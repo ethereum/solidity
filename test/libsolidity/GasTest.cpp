@@ -118,9 +118,8 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 
 	if (!compiler().parseAndAnalyze() || !compiler().compile())
 	{
-		SourceReferenceFormatter formatter(_stream, _formatted, false);
-		for (auto const& error: compiler().errors())
-			formatter.printErrorInformation(*error);
+		SourceReferenceFormatter{_stream, compiler(), _formatted, false}
+			.printErrorInformation(compiler().errors());
 		return TestResult::FatalError;
 	}
 

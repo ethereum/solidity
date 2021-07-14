@@ -22,6 +22,9 @@
 
 #include <libsmtutil/SMTPortfolio.h>
 
+#include <liblangutil/CharStream.h>
+#include <liblangutil/CharStreamProvider.h>
+
 #ifdef HAVE_Z3_DLOPEN
 #include <z3_version.h>
 #endif
@@ -38,9 +41,10 @@ BMC::BMC(
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	smtutil::SMTSolverChoice _enabledSolvers,
-	ModelCheckerSettings const& _settings
+	ModelCheckerSettings const& _settings,
+	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings),
+	SMTEncoder(_context, _settings, _charStreamProvider),
 	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers, _settings.timeout)),
 	m_outerErrorReporter(_errorReporter)
 {
@@ -650,7 +654,12 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 		if (uf->annotation().type->isValueType())
 		{
 			expressionsToEvaluate.emplace_back(expr(*uf));
-			expressionNames.push_back(uf->location().text());
+			string expressionName;
+			if (uf->location().hasText())
+				expressionName = m_charStreamProvider.charStream(*uf->location().sourceName).text(
+					uf->location()
+				);
+			expressionNames.push_back(move(expressionName));
 		}
 
 	return {expressionsToEvaluate, expressionNames};

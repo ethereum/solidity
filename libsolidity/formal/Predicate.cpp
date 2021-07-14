@@ -20,6 +20,8 @@
 
 #include <libsolidity/formal/SMTEncoder.h>
 
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/CharStream.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -196,12 +198,20 @@ bool Predicate::isInterface() const
 	return m_type == PredicateType::Interface;
 }
 
-string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) const
+string Predicate::formatSummaryCall(
+	vector<smtutil::Expression> const& _args,
+	langutil::CharStreamProvider const& _charStreamProvider
+) const
 {
 	solAssert(isSummary(), "");
 
 	if (auto funCall = programFunctionCall())
-		return funCall->location().text();
+	{
+		if (funCall->location().hasText())
+			return string(_charStreamProvider.charStream(*funCall->location().sourceName).text(funCall->location()));
+		else
+			return {};
+	}
 
 	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars to format the function call,

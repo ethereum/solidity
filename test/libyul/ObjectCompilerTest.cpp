@@ -69,7 +69,8 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	if (!stack.parseAndAnalyze("source", m_source))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, stack.errors());
+		SourceReferenceFormatter{_stream, stack, true, false}
+			.printErrorInformation(stack.errors());
 		return TestResult::FatalError;
 	}
 	stack.optimize();
@@ -103,12 +104,4 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	}
 
 	return checkResult(_stream, _linePrefix, _formatted);
-}
-
-void ObjectCompilerTest::printErrors(ostream& _stream, ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(_stream, true, false);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
 }

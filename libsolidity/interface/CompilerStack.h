@@ -38,6 +38,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
+#include <liblangutil/CharStreamProvider.h>
 
 #include <libevmasm/LinkerObject.h>
 
@@ -57,6 +58,7 @@
 namespace solidity::langutil
 {
 class Scanner;
+class CharStream;
 }
 
 
@@ -87,7 +89,7 @@ class DeclarationContainer;
  * If error recovery is active, it is possible to progress through the stages even when
  * there are errors. In any case, producing code is only possible without errors.
  */
-class CompilerStack
+class CompilerStack: public langutil::CharStreamProvider
 {
 public:
 	/// Noncopyable.
@@ -120,7 +122,7 @@ public:
 	/// and must not emit exceptions.
 	explicit CompilerStack(ReadCallback::Callback _readFile = ReadCallback::Callback());
 
-	~CompilerStack();
+	~CompilerStack() override;
 
 	/// @returns the list of errors that occurred during parsing and type checking.
 	langutil::ErrorList const& errors() const { return m_errorReporter.errors(); }
@@ -239,12 +241,8 @@ public:
 	/// by sourceNames().
 	std::map<std::string, unsigned> sourceIndices() const;
 
-	/// @returns the reverse mapping of source indices to their respective
-	/// CharStream instances.
-	std::map<unsigned, std::shared_ptr<langutil::CharStream>> indicesToCharStreams() const;
-
-	/// @returns the previously used scanner, useful for counting lines during error reporting.
-	langutil::Scanner const& scanner(std::string const& _sourceName) const;
+	/// @returns the previously used character stream, useful for counting lines during error reporting.
+	langutil::CharStream const& charStream(std::string const& _sourceName) const override;
 
 	/// @returns the parsed source unit with the supplied name.
 	SourceUnit const& ast(std::string const& _sourceName) const;
@@ -252,11 +250,6 @@ public:
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.
 	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
-
-	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
-	/// line and columns are numbered starting from 1 with following order:
-	/// start line, start column, end line, end column
-	std::tuple<int, int, int, int> positionFromSourceLocation(langutil::SourceLocation const& _sourceLocation) const;
 
 	/// @returns a list of unhandled queries to the SMT solver (has to be supplied in a second run
 	/// by calling @a addSMTLib2Response).

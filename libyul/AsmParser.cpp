@@ -80,7 +80,7 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	try
 	{
 		m_scanner = _scanner;
-		if (m_charStreamMap)
+		if (m_sourceNames)
 			fetchSourceLocationFromComment();
 		auto block = make_unique<Block>(parseBlock());
 		if (!_reuseScanner)
@@ -105,7 +105,7 @@ langutil::Token Parser::advance()
 
 void Parser::fetchSourceLocationFromComment()
 {
-	solAssert(m_charStreamMap.has_value(), "");
+	solAssert(m_sourceNames.has_value(), "");
 
 	if (m_scanner->currentCommentLiteral().empty())
 		return;
@@ -133,13 +133,13 @@ void Parser::fetchSourceLocationFromComment()
 			m_errorReporter.syntaxError(6367_error, commentLocation, "Invalid value in source location mapping. Could not parse location specification.");
 		else if (sourceIndex == -1)
 			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, nullptr});
-		else if (!(sourceIndex >= 0 && m_charStreamMap->count(static_cast<unsigned>(*sourceIndex))))
+		else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(*sourceIndex))))
 			m_errorReporter.syntaxError(2674_error, commentLocation, "Invalid source mapping. Source index not defined via @use-src.");
 		else
 		{
-			shared_ptr<CharStream> charStream = m_charStreamMap->at(static_cast<unsigned>(*sourceIndex));
-			solAssert(charStream, "");
-			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, charStream});
+			shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(*sourceIndex));
+			solAssert(sourceName, "");
+			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, move(sourceName)});
 		}
 	}
 }

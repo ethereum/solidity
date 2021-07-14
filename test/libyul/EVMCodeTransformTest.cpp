@@ -51,9 +51,8 @@ TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _
 	if (!stack.parseAndAnalyze("", m_source))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		SourceReferenceFormatter formatter(_stream, true, false);
-		for (auto const& error: stack.errors())
-			formatter.printErrorInformation(*error);
+		SourceReferenceFormatter{_stream, stack, true, false}
+			.printErrorInformation(stack.errors());
 		return TestResult::FatalError;
 	}
 

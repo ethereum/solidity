@@ -26,18 +26,20 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::tools;
 
-void UpgradeChange::apply()
+string UpgradeChange::apply(string _source) const
 {
-	m_source.replace(
+	_source.replace(
 		static_cast<size_t>(m_location.start),
-		static_cast<size_t>(m_location.end - m_location.start), m_patch
+		static_cast<size_t>(m_location.end - m_location.start),
+		m_patch
 	);
+	return _source;
 }
 
-void UpgradeChange::log(bool const _shorten) const
+void UpgradeChange::log(CharStreamProvider const& _charStreamProvider, bool const _shorten) const
 {
 	stringstream os;
-	SourceReferenceFormatter formatter{os, true, false};
+	SourceReferenceFormatter formatter{os, _charStreamProvider, true, false};
 
 	string start = to_string(m_location.start);
 	string end = to_string(m_location.end);
@@ -48,10 +50,10 @@ void UpgradeChange::log(bool const _shorten) const
 	os << endl;
 	AnsiColorized(os, true, {formatting::BOLD, color}) << "Upgrade change (" << level << ")" << endl;
 	os << "=======================" << endl;
-	formatter.printSourceLocation(SourceReferenceExtractor::extract(&m_location));
+	formatter.printSourceLocation(SourceReferenceExtractor::extract(_charStreamProvider, &m_location));
 	os << endl;
 
-	LineColumn lineEnd = m_location.source->translatePositionToLineColumn(m_location.end);
+	LineColumn lineEnd = _charStreamProvider.charStream(*m_location.sourceName).translatePositionToLineColumn(m_location.end);
 	int const leftpad = static_cast<int>(log10(max(lineEnd.line, 1))) + 2;
 
 	stringstream output;

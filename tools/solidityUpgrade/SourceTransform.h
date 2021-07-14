@@ -22,6 +22,9 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/Scanner.h>
+
 #include <sstream>
 #include <regex>
 
@@ -47,42 +50,57 @@ public:
 	operator std::string() { return m_stream.str(); }
 };
 
+class SourceTextRetriever
+{
+public:
+	explicit SourceTextRetriever(langutil::CharStreamProvider const& _charStreamProvider):
+		m_charStreamProvider(_charStreamProvider) {}
+	std::string text(langutil::SourceLocation const& _location) const
+	{
+		solAssert(_location.hasText(), "");
+		return std::string{m_charStreamProvider.charStream(*_location.sourceName).text(_location)};
+	}
+protected:
+	langutil::CharStreamProvider const& m_charStreamProvider;
+};
 
 /**
  * Helper that provides functions which analyze certain source locations
  * on a textual base. They utilize regular expression to search for
  * keywords or to determine formatting.
  */
-class SourceAnalysis
+class SourceAnalysis: public SourceTextRetriever
 {
 public:
-	static bool isMultilineKeyword(
+	using SourceTextRetriever::SourceTextRetriever;
+
+	bool isMultilineKeyword(
 		langutil::SourceLocation const& _location,
 		std::string const& _keyword
-	)
+	) const
 	{
 		return regex_search(
-			_location.text(),
+			text(_location),
 			std::regex{"(\\b" + _keyword + "\\b\\n|\\r|\\r\\n)"}
 		);
 	}
 
-	static bool hasMutabilityKeyword(langutil::SourceLocation const& _location)
+	bool hasMutabilityKeyword(langutil::SourceLocation const& _location) const
 	{
 		return regex_search(
-			_location.text(),
+			text(_location),
 			std::regex{"(\\b(pure|view|nonpayable|payable)\\b)"}
 		);
 	}
 
-	static bool hasVirtualKeyword(langutil::SourceLocation const& _location)
+	bool hasVirtualKeyword(langutil::SourceLocation const& _location) const
 	{
-		return regex_search(_location.text(), std::regex{"(\\b(virtual)\\b)"});
+		return regex_search(text(_location), std::regex{"(\\b(virtual)\\b)"});
 	}
 
-	static bool hasVisibilityKeyword(langutil::SourceLocation const& _location)
+	bool hasVisibilityKeyword(langutil::SourceLocation const& _location) const
 	{
-		return regex_search(_location.text(), std::regex{"\\bpublic\\b"});
+		return regex_search(text(_location), std::regex{"\\bpublic\\b"});
 	}
 };
 
@@ -117,21 +135,23 @@ public:
  * on a textual base. In general, these utilize regular expressions applied
  * to the given source location.
  */
-class SourceTransform
+class SourceTransform: public SourceTextRetriever
 {
 public:
+	using SourceTextRetriever::SourceTextRetriever;
+
 	/// Searches for the keyword given and prepends the expression.
 	/// E.g. `function f() view;` -> `function f() public view;`
-	static std::string insertBeforeKeyword(
+	std::string insertBeforeKeyword(
 		langutil::SourceLocation const& _location,
 		std::string const& _keyword,
 		std::string const& _expression
-	)
+	) const
 	{
 		auto _regex = std::regex{"(\\b" + _keyword + "\\b)"};
-		if (regex_search(_location.text(), _regex))
+		if (regex_search(text(_location), _regex))
 			return regex_replace(
-				_location.text(),
+				text(_location),
 				_regex,
 				_expression + " " + _keyword,
 				std::regex_constants::format_first_only
@@ -139,7 +159,7 @@ public:
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				LocationHelper() << "Could not fix: " << text(_location) << " at " << _location <<
 				"\nNeeds to be fixed manually."
 			);
 
@@ -148,22 +168,22 @@ public:
 
 	/// Searches for the keyword given and appends the expression.
 	/// E.g. `function f() public {}` -> `function f() public override {}`
-	static std::string insertAfterKeyword(
+	std::string insertAfterKeyword(
 		langutil::SourceLocation const& _location,
 		std::string const& _keyword,
 		std::string const& _expression
-	)
+	) const
 	{
-		bool isMultiline = SourceAnalysis::isMultilineKeyword(_location, _keyword);
+		bool isMultiline = SourceAnalysis{m_charStreamProvider}.isMultilineKeyword(_location, _keyword);
 		std::string toAppend = isMultiline ? ("\n        " + _expression) : (" " + _expression);
 		std::regex keyword{"(\\b" + _keyword + "\\b)"};
 
-		if (regex_search(_location.text(), keyword))
-			return regex_replace(_location.text(), keyword, _keyword + toAppend);
+		if (regex_search(text(_location), keyword))
+			return regex_replace(text(_location), keyword, _keyword + toAppend);
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				LocationHelper() << "Could not fix: " << text(_location) << " at " << _location <<
 				"\nNeeds to be fixed manually."
 			);
 
@@ -174,22 +194,22 @@ public:
 	/// Searches for the first right parenthesis and appends the expression
 	/// given.
 	/// E.g. `function f() {}` -> `function f() public {}`
-	static std::string insertAfterRightParenthesis(
+	std::string insertAfterRightParenthesis(
 		langutil::SourceLocation const& _location,
 		std::string const& _expression
-	)
+	) const
 	{
 		auto _regex = std::regex{"(\\))"};
-		if (regex_search(_location.text(), _regex))
+		if (regex_search(text(_location), _regex))
 			return regex_replace(
-				_location.text(),
+				text(_location),
 				std::regex{"(\\))"},
 				") " + _expression
 			);
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				LocationHelper() << "Could not fix: " << text(_location) << " at " << _location <<
 				"\nNeeds to be fixed manually."
 			);
 
@@ -199,38 +219,38 @@ public:
 	/// Searches for the `function` keyword and its identifier and replaces
 	/// both by the expression given.
 	/// E.g. `function Storage() {}` -> `constructor() {}`
-	static std::string replaceFunctionName(
+	std::string replaceFunctionName(
 		langutil::SourceLocation const& _location,
 		std::string const& _name,
 		std::string const& _expression
-	)
+	) const
 	{
 		auto _regex = std::regex{ "(\\bfunction\\s*" + _name + "\\b)"};
-		if (regex_search(_location.text(), _regex))
+		if (regex_search(text(_location), _regex))
 			return regex_replace(
-				_location.text(),
+				text(_location),
 				_regex,
 				_expression
 			);
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				LocationHelper() << "Could not fix: " << text(_location) << " at " << _location <<
 				"\nNeeds to be fixed manually."
 			);
 
 		return "";
 	}
 
-	static std::string gasUpdate(langutil::SourceLocation const& _location)
+	std::string gasUpdate(langutil::SourceLocation const& _location) const
 	{
 		// dot, "gas", any number of whitespaces, left bracket
 		std::regex gasReg{"\\.gas\\s*\\("};
 
-		if (regex_search(_location.text(), gasReg))
+		if (regex_search(text(_location), gasReg))
 		{
 			std::string out = regex_replace(
-				_location.text(),
+				text(_location),
 				gasReg,
 				"{gas: ",
 				std::regex_constants::format_first_only
@@ -240,22 +260,22 @@ public:
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				LocationHelper() << "Could not fix: " << text(_location) << " at " << _location <<
 				"\nNeeds to be fixed manually."
 			);
 
 		return "";
 	}
 
-	static std::string valueUpdate(langutil::SourceLocation const& _location)
+	std::string valueUpdate(langutil::SourceLocation const& _location) const
 	{
 		// dot, "value", any number of whitespaces, left bracket
 		std::regex valueReg{"\\.value\\s*\\("};
 
-		if (regex_search(_location.text(), valueReg))
+		if (regex_search(text(_location), valueReg))
 		{
 			std::string out = regex_replace(
-					_location.text(),
+					text(_location),
 					valueReg,
 					"{value: ",
 					std::regex_constants::format_first_only
@@ -265,21 +285,21 @@ public:
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				LocationHelper() << "Could not fix: " << text(_location) << " at " << _location <<
 				"\nNeeds to be fixed manually."
 			);
 
 		return "";
 	}
 
-	static std::string nowUpdate(langutil::SourceLocation const& _location)
+	std::string nowUpdate(langutil::SourceLocation const& _location) const
 	{
-		return regex_replace(_location.text(), std::regex{"now"}, "block.timestamp");
+		return regex_replace(text(_location), std::regex{"now"}, "block.timestamp");
 	}
 
-	static std::string removeVisibility(langutil::SourceLocation const& _location)
+	std::string removeVisibility(langutil::SourceLocation const& _location) const
 	{
-		std::string replacement = _location.text();
+		std::string replacement = text(_location);
 		for (auto const& replace: {"public ", "public", "internal ", "internal", "external ", "external"})
 			replacement = regex_replace(replacement, std::regex{replace}, "");
 		return replacement;

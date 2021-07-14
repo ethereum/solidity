@@ -347,14 +347,14 @@ bool SourceUpgrade::analyzeAndUpgrade(pair<string, string> const& _sourceCode)
 		log() << "Analyzing and upgrading " << _sourceCode.first << "." << endl;
 
 	if (m_compiler->state() >= CompilerStack::State::AnalysisPerformed)
-		m_suite.analyze(m_compiler->ast(_sourceCode.first));
+		m_suite.analyze(*m_compiler, m_compiler->ast(_sourceCode.first));
 
 	if (!m_suite.changes().empty())
 	{
 		auto& change = m_suite.changes().front();
 
 		if (verbose)
-			change.log(true);
+			change.log(*m_compiler, true);
 
 		if (change.level() == UpgradeChange::Level::Safe)
 		{
@@ -388,20 +388,19 @@ void SourceUpgrade::applyChange(
 		log() << _change.patch();
 	}
 
-	_change.apply();
-	m_sourceCodes[_sourceCode.first] = _change.source();
+	m_sourceCodes[_sourceCode.first] = _change.apply(_sourceCode.second);
 
 	if (!dryRun)
-		writeInputFile(_sourceCode.first, _change.source());
+		writeInputFile(_sourceCode.first, m_sourceCodes[_sourceCode.first]);
 }
 
 void SourceUpgrade::printErrors() const
 {
-	auto formatter = make_unique<langutil::SourceReferenceFormatter>(cout, true, false);
+	langutil::SourceReferenceFormatter formatter{cout, *m_compiler, true, false};
 
 	for (auto const& error: m_compiler->errors())
 		if (error->type() != langutil::Error::Type::Warning)
-			formatter->printErrorInformation(*error);
+			formatter.printErrorInformation(*error);
 }
 
 void SourceUpgrade::printStatistics() const

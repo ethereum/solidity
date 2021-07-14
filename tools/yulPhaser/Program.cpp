@@ -60,16 +60,6 @@ ostream& operator<<(ostream& _stream, Program const& _program);
 
 }
 
-ostream& std::operator<<(ostream& _outputStream, ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(_outputStream, true, false);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
-
-	return _outputStream;
-}
-
 Program::Program(Program const& program):
 	m_ast(make_unique<Block>(get<Block>(ASTCopier{}(*program.m_ast)))),
 	m_dialect{program.m_dialect},
