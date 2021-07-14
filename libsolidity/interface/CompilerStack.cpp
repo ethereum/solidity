@@ -742,6 +742,7 @@ Json::Value CompilerStack::generatedSources(string const& _contractName, bool _r
 		Json::Value sources{Json::arrayValue};
 		// If there is no compiler, then no bytecode was generated and thus no
 		// sources were generated.
+		// This can also be because we compile via IR.
 		if (c.compiler)
 		{
 			string source =
@@ -1063,6 +1064,7 @@ size_t CompilerStack::functionEntryPoint(
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	shared_ptr<Compiler> const& compiler = contract(_contractName).compiler;
+	// TODO support "viaIR" - although this function is only used for gas estimation.
 	if (!compiler)
 		return 0;
 	evmasm::AssemblyItem tag = compiler->functionEntryLabel(_function);
@@ -1266,6 +1268,7 @@ void CompilerStack::compileContract(
 )
 {
 	solAssert(m_stackState >= AnalysisPerformed, "");
+	solAssert(!m_viaIR, "");
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
 

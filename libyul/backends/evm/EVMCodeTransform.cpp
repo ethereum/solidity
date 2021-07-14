@@ -380,6 +380,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_function.debugData));
 	int const stackHeightBefore = m_assembly.stackHeight();
 
+	// TODO used named labels plus source ID for solidity functions
 	m_assembly.appendLabel(functionEntryID(_function.name, function));
 
 	m_assembly.setStackHeight(static_cast<int>(height));
