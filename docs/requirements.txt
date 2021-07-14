@@ -1,4 +1,8 @@
-sphinx_rtd_theme>=0.3.1
+# Older versions of sphinx-rtd-theme do not work with never docutils but have a bug in the dependency
+# which could result in it being installed anyway and the style (especially bullet points) being broken.
+# See https://github.com/readthedocs/sphinx_rtd_theme/issues/1115
+sphinx_rtd_theme>=0.5.2
+
 pygments-lexer-solidity>=0.7.0
 sphinx-a4doc>=1.2.1
 
