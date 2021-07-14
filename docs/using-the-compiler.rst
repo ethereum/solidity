@@ -779,9 +779,9 @@ Running the Upgrade
 
 It is recommended to explicitly specify the upgrade modules by using ``--modules`` argument.
 
-.. code-block:: none
+.. code-block:: bash
 
-    $ solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
+    solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
 
 The command above applies all changes as shown below. Please review them carefully (the pragmas will
 have to be updated manually.)
