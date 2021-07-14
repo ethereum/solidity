@@ -136,13 +136,13 @@ key in the ``"settings"`` field:
 
 .. code-block:: none
 
-  {
-    "sources": { ... },
-    "settings": {
-      "optimizer": { ... },
-      "evmVersion": "<VERSION>"
+    {
+      "sources": { ... },
+      "settings": {
+        "optimizer": { ... },
+        "evmVersion": "<VERSION>"
+      }
     }
-  }
 
 Target Options
 --------------
@@ -781,7 +781,7 @@ It is recommended to explicitly specify the upgrade modules by using ``--modules
 
 .. code-block:: none
 
-   $ solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
+    $ solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
 
 The command above applies all changes as shown below. Please review them carefully (the pragmas will
 have to be updated manually.)

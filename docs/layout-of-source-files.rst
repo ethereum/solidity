@@ -182,7 +182,7 @@ At a global level, you can use import statements of the following form:
 
 ::
 
-  import "filename";
+    import "filename";
 
 The ``filename`` part is called an *import path*.
 This statement imports all global symbols from "filename" (and symbols imported there) into the
@@ -197,7 +197,7 @@ the global symbols from ``"filename"``:
 
 ::
 
-  import * as symbolName from "filename";
+    import * as symbolName from "filename";
 
 which results in all global symbols being available in the format ``symbolName.symbol``.
 
@@ -215,7 +215,7 @@ the code below creates new global symbols ``alias`` and ``symbol2`` which refere
 
 ::
 
-  import {symbol1 as alias, symbol2} from "filename";
+    import {symbol1 as alias, symbol2} from "filename";
 
 .. index:: virtual filesystem, source unit name, import; path, filesystem path, import callback, Remix IDE
 
@@ -255,12 +255,12 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
 
 ::
 
-  // This is a single-line comment.
+    // This is a single-line comment.
 
-  /*
-  This is a
-  multi-line comment.
-  */
+    /*
+    This is a
+    multi-line comment.
+    */
 
 .. note::
   A single-line comment is terminated by any unicode line terminator

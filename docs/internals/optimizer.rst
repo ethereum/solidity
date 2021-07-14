@@ -89,21 +89,21 @@ the sequence:
 
 .. code-block:: none
 
-  PUSH 32
-  PUSH 0
-  CALLDATALOAD
-  PUSH 100
-  DUP2
-  MSTORE
-  KECCAK256
+    PUSH 32
+    PUSH 0
+    CALLDATALOAD
+    PUSH 100
+    DUP2
+    MSTORE
+    KECCAK256
 
 or the equivalent Yul
 
 .. code-block:: yul
 
-  let x := calldataload(0)
-  mstore(x, 100)
-  let value := keccak256(x, 32)
+    let x := calldataload(0)
+    mstore(x, 100)
+    let value := keccak256(x, 32)
 
 In this case, the optimizer tracks the value at a memory location ``calldataload(0)`` and then
 realizes that the Keccak-256 hash can be evaluated at compile time. This only works if there is no
@@ -116,14 +116,14 @@ For example,
 
 .. code-block:: yul
 
-  let x := calldataload(0)
-  mstore(x, 100)
-  // Current knowledge memory location x -> 100
-  let y := add(x, 32)
-  // Does not clear the knowledge that x -> 100, since y does not write to [x, x + 32)
-  mstore(y, 200)
-  // This Keccak-256 can now be evaluated
-  let value := keccak256(x, 32)
+    let x := calldataload(0)
+    mstore(x, 100)
+    // Current knowledge memory location x -> 100
+    let y := add(x, 32)
+    // Does not clear the knowledge that x -> 100, since y does not write to [x, x + 32)
+    mstore(y, 200)
+    // This Keccak-256 can now be evaluated
+    let value := keccak256(x, 32)
 
 Therefore, modifications to storage and memory locations, of say location ``l``, must erase
 knowledge about storage or memory locations which may be equal to ``l``. More specifically, for
@@ -239,8 +239,8 @@ for all references to ``tag_f`` leaving it unused, s.t. it can be removed, yield
 
 .. code-block:: text
 
-      ...body of function f...
-      ...opcodes after call to f...
+    ...body of function f...
+    ...opcodes after call to f...
 
 So the call to function ``f`` is inlined and the original definition of ``f`` can be removed.
 
@@ -375,7 +375,7 @@ After this step, a program has the following normal form:
 
 .. code-block:: text
 
-	{ I F... }
+    { I F... }
 
 Where ``I`` is a (potentially empty) block that does not contain any function definitions (not even recursively)
 and ``F`` is a list of function definitions such that no function contains a function definition.
@@ -1053,8 +1053,8 @@ remove the parameter and create a new "linking" function as follows:
 
 .. code-block:: yul
 
-  function f(a,b) -> x { x := div(a,b) }
-  function f2(a,b,c) -> x, y { x := f(a,b) }
+    function f(a,b) -> x { x := div(a,b) }
+    function f2(a,b,c) -> x, y { x := f(a,b) }
 
 and replace all references to ``f`` by ``f2``.
 The inliner should be run afterwards to make sure that all references to ``f2`` are replaced by

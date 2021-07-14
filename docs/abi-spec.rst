@@ -530,12 +530,12 @@ i.e. ``0xcf479181``, ``uint256(0)``, ``uint256(amount)``.
 The error selectors ``0x00000000`` and ``0xffffffff`` are reserved for future use.
 
 .. warning::
-  Never trust error data.
-  The error data by default bubbles up through the chain of external calls, which
-  means that a contract may receive an error not defined in any of the contracts
-  it calls directly.
-  Furthermore, any contract can fake any error by returning data that matches
-  an error signature, even if the error is not defined anywhere.
+    Never trust error data.
+    The error data by default bubbles up through the chain of external calls, which
+    means that a contract may receive an error not defined in any of the contracts
+    it calls directly.
+    Furthermore, any contract can fake any error by returning data that matches
+    an error signature, even if the error is not defined anywhere.
 
 .. _abi_json:
 
@@ -619,24 +619,24 @@ would result in the JSON:
 
 .. code-block:: json
 
-  [{
-  "type":"error",
-  "inputs": [{"name":"available","type":"uint256"},{"name":"required","type":"uint256"}],
-  "name":"InsufficientBalance"
-  }, {
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event"
-  }, {
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event2"
-  }, {
-  "type":"function",
-  "inputs": [{"name":"a","type":"uint256"}],
-  "name":"foo",
-  "outputs": []
-  }]
+    [{
+    "type":"error",
+    "inputs": [{"name":"available","type":"uint256"},{"name":"required","type":"uint256"}],
+    "name":"InsufficientBalance"
+    }, {
+    "type":"event",
+    "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+    "name":"Event"
+    }, {
+    "type":"event",
+    "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+    "name":"Event2"
+    }, {
+    "type":"function",
+    "inputs": [{"name":"a","type":"uint256"}],
+    "name":"foo",
+    "outputs": []
+    }]
 
 Handling tuple types
 --------------------
@@ -671,61 +671,61 @@ would result in the JSON:
 
 .. code-block:: json
 
-  [
-    {
-      "name": "f",
-      "type": "function",
-      "inputs": [
-        {
-          "name": "s",
-          "type": "tuple",
-          "components": [
-            {
-              "name": "a",
-              "type": "uint256"
-            },
-            {
-              "name": "b",
-              "type": "uint256[]"
-            },
-            {
-              "name": "c",
-              "type": "tuple[]",
-              "components": [
-                {
-                  "name": "x",
-                  "type": "uint256"
-                },
-                {
-                  "name": "y",
-                  "type": "uint256"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "t",
-          "type": "tuple",
-          "components": [
-            {
-              "name": "x",
-              "type": "uint256"
-            },
-            {
-              "name": "y",
-              "type": "uint256"
-            }
-          ]
-        },
-        {
-          "name": "a",
-          "type": "uint256"
-        }
-      ],
-      "outputs": []
-    }
-  ]
+    [
+      {
+        "name": "f",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "s",
+            "type": "tuple",
+            "components": [
+              {
+                "name": "a",
+                "type": "uint256"
+              },
+              {
+                "name": "b",
+                "type": "uint256[]"
+              },
+              {
+                "name": "c",
+                "type": "tuple[]",
+                "components": [
+                  {
+                    "name": "x",
+                    "type": "uint256"
+                  },
+                  {
+                    "name": "y",
+                    "type": "uint256"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "t",
+            "type": "tuple",
+            "components": [
+              {
+                "name": "x",
+                "type": "uint256"
+              },
+              {
+                "name": "y",
+                "type": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "a",
+            "type": "uint256"
+          }
+        ],
+        "outputs": []
+      }
+    ]
 
 .. _abi_packed_mode:
 
@@ -786,12 +786,12 @@ for prepending a function selector. Since the encoding is ambiguous, there is no
 
 .. warning::
 
-  If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
-  it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
-  vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
-  If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
-  sure to always use the same types and check that at most one of them is dynamic.
-  Unless there is a compelling reason, ``abi.encode`` should be preferred.
+    If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
+    it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
+    vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
+    If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
+    sure to always use the same types and check that at most one of them is dynamic.
+    Unless there is a compelling reason, ``abi.encode`` should be preferred.
 
 
 .. _indexed_event_encoding:
