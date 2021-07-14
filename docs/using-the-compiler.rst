@@ -134,12 +134,12 @@ On the command line, you can select the EVM version as follows:
 In the :ref:`standard JSON interface <compiler-api>`, use the ``"evmVersion"``
 key in the ``"settings"`` field:
 
-.. code-block:: none
+.. code-block:: javascript
 
     {
-      "sources": { ... },
+      "sources": {/* ... */},
       "settings": {
-        "optimizer": { ... },
+        "optimizer": {/* ... */},
         "evmVersion": "<VERSION>"
       }
     }
@@ -198,7 +198,7 @@ Comments are of course not permitted and used here only for explanatory purposes
 Input Description
 -----------------
 
-.. code-block:: none
+.. code-block:: javascript
 
     {
       // Required: Source code language. Currently supported are "Solidity" and "Yul".
@@ -310,7 +310,7 @@ Input Description
           // "debug" injects strings for compiler-generated internal reverts, implemented for ABI encoders V1 and V2 for now.
           // "verboseDebug" even appends further information to user-supplied revert strings (not yet implemented)
           "revertStrings": "default"
-        }
+        },
         // Metadata settings (optional)
         "metadata": {
           // Use only literal content and not URLs (false by default)
@@ -331,7 +331,7 @@ Input Description
           "myFile.sol": {
             "MyLib": "0x123123..."
           }
-        }
+        },
         // The following can be used to select desired outputs based
         // on file and contract names.
         // If this field is omitted, then the compiler loads and does type checking,
@@ -395,7 +395,7 @@ Input Description
         "modelChecker":
         {
           // Chose which contracts should be analyzed as the deployed one.
-          contracts:
+          "contracts":
           {
             "source1.sol": ["contract1"],
             "source2.sol": ["contract2", "contract3"]
@@ -420,7 +420,7 @@ Input Description
 Output Description
 ------------------
 
-.. code-block:: none
+.. code-block:: javascript
 
     {
       // Optional: not present if no errors/warnings were encountered
@@ -431,7 +431,7 @@ Output Description
             "file": "sourceFile.sol",
             "start": 0,
             "end": 100
-          ],
+          },
           // Optional: Further locations (e.g. places of conflicting declarations)
           "secondarySourceLocations": [
             {
@@ -463,7 +463,7 @@ Output Description
           // Identifier of the source (used in source maps)
           "id": 1,
           // The AST object
-          "ast": {},
+          "ast": {}
         }
       },
       // This contains the contract-level outputs.
@@ -476,7 +476,7 @@ Output Description
             // See https://docs.soliditylang.org/en/develop/abi-spec.html
             "abi": [],
             // See the Metadata Output documentation (serialised JSON string)
-            "metadata": "{...}",
+            "metadata": "{/* ... */}",
             // User documentation (natspec)
             "userdoc": {},
             // Developer documentation (natspec)
@@ -484,7 +484,7 @@ Output Description
             // Intermediate representation (string)
             "ir": "",
             // See the Storage Layout documentation.
-            "storageLayout": {"storage": [...], "types": {...} },
+            "storageLayout": {"storage": [/* ... */], "types": {/* ... */} },
             // EVM-related outputs
             "evm": {
               // Assembly (string)
@@ -514,14 +514,14 @@ Output Description
                 // contains a single Yul file.
                 "generatedSources": [{
                   // Yul AST
-                  "ast": { ... }
+                  "ast": {/* ... */},
                   // Source file in its text form (may contain comments)
                   "contents":"{ function abi_decode(start, end) -> data { data := calldataload(start) } }",
                   // Source file ID, used for source references, same "namespace" as the Solidity source files
                   "id": 2,
                   "language": "Yul",
                   "name": "#utility.yul"
-                }]
+                }],
                 // If given, this is an unlinked object.
                 "linkReferences": {
                   "libraryFile.sol": {
@@ -535,7 +535,7 @@ Output Description
                 }
               },
               "deployedBytecode": {
-                ..., // The same layout as above.
+                /* ..., */ // The same layout as above.
                 "immutableReferences": {
                   // There are two references to the immutable with AST ID 3, both 32 bytes long. One is
                   // at bytecode offset 42, the other at bytecode offset 80.

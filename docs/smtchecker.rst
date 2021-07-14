@@ -494,10 +494,9 @@ allowed) of <source>:<contract> pairs in the CLI:
 and via the object ``settings.modelChecker.contracts`` in the :ref:`JSON input<compiler-api>`,
 which has the following form:
 
-.. code-block:: none
+.. code-block:: json
 
-    contracts
-    {
+    "contracts": {
         "source1.sol": ["contract1"],
         "source2.sol": ["contract2", "contract3"]
     }
