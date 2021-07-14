@@ -15,7 +15,7 @@ that call them, similar to internal library functions.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.7.0 <0.9.0;
+    pragma solidity >=0.7.1 <0.9.0;
 
     function sum(uint[] memory _arr) pure returns (uint s) {
         for (uint i = 0; i < _arr.length; i++)

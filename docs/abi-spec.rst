@@ -657,7 +657,7 @@ As an example, the code
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.7.4 <0.9.0;
+    pragma solidity >=0.7.5 <0.9.0;
     pragma abicoder v2;
 
     contract Test {
