@@ -514,16 +514,20 @@ Additionally, string literals also support the following escape characters:
  - ``\\`` (backslash)
  - ``\'`` (single quote)
  - ``\"`` (double quote)
- - ``\b`` (backspace)
- - ``\f`` (form feed)
  - ``\n`` (newline)
  - ``\r`` (carriage return)
  - ``\t`` (tab)
- - ``\v`` (vertical tab)
  - ``\xNN`` (hex escape, see below)
  - ``\uNNNN`` (unicode escape, see below)
 
 ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
+
+.. note::
+
+    Until version 0.8.0 there were three additional escape sequences: ``\b``, ``\f`` and ``\v``.
+    They are commonly available in other languages but rarely needed in practice.
+    If you do need them, they can still be inserted via hexadecimal escapes, i.e. ``\x08``, ``\x0c``
+    and ``\x0b``, respectively, just as any other ASCII character.
 
 The string in the following example has a length of ten bytes.
 It starts with a newline byte, followed by a double quote, a single

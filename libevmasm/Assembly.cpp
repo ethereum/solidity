@@ -153,7 +153,7 @@ public:
 			return;
 		m_out << m_prefix << "    /*";
 		if (m_location.sourceName)
-			m_out << " " + escapeAndQuoteYulString(*m_location.sourceName);
+			m_out << " " + escapeAndQuoteString(*m_location.sourceName);
 		if (m_location.hasText())
 			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
 		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
