@@ -17,13 +17,13 @@ object "object" {
 
 
 Binary representation:
-600260028103808261626382815564656678797a010203040506070900010203040506070900010203040506070900010201020304050607090001020304050607090001020304050607090001026009905050505050
+6002808103808261626382815564656678797a010203040506070900010203040506070900010203040506070900010201020304050607090001020304050607090001020304050607090001026009905050505050
 
 Text representation:
     /* "yul_verbatim/input.yul":15:16   */
   0x02
     /* "yul_verbatim/input.yul":37:38   */
-  0x02
+  dup1
     /* "yul_verbatim/input.yul":34:35   */
   dup2
     /* "yul_verbatim/input.yul":30:39   */
@@ -32,6 +32,7 @@ Text representation:
   dup1
     /* "yul_verbatim/input.yul":75:76   */
   dup3
+    /* "yul_verbatim/input.yul":53:80   */
   verbatimbytecode_616263
     /* "yul_verbatim/input.yul":95:96   */
   dup3
@@ -39,6 +40,7 @@ Text representation:
   dup2
     /* "yul_verbatim/input.yul":85:97   */
   sstore
+    /* "yul_verbatim/input.yul":111:132   */
   verbatimbytecode_646566
     /* "yul_verbatim/input.yul":137:158   */
   verbatimbytecode_78797a

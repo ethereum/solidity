@@ -1,4 +1,7 @@
 #!/usr/bin/env python2
+#
+# Not actively tested or maintained. Exists in case we want to rebuild an
+# ancient release.
 
 import sys
 import re

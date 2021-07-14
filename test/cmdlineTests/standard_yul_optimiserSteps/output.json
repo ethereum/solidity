@@ -1,18 +1,10 @@
 {"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":17:18   */
   0x00
     /* \"A\":11:19   */
+  dup1
   mload
-    /* \"A\":38:39   */
-  0x00
-    /* \"A\":34:35   */
-  0x00
-    /* \"A\":31:32   */
-  dup3
-    /* \"A\":27:36   */
-  add
     /* \"A\":20:40   */
   sstore
-  pop
 ","bytecode":{"functionDebugData":{},"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"object\" {
     code {
         let x := mload(0)

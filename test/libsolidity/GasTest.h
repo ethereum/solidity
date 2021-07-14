@@ -22,6 +22,8 @@
 #include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -47,7 +49,7 @@ private:
 
 	bool m_optimise = false;
 	bool m_optimiseYul = false;
-	size_t m_optimiseRuns = 200;
+	size_t m_optimiseRuns = OptimiserSettings{}.expectedExecutionsPerDeployment;
 	std::map<std::string, std::map<std::string, std::string>> m_expectations;
 };
 

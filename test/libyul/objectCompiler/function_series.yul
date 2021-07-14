@@ -13,12 +13,10 @@ object "Contract" {
 //     /* "source":33:48   */
 //   jump(tag_1)
 // tag_2:
-//     /* "source":46:48   */
 // tag_3:
 //   jump	// out
 //     /* "source":53:68   */
 // tag_4:
-//     /* "source":66:68   */
 // tag_5:
 //   jump	// out
 // tag_1:
@@ -30,4 +28,4 @@ object "Contract" {
 //   sstore
 // Bytecode: 6009565b5b565b5b565b6001600055
 // Opcodes: PUSH1 0x9 JUMP JUMPDEST JUMPDEST JUMP JUMPDEST JUMPDEST JUMP JUMPDEST PUSH1 0x1 PUSH1 0x0 SSTORE
-// SourceMappings: 33:15:0:-:0;;;46:2;:::o;53:15::-;66:2;:::o;:::-;83:1;80;73:12
+// SourceMappings: 33:15:0:-:0;;;;:::o;53:::-;;:::o;:::-;83:1;80;73:12

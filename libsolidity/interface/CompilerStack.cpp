@@ -80,7 +80,6 @@
 
 #include <utility>
 #include <map>
-#include <range/v3/view/concat.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -243,7 +242,7 @@ void CompilerStack::setLibraries(std::map<std::string, util::h160> const& _libra
 	m_libraries = _libraries;
 }
 
-void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
+void CompilerStack::setOptimiserSettings(bool _optimize, size_t _runs)
 {
 	OptimiserSettings settings = _optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	settings.expectedExecutionsPerDeployment = _runs;
@@ -925,6 +924,19 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
 	indices[CompilerContext::yulUtilityFileName()] = index++;
 	return indices;
+}
+
+map<unsigned, shared_ptr<CharStream>> CompilerStack::indicesToCharStreams() const
+{
+	map<unsigned, shared_ptr<CharStream>> result;
+	unsigned index = 0;
+	for (auto const& s: m_sources)
+		result[index++] = s.second.scanner->charStream();
+
+	// NB: CompilerContext::yulUtilityFileName() does not have a source,
+	result[index++] = shared_ptr<CharStream>{};
+
+	return result;
 }
 
 Json::Value const& CompilerStack::contractABI(string const& _contractName) const

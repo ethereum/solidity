@@ -146,7 +146,7 @@ public:
 
 	/// Changes the optimiser settings.
 	/// Must be set before parsing.
-	void setOptimiserSettings(bool _optimize, unsigned _runs = 200);
+	void setOptimiserSettings(bool _optimize, size_t _runs = OptimiserSettings{}.expectedExecutionsPerDeployment);
 
 	/// Changes the optimiser settings.
 	/// Must be set before parsing.
@@ -238,6 +238,10 @@ public:
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
 	std::map<std::string, unsigned> sourceIndices() const;
+
+	/// @returns the reverse mapping of source indices to their respective
+	/// CharStream instances.
+	std::map<unsigned, std::shared_ptr<langutil::CharStream>> indicesToCharStreams() const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	langutil::Scanner const& scanner(std::string const& _sourceName) const;

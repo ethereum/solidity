@@ -12,7 +12,7 @@ contract Test {
 // compileViaYul: also
 // ----
 // set(uint24[]): 0x20, 18, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 -> 18
-// gas irOptimized: 101659
+// gas irOptimized: 100066
 // gas legacy: 103815
 // gas legacyOptimized: 101614
 // data(uint256): 7 -> 8

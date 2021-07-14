@@ -1,8 +1,9 @@
-{"contracts":{"A":{"NamedObject":{"evm":{"assembly":"  data_4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
+{"contracts":{"A":{"NamedObject":{"evm":{"assembly":"    /* \"A\":39:61   */
+  data_4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
     /* \"A\":80:81   */
   0x00
     /* \"A\":76:77   */
-  0x00
+  dup1
     /* \"A\":73:74   */
   dup3
     /* \"A\":69:78   */

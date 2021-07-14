@@ -85,7 +85,6 @@ struct OptimiserSettings
 		s.runConstantOptimiser = true;
 		s.runYulOptimiser = true;
 		s.optimizeStackAllocation = true;
-		s.expectedExecutionsPerDeployment = 200;
 		return s;
 	}
 	/// Full optimisations. Currently an alias for standard optimisations.

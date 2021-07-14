@@ -22,7 +22,7 @@ SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$SOLTMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
 
     if npm -v >/dev/null 2>&1; then
         if npm list -g | grep solhint >/dev/null 2>&1; then

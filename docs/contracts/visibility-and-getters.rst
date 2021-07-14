@@ -188,16 +188,24 @@ The next example is more complex:
             uint a;
             bytes3 b;
             mapping (uint => uint) map;
+            uint[3] c;
+            uint[] d;
+            bytes e;
         }
         mapping (uint => mapping(bool => Data[])) public data;
     }
 
-It generates a function of the following form. The mapping in the struct is omitted
-because there is no good way to provide the key for the mapping:
+It generates a function of the following form. The mapping and arrays (with the
+exception of byte arrays) in the struct are omitted because there is no good way
+to select individual struct members or provide a key for the mapping:
 
 .. code-block:: solidity
 
-    function data(uint arg1, bool arg2, uint arg3) public returns (uint a, bytes3 b) {
+    function data(uint arg1, bool arg2, uint arg3)
+        public
+        returns (uint a, bytes3 b, bytes memory e)
+    {
         a = data[arg1][arg2][arg3].a;
         b = data[arg1][arg2][arg3].b;
+        e = data[arg1][arg2][arg3].e;
     }

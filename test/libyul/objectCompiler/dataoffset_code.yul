@@ -7,7 +7,7 @@ object "a" {
 }
 // ----
 // Assembly:
-//     /* "source":22:50   */
+//     /* "source":32:49   */
 //   dataOffset(sub_0)
 //     /* "source":29:30   */
 //   0x00
@@ -27,4 +27,4 @@ object "a" {
 // }
 // Bytecode: 6006600055fe6008600055fe
 // Opcodes: PUSH1 0x6 PUSH1 0x0 SSTORE INVALID PUSH1 0x8 PUSH1 0x0 SSTORE INVALID
-// SourceMappings: 22:28:0:-:0;29:1;22:28
+// SourceMappings: 32:17:0:-:0;29:1;22:28

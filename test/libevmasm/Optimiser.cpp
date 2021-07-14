@@ -1286,7 +1286,8 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	settings.runCSE = true;
 	settings.runConstantOptimiser = true;
 	settings.evmVersion = solidity::test::CommonOptions::get().evmVersion();
-	settings.expectedExecutionsPerDeployment = 200;
+	settings.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
+;
 	main.optimise(settings);
 
 	AssemblyItems expectationMain{
@@ -1679,7 +1680,7 @@ BOOST_AUTO_TEST_CASE(inliner)
 		Instruction::SWAP1,
 		jumpOutOf,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1701,7 +1702,7 @@ BOOST_AUTO_TEST_CASE(inliner_no_inline_type)
 		Instruction::SWAP1,
 		Instruction::JUMP,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		items.begin(), items.end()
@@ -1726,7 +1727,7 @@ BOOST_AUTO_TEST_CASE(inliner_no_inline)
 		Instruction::JUMPI,
 		Instruction::JUMP,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1757,7 +1758,7 @@ BOOST_AUTO_TEST_CASE(inliner_single_jump)
 		AssemblyItem(Tag, 2),
 		jumpOutOf,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1777,7 +1778,7 @@ BOOST_AUTO_TEST_CASE(inliner_end_of_bytecode)
 		Instruction::STOP,
 		AssemblyItem(Tag, 2),
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		items.begin(), items.end()
@@ -1802,7 +1803,7 @@ BOOST_AUTO_TEST_CASE(inliner_cse_break)
 		Instruction::STOP, // CSE breaking instruction
 		jumpOutOf
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		items.begin(), items.end()
@@ -1822,7 +1823,7 @@ BOOST_AUTO_TEST_CASE(inliner_stop)
 		AssemblyItem(Tag, 1),
 		Instruction::STOP
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1840,7 +1841,7 @@ BOOST_AUTO_TEST_CASE(inliner_stop_jumpi)
 		Instruction::STOP
 	};
 	AssemblyItems expectation = items;
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1867,7 +1868,7 @@ BOOST_AUTO_TEST_CASE(inliner_revert)
 		Instruction::REVERT
 	};
 
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1887,7 +1888,7 @@ BOOST_AUTO_TEST_CASE(inliner_revert_increased_datagas)
 	};
 
 	AssemblyItems expectation = items;
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1908,7 +1909,7 @@ BOOST_AUTO_TEST_CASE(inliner_invalid)
 		AssemblyItem(Tag, 1),
 		Instruction::INVALID
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
