@@ -509,7 +509,17 @@ which has the following form:
         "source2.sol": ["contract2", "contract3"]
     }
 
-.. _smtchecker_engines:
+Division and Modulo With Slack Variables
+========================================
+
+Spacer, the default Horn solver used by the SMTChecker, often dislikes division
+and modulo operations inside Horn rules. Because of that, by default the
+Solidity division and modulo operations are encoded using the constraint
+``a = b * d + m`` where ``d = a / b`` and ``m = a % b``.
+However, other solvers, such as Eldarica, prefer the syntactically precise operations.
+The command line flag ``--model-checker-div-mod-no-slacks`` and the JSON option
+``settings.modelChecker.divModNoSlacks`` can be used to toggle the encoding
+depending on the used solver preferences.
 
 Natspec Function Abstraction
 ============================
@@ -522,6 +532,8 @@ body of the function is not used, and when called, the function will:
 
 - Return a nondeterministic value, and either keep the state variables unchanged if the abstracted function is view/pure, or also set the state variables to nondeterministic values otherwise. This can be used via the annotation ``/// @custom:smtchecker abstract-function-nondet``.
 - Act as an uninterpreted function. This means that the semantics of the function (given by the body) are ignored, and the only property this function has is that given the same input it guarantees the same output. This is currently under development and will be available via the annotation ``/// @custom:smtchecker abstract-function-uf``.
+
+.. _smtchecker_engines:
 
 Model Checking Engines
 ======================
