@@ -44,7 +44,9 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace std;
 
-StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout): m_layout(_layout)
+StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout, vector<VariableSlot> _currentFunctionReturnVariables):
+	m_layout(_layout),
+	m_currentFunctionReturnVariables(move(_currentFunctionReturnVariables))
 {
 }
 
@@ -265,43 +267,49 @@ list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator:
 
 optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 	CFG::BasicBlock const& _block,
-	set<CFG::BasicBlock const*> const& _blocksWithExitLayout,
+	set<CFG::BasicBlock const*> const& _visited,
 	list<CFG::BasicBlock const*>& _toVisit
 ) const
 {
 	return std::visit(util::GenericVisitor{
 		[&](CFG::BasicBlock::MainExit const&) -> std::optional<Stack>
 		{
+			// On the exit of the outermost block the stack can be empty.
 			return Stack{};
 		},
 		[&](CFG::BasicBlock::Jump const& _jump) -> std::optional<Stack>
 		{
 			if (_jump.backwards)
 			{
+				// Choose the best currently known entry layout of the jump target as initial exit.
+				// Note that this may not yet be the final layout.
 				if (auto* info = util::valueOrNullptr(m_layout.blockInfos, _jump.target))
 					return info->entryLayout;
 				return Stack{};
 			}
-			if (_blocksWithExitLayout.count(_jump.target))
-			{
+			// If the current iteration has already visited the jump target, start from its entry layout.
+			if (_visited.count(_jump.target))
 				return m_layout.blockInfos.at(_jump.target).entryLayout;
-			}
+			// Otherwise stage the jump target for visit and defer the current block.
 			_toVisit.emplace_front(_jump.target);
 			return nullopt;
 		},
 		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<Stack>
 		{
-			bool zeroVisited = _blocksWithExitLayout.count(_conditionalJump.zero);
-			bool nonZeroVisited = _blocksWithExitLayout.count(_conditionalJump.nonZero);
+			bool zeroVisited = _visited.count(_conditionalJump.zero);
+			bool nonZeroVisited = _visited.count(_conditionalJump.nonZero);
 			if (zeroVisited && nonZeroVisited)
 			{
+				// If the current iteration has already visited both jump targets, start from its entry layout.
 				Stack stack = combineStack(
 					m_layout.blockInfos.at(_conditionalJump.zero).entryLayout,
 					m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout
 				);
+				// Additionally, the jump condition has to be at the stack top at exit.
 				stack.emplace_back(_conditionalJump.condition);
 				return stack;
 			}
+			// If one of the jump targets has not been visited, stage it for visit and defer the current block.
 			if (!zeroVisited)
 				_toVisit.emplace_front(_conditionalJump.zero);
 			if (!nonZeroVisited)
@@ -310,6 +318,7 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 		},
 		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<Stack>
 		{
+			// A function return needs the return variables and the function return label slot on stack.
 			yulAssert(_functionReturn.info, "");
 			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
 				return StackSlot{_varSlot};
@@ -319,6 +328,7 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 		},
 		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>
 		{
+			// A terminating block can have an empty stack on exit.
 			return Stack{};
 		},
 	}, _block.exit);
@@ -347,14 +357,6 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 			if (std::optional<Stack> exitLayout = getExitLayoutOrStageDependencies(*block, visited, toVisit))
 			{
 				visited.emplace(block);
-				// We can skip the visit, if we have seen this precise exit layout already last time.
-				// Note: if the entire graph is revisited in the backwards jump check below, doing
-				//       this seems to break things; not sure why.
-				// Note: since I don't quite understand why doing this can break things, I comment
-				//       it out for now, since not aborting in those cases should always be safe.
-				// if (auto* previousInfo = util::valueOrNullptr(m_layout.blockInfos, block))
-				//	if (previousInfo->exitLayout == *exitLayout)
-				//		continue;
 				auto& info = m_layout.blockInfos[block];
 				info.exitLayout = *exitLayout;
 				info.entryLayout = propagateStackThroughBlock(info.exitLayout, *block);
@@ -367,23 +369,25 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 		}
 
 		// Determine which backwards jumps still require fixing and stage revisits of appropriate nodes.
-		for (auto [block, target]: backwardsJumps)
+		for (auto [jumpingBlock, target]: backwardsJumps)
+			// This block jumps backwards, but does not provide all slots required by the jump target on exit.
+			// Therefore we need to visit the subgraph between ``target`` and ``jumpingBlock`` again.
 			if (ranges::any_of(
 				m_layout.blockInfos[target].entryLayout,
-				[exitLayout = m_layout.blockInfos[block].exitLayout](StackSlot const& _slot) {
+				[exitLayout = m_layout.blockInfos[jumpingBlock].exitLayout](StackSlot const& _slot) {
 					return !util::findOffset(exitLayout, _slot);
 				}
 			))
 			{
-				// This block jumps backwards, but does not provide all slots required by the jump target on exit.
-				// Therefore we need to visit the subgraph between ``target`` and ``block`` again.
-				// In particular we can visit backwards starting from ``block`` and mark all entries to-be-visited-
+				// In particular we can visit backwards starting from ``jumpingBlock`` and mark all entries to-be-visited-
 				// again until we hit ``target``.
-				toVisit.emplace_front(block);
-				// Since we are likely to change the entry layout of ``target``, we also visit its entries again.
+				toVisit.emplace_front(jumpingBlock);
+				// Since we are likely to permute the entry layout of ``target``, we also visit its entries again.
+				// This is not required for correctness, since the set of stack slots will match, but it may move some
+				// required stack shuffling from the loop condition to outside the loop.
 				for (CFG::BasicBlock const* entry: target->entries)
 					visited.erase(entry);
-				util::BreadthFirstSearch<CFG::BasicBlock const*>{{block}}.run(
+				util::BreadthFirstSearch<CFG::BasicBlock const*>{{jumpingBlock}}.run(
 					[&visited, target = target](CFG::BasicBlock const* _block, auto _addChild) {
 						visited.erase(_block);
 						if (_block == target)
@@ -392,14 +396,11 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 							_addChild(entry);
 					}
 				);
-				// TODO: while the above is enough, the layout of ``target`` might change in the process.
 				// While the shuffled layout for ``target`` will be compatible, it can be worthwhile propagating
 				// it further up once more.
-				// This would mean not stopping at _block == target above or even doing visited.clear() here, revisiting the entire graph.
+				// This would mean not stopping at _block == target above, resp. even doing visited.clear() here, revisiting the entire graph.
 				// This is a tradeoff between the runtime of this process and the optimality of the result.
 				// Also note that while visiting the entire graph again *can* be helpful, it can also be detrimental.
-				// Also note that for some reason using visited.clear() is incompatible with skipping the revisit
-				// of already seen exit layouts above, I'm not sure yet why.
 			}
 	}
 
@@ -547,14 +548,10 @@ void StackLayoutGenerator::fixStackTooDeep(CFG::BasicBlock const&)
 StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 {
 	StackLayout stackLayout;
-	StackLayoutGenerator stackLayoutGenerator{stackLayout};
+	StackLayoutGenerator{stackLayout, {}}.processEntryPoint(*_cfg.entry);
 
-	stackLayoutGenerator.processEntryPoint(*_cfg.entry);
 	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
-	{
-		stackLayoutGenerator.m_currentFunctionReturnVariables = functionInfo.returnVariables;
-		stackLayoutGenerator.processEntryPoint(*functionInfo.entry);
-	}
+		StackLayoutGenerator{stackLayout, functionInfo.returnVariables}.processEntryPoint(*functionInfo.entry);
 
 	return stackLayout;
 }

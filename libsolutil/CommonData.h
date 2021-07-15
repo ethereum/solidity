@@ -340,7 +340,7 @@ namespace detail
 {
 
 template<typename Container, typename Value>
-auto findOffset(Container&& _container,  Value&& _value, int)
+auto findOffset(Container&& _container, Value&& _value, int)
 -> decltype(_container.find(_value) == _container.end(), std::optional<size_t>())
 {
 	auto it = _container.find(std::forward<Value>(_value));
@@ -363,6 +363,10 @@ auto findOffset(Range&& _range, Value&& _value, void*)
 
 }
 
+/// @returns an std::optional<size_t> containing the offset of the first element in @a _range that is equal to @a _value,
+/// if any, or std::nullopt otherwise.
+/// Uses a linear search (``std::find``) unless @a _range is a container and provides a
+/// suitable ``.find`` function (e.g. it will use the logarithmic ``.find`` function in ``std::set`` instead).
 template<typename Range>
 auto findOffset(Range&& _range, std::remove_reference_t<decltype(*std::cbegin(_range))> const& _value)
 -> decltype(detail::findOffset(std::forward<Range>(_range), _value, 0))

@@ -53,25 +53,68 @@ inline std::string stackToString(Stack const& _stack)
 	return result;
 }
 
+
+// Abstraction of stack shuffling operations. Can be defined as actual concept once we switch to C++20.
+/*
 template<typename ShuffleOperations>
+concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceOffset, size_t targetOffset, size_t depth) {
+	// Returns true, iff the current slot at sourceOffset in source layout is a suitable slot at targetOffset.
+	{ ops.isCompatible(sourceOffset, targetOffset) } -> std::convertible_to<bool>;
+	// Returns true, iff the slots at the two given source offsets are identical.
+	{ ops.souceIsSame(sourceOffset, sourceOffset) } -> std::convertible_to<bool>;
+	// Returns a positive integer n, if the slot at the given source offset needs n more copies.
+	// Returns a negative integer -n, if the slot at the given source offsets occurs n times too many.
+	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given source offset matches the desired amount of occurrences in the target.
+	{ ops.sourceMultiplicity(sourceOffset) } -> std::convertible_to<int>;
+	// Returns a positive integer n, if the slot at the given target offset needs n more copies.
+	// Returns a negative integer -n, if the slot at the given target offsets occurs n times too many.
+	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given target offset matches the desired amount of occurrences in the target.
+	{ ops.targetMultiplicity(targetOffset) } -> std::convertible_to<int>;
+	// Returns true, iff any slot is compatible with the given target offset.
+	{ ops.targetIsArbitrary(targetOffset) } -> std::convertible_to<bool>;
+	// Returns the number of slots in the source layout.
+	{ ops.sourceSize() } -> std::convertible_to<size_t>;
+	// Returns the number of slots in the target layout.
+	{ ops.targetSize() } -> std::convertible_to<size_t>;
+	// Swaps the top most slot in the source with the slot at depth.
+	{ ops.swap(depth) };
+	// Pops the top most slot in the source.
+	{ ops.pop() };
+	// Dups or pushes the slot that is supposed to end up at the given target offset.
+	{ ops.pushOrDupTarget(targetOffset) };
+};
+*/
+/// Helper class that can perform shuffling of a source stack layout to a target stack layout via
+/// abstracted shuffle operations.
+template</*ShuffleOperationConcept*/ typename ShuffleOperations>
 class Shuffler
 {
 public:
+	/// Executes the stack shuffling operations. Instantiates an instance of ShuffleOperations
+	/// in each iteration. Each iteration performs exactly one operation that modifies the stack.
+	/// After shuffle, all slots in the source layout are guaranteed to be compatible to the slots
+	/// at the same target offset, but there may be additional slots in the target that are not
+	/// pushed/dupped yet.
 	template<typename... Args>
 	static void shuffle(Args&&... args)
 	{
 		bool needsMoreShuffling = true;
+		// The shuffling algorithm should always terminate in polynomial time, but we provide a limit
+		// in case it does not terminate due to a bug.
 		size_t iterationCount = 0;
 		while (iterationCount < 1000 && (needsMoreShuffling = shuffleStep(std::forward<Args>(args)...)))
 			++iterationCount;
 		yulAssert(!needsMoreShuffling, "Could not create stack layout after 1000 iterations.");
 	}
 private:
+	/// Performs a single stack operation, transforming the source layout closer to the target layout.
 	template<typename... Args>
 	static bool shuffleStep(Args&&... args)
 	{
 		ShuffleOperations ops{std::forward<Args>(args)...};
 
+		// Terminates, if all slots in the source are compatible with the target.
+		// Note that there may still be more slots in the target.
 		if (ranges::all_of(
 			ranges::views::iota(0u, ops.sourceSize()),
 			[&](size_t _index) { return ops.isCompatible(_index, _index); }
@@ -195,6 +238,9 @@ private:
 	}
 };
 
+
+/// Transforms @a _currentStack to @a _targetStack, invoking the provided shuffling operations.
+/// Modifies @a _currentStack itself after each invocation of the shuffling operations.
 template<typename Swap, typename PushOrDup, typename Pop>
 void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _swap, PushOrDup _pushOrDup, Pop _pop)
 {

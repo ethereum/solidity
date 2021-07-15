@@ -50,7 +50,7 @@ public:
 	static StackLayout run(CFG const& _cfg);
 
 private:
-	StackLayoutGenerator(StackLayout& _context);
+	StackLayoutGenerator(StackLayout& _context, std::vector<VariableSlot> _currentFunctionReturnVariables);
 
 	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
 	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
@@ -64,12 +64,15 @@ private:
 	/// Iteratively reruns itself along backwards jumps until the layout is stabilized.
 	void processEntryPoint(CFG::BasicBlock const& _entry);
 
+	/// @returns the best known exit layout of @a _block, if all dependencies are already @a _visited.
+	/// If not, adds the dependencies to @a _dependencyList and @returns std::nullopt.
 	std::optional<Stack> getExitLayoutOrStageDependencies(
 		CFG::BasicBlock const& _block,
-		std::set<CFG::BasicBlock const*> const& _blocksWithExitLayouts,
+		std::set<CFG::BasicBlock const*> const& _visited,
 		std::list<CFG::BasicBlock const*>& _dependencyList
 	) const;
 
+	/// @returns a pair of ``{jumpingBlock, targetBlock}`` for each backwards jump in the graph starting at @a _entry.
 	std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> collectBackwardsJumps(CFG::BasicBlock const& _entry) const;
 
 	/// After the main algorithms, layouts at conditional jumps are merely compatible, i.e. the exit layout of the
@@ -86,10 +89,13 @@ private:
 	/// attempts to reorganize the layout to avoid those cases.
 	void fixStackTooDeep(CFG::BasicBlock const& _entry);
 
+	/// @returns a copy of @a _stack stripped of all duplicates and slots that can be freely generated.
+	/// Attempts to create a layout that requires a minimal amount of operations to reconstruct the original
+	/// stack @a _stack.
 	static Stack compressStack(Stack _stack);
 
 	StackLayout& m_layout;
-	std::vector<VariableSlot> m_currentFunctionReturnVariables;
+	std::vector<VariableSlot> const m_currentFunctionReturnVariables;
 };
 
 }
