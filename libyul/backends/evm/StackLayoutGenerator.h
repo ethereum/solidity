@@ -64,6 +64,14 @@ private:
 	/// Iteratively reruns itself along backwards jumps until the layout is stabilized.
 	void processEntryPoint(CFG::BasicBlock const& _entry);
 
+	std::optional<Stack> getExitLayoutOrStageDependencies(
+		CFG::BasicBlock const& _block,
+		std::set<CFG::BasicBlock const*> const& _blocksWithExitLayouts,
+		std::list<CFG::BasicBlock const*>& _dependencyList
+	) const;
+
+	std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> collectBackwardsJumps(CFG::BasicBlock const& _entry) const;
+
 	/// After the main algorithms, layouts at conditional jumps are merely compatible, i.e. the exit layout of the
 	/// jumping block is a superset of the entry layout of the target block. This function modifies the entry layouts
 	/// of conditional jump targets, s.t. the entry layout of target blocks match the exit layout of the jumping block

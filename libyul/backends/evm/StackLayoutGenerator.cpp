@@ -239,15 +239,103 @@ Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::Ba
 	return stack;
 }
 
+list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator::collectBackwardsJumps(CFG::BasicBlock const& _entry) const
+{
+	list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps;
+	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_entry}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				if (_jump.backwards)
+					backwardsJumps.emplace_back(_block, _jump.target);
+				_addChild(_jump.target);
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				_addChild(_conditionalJump.zero);
+				_addChild(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&) {},
+			[&](CFG::BasicBlock::Terminated const&) {},
+		}, _block->exit);
+	});
+	return backwardsJumps;
+}
+
+optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
+	CFG::BasicBlock const& _block,
+	set<CFG::BasicBlock const*> const& _blocksWithExitLayout,
+	list<CFG::BasicBlock const*>& _toVisit
+) const
+{
+	return std::visit(util::GenericVisitor{
+		[&](CFG::BasicBlock::MainExit const&) -> std::optional<Stack>
+		{
+			return Stack{};
+		},
+		[&](CFG::BasicBlock::Jump const& _jump) -> std::optional<Stack>
+		{
+			if (_jump.backwards)
+			{
+				if (auto* info = util::valueOrNullptr(m_layout.blockInfos, _jump.target))
+					return info->entryLayout;
+				return Stack{};
+			}
+			if (_blocksWithExitLayout.count(_jump.target))
+			{
+				return m_layout.blockInfos.at(_jump.target).entryLayout;
+			}
+			_toVisit.emplace_front(_jump.target);
+			return nullopt;
+		},
+		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<Stack>
+		{
+			bool zeroVisited = _blocksWithExitLayout.count(_conditionalJump.zero);
+			bool nonZeroVisited = _blocksWithExitLayout.count(_conditionalJump.nonZero);
+			if (zeroVisited && nonZeroVisited)
+			{
+				Stack stack = combineStack(
+					m_layout.blockInfos.at(_conditionalJump.zero).entryLayout,
+					m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout
+				);
+				stack.emplace_back(_conditionalJump.condition);
+				return stack;
+			}
+			if (!zeroVisited)
+				_toVisit.emplace_front(_conditionalJump.zero);
+			if (!nonZeroVisited)
+				_toVisit.emplace_front(_conditionalJump.nonZero);
+			return nullopt;
+		},
+		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<Stack>
+		{
+			yulAssert(_functionReturn.info, "");
+			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
+				return StackSlot{_varSlot};
+			}) | ranges::to<Stack>;
+			stack.emplace_back(FunctionReturnLabelSlot{});
+			return stack;
+		},
+		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>
+		{
+			return Stack{};
+		},
+	}, _block.exit);
+}
+
 void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 {
-	std::list<CFG::BasicBlock const*> toVisit{&_entry};
-	std::set<CFG::BasicBlock const*> visited;
+	list<CFG::BasicBlock const*> toVisit{&_entry};
+	set<CFG::BasicBlock const*> visited;
+
+	// TODO: check whether visiting only a subset of these in the outer iteration below is enough.
+	list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps = collectBackwardsJumps(_entry);
 
 	while (!toVisit.empty())
 	{
-		// TODO: calculate backwardsJumps only once.
-		std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps;
+		// First calculate stack layouts without walking backwards jumps, i.e. assuming the current preliminary
+		// entry layout of the backwards jump target as the initial exit layout of the backwards-jumping block.
 		while (!toVisit.empty())
 		{
 			CFG::BasicBlock const *block = *toVisit.begin();
@@ -256,67 +344,9 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 			if (visited.count(block))
 				continue;
 
-			if (std::optional<Stack> exitLayout = std::visit(util::GenericVisitor{
-				[&](CFG::BasicBlock::MainExit const&) -> std::optional<Stack>
-				{
-					visited.emplace(block);
-					return Stack{};
-				},
-				[&](CFG::BasicBlock::Jump const& _jump) -> std::optional<Stack>
-				{
-					if (_jump.backwards)
-					{
-						visited.emplace(block);
-						backwardsJumps.emplace_back(block, _jump.target);
-						if (auto* info = util::valueOrNullptr(m_layout.blockInfos, _jump.target))
-							return info->entryLayout;
-						return Stack{};
-					}
-					if (visited.count(_jump.target))
-					{
-						visited.emplace(block);
-						return m_layout.blockInfos.at(_jump.target).entryLayout;
-					}
-					toVisit.emplace_front(_jump.target);
-					return nullopt;
-				},
-				[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<Stack>
-				{
-					bool zeroVisited = visited.count(_conditionalJump.zero);
-					bool nonZeroVisited = visited.count(_conditionalJump.nonZero);
-					if (zeroVisited && nonZeroVisited)
-					{
-						Stack stack = combineStack(
-							m_layout.blockInfos.at(_conditionalJump.zero).entryLayout,
-							m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout
-						);
-						stack.emplace_back(_conditionalJump.condition);
-						visited.emplace(block);
-						return stack;
-					}
-					if (!zeroVisited)
-						toVisit.emplace_front(_conditionalJump.zero);
-					if (!nonZeroVisited)
-						toVisit.emplace_front(_conditionalJump.nonZero);
-					return nullopt;
-				},
-				[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<Stack>
-				{
-					visited.emplace(block);
-					yulAssert(_functionReturn.info, "");
-					Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
-						return StackSlot{_varSlot};
-					}) | ranges::to<Stack>;
-					stack.emplace_back(FunctionReturnLabelSlot{});
-					return stack;
-				},
-				[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>
-				{
-					visited.emplace(block);
-					return Stack{};
-				},
-			}, block->exit))
+			if (std::optional<Stack> exitLayout = getExitLayoutOrStageDependencies(*block, visited, toVisit))
 			{
+				visited.emplace(block);
 				// We can skip the visit, if we have seen this precise exit layout already last time.
 				// Note: if the entire graph is revisited in the backwards jump check below, doing
 				//       this seems to break things; not sure why.
@@ -336,6 +366,7 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 				continue;
 		}
 
+		// Determine which backwards jumps still require fixing and stage revisits of appropriate nodes.
 		for (auto [block, target]: backwardsJumps)
 			if (ranges::any_of(
 				m_layout.blockInfos[target].entryLayout,
