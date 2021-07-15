@@ -126,6 +126,8 @@ set(libyul_sources
     libyul/Common.cpp
     libyul/Common.h
     libyul/CompilabilityChecker.cpp
+    libyul/ControlFlowGraphTest.cpp
+    libyul/ControlFlowGraphTest.h
     libyul/EVMCodeTransformTest.cpp
     libyul/EVMCodeTransformTest.h
     libyul/EwasmTranslationTest.cpp
