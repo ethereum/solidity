@@ -741,9 +741,10 @@ Json::Value CompilerStack::generatedSources(string const& _contractName, bool _r
 	return sources.init([&]{
 		Json::Value sources{Json::arrayValue};
 		// If there is no compiler, then no bytecode was generated and thus no
-		// sources were generated.
+		// sources were generated (or we compiled "via IR").
 		if (c.compiler)
 		{
+			solAssert(!m_viaIR, "");
 			string source =
 				_runtime ?
 				c.compiler->runtimeGeneratedYulUtilityCode() :
@@ -1251,6 +1252,7 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, shared_ptr<Compiler const>>& _otherCompilers
 )
 {
+	solAssert(!m_viaIR, "");
 	solAssert(m_stackState >= AnalysisPerformed, "");
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
