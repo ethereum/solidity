@@ -26,14 +26,16 @@ contract C {
 // Warning 4281: (118-130): CHC: Division by zero might happen here.
 // Warning 4984: (134-148): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 4984: (176-189): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6328: (430-450): CHC: Assertion violation happens here.
+// Warning 6328: (430-450): CHC: Assertion violation might happen here.
+// Warning 6328: (454-474): CHC: Assertion violation might happen here.
 // Warning 6328: (478-498): CHC: Assertion violation might happen here.
 // Warning 6328: (502-527): CHC: Assertion violation might happen here.
 // Warning 2661: (134-148): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 2661: (176-189): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 2661: (134-148): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4661: (454-474): BMC: Assertion violation happens here.
 // Warning 2661: (134-148): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 8065: (176-189): BMC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+// Warning 2661: (176-189): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4661: (478-498): BMC: Assertion violation happens here.
 // Warning 2661: (134-148): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4661: (502-527): BMC: Assertion violation happens here.
