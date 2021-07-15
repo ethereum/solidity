@@ -753,6 +753,7 @@ Json::Value CompilerStack::generatedSources(string const& _contractName, bool _r
 		// sources were generated.
 		if (c.compiler)
 		{
+			solAssert(!m_viaIR, "");
 			string source =
 				_runtime ?
 				c.compiler->runtimeGeneratedYulUtilityCode() :
@@ -1075,6 +1076,7 @@ size_t CompilerStack::functionEntryPoint(
 	shared_ptr<Compiler> const& compiler = contract(_contractName).compiler;
 	if (!compiler)
 		return 0;
+	solAssert(!m_viaIR, "");
 	evmasm::AssemblyItem tag = compiler->functionEntryLabel(_function);
 	if (tag.type() == evmasm::UndefinedItem)
 		return 0;
@@ -1275,6 +1277,7 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, shared_ptr<Compiler const>>& _otherCompilers
 )
 {
+	solAssert(!m_viaIR, "");
 	solAssert(m_stackState >= AnalysisPerformed, "");
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
