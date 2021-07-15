@@ -134,7 +134,7 @@ string sourceLocationComment(langutil::SourceLocation const& _location, IRGenera
 		+ to_string(_context.sourceIndices().at(*_location.sourceName))
 		+ ":"
 		+ to_string(_location.start)
-		+ ","
+		+ ":"
 		+ to_string(_location.end);
 }
 
