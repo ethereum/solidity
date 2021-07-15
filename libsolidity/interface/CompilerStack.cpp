@@ -922,8 +922,11 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	unsigned index = 0;
 	for (auto const& s: m_sources)
 		indices[s.first] = index++;
-	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
-	indices[CompilerContext::yulUtilityFileName()] = index++;
+	if (!m_viaIR)
+	{
+		solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
+		indices[CompilerContext::yulUtilityFileName()] = index++;
+	}
 	return indices;
 }
 
