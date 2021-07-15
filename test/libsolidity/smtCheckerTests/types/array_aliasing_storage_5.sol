@@ -20,8 +20,7 @@ contract C
 		// erase knowledge about memory references.
 		assert(c[0] == 42);
 		// Fails because d == a is possible.
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(d[0] == 42);
+		assert(d[0] == 42);
 		// Fails because b == a and d == a are possible.
 		assert(a[0] == 2);
 		// b == a is possible, but does not fail because b
@@ -38,6 +37,8 @@ contract C
 // Warning 6368: (355-359): CHC: Out of bounds access happens here.
 // Warning 6368: (367-371): CHC: Out of bounds access happens here.
 // Warning 6368: (490-494): CHC: Out of bounds access happens here.
-// Warning 6368: (692-696): CHC: Out of bounds access happens here.
-// Warning 6328: (685-702): CHC: Assertion violation happens here.
-// Warning 6368: (796-800): CHC: Out of bounds access happens here.
+// Warning 6368: (551-555): CHC: Out of bounds access happens here.
+// Warning 6328: (544-562): CHC: Assertion violation happens here.
+// Warning 6368: (624-628): CHC: Out of bounds access happens here.
+// Warning 6328: (617-634): CHC: Assertion violation happens here.
+// Warning 6368: (728-732): CHC: Out of bounds access happens here.

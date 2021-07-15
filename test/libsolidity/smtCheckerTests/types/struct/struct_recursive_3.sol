@@ -14,10 +14,9 @@ contract C {
 		require(s1.a[0].a.length > 0);
 		require(s2.a[0].a.length > 0);
 		assert(s1.a[0].a.length == s2.a[0].a.length);
-		// Disabled because of Spacer killed.
-		//require(s1.a[0].a[0].a.length > 0);
-		//require(s2.a[0].a[0].a.length > 0);
-		//assert(s1.a[0].a[0].x == s2.a[0].a[0].x);
+		require(s1.a[0].a[0].a.length > 0);
+		require(s2.a[0].a[0].a.length > 0);
+		assert(s1.a[0].a[0].x == s2.a[0].a[0].x);
 	}
 	function g() public {
 		s1.x = 42;
@@ -73,56 +72,80 @@ contract C {
 // Warning 7650: (336-340): Assertion checker does not yet support this expression.
 // Warning 8364: (336-338): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 8364: (336-343): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 7650: (549-553): Assertion checker does not yet support this expression.
-// Warning 8364: (549-551): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (549-553): Assertion checker does not support recursive structs.
-// Warning 7650: (562-566): Assertion checker does not yet support this expression.
-// Warning 8364: (562-564): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (562-566): Assertion checker does not support recursive structs.
-// Warning 7650: (575-579): Assertion checker does not yet support this expression.
-// Warning 8364: (575-577): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (575-586): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (575-579): Assertion checker does not support recursive structs.
-// Warning 7650: (590-594): Assertion checker does not yet support this expression.
-// Warning 8364: (590-592): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (590-601): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (590-594): Assertion checker does not support recursive structs.
-// Warning 7650: (605-614): Assertion checker does not yet support this expression.
-// Warning 7650: (605-609): Assertion checker does not yet support this expression.
-// Warning 8364: (605-607): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (605-612): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (605-614): Assertion checker does not support recursive structs.
-// Warning 7650: (623-632): Assertion checker does not yet support this expression.
-// Warning 7650: (623-627): Assertion checker does not yet support this expression.
-// Warning 8364: (623-625): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (623-630): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (623-632): Assertion checker does not support recursive structs.
-// Warning 7650: (641-650): Assertion checker does not yet support this expression.
-// Warning 7650: (641-645): Assertion checker does not yet support this expression.
-// Warning 8364: (641-643): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (641-648): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (641-657): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (641-650): Assertion checker does not support recursive structs.
-// Warning 7650: (661-670): Assertion checker does not yet support this expression.
-// Warning 7650: (661-665): Assertion checker does not yet support this expression.
-// Warning 8364: (661-663): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (661-668): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (661-677): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (661-670): Assertion checker does not support recursive structs.
-// Warning 7650: (681-695): Assertion checker does not yet support this expression.
-// Warning 7650: (681-690): Assertion checker does not yet support this expression.
-// Warning 7650: (681-685): Assertion checker does not yet support this expression.
-// Warning 8364: (681-683): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (681-688): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (681-693): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (681-695): Assertion checker does not support recursive structs.
-// Warning 7650: (704-718): Assertion checker does not yet support this expression.
-// Warning 7650: (704-713): Assertion checker does not yet support this expression.
-// Warning 7650: (704-708): Assertion checker does not yet support this expression.
-// Warning 8364: (704-706): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (704-711): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (704-716): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (704-718): Assertion checker does not support recursive structs.
+// Warning 7650: (365-379): Assertion checker does not yet support this expression.
+// Warning 7650: (365-374): Assertion checker does not yet support this expression.
+// Warning 7650: (365-369): Assertion checker does not yet support this expression.
+// Warning 8364: (365-367): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (365-372): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (365-377): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (403-417): Assertion checker does not yet support this expression.
+// Warning 7650: (403-412): Assertion checker does not yet support this expression.
+// Warning 7650: (403-407): Assertion checker does not yet support this expression.
+// Warning 8364: (403-405): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (403-410): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (403-415): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (440-454): Assertion checker does not yet support this expression.
+// Warning 7650: (440-449): Assertion checker does not yet support this expression.
+// Warning 7650: (440-444): Assertion checker does not yet support this expression.
+// Warning 8364: (440-442): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (440-447): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (440-452): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (458-472): Assertion checker does not yet support this expression.
+// Warning 7650: (458-467): Assertion checker does not yet support this expression.
+// Warning 7650: (458-462): Assertion checker does not yet support this expression.
+// Warning 8364: (458-460): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (458-465): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (458-470): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (503-507): Assertion checker does not yet support this expression.
+// Warning 8364: (503-505): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (503-507): Assertion checker does not support recursive structs.
+// Warning 7650: (516-520): Assertion checker does not yet support this expression.
+// Warning 8364: (516-518): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (516-520): Assertion checker does not support recursive structs.
+// Warning 7650: (529-533): Assertion checker does not yet support this expression.
+// Warning 8364: (529-531): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (529-540): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (529-533): Assertion checker does not support recursive structs.
+// Warning 7650: (544-548): Assertion checker does not yet support this expression.
+// Warning 8364: (544-546): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (544-555): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (544-548): Assertion checker does not support recursive structs.
+// Warning 7650: (559-568): Assertion checker does not yet support this expression.
+// Warning 7650: (559-563): Assertion checker does not yet support this expression.
+// Warning 8364: (559-561): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (559-566): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (559-568): Assertion checker does not support recursive structs.
+// Warning 7650: (577-586): Assertion checker does not yet support this expression.
+// Warning 7650: (577-581): Assertion checker does not yet support this expression.
+// Warning 8364: (577-579): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (577-584): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (577-586): Assertion checker does not support recursive structs.
+// Warning 7650: (595-604): Assertion checker does not yet support this expression.
+// Warning 7650: (595-599): Assertion checker does not yet support this expression.
+// Warning 8364: (595-597): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (595-602): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (595-611): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (595-604): Assertion checker does not support recursive structs.
+// Warning 7650: (615-624): Assertion checker does not yet support this expression.
+// Warning 7650: (615-619): Assertion checker does not yet support this expression.
+// Warning 8364: (615-617): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (615-622): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (615-631): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (615-624): Assertion checker does not support recursive structs.
+// Warning 7650: (635-649): Assertion checker does not yet support this expression.
+// Warning 7650: (635-644): Assertion checker does not yet support this expression.
+// Warning 7650: (635-639): Assertion checker does not yet support this expression.
+// Warning 8364: (635-637): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (635-642): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (635-647): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (635-649): Assertion checker does not support recursive structs.
+// Warning 7650: (658-672): Assertion checker does not yet support this expression.
+// Warning 7650: (658-667): Assertion checker does not yet support this expression.
+// Warning 7650: (658-662): Assertion checker does not yet support this expression.
+// Warning 8364: (658-660): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (658-665): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (658-670): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (658-672): Assertion checker does not support recursive structs.
 // Warning 6328: (91-111): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (115-149): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6368: (216-223): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
@@ -133,14 +156,23 @@ contract C {
 // Warning 6368: (316-323): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6368: (336-343): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (309-353): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6368: (605-612): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6368: (623-630): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6368: (641-648): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6368: (661-668): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6368: (681-688): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6368: (681-693): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6368: (704-711): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6368: (704-716): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (365-372): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (365-377): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (403-410): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (403-415): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (440-447): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (440-452): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (458-465): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (458-470): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (433-473): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (559-566): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (577-584): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (595-602): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (615-622): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (635-642): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (635-647): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (658-665): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (658-670): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
 // Warning 8115: (48-52): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (55-59): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (98-102): Assertion checker does not yet support this expression.
@@ -179,53 +211,77 @@ contract C {
 // Warning 7650: (336-340): Assertion checker does not yet support this expression.
 // Warning 8364: (336-338): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 8364: (336-343): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 7650: (549-553): Assertion checker does not yet support this expression.
-// Warning 8364: (549-551): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (549-553): Assertion checker does not support recursive structs.
-// Warning 7650: (562-566): Assertion checker does not yet support this expression.
-// Warning 8364: (562-564): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (562-566): Assertion checker does not support recursive structs.
-// Warning 7650: (575-579): Assertion checker does not yet support this expression.
-// Warning 8364: (575-577): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (575-586): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (575-579): Assertion checker does not support recursive structs.
-// Warning 7650: (590-594): Assertion checker does not yet support this expression.
-// Warning 8364: (590-592): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (590-601): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (590-594): Assertion checker does not support recursive structs.
-// Warning 7650: (605-614): Assertion checker does not yet support this expression.
-// Warning 7650: (605-609): Assertion checker does not yet support this expression.
-// Warning 8364: (605-607): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (605-612): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (605-614): Assertion checker does not support recursive structs.
-// Warning 7650: (623-632): Assertion checker does not yet support this expression.
-// Warning 7650: (623-627): Assertion checker does not yet support this expression.
-// Warning 8364: (623-625): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (623-630): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (623-632): Assertion checker does not support recursive structs.
-// Warning 7650: (641-650): Assertion checker does not yet support this expression.
-// Warning 7650: (641-645): Assertion checker does not yet support this expression.
-// Warning 8364: (641-643): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (641-648): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (641-657): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (641-650): Assertion checker does not support recursive structs.
-// Warning 7650: (661-670): Assertion checker does not yet support this expression.
-// Warning 7650: (661-665): Assertion checker does not yet support this expression.
-// Warning 8364: (661-663): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (661-668): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (661-677): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (661-670): Assertion checker does not support recursive structs.
-// Warning 7650: (681-695): Assertion checker does not yet support this expression.
-// Warning 7650: (681-690): Assertion checker does not yet support this expression.
-// Warning 7650: (681-685): Assertion checker does not yet support this expression.
-// Warning 8364: (681-683): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (681-688): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (681-693): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (681-695): Assertion checker does not support recursive structs.
-// Warning 7650: (704-718): Assertion checker does not yet support this expression.
-// Warning 7650: (704-713): Assertion checker does not yet support this expression.
-// Warning 7650: (704-708): Assertion checker does not yet support this expression.
-// Warning 8364: (704-706): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (704-711): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 8364: (704-716): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4375: (704-718): Assertion checker does not support recursive structs.
+// Warning 7650: (365-379): Assertion checker does not yet support this expression.
+// Warning 7650: (365-374): Assertion checker does not yet support this expression.
+// Warning 7650: (365-369): Assertion checker does not yet support this expression.
+// Warning 8364: (365-367): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (365-372): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (365-377): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (403-417): Assertion checker does not yet support this expression.
+// Warning 7650: (403-412): Assertion checker does not yet support this expression.
+// Warning 7650: (403-407): Assertion checker does not yet support this expression.
+// Warning 8364: (403-405): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (403-410): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (403-415): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (440-454): Assertion checker does not yet support this expression.
+// Warning 7650: (440-449): Assertion checker does not yet support this expression.
+// Warning 7650: (440-444): Assertion checker does not yet support this expression.
+// Warning 8364: (440-442): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (440-447): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (440-452): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (458-472): Assertion checker does not yet support this expression.
+// Warning 7650: (458-467): Assertion checker does not yet support this expression.
+// Warning 7650: (458-462): Assertion checker does not yet support this expression.
+// Warning 8364: (458-460): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (458-465): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (458-470): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 7650: (503-507): Assertion checker does not yet support this expression.
+// Warning 8364: (503-505): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (503-507): Assertion checker does not support recursive structs.
+// Warning 7650: (516-520): Assertion checker does not yet support this expression.
+// Warning 8364: (516-518): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (516-520): Assertion checker does not support recursive structs.
+// Warning 7650: (529-533): Assertion checker does not yet support this expression.
+// Warning 8364: (529-531): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (529-540): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (529-533): Assertion checker does not support recursive structs.
+// Warning 7650: (544-548): Assertion checker does not yet support this expression.
+// Warning 8364: (544-546): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (544-555): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (544-548): Assertion checker does not support recursive structs.
+// Warning 7650: (559-568): Assertion checker does not yet support this expression.
+// Warning 7650: (559-563): Assertion checker does not yet support this expression.
+// Warning 8364: (559-561): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (559-566): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (559-568): Assertion checker does not support recursive structs.
+// Warning 7650: (577-586): Assertion checker does not yet support this expression.
+// Warning 7650: (577-581): Assertion checker does not yet support this expression.
+// Warning 8364: (577-579): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (577-584): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (577-586): Assertion checker does not support recursive structs.
+// Warning 7650: (595-604): Assertion checker does not yet support this expression.
+// Warning 7650: (595-599): Assertion checker does not yet support this expression.
+// Warning 8364: (595-597): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (595-602): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (595-611): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (595-604): Assertion checker does not support recursive structs.
+// Warning 7650: (615-624): Assertion checker does not yet support this expression.
+// Warning 7650: (615-619): Assertion checker does not yet support this expression.
+// Warning 8364: (615-617): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (615-622): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (615-631): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (615-624): Assertion checker does not support recursive structs.
+// Warning 7650: (635-649): Assertion checker does not yet support this expression.
+// Warning 7650: (635-644): Assertion checker does not yet support this expression.
+// Warning 7650: (635-639): Assertion checker does not yet support this expression.
+// Warning 8364: (635-637): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (635-642): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (635-647): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (635-649): Assertion checker does not support recursive structs.
+// Warning 7650: (658-672): Assertion checker does not yet support this expression.
+// Warning 7650: (658-667): Assertion checker does not yet support this expression.
+// Warning 7650: (658-662): Assertion checker does not yet support this expression.
+// Warning 8364: (658-660): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (658-665): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 8364: (658-670): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4375: (658-672): Assertion checker does not support recursive structs.

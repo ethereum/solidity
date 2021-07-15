@@ -18,12 +18,10 @@ contract C
 		b[0] = 1;
 		// Erasing knowledge about storage references should not
 		// erase knowledge about memory references.
-		// Disabled because of Spacer's seg fault.
-		//assert(c[0] == 42);
+		assert(c[0] == 42);
 		// Erasing knowledge about storage references should not
 		// erase knowledge about memory references.
-		// Disabled because of Spacer's seg fault.
-		//assert(d[0] == 42);
+		assert(d[0] == 42);
 		// Fails because b == a is possible.
 		// Accesses are safe but oob is reported due of aliasing.
 		assert(a[0] == 2);
@@ -34,8 +32,9 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (384-399): Unused local variable.
 // Warning 6368: (489-493): CHC: Out of bounds access happens here.
-// Warning 6368: (955-959): CHC: Out of bounds access happens here.
-// Warning 6328: (948-965): CHC: Assertion violation happens here.
-// Warning 6368: (976-980): CHC: Out of bounds access happens here.
+// Warning 6368: (740-744): CHC: Out of bounds access happens here.
+// Warning 6328: (733-751): CHC: Assertion violation happens here.
+// Warning 6368: (861-865): CHC: Out of bounds access happens here.
+// Warning 6328: (854-871): CHC: Assertion violation happens here.
+// Warning 6368: (882-886): CHC: Out of bounds access happens here.

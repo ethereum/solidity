@@ -19,8 +19,7 @@ contract C {
 		// Access is safe but oob reported due to aliasing.
 		assert(c[0][0][0] == 12);
 		// Safe but knowledge about `d` is erased because `b` could be pointing to `d`.
-		// Removed assertion because current Spacer seg faults in cex generation.
-		//assert(d[1] == 7);
+		assert(d[1] == 7);
 	}
 }
 // ====
@@ -36,3 +35,5 @@ contract C {
 // Warning 6368: (513-520): CHC: Out of bounds access happens here.
 // Warning 6368: (513-523): CHC: Out of bounds access happens here.
 // Warning 6328: (506-530): CHC: Assertion violation happens here.
+// Warning 6368: (623-627): CHC: Out of bounds access happens here.
+// Warning 6328: (616-633): CHC: Assertion violation happens here.

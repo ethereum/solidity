@@ -23,11 +23,11 @@ contract C {
 
 	// Fails due to j.
 	function i() public view {
-		// Disabled because Spacer 4.8.9 seg faults.
-		//assert(x < 2);
+		assert(x < 2); // should fail
 	}
 }
 // ====
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
+// Warning 6328: (278-291): CHC: Assertion violation happens here.

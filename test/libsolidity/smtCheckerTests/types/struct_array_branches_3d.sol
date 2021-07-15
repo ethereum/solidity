@@ -10,17 +10,16 @@ contract C
 		assert(c.a[0].length == 2);
 		assert(c.a[0][0].length == 0);
 		c.a[0][0] = new uint[](2);
-		// Disabled because of Spacer's seg fault.
-		/*
 		if (b)
 			c.a[0][0][0] = 1;
 		else
 			c.a[0][0][0] = 2;
 		assert(c.a[0][0][0] > 0);
-		*/
 	}
 }
 // ====
 // SMTEngine: all
 // ----
-// Warning 5667: (53-59): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6368: (360-369): CHC: Out of bounds access might happen here.
+// Warning 6368: (360-372): CHC: Out of bounds access might happen here.
+// Warning 6328: (353-377): CHC: Assertion violation might happen here.

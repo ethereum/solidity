@@ -16,8 +16,7 @@ contract C
 		b[0] = 1;
 		// Erasing knowledge about memory references should not
 		// erase knowledge about state variables.
-		// Removed because current Spacer seg faults.
-		//assert(array[0] == 42);
+		assert(array[0] == 42);
 		// Accesses are safe but oob is reported due of aliasing.
 		assert(a[0] == 2);
 		assert(b[0] == 1);
@@ -28,6 +27,6 @@ contract C
 // SMTIgnoreCex: yes
 // ----
 // Warning 6368: (327-331): CHC: Out of bounds access happens here.
-// Warning 6368: (584-588): CHC: Out of bounds access happens here.
-// Warning 6328: (577-594): CHC: Assertion violation happens here.
-// Warning 6368: (605-609): CHC: Out of bounds access happens here.
+// Warning 6368: (534-538): CHC: Out of bounds access happens here.
+// Warning 6328: (527-544): CHC: Assertion violation happens here.
+// Warning 6368: (555-559): CHC: Out of bounds access happens here.

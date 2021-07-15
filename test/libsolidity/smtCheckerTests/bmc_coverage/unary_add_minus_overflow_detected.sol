@@ -9,7 +9,6 @@ contract C {
 		--x;
 	}
 
-	/* Commented out because Spacer segfaults in Z3 4.8.9
     function inc_post() public {
 		x++;
 	}
@@ -17,7 +16,6 @@ contract C {
 	function dec_post() public {
 		x--;
 	}
-    */
 
 }
 // ====
@@ -25,3 +23,5 @@ contract C {
 // ----
 // Warning 2661: (55-58): BMC: Overflow (resulting value larger than 255) happens here.
 // Warning 4144: (95-98): BMC: Underflow (resulting value less than 0) happens here.
+// Warning 2661: (139-142): BMC: Overflow (resulting value larger than 255) happens here.
+// Warning 4144: (180-183): BMC: Underflow (resulting value less than 0) happens here.

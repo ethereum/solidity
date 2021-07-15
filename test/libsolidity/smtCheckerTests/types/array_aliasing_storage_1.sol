@@ -44,12 +44,17 @@ contract C
 		require(c < array4d[c].length);
 		require(d < tinyArray3d.length);
 		require(e < array4d.length);
-		// Disabled because of Spacer seg fault.
-		//f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
+		f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
 	}
 }
 // ====
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2018: (957-1329): Function state mutability can be restricted to view
+// Warning 6368: (1124-1134): CHC: Out of bounds access might happen here.
+// Warning 6368: (1214-1224): CHC: Out of bounds access might happen here.
+// Warning 6368: (1226-1236): CHC: Out of bounds access might happen here.
+// Warning 6368: (1238-1248): CHC: Out of bounds access might happen here.
+// Warning 6368: (1238-1251): CHC: Out of bounds access might happen here.
+// Warning 6368: (1253-1267): CHC: Out of bounds access might happen here.
+// Warning 6368: (1269-1279): CHC: Out of bounds access might happen here.

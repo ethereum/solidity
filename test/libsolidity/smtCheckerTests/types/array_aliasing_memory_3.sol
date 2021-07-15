@@ -19,12 +19,12 @@ contract C
 		// Erasing knowledge about memory references should not
 		// erase knowledge about storage references.
 		assert(c[0] == 42);
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(a[0] == 2);
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(b[0] == 1);
+		assert(a[0] == 2);
+		assert(b[0] == 1);
 	}
 }
 // ====
 // SMTEngine: all
 // ----
+// Warning 6368: (537-541): CHC: Out of bounds access happens here.
+// Warning 6328: (530-547): CHC: Assertion violation happens here.

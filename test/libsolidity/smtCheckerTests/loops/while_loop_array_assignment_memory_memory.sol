@@ -6,21 +6,15 @@ contract LoopFor2 {
 		b[0] = 900;
 		uint[] memory a = b;
 		uint i;
-		// Disabled because of Spacer's nondeterminism.
-		/*
 		while (i < n) {
 			// Accesses are safe but oob is reported due to potential aliasing after c's assignment.
 			b[i] = i + 1;
 			c[i] = b[i];
 			++i;
 		}
-		*/
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(b[0] == c[0]);
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(a[0] == 900);
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(b[0] == 900);
+		assert(b[0] == c[0]); // should fail due to aliasing
+		assert(a[0] == 900); // should fail due to aliasing
+		assert(b[0] == 900); // should fail due to aliasing
 	}
 }
 // ====
@@ -28,5 +22,13 @@ contract LoopFor2 {
 // SMTIgnoreCex: yes
 // SMTSolvers: z3
 // ----
-// Warning 2072: (202-217): Unused local variable.
-// Warning 2072: (225-231): Unused local variable.
+// Warning 6368: (346-350): CHC: Out of bounds access happens here.
+// Warning 6368: (370-374): CHC: Out of bounds access happens here.
+// Warning 6368: (363-367): CHC: Out of bounds access happens here.
+// Warning 6368: (397-401): CHC: Out of bounds access happens here.
+// Warning 6368: (405-409): CHC: Out of bounds access happens here.
+// Warning 6328: (390-410): CHC: Assertion violation happens here.
+// Warning 6368: (452-456): CHC: Out of bounds access happens here.
+// Warning 6328: (445-464): CHC: Assertion violation happens here.
+// Warning 6368: (506-510): CHC: Out of bounds access happens here.
+// Warning 6328: (499-518): CHC: Assertion violation happens here.

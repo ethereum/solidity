@@ -11,26 +11,29 @@ contract LoopFor2 {
 		a = b;
 		require(n > 0 && n < 100);
 		uint i;
-		// Disabled because of Spacer nondeterminism.
-		/*
 		while (i < n) {
 			// Accesses are safe but oob is reported due to potential aliasing after c's assignment.
 			b[i] = i + 1;
 			c[i] = b[i];
 			++i;
 		}
-		*/
 		// Fails due to aliasing, since both b and c are
 		// memory references of same type.
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(b[0] == c[0]);
+		assert(b[0] == c[0]);
 		assert(a[0] == 900);
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(b[0] == 900);
+		assert(b[0] == 900);
 	}
 }
 // ====
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 2072: (280-286): Unused local variable.
+// Warning 6368: (401-405): CHC: Out of bounds access happens here.
+// Warning 6368: (425-429): CHC: Out of bounds access happens here.
+// Warning 1218: (418-422): CHC: Error trying to invoke SMT solver.
+// Warning 6368: (418-422): CHC: Out of bounds access might happen here.
+// Warning 6368: (540-544): CHC: Out of bounds access happens here.
+// Warning 6368: (548-552): CHC: Out of bounds access happens here.
+// Warning 6328: (533-553): CHC: Assertion violation happens here.
+// Warning 6368: (587-591): CHC: Out of bounds access happens here.
+// Warning 6328: (580-599): CHC: Assertion violation happens here.

@@ -13,25 +13,25 @@ contract C {
 	}
 	function f(S memory s2) public pure {
 		S[] memory s1 = new S[](3);
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(s1.length == 3);
+		assert(s1.length == 3); // should hold
 		s1[0].x = 2;
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(s1[0].x == s2.x);
+		assert(s1[0].x == s2.x); // should fail
 		s1[1].t.y = 3;
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(s1[1].t.y == s2.t.y);
+		assert(s1[1].t.y == s2.t.y); // should fail
 		s1[2].a = new uint[](3);
 		s1[2].a[2] = 4;
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(s1[2].a[2] == s2.a[2]);
+		assert(s1[2].a[2] == s2.a[2]); // should fail
 		s1[0].ts = new T[](4);
 		s1[0].ts[3].y = 5;
-		// Removed because current Spacer seg faults in cex generation.
-		//assert(s1[0].ts[3].y == s2.ts[3].y);
+		assert(s1[0].ts[3].y == s2.ts[3].y); // should fail
 	}
 }
 // ====
 // SMTEngine: all
 // ----
-// Warning 5667: (151-162): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (266-289): CHC: Assertion violation happens here.
+// Warning 6328: (325-352): CHC: Assertion violation happens here.
+// Warning 6368: (437-444): CHC: Out of bounds access happens here.
+// Warning 6328: (416-445): CHC: Assertion violation happens here.
+// Warning 6368: (534-542): CHC: Out of bounds access happens here.
+// Warning 6328: (510-545): CHC: Assertion violation happens here.

@@ -18,12 +18,11 @@ contract C {
 
 	function f() public {
 		uint oldX = x;
-		// Removed because Spacer 4.8.9 seg faults.
-		//d.d();
-		assert(oldX == x);
+		d.d();
+		assert(oldX == x); // should fail
 	}
 }
 // ====
 // SMTEngine: all
 // ----
-// Warning 2018: (203-322): Function state mutability can be restricted to view
+// Warning 6328: (253-270): CHC: Assertion violation happens here.
