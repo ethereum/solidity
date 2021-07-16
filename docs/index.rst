@@ -7,23 +7,23 @@ Solidity
     :align: center
 
 Solidity is an object-oriented, high-level language for implementing smart
-contracts. Smart contracts are programs which govern the behaviour of accounts
+contracts. Smart contracts are programs that govern the behavior of accounts
 within the Ethereum state.
 
 Solidity is a `curly-bracket language <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_.
-It is influenced by C++, Python and JavaScript, and is designed to target the Ethereum Virtual Machine (EVM).
+It is influenced by C++, Python, and JavaScript, and is designed to target the Ethereum Virtual Machine (EVM).
 You can find more details about which languages Solidity has been inspired by in
 the :doc:`language influences <language-influences>` section.
 
-Solidity is statically typed, supports inheritance, libraries and complex
+Solidity is statically typed, supports inheritance, libraries, and complex
 user-defined types among other features.
 
-With Solidity you can create contracts for uses such as voting, crowdfunding, blind auctions,
+With Solidity, you can create contracts for uses such as voting, crowdfunding, blind auctions,
 and multi-signature wallets.
 
 When deploying contracts, you should use the latest released
-version of Solidity. This is because breaking changes as well as
-new features and bug fixes are introduced regularly. We currently use
+version of Solidity. This is because breaking changes, as well as
+new features and bug fixes, are introduced regularly. We currently use
 a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
 
 .. warning::
