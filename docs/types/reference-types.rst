@@ -28,7 +28,7 @@ annotation, the "data location", about where it is stored. There are three data 
 ``memory``, ``storage`` and ``calldata``. Calldata is a non-modifiable,
 non-persistent area where function arguments are stored, and behaves mostly like memory.
 
-Calldata is usually preferred over memory for external functions but is not required after Solidity `0.6.9`.
+Calldata is usually preferred over memory for external functions but is not required after version 0.6.9.
 
 .. note::
     Prior to version 0.5.0 the data location could be omitted, and would default to different locations
