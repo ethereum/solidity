@@ -29,11 +29,16 @@ annotation, the "data location", about where it is stored. There are three data 
 non-persistent area where function arguments are stored, and behaves mostly like memory.
 
 .. note::
-    If you can, try to use ``calldata`` as a data location because it will avoid copies and
-    also makes sure that the data cannot be modified. Calldata is typically preferred over
-    memory in  external functions (though not required after version 0.6.9). Arrays and
-    structs with ``calldata`` data location can also be returned from functions, but it
-    is not possible to allocate such types.
+    If you can, try to use ``calldata`` as data location because it will avoid copies and
+    also makes sure that the data cannot be modified. Arrays and structs with ``calldata``
+    data location can also be returned from functions, but it is not possible to
+    allocate such types.
+
+.. note::
+    Prior to version 0.6.9 data location for reference-type arguments was limited to
+    ``calldata`` in external functions, ``memory`` in public functions and either
+    ``memory`` or ``storage`` in internal and private ones.
+    Now ``memory`` and ``calldata`` are allowed in all functions regardless of their visibility.
 
 .. note::
     Prior to version 0.5.0 the data location could be omitted, and would default to different locations
