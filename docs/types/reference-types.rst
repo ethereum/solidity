@@ -30,9 +30,9 @@ non-persistent area where function arguments are stored, and behaves mostly like
 
 .. note::
     If you can, try to use ``calldata`` as a data location because it will avoid copies and
-    also makes sure that the data cannot be modified. Calldata is typically preferred over 
-    memory in  external functions (though not required after version 0.6.9). Arrays and 
-    structs with ``calldata`` data location can also be returned from functions, but it 
+    also makes sure that the data cannot be modified. Calldata is typically preferred over
+    memory in  external functions (though not required after version 0.6.9). Arrays and
+    structs with ``calldata`` data location can also be returned from functions, but it
     is not possible to allocate such types.
 
 .. note::
