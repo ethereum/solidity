@@ -48,13 +48,15 @@ then
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3
-  wget https://github.com/Z3Prover/z3/releases/download/z3-4.8.10/z3-4.8.10-x64-osx-10.15.7.zip
-  unzip z3-4.8.10-x64-osx-10.15.7.zip
-  rm -f z3-4.8.10-x64-osx-10.15.7.zip
-  cp z3-4.8.10-x64-osx-10.15.7/bin/libz3.a /usr/local/lib
-  cp z3-4.8.10-x64-osx-10.15.7/bin/z3 /usr/local/bin
-  cp z3-4.8.10-x64-osx-10.15.7/include/* /usr/local/include
-  rm -rf z3-4.8.10-x64-osx-10.15.7
+  z3_version="z3-4.8.12"
+  osx_version="osx-10.15.7"
+  wget "https://github.com/Z3Prover/z3/releases/download/$z3_version/$z3_version-x64-$osx_version.zip"
+  unzip "$z3_version-x64-$osx_version.zip"
+  rm -f "$z3_version-x64-$osx_version.zip"
+  cp "$z3_version-x64-$osx_version/bin/libz3.a" /usr/local/lib
+  cp "$z3_version-x64-$osx_version/bin/z3" /usr/local/bin
+  cp "$z3_version-x64-$osx_version"/include/* /usr/local/include
+  rm -rf "$z3_version-x64-$osx_version"
 
   # evmone
   wget https://github.com/ethereum/evmone/releases/download/v0.7.0/evmone-0.7.0-darwin-x86_64.tar.gz
