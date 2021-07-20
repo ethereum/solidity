@@ -31,6 +31,7 @@
 using namespace std;
 using namespace solidity::test;
 
+#define TEST_CASE_NAME (boost::unit_test::framework::current_test_case().p_name)
 
 namespace solidity::frontend::test
 {
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_absolute_path)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
 {
-	TemporaryDirectory tempDir("file-reader-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	boost::filesystem::create_directories(tempDir.path() / "x/y/z");
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "x/y/z");
 
@@ -116,7 +117,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_redundant_slashes)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_unc_path)
 {
-	TemporaryDirectory tempDir("file-reader-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
 
 	// On Windows tempDir.path() normally contains the drive letter while the normalized path should not.
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_unc_path)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_root_name_only)
 {
-	TemporaryDirectory tempDir("file-reader-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_root_name_only)
 #if defined(_WIN32)
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_stripping_root_name)
 {
-	TemporaryDirectory tempDir("file-reader-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
 
 	soltestAssert(boost::filesystem::current_path().is_absolute(), "");
@@ -221,7 +222,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_beyond_root)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_case_sensitivity)
 {
-	TemporaryDirectory tempDir("file-reader-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
 
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_separators)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_not_resolve_symlinks)
 {
-	TemporaryDirectory tempDir("file-reader-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	soltestAssert(tempDir.path().is_absolute(), "");
 	boost::filesystem::create_directories(tempDir.path() / "abc");
 
@@ -257,7 +258,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_not_resolve_symlinks)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_resolve_symlinks_in_workdir_when_path_is_relative)
 {
-	TemporaryDirectory tempDir("file-reader-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	soltestAssert(tempDir.path().is_absolute(), "");
 	boost::filesystem::create_directories(tempDir.path() / "abc");
 
