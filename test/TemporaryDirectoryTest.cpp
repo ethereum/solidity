@@ -37,10 +37,10 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_create_and_delete_a_unique_and_em
 {
 	fs::path dirPath;
 	{
-		TemporaryDirectory tempDir("temporary-directory-test-");
+		TemporaryDirectory tempDir("temporary-directory-test");
 		dirPath = tempDir.path();
 
-		BOOST_TEST(dirPath.stem().string().find("temporary-directory-test-") == 0);
+		BOOST_TEST(dirPath.stem().string().find("temporary-directory-test") == 0);
 		BOOST_TEST(fs::equivalent(dirPath.parent_path(), fs::temp_directory_path()));
 		BOOST_TEST(fs::is_directory(dirPath));
 		BOOST_TEST(fs::is_empty(dirPath));
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_delete_its_directory_even_if_not_
 {
 	fs::path dirPath;
 	{
-		TemporaryDirectory tempDir("temporary-directory-test-");
+		TemporaryDirectory tempDir("temporary-directory-test");
 		dirPath = tempDir.path();
 
 		BOOST_TEST(fs::is_directory(dirPath));
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TemporaryWorkingDirectory_should_change_and_restore_working
 	try
 	{
 		{
-			TemporaryDirectory tempDir("temporary-directory-test-");
+			TemporaryDirectory tempDir("temporary-directory-test");
 			assert(fs::equivalent(fs::current_path(), originalWorkingDirectory));
 			assert(!fs::equivalent(tempDir.path(), originalWorkingDirectory));
 

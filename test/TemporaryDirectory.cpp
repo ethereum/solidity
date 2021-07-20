@@ -31,7 +31,7 @@ using namespace solidity::test;
 namespace fs = boost::filesystem;
 
 TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
-	m_path(fs::temp_directory_path() / fs::unique_path(_prefix + "%%%%-%%%%-%%%%-%%%%"))
+	m_path(fs::temp_directory_path() / fs::unique_path(_prefix + "-%%%%-%%%%-%%%%-%%%%"))
 {
 	// Prefix should just be a file name and not contain anything that would make us step out of /tmp.
 	assert(fs::path(_prefix) == fs::path(_prefix).stem());

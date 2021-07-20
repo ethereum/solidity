@@ -40,7 +40,7 @@ namespace solidity::test
 class TemporaryDirectory
 {
 public:
-	TemporaryDirectory(std::string const& _prefix = "solidity-test-");
+	TemporaryDirectory(std::string const& _prefix = "solidity-test");
 	~TemporaryDirectory();
 
 	boost::filesystem::path const& path() const { return m_path; }
