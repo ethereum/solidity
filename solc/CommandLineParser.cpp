@@ -346,8 +346,13 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 					return false;
 				}
 
+				// If the target is a directory, whitelist it. Otherwise whitelist containing dir.
+				// NOTE: /a/b/c/ is a directory while /a/b/c is not.
 				auto remappingDir = boost::filesystem::path(remapping->target);
-				remappingDir.remove_filename();
+				if (remappingDir.filename() != "..")
+					// As an exception we'll treat /a/b/c/.. as a directory too. It would be
+					// unintuitive to whitelist /a/b/c when the target is equivalent to /a/b/.
+					remappingDir.remove_filename();
 				m_options.input.allowedDirectories.insert(remappingDir.empty() ? "." : remappingDir);
 
 				m_options.input.remappings.emplace_back(move(remapping.value()));

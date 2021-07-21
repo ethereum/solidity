@@ -428,14 +428,14 @@ BOOST_FIXTURE_TEST_CASE(allow_path_automatic_whitelisting_remappings, AllowPaths
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"x=./"}) == ImportCheck::PathDisallowed());
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/X/b/c.sol'", {"x=./"}) == ImportCheck::PathDisallowed());
 
-	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"x=.."}) == ImportCheck::PathDisallowed());
-	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/X/b/c.sol'", {"x=.."}) == ImportCheck::PathDisallowed());
+	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"x=.."}));
+	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/X/b/c.sol'", {"x=.."}));
 
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"x=../"}));
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/X/b/c.sol'", {"x=../"}));
 
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"x=../code/a/b/./.."}));
-	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/X/c.sol'", {"x=../code/a/b/./.."}) == ImportCheck::PathDisallowed());
+	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/X/c.sol'", {"x=../code/a/b/./.."}));
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/X/b/c.sol'", {"x=../code/a/b/./.."}) == ImportCheck::PathDisallowed());
 
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"x=../code/a/b/./../"}));
