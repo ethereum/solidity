@@ -6,5 +6,5 @@ with EVM dialect.
 
 The main semantic differences to the legacy code generator are the following:
 
- - Arithmetic operations cause a failing assertion if the result is not in range.
- - Resizing a storage array to a length larger than 2**64 causes a failing assertion.
+- Arithmetic operations cause a failing assertion if the result is not in range.
+- Resizing a storage array to a length larger than 2**64 causes a failing assertion.

@@ -77,8 +77,9 @@ The following (fixed-size) array type exists:
 
 - ``<type>[M]``: a fixed-length array of ``M`` elements, ``M >= 0``, of the given type.
 
-    .. note::
-        While this ABI specification can express fixed-length arrays with zero elements, they're not supported by the compiler.
+  .. note::
+
+      While this ABI specification can express fixed-length arrays with zero elements, they're not supported by the compiler.
 
 The following non-fixed-size types exist:
 
@@ -124,13 +125,13 @@ Design Criteria for the Encoding
 
 The encoding is designed to have the following properties, which are especially useful if some arguments are nested arrays:
 
-  1. The number of reads necessary to access a value is at most the depth of the value
-  inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a
-  previous version of the ABI, the number of reads scaled linearly with the total number of dynamic
-  parameters in the worst case.
+1. The number of reads necessary to access a value is at most the depth of the value
+   inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a
+   previous version of the ABI, the number of reads scaled linearly with the total number of dynamic
+   parameters in the worst case.
 
-  2. The data of a variable or array element is not interleaved with other data and it is
-  relocatable, i.e. it only uses relative "addresses".
+2. The data of a variable or array element is not interleaved with other data and it is
+   relocatable, i.e. it only uses relative "addresses".
 
 
 Formal Specification of the Encoding
@@ -312,21 +313,21 @@ these are directly the values we want to pass, whereas for the dynamic types ``u
 we use the offset in bytes to the start of their data area, measured from the start of the value
 encoding (i.e. not counting the first four bytes containing the hash of the function signature). These are:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000123`` (``0x123`` padded to 32 bytes)
- - ``0x0000000000000000000000000000000000000000000000000000000000000080`` (offset to start of data part of second parameter, 4*32 bytes, exactly the size of the head part)
- - ``0x3132333435363738393000000000000000000000000000000000000000000000`` (``"1234567890"`` padded to 32 bytes on the right)
- - ``0x00000000000000000000000000000000000000000000000000000000000000e0`` (offset to start of data part of fourth parameter = offset to start of data part of first dynamic parameter + size of data part of first dynamic parameter = 4\*32 + 3\*32 (see below))
+- ``0x0000000000000000000000000000000000000000000000000000000000000123`` (``0x123`` padded to 32 bytes)
+- ``0x0000000000000000000000000000000000000000000000000000000000000080`` (offset to start of data part of second parameter, 4*32 bytes, exactly the size of the head part)
+- ``0x3132333435363738393000000000000000000000000000000000000000000000`` (``"1234567890"`` padded to 32 bytes on the right)
+- ``0x00000000000000000000000000000000000000000000000000000000000000e0`` (offset to start of data part of fourth parameter = offset to start of data part of first dynamic parameter + size of data part of first dynamic parameter = 4\*32 + 3\*32 (see below))
 
 After this, the data part of the first dynamic argument, ``[0x456, 0x789]`` follows:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements of the array, 2)
- - ``0x0000000000000000000000000000000000000000000000000000000000000456`` (first element)
- - ``0x0000000000000000000000000000000000000000000000000000000000000789`` (second element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements of the array, 2)
+- ``0x0000000000000000000000000000000000000000000000000000000000000456`` (first element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000789`` (second element)
 
 Finally, we encode the data part of the second dynamic argument, ``"Hello, world!"``:
 
- - ``0x000000000000000000000000000000000000000000000000000000000000000d`` (number of elements (bytes in this case): 13)
- - ``0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000`` (``"Hello, world!"`` padded to 32 bytes on the right)
+- ``0x000000000000000000000000000000000000000000000000000000000000000d`` (number of elements (bytes in this case): 13)
+- ``0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000`` (``"Hello, world!"`` padded to 32 bytes on the right)
 
 All together, the encoding is (newline after function selector and each 32-bytes for clarity):
 
@@ -348,14 +349,14 @@ with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most
 
 First we encode the length and data of the first embedded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first array, 2; the elements themselves are ``1`` and ``2``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (first element)
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (second element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first array, 2; the elements themselves are ``1`` and ``2``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000001`` (first element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (second element)
 
 Then we encode the length and data of the second embedded dynamic array ``[3]`` of the first root array ``[[1, 2], [3]]``:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
 
 Then we need to find the offsets ``a`` and ``b`` for their respective dynamic arrays ``[1, 2]`` and ``[3]``.
 To calculate the offsets we can take a look at the encoded data of the first root array ``[[1, 2], [3]]``
@@ -380,12 +381,12 @@ thus ``b = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
 
 Then we encode the embedded strings of the second root array:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"one"``)
- - ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"one"``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"two"``)
- - ``0x74776f0000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"two"``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000005`` (number of characters in word ``"three"``)
- - ``0x7468726565000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"three"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"one"``)
+- ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"one"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"two"``)
+- ``0x74776f0000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"two"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000005`` (number of characters in word ``"three"``)
+- ``0x7468726565000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"three"``)
 
 In parallel to the first root array, since strings are dynamic elements we need to find their offsets ``c``, ``d`` and ``e``:
 
@@ -416,11 +417,11 @@ and have the same encodings for a function with a signature ``g(string[],uint[][
 
 Then we encode the length of the first root array:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
 
 Then we encode the length of the second root array:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
 
 Finally we find the offsets ``f`` and ``g`` for their respective root dynamic arrays ``[[1, 2], [3]]`` and
 ``["one", "two", "three"]``, and assemble parts in the correct order:
@@ -529,12 +530,12 @@ i.e. ``0xcf479181``, ``uint256(0)``, ``uint256(amount)``.
 The error selectors ``0x00000000`` and ``0xffffffff`` are reserved for future use.
 
 .. warning::
-  Never trust error data.
-  The error data by default bubbles up through the chain of external calls, which
-  means that a contract may receive an error not defined in any of the contracts
-  it calls directly.
-  Furthermore, any contract can fake any error by returning data that matches
-  an error signature, even if the error is not defined anywhere.
+    Never trust error data.
+    The error data by default bubbles up through the chain of external calls, which
+    means that a contract may receive an error not defined in any of the contracts
+    it calls directly.
+    Furthermore, any contract can fake any error by returning data that matches
+    an error signature, even if the error is not defined anywhere.
 
 .. _abi_json:
 
@@ -618,24 +619,24 @@ would result in the JSON:
 
 .. code-block:: json
 
-  [{
-  "type":"error",
-  "inputs": [{"name":"available","type":"uint256"},{"name":"required","type":"uint256"}],
-  "name":"InsufficientBalance"
-  }, {
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event"
-  }, {
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event2"
-  }, {
-  "type":"function",
-  "inputs": [{"name":"a","type":"uint256"}],
-  "name":"foo",
-  "outputs": []
-  }]
+    [{
+    "type":"error",
+    "inputs": [{"name":"available","type":"uint256"},{"name":"required","type":"uint256"}],
+    "name":"InsufficientBalance"
+    }, {
+    "type":"event",
+    "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+    "name":"Event"
+    }, {
+    "type":"event",
+    "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+    "name":"Event2"
+    }, {
+    "type":"function",
+    "inputs": [{"name":"a","type":"uint256"}],
+    "name":"foo",
+    "outputs": []
+    }]
 
 Handling tuple types
 --------------------
@@ -670,61 +671,61 @@ would result in the JSON:
 
 .. code-block:: json
 
-  [
-    {
-      "name": "f",
-      "type": "function",
-      "inputs": [
-        {
-          "name": "s",
-          "type": "tuple",
-          "components": [
-            {
-              "name": "a",
-              "type": "uint256"
-            },
-            {
-              "name": "b",
-              "type": "uint256[]"
-            },
-            {
-              "name": "c",
-              "type": "tuple[]",
-              "components": [
-                {
-                  "name": "x",
-                  "type": "uint256"
-                },
-                {
-                  "name": "y",
-                  "type": "uint256"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "t",
-          "type": "tuple",
-          "components": [
-            {
-              "name": "x",
-              "type": "uint256"
-            },
-            {
-              "name": "y",
-              "type": "uint256"
-            }
-          ]
-        },
-        {
-          "name": "a",
-          "type": "uint256"
-        }
-      ],
-      "outputs": []
-    }
-  ]
+    [
+      {
+        "name": "f",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "s",
+            "type": "tuple",
+            "components": [
+              {
+                "name": "a",
+                "type": "uint256"
+              },
+              {
+                "name": "b",
+                "type": "uint256[]"
+              },
+              {
+                "name": "c",
+                "type": "tuple[]",
+                "components": [
+                  {
+                    "name": "x",
+                    "type": "uint256"
+                  },
+                  {
+                    "name": "y",
+                    "type": "uint256"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "t",
+            "type": "tuple",
+            "components": [
+              {
+                "name": "x",
+                "type": "uint256"
+              },
+              {
+                "name": "y",
+                "type": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "a",
+            "type": "uint256"
+          }
+        ],
+        "outputs": []
+      }
+    ]
 
 .. _abi_packed_mode:
 
@@ -761,18 +762,19 @@ As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
 
 More specifically:
- - During the encoding, everything is encoded in-place. This means that there is
-   no distinction between head and tail, as in the ABI encoding, and the length
-   of an array is not encoded.
- - The direct arguments of ``abi.encodePacked`` are encoded without padding,
-   as long as they are not arrays (or ``string`` or ``bytes``).
- - The encoding of an array is the concatenation of the
-   encoding of its elements **with** padding.
- - Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded
-   without their length field.
- - The encoding of ``string`` or ``bytes`` does not apply padding at the end
-   unless it is part of an array or struct (then it is padded to a multiple of
-   32 bytes).
+
+- During the encoding, everything is encoded in-place. This means that there is
+  no distinction between head and tail, as in the ABI encoding, and the length
+  of an array is not encoded.
+- The direct arguments of ``abi.encodePacked`` are encoded without padding,
+  as long as they are not arrays (or ``string`` or ``bytes``).
+- The encoding of an array is the concatenation of the
+  encoding of its elements **with** padding.
+- Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded
+  without their length field.
+- The encoding of ``string`` or ``bytes`` does not apply padding at the end
+  unless it is part of an array or struct (then it is padded to a multiple of
+  32 bytes).
 
 In general, the encoding is ambiguous as soon as there are two dynamically-sized elements,
 because of the missing length field.
@@ -784,12 +786,12 @@ for prepending a function selector. Since the encoding is ambiguous, there is no
 
 .. warning::
 
-  If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
-  it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
-  vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
-  If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
-  sure to always use the same types and check that at most one of them is dynamic.
-  Unless there is a compelling reason, ``abi.encode`` should be preferred.
+    If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
+    it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
+    vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
+    If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
+    sure to always use the same types and check that at most one of them is dynamic.
+    Unless there is a compelling reason, ``abi.encode`` should be preferred.
 
 
 .. _indexed_event_encoding:
@@ -801,13 +803,13 @@ Indexed event parameters that are not value types, i.e. arrays and structs are n
 stored directly but instead a keccak256-hash of an encoding is stored. This encoding
 is defined as follows:
 
- - the encoding of a ``bytes`` and ``string`` value is just the string contents
-   without any padding or length prefix.
- - the encoding of a struct is the concatenation of the encoding of its members,
-   always padded to a multiple of 32 bytes (even ``bytes`` and ``string``).
- - the encoding of an array (both dynamically- and statically-sized) is
-   the concatenation of the encoding of its elements, always padded to a multiple
-   of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
+- the encoding of a ``bytes`` and ``string`` value is just the string contents
+  without any padding or length prefix.
+- the encoding of a struct is the concatenation of the encoding of its members,
+  always padded to a multiple of 32 bytes (even ``bytes`` and ``string``).
+- the encoding of an array (both dynamically- and statically-sized) is
+  the concatenation of the encoding of its elements, always padded to a multiple
+  of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
 
 In the above, as usual, a negative number is padded by sign extension and not zero padded.
 ``bytesNN`` types are padded on the right while ``uintNN`` / ``intNN`` are padded on the left.

@@ -30,8 +30,8 @@ set it to ``--optimize-runs=1``. If you expect many transactions and do not care
 output size, set ``--optimize-runs`` to a high number.
 This parameter has effects on the following (this might change in the future):
 
- - the size of the binary search in the function dispatch routine
- - the way constants like large numbers or strings are stored
+- the size of the binary search in the function dispatch routine
+- the way constants like large numbers or strings are stored
 
 .. index:: allowed paths, --allow-paths, base path, --base-path
 
@@ -136,13 +136,13 @@ key in the ``"settings"`` field:
 
 .. code-block:: none
 
-  {
-    "sources": { ... },
-    "settings": {
-      "optimizer": { ... },
-      "evmVersion": "<VERSION>"
+    {
+      "sources": { ... },
+      "settings": {
+        "optimizer": { ... },
+        "evmVersion": "<VERSION>"
+      }
     }
-  }
 
 Target Options
 --------------
@@ -781,7 +781,7 @@ It is recommended to explicitly specify the upgrade modules by using ``--modules
 
 .. code-block:: none
 
-   $ solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
+    $ solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
 
 The command above applies all changes as shown below. Please review them carefully (the pragmas will
 have to be updated manually.)

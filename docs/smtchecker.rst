@@ -44,23 +44,24 @@ where the default is no engine. Selecting the engine enables the SMTChecker on a
 
 .. note::
 
-  Prior to Solidity 0.8.4, the default way to enable the SMTChecker was via
-  ``pragma experimental SMTChecker;`` and only the contracts containing the
-  pragma would be analyzed. That pragma has been deprecated, and although it
-  still enables the SMTChecker for backwards compatibility, it will be removed
-  in Solidity 0.9.0. Note also that now using the pragma even in a single file
-  enables the SMTChecker for all files.
+    Prior to Solidity 0.8.4, the default way to enable the SMTChecker was via
+    ``pragma experimental SMTChecker;`` and only the contracts containing the
+    pragma would be analyzed. That pragma has been deprecated, and although it
+    still enables the SMTChecker for backwards compatibility, it will be removed
+    in Solidity 0.9.0. Note also that now using the pragma even in a single file
+    enables the SMTChecker for all files.
 
 .. note::
-  The lack of warnings for a verification target represents an undisputed
-  mathematical proof of correctness, assuming no bugs in the SMTChecker and
-  the underlying solver. Keep in mind that these problems are
-  *very hard* and sometimes *impossible* to solve automatically in the
-  general case.  Therefore, several properties might not be solved or might
-  lead to false positives for large contracts. Every proven property should
-  be seen as an important achievement. For advanced users, see :ref:`SMTChecker Tuning <smtchecker_options>`
-  to learn a few options that might help proving more complex
-  properties.
+
+    The lack of warnings for a verification target represents an undisputed
+    mathematical proof of correctness, assuming no bugs in the SMTChecker and
+    the underlying solver. Keep in mind that these problems are
+    *very hard* and sometimes *impossible* to solve automatically in the
+    general case.  Therefore, several properties might not be solved or might
+    lead to false positives for large contracts. Every proven property should
+    be seen as an important achievement. For advanced users, see :ref:`SMTChecker Tuning <smtchecker_options>`
+    to learn a few options that might help proving more complex
+    properties.
 
 ********
 Tutorial
@@ -202,8 +203,9 @@ Note that in this example the SMTChecker will automatically try to prove three p
 3. The assertion is always true.
 
 .. note::
-  The properties involve loops, which makes it *much much* harder than the previous
-  examples, so beware of loops!
+
+    The properties involve loops, which makes it *much much* harder than the previous
+    examples, so beware of loops!
 
 All the properties are correctly proven safe. Feel free to change the
 properties and/or add restrictions on the array to see different results.
@@ -233,18 +235,18 @@ gives us:
 
 .. code-block:: bash
 
-  Warning: CHC: Assertion violation happens here.
-  Counterexample:
+    Warning: CHC: Assertion violation happens here.
+    Counterexample:
 
-  _a = [0, 0, 0, 0, 0]
-   = 0
+    _a = [0, 0, 0, 0, 0]
+     = 0
 
-  Transaction trace:
-  Test.constructor()
-  Test.max([0, 0, 0, 0, 0])
-    --> max.sol:14:4:
-     |
-  14 | 			assert(m > _a[i]);
+    Transaction trace:
+    Test.constructor()
+    Test.max([0, 0, 0, 0, 0])
+      --> max.sol:14:4:
+       |
+    14 |            assert(m > _a[i]);
 
 
 State Properties
@@ -323,26 +325,26 @@ the SMTChecker tells us exactly *how* to reach (2, 4):
 
 .. code-block:: bash
 
-  Warning: CHC: Assertion violation happens here.
-  Counterexample:
-  x = 2, y = 4
+    Warning: CHC: Assertion violation happens here.
+    Counterexample:
+    x = 2, y = 4
 
-  Transaction trace:
-  Robot.constructor()
-  State: x = 0, y = 0
-  Robot.moveLeftUp()
-  State: x = (- 1), y = 1
-  Robot.moveRightUp()
-  State: x = 0, y = 2
-  Robot.moveRightUp()
-  State: x = 1, y = 3
-  Robot.moveRightUp()
-  State: x = 2, y = 4
-  Robot.reach_2_4()
-    --> r.sol:35:4:
-     |
-  35 | 			assert(!(x == 2 && y == 4));
-     | 			^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Transaction trace:
+    Robot.constructor()
+    State: x = 0, y = 0
+    Robot.moveLeftUp()
+    State: x = (- 1), y = 1
+    Robot.moveRightUp()
+    State: x = 0, y = 2
+    Robot.moveRightUp()
+    State: x = 1, y = 3
+    Robot.moveRightUp()
+    State: x = 2, y = 4
+    Robot.reach_2_4()
+      --> r.sol:35:4:
+       |
+    35 |            assert(!(x == 2 && y == 4));
+       |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Note that the path above is not necessarily deterministic, as there are
 other paths that could reach (2, 4). The choice of which path is shown
@@ -367,36 +369,36 @@ anything, including reenter the caller contract.
     pragma solidity >=0.8.0;
 
     interface Unknown {
-    	function run() external;
+        function run() external;
     }
 
     contract Mutex {
-    	uint x;
-    	bool lock;
+        uint x;
+        bool lock;
 
-    	Unknown immutable unknown;
+        Unknown immutable unknown;
 
-    	constructor(Unknown _u) {
-    		require(address(_u) != address(0));
-    		unknown = _u;
-    	}
+        constructor(Unknown _u) {
+            require(address(_u) != address(0));
+            unknown = _u;
+        }
 
-    	modifier mutex {
-    		require(!lock);
-    		lock = true;
-    		_;
-    		lock = false;
-    	}
+        modifier mutex {
+            require(!lock);
+            lock = true;
+            _;
+            lock = false;
+        }
 
-    	function set(uint _x) mutex public {
-    		x = _x;
-    	}
+        function set(uint _x) mutex public {
+            x = _x;
+        }
 
-    	function run() mutex public {
-    		uint xPre = x;
-    		unknown.run();
-    		assert(xPre == x);
-    	}
+        function run() mutex public {
+            uint xPre = x;
+            unknown.run();
+            assert(xPre == x);
+        }
     }
 
 The example above shows a contract that uses a mutex flag to forbid reentrancy.
@@ -410,20 +412,20 @@ that the assertion fails:
 
 .. code-block:: bash
 
-  Warning: CHC: Assertion violation happens here.
-  Counterexample:
-  x = 1, lock = true, unknown = 1
+    Warning: CHC: Assertion violation happens here.
+    Counterexample:
+    x = 1, lock = true, unknown = 1
 
-  Transaction trace:
-  Mutex.constructor(1)
-  State: x = 0, lock = false, unknown = 1
-  Mutex.run()
-      unknown.run() -- untrusted external call, synthesized as:
-          Mutex.set(1) -- reentrant call
-    --> m.sol:32:3:
-     |
-  32 | 		assert(xPre == x);
-     | 		^^^^^^^^^^^^^^^^^
+    Transaction trace:
+    Mutex.constructor(1)
+    State: x = 0, lock = false, unknown = 1
+    Mutex.run()
+        unknown.run() -- untrusted external call, synthesized as:
+            Mutex.set(1) -- reentrant call
+      --> m.sol:32:3:
+       |
+    32 | 		assert(xPre == x);
+       | 		^^^^^^^^^^^^^^^^^
 
 
 .. _smtchecker_options:
@@ -494,12 +496,11 @@ which has the following form:
 
 .. code-block:: none
 
-  contracts
-  {
-      "source1.sol": ["contract1"],
-      "source2.sol": ["contract2", "contract3"]
-  }
-
+    contracts
+    {
+        "source1.sol": ["contract1"],
+        "source2.sol": ["contract2", "contract3"]
+    }
 
 .. _smtchecker_engines:
 

@@ -124,17 +124,17 @@ The output of the above looks like the following (trimmed):
 
 .. code-block:: json
 
-  {
-     "returnValues": {
-         "_from": "0x1111…FFFFCCCC",
-         "_id": "0x50…sd5adb20",
-         "_value": "0x420042"
-     },
-     "raw": {
-         "data": "0x7f…91385",
-         "topics": ["0xfd4…b4ead7", "0x7f…1a91385"]
-     }
-  }
+    {
+       "returnValues": {
+           "_from": "0x1111…FFFFCCCC",
+           "_id": "0x50…sd5adb20",
+           "_value": "0x420042"
+       },
+       "raw": {
+           "data": "0x7f…91385",
+           "topics": ["0xfd4…b4ead7", "0x7f…1a91385"]
+       }
+    }
 
 Additional Resources for Understanding Events
 ==============================================
