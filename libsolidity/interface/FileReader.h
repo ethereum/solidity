@@ -98,6 +98,7 @@ public:
 	/// Paths are treated as case-sensitive. Does not require the path to actually exist in the
 	/// filesystem and does not follow symlinks. Only considers whole segments, e.g. /abc/d is not
 	/// considered a prefix of /abc/def. Both paths must be non-empty.
+	/// Ignores the trailing slash, i.e. /a/b/c.sol/ is treated as a valid prefix of /a/b/c.sol.
 	static bool isPathPrefix(boost::filesystem::path _prefix, boost::filesystem::path const& _path);
 
 	/// If @a _prefix is actually a prefix of @p _path, removes it from @a _path to make it relative.
