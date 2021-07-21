@@ -34,6 +34,8 @@
 using namespace std;
 using namespace solidity::test;
 
+#define TEST_CASE_NAME (boost::unit_test::framework::current_test_case().p_name)
+
 namespace solidity::util::test
 {
 
@@ -41,7 +43,7 @@ BOOST_AUTO_TEST_SUITE(CommonIOTest)
 
 BOOST_AUTO_TEST_CASE(readFileAsString_regular_file)
 {
-	TemporaryDirectory tempDir("common-io-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	createFileWithContent(tempDir.path() / "test.txt", "ABC\ndef\n");
 
 	BOOST_TEST(readFileAsString(tempDir.path() / "test.txt") == "ABC\ndef\n");
@@ -49,13 +51,13 @@ BOOST_AUTO_TEST_CASE(readFileAsString_regular_file)
 
 BOOST_AUTO_TEST_CASE(readFileAsString_directory)
 {
-	TemporaryDirectory tempDir("common-io-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	BOOST_CHECK_THROW(readFileAsString(tempDir.path()), NotAFile);
 }
 
 BOOST_AUTO_TEST_CASE(readFileAsString_symlink)
 {
-	TemporaryDirectory tempDir("common-io-test-");
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	createFileWithContent(tempDir.path() / "test.txt", "ABC\ndef\n");
 
 	if (!createSymlinkIfSupportedByFilesystem("test.txt", tempDir.path() / "symlink.txt", false))
