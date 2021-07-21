@@ -111,7 +111,10 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 }
 
-boost::filesystem::path FileReader::normalizeCLIPathForVFS(boost::filesystem::path const& _path)
+boost::filesystem::path FileReader::normalizeCLIPathForVFS(
+	boost::filesystem::path const& _path,
+	SymlinkResolution _symlinkResolution
+)
 {
 	// Detailed normalization rules:
 	// - Makes the path either be absolute or have slash as root (note that on Windows paths with
@@ -125,7 +128,8 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(boost::filesystem::pa
 	//   path to the current working directory.
 	//
 	// Also note that this function:
-	// - Does NOT resolve symlinks (except for symlinks in the path to the current working directory).
+	// - Does NOT resolve symlinks (except for symlinks in the path to the current working directory)
+	//   unless explicitly requested.
 	// - Does NOT check if the path refers to a file or a directory. If the path ends with a slash,
 	//   the slash is preserved even if it's a file.
 	//   - The only exception are paths where the file name is a dot (e.g. '.' or 'a/b/.'). These
@@ -139,9 +143,27 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(boost::filesystem::pa
 	// Windows it does not. To get consistent results we resolve them on all platforms.
 	boost::filesystem::path absolutePath = boost::filesystem::absolute(_path, canonicalWorkDir);
 
-	// NOTE: boost path preserves certain differences that are ignored by its operator ==.
-	// E.g. "a//b" vs "a/b" or "a/b/" vs "a/b/.". lexically_normal() does remove these differences.
-	boost::filesystem::path normalizedPath =  absolutePath.lexically_normal();
+	boost::filesystem::path normalizedPath;
+	if (_symlinkResolution == SymlinkResolution::Enabled)
+	{
+		// NOTE: weakly_canonical() will not convert a relative path into an absolute one if no
+		// directory included in the path actually exists.
+		normalizedPath = boost::filesystem::weakly_canonical(absolutePath);
+
+		// The three corner cases in which lexically_normal() includes a trailing slash in the
+		// normalized path but weakly_canonical() does not. Note that the trailing slash is not
+		// ignored when comparing paths with ==.
+		if ((_path == "." || _path == "./" || _path == "../") && !boost::ends_with(normalizedPath.generic_string(), "/"))
+			normalizedPath = normalizedPath.parent_path() / (normalizedPath.filename().string() + "/");
+	}
+	else
+	{
+		solAssert(_symlinkResolution == SymlinkResolution::Disabled, "");
+
+		// NOTE: boost path preserves certain differences that are ignored by its operator ==.
+		// E.g. "a//b" vs "a/b" or "a/b/" vs "a/b/.". lexically_normal() does remove these differences.
+		normalizedPath = absolutePath.lexically_normal();
+	}
 	solAssert(normalizedPath.is_absolute() || normalizedPath.root_path() == "/", "");
 
 	// If the path is on the same drive as the working dir, for portability we prefer not to
