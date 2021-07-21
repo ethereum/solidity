@@ -90,11 +90,16 @@ public:
 
 	/// Normalizes a filesystem path to make it include all components up to the filesystem root,
 	/// remove small, inconsequential differences that do not affect the meaning and make it look
-	/// the same on all platforms (if possible). Symlinks in the path are not resolved.
+	/// the same on all platforms (if possible).
 	/// The resulting path uses forward slashes as path separators, has no redundant separators,
 	/// has no redundant . or .. segments and has no root name if removing it does not change the meaning.
 	/// The path does not have to actually exist.
-	static boost::filesystem::path normalizeCLIPathForVFS(boost::filesystem::path const& _path);
+	/// @param _path Path to normalize.
+	/// @param _resolveSymlinks If false, any symlinks present in @a _path are preserved.
+	static boost::filesystem::path normalizeCLIPathForVFS(
+		boost::filesystem::path const& _path,
+		bool _resolveSymlinks = false
+	);
 
 	/// @returns true if all the path components of @a _prefix are present at the beginning of @a _path.
 	/// Both paths must be absolute (or have slash as root) and normalized (no . or .. segments, no
