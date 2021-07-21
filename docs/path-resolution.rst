@@ -297,7 +297,7 @@ Here are some examples of what you can expect if they are not:
     The same effect can be achieved in a more reliable way by using direct imports with
     :ref:`base path <base-path>` and :ref:`import remapping <import-remapping>`.
 
-.. index:: ! base path, --base-path
+.. index:: ! base path, ! --base-path
 .. _base-path:
 
 Base Path
@@ -372,6 +372,72 @@ The resulting file path becomes the source unit name.
     was the conversion of path separators.
     When working with older versions of the compiler it is recommended to invoke the compiler from
     the base path and to only use relative paths on the command line.
+
+.. index:: ! allowed paths, ! --allow-paths, remapping; target
+.. _allowed-paths:
+
+Allowed Paths
+=============
+
+As a security measure, the Host Filesystem Loader will refuse to load files from outside of a few
+locations that are considered safe by default:
+
+- Outside of Standard JSON mode:
+
+  - The directories containing input files listed on the command line.
+  - The directories used as :ref:`remapping <import-remapping>` targets.
+    If the target is not a directory (i.e does not end with ``/``, ``/.`` or ``/..``) the directory
+    containing the target is used instead.
+  - Base path.
+
+- In Standard JSON mode:
+
+  - Base path.
+
+Additional directories can be whitelisted using the ``--allow-paths`` option.
+The option accepts a comma-separated list of paths:
+
+.. code-block:: bash
+
+    cd /home/user/project/
+    solc token/contract.sol \
+        lib/util.sol=libs/util.sol \
+        --base-path=token/ \
+        --allow-paths=../utils/,/tmp/libraries
+
+When the compiler is invoked with the command shown above, the Host Filesystem Loader will allow
+importing files from the following directories:
+
+- ``/home/user/project/token/`` (because ``token/`` contains the input file and also because it is
+  the base path),
+- ``/home/user/project/libs/`` (because ``libs/`` is a directory containing a remapping target),
+- ``/home/user/utils/`` (because of ``../utils/`` passed to ``--allow-paths``),
+- ``/tmp/libraries/`` (because of ``/tmp/libraries`` passed to ``--allow-paths``),
+
+.. note::
+
+    The working directory of the compiler is one of the paths allowed by default only if it
+    happens to be the base path (or the base path is not specified or has an empty value).
+
+.. note::
+
+    The compiler does not check if allowed paths actually exist and whether they are directories.
+    Non-existent or empty paths are simply ignored.
+    If an allowed path matches a file rather than a directory, the file is considered whitelisted, too.
+
+.. note::
+
+    Allowed paths are case-sensitive even if the filesystem is not.
+    The case must exactly match the one used in your imports.
+    For example ``--allow-paths tokens`` will not match ``import "Tokens/IERC20.sol"``.
+
+.. warning::
+
+    Files and directories only reachable through symbolic links from allowed directories are not
+    automatically whitelisted.
+    For example if ``token/contract.sol`` in the example above was actually a symlink pointing at
+    ``/etc/passwd`` the compiler would refuse to load it unless ``/etc/`` was one of the allowed
+    paths too.
 
 .. index:: ! remapping; import, ! import; remapping, ! remapping; context, ! remapping; prefix, ! remapping; target
 .. _import-remapping:
