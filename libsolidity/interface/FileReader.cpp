@@ -69,20 +69,16 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 		if (strippedSourceUnitName.find("file://") == 0)
 			strippedSourceUnitName.erase(0, 7);
 
-		auto canonicalPath = boost::filesystem::weakly_canonical(m_basePath / strippedSourceUnitName);
+		auto canonicalPath = normalizeCLIPathForVFS(m_basePath / strippedSourceUnitName, SymlinkResolution::Enabled);
+
 		bool isAllowed = false;
-		for (auto const& allowedDir: m_allowedDirectories)
-		{
-			// If dir is a prefix of boostPath, we are fine.
-			if (
-				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
-				std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
-			)
+		for (boost::filesystem::path const& allowedDir: m_allowedDirectories)
+			if (isPathPrefix(normalizeCLIPathForVFS(allowedDir, SymlinkResolution::Enabled), canonicalPath))
 			{
 				isAllowed = true;
 				break;
 			}
-		}
+
 		if (!isAllowed)
 			return ReadCallback::Result{false, "File outside of allowed directories."};
 
