@@ -47,16 +47,13 @@ it is also possible to provide :ref:`path redirects <import-remapping>` using ``
 
 This essentially instructs the compiler to search for anything starting with
 ``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin``.
-``solc`` will not read files from the filesystem that lie outside of
-the remapping targets and outside of the directories where explicitly specified source
-files reside, so things like ``import "/etc/passwd";`` only work if you add ``/=/`` as a remapping.
 
 When accessing the filesystem to search for imports, :ref:`paths that do not start with ./
-or ../ <relative-imports>` are treated as relative to the directory specified using
+or ../ <direct-imports>` are treated as relative to the directory specified using
 ``--base-path`` option (or the current working directory if base path is not specified).
 Furthermore, the part added via ``--base-path`` will not appear in the contract metadata.
 
-For security reasons the compiler has restrictions on what directories it can access.
+For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
 Directories of source files specified on the command line and target paths of
 remappings are automatically allowed to be accessed by the file reader, but everything
 else is rejected by default.
