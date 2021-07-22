@@ -50,4 +50,6 @@ OptionsReaderAndMessages parseCommandLineAndReadInputFiles(
 	bool _processInput = false
 );
 
+std::string stripPreReleaseWarning(std::string const& _stderrContent);
+
 } // namespace solidity::frontend::test

@@ -54,5 +54,22 @@ test::OptionsReaderAndMessages test::parseCommandLineAndReadInputFiles(
 	if (success && _processInput)
 		success = cli.processInput();
 
-	return {success, cli.options(), cli.fileReader(), cli.standardJsonInput(), sout.str(), serr.str()};
+	return {
+		success,
+		cli.options(),
+		cli.fileReader(),
+		cli.standardJsonInput(),
+		sout.str(),
+		stripPreReleaseWarning(serr.str()),
+	};
+}
+
+string test::stripPreReleaseWarning(string const& _stderrContent)
+{
+	static regex const preReleaseWarningRegex{
+		R"(Warning( \(3805\))?: This is a pre-release compiler version, please do not use it in production\.\n)"
+		R"((\n)?)"
+	};
+
+	return regex_replace(_stderrContent, preReleaseWarningRegex, "");
 }
