@@ -223,13 +223,9 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_case_sensitivity)
 {
 	TemporaryDirectory tempDir("file-reader-test-");
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
-	boost::filesystem::create_directories(tempDir.path() / "abc");
 
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");
-
-	bool caseSensitiveFilesystem = boost::filesystem::create_directories(tempDir.path() / "ABC");
-	soltestAssert(boost::filesystem::equivalent(tempDir.path() / "abc", tempDir.path() / "ABC") != caseSensitiveFilesystem, "");
 
 	BOOST_TEST((FileReader::normalizeCLIPathForVFS((tempDir.path() / "abc")) == (expectedPrefix / "abc")));
 	BOOST_TEST((FileReader::normalizeCLIPathForVFS((tempDir.path() / "abc")) != (expectedPrefix / "ABC")));
