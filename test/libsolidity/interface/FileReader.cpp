@@ -65,8 +65,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_absolute_path)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
 {
-	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	boost::filesystem::create_directories(tempDir.path() / "x/y/z");
+	TemporaryDirectory tempDir({"x/y/z"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "x/y/z");
 
 	// NOTE: If path to work dir contains symlinks (often the case on macOS), boost might resolve
@@ -253,9 +252,8 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_separators)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_not_resolve_symlinks)
 {
-	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	TemporaryDirectory tempDir({"abc/"}, TEST_CASE_NAME);
 	soltestAssert(tempDir.path().is_absolute(), "");
-	boost::filesystem::create_directories(tempDir.path() / "abc");
 
 	if (!createSymlinkIfSupportedByFilesystem(tempDir.path() / "abc", tempDir.path() / "sym", true))
 		return;
@@ -269,9 +267,8 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_not_resolve_symlinks)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_resolve_symlinks_in_workdir_when_path_is_relative)
 {
-	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	TemporaryDirectory tempDir({"abc/"}, TEST_CASE_NAME);
 	soltestAssert(tempDir.path().is_absolute(), "");
-	boost::filesystem::create_directories(tempDir.path() / "abc");
 
 	if (!createSymlinkIfSupportedByFilesystem(tempDir.path() / "abc", tempDir.path() / "sym", true))
 		return;

@@ -66,6 +66,19 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_delete_its_directory_even_if_not_
 	BOOST_TEST(!boost::filesystem::exists(dirPath / "test-file.txt"));
 }
 
+BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_create_subdirectories)
+{
+	boost::filesystem::path dirPath;
+	{
+		TemporaryDirectory tempDir({"a", "a/", "a/b/c", "x.y/z"}, "temporary-directory-test");
+		dirPath = tempDir.path();
+
+		BOOST_TEST(boost::filesystem::is_directory(dirPath / "a"));
+		BOOST_TEST(boost::filesystem::is_directory(dirPath / "a/b/c"));
+		BOOST_TEST(boost::filesystem::is_directory(dirPath / "x.y/z"));
+	}
+}
+
 BOOST_AUTO_TEST_CASE(TemporaryWorkingDirectory_should_change_and_restore_working_directory)
 {
 	boost::filesystem::path originalWorkingDirectory = boost::filesystem::current_path();

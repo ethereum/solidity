@@ -20,6 +20,7 @@
 
 #include <test/libsolidity/util/SoltestErrors.h>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
 #include <regex>
@@ -38,6 +39,24 @@ TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
 	soltestAssert(fs::path(_prefix) == fs::path(_prefix).stem(), "");
 
 	fs::create_directory(m_path);
+}
+
+TemporaryDirectory::TemporaryDirectory(
+	vector<boost::filesystem::path> const& _subdirectories,
+	string const& _prefix
+):
+	TemporaryDirectory(_prefix)
+{
+	for (boost::filesystem::path const& subdirectory: _subdirectories)
+	{
+		soltestAssert(!subdirectory.is_absolute() && subdirectory.root_path() != "/", "");
+		soltestAssert(
+			m_path.lexically_relative(subdirectory).empty() ||
+			*m_path.lexically_relative(subdirectory).begin() != "..",
+			""
+		);
+		boost::filesystem::create_directories(m_path / subdirectory);
+	}
 }
 
 TemporaryDirectory::~TemporaryDirectory()

@@ -614,8 +614,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_relative_base_path)
 
 BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_names)
 {
-	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	boost::filesystem::create_directories(tempDir.path() / "x/y/z");
+	TemporaryDirectory tempDir({"x/y/z"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "x/y/z");
 	soltestAssert(tempDir.path().is_absolute(), "");
 
@@ -782,9 +781,8 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_name
 
 BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
 {
-	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	TemporaryDirectory tempDir({"r/"}, TEST_CASE_NAME);
 	createFilesWithParentDirs({tempDir.path() / "x/y/z/contract.sol"});
-	boost::filesystem::create_directories(tempDir.path() / "r");
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "r");
 
 	if (

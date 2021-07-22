@@ -25,6 +25,7 @@
 #include <boost/filesystem.hpp>
 
 #include <string>
+#include <vector>
 
 namespace solidity::test
 {
@@ -41,6 +42,10 @@ class TemporaryDirectory
 {
 public:
 	TemporaryDirectory(std::string const& _prefix = "solidity-test");
+	TemporaryDirectory(
+		std::vector<boost::filesystem::path> const& _subdirectories,
+		std::string const& _prefix = "solidity-test"
+	);
 	~TemporaryDirectory();
 
 	boost::filesystem::path const& path() const { return m_path; }
