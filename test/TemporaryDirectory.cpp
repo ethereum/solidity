@@ -18,9 +18,10 @@
 
 #include <test/TemporaryDirectory.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
+
 #include <boost/filesystem.hpp>
 
-#include <cassert>
 #include <regex>
 #include <iostream>
 
@@ -34,7 +35,7 @@ TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
 	m_path(fs::temp_directory_path() / fs::unique_path(_prefix + "-%%%%-%%%%-%%%%-%%%%"))
 {
 	// Prefix should just be a file name and not contain anything that would make us step out of /tmp.
-	assert(fs::path(_prefix) == fs::path(_prefix).stem());
+	soltestAssert(fs::path(_prefix) == fs::path(_prefix).stem(), "");
 
 	fs::create_directory(m_path);
 }
@@ -42,10 +43,10 @@ TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
 TemporaryDirectory::~TemporaryDirectory()
 {
 	// A few paranoid sanity checks just to be extra sure we're not deleting someone's homework.
-	assert(m_path.string().find(fs::temp_directory_path().string()) == 0);
-	assert(!fs::equivalent(m_path, fs::temp_directory_path()));
-	assert(!fs::equivalent(m_path, m_path.root_path()));
-	assert(!m_path.empty());
+	soltestAssert(m_path.string().find(fs::temp_directory_path().string()) == 0, "");
+	soltestAssert(!fs::equivalent(m_path, fs::temp_directory_path()), "");
+	soltestAssert(!fs::equivalent(m_path, m_path.root_path()), "");
+	soltestAssert(!m_path.empty(), "");
 
 	boost::system::error_code errorCode;
 	uintmax_t numRemoved = fs::remove_all(m_path, errorCode);
