@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_redundant_slashes)
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_unc_path)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
 	// On Windows tempDir.path() normally contains the drive letter while the normalized path should not.
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_unc_path)
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_root_name_only)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 	soltestAssert(expectedWorkDir.is_absolute() || expectedWorkDir.root_path() == "/", "");
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_root_name_only)
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_stripping_root_name)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
 	soltestAssert(boost::filesystem::current_path().is_absolute(), "");
 #if defined(_WIN32)
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_beyond_root)
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_case_sensitivity)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");

@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(readFileAsString_regular_file)
 BOOST_AUTO_TEST_CASE(readFileAsString_directory)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	BOOST_CHECK_THROW(readFileAsString(tempDir.path()), NotAFile);
+	BOOST_CHECK_THROW(readFileAsString(tempDir), NotAFile);
 }
 
 BOOST_AUTO_TEST_CASE(readFileAsString_symlink)
