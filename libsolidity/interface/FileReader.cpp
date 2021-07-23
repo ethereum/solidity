@@ -119,6 +119,8 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(boost::filesystem::pa
 	// - Does NOT resolve symlinks (except for symlinks in the path to the current working directory).
 	// - Does NOT check if the path refers to a file or a directory. If the path ends with a slash,
 	//   the slash is preserved even if it's a file.
+	//   - The only exception are paths where the file name is a dot (e.g. '.' or 'a/b/.'). These
+	//     always have a trailing slash after normalization.
 	// - Preserves case. Even if the filesystem is case-insensitive but case-preserving and the
 	//   case differs, the actual case from disk is NOT detected.
 

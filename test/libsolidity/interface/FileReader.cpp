@@ -78,7 +78,10 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
 
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("."), expectedPrefix / "x/y/z/");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./"), expectedPrefix / "x/y/z/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(".//"), expectedPrefix / "x/y/z/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(".."), expectedPrefix / "x/y");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../"), expectedPrefix / "x/y/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("..//"), expectedPrefix / "x/y/");
 
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a"), expectedPrefix / "x/y/z/a");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/"), expectedPrefix / "x/y/z/a/");
@@ -86,6 +89,11 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a"), expectedPrefix / "x/y/z/a");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/"), expectedPrefix / "x/y/z/a/");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/."), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/./"), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/.//"), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/./."), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/././"), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/././/"), expectedPrefix / "x/y/z/a/");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b"), expectedPrefix / "x/y/z/a/b");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/"), expectedPrefix / "x/y/z/a/b/");
 
@@ -98,6 +106,10 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/../a/b/"), expectedPrefix / "x/y/z/a/b/");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/.."), expectedPrefix / "x/y/z/a/b");
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../"), expectedPrefix / "x/y/z/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/..//"), expectedPrefix / "x/y/z/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../.."), expectedPrefix / "x/y/z/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../../"), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../..//"), expectedPrefix / "x/y/z/a/");
 
 	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/.././../p/../q/../a/b"), expectedPrefix / "a/b");
 }
