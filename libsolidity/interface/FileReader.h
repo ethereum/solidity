@@ -41,20 +41,12 @@ public:
 
 	/// Constructs a FileReader with a base path and a set of allowed directories that
 	/// will be used when requesting files from this file reader instance.
-	explicit FileReader(
-		boost::filesystem::path _basePath = {},
-		FileSystemPathSet _allowedDirectories = {}
-	):
-		m_allowedDirectories(std::move(_allowedDirectories)),
-		m_sourceCodes()
-	{
-		setBasePath(_basePath);
-	}
+	explicit FileReader(boost::filesystem::path _basePath = {}, FileSystemPathSet _allowedDirectories = {});
 
 	void setBasePath(boost::filesystem::path const& _path);
 	boost::filesystem::path const& basePath() const noexcept { return m_basePath; }
 
-	void allowDirectory(boost::filesystem::path _path) { m_allowedDirectories.insert(std::move(_path)); }
+	void allowDirectory(boost::filesystem::path _path);
 	FileSystemPathSet const& allowedDirectories() const noexcept { return m_allowedDirectories; }
 
 	StringMap const& sourceCodes() const noexcept { return m_sourceCodes; }

@@ -348,7 +348,7 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 
 				auto remappingDir = boost::filesystem::path(remapping->target);
 				remappingDir.remove_filename();
-				m_options.input.allowedDirectories.insert(remappingDir);
+				m_options.input.allowedDirectories.insert(remappingDir.empty() ? "." : remappingDir);
 
 				m_options.input.remappings.emplace_back(move(remapping.value()));
 			}
@@ -905,7 +905,8 @@ General Information)").c_str(),
 	{
 		vector<string> paths;
 		for (string const& allowedPath: boost::split(paths, m_args[g_strAllowPaths].as<string>(), boost::is_any_of(",")))
-			m_options.input.allowedDirectories.insert(allowedPath);
+			if (!allowedPath.empty())
+				m_options.input.allowedDirectories.insert(allowedPath);
 	}
 
 	if (m_args.count(g_strStopAfter))
