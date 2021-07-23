@@ -91,6 +91,9 @@ optional<ImportRemapper::Remapping> ImportRemapper::parseRemapping(string const&
 	r.prefix = colon == eq ? string(_remapping.begin(), eq) : string(colon + 1, eq);
 	r.target = string(eq + 1, _remapping.end());
 
+	if (r.target.empty())
+		r.target = r.prefix;
+
 	if (r.prefix.empty())
 		return {};
 

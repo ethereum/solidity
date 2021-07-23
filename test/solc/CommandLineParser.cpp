@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.input.remappings = {
 			{"", "/tmp", "/usr/lib/"},
 			{"a", "b", "c/d"},
-			{"", "contract.sol", ""},
+			{"", "contract.sol", "contract.sol"},
 		};
 		expectedOptions.input.addStdin = true;
 		expectedOptions.input.basePath = "/home/user/";
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.input.remappings = {
 			{"", "/tmp", "/usr/lib/"},
 			{"a", "b", "c/d"},
-			{"", "contract.yul", ""},
+			{"", "contract.yul", "contract.yul"},
 		};
 		expectedOptions.input.addStdin = true;
 		expectedOptions.input.basePath = "/home/user/";
