@@ -228,10 +228,10 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_case_sensitivity)
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");
 
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS((tempDir.path() / "abc")) == (expectedPrefix / "abc")));
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS((tempDir.path() / "abc")) != (expectedPrefix / "ABC")));
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS((tempDir.path() / "ABC")) != (expectedPrefix / "abc")));
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS((tempDir.path() / "ABC")) == (expectedPrefix / "ABC")));
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc") == expectedPrefix / "abc");
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc") != expectedPrefix / "ABC");
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "ABC") != expectedPrefix / "abc");
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "ABC") == expectedPrefix / "ABC");
 }
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_separators)
@@ -252,8 +252,8 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_not_resolve_symlinks)
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");
 
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol") == expectedPrefix / "sym/contract.sol"));
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol") == expectedPrefix / "abc/contract.sol"));
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol") == expectedPrefix / "sym/contract.sol");
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol") == expectedPrefix / "abc/contract.sol");
 }
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_resolve_symlinks_in_workdir_when_path_is_relative)
@@ -272,9 +272,9 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_resolve_symlinks_in_workdir_w
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");
 
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS("contract.sol") == expectedWorkDir / "contract.sol"));
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol") == expectedPrefix / "sym/contract.sol"));
-	BOOST_TEST((FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol") == expectedPrefix / "abc/contract.sol"));
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS("contract.sol") == expectedWorkDir / "contract.sol");
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol") == expectedPrefix / "sym/contract.sol");
+	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol") == expectedPrefix / "abc/contract.sol");
 }
 
 BOOST_AUTO_TEST_CASE(isPathPrefix_file_prefix)
