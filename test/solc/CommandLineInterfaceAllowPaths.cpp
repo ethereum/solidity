@@ -288,8 +288,8 @@ BOOST_FIXTURE_TEST_CASE(allow_path_should_handle_empty_paths, AllowPathsFixture)
 	BOOST_TEST(checkImport("import 'a/../../code/a/b/c.sol'", {"--allow-paths", "x,,y"}) == ImportCheck::PathDisallowed());
 
 	// Work dir is not base path
-	BOOST_TEST(checkImport("import 'a/../../work/a/b/c.sol'", {"--allow-paths", "", "--base-path=../code/"}));
-	BOOST_TEST(checkImport("import 'a/../../work/a/b/c.sol'", {"--allow-paths", "x,,y", "--base-path=../code/"}));
+	BOOST_TEST(checkImport("import 'a/../../work/a/b/c.sol'", {"--allow-paths", "", "--base-path=../code/"}) == ImportCheck::PathDisallowed());
+	BOOST_TEST(checkImport("import 'a/../../work/a/b/c.sol'", {"--allow-paths", "x,,y", "--base-path=../code/"}) == ImportCheck::PathDisallowed());
 	BOOST_TEST(checkImport("import 'a/../../code/a/b/c.sol'", {"--allow-paths", "", "--base-path=../code/"}));
 	BOOST_TEST(checkImport("import 'a/../../code/a/b/c.sol'", {"--allow-paths", "x,,y", "--base-path=../code/"}));
 }

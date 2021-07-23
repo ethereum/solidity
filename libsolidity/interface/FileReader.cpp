@@ -33,9 +33,27 @@ using std::string;
 namespace solidity::frontend
 {
 
+FileReader::FileReader(
+	boost::filesystem::path _basePath,
+	FileSystemPathSet _allowedDirectories
+):
+	m_allowedDirectories(std::move(_allowedDirectories)),
+	m_sourceCodes()
+{
+	setBasePath(_basePath);
+	for (boost::filesystem::path const& allowedDir: m_allowedDirectories)
+		solAssert(!allowedDir.empty(), "");
+}
+
 void FileReader::setBasePath(boost::filesystem::path const& _path)
 {
 	m_basePath = (_path.empty() ? "" : normalizeCLIPathForVFS(_path));
+}
+
+void FileReader::allowDirectory(boost::filesystem::path _path)
+{
+	solAssert(!_path.empty(), "");
+	m_allowedDirectories.insert(std::move(_path));
 }
 
 void FileReader::setSource(boost::filesystem::path const& _path, SourceCode _source)
