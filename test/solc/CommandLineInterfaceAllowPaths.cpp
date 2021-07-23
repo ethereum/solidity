@@ -418,7 +418,7 @@ BOOST_FIXTURE_TEST_CASE(allow_path_automatic_whitelisting_remappings, AllowPaths
 	// Adding a remapping with an empty target does not whitelist anything
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {m_portablePrefix + "="}) == ImportCheck::PathDisallowed());
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"../code/="}) == ImportCheck::PathDisallowed());
-	BOOST_TEST(checkImport("import '/../work/a/b/c.sol'", {"../code/=", "--base-path", m_portablePrefix}));
+	BOOST_TEST(checkImport("import '/../work/a/b/c.sol'", {"../code/=", "--base-path", m_portablePrefix}) == ImportCheck::PathDisallowed());
 
 	// Adding a remapping that includes .. or . segments whitelists the parent dir and subdirectories
 	// of the resolved target
