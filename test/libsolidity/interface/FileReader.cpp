@@ -40,27 +40,27 @@ BOOST_AUTO_TEST_SUITE(FileReaderTest)
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_absolute_path)
 {
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/.") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/./") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/./.") == "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/"), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/./"), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/./."), "/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a") == "/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/") == "/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/.") == "/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/./a") == "/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/./a/") == "/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/./a/.") == "/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b") == "/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b/") == "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a"), "/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/"), "/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/."), "/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/./a"), "/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/./a/"), "/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/./a/."), "/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b"), "/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/"), "/a/b/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/./b/") == "/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/../a/b/") == "/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b/c/..") == "/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b/c/../") == "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/./b/"), "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/../a/b/"), "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/.."), "/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/../"), "/a/b/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b/c/../../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b/c/../../../") == "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/../../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/../../../"), "/");
 }
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
@@ -76,43 +76,42 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
 	expectedPrefix = "/" / expectedPrefix.relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS(".") == expectedPrefix / "x/y/z/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("./") == expectedPrefix / "x/y/z/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../") == expectedPrefix / "x/y/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("."), expectedPrefix / "x/y/z/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./"), expectedPrefix / "x/y/z/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../"), expectedPrefix / "x/y/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a") == expectedPrefix / "x/y/z/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/") == expectedPrefix / "x/y/z/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/.") == expectedPrefix / "x/y/z/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("./a") == expectedPrefix / "x/y/z/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("./a/") == expectedPrefix / "x/y/z/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("./a/.") == expectedPrefix / "x/y/z/a/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/b") == expectedPrefix / "x/y/z/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/b/") == expectedPrefix / "x/y/z/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a"), expectedPrefix / "x/y/z/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/"), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/."), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a"), expectedPrefix / "x/y/z/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/"), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/."), expectedPrefix / "x/y/z/a/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b"), expectedPrefix / "x/y/z/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/"), expectedPrefix / "x/y/z/a/b/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../a/b") == expectedPrefix / "x/y/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../../a/b") == expectedPrefix / "x/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("./a/b") == expectedPrefix / "x/y/z/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("././a/b") == expectedPrefix / "x/y/z/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../a/b"), expectedPrefix / "x/y/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/b"), expectedPrefix / "x/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/b"), expectedPrefix / "x/y/z/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("././a/b"), expectedPrefix / "x/y/z/a/b");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/./b/") == expectedPrefix / "x/y/z/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/../a/b/") == expectedPrefix / "x/y/z/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/b/c/..") == expectedPrefix / "x/y/z/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/b/c/../") == expectedPrefix / "x/y/z/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/./b/"), expectedPrefix / "x/y/z/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/../a/b/"), expectedPrefix / "x/y/z/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/.."), expectedPrefix / "x/y/z/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../"), expectedPrefix / "x/y/z/a/b/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../../a/.././../p/../q/../a/b") == expectedPrefix / "a/b");
-
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/.././../p/../q/../a/b"), expectedPrefix / "a/b");
 }
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_redundant_slashes)
 {
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("///") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("////") == "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("///"), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("////"), "/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("////a/b/") == "/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a//b/") == "/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a////b/") == "/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b//") == "/a/b/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/b////") == "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("////a/b/"), "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a//b/"), "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a////b/"), "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b//"), "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b////"), "/a/b/");
 }
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_unc_path)
@@ -126,20 +125,20 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_unc_path)
 
 	// UNC paths start with // or \\ followed by a name. They are used for network shares on Windows.
 	// On UNIX systems they are not supported but still treated in a special way.
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("//host/") == "//host/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("//host/a/b") == "//host/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("//host/a/b/") == "//host/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("//host/"), "//host/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("//host/a/b"), "//host/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("//host/a/b/"), "//host/a/b/");
 
 #if defined(_WIN32)
 	// On Windows an UNC path can also start with \\ instead of //
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("\\\\host/") == "//host/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("\\\\host/a/b") == "//host/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("\\\\host/a/b/") == "//host/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("\\\\host/"), "//host/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("\\\\host/a/b"), "//host/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("\\\\host/a/b/"), "//host/a/b/");
 #else
 	// On UNIX systems it's just a fancy relative path instead
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("\\\\host/") == expectedWorkDir / "\\\\host/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("\\\\host/a/b") == expectedWorkDir / "\\\\host/a/b");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("\\\\host/a/b/") == expectedWorkDir / "\\\\host/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("\\\\host/"), expectedWorkDir / "\\\\host/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("\\\\host/a/b"), expectedWorkDir / "\\\\host/a/b");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("\\\\host/a/b/"), expectedWorkDir / "\\\\host/a/b/");
 #endif
 }
 
@@ -158,18 +157,18 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_root_name_only)
 	// directory.
 
 	// UNC paths
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("//") == "//" / expectedWorkDir);
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("//host") == "//host" / expectedWorkDir);
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("//"), "//" / expectedWorkDir);
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("//host"), "//host" / expectedWorkDir);
 
 	// On UNIX systems root name is empty.
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("") == expectedWorkDir);
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(""), expectedWorkDir);
 
 #if defined(_WIN32)
 	boost::filesystem::path driveLetter = boost::filesystem::current_path().root_name();
 	solAssert(!driveLetter.empty(), "");
 	solAssert(driveLetter.is_relative(), "");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS(driveLetter) == expectedWorkDir);
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(driveLetter), expectedWorkDir);
 #endif
 }
 
@@ -183,9 +182,9 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_stripping_root_name)
 	soltestAssert(!boost::filesystem::current_path().root_name().empty(), "");
 
 	boost::filesystem::path normalizedPath = FileReader::normalizeCLIPathForVFS(boost::filesystem::current_path());
-	BOOST_TEST(normalizedPath == "/" / boost::filesystem::current_path().relative_path());
+	BOOST_CHECK_EQUAL(normalizedPath, "/" / boost::filesystem::current_path().relative_path());
 	BOOST_TEST(normalizedPath.root_name().empty());
-	BOOST_TEST(normalizedPath.root_directory() == "/");
+	BOOST_CHECK_EQUAL(normalizedPath.root_directory(), "/");
 }
 #endif
 
@@ -193,31 +192,31 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_beyond_root)
 {
 	TemporaryWorkingDirectory tempWorkDir("/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../.") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../a") == "/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../a/..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../a/../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../../a") == "/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../../a/..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/../../a/../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("/a/../../b/../..") == "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../"), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../a"), "/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../a/.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../a/../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../../a"), "/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../../a/.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../../a/../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/../../b/../.."), "/");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../.") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../a") == "/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../a/..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../a/../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../../a") == "/a");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../../a/..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("../../a/../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/../..") == "/");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("a/../../b/../..") == "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(".."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../"), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../a"), "/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../a/.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../a/../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a"), "/a");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/../.."), "/");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/../../b/../.."), "/");
 }
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_case_sensitivity)
@@ -252,8 +251,8 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_not_resolve_symlinks)
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol") == expectedPrefix / "sym/contract.sol");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol") == expectedPrefix / "abc/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol"), expectedPrefix / "sym/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol"), expectedPrefix / "abc/contract.sol");
 }
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_resolve_symlinks_in_workdir_when_path_is_relative)
@@ -272,9 +271,9 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_resolve_symlinks_in_workdir_w
 	boost::filesystem::path expectedPrefix = "/" / tempDir.path().relative_path();
 	soltestAssert(expectedPrefix.is_absolute() || expectedPrefix.root_path() == "/", "");
 
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS("contract.sol") == expectedWorkDir / "contract.sol");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol") == expectedPrefix / "sym/contract.sol");
-	BOOST_TEST(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol") == expectedPrefix / "abc/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("contract.sol"), expectedWorkDir / "contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol"), expectedPrefix / "sym/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(tempDir.path() / "abc/contract.sol"), expectedPrefix / "abc/contract.sol");
 }
 
 BOOST_AUTO_TEST_CASE(isPathPrefix_file_prefix)
@@ -357,42 +356,41 @@ BOOST_AUTO_TEST_CASE(isPathPrefix_case_sensitivity)
 
 BOOST_AUTO_TEST_CASE(stripPrefixIfPresent_file_prefix)
 {
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/", "/contract.sol") == "contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/contract.sol", "/contract.sol") == ".");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/contract.sol/", "/contract.sol") == ".");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/contract.sol/.", "/contract.sol") == ".");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/", "/contract.sol"), "contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/contract.sol", "/contract.sol"), ".");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/contract.sol/", "/contract.sol"), ".");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/contract.sol/.", "/contract.sol"), ".");
 
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/", "/a/bc/def/contract.sol") == "a/bc/def/contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a", "/a/bc/def/contract.sol") == "bc/def/contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/", "/a/bc/def/contract.sol") == "bc/def/contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/bc", "/a/bc/def/contract.sol") == "def/contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/bc/def/", "/a/bc/def/contract.sol") == "contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/bc/def/contract.sol", "/a/bc/def/contract.sol") == ".");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/", "/a/bc/def/contract.sol"), "a/bc/def/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a", "/a/bc/def/contract.sol"), "bc/def/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/", "/a/bc/def/contract.sol"), "bc/def/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/bc", "/a/bc/def/contract.sol"), "def/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/bc/def/", "/a/bc/def/contract.sol"), "contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/bc/def/contract.sol", "/a/bc/def/contract.sol"), ".");
 
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/contract.sol", "/token.sol"), "/token.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/contract", "/contract.sol"), "/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/contract.sol", "/contract"), "/contract");
 
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/contract.sol", "/token.sol") == "/token.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/contract", "/contract.sol") == "/contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/contract.sol", "/contract") == "/contract");
-
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/b/c/contract.sol", "/a/b/contract.sol") == "/a/b/contract.sol");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/b/contract.sol", "/a/b/c/contract.sol") == "/a/b/c/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/b/c/contract.sol", "/a/b/contract.sol"), "/a/b/contract.sol");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/b/contract.sol", "/a/b/c/contract.sol"), "/a/b/c/contract.sol");
 }
 
 BOOST_AUTO_TEST_CASE(stripPrefixIfPresent_directory_prefix)
 {
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/", "/") == ".");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/", "/"), ".");
 
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/", "/a/bc/def/") == "a/bc/def/");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a", "/a/bc/def/") == "bc/def/");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/", "/a/bc/def/") == "bc/def/");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/bc", "/a/bc/def/") == "def/");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/bc/def/", "/a/bc/def/") == ".");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/", "/a/bc/def/"), "a/bc/def/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a", "/a/bc/def/"), "bc/def/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/", "/a/bc/def/"), "bc/def/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/bc", "/a/bc/def/"), "def/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/bc/def/", "/a/bc/def/"), ".");
 
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a", "/b/") == "/b/");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/", "/b/") == "/b/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a", "/b/"), "/b/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/", "/b/"), "/b/");
 
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/b/c/", "/a/b/") == "/a/b/");
-	BOOST_TEST(FileReader::stripPrefixIfPresent("/a/b/c", "/a/b/") == "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/b/c/", "/a/b/"), "/a/b/");
+	BOOST_CHECK_EQUAL(FileReader::stripPrefixIfPresent("/a/b/c", "/a/b/"), "/a/b/");
 }
 
 BOOST_AUTO_TEST_CASE(isUNCPath)
