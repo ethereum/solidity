@@ -184,21 +184,21 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_root_name_only)
 #endif
 }
 
-#if defined(_WIN32)
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_stripping_root_name)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
 
 	soltestAssert(boost::filesystem::current_path().is_absolute(), "");
+#if defined(_WIN32)
 	soltestAssert(!boost::filesystem::current_path().root_name().empty(), "");
+#endif
 
 	boost::filesystem::path normalizedPath = FileReader::normalizeCLIPathForVFS(boost::filesystem::current_path());
 	BOOST_CHECK_EQUAL(normalizedPath, "/" / boost::filesystem::current_path().relative_path());
 	BOOST_TEST(normalizedPath.root_name().empty());
 	BOOST_CHECK_EQUAL(normalizedPath.root_directory(), "/");
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_beyond_root)
 {
