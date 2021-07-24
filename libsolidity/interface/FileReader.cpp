@@ -73,9 +73,10 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 			m_basePath / strippedSourceUnitName,
 			true /* resolveSymlinks */
 		);
+		FileSystemPathSet extraAllowedPaths = {m_basePath.empty() ? "." : m_basePath};
 
 		bool isAllowed = false;
-		for (boost::filesystem::path const& allowedDir: m_allowedDirectories)
+		for (boost::filesystem::path const& allowedDir: m_allowedDirectories + extraAllowedPaths)
 			if (isPathPrefix(normalizeCLIPathForVFS(allowedDir, true), canonicalPath))
 			{
 				isAllowed = true;
