@@ -211,6 +211,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
         }
 
         function transferTo(address payable dest, uint amount) public {
+            // THE BUG IS RIGHT HERE, you must use msg.sender instead of tx.origin
             require(tx.origin == owner);
             dest.transfer(amount);
         }
