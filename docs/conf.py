@@ -44,6 +44,7 @@ def setup(sphinx):
 extensions = [
     'sphinx_a4doc',
     'html_extra_template_renderer',
+    'remix_code_links',
 ]
 
 a4_base_path = os.path.dirname(__file__) + '/grammar'
