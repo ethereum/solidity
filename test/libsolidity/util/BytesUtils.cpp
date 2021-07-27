@@ -232,8 +232,8 @@ std::string BytesUtils::formatFixedPoint(bytes const& _bytes, bool _signed, size
 	if (_fractionalDigits > 0)
 	{
 		size_t numDigits = decimal.length() - (negative ? 1 : 0);
-		if (_fractionalDigits > numDigits)
-			decimal.insert(negative ? 1 : 0, string(_fractionalDigits - numDigits, '0'));
+		if (_fractionalDigits >= numDigits)
+			decimal.insert(negative ? 1 : 0, string(_fractionalDigits + 1 - numDigits, '0'));
 		decimal.insert(decimal.length() - _fractionalDigits, ".");
 	}
 	return decimal;
