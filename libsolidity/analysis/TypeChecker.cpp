@@ -806,8 +806,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				}
 			}
 
-			solAssert(!dynamic_cast<FixedPointType const*>(var->type()), "FixedPointType not implemented.");
-
 			if (!identifierInfo.suffix.empty())
 			{
 				string const& suffix = identifierInfo.suffix;

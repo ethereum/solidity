@@ -3741,7 +3741,7 @@ string YulUtilFunctions::cleanupFunction(Type const& _type)
 			templ("body", "cleaned := iszero(iszero(value))");
 			break;
 		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
+			templ("body", "cleaned := " + cleanupFunction(*dynamic_cast<FixedPointType const&>(_type).asIntegerType()) + "(value)");
 			break;
 		case Type::Category::Function:
 			switch (dynamic_cast<FunctionType const&>(_type).kind())
