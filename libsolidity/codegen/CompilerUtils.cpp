@@ -776,15 +776,11 @@ void CompilerUtils::convertType(
 		solAssert(!contrType->isSuper(), "Cannot convert magic variable \"super\"");
 
 	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum || stackTypeCategory == Type::Category::Enum);
-	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
-	if (chopSignBitsPending)
-	{
-		IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-		chopSignBitsPending = targetIntegerType.isSigned();
-	}
-
-	if (targetTypeCategory == Type::Category::FixedPoint)
-		solUnimplemented("Not yet implemented - FixedPointType.");
+	bool chopSignBitsPending = false;
+	if (_chopSignBits && targetTypeCategory == Type::Category::Integer)
+		chopSignBitsPending = dynamic_cast<IntegerType const&>(_targetType).isSigned();
+	else if (_chopSignBits && targetTypeCategory == Type::Category::FixedPoint)
+		chopSignBitsPending = dynamic_cast<FixedPointType const&>(_targetType).isSigned();
 
 	switch (stackTypeCategory)
 	{
@@ -799,6 +795,14 @@ void CompilerUtils::convertType(
 			rightShiftNumberOnStack(256 - typeOnStack.numBytes() * 8);
 			if (targetIntegerType.numBits() < typeOnStack.numBytes() * 8)
 				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
+		}
+		else if (targetTypeCategory == Type::Category::FixedPoint)
+		{
+			// Conversion from bytes to fixed point type. No need to clean the high bit
+			// only to shift right because of opposite alignment.
+			FixedPointType const& targetFixedPointType = dynamic_cast<FixedPointType const&>(_targetType);
+			solAssert(targetFixedPointType.numBits() == typeOnStack.numBytes() * 8, "");
+			rightShiftNumberOnStack(256 - typeOnStack.numBytes() * 8);
 		}
 		else if (targetTypeCategory == Type::Category::Address)
 		{
@@ -835,10 +839,9 @@ void CompilerUtils::convertType(
 			enumOverflowCheckPending = false;
 		}
 		break;
-	case Type::Category::FixedPoint:
-		solUnimplemented("Not yet implemented - FixedPointType.");
 	case Type::Category::Address:
 	case Type::Category::Integer:
+	case Type::Category::FixedPoint:
 	case Type::Category::Contract:
 	case Type::Category::RationalNumber:
 		if (targetTypeCategory == Type::Category::FixedBytes)
@@ -846,6 +849,7 @@ void CompilerUtils::convertType(
 			solAssert(
 				stackTypeCategory == Type::Category::Address ||
 				stackTypeCategory == Type::Category::Integer ||
+				stackTypeCategory == Type::Category::FixedPoint ||
 				stackTypeCategory == Type::Category::RationalNumber,
 				"Invalid conversion to FixedBytesType requested."
 			);
@@ -859,11 +863,14 @@ void CompilerUtils::convertType(
 			}
 			else if (stackTypeCategory == Type::Category::Address)
 				solAssert(targetBytesType.numBytes() * 8 == 160, "");
+			else if (stackTypeCategory == Type::Category::FixedPoint)
+				solAssert(targetBytesType.numBytes() * 8 == dynamic_cast<FixedPointType const&>(_typeOnStack).numBits(), "");
 			leftShiftNumberOnStack(256 - targetBytesType.numBytes() * 8);
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 		{
 			solAssert(stackTypeCategory != Type::Category::Address, "Invalid conversion to EnumType requested.");
+			solAssert(stackTypeCategory != Type::Category::FixedPoint, "Invalid conversion to EnumType requested.");
 			solAssert(_typeOnStack.mobileType(), "");
 			// just clean
 			convertType(_typeOnStack, *_typeOnStack.mobileType(), true);
@@ -881,12 +888,50 @@ void CompilerUtils::convertType(
 				stackTypeCategory == Type::Category::FixedPoint,
 				"Invalid conversion to FixedMxNType requested."
 			);
-			//shift all integer bits onto the left side of the fixed type
+
 			FixedPointType const& targetFixedPointType = dynamic_cast<FixedPointType const&>(_targetType);
-			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
-				if (targetFixedPointType.numBits() > typeOnStack->numBits())
-					cleanHigherOrderBits(*typeOnStack);
-			solUnimplemented("Not yet implemented - FixedPointType.");
+			int digitDifference = static_cast<int>(targetFixedPointType.fractionalDigits());
+			bool isSigned = false;
+			if (auto const* typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
+			{
+				cleanHigherOrderBits(*typeOnStack);
+				isSigned = typeOnStack->isSigned();
+			}
+			else if (auto const* typeOnStack = dynamic_cast<FixedPointType const*>(&_typeOnStack))
+			{
+				isSigned = typeOnStack->isSigned();
+				digitDifference -= static_cast<int>(typeOnStack->fractionalDigits());
+				if (typeOnStack->isSigned() != targetFixedPointType.isSigned())
+					solAssert(digitDifference >= 0, "");
+				if (digitDifference < 0 || typeOnStack->numBits() < targetFixedPointType.numBits())
+					cleanHigherOrderBits(*typeOnStack->asIntegerType());
+			}
+			else if (auto const* typeOnStack = dynamic_cast<RationalNumberType const*>(&_typeOnStack))
+			{
+				if (typeOnStack->isFractional())
+					digitDifference -= static_cast<int>(typeOnStack->fixedPointType()->fractionalDigits());
+				isSigned = typeOnStack->isNegative();
+			}
+			else
+				solAssert(false, "");
+
+			if (digitDifference > 0)
+				m_context << pow(u256(10), static_cast<unsigned>(digitDifference)) << Instruction::MUL;
+			else if (digitDifference < 0)
+				m_context <<
+					pow(u256(10), static_cast<unsigned>(-digitDifference)) <<
+					(isSigned ? Instruction::SDIV : Instruction::DIV);
+
+			if (_cleanupNeeded)
+				cleanHigherOrderBits(*targetFixedPointType.asIntegerType());
+			if (chopSignBitsPending)
+			{
+				if (targetFixedPointType.numBits() < 256)
+					m_context
+						<< ((u256(1) << targetFixedPointType.numBits()) - 1)
+						<< Instruction::AND;
+				chopSignBitsPending = false;
+			}
 		}
 		else
 		{
@@ -897,35 +942,50 @@ void CompilerUtils::convertType(
 				""
 			);
 			IntegerType addressType(160);
-			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
-				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
+			IntegerType const& targetType =
+				targetTypeCategory == Type::Category::Integer ?
+				dynamic_cast<IntegerType const&>(_targetType) :
+				addressType;
 			if (stackTypeCategory == Type::Category::RationalNumber)
 			{
 				RationalNumberType const& constType = dynamic_cast<RationalNumberType const&>(_typeOnStack);
 				// We know that the stack is clean, we only have to clean for a narrowing conversion
 				// where cleanup is forced.
-				solUnimplementedAssert(!constType.isFractional(), "Not yet implemented - FixedPointType.");
+				solUnimplementedAssert(!constType.isFractional(), "Not yet implemented - rational to integer conversion.");
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)
+					cleanHigherOrderBits(targetType);
+			}
+			else if (stackTypeCategory == Type::Category::FixedPoint)
+			{
+				FixedPointType const& typeOnStack = dynamic_cast<FixedPointType const&>(_typeOnStack);
+				solAssert(typeOnStack.isSigned() == targetType.isSigned(), "");
+				cleanHigherOrderBits(*typeOnStack.asIntegerType());
+				m_context <<
+					pow(u256(10), typeOnStack.fractionalDigits()) <<
+					(typeOnStack.isSigned() ? Instruction::SDIV : Instruction::DIV);
+				if (_cleanupNeeded)
 					cleanHigherOrderBits(targetType);
 			}
 			else
 			{
-				IntegerType const& typeOnStack = stackTypeCategory == Type::Category::Integer
-					? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
+				IntegerType const& typeOnStack =
+					stackTypeCategory == Type::Category::Integer ?
+					dynamic_cast<IntegerType const&>(_typeOnStack) :
+					addressType;
 				// Widening: clean up according to source type width
 				// Non-widening and force: clean up according to target type bits
 				if (targetType.numBits() > typeOnStack.numBits())
 					cleanHigherOrderBits(typeOnStack);
 				else if (_cleanupNeeded)
 					cleanHigherOrderBits(targetType);
-				if (chopSignBitsPending)
-				{
-					if (targetType.numBits() < 256)
-						m_context
-							<< ((u256(1) << targetType.numBits()) - 1)
-							<< Instruction::AND;
-					chopSignBitsPending = false;
-				}
+			}
+			if (chopSignBitsPending)
+			{
+				if (targetType.numBits() < 256)
+					m_context
+						<< ((u256(1) << targetType.numBits()) - 1)
+						<< Instruction::AND;
+				chopSignBitsPending = false;
 			}
 		}
 		break;
