@@ -72,13 +72,17 @@ public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
-		std::map<unsigned, std::shared_ptr<std::string const>> _sourceNames
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceNames
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
 		m_sourceNames{std::move(_sourceNames)},
 		m_debugDataOverride{DebugData::create()},
-		m_useSourceLocationFrom{UseSourceLocationFrom::Comments}
+		m_useSourceLocationFrom{
+			m_sourceNames.has_value() ?
+			UseSourceLocationFrom::Comments :
+			UseSourceLocationFrom::Scanner
+		}
 	{}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.

@@ -177,4 +177,22 @@ inline std::string formatNumberReadable(
 	return str;
 }
 
+/// Safely converts an usigned integer as string into an unsigned int type.
+///
+/// @return the converted number or nullopt in case of an failure (including if it would not fit).
+inline std::optional<unsigned> toUnsignedInt(std::string const& _value)
+{
+	try
+	{
+		auto const ulong = stoul(_value);
+		if (ulong > std::numeric_limits<unsigned>::max())
+			return std::nullopt;
+		return static_cast<unsigned>(ulong);
+	}
+	catch (...)
+	{
+		return std::nullopt;
+	}
+}
+
 }
