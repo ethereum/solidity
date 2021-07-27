@@ -573,9 +573,10 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	IntegerType const* integerType() const;
-	/// @returns the smallest fixed type that can hold the value or incurs the least precision loss,
-	/// unless the value was truncated, then a suitable type will be chosen to indicate such event.
+	/// @returns the smallest fixed type that can hold the value or incurs the least precision loss.
 	/// If the integer part does not fit, returns an empty pointer.
+	/// The rational number is not always implicitly convertible to the resulting type
+	/// (for example if precision loss is required).
 	FixedPointType const* fixedPointType() const;
 
 	/// @returns true if the value is not an integer.
