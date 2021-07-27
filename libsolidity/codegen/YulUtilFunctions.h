@@ -109,6 +109,10 @@ public:
 	std::string typedShiftLeftFunction(Type const& _type, Type const& _amountType);
 	std::string typedShiftRightFunction(Type const& _type, Type const& _amountType);
 
+	/// @returns the name of a function that shifts a decimal fixed point number by
+	/// @a _decimal decimals (positive multiplies, negative divides).
+	std::string fixedPointShiftFunction(int _digits, bool _signed);
+
 	/// @returns the name of a function which replaces the
 	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
 	/// byte) by the _numBytes least significant bytes of `toInsert`.

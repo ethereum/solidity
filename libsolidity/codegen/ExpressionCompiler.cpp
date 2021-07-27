@@ -2229,6 +2229,8 @@ void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& 
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(&_type))
 			isSigned = type->isSigned();
+		else if (auto type = dynamic_cast<FixedPointType const*>(&_type))
+			isSigned = type->isSigned();
 
 		switch (_operator)
 		{

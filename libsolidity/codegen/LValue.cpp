@@ -222,18 +222,18 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 		m_context
 			<< Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
 			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
-		if (m_dataType->category() == Type::Category::FixedPoint)
-			// implementation should be very similar to the integer case.
-			solUnimplemented("Not yet implemented - FixedPointType.");
 		if (m_dataType->category() == Type::Category::FixedBytes)
 		{
 			CompilerUtils(m_context).leftShiftNumberOnStack(256 - 8 * m_dataType->storageBytes());
 			cleaned = true;
 		}
-		else if (
-			m_dataType->category() == Type::Category::Integer &&
-			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
-		)
+		else if ((
+				m_dataType->category() == Type::Category::Integer &&
+				dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
+			) || (
+				m_dataType->category() == Type::Category::FixedPoint &&
+				dynamic_cast<FixedPointType const&>(*m_dataType).isSigned()
+		))
 		{
 			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
 			cleaned = true;
@@ -332,7 +332,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				// remove the higher order bits
 				utils.convertType(_sourceType, *m_dataType, true, true);
 			}
-			m_context  << Instruction::MUL << Instruction::OR;
+			m_context << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;
 			if (_move)

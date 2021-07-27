@@ -797,6 +797,8 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(commonType))
 			isSigned = type->isSigned();
+		if (auto type = dynamic_cast<FixedPointType const*>(commonType))
+			isSigned = type->isSigned();
 
 		string args =
 			expressionAsType(_binOp.leftExpression(), *commonType, true) +
