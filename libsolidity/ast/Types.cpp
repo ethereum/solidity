@@ -553,8 +553,6 @@ BoolResult IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		return (!isSigned() && (numBits() == fixedBytesType->numBytes() * 8));
 	else if (dynamic_cast<EnumType const*>(&_convertTo))
 		return true;
-	else if (auto fixedPointType = dynamic_cast<FixedPointType const*>(&_convertTo))
-		return (isSigned() == fixedPointType->isSigned()) && (numBits() == fixedPointType->numBits());
 
 	return false;
 }
@@ -689,7 +687,7 @@ BoolResult FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) con
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
 		if (convertTo.fractionalDigits() < m_fractionalDigits)
-			return BoolResult::err("Too many fractional digits.");
+			return BoolResult::err("Conversion would incur precision loss - use explicit conversion instead.");
 		if (convertTo.numBits() < m_totalBits)
 			return false;
 		else
@@ -700,7 +698,28 @@ BoolResult FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) con
 
 BoolResult FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
+	if (isImplicitlyConvertibleTo(_convertTo))
+		return true;
+	if (FixedBytesType const* convertTo = dynamic_cast<FixedBytesType const*>(&_convertTo))
+		return 8 * convertTo->numBytes() == m_totalBits;
+	if (FixedPointType const* convertTo = dynamic_cast<FixedPointType const*>(&_convertTo))
+	{
+		// It was not implicitly convertible, so we either lose precision or value range (can also be signedness).
+		size_t changes = 0;
+		if (convertTo->numBits() != numBits()) changes++;
+		if (convertTo->isSigned() != isSigned()) changes++;
+		if (convertTo->fractionalDigits() != fractionalDigits()) changes++;
+		solAssert(changes != 0, "");
+		if (changes > 1)
+			return BoolResult::err("Can only change one of precision, number of bits and signedness at the same time.");
+		return true;
+	}
+	if (IntegerType const* convertTo = dynamic_cast<IntegerType const*>(&_convertTo))
+		return
+			maxIntegerValue() <= convertTo->maxValue() &&
+			minIntegerValue() >= convertTo->minValue();
+
+	return false;
 }
 
 TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
@@ -986,9 +1005,9 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		if (isFractional())
-			return TypeResult::err("Fractional literals not supported.");
-		else if (!integerType())
+		if (isFractional() && !fixedPointType())
+			return TypeResult::err("Literal too large or cannot be represented without precision loss.");
+		else if (!isFractional() && !integerType())
 			return TypeResult::err("Literal too large.");
 
 		// Shift and exp are not symmetric, so it does not make sense to swap
