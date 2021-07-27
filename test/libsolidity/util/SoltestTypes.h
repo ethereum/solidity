@@ -107,7 +107,9 @@ struct ABIType
 		SignedDec,
 		Hex,
 		HexString,
-		String
+		String,
+		UnsignedFixedPoint,
+		SignedFixedPoint
 	};
 	enum Align
 	{
@@ -125,6 +127,9 @@ struct ABIType
 	Type type = ABIType::None;
 	Align align = ABIType::AlignRight;
 	size_t size = 32;
+
+	size_t fractionalDigits = 0;
+
 	bool alignDeclared = false;
 };
 

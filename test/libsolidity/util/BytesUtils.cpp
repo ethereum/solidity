@@ -17,18 +17,13 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/util/BytesUtils.h>
-
 #include <test/libsolidity/util/ContractABIUtils.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
-#include <liblangutil/Common.h>
-
 #include <libsolutil/CommonData.h>
-#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 
-#include <fstream>
 #include <iomanip>
 #include <memory>
 #include <regex>
@@ -89,6 +84,22 @@ bytes BytesUtils::convertNumber(string const& _literal)
 	try
 	{
 		return toCompactBigEndian(u256{_literal});
+	}
+	catch (std::exception const&)
+	{
+		BOOST_THROW_EXCEPTION(TestParserError("Number encoding invalid."));
+	}
+}
+
+bytes BytesUtils::convertFixedPoint(string const& _literal, size_t& o_fractionalDigits)
+{
+	size_t dotPos = _literal.find('.');
+	string valueInteger = _literal.substr(0, dotPos);
+	string valueFraction = _literal.substr(dotPos + 1);
+	o_fractionalDigits = valueFraction.length();
+	try
+	{
+		return util::toBigEndian(u256(valueInteger + valueFraction));
 	}
 	catch (std::exception const&)
 	{
@@ -206,6 +217,28 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 	return os.str();
 }
 
+std::string BytesUtils::formatFixedPoint(bytes const& _bytes, bool _signed, size_t _fractionalDigits)
+{
+	string decimal;
+	bool negative = false;
+	if (_signed)
+	{
+		s256 signedValue{u2s(fromBigEndian<u256>(_bytes))};
+		negative = (signedValue < 0);
+		decimal = signedValue.str();
+	}
+	else
+		decimal = fromBigEndian<u256>(_bytes).str();
+	if (_fractionalDigits > 0)
+	{
+		size_t numDigits = decimal.length() - (negative ? 1 : 0);
+		if (_fractionalDigits > numDigits)
+			decimal.insert(negative ? 1 : 0, string(_fractionalDigits - numDigits, '0'));
+		decimal.insert(decimal.length() - _fractionalDigits, ".");
+	}
+	return decimal;
+}
+
 string BytesUtils::formatRawBytes(
 	bytes const& _bytes,
 	solidity::frontend::test::ParameterList const& _parameters,
@@ -296,8 +329,11 @@ string BytesUtils::formatBytes(
 	case ABIType::String:
 		os << formatString(_bytes, _bytes.size() - countRightPaddedZeros(_bytes));
 		break;
-	case ABIType::Failure:
+	case ABIType::UnsignedFixedPoint:
+	case ABIType::SignedFixedPoint:
+		os << formatFixedPoint(_bytes, _abiType.type == ABIType::SignedFixedPoint, _abiType.fractionalDigits);
 		break;
+	case ABIType::Failure:
 	case ABIType::None:
 		break;
 	}
