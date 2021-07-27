@@ -383,10 +383,19 @@ bool CommandLineInterface::readInputFiles()
 
 	m_fileReader.setBasePath(m_options.input.basePath);
 
-	if (m_fileReader.basePath() != "" && !boost::filesystem::is_directory(m_fileReader.basePath()))
+	if (m_fileReader.basePath() != "")
 	{
-		serr() << "Base path must be a directory: " << m_fileReader.basePath() << endl;
-		return false;
+		if (!boost::filesystem::exists(m_fileReader.basePath()))
+		{
+			serr() << "Base path does not exist: " << m_fileReader.basePath() << endl;
+			return false;
+		}
+
+		if (!boost::filesystem::is_directory(m_fileReader.basePath()))
+		{
+			serr() << "Base path is not a directory: " << m_fileReader.basePath() << endl;
+			return false;
+		}
 	}
 
 	for (boost::filesystem::path const& allowedDirectory: m_options.input.allowedDirectories)
