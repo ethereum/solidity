@@ -464,7 +464,8 @@ Here are the detailed rules governing the behaviour of remappings:
 
 #. **Prefix cannot be empty but context and target are optional.**
 
-   If ``target`` is omitted, it defaults to the value of the ``prefix``.
+   - If ``target`` is the empty string, ``prefix`` is simply removed from import paths.
+   - Empty ``context`` means that the remapping applies to all imports in all source units.
 
 .. index:: Remix IDE, file://
 
