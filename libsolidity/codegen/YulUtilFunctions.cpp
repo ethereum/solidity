@@ -282,7 +282,7 @@ string YulUtilFunctions::leftAlignFunction(Type const& _type)
 			templ("body", "aligned := " + leftAlignFunction(IntegerType(8)) + "(value)");
 			break;
 		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
+			templ("body", "aligned := " + leftAlignFunction(*dynamic_cast<FixedPointType const&>(_type).asIntegerType()) + "(value)");
 			break;
 		case Type::Category::Array:
 		case Type::Category::Struct:
@@ -435,7 +435,7 @@ string YulUtilFunctions::shiftRightSignedFunctionDynamic()
 
 string YulUtilFunctions::typedShiftLeftFunction(Type const& _type, Type const& _amountType)
 {
-	solUnimplementedAssert(_type.category() != Type::Category::FixedPoint, "Not yet implemented - FixedPointType.");
+	solAssert(_type.category() != Type::Category::FixedPoint, "No operators for fixed point types.");
 	solAssert(_type.category() == Type::Category::FixedBytes || _type.category() == Type::Category::Integer, "");
 	solAssert(_amountType.category() == Type::Category::Integer, "");
 	solAssert(!dynamic_cast<IntegerType const&>(_amountType).isSigned(), "");
@@ -458,7 +458,7 @@ string YulUtilFunctions::typedShiftLeftFunction(Type const& _type, Type const& _
 
 string YulUtilFunctions::typedShiftRightFunction(Type const& _type, Type const& _amountType)
 {
-	solUnimplementedAssert(_type.category() != Type::Category::FixedPoint, "Not yet implemented - FixedPointType.");
+	solAssert(_type.category() != Type::Category::FixedPoint, "No operators for fixed point types.");
 	solAssert(_type.category() == Type::Category::FixedBytes || _type.category() == Type::Category::Integer, "");
 	solAssert(_amountType.category() == Type::Category::Integer, "");
 	solAssert(!dynamic_cast<IntegerType const&>(_amountType).isSigned(), "");
@@ -3266,13 +3266,17 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		case Type::Category::Integer:
 		case Type::Category::RationalNumber:
 		case Type::Category::Contract:
+		case Type::Category::FixedPoint:
 		{
 			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&_from))
-				solUnimplementedAssert(!rational->isFractional(), "Not yet implemented - FixedPointType.");
+				if (rational->isFractional())
+					solAssert(toCategory == Type::Category::FixedPoint, "");
 			if (toCategory == Type::Category::FixedBytes)
 			{
 				solAssert(
-					fromCategory == Type::Category::Integer || fromCategory == Type::Category::RationalNumber,
+					fromCategory == Type::Category::Integer ||
+					fromCategory == Type::Category::FixedPoint ||
+					fromCategory == Type::Category::RationalNumber,
 					"Invalid conversion to FixedBytesType requested."
 				);
 				FixedBytesType const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
@@ -3284,6 +3288,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			}
 			else if (toCategory == Type::Category::Enum)
 			{
+				solAssert(fromCategory != Type::Category::FixedPoint, "");
 				solAssert(_from.mobileType(), "");
 				body =
 					Whiskers("converted := <cleanEnum>(<cleanInt>(value))")
@@ -3293,7 +3298,42 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					.render();
 			}
 			else if (toCategory == Type::Category::FixedPoint)
-				solUnimplemented("Not yet implemented - FixedPointType.");
+			{
+				FixedPointType const& toFixedType = dynamic_cast<FixedPointType const&>(_to);
+				int digitDifference = static_cast<int>(toFixedType.fractionalDigits());
+				bool isSigned = false;
+				if (auto const* fromIntegerType = dynamic_cast<IntegerType const*>(&_from))
+				{
+					solAssert(
+						fromIntegerType->maxValue() <= toFixedType.maxIntegerValue() &&
+						fromIntegerType->minValue() >= toFixedType.minIntegerValue(),
+						""
+					);
+					isSigned = fromIntegerType->isSigned();
+				}
+				else if (auto const* fromFixedType = dynamic_cast<FixedPointType const*>(&_from))
+				{
+					isSigned = fromFixedType->isSigned();
+					digitDifference -= static_cast<int>(fromFixedType->fractionalDigits());
+					if (fromFixedType->isSigned() != toFixedType.isSigned())
+						solAssert(digitDifference >= 0, "");
+				}
+				else if (auto const* fromRationalType = dynamic_cast<RationalNumberType const*>(&_from))
+				{
+					if (fromRationalType->isFractional())
+						digitDifference -= static_cast<int>(fromRationalType->fixedPointType()->fractionalDigits());
+					isSigned = fromRationalType->isNegative();
+				}
+				else
+					solAssert(false, "");
+				// TODO maybe target cleanup can be avoided in some cases.
+				body = Whiskers{"converted := <cleanupTarget>(<operator>(<cleanupSource>(value), <factor>))"}
+					("cleanupSource", cleanupFunction(_from))
+					("operator", digitDifference >= 0 ? "mul" : isSigned ? "sdiv" : "div")
+					("factor", "1" + string(static_cast<unsigned>(abs(digitDifference)), '0'))
+					("cleanupTarget", cleanupFunction(toFixedType))
+					.render();
+			}
 			else if (toCategory == Type::Category::Address)
 				body =
 					Whiskers("converted := <convert>(value)")
@@ -3310,23 +3350,37 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					toCategory == Type::Category::Integer ?
 					dynamic_cast<IntegerType const&>(_to) :
 					addressType;
-
-				// Clean according to the "to" type, except if this is
-				// a widening conversion.
-				IntegerType const* cleanupType = &to;
-				if (fromCategory != Type::Category::RationalNumber)
+				if (fromCategory == Type::Category::FixedPoint)
 				{
-					IntegerType const& from =
-						fromCategory == Type::Category::Integer ?
-						dynamic_cast<IntegerType const&>(_from) :
-						addressType;
-					if (to.numBits() > from.numBits())
-						cleanupType = &from;
+					auto const& fixedFrom = dynamic_cast<FixedPointType const&>(_from);
+					solAssert(fixedFrom.isSigned() == to.isSigned(), "" );
+					body =
+						Whiskers("converted := <cleanInt>(<div>(<cleanFixed>(value), <digits>))")
+						("cleanFixed", cleanupFunction(_from))
+						("div", to.isSigned() ? "sdiv" : "div")
+						("digits", "1"s + string(fixedFrom.fractionalDigits(), '0'))
+						("cleanInt", cleanupFunction(to))
+						.render();
 				}
-				body =
-					Whiskers("converted := <cleanInt>(value)")
-					("cleanInt", cleanupFunction(*cleanupType))
-					.render();
+				else
+				{
+					// Clean according to the "to" type, except if this is
+					// a widening conversion.
+					IntegerType const* cleanupType = &to;
+					if (fromCategory != Type::Category::RationalNumber)
+					{
+						IntegerType const& from =
+							fromCategory == Type::Category::Integer ?
+							dynamic_cast<IntegerType const&>(_from) :
+							addressType;
+						if (to.numBits() > from.numBits())
+							cleanupType = &from;
+					}
+					body =
+						Whiskers("converted := <cleanInt>(value)")
+						("cleanInt", cleanupFunction(*cleanupType))
+						.render();
+				}
 			}
 			break;
 		}
@@ -3339,9 +3393,6 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				.render();
 			break;
 		}
-		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
-			break;
 		case Type::Category::Struct:
 		{
 			solAssert(toCategory == Type::Category::Struct, "");
@@ -3390,11 +3441,23 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					("shift", shiftRightFunction(256 - from.numBytes() * 8))
 					("convert", conversionFunction(IntegerType(from.numBytes() * 8), _to))
 					.render();
+			else if (toCategory == Type::Category::FixedPoint)
+			{
+				auto const& toFixedPoint = dynamic_cast<FixedPointType const&>(_to);
+				IntegerType integerType(
+					toFixedPoint.numBits(),
+					toFixedPoint.isSigned() ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
+				);
+				body =
+					Whiskers("converted := <convert>(value)")
+					("convert", conversionFunction(_from, integerType))
+					.render();
+			}
 			else if (toCategory == Type::Category::Address)
 				body =
 					Whiskers("converted := <convert>(value)")
-						("convert", conversionFunction(_from, IntegerType(160)))
-						.render();
+					("convert", conversionFunction(_from, IntegerType(160)))
+					.render();
 			else
 			{
 				// clear for conversion to longer bytes
@@ -3734,14 +3797,14 @@ string YulUtilFunctions::cleanupFunction(Type const& _type)
 				templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << type.numBits()) - 1) + ")");
 			break;
 		}
+		case Type::Category::FixedPoint:
+			templ("body", "cleaned := " + cleanupFunction(*dynamic_cast<FixedPointType const&>(_type).asIntegerType()) + "(value)");
+			break;
 		case Type::Category::RationalNumber:
 			templ("body", "cleaned := value");
 			break;
 		case Type::Category::Bool:
 			templ("body", "cleaned := iszero(iszero(value))");
-			break;
-		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
 			break;
 		case Type::Category::Function:
 			switch (dynamic_cast<FunctionType const&>(_type).kind())
