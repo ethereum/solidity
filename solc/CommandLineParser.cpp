@@ -198,14 +198,14 @@ void CommandLineParser::printLicenseAndExit()
 }
 
 
-bool CommandLineParser::checkMutuallyExclusive(boost::program_options::variables_map const& args, string const& _optionA, string const& _optionB)
+bool CommandLineParser::checkMutuallyExclusive(vector<string> const& _optionNames)
 {
-	if (args.count(_optionA) && args.count(_optionB))
+	if (countEnabledOptions(_optionNames) > 1)
 	{
-		serr() << "Option " << _optionA << " and " << _optionB << " are mutually exclusive." << endl;
+		serr() << "The following options are mutually exclusive: " << joinOptionNames(_optionNames) << ". ";
+		serr() << "Select at most one." << endl;
 		return false;
 	}
-
 	return true;
 }
 
@@ -265,7 +265,6 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 {
 	return
 		input.paths == _other.input.paths &&
-		input.standardJsonFile == _other.input.standardJsonFile &&
 		input.remappings == _other.input.remappings &&
 		input.addStdin == _other.input.addStdin &&
 		input.basePath == _other.input.basePath &&
@@ -301,12 +300,20 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 bool CommandLineParser::parseInputPathsAndRemappings()
 {
 	m_options.input.ignoreMissingFiles = (m_args.count(g_strIgnoreMissingFiles) > 0);
+
 	if (m_args.count(g_strInputFile))
 		for (string path: m_args[g_strInputFile].as<vector<string>>())
 		{
 			auto eq = find(path.begin(), path.end(), '=');
 			if (eq != path.end())
 			{
+				if (m_options.input.mode == InputMode::StandardJson)
+				{
+					serr() << "Import remappings are not accepted on the command line in Standard JSON mode." << endl;
+					serr() << "Please put them under 'settings.remappings' in the JSON input." << endl;
+					return false;
+				}
+
 				if (auto r = ImportRemapper::parseRemapping(path))
 					m_options.input.remappings.emplace_back(std::move(*r));
 				else
@@ -323,6 +330,25 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 			else
 				m_options.input.paths.insert(path);
 		}
+
+	if (m_options.input.mode == InputMode::StandardJson)
+	{
+		if (m_options.input.paths.size() > 1 || (m_options.input.paths.size() == 1 && m_options.input.addStdin))
+		{
+			serr() << "Too many input files for --" << g_strStandardJSON << "." << endl;
+			serr() << "Please either specify a single file name or provide its content on standard input." << endl;
+			return false;
+		}
+		else if (m_options.input.paths.size() == 0)
+			// Standard JSON mode input used to be handled separately and zero files meant "read from stdin".
+			// Keep it working that way for backwards-compatibility.
+			m_options.input.addStdin = true;
+	}
+	else if (m_options.input.paths.size() == 0 && !m_options.input.addStdin)
+	{
+		serr() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		return false;
+	}
 
 	return true;
 }
@@ -735,7 +761,7 @@ General Information)").c_str(),
 		return false;
 	}
 
-	if (!checkMutuallyExclusive(m_args, g_strColor, g_strNoColor))
+	if (!checkMutuallyExclusive({g_strColor, g_strNoColor}))
 		return false;
 
 	array<string, 8> const conflictingWithStopAfter{
@@ -750,7 +776,7 @@ General Information)").c_str(),
 	};
 
 	for (auto& option: conflictingWithStopAfter)
-		if (!checkMutuallyExclusive(m_args, g_strStopAfter, option))
+		if (!checkMutuallyExclusive({g_strStopAfter, option}))
 			return false;
 
 	if (m_args.count(g_strColor) > 0)
@@ -861,41 +887,32 @@ General Information)").c_str(),
 			m_options.output.stopAfter = CompilerStack::State::Parsed;
 	}
 
-	vector<string> const exclusiveModes = {
+	if (!checkMutuallyExclusive({
 		g_strStandardJSON,
 		g_strLink,
 		g_strAssemble,
 		g_strStrictAssembly,
 		g_strYul,
 		g_strImportAst,
-	};
-	if (countEnabledOptions(exclusiveModes) > 1)
-	{
-		serr() << "The following options are mutually exclusive: " << joinOptionNames(exclusiveModes) << ". ";
-		serr() << "Select at most one." << endl;
+	}))
 		return false;
-	}
 
-	if (m_args.count(g_strStandardJSON))
-	{
+	if (m_args.count(g_strStandardJSON) > 0)
 		m_options.input.mode = InputMode::StandardJson;
-
-		vector<string> inputFiles;
-		if (m_args.count(g_strInputFile))
-			inputFiles = m_args[g_strInputFile].as<vector<string>>();
-		if (inputFiles.size() == 1)
-			m_options.input.standardJsonFile = inputFiles[0];
-		else if (inputFiles.size() > 1)
-		{
-			serr() << "If --" << g_strStandardJSON << " is used, only zero or one input files are supported." << endl;
-			return false;
-		}
-
-		return true;
-	}
+	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
+		m_options.input.mode = InputMode::Assembler;
+	else if (m_args.count(g_strLink) > 0)
+		m_options.input.mode = InputMode::Linker;
+	else if (m_args.count(g_strImportAst) > 0)
+		m_options.input.mode = InputMode::CompilerWithASTImport;
+	else
+		m_options.input.mode = InputMode::Compiler;
 
 	if (!parseInputPathsAndRemappings())
 		return false;
+
+	if (m_options.input.mode == InputMode::StandardJson)
+		return true;
 
 	if (m_args.count(g_strLibraries))
 		for (string const& library: m_args[g_strLibraries].as<vector<string>>())
@@ -914,10 +931,8 @@ General Information)").c_str(),
 		m_options.output.evmVersion = *versionOption;
 	}
 
-	if (m_args.count(g_strAssemble) || m_args.count(g_strStrictAssembly) || m_args.count(g_strYul))
+	if (m_options.input.mode == InputMode::Assembler)
 	{
-		m_options.input.mode = InputMode::Assembler;
-
 		vector<string> const nonAssemblyModeOptions = {
 			// TODO: The list is not complete. Add more.
 			g_strOutputDir,
@@ -1031,11 +1046,8 @@ General Information)").c_str(),
 		return false;
 	}
 
-	if (m_args.count(g_strLink))
-	{
-		m_options.input.mode = InputMode::Linker;
+	if (m_options.input.mode == InputMode::Linker)
 		return true;
-	}
 
 	if (m_args.count(g_strMetadataHash))
 	{
@@ -1128,9 +1140,7 @@ General Information)").c_str(),
 		m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
 	}
 
-	if (m_args.count(g_strImportAst) > 0)
-		m_options.input.mode = InputMode::CompilerWithASTImport;
-	else
+	if (m_options.input.mode == InputMode::Compiler)
 		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");

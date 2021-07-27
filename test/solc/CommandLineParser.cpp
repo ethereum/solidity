@@ -20,6 +20,8 @@
 
 #include <solc/CommandLineParser.h>
 
+#include <test/solc/Common.h>
+
 #include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
@@ -28,7 +30,6 @@
 #include <libsolidity/interface/Version.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include <map>
 #include <optional>
@@ -46,20 +47,13 @@ using namespace solidity::yul;
 namespace
 {
 
-optional<CommandLineOptions> parseCommandLine(vector<string> const& commandLine, ostream& _stdout, ostream& _stderr)
+optional<CommandLineOptions> parseCommandLine(vector<string> const& _commandLine, ostream& _stdout, ostream& _stderr)
 {
-	size_t argc = commandLine.size();
-	vector<char const*> argv(argc + 1);
-
-	// argv[argc] typically contains NULL
-	argv[argc] = nullptr;
-
-	for (size_t i = 0; i < argc; ++i)
-		argv[i] = commandLine[i].c_str();
+	vector<char const*> argv = test::makeArgv(_commandLine);
 
 	CommandLineParser cliParser(_stdout, _stderr);
 	bool success = cliParser.parse(
-		static_cast<int>(argc),
+		static_cast<int>(_commandLine.size()),
 		argv.data(),
 		false // interactiveTerminal
 	);
@@ -69,7 +63,6 @@ optional<CommandLineOptions> parseCommandLine(vector<string> const& commandLine,
 	else
 		return cliParser.options();
 }
-
 
 } // namespace
 
@@ -99,7 +92,7 @@ BOOST_AUTO_TEST_CASE(no_options)
 	BOOST_TEST(sout.str() == "");
 	BOOST_TEST(serr.str() == "");
 	BOOST_REQUIRE(parsedOptions.has_value());
-	BOOST_TEST((parsedOptions.value() == expectedOptions));
+	BOOST_TEST(parsedOptions.value() == expectedOptions);
 }
 
 BOOST_AUTO_TEST_CASE(help)
@@ -224,7 +217,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		BOOST_TEST(sout.str() == "");
 		BOOST_TEST(serr.str() == "");
 		BOOST_REQUIRE(parsedOptions.has_value());
-		BOOST_TEST((parsedOptions.value() == expectedOptions));
+		BOOST_TEST(parsedOptions.value() == expectedOptions);
 	}
 }
 
@@ -342,8 +335,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		BOOST_TEST(sout.str() == "");
 		BOOST_TEST(serr.str() == "Warning: Yul is still experimental. Please use the output with care.\n");
 		BOOST_REQUIRE(parsedOptions.has_value());
-
-		BOOST_TEST((parsedOptions.value() == expectedOptions));
+		BOOST_TEST(parsedOptions.value() == expectedOptions);
 	}
 }
 
@@ -355,7 +347,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"--standard-json",
 		"--base-path=/home/user/",
 		"--allow-paths=/tmp,/home,project,../contracts",
-		"--ignore-missing",                // Ignored in Standard JSON mode
+		"--ignore-missing",
 		"--error-recovery",                // Ignored in Standard JSON mode
 		"--output-dir=/tmp/out",           // Accepted but has no effect in Standard JSON mode
 		"--overwrite",                     // Accepted but has no effect in Standard JSON mode
@@ -393,10 +385,10 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	CommandLineOptions expectedOptions;
 
 	expectedOptions.input.mode = InputMode::StandardJson;
-	expectedOptions.input.paths = {};
-	expectedOptions.input.standardJsonFile = "input.json";
+	expectedOptions.input.paths = {"input.json"};
 	expectedOptions.input.basePath = "/home/user/";
 	expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts"};
+	expectedOptions.input.ignoreMissingFiles = true;
 	expectedOptions.output.dir = "/tmp/out";
 	expectedOptions.output.overwriteFiles = true;
 	expectedOptions.output.revertStrings = RevertStrings::Strip;
@@ -419,7 +411,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	BOOST_TEST(sout.str() == "");
 	BOOST_TEST(serr.str() == "");
 	BOOST_REQUIRE(parsedOptions.has_value());
-	BOOST_TEST((parsedOptions.value() == expectedOptions));
+	BOOST_TEST(parsedOptions.value() == expectedOptions);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

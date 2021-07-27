@@ -57,6 +57,8 @@ int main(int argc, char** argv)
 	solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
 	if (!cli.parseArguments(argc, argv))
 		return 1;
+	if (!cli.readInputFiles())
+		return 1;
 	if (!cli.processInput())
 		return 1;
 	bool success = false;

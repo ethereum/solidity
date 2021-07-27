@@ -107,7 +107,6 @@ struct CommandLineOptions
 	{
 		InputMode mode = InputMode::Compiler;
 		std::set<boost::filesystem::path> paths;
-		std::string standardJsonFile;
 		std::vector<ImportRemapper::Remapping> remappings;
 		bool addStdin = false;
 		boost::filesystem::path basePath = "";
@@ -218,11 +217,7 @@ private:
 	/// @return false if there are any validation errors, true otherwise.
 	bool parseLibraryOption(std::string const& _input);
 
-	bool checkMutuallyExclusive(
-		boost::program_options::variables_map const& args,
-		std::string const& _optionA,
-		std::string const& _optionB
-	);
+	bool checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
 	[[noreturn]] void printVersionAndExit();
 	[[noreturn]] void printLicenseAndExit();
 	size_t countEnabledOptions(std::vector<std::string> const& _optionNames) const;
