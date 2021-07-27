@@ -157,12 +157,48 @@ Fixed Point Numbers
 -------------------
 
 .. warning::
-    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
-    cannot be assigned to or from.
+    Fixed point numbers are not fully supported by Solidity yet.
 
-``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the number of bits taken by
-the type and ``N`` represents how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
+``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the total number of bits used by
+the type and ``N`` represents how many fractional decimal digits are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
 ``ufixed`` and ``fixed`` are aliases for ``ufixed128x18`` and ``fixed128x18``, respectively.
+
+Fixed point types are used to represent fractional numbers with a fixed precision. The number ``1.5`` is stored in a ``fixed16x2`` (16 bit number with
+two fractional digits) as ``1.50``. In the EVM, it is stored exactly the same way as the number ``150`` would be stored in an ``int16``.
+The largest and the smallest number representable in a ``fixed16x2`` are ``327.67`` and ``-327.68``, respectively.
+
+For a fixed point type ``X``, you can use ``type(X).min`` and ``type(X).max`` to
+access the minimum and maximum value representable by the type, e.g. ``type(fixed16x2).max`` is ``327.67``.
+
+
+
+Type conversions:
+
+Implicit conversions from integer and fixed point types to ``fixedMxN`` types can be performed,
+as long as all values can still be represented ("widening" conversion).
+
+Implicit conversion from rational number expressions (literals) to fixed point types are only possible if there
+is no precision loss and the number is within the value range. This means that 0.01 can be implicitly
+converted to ``fixed64x2`` but not to ``fixed64x1``.
+
+Explicit conversions from rational number expressions (literals) are always possible as long as the
+value is within the range of the fixed point type.
+
+.. note::
+    Expressions like ``1/3``, which do not fit any finite precision, always have to be explicitly converted to
+    a fixed point type to specify the desired precision. Use ``fixed64x4(1/3)`` for example to have
+    four decimal digits of precision.
+
+Explicit conversions between fixed point types can be used to reduce precision (resulting in rounding
+towards zero) or value range (resulting in removing higher order bits), but only
+one of value range, signedness and precision can be changed at a time.
+
+Explicit conversions to integer types truncate the fractional part (towards zero) and can only be performed if the integer
+type can contain the resulting value after truncation.
+
+Explicit conversions to and from ``bytesNN`` types of matching width can be performed and do not change the internal representation.
+
+
 
 Operators:
 
@@ -170,10 +206,13 @@ Operators:
 * Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo)
 
 .. note::
-    The main difference between floating point (``float`` and ``double`` in many languages, more precisely IEEE 754 numbers) and fixed point numbers is
-    that the number of bits used for the integer and the fractional part (the part after the decimal dot) is flexible in the former, while it is strictly
-    defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
-    where the decimal point is.
+    Arithmetic operators are not yet supported.
+
+.. note::
+    Many programming language use floating point numbers (``float`` and ``double``, more precisely IEEE 754 numbers)
+    to handle fractional values. While floating point numbers usually work nicely with multiplication,
+    it is often difficult to predict when precision loss occurs for addition. Floating point numbers are
+    not supported by Solidity.
 
 .. index:: address, balance, send, call, delegatecall, staticcall, transfer
 
