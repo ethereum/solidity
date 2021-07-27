@@ -37,11 +37,8 @@ source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
-(( $# <= 1 )) || { printError "Too many arguments"; exit 1; }
-(( $# == 0 )) || [[ $1 == '--update' ]] || { printError "Invalid argument: '$1'"; exit 1; }
-
 AUTOUPDATE=false
-[[ $1 == --update ]] && AUTOUPDATE=true
+[[ $1 == --update ]] && AUTOUPDATE=true && shift
 
 case "$OSTYPE" in
     msys)
@@ -294,8 +291,21 @@ test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid rem
 printTask "Running general commandline tests..."
 (
     cd "$REPO_ROOT"/test/cmdlineTests/
-    for tdir in */
+    for tdir in ${*:-*/}
     do
+        if ! [[ -d $tdir ]]; then
+            if [[ $tdir =~ ^--.*$ ]]; then
+                if [[ $tdir == "--update" ]]; then
+                    printError "The --update option must be given before any positional arguments."
+                else
+                    printError "Invalid option: $tdir."
+                fi
+            else
+                printError "Test directory not found: $tdir"
+            fi
+            exit 1
+        fi
+
         printTask " - ${tdir}"
 
         # Strip trailing slash from $tdir.
