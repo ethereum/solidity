@@ -40,16 +40,15 @@ BMC::BMC(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
-	smtutil::SMTSolverChoice _enabledSolvers,
 	ModelCheckerSettings const& _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
 	SMTEncoder(_context, _settings, _charStreamProvider),
-	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers, _settings.timeout)),
+	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout)),
 	m_outerErrorReporter(_errorReporter)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
-	if (_enabledSolvers.some())
+	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
 			m_errorReporter.warning(
 				5622_error,
@@ -63,6 +62,20 @@ BMC::BMC(
 
 void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTargetType>> _solvedTargets)
 {
+	if (m_interface->solvers() == 0)
+	{
+		if (!m_noSolverWarning)
+		{
+			m_noSolverWarning = true;
+			m_outerErrorReporter.warning(
+				7710_error,
+				SourceLocation(),
+				"BMC analysis was not possible since no SMT solver was found and enabled."
+			);
+		}
+		return;
+	}
+
 	if (SMTEncoder::analyze(_source))
 	{
 		m_solvedTargets = move(_solvedTargets);
@@ -75,11 +88,14 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		_source.accept(*this);
 	}
 
-	solAssert(m_interface->solvers() > 0, "");
 	// If this check is true, Z3 and CVC4 are not available
 	// and the query answers were not provided, since SMTPortfolio
-	// guarantees that SmtLib2Interface is the first solver.
-	if (!m_interface->unhandledQueries().empty() && m_interface->solvers() == 1)
+	// guarantees that SmtLib2Interface is the first solver, if enabled.
+	if (
+		!m_interface->unhandledQueries().empty() &&
+		m_interface->solvers() == 1 &&
+		m_settings.solvers.smtlib2
+	)
 	{
 		if (!m_noSolverWarning)
 		{
@@ -87,7 +103,8 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 			m_outerErrorReporter.warning(
 				8084_error,
 				SourceLocation(),
-				"BMC analysis was not possible since no SMT solver (Z3 or CVC4) was found."
+				"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
+				" None of the installed solvers was enabled."
 #ifdef HAVE_Z3_DLOPEN
 				" Install libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " to enable Z3."
 #endif
@@ -916,16 +933,20 @@ void BMC::checkCondition(
 		solAssert(!_callStack.empty(), "");
 		std::ostringstream message;
 		message << "BMC: " << _description << " happens here.";
-		std::ostringstream modelMessage;
-		modelMessage << "Counterexample:\n";
-		solAssert(values.size() == expressionNames.size(), "");
-		map<string, string> sortedModel;
-		for (size_t i = 0; i < values.size(); ++i)
-			if (expressionsToEvaluate.at(i).name != values.at(i))
-				sortedModel[expressionNames.at(i)] = values.at(i);
 
-		for (auto const& eval: sortedModel)
-			modelMessage << "  " << eval.first << " = " << eval.second << "\n";
+		std::ostringstream modelMessage;
+		// Sometimes models have complex smtlib2 expressions that SMTLib2Interface fails to parse.
+		if (values.size() == expressionNames.size())
+		{
+			modelMessage << "Counterexample:\n";
+			map<string, string> sortedModel;
+			for (size_t i = 0; i < values.size(); ++i)
+				if (expressionsToEvaluate.at(i).name != values.at(i))
+					sortedModel[expressionNames.at(i)] = values.at(i);
+
+			for (auto const& eval: sortedModel)
+				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
+		}
 
 		m_errorReporter.warning(
 			_errorHappens,

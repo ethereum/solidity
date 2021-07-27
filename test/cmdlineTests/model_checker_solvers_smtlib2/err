@@ -1,0 +1,3 @@
+Warning: CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.
+
+Warning: BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.

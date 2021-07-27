@@ -27,6 +27,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <liblangutil/EVMVersion.h>
+#include <libsmtutil/SolverInterface.h>
 #include <libsolidity/interface/Version.h>
 
 #include <boost/algorithm/string.hpp>
@@ -82,6 +83,7 @@ BOOST_AUTO_TEST_CASE(no_options)
 	expectedOptions.modelChecker.settings = {
 		ModelCheckerContracts::Default(),
 		ModelCheckerEngine::None(),
+		smtutil::SMTSolverChoice::All(),
 		ModelCheckerTargets::Default(),
 		nullopt,
 	};
@@ -150,6 +152,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--yul-optimizations=agf",
 			"--model-checker-contracts=contract1.yul:A,contract2.yul:B",
 			"--model-checker-engine=bmc",
+			"--model-checker-solvers=z3,smtlib2",
 			"--model-checker-targets=underflow,divByZero",
 			"--model-checker-timeout=5",
 		};
@@ -207,6 +210,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.modelChecker.settings = {
 			{{{"contract1.yul", {"A"}}, {"contract2.yul", {"B"}}}},
 			{true, false},
+			{false, true, true},
 			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
 			5,
 		};
@@ -276,6 +280,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 				"contract1.yul:A,"
 				"contract2.yul:B",
 			"--model-checker-engine=bmc",  // Ignored in assembly mode
+			"--model-checker-solvers=z3,smtlib2", // Ignored in assembly mode
 			"--model-checker-targets="     // Ignored in assembly mode
 				"underflow,"
 				"divByZero",
@@ -372,6 +377,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 			"contract1.yul:A,"
 			"contract2.yul:B",
 		"--model-checker-engine=bmc",      // Ignored in Standard JSON mode
+		"--model-checker-solvers=z3,smtlib2", // Ignored in Standard JSON mode
 		"--model-checker-targets="         // Ignored in Standard JSON mode
 			"underflow,"
 			"divByZero",
