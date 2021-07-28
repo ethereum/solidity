@@ -95,6 +95,7 @@ private:
 	ASTPointer<ASTNode> parseFunctionDefinition(bool _freeFunction = false);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
+	ASTPointer<UserDefinedValueTypeDefinition> parseUserDefinedValueTypeDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(
 		VarDeclParserOptions const& _options = {},
