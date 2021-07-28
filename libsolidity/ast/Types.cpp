@@ -733,8 +733,7 @@ TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
 	case Token::Sub:
 	case Token::Inc:
 	case Token::Dec:
-		// for fixed, we allow +, -, ++ and --
-		return this;
+		return TypeResult::err("Arithmetic operators on fixed point types are not yet supported.");
 	default:
 		return nullptr;
 	}
@@ -795,7 +794,8 @@ TypeResult FixedPointType::binaryOperatorResult(Token _operator, Type const* _ot
 		return commonType;
 	if (TokenTraits::isBitOp(_operator) || TokenTraits::isBooleanOp(_operator) || _operator == Token::Exp)
 		return nullptr;
-	return commonType;
+
+	return TypeResult::err("Arithmetic operators on fixed point types are not yet supported.");
 }
 
 IntegerType const* FixedPointType::asIntegerType() const
