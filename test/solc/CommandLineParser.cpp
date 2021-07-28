@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
 			commandLine += vector<string>{
 				"--optimize",
-				"--optimize-runs=1000",    // Ignored in assembly mode
+				"--optimize-runs=1000",
 				"--yul-optimizations=agf",
 			};
 
@@ -332,7 +332,10 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		{
 			expectedOptions.optimizer.enabled = true;
 			expectedOptions.optimizer.yulSteps = "agf";
+			expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		}
+		else
+			expectedOptions.optimizer.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
 
 		stringstream sout, serr;
 		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);

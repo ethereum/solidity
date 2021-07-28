@@ -78,6 +78,7 @@ private:
 		yul::AssemblyStack::Language _language,
 		yul::AssemblyStack::Machine _targetMachine,
 		bool _optimize,
+		std::optional<unsigned int> _expectedExecutionsPerDeployment = std::nullopt,
 		std::optional<std::string> _yulOptimiserSteps = std::nullopt
 	);
 
