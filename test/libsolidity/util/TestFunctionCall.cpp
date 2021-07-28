@@ -18,8 +18,11 @@
 #include <test/libsolidity/util/ContractABIUtils.h>
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/JSON.h>
 
+#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include <optional>
 #include <stdexcept>
@@ -266,6 +269,7 @@ string TestFunctionCall::formatBytesParameters(
 			if (preferredParams)
 			{
 				ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.value(), abiParams.value());
+				preferredParams.value().begin()->abiType = abiParams.value().begin()->abiType;
 				os << BytesUtils::formatBytesRange(_bytes, preferredParams.value(), _highlight);
 			}
 		}
@@ -372,4 +376,67 @@ void TestFunctionCall::reset()
 bool TestFunctionCall::matchesExpectation() const
 {
 	return m_failure == m_call.expectations.failure && m_rawBytes == m_call.expectations.rawBytes();
+}
+
+bool TestFunctionCall::checkFixedPointTypes()
+{
+	// if constructor, we do not have any type information, because of missing signature.
+	if (m_call.signature.find("constructor()") != string::npos)
+		return true;
+
+	// check fixed point type used in return type.
+	ErrorReporter errorReporter;
+	std::optional<ParameterList> returnType
+		= ContractABIUtils::parametersFromJsonOutputs(errorReporter, m_contractABI, m_call.signature);
+	if (returnType.has_value() && !returnType.value().empty() && returnType.value().begin()->abiType.type == ABIType::FixedPointType)
+		if (m_call.expectations.result.begin()->abiType.N != returnType.value().begin()->abiType.N)
+		{
+			// if not matching, we reset the raw bytes of result, so that isoltest will generate the correct expectation.
+			m_call.expectations.result.begin()->rawBytes = {};
+			return false;
+		}
+
+	// check fixed point types used in arguments.
+	// - extract argument types from signature
+	size_t ob = m_call.signature.find('(') + 1;
+	size_t cb = m_call.signature.find(')');
+	string signature = m_call.signature.substr(ob, cb - ob);
+	vector<string> inputTypes;
+	if (signature.find(',') != string::npos)
+	{
+		if (!signature.empty())
+			boost::split(inputTypes, signature, boost::is_any_of(","));
+	}
+	else if (!signature.empty())
+		inputTypes.emplace_back(signature);
+
+	if (m_call.arguments.parameters.size() != inputTypes.size())
+		return true;
+
+	// - iterate through arguments and check that fractional digits match with the corresponding argument type.
+	for (size_t i = 0; i < inputTypes.size(); ++i)
+	{
+		auto& type = inputTypes[i];
+		auto& parameter = m_call.arguments.parameters[i];
+		if ((parameter.abiType.type == ABIType::FixedPointType || parameter.abiType.type == ABIType::UnsignedDec) && (type.find("fixed") != string::npos))
+		{
+			size_t fixedPointN;
+			vector<string> fixedTypeParameter;
+			string fixedTypeParameterString{type.substr(5)};
+			solAssert(fixedTypeParameterString.find('x') != string::npos, "");
+			boost::split(fixedTypeParameter, fixedTypeParameterString, boost::is_any_of("x"));
+			solAssert(fixedTypeParameter.size() == 2, "");
+			fixedPointN = static_cast<unsigned>(std::stoi(fixedTypeParameter[1]));
+			string what;
+			if (parameter.rawString.find('.') != string::npos)
+			{
+				what = parameter.rawString.substr(parameter.rawString.find('.') + 1);
+				solAssert(fixedPointN == what.length(), type + " not compatible with '" + parameter.rawString + "'");
+			}
+			else
+				solAssert(fixedPointN == 0, type + " not compatible with '" + parameter.rawString + "'");
+		}
+	}
+
+	return true;
 }

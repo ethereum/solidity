@@ -461,6 +461,7 @@ TestCase::TestResult SemanticTest::runTest(
 		test.setSideEffects(move(effects));
 
 		success &= test.call().expectedSideEffects == test.call().actualSideEffects;
+		success &= test.checkFixedPointTypes();
 	}
 
 	if (!m_testCaseWantsYulRun && _isYulRun)

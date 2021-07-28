@@ -20,9 +20,11 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/JSON.h>
 
 #include <json/json.h>
 
+#include "ContractABIUtils.h"
 #include <iosfwd>
 #include <numeric>
 #include <stdexcept>
@@ -95,6 +97,8 @@ public:
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
 	void setSideEffects(std::vector<std::string> _sideEffects) { m_call.actualSideEffects = _sideEffects; }
 
+	bool checkFixedPointTypes();
+
 private:
 	/// Tries to format the given `bytes`, applying the detected ABI types that have be set for each parameter.
 	/// Throws if there's a mismatch in the size of `bytes` and the desired formats that are specified
@@ -107,12 +111,6 @@ private:
 		ParameterList const& _params,
 		bool highlight = false,
 		bool failure = false
-	) const;
-
-	/// Formats a given _bytes applying the _abiType.
-	std::string formatBytesRange(
-		bytes const& _bytes,
-		ABIType const& _abiType
 	) const;
 
 	/// Formats a FAILURE plus additional parameters, if e.g. a revert message was returned.

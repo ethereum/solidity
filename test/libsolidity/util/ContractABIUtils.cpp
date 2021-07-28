@@ -114,6 +114,11 @@ bool isFixedStringArray(string const& _type)
 	return regex_match(_type, regex{"string\\[\\d+\\]"});
 }
 
+bool isFixedPointType(string const& _type)
+{
+	return regex_match(_type, regex{"fixed.*"});
+}
+
 bool isTuple(string const& _type)
 {
 	return _type == "tuple";
@@ -244,6 +249,23 @@ bool ContractABIUtils::appendTypesFromName(
 			_dynamicTypes.push_back(ABIType{ABIType::UnsignedDec});
 			_dynamicTypes.push_back(ABIType{ABIType::String, ABIType::AlignLeft});
 		}
+	}
+	else if (isFixedPointType(type))
+	{
+		vector<string> fixedTypeParameter;
+		solAssert(boost::starts_with(type, "fixed"), "");
+		string fixedTypeParameterString{type.substr(5)};
+		solAssert(fixedTypeParameterString.find('x') != string::npos, "");
+		boost::split(fixedTypeParameter, fixedTypeParameterString, boost::is_any_of("x"));
+		solAssert(fixedTypeParameter.size() == 2, "");
+		ABIType abiType{ABIType::FixedPointType};
+		abiType.M = static_cast<unsigned>(std::stoi(fixedTypeParameter[0]));
+		abiType.N = static_cast<unsigned>(std::stoi(fixedTypeParameter[1]));
+		solAssert(
+			8 <= abiType.M && abiType.M <= 256 && abiType.M % 8 == 0 && abiType.N <= 80,
+			""
+		);
+		_inplaceTypes.push_back(abiType);
 	}
 	else if (isBytes(type))
 		return false;

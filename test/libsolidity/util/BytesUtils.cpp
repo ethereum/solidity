@@ -96,6 +96,25 @@ bytes BytesUtils::convertNumber(string const& _literal)
 	}
 }
 
+bytes BytesUtils::convertFixedPoint(string const& _literal, size_t *_fixedPointN)
+{
+	solAssert(_fixedPointN != nullptr, "");
+	solAssert(_literal.find('.') != string::npos, "");
+	string v_integer{_literal};
+	string v_fraction;
+	v_integer = _literal.substr(0, _literal.find('.'));
+	v_fraction = {_literal.substr(_literal.find('.') + 1)};
+	try
+	{
+		*_fixedPointN = v_fraction.length();
+		return util::fromHex(util::toHex(u256{v_integer + v_fraction}));
+	}
+	catch (std::exception const&)
+	{
+		BOOST_THROW_EXCEPTION(TestParserError("Number encoding invalid."));
+	}
+}
+
 bytes BytesUtils::convertHexNumber(string const& _literal)
 {
 	try
@@ -206,6 +225,19 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 	return os.str();
 }
 
+std::string BytesUtils::formatFixedPoint(bytes const& _bytes, size_t _fixedPointM, size_t _fixedPointN)
+{
+	solAssert(_fixedPointM != 0, "");
+	u256 max{boost::multiprecision::pow(u256{2}, static_cast<unsigned>(_fixedPointM))};
+	solAssert(u256{_bytes} >= max, "");
+	stringstream os;
+	os << u256{_bytes};
+	string value{os.str()};
+	if (_fixedPointN > 0)
+		value.insert(value.length() - _fixedPointN, ".");
+	return value;
+}
+
 string BytesUtils::formatRawBytes(
 	bytes const& _bytes,
 	solidity::frontend::test::ParameterList const& _parameters,
@@ -295,6 +327,9 @@ string BytesUtils::formatBytes(
 		break;
 	case ABIType::String:
 		os << formatString(_bytes, _bytes.size() - countRightPaddedZeros(_bytes));
+		break;
+	case ABIType::FixedPointType:
+		os << formatFixedPoint(_bytes, _abiType.M, _abiType.N);
 		break;
 	case ABIType::Failure:
 		break;
