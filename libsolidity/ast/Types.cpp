@@ -756,19 +756,31 @@ string FixedPointType::toString(bool) const
 
 bigint FixedPointType::maxIntegerValue() const
 {
-	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
-	return maxValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
+	rational max = maxValue();
+	return max.numerator() / max.denominator();
 }
 
 bigint FixedPointType::minIntegerValue() const
 {
+	rational min = minValue();
+	return min.numerator() / min.denominator();
+}
+
+rational FixedPointType::maxValue() const
+{
+	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
+	return rational(maxValue) / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
+}
+
+rational FixedPointType::minValue() const
+{
 	if (isSigned())
 	{
-		bigint minValue = -(bigint(1) << (m_totalBits - (isSigned() ? 1 : 0)));
-		return minValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
+		bigint minValue = -(bigint(1) << (m_totalBits - 1));
+		return rational(minValue) / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 	}
 	else
-		return bigint(0);
+		return rational{0};
 }
 
 TypeResult FixedPointType::binaryOperatorResult(Token _operator, Type const* _other) const
@@ -985,11 +997,24 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 	else if (category == Category::Integer)
 		return false;
 	else if (auto enumType = dynamic_cast<EnumType const*>(&_convertTo))
+	{
 		if (isNegative() || isFractional() || m_value >= enumType->numberOfMembers())
 			return false;
+	}
+	else if (auto fixedPointType = dynamic_cast<FixedPointType const*>(&_convertTo))
+	{
+		if (value() < fixedPointType->minValue())
+			return BoolResult::err("Value is too small.");
+		else if (value() > fixedPointType->maxValue())
+			return BoolResult::err("Value is too large.");
+		else
+			return true;
+	}
 
 	Type const* mobType = mobileType();
-	return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
+	if (!mobType)
+		return false;
+	return mobType->isExplicitlyConvertibleTo(_convertTo);
 
 }
 
