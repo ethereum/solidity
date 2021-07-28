@@ -786,12 +786,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "r");
 
 	if (
-#if !defined(_WIN32)
 		!createSymlinkIfSupportedByFilesystem("../x/y", tempDir.path() / "r/sym", true) ||
-#else
-		// NOTE: On Windows / works as a separator in a symlink target only if the target is absolute
-		!createSymlinkIfSupportedByFilesystem("..\\x\\y", tempDir.path() / "r/sym", true) ||
-#endif
 		!createSymlinkIfSupportedByFilesystem("contract.sol", tempDir.path() / "x/y/z/contract_symlink.sol", false)
 	)
 		return;
