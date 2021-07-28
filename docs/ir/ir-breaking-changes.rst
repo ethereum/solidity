@@ -193,6 +193,30 @@ This causes differences in some contracts, for example:
   - Old code generator: ``aMod = 0`` and ``mMod = 2``
   - New code generator: ``aMod = 4`` and ``mMod = 0``
 
+- The new code generator imposes a hard limit of ``type(uint64).max`` (``0xffffffffffffffff``) for the free memory pointer. Allocations that would increase its value beyond this limit revert. The old code generator does not have this limit.
+
+  For example:
+
+  .. code-block:: solidity
+
+      // SPDX-License-Identifier: GPL-3.0
+      pragma solidity >0.8.0;
+      contract C {
+          function f() public {
+              uint[] memory arr;
+              // allocation size: 576460752303423481
+              // assumes freeMemPtr points to 0x80 initially
+              uint solYulMaxAllocationBeforeMemPtrOverflow = (type(uint64).max - 0x80 - 31) / 32;
+              // freeMemPtr overflows UINT64_MAX
+              arr = new uint[](solYulMaxAllocationBeforeMemPtrOverflow);
+          }
+      }
+
+  The function `f()` behaves as follows:
+
+  - Old code generator: runs out of gas while zeroing the array contents after the large memory allocation
+  - New code generator: reverts due to free memory pointer overflow (does not run out of gas)
+
 
 Internals
 =========
