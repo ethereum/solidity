@@ -7,4 +7,5 @@ contract test {
     }
 }
 // ----
-// TypeError 2271: (117-123): Operator % not compatible with types rational_const 1 / 2 and fixed128x18. Fractional literals not supported.
+// TypeError 2271: (117-123): Operator % not compatible with types rational_const 1 / 2 and fixed128x18. Arithmetic operators on fixed point types are not yet supported.
+// TypeError 2271: (143-148): Operator % not compatible with types fixed128x18 and fixed128x18. Arithmetic operators on fixed point types are not yet supported.

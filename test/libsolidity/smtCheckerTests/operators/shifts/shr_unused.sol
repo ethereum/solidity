@@ -7,4 +7,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// UnimplementedFeatureError: Not yet implemented - FixedPointType.
+// TypeError 2271: (61-68): Operator >>> not compatible with types fixed128x18 and int_const 6. Arithmetic operators on fixed point types are not yet supported.
