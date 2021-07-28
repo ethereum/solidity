@@ -529,6 +529,9 @@ public:
 	/// smallest value in general.
 	bigint minIntegerValue() const;
 
+	rational maxValue() const;
+	rational minValue() const;
+
 	/// @returns the smallest integer type that can hold this type with fractional parts shifted to integers.
 	IntegerType const* asIntegerType() const;
 
