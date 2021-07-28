@@ -51,6 +51,7 @@ class UsingForDirective;
 class StructDefinition;
 class EnumDefinition;
 class EnumValue;
+class UserDefinedValueTypeDefinition;
 class ParameterList;
 class FunctionDefinition;
 class VariableDeclaration;
