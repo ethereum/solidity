@@ -101,6 +101,10 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	{
 		return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
 	}
+	catch (std::exception const& _exception)
+	{
+		return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
+	}
 	catch (...)
 	{
 		return ReadCallback::Result{false, "Unknown exception in read callback."};
