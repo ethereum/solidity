@@ -17,7 +17,7 @@ hiding new and different behavior in existing code.
   .. code-block:: solidity
 
       // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >0.7.0;
+      pragma solidity >=0.7.1;
 
       contract C {
           struct S {
@@ -80,7 +80,7 @@ This causes differences in some contracts, for example:
   .. code-block:: solidity
 
       // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >0.7.0;
+      pragma solidity >=0.7.1;
 
       contract A {
           uint x;
@@ -104,7 +104,7 @@ This causes differences in some contracts, for example:
   .. code-block:: solidity
 
       // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >0.8.0;
+      pragma solidity >=0.8.1;
 
       contract C {
           bytes x;
@@ -135,7 +135,7 @@ This causes differences in some contracts, for example:
   .. code-block:: solidity
 
       // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >0.8.0;
+      pragma solidity >=0.8.1;
       contract C {
           function preincr_u8(uint8 _a) public pure returns (uint8) {
               return ++_a + _a;
@@ -155,7 +155,7 @@ This causes differences in some contracts, for example:
   .. code-block:: solidity
 
       // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >0.8.0;
+      pragma solidity >=0.8.1;
       contract C {
           function add(uint8 _a, uint8 _b) public pure returns (uint8) {
               return _a + _b;
@@ -174,10 +174,10 @@ This causes differences in some contracts, for example:
   and left-to-right by the new code generator.
   For example:
 
-  ::
+  .. code-block:: solidity
 
       // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >0.8.0;
+      pragma solidity >=0.8.1;
       contract C {
           function f() public pure returns (uint256 aMod, uint256 mMod) {
               uint256 x = 3;
@@ -250,9 +250,10 @@ The new code generator performs cleanup after any operation that can result in d
 For example:
 
 .. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.8.0;
+    pragma solidity >=0.8.1;
     contract C {
         function f(uint8 _a) public pure returns (uint _r1, uint _r2)
         {

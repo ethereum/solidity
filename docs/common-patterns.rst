@@ -130,6 +130,7 @@ The use of **function modifiers** makes these
 restrictions highly readable.
 
 .. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -293,6 +294,7 @@ function finishes.
     will run even if the function explicitly returns.
 
 .. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;

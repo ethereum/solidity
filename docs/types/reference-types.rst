@@ -496,7 +496,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.8.4 <0.9.0;
+    pragma solidity >=0.8.5 <0.9.0;
     contract Proxy {
         /// @dev Address of the client contract managed by proxy i.e., this contract
         address client;

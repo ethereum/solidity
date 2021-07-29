@@ -158,7 +158,8 @@ Global Variables
 Function Visibility Specifiers
 ==============================
 
-::
+.. code-block:: solidity
+    :force:
 
     function myFunction() <visibility specifier> returns (bool) {
         return true;

@@ -97,7 +97,7 @@ The SMTChecker will, by default, check every reachable arithmetic operation
 in the contract for potential underflow and overflow.
 Here, it reports the following:
 
-.. code-block:: bash
+.. code-block:: text
 
     Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
     Counterexample:
@@ -233,7 +233,7 @@ For example, changing the code to
 
 gives us:
 
-.. code-block:: bash
+.. code-block:: text
 
     Warning: CHC: Assertion violation happens here.
     Counterexample:
@@ -323,7 +323,7 @@ reachable, by adding the following function.
 This property is false, and while proving that the property is false,
 the SMTChecker tells us exactly *how* to reach (2, 4):
 
-.. code-block:: bash
+.. code-block:: text
 
     Warning: CHC: Assertion violation happens here.
     Counterexample:
@@ -410,7 +410,7 @@ If we "forget" to use the ``mutex`` modifier on function ``set``, the
 SMTChecker is able to synthesize the behavior of the externally called code so
 that the assertion fails:
 
-.. code-block:: bash
+.. code-block:: text
 
     Warning: CHC: Assertion violation happens here.
     Counterexample:
@@ -494,10 +494,9 @@ allowed) of <source>:<contract> pairs in the CLI:
 and via the object ``settings.modelChecker.contracts`` in the :ref:`JSON input<compiler-api>`,
 which has the following form:
 
-.. code-block:: none
+.. code-block:: json
 
-    contracts
-    {
+    "contracts": {
         "source1.sol": ["contract1"],
         "source2.sol": ["contract2", "contract3"]
     }

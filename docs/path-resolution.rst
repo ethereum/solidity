@@ -180,7 +180,7 @@ Direct Imports
 
 An import that does not start with ``./`` or ``../`` is a *direct import*.
 
-::
+.. code-block:: solidity
 
     import "/project/lib/util.sol";         // source unit name: /project/lib/util.sol
     import "lib/util.sol";                  // source unit name: lib/util.sol

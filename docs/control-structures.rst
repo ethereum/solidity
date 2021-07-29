@@ -660,6 +660,7 @@ The following example shows how you can use ``require`` to check conditions on i
 and ``assert`` for internal error checking.
 
 .. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -786,7 +787,7 @@ A failure in an external call can be caught using a try/catch statement, as foll
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.8.0;
+    pragma solidity >=0.8.1;
 
     interface DataFeed { function getData(address token) external returns (uint value); }
 
