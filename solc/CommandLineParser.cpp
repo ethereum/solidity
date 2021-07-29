@@ -967,7 +967,8 @@ General Information)").c_str(),
 		m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
 		m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
 
-		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
+		if (!m_args[g_strOptimizeRuns].defaulted())
+			m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
 
 		if (m_args.count(g_strYulOptimizations))
 		{
@@ -1132,7 +1133,8 @@ General Information)").c_str(),
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);
 	m_options.output.experimentalViaIR = (m_args.count(g_strExperimentalViaIR) > 0);
-	m_options.optimizer.expectedExecutionsPerDeployment = m_args[g_strOptimizeRuns].as<unsigned>();
+	if (!m_args[g_strOptimizeRuns].defaulted())
+		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
 
 	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
 	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);

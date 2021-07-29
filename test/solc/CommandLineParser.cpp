@@ -78,7 +78,6 @@ BOOST_AUTO_TEST_CASE(no_options)
 
 	CommandLineOptions expectedOptions;
 	expectedOptions.input.paths = {"contract.sol"};
-	expectedOptions.optimizer.expectedExecutionsPerDeployment = 200;
 	expectedOptions.modelChecker.initialize = true;
 	expectedOptions.modelChecker.settings = {
 		ModelCheckerContracts::Default(),
@@ -334,8 +333,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			expectedOptions.optimizer.yulSteps = "agf";
 			expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		}
-		else
-			expectedOptions.optimizer.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
 
 		stringstream sout, serr;
 		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
