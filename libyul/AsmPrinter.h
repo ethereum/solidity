@@ -44,16 +44,22 @@ struct Dialect;
 class AsmPrinter
 {
 public:
-	AsmPrinter(std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {})
+	explicit AsmPrinter(
+		Dialect const* _dialect = nullptr,
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
+	):
+		m_dialect(_dialect)
 	{
 		if (_sourceIndexToName)
-			fillMap(*_sourceIndexToName);
+			for (auto&& [index, name]: *_sourceIndexToName)
+				m_nameToSourceIndex[*name] = index;
 	}
-	explicit AsmPrinter(Dialect const& _dialect, std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}): m_dialect(&_dialect)
-	{
-		if (_sourceIndexToName)
-			fillMap(*_sourceIndexToName);
-	}
+
+
+	explicit AsmPrinter(
+		Dialect const& _dialect,
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
+	): AsmPrinter(&_dialect, _sourceIndexToName) {}
 
 	std::string operator()(Literal const& _literal);
 	std::string operator()(Identifier const& _identifier);
@@ -71,18 +77,15 @@ public:
 	std::string operator()(Block const& _block);
 
 private:
-	void fillMap(std::map<unsigned, std::shared_ptr<std::string const>> const& _sourceIndexToName)
-	{
-		for (auto&& [key, val]: _sourceIndexToName)
-		{
-			if (val)
-				(m_nameToSourceIndex)[*val] = key;
-		}
-	}
-
 	std::string formatTypedName(TypedName _variable);
 	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
-	std::string formatSourceLocationComment(std::shared_ptr<DebugData const> _debugData, bool _statement = false);
+	std::string formatSourceLocationComment(std::shared_ptr<DebugData const> const& _debugData, bool _statement);
+	template <class T>
+	std::string formatSourceLocationComment(T const& _node)
+	{
+		bool isExpression = std::is_constructible<Expression, T>::value;
+		return formatSourceLocationComment(_node.debugData, !isExpression);
+	}
 
 	Dialect const* const m_dialect = nullptr;
 	std::map<std::string const, unsigned> m_nameToSourceIndex;

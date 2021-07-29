@@ -35,41 +35,51 @@ struct Dialect;
 struct AsmAnalysisInfo;
 
 
+using SourceNameMap = std::map<unsigned, std::shared_ptr<std::string const>>;
+
 /**
  * Generic base class for both Yul objects and Yul data.
  */
 struct ObjectNode
 {
 	virtual ~ObjectNode() = default;
-	virtual std::string toString(Dialect const* _dialect, bool printUseSrc = true) const = 0;
-	std::string toString() { return toString(nullptr); }
 
 	/// Name of the object.
 	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
+
+	/// Only for internal use. Use Object::toString(Dialect const*) instead.
+	virtual std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const = 0;
 };
 
 /**
  * Named data in Yul objects.
  */
-struct Data: ObjectNode
+struct Data: public ObjectNode
 {
 	Data(YulString _name, bytes _data): data(std::move(_data)) { name = _name; }
-	std::string toString(Dialect const* _dialect, bool printUseSrc = true) const override;
 
 	bytes data;
+
+	/// Only for internal use. Use Object::toString(Dialect const*) instead.
+	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
 };
 
-using SourceNameMap = std::map<unsigned, std::shared_ptr<std::string const>>;
+
+struct ObjectDebugData
+{
+	std::optional<SourceNameMap> sourceNames = {};
+};
+
 
 /**
  * Yul code and data object container.
  */
-struct Object: ObjectNode
+struct Object: public ObjectNode
 {
 public:
-	/// @returns a (parseable) string representation. Includes types if @a _yul is set.
-	std::string toString(Dialect const* _dialect, bool printUseSrc = true) const override;
+	/// @returns a (parseable) string representation.
+	std::string toString(Dialect const* _dialect) const;
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
@@ -96,10 +106,13 @@ public:
 	std::map<YulString, size_t> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 
-	std::optional<SourceNameMap> sourceIndexToName;
+	std::shared_ptr<ObjectDebugData const> debugData;
 
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
+
+	/// Only for internal use. Use Object::toString(Dialect const*) instead.
+	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
 };
 
 }

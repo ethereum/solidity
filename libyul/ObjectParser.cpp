@@ -53,14 +53,14 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 			object = make_shared<Object>();
 			object->name = "object"_yulstring;
 			object->code = parseBlock();
-			object->sourceIndexToName = m_sourceNameMapping;
 			if (!object->code)
 				return nullptr;
 		}
 		else
 			object = parseObject();
-		if (object && !_reuseScanner)
+		if (!_reuseScanner)
 			expectToken(Token::EOS);
+		object->debugData = make_shared<ObjectDebugData>(ObjectDebugData{m_sourceNameMapping});
 		return object;
 	}
 	catch (FatalError const&)
@@ -80,7 +80,6 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 	advance();
 
 	shared_ptr<Object> ret = make_shared<Object>();
-	ret->sourceIndexToName = m_sourceNameMapping;
 	ret->name = parseUniqueName(_containingObject);
 
 	expectToken(Token::LBrace);

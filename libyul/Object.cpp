@@ -50,30 +50,36 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(Dialect const*, bool) const
+string Data::toString(Dialect const*, optional<SourceNameMap>) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
-string Object::toString(Dialect const* _dialect, bool printUseSrc) const
+string Object::toString(Dialect const* _dialect) const
+{
+	return toString(_dialect, debugData ? debugData->sourceNames : optional<SourceNameMap>{});
+}
+
+string Object::toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const
 {
 	yulAssert(code, "No code");
-	string inner = "code " + (_dialect ? AsmPrinter{*_dialect, sourceIndexToName} : AsmPrinter{sourceIndexToName})(*code);
+	string inner = "code " + AsmPrinter{_dialect, _sourceNames}(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_dialect, false);
+	{
+		if (auto const* o = dynamic_cast<Object const*>(obj.get()))
+			yulAssert(!o->debugData || !o->debugData->sourceNames, "");
+		inner += "\n" + obj->toString(_dialect, _sourceNames);
+	}
 
-	string useSrcComment = "";
+	string useSrcComment;
 
-	if (sourceIndexToName && printUseSrc)
+	if (_sourceNames)
 		useSrcComment =
 			"/// @use-src " +
-			joinHumanReadable(
-				ranges::views::transform(*sourceIndexToName, [](auto&& _pair) {
-					return to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
-				}),
-				", "
-			) +
+			joinHumanReadable(ranges::views::transform(*_sourceNames, [](auto&& _pair) {
+				return to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
+			})) +
 			"\n";
 
 	return

@@ -43,7 +43,7 @@ using namespace solidity::yul;
 
 string AsmPrinter::operator()(Literal const& _literal)
 {
-	string const locationComment = formatSourceLocationComment(_literal.debugData, false);
+	string const locationComment = formatSourceLocationComment(_literal);
 
 	switch (_literal.kind)
 	{
@@ -63,19 +63,19 @@ string AsmPrinter::operator()(Literal const& _literal)
 string AsmPrinter::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "Invalid identifier.");
-	return formatSourceLocationComment(_identifier.debugData, false) + _identifier.name.str();
+	return formatSourceLocationComment(_identifier) + _identifier.name.str();
 }
 
 string AsmPrinter::operator()(ExpressionStatement const& _statement)
 {
-	string const locationComment = formatSourceLocationComment(_statement.debugData, true);
+	string const locationComment = formatSourceLocationComment(_statement);
 
 	return locationComment + std::visit(*this, _statement.expression);
 }
 
 string AsmPrinter::operator()(Assignment const& _assignment)
 {
-	string const locationComment = formatSourceLocationComment(_assignment.debugData, true);
+	string const locationComment = formatSourceLocationComment(_assignment);
 
 	yulAssert(_assignment.variableNames.size() >= 1, "");
 	string variables = (*this)(_assignment.variableNames.front());
@@ -87,8 +87,9 @@ string AsmPrinter::operator()(Assignment const& _assignment)
 
 string AsmPrinter::operator()(VariableDeclaration const& _variableDeclaration)
 {
-	string out = formatSourceLocationComment(_variableDeclaration.debugData, true) + "let ";
+	string out = formatSourceLocationComment(_variableDeclaration);
 
+	out += "let ";
 	out += boost::algorithm::join(
 		_variableDeclaration.variables | ranges::views::transform(
 			[this](TypedName argument) { return formatTypedName(argument); }
@@ -107,19 +108,14 @@ string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition)
 {
 	yulAssert(!_functionDefinition.name.empty(), "Invalid function name.");
 
-	string out =
-		formatSourceLocationComment(_functionDefinition.debugData, true) +
-		"function " +
-		_functionDefinition.name.str() +
-		"(";
-
-
+	string out = formatSourceLocationComment(_functionDefinition);
+	out += "function " + _functionDefinition.name.str() + "(";
 	out += boost::algorithm::join(
-			_functionDefinition.parameters | ranges::views::transform(
-				[this](TypedName argument) { return formatTypedName(argument); }
-				),
-			", "
-			);
+		_functionDefinition.parameters | ranges::views::transform(
+			[this](TypedName argument) { return formatTypedName(argument); }
+			),
+		", "
+	);
 	out += ")";
 	if (!_functionDefinition.returnVariables.empty())
 	{
@@ -132,12 +128,12 @@ string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition)
 				);
 	}
 
-	return  out + "\n" + (*this)(_functionDefinition.body);
+	return out + "\n" + (*this)(_functionDefinition.body);
 }
 
 string AsmPrinter::operator()(FunctionCall const& _functionCall)
 {
-	string const locationComment = formatSourceLocationComment(_functionCall.debugData, false);
+	string const locationComment = formatSourceLocationComment(_functionCall);
 	string const functionName = (*this)(_functionCall.functionName);
 	return
 		locationComment +
@@ -152,7 +148,7 @@ string AsmPrinter::operator()(If const& _if)
 {
 	yulAssert(_if.condition, "Invalid if condition.");
 
-	string out = formatSourceLocationComment(_if.debugData, true);
+	string out = formatSourceLocationComment(_if);
 	out += "if " + std::visit(*this, *_if.condition);
 
 	string body = (*this)(_if.body);
@@ -167,7 +163,7 @@ string AsmPrinter::operator()(Switch const& _switch)
 {
 	yulAssert(_switch.expression, "Invalid expression pointer.");
 
-	string out = formatSourceLocationComment(_switch.debugData, true);
+	string out = formatSourceLocationComment(_switch);
 	out += "switch " + std::visit(*this, *_switch.expression);
 
 	for (auto const& _case: _switch.cases)
@@ -184,7 +180,7 @@ string AsmPrinter::operator()(Switch const& _switch)
 string AsmPrinter::operator()(ForLoop const& _forLoop)
 {
 	yulAssert(_forLoop.condition, "Invalid for loop condition.");
-	string const locationComment = formatSourceLocationComment(_forLoop.debugData, true);
+	string const locationComment = formatSourceLocationComment(_forLoop);
 
 	string pre = (*this)(_forLoop.pre);
 	string condition = std::visit(*this, *_forLoop.condition);
@@ -205,22 +201,22 @@ string AsmPrinter::operator()(ForLoop const& _forLoop)
 
 string AsmPrinter::operator()(Break const& _break)
 {
-	return formatSourceLocationComment(_break.debugData, true) + "break";
+	return formatSourceLocationComment(_break) + "break";
 }
 
 string AsmPrinter::operator()(Continue const& _continue)
 {
-	return formatSourceLocationComment(_continue.debugData, true) + "continue";
+	return formatSourceLocationComment(_continue) + "continue";
 }
 
 string AsmPrinter::operator()(Leave const& _leave)
 {
-	return formatSourceLocationComment(_leave.debugData, true) + "leave";
+	return formatSourceLocationComment(_leave) + "leave";
 }
 
 string AsmPrinter::operator()(Block const& _block)
 {
-	string const locationComment = formatSourceLocationComment(_block.debugData, true);
+	string const locationComment = formatSourceLocationComment(_block);
 
 	if (_block.statements.empty())
 		return locationComment + "{ }";
@@ -240,7 +236,7 @@ string AsmPrinter::operator()(Block const& _block)
 string AsmPrinter::formatTypedName(TypedName _variable)
 {
 	yulAssert(!_variable.name.empty(), "Invalid variable name.");
-	return formatSourceLocationComment(_variable.debugData, false) + _variable.name.str() + appendTypeName(_variable.type);
+	return formatSourceLocationComment(_variable) + _variable.name.str() + appendTypeName(_variable.type);
 }
 
 string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
@@ -259,28 +255,30 @@ string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
 		return ":" + _type.str();
 }
 
-std::string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> _debugData,  bool _statement)
+string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const& _debugData,  bool _statement)
 {
 	if (
 		!_debugData ||
-		!_debugData->location.sourceName ||
 		m_lastLocation == _debugData->location ||
 		m_nameToSourceIndex.empty()
 	)
 		return "";
 
-	auto resultIter = m_nameToSourceIndex.find(*_debugData->location.sourceName);
-	if (resultIter == m_nameToSourceIndex.end())
-		return "";
-
 	m_lastLocation = _debugData->location;
 
-	return
-		(_statement ? "/// @src " : "/** @src ") +
-		to_string(resultIter->second) +
+	string sourceIndex = "-1";
+	if (_debugData->location.sourceName)
+		sourceIndex = to_string(m_nameToSourceIndex.at(*_debugData->location.sourceName));
+
+	string sourceLocation =
+		"@src " +
+		sourceIndex +
 		":" +
 		to_string(_debugData->location.start) +
 		":" +
-		to_string(_debugData->location.end) +
-		(_statement ? "\n" : " */ ");
+		to_string(_debugData->location.end);
+	return
+		_statement ?
+		"/// " + sourceLocation + "\n" :
+		"/** " + sourceLocation + " */ ";
 }
