@@ -1177,11 +1177,13 @@ intermediate states. This allows for easy debugging and verification of the opti
 Please refer to the general :ref:`optimizer documentation <optimizer>`
 for more details about the different optimization stages and how to use the optimizer.
 
-If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``:
+If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``
+and optionally specify the :ref:`expected number of contract executions <optimizer-parameter-runs>` with
+``--optimize-runs``:
 
 .. code-block:: sh
 
-    solc --strict-assembly --optimize
+    solc --strict-assembly --optimize --optimize-runs 200
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
 

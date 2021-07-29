@@ -49,6 +49,8 @@ differences, for example, functions may be inlined, combined, or rewritten to el
 redundancies, etc. (compare the output between the flags ``--ir`` and
 ``--optimize --ir-optimized``).
 
+.. _optimizer-parameter-runs:
+
 Optimizer Parameter Runs
 ========================
 

@@ -555,6 +555,7 @@ bool CommandLineInterface::processInput()
 			m_options.assembly.inputLanguage,
 			m_options.assembly.targetMachine,
 			m_options.optimizer.enabled,
+			m_options.optimizer.expectedExecutionsPerDeployment,
 			m_options.optimizer.yulSteps
 		);
 	}
@@ -595,7 +596,8 @@ bool CommandLineInterface::compile()
 		m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm);
 
 		OptimiserSettings settings = m_options.optimizer.enabled ? OptimiserSettings::standard() : OptimiserSettings::minimal();
-		settings.expectedExecutionsPerDeployment = m_options.optimizer.expectedExecutionsPerDeployment;
+		if (m_options.optimizer.expectedExecutionsPerDeployment.has_value())
+			settings.expectedExecutionsPerDeployment = m_options.optimizer.expectedExecutionsPerDeployment.value();
 		if (m_options.optimizer.noOptimizeYul)
 			settings.runYulOptimiser = false;
 
@@ -941,6 +943,7 @@ bool CommandLineInterface::assemble(
 	yul::AssemblyStack::Language _language,
 	yul::AssemblyStack::Machine _targetMachine,
 	bool _optimize,
+	optional<unsigned int> _expectedExecutionsPerDeployment,
 	optional<string> _yulOptimiserSteps
 )
 {
@@ -951,6 +954,8 @@ bool CommandLineInterface::assemble(
 	for (auto const& src: m_fileReader.sourceCodes())
 	{
 		OptimiserSettings settings = _optimize ? OptimiserSettings::full() : OptimiserSettings::minimal();
+		if (_expectedExecutionsPerDeployment.has_value())
+			settings.expectedExecutionsPerDeployment = _expectedExecutionsPerDeployment.value();
 		if (_yulOptimiserSteps.has_value())
 			settings.yulOptimiserSteps = _yulOptimiserSteps.value();
 

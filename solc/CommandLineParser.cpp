@@ -967,6 +967,8 @@ General Information)").c_str(),
 		m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
 		m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
 
+		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
+
 		if (m_args.count(g_strYulOptimizations))
 		{
 			if (!m_options.optimizer.enabled)

@@ -159,7 +159,7 @@ struct CommandLineOptions
 	struct
 	{
 		bool enabled = false;
-		unsigned expectedExecutionsPerDeployment = 0;
+		std::optional<unsigned> expectedExecutionsPerDeployment;
 		bool noOptimizeYul = false;
 		std::optional<std::string> yulSteps;
 	} optimizer;
