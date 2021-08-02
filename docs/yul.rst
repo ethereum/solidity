@@ -546,11 +546,18 @@ as explained below) and all declarations
 introduce new identifiers into these scopes.
 
 Identifiers are visible in
-the block they are defined in (including all sub-nodes and sub-blocks).
+the block they are defined in (including all sub-nodes and sub-blocks):
+Functions are visible in the whole block (even before their definitions) while
+variables are only visible starting from the statement after the ``VariableDeclaration``.
 
-As an exception, the scope of the "init" part of the or-loop
+In particular,
+variables cannot be referenced in the right hand side of their own variable
+declaration.
+Functions can be referenced already before their declaration (if they are visible).
+
+As an exception to the general scoping rule, the scope of the "init" part of the for-loop
 (the first block) extends across all other parts of the for loop.
-This means that variables declared in the init part (but not inside a
+This means that variables (and functions) declared in the init part (but not inside a
 block inside the init part) are visible in all other parts of the for-loop.
 
 Identifiers declared in the other parts of the for loop respect the regular
@@ -559,21 +566,15 @@ syntactical scoping rules.
 This means a for-loop of the form ``for { I... } C { P... } { B... }`` is equivalent
 to ``{ I... for {} C { P... } { B... } }``.
 
-
 The parameters and return parameters of functions are visible in the
 function body and their names have to be distinct.
 
-Variables can only be referenced after their declaration. In particular,
-variables cannot be referenced in the right hand side of their own variable
-declaration.
-Functions can be referenced already before their declaration (if they are visible).
+Inside functions, it is not possible to reference a variable that was declared
+outside of that function.
 
 Shadowing is disallowed, i.e. you cannot declare an identifier at a point
 where another identifier with the same name is also visible, even if it is
-not accessible.
-
-Inside functions, it is not possible to access a variable that was declared
-outside of that function.
+not possible to reference it because it was declared outside the current function.
 
 Formal Specification
 --------------------
