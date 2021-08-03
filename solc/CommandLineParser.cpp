@@ -302,6 +302,29 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		modelChecker.settings == _other.modelChecker.settings;
 }
 
+OptimiserSettings CommandLineOptions::optimiserSettings() const
+{
+	OptimiserSettings settings;
+
+	if (optimizer.enabled && input.mode == InputMode::Assembler)
+		settings = OptimiserSettings::full();
+	else if (optimizer.enabled)
+		settings = OptimiserSettings::standard();
+	else
+		settings = OptimiserSettings::minimal();
+
+	if (optimizer.noOptimizeYul)
+		settings.runYulOptimiser = false;
+
+	if (optimizer.expectedExecutionsPerDeployment.has_value())
+		settings.expectedExecutionsPerDeployment = optimizer.expectedExecutionsPerDeployment.value();
+
+	if (optimizer.yulSteps.has_value())
+		settings.yulOptimiserSteps = optimizer.yulSteps.value();
+
+	return settings;
+}
+
 bool CommandLineParser::parseInputPathsAndRemappings()
 {
 	m_options.input.ignoreMissingFiles = (m_args.count(g_strIgnoreMissingFiles) > 0);
@@ -988,19 +1011,9 @@ General Information)").c_str(),
 	if (!m_args[g_strOptimizeRuns].defaulted())
 		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
 
-	OptimiserSettings optimiserSettings;
-	if (m_options.optimizer.enabled && m_options.input.mode == InputMode::Assembler)
-		optimiserSettings = OptimiserSettings::full();
-	else if (m_options.optimizer.enabled)
-		optimiserSettings = OptimiserSettings::standard();
-	else
-		optimiserSettings = OptimiserSettings::minimal();
-
-	if (m_options.optimizer.noOptimizeYul)
-		optimiserSettings.runYulOptimiser = false;
-
 	if (m_args.count(g_strYulOptimizations))
 	{
+		OptimiserSettings optimiserSettings = m_options.optimiserSettings();
 		if (!optimiserSettings.runYulOptimiser)
 		{
 			serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
