@@ -31,6 +31,7 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
 
+#include <map>
 #include <memory>
 #include <variant>
 #include <vector>

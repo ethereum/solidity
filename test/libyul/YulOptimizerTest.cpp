@@ -27,6 +27,7 @@
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/AsmPrinter.h>
 
+#include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/Scanner.h>
 
