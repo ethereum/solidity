@@ -6,9 +6,11 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
+/// @use-src 0:"optimizer_array_sload/input.sol", 1:"#utility.yul"
 object "Arraysum_34" {
     code {
         {
+            /// @src 0:80:429
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("Arraysum_34_deployed")
@@ -19,6 +21,7 @@ object "Arraysum_34" {
     object "Arraysum_34_deployed" {
         code {
             {
+                /// @src 0:80:429
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
@@ -28,19 +31,27 @@ object "Arraysum_34" {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
                         let var_sum := _1
-                        let var_i := _1
+                        /// @src 0:368:378
+                        let var_i := /** @src 0:80:429 */ _1
                         let _2 := sload(_1)
+                        /// @src 0:364:423
                         for { }
-                        lt(var_i, _2)
+                        /** @src 0:380:397 */ lt(var_i, _2)
+                        /// @src 0:368:378
                         {
+                            /// @src 0:80:429
                             if eq(var_i, not(0)) { panic_error_0x11() }
-                            var_i := add(var_i, 1)
+                            /// @src 0:399:402
+                            var_i := /** @src 0:80:429 */ add(var_i, 1)
                         }
+                        /// @src 0:399:402
                         {
+                            /// @src 0:80:429
                             mstore(_1, _1)
                             let _3 := sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i))
                             if gt(var_sum, not(_3)) { panic_error_0x11() }
-                            var_sum := add(var_sum, _3)
+                            /// @src 0:407:423
+                            var_sum := /** @src 0:80:429 */ add(var_sum, _3)
                         }
                         let memPos := mload(64)
                         return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))

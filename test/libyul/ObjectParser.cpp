@@ -108,7 +108,7 @@ Error expectError(string const& _source, bool _allowWarnings = false)
 	return *error;
 }
 
-tuple<optional<ObjectParser::SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _source)
+tuple<optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _source)
 {
 	vector<string> lines;
 	boost::split(lines, _source, boost::is_any_of("\n"));

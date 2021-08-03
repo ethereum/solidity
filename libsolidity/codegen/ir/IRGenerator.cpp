@@ -279,8 +279,8 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions(ContractDefin
 		string funName = IRNames::internalDispatch(arity);
 		m_context.functionCollector().createFunction(funName, [&]() {
 			Whiskers templ(R"(
+				<sourceLocationComment>
 				function <functionName>(fun<?+in>, <in></+in>) <?+out>-> <out></+out> {
-					<sourceLocationComment>
 					switch fun
 					<#cases>
 					case <funID>
@@ -290,6 +290,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions(ContractDefin
 					</cases>
 					default { <panic>() }
 				}
+				<sourceLocationComment>
 			)");
 			templ("sourceLocationComment", sourceLocationComment(_contract, m_context));
 			templ("functionName", funName);
@@ -336,14 +337,19 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		m_context.resetLocalVariables();
 		Whiskers t(R"(
+			<sourceLocationComment>
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
-				<sourceLocationComment>
 				<retInit>
 				<body>
 			}
+			<contractSourceLocationComment>
 		)");
 
 		t("sourceLocationComment", sourceLocationComment(_function, m_context));
+		t(
+			"contractSourceLocationComment",
+			sourceLocationComment(m_context.mostDerivedContract(), m_context)
+		);
 
 		t("functionName", functionName);
 		vector<string> params;
@@ -398,12 +404,13 @@ string IRGenerator::generateModifier(
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		m_context.resetLocalVariables();
 		Whiskers t(R"(
+			<sourceLocationComment>
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
-				<sourceLocationComment>
 				<assignRetParams>
 				<evalArgs>
 				<body>
 			}
+			<contractSourceLocationComment>
 		)");
 		t("functionName", functionName);
 		vector<string> retParamsIn;
@@ -428,6 +435,11 @@ string IRGenerator::generateModifier(
 		);
 		solAssert(modifier, "");
 		t("sourceLocationComment", sourceLocationComment(*modifier, m_context));
+		t(
+			"contractSourceLocationComment",
+			sourceLocationComment(m_context.mostDerivedContract(), m_context)
+		);
+
 		switch (*_modifierInvocation.name().annotation().requiredLookup)
 		{
 		case VirtualLookup::Virtual:
@@ -478,13 +490,18 @@ string IRGenerator::generateFunctionWithModifierInner(FunctionDefinition const& 
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		m_context.resetLocalVariables();
 		Whiskers t(R"(
+			<sourceLocationComment>
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
-				<sourceLocationComment>
 				<assignRetParams>
 				<body>
 			}
+			<contractSourceLocationComment>
 		)");
 		t("sourceLocationComment", sourceLocationComment(_function, m_context));
+		t(
+			"contractSourceLocationComment",
+			sourceLocationComment(m_context.mostDerivedContract(), m_context)
+		);
 		t("functionName", functionName);
 		vector<string> retParams;
 		vector<string> retParamsIn;
@@ -522,12 +539,17 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 			solAssert(paramTypes.empty(), "");
 			solUnimplementedAssert(type->sizeOnStack() == 1, "");
 			return Whiskers(R"(
+				<sourceLocationComment>
 				function <functionName>() -> rval {
-					<sourceLocationComment>
 					rval := loadimmutable("<id>")
 				}
+				<contractSourceLocationComment>
 			)")
 			("sourceLocationComment", sourceLocationComment(_varDecl, m_context))
+			(
+				"contractSourceLocationComment",
+				sourceLocationComment(m_context.mostDerivedContract(), m_context)
+			)
 			("functionName", functionName)
 			("id", to_string(_varDecl.id()))
 			.render();
@@ -536,12 +558,17 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		{
 			solAssert(paramTypes.empty(), "");
 			return Whiskers(R"(
+				<sourceLocationComment>
 				function <functionName>() -> <ret> {
-					<sourceLocationComment>
 					<ret> := <constantValueFunction>()
 				}
+				<contractSourceLocationComment>
 			)")
 			("sourceLocationComment", sourceLocationComment(_varDecl, m_context))
+			(
+				"contractSourceLocationComment",
+				sourceLocationComment(m_context.mostDerivedContract(), m_context)
+			)
 			("functionName", functionName)
 			("constantValueFunction", IRGeneratorForStatements(m_context, m_utils).constantValueFunction(_varDecl))
 			("ret", suffixedVariableNameList("ret_", 0, _varDecl.type()->sizeOnStack()))
@@ -653,16 +680,21 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		}
 
 		return Whiskers(R"(
+			<sourceLocationComment>
 			function <functionName>(<params>) -> <retVariables> {
-				<sourceLocationComment>
 				<code>
 			}
+			<contractSourceLocationComment>
 		)")
 		("functionName", functionName)
 		("params", joinHumanReadable(parameters))
 		("retVariables", joinHumanReadable(returnVariables))
 		("code", std::move(code))
 		("sourceLocationComment", sourceLocationComment(_varDecl, m_context))
+		(
+			"contractSourceLocationComment",
+			sourceLocationComment(m_context.mostDerivedContract(), m_context)
+		)
 		.render();
 	});
 }
@@ -769,6 +801,7 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 		m_context.resetLocalVariables();
 		m_context.functionCollector().createFunction(IRNames::constructor(*contract), [&]() {
 			Whiskers t(R"(
+				<sourceLocationComment>
 				function <functionName>(<params><comma><baseParams>) {
 					<evalBaseArguments>
 					<sourceLocationComment>
@@ -776,6 +809,7 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 					<initStateVariables>
 					<userDefinedConstructorBody>
 				}
+				<contractSourceLocationComment>
 			)");
 			vector<string> params;
 			if (contract->constructor())
@@ -788,6 +822,10 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 				contract->location(),
 				m_context
 			));
+			t(
+				"contractSourceLocationComment",
+				sourceLocationComment(m_context.mostDerivedContract(), m_context)
+			);
 
 			t("params", joinHumanReadable(params));
 			vector<string> baseParams = listAllParams(baseConstructorParams);

@@ -6,9 +6,11 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
+/// @use-src 0:"name_simplifier/input.sol", 1:"#utility.yul"
 object "C_59" {
     code {
         {
+            /// @src 0:346:625
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("C_59_deployed")
@@ -19,6 +21,7 @@ object "C_59" {
     object "C_59_deployed" {
         code {
             {
+                /// @src 0:346:625
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
@@ -90,14 +93,18 @@ object "C_59" {
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
             }
+            /// @src 0:381:623
             function fun_sumArray(var_s_mpos) -> var, var_mpos
             {
+                /// @src 0:346:625
                 if iszero(mload(var_s_mpos)) { panic_error_0x32() }
-                sstore(0x00, mload(mload(add(var_s_mpos, 32))))
+                sstore(/** @src 0:472:473 */ 0x00, /** @src 0:346:625 */ mload(/** @src 0:469:474 */ mload(/** @src 0:346:625 */ add(var_s_mpos, 32))))
                 if iszero(lt(1, mload(var_s_mpos))) { panic_error_0x32() }
-                let _1 := mload(mload(add(var_s_mpos, 64)))
+                let _1 := mload(/** @src 0:489:494 */ mload(/** @src 0:346:625 */ add(var_s_mpos, 64)))
                 sstore(0x02, _1)
+                /// @src 0:500:619
                 var := _1
+                /// @src 0:346:625
                 let memPtr := mload(64)
                 let newFreePtr := add(memPtr, 160)
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
@@ -107,8 +114,10 @@ object "C_59" {
                 mstore(add(memPtr, 64), "ngstringlongstringlongstringlong")
                 mstore(add(memPtr, 96), "stringlongstringlongstringlongst")
                 mstore(add(memPtr, 128), "ring")
+                /// @src 0:500:619
                 var_mpos := memPtr
             }
+            /// @src 0:346:625
             function panic_error_0x32()
             {
                 mstore(0, shl(224, 0x4e487b71))
