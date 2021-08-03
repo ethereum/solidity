@@ -23,11 +23,19 @@
 
 #include <liblangutil/SemVerHandler.h>
 
+#include <liblangutil/Exceptions.h>
+
 #include <functional>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
+
+SemVerMatchExpressionParser::SemVerMatchExpressionParser(vector<Token> _tokens, vector<string> _literals):
+	m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
+{
+	solAssert(m_tokens.size() == m_literals.size(), "");
+}
 
 SemVerVersion::SemVerVersion(string const& _versionString)
 {

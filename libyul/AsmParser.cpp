@@ -24,8 +24,9 @@
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/Exceptions.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/Scanner.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Visitor.h>
 
@@ -68,6 +69,20 @@ optional<int> toInt(string const& _value)
 	}
 }
 
+}
+
+std::shared_ptr<DebugData const> Parser::createDebugData() const
+{
+	switch (m_useSourceLocationFrom)
+	{
+		case UseSourceLocationFrom::Scanner:
+			return DebugData::create(ParserBase::currentLocation());
+		case UseSourceLocationFrom::LocationOverride:
+			return DebugData::create(m_locationOverride);
+		case UseSourceLocationFrom::Comments:
+			return m_debugDataOverride;
+	}
+	solAssert(false, "");
 }
 
 unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)

@@ -21,6 +21,8 @@
 
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/CharStream.h>
+#include <liblangutil/CharStreamProvider.h>
 #include <libsolutil/UTF8.h>
 #include <iomanip>
 #include <string_view>
@@ -43,6 +45,14 @@ std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
 	return output;
 }
 
+}
+
+std::string SourceReferenceFormatter::formatErrorInformation(Error const& _error, CharStream const& _charStream)
+{
+	return formatErrorInformation(
+		_error,
+		SingletonCharStreamProvider(_charStream)
+	);
 }
 
 AnsiColorized SourceReferenceFormatter::normalColored() const

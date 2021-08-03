@@ -42,8 +42,6 @@
 
 #pragma once
 
-#include <libsolutil/Common.h>
-#include <liblangutil/Exceptions.h>
 #include <liblangutil/UndefMacros.h>
 
 #include <iosfwd>
@@ -329,11 +327,7 @@ namespace TokenTraits
 
 	bool isYulKeyword(std::string const& _literal);
 
-	inline Token AssignmentToBinaryOp(Token op)
-	{
-		solAssert(isAssignmentOp(op) && op != Token::Assign, "");
-		return static_cast<Token>(static_cast<int>(op) + (static_cast<int>(Token::BitOr) - static_cast<int>(Token::AssignBitOr)));
-	}
+	Token AssignmentToBinaryOp(Token op);
 
 	// @returns the precedence > 0 for binary and compare
 	// operators; returns 0 otherwise.
@@ -393,17 +387,7 @@ public:
 	Token token() const { return m_token; }
 
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
-	std::string toString(bool const& tokenValue = false) const
-	{
-		std::string name = TokenTraits::toString(m_token);
-		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))
-			return name;
-		solAssert(name.size() >= 3, "Token name size should be greater than 3. Should not reach here.");
-		if (m_token == Token::FixedMxN || m_token == Token::UFixedMxN)
-			return name.substr(0, name.size() - 3) + std::to_string(m_firstNumber) + "x" + std::to_string(m_secondNumber);
-		else
-			return name.substr(0, name.size() - 1) + std::to_string(m_firstNumber);
-	}
+	std::string toString(bool const& tokenValue = false) const;
 
 private:
 	Token m_token;

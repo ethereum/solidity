@@ -23,7 +23,6 @@
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceExtractor.h>
-#include <liblangutil/CharStreamProvider.h>
 
 #include <libsolutil/AnsiColorized.h>
 
@@ -33,6 +32,9 @@
 
 namespace solidity::langutil
 {
+
+class CharStream;
+class CharStreamProvider;
 struct SourceLocation;
 
 class SourceReferenceFormatter
@@ -80,13 +82,7 @@ public:
 		);
 	}
 
-	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream)
-	{
-		return formatErrorInformation(
-			_error,
-			SingletonCharStreamProvider(_charStream)
-		);
-	}
+	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream);
 
 private:
 	util::AnsiColorized normalColored() const;

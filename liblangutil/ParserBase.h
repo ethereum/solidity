@@ -33,6 +33,7 @@ namespace solidity::langutil
 
 class ErrorReporter;
 class Scanner;
+struct SourceLocation;
 struct ErrorId;
 
 class ParserBase

@@ -27,6 +27,7 @@
 #include <tools/yulPhaser/SimulationRNG.h>
 
 #include <liblangutil/CharStream.h>
+#include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/Scanner.h>
 

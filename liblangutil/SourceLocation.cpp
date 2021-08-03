@@ -21,6 +21,8 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <iostream>
+
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace std;
@@ -49,4 +51,17 @@ SourceLocation solidity::langutil::parseSourceLocation(string const& _input, vec
 	if (sourceIndex != -1)
 		result.sourceName = _sourceNames.at(static_cast<size_t>(sourceIndex));
 	return result;
+}
+
+std::ostream& solidity::langutil::operator<<(std::ostream& _out, SourceLocation const& _location)
+{
+	if (!_location.isValid())
+		return _out << "NO_LOCATION_SPECIFIED";
+
+	if (_location.sourceName)
+		_out << *_location.sourceName;
+
+	_out << "[" << _location.start << "," << _location.end << "]";
+
+	return _out;
 }
