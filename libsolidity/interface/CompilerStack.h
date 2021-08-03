@@ -57,7 +57,6 @@
 
 namespace solidity::langutil
 {
-class Scanner;
 class CharStream;
 }
 
@@ -344,7 +343,7 @@ private:
 	/// The state per source unit. Filled gradually during parsing.
 	struct Source
 	{
-		std::shared_ptr<langutil::Scanner> scanner;
+		std::shared_ptr<langutil::CharStream> charStream;
 		std::shared_ptr<SourceUnit> ast;
 		util::h256 mutable keccak256HashCached;
 		util::h256 mutable swarmHashCached;

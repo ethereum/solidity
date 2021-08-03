@@ -958,7 +958,8 @@ Json::Value ASTJsonImporter::member(Json::Value const& _node, string const& _nam
 
 Token ASTJsonImporter::scanSingleToken(Json::Value const& _node)
 {
-	langutil::Scanner scanner{langutil::CharStream(_node.asString(), "")};
+	langutil::CharStream charStream(_node.asString(), "");
+	langutil::Scanner scanner{charStream};
 	astAssert(scanner.peekNextToken() == Token::EOS, "Token string is too long.");
 	return scanner.currentToken();
 }

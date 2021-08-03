@@ -120,7 +120,7 @@ variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _diale
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(move(_source));
+	auto scanner = make_shared<Scanner>(_source);
 
 	ObjectParser parser(errorReporter, _dialect);
 	shared_ptr<Object> object = parser.parse(scanner, false);

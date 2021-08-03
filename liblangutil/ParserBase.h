@@ -24,7 +24,6 @@
 #pragma once
 
 #include <liblangutil/Token.h>
-#include <liblangutil/Scanner.h>
 #include <memory>
 #include <string>
 
@@ -49,8 +48,6 @@ public:
 	}
 
 	virtual ~ParserBase() = default;
-
-	std::shared_ptr<CharStream> source() const { return m_scanner->charStream(); }
 
 protected:
 	/// Utility class that creates an error and throws an exception if the

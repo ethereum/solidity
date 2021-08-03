@@ -42,11 +42,12 @@ namespace
 ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors, bool errorRecovery = false)
 {
 	ErrorReporter errorReporter(_errors);
+	auto charStream = CharStream(_source, "");
 	ASTPointer<SourceUnit> sourceUnit = Parser(
 		errorReporter,
 		solidity::test::CommonOptions::get().evmVersion(),
 		errorRecovery
-	).parse(std::make_shared<Scanner>(CharStream(_source, "")));
+	).parse(charStream);
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())

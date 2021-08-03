@@ -100,17 +100,13 @@ class Scanner
 {
 	friend class LiteralScope;
 public:
-	explicit Scanner(std::shared_ptr<CharStream> _source) { reset(std::move(_source)); }
-	explicit Scanner(CharStream _source = CharStream()) { reset(std::move(_source)); }
+	explicit Scanner(CharStream& _source):
+		m_source(_source),
+		m_sourceName{std::make_shared<std::string>(_source.name())}
+	{
+		reset();
+	}
 
-	std::string const& source() const noexcept { return m_source->source(); }
-
-	std::shared_ptr<CharStream> charStream() noexcept { return m_source; }
-	std::shared_ptr<CharStream const> charStream() const noexcept { return m_source; }
-
-	/// Resets the scanner as if newly constructed with _source as input.
-	void reset(CharStream _source);
-	void reset(std::shared_ptr<CharStream> _source);
 	/// Resets scanner to the start of input.
 	void reset();
 
@@ -122,6 +118,8 @@ public:
 		// Invalidate lookahead buffer.
 		rescan();
 	}
+
+	CharStream const& charStream() const noexcept { return m_source; }
 
 	/// @returns the next token and advances input
 	Token next();
@@ -201,8 +199,8 @@ private:
 	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
 
-	bool advance() { m_char = m_source->advanceAndGet(); return !m_source->isPastEndOfInput(); }
-	void rollback(size_t _amount) { m_char = m_source->rollback(_amount); }
+	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
+	void rollback(size_t _amount) { m_char = m_source.rollback(_amount); }
 	/// Rolls back to the start of the current token and re-runs the scanner.
 	void rescan();
 
@@ -251,15 +249,15 @@ private:
 	bool isUnicodeLinebreak();
 
 	/// Return the current source position.
-	size_t sourcePos() const { return m_source->position(); }
-	bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
+	size_t sourcePos() const { return m_source.position(); }
+	bool isSourcePastEndOfInput() const { return m_source.isPastEndOfInput(); }
 
 	enum TokenIndex { Current, Next, NextNext };
 
 	TokenDesc m_skippedComments[3] = {}; // desc for the current, next and nextnext skipped comment
 	TokenDesc m_tokens[3] = {}; // desc for the current, next and nextnext token
 
-	std::shared_ptr<CharStream> m_source;
+	CharStream& m_source;
 	std::shared_ptr<std::string const> m_sourceName;
 
 	ScannerKind m_kind = ScannerKind::Solidity;

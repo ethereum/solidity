@@ -85,7 +85,15 @@ std::shared_ptr<DebugData const> Parser::createDebugData() const
 	solAssert(false, "");
 }
 
-unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
+unique_ptr<Block> Parser::parse(CharStream& _charStream)
+{
+	m_scanner = make_shared<Scanner>(_charStream);
+	unique_ptr<Block> block = parseInline(m_scanner);
+	expectToken(Token::EOS);
+	return block;
+}
+
+unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner)
 {
 	m_recursionDepth = 0;
 
@@ -97,10 +105,7 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 		m_scanner = _scanner;
 		if (m_sourceNames)
 			fetchSourceLocationFromComment();
-		auto block = make_unique<Block>(parseBlock());
-		if (!_reuseScanner)
-			expectToken(Token::EOS);
-		return block;
+		return make_unique<Block>(parseBlock());
 	}
 	catch (FatalError const&)
 	{

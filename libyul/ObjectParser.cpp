@@ -131,7 +131,8 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 
 	solAssert(sm.size() == 2, "");
 	auto text = m_scanner->currentCommentLiteral().substr(static_cast<size_t>(sm.position() + sm.length()));
-	Scanner scanner(make_shared<CharStream>(text, ""));
+	CharStream charStream(text, "");
+	Scanner scanner(charStream);
 	if (scanner.currentToken() == Token::EOS)
 		return SourceNameMap{};
 	SourceNameMap sourceNames;
@@ -168,7 +169,7 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 shared_ptr<Block> ObjectParser::parseBlock()
 {
 	Parser parser(m_errorReporter, m_dialect, m_sourceNameMapping);
-	shared_ptr<Block> block = parser.parse(m_scanner, true);
+	shared_ptr<Block> block = parser.parseInline(m_scanner);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;
 }
