@@ -983,6 +983,43 @@ General Information)").c_str(),
 		m_options.output.evmVersion = *versionOption;
 	}
 
+	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
+	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
+	if (!m_args[g_strOptimizeRuns].defaulted())
+		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
+
+	OptimiserSettings optimiserSettings;
+	if (m_options.optimizer.enabled && m_options.input.mode == InputMode::Assembler)
+		optimiserSettings = OptimiserSettings::full();
+	else if (m_options.optimizer.enabled)
+		optimiserSettings = OptimiserSettings::standard();
+	else
+		optimiserSettings = OptimiserSettings::minimal();
+
+	if (m_options.optimizer.noOptimizeYul)
+		optimiserSettings.runYulOptimiser = false;
+
+	if (m_args.count(g_strYulOptimizations))
+	{
+		if (!optimiserSettings.runYulOptimiser)
+		{
+			serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
+			return false;
+		}
+
+		try
+		{
+			yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
+		}
+		catch (yul::OptimizerException const& _exception)
+		{
+			serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
+			return false;
+		}
+
+		m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
+	}
+
 	if (m_options.input.mode == InputMode::Assembler)
 	{
 		vector<string> const nonAssemblyModeOptions = {
@@ -1010,32 +1047,6 @@ General Information)").c_str(),
 		using Input = yul::AssemblyStack::Language;
 		using Machine = yul::AssemblyStack::Machine;
 		m_options.assembly.inputLanguage = m_args.count(g_strYul) ? Input::Yul : (m_args.count(g_strStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
-		m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
-		m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
-
-		if (!m_args[g_strOptimizeRuns].defaulted())
-			m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
-
-		if (m_args.count(g_strYulOptimizations))
-		{
-			if (!m_options.optimizer.enabled)
-			{
-				serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
-				return false;
-			}
-
-			try
-			{
-				yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
-			}
-			catch (yul::OptimizerException const& _exception)
-			{
-				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
-				return false;
-			}
-
-			m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
-		}
 
 		if (m_args.count(g_strMachine))
 		{
@@ -1184,36 +1195,6 @@ General Information)").c_str(),
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);
 	m_options.output.experimentalViaIR = (m_args.count(g_strExperimentalViaIR) > 0);
-	if (!m_args[g_strOptimizeRuns].defaulted())
-		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
-
-	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
-	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
-
-	OptimiserSettings settings = m_options.optimizer.enabled ? OptimiserSettings::standard() : OptimiserSettings::minimal();
-	if (m_options.optimizer.noOptimizeYul)
-		settings.runYulOptimiser = false;
-	if (m_args.count(g_strYulOptimizations))
-	{
-		if (!settings.runYulOptimiser)
-		{
-			serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
-			return false;
-		}
-
-		try
-		{
-			yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
-		}
-		catch (yul::OptimizerException const& _exception)
-		{
-			serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
-			return false;
-		}
-
-		m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
-	}
-
 	if (m_options.input.mode == InputMode::Compiler)
 		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 
