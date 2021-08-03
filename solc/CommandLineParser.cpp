@@ -940,6 +940,26 @@ General Information)").c_str(),
 	if (!parseInputPathsAndRemappings())
 		return false;
 
+	if (
+		m_options.input.mode != InputMode::Compiler &&
+		m_options.input.mode != InputMode::CompilerWithASTImport &&
+		m_options.input.mode != InputMode::Assembler
+	)
+	{
+		if (!m_args[g_strOptimizeRuns].defaulted())
+		{
+			serr() << "Option --" << g_strOptimizeRuns << " is only valid in compiler and assembler modes." << endl;
+			return false;
+		}
+
+		for (string const& option: {g_strOptimize, g_strNoOptimizeYul, g_strOptimizeYul, g_strYulOptimizations})
+			if (m_args.count(option) > 0)
+			{
+				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
+				return false;
+			}
+	}
+
 	if (m_options.input.mode == InputMode::StandardJson)
 		return true;
 

@@ -368,9 +368,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"--combined-json=abi,bin",         // Accepted but has no effect in Standard JSON mode
 		"--metadata-hash=swarm",           // Ignored in Standard JSON mode
 		"--metadata-literal",              // Ignored in Standard JSON mode
-		"--optimize",                      // Ignored in Standard JSON mode
-		"--optimize-runs=1000",            // Ignored in Standard JSON mode
-		"--yul-optimizations=agf",
 		"--model-checker-contracts="       // Ignored in Standard JSON mode
 			"contract1.yul:A,"
 			"contract2.yul:B",
