@@ -26,6 +26,7 @@
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
+#include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 
 #include <boost/algorithm/string/split.hpp>

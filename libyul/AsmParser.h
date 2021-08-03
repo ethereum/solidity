@@ -103,19 +103,7 @@ protected:
 	void fetchSourceLocationFromComment();
 
 	/// Creates a DebugData object with the correct source location set.
-	std::shared_ptr<DebugData const> createDebugData() const
-	{
-		switch (m_useSourceLocationFrom)
-		{
-			case UseSourceLocationFrom::Scanner:
-				return DebugData::create(ParserBase::currentLocation());
-			case UseSourceLocationFrom::LocationOverride:
-				return DebugData::create(m_locationOverride);
-			case UseSourceLocationFrom::Comments:
-				return m_debugDataOverride;
-		}
-		solAssert(false, "");
-	}
+	std::shared_ptr<DebugData const> createDebugData() const;
 
 	/// Creates an inline assembly node with the current source location.
 	template <class T> T createWithLocation() const
