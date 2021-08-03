@@ -948,6 +948,9 @@ General Information)").c_str(),
 			if (!parseLibraryOption(library))
 				return false;
 
+	if (m_options.input.mode == InputMode::Linker)
+		return true;
+
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
@@ -1077,9 +1080,6 @@ General Information)").c_str(),
 		serr() << "are only valid in assembly mode." << endl;
 		return false;
 	}
-
-	if (m_options.input.mode == InputMode::Linker)
-		return true;
 
 	if (m_args.count(g_strMetadataHash))
 	{
