@@ -23,16 +23,14 @@
 
 #pragma once
 
-#include <libsolutil/Assertions.h>
-#include <libsolutil/Exceptions.h>
-
-#include <limits>
+#include <iosfwd>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <vector>
 
 namespace solidity::langutil
 {
-struct SourceLocationError: virtual util::Exception {};
 
 /**
  * Representation of an interval of source positions.
@@ -112,17 +110,6 @@ SourceLocation parseSourceLocation(
 );
 
 /// Stream output for Location (used e.g. in boost exceptions).
-inline std::ostream& operator<<(std::ostream& _out, SourceLocation const& _location)
-{
-	if (!_location.isValid())
-		return _out << "NO_LOCATION_SPECIFIED";
-
-	if (_location.sourceName)
-		_out << *_location.sourceName;
-
-	_out << "[" << _location.start << "," << _location.end << "]";
-
-	return _out;
-}
+std::ostream& operator<<(std::ostream& _out, SourceLocation const& _location);
 
 }
