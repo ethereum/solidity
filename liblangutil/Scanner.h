@@ -119,6 +119,8 @@ public:
 		rescan();
 	}
 
+	CharStream const& charStream() const noexcept { return m_source; }
+
 	/// @returns the next token and advances input
 	Token next();
 

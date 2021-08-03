@@ -211,7 +211,6 @@ private:
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
 	ASTPointer<ParameterList> createEmptyParameterList();
 
-	langutil::CharStream* m_source = nullptr;
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
 	langutil::EVMVersion m_evmVersion;
