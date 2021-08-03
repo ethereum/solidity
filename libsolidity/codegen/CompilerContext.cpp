@@ -441,7 +441,7 @@ void CompilerContext::appendInlineAssembly(
 		locationOverride = m_asm->currentSourceLocation();
 	shared_ptr<yul::Block> parserResult =
 		yul::Parser(errorReporter, dialect, std::move(locationOverride))
-		.parse(make_shared<langutil::Scanner>(charStream), false);
+		.parse(charStream);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
@@ -492,7 +492,7 @@ void CompilerContext::appendInlineAssembly(
 			m_generatedYulUtilityCode = yul::AsmPrinter(dialect)(*obj.code);
 			string code = yul::AsmPrinter{dialect}(*obj.code);
 			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
-			obj.code = yul::Parser(errorReporter, dialect).parse(make_shared<Scanner>(charStream), false);
+			obj.code = yul::Parser(errorReporter, dialect).parse(charStream);
 			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(dialect, obj);
 		}
 

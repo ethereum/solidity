@@ -168,7 +168,7 @@ optional<ObjectParser::SourceNameMap> ObjectParser::tryParseSourceNameMapping() 
 shared_ptr<Block> ObjectParser::parseBlock()
 {
 	Parser parser(m_errorReporter, m_dialect, m_sourceNameMapping);
-	shared_ptr<Block> block = parser.parse(m_scanner, true);
+	shared_ptr<Block> block = parser.parseInline(m_scanner);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;
 }

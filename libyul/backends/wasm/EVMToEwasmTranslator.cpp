@@ -136,10 +136,7 @@ void EVMToEwasmTranslator::parsePolyfill()
 			string(solidity::yul::wasm::polyfill::Logical) +
 			string(solidity::yul::wasm::polyfill::Memory) +
 		"}", "");
-	m_polyfill = Parser(errorReporter, WasmDialect::instance()).parse(
-		make_shared<Scanner>(charStream),
-		false
-	);
+	m_polyfill = Parser(errorReporter, WasmDialect::instance()).parse(charStream);
 	if (!errors.empty())
 	{
 		string message;

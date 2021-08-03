@@ -22,7 +22,6 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libsolidity/parsing/Parser.h>
@@ -45,7 +44,6 @@
 
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <liblangutil/CharStreamProvider.h>
-#include <liblangutil/Scanner.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -92,8 +90,7 @@ public:
 	{
 		ErrorReporter errorReporter(m_errors);
 		m_charStream = make_shared<CharStream>(_input, "");
-		m_scanner = make_shared<Scanner>(*m_charStream);
-		m_ast = yul::Parser(errorReporter, m_dialect).parse(m_scanner, false);
+		m_ast = yul::Parser(errorReporter, m_dialect).parse(*m_charStream);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
 			cerr << "Error parsing source." << endl;
@@ -236,7 +233,6 @@ public:
 private:
 	ErrorList m_errors;
 	shared_ptr<CharStream> m_charStream;
-	shared_ptr<Scanner> m_scanner;
 	shared_ptr<yul::Block> m_ast;
 	Dialect const& m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
 	shared_ptr<AsmAnalysisInfo> m_analysisInfo;

@@ -30,7 +30,6 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Dialect.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -56,7 +55,6 @@ shared_ptr<Block> parse(string const& _source, Dialect const& _dialect, ErrorRep
 	try
 	{
 		auto stream = CharStream(_source, "");
-		auto scanner = make_shared<Scanner>(stream);
 		map<unsigned, shared_ptr<string const>> indicesToSourceNames;
 		indicesToSourceNames[0] = make_shared<string const>("source0");
 		indicesToSourceNames[1] = make_shared<string const>("source1");
@@ -65,7 +63,7 @@ shared_ptr<Block> parse(string const& _source, Dialect const& _dialect, ErrorRep
 			errorReporter,
 			_dialect,
 			move(indicesToSourceNames)
-		).parse(scanner, false);
+		).parse(stream);
 		if (parserResult)
 		{
 			yul::AsmAnalysisInfo analysisInfo;
