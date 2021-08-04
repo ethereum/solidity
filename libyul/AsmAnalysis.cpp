@@ -323,7 +323,6 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			returnTypes = &_fun.returns;
 		}
 	}))
-	else
 	{
 		if (!validateInstructions(_funCall))
 			m_errorReporter.declarationError(

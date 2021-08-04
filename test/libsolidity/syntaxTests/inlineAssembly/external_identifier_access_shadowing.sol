@@ -9,4 +9,5 @@ contract C {
     }
 }
 // ----
+// DeclarationError 3859: (103-104): This declaration shadows a declaration outside the inline assembly block.
 // DeclarationError 6578: (123-124): Cannot access local Solidity variables from inside an inline assembly function.
