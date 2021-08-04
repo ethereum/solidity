@@ -47,7 +47,7 @@ you receive the funds of the person who is now the richest.
 
         function becomeRichest() public payable {
             if (msg.value <= mostSent) revert NotEnoughEther();
-            pendingWithdrawals[richest] += msg.value;
+            pendingWithdrawals[richest] += mostSent;
             richest = msg.sender;
             mostSent = msg.value;
         }
@@ -84,7 +84,7 @@ This is as opposed to the more intuitive sending pattern:
         function becomeRichest() public payable {
             if (msg.value <= mostSent) revert NotEnoughEther();
             // This line can cause problems (explained below).
-            richest.transfer(msg.value);
+            richest.transfer(mostSent);
             richest = payable(msg.sender);
             mostSent = msg.value;
         }
