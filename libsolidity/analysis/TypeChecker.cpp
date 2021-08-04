@@ -742,8 +742,15 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		yul::Identifier const& _identifier,
 		yul::IdentifierContext _context,
 		bool
-	)
+	) -> bool
 	{
+		if (_context == yul::IdentifierContext::NonExternal)
+		{
+			// Hack until we can disallow any shadowing: If we found an internal reference,
+			// clear the external references, so that codegen does not use it.
+			_inlineAssembly.annotation().externalReferences.erase(& _identifier);
+			return false;
+		}
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return false;
