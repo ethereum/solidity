@@ -369,7 +369,7 @@ printTask "Compiling various other contracts and libraries..."
     do
         echo " - $dir"
         cd "$dir"
-        compileFull -w ./*.sol ./*/*.sol
+        compileFull --expect-warnings ./*.sol ./*/*.sol
         cd ..
     done
 )
@@ -397,15 +397,15 @@ SOLTMPDIR=$(mktemp -d)
         # are used (in the style guide)
         if grep -E "This will not compile|import \"" "$f" >/dev/null
         then
-            opts=(-e)
+            opts=(--expect-errors)
         fi
         if grep "This will report a warning" "$f" >/dev/null
         then
-            opts+=(-w)
+            opts+=(--expect-warnings)
         fi
         if grep "This may report a warning" "$f" >/dev/null
         then
-            opts+=(-o)
+            opts+=(--ignore-warnings)
         fi
 
         # Disable the version pragma in code snippets that only work with the current development version.

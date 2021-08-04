@@ -156,11 +156,11 @@ SOLTMPDIR=$(mktemp -d)
         if ( ! grep -E "This will not compile after" "$f" >/dev/null && \
             grep -E "This will not compile|import \"" "$f" >/dev/null )
         then
-            opts=(-e)
+            opts=(--expect-errors)
         fi
 
         # ignore warnings in this case
-        opts+=(-o)
+        opts+=(--ignore-warnings)
 
         findMinimalVersion "$f"
         if [[ "$version" == "" ]]
