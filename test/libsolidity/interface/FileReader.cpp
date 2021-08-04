@@ -56,13 +56,16 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_absolute_path)
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b", resolveSymlinks), "/a/b");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/", resolveSymlinks), "/a/b/");
 
-		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/./b/", resolveSymlinks), "/a/b/");
-		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/../a/b/", resolveSymlinks), "/a/b/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/..", resolveSymlinks), "/a/b");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/../", resolveSymlinks), "/a/b/");
+		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/./b/", resolveSymlinks), "/a/b/");
+#if !defined(_WIN32) || BOOST_VERSION > 107600
+		// This throws on Windows due to a bug in Boost: https://github.com/boostorg/filesystem/issues/201
+		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/../a/b/", resolveSymlinks), "/a/b/");
 
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/../../..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/b/c/../../../", resolveSymlinks), "/");
+#endif
 	}
 }
 
@@ -106,16 +109,20 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_relative_path)
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("./a/b", resolveSymlinks), expectedPrefix / "x/y/z/a/b");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("././a/b", resolveSymlinks), expectedPrefix / "x/y/z/a/b");
 
-		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/./b/", resolveSymlinks), expectedPrefix / "x/y/z/a/b/");
+
+#if !defined(_WIN32) || BOOST_VERSION > 107600
+		// This throws on Windows due to a bug in Boost: https://github.com/boostorg/filesystem/issues/201
+		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/.././../p/../q/../a/b", resolveSymlinks), expectedPrefix / "a/b");
+
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/../a/b/", resolveSymlinks), expectedPrefix / "x/y/z/a/b/");
+#endif
+		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/./b/", resolveSymlinks), expectedPrefix / "x/y/z/a/b/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/..", resolveSymlinks), expectedPrefix / "x/y/z/a/b");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../", resolveSymlinks), expectedPrefix / "x/y/z/a/b/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/..//", resolveSymlinks), expectedPrefix / "x/y/z/a/b/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../..", resolveSymlinks), expectedPrefix / "x/y/z/a");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../../", resolveSymlinks), expectedPrefix / "x/y/z/a/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/b/c/../..//", resolveSymlinks), expectedPrefix / "x/y/z/a/");
-
-		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/.././../p/../q/../a/b", resolveSymlinks), expectedPrefix / "a/b");
 	}
 }
 
@@ -231,26 +238,31 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_path_beyond_root)
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../.", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../a", resolveSymlinks), "/a");
+		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../../a", resolveSymlinks), "/a");
+#if !defined(_WIN32) || BOOST_VERSION > 107600
+		// This throws on Windows due to a bug in Boost: https://github.com/boostorg/filesystem/issues/201
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../a/..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../a/../..", resolveSymlinks), "/");
-		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../../a", resolveSymlinks), "/a");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../../a/..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/../../a/../..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/../..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("/a/../../b/../..", resolveSymlinks), "/");
+#endif
 
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../.", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../a", resolveSymlinks), "/a");
+		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a", resolveSymlinks), "/a");
+#if !defined(_WIN32) || BOOST_VERSION > 107600
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../a/..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../a/../..", resolveSymlinks), "/");
-		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a", resolveSymlinks), "/a");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("../../a/../..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/../..", resolveSymlinks), "/");
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS("a/../../b/../..", resolveSymlinks), "/");
+#endif
 	}
 }
 
