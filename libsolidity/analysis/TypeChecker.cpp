@@ -608,6 +608,20 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		}
 	}
 
+	auto fixedPoint = dynamic_cast<FixedPointType const*>(_variable.annotation().type);
+	if (fixedPoint)
+	{
+		bigint fixedPointTypeSize = boost::multiprecision::pow(bigint(2), fixedPoint->numBits());
+		bigint digitSize = boost::multiprecision::pow(bigint(10), fixedPoint->fractionalDigits());
+		if (fixedPointTypeSize <= digitSize)
+			m_errorReporter.typeError(
+				5108_error,
+				_variable.location(),
+				"Invalid fixed point type " + fixedPoint->toString(true) + ": 10^"
+				+ std::to_string(fixedPoint->fractionalDigits()) + " does not fit in 2^"
+				+ std::to_string(fixedPoint->numBits()) + " bits."
+			);
+	}
 	return false;
 }
 
