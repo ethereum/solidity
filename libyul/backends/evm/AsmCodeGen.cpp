@@ -37,7 +37,7 @@ void CodeGenerator::assemble(
 	AsmAnalysisInfo& _analysisInfo,
 	evmasm::Assembly& _assembly,
 	langutil::EVMVersion _evmVersion,
-	ExternalIdentifierAccess const& _identifierAccess,
+	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 	bool _useNamedLabelsForFunctions,
 	bool _optimizeStackAllocation
 )
@@ -51,7 +51,7 @@ void CodeGenerator::assemble(
 		EVMDialect::strictAssemblyForEVM(_evmVersion),
 		builtinContext,
 		_optimizeStackAllocation,
-		_identifierAccess,
+		_identifierAccessCodeGen,
 		_useNamedLabelsForFunctions
 	);
 	transform(_parsedData);
