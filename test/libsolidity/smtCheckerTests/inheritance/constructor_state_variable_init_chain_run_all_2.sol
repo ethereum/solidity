@@ -23,6 +23,6 @@ contract A is B {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (241-259): CHC: Assertion violation happens here.
 // Warning 4984: (125-131): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4984: (185-190): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (241-259): CHC: Assertion violation happens here.

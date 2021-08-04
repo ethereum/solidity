@@ -27,6 +27,14 @@ using namespace solidity::frontend::test;
 
 SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, EVMVersion{})
 {
+	auto const& showUnproved = m_reader.stringSetting("SMTShowUnproved", "yes");
+	if (showUnproved == "no")
+		m_modelCheckerSettings.showUnproved = false;
+	else if (showUnproved == "yes")
+		m_modelCheckerSettings.showUnproved = true;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unproved\" choice."));
+
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "any");
 	if (choice == "any")
 		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::All();

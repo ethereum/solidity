@@ -87,6 +87,7 @@ static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerContracts = "model-checker-contracts";
 static string const g_strModelCheckerEngine = "model-checker-engine";
+static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved";
 static string const g_strModelCheckerSolvers = "model-checker-solvers";
 static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
@@ -725,6 +726,11 @@ General Information)").c_str(),
 			"Select model checker engine."
 		)
 		(
+			g_strModelCheckerShowUnproved.c_str(),
+			po::value<bool>()->value_name("false,true")->default_value(false),
+			"Select whether to show all unproved targets."
+		)
+		(
 			g_strModelCheckerSolvers.c_str(),
 			po::value<string>()->value_name("all,cvc4,z3,smtlib2")->default_value("all"),
 			"Select model checker solvers."
@@ -1098,6 +1104,12 @@ General Information)").c_str(),
 		m_options.modelChecker.settings.engine = *engine;
 	}
 
+	if (m_args.count(g_strModelCheckerShowUnproved))
+	{
+		bool showUnproved = m_args[g_strModelCheckerShowUnproved].as<bool>();
+		m_options.modelChecker.settings.showUnproved = showUnproved;
+	}
+
 	if (m_args.count(g_strModelCheckerSolvers))
 	{
 		string solversStr = m_args[g_strModelCheckerSolvers].as<string>();
@@ -1129,6 +1141,7 @@ General Information)").c_str(),
 	m_options.modelChecker.initialize =
 		m_args.count(g_strModelCheckerContracts) ||
 		m_args.count(g_strModelCheckerEngine) ||
+		m_args.count(g_strModelCheckerShowUnproved) ||
 		m_args.count(g_strModelCheckerSolvers) ||
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);

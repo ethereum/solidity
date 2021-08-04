@@ -254,17 +254,8 @@
 (assert (= |EVALEXPR_3| r_33_1))
 (check-sat)
 (get-value (|EVALEXPR_0| |EVALEXPR_1| |EVALEXPR_2| |EVALEXPR_3| ))
-"}},"errors":[{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation might happen here.
- --> A:6:85:
-  |
-6 | require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
-  |                                                                                     ^^^^^^^^^^^^^^^^^^
+"}},"errors":[{"component":"general","errorCode":"5840","formattedMessage":"Warning: CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
 
-","message":"CHC: Assertion violation might happen here.","severity":"warning","sourceLocation":{"end":227,"file":"A","start":209},"type":"Warning"},{"component":"general","errorCode":"7812","formattedMessage":"Warning: BMC: Assertion violation might happen here.
- --> A:6:85:
-  |
-6 | require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
-  |                                                                                     ^^^^^^^^^^^^^^^^^^
-Note:
+","message":"CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"2788","formattedMessage":"Warning: BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
 
-","message":"BMC: Assertion violation might happen here.","secondarySourceLocations":[{"message":""}],"severity":"warning","sourceLocation":{"end":227,"file":"A","start":209},"type":"Warning"}],"sources":{"A":{"id":0}}}
+","message":"BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}

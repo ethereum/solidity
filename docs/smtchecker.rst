@@ -474,6 +474,14 @@ A common subset of targets might be, for example:
 There is no precise heuristic on how and when to split verification targets,
 but it can be useful especially when dealing with large contracts.
 
+Unproved Targets
+================
+
+If there are any unproved targets, the SMTChecker issues one warning stating
+how many unproved targets there are. If the user wishes to see all the specific
+unproved targets, the CLI option ``--model-checker-show-unproved true`` and
+the JSON option ``settings.modelChecker.showUnproved = true`` can be used.
+
 Verified Contracts
 ==================
 
