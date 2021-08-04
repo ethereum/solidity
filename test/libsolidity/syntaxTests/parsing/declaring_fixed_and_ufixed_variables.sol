@@ -1,7 +1,7 @@
 contract A {
-    fixed40x40 storeMe;
-    function f(ufixed, fixed32x32) public pure {
-        ufixed8x8 a;
+    fixed128x4 storeMe;
+    function f(ufixed, fixed128x3) public pure {
+        ufixed128x2 a;
         fixed b;
         a; b;
     }

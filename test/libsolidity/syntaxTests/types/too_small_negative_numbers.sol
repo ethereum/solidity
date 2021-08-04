@@ -1,5 +1,5 @@
 contract C {
-  fixed8x80 a = -1e-100;
+  fixed a = -1e-100;
 }
 // ----
-// TypeError 4426: (29-36): Type rational_const -1 / 1000...(93 digits omitted)...0000 is not implicitly convertible to expected type fixed8x80, but it can be explicitly converted.
+// TypeError 2326: (25-32): Type rational_const -1 / 1000...(93 digits omitted)...0000 is not implicitly convertible to expected type fixed128x18. Try converting to type fixed8x80 or use an explicit conversion.
