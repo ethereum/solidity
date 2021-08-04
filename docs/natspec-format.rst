@@ -58,7 +58,7 @@ The following example shows a contract and a function using all available tags.
 
   This may change in the future.
 
-.. code:: Solidity
+.. code-block:: Solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.2 < 0.9.0;
@@ -166,9 +166,9 @@ Inheritance Notes
 Functions without NatSpec will automatically inherit the documentation of their
 base function. Exceptions to this are:
 
- * When the parameter names are different.
- * When there is more than one base function.
- * When there is an explicit ``@inheritdoc`` tag which specifies which contract should be used to inherit.
+* When the parameter names are different.
+* When there is more than one base function.
+* When there is an explicit ``@inheritdoc`` tag which specifies which contract should be used to inherit.
 
 .. _header-output:
 

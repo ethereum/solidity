@@ -53,15 +53,6 @@ Dialect const& defaultDialect(bool _yul)
 }
 }
 
-void yul::test::printErrors(ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(cout, true, false);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
-}
-
-
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
 	AssemblyStack stack(
@@ -83,7 +74,8 @@ pair<shared_ptr<Object>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 )
 {
 	ErrorReporter errorReporter(_errors);
-	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_source, ""));
+	CharStream stream(_source, "");
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(stream);
 	shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
 	if (!parserResult)
 		return {};

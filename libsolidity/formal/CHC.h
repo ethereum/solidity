@@ -39,6 +39,8 @@
 
 #include <libsmtutil/CHCSolverInterface.h>
 
+#include <liblangutil/SourceLocation.h>
+
 #include <boost/algorithm/string/join.hpp>
 
 #include <map>
@@ -56,14 +58,20 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers,
-		ModelCheckerSettings const& _settings
+		ModelCheckerSettings const& _settings,
+		langutil::CharStreamProvider const& _charStreamProvider
 	);
 
 	void analyze(SourceUnit const& _sources);
 
-	std::map<ASTNode const*, std::set<VerificationTargetType>> const& safeTargets() const { return m_safeTargets; }
-	std::map<ASTNode const*, std::set<VerificationTargetType>> const& unsafeTargets() const { return m_unsafeTargets; }
+	struct ReportTargetInfo
+	{
+		langutil::ErrorId error;
+		langutil::SourceLocation location;
+		std::string message;
+	};
+	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> const& safeTargets() const { return m_safeTargets; }
+	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> const& unsafeTargets() const { return m_unsafeTargets; }
 
 	/// This is used if the Horn solver is not directly linked into this binary.
 	/// @returns a list of inputs to the Horn solver that were not part of the argument to
@@ -347,10 +355,12 @@ private:
 	/// Helper mapping unique IDs to actual verification targets.
 	std::map<unsigned, CHCVerificationTarget> m_verificationTargets;
 
-	/// Targets proven safe.
-	std::map<ASTNode const*, std::set<VerificationTargetType>> m_safeTargets;
-	/// Targets proven unsafe.
-	std::map<ASTNode const*, std::set<VerificationTargetType>> m_unsafeTargets;
+	/// Targets proved safe.
+	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> m_safeTargets;
+	/// Targets proved unsafe.
+	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> m_unsafeTargets;
+	/// Targets not proved.
+	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> m_unprovedTargets;
 	//@}
 
 	/// Control-flow.
@@ -392,9 +402,6 @@ private:
 
 	/// ErrorReporter that comes from CompilerStack.
 	langutil::ErrorReporter& m_outerErrorReporter;
-
-	/// SMT solvers that are chosen at runtime.
-	smtutil::SMTSolverChoice m_enabledSolvers;
 };
 
 }

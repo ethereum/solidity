@@ -46,3 +46,26 @@ Sphinx does not complain about these.
     contract E {}
 
 More text.
+
+.. code-block:: yul
+
+    :force:
+    let x := add(1, 5)
+
+.. code-block:: yul
+
+    :linenos:
+    :language: Yul
+    // Yul code wrapped in object
+    {
+        let y := mul(3, 5)
+    }
+
+.. code-block:: yul
+
+    // Yul code wrapped in named object
+    object "Test" {
+        let y := mul(3, 5)
+    :linenos:
+    }
+

@@ -35,39 +35,55 @@ struct Dialect;
 struct AsmAnalysisInfo;
 
 
+using SourceNameMap = std::map<unsigned, std::shared_ptr<std::string const>>;
+
+struct Object;
+
 /**
  * Generic base class for both Yul objects and Yul data.
  */
 struct ObjectNode
 {
 	virtual ~ObjectNode() = default;
-	virtual std::string toString(Dialect const* _dialect) const = 0;
-	std::string toString() { return toString(nullptr); }
 
 	/// Name of the object.
 	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
+protected:
+	virtual std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const = 0;
+
+	/// Object should have access to toString
+	friend struct Object;
 };
 
 /**
  * Named data in Yul objects.
  */
-struct Data: ObjectNode
+struct Data: public ObjectNode
 {
 	Data(YulString _name, bytes _data): data(std::move(_data)) { name = _name; }
-	std::string toString(Dialect const* _dialect) const override;
 
 	bytes data;
+
+protected:
+	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
 };
+
+
+struct ObjectDebugData
+{
+	std::optional<SourceNameMap> sourceNames = {};
+};
+
 
 /**
  * Yul code and data object container.
  */
-struct Object: ObjectNode
+struct Object: public ObjectNode
 {
 public:
-	/// @returns a (parseable) string representation. Includes types if @a _yul is set.
-	std::string toString(Dialect const* _dialect) const override;
+	/// @returns a (parseable) string representation.
+	std::string toString(Dialect const* _dialect) const;
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
@@ -94,8 +110,12 @@ public:
 	std::map<YulString, size_t> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 
+	std::shared_ptr<ObjectDebugData const> debugData;
+
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
+protected:
+	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
 };
 
 }

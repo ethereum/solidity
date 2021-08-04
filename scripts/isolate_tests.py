@@ -10,7 +10,9 @@ import sys
 import re
 import os
 import hashlib
-from os.path import join, isfile, split
+from os.path import join, isfile, basename
+from argparse import ArgumentParser
+from textwrap import indent, dedent
 
 def extract_test_cases(path):
     with open(path, encoding="utf8", errors='ignore', mode='r', newline='') as file:
@@ -35,84 +37,121 @@ def extract_test_cases(path):
 
     return tests
 
-# Contract sources are indented by 4 spaces.
-# Look for `pragma solidity`, `contract`, `library` or `interface`
-# and abort a line not indented properly.
-def extract_docs_cases(path):
-    insideBlock = False
-    insideBlockParameters = False
-    pastBlockParameters = False
-    extractedLines = []
-    tests = []
-
-    # Collect all snippets of indented blocks
-
-    with open(path, mode='r', errors='ignore', encoding='utf8', newline='') as f:
-        lines = f.read().splitlines()
-    for l in lines:
-        if l != '':
-            if not insideBlock and l.startswith(' '):
-                # start new test
-                extractedLines += ['']
-                insideBlockParameters = False
-                pastBlockParameters = False
-            insideBlock = l.startswith(' ')
-        if insideBlock:
-            if not pastBlockParameters:
-                # NOTE: For simplicity this allows blank lines between block parameters even
-                # though Sphinx does not. This does not matter since the first non-empty line in
-                # a Solidity file cannot start with a colon anyway.
-                if not l.strip().startswith(':') and (l != '' or not insideBlockParameters):
-                    insideBlockParameters = False
-                    pastBlockParameters = True
-                else:
-                    insideBlockParameters = True
-
-            if not insideBlockParameters:
-                extractedLines[-1] += l + '\n'
+def extract_solidity_docs_cases(path):
+    tests = extract_docs_cases(path, [".. code-block:: solidity", '::'])
 
     codeStart = "(// SPDX-License-Identifier:|pragma solidity|contract.*{|library.*{|interface.*{)"
 
-    # Filter all tests that do not contain Solidity or are indented incorrectly.
-    for lines in extractedLines:
-        if re.search(r'^\s{0,3}' + codeStart, lines, re.MULTILINE):
-            print("Indentation error in " + path + ":")
-            print(lines)
-            exit(1)
-        if re.search(r'^\s{4}' + codeStart, lines, re.MULTILINE):
-            tests.append(lines)
+    # Filter out tests that are not supposed to be compilable.
+    return [
+        test.lstrip("\n")
+        for test in tests
+        if re.search(r'^\s{4}' + codeStart, test, re.MULTILINE) is not None
+    ]
+
+def extract_yul_docs_cases(path):
+    tests = extract_docs_cases(path, [".. code-block:: yul"])
+
+    def wrap_in_object(code):
+        for line in code.splitlines():
+            line = line.lstrip()
+            if line.startswith("//"):
+                continue
+            if not line.startswith("object") and not line.startswith("{"):
+                return indent("{{\n{}\n}}\n\n".format(code.rstrip()), "    ")
+            break
+
+        return code
+
+    return [
+        wrap_in_object(test)
+        for test in tests
+        if test.strip() != ""
+    ]
+
+# Extract code examples based on the 'beginMarker' parameter
+# up until we reach EOF or a line that is not empty and doesn't start with 4
+# spaces.
+def extract_docs_cases(path, beginMarkers):
+    immediatelyAfterMarker = False
+    insideBlock = False
+    tests = []
+
+    # Collect all snippets of indented blocks
+    with open(path, mode='r', errors='ignore', encoding='utf8', newline='') as f:
+        lines = f.read().splitlines()
+
+    for line in lines:
+        if insideBlock:
+            if immediatelyAfterMarker:
+                # Skip Sphinx instructions and empty lines between them
+                if line == '' or line.lstrip().startswith(":"):
+                    continue
+
+            if line == '' or line.startswith(" "):
+                tests[-1] += line + "\n"
+                immediatelyAfterMarker = False
+                continue
+
+            insideBlock = False
+        if any(map(line.lower().startswith, beginMarkers)):
+            insideBlock = True
+            immediatelyAfterMarker = True
+            tests += ['']
 
     return tests
 
-def write_cases(f, tests):
+def write_cases(f, solidityTests, yulTests):
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
-    for test in tests:
+    for language, test in [("sol", t) for t in solidityTests] + [("yul", t) for t in yulTests]:
         # When code examples are extracted they are indented by 8 spaces, which violates the style guide,
         # so before checking remove 4 spaces from each line.
-        remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
-        sol_filename = 'test_%s_%s.sol' % (hashlib.sha256(test.encode("utf-8")).hexdigest(), cleaned_filename)
+        remainder = dedent(test)
+        sol_filename = 'test_%s_%s.%s' % (hashlib.sha256(test.encode("utf-8")).hexdigest(), cleaned_filename, language)
         with open(sol_filename, mode='w', encoding='utf8', newline='') as fi:
             fi.write(remainder)
 
-def extract_and_write(f, path):
-    if docs:
-        cases = extract_docs_cases(path)
+def extract_and_write(path, language):
+    assert language in ["solidity", "yul", ""]
+    yulCases = []
+    cases = []
+
+    if path.lower().endswith('.rst'):
+        if language in ("solidity", ""):
+            cases = extract_solidity_docs_cases(path)
+
+        if language in ("yul", ""):
+            yulCases  = extract_yul_docs_cases(path)
+    elif path.endswith('.sol'):
+        if language in ("solidity", ""):
+            with open(path, mode='r', encoding='utf8', newline='') as f:
+                cases = [f.read()]
     else:
-        if f.endswith('.sol'):
-            with open(path, mode='r', encoding='utf8', newline='') as _f:
-                cases = [_f.read()]
-        else:
-            cases = extract_test_cases(path)
-    write_cases(f, cases)
+        cases = extract_test_cases(path)
+
+    write_cases(basename(path), cases, yulCases)
 
 if __name__ == '__main__':
-    path = sys.argv[1]
-    docs = False
-    if len(sys.argv) > 2 and sys.argv[2] == 'docs':
-        docs = True
+    script_description = (
+        "Reads Solidity, C++ or RST source files and extracts compilable solidity and yul code blocks from them. "
+        "Can be used to generate test cases to validade code examples. "
+    )
+
+    parser = ArgumentParser(description=script_description)
+    parser.add_argument(dest='path', help='Path to file or directory to look for code in.')
+    parser.add_argument(
+        '-l', '--language',
+        dest='language',
+        choices=["yul", "solidity"],
+        default="",
+        action='store',
+        help="Extract only code blocks in the given language"
+    )
+    options = parser.parse_args()
+    path = options.path
 
     if isfile(path):
-        extract_and_write(path, path)
+        extract_and_write(path, options.language)
     else:
         for root, subdirs, files in os.walk(path):
             if '_build' in subdirs:
@@ -120,8 +159,7 @@ if __name__ == '__main__':
             if 'compilationTests' in subdirs:
                 subdirs.remove('compilationTests')
             for f in files:
-                _, tail = split(f)
-                if tail == "invalid_utf8_sequence.sol":
+                if basename(f) == "invalid_utf8_sequence.sol":
                     continue  # ignore the test with broken utf-8 encoding
                 path = join(root, f)
-                extract_and_write(f, path)
+                extract_and_write(path, options.language)

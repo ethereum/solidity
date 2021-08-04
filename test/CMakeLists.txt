@@ -126,6 +126,8 @@ set(libyul_sources
     libyul/Common.cpp
     libyul/Common.h
     libyul/CompilabilityChecker.cpp
+    libyul/ControlFlowGraphTest.cpp
+    libyul/ControlFlowGraphTest.h
     libyul/EVMCodeTransformTest.cpp
     libyul/EVMCodeTransformTest.h
     libyul/EwasmTranslationTest.cpp
@@ -148,6 +150,14 @@ set(libyul_sources
     libyul/YulOptimizerTestCommon.h
 )
 detect_stray_source_files("${libyul_sources}" "libyul/")
+
+set(solcli_sources
+    solc/Common.cpp
+    solc/Common.h
+    solc/CommandLineInterface.cpp
+    solc/CommandLineParser.cpp
+)
+detect_stray_source_files("${solcli_sources}" "solc/")
 
 set(yul_phaser_sources
     yulPhaser/TestHelpers.h
@@ -177,9 +187,10 @@ add_executable(soltest ${sources}
     ${libyul_sources}
     ${libsolidity_sources}
     ${libsolidity_util_sources}
+    ${solcli_sources}
     ${yul_phaser_sources}
 )
-target_link_libraries(soltest PRIVATE libsolc yul solidity smtutil solutil phaser Boost::boost yulInterpreter evmasm Boost::filesystem Boost::program_options Boost::unit_test_framework evmc)
+target_link_libraries(soltest PRIVATE solcli libsolc yul solidity smtutil solutil phaser Boost::boost yulInterpreter evmasm Boost::filesystem Boost::program_options Boost::unit_test_framework evmc)
 
 
 # Special compilation flag for Visual Studio (version 2019 at least affected)

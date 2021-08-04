@@ -26,6 +26,11 @@
 #include <libyul/Exceptions.h>
 
 #include <liblangutil/Token.h>
+#include <liblangutil/Scanner.h>
+
+#include <libsolutil/StringUtils.h>
+
+#include <regex>
 
 using namespace std;
 using namespace solidity;
@@ -40,6 +45,8 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 	{
 		shared_ptr<Object> object;
 		m_scanner = _scanner;
+		m_sourceNameMapping = tryParseSourceNameMapping();
+
 		if (currentToken() == Token::LBrace)
 		{
 			// Special case: Code-only form.
@@ -51,8 +58,9 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 		}
 		else
 			object = parseObject();
-		if (object && !_reuseScanner)
+		if (!_reuseScanner)
 			expectToken(Token::EOS);
+		object->debugData = make_shared<ObjectDebugData>(ObjectDebugData{m_sourceNameMapping});
 		return object;
 	}
 	catch (FatalError const&)
@@ -104,10 +112,64 @@ shared_ptr<Block> ObjectParser::parseCode()
 	return parseBlock();
 }
 
+optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
+{
+	// @use-src 0:"abc.sol", 1:"foo.sol", 2:"bar.sol"
+	//
+	// UseSrcList := UseSrc (',' UseSrc)*
+	// UseSrc     := [0-9]+ ':' FileName
+	// FileName   := "(([^\"]|\.)*)"
+
+	// Matches some "@use-src TEXT".
+	static std::regex const lineRE = std::regex(
+		"(^|\\s)@use-src\\b",
+		std::regex_constants::ECMAScript | std::regex_constants::optimize
+	);
+	std::smatch sm;
+	if (!std::regex_search(m_scanner->currentCommentLiteral(), sm, lineRE))
+		return nullopt;
+
+	solAssert(sm.size() == 2, "");
+	auto text = m_scanner->currentCommentLiteral().substr(static_cast<size_t>(sm.position() + sm.length()));
+	CharStream charStream(text, "");
+	Scanner scanner(charStream);
+	if (scanner.currentToken() == Token::EOS)
+		return SourceNameMap{};
+	SourceNameMap sourceNames;
+
+	while (scanner.currentToken() != Token::EOS)
+	{
+		if (scanner.currentToken() != Token::Number)
+			break;
+		auto sourceIndex = toUnsignedInt(scanner.currentLiteral());
+		if (!sourceIndex)
+			break;
+		if (scanner.next() != Token::Colon)
+			break;
+		if (scanner.next() != Token::StringLiteral)
+			break;
+		sourceNames[*sourceIndex] = make_shared<string const>(scanner.currentLiteral());
+
+		Token const next = scanner.next();
+		if (next == Token::EOS)
+			return {move(sourceNames)};
+		if (next != Token::Comma)
+			break;
+		scanner.next();
+	}
+
+	m_errorReporter.syntaxError(
+		9804_error,
+		m_scanner->currentCommentLocation(),
+		"Error parsing arguments to @use-src. Expected: <number> \":\" \"<filename>\", ..."
+	);
+	return nullopt;
+}
+
 shared_ptr<Block> ObjectParser::parseBlock()
 {
-	Parser parser(m_errorReporter, m_dialect);
-	shared_ptr<Block> block = parser.parse(m_scanner, true);
+	Parser parser(m_errorReporter, m_dialect, m_sourceNameMapping);
+	shared_ptr<Block> block = parser.parseInline(m_scanner);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;
 }

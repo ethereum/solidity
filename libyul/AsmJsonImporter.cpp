@@ -26,6 +26,7 @@
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
+#include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 
 #include <boost/algorithm/string/split.hpp>
@@ -45,7 +46,7 @@ SourceLocation const AsmJsonImporter::createSourceLocation(Json::Value const& _n
 {
 	yulAssert(member(_node, "src").isString(), "'src' must be a string");
 
-	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_sourceName);
+	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_sourceNames);
 }
 
 template <class T>
@@ -53,10 +54,7 @@ T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 {
 	T r;
 	SourceLocation location = createSourceLocation(_node);
-	yulAssert(
-		location.source && 0 <= location.start && location.start <= location.end,
-		"Invalid source location in Asm AST"
-	);
+	yulAssert(location.hasText(), "Invalid source location in Asm AST");
 	r.debugData = DebugData::create(location);
 	return r;
 }
@@ -168,7 +166,8 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 
 	if (kind == "number")
 	{
-		langutil::Scanner scanner{langutil::CharStream(lit.value.str(), "")};
+		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Number;
 		yulAssert(
 			scanner.currentToken() == Token::Number,
@@ -177,7 +176,8 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 	}
 	else if (kind == "bool")
 	{
-		langutil::Scanner scanner{langutil::CharStream(lit.value.str(), "")};
+		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Boolean;
 		yulAssert(
 			scanner.currentToken() == Token::TrueLiteral ||

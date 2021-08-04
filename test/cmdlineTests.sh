@@ -37,11 +37,8 @@ source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
-(( $# <= 1 )) || { printError "Too many arguments"; exit 1; }
-(( $# == 0 )) || [[ $1 == '--update' ]] || { printError "Invalid argument: '$1'"; exit 1; }
-
 AUTOUPDATE=false
-[[ $1 == --update ]] && AUTOUPDATE=true
+[[ $1 == --update ]] && AUTOUPDATE=true && shift
 
 case "$OSTYPE" in
     msys)
@@ -141,9 +138,16 @@ function test_solc_behaviour()
 
     if [[ " ${solc_args[*]} " == *" --standard-json "* ]]
     then
-        sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
+        python3 - <<EOF
+import re, sys
+json = open("$stdout_path", "r").read()
+json = re.sub(r"{[^{}]*Warning: This is a pre-release compiler version[^{}]*},?", "", json)
+json = re.sub(r"},\s*]", "}]", json)                  # },] -> }]
+json = re.sub(r"\"errors\":\s*\[\s*\],?\s*","",json)  # Remove "errors" array if it's not empty
+json = re.sub("\n\\s+\n", "\n\n", json)               # Remove any leftover trailing whitespace
+open("$stdout_path", "w").write(json)
+EOF
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
-        sed -i.bak -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"<OPCODES REMOVED>\"/g' "$stdout_path"
         sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"<SOURCEMAP REMOVED>\"/g' "$stdout_path"
 
@@ -161,6 +165,7 @@ function test_solc_behaviour()
         # Replace escaped newlines by actual newlines for readability
         # shellcheck disable=SC1003
         sed -i.bak -E -e 's/\\n/\'$'\n/g' "$stdout_path"
+        sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
         rm "$stdout_path.bak"
     else
         sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
@@ -287,8 +292,21 @@ test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid rem
 printTask "Running general commandline tests..."
 (
     cd "$REPO_ROOT"/test/cmdlineTests/
-    for tdir in */
+    for tdir in ${*:-*/}
     do
+        if ! [[ -d $tdir ]]; then
+            if [[ $tdir =~ ^--.*$ ]]; then
+                if [[ $tdir == "--update" ]]; then
+                    printError "The --update option must be given before any positional arguments."
+                else
+                    printError "Invalid option: $tdir."
+                fi
+            else
+                printError "Test directory not found: $tdir"
+            fi
+            exit 1
+        fi
+
         printTask " - ${tdir}"
 
         # Strip trailing slash from $tdir.
@@ -351,7 +369,7 @@ printTask "Compiling various other contracts and libraries..."
     do
         echo " - $dir"
         cd "$dir"
-        compileFull -w ./*.sol ./*/*.sol
+        compileFull --expect-warnings ./*.sol ./*/*.sol
         cd ..
     done
 )
@@ -361,10 +379,10 @@ SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$SOLTMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
     developmentVersion=$("$REPO_ROOT/scripts/get_version.sh")
 
-    for f in *.sol
+    for f in *.yul *.sol
     do
         # The contributors guide uses syntax tests, but we cannot
         # really handle them here.
@@ -379,15 +397,15 @@ SOLTMPDIR=$(mktemp -d)
         # are used (in the style guide)
         if grep -E "This will not compile|import \"" "$f" >/dev/null
         then
-            opts=(-e)
+            opts=(--expect-errors)
         fi
         if grep "This will report a warning" "$f" >/dev/null
         then
-            opts+=(-w)
+            opts+=(--expect-warnings)
         fi
         if grep "This may report a warning" "$f" >/dev/null
         then
-            opts+=(-o)
+            opts+=(--ignore-warnings)
         fi
 
         # Disable the version pragma in code snippets that only work with the current development version.
@@ -510,7 +528,7 @@ SOLTMPDIR=$(mktemp -d)
     set -e
     cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
 
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files

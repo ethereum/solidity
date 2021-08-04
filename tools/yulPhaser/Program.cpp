@@ -60,16 +60,6 @@ ostream& operator<<(ostream& _stream, Program const& _program);
 
 }
 
-ostream& std::operator<<(ostream& _outputStream, ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(_outputStream, true, false);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
-
-	return _outputStream;
-}
-
 Program::Program(Program const& program):
 	m_ast(make_unique<Block>(get<Block>(ASTCopier{}(*program.m_ast)))),
 	m_dialect{program.m_dialect},
@@ -130,7 +120,7 @@ variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _diale
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(move(_source));
+	auto scanner = make_shared<Scanner>(_source);
 
 	ObjectParser parser(errorReporter, _dialect);
 	shared_ptr<Object> object = parser.parse(scanner, false);

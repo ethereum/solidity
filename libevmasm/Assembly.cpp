@@ -76,15 +76,15 @@ namespace
 string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
 {
 	if (!_location.hasText() || _sourceCodes.empty())
-		return "";
+		return {};
 
-	auto it = _sourceCodes.find(_location.source->name());
+	auto it = _sourceCodes.find(*_location.sourceName);
 	if (it == _sourceCodes.end())
-		return "";
+		return {};
 
 	string const& source = it->second;
 	if (static_cast<size_t>(_location.start) >= source.size())
-		return "";
+		return {};
 
 	string cut = source.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
 	auto newLinePos = cut.find_first_of("\n");
@@ -152,8 +152,8 @@ public:
 		if (!m_location.isValid())
 			return;
 		m_out << m_prefix << "    /*";
-		if (m_location.source)
-			m_out << " \"" + m_location.source->name() + "\"";
+		if (m_location.sourceName)
+			m_out << " " + escapeAndQuoteString(*m_location.sourceName);
 		if (m_location.hasText())
 			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
 		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
@@ -235,9 +235,9 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 	for (AssemblyItem const& i: m_items)
 	{
 		int sourceIndex = -1;
-		if (i.location().source)
+		if (i.location().sourceName)
 		{
-			auto iter = _sourceIndices.find(i.location().source->name());
+			auto iter = _sourceIndices.find(*i.location().sourceName);
 			if (iter != _sourceIndices.end())
 				sourceIndex = static_cast<int>(iter->second);
 		}

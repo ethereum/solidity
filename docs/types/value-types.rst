@@ -128,10 +128,10 @@ The modulo operation ``a % n`` yields the remainder ``r`` after the division of 
 by the operand ``n``, where ``q = int(a / n)`` and ``r = a - (n * q)``. This means that modulo
 results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`` holds for negative ``a``:
 
- * ``int256(5) % int256(2) == int256(1)``
- * ``int256(5) % int256(-2) == int256(1)``
- * ``int256(-5) % int256(2) == int256(-1)``
- * ``int256(-5) % int256(-2) == int256(-1)``
+* ``int256(5) % int256(2) == int256(1)``
+* ``int256(5) % int256(-2) == int256(1)``
+* ``int256(-5) % int256(2) == int256(-1)``
+* ``int256(-5) % int256(-2) == int256(-1)``
 
 .. note::
   Modulo with zero causes a :ref:`Panic error<assert-and-require>`. This check can **not** be disabled through ``unchecked { ... }``.
@@ -184,8 +184,8 @@ Address
 
 The address type comes in two flavours, which are largely identical:
 
- - ``address``: Holds a 20 byte value (size of an Ethereum address).
- - ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
+- ``address``: Holds a 20 byte value (size of an Ethereum address).
+- ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
 
 The idea behind this distinction is that ``address payable`` is an address you can send Ether to,
 while a plain ``address`` cannot be sent Ether.
@@ -239,6 +239,7 @@ It is possible to query the balance of an address using the property ``balance``
 and to send Ether (in units of wei) to a payable address using the ``transfer`` function:
 
 .. code-block:: solidity
+    :force:
 
     address payable x = address(0x123);
     address myAddress = address(this);
@@ -398,7 +399,7 @@ Members:
 * ``.length`` yields the fixed length of the byte array (read-only).
 
 .. note::
-    The type ``byte[]`` is an array of bytes, but due to padding rules, it wastes
+    The type ``bytes1[]`` is an array of bytes, but due to padding rules, it wastes
     31 bytes of space for each element (except in storage). It is better to use the ``bytes``
     type instead.
 
@@ -510,27 +511,32 @@ String literals can only contain printable ASCII characters, which means the cha
 
 Additionally, string literals also support the following escape characters:
 
- - ``\<newline>`` (escapes an actual newline)
- - ``\\`` (backslash)
- - ``\'`` (single quote)
- - ``\"`` (double quote)
- - ``\b`` (backspace)
- - ``\f`` (form feed)
- - ``\n`` (newline)
- - ``\r`` (carriage return)
- - ``\t`` (tab)
- - ``\v`` (vertical tab)
- - ``\xNN`` (hex escape, see below)
- - ``\uNNNN`` (unicode escape, see below)
+- ``\<newline>`` (escapes an actual newline)
+- ``\\`` (backslash)
+- ``\'`` (single quote)
+- ``\"`` (double quote)
+- ``\n`` (newline)
+- ``\r`` (carriage return)
+- ``\t`` (tab)
+- ``\xNN`` (hex escape, see below)
+- ``\uNNNN`` (unicode escape, see below)
 
 ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
+
+.. note::
+
+    Until version 0.8.0 there were three additional escape sequences: ``\b``, ``\f`` and ``\v``.
+    They are commonly available in other languages but rarely needed in practice.
+    If you do need them, they can still be inserted via hexadecimal escapes, i.e. ``\x08``, ``\x0c``
+    and ``\x0b``, respectively, just as any other ASCII character.
 
 The string in the following example has a length of ten bytes.
 It starts with a newline byte, followed by a double quote, a single
 quote a backslash character and then (without separator) the
 character sequence ``abcdef``.
 
-::
+.. code-block:: solidity
+    :force:
 
     "\n\"\'\\abc\
     def"
@@ -637,6 +643,7 @@ be passed via and returned from external function calls.
 Function types are notated as follows:
 
 .. code-block:: solidity
+    :force:
 
     function (<parameter types>) {internal|external} [pure|view|payable] [returns (<return types>)]
 
@@ -656,9 +663,9 @@ their parameter types are identical, their return types are identical,
 their internal/external property is identical and the state mutability of ``A``
 is more restrictive than the state mutability of ``B``. In particular:
 
- - ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
- - ``view`` functions can be converted to ``non-payable`` functions
- - ``payable`` functions can be converted to ``non-payable`` functions
+- ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
+- ``view`` functions can be converted to ``non-payable`` functions
+- ``payable`` functions can be converted to ``non-payable`` functions
 
 No other conversions between function types are possible.
 

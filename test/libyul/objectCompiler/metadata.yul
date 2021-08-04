@@ -21,8 +21,9 @@ object "A" {
 }
 // ----
 // Assembly:
+//     /* "source":35:48   */
 //   0x0e
-//     /* "source":26:48   */
+//     /* "source":62:75   */
 //   0x03
 //     /* "source":90:91   */
 //   dup2
@@ -44,6 +45,7 @@ object "A" {
 // data_e1629b9dda060bb30c7908346f6af189c16773fa148d3366701fbaa35d54f3c8 414243
 //
 // sub_0: assembly {
+//         /* "source":157:176   */
 //       data_211450822d7f8c345093893187e7e1fbebc4ec67af72601920194be14104e336
 //         /* "source":193:194   */
 //       dup1
@@ -62,4 +64,4 @@ object "A" {
 // auxdata: 0x4d32
 // Bytecode: 600e600381600055806020555050fe4d32
 // Opcodes: PUSH1 0xE PUSH1 0x3 DUP2 PUSH1 0x0 SSTORE DUP1 PUSH1 0x20 SSTORE POP POP INVALID 0x4D ORIGIN
-// SourceMappings: :::-:0;26:22:0;90:1;87;80:12;108:1;104:2;97:13;20:94;
+// SourceMappings: 35:13:0:-:0;62;90:1;87;80:12;108:1;104:2;97:13;20:94;

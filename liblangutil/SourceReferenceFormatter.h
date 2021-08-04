@@ -32,41 +32,57 @@
 
 namespace solidity::langutil
 {
+
+class CharStream;
+class CharStreamProvider;
 struct SourceLocation;
 
 class SourceReferenceFormatter
 {
 public:
-	SourceReferenceFormatter(std::ostream& _stream, bool _colored, bool _withErrorIds):
-		m_stream(_stream), m_colored(_colored), m_withErrorIds(_withErrorIds)
+	SourceReferenceFormatter(
+		std::ostream& _stream,
+		CharStreamProvider const& _charStreamProvider,
+		bool _colored,
+		bool _withErrorIds
+	):
+		m_stream(_stream), m_charStreamProvider(_charStreamProvider), m_colored(_colored), m_withErrorIds(_withErrorIds)
 	{}
 
 	/// Prints source location if it is given.
 	void printSourceLocation(SourceReference const& _ref);
 	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
 	void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
+	void printErrorInformation(langutil::ErrorList const& _errors);
 	void printErrorInformation(Error const& _error);
 
 	static std::string formatExceptionInformation(
 		util::Exception const& _exception,
 		std::string const& _name,
+		CharStreamProvider const& _charStreamProvider,
 		bool _colored = false,
 		bool _withErrorIds = false
 	)
 	{
 		std::ostringstream errorOutput;
-		SourceReferenceFormatter formatter(errorOutput, _colored, _withErrorIds);
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
 		formatter.printExceptionInformation(_exception, _name);
 		return errorOutput.str();
 	}
 
-	static std::string formatErrorInformation(Error const& _error)
+	static std::string formatErrorInformation(
+		Error const& _error,
+		CharStreamProvider const& _charStreamProvider
+	)
 	{
 		return formatExceptionInformation(
 			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
+			(_error.type() == Error::Type::Warning) ? "Warning" : "Error",
+			_charStreamProvider
 		);
 	}
+
+	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream);
 
 private:
 	util::AnsiColorized normalColored() const;
@@ -79,6 +95,7 @@ private:
 
 private:
 	std::ostream& m_stream;
+	CharStreamProvider const& m_charStreamProvider;
 	bool m_colored;
 	bool m_withErrorIds;
 };

@@ -56,25 +56,38 @@ CHC::CHC(
 	ErrorReporter& _errorReporter,
 	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
 	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
-	SMTSolverChoice _enabledSolvers,
-	ModelCheckerSettings const& _settings
+	ModelCheckerSettings const& _settings,
+	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings),
-	m_outerErrorReporter(_errorReporter),
-	m_enabledSolvers(_enabledSolvers)
+	SMTEncoder(_context, _settings, _charStreamProvider),
+	m_outerErrorReporter(_errorReporter)
 {
-	bool usesZ3 = _enabledSolvers.z3;
+	bool usesZ3 = m_settings.solvers.z3;
 #ifdef HAVE_Z3
 	usesZ3 = usesZ3 && Z3Interface::available();
 #else
 	usesZ3 = false;
 #endif
-	if (!usesZ3)
+	if (!usesZ3 && m_settings.solvers.smtlib2)
 		m_interface = make_unique<CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback, m_settings.timeout);
 }
 
 void CHC::analyze(SourceUnit const& _source)
 {
+	if (!m_settings.solvers.z3 && !m_settings.solvers.smtlib2)
+	{
+		if (!m_noSolverWarning)
+		{
+			m_noSolverWarning = true;
+			m_outerErrorReporter.warning(
+				7649_error,
+				SourceLocation(),
+				"CHC analysis was not possible since no Horn solver was enabled."
+			);
+		}
+		return;
+	}
+
 	if (SMTEncoder::analyze(_source))
 	{
 		resetSourceAnalysis();
@@ -91,6 +104,8 @@ void CHC::analyze(SourceUnit const& _source)
 	}
 
 	bool ranSolver = true;
+	// If ranSolver is true here it's because an SMT solver callback was
+	// actually given and the queries were solved.
 	if (auto const* smtLibInterface = dynamic_cast<CHCSmtLib2Interface const*>(m_interface.get()))
 		ranSolver = smtLibInterface->unhandledQueries().empty();
 	if (!ranSolver && !m_noSolverWarning)
@@ -102,7 +117,8 @@ void CHC::analyze(SourceUnit const& _source)
 #ifdef HAVE_Z3_DLOPEN
 			"CHC analysis was not possible since libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " was not found."
 #else
-			"CHC analysis was not possible since no integrated z3 SMT solver was found."
+			"CHC analysis was not possible. No Horn solver was available."
+			" None of the installed solvers was enabled."
 #endif
 		);
 	}
@@ -917,6 +933,7 @@ void CHC::resetSourceAnalysis()
 {
 	m_safeTargets.clear();
 	m_unsafeTargets.clear();
+	m_unprovedTargets.clear();
 	m_functionTargetIds.clear();
 	m_verificationTargets.clear();
 	m_queryPlaceholders.clear();
@@ -932,7 +949,7 @@ void CHC::resetSourceAnalysis()
 
 	bool usesZ3 = false;
 #ifdef HAVE_Z3
-	usesZ3 = m_enabledSolvers.z3 && Z3Interface::available();
+	usesZ3 = m_settings.solvers.z3 && Z3Interface::available();
 	if (usesZ3)
 	{
 		/// z3::fixedpoint does not have a reset mechanism, so we need to create another.
@@ -1426,20 +1443,23 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 	case CheckResult::SATISFIABLE:
 	{
 #ifdef HAVE_Z3
-		// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
-		// We now disable those optimizations and check whether we can still solve the problem.
-		auto* spacer = dynamic_cast<Z3CHCInterface*>(m_interface.get());
-		solAssert(spacer, "");
-		spacer->setSpacerOptions(false);
+		if (m_settings.solvers.z3)
+		{
+			// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
+			// We now disable those optimizations and check whether we can still solve the problem.
+			auto* spacer = dynamic_cast<Z3CHCInterface*>(m_interface.get());
+			solAssert(spacer, "");
+			spacer->setSpacerOptions(false);
 
-		CheckResult resultNoOpt;
-		CHCSolverInterface::CexGraph cexNoOpt;
-		tie(resultNoOpt, cexNoOpt) = m_interface->query(_query);
+			CheckResult resultNoOpt;
+			CHCSolverInterface::CexGraph cexNoOpt;
+			tie(resultNoOpt, cexNoOpt) = m_interface->query(_query);
 
-		if (resultNoOpt == CheckResult::SATISFIABLE)
-			cex = move(cexNoOpt);
+			if (resultNoOpt == CheckResult::SATISFIABLE)
+				cex = move(cexNoOpt);
 
-		spacer->setSpacerOptions(true);
+			spacer->setSpacerOptions(true);
+		}
 #endif
 		break;
 	}
@@ -1575,6 +1595,32 @@ void CHC::checkVerificationTargets()
 		checkedErrorIds.insert(target.errorId);
 	}
 
+	auto toReport = m_unsafeTargets;
+	if (m_settings.showUnproved)
+		for (auto const& [node, targets]: m_unprovedTargets)
+			for (auto const& [target, info]: targets)
+				toReport[node].emplace(target, info);
+
+	for (auto const& [node, targets]: toReport)
+		for (auto const& [target, info]: targets)
+			m_errorReporter.warning(
+				info.error,
+				info.location,
+				info.message
+			);
+
+	if (!m_settings.showUnproved && !m_unprovedTargets.empty())
+		m_errorReporter.warning(
+			5840_error,
+			{},
+			"CHC: " +
+			to_string(m_unprovedTargets.size()) +
+			" verification condition(s) could not be proved." +
+			" Enable the model checker option \"show unproved\" to see all of them." +
+			" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
+			" Consider increasing the timeout per query."
+		);
+
 	// There can be targets in internal functions that are not reachable from the external interface.
 	// These are safe by definition and are not even checked by the CHC engine, but this information
 	// must still be reported safe by the BMC engine.
@@ -1614,27 +1660,26 @@ void CHC::checkAndReportTarget(
 	else if (result == CheckResult::SATISFIABLE)
 	{
 		solAssert(!_satMsg.empty(), "");
-		m_unsafeTargets[_target.errorNode].insert(_target.type);
 		auto cex = generateCounterexample(model, error().name);
 		if (cex)
-			m_errorReporter.warning(
+			m_unsafeTargets[_target.errorNode][_target.type] = {
 				_errorReporterId,
 				location,
 				"CHC: " + _satMsg + "\nCounterexample:\n" + *cex
-			);
+			};
 		else
-			m_errorReporter.warning(
+			m_unsafeTargets[_target.errorNode][_target.type] = {
 				_errorReporterId,
 				location,
 				"CHC: " + _satMsg
-			);
+			};
 	}
 	else if (!_unknownMsg.empty())
-		m_errorReporter.warning(
+		m_unprovedTargets[_target.errorNode][_target.type] = {
 			_errorReporterId,
 			location,
 			"CHC: " + _unknownMsg
-		);
+		};
 }
 
 /**
@@ -1741,7 +1786,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 				path.emplace_back("State: " + modelMsg);
 		}
 
-		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
+		string txCex = summaryPredicate->formatSummaryCall(summaryArgs, m_charStreamProvider);
 
 		list<string> calls;
 		auto dfs = [&](unsigned parent, unsigned node, unsigned depth, auto&& _dfs) -> void {
@@ -1753,7 +1798,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			if (!pred->isConstructorSummary())
 				for (unsigned v: callGraph[node])
 					_dfs(node, v, depth + 1, _dfs);
-			calls.push_front(string(depth * 4, ' ') + pred->formatSummaryCall(nodeArgs(node)));
+			calls.push_front(string(depth * 4, ' ') + pred->formatSummaryCall(nodeArgs(node), m_charStreamProvider));
 			if (pred->isInternalCall())
 				calls.front() += " -- internal call";
 			else if (pred->isExternalCallTrusted())

@@ -27,19 +27,23 @@ Every reference type has an additional
 annotation, the "data location", about where it is stored. There are three data locations:
 ``memory``, ``storage`` and ``calldata``. Calldata is a non-modifiable,
 non-persistent area where function arguments are stored, and behaves mostly like memory.
-It is required for parameters of external functions but can also be used for other variables.
-
-
-.. note::
-    Prior to version 0.5.0 the data location could be omitted, and would default to different locations
-    depending on the kind of variable, function type, etc., but all complex types must now give an explicit
-    data location.
 
 .. note::
     If you can, try to use ``calldata`` as data location because it will avoid copies and
     also makes sure that the data cannot be modified. Arrays and structs with ``calldata``
     data location can also be returned from functions, but it is not possible to
     allocate such types.
+
+.. note::
+    Prior to version 0.6.9 data location for reference-type arguments was limited to
+    ``calldata`` in external functions, ``memory`` in public functions and either
+    ``memory`` or ``storage`` in internal and private ones.
+    Now ``memory`` and ``calldata`` are allowed in all functions regardless of their visibility.
+
+.. note::
+    Prior to version 0.5.0 the data location could be omitted, and would default to different locations
+    depending on the kind of variable, function type, etc., but all complex types must now give an explicit
+    data location.
 
 .. _data-location-assignment:
 
@@ -139,7 +143,7 @@ a reference to it.
 ``bytes`` and ``string`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
+Variables of type ``bytes`` and ``string`` are special arrays. The ``bytes`` type is similar to ``bytes1[]``,
 but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
 length or index access.
 
@@ -148,8 +152,8 @@ third-party string libraries. You can also compare two strings by their keccak25
 ``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and
 concatenate two strings using ``bytes.concat(bytes(s1), bytes(s2))``.
 
-You should use ``bytes`` over ``byte[]`` because it is cheaper,
-since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
+You should use ``bytes`` over ``bytes1[]`` because it is cheaper,
+since ``bytes1[]`` adds 31 padding bytes between the elements. As a general rule,
 use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
 string (UTF-8) data. If you can limit the length to a certain number of bytes,
 always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.
@@ -492,7 +496,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.8.4 <0.9.0;
+    pragma solidity >=0.8.5 <0.9.0;
     contract Proxy {
         /// @dev Address of the client contract managed by proxy i.e., this contract
         address client;
@@ -559,7 +563,7 @@ shown in the following example:
         function newCampaign(address payable beneficiary, uint goal) public returns (uint campaignID) {
             campaignID = numCampaigns++; // campaignID is return variable
             // We cannot use "campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0)"
-            // because the RHS creates a memory-struct "Campaign" that contains a mapping.
+            // because the right hand side creates a memory-struct "Campaign" that contains a mapping.
             Campaign storage c = campaigns[campaignID];
             c.beneficiary = beneficiary;
             c.fundingGoal = goal;

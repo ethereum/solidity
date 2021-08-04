@@ -55,8 +55,6 @@
 #include <liblangutil/Token.h>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/SourceLocation.h>
-#include <libsolutil/Common.h>
-#include <libsolutil/CommonData.h>
 
 #include <optional>
 #include <iosfwd>
@@ -102,17 +100,13 @@ class Scanner
 {
 	friend class LiteralScope;
 public:
-	explicit Scanner(std::shared_ptr<CharStream> _source) { reset(std::move(_source)); }
-	explicit Scanner(CharStream _source = CharStream()) { reset(std::move(_source)); }
+	explicit Scanner(CharStream& _source):
+		m_source(_source),
+		m_sourceName{std::make_shared<std::string>(_source.name())}
+	{
+		reset();
+	}
 
-	std::string const& source() const noexcept { return m_source->source(); }
-
-	std::shared_ptr<CharStream> charStream() noexcept { return m_source; }
-	std::shared_ptr<CharStream const> charStream() const noexcept { return m_source; }
-
-	/// Resets the scanner as if newly constructed with _source as input.
-	void reset(CharStream _source);
-	void reset(std::shared_ptr<CharStream> _source);
 	/// Resets scanner to the start of input.
 	void reset();
 
@@ -124,6 +118,8 @@ public:
 		// Invalidate lookahead buffer.
 		rescan();
 	}
+
+	CharStream const& charStream() const noexcept { return m_source; }
 
 	/// @returns the next token and advances input
 	Token next();
@@ -177,14 +173,6 @@ public:
 	Token peekNextNextToken() const { return m_tokens[NextNext].token; }
 	///@}
 
-	///@{
-	///@name Error printing helper functions
-	/// Functions that help pretty-printing parse errors
-	/// Do only use in error cases, they are quite expensive.
-	std::string lineAtPosition(int _position) const { return m_source->lineAtPosition(_position); }
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source->translatePositionToLineColumn(_position); }
-	///@}
-
 private:
 
 	inline Token setError(ScannerError _error) noexcept
@@ -211,8 +199,8 @@ private:
 	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
 
-	bool advance() { m_char = m_source->advanceAndGet(); return !m_source->isPastEndOfInput(); }
-	void rollback(size_t _amount) { m_char = m_source->rollback(_amount); }
+	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
+	void rollback(size_t _amount) { m_char = m_source.rollback(_amount); }
 	/// Rolls back to the start of the current token and re-runs the scanner.
 	void rescan();
 
@@ -261,15 +249,16 @@ private:
 	bool isUnicodeLinebreak();
 
 	/// Return the current source position.
-	size_t sourcePos() const { return m_source->position(); }
-	bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
+	size_t sourcePos() const { return m_source.position(); }
+	bool isSourcePastEndOfInput() const { return m_source.isPastEndOfInput(); }
 
 	enum TokenIndex { Current, Next, NextNext };
 
 	TokenDesc m_skippedComments[3] = {}; // desc for the current, next and nextnext skipped comment
 	TokenDesc m_tokens[3] = {}; // desc for the current, next and nextnext token
 
-	std::shared_ptr<CharStream> m_source;
+	CharStream& m_source;
+	std::shared_ptr<std::string const> m_sourceName;
 
 	ScannerKind m_kind = ScannerKind::Solidity;
 

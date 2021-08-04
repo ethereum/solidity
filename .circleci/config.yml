@@ -9,20 +9,20 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-6
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:da44d7f78e093f7f0415abf07f7c1fd1c2ed4fa65fefea428821a05186c42ec9"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-8
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:9c3cdfc1d573d1ca3edacd892590a9a83487a1f746a6ca2093d7e009818c5179"
   ubuntu-2004-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-6
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:c78dd9c48d393b57afe053aeb2d0d358a9f31ac85039a181724c2f8408d0bcf8"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-8
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:61232feea23c8c57e82cf5fae890f8b86bbec353cdc04f2fcba383ca589e1d8b"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-9
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:5078e1d74ab6f4329e9218c2d8c0ebe2d42817a3d4c3c62ce887100cbe9bc739"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-11
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:4acb2674eab3e7939d6dc6caa0b8320f4dd79484325242b58473ca2875792d90"
   emscripten-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:emscripten-5
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d28afb9624c2352ea40f157d1a321ffac77f54a21e33a8e8744f9126b780ded4"
+    # solbuildpackpusher/solidity-buildpack-deps:emscripten-6
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:092da5817bc032c91a806b4f73db2a1a31e5cc4c066d94d43eedd9f365df7154"
 
 orbs:
   win: circleci/windows@2.2.0
@@ -811,7 +811,7 @@ jobs:
 
   t_ems_solcjs:
     docker:
-      - image: buildpack-deps:latest
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
       TERM: xterm
     steps:
@@ -822,7 +822,7 @@ jobs:
           name: Install test dependencies
           command: |
             apt-get update
-            apt-get install -qqy --no-install-recommends nodejs npm cvc4
+            apt-get install -qqy --no-install-recommends nodejs npm
       - run:
           name: Test solcjs
           no_output_timeout: 30m

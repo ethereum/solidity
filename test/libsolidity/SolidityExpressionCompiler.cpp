@@ -101,15 +101,14 @@ bytes compileFirstExpression(
 )
 {
 	string sourceCode = "pragma solidity >=0.0; // SPDX-License-Identifier: GPL-3\n" + _sourceCode;
+	CharStream stream(sourceCode, "");
 
 	ASTPointer<SourceUnit> sourceUnit;
 	try
 	{
 		ErrorList errors;
 		ErrorReporter errorReporter(errors);
-		sourceUnit = Parser(errorReporter, solidity::test::CommonOptions::get().evmVersion()).parse(
-			make_shared<Scanner>(CharStream(sourceCode, ""))
-		);
+		sourceUnit = Parser(errorReporter, solidity::test::CommonOptions::get().evmVersion()).parse(stream);
 		if (!sourceUnit)
 			return bytes();
 	}

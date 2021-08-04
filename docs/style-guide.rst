@@ -410,7 +410,9 @@ No:
 
     spam( ham[ 1 ], Coin( { name: "ham" } ) );
 
-Exception::
+Exception:
+
+.. code-block:: solidity
 
     function singleLine() public { spam(); }
 
@@ -996,6 +998,7 @@ No:
 Yes:
 
 .. code-block:: solidity
+    :force:
 
     x = 3;
     x = 100 / 10;
@@ -1005,6 +1008,7 @@ Yes:
 No:
 
 .. code-block:: solidity
+    :force:
 
     x=3;
     x = 100/10;

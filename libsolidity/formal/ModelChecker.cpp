@@ -32,16 +32,16 @@ using namespace solidity::frontend;
 
 ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
+	langutil::CharStreamProvider const& _charStreamProvider,
 	map<h256, string> const& _smtlib2Responses,
 	ModelCheckerSettings _settings,
-	ReadCallback::Callback const& _smtCallback,
-	smtutil::SMTSolverChoice _enabledSolvers
+	ReadCallback::Callback const& _smtCallback
 ):
 	m_errorReporter(_errorReporter),
-	m_settings(_settings),
+	m_settings(move(_settings)),
 	m_context(),
-	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings),
-	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings)
+	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
+	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)
 {
 }
 
@@ -120,8 +120,8 @@ void ModelChecker::analyze(SourceUnit const& _source)
 		m_chc.analyze(_source);
 
 	auto solvedTargets = m_chc.safeTargets();
-	for (auto const& target: m_chc.unsafeTargets())
-		solvedTargets[target.first] += target.second;
+	for (auto const& [node, targets]: m_chc.unsafeTargets())
+		solvedTargets[node] += targets | ranges::views::keys;
 
 	if (m_settings.engine.bmc)
 		m_bmc.analyze(_source, solvedTargets);
@@ -134,7 +134,7 @@ vector<string> ModelChecker::unhandledQueries()
 
 solidity::smtutil::SMTSolverChoice ModelChecker::availableSolvers()
 {
-	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::None();
+	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
 #ifdef HAVE_Z3
 	available.z3 = solidity::smtutil::Z3Interface::available();
 #endif

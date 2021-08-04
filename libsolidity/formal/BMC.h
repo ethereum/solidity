@@ -62,11 +62,11 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers,
-		ModelCheckerSettings const& _settings
+		ModelCheckerSettings const& _settings,
+		langutil::CharStreamProvider const& _charStreamProvider
 	);
 
-	void analyze(SourceUnit const& _sources, std::map<ASTNode const*, std::set<VerificationTargetType>> _solvedTargets);
+	void analyze(SourceUnit const& _sources, std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets);
 
 	/// This is used if the SMT solver is not directly linked into this binary.
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to
@@ -192,7 +192,10 @@ private:
 	std::vector<BMCVerificationTarget> m_verificationTargets;
 
 	/// Targets that were already proven.
-	std::map<ASTNode const*, std::set<VerificationTargetType>> m_solvedTargets;
+	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> m_solvedTargets;
+
+	/// Number of verification conditions that could not be proved.
+	size_t m_unprovedAmt = 0;
 };
 
 }

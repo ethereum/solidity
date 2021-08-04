@@ -24,7 +24,6 @@
 #pragma once
 
 #include <liblangutil/Token.h>
-#include <liblangutil/Scanner.h>
 #include <memory>
 #include <string>
 
@@ -33,6 +32,7 @@ namespace solidity::langutil
 
 class ErrorReporter;
 class Scanner;
+struct SourceLocation;
 struct ErrorId;
 
 class ParserBase
@@ -47,7 +47,7 @@ public:
 		m_parserErrorRecovery = _parserErrorRecovery;
 	}
 
-	std::shared_ptr<CharStream> source() const { return m_scanner->charStream(); }
+	virtual ~ParserBase() = default;
 
 protected:
 	/// Utility class that creates an error and throws an exception if the

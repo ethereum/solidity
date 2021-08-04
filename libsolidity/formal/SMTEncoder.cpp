@@ -30,6 +30,8 @@
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
 
+#include <liblangutil/CharStreamProvider.h>
+
 #include <range/v3/view.hpp>
 
 #include <boost/range/adaptors.hpp>
@@ -45,11 +47,13 @@ using namespace solidity::frontend;
 
 SMTEncoder::SMTEncoder(
 	smt::EncodingContext& _context,
-	ModelCheckerSettings const& _settings
+	ModelCheckerSettings const& _settings,
+	langutil::CharStreamProvider const& _charStreamProvider
 ):
 	m_errorReporter(m_smtErrors),
 	m_context(_context),
-	m_settings(_settings)
+	m_settings(_settings),
+	m_charStreamProvider(_charStreamProvider)
 {
 }
 

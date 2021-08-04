@@ -157,16 +157,16 @@ where an object is expected.
 Inside a code block, the following elements can be used
 (see the later sections for more details):
 
- - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
- - calls to builtin functions, e.g. ``add(1, mload(0))``
- - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of 0 is assigned)
- - identifiers (variables), e.g. ``add(3, x)``
- - assignments, e.g. ``x := add(y, 3)``
- - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
- - if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
- - switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
- - for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
- - function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }```
+- literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
+- calls to builtin functions, e.g. ``add(1, mload(0))``
+- variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of 0 is assigned)
+- identifiers (variables), e.g. ``add(3, x)``
+- assignments, e.g. ``x := add(y, 3)``
+- blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
+- if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
+- switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
+- for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
+- function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }```
 
 Multiple syntactical elements can follow each other simply separated by
 whitespace, i.e. there is no terminating ``;`` or newline required.
@@ -198,7 +198,8 @@ has to be specified after a colon:
 
 .. code-block:: yul
 
-    let x := and("abc":uint32, add(3:uint256, 2:uint256))
+    // This will not compile (u32 and u256 type not implemented yet)
+    let x := and("abc":u32, add(3:u256, 2:u256))
 
 
 Function Calls
@@ -212,10 +213,9 @@ they have to be assigned to local variables.
 
 .. code-block:: yul
 
+    function f(x, y) -> a, b { /* ... */ }
     mstore(0x80, add(mload(0x80), 3))
-    // Here, the user-defined function `f` returns
-    // two values. The definition of the function
-    // is missing from the example.
+    // Here, the user-defined function `f` returns two values.
     let x, y := f(1, mload(0))
 
 For built-in functions of the EVM, functional expressions
@@ -271,9 +271,10 @@ that returns multiple values.
 
 .. code-block:: yul
 
+    // This will not compile (u32 and u256 type not implemented yet)
     {
-        let zero:uint32 := 0:uint32
-        let v:uint256, t:uint32 := f()
+        let zero:u32 := 0:u32
+        let v:u256, t:u32 := f()
         let x, y := g()
     }
 
@@ -314,7 +315,7 @@ you need multiple alternatives.
 
 .. code-block:: yul
 
-    if eq(value, 0) { revert(0, 0) }
+    if lt(calldatasize(), 4) { revert(0, 0) }
 
 The curly braces for the body are required.
 
@@ -545,11 +546,18 @@ as explained below) and all declarations
 introduce new identifiers into these scopes.
 
 Identifiers are visible in
-the block they are defined in (including all sub-nodes and sub-blocks).
+the block they are defined in (including all sub-nodes and sub-blocks):
+Functions are visible in the whole block (even before their definitions) while
+variables are only visible starting from the statement after the ``VariableDeclaration``.
 
-As an exception, the scope of the "init" part of the or-loop
+In particular,
+variables cannot be referenced in the right hand side of their own variable
+declaration.
+Functions can be referenced already before their declaration (if they are visible).
+
+As an exception to the general scoping rule, the scope of the "init" part of the for-loop
 (the first block) extends across all other parts of the for loop.
-This means that variables declared in the init part (but not inside a
+This means that variables (and functions) declared in the init part (but not inside a
 block inside the init part) are visible in all other parts of the for-loop.
 
 Identifiers declared in the other parts of the for loop respect the regular
@@ -558,21 +566,15 @@ syntactical scoping rules.
 This means a for-loop of the form ``for { I... } C { P... } { B... }`` is equivalent
 to ``{ I... for {} C { P... } { B... } }``.
 
-
 The parameters and return parameters of functions are visible in the
 function body and their names have to be distinct.
 
-Variables can only be referenced after their declaration. In particular,
-variables cannot be referenced in the right hand side of their own variable
-declaration.
-Functions can be referenced already before their declaration (if they are visible).
+Inside functions, it is not possible to reference a variable that was declared
+outside of that function.
 
 Shadowing is disallowed, i.e. you cannot declare an identifier at a point
 where another identifier with the same name is also visible, even if it is
-not accessible.
-
-Inside functions, it is not possible to access a variable that was declared
-outside of that function.
+not possible to reference it because it was declared outside the current function.
 
 Formal Specification
 --------------------
@@ -984,9 +986,10 @@ that are not known to the Yul compiler. It also allows you to create
 bytecode sequences that will not be modified by the optimizer.
 
 The functions are ``verbatim_<n>i_<m>o("<data>", ...)``, where
- - ``n`` is a decimal between 0 and 99 that specifies the number of input stack slots / variables
- - ``m`` is a decimal between 0 and 99 that specifies the number of output stack slots / variables
- - ``data`` is a string literal that contains the sequence of bytes
+
+- ``n`` is a decimal between 0 and 99 that specifies the number of input stack slots / variables
+- ``m`` is a decimal between 0 and 99 that specifies the number of output stack slots / variables
+- ``data`` is a string literal that contains the sequence of bytes
 
 If you for example want to define a function that multiplies the input
 by two, without the optimizer touching the constant two, you can use
@@ -1021,15 +1024,15 @@ verbatim bytecode that are not checked by
 the compiler. Violations of these restrictions can result in
 undefined behaviour.
 
- - Control-flow should not jump into or out of verbatim blocks,
-   but it can jump within the same verbatim block.
- - Stack contents apart from the input and output parameters
-   should not be accessed.
- - The stack height difference should be exactly ``m - n``
-   (output slots minus input slots).
- - Verbatim bytecode cannot make any assumptions about the
-   surrounding bytecode. All required parameters have to be
-   passed in as stack variables.
+- Control-flow should not jump into or out of verbatim blocks,
+  but it can jump within the same verbatim block.
+- Stack contents apart from the input and output parameters
+  should not be accessed.
+- The stack height difference should be exactly ``m - n``
+  (output slots minus input slots).
+- Verbatim bytecode cannot make any assumptions about the
+  surrounding bytecode. All required parameters have to be
+  passed in as stack variables.
 
 The optimizer does not analyze verbatim bytecode and always
 assumes that it modifies all aspects of state and thus can only
@@ -1175,11 +1178,13 @@ intermediate states. This allows for easy debugging and verification of the opti
 Please refer to the general :ref:`optimizer documentation <optimizer>`
 for more details about the different optimization stages and how to use the optimizer.
 
-If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``:
+If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``
+and optionally specify the :ref:`expected number of contract executions <optimizer-parameter-runs>` with
+``--optimize-runs``:
 
 .. code-block:: sh
 
-    solc --strict-assembly --optimize
+    solc --strict-assembly --optimize --optimize-runs 200
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
 

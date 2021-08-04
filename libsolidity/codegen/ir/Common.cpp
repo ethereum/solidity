@@ -129,11 +129,12 @@ string IRNames::zeroValue(Type const& _type, string const& _variableName)
 
 string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext const& _context)
 {
+	solAssert(_location.sourceName, "");
 	return "/// @src "
-		+ to_string(_context.sourceIndices().at(_location.source->name()))
+		+ to_string(_context.sourceIndices().at(*_location.sourceName))
 		+ ":"
 		+ to_string(_location.start)
-		+ ","
+		+ ":"
 		+ to_string(_location.end);
 }
 

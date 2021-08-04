@@ -22,36 +22,51 @@
  */
 #pragma once
 
+#include <solc/CommandLineParser.h>
+
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
-#include <libsolidity/interface/ImportRemapper.h>
 #include <libyul/AssemblyStack.h>
-#include <liblangutil/EVMVersion.h>
 
-#include <boost/program_options.hpp>
-#include <boost/filesystem/path.hpp>
-
+#include <iostream>
 #include <memory>
+#include <string>
 
 namespace solidity::frontend
 {
 
-//forward declaration
-enum class DocumentationType: uint8_t;
-
 class CommandLineInterface
 {
 public:
+	explicit CommandLineInterface(
+		std::istream& _sin,
+		std::ostream& _sout,
+		std::ostream& _serr,
+		CommandLineOptions const& _options = CommandLineOptions{}
+	):
+		m_sin(_sin),
+		m_sout(_sout),
+		m_serr(_serr),
+		m_options(_options)
+	{}
+
 	/// Parse command line arguments and return false if we should not continue
-	bool parseArguments(int _argc, char** _argv);
+	bool parseArguments(int _argc, char const* const* _argv);
+	/// Read the content of all input files and initialize the file reader.
+	bool readInputFiles();
 	/// Parse the files and create source code objects
 	bool processInput();
 	/// Perform actions on the input depending on provided compiler arguments
 	/// @returns true on success.
 	bool actOnInput();
 
+	CommandLineOptions const& options() const { return m_options; }
+	FileReader const& fileReader() const { return m_fileReader; }
+	std::optional<std::string> const& standardJsonInput() const { return m_standardJsonInput; }
+
 private:
+	bool compile();
 	bool link();
 	void writeLinkedFiles();
 	/// @returns the ``// <identifier> -> name`` hint for library placeholders.
@@ -63,6 +78,7 @@ private:
 		yul::AssemblyStack::Language _language,
 		yul::AssemblyStack::Machine _targetMachine,
 		bool _optimize,
+		std::optional<unsigned int> _expectedExecutionsPerDeployment = std::nullopt,
 		std::optional<std::string> _yulOptimiserSteps = std::nullopt
 	);
 
@@ -83,12 +99,6 @@ private:
 	void handleGasEstimation(std::string const& _contract);
 	void handleStorageLayout(std::string const& _contract);
 
-	/// Fills @a m_sourceCodes initially and @a m_redirects.
-	bool readInputFilesAndConfigureRemappings();
-	/// Tries to read from the file @a _input or interprets _input literally if that fails.
-	/// It then tries to parse the contents and appends to m_libraries.
-	bool parseLibraryOption(std::string const& _input);
-
 	/// Tries to read @ m_sourceCodes as a JSONs holding ASTs
 	/// such that they can be imported into the compiler  (importASTs())
 	/// (produced by --combined-json ast,compact-format <file.sol>
@@ -105,38 +115,23 @@ private:
 	/// @arg _json json string to be written
 	void createJson(std::string const& _fileName, std::string const& _json);
 
-	size_t countEnabledOptions(std::vector<std::string> const& _optionNames) const;
-	static std::string joinOptionNames(std::vector<std::string> const& _optionNames, std::string _separator = ", ");
+	/// Returns the stream that should receive normal output. Sets m_hasOutput to true if the
+	/// stream has ever been used unless @arg _markAsUsed is set to false.
+	std::ostream& sout(bool _markAsUsed = true);
 
+	/// Returns the stream that should receive error output. Sets m_hasOutput to true if the
+	/// stream has ever been used unless @arg _markAsUsed is set to false.
+	std::ostream& serr(bool _markAsUsed = true);
+
+	std::istream& m_sin;
+	std::ostream& m_sout;
+	std::ostream& m_serr;
+	bool m_hasOutput = false;
 	bool m_error = false; ///< If true, some error occurred.
-
-	bool m_onlyAssemble = false;
-
-	bool m_onlyLink = false;
-
 	FileReader m_fileReader;
-
-	/// Compiler arguments variable map
-	boost::program_options::variables_map m_args;
-	/// list of remappings
-	std::vector<ImportRemapper::Remapping> m_remappings;
-	/// map of library names to addresses
-	std::map<std::string, util::h160> m_libraries;
-	/// Solidity compiler stack
+	std::optional<std::string> m_standardJsonInput;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;
-	CompilerStack::State m_stopAfter = CompilerStack::State::CompilationSuccessful;
-	/// EVM version to use
-	langutil::EVMVersion m_evmVersion;
-	/// How to handle revert strings
-	RevertStrings m_revertStrings = RevertStrings::Default;
-	/// Chosen hash method for the bytecode metadata.
-	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
-	/// Model checker settings.
-	ModelCheckerSettings m_modelCheckerSettings;
-	/// Whether or not to colorize diagnostics output.
-	bool m_coloredOutput = true;
-	/// Whether or not to output error IDs.
-	bool m_withErrorIds = false;
+	CommandLineOptions m_options;
 };
 
 }

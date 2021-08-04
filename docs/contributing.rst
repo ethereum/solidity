@@ -112,7 +112,7 @@ starting from the current directory. The required file is called ``libevmone.so`
 ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
 use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
 ``libsolidity/SolidityEndToEndTest``, part of the soltest suite. To run all tests, download the library from
-`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.7.0>`_
+`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.8.0>`_
 and place it in the project root path or inside the ``deps`` folder.
 
 If the ``libz3`` library is not installed on your system, you should disable the
@@ -324,7 +324,7 @@ from the documentation or the other tests:
     # extract from tests:
     path/to/solidity/scripts/isolate_tests.py path/to/solidity/test/libsolidity/SolidityEndToEndTest.cpp
     # extract from documentation:
-    path/to/solidity/scripts/isolate_tests.py path/to/solidity/docs docs
+    path/to/solidity/scripts/isolate_tests.py path/to/solidity/docs
 
 The AFL documentation states that the corpus (the initial input files) should not be
 too large. The files themselves should not be larger than 1 kB and there should be

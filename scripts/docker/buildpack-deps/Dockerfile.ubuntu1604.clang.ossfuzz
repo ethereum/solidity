@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang as base
-LABEL version="9"
+LABEL version="11"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -60,7 +60,7 @@ RUN set -ex; \
 
 # Z3
 RUN set -ex; \
-    git clone --depth 1 -b z3-4.8.10 https://github.com/Z3Prover/z3.git \
+    git clone --depth 1 -b z3-4.8.12 https://github.com/Z3Prover/z3.git \
     /usr/src/z3; \
     cd /usr/src/z3; \
     mkdir build; \
@@ -92,7 +92,7 @@ RUN set -ex; \
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.7.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	git clone --branch="v0.8.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \
@@ -104,7 +104,7 @@ RUN set -ex; \
 # HERA
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.3.2-evmc8" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
+	git clone --branch="v0.5.0" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
 	cd hera; \
 	mkdir build; \
 	cd build; \

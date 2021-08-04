@@ -10,6 +10,7 @@ Ether Units
 A literal number can take a suffix of ``wei``, ``gwei`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
 
 .. code-block:: solidity
+    :force:
 
     assert(1 wei == 1);
     assert(1 gwei == 1e9);
@@ -29,11 +30,11 @@ Suffixes like ``seconds``, ``minutes``, ``hours``, ``days`` and ``weeks``
 after literal numbers can be used to specify units of time where seconds are the base
 unit and units are considered naively in the following way:
 
- * ``1 == 1 seconds``
- * ``1 minutes == 60 seconds``
- * ``1 hours == 60 minutes``
- * ``1 days == 24 hours``
- * ``1 weeks == 7 days``
+* ``1 == 1 seconds``
+* ``1 minutes == 60 seconds``
+* ``1 hours == 60 minutes``
+* ``1 days == 24 hours``
+* ``1 weeks == 7 days``
 
 Take care if you perform calendar calculations using these units, because
 not every year equals 365 days and not even every day has 24 hours

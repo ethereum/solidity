@@ -81,7 +81,7 @@ std::optional<Error> parseAndReturnFirstError(
 		{
 			string errors;
 			for (auto const& err: stack.errors())
-				errors += SourceReferenceFormatter::formatErrorInformation(*err);
+				errors += SourceReferenceFormatter::formatErrorInformation(*err, stack);
 			BOOST_FAIL("Found more than one error:\n" + errors);
 		}
 		error = e;

@@ -57,7 +57,7 @@ std::ostream& operator<<(std::ostream& _output, std::tuple<T1, T2> const& _tuple
 namespace boost::test_tools::tt_detail
 {
 
-// Boost won't find find the << operator unless we put it in the std namespace which is illegal.
+// Boost won't find the << operator unless we put it in the std namespace which is illegal.
 // The recommended solution is to overload print_log_value<> struct and make it use our global operator.
 template<typename T1,typename T2>
 struct print_log_value<std::tuple<T1, T2>>

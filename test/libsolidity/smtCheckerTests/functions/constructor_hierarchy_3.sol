@@ -21,5 +21,5 @@ contract A is B {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (200-218): CHC: Assertion violation happens here.
 // Warning 4984: (171-176): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (200-218): CHC: Assertion violation happens here.

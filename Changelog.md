@@ -14,14 +14,22 @@ Compiler Features:
  * Yul EVM Code Transform: Do not reuse stack slots that immediately become unreachable.
  * Yul EVM Code Transform: Also pop unused argument slots for functions without return variables (under the same restrictions as for functions with return variables).
  * Yul Optimizer: Move function arguments and return variables to memory with the experimental Stack Limit Evader (which is not enabled by default).
+ * Commandline Interface: option ``--pretty-json`` works also with ``--standard--json``.
+ * SMTChecker: Unproved targets are hidden by default, and the SMTChecker only states how many unproved targets there are. They can be listed using the command line option ``--model-checker-show-unproved`` or the JSON option ``settings.modelChecker.showUnproved``.
 
 
 Bugfixes:
  * Code Generator: Fix crash when passing an empty string literal to ``bytes.concat()``.
  * Code Generator: Fix internal compiler error when calling functions bound to calldata structs and arrays.
  * Code Generator: Fix internal compiler error when passing a 32-byte hex literal or a zero literal to ``bytes.concat()`` by disallowing such literals.
+ * Commandline Interface: Fix crash when a directory path is passed to ``--standard-json``.
+ * Commandline Interface: Read JSON from standard input when ``--standard-json`` gets ``-`` as a file name.
+ * Standard JSON: Include source location for errors in files with empty name.
  * Type Checker: Fix internal error and prevent static calls to unimplemented modifiers.
  * Yul Code Generator: Fix internal compiler error when using a long literal with bitwise negation.
+ * Yul Code Generator: Fix source location references for calls to builtin functions.
+ * Yul Parser: Fix source location references for ``if`` statements.
+ * Commandline Interface: Apply ``--optimizer-runs`` option in assembly / yul mode.
 
 
 ### 0.8.6 (2021-06-22)

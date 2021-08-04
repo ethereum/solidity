@@ -58,7 +58,7 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (s2.sol:518-539): CHC: Assertion violation happens here.\nCounterexample:\n\nr1 = [3, 1, 2]\nr2 = []\nr3 = []\nz = 0\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call
+// Warning 6328: (s2.sol:518-539): CHC: Assertion violation happens here.\nCounterexample:\n\nr2 = []\nr3 = []\nz = 0\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call
 // Warning 6328: (s2.sol:704-725): CHC: Assertion violation happens here.\nCounterexample:\n\nr1 = [3, 1, 2]\nr2 = [3, 1, 2]\nr3 = []\nz = 0\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n    C.g() -- internal call
 // Warning 6328: (s2.sol:890-911): CHC: Assertion violation happens here.
 // Warning 6328: (s2.sol:980-994): CHC: Assertion violation happens here.

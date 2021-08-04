@@ -28,6 +28,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
 // Warning 2072: (643-658): Unused local variable.
 // Warning 6328: (298-328): CHC: Assertion violation happens here.

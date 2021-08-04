@@ -33,6 +33,7 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
+// Warning 6368: (186-196): CHC: Out of bounds access might happen here.
 // Warning 6368: (329-333): CHC: Out of bounds access happens here.
 // Warning 6368: (342-346): CHC: Out of bounds access happens here.
 // Warning 6368: (355-359): CHC: Out of bounds access happens here.

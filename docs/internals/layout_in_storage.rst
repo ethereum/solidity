@@ -127,7 +127,7 @@ The type of the value is ``uint256``, so it uses a single slot.
 ------------------------
 
 ``bytes`` and ``string`` are encoded identically.
-In general, the encoding is similar to ``byte1[]``, in the sense that there is a slot for the array itself and
+In general, the encoding is similar to ``bytes1[]``, in the sense that there is a slot for the array itself and
 a data area that is computed using a ``keccak256`` hash of that slot's position.
 However, for short values (shorter than 32 bytes) the array elements are stored together with the length in the same slot.
 

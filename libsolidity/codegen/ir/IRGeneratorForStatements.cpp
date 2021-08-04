@@ -3166,5 +3166,5 @@ bool IRGeneratorForStatements::visit(TryCatchClause const& _clause)
 string IRGeneratorForStatements::linkerSymbol(ContractDefinition const& _library) const
 {
 	solAssert(_library.isLibrary(), "");
-	return "linkersymbol(" + util::escapeAndQuoteYulString(_library.fullyQualifiedName()) + ")";
+	return "linkersymbol(" + util::escapeAndQuoteString(_library.fullyQualifiedName()) + ")";
 }

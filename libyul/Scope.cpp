@@ -32,6 +32,7 @@ bool Scope::registerVariable(YulString _name, YulType const& _type)
 		return false;
 	Variable variable;
 	variable.type = _type;
+	variable.name = _name;
 	identifiers[_name] = variable;
 	return true;
 }
@@ -40,7 +41,7 @@ bool Scope::registerFunction(YulString _name, std::vector<YulType> _arguments, s
 {
 	if (exists(_name))
 		return false;
-	identifiers[_name] = Function{std::move(_arguments), std::move(_returns)};
+	identifiers[_name] = Function{std::move(_arguments), std::move(_returns), _name};
 	return true;
 }
 

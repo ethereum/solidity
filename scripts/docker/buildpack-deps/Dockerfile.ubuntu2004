@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:focal AS base
-LABEL version="6"
+LABEL version="8"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -37,7 +37,7 @@ RUN set -ex; \
 		cmake ninja-build \
 		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
-		libcvc4-dev libz3-static-dev \
+		libcvc4-dev libz3-static-dev z3-static \
 		; \
 	apt-get install -qy python3-pip python3-sphinx; \
 	pip3 install codecov; \
@@ -48,7 +48,7 @@ FROM base AS libraries
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.7.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	git clone --branch="v0.8.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \
@@ -60,7 +60,7 @@ RUN set -ex; \
 # HERA
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.3.2-evmc8" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
+	git clone --branch="v0.5.0" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
 	cd hera; \
 	mkdir build; \
 	cd build; \
@@ -73,4 +73,3 @@ FROM base
 COPY --from=libraries /usr/lib /usr/lib
 COPY --from=libraries /usr/bin /usr/bin
 COPY --from=libraries /usr/include /usr/include
-

@@ -237,16 +237,14 @@ void CodeTransform::operator()(FunctionCall const& _call)
 {
 	yulAssert(m_scope, "");
 
+	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
 	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
 		builtin->generateCode(_call, m_assembly, m_builtinContext, [&](Expression const& _expression) {
 			visitExpression(_expression);
 		});
 	else
 	{
-		m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
-		AbstractAssembly::LabelID returnLabel(numeric_limits<AbstractAssembly::LabelID>::max()); // only used for evm 1.0
-
-		returnLabel = m_assembly.newLabelId();
+		AbstractAssembly::LabelID returnLabel = m_assembly.newLabelId();
 		m_assembly.appendLabelReference(returnLabel);
 
 		Scope::Function* function = nullptr;
@@ -320,8 +318,6 @@ void CodeTransform::operator()(If const& _if)
 
 void CodeTransform::operator()(Switch const& _switch)
 {
-	//@TODO use JUMPV in EVM1.5?
-
 	visitExpression(*_switch.expression);
 	int expressionHeight = m_assembly.stackHeight();
 	map<Case const*, AbstractAssembly::LabelID> caseBodies;
@@ -416,6 +412,8 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		subTransform.setupReturnVariablesAndFunctionExit();
 
 	subTransform(_function.body);
+
+	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_function.debugData));
 	if (!subTransform.m_stackErrors.empty())
 	{
 		m_assembly.markAsInvalid();

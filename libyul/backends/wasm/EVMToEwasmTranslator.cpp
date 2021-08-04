@@ -41,6 +41,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/CharStreamProvider.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
 
@@ -106,7 +107,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 		message += ret.toString(&WasmDialect::instance());
 		message += "----------------------------------\n";
 		for (auto const& err: errors)
-			message += langutil::SourceReferenceFormatter::formatErrorInformation(*err);
+			message += langutil::SourceReferenceFormatter::formatErrorInformation(*err, m_charStreamProvider);
 		yulAssert(false, message);
 	}
 
@@ -124,7 +125,7 @@ void EVMToEwasmTranslator::parsePolyfill()
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	shared_ptr<Scanner> scanner{make_shared<Scanner>(CharStream(
+	CharStream charStream(
 		"{" +
 			string(solidity::yul::wasm::polyfill::Arithmetic) +
 			string(solidity::yul::wasm::polyfill::Bitwise) +
@@ -134,13 +135,16 @@ void EVMToEwasmTranslator::parsePolyfill()
 			string(solidity::yul::wasm::polyfill::Keccak) +
 			string(solidity::yul::wasm::polyfill::Logical) +
 			string(solidity::yul::wasm::polyfill::Memory) +
-		"}", ""))};
-	m_polyfill = Parser(errorReporter, WasmDialect::instance()).parse(scanner, false);
+		"}", "");
+	m_polyfill = Parser(errorReporter, WasmDialect::instance()).parse(charStream);
 	if (!errors.empty())
 	{
 		string message;
 		for (auto const& err: errors)
-			message += langutil::SourceReferenceFormatter::formatErrorInformation(*err);
+			message += langutil::SourceReferenceFormatter::formatErrorInformation(
+				*err,
+				SingletonCharStreamProvider(charStream)
+			);
 		yulAssert(false, message);
 	}
 

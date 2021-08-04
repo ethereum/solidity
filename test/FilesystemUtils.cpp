@@ -24,6 +24,21 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::test;
 
+void solidity::test::createFilesWithParentDirs(set<boost::filesystem::path> const& _paths, string const& _content)
+{
+	for (boost::filesystem::path const& path: _paths)
+	{
+		if (!path.parent_path().empty())
+			boost::filesystem::create_directories(path.parent_path());
+
+		ofstream newFile(path.string());
+		newFile << _content;
+
+		if (newFile.fail() || !boost::filesystem::exists(path))
+			BOOST_THROW_EXCEPTION(runtime_error("Failed to create an empty file: \"" + path.string() + "\"."));
+	}
+}
+
 void solidity::test::createFileWithContent(boost::filesystem::path const& _path, string const& content)
 {
 	if (boost::filesystem::is_regular_file(_path))

@@ -50,7 +50,12 @@ class Parser::ASTNodeFactory
 {
 public:
 	explicit ASTNodeFactory(Parser& _parser):
-		m_parser(_parser), m_location{_parser.currentLocation().start, -1, _parser.currentLocation().source} {}
+		m_parser(_parser), m_location{
+			_parser.currentLocation().start,
+			-1,
+			_parser.currentLocation().sourceName
+		}
+	{}
 	ASTNodeFactory(Parser& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location{_childNode->location()} {}
 
@@ -63,7 +68,7 @@ public:
 	template <class NodeType, typename... Args>
 	ASTPointer<NodeType> createNode(Args&& ... _args)
 	{
-		solAssert(m_location.source, "");
+		solAssert(m_location.sourceName, "");
 		if (m_location.end < 0)
 			markEndPosition();
 		return make_shared<NodeType>(m_parser.nextID(), m_location, std::forward<Args>(_args)...);
@@ -76,13 +81,13 @@ private:
 	SourceLocation m_location;
 };
 
-ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
+ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 {
 	solAssert(!m_insideModifier, "");
 	try
 	{
 		m_recursionDepth = 0;
-		m_scanner = _scanner;
+		m_scanner = make_shared<Scanner>(_charStream);
 		ASTNodeFactory nodeFactory(*this);
 
 		vector<ASTPointer<ASTNode>> nodes;
@@ -1284,7 +1289,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	}
 
 	yul::Parser asmParser(m_errorReporter, dialect);
-	shared_ptr<yul::Block> block = asmParser.parse(m_scanner, true);
+	shared_ptr<yul::Block> block = asmParser.parseInline(m_scanner);
 	if (block == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());
 
@@ -2045,9 +2050,9 @@ optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> cons
 
 	// Search inside all parts of the source not covered by parsed nodes.
 	// This will leave e.g. "global comments".
-	string const& source = m_scanner->source();
-	using iter = decltype(source.begin());
+	using iter = std::string::const_iterator;
 	vector<pair<iter, iter>> sequencesToSearch;
+	string const& source = m_scanner->charStream().source();
 	sequencesToSearch.emplace_back(source.begin(), source.end());
 	for (ASTPointer<ASTNode> const& node: _nodes)
 		if (node->location().hasText())
@@ -2073,7 +2078,7 @@ optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> cons
 	else if (matches.empty())
 		parserWarning(
 			1878_error,
-			{-1, -1, m_scanner->charStream()},
+			{-1, -1, m_scanner->currentLocation().sourceName},
 			"SPDX license identifier not provided in source file. "
 			"Before publishing, consider adding a comment containing "
 			"\"SPDX-License-Identifier: <SPDX-License>\" to each source file. "
@@ -2083,7 +2088,7 @@ optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> cons
 	else
 		parserError(
 			3716_error,
-			{-1, -1, m_scanner->charStream()},
+			{-1, -1, m_scanner->currentLocation().sourceName},
 			"Multiple SPDX license identifiers found in source file. "
 			"Use \"AND\" or \"OR\" to combine multiple licenses. "
 			"Please see https://spdx.org for more information."
