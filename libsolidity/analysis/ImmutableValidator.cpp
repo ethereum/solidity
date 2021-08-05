@@ -27,14 +27,9 @@ using namespace solidity::langutil;
 
 void ImmutableValidator::analyze()
 {
-	m_inConstructionContext = true;
+	m_inCreationContext = true;
 
 	auto linearizedContracts = m_currentContract.annotation().linearizedBaseContracts | ranges::views::reverse;
-
-	for (ContractDefinition const* contract: linearizedContracts)
-		for (VariableDeclaration const* stateVar: contract->stateVariables())
-			if (stateVar->value())
-				m_initializedStateVariables.emplace(stateVar);
 
 	for (ContractDefinition const* contract: linearizedContracts)
 		for (VariableDeclaration const* stateVar: contract->stateVariables())
@@ -42,15 +37,21 @@ void ImmutableValidator::analyze()
 				stateVar->value()->accept(*this);
 
 	for (ContractDefinition const* contract: linearizedContracts)
-		if (contract->constructor())
-			visitCallableIfNew(*contract->constructor());
-
-	for (ContractDefinition const* contract: linearizedContracts)
 		for (std::shared_ptr<InheritanceSpecifier> const& inheritSpec: contract->baseContracts())
 			if (auto args = inheritSpec->arguments())
 				ASTNode::listAccept(*args, *this);
 
-	m_inConstructionContext = false;
+	for (ContractDefinition const* contract: linearizedContracts)
+	{
+		for (VariableDeclaration const* stateVar: contract->stateVariables())
+			if (stateVar->value())
+				m_initializedStateVariables.emplace(stateVar);
+
+		if (contract->constructor())
+			visitCallableIfNew(*contract->constructor());
+	}
+
+	m_inCreationContext = false;
 
 	for (ContractDefinition const* contract: linearizedContracts)
 	{
@@ -63,6 +64,15 @@ void ImmutableValidator::analyze()
 
 	checkAllVariablesInitialized(m_currentContract.location());
 }
+
+bool ImmutableValidator::visit(Assignment const& _assignment)
+{
+	// Need to visit values first (rhs) as they might access other immutables.
+	_assignment.rightHandSide().accept(*this);
+	_assignment.leftHandSide().accept(*this);
+	return false;
+}
+
 
 bool ImmutableValidator::visit(FunctionDefinition const& _functionDefinition)
 {
@@ -207,19 +217,37 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 				"Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement."
 			);
 		else if (m_initializedStateVariables.count(&_variableReference))
+		{
+			if (!read)
+				m_errorReporter.typeError(
+					1574_error,
+					_expression.location(),
+					"Immutable state variable already initialized."
+				);
+			else
+				m_errorReporter.typeError(
+					2718_error,
+					_expression.location(),
+					"Immutable variables cannot be modified after initialization."
+				);
+		}
+		else if (read)
 			m_errorReporter.typeError(
-				1574_error,
+				3969_error,
 				_expression.location(),
-				"Immutable state variable already initialized."
+				"Immutable variables must be initialized using an assignment."
 			);
 		m_initializedStateVariables.emplace(&_variableReference);
 	}
-	if (read && m_inConstructionContext)
+	if (
+		read &&
+		m_inCreationContext &&
+		!m_initializedStateVariables.count(&_variableReference)
+	)
 		m_errorReporter.typeError(
 			7733_error,
 			_expression.location(),
-			"Immutable variables cannot be read during contract creation time, which means "
-			"they cannot be read in the constructor or any function or modifier called from it."
+			"Immutable variables cannot be read before they are initialized."
 		);
 }
 

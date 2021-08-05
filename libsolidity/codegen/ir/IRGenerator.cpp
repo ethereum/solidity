@@ -164,7 +164,7 @@ string IRGenerator::generate(
 		}
 	)");
 
-	resetContext(_contract);
+	resetContext(_contract, ExecutionContext::Creation);
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
@@ -211,7 +211,7 @@ string IRGenerator::generate(
 	bool creationInvolvesAssembly = m_context.inlineAssemblySeen();
 	t("memoryInitCreation", memoryInit(!creationInvolvesAssembly));
 
-	resetContext(_contract);
+	resetContext(_contract, ExecutionContext::Deployed);
 
 	// NOTE: Function pointers can be passed from creation code via storage variables. We need to
 	// get all the functions they could point to into the dispatch functions even if they're never
@@ -1049,7 +1049,7 @@ string IRGenerator::memoryInit(bool _useMemoryGuard)
 		).render();
 }
 
-void IRGenerator::resetContext(ContractDefinition const& _contract)
+void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionContext _context)
 {
 	solAssert(
 		m_context.functionGenerationQueueEmpty(),
@@ -1063,7 +1063,7 @@ void IRGenerator::resetContext(ContractDefinition const& _contract)
 		m_context.internalDispatchClean(),
 		"Reset internal dispatch map without consuming it."
 	);
-	IRGenerationContext newContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings, m_context.sourceIndices());
+	IRGenerationContext newContext(m_evmVersion, _context, m_context.revertStrings(), m_optimiserSettings, m_context.sourceIndices());
 	newContext.copyFunctionIDsFrom(m_context);
 	m_context = move(newContext);
 

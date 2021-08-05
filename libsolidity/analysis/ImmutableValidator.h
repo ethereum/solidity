@@ -28,8 +28,9 @@ namespace solidity::frontend
 
 /**
  * Validates access and initialization of immutable variables:
- * must be directly initialized in their respective c'tor
- * can not be read by any function/modifier called by the c'tor (or the c'tor itself)
+ * must be directly initialized in their respective c'tor or inline
+ * cannot be read before being initialized
+ * cannot be read when initializing state variables inline
  * must be initialized outside loops (only one initialization)
  * must be initialized outside ifs (must be initialized unconditionally)
  * must be initialized exactly once (no multiple statements)
@@ -48,6 +49,7 @@ public:
 	void analyze();
 
 private:
+	bool visit(Assignment const& _assignment);
 	bool visit(FunctionDefinition const& _functionDefinition);
 	bool visit(ModifierDefinition const& _modifierDefinition);
 	bool visit(MemberAccess const& _memberAccess);
@@ -74,7 +76,7 @@ private:
 	FunctionDefinition const* m_currentConstructor = nullptr;
 	bool m_inLoop = false;
 	bool m_inBranch = false;
-	bool m_inConstructionContext = false;
+	bool m_inCreationContext = true;
 };
 
 }

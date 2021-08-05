@@ -11,3 +11,4 @@ contract C is B(C.f) {
 }
 // ----
 // TypeError 1581: (200-201): Cannot write to immutable here: Immutable variables can only be initialized inline or assigned directly in the constructor.
+// TypeError 1574: (109-110): Immutable state variable already initialized.
