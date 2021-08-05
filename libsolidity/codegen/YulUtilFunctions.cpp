@@ -35,6 +35,16 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
+string YulUtilFunctions::identityFunction()
+{
+	string functionName = "identity";
+	return m_functionCollector.createFunction("identity", [&](vector<string>& _args, vector<string>& _rets) {
+		_args.push_back("value");
+		_rets.push_back("ret");
+		return "ret := value";
+	});
+}
+
 string YulUtilFunctions::combineExternalFunctionIdFunction()
 {
 	string functionName = "combine_external_function_id";
@@ -3272,48 +3282,38 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				if (rational->isFractional())
 					solAssert(toCategory == Type::Category::FixedPoint, "");
 
-			if (toCategory == Type::Category::FixedBytes)
-			{
-				FixedBytesType const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
-				body =
-					Whiskers("converted := <shiftLeft>(<clean>(value))")
-					("shiftLeft", shiftLeftFunction(256 - toBytesType.numBytes() * 8))
-					("clean", cleanupFunction(_from))
-					.render();
-			}
-			else if (toCategory == Type::Category::Enum)
-				body =
-					Whiskers("converted := <cleanEnum>(<cleanInt>(value))")
-					("cleanEnum", cleanupFunction(_to))
-					("cleanInt", cleanupFunction(_from))
-					.render();
-			else if (toCategory == Type::Category::FixedPoint)
-				solUnimplemented("Not yet implemented - FixedPointType.");
-			else if (toCategory == Type::Category::Address || toCategory == Type::Category::Contract)
+			if (toCategory == Type::Category::Address || toCategory == Type::Category::Contract)
 				body =
 					Whiskers("converted := <convert>(value)")
 					("convert", conversionFunction(_from, IntegerType(160)))
 					.render();
-			else if (toCategory == Type::Category::Integer)
-			{
-				IntegerType const& to = dynamic_cast<IntegerType const&>(_to);
-
-				// Clean according to the "to" type, except if this is
-				// a widening conversion.
-				IntegerType const* cleanupType = &to;
-				if (fromCategory == Type::Category::Integer)
-				{
-					IntegerType const& from = dynamic_cast<IntegerType const&>(_from);
-					if (to.numBits() > from.numBits())
-						cleanupType = &from;
-				}
-				body =
-					Whiskers("converted := <cleanInt>(value)")
-					("cleanInt", cleanupFunction(*cleanupType))
-					.render();
-			}
 			else
-				solAssert(false, "");
+			{
+				Whiskers bodyTemplate("converted := <cleanOutput>(<convert>(<cleanInput>(value)))");
+				bodyTemplate("cleanInput", cleanupFunction(_from));
+				bodyTemplate("cleanOutput", cleanupFunction(_to));
+				string convert;
+
+				if (auto const* toFixedBytes = dynamic_cast<FixedBytesType const*>(&_to))
+					convert = shiftLeftFunction(256 - toFixedBytes->numBytes() * 8);
+				else if (dynamic_cast<FixedPointType const*>(&_to))
+					solUnimplementedAssert(false, "");
+				else if (dynamic_cast<IntegerType const*>(&_to))
+				{
+					solUnimplementedAssert(fromCategory != Type::Category::FixedPoint, "");
+					convert = identityFunction();
+				}
+				else if (toCategory == Type::Category::Enum)
+				{
+					solAssert(fromCategory != Type::Category::FixedPoint, "");
+					convert = identityFunction();
+				}
+				else
+					solAssert(false, "");
+				solAssert(!convert.empty(), "");
+				bodyTemplate("convert", convert);
+				body = bodyTemplate.render();
+			}
 			break;
 		}
 		case Type::Category::Bool:
