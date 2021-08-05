@@ -520,7 +520,7 @@ void CompilerContext::appendInlineAssembly(
 		analysisInfo,
 		*m_asm,
 		m_evmVersion,
-		identifierAccess,
+		identifierAccess.generateCode,
 		_system,
 		_optimiserSettings.optimizeStackAllocation
 	);
