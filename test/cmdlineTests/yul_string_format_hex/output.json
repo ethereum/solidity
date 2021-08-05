@@ -93,7 +93,10 @@ object \"C_11\" {
             }
 
             function convert_t_rational_2864434397_by_1_to_t_bytes4(value) -> converted {
-                converted := shift_left_224(cleanup_t_rational_2864434397_by_1(value))
+
+                value := cleanup_t_rational_2864434397_by_1(value)
+                converted := cleanup_t_bytes4(shift_left_224(value))
+
             }
 
             /// @src 0:91:157

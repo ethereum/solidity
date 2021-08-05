@@ -182,36 +182,85 @@ object "C_81" {
                 cleaned := value
             }
 
+            function cleanup_t_rational_0_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_10_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_1_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_2_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_minus_1_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_minus_2_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
             function cleanup_t_uint256(value) -> cleaned {
                 cleaned := value
             }
 
             function convert_t_rational_0_by_1_to_t_uint256(value) -> converted {
+
+                value := cleanup_t_rational_0_by_1(value)
                 converted := cleanup_t_uint256(value)
+
             }
 
             function convert_t_rational_10_by_1_to_t_uint256(value) -> converted {
+
+                value := cleanup_t_rational_10_by_1(value)
                 converted := cleanup_t_uint256(value)
+
             }
 
             function convert_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1_to_t_uint256(value) -> converted {
+
+                value := cleanup_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1(value)
                 converted := cleanup_t_uint256(value)
+
             }
 
             function convert_t_rational_1_by_1_to_t_uint256(value) -> converted {
+
+                value := cleanup_t_rational_1_by_1(value)
                 converted := cleanup_t_uint256(value)
+
             }
 
             function convert_t_rational_2_by_1_to_t_uint256(value) -> converted {
+
+                value := cleanup_t_rational_2_by_1(value)
                 converted := cleanup_t_uint256(value)
+
             }
 
             function convert_t_rational_minus_1_by_1_to_t_int256(value) -> converted {
+
+                value := cleanup_t_rational_minus_1_by_1(value)
                 converted := cleanup_t_int256(value)
+
             }
 
             function convert_t_rational_minus_2_by_1_to_t_int256(value) -> converted {
+
+                value := cleanup_t_rational_minus_2_by_1(value)
                 converted := cleanup_t_int256(value)
+
             }
 
             /// @src 0:96:368

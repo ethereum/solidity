@@ -53,6 +53,10 @@ object \"C_54\" {
             cleaned := value
         }
 
+        function cleanup_t_rational_42_by_1(value) -> cleaned {
+            cleaned := value
+        }
+
         /// @src 0:175:223
         function constructor_C_54(var__init_12) {
 
@@ -74,11 +78,17 @@ object \"C_54\" {
         /// @src 0:79:428
 
         function convert_t_int256_to_t_int256(value) -> converted {
+
+            value := cleanup_t_int256(value)
             converted := cleanup_t_int256(value)
+
         }
 
         function convert_t_rational_42_by_1_to_t_int256(value) -> converted {
+
+            value := cleanup_t_rational_42_by_1(value)
             converted := cleanup_t_int256(value)
+
         }
 
         function copy_arguments_for_constructor_20_object_C_54() -> ret_param_0 {
@@ -261,6 +271,10 @@ object \"C_54\" {
                 cleaned := value
             }
 
+            function cleanup_t_rational_41_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
             function cleanup_t_uint160(value) -> cleaned {
                 cleaned := and(value, 0xffffffffffffffffffffffffffffffffffffffff)
             }
@@ -279,11 +293,17 @@ object \"C_54\" {
             }
 
             function convert_t_int256_to_t_int256(value) -> converted {
+
+                value := cleanup_t_int256(value)
                 converted := cleanup_t_int256(value)
+
             }
 
             function convert_t_rational_41_by_1_to_t_int256(value) -> converted {
+
+                value := cleanup_t_rational_41_by_1(value)
                 converted := cleanup_t_int256(value)
+
             }
 
             function convert_t_uint160_to_t_address(value) -> converted {
@@ -291,7 +311,10 @@ object \"C_54\" {
             }
 
             function convert_t_uint160_to_t_uint160(value) -> converted {
+
+                value := cleanup_t_uint160(value)
                 converted := cleanup_t_uint160(value)
+
             }
 
             function extract_from_storage_value_dynamict_int256(slot_value, offset) -> value {
@@ -610,6 +633,14 @@ object \"D_72\" {
             cleaned := value
         }
 
+        function cleanup_t_rational_3_by_1(value) -> cleaned {
+            cleaned := value
+        }
+
+        function cleanup_t_rational_42_by_1(value) -> cleaned {
+            cleaned := value
+        }
+
         /// @src 0:175:223
         function constructor_C_54(var__init_12) {
 
@@ -652,15 +683,24 @@ object \"D_72\" {
         /// @src 1:91:166
 
         function convert_t_int256_to_t_int256(value) -> converted {
+
+            value := cleanup_t_int256(value)
             converted := cleanup_t_int256(value)
+
         }
 
         function convert_t_rational_3_by_1_to_t_int256(value) -> converted {
+
+            value := cleanup_t_rational_3_by_1(value)
             converted := cleanup_t_int256(value)
+
         }
 
         function convert_t_rational_42_by_1_to_t_int256(value) -> converted {
+
+            value := cleanup_t_rational_42_by_1(value)
             converted := cleanup_t_int256(value)
+
         }
 
         function copy_arguments_for_constructor_71_object_D_72() -> ret_param_0 {
@@ -865,6 +905,10 @@ object \"D_72\" {
                 cleaned := value
             }
 
+            function cleanup_t_rational_41_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
             function cleanup_t_uint160(value) -> cleaned {
                 cleaned := and(value, 0xffffffffffffffffffffffffffffffffffffffff)
             }
@@ -883,11 +927,17 @@ object \"D_72\" {
             }
 
             function convert_t_int256_to_t_int256(value) -> converted {
+
+                value := cleanup_t_int256(value)
                 converted := cleanup_t_int256(value)
+
             }
 
             function convert_t_rational_41_by_1_to_t_int256(value) -> converted {
+
+                value := cleanup_t_rational_41_by_1(value)
                 converted := cleanup_t_int256(value)
+
             }
 
             function convert_t_uint160_to_t_address(value) -> converted {
@@ -895,7 +945,10 @@ object \"D_72\" {
             }
 
             function convert_t_uint160_to_t_uint160(value) -> converted {
+
+                value := cleanup_t_uint160(value)
                 converted := cleanup_t_uint160(value)
+
             }
 
             function extract_from_storage_value_dynamict_int256(slot_value, offset) -> value {

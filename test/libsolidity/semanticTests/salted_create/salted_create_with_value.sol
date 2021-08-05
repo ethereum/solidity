@@ -23,5 +23,5 @@ contract A {
 // ----
 // f(), 10 ether -> 3007, 3008, 3009
 // gas irOptimized: 270255
-// gas legacy: 422627
+// gas legacy: 422780
 // gas legacyOptimized: 287856
