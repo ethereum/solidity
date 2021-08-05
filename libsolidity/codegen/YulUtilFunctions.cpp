@@ -3258,6 +3258,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		switch (fromCategory)
 		{
 		case Type::Category::Address:
+		case Type::Category::Contract:
 			body =
 				Whiskers("converted := <convert>(value)")
 					("convert", conversionFunction(IntegerType(160), _to))
@@ -3265,61 +3266,44 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			break;
 		case Type::Category::Integer:
 		case Type::Category::RationalNumber:
-		case Type::Category::Contract:
 		{
+			solAssert(_from.mobileType(), "");
 			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&_from))
-				solUnimplementedAssert(!rational->isFractional(), "Not yet implemented - FixedPointType.");
+				if (rational->isFractional())
+					solAssert(toCategory == Type::Category::FixedPoint, "");
+
 			if (toCategory == Type::Category::FixedBytes)
 			{
-				solAssert(
-					fromCategory == Type::Category::Integer || fromCategory == Type::Category::RationalNumber,
-					"Invalid conversion to FixedBytesType requested."
-				);
 				FixedBytesType const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
 				body =
 					Whiskers("converted := <shiftLeft>(<clean>(value))")
-						("shiftLeft", shiftLeftFunction(256 - toBytesType.numBytes() * 8))
-						("clean", cleanupFunction(_from))
-						.render();
+					("shiftLeft", shiftLeftFunction(256 - toBytesType.numBytes() * 8))
+					("clean", cleanupFunction(_from))
+					.render();
 			}
 			else if (toCategory == Type::Category::Enum)
-			{
-				solAssert(_from.mobileType(), "");
 				body =
 					Whiskers("converted := <cleanEnum>(<cleanInt>(value))")
 					("cleanEnum", cleanupFunction(_to))
-					// "mobileType()" returns integer type for rational
-					("cleanInt", cleanupFunction(*_from.mobileType()))
+					("cleanInt", cleanupFunction(_from))
 					.render();
-			}
 			else if (toCategory == Type::Category::FixedPoint)
 				solUnimplemented("Not yet implemented - FixedPointType.");
-			else if (toCategory == Type::Category::Address)
+			else if (toCategory == Type::Category::Address || toCategory == Type::Category::Contract)
 				body =
 					Whiskers("converted := <convert>(value)")
-						("convert", conversionFunction(_from, IntegerType(160)))
-						.render();
-			else
+					("convert", conversionFunction(_from, IntegerType(160)))
+					.render();
+			else if (toCategory == Type::Category::Integer)
 			{
-				solAssert(
-					toCategory == Type::Category::Integer ||
-					toCategory == Type::Category::Contract,
-				"");
-				IntegerType const addressType(160);
-				IntegerType const& to =
-					toCategory == Type::Category::Integer ?
-					dynamic_cast<IntegerType const&>(_to) :
-					addressType;
+				IntegerType const& to = dynamic_cast<IntegerType const&>(_to);
 
 				// Clean according to the "to" type, except if this is
 				// a widening conversion.
 				IntegerType const* cleanupType = &to;
-				if (fromCategory != Type::Category::RationalNumber)
+				if (fromCategory == Type::Category::Integer)
 				{
-					IntegerType const& from =
-						fromCategory == Type::Category::Integer ?
-						dynamic_cast<IntegerType const&>(_from) :
-						addressType;
+					IntegerType const& from = dynamic_cast<IntegerType const&>(_from);
 					if (to.numBits() > from.numBits())
 						cleanupType = &from;
 				}
@@ -3328,6 +3312,8 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					("cleanInt", cleanupFunction(*cleanupType))
 					.render();
 			}
+			else
+				solAssert(false, "");
 			break;
 		}
 		case Type::Category::Bool:
