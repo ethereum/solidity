@@ -3272,48 +3272,33 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				if (rational->isFractional())
 					solAssert(toCategory == Type::Category::FixedPoint, "");
 
-			if (toCategory == Type::Category::FixedBytes)
-			{
-				FixedBytesType const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
-				body =
-					Whiskers("converted := <shiftLeft>(<clean>(value))")
-					("shiftLeft", shiftLeftFunction(256 - toBytesType.numBytes() * 8))
-					("clean", cleanupFunction(_from))
-					.render();
-			}
-			else if (toCategory == Type::Category::Enum)
-				body =
-					Whiskers("converted := <cleanEnum>(<cleanInt>(value))")
-					("cleanEnum", cleanupFunction(_to))
-					("cleanInt", cleanupFunction(_from))
-					.render();
-			else if (toCategory == Type::Category::FixedPoint)
-				solUnimplemented("Not yet implemented - FixedPointType.");
-			else if (toCategory == Type::Category::Address || toCategory == Type::Category::Contract)
+			if (toCategory == Type::Category::Address || toCategory == Type::Category::Contract)
 				body =
 					Whiskers("converted := <convert>(value)")
 					("convert", conversionFunction(_from, IntegerType(160)))
 					.render();
-			else if (toCategory == Type::Category::Integer)
-			{
-				IntegerType const& to = dynamic_cast<IntegerType const&>(_to);
-
-				// Clean according to the "to" type, except if this is
-				// a widening conversion.
-				IntegerType const* cleanupType = &to;
-				if (fromCategory == Type::Category::Integer)
-				{
-					IntegerType const& from = dynamic_cast<IntegerType const&>(_from);
-					if (to.numBits() > from.numBits())
-						cleanupType = &from;
-				}
-				body =
-					Whiskers("converted := <cleanInt>(value)")
-					("cleanInt", cleanupFunction(*cleanupType))
-					.render();
-			}
 			else
-				solAssert(false, "");
+			{
+				Whiskers bodyTemplate(R"(
+					value := <cleanInput>(value)
+					converted := <cleanOutput>(<convert>)
+				)");
+				bodyTemplate("cleanInput", cleanupFunction(_from));
+				bodyTemplate("cleanOutput", cleanupFunction(_to));
+
+				if (toCategory == Type::Category::FixedBytes)
+				{
+					FixedBytesType const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
+					bodyTemplate("convert", shiftLeftFunction(256 - toBytesType.numBytes() * 8) + "(value)");
+				}
+				else if (toCategory == Type::Category::Enum || toCategory == Type::Category::Integer)
+					bodyTemplate("convert", "value");
+				else if (toCategory == Type::Category::FixedPoint)
+					solUnimplemented("Not yet implemented - FixedPointType.");
+				else
+					solAssert(false, "");
+				body = bodyTemplate.render();
+			}
 			break;
 		}
 		case Type::Category::Bool:
