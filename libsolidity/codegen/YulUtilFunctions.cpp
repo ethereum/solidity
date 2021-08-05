@@ -445,7 +445,7 @@ string YulUtilFunctions::typedShiftLeftFunction(Type const& _type, Type const& _
 			Whiskers(R"(
 			function <functionName>(value, bits) -> result {
 				bits := <cleanAmount>(bits)
-				result := <cleanup>(<shift>(bits, value))
+				result := <cleanup>(<shift>(bits, <cleanup>(value)))
 			}
 			)")
 			("functionName", functionName)
