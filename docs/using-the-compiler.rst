@@ -410,6 +410,9 @@ Input Description
           "engine": "chc",
           // Choose whether to output all unproved targets. The default is `false`.
           "showUnproved": true,
+          // Choose which solvers should be used, if available.
+          // See the Formal Verification section for the solvers description.
+          "solvers": ["cvc4", "smtlib2", "z3"],
           // Choose which targets should be checked: constantCondition,
           // underflow, overflow, divByZero, balance, assert, popEmptyArray, outOfBounds.
           // If the option is not given all targets are checked by default.
