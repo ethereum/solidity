@@ -400,6 +400,12 @@ Input Description
             "source1.sol": ["contract1"],
             "source2.sol": ["contract2", "contract3"]
           },
+          // Choose whether division and modulo operations should be replaced by
+          // multiplication with slack variables. Default is `true`.
+          // Using `false` here is recommended if you are using the CHC engine
+          // and not using Spacer as the Horn solver (using Eldarica, for example).
+          // See the Formal Verification section for a more detailed explanation of this option.
+          "divModWithSlacks": true,
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
           // Choose whether to output all unproved targets. The default is `false`.

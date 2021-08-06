@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"settings.modelChecker.divModNoSlacks must be a Boolean.","message":"settings.modelChecker.divModNoSlacks must be a Boolean.","severity":"error","type":"JSONError"}]}
