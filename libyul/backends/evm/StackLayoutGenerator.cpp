@@ -549,8 +549,16 @@ Stack StackLayoutGenerator::compressStack(Stack _stack)
 			firstDupOffset.reset();
 		}
 		for (auto&& [offset, slot]: _stack | ranges::views::enumerate)
-			if (canBeFreelyGenerated(slot) || util::findOffset(_stack | ranges::views::take(offset), slot))
+			if (canBeFreelyGenerated(slot))
+			{
 				firstDupOffset = offset;
+
+			}
+			else if (auto dupOffset = util::findOffset(_stack | ranges::views::take(offset), slot))
+			{
+				if (_stack.size() - *dupOffset <= 16)
+					firstDupOffset = offset;
+			}
 	}
 	while (firstDupOffset);
 	return _stack;

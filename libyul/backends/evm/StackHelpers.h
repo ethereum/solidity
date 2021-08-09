@@ -24,6 +24,7 @@
 #include <libsolutil/Visitor.h>
 
 #include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/reverse.hpp>
@@ -61,7 +62,7 @@ concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceO
 	// Returns true, iff the current slot at sourceOffset in source layout is a suitable slot at targetOffset.
 	{ ops.isCompatible(sourceOffset, targetOffset) } -> std::convertible_to<bool>;
 	// Returns true, iff the slots at the two given source offsets are identical.
-	{ ops.souceIsSame(sourceOffset, sourceOffset) } -> std::convertible_to<bool>;
+	{ ops.sourceIsSame(sourceOffset, sourceOffset) } -> std::convertible_to<bool>;
 	// Returns a positive integer n, if the slot at the given source offset needs n more copies.
 	// Returns a negative integer -n, if the slot at the given source offsets occurs n times too many.
 	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given source offset matches the desired amount of occurrences in the target.
@@ -92,9 +93,8 @@ class Shuffler
 public:
 	/// Executes the stack shuffling operations. Instantiates an instance of ShuffleOperations
 	/// in each iteration. Each iteration performs exactly one operation that modifies the stack.
-	/// After shuffle, all slots in the source layout are guaranteed to be compatible to the slots
-	/// at the same target offset, but there may be additional slots in the target that are not
-	/// pushed/dupped yet.
+	/// After shuffle, source and target have the same size and all slots in the source layout are
+	/// compatible to the slots at the same target offset.
 	template<typename... Args>
 	static void shuffle(Args&&... args)
 	{
@@ -107,19 +107,85 @@ public:
 		yulAssert(!needsMoreShuffling, "Could not create stack layout after 1000 iterations.");
 	}
 private:
+	// If dupping an ideal slot causes a slot that will still be required to become unreachable, then dup
+	// the latter slot first.
+	static bool pushDeepSlotIfRequired(ShuffleOperations& _ops)
+	{
+		// Check if the stack is large enough for anything to potentially become unreachable.
+		if (_ops.sourceSize() < 15)
+			return false;
+		// Check whether any deep slot might still be needed later.
+		for (size_t sourceOffset: ranges::views::iota(0u, std::min(_ops.sourceSize() - 15, _ops.targetSize())))
+		{
+			// We need another copy of this slot.
+			if (_ops.sourceMultiplicity(sourceOffset) > 0)
+			{
+				// If this slot occurs again later, we skip this occurrence.
+				if (ranges::any_of(
+					ranges::views::iota(sourceOffset + 1, _ops.sourceSize()),
+					[&](size_t _offset) { return _ops.sourceIsSame(sourceOffset, _offset); }
+				))
+					continue;
+				// Bring up the target slot that would otherwise become unreachable.
+				for (size_t targetOffset: ranges::views::iota(0u, _ops.targetSize()))
+					if (!_ops.targetIsArbitrary(targetOffset) && _ops.isCompatible(sourceOffset, targetOffset))
+					{
+						_ops.pushOrDupTarget(targetOffset);
+						return true;
+					}
+			}
+		}
+		return false;
+	}
+	static void bringUpTargetSlot(ShuffleOperations& _ops, size_t _targetOffset)
+	{
+		if (pushDeepSlotIfRequired(_ops))
+			return;
+
+		std::list<size_t> toVisit{_targetOffset};
+		std::set<size_t> visited;
+
+		while (!toVisit.empty())
+		{
+			auto offset = *toVisit.begin();
+			toVisit.erase(toVisit.begin());
+			visited.emplace(offset);
+			if (_ops.targetMultiplicity(offset) > 0)
+			{
+				_ops.pushOrDupTarget(offset);
+				return;
+			}
+			// The desired target slot must already be somewhere else on stack right now.
+			for (auto nextOffset: ranges::views::iota(0u, std::min(_ops.sourceSize(), _ops.targetSize())))
+				if (
+					!_ops.isCompatible(nextOffset, nextOffset) &&
+					_ops.isCompatible(nextOffset, offset)
+				)
+					if (!visited.count(nextOffset))
+						toVisit.emplace_back(nextOffset);
+		}
+		yulAssert(false, "");
+	}
 	/// Performs a single stack operation, transforming the source layout closer to the target layout.
 	template<typename... Args>
 	static bool shuffleStep(Args&&... args)
 	{
 		ShuffleOperations ops{std::forward<Args>(args)...};
 
-		// Terminates, if all slots in the source are compatible with the target.
-		// Note that there may still be more slots in the target.
+		// All source slots are final.
 		if (ranges::all_of(
 			ranges::views::iota(0u, ops.sourceSize()),
 			[&](size_t _index) { return ops.isCompatible(_index, _index); }
 		))
+		{
+			// Bring up all remaining target slots, if any, or terminate otherwise.
+			if (ops.sourceSize() < ops.targetSize())
+			{
+				bringUpTargetSlot(ops, ops.sourceSize());
+				return true;
+			}
 			return false;
+		}
 
 		size_t sourceTop = ops.sourceSize() - 1;
 		// If we no longer need the current stack top, we pop it, unless we need an arbitrary slot at this position
@@ -149,32 +215,6 @@ private:
 					return true;
 				}
 
-		auto bringUpTargetSlot = [&](size_t _targetOffset) {
-			std::list<size_t> toVisit{_targetOffset};
-			std::set<size_t> visited;
-
-			while (!toVisit.empty())
-			{
-				auto offset = *toVisit.begin();
-				toVisit.erase(toVisit.begin());
-				visited.emplace(offset);
-				if (ops.targetMultiplicity(offset) > 0)
-				{
-					ops.pushOrDupTarget(offset);
-					return;
-				}
-				// The desired target slot must already be somewhere else on stack right now.
-				for (auto nextOffset: ranges::views::iota(0u, std::min(ops.sourceSize(), ops.targetSize())))
-					if (
-						!ops.isCompatible(nextOffset, nextOffset) &&
-						ops.isCompatible(nextOffset, offset)
-					)
-					if (!visited.count(nextOffset))
-						toVisit.emplace_back(nextOffset);
-			}
-			yulAssert(false, "");
-		};
-
 		// If a lower slot should be removed, try to bring up the slot that should end up there and bring it up.
 		// Note that after the cases above, there will always be a target slot to duplicate in this case.
 		for (size_t offset: ranges::views::iota(0u, ops.sourceSize()))
@@ -185,7 +225,7 @@ private:
 				!ops.targetIsArbitrary(offset) // And that target slot is not arbitrary.
 			)
 			{
-				bringUpTargetSlot(offset);
+				bringUpTargetSlot(ops, offset);
 				return true;
 			}
 
@@ -209,7 +249,7 @@ private:
 		// If we still need more slots, produce a suitable one.
 		if (ops.sourceSize() < ops.targetSize())
 		{
-			bringUpTargetSlot(ops.sourceSize());
+			bringUpTargetSlot(ops, ops.sourceSize());
 			return true;
 		}
 
@@ -311,12 +351,6 @@ void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _sw
 	};
 
 	Shuffler<ShuffleOperations>::shuffle(_currentStack, _targetStack, _swap, _pushOrDup, _pop);
-
-	while (_currentStack.size() < _targetStack.size())
-	{
-		_pushOrDup(_targetStack.at(_currentStack.size()));
-		_currentStack.push_back(_targetStack.at(_currentStack.size()));
-	}
 
 	yulAssert(_currentStack.size() == _targetStack.size(), "");
 	for (auto&& [current, target]: ranges::zip_view(_currentStack, _targetStack))
