@@ -24,10 +24,10 @@ set -ev
 
 keyid=70D110489D66E2F6
 email=builds@ethereum.org
-packagename=libz3-static-dev
-version=4.8.10
+packagename=z3-static
+version=4.8.12
 
-DISTRIBUTIONS="focal groovy"
+DISTRIBUTIONS="focal groovy hirsute"
 
 for distribution in $DISTRIBUTIONS
 do
@@ -62,7 +62,7 @@ mkdir debian
 echo 9 > debian/compat
 # TODO: the Z3 packages have different build dependencies
 cat <<EOF > debian/control
-Source: libz3-static-dev
+Source: z3-static
 Section: science
 Priority: extra
 Maintainer: Daniel Kirchner <daniel@ekpyron.org>
@@ -77,6 +77,22 @@ Standards-Version: 3.9.6
 Homepage: https://github.com/Z3Prover/z3
 Vcs-Git: git://github.com/Z3Prover/z3.git
 Vcs-Browser: https://github.com/Z3Prover/z3
+
+Package: z3-static
+Architecture: any
+Breaks: z3
+Replaces: z3
+Depends: \${misc:Depends}, \${shlibs:Depends}
+Description: theorem prover from Microsoft Research
+ Z3 is a state-of-the art theorem prover from Microsoft Research. It can be
+ used to check the satisfiability of logical formulas over one or more
+ theories. Z3 offers a compelling match for software analysis and verification
+ tools, since several common software constructs map directly into supported
+ theories.
+ .
+ The Z3 input format is an extension of the one defined by the SMT-LIB 2.0
+ standard.
+
 
 Package: libz3-static-dev
 Section: libdevel
@@ -133,6 +149,9 @@ usr/include/*
 usr/lib/*/libz3.a
 usr/lib/*/cmake/z3/*
 EOF
+cat <<EOF > debian/z3-static.install
+usr/bin/z3
+EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: z3
@@ -179,7 +198,7 @@ This program is free software: you can redistribute it and/or modify
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 EOF
 cat <<EOF > debian/changelog
-libz3-static-dev (0.0.1-1ubuntu0) saucy; urgency=low
+z3-static (0.0.1-1ubuntu0) saucy; urgency=low
 
   * Initial release.
 
