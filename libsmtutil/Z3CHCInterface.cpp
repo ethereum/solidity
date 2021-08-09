@@ -80,6 +80,7 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
 {
 	CheckResult result;
+	cout << m_solver << endl;
 	try
 	{
 		z3::expr z3Expr = m_z3Interface->toZ3Expr(_expr);

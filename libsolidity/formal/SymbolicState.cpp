@@ -75,13 +75,13 @@ void SymbolicState::reset()
 {
 	m_error.resetIndex();
 	m_thisAddress.resetIndex();
-	m_state.reset();
-	m_tx.reset();
-	m_crypto.reset();
+	//m_state.reset();
+	//m_tx.reset();
+	//m_crypto.reset();
 	/// We don't reset m_abi's pointer nor clear m_abiMembers on purpose,
 	/// since it only helps to keep the already generated types.
-	solAssert(m_abi, "");
-	m_abi->reset();
+	//solAssert(m_abi, "");
+	//m_abi->reset();
 }
 
 smtutil::Expression SymbolicState::balances() const
@@ -128,6 +128,8 @@ smtutil::Expression SymbolicState::txMember(string const& _member) const
 
 smtutil::Expression SymbolicState::txTypeConstraints() const
 {
+	return smtutil::Expression(true);
+
 	return smt::symbolicUnknownConstraints(m_tx.member("block.chainid"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.coinbase"), TypeProvider::address()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.difficulty"), TypeProvider::uint256()) &&
@@ -142,11 +144,14 @@ smtutil::Expression SymbolicState::txTypeConstraints() const
 
 smtutil::Expression SymbolicState::txNonPayableConstraint() const
 {
+	return smtutil::Expression(true);
 	return m_tx.member("msg.value") == 0;
 }
 
 smtutil::Expression SymbolicState::txFunctionConstraints(FunctionDefinition const& _function) const
 {
+	return smtutil::Expression(true);
+
 	smtutil::Expression conj = _function.isPayable() ? smtutil::Expression(true) : txNonPayableConstraint();
 	if (_function.isPartOfExternalInterface())
 	{
@@ -169,12 +174,14 @@ smtutil::Expression SymbolicState::txFunctionConstraints(FunctionDefinition cons
 	return conj;
 }
 
-void SymbolicState::prepareForSourceUnit(SourceUnit const& _source)
+void SymbolicState::prepareForSourceUnit(SourceUnit const& /*_source*/)
 {
+	/*
 	set<FunctionCall const*> abiCalls = SMTEncoder::collectABICalls(&_source);
 	for (auto const& source: _source.referencedSourceUnits(true))
 		abiCalls += SMTEncoder::collectABICalls(source);
 	buildABIFunctions(abiCalls);
+	*/
 }
 
 /// Private helpers.

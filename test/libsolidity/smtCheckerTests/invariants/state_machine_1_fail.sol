@@ -24,7 +24,7 @@ contract C {
 	// Fails due to j.
 	function i() public view {
 		// Disabled because Spacer 4.8.9 seg faults.
-		//assert(x < 2);
+		assert(x < 2);
 	}
 }
 // ====

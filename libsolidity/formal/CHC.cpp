@@ -756,14 +756,14 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	for (auto var: function->returnParameters())
 		m_context.variable(*var)->increaseIndex();
 
-	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
+	auto preCallState = /*vector<smtutil::Expression>{state().state()} + */currentStateVariables();
 	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall ||
 		function->stateMutability() == StateMutability::Pure ||
 		function->stateMutability() == StateMutability::View;
 
 	if (!usesStaticCall)
 	{
-		state().newState();
+		//state().newState();
 		for (auto const* var: m_stateVariables)
 			m_context.variable(*var)->increaseIndex();
 	}
@@ -776,8 +776,8 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 		PredicateType::ExternalCallUntrusted,
 		&_funCall
 	);
-	auto postCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
-	vector<smtutil::Expression> stateExprs{error, state().thisAddress(), state().abi(), state().crypto()};
+	auto postCallState = /*vector<smtutil::Expression>{state().state()} +*/ currentStateVariables();
+	vector<smtutil::Expression> stateExprs{error, state().thisAddress()/*, state().abi(), state().crypto()*/};
 
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(stateExprs + preCallState + postCallState);
 	auto nondetCall = callPredicate(stateExprs + preCallState + postCallState);
@@ -809,21 +809,21 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 		return;
 
 	// External call creates a new transaction.
-	auto originalTx = state().tx();
-	auto txOrigin = state().txMember("tx.origin");
-	state().newTx();
+	//auto originalTx = state().tx();
+	//auto txOrigin = state().txMember("tx.origin");
+	//state().newTx();
 	// set the transaction sender as this contract
-	m_context.addAssertion(state().txMember("msg.sender") == state().thisAddress());
+	//m_context.addAssertion(state().txMember("msg.sender") == state().thisAddress());
 	// set the origin to be the current transaction origin
-	m_context.addAssertion(state().txMember("tx.origin") == txOrigin);
+	//m_context.addAssertion(state().txMember("tx.origin") == txOrigin);
 
 	smtutil::Expression pred = predicate(_funCall);
 
 	auto txConstraints = state().txTypeConstraints() && state().txFunctionConstraints(*function);
 	m_context.addAssertion(pred && txConstraints);
 	// restore the original transaction data
-	state().newTx();
-	m_context.addAssertion(originalTx == state().tx());
+	//state().newTx();
+	//m_context.addAssertion(originalTx == state().tx());
 
 	solAssert(m_errorDest, "");
 	connectBlocks(
@@ -1002,7 +1002,7 @@ void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition c
 			m_context.variable(*var)->increaseIndex();
 	}
 
-	state().newState();
+	//state().newState();
 }
 
 void CHC::setCurrentBlock(Predicate const& _block)
@@ -1125,10 +1125,10 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 					auto errorPost = errorFlag().increaseIndex();
 					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-					vector<smtutil::Expression> args{errorPost, state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
+					vector<smtutil::Expression> args{errorPost, state().thisAddress()/*, state().abi(), state().crypto(), state().tx(), state().state(1)*/};
 					args += state1 +
 						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
-						vector<smtutil::Expression>{state().state(2)} +
+						//vector<smtutil::Expression>{state().state(2)} +
 						state2 +
 						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 1); }) +
 						applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
@@ -1272,7 +1272,7 @@ void CHC::connectBlocks(smtutil::Expression const& _from, smtutil::Expression co
 
 smtutil::Expression CHC::initialConstraints(ContractDefinition const& _contract, FunctionDefinition const* _function)
 {
-	smtutil::Expression conj = state().state() == state().state(0);
+	smtutil::Expression conj(true);// = state().state() == state().state(0);
 	conj = conj && errorFlag().currentValue() == 0;
 	conj = conj && currentEqualInitialVarsConstraints(stateVariablesIncludingInheritedAndPrivate(_contract));
 
@@ -1387,7 +1387,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		solAssert(false, "Unreachable!");
 	};
 	errorFlag().increaseIndex();
-	vector<smtutil::Expression> args{errorFlag().currentValue(), contractAddressValue(_funCall), state().abi(), state().crypto(), state().tx(), state().state()};
+	vector<smtutil::Expression> args{errorFlag().currentValue(), contractAddressValue(_funCall)/*, state().abi(), state().crypto(), state().tx(), state().state()*/};
 
 	auto const* contract = function->annotation().contract;
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
@@ -1399,11 +1399,11 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 	args += symbolicArguments(_funCall, m_currentContract);
 	if (!m_currentContract->isLibrary() && !usesStaticCall)
 	{
-		state().newState();
+		//state().newState();
 		for (auto const& var: m_stateVariables)
 			m_context.variable(*var)->increaseIndex();
 	}
-	args += vector<smtutil::Expression>{state().state()};
+	//args += vector<smtutil::Expression>{state().state()};
 	args += currentStateVariables(*m_currentContract);
 
 	for (auto var: function->parameters() + function->returnParameters())
@@ -1660,6 +1660,7 @@ void CHC::checkAndReportTarget(
 	else if (result == CheckResult::SATISFIABLE)
 	{
 		solAssert(!_satMsg.empty(), "");
+		/*
 		auto cex = generateCounterexample(model, error().name);
 		if (cex)
 			m_unsafeTargets[_target.errorNode][_target.type] = {
@@ -1668,6 +1669,7 @@ void CHC::checkAndReportTarget(
 				"CHC: " + _satMsg + "\nCounterexample:\n" + *cex
 			};
 		else
+		*/
 			m_unsafeTargets[_target.errorNode][_target.type] = {
 				_errorReporterId,
 				location,
