@@ -64,3 +64,18 @@ def BYTE(i, x):
 		BitVecVal(0, x.size()),
 		(LShR(x, (x.size() - bit))) & 0xff
 	)
+
+def SIGNEXTEND(i, x):
+	bitBV = i * 8 + 7
+	bitInt = BV2Int(i) * 8 + 7
+	test = BitVecVal(1, x.size()) << bitBV
+	mask = test - 1
+	return If(
+		bitInt >= x.size(),
+		x,
+		If(
+			(x & test) == 0,
+			x & mask,
+			x | ~mask
+		)
+	)
