@@ -44,6 +44,17 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace std;
 
+StackLayout StackLayoutGenerator::run(CFG const& _cfg)
+{
+	StackLayout stackLayout;
+	StackLayoutGenerator{stackLayout, {}}.processEntryPoint(*_cfg.entry);
+
+	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
+		StackLayoutGenerator{stackLayout, functionInfo.returnVariables}.processEntryPoint(*functionInfo.entry);
+
+	return stackLayout;
+}
+
 StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout, vector<VariableSlot> _currentFunctionReturnVariables):
 	m_layout(_layout),
 	m_currentFunctionReturnVariables(move(_currentFunctionReturnVariables))
@@ -212,126 +223,12 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 	return stack;
 }
 
-Stack StackLayoutGenerator::compressStack(Stack _stack)
-{
-	optional<size_t> firstDupOffset;
-	do
-	{
-		if (firstDupOffset)
-		{
-			if (_stack.size() - *firstDupOffset - 1 > 1)
-				std::swap(_stack.at(*firstDupOffset + 1), _stack.back());
-			std::swap(_stack.at(*firstDupOffset), _stack.back());
-			_stack.pop_back();
-			firstDupOffset.reset();
-		}
-		for (auto&& [offset, slot]: _stack | ranges::views::enumerate)
-			if (canBeFreelyGenerated(slot) || util::findOffset(_stack | ranges::views::take(offset), slot))
-				firstDupOffset = offset;
-	}
-	while (firstDupOffset);
-	return _stack;
-}
-
 Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::BasicBlock const& _block)
 {
 	Stack stack = std::move(_exitStack);
 	for (auto& operation: _block.operations | ranges::views::reverse)
 		stack = propagateStackThroughOperation(stack, operation);
 	return stack;
-}
-
-list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator::collectBackwardsJumps(CFG::BasicBlock const& _entry) const
-{
-	list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps;
-	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_entry}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
-		std::visit(util::GenericVisitor{
-			[&](CFG::BasicBlock::MainExit const&) {},
-			[&](CFG::BasicBlock::Jump const& _jump)
-			{
-				if (_jump.backwards)
-					backwardsJumps.emplace_back(_block, _jump.target);
-				_addChild(_jump.target);
-			},
-			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
-			{
-				_addChild(_conditionalJump.zero);
-				_addChild(_conditionalJump.nonZero);
-			},
-			[&](CFG::BasicBlock::FunctionReturn const&) {},
-			[&](CFG::BasicBlock::Terminated const&) {},
-		}, _block->exit);
-	});
-	return backwardsJumps;
-}
-
-optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
-	CFG::BasicBlock const& _block,
-	set<CFG::BasicBlock const*> const& _visited,
-	list<CFG::BasicBlock const*>& _toVisit
-) const
-{
-	return std::visit(util::GenericVisitor{
-		[&](CFG::BasicBlock::MainExit const&) -> std::optional<Stack>
-		{
-			// On the exit of the outermost block the stack can be empty.
-			return Stack{};
-		},
-		[&](CFG::BasicBlock::Jump const& _jump) -> std::optional<Stack>
-		{
-			if (_jump.backwards)
-			{
-				// Choose the best currently known entry layout of the jump target as initial exit.
-				// Note that this may not yet be the final layout.
-				if (auto* info = util::valueOrNullptr(m_layout.blockInfos, _jump.target))
-					return info->entryLayout;
-				return Stack{};
-			}
-			// If the current iteration has already visited the jump target, start from its entry layout.
-			if (_visited.count(_jump.target))
-				return m_layout.blockInfos.at(_jump.target).entryLayout;
-			// Otherwise stage the jump target for visit and defer the current block.
-			_toVisit.emplace_front(_jump.target);
-			return nullopt;
-		},
-		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<Stack>
-		{
-			bool zeroVisited = _visited.count(_conditionalJump.zero);
-			bool nonZeroVisited = _visited.count(_conditionalJump.nonZero);
-			if (zeroVisited && nonZeroVisited)
-			{
-				// If the current iteration has already visited both jump targets, start from its entry layout.
-				Stack stack = combineStack(
-					m_layout.blockInfos.at(_conditionalJump.zero).entryLayout,
-					m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout
-				);
-				// Additionally, the jump condition has to be at the stack top at exit.
-				stack.emplace_back(_conditionalJump.condition);
-				return stack;
-			}
-			// If one of the jump targets has not been visited, stage it for visit and defer the current block.
-			if (!zeroVisited)
-				_toVisit.emplace_front(_conditionalJump.zero);
-			if (!nonZeroVisited)
-				_toVisit.emplace_front(_conditionalJump.nonZero);
-			return nullopt;
-		},
-		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<Stack>
-		{
-			// A function return needs the return variables and the function return label slot on stack.
-			yulAssert(_functionReturn.info, "");
-			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
-				return StackSlot{_varSlot};
-			}) | ranges::to<Stack>;
-			stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
-			return stack;
-		},
-		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>
-		{
-			// A terminating block can have an empty stack on exit.
-			return Stack{};
-		},
-	}, _block.exit);
 }
 
 void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
@@ -406,6 +303,145 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 
 	stitchConditionalJumps(_entry);
 	fixStackTooDeep(_entry);
+}
+
+optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
+	CFG::BasicBlock const& _block,
+	set<CFG::BasicBlock const*> const& _visited,
+	list<CFG::BasicBlock const*>& _toVisit
+) const
+{
+	return std::visit(util::GenericVisitor{
+		[&](CFG::BasicBlock::MainExit const&) -> std::optional<Stack>
+		{
+			// On the exit of the outermost block the stack can be empty.
+			return Stack{};
+		},
+		[&](CFG::BasicBlock::Jump const& _jump) -> std::optional<Stack>
+		{
+			if (_jump.backwards)
+			{
+				// Choose the best currently known entry layout of the jump target as initial exit.
+				// Note that this may not yet be the final layout.
+				if (auto* info = util::valueOrNullptr(m_layout.blockInfos, _jump.target))
+					return info->entryLayout;
+				return Stack{};
+			}
+			// If the current iteration has already visited the jump target, start from its entry layout.
+			if (_visited.count(_jump.target))
+				return m_layout.blockInfos.at(_jump.target).entryLayout;
+			// Otherwise stage the jump target for visit and defer the current block.
+			_toVisit.emplace_front(_jump.target);
+			return nullopt;
+		},
+		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<Stack>
+		{
+			bool zeroVisited = _visited.count(_conditionalJump.zero);
+			bool nonZeroVisited = _visited.count(_conditionalJump.nonZero);
+			if (zeroVisited && nonZeroVisited)
+			{
+				// If the current iteration has already visited both jump targets, start from its entry layout.
+				Stack stack = combineStack(
+					m_layout.blockInfos.at(_conditionalJump.zero).entryLayout,
+					m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout
+				);
+				// Additionally, the jump condition has to be at the stack top at exit.
+				stack.emplace_back(_conditionalJump.condition);
+				return stack;
+			}
+			// If one of the jump targets has not been visited, stage it for visit and defer the current block.
+			if (!zeroVisited)
+				_toVisit.emplace_front(_conditionalJump.zero);
+			if (!nonZeroVisited)
+				_toVisit.emplace_front(_conditionalJump.nonZero);
+			return nullopt;
+		},
+		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<Stack>
+		{
+			// A function return needs the return variables and the function return label slot on stack.
+			yulAssert(_functionReturn.info, "");
+			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
+				return StackSlot{_varSlot};
+			}) | ranges::to<Stack>;
+			stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
+			return stack;
+		},
+		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>
+		{
+			// A terminating block can have an empty stack on exit.
+			return Stack{};
+		},
+	}, _block.exit);
+}
+
+list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator::collectBackwardsJumps(CFG::BasicBlock const& _entry) const
+{
+	list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps;
+	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_entry}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				if (_jump.backwards)
+					backwardsJumps.emplace_back(_block, _jump.target);
+				_addChild(_jump.target);
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				_addChild(_conditionalJump.zero);
+				_addChild(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&) {},
+			[&](CFG::BasicBlock::Terminated const&) {},
+		}, _block->exit);
+	});
+	return backwardsJumps;
+}
+
+void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
+{
+	util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{&_block}};
+	breadthFirstSearch.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		auto& info = m_layout.blockInfos.at(_block);
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				if (!_jump.backwards)
+					_addChild(_jump.target);
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				auto& zeroTargetInfo = m_layout.blockInfos.at(_conditionalJump.zero);
+				auto& nonZeroTargetInfo = m_layout.blockInfos.at(_conditionalJump.nonZero);
+				Stack exitLayout = info.exitLayout;
+
+				// The last block must have produced the condition at the stack top.
+				yulAssert(!exitLayout.empty(), "");
+				yulAssert(exitLayout.back() == _conditionalJump.condition, "");
+				// The condition is consumed by the jump.
+				exitLayout.pop_back();
+
+				auto fixJumpTargetEntry = [&](Stack const& _originalEntryLayout) -> Stack {
+					Stack newEntryLayout = exitLayout;
+					// Whatever the block being jumped to does not actually require, can be marked as junk.
+					for (auto& slot: newEntryLayout)
+						if (!util::findOffset(_originalEntryLayout, slot))
+							slot = JunkSlot{};
+					// Make sure everything the block being jumped to requires is actually present or can be generated.
+					for (auto const& slot: _originalEntryLayout)
+						yulAssert(canBeFreelyGenerated(slot) || util::findOffset(newEntryLayout, slot), "");
+					return newEntryLayout;
+				};
+				zeroTargetInfo.entryLayout = fixJumpTargetEntry(zeroTargetInfo.entryLayout);
+				nonZeroTargetInfo.entryLayout = fixJumpTargetEntry(nonZeroTargetInfo.entryLayout);
+				_addChild(_conditionalJump.zero);
+				_addChild(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&)	{},
+			[&](CFG::BasicBlock::Terminated const&) { },
+		}, _block->exit);
+	});
 }
 
 Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _stack2)
@@ -494,64 +530,28 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 	return commonPrefix + sortedCandidates.begin()->second;
 }
 
-void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
-{
-	util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{&_block}};
-	breadthFirstSearch.run([&](CFG::BasicBlock const* _block, auto _addChild) {
-		auto& info = m_layout.blockInfos.at(_block);
-		std::visit(util::GenericVisitor{
-			[&](CFG::BasicBlock::MainExit const&) {},
-			[&](CFG::BasicBlock::Jump const& _jump)
-			{
-				if (!_jump.backwards)
-					_addChild(_jump.target);
-			},
-			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
-			{
-				auto& zeroTargetInfo = m_layout.blockInfos.at(_conditionalJump.zero);
-				auto& nonZeroTargetInfo = m_layout.blockInfos.at(_conditionalJump.nonZero);
-				Stack exitLayout = info.exitLayout;
-
-				// The last block must have produced the condition at the stack top.
-				yulAssert(!exitLayout.empty(), "");
-				yulAssert(exitLayout.back() == _conditionalJump.condition, "");
-				// The condition is consumed by the jump.
-				exitLayout.pop_back();
-
-				auto fixJumpTargetEntry = [&](Stack const& _originalEntryLayout) -> Stack {
-					Stack newEntryLayout = exitLayout;
-					// Whatever the block being jumped to does not actually require, can be marked as junk.
-					for (auto& slot: newEntryLayout)
-						if (!util::findOffset(_originalEntryLayout, slot))
-							slot = JunkSlot{};
-					// Make sure everything the block being jumped to requires is actually present or can be generated.
-					for (auto const& slot: _originalEntryLayout)
-						yulAssert(canBeFreelyGenerated(slot) || util::findOffset(newEntryLayout, slot), "");
-					return newEntryLayout;
-				};
-				zeroTargetInfo.entryLayout = fixJumpTargetEntry(zeroTargetInfo.entryLayout);
-				nonZeroTargetInfo.entryLayout = fixJumpTargetEntry(nonZeroTargetInfo.entryLayout);
-				_addChild(_conditionalJump.zero);
-				_addChild(_conditionalJump.nonZero);
-			},
-			[&](CFG::BasicBlock::FunctionReturn const&)	{},
-			[&](CFG::BasicBlock::Terminated const&) { },
-		}, _block->exit);
-	});
-}
-
 void StackLayoutGenerator::fixStackTooDeep(CFG::BasicBlock const&)
 {
 	// TODO
 }
 
-StackLayout StackLayoutGenerator::run(CFG const& _cfg)
+Stack StackLayoutGenerator::compressStack(Stack _stack)
 {
-	StackLayout stackLayout;
-	StackLayoutGenerator{stackLayout, {}}.processEntryPoint(*_cfg.entry);
-
-	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
-		StackLayoutGenerator{stackLayout, functionInfo.returnVariables}.processEntryPoint(*functionInfo.entry);
-
-	return stackLayout;
+	optional<size_t> firstDupOffset;
+	do
+	{
+		if (firstDupOffset)
+		{
+			if (_stack.size() - *firstDupOffset - 1 > 1)
+				std::swap(_stack.at(*firstDupOffset + 1), _stack.back());
+			std::swap(_stack.at(*firstDupOffset), _stack.back());
+			_stack.pop_back();
+			firstDupOffset.reset();
+		}
+		for (auto&& [offset, slot]: _stack | ranges::views::enumerate)
+			if (canBeFreelyGenerated(slot) || util::findOffset(_stack | ranges::views::take(offset), slot))
+				firstDupOffset = offset;
+	}
+	while (firstDupOffset);
+	return _stack;
 }
