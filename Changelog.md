@@ -11,6 +11,7 @@ Compiler Features:
  * Commandline Interface: option ``--pretty-json`` works also with ``--standard--json``.
  * SMTChecker: Unproved targets are hidden by default, and the SMTChecker only states how many unproved targets there are. They can be listed using the command line option ``--model-checker-show-unproved`` or the JSON option ``settings.modelChecker.showUnproved``.
  * SMTChecker: new setting to enable/disable encoding of division and modulo with slack variables. The command line option is ``--model-checker-div-mod-slacks`` and the JSON option is ``settings.modelChecker.divModWithSlacks``.
+ * SMTChecker: Do not check underflow and overflow by default.
 
 
 Bugfixes:

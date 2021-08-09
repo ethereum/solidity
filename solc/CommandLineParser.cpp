@@ -743,10 +743,10 @@ General Information)").c_str(),
 		)
 		(
 			g_strModelCheckerTargets.c_str(),
-			po::value<string>()->value_name("default,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
+			po::value<string>()->value_name("default,all,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
 			"Select model checker verification targets. "
-			"Multiple targets can be selected at the same time, separated by a comma "
-			"and no spaces."
+			"Multiple targets can be selected at the same time, separated by a comma and no spaces."
+			" By default all targets except underflow and overflow are selected."
 		)
 		(
 			g_strModelCheckerTimeout.c_str(),

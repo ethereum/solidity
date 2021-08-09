@@ -91,7 +91,10 @@ enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, Unde
 
 struct ModelCheckerTargets
 {
+	/// Adds the default targets, that is, all except underflow and overflow.
 	static ModelCheckerTargets Default() { return *fromString("default"); }
+	/// Adds all targets, including underflow and overflow.
+	static ModelCheckerTargets All() { return *fromString("all"); }
 
 	static std::optional<ModelCheckerTargets> fromString(std::string const& _targets);
 

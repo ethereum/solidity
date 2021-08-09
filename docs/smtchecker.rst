@@ -34,6 +34,9 @@ The other verification targets that the SMTChecker checks at compile time are:
 - Out of bounds index access.
 - Insufficient funds for a transfer.
 
+All the targets above are automatically checked by default if all engines are
+enabled, except underflow and overflow for Solidity >=0.8.7.
+
 The potential warnings that the SMTChecker reports are:
 
 - ``<failing  property> happens here.``. This means that the SMTChecker proved that a certain property fails. A counterexample may be given, however in complex situations it may also not show a counterexample. This result may also be a false positive in certain cases, when the SMT encoding adds abstractions for Solidity code that is either hard or impossible to express.
@@ -93,8 +96,10 @@ Overflow
     }
 
 The contract above shows an overflow check example.
-The SMTChecker will, by default, check every reachable arithmetic operation
-in the contract for potential underflow and overflow.
+The SMTChecker does not check underflow and overflow by default for Solidity >=0.8.7,
+so we need to use the command line option ``--model-checker-targets "underflow,overflow"``
+or the JSON option ``settings.modelChecker.targets = ["underflow", "overflow"]``.
+See :ref:`this section for targets configuration<smtchecker_targets>`.
 Here, it reports the following:
 
 .. code-block:: text
@@ -447,6 +452,8 @@ If the SMTChecker does not manage to solve the contract properties with the defa
 a timeout can be given in milliseconds via the CLI option ``--model-checker-timeout <time>`` or
 the JSON option ``settings.modelChecker.timeout=<time>``, where 0 means no timeout.
 
+.. _smtchecker_targets:
+
 Verification Targets
 ====================
 
@@ -470,6 +477,8 @@ The keywords that represent the targets are:
 
 A common subset of targets might be, for example:
 ``--model-checker-targets assert,overflow``.
+
+All targets are checked by default, except underflow and overflow for Solidity >=0.8.7.
 
 There is no precise heuristic on how and when to split verification targets,
 but it can be useful especially when dealing with large contracts.
