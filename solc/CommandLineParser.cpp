@@ -86,6 +86,7 @@ static string const g_strMetadata = "metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerContracts = "model-checker-contracts";
+static string const g_strModelCheckerDivModNoSlacks = "model-checker-div-mod-no-slacks";
 static string const g_strModelCheckerEngine = "model-checker-engine";
 static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved";
 static string const g_strModelCheckerSolvers = "model-checker-solvers";
@@ -721,6 +722,11 @@ General Information)").c_str(),
 			"and no spaces."
 		)
 		(
+			g_strModelCheckerDivModNoSlacks.c_str(),
+			"Encode division and modulo operations with their precise operators"
+			" instead of multiplication with slack variables."
+		)
+		(
 			g_strModelCheckerEngine.c_str(),
 			po::value<string>()->value_name("all,bmc,chc,none")->default_value("none"),
 			"Select model checker engine."
@@ -1092,6 +1098,9 @@ General Information)").c_str(),
 		m_options.modelChecker.settings.contracts = move(*contracts);
 	}
 
+	if (m_args.count(g_strModelCheckerDivModNoSlacks))
+		m_options.modelChecker.settings.divModNoSlacks = true;
+
 	if (m_args.count(g_strModelCheckerEngine))
 	{
 		string engineStr = m_args[g_strModelCheckerEngine].as<string>();
@@ -1140,6 +1149,7 @@ General Information)").c_str(),
 	m_options.metadata.literalSources = (m_args.count(g_strMetadataLiteral) > 0);
 	m_options.modelChecker.initialize =
 		m_args.count(g_strModelCheckerContracts) ||
+		m_args.count(g_strModelCheckerDivModNoSlacks) ||
 		m_args.count(g_strModelCheckerEngine) ||
 		m_args.count(g_strModelCheckerShowUnproved) ||
 		m_args.count(g_strModelCheckerSolvers) ||

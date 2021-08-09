@@ -400,10 +400,19 @@ Input Description
             "source1.sol": ["contract1"],
             "source2.sol": ["contract2", "contract3"]
           },
+          // Choose whether division and modulo operations should be replaced by
+          // multiplication with slack variables. Default is `true`.
+          // Using `false` here is recommended if you are using the CHC engine
+          // and not using Spacer as the Horn solver (using Eldarica, for example).
+          // See the Formal Verification section for a more detailed explanation of this option.
+          "divModWithSlacks": true,
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
           // Choose whether to output all unproved targets. The default is `false`.
           "showUnproved": true,
+          // Choose which solvers should be used, if available.
+          // See the Formal Verification section for the solvers description.
+          "solvers": ["cvc4", "smtlib2", "z3"],
           // Choose which targets should be checked: constantCondition,
           // underflow, overflow, divByZero, balance, assert, popEmptyArray, outOfBounds.
           // If the option is not given all targets are checked by default.

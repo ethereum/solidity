@@ -275,11 +275,7 @@ object \"C_54\" {
             }
 
             function convert_t_contract$_C_$54_to_t_address(value) -> converted {
-                converted := convert_t_contract$_C_$54_to_t_uint160(value)
-            }
-
-            function convert_t_contract$_C_$54_to_t_uint160(value) -> converted {
-                converted := cleanup_t_uint160(value)
+                converted := convert_t_uint160_to_t_address(value)
             }
 
             function convert_t_int256_to_t_int256(value) -> converted {
@@ -288,6 +284,14 @@ object \"C_54\" {
 
             function convert_t_rational_41_by_1_to_t_int256(value) -> converted {
                 converted := cleanup_t_int256(value)
+            }
+
+            function convert_t_uint160_to_t_address(value) -> converted {
+                converted := convert_t_uint160_to_t_uint160(value)
+            }
+
+            function convert_t_uint160_to_t_uint160(value) -> converted {
+                converted := cleanup_t_uint160(value)
             }
 
             function extract_from_storage_value_dynamict_int256(slot_value, offset) -> value {
@@ -875,11 +879,7 @@ object \"D_72\" {
             }
 
             function convert_t_contract$_C_$54_to_t_address(value) -> converted {
-                converted := convert_t_contract$_C_$54_to_t_uint160(value)
-            }
-
-            function convert_t_contract$_C_$54_to_t_uint160(value) -> converted {
-                converted := cleanup_t_uint160(value)
+                converted := convert_t_uint160_to_t_address(value)
             }
 
             function convert_t_int256_to_t_int256(value) -> converted {
@@ -888,6 +888,14 @@ object \"D_72\" {
 
             function convert_t_rational_41_by_1_to_t_int256(value) -> converted {
                 converted := cleanup_t_int256(value)
+            }
+
+            function convert_t_uint160_to_t_address(value) -> converted {
+                converted := convert_t_uint160_to_t_uint160(value)
+            }
+
+            function convert_t_uint160_to_t_uint160(value) -> converted {
+                converted := cleanup_t_uint160(value)
             }
 
             function extract_from_storage_value_dynamict_int256(slot_value, offset) -> value {
