@@ -61,7 +61,7 @@ CodeTransform::CodeTransform(
 	bool _allowStackOpt,
 	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
-	ExternalIdentifierAccess _identifierAccess,
+	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 	bool _useNamedLabelsForFunctions,
 	shared_ptr<Context> _context,
 	vector<TypedName> _delayedReturnVariables,
@@ -73,7 +73,7 @@ CodeTransform::CodeTransform(
 	m_builtinContext(_builtinContext),
 	m_allowStackOpt(_allowStackOpt),
 	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
-	m_identifierAccess(move(_identifierAccess)),
+	m_identifierAccessCodeGen(move(_identifierAccessCodeGen)),
 	m_context(move(_context)),
 	m_delayedReturnVariables(move(_delayedReturnVariables)),
 	m_functionExitLabel(_functionExitLabel)
@@ -292,10 +292,10 @@ void CodeTransform::operator()(Identifier const& _identifier)
 		return;
 	}
 	yulAssert(
-		m_identifierAccess.generateCode,
+		m_identifierAccessCodeGen,
 		"Identifier not found and no external access available."
 	);
-	m_identifierAccess.generateCode(_identifier, IdentifierContext::RValue, m_assembly);
+	m_identifierAccessCodeGen(_identifier, IdentifierContext::RValue, m_assembly);
 }
 
 void CodeTransform::operator()(Literal const& _literal)
@@ -391,7 +391,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_allowStackOpt,
 		m_dialect,
 		m_builtinContext,
-		m_identifierAccess,
+		m_identifierAccessCodeGen,
 		m_useNamedLabelsForFunctions,
 		m_context,
 		_function.returnVariables,
@@ -740,10 +740,10 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	else
 	{
 		yulAssert(
-			m_identifierAccess.generateCode,
+			m_identifierAccessCodeGen,
 			"Identifier not found and no external access available."
 		);
-		m_identifierAccess.generateCode(_variableName, IdentifierContext::LValue, m_assembly);
+		m_identifierAccessCodeGen(_variableName, IdentifierContext::LValue, m_assembly);
 	}
 }
 

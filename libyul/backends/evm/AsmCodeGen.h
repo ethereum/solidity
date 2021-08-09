@@ -44,7 +44,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		evmasm::Assembly& _assembly,
 		langutil::EVMVersion _evmVersion,
-		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
+		ExternalIdentifierAccess::CodeGenerator _identifierAccess = {},
 		bool _useNamedLabelsForFunctions = false,
 		bool _optimizeStackAllocation = false
 	);

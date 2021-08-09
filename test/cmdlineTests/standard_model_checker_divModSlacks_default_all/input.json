@@ -1,0 +1,22 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n\ncontract C {
+					function f(uint a, uint b) public pure returns (uint, uint) {
+						require(b != 0);
+						return (a / b, a % b);
+					}
+			}"
+		}
+	},
+	"settings":
+	{
+		"modelChecker":
+		{
+			"engine": "all"
+		}
+	}
+}

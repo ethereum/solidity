@@ -1,7 +1,7 @@
 
 ======= dup_opt_peephole/input.sol:C =======
 EVM assembly:
-    /* "dup_opt_peephole/input.sol":0:111  contract C {... */
+    /* "dup_opt_peephole/input.sol":60:171  contract C {... */
   mstore(0x40, 0x80)
   callvalue
   dup1
@@ -23,7 +23,7 @@ tag_1:
 stop
 
 sub_0: assembly {
-        /* "dup_opt_peephole/input.sol":0:111  contract C {... */
+        /* "dup_opt_peephole/input.sol":60:171  contract C {... */
       mstore(0x40, 0x80)
       callvalue
       dup1
@@ -35,19 +35,19 @@ sub_0: assembly {
       revert
     tag_3:
       pop
-        /* "dup_opt_peephole/input.sol":74:75  0 */
+        /* "dup_opt_peephole/input.sol":134:135  0 */
       0x00
-        /* "dup_opt_peephole/input.sol":61:76  calldataload(0) */
+        /* "dup_opt_peephole/input.sol":121:136  calldataload(0) */
       calldataload
-        /* "dup_opt_peephole/input.sol":100:101  x */
+        /* "dup_opt_peephole/input.sol":160:161  x */
       dup1
-        /* "dup_opt_peephole/input.sol":97:98  0 */
+        /* "dup_opt_peephole/input.sol":157:158  0 */
       0x00
-        /* "dup_opt_peephole/input.sol":90:102  sstore(0, x) */
+        /* "dup_opt_peephole/input.sol":150:162  sstore(0, x) */
       sstore
-        /* "dup_opt_peephole/input.sol":47:106  {... */
+        /* "dup_opt_peephole/input.sol":107:166  {... */
       pop
-        /* "dup_opt_peephole/input.sol":0:111  contract C {... */
+        /* "dup_opt_peephole/input.sol":60:171  contract C {... */
       stop
 
     auxdata: <AUXDATA REMOVED>
