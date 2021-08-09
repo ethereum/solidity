@@ -61,7 +61,6 @@ int main(int argc, char** argv)
 
 		return 0;
 	}
-<<<<<<< HEAD
 	catch (boost::exception const& _exception)
 	{
 		cerr << "Uncaught exception" << boost::diagnostic_information(_exception) << endl;
@@ -78,9 +77,6 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	catch (smtutil::SMTLogicError const& _exception)
-=======
-	catch (boost::exception const& _exception || Exception const& _exception || InternalCompilerError const& _exception || smtutil::SMTLogicError const& _exception)
->>>>>>> 0dbd28a244bd8fd79f325984405c23cbe7b1b9f0
 	{
 		cerr << "Uncaught exception" << boost::diagnostic_information(_exception) << endl;
 		return 1;
