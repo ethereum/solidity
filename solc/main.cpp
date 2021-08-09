@@ -20,11 +20,10 @@
  * @date 2014
  * Solidity commandline compiler.
  */
-
+#include <solc/CommandLineInterface.h>
 #include <boost/exception/all.hpp>
 #include <clocale>
 #include <iostream>
-#include <solc/CommandLineInterface.h>
 
 using namespace std;
 
@@ -62,8 +61,22 @@ int main(int argc, char** argv)
 
 		return 0;
 	}
-	catch (boost::exception const& _exception || Exception const& _exception || InternalCompilerError const& _exception
-		|| smtutil::SMTLogicError const& _exception)
+	catch (boost::exception const& _exception)
+	{
+		cerr << "Uncaught exception" << boost::diagnostic_information(_exception) << endl;
+		return 1;
+	}
+	catch (Exception const& _exception)
+	{
+		cerr << "Uncaught exception" << boost::diagnostic_information(_exception) << endl;
+		return 1;
+	}
+	catch (InternalCompilerError const& _exception)
+	{
+		cerr << "Uncaught exception" << boost::diagnostic_information(_exception) << endl;
+		return 1;
+	}
+	catch (smtutil::SMTLogicError const& _exception)
 	{
 		cerr << "Uncaught exception" << boost::diagnostic_information(_exception) << endl;
 		return 1;
@@ -75,7 +88,7 @@ int main(int argc, char** argv)
 	}
 	catch (Exception const& _exc)
 	{
-		cerr() << string("Failed to import AST: ") << _exc.what() << endl;
+		cerr() << "Uncaught exception" << _exc.what() << endl;
 		return 1;
 	}
 	catch (...)
