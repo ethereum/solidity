@@ -699,30 +699,6 @@ bool CommandLineInterface::compile()
 		formatter.printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
-	catch (InternalCompilerError const& _exception)
-	{
-		serr() <<
-			"Internal compiler error during compilation:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
-		return false;
-	}
-	catch (UnimplementedFeatureError const& _exception)
-	{
-		serr() <<
-			"Unimplemented feature:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
-		return false;
-	}
-	catch (smtutil::SMTLogicError const& _exception)
-	{
-		serr() <<
-			"SMT logic error during analysis:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
-		return false;
-	}
 	catch (Error const& _error)
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)
@@ -733,23 +709,6 @@ bool CommandLineInterface::compile()
 			formatter.printExceptionInformation(_error, _error.typeName());
 		}
 
-		return false;
-	}
-	catch (Exception const& _exception)
-	{
-		serr() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
-		return false;
-	}
-	catch (std::exception const& _e)
-	{
-		serr() << "Unknown exception during compilation" << (
-			_e.what() ? ": " + string(_e.what()) : "."
-		) << endl;
-		return false;
-	}
-	catch (...)
-	{
-		serr() << "Unknown exception during compilation." << endl;
 		return false;
 	}
 
@@ -1016,31 +975,10 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 			m_options.optimiserSettings()
 		);
 
-		try
-		{
-			if (!stack.parseAndAnalyze(src.first, src.second))
-				successful = false;
-			else
-				stack.optimize();
-		}
-		catch (Exception const& _exception)
-		{
-			serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
-			return false;
-		}
-		catch (std::exception const& _e)
-		{
-			serr() <<
-				"Unknown exception during compilation" <<
-				(_e.what() ? ": " + string(_e.what()) : ".") <<
-				endl;
-			return false;
-		}
-		catch (...)
-		{
-			serr() << "Unknown exception in assembler." << endl;
-			return false;
-		}
+		if (!stack.parseAndAnalyze(src.first, src.second))
+			successful = false;
+		else
+			stack.optimize();
 	}
 
 	for (auto const& sourceAndStack: assemblyStacks)
@@ -1074,29 +1012,8 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
 		{
-			try
-			{
-				stack.translate(yul::AssemblyStack::Language::Ewasm);
-				stack.optimize();
-			}
-			catch (Exception const& _exception)
-			{
-				serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
-				return false;
-			}
-			catch (std::exception const& _e)
-			{
-				serr() <<
-					"Unknown exception during compilation" <<
-					(_e.what() ? ": " + string(_e.what()) : ".") <<
-					endl;
-				return false;
-			}
-			catch (...)
-			{
-				serr() << "Unknown exception in assembler." << endl;
-				return false;
-			}
+			stack.translate(yul::AssemblyStack::Language::Ewasm);
+			stack.optimize();
 
 			sout() << endl << "==========================" << endl;
 			sout() << endl << "Translated source:" << endl;
@@ -1104,28 +1021,8 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		}
 
 		yul::MachineAssemblyObject object;
-		try
-		{
-			object = stack.assemble(_targetMachine);
-			object.bytecode->link(m_options.linker.libraries);
-		}
-		catch (Exception const& _exception)
-		{
-			serr() << "Exception while assembling: " << boost::diagnostic_information(_exception) << endl;
-			return false;
-		}
-		catch (std::exception const& _e)
-		{
-			serr() << "Unknown exception during compilation" << (
-				_e.what() ? ": " + string(_e.what()) : "."
-			) << endl;
-			return false;
-		}
-		catch (...)
-		{
-			serr() << "Unknown exception while assembling." << endl;
-			return false;
-		}
+		object = stack.assemble(_targetMachine);
+		object.bytecode->link(m_options.linker.libraries);
 
 		sout() << endl << "Binary representation:" << endl;
 		if (object.bytecode)
