@@ -323,7 +323,7 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
 				return StackSlot{_varSlot};
 			}) | ranges::to<Stack>;
-			stack.emplace_back(FunctionReturnLabelSlot{});
+			stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
 			return stack;
 		},
 		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>

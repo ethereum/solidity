@@ -117,7 +117,7 @@ public:
 			m_stream << joinHumanReadable(_info.returnVariables | ranges::views::transform(variableSlotToString));
 		}
 		m_stream << "\\l\\\n";
-		Stack functionEntryStack = {FunctionReturnLabelSlot{}};
+		Stack functionEntryStack = {FunctionReturnLabelSlot{_info.function}};
 		functionEntryStack += _info.parameters | ranges::views::reverse;
 		m_stream << stackToString(functionEntryStack) << "\"];\n";
 		m_stream << "FunctionEntry_" << _info.function.name.str() << " -> Block" << getBlockId(*_info.entry) << ";\n";
