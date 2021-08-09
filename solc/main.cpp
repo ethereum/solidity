@@ -21,10 +21,10 @@
  * Solidity commandline compiler.
  */
 
-#include <solc/CommandLineInterface.h>
 #include <boost/exception/all.hpp>
 #include <clocale>
 #include <iostream>
+#include <solc/CommandLineInterface.h>
 
 using namespace std;
 
@@ -53,24 +53,34 @@ static void setDefaultOrCLocale()
 
 int main(int argc, char** argv)
 {
-	setDefaultOrCLocale();
-	solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
-	if (!cli.parseArguments(argc, argv))
-		return 1;
-	if (!cli.readInputFiles())
-		return 1;
-	if (!cli.processInput())
-		return 1;
-	bool success = false;
 	try
 	{
-		success = cli.actOnInput();
-	}
-	catch (boost::exception const& _exception)
-	{
-		cerr << "Exception during output generation: " << boost::diagnostic_information(_exception) << endl;
-		success = false;
-	}
+		setDefaultOrCLocale();
+		solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
+		if (!cli.parseArguments(argc, argv) || !cli.readInputFiles() || !cli.processInput() || !cli.actOnInput())
+			return 1;
 
-	return success ? 0 : 1;
+		return 0;
+	}
+	catch (boost::exception const& _exception || Exception const& _exception || InternalCompilerError const& _exception
+		|| smtutil::SMTLogicError const& _exception)
+	{
+		cerr << "Uncaught exception" << boost::diagnostic_information(_exception) << endl;
+		return 1;
+	}
+	catch (std::exception const& _e)
+	{
+		cerr() << "Uncaught exception" << (_e.what() ? ": " + string(_e.what()) : ".") << endl;
+		return 1;
+	}
+	catch (Exception const& _exc)
+	{
+		cerr() << string("Failed to import AST: ") << _exc.what() << endl;
+		return 1;
+	}
+	catch (...)
+	{
+		cerr << "Uncaught exception" << endl;
+		return 1;
+	}
 }
