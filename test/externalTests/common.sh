@@ -173,7 +173,7 @@ function run_install
 
     replace_version_pragmas
     force_truffle_solc_modules "$soljson"
-    force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$OPTIMIZER_LEVEL" berlin
+    force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$OPTIMIZER_LEVEL" london
 
     $init_fn
 }
@@ -234,7 +234,7 @@ function truffle_run_test
     for level in $(seq "$OPTIMIZER_LEVEL" 3)
     do
         clean
-        force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$level" berlin
+        force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$level" london
 
         printLog "Running compile function..."
         $compile_fn
