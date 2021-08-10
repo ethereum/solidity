@@ -45,7 +45,7 @@ public:
 		evmasm::Assembly& _assembly,
 		langutil::EVMVersion _evmVersion,
 		ExternalIdentifierAccess::CodeGenerator _identifierAccess = {},
-		bool _useNamedLabelsForFunctions = false,
+		bool _system = false,
 		bool _optimizeStackAllocation = false
 	);
 };

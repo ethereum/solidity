@@ -23,6 +23,7 @@
 
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
+#include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
 #include <libyul/AST.h>
 #include <libyul/AsmAnalysisInfo.h>
 
@@ -38,28 +39,45 @@ void CodeGenerator::assemble(
 	evmasm::Assembly& _assembly,
 	langutil::EVMVersion _evmVersion,
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
-	bool _useNamedLabelsForFunctions,
+	bool _system,
 	bool _optimizeStackAllocation
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
 	BuiltinContext builtinContext;
-	CodeTransform transform(
-		assemblyAdapter,
-		_analysisInfo,
-		_parsedData,
-		EVMDialect::strictAssemblyForEVM(_evmVersion),
-		builtinContext,
-		_optimizeStackAllocation,
-		_identifierAccessCodeGen,
-		_useNamedLabelsForFunctions
-	);
-	transform(_parsedData);
-	if (!transform.stackErrors().empty())
-		assertThrow(
-			false,
-			langutil::StackTooDeepError,
-			"Stack too deep when compiling inline assembly" +
-			(transform.stackErrors().front().comment() ? ": " + *transform.stackErrors().front().comment() : ".")
+	if (_system && _optimizeStackAllocation && _evmVersion > EVMVersion::homestead())
+	{
+		int oldStackHeight = assemblyAdapter.stackHeight();
+		assemblyAdapter.setStackHeight(0);
+		auto stackErrors = OptimizedEVMCodeTransform::run(assemblyAdapter, _analysisInfo, _parsedData, EVMDialect::strictAssemblyForEVM(_evmVersion), builtinContext, _system);
+		assemblyAdapter.setStackHeight(oldStackHeight);
+		if (!stackErrors.empty())
+			assertThrow(
+				false,
+				langutil::StackTooDeepError,
+				"Stack too deep when compiling inline assembly" +
+				(stackErrors.front().comment() ? ": " + *stackErrors.front().comment() : ".")
+			);
+	}
+	else
+	{
+		CodeTransform transform(
+			assemblyAdapter,
+			_analysisInfo,
+			_parsedData,
+			EVMDialect::strictAssemblyForEVM(_evmVersion),
+			builtinContext,
+			_optimizeStackAllocation,
+			_identifierAccessCodeGen,
+			_system
 		);
+		transform(_parsedData);
+		if (!transform.stackErrors().empty())
+			assertThrow(
+				false,
+				langutil::StackTooDeepError,
+				"Stack too deep when compiling inline assembly" +
+				(transform.stackErrors().front().comment() ? ": " + *transform.stackErrors().front().comment() : ".")
+			);
+	}
 }
