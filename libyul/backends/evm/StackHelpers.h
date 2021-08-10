@@ -56,6 +56,14 @@ inline std::string stackToString(Stack const& _stack)
 
 
 // Abstraction of stack shuffling operations. Can be defined as actual concept once we switch to C++20.
+// Used as an interface for the stack shuffler below.
+// The shuffle operation class is expected to internally keep track of a current stack layout (the "source layout")
+// that the shuffler is supposed to shuffle to a fixed target stack layout.
+// The shuffler works iteratively. At each iteration it instantiates an instance of the shuffle operations and
+// queries it for various information about the current source stack layout and the target layout, as described
+// in the interface below.
+// Based on that information the shuffler decides which is the next optimal operation to perform on the stack
+// and calls the corresponding entry point in the shuffling operations (swap, pushOrDupTarget or pop).
 /*
 template<typename ShuffleOperations>
 concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceOffset, size_t targetOffset, size_t depth) {
@@ -65,11 +73,13 @@ concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceO
 	{ ops.sourceIsSame(sourceOffset, sourceOffset) } -> std::convertible_to<bool>;
 	// Returns a positive integer n, if the slot at the given source offset needs n more copies.
 	// Returns a negative integer -n, if the slot at the given source offsets occurs n times too many.
-	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given source offset matches the desired amount of occurrences in the target.
+	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given source offset
+	// matches the desired amount of occurrences in the target.
 	{ ops.sourceMultiplicity(sourceOffset) } -> std::convertible_to<int>;
 	// Returns a positive integer n, if the slot at the given target offset needs n more copies.
 	// Returns a negative integer -n, if the slot at the given target offsets occurs n times too many.
-	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given target offset matches the desired amount of occurrences in the target.
+	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given target offset
+	// matches the desired amount of occurrences in the target.
 	{ ops.targetMultiplicity(targetOffset) } -> std::convertible_to<int>;
 	// Returns true, iff any slot is compatible with the given target offset.
 	{ ops.targetIsArbitrary(targetOffset) } -> std::convertible_to<bool>;
@@ -77,7 +87,9 @@ concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceO
 	{ ops.sourceSize() } -> std::convertible_to<size_t>;
 	// Returns the number of slots in the target layout.
 	{ ops.targetSize() } -> std::convertible_to<size_t>;
-	// Swaps the top most slot in the source with the slot at depth.
+	// Swaps the top most slot in the source with the slot `depth` slots below the top.
+	// In terms of EVM opcodes this is supposed to be a `SWAP<depth>`.
+	// In terms of vectors this is supposed to be `std::swap(source.at(source.size() - depth - 1, source.top))`.
 	{ ops.swap(depth) };
 	// Pops the top most slot in the source.
 	{ ops.pop() };
