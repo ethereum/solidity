@@ -341,13 +341,13 @@ namespace detail
 
 template<typename Container, typename Value>
 auto findOffset(Container&& _container, Value&& _value, int)
--> decltype(_container.find(_value) == _container.end(), std::optional<size_t>())
+-> decltype(_container.find(_value) == _container.end(), std::distance(_container.begin(), _container.find(_value)), std::optional<size_t>())
 {
 	auto it = _container.find(std::forward<Value>(_value));
 	auto end = _container.end();
 	if (it == end)
 		return std::nullopt;
-	return std::distance(it, end);
+	return std::distance(_container.begin(), it);
 }
 template<typename Range, typename Value>
 auto findOffset(Range&& _range, Value&& _value, void*)
