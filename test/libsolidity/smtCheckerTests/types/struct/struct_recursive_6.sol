@@ -60,8 +60,6 @@ contract C {
 // Warning 6328: (152-176): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (180-214): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (231-248): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 8115: (48-52): Assertion checker does not yet support the type of this variable.
-// Warning 8115: (55-59): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (86-90): Assertion checker does not yet support this expression.
 // Warning 8364: (86-88): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 4375: (86-90): Assertion checker does not support recursive structs.

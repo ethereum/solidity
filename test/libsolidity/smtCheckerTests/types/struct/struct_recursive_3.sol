@@ -141,8 +141,6 @@ contract C {
 // Warning 6368: (681-693): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
 // Warning 6368: (704-711): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
 // Warning 6368: (704-716): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 8115: (48-52): Assertion checker does not yet support the type of this variable.
-// Warning 8115: (55-59): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (98-102): Assertion checker does not yet support this expression.
 // Warning 8364: (98-100): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 7650: (106-110): Assertion checker does not yet support this expression.

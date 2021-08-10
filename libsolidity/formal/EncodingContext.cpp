@@ -49,12 +49,6 @@ unsigned EncodingContext::newUniqueId()
 	return m_nextUniqueId++;
 }
 
-void EncodingContext::clear()
-{
-	m_variables.clear();
-	reset();
-}
-
 /// Variables.
 
 shared_ptr<SymbolicVariable> EncodingContext::variable(frontend::VariableDeclaration const& _varDecl)
