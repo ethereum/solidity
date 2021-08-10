@@ -78,6 +78,10 @@ if you want to help.
 You can find our current feature and bug priorities for forthcoming
 releases [in the projects section](https://github.com/ethereum/solidity/projects).
 
+## Guides
+
+Refer the link for further examples: https://solidity-by-example.org/
+
 ## Maintainers
 * [@axic](https://github.com/axic)
 * [@chriseth](https://github.com/chriseth)
