@@ -91,7 +91,9 @@ concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceO
 	// In terms of EVM opcodes this is supposed to be a `SWAP<depth>`.
 	// In terms of vectors this is supposed to be `std::swap(source.at(source.size() - depth - 1, source.top))`.
 	{ ops.swap(depth) };
-	// Pops the top most slot in the source.
+	// Pops the top most slot in the source, i.e. the slot at offset ops.sourceSize() - 1.
+	// In terms of EVM opcodes this is `POP`.
+	// In terms of vectors this is `source.pop();`.
 	{ ops.pop() };
 	// Dups or pushes the slot that is supposed to end up at the given target offset.
 	{ ops.pushOrDupTarget(targetOffset) };
@@ -150,6 +152,15 @@ private:
 		}
 		return false;
 	}
+	/// Finds a slot to dups or pushes with the aim of eventually fixing @a _targetOffset in the target.
+	/// In the simplest case, the slot at @a _targetOffset has a multiplicity > 0, i.e. it can directly be dupped or pushed
+	/// and the next iteration will fix @a _targetOffset.
+	/// But, in general, there may already be enough copies of the slot that is supposed to end up at @a _targetOffset
+	/// on stack, s.t. it cannot be dupped again. In that case there has to be a copy of the desired slot on stack already
+	/// elsewhere that is not yet in place (`nextOffset` below). The fact that ``nextOffset`` is not in place means that
+	/// we can (recursively) try bringing up the slot that is supposed to end up at ``nextOffset`` in the *target*.
+	/// When the target slot at ``nextOffset`` is fixed, the current source slot at ``nextOffset`` will be
+	/// at the stack top, which is the slot required at @a _targetOffset.
 	static void bringUpTargetSlot(ShuffleOperations& _ops, size_t _targetOffset)
 	{
 		std::list<size_t> toVisit{_targetOffset};
@@ -203,7 +214,7 @@ private:
 		// in the target.
 		if (
 			ops.sourceMultiplicity(sourceTop) < 0 &&
-			!(ops.targetSize() >= ops.sourceSize() && ops.targetIsArbitrary(sourceTop))
+			!ops.targetIsArbitrary(sourceTop)
 		)
 		{
 			ops.pop();
