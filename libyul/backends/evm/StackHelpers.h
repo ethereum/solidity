@@ -121,13 +121,14 @@ public:
 private:
 	// If dupping an ideal slot causes a slot that will still be required to become unreachable, then dup
 	// the latter slot first.
-	static bool pushDeepSlotIfRequired(ShuffleOperations& _ops)
+	// @returns true, if it performed a dup.
+	static bool dupDeepSlotIfRequired(ShuffleOperations& _ops)
 	{
 		// Check if the stack is large enough for anything to potentially become unreachable.
 		if (_ops.sourceSize() < 15)
 			return false;
 		// Check whether any deep slot might still be needed later.
-		for (size_t sourceOffset: ranges::views::iota(0u, std::min(_ops.sourceSize() - 15, _ops.targetSize())))
+		for (size_t sourceOffset: ranges::views::iota(0u, _ops.sourceSize() - 15))
 		{
 			// We need another copy of this slot.
 			if (_ops.sourceMultiplicity(sourceOffset) > 0)
@@ -151,9 +152,6 @@ private:
 	}
 	static void bringUpTargetSlot(ShuffleOperations& _ops, size_t _targetOffset)
 	{
-		if (pushDeepSlotIfRequired(_ops))
-			return;
-
 		std::list<size_t> toVisit{_targetOffset};
 		std::set<size_t> visited;
 
@@ -193,7 +191,8 @@ private:
 			// Bring up all remaining target slots, if any, or terminate otherwise.
 			if (ops.sourceSize() < ops.targetSize())
 			{
-				bringUpTargetSlot(ops, ops.sourceSize());
+				if (!dupDeepSlotIfRequired(ops))
+					bringUpTargetSlot(ops, ops.sourceSize());
 				return true;
 			}
 			return false;
@@ -237,7 +236,8 @@ private:
 				!ops.targetIsArbitrary(offset) // And that target slot is not arbitrary.
 			)
 			{
-				bringUpTargetSlot(ops, offset);
+				if (!dupDeepSlotIfRequired(ops))
+					bringUpTargetSlot(ops, offset);
 				return true;
 			}
 
@@ -261,7 +261,8 @@ private:
 		// If we still need more slots, produce a suitable one.
 		if (ops.sourceSize() < ops.targetSize())
 		{
-			bringUpTargetSlot(ops, ops.sourceSize());
+			if (!dupDeepSlotIfRequired(ops))
+				bringUpTargetSlot(ops, ops.sourceSize());
 			return true;
 		}
 
