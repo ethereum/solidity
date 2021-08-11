@@ -122,6 +122,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
 		m_evmRevision = EVMC_BERLIN;
+	else if (_evmVersion == langutil::EVMVersion::london())
+		m_evmRevision = EVMC_LONDON;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 
@@ -132,6 +134,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
 	// Mainnet according to EIP-155
 	tx_context.chain_id = evmc::uint256be{1};
+	// The minimum value of basefee
+	tx_context.block_base_fee = evmc::bytes32{7};
 
 	// Reserve space for recording calls.
 	if (!recorded_calls.capacity())

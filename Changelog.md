@@ -1,6 +1,8 @@
 ### 0.8.7 (unreleased)
 
 Language Features:
+ * Introduce global ``block.basefee`` for retrieving the base fee of the current block.
+ * Yul: Introduce builtin ``basefee()`` for retrieving the base fee of the current block.
 
 
 Compiler Features:
