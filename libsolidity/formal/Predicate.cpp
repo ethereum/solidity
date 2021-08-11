@@ -518,6 +518,7 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 map<string, optional<string>> Predicate::readTxVars(smtutil::Expression const& _tx) const
 {
 	map<string, Type const*> const txVars{
+		{"block.basefee", TypeProvider::uint256()},
 		{"block.chainid", TypeProvider::uint256()},
 		{"block.coinbase", TypeProvider::address()},
 		{"block.difficulty", TypeProvider::uint256()},

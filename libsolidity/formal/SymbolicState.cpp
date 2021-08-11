@@ -128,7 +128,9 @@ smtutil::Expression SymbolicState::txMember(string const& _member) const
 
 smtutil::Expression SymbolicState::txTypeConstraints() const
 {
-	return smt::symbolicUnknownConstraints(m_tx.member("block.chainid"), TypeProvider::uint256()) &&
+	return
+		smt::symbolicUnknownConstraints(m_tx.member("block.basefee"), TypeProvider::uint256()) &&
+		smt::symbolicUnknownConstraints(m_tx.member("block.chainid"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.coinbase"), TypeProvider::address()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.difficulty"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.gaslimit"), TypeProvider::uint256()) &&
