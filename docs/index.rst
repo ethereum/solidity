@@ -13,7 +13,7 @@ within the Ethereum state.
 Solidity is a `curly-bracket language <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_.
 It is influenced by C++, Python, and JavaScript, and is designed to target the Ethereum Virtual Machine (EVM).
 You can find more details about which languages Solidity has been inspired by in
-the :doc:`language influences <language-influences>` section.
+the:doc:`language influences <language-influences>` section.
 
 Solidity is statically typed, supports inheritance, libraries, and complex
 user-defined types among other features.
@@ -28,8 +28,7 @@ a 0.x version number `to indicate this fast pace of change <https://semver.org/#
 
 .. warning::
 
-  Solidity recently released the 0.8.x version that introduced a lot of breaking
-  changes. Make sure you read :doc:`the full list <080-breaking-changes>`.
+  Solidity recently released the 0.8.x version that introduced a lot of breaking changes. Make sure you read:doc:`the full list <080-breaking-changes>`.
 
 Ideas for improving Solidity or this documentation are always welcome,
 read our :doc:`contributors guide <contributing>` for more details.
@@ -54,20 +53,19 @@ and “Language Description” sections to understand the core concepts of the l
 **3. Install the Solidity Compiler**
 
 There are various ways to install the Solidity compiler,
-simply choose your preferred option and follow the steps outlined on the :ref:`installation page <installing-solidity>`.
+simply choose your preferred option and follow the steps outlined on the:ref:`installation page <installing-solidity>`.
 
 .. hint::
   You can try out code examples directly in your browser with the
-  `Remix IDE <https://remix.ethereum.org>`_. Remix is a web browser based IDE
-  that allows you to write, deploy and administer Solidity smart contracts, without
-  the need to install Solidity locally.
+  `Remix IDE <https://remix.ethereum.org>`_. The remix is a web browser-based IDE
+  that allows you to write, deploy and administer Solidity smart contracts, without the need to install Solidity locally.
 
 .. warning::
     As humans write software, it can have bugs. You should follow established
-    software development best-practices when writing your smart contracts. This
+    software development best practices when writing your smart contracts. This
     includes code review, testing, audits, and correctness proofs. Smart contract
     users are sometimes more confident with code than their authors, and
-    blockchains and smart contracts have their own unique issues to
+    blockchains and smart contracts have their unique issues to
     watch out for, so before working on production code, make sure you read the
     :ref:`security_considerations` section.
 
