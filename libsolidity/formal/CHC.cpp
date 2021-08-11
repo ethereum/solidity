@@ -529,11 +529,11 @@ void CHC::endVisit(FunctionCall const& _funCall)
 		break;
 	case FunctionType::Kind::External:
 	case FunctionType::Kind::BareStaticCall:
+	case FunctionType::Kind::BareCall:
 		externalFunctionCall(_funCall);
 		SMTEncoder::endVisit(_funCall);
 		break;
 	case FunctionType::Kind::DelegateCall:
-	case FunctionType::Kind::BareCall:
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
 	case FunctionType::Kind::Creation:
@@ -746,23 +746,29 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	auto kind = funType.kind();
-	solAssert(kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
+	solAssert(
+		kind == FunctionType::Kind::External ||
+		kind == FunctionType::Kind::BareCall ||
+		kind == FunctionType::Kind::BareStaticCall,
+		""
+	);
+
+	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall;
 
 	solAssert(m_currentContract, "");
 	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
-	if (!function)
-		return;
-
-	for (auto var: function->returnParameters())
-		m_context.variable(*var)->increaseIndex();
+	if (function)
+	{
+		usesStaticCall |= function->stateMutability() == StateMutability::Pure ||
+			function->stateMutability() == StateMutability::View;
+		for (auto var: function->returnParameters())
+			m_context.variable(*var)->increaseIndex();
+	}
 
 	if (!m_currentFunction || m_currentFunction->isConstructor())
 		return;
 
 	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
-	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall ||
-		function->stateMutability() == StateMutability::Pure ||
-		function->stateMutability() == StateMutability::View;
 
 	if (!usesStaticCall)
 	{
