@@ -193,6 +193,39 @@ Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
 ``.call()``, ``.delegatecall()`` and ``.staticcall()`` behave in the same way.
 
+Authorized Proxies
+==================
+
+If your contract can act as a proxy, i.e. if it can call arbitrary contracts
+with user-supplied data, then the user can essentially assume the identity
+of the proxy contract. Even if you have other protective measures in place,
+it is best to build your contract system such that the proxy does not have
+any permissions (not even for itself). If needed, you can accomplish that
+using a second proxy:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.0;
+    contract ProxyWithMoreFunctionality {
+        PermissionlessProxy proxy;
+
+        function callOther(address _addr, bytes memory _payload) public
+                returns (bool, bytes memory) {
+            return proxy.callOther(_addr, _payload);
+        }
+        // Other functions and other functionality
+    }
+
+    // This is the full contract, it has no other functionality and
+    // requires no privileges to work.
+    contract PermissionlessProxy {
+        function callOther(address _addr, bytes memory _payload) public
+                returns (bool, bytes memory) {
+            return _addr.call(_payload);
+        }
+    }
+
 tx.origin
 =========
 
