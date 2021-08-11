@@ -112,14 +112,22 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	return {name, f};
 }
 
-set<YulString> createReservedIdentifiers()
+set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 {
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// basefee for VMs before london.
+	auto baseFeeException = [&](evmasm::Instruction _instr) -> bool
+	{
+		return _instr == evmasm::Instruction::BASEFEE && _evmVersion < langutil::EVMVersion::london();
+	};
+
 	set<YulString> reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
 		string name = instr.first;
 		transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-		reserved.emplace(name);
+		if (!baseFeeException(instr.second))
+			reserved.emplace(name);
 	}
 	reserved += vector<YulString>{
 		"linkersymbol"_yulstring,
@@ -300,7 +308,7 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, bool _objectAccess):
 	m_objectAccess(_objectAccess),
 	m_evmVersion(_evmVersion),
 	m_functions(createBuiltins(_evmVersion, _objectAccess)),
-	m_reserved(createReservedIdentifiers())
+	m_reserved(createReservedIdentifiers(_evmVersion))
 {
 }
 
