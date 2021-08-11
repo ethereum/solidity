@@ -169,10 +169,12 @@ at each version. Backward compatibility is not guaranteed between each version.
    - The compiler behaves the same way as with constantinople.
 - ``istanbul``
    - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
-- ``berlin`` (**default**)
+- ``berlin``
    - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
      compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
      the optimizer.
+- ``london`` (**default**)
+   - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
 
 
 .. index:: ! standard JSON, ! --standard-json

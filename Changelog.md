@@ -7,6 +7,7 @@ Language Features:
 
 Compiler Features:
  * AssemblyStack: Also run opcode-based optimizer when compiling Yul code.
+ * EVM: Set the default EVM version to "London".
  * Yul EVM Code Transform: Do not reuse stack slots that immediately become unreachable.
  * Yul EVM Code Transform: Also pop unused argument slots for functions without return variables (under the same restrictions as for functions with return variables).
  * Yul Optimizer: Move function arguments and return variables to memory with the experimental Stack Limit Evader (which is not enabled by default).
