@@ -1,4 +1,4 @@
-### 0.8.7 (unreleased)
+### 0.8.7 (2021-08-11)
 
 Language Features:
  * Introduce global ``block.basefee`` for retrieving the base fee of the current block.
