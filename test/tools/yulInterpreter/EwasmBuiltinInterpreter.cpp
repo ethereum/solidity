@@ -413,6 +413,11 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		writeAddress(arg[3], h160(0xcccccc + arg[1]));
 		return 1;
 	}
+	else if (_fun == "getBlockBaseFee")
+	{
+		writeU128(arg[0], m_state.basefee);
+		return 0;
+	}
 	else if (_fun == "getBlockDifficulty")
 	{
 		writeU256(arg[0], m_state.difficulty);
