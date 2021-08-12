@@ -26,7 +26,7 @@ contract C {
 // setX(int256): 5 ->
 // gas irOptimized: 43510
 // gas legacy: 43724
-// gas legacyOptimized: 43516
+// gas legacyOptimized: 43505
 // getX() -> 5
 // gas irOptimized: 23379
 // gas legacy: 23479
@@ -34,4 +34,4 @@ contract C {
 // add(int256,int256): 200, 99 -> 299
 // gas irOptimized: 21764
 // gas legacy: 22394
-// gas legacyOptimized: 21813
+// gas legacyOptimized: 21780

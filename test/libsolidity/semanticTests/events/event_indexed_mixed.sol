@@ -15,4 +15,4 @@ contract C {
 // ~ emit E(uint256,uint256,uint256,bytes): #0x02, 0x01, 0x03, 0x60, 0x03, "def"
 // gas irOptimized: 23709
 // gas legacy: 24342
-// gas legacyOptimized: 23753
+// gas legacyOptimized: 23744

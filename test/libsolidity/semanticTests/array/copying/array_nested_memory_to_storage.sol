@@ -42,10 +42,10 @@ contract Test {
 // test() -> 24
 // gas irOptimized: 227167
 // gas legacy: 227133
-// gas legacyOptimized: 226547
+// gas legacyOptimized: 226529
 // test1() -> 3
 // test2() -> 6
 // test3() -> 24
 // gas irOptimized: 133621
 // gas legacy: 134295
-// gas legacyOptimized: 133383
+// gas legacyOptimized: 133365
