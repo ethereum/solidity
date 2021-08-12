@@ -2,5 +2,6 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x0
-// POP
+//     /* "":2:7   */
+//   0x00
+//   stop

@@ -4,25 +4,22 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x17
-// JUMP
-// JUMPDEST
-// ADDRESS
-// POP
-// DUP3
-// DUP2
-// SSTORE
-// POP
-// CALLVALUE
-// POP
-// PUSH1 0x0
-// DUP2
-// SWAP1
-// POP
-// JUMPDEST
-// SWAP3
-// SWAP2
-// POP
-// POP
-// JUMP
-// JUMPDEST
+//   stop
+//     /* "":6:86   */
+// tag_1:
+//   swap2
+//   swap1
+//   swap2
+//     /* "":37:46   */
+//   address
+//     /* "":33:47   */
+//   pop
+//     /* "":48:60   */
+//   sstore
+//     /* "":65:76   */
+//   callvalue
+//     /* "":61:77   */
+//   pop
+//   swap1
+//     /* "":6:86   */
+//   jump	// out

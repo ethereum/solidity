@@ -25,92 +25,85 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x80
-// JUMP
-// JUMPDEST
-// DUP1
-// PUSH2 0x100
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x120
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x140
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x160
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x180
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x1A0
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x1C0
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x1E0
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x200
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x220
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x240
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x260
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x280
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x2A0
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x2C0
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x2E0
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x300
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x320
-// MSTORE
-// POP
-// DUP1
-// PUSH2 0x340
-// MSTORE
-// POP
-// PUSH1 0x0
-// DUP2
-// SWAP1
-// POP
-// JUMPDEST
-// SWAP2
-// SWAP1
-// POP
-// JUMP
-// JUMPDEST
+//   stop
+//     /* "":6:660   */
+// tag_1:
+//     /* "":130:136   */
+//   0x0100
+//     /* "":123:141   */
+//   mstore
+//     /* "":157:163   */
+//   0x0120
+//     /* "":150:168   */
+//   mstore
+//     /* "":184:190   */
+//   0x0140
+//     /* "":177:195   */
+//   mstore
+//     /* "":211:217   */
+//   0x0160
+//     /* "":204:222   */
+//   mstore
+//     /* "":238:244   */
+//   0x0180
+//     /* "":231:249   */
+//   mstore
+//     /* "":265:271   */
+//   0x01a0
+//     /* "":258:276   */
+//   mstore
+//     /* "":292:298   */
+//   0x01c0
+//     /* "":285:303   */
+//   mstore
+//     /* "":319:325   */
+//   0x01e0
+//     /* "":312:330   */
+//   mstore
+//     /* "":346:352   */
+//   0x0200
+//     /* "":339:357   */
+//   mstore
+//     /* "":373:379   */
+//   0x0220
+//     /* "":366:385   */
+//   mstore
+//     /* "":401:407   */
+//   0x0240
+//     /* "":394:413   */
+//   mstore
+//     /* "":429:435   */
+//   0x0260
+//     /* "":422:441   */
+//   mstore
+//     /* "":457:463   */
+//   0x0280
+//     /* "":450:469   */
+//   mstore
+//     /* "":485:491   */
+//   0x02a0
+//     /* "":478:497   */
+//   mstore
+//     /* "":513:519   */
+//   0x02c0
+//     /* "":506:525   */
+//   mstore
+//     /* "":541:547   */
+//   0x02e0
+//     /* "":534:553   */
+//   mstore
+//     /* "":569:575   */
+//   0x0300
+//     /* "":562:581   */
+//   mstore
+//     /* "":597:603   */
+//   0x0320
+//     /* "":590:609   */
+//   mstore
+//     /* "":625:631   */
+//   0x0340
+//     /* "":618:637   */
+//   mstore
+//   swap1
+//     /* "":6:660   */
+//   jump	// out
