@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix false positive in external calls from constructors.
 
 
 
