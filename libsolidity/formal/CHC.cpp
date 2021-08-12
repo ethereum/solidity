@@ -756,6 +756,9 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	for (auto var: function->returnParameters())
 		m_context.variable(*var)->increaseIndex();
 
+	if (!m_currentFunction || m_currentFunction->isConstructor())
+		return;
+
 	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
 	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall ||
 		function->stateMutability() == StateMutability::Pure ||
@@ -787,6 +790,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	m_context.addAssertion(nondetCall);
 	solAssert(m_errorDest, "");
 	connectBlocks(m_currentBlock, predicate(*m_errorDest), errorFlag().currentValue() > 0);
+
 	// To capture the possibility of a reentrant call, we record in the call graph that the  current function
 	// can call any of the external methods of the current contract.
 	if (m_currentFunction)
