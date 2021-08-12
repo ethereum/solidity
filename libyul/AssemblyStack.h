@@ -124,9 +124,9 @@ public:
 private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
-
+public:
 	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
-
+private:
 	void optimize(yul::Object& _object, bool _isCreation);
 
 	Language m_language = Language::Assembly;
