@@ -109,10 +109,7 @@ m_nameDispenser(_context.dispenser),
 m_functionReturnVariables(move(_functionReturnVariables))
 {
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
-	yulAssert(
-		evmDialect && evmDialect->providesObjectAccess(),
-		"StackToMemoryMover can only be run on objects using the EVMDialect with object access."
-	);
+	yulAssert(evmDialect, "StackToMemoryMover can only be run on objects using the EVMDialect.");
 }
 
 void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
