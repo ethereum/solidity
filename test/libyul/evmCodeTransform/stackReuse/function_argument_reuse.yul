@@ -20,6 +20,6 @@
 //   callvalue
 //     /* "":61:77   */
 //   pop
-//   swap1
 //     /* "":6:86   */
+//   swap1
 //   jump	// out

@@ -14,6 +14,6 @@ contract C {
 // compileViaYul: also
 // ----
 // f(uint120[]): 0x20, 3, 1, 2, 3 -> 1
-// gas irOptimized: 113393
+// gas irOptimized: 113267
 // gas legacy: 113686
-// gas legacyOptimized: 113499
+// gas legacyOptimized: 113449

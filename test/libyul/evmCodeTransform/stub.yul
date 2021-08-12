@@ -20,8 +20,8 @@
 // ====
 // stackOptimization: true
 // ----
-//   tag_1
 //     /* "":14:21   */
+//   tag_1
 //   tag_2
 //   jump	// in
 // tag_1:
@@ -36,6 +36,7 @@
 //   iszero
 //     /* "":133:134   */
 //   0x00
+//     /* "":81:415   */
 //   eq
 //   tag_3
 //   jumpi

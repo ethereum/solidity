@@ -21,8 +21,8 @@
 //   tag_2
 //   jumpi
 // tag_3:
-//   pop
 //     /* "":4:86   */
+//   pop
 //   jump	// out
 // tag_2:
 //   dup1
