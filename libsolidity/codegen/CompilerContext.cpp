@@ -411,6 +411,7 @@ void CompilerContext::appendInlineAssembly(
 		yul::AbstractAssembly& _assembly
 	)
 	{
+		solAssert(_context == yul::IdentifierContext::RValue || _context == yul::IdentifierContext::LValue, "");
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
 		solAssert(it != _localVariables.end(), "");
 		auto stackDepth = static_cast<size_t>(distance(it, _localVariables.end()));

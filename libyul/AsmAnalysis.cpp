@@ -146,6 +146,13 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 		}
 	}))
 	{
+		if (m_resolver)
+			// We found a local reference, make sure there is no external reference.
+			m_resolver(
+				_identifier,
+				yul::IdentifierContext::NonExternal,
+				m_currentScope->insideFunction()
+			);
 	}
 	else
 	{
@@ -308,7 +315,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 
 		validateInstructions(_funCall);
 	}
-	else if (!m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
+	else if (m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
 		{
 			m_errorReporter.typeError(
@@ -323,6 +330,16 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			returnTypes = &_fun.returns;
 		}
 	}))
+	{
+		if (m_resolver)
+			// We found a local reference, make sure there is no external reference.
+			m_resolver(
+				_funCall.functionName,
+				yul::IdentifierContext::NonExternal,
+				m_currentScope->insideFunction()
+			);
+	}
+	else
 	{
 		if (!validateInstructions(_funCall))
 			m_errorReporter.declarationError(
@@ -539,6 +556,14 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 	bool found = false;
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
+		if (m_resolver)
+			// We found a local reference, make sure there is no external reference.
+			m_resolver(
+				_variable,
+				yul::IdentifierContext::NonExternal,
+				m_currentScope->insideFunction()
+			);
+
 		if (!holds_alternative<Scope::Variable>(*var))
 			m_errorReporter.typeError(2657_error, _variable.debugData->location, "Assignment requires variable.");
 		else if (!m_activeVariables.count(&std::get<Scope::Variable>(*var)))

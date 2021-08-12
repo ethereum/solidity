@@ -117,7 +117,7 @@ public:
 	virtual void markAsInvalid() = 0;
 };
 
-enum class IdentifierContext { LValue, RValue, VariableDeclaration };
+enum class IdentifierContext { LValue, RValue, VariableDeclaration, NonExternal };
 
 /// Object that is used to resolve references and generate code for access to identifiers external
 /// to inline assembly (not used in standalone assembly mode).
