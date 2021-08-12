@@ -3034,6 +3034,15 @@ void SMTEncoder::createFreeConstants(set<SourceUnit const*, ASTNode::CompareByID
 		for (auto node: source->nodes())
 			if (auto var = dynamic_cast<VariableDeclaration const*>(node.get()))
 				createVariable(*var);
+			else if (
+				auto contract = dynamic_cast<ContractDefinition const*>(node.get());
+				contract && contract->isLibrary()
+			)
+				for (auto var: contract->stateVariables())
+				{
+					solAssert(var->isConstant(), "");
+					createVariable(*var);
+				}
 }
 
 smt::SymbolicState& SMTEncoder::state()

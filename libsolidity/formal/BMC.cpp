@@ -80,7 +80,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 	{
 		m_solvedTargets = move(_solvedTargets);
 		m_context.setSolver(m_interface.get());
-		m_context.clear();
+		m_context.reset();
 		m_context.setAssertionAccumulation(true);
 		m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
 		createFreeConstants(sourceDependencies(_source));

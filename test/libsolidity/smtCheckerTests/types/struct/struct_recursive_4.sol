@@ -55,10 +55,6 @@ contract C {
 // Warning 6328: (164-200): CHC: Assertion violation happens here.
 // Warning 6328: (204-240): CHC: Assertion violation happens here.
 // Warning 6328: (326-358): CHC: Assertion violation happens here.
-// Warning 8115: (48-52): Assertion checker does not yet support the type of this variable.
-// Warning 8115: (55-59): Assertion checker does not yet support the type of this variable.
-// Warning 8115: (102-114): Assertion checker does not yet support the type of this variable.
-// Warning 8115: (133-145): Assertion checker does not yet support the type of this variable.
 // Warning 8364: (122-124): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 8364: (127-129): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 8364: (117-129): Assertion checker does not yet implement type struct C.S storage pointer
