@@ -2533,6 +2533,36 @@ unsigned EnumType::memberValue(ASTString const& _member) const
 	solAssert(false, "Requested unknown enum value " + _member);
 }
 
+Type const& UserDefinedValueType::underlyingType() const
+{
+	Type const* type = m_definition.underlyingType()->annotation().type;
+	solAssert(type, "");
+	return *type;
+}
+
+string UserDefinedValueType::richIdentifier() const
+{
+	return "t_userDefinedValueType" + parenthesizeIdentifier(m_definition.name()) + to_string(m_definition.id());
+}
+
+bool UserDefinedValueType::operator==(Type const& _other) const
+{
+	if (_other.category() != category())
+		return false;
+	UserDefinedValueType const& other = dynamic_cast<UserDefinedValueType const&>(_other);
+	return other.definition() == definition();
+}
+
+string UserDefinedValueType::toString(bool /* _short */) const
+{
+	return "user defined type " + definition().name();
+}
+
+vector<tuple<string, Type const*>> UserDefinedValueType::makeStackItems() const
+{
+	return underlyingType().stackItems();
+}
+
 BoolResult TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 {
 	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
@@ -2884,6 +2914,8 @@ string FunctionType::richIdentifier() const
 	case Kind::GasLeft: id += "gasleft"; break;
 	case Kind::Event: id += "event"; break;
 	case Kind::Error: id += "error"; break;
+	case Kind::Wrap: id += "wrap"; break;
+	case Kind::Unwrap: id += "unwrap"; break;
 	case Kind::SetGas: id += "setgas"; break;
 	case Kind::SetValue: id += "setvalue"; break;
 	case Kind::BlockHash: id += "blockhash"; break;
@@ -3753,6 +3785,34 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 		auto enumType = TypeProvider::enumType(enumDef);
 		for (ASTPointer<EnumValue> const& enumValue: enumDef.members())
 			members.emplace_back(enumValue.get(), enumType);
+	}
+	else if (m_actualType->category() == Category::UserDefinedValueType)
+	{
+		auto& userDefined = dynamic_cast<UserDefinedValueType const&>(*m_actualType);
+		members.emplace_back(
+			"wrap",
+			TypeProvider::function(
+				TypePointers{&userDefined.underlyingType()},
+				TypePointers{&userDefined},
+				strings{string{}},
+				strings{string{}},
+				FunctionType::Kind::Wrap,
+				false, /*_arbitraryParameters */
+				StateMutability::Pure
+			)
+		);
+		members.emplace_back(
+			"unwrap",
+			TypeProvider::function(
+				TypePointers{&userDefined},
+				TypePointers{&userDefined.underlyingType()},
+				strings{string{}},
+				strings{string{}},
+				FunctionType::Kind::Unwrap,
+				false, /* _arbitraryParameters */
+				StateMutability::Pure
+			)
+		);
 	}
 	else if (
 		auto const* arrayType = dynamic_cast<ArrayType const*>(m_actualType);
