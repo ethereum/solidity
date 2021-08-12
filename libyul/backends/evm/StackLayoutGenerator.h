@@ -47,10 +47,20 @@ struct StackLayout
 class StackLayoutGenerator
 {
 public:
+	struct StackTooDeep
+	{
+		/// Number of slots that need to be saved.
+		size_t deficit = 0;
+		/// Set of variables, eliminating which would decrease the stack deficit.
+		std::set<YulString> variableChoices;
+	};
+
 	static StackLayout run(CFG const& _cfg);
+	static std::map<YulString, std::vector<StackTooDeep>> reportStackTooDeep(CFG const& _cfg);
+	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulString _functionName);
 
 private:
-	StackLayoutGenerator(StackLayout& _context, std::vector<VariableSlot> _currentFunctionReturnVariables);
+	StackLayoutGenerator(StackLayout& _context);
 
 	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
 	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
@@ -86,13 +96,16 @@ private:
 	/// stack shuffling when starting from the returned layout.
 	static Stack combineStack(Stack const& _stack1, Stack const& _stack2);
 
+	/// Walks through the CFG and reports and stack too deep errors that would occur when generating code for it
+	/// without countermeasures.
+	std::vector<StackTooDeep> reportStackTooDeep(CFG::BasicBlock const& _entry);
+
 	/// @returns a copy of @a _stack stripped of all duplicates and slots that can be freely generated.
 	/// Attempts to create a layout that requires a minimal amount of operations to reconstruct the original
 	/// stack @a _stack.
 	static Stack compressStack(Stack _stack);
 
 	StackLayout& m_layout;
-	std::vector<VariableSlot> const m_currentFunctionReturnVariables;
 };
 
 }

@@ -141,6 +141,7 @@ private:
 					[&](size_t _offset) { return _ops.sourceIsSame(sourceOffset, _offset); }
 				))
 					continue;
+
 				// Bring up the target slot that would otherwise become unreachable.
 				for (size_t targetOffset: ranges::views::iota(0u, _ops.targetSize()))
 					if (!_ops.targetIsArbitrary(targetOffset) && _ops.isCompatible(sourceOffset, targetOffset))

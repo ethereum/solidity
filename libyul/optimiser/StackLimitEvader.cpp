@@ -21,14 +21,18 @@
 #include <libyul/optimiser/FunctionDefinitionCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/StackToMemoryMover.h>
+#include <libyul/backends/evm/ControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/AsmAnalysis.h>
 #include <libyul/AST.h>
+#include <libyul/CompilabilityChecker.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>
 #include <libyul/Utilities.h>
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/CommonData.h>
 
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/take.hpp>
 
@@ -112,6 +116,45 @@ u256 literalArgumentValue(FunctionCall const& _call)
 	yulAssert(literal && literal->kind == LiteralKind::Number, "");
 	return valueOfLiteral(*literal);
 }
+}
+
+void StackLimitEvader::run(
+	OptimiserStepContext& _context,
+	Object& _object
+)
+{
+	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
+	yulAssert(
+		evmDialect && evmDialect->providesObjectAccess(),
+		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
+	);
+	if (evmDialect && evmDialect->evmVersion() > langutil::EVMVersion::homestead())
+	{
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _object);
+		unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, *_object.code);
+		run(_context, _object, StackLayoutGenerator::reportStackTooDeep(*cfg));
+	}
+	else
+		run(_context, _object, CompilabilityChecker{
+			_context.dialect,
+			_object,
+			true
+		}.unreachableVariables);
+
+}
+
+void StackLimitEvader::run(
+	OptimiserStepContext& _context,
+	Object& _object,
+	map<YulString, vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
+)
+{
+	map<YulString, set<YulString>> unreachableVariables;
+	for (auto&& [function, stackTooDeepErrors]: _stackTooDeepErrors)
+		// TODO: choose wisely.
+		for (auto const& stackTooDeepError: stackTooDeepErrors)
+			unreachableVariables[function] += stackTooDeepError.variableChoices | ranges::views::take(stackTooDeepError.deficit) | ranges::to<set<YulString>>;
+	run(_context, _object, unreachableVariables);
 }
 
 void StackLimitEvader::run(

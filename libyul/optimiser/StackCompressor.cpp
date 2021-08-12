@@ -27,6 +27,13 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/Semantics.h>
 
+#include <libyul/backends/evm/ControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/StackHelpers.h>
+#include <libyul/backends/evm/StackLayoutGenerator.h>
+
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+
 #include <libyul/CompilabilityChecker.h>
 
 #include <libyul/AST.h>
@@ -150,6 +157,40 @@ void eliminateVariables(
 	UnusedPruner::runUntilStabilised(_dialect, _node, _allowMSizeOptimization);
 }
 
+void eliminateVariables(
+	Dialect const& _dialect,
+	Block& _block,
+	vector<StackLayoutGenerator::StackTooDeep> const& _unreachables,
+	bool _allowMSizeOptimization
+)
+{
+	RematCandidateSelector selector{_dialect};
+	selector(_block);
+	std::map<YulString, size_t> candidates;
+	for (auto [cost, name, dependencies]: selector.candidates())
+		candidates[name] = cost;
+
+	set<YulString> varsToEliminate;
+
+	for (auto const& unreachable: _unreachables)
+	{
+		set<tuple<size_t, YulString>> suitableCandidates;
+		size_t neededSlots = unreachable.deficit;
+		for (auto varName: unreachable.variableChoices)
+		{
+			if (varsToEliminate.count(varName))
+				--neededSlots;
+			else if (size_t* cost = util::valueOrNullptr(candidates, varName))
+				suitableCandidates.insert(std::make_tuple(*cost, varName));
+		}
+
+		for (auto candidate: suitableCandidates | ranges::views::take(neededSlots))
+			varsToEliminate.emplace(get<1>(candidate));
+	}
+	Rematerialiser::run(_dialect, _block, std::move(varsToEliminate), true);
+	UnusedPruner::runUntilStabilised(_dialect, _block, _allowMSizeOptimization);
+}
+
 }
 
 bool StackCompressor::run(
@@ -164,39 +205,63 @@ bool StackCompressor::run(
 		_object.code->statements.size() > 0 && holds_alternative<Block>(_object.code->statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
+	bool usesOptimizedCodeGenerator = false;
+	if (auto evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
+		usesOptimizedCodeGenerator = _optimizeStackAllocation && evmDialect->evmVersion() > langutil::EVMVersion::homestead();
 	bool allowMSizeOptimzation = !MSizeFinder::containsMSize(_dialect, *_object.code);
-	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
+	if (usesOptimizedCodeGenerator)
 	{
-		map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
-		if (stackSurplus.empty())
-			return true;
-
-		if (stackSurplus.count(YulString{}))
-		{
-			yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
-			eliminateVariables(
-				_dialect,
-				std::get<Block>(_object.code->statements.at(0)),
-				static_cast<size_t>(stackSurplus.at({})),
-				allowMSizeOptimzation
-			);
-		}
-
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
+		unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, *_object.code);
+		Block& mainBlock = std::get<Block>(_object.code->statements.at(0));
+		if (
+			auto stackTooDeepErrors = StackLayoutGenerator::reportStackTooDeep(*cfg, YulString{});
+			!stackTooDeepErrors.empty()
+		)
+			eliminateVariables(_dialect, mainBlock, stackTooDeepErrors, allowMSizeOptimzation);
 		for (size_t i = 1; i < _object.code->statements.size(); ++i)
 		{
 			auto& fun = std::get<FunctionDefinition>(_object.code->statements[i]);
-			if (!stackSurplus.count(fun.name))
-				continue;
-
-			yulAssert(stackSurplus.at(fun.name) > 0, "Invalid surplus value.");
-			eliminateVariables(
-				_dialect,
-				fun,
-				static_cast<size_t>(stackSurplus.at(fun.name)),
-				allowMSizeOptimzation
-			);
+			if (
+				auto stackTooDeepErrors = StackLayoutGenerator::reportStackTooDeep(*cfg, fun.name);
+				!stackTooDeepErrors.empty()
+			)
+				eliminateVariables(_dialect, fun.body, stackTooDeepErrors, allowMSizeOptimzation);
 		}
 	}
+	else
+		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
+		{
+			map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
+			if (stackSurplus.empty())
+				return true;
+
+			if (stackSurplus.count(YulString{}))
+			{
+				yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
+				eliminateVariables(
+					_dialect,
+					std::get<Block>(_object.code->statements.at(0)),
+					static_cast<size_t>(stackSurplus.at({})),
+					allowMSizeOptimzation
+				);
+			}
+
+			for (size_t i = 1; i < _object.code->statements.size(); ++i)
+			{
+				auto& fun = std::get<FunctionDefinition>(_object.code->statements[i]);
+				if (!stackSurplus.count(fun.name))
+					continue;
+
+				yulAssert(stackSurplus.at(fun.name) > 0, "Invalid surplus value.");
+				eliminateVariables(
+					_dialect,
+					fun,
+					static_cast<size_t>(stackSurplus.at(fun.name)),
+					allowMSizeOptimzation
+				);
+			}
+		}
 	return false;
 }
 
