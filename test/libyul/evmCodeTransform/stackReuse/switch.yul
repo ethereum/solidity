@@ -2,25 +2,23 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x0
-// DUP1
-// PUSH1 0x0
-// DUP2
-// EQ
-// PUSH1 0x11
-// JUMPI
-// PUSH1 0x3
-// SWAP2
-// POP
-// PUSH1 0x18
-// JUMP
-// JUMPDEST
-// PUSH1 0x2
-// POP
-// PUSH1 0x3
-// POP
-// JUMPDEST
-// POP
-// POP
-// PUSH1 0x9
-// POP
+//     /* "":11:12   */
+//   0x00
+//     /* "":27:28   */
+//   0x00
+//   eq
+//   tag_1
+//   jumpi
+// tag_2:
+//     /* "":70:71   */
+//   pop(0x03)
+// tag_3:
+//     /* "":83:84   */
+//   0x09
+//   stop
+// tag_1:
+//     /* "":40:41   */
+//   pop(0x02)
+//     /* "":51:52   */
+//   pop(0x03)
+//   jump(tag_3)

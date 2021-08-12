@@ -5,36 +5,31 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x12
-// JUMP
-// JUMPDEST
-// PUSH1 0x0
-// PUSH1 0x0
-// PUSH1 0x0
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// SWAP2
-// SWAP3
-// SWAP4
-// JUMP
-// JUMPDEST
-// PUSH1 0x18
-// PUSH1 0x3
-// JUMP
-// JUMPDEST
-// POP
-// PUSH1 0x2
-// SWAP2
-// POP
-// PUSH1 0x3
-// DUP4
-// DUP4
-// MSTORE
-// DUP2
-// DUP2
-// MSTORE
-// POP
-// POP
-// POP
-// POP
+//   tag_1
+//     /* "":58:61   */
+//   tag_2
+//   jump	// in
+// tag_1:
+//   pop
+//   swap2
+//   swap1
+//   pop
+//     /* "":72:73   */
+//   0x02
+//   swap1
+//     /* "":84:85   */
+//   0x03
+//   swap2
+//     /* "":86:99   */
+//   mstore
+//     /* "":100:113   */
+//   mstore
+//   stop
+//     /* "":6:35   */
+// tag_2:
+//   0x00
+//   0x00
+//   0x00
+//   0x00
+//   swap4
+//   jump	// out

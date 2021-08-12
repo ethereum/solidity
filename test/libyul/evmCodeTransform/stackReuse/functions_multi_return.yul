@@ -10,51 +10,53 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x14
-// JUMP
-// JUMPDEST
-// POP
-// POP
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// JUMP
-// JUMPDEST
-// PUSH1 0x0
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// SWAP2
-// JUMP
-// JUMPDEST
-// PUSH1 0x1E
-// PUSH1 0x2
-// PUSH1 0x1
-// PUSH1 0x3
-// JUMP
-// JUMPDEST
-// PUSH1 0x28
-// PUSH1 0x4
-// PUSH1 0x3
-// PUSH1 0x3
-// JUMP
-// JUMPDEST
-// SWAP1
-// POP
-// POP
-// PUSH1 0x31
-// PUSH1 0xB
-// JUMP
-// JUMPDEST
-// PUSH1 0x37
-// PUSH1 0xB
-// JUMP
-// JUMPDEST
-// SWAP2
-// POP
-// SWAP2
-// POP
-// POP
-// POP
-// PUSH1 0x7
-// POP
+//   tag_1
+//     /* "":79:80   */
+//   0x02
+//     /* "":76:77   */
+//   0x01
+//     /* "":74:81   */
+//   tag_2
+//   jump	// in
+// tag_1:
+//   pop
+//   tag_3
+//     /* "":96:97   */
+//   0x04
+//     /* "":93:94   */
+//   0x03
+//     /* "":91:98   */
+//   tag_2
+//   jump	// in
+// tag_3:
+//   pop
+//   tag_4
+//     /* "":115:118   */
+//   tag_5
+//   jump	// in
+// tag_4:
+//   pop
+//   pop
+//   tag_6
+//     /* "":131:134   */
+//   tag_5
+//   jump	// in
+// tag_6:
+//   pop
+//   pop
+//     /* "":153:154   */
+//   0x07
+//   stop
+//     /* "":6:31   */
+// tag_2:
+//   pop
+//   pop
+//   0x00
+//   swap1
+//   jump	// out
+//     /* "":36:60   */
+// tag_5:
+//   0x00
+//   0x00
+//   swap2
+//   jump	// out

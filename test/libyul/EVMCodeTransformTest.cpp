@@ -20,6 +20,9 @@
 #include <test/libyul/Common.h>
 
 #include <libyul/AssemblyStack.h>
+#include <libyul/backends/evm/EthAssemblyAdapter.h>
+
+#include <libevmasm/Assembly.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -56,7 +59,13 @@ TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = evmasm::disassemble(stack.assemble(AssemblyStack::Machine::EVM).bytecode->bytecode, "\n");
+	evmasm::Assembly assembly;
+	EthAssemblyAdapter adapter(assembly);
+	stack.compileEVM(adapter, m_stackOpt);
+
+	std::ostringstream output;
+	output << assembly;
+	m_obtainedResult = output.str();
 
 	return checkResult(_stream, _linePrefix, _formatted);
 }

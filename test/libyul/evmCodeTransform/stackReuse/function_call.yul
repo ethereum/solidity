@@ -6,28 +6,30 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x9
-// PUSH1 0x2
-// PUSH1 0x1
-// PUSH1 0xD
-// JUMP
-// JUMPDEST
-// PUSH1 0x15
-// JUMP
-// JUMPDEST
-// POP
-// POP
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// JUMP
-// JUMPDEST
-// PUSH1 0x1F
-// PUSH1 0x4
-// PUSH1 0x3
-// PUSH1 0xD
-// JUMP
-// JUMPDEST
-// SWAP1
-// POP
-// POP
+//   tag_1
+//     /* "":20:21   */
+//   0x02
+//     /* "":17:18   */
+//   0x01
+//     /* "":15:22   */
+//   tag_2
+//   jump	// in
+// tag_1:
+//   pop
+//   tag_3
+//     /* "":67:68   */
+//   0x04
+//     /* "":64:65   */
+//   0x03
+//     /* "":62:69   */
+//   tag_2
+//   jump	// in
+// tag_3:
+//   stop
+//     /* "":27:52   */
+// tag_2:
+//   pop
+//   pop
+//   0x00
+//   swap1
+//   jump	// out
