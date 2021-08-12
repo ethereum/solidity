@@ -29,6 +29,25 @@ using namespace std;
 namespace solidity::yul::test
 {
 
+namespace
+{
+bool triggersStackTooDeep(Stack _source, Stack const& _target)
+{
+	bool result = false;
+	createStackLayout(_source, _target, [&](unsigned _i) {
+		if (_i > 16)
+			result = true;
+	}, [&](StackSlot const& _slot) {
+		if (canBeFreelyGenerated(_slot))
+			return;
+		if (auto depth = util::findOffset(_source | ranges::views::reverse, _slot); depth && *depth >= 16)
+			if (*depth >= 16)
+				result = true;
+	}, [&]() {});
+	return result;
+}
+}
+
 BOOST_AUTO_TEST_SUITE(StackHelpers)
 
 BOOST_AUTO_TEST_CASE(avoid_deep_dup)
@@ -74,8 +93,7 @@ BOOST_AUTO_TEST_CASE(avoid_deep_dup)
 		VariableSlot{variableContainer[14]}, // While "optimal", bringing this slot up first will make the next unreachable.
 		VariableSlot{variableContainer[0]}
 	}};
-	auto unreachable = OptimizedEVMCodeTransform::tryCreateStackLayout(from, to, {});
-	BOOST_CHECK(unreachable.empty());
+	BOOST_CHECK(!triggersStackTooDeep(from, to));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

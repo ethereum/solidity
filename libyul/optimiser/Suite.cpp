@@ -96,8 +96,7 @@ void OptimiserSuite::run(
 	bool usesOptimizedCodeGenerator =
 		_optimizeStackAllocation &&
 		evmDialect &&
-		evmDialect->evmVersion().canOverchargeGasForCall() &&
-		evmDialect->providesObjectAccess();
+		evmDialect->evmVersion().canOverchargeGasForCall();
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
