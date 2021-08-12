@@ -151,7 +151,7 @@ The full contract
 
         constructor() payable {}
 
-        function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) public {
+        function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) external {
             require(!usedNonces[nonce]);
             usedNonces[nonce] = true;
 
@@ -164,7 +164,7 @@ The full contract
         }
 
         /// destroy the contract and reclaim the leftover funds.
-        function shutdown() public {
+        function shutdown() external {
             require(msg.sender == owner);
             selfdestruct(payable(msg.sender));
         }
@@ -357,7 +357,7 @@ The full contract
         /// the recipient can close the channel at any time by presenting a
         /// signed amount from the sender. the recipient will be sent that amount,
         /// and the remainder will go back to the sender
-        function close(uint256 amount, bytes memory signature) public {
+        function close(uint256 amount, bytes memory signature) external {
             require(msg.sender == recipient);
             require(isValidSignature(amount, signature));
 
@@ -366,7 +366,7 @@ The full contract
         }
 
         /// the sender can extend the expiration at any time
-        function extend(uint256 newExpiration) public {
+        function extend(uint256 newExpiration) external {
             require(msg.sender == sender);
             require(newExpiration > expiration);
 
@@ -375,7 +375,7 @@ The full contract
 
         /// if the timeout is reached without the recipient closing the channel,
         /// then the Ether is released back to the sender.
-        function claimTimeout() public {
+        function claimTimeout() external {
             require(block.timestamp >= expiration);
             selfdestruct(sender);
         }
