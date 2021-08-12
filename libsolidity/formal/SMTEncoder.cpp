@@ -1916,6 +1916,9 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks(
 	IntegerType const& _type
 )
 {
+	if (m_settings.divModNoSlacks)
+		return {_left / _right, _left % _right};
+
 	IntegerType const* intType = &_type;
 	string suffix = "div_mod_" + to_string(m_context.newUniqueId());
 	smt::SymbolicIntVariable dSymb(intType, intType, "d_" + suffix, m_context);
@@ -3031,6 +3034,15 @@ void SMTEncoder::createFreeConstants(set<SourceUnit const*, ASTNode::CompareByID
 		for (auto node: source->nodes())
 			if (auto var = dynamic_cast<VariableDeclaration const*>(node.get()))
 				createVariable(*var);
+			else if (
+				auto contract = dynamic_cast<ContractDefinition const*>(node.get());
+				contract && contract->isLibrary()
+			)
+				for (auto var: contract->stateVariables())
+				{
+					solAssert(var->isConstant(), "");
+					createVariable(*var);
+				}
 }
 
 smt::SymbolicState& SMTEncoder::state()

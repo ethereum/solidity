@@ -702,16 +702,13 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 {
 	unsigned startStackHeight = m_context.stackHeight();
-	yul::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](yul::Identifier const& _identifier, yul::IdentifierContext, bool)
+	yul::ExternalIdentifierAccess::CodeGenerator identifierAccessCodeGen = [&](
+		yul::Identifier const& _identifier,
+		yul::IdentifierContext _context,
+		yul::AbstractAssembly& _assembly
+	)
 	{
-		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
-		if (ref == _inlineAssembly.annotation().externalReferences.end())
-			return numeric_limits<size_t>::max();
-		return ref->second.valueSize;
-	};
-	identifierAccess.generateCode = [&](yul::Identifier const& _identifier, yul::IdentifierContext _context, yul::AbstractAssembly& _assembly)
-	{
+		solAssert(_context == yul::IdentifierContext::RValue || _context == yul::IdentifierContext::LValue, "");
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		solAssert(ref != _inlineAssembly.annotation().externalReferences.end(), "");
 		Declaration const* decl = ref->second.declaration;
@@ -918,7 +915,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		*analysisInfo,
 		*m_context.assemblyPtr(),
 		m_context.evmVersion(),
-		identifierAccess,
+		identifierAccessCodeGen,
 		false,
 		m_optimiserSettings.optimizeStackAllocation
 	);

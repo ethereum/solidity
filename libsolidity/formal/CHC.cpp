@@ -967,7 +967,7 @@ void CHC::resetSourceAnalysis()
 		m_context.setSolver(smtlib2Interface->smtlib2Interface());
 	}
 
-	m_context.clear();
+	m_context.reset();
 	m_context.resetUniqueId();
 	m_context.setAssertionAccumulation(false);
 }

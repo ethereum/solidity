@@ -169,10 +169,12 @@ at each version. Backward compatibility is not guaranteed between each version.
    - The compiler behaves the same way as with constantinople.
 - ``istanbul``
    - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
-- ``berlin`` (**default**)
+- ``berlin``
    - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
      compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
      the optimizer.
+- ``london`` (**default**)
+   - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
 
 
 .. index:: ! standard JSON, ! --standard-json
@@ -400,13 +402,23 @@ Input Description
             "source1.sol": ["contract1"],
             "source2.sol": ["contract2", "contract3"]
           },
+          // Choose whether division and modulo operations should be replaced by
+          // multiplication with slack variables. Default is `true`.
+          // Using `false` here is recommended if you are using the CHC engine
+          // and not using Spacer as the Horn solver (using Eldarica, for example).
+          // See the Formal Verification section for a more detailed explanation of this option.
+          "divModWithSlacks": true,
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
           // Choose whether to output all unproved targets. The default is `false`.
           "showUnproved": true,
+          // Choose which solvers should be used, if available.
+          // See the Formal Verification section for the solvers description.
+          "solvers": ["cvc4", "smtlib2", "z3"],
           // Choose which targets should be checked: constantCondition,
           // underflow, overflow, divByZero, balance, assert, popEmptyArray, outOfBounds.
-          // If the option is not given all targets are checked by default.
+          // If the option is not given all targets are checked by default,
+          // except underflow/overflow for Solidity >=0.8.7.
           // See the Formal Verification section for the targets description.
           "targets": ["underflow", "overflow", "assert"],
           // Timeout for each SMT query in milliseconds.

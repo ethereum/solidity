@@ -28,8 +28,8 @@ set -e
 
 REPODIR="$(realpath "$(dirname "$0")"/..)"
 
-EVM_VALUES=(homestead byzantium constantinople petersburg istanbul berlin)
-DEFAULT_EVM=berlin
+EVM_VALUES=(homestead byzantium constantinople petersburg istanbul berlin london)
+DEFAULT_EVM=london
 [[ " ${EVM_VALUES[*]} " =~ $DEFAULT_EVM ]]
 OPTIMIZE_VALUES=(0 1)
 STEPS=$(( 1 + ${#EVM_VALUES[@]} * ${#OPTIMIZE_VALUES[@]} ))

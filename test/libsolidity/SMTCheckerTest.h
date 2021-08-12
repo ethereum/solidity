@@ -43,16 +43,19 @@ public:
 	void filterObtainedErrors() override;
 
 protected:
-	/// This contains engine and timeout.
-	/// The engine can be set via option SMTEngine in the test.
-	/// The possible options are `all`, `chc`, `bmc`, `none`,
-	/// where the default is `all`.
-	ModelCheckerSettings m_modelCheckerSettings;
+	/*
+	Options that can be set in the test:
+	SMTEngine: `all`, `chc`, `bmc`, `none`, where the default is `all`.
+		Set in m_modelCheckerSettings.
+	SMTIgnoreCex: `yes`, `no`, where the default is `no`.
+		Set in m_ignoreCex.
+	SMTShowUnproved: `yes`, `no`, where the default is `yes`.
+		Set in m_modelCheckerSettings.
+	SMTSolvers: `all`, `cvc4`, `z3`, `none`, where the default is `all`.
+		Set in m_modelCheckerSettings.
+	*/
 
-	/// This is set via option SMTSolvers in the test.
-	/// The possible options are `all`, `z3`, `cvc4`, `none`,
-	/// where if none is given the default used option is `all`.
-	smtutil::SMTSolverChoice m_enabledSolvers;
+	ModelCheckerSettings m_modelCheckerSettings;
 
 	bool m_ignoreCex = false;
 };

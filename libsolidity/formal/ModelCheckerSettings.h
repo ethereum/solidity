@@ -91,7 +91,10 @@ enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, Unde
 
 struct ModelCheckerTargets
 {
+	/// Adds the default targets, that is, all except underflow and overflow.
 	static ModelCheckerTargets Default() { return *fromString("default"); }
+	/// Adds all targets, including underflow and overflow.
+	static ModelCheckerTargets All() { return *fromString("all"); }
 
 	static std::optional<ModelCheckerTargets> fromString(std::string const& _targets);
 
@@ -112,6 +115,13 @@ struct ModelCheckerTargets
 struct ModelCheckerSettings
 {
 	ModelCheckerContracts contracts = ModelCheckerContracts::Default();
+	/// Currently division and modulo are replaced by multiplication with slack vars, such that
+	/// a / b <=> a = b * k + m
+	/// where k and m are slack variables.
+	/// This is the default because Spacer prefers that over precise / and mod.
+	/// This option allows disabling this mechanism since other solvers
+	/// might prefer the precise encoding.
+	bool divModNoSlacks = false;
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
 	bool showUnproved = false;
 	smtutil::SMTSolverChoice solvers = smtutil::SMTSolverChoice::All();
@@ -123,6 +133,7 @@ struct ModelCheckerSettings
 	{
 		return
 			contracts == _other.contracts &&
+			divModNoSlacks == _other.divModNoSlacks &&
 			engine == _other.engine &&
 			showUnproved == _other.showUnproved &&
 			solvers == _other.solvers &&

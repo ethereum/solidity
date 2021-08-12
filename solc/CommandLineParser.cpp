@@ -86,6 +86,7 @@ static string const g_strMetadata = "metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerContracts = "model-checker-contracts";
+static string const g_strModelCheckerDivModNoSlacks = "model-checker-div-mod-no-slacks";
 static string const g_strModelCheckerEngine = "model-checker-engine";
 static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved";
 static string const g_strModelCheckerSolvers = "model-checker-solvers";
@@ -522,7 +523,7 @@ General Information)").c_str(),
 			g_strEVMVersion.c_str(),
 			po::value<string>()->value_name("version")->default_value(EVMVersion{}.name()),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
-			"byzantium, constantinople, petersburg, istanbul or berlin."
+			"byzantium, constantinople, petersburg, istanbul, berlin or london."
 		)
 		(
 			g_strExperimentalViaIR.c_str(),
@@ -721,14 +722,18 @@ General Information)").c_str(),
 			"and no spaces."
 		)
 		(
+			g_strModelCheckerDivModNoSlacks.c_str(),
+			"Encode division and modulo operations with their precise operators"
+			" instead of multiplication with slack variables."
+		)
+		(
 			g_strModelCheckerEngine.c_str(),
 			po::value<string>()->value_name("all,bmc,chc,none")->default_value("none"),
 			"Select model checker engine."
 		)
 		(
 			g_strModelCheckerShowUnproved.c_str(),
-			po::value<bool>()->value_name("false,true")->default_value(false),
-			"Select whether to show all unproved targets."
+			"Show all unproved targets separately."
 		)
 		(
 			g_strModelCheckerSolvers.c_str(),
@@ -737,10 +742,10 @@ General Information)").c_str(),
 		)
 		(
 			g_strModelCheckerTargets.c_str(),
-			po::value<string>()->value_name("default,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
+			po::value<string>()->value_name("default,all,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
 			"Select model checker verification targets. "
-			"Multiple targets can be selected at the same time, separated by a comma "
-			"and no spaces."
+			"Multiple targets can be selected at the same time, separated by a comma and no spaces."
+			" By default all targets except underflow and overflow are selected."
 		)
 		(
 			g_strModelCheckerTimeout.c_str(),
@@ -1092,6 +1097,9 @@ General Information)").c_str(),
 		m_options.modelChecker.settings.contracts = move(*contracts);
 	}
 
+	if (m_args.count(g_strModelCheckerDivModNoSlacks))
+		m_options.modelChecker.settings.divModNoSlacks = true;
+
 	if (m_args.count(g_strModelCheckerEngine))
 	{
 		string engineStr = m_args[g_strModelCheckerEngine].as<string>();
@@ -1105,10 +1113,7 @@ General Information)").c_str(),
 	}
 
 	if (m_args.count(g_strModelCheckerShowUnproved))
-	{
-		bool showUnproved = m_args[g_strModelCheckerShowUnproved].as<bool>();
-		m_options.modelChecker.settings.showUnproved = showUnproved;
-	}
+		m_options.modelChecker.settings.showUnproved = true;
 
 	if (m_args.count(g_strModelCheckerSolvers))
 	{
@@ -1140,6 +1145,7 @@ General Information)").c_str(),
 	m_options.metadata.literalSources = (m_args.count(g_strMetadataLiteral) > 0);
 	m_options.modelChecker.initialize =
 		m_args.count(g_strModelCheckerContracts) ||
+		m_args.count(g_strModelCheckerDivModNoSlacks) ||
 		m_args.count(g_strModelCheckerEngine) ||
 		m_args.count(g_strModelCheckerShowUnproved) ||
 		m_args.count(g_strModelCheckerSolvers) ||

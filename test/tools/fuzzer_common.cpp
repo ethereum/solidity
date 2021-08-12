@@ -104,6 +104,7 @@ void FuzzerUtil::testCompiler(
 		forceSMT(_input);
 		compiler.setModelCheckerSettings({
 			frontend::ModelCheckerContracts::Default(),
+			/*divModWithSlacks*/true,
 			frontend::ModelCheckerEngine::All(),
 			/*showUnproved=*/false,
 			smtutil::SMTSolverChoice::All(),

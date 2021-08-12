@@ -1,0 +1,13 @@
+Warning: CHC: Error trying to invoke SMT solver.
+ --> model_checker_divModSlacks_false_all/input.sol:6:11:
+  |
+6 | 		return (a / b, a % b);
+  | 		        ^^^^^
+
+Warning: CHC: Error trying to invoke SMT solver.
+ --> model_checker_divModSlacks_false_all/input.sol:6:18:
+  |
+6 | 		return (a / b, a % b);
+  | 		               ^^^^^
+
+Warning: CHC: 2 verification condition(s) could not be proved. Enable the model checker option "show unproved" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
