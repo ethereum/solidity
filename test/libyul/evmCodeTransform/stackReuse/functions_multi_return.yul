@@ -10,51 +10,62 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x14
-// JUMP
-// JUMPDEST
-// POP
-// POP
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// JUMP
-// JUMPDEST
-// PUSH1 0x0
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// SWAP2
-// JUMP
-// JUMPDEST
-// PUSH1 0x1E
-// PUSH1 0x2
-// PUSH1 0x1
-// PUSH1 0x3
-// JUMP
-// JUMPDEST
-// PUSH1 0x28
-// PUSH1 0x4
-// PUSH1 0x3
-// PUSH1 0x3
-// JUMP
-// JUMPDEST
-// SWAP1
-// POP
-// POP
-// PUSH1 0x31
-// PUSH1 0xB
-// JUMP
-// JUMPDEST
-// PUSH1 0x37
-// PUSH1 0xB
-// JUMP
-// JUMPDEST
-// SWAP2
-// POP
-// SWAP2
-// POP
-// POP
-// POP
-// PUSH1 0x7
-// POP
+//     /* "":74:81   */
+//   tag_1
+//     /* "":79:80   */
+//   0x02
+//     /* "":76:77   */
+//   0x01
+//     /* "":74:81   */
+//   tag_2
+//   jump	// in
+// tag_1:
+//     /* "":91:98   */
+//   pop
+//   tag_3
+//     /* "":96:97   */
+//   0x04
+//     /* "":93:94   */
+//   0x03
+//     /* "":91:98   */
+//   tag_2
+//   jump	// in
+// tag_3:
+//     /* "":115:118   */
+//   pop
+//   tag_4
+//   tag_5
+//   jump	// in
+// tag_4:
+//     /* "":131:134   */
+//   pop
+//   pop
+//   tag_6
+//   tag_5
+//   jump	// in
+// tag_6:
+//     /* "":139:154   */
+//   pop
+//   pop
+//     /* "":153:154   */
+//   0x07
+//     /* "":0:156   */
+//   stop
+//     /* "":6:31   */
+// tag_2:
+//   pop
+//   pop
+//     /* "":26:27   */
+//   0x00
+//     /* "":6:31   */
+//   swap1
+//   jump	// out
+//     /* "":36:60   */
+// tag_5:
+//     /* "":55:56   */
+//   0x00
+//     /* "":52:53   */
+//   0x00
+//     /* "":36:60   */
+//   swap2
+//   jump	// out

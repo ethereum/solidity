@@ -4,11 +4,10 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x8
-// JUMP
-// JUMPDEST
-// POP
-// POP
-// JUMPDEST
-// JUMP
-// JUMPDEST
+//     /* "":0:28   */
+//   stop
+//     /* "":6:26   */
+// tag_1:
+//   pop
+//   pop
+//   jump	// out

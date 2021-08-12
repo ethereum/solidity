@@ -3,15 +3,22 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x0
-// MLOAD
-// DUP1
-// ISZERO
-// PUSH1 0xA
-// JUMPI
-// DUP1
-// POP
-// JUMPDEST
-// POP
-// PUSH1 0x3
-// POP
+//     /* "":72:73   */
+//   0x00
+//     /* "":66:74   */
+//   mload
+//     /* "":75:94   */
+//   dup1
+//   tag_1
+//   jumpi
+//     /* "":55:107   */
+// tag_2:
+//     /* "":95:105   */
+//   pop
+//     /* "":104:105   */
+//   0x03
+//     /* "":55:107   */
+//   stop
+//     /* "":80:94   */
+// tag_1:
+//   jump(tag_2)
