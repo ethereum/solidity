@@ -62,6 +62,6 @@ contract C {
 // via yul disabled because of stack issues.
 
 // ====
-// compileViaYul: false
+// compileViaYul: also
 // ----
 // constructor() ->

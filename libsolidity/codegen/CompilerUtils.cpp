@@ -55,7 +55,7 @@ void CompilerUtils::initialiseFreeMemoryPointer()
 {
 	size_t reservedMemory = m_context.reservedMemory();
 	solAssert(bigint(generalPurposeMemoryStart) + bigint(reservedMemory) < bigint(1) << 63, "");
-	m_context << (u256(generalPurposeMemoryStart) + reservedMemory);
+	m_context << m_context.makeFreeMemoryInitPush((u256(generalPurposeMemoryStart) + reservedMemory));
 	storeFreeMemoryPointer();
 }
 

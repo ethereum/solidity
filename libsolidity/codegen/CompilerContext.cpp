@@ -484,7 +484,7 @@ void CompilerContext::appendInlineAssembly(
 		obj.code = parserResult;
 		obj.analysisInfo = make_shared<yul::AsmAnalysisInfo>(analysisInfo);
 
-		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
+		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers, _system);
 
 		if (_system)
 		{
@@ -531,7 +531,13 @@ void CompilerContext::appendInlineAssembly(
 }
 
 
-void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulString> const& _externalIdentifiers)
+void CompilerContext::optimizeYul(
+	yul::Object& _object,
+	yul::EVMDialect const& _dialect,
+	OptimiserSettings const& _optimiserSettings,
+	std::set<yul::YulString> const& _externalIdentifiers,
+	bool _system
+)
 {
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(*dialect)(*_object.code) << endl;
@@ -539,6 +545,7 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 
 	bool const isCreation = runtimeContext() != nullptr;
 	yul::GasMeter meter(_dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
+	solAssert(m_freeMemoryInitPush, "");
 	yul::OptimiserSuite::run(
 		_dialect,
 		&meter,
@@ -546,7 +553,8 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 		_optimiserSettings.optimizeStackAllocation,
 		_optimiserSettings.yulOptimiserSteps,
 		isCreation? nullopt : make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
-		_externalIdentifiers
+		_externalIdentifiers,
+		_system ? m_freeMemoryInitPush : shared_ptr<u256>{}
 	);
 
 #ifdef SOL_OUTPUT_ASM

@@ -66,7 +66,8 @@ public:
 		bool _optimizeStackAllocation,
 		std::string const& _optimisationSequence,
 		std::optional<size_t> _expectedExecutionsPerDeployment,
-		std::set<YulString> const& _externallyUsedIdentifiers = {}
+		std::set<YulString> const& _externallyUsedIdentifiers = {},
+		std::shared_ptr<u256> _externalFreeMemoryPointerInitializer = {}
 	);
 
 	/// Ensures that specified sequence of step abbreviations is well-formed and can be executed.
@@ -91,10 +92,18 @@ private:
 		std::set<YulString> const& _externallyUsedIdentifiers,
 		Debug _debug,
 		Block& _ast,
-		std::optional<size_t> expectedExecutionsPerDeployment
+		std::optional<size_t> expectedExecutionsPerDeployment,
+		std::shared_ptr<u256> _externalFreeMemoryPointerInitializer = {}
+
 	):
 		m_dispenser{_dialect, _ast, _externallyUsedIdentifiers},
-		m_context{_dialect, m_dispenser, _externallyUsedIdentifiers, expectedExecutionsPerDeployment},
+		m_context{
+			_dialect,
+			m_dispenser,
+			_externallyUsedIdentifiers,
+			expectedExecutionsPerDeployment,
+			_externalFreeMemoryPointerInitializer
+		},
 		m_debug(_debug)
 	{}
 

@@ -89,7 +89,8 @@ void OptimiserSuite::run(
 	bool _optimizeStackAllocation,
 	string const& _optimisationSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
-	set<YulString> const& _externallyUsedIdentifiers
+	set<YulString> const& _externallyUsedIdentifiers,
+	std::shared_ptr<u256> _externalFreeMemoryPointerInitializer
 )
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
@@ -107,7 +108,14 @@ void OptimiserSuite::run(
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast, _expectedExecutionsPerDeployment);
+	OptimiserSuite suite(
+		_dialect,
+		reservedIdentifiers,
+		Debug::None,
+		ast,
+		_expectedExecutionsPerDeployment,
+		_externalFreeMemoryPointerInitializer
+	);
 
 	// Some steps depend on properties ensured by FunctionHoister, BlockFlattener, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
@@ -144,10 +152,9 @@ void OptimiserSuite::run(
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
 			);
-			if (evmDialect->providesObjectAccess())
-				StackLimitEvader::run(suite.m_context, _object);
+			StackLimitEvader::run(suite.m_context, _object);
 		}
-		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
+		else if (_optimizeStackAllocation)
 			StackLimitEvader::run(suite.m_context, _object);
 	}
 	else if (dynamic_cast<WasmDialect const*>(&_dialect))
