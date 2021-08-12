@@ -124,10 +124,7 @@ void StackLimitEvader::run(
 )
 {
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
-	yulAssert(
-		evmDialect && evmDialect->providesObjectAccess(),
-		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
-	);
+	yulAssert(evmDialect, "StackLimitEvader can only be run on objects using the EVMDialect.");
 	if (evmDialect && evmDialect->evmVersion() > langutil::EVMVersion::homestead())
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _object);
@@ -165,26 +162,30 @@ void StackLimitEvader::run(
 {
 	yulAssert(_object.code, "");
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
-	yulAssert(
-		evmDialect && evmDialect->providesObjectAccess(),
-		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
-	);
+	yulAssert(evmDialect, "StackLimitEvader can only be run on objects using the EVMDialect.");
 
-	vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
-		*_object.code,
-		"memoryguard"_yulstring
-	);
-	// Do not optimise, if no ``memoryguard`` call is found.
-	if (memoryGuardCalls.empty())
-		return;
+	u256 reservedMemory = 0;
 
-	// Make sure all calls to ``memoryguard`` we found have the same value as argument (otherwise, abort).
-	u256 reservedMemory = literalArgumentValue(*memoryGuardCalls.front());
-	yulAssert(reservedMemory < u256(1) << 32 - 1, "");
-
-	for (FunctionCall const* memoryGuardCall: memoryGuardCalls)
-		if (reservedMemory != literalArgumentValue(*memoryGuardCall))
+	if (_context.externalFreeMemoryPointerInitializer)
+		reservedMemory = *_context.externalFreeMemoryPointerInitializer;
+	else
+	{
+		vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
+			*_object.code,
+			"memoryguard"_yulstring
+		);
+		// Do not optimise, if no ``memoryguard`` call is found.
+		if (memoryGuardCalls.empty())
 			return;
+
+		// Make sure all calls to ``memoryguard`` we found have the same value as argument (otherwise, abort).
+		reservedMemory = literalArgumentValue(*memoryGuardCalls.front());
+		yulAssert(reservedMemory < u256(1) << 32 - 1, "");
+
+		for (FunctionCall const* memoryGuardCall: memoryGuardCalls)
+			if (reservedMemory != literalArgumentValue(*memoryGuardCall))
+				return;
+	}
 
 	CallGraph callGraph = CallGraphGenerator::callGraph(*_object.code);
 
@@ -195,6 +196,11 @@ void StackLimitEvader::run(
 
 	map<YulString, FunctionDefinition const*> functionDefinitions = FunctionDefinitionCollector::run(*_object.code);
 
+	if (_context.externalFreeMemoryPointerInitializer)
+		// Simulate calls from outer block to all defined functions.
+		for (auto functionDef: functionDefinitions)
+			callGraph.functionCalls[YulString{}].insert(functionDef.first);
+
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
 	yulAssert(requiredSlots < (uint64_t(1) << 32) - 1, "");
@@ -202,10 +208,13 @@ void StackLimitEvader::run(
 	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, *_object.code);
 
 	reservedMemory += 32 * requiredSlots;
-	for (FunctionCall* memoryGuardCall: FunctionCallFinder::run(*_object.code, "memoryguard"_yulstring))
-	{
-		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
-		yulAssert(literal && literal->kind == LiteralKind::Number, "");
-		literal->value = YulString{util::toCompactHexWithPrefix(reservedMemory)};
-	}
+	if (_context.externalFreeMemoryPointerInitializer)
+		*_context.externalFreeMemoryPointerInitializer = reservedMemory;
+	else
+		for (FunctionCall* memoryGuardCall: FunctionCallFinder::run(*_object.code, "memoryguard"_yulstring))
+		{
+			Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
+			yulAssert(literal && literal->kind == LiteralKind::Number, "");
+			literal->value = YulString{util::toCompactHexWithPrefix(reservedMemory)};
+		}
 }

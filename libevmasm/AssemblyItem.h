@@ -63,6 +63,9 @@ public:
 
 	AssemblyItem(u256 _push, langutil::SourceLocation _location = langutil::SourceLocation()):
 		AssemblyItem(Push, std::move(_push), std::move(_location)) { }
+	/// Used only for the free memory pointer as "memoryguard". Should probably be replaced by a separate AssemblyItemType.
+	AssemblyItem(std::shared_ptr<u256> _pushData, langutil::SourceLocation _location = langutil::SourceLocation()):
+		m_type(Push), m_data(std::move(_pushData)), m_location(std::move(_location)) { }
 	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
 		m_type(Operation),
 		m_instruction(_i),
