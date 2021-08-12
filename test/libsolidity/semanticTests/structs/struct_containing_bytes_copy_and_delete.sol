@@ -25,9 +25,9 @@ contract c {
 // ----
 // storageEmpty -> 1
 // set(uint256,bytes,uint256): 12, 0x60, 13, 33, "12345678901234567890123456789012", "3" -> true
-// gas irOptimized: 133819
+// gas irOptimized: 133752
 // gas legacy: 134436
-// gas legacyOptimized: 133879
+// gas legacyOptimized: 133811
 // test(uint256): 32 -> "3"
 // storageEmpty -> 0
 // copy() -> true

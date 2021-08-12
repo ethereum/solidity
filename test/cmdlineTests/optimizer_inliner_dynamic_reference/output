@@ -152,20 +152,23 @@ sub_0: assembly {
       jump	// out
         /* "#utility.yul":196:421   */
     tag_22:
-        /* "#utility.yul":236:239   */
-      0x00
-        /* "#utility.yul":267:268   */
-      dup3
+      dup2
         /* "#utility.yul":263:269   */
       not
-        /* "#utility.yul":260:261   */
-      dup3
+      dup2
         /* "#utility.yul":257:270   */
       gt
-        /* "#utility.yul":254:390   */
-      iszero
-      tag_30
+      tag_27
       jumpi
+        /* "#utility.yul":406:415   */
+      add
+      swap1
+        /* "#utility.yul":196:421   */
+      jump	// out
+    tag_27:
+      pop
+      pop
+      pop
         /* "#utility.yul":312:322   */
       0x4e487b71
         /* "#utility.yul":307:310   */
@@ -188,16 +191,9 @@ sub_0: assembly {
       0x00
         /* "#utility.yul":365:380   */
       revert
-        /* "#utility.yul":254:390   */
-    tag_30:
-      pop
-        /* "#utility.yul":406:415   */
-      add
-      swap1
-        /* "#utility.yul":196:421   */
-      jump	// out
         /* "#utility.yul":426:553   */
     tag_26:
+      pop
         /* "#utility.yul":487:497   */
       0x4e487b71
         /* "#utility.yul":482:485   */

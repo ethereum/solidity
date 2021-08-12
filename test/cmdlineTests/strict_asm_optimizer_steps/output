@@ -25,7 +25,7 @@ object "C_6" {
 
 
 Binary representation:
-60806040523415600e57600080fd5b600e601c600039600e6000f3fe60806040523615600055600080fd
+608060405234601557600e601b600039600e6000f35b600080fdfe60806040523615600055600080fd
 
 Text representation:
     /* "strict_asm_optimizer_steps/input.yul":45:48   */
@@ -35,19 +35,7 @@ Text representation:
     /* "strict_asm_optimizer_steps/input.yul":34:49   */
   mstore
     /* "strict_asm_optimizer_steps/input.yul":61:72   */
-  callvalue
-    /* "strict_asm_optimizer_steps/input.yul":58:89   */
-  iszero
-  tag_1
-  jumpi
-    /* "strict_asm_optimizer_steps/input.yul":85:86   */
-  0x00
-    /* "strict_asm_optimizer_steps/input.yul":82:83   */
-  dup1
-    /* "strict_asm_optimizer_steps/input.yul":75:87   */
-  revert
-    /* "strict_asm_optimizer_steps/input.yul":58:89   */
-tag_1:
+  jumpi(tag_1, callvalue)
     /* "strict_asm_optimizer_steps/input.yul":138:162   */
   dataSize(sub_0)
     /* "strict_asm_optimizer_steps/input.yul":110:136   */
@@ -62,6 +50,12 @@ tag_1:
   0x00
     /* "strict_asm_optimizer_steps/input.yul":172:207   */
   return
+tag_1:
+    /* "strict_asm_optimizer_steps/input.yul":85:86   */
+  0x00
+  dup1
+    /* "strict_asm_optimizer_steps/input.yul":75:87   */
+  revert
 stop
 
 sub_0: assembly {
@@ -81,7 +75,6 @@ sub_0: assembly {
       sstore
         /* "strict_asm_optimizer_steps/input.yul":576:577   */
       0x00
-        /* "strict_asm_optimizer_steps/input.yul":573:574   */
       dup1
         /* "strict_asm_optimizer_steps/input.yul":566:578   */
       revert

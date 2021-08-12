@@ -11,7 +11,7 @@ IR:
 object "C_81" {
     code {
         /// @src 0:82:370
-        mstore(64, 128)
+        mstore(64, memoryguard(128))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_C_81()
@@ -41,7 +41,7 @@ object "C_81" {
     object "C_81_deployed" {
         code {
             /// @src 0:82:370
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {

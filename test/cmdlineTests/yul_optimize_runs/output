@@ -21,7 +21,7 @@ object "RunsTest1" {
 
 
 Binary representation:
-602480600d600039806000f3fe7fabc1234500000000000000000000000000000000000000000000000000000000600052
+602580600c6000396000f3fe7fabc123450000000000000000000000000000000000000000000000000000000060005200
 
 Text representation:
     /* "yul_optimize_runs/input.yul":106:125   */
@@ -33,8 +33,6 @@ Text representation:
   0x00
     /* "yul_optimize_runs/input.yul":71:126   */
   codecopy
-    /* "yul_optimize_runs/input.yul":145:164   */
-  dup1
     /* "yul_optimize_runs/input.yul":80:81   */
   0x00
     /* "yul_optimize_runs/input.yul":135:165   */
@@ -48,5 +46,5 @@ sub_0: assembly {
       0x00
         /* "yul_optimize_runs/input.yul":270:288   */
       mstore
+      stop
 }
-

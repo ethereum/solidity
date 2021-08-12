@@ -11,7 +11,7 @@ object "C_7" {
     code {
         {
             /// @src 0:80:112
-            mstore(64, 128)
+            mstore(64, memoryguard(0x80))
             if callvalue()
             {
                 revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
@@ -29,7 +29,7 @@ object "C_7" {
         code {
             {
                 /// @src 0:80:112
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 if iszero(lt(calldatasize(), 4))
                 {
                     let selector := shift_right_unsigned(calldataload(0))

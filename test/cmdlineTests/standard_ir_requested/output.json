@@ -10,7 +10,7 @@
 object \"C_7\" {
     code {
         /// @src 0:79:121
-        mstore(64, 128)
+        mstore(64, memoryguard(128))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_C_7()
@@ -40,7 +40,7 @@ object \"C_7\" {
     object \"C_7_deployed\" {
         code {
             /// @src 0:79:121
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {

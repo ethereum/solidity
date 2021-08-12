@@ -11,18 +11,19 @@ object "Arraysum_34" {
     code {
         {
             /// @src 0:80:429
-            mstore(64, 128)
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("Arraysum_34_deployed")
-            codecopy(128, dataoffset("Arraysum_34_deployed"), _1)
-            return(128, _1)
+            let _2 := datasize("Arraysum_34_deployed")
+            codecopy(_1, dataoffset("Arraysum_34_deployed"), _2)
+            return(_1, _2)
         }
     }
     object "Arraysum_34_deployed" {
         code {
             {
                 /// @src 0:80:429
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0

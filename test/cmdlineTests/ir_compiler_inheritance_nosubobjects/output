@@ -11,18 +11,19 @@ object "C_7" {
     code {
         {
             /// @src 0:82:117
-            mstore(64, 128)
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_7_deployed")
-            codecopy(128, dataoffset("C_7_deployed"), _1)
-            return(128, _1)
+            let _2 := datasize("C_7_deployed")
+            codecopy(_1, dataoffset("C_7_deployed"), _2)
+            return(_1, _2)
         }
     }
     object "C_7_deployed" {
         code {
             {
                 /// @src 0:82:117
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
@@ -43,18 +44,19 @@ object "D_10" {
     code {
         {
             /// @src 0:118:137
-            mstore(64, 128)
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_10_deployed")
-            codecopy(128, dataoffset("D_10_deployed"), _1)
-            return(128, _1)
+            let _2 := datasize("D_10_deployed")
+            codecopy(_1, dataoffset("D_10_deployed"), _2)
+            return(_1, _2)
         }
     }
     object "D_10_deployed" {
         code {
             {
                 /// @src 0:118:137
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }

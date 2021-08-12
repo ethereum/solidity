@@ -11,18 +11,19 @@ object "C_59" {
     code {
         {
             /// @src 0:346:625
-            mstore(64, 128)
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_59_deployed")
-            codecopy(128, dataoffset("C_59_deployed"), _1)
-            return(128, _1)
+            let _2 := datasize("C_59_deployed")
+            codecopy(_1, dataoffset("C_59_deployed"), _2)
+            return(_1, _2)
         }
     }
     object "C_59_deployed" {
         code {
             {
                 /// @src 0:346:625
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0

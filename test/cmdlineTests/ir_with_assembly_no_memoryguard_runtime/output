@@ -11,11 +11,12 @@ object "D_8" {
     code {
         {
             /// @src 0:82:153
-            mstore(64, 128)
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_8_deployed")
-            codecopy(128, dataoffset("D_8_deployed"), _1)
-            return(128, _1)
+            let _2 := datasize("D_8_deployed")
+            codecopy(_1, dataoffset("D_8_deployed"), _2)
+            return(_1, _2)
         }
     }
     object "D_8_deployed" {

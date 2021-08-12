@@ -54,18 +54,18 @@ contract C {
 // ----
 // test_zeroed_indicies(uint256): 1 ->
 // test_zeroed_indicies(uint256): 5 ->
-// gas irOptimized: 131736
+// gas irOptimized: 131197
 // gas legacy: 132367
-// gas legacyOptimized: 129586
+// gas legacyOptimized: 129458
 // test_zeroed_indicies(uint256): 10 ->
-// gas irOptimized: 175795
+// gas irOptimized: 174805
 // gas legacy: 177329
-// gas legacyOptimized: 172224
+// gas legacyOptimized: 171961
 // test_zeroed_indicies(uint256): 15 ->
-// gas irOptimized: 199485
+// gas irOptimized: 198055
 // gas legacy: 201954
-// gas legacyOptimized: 194604
+// gas legacyOptimized: 194206
 // test_zeroed_indicies(uint256): 0xFF ->
-// gas irOptimized: 6123320
+// gas irOptimized: 6098185
 // gas legacy: 6163149
-// gas legacyOptimized: 6029474
+// gas legacyOptimized: 6022596

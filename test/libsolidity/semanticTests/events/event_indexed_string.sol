@@ -19,6 +19,6 @@ contract C {
 // ----
 // deposit() ->
 // ~ emit E(string,uint256[4]): #0xa7fb06bb999a5eb9aff9e0779953f4e1e4ce58044936c2f51c7fb879b85c08bd, #0xe755d8cc1a8cde16a2a31160dcd8017ac32d7e2f13215b29a23cdae40a78aa81
-// gas irOptimized: 353515
+// gas irOptimized: 343396
 // gas legacy: 390742
-// gas legacyOptimized: 376774
+// gas legacyOptimized: 372772

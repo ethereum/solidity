@@ -5,6 +5,7 @@
   mload
     /* \"A\":20:40   */
   sstore
+  stop
 ","bytecode":{"functionDebugData":{},"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"object\" {
     code {
         let x := mload(0)

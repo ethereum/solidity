@@ -18,6 +18,8 @@
         extcodecopy(1, msize(), 1, 1)
     }
 }
+// ====
+// EVMVersion: =homestead
 // ----
 // step: stackCompressor
 //

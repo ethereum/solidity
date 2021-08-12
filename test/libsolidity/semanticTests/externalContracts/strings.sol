@@ -51,26 +51,26 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 776466
+// gas irOptimized: 709526
 // gas legacy: 1188228
-// gas legacyOptimized: 749336
+// gas legacyOptimized: 735032
 // toSlice(string): 0x20, 11, "hello world" -> 11, 0xa0
-// gas irOptimized: 22723
+// gas irOptimized: 22660
 // gas legacy: 23190
-// gas legacyOptimized: 22508
+// gas legacyOptimized: 22449
 // roundtrip(string): 0x20, 11, "hello world" -> 0x20, 11, "hello world"
-// gas irOptimized: 23513
+// gas irOptimized: 23408
 // gas legacy: 23820
-// gas legacyOptimized: 23123
+// gas legacyOptimized: 23072
 // utf8len(string): 0x20, 16, "\xf0\x9f\x98\x83\xf0\x9f\x98\x83\xf0\x9f\x98\x83\xf0\x9f\x98\x83" -> 4 # Input: "😃😃😃😃" #
-// gas irOptimized: 24266
+// gas irOptimized: 24026
 // gas legacy: 25716
-// gas legacyOptimized: 24115
+// gas legacyOptimized: 23978
 // multiconcat(string,uint256): 0x40, 3, 11, "hello world" -> 0x20, 0x58, 0x68656c6c6f20776f726c6468656c6c6f20776f726c6468656c6c6f20776f726c, 0x6468656c6c6f20776f726c6468656c6c6f20776f726c6468656c6c6f20776f72, 49027192869463622675296414541903001712009715982962058146354235762728281047040 # concatenating 3 times #
-// gas irOptimized: 28962
+// gas irOptimized: 28449
 // gas legacy: 31621
-// gas legacyOptimized: 27914
+// gas legacyOptimized: 27691
 // benchmark(string,bytes32): 0x40, 0x0842021, 8, "solidity" -> 0x2020
-// gas irOptimized: 2235661
+// gas irOptimized: 2040097
 // gas legacy: 4381235
-// gas legacyOptimized: 2317529
+// gas legacyOptimized: 2166117

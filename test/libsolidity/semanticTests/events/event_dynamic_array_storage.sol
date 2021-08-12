@@ -15,6 +15,6 @@ contract C {
 // ----
 // createEvent(uint256): 42 ->
 // ~ emit E(uint256[]): 0x20, 0x03, 0x2a, 0x2b, 0x2c
-// gas irOptimized: 114816
+// gas irOptimized: 114746
 // gas legacy: 116393
-// gas legacyOptimized: 114415
+// gas legacyOptimized: 114385

@@ -25,6 +25,7 @@ object "a" {
 //   calldataload
 //     /* "source":107:127   */
 //   sstore
+//   stop
 // stop
 //
 // sub_0: assembly {
@@ -35,7 +36,8 @@ object "a" {
 //       calldataload
 //         /* "source":253:273   */
 //       sstore
+//       stop
 // }
-// Bytecode: 6000803555fe
-// Opcodes: PUSH1 0x0 DUP1 CALLDATALOAD SSTORE INVALID
-// SourceMappings: 48:1:0:-:0;;35:15;107:20
+// Bytecode: 600080355500fe
+// Opcodes: PUSH1 0x0 DUP1 CALLDATALOAD SSTORE STOP INVALID
+// SourceMappings: 48:1:0:-:0;;35:15;107:20;

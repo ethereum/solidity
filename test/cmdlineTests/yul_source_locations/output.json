@@ -10,7 +10,7 @@
 object \"C_54\" {
     code {
         /// @src 0:79:428
-        mstore(64, 160)
+        mstore(64, memoryguard(160))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         let _1 := copy_arguments_for_constructor_20_object_C_54()
@@ -151,7 +151,7 @@ object \"C_54\" {
     object \"C_54_deployed\" {
         code {
             /// @src 0:79:428
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {
@@ -551,7 +551,7 @@ object \"C_54\" {
 object \"D_72\" {
     code {
         /// @src 1:91:166
-        mstore(64, 160)
+        mstore(64, memoryguard(160))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         let _1 := copy_arguments_for_constructor_71_object_D_72()
@@ -755,7 +755,7 @@ object \"D_72\" {
     object \"D_72_deployed\" {
         code {
             /// @src 1:91:166
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {

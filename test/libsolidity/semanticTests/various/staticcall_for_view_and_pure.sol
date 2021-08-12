@@ -38,10 +38,10 @@ contract D {
 // f() -> 0x1 # This should work, next should throw #
 // gas legacy: 103844
 // fview() -> FAILURE
-// gas irOptimized: 98438630
+// gas irOptimized: 98438627
 // gas legacy: 98438803
 // gas legacyOptimized: 98438596
 // fpure() -> FAILURE
-// gas irOptimized: 98438630
+// gas irOptimized: 98438627
 // gas legacy: 98438803
 // gas legacyOptimized: 98438597

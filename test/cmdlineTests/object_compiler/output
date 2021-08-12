@@ -23,7 +23,7 @@ object "MyContract" {
 
 
 Binary representation:
-33600055600b806011600039806000f3fe60005460005260206000f3
+33600055600b8060106000396000f3fe60005460005260206000f3
 
 Text representation:
     /* "object_compiler/input.yul":128:136   */
@@ -41,8 +41,6 @@ Text representation:
   0x00
     /* "object_compiler/input.yul":205:260   */
   codecopy
-    /* "object_compiler/input.yul":275:294   */
-  dup1
     /* "object_compiler/input.yul":125:126   */
   0x00
     /* "object_compiler/input.yul":265:295   */
