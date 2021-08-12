@@ -276,7 +276,13 @@ public:
 	/// Otherwise returns "revert(0, 0)".
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
-	void optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSetting, std::set<yul::YulString> const& _externalIdentifiers = {});
+	void optimizeYul(
+		yul::Object& _object,
+		yul::EVMDialect const& _dialect,
+		OptimiserSettings const& _optimiserSetting,
+		std::set<yul::YulString> const& _externalIdentifiers = {},
+		bool _system = false
+	);
 
 	/// Appends arbitrary data to the end of the bytecode.
 	void appendToAuxiliaryData(bytes const& _data) { m_asm->appendToAuxiliaryData(_data); }
@@ -308,6 +314,12 @@ public:
 	void setModifierDepth(size_t _modifierDepth) { m_asm->m_currentModifierDepth = _modifierDepth; }
 
 	RevertStrings revertStrings() const { return m_revertStrings; }
+
+	evmasm::AssemblyItem makeFreeMemoryInitPush(u256 _value)
+	{
+		m_freeMemoryInitPush = std::make_shared<u256>(_value);
+		return evmasm::AssemblyItem(m_freeMemoryInitPush);
+	}
 
 private:
 	/// Updates source location set in the assembly.
@@ -394,6 +406,8 @@ private:
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
 	/// Flag to check that appendYulUtilityFunctions() was called exactly once
 	bool m_appendYulUtilityFunctionsRan = false;
+	/// The assembly item that pushes the initial value of the free memory pointer.
+	std::shared_ptr<u256> m_freeMemoryInitPush;
 };
 
 }

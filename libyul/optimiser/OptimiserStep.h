@@ -20,6 +20,8 @@
 
 #include <libyul/Exceptions.h>
 
+#include <libsolutil/Common.h>
+
 #include <optional>
 #include <string>
 #include <set>
@@ -39,6 +41,7 @@ struct OptimiserStepContext
 	std::set<YulString> const& reservedIdentifiers;
 	/// The value nullopt represents creation code
 	std::optional<size_t> expectedExecutionsPerDeployment;
+	std::shared_ptr<u256> externalFreeMemoryPointerInitializer{};
 };
 
 
