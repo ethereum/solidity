@@ -92,6 +92,11 @@ void OptimiserSuite::run(
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {
+	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
+	bool usesOptimizedCodeGenerator =
+		_optimizeStackAllocation &&
+		evmDialect &&
+		evmDialect->evmVersion() > langutil::EVMVersion::homestead();
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
@@ -118,24 +123,32 @@ void OptimiserSuite::run(
 
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
-	StackCompressor::run(
-		_dialect,
-		_object,
-		_optimizeStackAllocation,
-		stackCompressorMaxIterations
-	);
+	if (!usesOptimizedCodeGenerator)
+		StackCompressor::run(
+			_dialect,
+			_object,
+			_optimizeStackAllocation,
+			stackCompressorMaxIterations
+		);
 	suite.runSequence("fDnTOc g", ast);
 
-	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
+	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{*dialect, *_meter}(ast);
-		if (dialect->providesObjectAccess() && _optimizeStackAllocation)
-			StackLimitEvader::run(suite.m_context, _object, CompilabilityChecker{
+		ConstantOptimiser{*evmDialect, *_meter}(ast);
+		if (usesOptimizedCodeGenerator)
+		{
+			StackCompressor::run(
 				_dialect,
 				_object,
-				_optimizeStackAllocation
-			}.unreachableVariables);
+				_optimizeStackAllocation,
+				stackCompressorMaxIterations
+			);
+			if (evmDialect->providesObjectAccess())
+				StackLimitEvader::run(suite.m_context, _object);
+		}
+		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
+			StackLimitEvader::run(suite.m_context, _object);
 	}
 	else if (dynamic_cast<WasmDialect const*>(&_dialect))
 	{
