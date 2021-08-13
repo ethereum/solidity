@@ -523,7 +523,7 @@ General Information)").c_str(),
 			g_strEVMVersion.c_str(),
 			po::value<string>()->value_name("version")->default_value(EVMVersion{}.name()),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
-			"byzantium, constantinople, petersburg, istanbul or berlin."
+			"byzantium, constantinople, petersburg, istanbul, berlin or london."
 		)
 		(
 			g_strExperimentalViaIR.c_str(),
@@ -733,8 +733,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strModelCheckerShowUnproved.c_str(),
-			po::value<bool>()->value_name("false,true")->default_value(false),
-			"Select whether to show all unproved targets."
+			"Show all unproved targets separately."
 		)
 		(
 			g_strModelCheckerSolvers.c_str(),
@@ -1114,10 +1113,7 @@ General Information)").c_str(),
 	}
 
 	if (m_args.count(g_strModelCheckerShowUnproved))
-	{
-		bool showUnproved = m_args[g_strModelCheckerShowUnproved].as<bool>();
-		m_options.modelChecker.settings.showUnproved = showUnproved;
-	}
+		m_options.modelChecker.settings.showUnproved = true;
 
 	if (m_args.count(g_strModelCheckerSolvers))
 	{

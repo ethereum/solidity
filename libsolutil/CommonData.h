@@ -295,6 +295,31 @@ decltype(auto) mapTuple(Callable&& _callable)
 	return detail::MapTuple<Callable>{std::forward<Callable>(_callable)};
 }
 
+/// Merges map @a _b into map @a _a. If the same key exists in both maps,
+/// calls @a _conflictSolver to combine the two values.
+template <class K, class V, class F>
+void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
+{
+	auto ita = _a.begin();
+	auto aend = _a.end();
+	auto itb = _b.begin();
+	auto bend = _b.end();
+
+	for (; itb != bend; ++ita)
+	{
+		if (ita == aend)
+			ita = _a.insert(ita, std::move(*itb++));
+		else if (ita->first < itb->first)
+			continue;
+		else if (itb->first < ita->first)
+			ita = _a.insert(ita, std::move(*itb++));
+		else
+		{
+			_conflictSolver(ita->second, std::move(itb->second));
+			++itb;
+		}
+	}
+}
 
 // String conversion functions, mainly to/from hex/nibble/byte representations.
 

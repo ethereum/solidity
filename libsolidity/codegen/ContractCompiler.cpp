@@ -708,6 +708,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		yul::AbstractAssembly& _assembly
 	)
 	{
+		solAssert(_context == yul::IdentifierContext::RValue || _context == yul::IdentifierContext::LValue, "");
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		solAssert(ref != _inlineAssembly.annotation().externalReferences.end(), "");
 		Declaration const* decl = ref->second.declaration;

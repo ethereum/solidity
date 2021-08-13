@@ -553,8 +553,6 @@ BoolResult IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		return (!isSigned() && (numBits() == fixedBytesType->numBytes() * 8));
 	else if (dynamic_cast<EnumType const*>(&_convertTo))
 		return true;
-	else if (auto fixedPointType = dynamic_cast<FixedPointType const*>(&_convertTo))
-		return (isSigned() == fixedPointType->isSigned()) && (numBits() == fixedPointType->numBits());
 
 	return false;
 }
@@ -689,7 +687,7 @@ BoolResult FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) con
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
 		if (convertTo.fractionalDigits() < m_fractionalDigits)
-			return BoolResult::err("Too many fractional digits.");
+			return BoolResult::err("Conversion would incur precision loss - use explicit conversion instead.");
 		if (convertTo.numBits() < m_totalBits)
 			return false;
 		else
@@ -700,7 +698,28 @@ BoolResult FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) con
 
 BoolResult FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
+	if (isImplicitlyConvertibleTo(_convertTo))
+		return true;
+	if (FixedBytesType const* convertTo = dynamic_cast<FixedBytesType const*>(&_convertTo))
+		return 8 * convertTo->numBytes() == m_totalBits;
+	if (FixedPointType const* convertTo = dynamic_cast<FixedPointType const*>(&_convertTo))
+	{
+		// It was not implicitly convertible, so we either lose precision or value range (can also be signedness).
+		size_t changes = 0;
+		if (convertTo->numBits() != numBits()) changes++;
+		if (convertTo->isSigned() != isSigned()) changes++;
+		if (convertTo->fractionalDigits() != fractionalDigits()) changes++;
+		solAssert(changes != 0, "");
+		if (changes > 1)
+			return BoolResult::err("Can only change one of precision, number of bits and signedness at the same time.");
+		return true;
+	}
+	if (IntegerType const* convertTo = dynamic_cast<IntegerType const*>(&_convertTo))
+		return
+			maxIntegerValue() <= convertTo->maxValue() &&
+			minIntegerValue() >= convertTo->minValue();
+
+	return false;
 }
 
 TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
@@ -714,8 +733,7 @@ TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
 	case Token::Sub:
 	case Token::Inc:
 	case Token::Dec:
-		// for fixed, we allow +, -, ++ and --
-		return this;
+		return TypeResult::err("Arithmetic operators on fixed point types are not yet supported.");
 	default:
 		return nullptr;
 	}
@@ -737,19 +755,31 @@ string FixedPointType::toString(bool) const
 
 bigint FixedPointType::maxIntegerValue() const
 {
-	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
-	return maxValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
+	rational max = maxValue();
+	return max.numerator() / max.denominator();
 }
 
 bigint FixedPointType::minIntegerValue() const
 {
+	rational min = minValue();
+	return min.numerator() / min.denominator();
+}
+
+rational FixedPointType::maxValue() const
+{
+	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
+	return rational(maxValue) / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
+}
+
+rational FixedPointType::minValue() const
+{
 	if (isSigned())
 	{
-		bigint minValue = -(bigint(1) << (m_totalBits - (isSigned() ? 1 : 0)));
-		return minValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
+		bigint minValue = -(bigint(1) << (m_totalBits - 1));
+		return rational(minValue) / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 	}
 	else
-		return bigint(0);
+		return rational{0};
 }
 
 TypeResult FixedPointType::binaryOperatorResult(Token _operator, Type const* _other) const
@@ -764,7 +794,8 @@ TypeResult FixedPointType::binaryOperatorResult(Token _operator, Type const* _ot
 		return commonType;
 	if (TokenTraits::isBitOp(_operator) || TokenTraits::isBooleanOp(_operator) || _operator == Token::Exp)
 		return nullptr;
-	return commonType;
+
+	return TypeResult::err("Arithmetic operators on fixed point types are not yet supported.");
 }
 
 IntegerType const* FixedPointType::asIntegerType() const
@@ -966,11 +997,24 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 	else if (category == Category::Integer)
 		return false;
 	else if (auto enumType = dynamic_cast<EnumType const*>(&_convertTo))
+	{
 		if (isNegative() || isFractional() || m_value >= enumType->numberOfMembers())
 			return false;
+	}
+	else if (auto fixedPointType = dynamic_cast<FixedPointType const*>(&_convertTo))
+	{
+		if (value() < fixedPointType->minValue())
+			return BoolResult::err("Value is too small.");
+		else if (value() > fixedPointType->maxValue())
+			return BoolResult::err("Value is too large.");
+		else
+			return true;
+	}
 
 	Type const* mobType = mobileType();
-	return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
+	if (!mobType)
+		return false;
+	return mobType->isExplicitlyConvertibleTo(_convertTo);
 
 }
 
@@ -986,9 +1030,9 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		if (isFractional())
-			return TypeResult::err("Fractional literals not supported.");
-		else if (!integerType())
+		if (isFractional() && !fixedPointType())
+			return TypeResult::err("Literal too large or cannot be represented without precision loss.");
+		else if (!isFractional() && !integerType())
 			return TypeResult::err("Literal too large.");
 
 		// Shift and exp are not symmetric, so it does not make sense to swap
@@ -3892,7 +3936,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			{"difficulty", TypeProvider::uint256()},
 			{"number", TypeProvider::uint256()},
 			{"gaslimit", TypeProvider::uint256()},
-			{"chainid", TypeProvider::uint256()}
+			{"chainid", TypeProvider::uint256()},
+			{"basefee", TypeProvider::uint256()}
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({

@@ -65,6 +65,7 @@ private:
  *   - TODO: potentially storage of contracts
  * - block and transaction properties, represented as a tuple of:
  *   - blockhash
+ *   - block basefee
  *   - block chainid
  *   - block coinbase
  *   - block difficulty
@@ -191,6 +192,7 @@ private:
 	BlockchainVariable m_tx{
 		"tx",
 		{
+			{"block.basefee", smtutil::SortProvider::uintSort},
 			{"block.chainid", smtutil::SortProvider::uintSort},
 			{"block.coinbase", smt::smtSort(*TypeProvider::address())},
 			{"block.difficulty", smtutil::SortProvider::uintSort},

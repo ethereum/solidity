@@ -19,7 +19,7 @@
 
 #include <libsolutil/AnsiColorized.h>
 
-#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <optional>
 #include <stdexcept>

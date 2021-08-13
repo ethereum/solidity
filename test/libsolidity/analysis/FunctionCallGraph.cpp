@@ -1854,6 +1854,7 @@ BOOST_AUTO_TEST_CASE(builtins)
 				abi.encodePacked;
 				abi.encodeWithSelector;
 				abi.encodeWithSignature;
+				block.basefee;
 				block.chainid;
 				block.coinbase;
 				block.difficulty;
