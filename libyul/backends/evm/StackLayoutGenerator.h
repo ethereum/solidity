@@ -85,10 +85,6 @@ private:
 	/// stack shuffling when starting from the returned layout.
 	static Stack combineStack(Stack const& _stack1, Stack const& _stack2);
 
-	/// Tries to detect stack layout transitions that are bound to cause stack too deep errors and
-	/// attempts to reorganize the layout to avoid those cases.
-	void fixStackTooDeep(CFG::BasicBlock const& _entry);
-
 	/// @returns a copy of @a _stack stripped of all duplicates and slots that can be freely generated.
 	/// Attempts to create a layout that requires a minimal amount of operations to reconstruct the original
 	/// stack @a _stack.

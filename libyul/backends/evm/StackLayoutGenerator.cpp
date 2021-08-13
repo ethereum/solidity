@@ -302,7 +302,6 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 	}
 
 	stitchConditionalJumps(_entry);
-	fixStackTooDeep(_entry);
 }
 
 optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
@@ -446,8 +445,9 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 
 Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _stack2)
 {
-	// TODO: there is probably a better way than brute-forcing. This has n! complexity or worse, so
-	// we can't keep it like this.
+	// TODO: it would be nicer to replace this by a constructive algorithm.
+	// Currently it uses a reduced version of the Heap Algorithm to partly brute-force, which seems
+	// to work decently well.
 
 	Stack commonPrefix;
 	for (auto&& [slot1, slot2]: ranges::zip_view(_stack1, _stack2))
@@ -477,13 +477,6 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 	});
 
 	std::map<size_t, Stack> sortedCandidates;
-
-	// TODO: surprisingly this works for rather comparably large candidate size, but we should probably
-	// set up some limit, since this will quickly explode otherwise.
-	// Ideally we would then have a better fallback mechanism - although returning any naive union of both stacks
-	// like ``candidate`` itself may just be fine.
-	//	if (candidate.size() > 8)
-	//		return candidate;
 
 	auto evaluate = [&](Stack const& _candidate) -> size_t {
 		size_t numOps = 0;
@@ -518,6 +511,9 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 				std::swap(candidate[c[i]], candidate[i]);
 			sortedCandidates.insert(std::make_pair(evaluate(candidate), candidate));
 			++c[i];
+			// Note that for a proper implementation of the Heap algorithm this would need to revert back to ``i = 1.``
+			// However, the incorrect implementation produces decent result and the proper version would have n!
+			// complexity and is thereby not feasible.
 			++i;
 		}
 		else
@@ -528,11 +524,6 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 	}
 
 	return commonPrefix + sortedCandidates.begin()->second;
-}
-
-void StackLayoutGenerator::fixStackTooDeep(CFG::BasicBlock const&)
-{
-	// TODO
 }
 
 Stack StackLayoutGenerator::compressStack(Stack _stack)
