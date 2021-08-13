@@ -108,6 +108,7 @@ detect_stray_source_files("${libsolidity_sources}" "libsolidity/")
 
 set(libsolidity_util_sources
     libsolidity/util/BytesUtils.cpp
+    libsolidity/util/BytesUtilsTests.cpp
     libsolidity/util/BytesUtils.h
     libsolidity/util/ContractABIUtils.cpp
     libsolidity/util/ContractABIUtils.h

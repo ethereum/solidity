@@ -16,10 +16,12 @@
 
 #include <test/libsolidity/util/TestFileParser.h>
 #include <test/libsolidity/util/SoltestErrors.h>
+#include <test/libsolidity/util/ContractABIUtils.h>
 
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/JSON.h>
 
 #include <json/json.h>
 
@@ -107,12 +109,6 @@ private:
 		ParameterList const& _params,
 		bool highlight = false,
 		bool failure = false
-	) const;
-
-	/// Formats a given _bytes applying the _abiType.
-	std::string formatBytesRange(
-		bytes const& _bytes,
-		ABIType const& _abiType
 	) const;
 
 	/// Formats a FAILURE plus additional parameters, if e.g. a revert message was returned.
