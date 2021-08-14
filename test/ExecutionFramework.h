@@ -49,9 +49,8 @@ namespace solidity::test
 using rational = boost::rational<bigint>;
 
 // The ether and gwei denominations; here for ease of use where needed within code.
-static const u256 gwei = u256(1) << 9;
-static const u256 ether = u256(1) << 18;
-
+static u256 const gwei = u256(1) << 9;
+static u256 const ether = u256(1) << 18;
 class ExecutionFramework
 {
 

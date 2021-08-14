@@ -34,6 +34,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <regex>
+#include <string_view>
 
 using namespace std;
 using namespace solidity;
@@ -233,7 +234,7 @@ void DocStringTagParser::parseDocStrings(
 
 	for (auto const& [tagName, tagValue]: _annotation.docTags)
 	{
-		string static const customPrefix("custom:");
+		string_view static constexpr customPrefix("custom:");
 		if (tagName == "custom" || tagName == "custom:")
 			m_errorReporter.docstringParsingError(
 				6564_error,
