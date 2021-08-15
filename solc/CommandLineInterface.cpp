@@ -420,16 +420,10 @@ bool CommandLineInterface::readInputFiles()
 	if (m_fileReader.basePath() != "")
 	{
 		if (!boost::filesystem::exists(m_fileReader.basePath()))
-		{
-			serr() << "Base path does not exist: " << m_fileReader.basePath() << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Base path does not exist: \"" + m_fileReader.basePath().string() + '"');
 
 		if (!boost::filesystem::is_directory(m_fileReader.basePath()))
-		{
-			serr() << "Base path is not a directory: " << m_fileReader.basePath() << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Base path is not a directory: \"" + m_fileReader.basePath().string() + '"');
 	}
 
 	for (boost::filesystem::path const& includePath: m_options.input.includePaths)
@@ -444,16 +438,18 @@ bool CommandLineInterface::readInputFiles()
 	{
 		auto pathToQuotedString = [](boost::filesystem::path const& _path){ return "\"" + _path.string() + "\""; };
 
-		serr() << "Source unit name collision detected. ";
-		serr() << "The specified values of base path and/or include paths would result in multiple ";
-		serr() << "input files being assigned the same source unit name:" << endl;
+		string message =
+			"Source unit name collision detected. "
+			"The specified values of base path and/or include paths would result in multiple "
+			"input files being assigned the same source unit name:\n";
+
 		for (auto const& [sourceUnitName, normalizedInputPaths]: collisions)
 		{
-			serr() << sourceUnitName << " matches: ";
-			serr() << joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) << endl;
+			message += sourceUnitName + " matches: ";
+			message += joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) + "\n";
 		}
 
-		return false;
+		solThrow(CommandLineValidationError, message);
 	}
 
 	for (boost::filesystem::path const& infile: m_options.input.paths)
@@ -461,10 +457,7 @@ bool CommandLineInterface::readInputFiles()
 		if (!boost::filesystem::exists(infile))
 		{
 			if (!m_options.input.ignoreMissingFiles)
-			{
-				serr() << infile << " is not found." << endl;
-				return false;
-			}
+				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not found.");
 			else
 				serr() << infile << " is not found. Skipping." << endl;
 
@@ -474,10 +467,7 @@ bool CommandLineInterface::readInputFiles()
 		if (!boost::filesystem::is_regular_file(infile))
 		{
 			if (!m_options.input.ignoreMissingFiles)
-			{
-				serr() << infile << " is not a valid file." << endl;
-				return false;
-			}
+				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not a valid file.");
 			else
 				serr() << infile << " is not a valid file. Skipping." << endl;
 
@@ -510,10 +500,7 @@ bool CommandLineInterface::readInputFiles()
 	}
 
 	if (m_fileReader.sourceCodes().empty() && !m_standardJsonInput.has_value())
-	{
-		serr() << "All specified input files either do not exist or are not regular files." << endl;
-		return false;
-	}
+		solThrow(CommandLineValidationError, "All specified input files either do not exist or are not regular files.");
 
 	return true;
 }
@@ -647,7 +634,8 @@ bool CommandLineInterface::processInput()
 		outputCompilationResults();
 	}
 
-	return !m_outputFailed;
+	if (m_outputFailed)
+		solThrow(CommandLineOutputError, "Failed to write all output files to disk.");
 }
 
 void CommandLineInterface::printVersion()
@@ -726,8 +714,7 @@ bool CommandLineInterface::compile()
 			}
 			catch (Exception const& _exc)
 			{
-				serr() << string("Failed to import AST: ") << _exc.what() << endl;
-				return false;
+				solThrow(CommandLineExecutionError, "Failed to import AST: "s + _exc.what());
 			}
 		}
 		else
@@ -744,26 +731,28 @@ bool CommandLineInterface::compile()
 			formatter.printErrorInformation(*error);
 		}
 
-		if (!successful)
-			return m_options.input.errorRecovery;
+		if (!successful && !m_options.input.errorRecovery)
+			solThrow(CommandLineExecutionError, "");
 	}
 	catch (CompilerError const& _exception)
 	{
 		m_hasOutput = true;
 		formatter.printExceptionInformation(_exception, "Compiler error");
-		return false;
+		solThrow(CommandLineExecutionError, "");
 	}
 	catch (Error const& _error)
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)
-			serr() << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
+		{
+			serr() << *boost::get_error_info<errinfo_comment>(_error);
+			solThrow(CommandLineExecutionError, "Documentation parsing failed.");
+		}
 		else
 		{
 			m_hasOutput = true;
 			formatter.printExceptionInformation(_error, _error.typeName());
+			solThrow(CommandLineExecutionError, "");
 		}
-
-		return false;
 	}
 
 	return true;
@@ -933,11 +922,11 @@ bool CommandLineInterface::link()
 				*(it + placeholderSize - 2) != '_' ||
 				*(it + placeholderSize - 1) != '_'
 			)
-			{
-				serr() << "Error in binary object file " << src.first << " at position " << (it - src.second.begin()) << endl;
-				serr() << '"' << string(it, it + min(placeholderSize, static_cast<int>(end - it))) << "\" is not a valid link reference." << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineExecutionError,
+					"Error in binary object file " + src.first + " at position " + to_string(it - src.second.begin()) + "\n" +
+					'"' + string(it, it + min(placeholderSize, static_cast<int>(end - it))) + "\" is not a valid link reference."
+				);
 
 			string foundPlaceholder(it, it + placeholderSize);
 			if (librariesReplacements.count(foundPlaceholder))
@@ -973,9 +962,8 @@ void CommandLineInterface::writeLinkedFiles()
 			outFile << src.second;
 			if (!outFile)
 			{
-				serr() << "Could not write to file " << src.first << ". Aborting." << endl;
 				m_outputFailed = true;
-				return;
+				solThrow(CommandLineOutputError, "Could not write to file " + src.first + ". Aborting.");
 			}
 		}
 	sout() << "Linking completed." << endl;
@@ -1041,7 +1029,10 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 	}
 
 	if (!successful)
-		return false;
+	{
+		solAssert(m_hasOutput);
+		solThrow(CommandLineExecutionError, "");
+	}
 
 	for (auto const& src: m_fileReader.sourceCodes())
 	{
