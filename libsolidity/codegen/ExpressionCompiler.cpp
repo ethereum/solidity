@@ -957,6 +957,35 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			);
 			break;
 		}
+		case FunctionType::Kind::Wrap:
+		case FunctionType::Kind::Unwrap:
+		{
+			solAssert(arguments.size() == 1, "");
+			Type const* argumentType = arguments.at(0)->annotation().type;
+			Type const* functionCallType = _functionCall.annotation().type;
+			solAssert(argumentType, "");
+			solAssert(functionCallType, "");
+			FunctionType::Kind kind = functionType->kind();
+			if (kind == FunctionType::Kind::Wrap)
+			{
+				solAssert(
+					argumentType->isImplicitlyConvertibleTo(
+						dynamic_cast<UserDefinedValueType const&>(*functionCallType).underlyingType()
+					),
+					""
+				);
+				solAssert(argumentType->isImplicitlyConvertibleTo(*function.parameterTypes()[0]), "");
+			}
+			else
+				solAssert(
+					dynamic_cast<UserDefinedValueType const&>(*argumentType) ==
+					dynamic_cast<UserDefinedValueType const&>(*function.parameterTypes()[0]),
+					""
+				);
+
+			acceptAndConvert(*arguments[0], *function.parameterTypes()[0]);
+			break;
+		}
 		case FunctionType::Kind::BlockHash:
 		{
 			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
@@ -2154,6 +2183,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		// no-op
 	}
 	else if (dynamic_cast<EnumDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<UserDefinedValueTypeDefinition const*>(declaration))
 	{
 		// no-op
 	}

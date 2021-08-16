@@ -772,6 +772,33 @@ void CompilerUtils::convertType(
 	Type::Category stackTypeCategory = _typeOnStack.category();
 	Type::Category targetTypeCategory = _targetType.category();
 
+	if (stackTypeCategory == Type::Category::UserDefinedValueType)
+	{
+		solAssert(_cleanupNeeded, "");
+		auto& userDefined = dynamic_cast<UserDefinedValueType const&>(_typeOnStack);
+		solAssert(_typeOnStack == _targetType || _targetType == userDefined.underlyingType(), "");
+		return convertType(
+			userDefined.underlyingType(),
+			_targetType,
+			_cleanupNeeded,
+			_chopSignBits,
+			_asPartOfArgumentDecoding
+		);
+	}
+	if (targetTypeCategory == Type::Category::UserDefinedValueType)
+	{
+		solAssert(_cleanupNeeded, "");
+		auto& userDefined = dynamic_cast<UserDefinedValueType const&>(_targetType);
+		solAssert(_typeOnStack.isImplicitlyConvertibleTo(userDefined.underlyingType()), "");
+		return convertType(
+			_typeOnStack,
+			userDefined.underlyingType(),
+			_cleanupNeeded,
+			_chopSignBits,
+			_asPartOfArgumentDecoding
+		);
+	}
+
 	if (auto contrType = dynamic_cast<ContractType const*>(&_typeOnStack))
 		solAssert(!contrType->isSuper(), "Cannot convert magic variable \"super\"");
 
