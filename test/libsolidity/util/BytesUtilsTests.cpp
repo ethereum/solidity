@@ -35,11 +35,11 @@ BOOST_AUTO_TEST_CASE(format_fixed)
 {
 	BOOST_CHECK_EQUAL(
 		BytesUtils::formatFixedPoint(toBigEndian(u256{0}), true, 2),
-		".00"
+		"0.00"
 	);
 	BOOST_CHECK_EQUAL(
 		BytesUtils::formatFixedPoint(toBigEndian(u256{1}), true, 2),
-		".01"
+		"0.01"
 	);
 	BOOST_CHECK_EQUAL(
 		BytesUtils::formatFixedPoint(toBigEndian(u256{123}), true, 2),
@@ -47,11 +47,11 @@ BOOST_AUTO_TEST_CASE(format_fixed)
 	);
 	BOOST_CHECK_EQUAL(
 		BytesUtils::formatFixedPoint(toBigEndian(u256{-1}), true, 2),
-		"-.01"
+		"-0.01"
 	);
 	BOOST_CHECK_EQUAL(
 		BytesUtils::formatFixedPoint(toBigEndian(u256{-12}), true, 2),
-		"-.12"
+		"-0.12"
 	);
 	BOOST_CHECK_EQUAL(
 		BytesUtils::formatFixedPoint(toBigEndian(u256{-123}), true, 2),
