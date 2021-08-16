@@ -553,18 +553,22 @@ Stack StackLayoutGenerator::compressStack(Stack _stack)
 	{
 		if (firstDupOffset)
 		{
-			if (_stack.size() - *firstDupOffset - 1 > 1)
-				std::swap(_stack.at(*firstDupOffset + 1), _stack.back());
 			std::swap(_stack.at(*firstDupOffset), _stack.back());
 			_stack.pop_back();
 			firstDupOffset.reset();
 		}
-		for (auto&& [offset, slot]: _stack | ranges::views::enumerate)
+		for (auto&& [depth, slot]: _stack | ranges::views::reverse | ranges::views::enumerate)
 			if (canBeFreelyGenerated(slot))
-				firstDupOffset = offset;
-			else if (auto dupOffset = util::findOffset(_stack | ranges::views::take(offset), slot))
-				if (_stack.size() - *dupOffset <= 16)
-					firstDupOffset = offset;
+			{
+				firstDupOffset = _stack.size() - depth - 1;
+				break;
+			}
+			else if (auto dupDepth = util::findOffset(_stack | ranges::views::reverse | ranges::views::drop(depth + 1), slot))
+				if (depth + *dupDepth <= 16)
+				{
+					firstDupOffset = _stack.size() - depth - 1;
+					break;
+				}
 	}
 	while (firstDupOffset);
 	return _stack;
