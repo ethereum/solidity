@@ -496,8 +496,6 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 		return holds_alternative<LiteralSlot>(slot) || holds_alternative<FunctionCallReturnLabelSlot>(slot);
 	});
 
-	std::map<size_t, Stack> sortedCandidates;
-
 	auto evaluate = [&](Stack const& _candidate) -> size_t {
 		size_t numOps = 0;
 		Stack testStack = _candidate;
@@ -518,7 +516,8 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 
 	// See https://en.wikipedia.org/wiki/Heap's_algorithm
 	size_t n = candidate.size();
-	sortedCandidates.insert(std::make_pair(evaluate(candidate), candidate));
+	Stack bestCandidate = candidate;
+	size_t bestCost = evaluate(candidate);
 	std::vector<size_t> c(n, 0);
 	size_t i = 1;
 	while (i < n)
@@ -529,7 +528,12 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 				std::swap(candidate.front(), candidate[i]);
 			else
 				std::swap(candidate[c[i]], candidate[i]);
-			sortedCandidates.insert(std::make_pair(evaluate(candidate), candidate));
+			size_t cost = evaluate(candidate);
+			if (cost < bestCost)
+			{
+				bestCost = cost;
+				bestCandidate = candidate;
+			}
 			++c[i];
 			// Note that for a proper implementation of the Heap algorithm this would need to revert back to ``i = 1.``
 			// However, the incorrect implementation produces decent result and the proper version would have n!
@@ -543,7 +547,7 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 		}
 	}
 
-	return commonPrefix + sortedCandidates.begin()->second;
+	return commonPrefix + bestCandidate;
 }
 
 Stack StackLayoutGenerator::compressStack(Stack _stack)
