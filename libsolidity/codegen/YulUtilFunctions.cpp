@@ -494,7 +494,8 @@ string YulUtilFunctions::typedShiftRightFunction(Type const& _type, Type const& 
 
 string YulUtilFunctions::fixedPointShiftFunction(int _digits, bool _signed)
 {
-	string const functionName = "fixed_point_shift_" + to_string(_digits) + (_signed ? "_signed" : "_unsigned");
+	string digitsStr = _digits < 0 ? ("n_" + to_string(-_digits)) : to_string(_digits);
+	string const functionName = "fixed_point_shift_" + digitsStr + (_signed ? "_signed" : "_unsigned");
 	return m_functionCollector.createFunction(functionName, [&](vector<string>& _args, vector<string>& _ret) {
 		_args = {"value"};
 		_ret = {"result"};
