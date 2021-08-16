@@ -108,7 +108,7 @@ Division
 
 Since the type of the result of an operation is always the type of one of
 the operands, division on integers always results in an integer.
-In Solidity, division rounds towards zero. This mean that ``int256(-5) / int256(2) == int256(-2)``.
+In Solidity, division rounds towards zero. This means that ``int256(-5) / int256(2) == int256(-2)``.
 
 Note that in contrast, division on :ref:`literals<rational_literals>` results in fractional values
 of arbitrary precision.
