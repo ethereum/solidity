@@ -63,14 +63,36 @@ StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout, vector<Variable
 
 namespace
 {
-struct PreviousSlot { size_t slot; };
 
+/// @returns the ideal stack to have before executing an operation that outputs @a _operationOutput, s.t.
+/// shuffling to @a _post is cheap.
+/// If @a _generateSlotOnTheFly returns true for a slot, this slot should not occur in the ideal stack, but
+/// rather be generated on the fly during shuffling.
 template<typename Callable>
-Stack createIdealLayout(Stack const& _post, vector<variant<PreviousSlot, StackSlot>> _layout, Callable _generateSlotOnTheFly)
+Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Callable _generateSlotOnTheFly)
 {
-	if (_layout.empty())
+	struct PreviousSlot { size_t slot; };
+
+	// Determine the number of slots that have to be on stack before executing the operation.
+	// That is slots that should not be generated on the fly and are not outputs of the operation.
+	size_t previousLayoutSize = _post.size();
+	for (auto const& slot: _post)
+		if (util::findOffset(_operationOutput, slot) || _generateSlotOnTheFly(slot))
+			--previousLayoutSize;
+
+	// The symbolic layout directly after the operation has the form
+	// PreviousSlot{0}, ..., PreviousSlot{n}, [output<0>], ..., [output<m>]
+	auto layout = ranges::views::iota(0u, previousLayoutSize) |
+		ranges::views::transform([](size_t _index) { return PreviousSlot{_index}; }) |
+		ranges::to<vector<variant<PreviousSlot, StackSlot>>>;
+	layout += _operationOutput;
+
+	// Shortcut for trivial case.
+	if (layout.empty())
 		return Stack{};
 
+	// Next we will shuffle the layout to the post stack using ShuffleOperations
+	// that are aware of PreviousSlot's.
 	struct ShuffleOperations
 	{
 		vector<variant<PreviousSlot, StackSlot>>& layout;
@@ -145,19 +167,23 @@ Stack createIdealLayout(Stack const& _post, vector<variant<PreviousSlot, StackSl
 		void pop() { layout.pop_back(); }
 		void pushOrDupTarget(size_t _offset) { layout.push_back(post.at(_offset)); }
 	};
-
-	Shuffler<ShuffleOperations>::shuffle(_layout, _post, _generateSlotOnTheFly);
+	Shuffler<ShuffleOperations>::shuffle(layout, _post, _generateSlotOnTheFly);
 
 	// Now we can construct the ideal layout before the operation.
-	// "layout" has the declared variables in the desired position and
-	// for any PreviousSlot{x}, x yields the ideal place of the slot before the declaration.
+	// "layout" has shuffled the PreviousSlot{x} to new places using minimal operations to move the operation
+	// output in place. The resulting permutation of the PreviousSlot yields the ideal positions of slots
+	// before the operation, i.e. if PreviousSlot{2} is at a position at which _post contains VariableSlot{"tmp"},
+	// then we want the variable tmp in the slot at offset 2 in the layout before the operation.
 	vector<optional<StackSlot>> idealLayout(_post.size(), nullopt);
-	for (auto const& [slot, idealPosition]: ranges::zip_view(_post, _layout))
+	for (auto const& [slot, idealPosition]: ranges::zip_view(_post, layout))
 		if (PreviousSlot* previousSlot = std::get_if<PreviousSlot>(&idealPosition))
 			idealLayout.at(previousSlot->slot) = slot;
 
+	// The tail of layout must have contained the operation outputs and will not have been assigned slots in the last loop.
 	while (!idealLayout.empty() && !idealLayout.back())
 		idealLayout.pop_back();
+
+	yulAssert(idealLayout.size() == previousLayoutSize, "");
 
 	return idealLayout | ranges::views::transform([](optional<StackSlot> s) {
 		yulAssert(s, "");
@@ -168,8 +194,6 @@ Stack createIdealLayout(Stack const& _post, vector<variant<PreviousSlot, StackSl
 
 Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation)
 {
-	Stack& stack = _exitStack;
-
 	// This is a huge tradeoff between code size, gas cost and stack size.
 	auto generateSlotOnTheFly = [&](StackSlot const&) {
 		//return stack.size() > 12 && canBeFreelyGenerated(_slot);
@@ -177,27 +201,23 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 		return false;
 	};
 
-	size_t previousLayoutSize = stack.size();
-	for (auto const& slot: stack)
-		if (util::findOffset(_operation.output, slot) || generateSlotOnTheFly(slot))
-				--previousLayoutSize;
+	// Determine the ideal permutation of the slots in _exitLayout that are not operation outputs (and not to be
+	// generated on the fly), s.t. shuffling the stack+_operation.output to _exitLayout is cheap.
+	Stack stack = createIdealLayout(_operation.output, _exitStack, generateSlotOnTheFly);
 
-	auto layout = ranges::views::iota(0u, previousLayoutSize) |
-		ranges::views::transform([](size_t _index) { return PreviousSlot{_index}; }) |
-		ranges::to<vector<variant<PreviousSlot, StackSlot>>>;
-	// The call produces a known sequence of values.
-	layout += _operation.output;
-
-	stack = createIdealLayout(stack, layout, generateSlotOnTheFly);
-
+	// Make sure the resulting previous slots do not overlap with any assignmed variables.
 	if (auto const* assignment = get_if<CFG::Assignment>(&_operation.operation))
 		for (auto& stackSlot: stack)
 			if (auto const* varSlot = get_if<VariableSlot>(&stackSlot))
 				yulAssert(!util::findOffset(assignment->variables, *varSlot), "");
 
-	for (StackSlot const& input: _operation.input)
-		stack.emplace_back(input);
+	// Since stack+_operation.output can be easily shuffled to _exitLayout, the desired layout before the operation
+	// is stack+_operation.input;
+	stack += _operation.input;
 
+	// Store the exact desired operation entry layout. The stored layout will be recreated by the code transform
+	// before executing the operation. However, this recreation can produce slots that can be freely generated or
+	// are duplicated, i.e. we can compress the stack afterwards without causing problems for code generation later.
 	m_layout.operationEntryLayout[&_operation] = stack;
 
 	// Remove anything from the stack top that can be freely generated or dupped from deeper on the stack.
