@@ -149,6 +149,27 @@ private:
 						return true;
 					}
 			}
+			// This slot needs to be moved.
+			else if (!_ops.isCompatible(sourceOffset, sourceOffset))
+			{
+				// If the current top fixes the slot, swap it down now.
+				if (_ops.isCompatible(_ops.sourceSize() - 1, sourceOffset))
+				{
+					_ops.swap(_ops.sourceSize() - sourceOffset - 1);
+					return true;
+				}
+				// Bring up a slot to fix this now, if possible.
+				if (bringUpTargetSlot(_ops, sourceOffset))
+					return true;
+				// Otherwise swap up the slot that swill fix the offending slot.
+				for (auto offset: ranges::views::iota(sourceOffset + 1, _ops.sourceSize()))
+					if (_ops.isCompatible(offset, sourceOffset))
+					{
+						_ops.swap(_ops.sourceSize() - offset - 1);
+						return true;
+					}
+				// Otherwise give up - we will need stack compression or stack limit evasion.
+			}
 		}
 		return false;
 	}
@@ -161,7 +182,7 @@ private:
 	/// we can (recursively) try bringing up the slot that is supposed to end up at ``nextOffset`` in the *target*.
 	/// When the target slot at ``nextOffset`` is fixed, the current source slot at ``nextOffset`` will be
 	/// at the stack top, which is the slot required at @a _targetOffset.
-	static void bringUpTargetSlot(ShuffleOperations& _ops, size_t _targetOffset)
+	static bool bringUpTargetSlot(ShuffleOperations& _ops, size_t _targetOffset)
 	{
 		std::list<size_t> toVisit{_targetOffset};
 		std::set<size_t> visited;
@@ -174,7 +195,7 @@ private:
 			if (_ops.targetMultiplicity(offset) > 0)
 			{
 				_ops.pushOrDupTarget(offset);
-				return;
+				return true;
 			}
 			// The desired target slot must already be somewhere else on stack right now.
 			for (auto nextOffset: ranges::views::iota(0u, std::min(_ops.sourceSize(), _ops.targetSize())))
@@ -185,7 +206,7 @@ private:
 					if (!visited.count(nextOffset))
 						toVisit.emplace_back(nextOffset);
 		}
-		yulAssert(false, "");
+		return false;
 	}
 	/// Performs a single stack operation, transforming the source layout closer to the target layout.
 	template<typename... Args>
@@ -203,7 +224,7 @@ private:
 			if (ops.sourceSize() < ops.targetSize())
 			{
 				if (!dupDeepSlotIfRequired(ops))
-					bringUpTargetSlot(ops, ops.sourceSize());
+					yulAssert(bringUpTargetSlot(ops, ops.sourceSize()), "");
 				return true;
 			}
 			return false;
@@ -248,7 +269,7 @@ private:
 			)
 			{
 				if (!dupDeepSlotIfRequired(ops))
-					bringUpTargetSlot(ops, offset);
+					yulAssert(bringUpTargetSlot(ops, offset), "");
 				return true;
 			}
 
@@ -273,7 +294,7 @@ private:
 		if (ops.sourceSize() < ops.targetSize())
 		{
 			if (!dupDeepSlotIfRequired(ops))
-				bringUpTargetSlot(ops, ops.sourceSize());
+				yulAssert(bringUpTargetSlot(ops, ops.sourceSize()), "");
 			return true;
 		}
 
