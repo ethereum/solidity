@@ -179,16 +179,6 @@ case $(uname -s) in
                 . /etc/os-release
                 install_z3=""
                 case $VERSION_ID in
-                    7)
-                        #wheezy
-                        echo "Installing solidity dependencies on Debian Wheezy (7.x)."
-                        echo "ERROR - 'install_deps.sh' doesn't have Debian Wheezy support yet."
-                        echo "See https://docs.soliditylang.org/en/latest/installing-solidity.html for manual instructions."
-                        echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
-                        echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
-                        exit 1
-                        ;;
                     8)
                         #jessie
                         echo "Installing solidity dependencies on Debian Jesse (8.x)."
