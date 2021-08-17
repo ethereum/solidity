@@ -306,9 +306,7 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 {
 	OptimiserSettings settings;
 
-	if (optimizer.enabled && input.mode == InputMode::Assembler)
-		settings = OptimiserSettings::full();
-	else if (optimizer.enabled)
+	if (optimizer.enabled)
 		settings = OptimiserSettings::standard();
 	else
 		settings = OptimiserSettings::minimal();
