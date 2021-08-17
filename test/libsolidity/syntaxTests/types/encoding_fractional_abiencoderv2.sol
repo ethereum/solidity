@@ -5,4 +5,3 @@ contract C {
    }
 }
 // ----
-// TypeError 6090: (126-129): Fractional numbers cannot yet be encoded.
