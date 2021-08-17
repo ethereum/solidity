@@ -954,7 +954,7 @@ BoolResult RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo)
 	case Category::Integer:
 	{
 		if (isFractional())
-			return false;
+			return BoolResult::err("Rational number is fractional, use an explicit conversion instead.");
 		IntegerType const& targetType = dynamic_cast<IntegerType const&>(_convertTo);
 		return fitsIntegerType(m_value.numerator(), targetType);
 	}
@@ -963,14 +963,26 @@ BoolResult RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo)
 		FixedPointType const& targetType = dynamic_cast<FixedPointType const&>(_convertTo);
 		// Store a negative number into an unsigned.
 		if (isNegative() && !targetType.isSigned())
-			return false;
+			return BoolResult::err("Rational number is negative, use a signed fixed point type instead.");
 		if (!isFractional())
-			return (targetType.minIntegerValue() <= m_value) && (m_value <= targetType.maxIntegerValue());
+		{
+			if (m_value < targetType.minIntegerValue())
+				return BoolResult::err("Number is too small for type.");
+			else if (m_value > targetType.maxIntegerValue())
+				return BoolResult::err("Number is too large for type.");
+			else
+				return true;
+		}
 		rational value = m_value * pow(bigint(10), targetType.fractionalDigits());
 		// Need explicit conversion since truncation will occur.
 		if (value.denominator() != 1)
-			return false;
-		return fitsIntoBits(value.numerator(), targetType.numBits(), targetType.isSigned());
+			return BoolResult::err("Conversion incurs precision loss. Use an explicit conversion instead.");
+		if (m_value < targetType.minValue())
+			return BoolResult::err("Number is too small for type.");
+		else if (m_value > targetType.maxValue())
+			return BoolResult::err("Number is too large for type.");
+		solAssert(fitsIntoBits(value.numerator(), targetType.numBits(), targetType.isSigned()), "");
+		return true;
 	}
 	case Category::FixedBytes:
 		return (m_value == rational(0)) || (m_compatibleBytesType && *m_compatibleBytesType == _convertTo);

@@ -1152,7 +1152,8 @@ void TypeChecker::endVisit(Return const& _return)
 					"Return argument type " +
 					type(*_return.expression())->toString() +
 					" is not implicitly convertible to expected type " +
-					TupleType(returnTypes).toString(false) + ".",
+					TupleType(returnTypes).toString(false) +
+					".",
 					result.message()
 				);
 		}
@@ -1170,7 +1171,8 @@ void TypeChecker::endVisit(Return const& _return)
 				"Return argument type " +
 				type(*_return.expression())->toString() +
 				" is not implicitly convertible to expected type (type of first return variable) " +
-				expected->toString() + ".",
+				expected->toString() +
+				".",
 				result.message()
 			);
 	}
@@ -1264,41 +1266,16 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		var.accept(*this);
 		BoolResult result = valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type);
 		if (!result)
-		{
-			auto errorMsg = "Type " +
+			m_errorReporter.typeErrorConcatenateDescriptions(
+				9574_error,
+				_statement.location(),
+				"Type " +
 				valueComponentType->toString() +
 				" is not implicitly convertible to expected type " +
-				var.annotation().type->toString();
-			if (
-				valueComponentType->category() == Type::Category::RationalNumber &&
-				dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
-				valueComponentType->mobileType()
-			)
-			{
-				if (var.annotation().type->operator==(*valueComponentType->mobileType()))
-					m_errorReporter.typeError(
-						5107_error,
-						_statement.location(),
-						errorMsg + ", but it can be explicitly converted."
-					);
-				else
-					m_errorReporter.typeError(
-						4486_error,
-						_statement.location(),
-						errorMsg +
-						". Try converting to type " +
-						valueComponentType->mobileType()->toString() +
-						" or use an explicit conversion."
-					);
-			}
-			else
-				m_errorReporter.typeErrorConcatenateDescriptions(
-					9574_error,
-					_statement.location(),
-					errorMsg + ".",
-					result.message()
-				);
-		}
+				var.annotation().type->toString() +
+				".",
+				result.message()
+			);
 	}
 
 	if (valueTypes.size() != variables.size())
@@ -3449,40 +3426,16 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 	BoolResult result = type(_expression)->isImplicitlyConvertibleTo(_expectedType);
 	if (!result)
 	{
-		auto errorMsg = "Type " +
+		m_errorReporter.typeErrorConcatenateDescriptions(
+			7407_error,
+			_expression.location(),
+			"Type " +
 			type(_expression)->toString() +
 			" is not implicitly convertible to expected type " +
-			_expectedType.toString();
-		if (
-			type(_expression)->category() == Type::Category::RationalNumber &&
-			dynamic_cast<RationalNumberType const*>(type(_expression))->isFractional() &&
-			type(_expression)->mobileType()
-		)
-		{
-			if (_expectedType.operator==(*type(_expression)->mobileType()))
-				m_errorReporter.typeError(
-					4426_error,
-					_expression.location(),
-					errorMsg + ", but it can be explicitly converted."
-				);
-			else
-				m_errorReporter.typeErrorConcatenateDescriptions(
-					2326_error,
-					_expression.location(),
-					errorMsg +
-					". Try converting to type " +
-					type(_expression)->mobileType()->toString() +
-					" or use an explicit conversion.",
-					result.message()
-				);
-		}
-		else
-			m_errorReporter.typeErrorConcatenateDescriptions(
-				7407_error,
-				_expression.location(),
-				errorMsg + ".",
-				result.message()
-			);
+			_expectedType.toString() +
+			".",
+			result.message()
+		);
 		return false;
 	}
 	return true;
