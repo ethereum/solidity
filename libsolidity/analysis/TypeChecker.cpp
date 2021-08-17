@@ -1641,6 +1641,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			// These rules are enforced by the binary operator, but assert them here too.
 			if (auto type = dynamic_cast<IntegerType const*>(commonType))
 				solAssert(type->numBits() == 256, "");
+			solUnimplementedAssert(!dynamic_cast<FixedPointType const*>(commonType), "");
 			if (auto type = dynamic_cast<FixedPointType const*>(commonType))
 				solAssert(type->numBits() == 256, "");
 		}
@@ -1953,17 +1954,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 
 		if (argType->category() == Type::Category::RationalNumber)
 		{
-			auto const& rationalType = dynamic_cast<RationalNumberType const&>(*argType);
-			if (rationalType.isFractional())
-			{
-				m_errorReporter.typeError(
-					6090_error,
-					arguments[i]->location(),
-					"Fractional numbers cannot yet be encoded."
-				);
-				continue;
-			}
-			else if (!argType->mobileType())
+			if (!argType->mobileType())
 			{
 				m_errorReporter.typeError(
 					8009_error,
