@@ -1030,7 +1030,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		if (isFractional() && !fixedPointType())
+		if (isFractional() && !mobileType())
 			return TypeResult::err("Literal too large or cannot be represented without precision loss.");
 		else if (!isFractional() && !integerType())
 			return TypeResult::err("Literal too large.");
@@ -1143,7 +1143,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 		shiftedValue = m_value.numerator();
 	else
 	{
-		auto fixed = fixedPointType();
+		auto fixed = closestFixedPointType();
 		solAssert(fixed, "Rational number cannot be represented as fixed point type.");
 		unsigned fractionalDigits = fixed->fractionalDigits();
 		shiftedValue = m_value.numerator() * boost::multiprecision::pow(bigint(10), fractionalDigits) / m_value.denominator();
@@ -1164,8 +1164,10 @@ Type const* RationalNumberType::mobileType() const
 {
 	if (!isFractional())
 		return integerType();
-	else
-		return fixedPointType();
+	else if (auto const* fixed = closestFixedPointType())
+		if (isImplicitlyConvertibleTo(*fixed))
+			return fixed;
+	return nullptr;
 }
 
 IntegerType const* RationalNumberType::integerType() const
@@ -1184,7 +1186,7 @@ IntegerType const* RationalNumberType::integerType() const
 		);
 }
 
-FixedPointType const* RationalNumberType::fixedPointType() const
+FixedPointType const* RationalNumberType::closestFixedPointType() const
 {
 	bool negative = (m_value < 0);
 	unsigned fractionalDigits = 0;

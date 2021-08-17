@@ -580,7 +580,7 @@ public:
 	/// If the integer part does not fit, returns an empty pointer.
 	/// The rational number is not always implicitly convertible to the resulting type
 	/// (for example if precision loss is required).
-	FixedPointType const* fixedPointType() const;
+	FixedPointType const* closestFixedPointType() const;
 
 	/// @returns true if the value is not an integer.
 	bool isFractional() const { return m_value.denominator() != 1; }
