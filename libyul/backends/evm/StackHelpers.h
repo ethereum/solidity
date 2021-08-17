@@ -107,8 +107,8 @@ class Shuffler
 public:
 	/// Executes the stack shuffling operations. Instantiates an instance of ShuffleOperations
 	/// in each iteration. Each iteration performs exactly one operation that modifies the stack.
-	/// After shuffle, source and target have the same size and all slots in the source layout are
-	/// compatible to the slots at the same target offset.
+	/// After `shuffle`, source and target have the same size and all slots in the source layout are
+	/// compatible with the slots at the same target offset.
 	template<typename... Args>
 	static void shuffle(Args&&... args)
 	{
@@ -129,7 +129,7 @@ private:
 		// Check if the stack is large enough for anything to potentially become unreachable.
 		if (_ops.sourceSize() < 15)
 			return false;
-		// Check whether any deep slot might still be needed later.
+		// Check whether any deep slot might still be needed later (i.e. we still need to reach it with a DUP or SWAP).
 		for (size_t sourceOffset: ranges::views::iota(0u, _ops.sourceSize() - 15))
 		{
 			// We need another copy of this slot.
@@ -173,7 +173,7 @@ private:
 		}
 		return false;
 	}
-	/// Finds a slot to dups or pushes with the aim of eventually fixing @a _targetOffset in the target.
+	/// Finds a slot to dup or push with the aim of eventually fixing @a _targetOffset in the target.
 	/// In the simplest case, the slot at @a _targetOffset has a multiplicity > 0, i.e. it can directly be dupped or pushed
 	/// and the next iteration will fix @a _targetOffset.
 	/// But, in general, there may already be enough copies of the slot that is supposed to end up at @a _targetOffset
@@ -197,7 +197,7 @@ private:
 				_ops.pushOrDupTarget(offset);
 				return true;
 			}
-			// The desired target slot must already be somewhere else on stack right now.
+			// There must be another slot we can dup/push that will lead to the target slot at ``offset`` to be fixed.
 			for (auto nextOffset: ranges::views::iota(0u, std::min(_ops.sourceSize(), _ops.targetSize())))
 				if (
 					!_ops.isCompatible(nextOffset, nextOffset) &&
@@ -257,6 +257,10 @@ private:
 					ops.swap(ops.sourceSize() - offset - 1);
 					return true;
 				}
+
+		// ops.sourceSize() > ops.targetSize() cannot be true anymore, since if the source top is no longer required,
+		// we already popped it, and if it is required, we already swapped it down to a suitable target position.
+		yulAssert(ops.sourceSize() <= ops.targetSize(), "");
 
 		// If a lower slot should be removed, try to bring up the slot that should end up there and bring it up.
 		// Note that after the cases above, there will always be a target slot to duplicate in this case.
