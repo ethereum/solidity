@@ -81,6 +81,7 @@ public:
 	bool visit(StructDefinition const& _node) override;
 	bool visit(EnumDefinition const& _node) override;
 	bool visit(EnumValue const& _node) override;
+	bool visit(UserDefinedValueTypeDefinition const& _node) override;
 	bool visit(ParameterList const& _node) override;
 	bool visit(OverrideSpecifier const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;

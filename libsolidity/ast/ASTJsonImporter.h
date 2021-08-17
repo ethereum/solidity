@@ -81,6 +81,7 @@ private:
 	ASTPointer<ASTNode> createStructDefinition(Json::Value const& _node);
 	ASTPointer<EnumDefinition> createEnumDefinition(Json::Value const& _node);
 	ASTPointer<EnumValue> createEnumValue(Json::Value const& _node);
+	ASTPointer<UserDefinedValueTypeDefinition> createUserDefinedValueTypeDefinition(Json::Value const& _node);
 	ASTPointer<ParameterList> createParameterList(Json::Value const& _node);
 	ASTPointer<OverrideSpecifier> createOverrideSpecifier(Json::Value const& _node);
 	ASTPointer<FunctionDefinition> createFunctionDefinition(Json::Value const& _node);
