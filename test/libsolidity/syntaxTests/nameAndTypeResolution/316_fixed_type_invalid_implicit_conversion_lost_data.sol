@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// TypeError 9574: (50-69): Type rational_const 1 / 3 is not implicitly convertible to expected type ufixed256x1.
+// TypeError 9574: (50-69): Type rational_const 1 / 3 is not implicitly convertible to expected type ufixed256x1. Conversion incurs precision loss. Use an explicit conversion instead.

@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// TypeError 4486: (50-62): Type rational_const 1 / 3 is not implicitly convertible to expected type uint256. Try converting to type ufixed256x77 or use an explicit conversion.
+// TypeError 9574: (50-62): Type rational_const 1 / 3 is not implicitly convertible to expected type uint256. Rational number is fractional, use an explicit conversion instead.

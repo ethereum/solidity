@@ -10,5 +10,5 @@ contract test {
     }
 }
 // ----
-// TypeError 9574: (153-250): Type rational_const 9208...(70 digits omitted)...7637 / 1000...(71 digits omitted)...0000 is not implicitly convertible to expected type ufixed256x77.
-// TypeError 9574: (470-566): Type rational_const -933...(70 digits omitted)...0123 / 1000...(70 digits omitted)...0000 is not implicitly convertible to expected type fixed256x76.
+// TypeError 9574: (153-250): Type rational_const 9208...(70 digits omitted)...7637 / 1000...(71 digits omitted)...0000 is not implicitly convertible to expected type ufixed256x77. Conversion incurs precision loss. Use an explicit conversion instead.
+// TypeError 9574: (470-566): Type rational_const -933...(70 digits omitted)...0123 / 1000...(70 digits omitted)...0000 is not implicitly convertible to expected type fixed256x76. Conversion incurs precision loss. Use an explicit conversion instead.
