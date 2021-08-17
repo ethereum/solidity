@@ -27,6 +27,8 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
 
+#include <list>
+
 namespace solidity::yul
 {
 
