@@ -7,11 +7,11 @@ contract C {
         uint256 off1;
         uint256 off2;
         assembly {
-            function f() -> o1 {
+            function g() -> o1 {
                 sstore(z.slot, 7)
                 o1 := y.offset
             }
-            off2 := f()
+            off2 := g()
         }
         assert(off2 == 2);
         return true;

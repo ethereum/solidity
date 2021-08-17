@@ -12,7 +12,7 @@ contract C {
         assembly { for {} 1 { pop(sload(0)) } { } pop(gas()) }
     }
     function h() view public {
-        assembly { function g() { pop(blockhash(20)) } }
+        assembly { function g1() { pop(blockhash(20)) } }
     }
     function i() public {
         assembly { pop(call(0, 1, 2, 3, 4, 5, 6)) }

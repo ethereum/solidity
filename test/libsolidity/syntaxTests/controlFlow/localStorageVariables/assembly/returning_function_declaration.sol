@@ -1,7 +1,7 @@
 contract C {
     struct S { bool f; }
     S s;
-    function f() internal pure {
+    function g() internal pure {
         S storage c;
         // this should warn about unreachable code, but currently function flow is ignored
         assembly {

@@ -2,6 +2,7 @@
 
 Breaking changes:
  * `error` is now a keyword that can only be used for defining errors.
+ * Inline Assembly: Consider functions, function parameters and return variables for shadowing checks.
 
 
 ### 0.8.8 (unreleased)

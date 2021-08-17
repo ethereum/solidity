@@ -1,7 +1,7 @@
 contract C {
 	uint256 public z;
 
-	function f() public {
+	function g() public {
 		z = 42;
 		uint i = 32;
 		assembly {
