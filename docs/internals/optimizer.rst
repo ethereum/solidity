@@ -321,9 +321,8 @@ By default the optimizer applies its predefined sequence of optimization steps t
 the generated assembly. You can override this sequence and supply your own using
 the ``--yul-optimizations`` option:
 
-.. code-block:: text
+.. code-block:: bash
 
-    bash
     solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul'
 
 The sequence inside ``[...]`` will be applied multiple times in a loop until the Yul code
