@@ -94,12 +94,21 @@ bytes BytesUtils::convertNumber(string const& _literal)
 bytes BytesUtils::convertFixedPoint(string const& _literal, size_t& o_fractionalDigits)
 {
 	size_t dotPos = _literal.find('.');
-	string valueInteger = _literal.substr(0, dotPos);
-	string valueFraction = _literal.substr(dotPos + 1);
-	o_fractionalDigits = valueFraction.length();
+	o_fractionalDigits = dotPos < _literal.size() ? _literal.size() - dotPos : 0;
+	bool negative = !_literal.empty() && _literal.at(0) == '-';
+	// remove decimal point
+	string valueInteger = _literal.substr(0, dotPos) + _literal.substr(dotPos + 1);
+	// erase leading zeros to avoid parsing as octal.
+	while (!valueInteger.empty() && (valueInteger.at(0) == '0' || valueInteger.at(0) == '-'))
+		valueInteger.erase(valueInteger.begin());
+	if (valueInteger.empty())
+		valueInteger = "0";
 	try
 	{
-		return util::toBigEndian(u256(valueInteger + valueFraction));
+		u256 value(valueInteger);
+		if (negative)
+			value = s2u(-u2s(value));
+		return util::toBigEndian(value);
 	}
 	catch (std::exception const&)
 	{
