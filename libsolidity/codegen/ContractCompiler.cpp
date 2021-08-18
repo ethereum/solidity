@@ -915,6 +915,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		*analysisInfo,
 		*m_context.assemblyPtr(),
 		m_context.evmVersion(),
+		m_optimiserSettings.forceOldPipeline,
 		identifierAccessCodeGen,
 		false,
 		m_optimiserSettings.optimizeStackAllocation

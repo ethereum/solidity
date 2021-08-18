@@ -64,6 +64,7 @@ public:
 		GasMeter const* _meter,
 		Object& _object,
 		bool _optimizeStackAllocation,
+		bool _forceOldPipeline,
 		std::string const& _optimisationSequence,
 		std::optional<size_t> _expectedExecutionsPerDeployment,
 		std::set<YulString> const& _externallyUsedIdentifiers = {},

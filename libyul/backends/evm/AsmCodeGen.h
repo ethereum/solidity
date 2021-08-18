@@ -44,6 +44,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		evmasm::Assembly& _assembly,
 		langutil::EVMVersion _evmVersion,
+		bool _forceOldPipeline,
 		ExternalIdentifierAccess::CodeGenerator _identifierAccess = {},
 		bool _system = false,
 		bool _optimizeStackAllocation = false

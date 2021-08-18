@@ -125,7 +125,7 @@ private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
 public:
-	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
+	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize, bool _forceOldPipeline) const;
 private:
 	void optimize(yul::Object& _object, bool _isCreation);
 

@@ -521,6 +521,7 @@ void CompilerContext::appendInlineAssembly(
 		analysisInfo,
 		*m_asm,
 		m_evmVersion,
+		_optimiserSettings.forceOldPipeline,
 		identifierAccess.generateCode,
 		_system,
 		_optimiserSettings.optimizeStackAllocation
@@ -551,6 +552,7 @@ void CompilerContext::optimizeYul(
 		&meter,
 		_object,
 		_optimiserSettings.optimizeStackAllocation,
+		_optimiserSettings.forceOldPipeline,
 		_optimiserSettings.yulOptimiserSteps,
 		isCreation? nullopt : make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
 		_externalIdentifiers,

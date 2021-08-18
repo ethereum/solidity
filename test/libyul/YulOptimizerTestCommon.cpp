@@ -79,8 +79,9 @@ using namespace std;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
 	shared_ptr<Object> _obj,
-	Dialect const& _dialect
-)
+	Dialect const& _dialect,
+	bool _forceOldPipeline
+): m_forceOldPipeline(_forceOldPipeline)
 {
 	m_object = _obj;
 	m_ast = m_object->code;
@@ -322,6 +323,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				&meter,
 				*m_object,
 				true,
+				m_forceOldPipeline,
 				frontend::OptimiserSettings::DefaultYulOptimiserSteps,
 				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 			);

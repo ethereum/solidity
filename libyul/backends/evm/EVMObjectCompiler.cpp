@@ -31,13 +31,13 @@
 using namespace solidity::yul;
 using namespace std;
 
-void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, EVMDialect const& _dialect, bool _optimize)
+void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, EVMDialect const& _dialect, bool _optimize, bool _forceOldPipeline)
 {
 	EVMObjectCompiler compiler(_assembly, _dialect);
-	compiler.run(_object, _optimize);
+	compiler.run(_object, _optimize, _forceOldPipeline);
 }
 
-void EVMObjectCompiler::run(Object& _object, bool _optimize)
+void EVMObjectCompiler::run(Object& _object, bool _optimize, bool _forceOldPipeline)
 {
 	BuiltinContext context;
 	context.currentObject = &_object;
@@ -49,7 +49,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			auto subAssemblyAndID = m_assembly.createSubAssembly(subObject->name.str());
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
-			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize);
+			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize, _forceOldPipeline);
 		}
 		else
 		{
@@ -63,7 +63,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 
 	yulAssert(_object.analysisInfo, "No analysis info.");
 	yulAssert(_object.code, "No code.");
-	if (_optimize && m_dialect.evmVersion() > langutil::EVMVersion::homestead())
+	if (!_forceOldPipeline && (_optimize && m_dialect.evmVersion() > langutil::EVMVersion::homestead()))
 	{
 
 		auto stackErrors = OptimizedEVMCodeTransform::run(m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context);

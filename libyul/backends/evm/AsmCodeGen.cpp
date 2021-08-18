@@ -38,6 +38,7 @@ void CodeGenerator::assemble(
 	AsmAnalysisInfo& _analysisInfo,
 	evmasm::Assembly& _assembly,
 	langutil::EVMVersion _evmVersion,
+	bool _forceOldPipeline,
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 	bool _system,
 	bool _optimizeStackAllocation
@@ -45,7 +46,7 @@ void CodeGenerator::assemble(
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
 	BuiltinContext builtinContext;
-	if (_system && _optimizeStackAllocation && _evmVersion > EVMVersion::homestead())
+	if (!_forceOldPipeline && _system && _optimizeStackAllocation && _evmVersion > EVMVersion::homestead())
 	{
 		int oldStackHeight = assemblyAdapter.stackHeight();
 		assemblyAdapter.setStackHeight(0);

@@ -87,6 +87,7 @@ void OptimiserSuite::run(
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
+	bool _forceOldPipeline,
 	string const& _optimisationSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers,
@@ -95,6 +96,7 @@ void OptimiserSuite::run(
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
 	bool usesOptimizedCodeGenerator =
+		!_forceOldPipeline &&
 		_optimizeStackAllocation &&
 		evmDialect &&
 		evmDialect->evmVersion() > langutil::EVMVersion::homestead();
