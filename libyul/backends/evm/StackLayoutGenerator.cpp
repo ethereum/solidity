@@ -100,6 +100,38 @@ StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout): m_layout(_layo
 
 namespace
 {
+vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source, Stack const& _target)
+{
+	Stack currentStack = _source;
+	vector<StackLayoutGenerator::StackTooDeep> stackTooDeepErrors;
+	auto getVariableChoices = [](auto&& range) {
+		set<YulString> result;
+		for (auto const& slot: range)
+			if (auto const* variableSlot = get_if<VariableSlot>(&slot))
+				result.insert(variableSlot->variable.get().name);
+		return result;
+	};
+	::createStackLayout(currentStack, _target, [&](unsigned _i) {
+		if (_i > 16)
+			stackTooDeepErrors.emplace_back(StackLayoutGenerator::StackTooDeep{
+				_i - 16,
+				getVariableChoices(currentStack | ranges::views::take_last(_i + 1))
+			});
+	}, [&](StackSlot const& _slot) {
+		if (canBeFreelyGenerated(_slot))
+			return;
+		if (
+			auto depth = util::findOffset(currentStack | ranges::views::reverse, _slot);
+			depth && *depth >= 16
+			)
+			stackTooDeepErrors.emplace_back(StackLayoutGenerator::StackTooDeep{
+				*depth - 15,
+				getVariableChoices(currentStack | ranges::views::take_last(*depth + 1))
+			});
+	}, [&]() {});
+	return stackTooDeepErrors;
+
+}
 
 /// @returns the ideal stack to have before executing an operation that outputs @a _operationOutput, s.t.
 /// shuffling to @a _post is cheap.
@@ -229,13 +261,11 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 }
 }
 
-Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation)
+Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation, bool _aggressiveStackCompression)
 {
 	// This is a huge tradeoff between code size, gas cost and stack size.
-	auto generateSlotOnTheFly = [&](StackSlot const&) {
-		//return stack.size() > 12 && canBeFreelyGenerated(_slot);
-		// return canBeFreelyGenerated(_slot);
-		return false;
+	auto generateSlotOnTheFly = [&](StackSlot const& _slot) {
+		return _aggressiveStackCompression && canBeFreelyGenerated(_slot);
 	};
 
 	// Determine the ideal permutation of the slots in _exitLayout that are not operation outputs (and not to be
@@ -273,18 +303,29 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 			break;
 	}
 
-	// TODO: there may be a better criterion than overall stack size.
-	if (stack.size() > 12)
-		// Deduplicate and remove slots that can be freely generated.
-		stack = compressStack(move(stack));
 	return stack;
 }
 
 Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::BasicBlock const& _block)
 {
-	Stack stack = std::move(_exitStack);
-	for (auto& operation: _block.operations | ranges::views::reverse)
-		stack = propagateStackThroughOperation(stack, operation);
+	vector<StackLayoutGenerator::StackTooDeep> stackErrors;
+	Stack stack = _exitStack;
+	for (auto&& [idx, operation]: _block.operations | ranges::views::enumerate | ranges::views::reverse)
+	{
+		Stack newStack = propagateStackThroughOperation(stack, operation);
+		stackErrors += findStackTooDeep(newStack, stack);
+		stack = std::move(newStack);
+
+	}
+
+	// If we had stack errors, run again with aggressive stack compression.
+	if (!stackErrors.empty())
+	{
+		stack = _exitStack;
+		for (auto&& [idx, operation]: _block.operations | ranges::views::enumerate | ranges::views::reverse)
+			stack = propagateStackThroughOperation(stack, operation, true);
+	}
+
 	return stack;
 }
 
@@ -588,42 +629,6 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 	}
 
 	return commonPrefix + bestCandidate;
-}
-
-namespace
-{
-vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source, Stack const& _target)
-{
-	Stack currentStack = _source;
-	vector<StackLayoutGenerator::StackTooDeep> stackTooDeepErrors;
-	auto getVariableChoices = [](auto&& range) {
-		set<YulString> result;
-		for (auto const& slot: range)
-			if (auto const* variableSlot = get_if<VariableSlot>(&slot))
-				result.insert(variableSlot->variable.get().name);
-		return result;
-	};
-	::createStackLayout(currentStack, _target, [&](unsigned _i) {
-		if (_i > 16)
-			stackTooDeepErrors.emplace_back(StackLayoutGenerator::StackTooDeep{
-				_i - 16,
-				getVariableChoices(currentStack | ranges::views::take_last(_i + 1))
-			});
-	}, [&](StackSlot const& _slot) {
-		if (canBeFreelyGenerated(_slot))
-			return;
-		if (
-			auto depth = util::findOffset(currentStack | ranges::views::reverse, _slot);
-			depth && *depth >= 16
-		)
-			stackTooDeepErrors.emplace_back(StackLayoutGenerator::StackTooDeep{
-				*depth - 15,
-				getVariableChoices(currentStack | ranges::views::take_last(*depth + 1))
-			});
-	}, [&]() {});
-	return stackTooDeepErrors;
-
-}
 }
 
 vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG::BasicBlock const& _entry)

@@ -65,7 +65,7 @@ private:
 	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
 	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
 	/// Simultaneously stores the entry layout required for executing the operation in m_layout.
-	Stack propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation);
+	Stack propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation, bool _aggressiveStackCompression = false);
 
 	/// @returns the desired stack layout at the entry of @a _block, assuming the layout after
 	/// executing the block should be @a _exitStack.
