@@ -46,6 +46,18 @@ static LPMPostProcessor<Block> addStoreToZero(
 	}
 );
 
+static LPMPostProcessor<Block> addStackVariables(
+	[](Block* _message, unsigned _seed)
+	{
+		if (_seed % YPM::s_highIP == 0)
+		{
+			MutationInfo m{_message, "Added variable to block."};
+			_message->add_statements()->set_allocated_multidecl(new MultiVarDecl());
+			_message->add_statements()->set_allocated_decl(new VarDecl());
+			_message->add_statements()->set_allocated_assignment(new AssignmentStatement());
+		}
+	}
+);
 
 namespace
 {

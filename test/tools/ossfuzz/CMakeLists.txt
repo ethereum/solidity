@@ -16,6 +16,8 @@ if (OSSFUZZ)
             yul_proto_diff_ossfuzz
             yul_proto_diff_custom_mutate_ossfuzz
             stack_reuse_codegen_ossfuzz
+            yul_evm_diff_ossfuzz
+            yul_evm_mutator_diff_ossfuzz
     )
 
     add_custom_target(ossfuzz_abiv2)
@@ -125,6 +127,69 @@ if (OSSFUZZ)
     )
     set_target_properties(stack_reuse_codegen_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
     target_compile_options(stack_reuse_codegen_ossfuzz PUBLIC
+            ${COMPILE_OPTIONS}
+            -Wno-sign-conversion
+            -Wno-inconsistent-missing-destructor-override
+            -Wno-unused-parameter
+            -Wno-zero-length-array
+            -Wno-suggest-destructor-override
+    )
+
+    add_executable(yul_evm_diff_ossfuzz
+            ../../libyul/YulOptimizerTestCommon.cpp
+            YulToEvmDifferentialFuzzer.cpp
+            protoToYul.cpp
+            yulProto.pb.cc
+            ../../EVMHost.cpp
+            YulEvmoneInterface.cpp
+            yulFuzzerCommon.cpp
+    )
+    target_include_directories(yul_evm_diff_ossfuzz PRIVATE
+            /usr/include/libprotobuf-mutator
+    )
+    target_link_libraries(yul_evm_diff_ossfuzz PRIVATE
+            yul
+            yulInterpreter
+            evmc
+            evmone-standalone
+            protobuf-mutator-libfuzzer.a
+            protobuf-mutator.a
+            protobuf.a
+    )
+    set_target_properties(yul_evm_diff_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(yul_evm_diff_ossfuzz PUBLIC
+            ${COMPILE_OPTIONS}
+            -Wno-sign-conversion
+            -Wno-inconsistent-missing-destructor-override
+            -Wno-unused-parameter
+            -Wno-zero-length-array
+            -Wno-suggest-destructor-override
+    )
+
+    add_executable(yul_evm_mutator_diff_ossfuzz
+            ../../libyul/YulOptimizerTestCommon.cpp
+            YulToEvmDifferentialFuzzer.cpp
+            protoToYul.cpp
+            yulProto.pb.cc
+            ../../EVMHost.cpp
+            YulEvmoneInterface.cpp
+            yulFuzzerCommon.cpp
+	    protomutators/YulProtoMutator.cpp
+    )
+    target_include_directories(yul_evm_mutator_diff_ossfuzz PRIVATE
+            /usr/include/libprotobuf-mutator
+    )
+    target_link_libraries(yul_evm_mutator_diff_ossfuzz PRIVATE
+            yul
+            yulInterpreter
+            evmc
+            evmone-standalone
+            protobuf-mutator-libfuzzer.a
+            protobuf-mutator.a
+            protobuf.a
+    )
+    set_target_properties(yul_evm_mutator_diff_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(yul_evm_mutator_diff_ossfuzz PUBLIC
             ${COMPILE_OPTIONS}
             -Wno-sign-conversion
             -Wno-inconsistent-missing-destructor-override
