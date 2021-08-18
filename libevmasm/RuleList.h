@@ -681,6 +681,22 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 			// X - (A + Y) -> (X - Y) + (-A)
 			Builtins::SUB(X, Builtins::ADD(A, Y)),
 			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); }
+		}, {
+			// (X - A) - Y -> (X - Y) - A
+			Builtins::SUB(Builtins::SUB(X, A), Y),
+			[=]() -> Pattern { return Builtins::SUB(Builtins::SUB(X, Y), A); }
+		}, {
+			// (A - X) - Y -> A - (X + Y)
+			Builtins::SUB(Builtins::SUB(A, X), Y),
+			[=]() -> Pattern { return Builtins::SUB(A, Builtins::ADD(X, Y)); }
+		}, {
+			// X - (Y - A) -> (X - Y) + A
+			Builtins::SUB(X, Builtins::SUB(Y, A)),
+			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A.d()); }
+		}, {
+			// X - (A - Y) -> (X + Y) + (-A)
+			Builtins::SUB(X, Builtins::SUB(A, Y)),
+			[=]() -> Pattern { return Builtins::ADD(Builtins::ADD(X, Y), 0 - A.d()); }
 		}
 	};
 	return rules;
