@@ -168,7 +168,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 	return success;
 }
 
-void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
+void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _optimize, bool _forceOldPipeline) const
 {
 	EVMDialect const* dialect = nullptr;
 	switch (m_language)
@@ -185,7 +185,7 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) cons
 			break;
 	}
 
-	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize);
+	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize, _forceOldPipeline);
 }
 
 void AssemblyStack::optimize(Object& _object, bool _isCreation)
@@ -205,6 +205,7 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 		meter.get(),
 		_object,
 		m_optimiserSettings.optimizeStackAllocation,
+		m_optimiserSettings.forceOldPipeline,
 		m_optimiserSettings.yulOptimiserSteps,
 		_isCreation ? nullopt : make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
@@ -283,7 +284,7 @@ AssemblyStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 
 	evmasm::Assembly assembly;
 	EthAssemblyAdapter adapter(assembly);
-	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
+	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation, m_optimiserSettings.forceOldPipeline);
 
 	assembly.optimise(translateOptimiserSettings(m_optimiserSettings, m_evmVersion));
 

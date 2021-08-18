@@ -61,7 +61,7 @@ TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _
 
 	evmasm::Assembly assembly;
 	EthAssemblyAdapter adapter(assembly);
-	stack.compileEVM(adapter, m_stackOpt);
+	stack.compileEVM(adapter, m_stackOpt, settings.forceOldPipeline);
 
 	std::ostringstream output;
 	output << assembly;

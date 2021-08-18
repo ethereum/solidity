@@ -40,7 +40,8 @@ class YulOptimizerTestCommon
 public:
 	explicit YulOptimizerTestCommon(
 		std::shared_ptr<Object> _obj,
-		Dialect const& _dialect
+		Dialect const& _dialect,
+		bool _forceOldPipeline = false
 	);
 	/// Sets optimiser step to be run to @param
 	/// _optimiserStep.
@@ -71,6 +72,7 @@ private:
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::map<std::string, std::function<void(void)>> m_namedSteps;
+	bool m_forceOldPipeline = false;
 };
 
 }
