@@ -131,6 +131,9 @@ struct CFG
 		std::shared_ptr<DebugData const> debugData;
 		std::reference_wrapper<Scope::Function const> function;
 		std::reference_wrapper<yul::FunctionCall const> functionCall;
+		/// True, if the call is recursive, i.e. entering the function involves a control flow path (potentially involving
+		/// more intermediate function calls) that leads back to this very call.
+		bool recursive = false;
 	};
 	struct Assignment
 	{
