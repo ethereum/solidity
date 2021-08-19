@@ -670,7 +670,7 @@ FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, 
 	m_totalBits(_totalBits), m_fractionalDigits(_fractionalDigits), m_modifier(_modifier)
 {
 	solAssert(
-		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 && m_fractionalDigits <= 80,
+		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 && m_fractionalDigits <= 77,
 		"Invalid bit number(s) for fixed type: " +
 		util::toString(_totalBits) + "x" + util::toString(_fractionalDigits)
 	);

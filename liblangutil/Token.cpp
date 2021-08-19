@@ -213,7 +213,7 @@ tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _
 				int n = parseSize(positionX + 1, _literal.end());
 				if (
 					8 <= m && m <= 256 && m % 8 == 0 &&
-					0 <= n && n <= 80
+					0 <= n && n <= 77
 				) {
 					if (keyword == Token::UFixed)
 						return make_tuple(Token::UFixedMxN, m, n);
