@@ -611,6 +611,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		break;
 	case FunctionType::Kind::Internal:
 	case FunctionType::Kind::BareStaticCall:
+	case FunctionType::Kind::BareCall:
 		break;
 	case FunctionType::Kind::KECCAK256:
 	case FunctionType::Kind::ECRecover:
@@ -653,7 +654,6 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		visitObjectCreation(_funCall);
 		return;
 	case FunctionType::Kind::DelegateCall:
-	case FunctionType::Kind::BareCall:
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
 	case FunctionType::Kind::Creation:
