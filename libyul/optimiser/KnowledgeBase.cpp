@@ -88,22 +88,21 @@ optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
 
 Expression KnowledgeBase::simplify(Expression _expression)
 {
-	bool startedRecursion = (m_recursionCounter == 0);
-	ScopeGuard{[&] { if (startedRecursion) m_recursionCounter = 0; }};
+	m_counter = 0;
+	return simplifyRecursively(move(_expression));
+}
 
-	if (startedRecursion)
-		m_recursionCounter = 100;
-	else if (m_recursionCounter == 1)
+Expression KnowledgeBase::simplifyRecursively(Expression _expression)
+{
+	if (m_counter++ > 100)
 		return _expression;
-	else
-		--m_recursionCounter;
 
 	if (holds_alternative<FunctionCall>(_expression))
 		for (Expression& arg: std::get<FunctionCall>(_expression).arguments)
-			arg = simplify(arg);
+			arg = simplifyRecursively(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
-		return simplify(match->action().toExpression(debugDataOf(_expression)));
+		return simplifyRecursively(match->action().toExpression(debugDataOf(_expression)));
 
 	return _expression;
 }

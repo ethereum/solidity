@@ -56,10 +56,11 @@ public:
 
 private:
 	Expression simplify(Expression _expression);
+	Expression simplifyRecursively(Expression _expression);
 
 	Dialect const& m_dialect;
 	std::map<YulString, AssignedValue> const& m_variableValues;
-	size_t m_recursionCounter = 0;
+	size_t m_counter = 0;
 };
 
 }
