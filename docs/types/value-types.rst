@@ -160,7 +160,7 @@ Fixed Point Numbers
     Fixed point numbers are not fully supported by Solidity yet.
 
 ``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the total number of bits used by
-the type and ``N`` represents how many fractional decimal digits are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
+the type and ``N`` represents how many fractional decimal digits are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 77, inclusive.
 ``ufixed`` and ``fixed`` are aliases for ``ufixed128x18`` and ``fixed128x18``, respectively.
 
 Fixed point types are used to represent fractional numbers with a fixed precision. The number ``1.5`` is stored in a ``fixed16x2`` (16 bit number with
