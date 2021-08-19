@@ -499,10 +499,12 @@ string YulUtilFunctions::fixedPointShiftFunction(int _digits, bool _signed)
 	return m_functionCollector.createFunction(functionName, [&](vector<string>& _args, vector<string>& _ret) {
 		_args = {"value"};
 		_ret = {"result"};
+		bigint factor = bigint("1" + string(static_cast<unsigned>(abs(_digits)), '0'));
+		solAssert(factor < (bigint(1) << 256), "");
 		return
 			Whiskers("result := <op>(value, <factor>)")
 			("op", _digits >= 0 ? "mul" : _signed ? "sdiv" : "div")
-			("factor", ("1" + string(static_cast<unsigned>(abs(_digits)), '0')))
+			("factor", factor.str())
 			.render();
 	});
 }

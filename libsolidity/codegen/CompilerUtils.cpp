@@ -915,11 +915,13 @@ void CompilerUtils::convertType(
 			else
 				solAssert(false, "");
 
+			bigint factor = pow(bigint(10), static_cast<unsigned>(abs(digitDifference)));
+			solAssert(0 <= factor && factor <= std::numeric_limits<u256>::max(), "");
 			if (digitDifference > 0)
-				m_context << pow(u256(10), static_cast<unsigned>(digitDifference)) << Instruction::MUL;
+				m_context << u256(factor) << Instruction::MUL;
 			else if (digitDifference < 0)
 				m_context <<
-					pow(u256(10), static_cast<unsigned>(-digitDifference)) <<
+					u256(factor) <<
 					Instruction::SWAP1 <<
 					(isSigned ? Instruction::SDIV : Instruction::DIV);
 
