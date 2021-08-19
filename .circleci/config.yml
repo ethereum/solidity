@@ -121,18 +121,7 @@ defaults:
       no_output_timeout: 30m
       command: ./.circleci/soltest_all.sh
 
-  - run_cmdline_tests: &run_cmdline_tests
-      name: command line tests
-      no_output_timeout: 30m
-      command: ./test/cmdlineTests.sh
-
-  - run_docs_pragma_min_version: &run_docs_pragma_min_version
-      name: docs pragma version check
-      command: ./scripts/docs_version_pragma_check.sh
-
-  - test_ubuntu1604_clang: &test_ubuntu1604_clang
-      docker:
-        - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
+  - run_soltest_steps: &run_soltest_steps
       steps:
         - checkout
         - attach_workspace:
@@ -141,21 +130,7 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - test_ubuntu2004_clang: &test_ubuntu2004_clang
-      docker:
-        - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
-      steps:
-        - checkout
-        - attach_workspace:
-            at: build
-        - run: *run_soltest
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
-
-  - test_ubuntu2004: &test_ubuntu2004
-      docker:
-        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
-      parallelism: 6
+  - run_soltest_all_steps: &run_soltest_all_steps
       steps:
         - checkout
         - attach_workspace:
@@ -164,27 +139,48 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
+  - run_cmdline_tests: &run_cmdline_tests
+      name: command line tests
+      no_output_timeout: 30m
+      command: ./test/cmdlineTests.sh
+
+  - run_cmdline_tests_steps: &run_cmdline_tests_steps
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_cmdline_tests
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
+
+  - run_docs_pragma_min_version: &run_docs_pragma_min_version
+      name: docs pragma version check
+      command: ./scripts/docs_version_pragma_check.sh
+
+  - test_ubuntu1604_clang: &test_ubuntu1604_clang
+      docker:
+        - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
+      <<: *run_soltest_steps
+
+  - test_ubuntu2004_clang: &test_ubuntu2004_clang
+      docker:
+        - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
+      <<: *run_soltest_steps
+
+  - test_ubuntu2004: &test_ubuntu2004
+      docker:
+        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+      parallelism: 6
+      <<: *run_soltest_all_steps
+
   - test_asan: &test_asan
       <<: *test_ubuntu2004
-      steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          <<: *run_soltest
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+      <<: *run_soltest_steps
 
-  - test_asan_clang: &test_asan_clang
-      <<: *test_ubuntu2004_clang
-      steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          <<: *run_soltest
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+  - test_ubuntu2004_clang_cli: &test_ubuntu2004_clang_cli
+      docker:
+        - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
+      <<: *run_cmdline_tests_steps
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -238,6 +234,11 @@ defaults:
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_asan_clang
+
+  - workflow_ubuntu2004_ubsan_clang: &workflow_ubuntu2004_ubsan_clang
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_ubsan_clang
 
   - workflow_emscripten: &workflow_emscripten
       <<: *workflow_trigger_on_tags
@@ -447,14 +448,27 @@ jobs:
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
 
-
-  b_ubu_asan_clang: &build_ubuntu2004_clang
+  b_ubu_asan_clang: &b_ubu_asan_clang
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     environment:
       CC: clang
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=address
+      MAKEFLAGS: -j 3
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
+  b_ubu_ubsan_clang: &b_ubu_ubsan_clang
+    docker:
+      - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
+    environment:
+      CC: clang
+      CXX: clang++
+      CMAKE_OPTIONS: -DSANITIZE=undefined
       MAKEFLAGS: -j 3
     steps:
       - checkout
@@ -768,13 +782,7 @@ jobs:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
       TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_cmdline_tests
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+    <<: *run_cmdline_tests_steps
 
   t_ubu_release_cli: &t_ubu_release_cli
     <<: *t_ubu_cli
@@ -784,14 +792,7 @@ jobs:
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          <<: *run_cmdline_tests
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+    <<: *run_cmdline_tests_steps
 
   t_ubu_asan_constantinople:
     <<: *test_asan
@@ -802,12 +803,18 @@ jobs:
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ubu_asan_constantinople_clang:
-    <<: *test_asan_clang
+    <<: *test_ubuntu2004_clang
     environment:
       EVM: constantinople
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
+
+  t_ubu_ubsan_clang:
+    <<: *test_ubuntu2004_clang
+
+  t_ubu_ubsan_clang_cli:
+    <<: *test_ubuntu2004_clang_cli
 
   t_ems_solcjs:
     docker:
@@ -1207,6 +1214,11 @@ workflows:
       - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
       - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
+
+      # UBSan build and tests
+      - b_ubu_ubsan_clang: *workflow_trigger_on_tags
+      - t_ubu_ubsan_clang: *workflow_ubuntu2004_ubsan_clang
+      - t_ubu_ubsan_clang_cli: *workflow_ubuntu2004_ubsan_clang
 
       # Emscripten build and tests that take more than 15 minutes to execute
       - b_ems: *workflow_trigger_on_tags

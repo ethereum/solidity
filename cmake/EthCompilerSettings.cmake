@@ -192,11 +192,44 @@ endif ()
 
 if (SANITIZE)
 	# Perform case-insensitive string compare
-	string(TOLOWER "${SANITIZE}" san)
+	string(TOLOWER "${SANITIZE}" sanitizer)
 	# -fno-omit-frame-pointer gives more informative stack trace in case of an error
 	# -fsanitize-address-use-after-scope throws an error when a variable is used beyond its scope
-	if (san STREQUAL "address")
+	if (sanitizer STREQUAL "address")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope")
+	elseif (sanitizer STREQUAL "undefined")
+		# The following flags not used by fuzzer but used by us may create problems, so consider
+		# disabling them: alignment, pointer-overflow, unsigned-shift-base.
+		# Flags are alphabetically sorted
+		list(APPEND undefinedSanitizerChecks
+			alignment
+			array-bounds
+			bool
+			builtin
+			enum
+			float-divide-by-zero
+			function
+			integer-divide-by-zero
+			null
+			object-size
+			pointer-overflow
+			return
+			returns-nonnull-attribute
+			shift
+			signed-integer-overflow
+			unsigned-integer-overflow
+			unsigned-shift-base
+			unreachable
+			vla-bound
+			vptr
+		)
+		list(JOIN undefinedSanitizerChecks "," sanitizerChecks)
+		list(REMOVE_ITEM undefinedSanitizerChecks unsigned-integer-overflow)
+		# The fuzzer excludes reports of unsigned-integer-overflow. Hence, we remove it
+		# from the -fno-sanitize-recover checks. Consider reducing this list if we do not
+		# want to be notified about other failed checks.
+		list(JOIN undefinedSanitizerChecks "," dontRecoverFromChecks)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${sanitizerChecks} -fno-sanitize-recover=${dontRecoverFromChecks}")
 	endif()
 endif()
 
