@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Immutable variables can be read at construction time once they are initialized.
 
 
 Bugfixes:
