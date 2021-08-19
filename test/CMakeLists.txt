@@ -136,6 +136,7 @@ set(libyul_sources
     libyul/FunctionSideEffects.cpp
     libyul/FunctionSideEffects.h
     libyul/Inliner.cpp
+    libyul/KnowledgeBaseTest.cpp
     libyul/Metrics.cpp
     libyul/ObjectCompilerTest.cpp
     libyul/ObjectCompilerTest.h
