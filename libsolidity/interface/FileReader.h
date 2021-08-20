@@ -44,12 +44,19 @@ public:
 		Enabled,  ///< Follow symbolic links. The path should contain no symlinks.
 	};
 
-	/// Constructs a FileReader with a base path and a set of allowed directories that
-	/// will be used when requesting files from this file reader instance.
-	explicit FileReader(boost::filesystem::path _basePath = {}, FileSystemPathSet _allowedDirectories = {});
+	/// Constructs a FileReader with a base path and sets of include paths and allowed directories
+	/// that will be used when requesting files from this file reader instance.
+	explicit FileReader(
+		boost::filesystem::path _basePath = {},
+		std::vector<boost::filesystem::path> const& _includePaths = {},
+		FileSystemPathSet _allowedDirectories = {}
+	);
 
 	void setBasePath(boost::filesystem::path const& _path);
 	boost::filesystem::path const& basePath() const noexcept { return m_basePath; }
+
+	void addIncludePath(boost::filesystem::path const& _path);
+	std::vector<boost::filesystem::path> const& includePaths() const noexcept { return m_includePaths; }
 
 	void allowDirectory(boost::filesystem::path _path);
 	FileSystemPathSet const& allowedDirectories() const noexcept { return m_allowedDirectories; }
@@ -84,6 +91,10 @@ public:
 	{
 		return [this](std::string const& _kind, std::string const& _path) { return readFile(_kind, _path); };
 	}
+
+	/// Creates a source unit name by normalizing a path given on the command line and, if possible,
+	/// making it relative to base path or one of the include directories.
+	std::string cliPathToSourceUnitName(boost::filesystem::path const& _cliPath);
 
 	/// Normalizes a filesystem path to make it include all components up to the filesystem root,
 	/// remove small, inconsequential differences that do not affect the meaning and make it look
@@ -129,6 +140,9 @@ private:
 
 	/// Base path, used for resolving relative paths in imports.
 	boost::filesystem::path m_basePath;
+
+	/// Additional directories used for resolving relative paths in imports.
+	std::vector<boost::filesystem::path> m_includePaths;
 
 	/// list of allowed directories to read files from
 	FileSystemPathSet m_allowedDirectories;

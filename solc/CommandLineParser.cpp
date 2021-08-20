@@ -54,6 +54,7 @@ ostream& CommandLineParser::serr()
 static string const g_strAbi = "abi";
 static string const g_strAllowPaths = "allow-paths";
 static string const g_strBasePath = "base-path";
+static string const g_strIncludePath = "include-path";
 static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
 static string const g_strAssemble = "assemble";
@@ -273,6 +274,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		input.remappings == _other.input.remappings &&
 		input.addStdin == _other.input.addStdin &&
 		input.basePath == _other.input.basePath &&
+		input.includePaths == _other.input.includePaths &&
 		input.allowedDirectories == _other.input.allowedDirectories &&
 		input.ignoreMissingFiles == _other.input.ignoreMissingFiles &&
 		input.errorRecovery == _other.input.errorRecovery &&
@@ -531,6 +533,15 @@ General Information)").c_str(),
 			g_strBasePath.c_str(),
 			po::value<string>()->value_name("path"),
 			"Use the given path as the root of the source tree instead of the root of the filesystem."
+		)
+		(
+			g_strIncludePath.c_str(),
+			po::value<vector<string>>()->value_name("path"),
+			"Make an additional source directory available to the default import callback. "
+			"Use this option if you want to import contracts whose location is not fixed in relation "
+			"to your main source tree, e.g. third-party libraries installed using a package manager. "
+			"Can be used multiple times. "
+			"Can only be used if base path has a non-empty value."
 		)
 		(
 			g_strAllowPaths.c_str(),
@@ -982,6 +993,25 @@ bool CommandLineParser::processArgs()
 
 	if (m_args.count(g_strBasePath))
 		m_options.input.basePath = m_args[g_strBasePath].as<string>();
+
+	if (m_args.count(g_strIncludePath) > 0)
+	{
+		if (m_options.input.basePath.empty())
+		{
+			serr() << "--" << g_strIncludePath << " option requires a non-empty base path." << endl;
+			return false;
+		}
+
+		for (string const& includePath: m_args[g_strIncludePath].as<vector<string>>())
+		{
+			if (includePath.empty())
+			{
+				serr() << "Empty values are not allowed in --" << g_strIncludePath << "." << endl;
+				return false;
+			}
+			m_options.input.includePaths.push_back(includePath);
+		}
+	}
 
 	if (m_args.count(g_strAllowPaths))
 	{

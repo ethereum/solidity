@@ -422,6 +422,9 @@ bool CommandLineInterface::readInputFiles()
 		}
 	}
 
+	for (boost::filesystem::path const& includePath: m_options.input.includePaths)
+		m_fileReader.addIncludePath(includePath);
+
 	for (boost::filesystem::path const& allowedDirectory: m_options.input.allowedDirectories)
 		m_fileReader.allowDirectory(allowedDirectory);
 

@@ -76,6 +76,7 @@ ImportCheck checkImport(
 	for (string const& option: _cliOptions)
 		soltestAssert(
 			boost::starts_with(option, "--base-path") ||
+			boost::starts_with(option, "--include-path") ||
 			boost::starts_with(option, "--allow-paths") ||
 			!boost::starts_with(option, "--"),
 			""
@@ -146,6 +147,7 @@ protected:
 				m_codeDir / "X/bc/d.sol",
 
 				m_codeDir / "x/y/z.sol",
+				m_codeDir / "1/2/3.sol",
 				m_codeDir / "contract.sol",
 
 				m_workDir / "a/b/c/d.sol",
@@ -419,7 +421,7 @@ BOOST_FIXTURE_TEST_CASE(allow_path_automatic_whitelisting_remappings, AllowPaths
 	BOOST_TEST(checkImport("import '/../../../work/a/b/c.sol'", {"x=contract.sol/", "--base-path=../code/a/b/"}) == ImportCheck::PathDisallowed());
 
 	// Adding a remapping with an empty target does not whitelist anything
-	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {m_portablePrefix + "="}) == ImportCheck::PathDisallowed());
+	BOOST_TEST(checkImport("import '" + m_portablePrefix + m_portablePrefix + "/a/b/c.sol'", {m_portablePrefix + "="}) == ImportCheck::PathDisallowed());
 	BOOST_TEST(checkImport("import '" + m_portablePrefix + "/a/b/c.sol'", {"../code/="}) == ImportCheck::PathDisallowed());
 	BOOST_TEST(checkImport("import '/../work/a/b/c.sol'", {"../code/=", "--base-path", m_portablePrefix}) == ImportCheck::PathDisallowed());
 
@@ -506,6 +508,37 @@ BOOST_FIXTURE_TEST_CASE(allow_path_automatic_whitelisting_work_dir, AllowPathsFi
 	BOOST_TEST(checkImport("import 'a/b/c/d.sol'", {"--base-path", ""}));
 	BOOST_TEST(checkImport("import 'a/b/X.sol'", {"--base-path", ""}));
 	BOOST_TEST(checkImport("import 'a/X/c.sol'", {"--base-path", ""}));
+}
+
+BOOST_FIXTURE_TEST_CASE(allow_path_automatic_whitelisting_include_paths, AllowPathsFixture)
+{
+	// Relative include path whitelists its content
+	BOOST_TEST(checkImport("import 'b/c.sol'", {"--base-path=a/b/c", "--include-path=../code/a"}));
+	BOOST_TEST(checkImport("import 'b/c/d.sol'", {"--base-path=a/b/c", "--include-path=../code/a"}));
+	BOOST_TEST(checkImport("import 'b/X.sol'", {"--base-path=a/b/c", "--include-path=../code/a"}));
+	BOOST_TEST(checkImport("import 'X/c.sol'", {"--base-path=a/b/c", "--include-path=../code/a"}));
+
+	BOOST_TEST(checkImport("import 'b/c.sol'", {"--base-path=a/b/c", "--include-path=../code/a/"}));
+	BOOST_TEST(checkImport("import 'b/c/d.sol'", {"--base-path=a/b/c", "--include-path=../code/a/"}));
+	BOOST_TEST(checkImport("import 'b/X.sol'", {"--base-path=a/b/c", "--include-path=../code/a/"}));
+	BOOST_TEST(checkImport("import 'X/c.sol'", {"--base-path=a/b/c", "--include-path=../code/a/"}));
+
+	BOOST_TEST(checkImport("import 'a/b/c.sol'", {"--base-path=a/b/c", "--include-path=../code/."}));
+	BOOST_TEST(checkImport("import 'a/b/c.sol'", {"--base-path=a/b/c", "--include-path=../code/./"}));
+	BOOST_TEST(checkImport("import 'code/a/b/c.sol'", {"--base-path=a/b/c", "--include-path=.."}));
+	BOOST_TEST(checkImport("import 'code/a/b/c.sol'", {"--base-path=a/b/c", "--include-path=../"}));
+
+	// Absolute include path whitelists its content
+	BOOST_TEST(checkImport("import 'b/c.sol'", {"--base-path=a/b/c", "--include-path", m_codeDir.string() + "/a"}));
+	BOOST_TEST(checkImport("import 'b/c/d.sol'", {"--base-path=a/b/c", "--include-path", m_codeDir.string() + "/a"}));
+	BOOST_TEST(checkImport("import 'b/X.sol'", {"--base-path=a/b/c", "--include-path", m_codeDir.string() + "/a"}));
+	BOOST_TEST(checkImport("import 'X/c.sol'", {"--base-path=a/b/c", "--include-path", m_codeDir.string() + "/a"}));
+
+	// If there are multiple include paths, all of them get whitelisted
+	BOOST_TEST(checkImport("import 'b/c.sol'", {"--base-path=a/b/c", "--include-path=../code/a", "--include-path=../code/1"}));
+	BOOST_TEST(checkImport("import '2/3.sol'", {"--base-path=a/b/c", "--include-path=../code/a", "--include-path=../code/1"}));
+	BOOST_TEST(checkImport("import 'b/c.sol'", {"--base-path=a/b/c", "--include-path=../code/1", "--include-path=../code/a"}));
+	BOOST_TEST(checkImport("import '2/3.sol'", {"--base-path=a/b/c", "--include-path=../code/1", "--include-path=../code/a"}));
 }
 
 BOOST_FIXTURE_TEST_CASE(allow_path_symlinks_within_whitelisted_dir, AllowPathsFixture)
