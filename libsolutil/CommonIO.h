@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 #include <libsolutil/Common.h>
 #include <iostream>
 #include <sstream>
@@ -36,7 +38,7 @@ namespace solidity::util
 /// If the file doesn't exist, it will throw a FileNotFound exception.
 /// If the file exists but is not a regular file, it will throw NotAFile exception.
 /// If the file is empty, returns an empty string.
-std::string readFileAsString(std::string const& _file);
+std::string readFileAsString(boost::filesystem::path const& _file);
 
 /// Retrieves and returns the whole content of the specified input stream (until EOF).
 std::string readUntilEnd(std::istream& _stdin);

@@ -430,7 +430,7 @@ bool CommandLineInterface::readInputFiles()
 		}
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		string fileContent = readFileAsString(infile.string());
+		string fileContent = readFileAsString(infile);
 		if (m_options.input.mode == InputMode::StandardJson)
 		{
 			solAssert(!m_standardJsonInput.has_value(), "");
