@@ -27,6 +27,8 @@
 #include <test/FilesystemUtils.h>
 #include <test/TemporaryDirectory.h>
 
+#include <libsolutil/JSON.h>
+
 #include <range/v3/view/transform.hpp>
 
 #include <map>
@@ -866,6 +868,294 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_and_stdin)
 	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
 	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
 	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "base");
+}
+
+BOOST_AUTO_TEST_CASE(cli_include_paths)
+{
+	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+
+	string const preamble =
+		"// SPDX-License-Identifier: GPL-3.0\n"
+		"pragma solidity >=0.0;\n";
+	string const mainContractSource = preamble +
+		"import \"contract.sol\";\n"
+		"import \"contract_via_callback.sol\";\n"
+		"import \"include.sol\";\n"
+		"import \"include_via_callback.sol\";\n"
+		"import \"nested.sol\";\n"
+		"import \"nested_via_callback.sol\";\n"
+		"import \"lib.sol\";\n"
+		"import \"lib_via_callback.sol\";\n";
+
+	createFilesWithParentDirs(
+		{
+			tempDir.path() / "base/contract.sol",
+			tempDir.path() / "base/contract_via_callback.sol",
+			tempDir.path() / "include/include.sol",
+			tempDir.path() / "include/include_via_callback.sol",
+			tempDir.path() / "lib/nested/nested.sol",
+			tempDir.path() / "lib/nested/nested_via_callback.sol",
+			tempDir.path() / "lib/lib.sol",
+			tempDir.path() / "lib/lib_via_callback.sol",
+		},
+		preamble
+	);
+	createFilesWithParentDirs({tempDir.path() / "base/main.sol"}, mainContractSource);
+
+	boost::filesystem::path canonicalWorkDir = boost::filesystem::canonical(tempDir);
+	boost::filesystem::path expectedWorkDir = "/" / canonicalWorkDir.relative_path();
+
+	vector<string> commandLine = {
+		"solc",
+		"--no-color",
+		"--base-path=base/",
+		"--include-path=include/",
+		"--include-path=lib/nested",
+		"--include-path=lib/",
+		"base/main.sol",
+		"base/contract.sol",
+		"include/include.sol",
+		"lib/nested/nested.sol",
+		"lib/lib.sol",
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.paths = {
+		"base/main.sol",
+		"base/contract.sol",
+		"include/include.sol",
+		"lib/nested/nested.sol",
+		"lib/lib.sol",
+	};
+	expectedOptions.input.basePath = "base/";
+	expectedOptions.input.includePaths = {
+		"include/",
+		"lib/nested",
+		"lib/",
+	};
+	expectedOptions.formatting.coloredOutput = false;
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+		{"main.sol", mainContractSource},
+		{"contract.sol", preamble},
+		{"contract_via_callback.sol", preamble},
+		{"include.sol", preamble},
+		{"include_via_callback.sol", preamble},
+		{"nested.sol", preamble},
+		{"nested_via_callback.sol", preamble},
+		{"lib.sol", preamble},
+		{"lib_via_callback.sol", preamble},
+	};
+
+	vector<boost::filesystem::path> expectedIncludePaths = {
+		expectedWorkDir / "include/",
+		expectedWorkDir / "lib/nested",
+		expectedWorkDir / "lib/",
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {
+		canonicalWorkDir / "base",
+		canonicalWorkDir / "include",
+		canonicalWorkDir / "lib/nested",
+		canonicalWorkDir / "lib",
+	};
+
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(
+		commandLine,
+		"",
+		true /* _processInput */
+	);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.includePaths() == expectedIncludePaths);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "base/");
+}
+
+BOOST_AUTO_TEST_CASE(standard_json_include_paths)
+{
+	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+
+	string const preamble =
+		"// SPDX-License-Identifier: GPL-3.0\n"
+		"pragma solidity >=0.0;\n";
+	string const mainContractSource = preamble +
+		"import 'contract_via_callback.sol';\n"
+		"import 'include_via_callback.sol';\n"
+		"import 'nested_via_callback.sol';\n"
+		"import 'lib_via_callback.sol';\n";
+
+	string const standardJsonInput = R"(
+		{
+			"language": "Solidity",
+			"sources": {
+				"main.sol": {"content": ")" + mainContractSource + R"("}
+			}
+		}
+	)";
+
+	createFilesWithParentDirs(
+		{
+			tempDir.path() / "base/contract_via_callback.sol",
+			tempDir.path() / "include/include_via_callback.sol",
+			tempDir.path() / "lib/nested/nested_via_callback.sol",
+			tempDir.path() / "lib/lib_via_callback.sol",
+		},
+		preamble
+	);
+
+	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
+
+	vector<string> commandLine = {
+		"solc",
+		"--base-path=base/",
+		"--include-path=include/",
+		"--include-path=lib/nested",
+		"--include-path=lib/",
+		"--standard-json",
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.mode = InputMode::StandardJson;
+	expectedOptions.input.paths = {};
+	expectedOptions.input.addStdin = true;
+	expectedOptions.input.basePath = "base/";
+	expectedOptions.input.includePaths = {
+		"include/",
+		"lib/nested",
+		"lib/",
+	};
+	expectedOptions.modelChecker.initialize = false;
+
+	// NOTE: Source code from Standard JSON does not end up in FileReader. This is not a problem
+	// because FileReader is only used once to initialize the compiler stack and after that
+	// its sources are irrelevant (even though the callback still stores everything it loads).
+	map<string, string> expectedSources = {
+		{"contract_via_callback.sol", preamble},
+		{"include_via_callback.sol", preamble},
+		{"nested_via_callback.sol", preamble},
+		{"lib_via_callback.sol", preamble},
+	};
+
+	vector<boost::filesystem::path> expectedIncludePaths = {
+		expectedWorkDir / "include/",
+		expectedWorkDir / "lib/nested",
+		expectedWorkDir / "lib/",
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {};
+
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(
+		commandLine,
+		standardJsonInput,
+		true /* _processInput */
+	);
+
+	Json::Value parsedStdout;
+	string jsonParsingErrors;
+	BOOST_TEST(util::jsonParseStrict(result.stdoutContent, parsedStdout, &jsonParsingErrors));
+	BOOST_TEST(jsonParsingErrors == "");
+	for (Json::Value const& errorDict: parsedStdout["errors"])
+		// The error list might contain pre-release compiler warning
+		BOOST_TEST(errorDict["severity"] != "error");
+	BOOST_TEST(
+		(parsedStdout["sources"].getMemberNames() | ranges::to<set>) ==
+		(expectedSources | ranges::views::keys | ranges::to<set>) + set<string>{"main.sol"}
+	);
+
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.includePaths() == expectedIncludePaths);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "base/");
+}
+
+BOOST_AUTO_TEST_CASE(cli_include_paths_empty_path)
+{
+	TemporaryDirectory tempDir({"base/", "include/"}, TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+	createFilesWithParentDirs({tempDir.path() / "base/main.sol"});
+
+	string expectedMessage = "Empty values are not allowed in --include-path.\n";
+
+	vector<string> commandLine = {
+		"solc",
+		"--base-path=base/",
+		"--include-path", "include/",
+		"--include-path", "",
+		"base/main.sol",
+	};
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+	BOOST_TEST(!result.success);
+	BOOST_TEST(result.stderrContent == expectedMessage);
+}
+
+BOOST_AUTO_TEST_CASE(cli_include_paths_without_base_path)
+{
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+	createFilesWithParentDirs({tempDir.path() / "contract.sol"});
+
+	string expectedMessage = "--include-path option requires a non-empty base path.\n";
+
+	vector<string> commandLine = {"solc", "--include-path", "include/", "contract.sol"};
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+	BOOST_TEST(!result.success);
+	BOOST_TEST(result.stderrContent == expectedMessage);
+}
+
+BOOST_AUTO_TEST_CASE(cli_include_paths_should_allow_duplicate_paths)
+{
+	TemporaryDirectory tempDir({"dir1/", "dir2/"}, TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+	createFilesWithParentDirs({"dir1/contract.sol"});
+
+	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
+	boost::filesystem::path expectedTempDir = "/" / tempDir.path().relative_path();
+
+	vector<string> commandLine = {
+		"solc",
+		"--base-path=dir1/",
+		"--include-path", "dir1",
+		"--include-path", "dir1",
+		"--include-path", "dir1/",
+		"--include-path", "dir1/",
+		"--include-path", "./dir1/",
+		"--include-path", "dir2/../dir1/",
+		"--include-path", (tempDir.path() / "dir1/").string(),
+		"--include-path", (expectedWorkDir / "dir1/").string(),
+		"--include-path", "dir1/",
+		"dir1/contract.sol",
+	};
+
+	// Duplicates do not affect the result but are not removed from the include path list.
+	vector<boost::filesystem::path> expectedIncludePaths = {
+		expectedWorkDir / "dir1",
+		expectedWorkDir / "dir1",
+		expectedWorkDir / "dir1/",
+		expectedWorkDir / "dir1/",
+		expectedWorkDir / "dir1/",
+		expectedWorkDir / "dir1/",
+		// NOTE: On macOS expectedTempDir usually contains a symlink and therefore for us it's
+		// different from expectedWorkDir.
+		expectedTempDir / "dir1/",
+		expectedWorkDir / "dir1/",
+		expectedWorkDir / "dir1/",
+	};
+
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.reader.includePaths() == expectedIncludePaths);
+	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "dir1/");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
