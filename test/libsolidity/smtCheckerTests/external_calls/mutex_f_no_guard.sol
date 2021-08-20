@@ -28,4 +28,6 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (274-288): CHC: Assertion violation happens here.
+// Warning 1218: (274-288): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (274-288): CHC: Assertion violation might happen here.
+// Warning 4661: (274-288): BMC: Assertion violation happens here.

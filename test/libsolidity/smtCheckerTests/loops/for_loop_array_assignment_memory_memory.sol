@@ -23,6 +23,7 @@ contract LoopFor2 {
 // SMTIgnoreCex: yes
 // ----
 // Warning 2072: (202-217): Unused local variable.
+// Warning 1218: (371-375): CHC: Error trying to invoke SMT solver.
 // Warning 6368: (354-358): CHC: Out of bounds access happens here.
-// Warning 6368: (371-375): CHC: Out of bounds access happens here.
+// Warning 6368: (371-375): CHC: Out of bounds access might happen here.
 // Warning 6368: (378-382): CHC: Out of bounds access happens here.

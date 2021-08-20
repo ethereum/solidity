@@ -8,4 +8,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (92-111): CHC: Assertion violation happens here.\nCounterexample:\n\na = 38\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(38, 0)
+// Warning 6328: (92-111): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)

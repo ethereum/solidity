@@ -1,4 +1,5 @@
 contract C {
+	constructor() payable {}
 	function f(address payable a) public {
 		require(address(this).balance > 1000);
 		a.transfer(666);
@@ -11,4 +12,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (166-201): CHC: Assertion violation happens here.
+// Warning 6328: (192-227): CHC: Assertion violation happens here.
