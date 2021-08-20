@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Immutable variables can be read at construction time once they are initialized.
  * SMTChecker: Support low level ``call`` as external calls to unknown code.
+ * SMTChecker: Add constraints to better correlate ``address(this).balance`` and ``msg.value``.
 
 
 Bugfixes:

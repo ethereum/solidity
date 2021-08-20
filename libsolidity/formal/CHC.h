@@ -164,6 +164,12 @@ private:
 	/// in a given _source.
 	void defineInterfacesAndSummaries(SourceUnit const& _source);
 
+	/// Creates the rule
+	/// summary_function \land transaction_entry_constraints => external_summary_function
+	/// This is needed to add these transaction entry constraints which include
+	/// potential balance increase by external means, for example.
+	void defineExternalFunctionInterface(FunctionDefinition const& _function, ContractDefinition const& _contract);
+
 	/// Creates a CHC system that, for a given contract,
 	/// - initializes its state variables (as 0 or given value, if any).
 	/// - "calls" the explicit constructor function of the contract, if any.
@@ -225,6 +231,13 @@ private:
 	/// @returns a predicate that defines a function summary.
 	smtutil::Expression summary(FunctionDefinition const& _function);
 	smtutil::Expression summary(FunctionDefinition const& _function, ContractDefinition const& _contract);
+	/// @returns a predicate that applies a function summary
+	/// over the constrained variables.
+	smtutil::Expression summaryCall(FunctionDefinition const& _function);
+	smtutil::Expression summaryCall(FunctionDefinition const& _function, ContractDefinition const& _contract);
+	/// @returns a predicate that defines an external function summary.
+	smtutil::Expression externalSummary(FunctionDefinition const& _function);
+	smtutil::Expression externalSummary(FunctionDefinition const& _function, ContractDefinition const& _contract);
 	//@}
 
 	/// Solver related.
@@ -317,6 +330,9 @@ private:
 
 	/// Function predicates.
 	std::map<ContractDefinition const*, std::map<FunctionDefinition const*, Predicate const*>> m_summaries;
+
+	/// External function predicates.
+	std::map<ContractDefinition const*, std::map<FunctionDefinition const*, Predicate const*>> m_externalSummaries;
 	//@}
 
 	/// Variables.
