@@ -830,6 +830,25 @@ are located in storage, even though they also have type ``uint[]``.  However,
 if ``d`` was assigned, we would need to clear knowledge about ``array`` and
 vice-versa.
 
+Contract Balance
+================
+
+A contract may be deployed with funds sent to it, if ``msg.value`` > 0 in the
+deployment transaction.
+However, the contract's address may already have funds before deployment,
+which are kept by the contract.
+Therefore, the SMTChecker assumes that ``address(this).balance >= msg.value``
+in the constructor in order to be consistent with the EVM rules.
+The contract's balance may also increase without triggering any calls to the
+contract, if
+
+- ``selfdestruct`` is executed by another contract with the analyzed contract
+  as the target of the remaining funds,
+- the contract is the coinbase (i.e., ``block.coinbase``) of some block.
+
+To model this properly, the SMTChecker assumes that at every new transaction
+the contract's balance may grow by at least ``msg.value``.
+
 **********************
 Real World Assumptions
 **********************
@@ -841,3 +860,7 @@ push: If the ``push`` operation is applied to an array of length 2^256 - 1, its
 length silently overflows.
 However, this is unlikely to happen in practice, since the operations required
 to grow the array to that point would take billions of years to execute.
+Another similar assumption taken by the SMTChecker is that an address' balance
+can never overflow.
+
+A similar idea was presented in `EIP-1985 <https://eips.ethereum.org/EIPS/eip-1985>`_.
