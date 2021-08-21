@@ -78,6 +78,8 @@
 #include <range/v3/view/map.hpp>
 #include <range/v3/action/remove.hpp>
 
+#include <limits>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -269,7 +271,7 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 
 void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 {
-	bool insideLoop = false;
+	int8_t nestingLevel = 0;
 	for (char abbreviation: _stepAbbreviations)
 		switch (abbreviation)
 		{
@@ -277,12 +279,12 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 		case '\n':
 			break;
 		case '[':
-			assertThrow(!insideLoop, OptimizerException, "Nested brackets are not supported");
-			insideLoop = true;
+			assertThrow(nestingLevel < numeric_limits<int8_t>::max(), OptimizerException, "Brackets nested too deep");
+			nestingLevel++;
 			break;
 		case ']':
-			assertThrow(insideLoop, OptimizerException, "Unbalanced brackets");
-			insideLoop = false;
+			nestingLevel--;
+			assertThrow(nestingLevel >= 0, OptimizerException, "Unbalanced brackets");
 			break;
 		default:
 		{
@@ -301,10 +303,9 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 				OptimizerException,
 				"'"s + abbreviation + "' is invalid in the current environment: " + *invalid
 			);
-
 		}
 		}
-	assertThrow(!insideLoop, OptimizerException, "Unbalanced brackets");
+	assertThrow(nestingLevel == 0, OptimizerException, "Unbalanced brackets");
 }
 
 void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
