@@ -9,6 +9,7 @@ from os import path, walk
 from sys import exit
 from textwrap import dedent
 import subprocess
+import sys
 
 PROJECT_ROOT = path.dirname(path.dirname(path.realpath(__file__)))
 PYLINT_RCFILE = f"{PROJECT_ROOT}/scripts/pylintrc"
@@ -18,6 +19,12 @@ SGR_CLEAR = "\033[0m"
 
 def pylint_all_filenames(dev_mode, rootdirs):
     """ Performs pylint on all python files within given root directory (recursively).  """
+
+    BARE_COMMAND = [
+        "pylint",
+        f"--rcfile={PYLINT_RCFILE}",
+    ]
+
     filenames = []
     for rootdir in rootdirs:
         for rootpath, _, filenames_w in walk(rootdir):
@@ -25,29 +32,27 @@ def pylint_all_filenames(dev_mode, rootdirs):
                 if filename.endswith('.py'):
                     filenames.append(path.join(rootpath, filename))
 
-    checked_count = 0
-    failed = []
-    for filename in filenames:
-        checked_count += 1
-        command_line = [
-            "pylint",
-            f"--rcfile={PYLINT_RCFILE}",
-            f"{filename}",
-        ]
+    if not dev_mode:
+        # NOTE: We could just give pylint the directories and it would find the files on its
+        # own but it would treat them as packages, which would result in lots of import errors.
+        command_line = BARE_COMMAND + filenames
+        return subprocess.run(command_line, check=False).returncode == 0
+
+    for i, filename in enumerate(filenames):
+        command_line = BARE_COMMAND + [filename]
         print(
             f"{SGR_INFO}"
-            f"[{checked_count}/{len(filenames)}] "
+            f"[{i + 1}/{len(filenames)}] "
             f"Running pylint on file: {filename}{SGR_CLEAR}"
         )
 
-        process = subprocess.run(command_line)
+        process = subprocess.run(command_line, check=False)
 
         if process.returncode != 0:
-            if dev_mode:
-                return 1, checked_count
-            failed.append(filename)
+            return False
 
-    return len(failed), len(filenames)
+    print()
+    return True
 
 
 def parse_command_line():
@@ -64,7 +69,10 @@ def parse_command_line():
         dest='dev_mode',
         default=False,
         action='store_true',
-        help="Abort on first error."
+        help=(
+            "Abort on first error. "
+            "In this mode every script is passed to pylint separately. "
+        )
     )
     return parser.parse_args()
 
@@ -77,12 +85,12 @@ def main():
         f"{PROJECT_ROOT}/scripts",
         f"{PROJECT_ROOT}/test",
     ]
-    (failed_count, total_count) = pylint_all_filenames(options.dev_mode, rootdirs)
+    success = pylint_all_filenames(options.dev_mode, rootdirs)
 
-    if failed_count != 0:
-        exit(f"pylint failed on {failed_count}/{total_count} files.")
+    if not success:
+        exit(1)
     else:
-        print(f"Successfully tested {total_count} files.")
+        print("No problems found.")
 
 
 if __name__ == "__main__":
