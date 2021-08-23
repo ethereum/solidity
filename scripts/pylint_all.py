@@ -5,9 +5,10 @@ Runs pylint on all Python files in project directories known to contain Python s
 """
 
 from argparse import ArgumentParser
-from os import path, walk, system
+from os import path, walk
 from sys import exit as exitwith
 from textwrap import dedent
+import subprocess
 
 PROJECT_ROOT = path.dirname(path.dirname(path.realpath(__file__)))
 PYLINT_RCFILE = f"{PROJECT_ROOT}/scripts/pylintrc"
@@ -28,11 +29,20 @@ def pylint_all_filenames(dev_mode, rootdirs):
     failed = []
     for filename in filenames:
         checked_count += 1
-        cmdline = "pylint --rcfile=\"{}\" \"{}\"".format(PYLINT_RCFILE, filename)
-        print("{}[{}/{}] Running pylint on file: {}{}".format(SGR_INFO, checked_count, len(filenames),
-                                                              filename, SGR_CLEAR))
-        exit_code = system(cmdline)
-        if exit_code != 0:
+        command_line = [
+            "pylint",
+            f"--rcfile={PYLINT_RCFILE}",
+            f"{filename}",
+        ]
+        print(
+            f"{SGR_INFO}"
+            f"[{checked_count}/{len(filenames)}] "
+            f"Running pylint on file: {filename}{SGR_CLEAR}"
+        )
+
+        process = subprocess.run(command_line)
+
+        if process.returncode != 0:
             if dev_mode:
                 return 1, checked_count
             failed.append(filename)
