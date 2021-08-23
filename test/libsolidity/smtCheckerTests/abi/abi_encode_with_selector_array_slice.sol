@@ -24,6 +24,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
 // Warning 1218: (578-608): CHC: Error trying to invoke SMT solver.
 // Warning 1218: (691-721): CHC: Error trying to invoke SMT solver.

@@ -5,7 +5,7 @@ contract C {
 		++c;
 	}
 	function inv() public view {
-		assert(address(this).balance >= c * 10); // should hold
+		assert(address(this).balance >= c * 11); // should hold
 		assert(address(this).balance >= c * 12); // should fail
 	}
 }

@@ -12,6 +12,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (132-188): CHC: Assertion violation happens here.\nCounterexample:\nprevBalance = 0\n\nTransaction trace:\nC.constructor()\nState: prevBalance = 0\nC.f(){ value: 168 }
-// Warning 6328: (269-324): CHC: Assertion violation happens here.\nCounterexample:\nprevBalance = 0\n\nTransaction trace:\nC.constructor()\nState: prevBalance = 0\nC.f(){ value: 1201 }
+// Warning 6328: (132-188): CHC: Assertion violation happens here.
+// Warning 6328: (269-324): CHC: Assertion violation happens here.

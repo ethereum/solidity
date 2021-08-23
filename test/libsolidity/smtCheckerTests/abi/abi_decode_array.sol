@@ -30,6 +30,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
 // Warning 8364: (162-168): Assertion checker does not yet implement type type(uint256[] memory)
 // Warning 8364: (170-176): Assertion checker does not yet implement type type(uint256[] memory)

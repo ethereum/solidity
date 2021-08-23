@@ -16,8 +16,9 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
 // Warning 4588: (219-224): Assertion checker does not yet implement this type of function call.
-// Warning 6328: (263-279): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\na = 0\nb1 = 7720\nb2 = 7719\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f(0){ value: 5855 }
-// Warning 6328: (359-373): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 0\nb1 = 39\nb2 = 38\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f(0){ value: 21240 }
+// Warning 6328: (263-279): CHC: Assertion violation happens here.
+// Warning 6328: (359-373): CHC: Assertion violation happens here.
 // Warning 4588: (219-224): Assertion checker does not yet implement this type of function call.
