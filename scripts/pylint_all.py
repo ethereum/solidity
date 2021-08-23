@@ -23,6 +23,8 @@ def pylint_all_filenames(dev_mode, rootdirs):
     BARE_COMMAND = [
         "pylint",
         f"--rcfile={PYLINT_RCFILE}",
+        "--output-format=colorized",
+        "--score=n"
     ]
 
     filenames = []
