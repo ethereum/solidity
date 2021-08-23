@@ -61,7 +61,7 @@ def get_checks(content, sol_file_path):
             constructors.append(line)
         if line.startswith("ABI_CHECK") or line.startswith("BOOST_REQUIRE"):
             checks.append(line)
-    with open(sol_file_path, "r") as sol_file:
+    with open(sol_file_path, "r", encoding='utf8') as sol_file:
         sol_constructors = []
         sol_checks = []
         inside_expectations = False
@@ -118,7 +118,7 @@ def get_tests(e2e_path):
 
 def process_input_file(e2e_path, input_file, interactive):
     tests = get_tests(e2e_path)
-    with open(input_file, "r") as cpp_file:
+    with open(input_file, "r", encoding='utf8') as cpp_file:
         inside_test = False
         test_name = ""
         inside_extracted_test = False
