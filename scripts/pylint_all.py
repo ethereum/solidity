@@ -1,14 +1,13 @@
 #! /usr/bin/env python3
 
 """
-Performs pylint on all python files in the project repo's {test,script,docs} directory recursively.
-
-This script is meant to be run from the CI but can also be easily in local dev environment,
-where you can optionally pass `-d` as command line argument to let this script abort on first error.
+Runs pylint on all Python files in project directories known to contain Python scripts.
 """
 
+from argparse import ArgumentParser
 from os import path, walk, system
-from sys import argv, exit as exitwith
+from sys import exit as exitwith
+from textwrap import dedent
 
 PROJECT_ROOT = path.dirname(path.realpath(__file__))
 PYLINT_RCFILE = "{}/pylintrc".format(PROJECT_ROOT)
@@ -40,11 +39,29 @@ def pylint_all_filenames(dev_mode, rootdirs):
 
     return len(failed), len(filenames)
 
+
+def parse_command_line():
+    script_description = dedent("""
+        Runs pylint on all Python files in project directories known to contain Python scripts.
+
+        This script is meant to be run from the CI but can also be easily used in the local dev
+        environment.
+    """)
+
+    parser = ArgumentParser(description=script_description)
+    parser.add_argument(
+        '-d', '--dev-mode',
+        dest='dev_mode',
+        default=False,
+        action='store_true',
+        help="Abort on first error."
+    )
+    return parser.parse_args()
+
+
 def main():
-    """ Collects all python script root dirs and runs pylint on them. You can optionally
-        pass `-d` as command line argument to let this script abort on first error. """
-    dev_mode = len(argv) == 2 and argv[1] == "-d"
-    failed_count, total_count = pylint_all_filenames(dev_mode, [
+    options = parse_command_line()
+    failed_count, total_count = pylint_all_filenames(options.dev_mode, [
         path.abspath(path.dirname(__file__) + "/../docs"),
         path.abspath(path.dirname(__file__) + "/../scripts"),
         path.abspath(path.dirname(__file__) + "/../test")])
@@ -52,6 +69,7 @@ def main():
         exitwith("pylint failed on {}/{} files.".format(failed_count, total_count))
     else:
         print("Successfully tested {} files.".format(total_count))
+
 
 if __name__ == "__main__":
     main()
