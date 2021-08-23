@@ -9,8 +9,8 @@ from os import path, walk, system
 from sys import exit as exitwith
 from textwrap import dedent
 
-PROJECT_ROOT = path.dirname(path.realpath(__file__))
-PYLINT_RCFILE = "{}/pylintrc".format(PROJECT_ROOT)
+PROJECT_ROOT = path.dirname(path.dirname(path.realpath(__file__)))
+PYLINT_RCFILE = f"{PROJECT_ROOT}/scripts/pylintrc"
 
 SGR_INFO = "\033[1;32m"
 SGR_CLEAR = "\033[0m"
@@ -61,10 +61,14 @@ def parse_command_line():
 
 def main():
     options = parse_command_line()
-    failed_count, total_count = pylint_all_filenames(options.dev_mode, [
-        path.abspath(path.dirname(__file__) + "/../docs"),
-        path.abspath(path.dirname(__file__) + "/../scripts"),
-        path.abspath(path.dirname(__file__) + "/../test")])
+
+    rootdirs = [
+        f"{PROJECT_ROOT}/docs",
+        f"{PROJECT_ROOT}/scripts",
+        f"{PROJECT_ROOT}/test",
+    ]
+    (failed_count, total_count) = pylint_all_filenames(options.dev_mode, rootdirs)
+
     if failed_count != 0:
         exitwith("pylint failed on {}/{} files.".format(failed_count, total_count))
     else:
