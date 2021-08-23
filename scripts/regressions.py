@@ -67,7 +67,7 @@ class regressor():
         if not env:
             env = os.environ.copy()
 
-        with open(logfile, 'w') as logfh:
+        with open(logfile, 'w', encoding='utf8') as logfh:
             with subprocess.Popen(command, shell=True, executable='/bin/bash',
                                     env=env, stdout=logfh,
                                     stderr=subprocess.STDOUT) as proc:
@@ -88,7 +88,7 @@ class regressor():
 
         ## Log may contain non ASCII characters, so we simply stringify them
         ## since they don't matter for regular expression matching
-        with open(logfile, 'rb') as f:
+        with open(logfile, 'rb', encoding=None) as f:
             rawtext = str(f.read())
         return not re.search(self._re_sanitizer_log, rawtext)
 
