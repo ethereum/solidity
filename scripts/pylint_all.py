@@ -6,7 +6,7 @@ Runs pylint on all Python files in project directories known to contain Python s
 
 from argparse import ArgumentParser
 from os import path, walk
-from sys import exit as exitwith
+from sys import exit
 from textwrap import dedent
 import subprocess
 
@@ -80,9 +80,9 @@ def main():
     (failed_count, total_count) = pylint_all_filenames(options.dev_mode, rootdirs)
 
     if failed_count != 0:
-        exitwith("pylint failed on {}/{} files.".format(failed_count, total_count))
+        exit(f"pylint failed on {failed_count}/{total_count} files.")
     else:
-        print("Successfully tested {} files.".format(total_count))
+        print(f"Successfully tested {total_count} files.")
 
 
 if __name__ == "__main__":
