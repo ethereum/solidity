@@ -20,7 +20,8 @@
 
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Algorithms.h>
-#include <boost/range/algorithm/sort.hpp>
+
+#include <range/v3/algorithm/sort.hpp>
 
 #include <functional>
 
@@ -141,7 +142,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 			exitInfo.uninitializedVariableAccesses.begin(),
 			exitInfo.uninitializedVariableAccesses.end()
 		);
-		boost::range::sort(
+		ranges::sort(
 			uninitializedAccessesOrdered,
 			[](VariableOccurrence const* lhs, VariableOccurrence const* rhs) -> bool
 			{
