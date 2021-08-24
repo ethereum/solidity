@@ -21,6 +21,7 @@ disable=
     bad-indentation,
     bad-whitespace,
     consider-using-sys-exit,
+    duplicate-code,
     invalid-name,
     missing-docstring,
     mixed-indentation,
