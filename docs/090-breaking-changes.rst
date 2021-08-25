@@ -15,7 +15,7 @@ Silent Changes of the Semantics
 New Restrictions
 ================
 
-...
+- Make ``basefee`` a reserved identifier in assembly.
 
 Interface Changes
 =================
