@@ -591,6 +591,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 	{
 		m_externalFunctionCallHappened = true;
 		resetStorageVariables();
+		resetBalances();
 	}
 }
 
