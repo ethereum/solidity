@@ -434,7 +434,7 @@ jobs:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
 
-  b_ubu_clang: &build_ubuntu2004_clang
+  b_ubu_clang: &b_ubu_clang
     resource_class: xlarge
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
@@ -473,10 +473,11 @@ jobs:
     steps:
       - checkout
       - run: *run_build
+      - run: *gitter_notify_failure
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
 
-  b_ubu: &build_ubuntu2004
+  b_ubu: &b_ubu
     resource_class: xlarge
     docker:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
@@ -489,14 +490,14 @@ jobs:
       - store_artifacts: *artifacts_tools
       - persist_to_workspace: *artifacts_executables
 
-  b_ubu_release: &build_ubuntu2004_release
-    <<: *build_ubuntu2004
+  b_ubu_release: &b_ubu_release
+    <<: *b_ubu
     environment:
       FORCE_RELEASE: ON
       MAKEFLAGS: -j 10
 
   b_ubu_static:
-    <<: *build_ubuntu2004
+    <<: *b_ubu
     environment:
       MAKEFLAGS: -j 10
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
@@ -509,7 +510,7 @@ jobs:
       - store_artifacts: *artifacts_solc
 
   b_ubu_codecov:
-    <<: *build_ubuntu2004
+    <<: *b_ubu
     environment:
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
@@ -543,7 +544,7 @@ jobs:
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
-    <<: *build_ubuntu2004
+    <<: *b_ubu
     environment:
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
@@ -552,7 +553,7 @@ jobs:
       - checkout
       - run: *run_build
 
-  b_ubu_ossfuzz: &build_ubuntu1604_clang
+  b_ubu_ossfuzz: &b_ubu_ossfuzz
     docker:
       - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
     environment:
@@ -697,7 +698,7 @@ jobs:
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
-    <<: *build_ubuntu2004
+    <<: *b_ubu
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
       MAKEFLAGS: -j 10
@@ -811,10 +812,28 @@ jobs:
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ubu_ubsan_clang:
-    <<: *test_ubuntu2004_clang
+    docker:
+      - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: *run_soltest
+      - run: *gitter_notify_failure
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
 
   t_ubu_ubsan_clang_cli:
-    <<: *test_ubuntu2004_clang_cli
+    docker:
+      - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: *run_cmdline_tests
+      - run: *gitter_notify_failure
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
 
   t_ems_solcjs:
     docker:
