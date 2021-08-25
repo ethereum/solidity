@@ -25,6 +25,7 @@
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/RedundantStoreBase.h>
 
 #include <map>
 #include <vector>
@@ -106,91 +107,37 @@ struct Dialect;
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
-class RedundantAssignEliminator: public ASTWalker
+class RedundantAssignEliminator: public RedundantStoreBase
 {
 public:
 	static constexpr char const* name{"RedundantAssignEliminator"};
 	static void run(OptimiserStepContext&, Block& _ast);
 
-	explicit RedundantAssignEliminator(Dialect const& _dialect): m_dialect(&_dialect) {}
-	RedundantAssignEliminator() = delete;
-	RedundantAssignEliminator(RedundantAssignEliminator const&) = delete;
-	RedundantAssignEliminator& operator=(RedundantAssignEliminator const&) = delete;
-	RedundantAssignEliminator(RedundantAssignEliminator&&) = default;
-	RedundantAssignEliminator& operator=(RedundantAssignEliminator&&) = default;
+	explicit RedundantAssignEliminator(Dialect const& _dialect): RedundantStoreBase(_dialect) {}
 
 	void operator()(Identifier const& _identifier) override;
 	void operator()(VariableDeclaration const& _variableDeclaration) override;
 	void operator()(Assignment const& _assignment) override;
-	void operator()(If const& _if) override;
-	void operator()(Switch const& _switch) override;
 	void operator()(FunctionDefinition const&) override;
-	void operator()(ForLoop const&) override;
-	void operator()(Break const&) override;
-	void operator()(Continue const&) override;
 	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
+	using RedundantStoreBase::visit;
+	void visit(Statement const& _statement) override;
+
 private:
-	class State
-	{
-	public:
-		enum Value { Unused, Undecided, Used };
-		State(Value _value = Undecided): m_value(_value) {}
-		inline bool operator==(State _other) const { return m_value == _other.m_value; }
-		inline bool operator!=(State _other) const { return !operator==(_other); }
-		static inline void join(State& _a, State const& _b)
-		{
-			// Using "max" works here because of the order of the values in the enum.
-			_a.m_value =  Value(std::max(int(_a.m_value), int(_b.m_value)));
-		}
-	private:
-		Value m_value = Undecided;
-	};
+	void shortcutNestedLoop(TrackedStores const& _beforeLoop) override;
+	void finalizeFunctionDefinition(FunctionDefinition const& _functionDefinition) override;
 
-	// TODO check that this does not cause nondeterminism!
-	// This could also be a pseudo-map from state to assignment.
-	using TrackedAssignments = std::map<YulString, std::map<Assignment const*, State>>;
-
-	/// Joins the assignment mapping of @a _source into @a _target according to the rules laid out
-	/// above.
-	/// Will destroy @a _source.
-	static void merge(TrackedAssignments& _target, TrackedAssignments&& _source);
-	static void merge(TrackedAssignments& _target, std::vector<TrackedAssignments>&& _source);
 	void changeUndecidedTo(YulString _variable, State _newState);
 	/// Called when a variable goes out of scope. Sets the state of all still undecided
 	/// assignments to the final state. In this case, this also applies to pending
-	/// break and continue TrackedAssignments.
+	/// break and continue TrackedStores.
 	void finalize(YulString _variable, State _finalState);
 
-	Dialect const* m_dialect;
+
 	std::set<YulString> m_declaredVariables;
 	std::set<YulString> m_returnVariables;
-	std::set<Assignment const*> m_pendingRemovals;
-	TrackedAssignments m_assignments;
-
-	/// Working data for traversing for-loops.
-	struct ForLoopInfo
-	{
-		/// Tracked assignment states for each break statement.
-		std::vector<TrackedAssignments> pendingBreakStmts;
-		/// Tracked assignment states for each continue statement.
-		std::vector<TrackedAssignments> pendingContinueStmts;
-	};
-	ForLoopInfo m_forLoopInfo;
-	size_t m_forLoopNestingDepth = 0;
-};
-
-class AssignmentRemover: public ASTModifier
-{
-public:
-	explicit AssignmentRemover(std::set<Assignment const*> const& _toRemove):
-		m_toRemove(_toRemove)
-	{}
-	void operator()(Block& _block) override;
-
-private:
-	std::set<Assignment const*> const& m_toRemove;
 };
 
 }

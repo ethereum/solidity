@@ -248,8 +248,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 
 template <class Pattern>
 std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4_5(
-	Pattern,
-	Pattern,
+	Pattern A,
+	Pattern B,
 	Pattern,
 	Pattern X,
 	Pattern Y
@@ -266,13 +266,17 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4_5(
 		{Builtins::OR(Y, Builtins::OR(X, Y)), [=]{ return Builtins::OR(X, Y); }},
 		{Builtins::OR(Builtins::OR(Y, X), Y), [=]{ return Builtins::OR(Y, X); }},
 		{Builtins::OR(Y, Builtins::OR(Y, X)), [=]{ return Builtins::OR(Y, X); }},
+		{Builtins::SIGNEXTEND(X, Builtins::SIGNEXTEND(X, Y)), [=]() { return Builtins::SIGNEXTEND(X, Y); }},
+		{Builtins::SIGNEXTEND(A, Builtins::SIGNEXTEND(B, X)), [=]() {
+			return Builtins::SIGNEXTEND(A.d() < B.d() ? A.d() : B.d(), X);
+		}},
 	};
 }
 
 template <class Pattern>
 std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	Pattern A,
-	Pattern,
+	Pattern B,
 	Pattern,
 	Pattern X,
 	Pattern
@@ -312,6 +316,31 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		Builtins::BYTE(A, X),
 		[=]() -> Pattern { return Word(0); },
 		[=]() { return A.d() >= Pattern::WordSize / 8; }
+	});
+
+	// Replace SIGNEXTEND(A, X), A >= 31 with ID
+	rules.push_back({
+		Builtins::SIGNEXTEND(A, X),
+		[=]() -> Pattern { return X; },
+		[=]() { return A.d() >= Pattern::WordSize / 8 - 1; }
+	});
+	rules.push_back({
+		Builtins::AND(A, Builtins::SIGNEXTEND(B, X)),
+		[=]() -> Pattern { return Builtins::AND(A, X); },
+		[=]() {
+			return
+				B.d() < Pattern::WordSize / 8 - 1 &&
+				(A.d() & ((u256(1) << static_cast<size_t>((B.d() + 1) * 8)) - 1)) == A.d();
+		}
+	});
+	rules.push_back({
+		Builtins::AND(Builtins::SIGNEXTEND(B, X), A),
+		[=]() -> Pattern { return Builtins::AND(A, X); },
+		[=]() {
+			return
+				B.d() < Pattern::WordSize / 8 - 1 &&
+				(A.d() & ((u256(1) << static_cast<size_t>((B.d() + 1) * 8)) - 1)) == A.d();
+		}
 	});
 
 	for (auto instr: {
@@ -597,6 +626,24 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		}
 	});
 
+	rules.push_back({
+		Builtins::SHL(A, Builtins::SIGNEXTEND(B, X)),
+		[=]() -> Pattern { return Builtins::SIGNEXTEND((A.d() >> 3) + B.d(), Builtins::SHL(A, X)); },
+		[=] { return (A.d() & 7) == 0 && A.d() <= Pattern::WordSize && B.d() <= Pattern::WordSize / 8; }
+	});
+
+	rules.push_back({
+		Builtins::SIGNEXTEND(A, Builtins::SHR(B, X)),
+		[=]() -> Pattern { return Builtins::SAR(B, X); },
+		[=] {
+			return
+				B.d() % 8 == 0 &&
+				B.d() <= Pattern::WordSize &&
+				A.d() <= Pattern::WordSize &&
+				(Pattern::WordSize - B.d()) / 8 == A.d() + 1;
+		}
+	});
+
 	return rules;
 }
 
@@ -634,6 +681,22 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 			// X - (A + Y) -> (X - Y) + (-A)
 			Builtins::SUB(X, Builtins::ADD(A, Y)),
 			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); }
+		}, {
+			// (X - A) - Y -> (X - Y) - A
+			Builtins::SUB(Builtins::SUB(X, A), Y),
+			[=]() -> Pattern { return Builtins::SUB(Builtins::SUB(X, Y), A); }
+		}, {
+			// (A - X) - Y -> A - (X + Y)
+			Builtins::SUB(Builtins::SUB(A, X), Y),
+			[=]() -> Pattern { return Builtins::SUB(A, Builtins::ADD(X, Y)); }
+		}, {
+			// X - (Y - A) -> (X - Y) + A
+			Builtins::SUB(X, Builtins::SUB(Y, A)),
+			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A.d()); }
+		}, {
+			// X - (A - Y) -> (X + Y) + (-A)
+			Builtins::SUB(X, Builtins::SUB(A, Y)),
+			[=]() -> Pattern { return Builtins::ADD(Builtins::ADD(X, Y), 0 - A.d()); }
 		}
 	};
 	return rules;

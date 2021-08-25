@@ -407,11 +407,17 @@ Parameter TestFileParser::parseParameter()
 		if (isSigned)
 			parsed = "-" + parsed;
 
-		parameter.rawBytes = BytesUtils::applyAlign(
-			parameter.alignment,
-			parameter.abiType,
-			BytesUtils::convertNumber(parsed)
-		);
+		if (parsed.find('.') == string::npos)
+			parameter.rawBytes = BytesUtils::applyAlign(
+				parameter.alignment,
+				parameter.abiType,
+				BytesUtils::convertNumber(parsed)
+			);
+		else
+		{
+			parameter.abiType.type = isSigned ? ABIType::SignedFixedPoint : ABIType::UnsignedFixedPoint;
+			parameter.rawBytes = BytesUtils::convertFixedPoint(parsed, parameter.abiType.fractionalDigits);
+		}
 	}
 	else if (accept(Token::Failure, true))
 	{
@@ -667,7 +673,7 @@ string TestFileParser::Scanner::scanDecimalNumber()
 {
 	string number;
 	number += current();
-	while (langutil::isDecimalDigit(peek()))
+	while (langutil::isDecimalDigit(peek()) || '.' == peek())
 	{
 		advance();
 		number += current();

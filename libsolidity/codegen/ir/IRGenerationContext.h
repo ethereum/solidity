@@ -65,13 +65,17 @@ using InternalDispatchMap = std::map<YulArity, DispatchSet>;
 class IRGenerationContext
 {
 public:
+	enum class ExecutionContext { Creation, Deployed };
+
 	IRGenerationContext(
 		langutil::EVMVersion _evmVersion,
+		ExecutionContext _executionContext,
 		RevertStrings _revertStrings,
 		OptimiserSettings _optimiserSettings,
 		std::map<std::string, unsigned> _sourceIndices
 	):
 		m_evmVersion(_evmVersion),
+		m_executionContext(_executionContext),
 		m_revertStrings(_revertStrings),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_sourceIndices(std::move(_sourceIndices))
@@ -139,6 +143,7 @@ public:
 	YulUtilFunctions utils();
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
+	ExecutionContext executionContext() const { return m_executionContext; }
 
 	void setArithmetic(Arithmetic _value) { m_arithmetic = _value; }
 	Arithmetic arithmetic() const { return m_arithmetic; }
@@ -162,8 +167,11 @@ public:
 
 	std::map<std::string, unsigned> const& sourceIndices() const { return m_sourceIndices; }
 
+	bool immutableRegistered(VariableDeclaration const& _varDecl) const { return m_immutableVariables.count(&_varDecl); }
+
 private:
 	langutil::EVMVersion m_evmVersion;
+	ExecutionContext m_executionContext;
 	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
 	std::map<std::string, unsigned> m_sourceIndices;

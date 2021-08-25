@@ -60,11 +60,6 @@ function setup_solcjs
 
     cd "$path"
 
-    # disable "prepublish" script which downloads the latest version
-    # (we will replace it anyway and it is often incorrectly cached
-    # on travis)
-    npm config set script.prepublish ''
-
     npm install
     cp "$soljson" soljson.js
     SOLCVERSION=$(./solcjs --version)

@@ -182,36 +182,64 @@ object "C_81" {
                 cleaned := value
             }
 
+            function cleanup_t_rational_0_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_10_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_1_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_2_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_minus_1_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_rational_minus_2_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
             function cleanup_t_uint256(value) -> cleaned {
                 cleaned := value
             }
 
             function convert_t_rational_0_by_1_to_t_uint256(value) -> converted {
-                converted := cleanup_t_uint256(value)
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_0_by_1(value)))
             }
 
             function convert_t_rational_10_by_1_to_t_uint256(value) -> converted {
-                converted := cleanup_t_uint256(value)
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_10_by_1(value)))
             }
 
             function convert_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1_to_t_uint256(value) -> converted {
-                converted := cleanup_t_uint256(value)
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1(value)))
             }
 
             function convert_t_rational_1_by_1_to_t_uint256(value) -> converted {
-                converted := cleanup_t_uint256(value)
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_1_by_1(value)))
             }
 
             function convert_t_rational_2_by_1_to_t_uint256(value) -> converted {
-                converted := cleanup_t_uint256(value)
+                converted := cleanup_t_uint256(identity(cleanup_t_rational_2_by_1(value)))
             }
 
             function convert_t_rational_minus_1_by_1_to_t_int256(value) -> converted {
-                converted := cleanup_t_int256(value)
+                converted := cleanup_t_int256(identity(cleanup_t_rational_minus_1_by_1(value)))
             }
 
             function convert_t_rational_minus_2_by_1_to_t_int256(value) -> converted {
-                converted := cleanup_t_int256(value)
+                converted := cleanup_t_int256(identity(cleanup_t_rational_minus_2_by_1(value)))
             }
 
             /// @src 0:96:368
@@ -339,6 +367,10 @@ object "C_81" {
 
             }
             /// @src 0:82:370
+
+            function identity(value) -> ret {
+                ret := value
+            }
 
             function panic_error_0x11() {
                 mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)

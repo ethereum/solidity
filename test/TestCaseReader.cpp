@@ -168,7 +168,7 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 				if (!fs::exists(externalSourceFullPath))
 					BOOST_THROW_EXCEPTION(runtime_error("External Source '" + externalSourceTarget.string() + "' not found."));
 				else
-					externalSourceContent = util::readFileAsString(externalSourceFullPath.string());
+					externalSourceContent = util::readFileAsString(externalSourceFullPath);
 
 				if (sources.count(externalSourceName))
 					BOOST_THROW_EXCEPTION(runtime_error("Multiple definitions of test source \"" + externalSourceName + "\"."));

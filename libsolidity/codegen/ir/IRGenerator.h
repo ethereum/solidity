@@ -39,6 +39,8 @@ class SourceUnit;
 class IRGenerator
 {
 public:
+	using ExecutionContext = IRGenerationContext::ExecutionContext;
+
 	IRGenerator(
 		langutil::EVMVersion _evmVersion,
 		RevertStrings _revertStrings,
@@ -47,7 +49,7 @@ public:
 	):
 		m_evmVersion(_evmVersion),
 		m_optimiserSettings(_optimiserSettings),
-		m_context(_evmVersion, _revertStrings, std::move(_optimiserSettings), std::move(_sourceIndices)),
+		m_context(_evmVersion, ExecutionContext::Creation, _revertStrings, std::move(_optimiserSettings), std::move(_sourceIndices)),
 		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector())
 	{}
 
@@ -115,7 +117,7 @@ private:
 	/// to perform memory optimizations.
 	std::string memoryInit(bool _useMemoryGuard);
 
-	void resetContext(ContractDefinition const& _contract);
+	void resetContext(ContractDefinition const& _contract, ExecutionContext _context);
 
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;

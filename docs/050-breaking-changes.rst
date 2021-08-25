@@ -127,7 +127,10 @@ For most of the topics the compiler will provide suggestions.
   adjusted within the type before the conversion.  For example, you can convert
   a ``bytes4`` (4 bytes) to a ``uint64`` (8 bytes) by first converting the
   ``bytes4`` variable to ``bytes8`` and then to ``uint64``. You get the
-  opposite padding when converting through ``uint32``.
+  opposite padding when converting through ``uint32``. Before v0.5.0 any
+  conversion between ``bytesX`` and ``uintY`` would go through ``uint8X``. For
+  example ``uint8(bytes3(0x291807))`` would be converted to ``uint8(uint24(bytes3(0x291807)))``
+  (the result is ``0x07``).
 
 * Using ``msg.value`` in non-payable functions (or introducing it via a
   modifier) is disallowed as a security feature. Turn the function into

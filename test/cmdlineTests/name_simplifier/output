@@ -48,7 +48,7 @@ object "C_59" {
                         for { } lt(i, _4) { i := add(i, 1) }
                         {
                             if slt(sub(calldatasize(), src), _2) { revert(_1, _1) }
-                            let value := allocate_memory_1228()
+                            let value := allocate_memory_1236()
                             mstore(value, calldataload(src))
                             mstore(dst, value)
                             dst := add(dst, _2)
@@ -79,7 +79,7 @@ object "C_59" {
                 }
                 tail := add(add(headStart, and(add(length, 31), not(31))), 96)
             }
-            function allocate_memory_1228() -> memPtr
+            function allocate_memory_1236() -> memPtr
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, 32)

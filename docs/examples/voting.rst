@@ -82,7 +82,7 @@ of votes.
 
         // Give `voter` the right to vote on this ballot.
         // May only be called by `chairperson`.
-        function giveRightToVote(address voter) public {
+        function giveRightToVote(address voter) external {
             // If the first argument of `require` evaluates
             // to `false`, execution terminates and all
             // changes to the state and to Ether balances
@@ -106,7 +106,7 @@ of votes.
         }
 
         /// Delegate your vote to the voter `to`.
-        function delegate(address to) public {
+        function delegate(address to) external {
             // assigns reference
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "You already voted.");
@@ -146,7 +146,7 @@ of votes.
 
         /// Give your vote (including votes delegated to you)
         /// to proposal `proposals[proposal].name`.
-        function vote(uint proposal) public {
+        function vote(uint proposal) external {
             Voter storage sender = voters[msg.sender];
             require(sender.weight != 0, "Has no right to vote");
             require(!sender.voted, "Already voted.");
@@ -176,7 +176,7 @@ of votes.
         // Calls winningProposal() function to get the index
         // of the winner contained in the proposals array and then
         // returns the name of the winner
-        function winnerName() public view
+        function winnerName() external view
                 returns (bytes32 winnerName_)
         {
             winnerName_ = proposals[winningProposal()].name;

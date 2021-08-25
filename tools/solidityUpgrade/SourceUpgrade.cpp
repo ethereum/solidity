@@ -421,7 +421,7 @@ bool SourceUpgrade::readInputFiles()
 	if (m_args.count(g_argInputFile))
 		for (string path: m_args[g_argInputFile].as<vector<string>>())
 		{
-			auto infile = boost::filesystem::path(path);
+			boost::filesystem::path infile = path;
 			if (!boost::filesystem::exists(infile))
 			{
 				if (!ignoreMissing)
@@ -448,13 +448,12 @@ bool SourceUpgrade::readInputFiles()
 				continue;
 			}
 
-			m_sourceCodes[infile.generic_string()] = readFileAsString(infile.string());
-			path = boost::filesystem::canonical(infile).string();
+			m_sourceCodes[infile.generic_string()] = readFileAsString(infile);
 		}
 
 	if (m_sourceCodes.size() == 0)
 	{
-		warning() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		warning() << "No input files given." << endl;
 		return false;
 	}
 
@@ -484,8 +483,8 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 	{
 		try
 		{
-			auto path = boost::filesystem::path(_path);
-			auto canonicalPath = boost::filesystem::weakly_canonical(path);
+			boost::filesystem::path path = _path;
+			boost::filesystem::path canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
@@ -508,7 +507,7 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 			if (!boost::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
 
-			auto contents = readFileAsString(canonicalPath.string());
+			string contents = readFileAsString(canonicalPath);
 			m_sourceCodes[path.generic_string()] = contents;
 			return ReadCallback::Result{true, contents};
 		}

@@ -2934,7 +2934,14 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 			solUnimplementedAssert(_lvalue.type.isValueType(), "");
 			solUnimplementedAssert(_lvalue.type.sizeOnStack() == 1, "");
 			solAssert(_lvalue.type == *_immutable.variable->type(), "");
-			define(result) << "loadimmutable(\"" << to_string(_immutable.variable->id()) << "\")\n";
+			if (m_context.executionContext() == IRGenerationContext::ExecutionContext::Creation)
+				define(result) <<
+					m_utils.readFromMemory(*_immutable.variable->type()) <<
+					"(" <<
+					to_string(m_context.immutableMemoryOffset(*_immutable.variable)) <<
+					")\n";
+			else
+				define(result) << "loadimmutable(\"" << to_string(_immutable.variable->id()) << "\")\n";
 		},
 		[&](IRLValue::Tuple const&) {
 			solAssert(false, "Attempted to read from tuple lvalue.");

@@ -16,5 +16,5 @@ contract D {
 // ----
 // Warning 4588: (78-85): Assertion checker does not yet implement this type of function call.
 // Warning 4588: (78-85): Assertion checker does not yet implement this type of function call.
-// Warning 6328: (133-152): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()\n    test() -- internal call
+// Warning 6328: (133-152): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()\n    test() -- internal call\n        (new C()).x() -- untrusted external call
 // Warning 4588: (78-85): Assertion checker does not yet implement this type of function call.

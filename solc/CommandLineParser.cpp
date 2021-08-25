@@ -25,6 +25,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include <range/v3/view/transform.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/range/conversion.hpp>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -961,7 +963,7 @@ General Information)").c_str(),
 		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
 		{
 			auto optionEnabled = [&](string const& name){ return m_args.count(name) > 0; };
-			auto enabledOptions = boost::copy_range<vector<string>>(nonAssemblyModeOptions | boost::adaptors::filtered(optionEnabled));
+			auto enabledOptions = nonAssemblyModeOptions | ranges::views::filter(optionEnabled) | ranges::to_vector;
 
 			serr() << "The following options are invalid in assembly mode: ";
 			serr() << joinOptionNames(enabledOptions) << ".";

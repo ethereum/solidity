@@ -303,6 +303,7 @@ protected:
 	void resetStateVariables();
 	void resetStorageVariables();
 	void resetMemoryVariables();
+	void resetBalances();
 	/// Resets all references/pointers that have the same type or have
 	/// a subexpression of the same type as _varDecl.
 	void resetReferences(VariableDeclaration const& _varDecl);

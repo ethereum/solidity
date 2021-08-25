@@ -59,6 +59,10 @@ public:
 		m_functionCollector(_functionCollector)
 	{}
 
+	/// @returns the name of a function that returns its argument.
+	/// Sometimes needed to satisfy templates.
+	std::string identityFunction();
+
 	/// @returns a function that combines the address and selector to a single value
 	/// for use in the ABI.
 	std::string combineExternalFunctionIdFunction();

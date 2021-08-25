@@ -59,6 +59,10 @@ namespace GasCosts
 	}
 	static unsigned const keccak256Gas = 30;
 	static unsigned const keccak256WordGas = 6;
+	/// Corresponds to ACCESS_LIST_ADDRESS_COST from EIP-2930
+	static unsigned const accessListAddressCost = 2400;
+	/// Corresponds to ACCESS_LIST_STORAGE_COST from EIP-2930
+	static unsigned const accessListStorageKeyCost = 1900;
 	/// Corresponds to COLD_SLOAD_COST from EIP-2929
 	static unsigned const coldSloadCost = 2100;
 	/// Corresponds to COLD_ACCOUNT_ACCESS_COST from EIP-2929
@@ -80,7 +84,15 @@ namespace GasCosts
 	static unsigned const sstoreSetGas = 20000;
 	/// Corresponds to SSTORE_RESET_GAS from EIP-2929
 	static unsigned const sstoreResetGas = 5000 - coldSloadCost;
-	static unsigned const sstoreRefundGas = 15000;
+	/// Corresponds to SSTORE_CLEARS_SCHEDULE from EIP-2200
+	inline static unsigned sstoreClearsSchedule(langutil::EVMVersion _evmVersion)
+	{
+		// Changes from EIP-3529
+		if (_evmVersion >= langutil::EVMVersion::london())
+			return sstoreResetGas + accessListStorageKeyCost;
+		else
+			return 15000;
+	}
 	inline static unsigned totalSstoreSetGas(langutil::EVMVersion _evmVersion)
 	{
 		if (_evmVersion >= langutil::EVMVersion::berlin())
@@ -144,7 +156,14 @@ namespace GasCosts
 		else
 			return 0;
 	}
-	static unsigned const selfdestructRefundGas = 24000;
+	inline unsigned selfdestructRefundGas(langutil::EVMVersion _evmVersion)
+	{
+		// Changes from EIP-3529
+		if (_evmVersion >= langutil::EVMVersion::london())
+			return 0;
+		else
+			return 24000;
+	}
 	static unsigned const memoryGas = 3;
 	static unsigned const quadCoeffDiv = 512;
 	static unsigned const createDataGas = 200;

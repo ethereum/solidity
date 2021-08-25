@@ -40,9 +40,8 @@ bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 	// current values to turn `sub(_a, _b)` into a nonzero constant.
 	// If that fails, try `eq(_a, _b)`.
 
-	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
-	if (holds_alternative<Literal>(expr1))
-		return valueOfLiteral(std::get<Literal>(expr1)) != 0;
+	if (optional<u256> difference = differenceIfKnownConstant(_a, _b))
+		return difference != 0;
 
 	Expression expr2 = simplify(FunctionCall{{}, {{}, "eq"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
 	if (holds_alternative<Literal>(expr2))
@@ -51,39 +50,59 @@ bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 	return false;
 }
 
+optional<u256> KnowledgeBase::differenceIfKnownConstant(YulString _a, YulString _b)
+{
+	// Try to use the simplification rules together with the
+	// current values to turn `sub(_a, _b)` into a constant.
+
+	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
+	if (Literal const* value = get_if<Literal>(&expr1))
+		return valueOfLiteral(*value);
+
+	return {};
+}
+
 bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 {
 	// Try to use the simplification rules together with the
 	// current values to turn `sub(_a, _b)` into a constant whose absolute value is at least 32.
 
-	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
-	if (holds_alternative<Literal>(expr1))
-	{
-		u256 val = valueOfLiteral(std::get<Literal>(expr1));
-		return val >= 32 && val <= u256(0) - 32;
-	}
+	if (optional<u256> difference = differenceIfKnownConstant(_a, _b))
+		return difference >= 32 && difference <= u256(0) - 32;
 
 	return false;
 }
 
+bool KnowledgeBase::knownToBeZero(YulString _a)
+{
+	return valueIfKnownConstant(_a) == u256{};
+}
+
+optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
+{
+	if (m_variableValues.count(_a))
+		if (Literal const* literal = get_if<Literal>(m_variableValues.at(_a).value))
+			return valueOfLiteral(*literal);
+	return {};
+}
+
 Expression KnowledgeBase::simplify(Expression _expression)
 {
-	bool startedRecursion = (m_recursionCounter == 0);
-	ScopeGuard{[&] { if (startedRecursion) m_recursionCounter = 0; }};
+	m_counter = 0;
+	return simplifyRecursively(move(_expression));
+}
 
-	if (startedRecursion)
-		m_recursionCounter = 100;
-	else if (m_recursionCounter == 1)
+Expression KnowledgeBase::simplifyRecursively(Expression _expression)
+{
+	if (m_counter++ > 100)
 		return _expression;
-	else
-		--m_recursionCounter;
 
 	if (holds_alternative<FunctionCall>(_expression))
 		for (Expression& arg: std::get<FunctionCall>(_expression).arguments)
-			arg = simplify(arg);
+			arg = simplifyRecursively(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
-		return simplify(match->action().toExpression(debugDataOf(_expression)));
+		return simplifyRecursively(match->action().toExpression(debugDataOf(_expression)));
 
 	return _expression;
 }

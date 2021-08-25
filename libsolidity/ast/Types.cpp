@@ -41,11 +41,11 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/view/tail.hpp>
 #include <range/v3/view/transform.hpp>
 
 #include <limits>
@@ -3694,7 +3694,7 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 			auto bases = contract.annotation().linearizedBaseContracts;
 			solAssert(bases.size() >= 1, "linearizedBaseContracts should at least contain the most derived contract.");
 			// `sliced(1, ...)` ignores the most derived contract, which should not be searchable from `super`.
-			for (ContractDefinition const* base: bases | boost::adaptors::sliced(1, bases.size()))
+			for (ContractDefinition const* base: bases | ranges::views::tail)
 				for (FunctionDefinition const* function: base->definedFunctions())
 				{
 					if (!function->isVisibleInDerivedContracts() || !function->isImplemented())

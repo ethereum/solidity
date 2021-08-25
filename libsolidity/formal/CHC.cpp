@@ -529,11 +529,11 @@ void CHC::endVisit(FunctionCall const& _funCall)
 		break;
 	case FunctionType::Kind::External:
 	case FunctionType::Kind::BareStaticCall:
+	case FunctionType::Kind::BareCall:
 		externalFunctionCall(_funCall);
 		SMTEncoder::endVisit(_funCall);
 		break;
 	case FunctionType::Kind::DelegateCall:
-	case FunctionType::Kind::BareCall:
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
 	case FunctionType::Kind::Creation:
@@ -746,20 +746,29 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	auto kind = funType.kind();
-	solAssert(kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
+	solAssert(
+		kind == FunctionType::Kind::External ||
+		kind == FunctionType::Kind::BareCall ||
+		kind == FunctionType::Kind::BareStaticCall,
+		""
+	);
+
+	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall;
 
 	solAssert(m_currentContract, "");
 	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
-	if (!function)
+	if (function)
+	{
+		usesStaticCall |= function->stateMutability() == StateMutability::Pure ||
+			function->stateMutability() == StateMutability::View;
+		for (auto var: function->returnParameters())
+			m_context.variable(*var)->increaseIndex();
+	}
+
+	if (!m_currentFunction || m_currentFunction->isConstructor())
 		return;
 
-	for (auto var: function->returnParameters())
-		m_context.variable(*var)->increaseIndex();
-
 	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
-	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall ||
-		function->stateMutability() == StateMutability::Pure ||
-		function->stateMutability() == StateMutability::View;
 
 	if (!usesStaticCall)
 	{
@@ -787,6 +796,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	m_context.addAssertion(nondetCall);
 	solAssert(m_errorDest, "");
 	connectBlocks(m_currentBlock, predicate(*m_errorDest), errorFlag().currentValue() > 0);
+
 	// To capture the possibility of a reentrant call, we record in the call graph that the  current function
 	// can call any of the external methods of the current contract.
 	if (m_currentFunction)
@@ -985,6 +995,7 @@ void CHC::resetContractAnalysis()
 void CHC::eraseKnowledge()
 {
 	resetStorageVariables();
+	resetBalances();
 }
 
 void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)

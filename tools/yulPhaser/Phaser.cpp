@@ -35,8 +35,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 
-#include <boost/filesystem.hpp>
-
 #include <iostream>
 
 using namespace std;
@@ -405,12 +403,12 @@ vector<Program> ProgramFactory::build(Options const& _options)
 	return inputPrograms;
 }
 
-CharStream ProgramFactory::loadSource(string const& _sourcePath)
+CharStream ProgramFactory::loadSource(boost::filesystem::path const& _sourcePath)
 {
-	assertThrow(boost::filesystem::exists(_sourcePath), MissingFile, "Source file does not exist: " + _sourcePath);
+	assertThrow(boost::filesystem::exists(_sourcePath), MissingFile, "Source file does not exist: " + _sourcePath.string());
 
 	string sourceCode = readFileAsString(_sourcePath);
-	return CharStream(sourceCode, _sourcePath);
+	return CharStream(sourceCode, _sourcePath.string());
 }
 
 void Phaser::main(int _argc, char** _argv)

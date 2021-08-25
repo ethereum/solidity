@@ -12,5 +12,3 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4588: (110-129): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (110-129): Assertion checker does not yet implement this type of function call.

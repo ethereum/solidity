@@ -14,14 +14,14 @@ def render_html_extra_templates(app):
         if not os.path.isabs(template_config['target']):
             raise RuntimeError(f"Template target path is not absolute: {template_config['target']}")
 
-        with open(input_path, 'r') as input_file:
+        with open(input_path, 'r', encoding='utf8') as input_file:
             # This runs Jinja2, which supports rendering {{ }} tags among other things.
             rendered_template = app.builder.templates.render_string(
                 input_file.read(),
                 template_config['context'],
             )
 
-        with open(template_config['target'], 'w') as target_file:
+        with open(template_config['target'], 'w', encoding='utf8') as target_file:
             target_file.write(rendered_template)
 
         app.config.html_extra_path.append(template_config['target'])
