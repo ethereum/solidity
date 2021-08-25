@@ -995,6 +995,7 @@ void CHC::resetContractAnalysis()
 void CHC::eraseKnowledge()
 {
 	resetStorageVariables();
+	resetBalances();
 }
 
 void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)

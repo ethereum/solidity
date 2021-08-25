@@ -587,10 +587,16 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 			_funCall.location(),
 			"BMC does not yet implement this type of function call."
 		);
+	else if (funType.kind() == FunctionType::Kind::BareStaticCall)
+	{
+		// Do nothing here.
+		// Neither storage nor balances should be modified.
+	}
 	else
 	{
 		m_externalFunctionCallHappened = true;
 		resetStorageVariables();
+		resetBalances();
 	}
 }
 
