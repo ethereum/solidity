@@ -64,7 +64,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 include(EthOptions)
 configure_project(TESTS)
 
-find_package(Z3 4.8.0)
+find_package(Z3 4.8.12)
 if(${USE_Z3_DLOPEN})
   add_definitions(-DHAVE_Z3)
   add_definitions(-DHAVE_Z3_DLOPEN)
