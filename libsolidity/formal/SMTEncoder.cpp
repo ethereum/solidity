@@ -2283,9 +2283,7 @@ void SMTEncoder::resetStorageVariables()
 
 void SMTEncoder::resetBalances()
 {
-	// TODO this should be changed to `balances` only
-	// when `state` gets more members.
-	state().newState();
+	state().newBalances();
 }
 
 void SMTEncoder::resetReferences(VariableDeclaration const& _varDecl)

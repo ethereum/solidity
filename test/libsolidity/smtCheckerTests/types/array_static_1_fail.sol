@@ -11,4 +11,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (135-157): CHC: Assertion violation happens here.\nCounterexample:\narray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 200]\nx = 9\ny = 9\n\nTransaction trace:\nC.constructor()\nState: array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nC.f(9, 9)
+// Warning 6328: (135-157): CHC: Assertion violation happens here.\nCounterexample:\narray = [200, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nState: array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nC.f(0, 0)

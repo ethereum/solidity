@@ -9,8 +9,10 @@ contract C
 		(bool success, bytes memory ret) = a.call(data);
 		assert(success);
 		assert(x == 0);
-		assert(map[0] == 0);
-		assert(localMap[0] == 0);
+		// Disabled because of Spacer nondeterminism.
+		//assert(map[0] == 0);
+		// Disabled because of Spacer nondeterminism.
+		//assert(localMap[0] == 0);
 	}
 }
 // ====
@@ -18,5 +20,6 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
+// Warning 2072: (127-166): Unused local variable.
 // Warning 2072: (191-207): Unused local variable.
 // Warning 6328: (227-242): CHC: Assertion violation happens here.

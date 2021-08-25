@@ -24,7 +24,9 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 5667: (107-122): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 1218: (824-854): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (543-573): CHC: Assertion violation happens here.
 // Warning 6328: (664-694): CHC: Assertion violation happens here.
 // Warning 6328: (713-743): CHC: Assertion violation happens here.
-// Warning 6328: (824-854): CHC: Assertion violation happens here.
+// Warning 6328: (824-854): CHC: Assertion violation might happen here.
+// Warning 4661: (824-854): BMC: Assertion violation happens here.

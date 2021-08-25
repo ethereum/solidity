@@ -7,3 +7,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 6368: (76-90): CHC: Out of bounds access might happen here.

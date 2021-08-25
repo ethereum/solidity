@@ -11,4 +11,4 @@ contract C
 // SMTEngine: all
 // ----
 // Warning 6368: (98-106): CHC: Out of bounds access happens here.\nCounterexample:\narray = []\nx = 0\ny = 0\nz = 0\nt = 0\n\nTransaction trace:\nC.constructor()\nState: array = []\nC.f(0, 0, 0, 0)
-// Warning 6368: (98-109): CHC: Out of bounds access happens here.\nCounterexample:\narray = []\nx = 38\ny = 0\nz = 0\nt = 0\n\nTransaction trace:\nC.constructor()\nState: array = []\nC.f(38, 0, 0, 0)
+// Warning 6368: (98-109): CHC: Out of bounds access happens here.\nCounterexample:\narray = []\nx = 0\ny = 0\nz = 0\nt = 0\n\nTransaction trace:\nC.constructor()\nState: array = []\nC.f(0, 0, 0, 0)

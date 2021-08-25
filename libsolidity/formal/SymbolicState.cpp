@@ -104,6 +104,14 @@ smtutil::Expression SymbolicState::blockhash(smtutil::Expression _blockNumber) c
 	return smtutil::Expression::select(m_tx.member("blockhash"), move(_blockNumber));
 }
 
+void SymbolicState::newBalances()
+{
+	auto tupleSort = dynamic_pointer_cast<TupleSort>(stateSort());
+	auto balanceSort = tupleSort->components.at(tupleSort->memberToIndex.at("balances"));
+	SymbolicVariable newBalances(balanceSort, "fresh_balances_" + to_string(m_context.newUniqueId()), m_context);
+	m_state.assignMember("balances", newBalances.currentValue());
+}
+
 void SymbolicState::transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value)
 {
 	unsigned indexBefore = m_state.index();
@@ -119,6 +127,16 @@ void SymbolicState::transfer(smtutil::Expression _from, smtutil::Expression _to,
 		m_state.value(indexAfter)
 	);
 	m_context.addAssertion(m_state.value() == newState);
+}
+
+void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression _value)
+{
+	auto newBalances = smtutil::Expression::store(
+		balances(),
+		_address,
+		balance(_address) + move(_value)
+	);
+	m_state.assignMember("balances", newBalances);
 }
 
 smtutil::Expression SymbolicState::txMember(string const& _member) const
@@ -180,16 +198,6 @@ void SymbolicState::prepareForSourceUnit(SourceUnit const& _source)
 }
 
 /// Private helpers.
-
-void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression _value)
-{
-	auto newBalances = smtutil::Expression::store(
-		balances(),
-		_address,
-		balance(_address) + move(_value)
-	);
-	m_state.assignMember("balances", newBalances);
-}
 
 void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFunctions)
 {
