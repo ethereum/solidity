@@ -32,7 +32,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string/join.hpp>
 
 using namespace std;

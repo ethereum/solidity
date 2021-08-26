@@ -34,7 +34,8 @@
 #include <libsolutil/UTF8.h>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/range/algorithm/sort.hpp>
+
+#include <range/v3/algorithm/sort.hpp>
 
 #include <utility>
 #include <vector>
@@ -563,8 +564,9 @@ bool ASTJsonConverter::visit(InlineAssembly const& _node)
 
 	Json::Value externalReferencesJson = Json::arrayValue;
 
-	for (auto&& it: boost::range::sort(externalReferences))
-		externalReferencesJson.append(std::move(it.second));
+	ranges::sort(externalReferences);
+	for (Json::Value& it: externalReferences | ranges::views::values)
+		externalReferencesJson.append(std::move(it));
 
 	setJsonNode(_node, "InlineAssembly", {
 		make_pair("AST", Json::Value(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations()))),
