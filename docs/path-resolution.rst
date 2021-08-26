@@ -339,6 +339,15 @@ of the compiler.
 
     Include paths cannot have empty values and must be used together with a non-empty base path.
 
+.. note::
+
+    Include paths and base path can overlap as long as it does not make import resolution ambiguous.
+    For example, you can specify a directory inside base path as an include directory or have an
+    include directory that is a subdirectory of another include directory.
+    The compiler will only issue an error if the source unit name passed to the Host Filesystem
+    Loader represents an existing path when combined with multiple include paths or an include path
+    and base path.
+
 .. _cli-path-normalization-and-stripping:
 
 CLI Path Normalization and Stripping

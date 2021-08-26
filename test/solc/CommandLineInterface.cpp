@@ -1247,6 +1247,50 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_should_allow_duplicate_paths)
 	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "dir1/");
 }
 
+BOOST_AUTO_TEST_CASE(cli_include_paths_ambiguous_import)
+{
+	TemporaryDirectory tempDir({"base/", "include/"}, TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+
+	string const preamble =
+		"// SPDX-License-Identifier: GPL-3.0\n"
+		"pragma solidity >=0.0;\n";
+	string const mainContractSource = preamble +
+		// Ambiguous: both base/contract.sol and include/contract.sol match the import.
+		"import \"contract.sol\";";
+
+	createFilesWithParentDirs({"base/contract.sol", "include/contract.sol"}, preamble);
+
+	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
+
+	vector<string> commandLine = {
+		"solc",
+		"--no-color",
+		"--base-path=base/",
+		"--include-path=include/",
+		"-",
+	};
+
+	string expectedMessage =
+		"Error: Source \"contract.sol\" not found: Ambiguous import. "
+		"Multiple matching files found inside base path and/or include paths: \"" +
+		(expectedWorkDir / "base/contract.sol").generic_string() + "\", \"" +
+		(expectedWorkDir / "include/contract.sol").generic_string() + "\".\n"
+		" --> <stdin>:3:1:\n"
+		"  |\n"
+		"3 | import \"contract.sol\";\n"
+		"  | ^^^^^^^^^^^^^^^^^^^^^^\n\n";
+
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(
+		commandLine,
+		mainContractSource,
+		true /* _processInput */
+	);
+
+	BOOST_TEST(result.stderrContent == expectedMessage);
+	BOOST_REQUIRE(!result.success);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::frontend::test

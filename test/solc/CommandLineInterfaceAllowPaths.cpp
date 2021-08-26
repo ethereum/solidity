@@ -344,10 +344,14 @@ BOOST_FIXTURE_TEST_CASE(allow_path_should_work_with_various_import_forms, AllowP
 	BOOST_TEST(checkImport("import 'a/../../code/a/../a/b/c.sol'", {"--allow-paths", "../code/a/b/c.sol"}));
 	BOOST_TEST(checkImport("import 'a/../../code/a///b/c.sol'", {"--allow-paths", "../code/a/b/c.sol"}));
 
-	// UNC paths in imports
+#if !defined(_WIN32)
+	// UNC paths in imports.
+	// Unfortunately can't test it on Windows without having an existing UNC path. On Linux we can
+	// at least rely on the fact that `//` works like `/`.
 	string uncImportPath = "/" + m_portablePrefix + "/a/b/c.sol";
 	soltestAssert(FileReader::isUNCPath(uncImportPath), "");
 	BOOST_TEST(checkImport("import '" + uncImportPath + "'", {"--allow-paths", "../code/a/b/c.sol"}) == ImportCheck::PathDisallowed());
+#endif
 }
 
 BOOST_FIXTURE_TEST_CASE(allow_path_automatic_whitelisting_input_files, AllowPathsFixture)
