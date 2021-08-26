@@ -394,6 +394,16 @@ The resulting file path becomes the source unit name.
 
 .. note::
 
+    The relative path produced by stripping must remain unique within the base path and include paths.
+    For example the compiler will issue an error for the following command if both
+    ``/project/contract.sol`` and ``/lib/contract.sol`` exist:
+
+    .. code-block:: bash
+
+        solc /project/contract.sol --base-path /project --include-path /lib
+
+.. note::
+
     Prior to version 0.8.8, CLI path stripping was not performed and the only normalization applied
     was the conversion of path separators.
     When working with older versions of the compiler it is recommended to invoke the compiler from

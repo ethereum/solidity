@@ -1112,6 +1112,95 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_without_base_path)
 	BOOST_TEST(result.stderrContent == expectedMessage);
 }
 
+BOOST_AUTO_TEST_CASE(cli_include_paths_should_detect_source_unit_name_collisions)
+{
+	TemporaryDirectory tempDir({"dir1/", "dir2/", "dir3/"}, TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+	createFilesWithParentDirs({
+		"dir1/contract1.sol",
+		"dir1/contract2.sol",
+		"dir2/contract1.sol",
+		"dir2/contract2.sol",
+	});
+
+	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
+
+	string expectedMessage =
+		"Source unit name collision detected. "
+		"The specified values of base path and/or include paths would result in multiple "
+		"input files being assigned the same source unit name:\n"
+		"contract1.sol matches: "
+		"\"" + (expectedWorkDir / "dir1/contract1.sol").generic_string() + "\", "
+		"\"" + (expectedWorkDir / "dir2/contract1.sol").generic_string() + "\"\n"
+		"contract2.sol matches: "
+		"\"" + (expectedWorkDir / "dir1/contract2.sol").generic_string() + "\", "
+		"\"" + (expectedWorkDir / "dir2/contract2.sol").generic_string() + "\"\n";
+
+	{
+		// import "contract1.sol" and import "contract2.sol" would be ambiguous:
+		vector<string> commandLine = {
+			"solc",
+			"--base-path=dir1/",
+			"--include-path=dir2/",
+			"dir1/contract1.sol",
+			"dir2/contract1.sol",
+			"dir1/contract2.sol",
+			"dir2/contract2.sol",
+		};
+		OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+		BOOST_TEST(result.stderrContent == expectedMessage);
+		BOOST_REQUIRE(!result.success);
+	}
+
+	{
+		// import "contract1.sol" and import "contract2.sol" would be ambiguous:
+		vector<string> commandLine = {
+			"solc",
+			"--base-path=dir3/",
+			"--include-path=dir1/",
+			"--include-path=dir2/",
+			"dir1/contract1.sol",
+			"dir2/contract1.sol",
+			"dir1/contract2.sol",
+			"dir2/contract2.sol",
+		};
+		OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+		BOOST_TEST(result.stderrContent == expectedMessage);
+		BOOST_REQUIRE(!result.success);
+	}
+
+	{
+		// No conflict if files with the same name exist but only one is given to the compiler.
+		vector<string> commandLine = {
+			"solc",
+			"--base-path=dir3/",
+			"--include-path=dir1/",
+			"--include-path=dir2/",
+			"dir1/contract1.sol",
+			"dir1/contract2.sol",
+		};
+		OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+		BOOST_TEST(result.stderrContent == "");
+		BOOST_REQUIRE(result.success);
+	}
+
+	{
+		// The same file specified multiple times is not a conflict.
+		vector<string> commandLine = {
+			"solc",
+			"--base-path=dir3/",
+			"--include-path=dir1/",
+			"--include-path=dir2/",
+			"dir1/contract1.sol",
+			"dir1/contract1.sol",
+			"./dir1/contract1.sol",
+		};
+		OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+		BOOST_TEST(result.stderrContent == "");
+		BOOST_REQUIRE(result.success);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(cli_include_paths_should_allow_duplicate_paths)
 {
 	TemporaryDirectory tempDir({"dir1/", "dir2/"}, TEST_CASE_NAME);
