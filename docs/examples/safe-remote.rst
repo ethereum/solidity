@@ -36,8 +36,8 @@ you can use state machine-like constructs inside a contract.
         // The state variable has a default value of the first member, `State.created`
         State public state;
 
-        modifier condition(bool _condition) {
-            require(_condition);
+        modifier condition(bool condition_) {
+            require(condition_);
             _;
         }
 
@@ -62,8 +62,8 @@ you can use state machine-like constructs inside a contract.
             _;
         }
 
-        modifier inState(State _state) {
-            if (state != _state)
+        modifier inState(State state_) {
+            if (state != state_)
                 revert InvalidState();
             _;
         }
