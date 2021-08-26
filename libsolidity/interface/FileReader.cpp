@@ -32,6 +32,7 @@ using solidity::frontend::ReadCallback;
 using solidity::langutil::InternalCompilerError;
 using solidity::util::errinfo_comment;
 using solidity::util::readFileAsString;
+using std::map;
 using std::reference_wrapper;
 using std::string;
 using std::vector;
@@ -174,6 +175,24 @@ string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPa
 		}
 
 	return normalizedPath.generic_string();
+}
+
+map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths)
+{
+	map<string, FileReader::FileSystemPathSet> nameToPaths;
+	for (boost::filesystem::path const& cliPath: _cliPaths)
+	{
+		string sourceUnitName = cliPathToSourceUnitName(cliPath);
+		boost::filesystem::path normalizedPath = normalizeCLIPathForVFS(cliPath);
+		nameToPaths[sourceUnitName].insert(normalizedPath);
+	}
+
+	map<string, FileReader::FileSystemPathSet> collisions;
+	for (auto&& [sourceUnitName, cliPaths]: nameToPaths)
+		if (cliPaths.size() >= 2)
+			collisions[sourceUnitName] = std::move(cliPaths);
+
+	return collisions;
 }
 
 boost::filesystem::path FileReader::normalizeCLIPathForVFS(

@@ -96,6 +96,13 @@ public:
 	/// making it relative to base path or one of the include directories.
 	std::string cliPathToSourceUnitName(boost::filesystem::path const& _cliPath);
 
+	/// Checks if a set contains any paths that lead to different files but would receive identical
+	/// source unit names. Files are considered the same if their paths are exactly the same after
+	/// normalization (without following symlinks).
+	/// @returns a map containing all the conflicting source unit names and the paths that would
+	/// receive them. The returned paths are normalized.
+	std::map<std::string, FileSystemPathSet> detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths);
+
 	/// Normalizes a filesystem path to make it include all components up to the filesystem root,
 	/// remove small, inconsequential differences that do not affect the meaning and make it look
 	/// the same on all platforms (if possible).
