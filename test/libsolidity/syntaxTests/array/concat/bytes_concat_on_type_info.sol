@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4259: (93-98): Invalid type for argument in the function call. A contract type or an integer type is required, but type(bytes) provided.
+// TypeError 4259: (93-98): Invalid type for argument in the function call. An enum type, contract type or an integer type is required, but type(bytes) provided.

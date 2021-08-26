@@ -1071,6 +1071,12 @@ public:
 	/// @returns the value that the string has in the Enum
 	unsigned int memberValue(ASTString const& _member) const;
 	size_t numberOfMembers() const;
+	unsigned int minValue() const { return 0; }
+	unsigned int maxValue() const
+	{
+		solAssert(numberOfMembers() <= 256, "");
+		return static_cast<unsigned int>(numberOfMembers()) - 1;
+	}
 
 private:
 	EnumDefinition const& m_enum;

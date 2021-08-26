@@ -3961,9 +3961,10 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 		solAssert(
 			m_typeArgument && (
 					m_typeArgument->category() == Type::Category::Contract ||
-					m_typeArgument->category() == Type::Category::Integer
+					m_typeArgument->category() == Type::Category::Integer ||
+					m_typeArgument->category() == Type::Category::Enum
 			),
-			"Only contracts or integer types supported for now"
+			"Only enums, contracts or integer types supported for now"
 		);
 
 		if (m_typeArgument->category() == Type::Category::Contract)
@@ -3987,6 +3988,14 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			return MemberList::MemberMap({
 				{"min", integerTypePointer},
 				{"max", integerTypePointer},
+			});
+		}
+		else if (m_typeArgument->category() == Type::Category::Enum)
+		{
+			EnumType const* enumTypePointer = dynamic_cast<EnumType const*>(m_typeArgument);
+			return MemberList::MemberMap({
+				{"min", enumTypePointer},
+				{"max", enumTypePointer},
 			});
 		}
 	}
