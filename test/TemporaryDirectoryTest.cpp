@@ -18,6 +18,8 @@
 
 #include <test/TemporaryDirectory.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
+
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -26,8 +28,6 @@
 using namespace std;
 using namespace boost::test_tools;
 
-namespace fs = boost::filesystem;
-
 namespace solidity::test
 {
 
@@ -35,59 +35,72 @@ BOOST_AUTO_TEST_SUITE(TemporaryDirectoryTest)
 
 BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_create_and_delete_a_unique_and_empty_directory)
 {
-	fs::path dirPath;
+	boost::filesystem::path dirPath;
 	{
-		TemporaryDirectory tempDir("temporary-directory-test-");
+		TemporaryDirectory tempDir("temporary-directory-test");
 		dirPath = tempDir.path();
 
-		BOOST_TEST(dirPath.stem().string().find("temporary-directory-test-") == 0);
-		BOOST_TEST(fs::equivalent(dirPath.parent_path(), fs::temp_directory_path()));
-		BOOST_TEST(fs::is_directory(dirPath));
-		BOOST_TEST(fs::is_empty(dirPath));
+		BOOST_TEST(dirPath.stem().string().find("temporary-directory-test") == 0);
+		BOOST_TEST(boost::filesystem::equivalent(dirPath.parent_path(), boost::filesystem::temp_directory_path()));
+		BOOST_TEST(boost::filesystem::is_directory(dirPath));
+		BOOST_TEST(boost::filesystem::is_empty(dirPath));
 	}
-	BOOST_TEST(!fs::exists(dirPath));
+	BOOST_TEST(!boost::filesystem::exists(dirPath));
 }
 
 BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_delete_its_directory_even_if_not_empty)
 {
-	fs::path dirPath;
+	boost::filesystem::path dirPath;
 	{
-		TemporaryDirectory tempDir("temporary-directory-test-");
+		TemporaryDirectory tempDir("temporary-directory-test");
 		dirPath = tempDir.path();
 
-		BOOST_TEST(fs::is_directory(dirPath));
+		BOOST_TEST(boost::filesystem::is_directory(dirPath));
 
 		{
 			ofstream tmpFile((dirPath / "test-file.txt").string());
 			tmpFile << "Delete me!" << endl;
 		}
-		assert(fs::is_regular_file(dirPath / "test-file.txt"));
+		soltestAssert(boost::filesystem::is_regular_file(dirPath / "test-file.txt"), "");
 	}
-	BOOST_TEST(!fs::exists(dirPath / "test-file.txt"));
+	BOOST_TEST(!boost::filesystem::exists(dirPath / "test-file.txt"));
+}
+
+BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_create_subdirectories)
+{
+	boost::filesystem::path dirPath;
+	{
+		TemporaryDirectory tempDir({"a", "a/", "a/b/c", "x.y/z"}, "temporary-directory-test");
+		dirPath = tempDir.path();
+
+		BOOST_TEST(boost::filesystem::is_directory(dirPath / "a"));
+		BOOST_TEST(boost::filesystem::is_directory(dirPath / "a/b/c"));
+		BOOST_TEST(boost::filesystem::is_directory(dirPath / "x.y/z"));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(TemporaryWorkingDirectory_should_change_and_restore_working_directory)
 {
-	fs::path originalWorkingDirectory = fs::current_path();
+	boost::filesystem::path originalWorkingDirectory = boost::filesystem::current_path();
 
 	try
 	{
 		{
-			TemporaryDirectory tempDir("temporary-directory-test-");
-			assert(fs::equivalent(fs::current_path(), originalWorkingDirectory));
-			assert(!fs::equivalent(tempDir.path(), originalWorkingDirectory));
+			TemporaryDirectory tempDir("temporary-directory-test");
+			soltestAssert(boost::filesystem::equivalent(boost::filesystem::current_path(), originalWorkingDirectory), "");
+			soltestAssert(!boost::filesystem::equivalent(tempDir.path(), originalWorkingDirectory), "");
 
 			TemporaryWorkingDirectory tempWorkDir(tempDir.path());
 
-			BOOST_TEST(fs::equivalent(fs::current_path(), tempDir.path()));
+			BOOST_TEST(boost::filesystem::equivalent(boost::filesystem::current_path(), tempDir.path()));
 		}
-		BOOST_TEST(fs::equivalent(fs::current_path(), originalWorkingDirectory));
+		BOOST_TEST(boost::filesystem::equivalent(boost::filesystem::current_path(), originalWorkingDirectory));
 
-		fs::current_path(originalWorkingDirectory);
+		boost::filesystem::current_path(originalWorkingDirectory);
 	}
 	catch (...)
 	{
-		fs::current_path(originalWorkingDirectory);
+		boost::filesystem::current_path(originalWorkingDirectory);
 	}
 }
 

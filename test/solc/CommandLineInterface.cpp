@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(cli_input)
 		{(expectedDir2 / "input2.sol").generic_string(), ""},
 	};
 	PathSet expectedAllowedPaths = {
-		boost::filesystem::canonical(tempDir1.path()),
-		boost::filesystem::canonical(tempDir2.path()),
+		boost::filesystem::canonical(tempDir1),
+		boost::filesystem::canonical(tempDir2),
 		"b/c",
 		"c/d/e",
 	};
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(cli_ignore_missing_some_files_exist)
 
 	// NOTE: Allowed paths should not be added for skipped files.
 	map<string, string> expectedSources = {{(expectedDir1 / "input1.sol").generic_string(), ""}};
-	PathSet expectedAllowedPaths = {boost::filesystem::canonical(tempDir1.path())};
+	PathSet expectedAllowedPaths = {boost::filesystem::canonical(tempDir1)};
 
 	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles({
 		"solc",
@@ -354,14 +354,14 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_no_base_path)
 {
 	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
 	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent);
 	soltestAssert(tempDirCurrent.path().is_absolute(), "");
 	soltestAssert(tempDirOther.path().is_absolute(), "");
 
 	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
 	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
-	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
-	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent);
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther);
 
 	boost::filesystem::path expectedOtherDir = "/" / otherDirNoSymlinks.relative_path();
 	soltestAssert(expectedOtherDir.is_absolute() || expectedOtherDir.root_path() == "/", "");
@@ -412,14 +412,14 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_same_as_work_dir)
 {
 	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
 	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent);
 	soltestAssert(tempDirCurrent.path().is_absolute(), "");
 	soltestAssert(tempDirOther.path().is_absolute(), "");
 
 	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
 	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
-	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
-	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent);
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther);
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 	boost::filesystem::path expectedOtherDir = "/" / otherDirNoSymlinks.relative_path();
@@ -475,16 +475,16 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_different_from_wor
 	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
 	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
 	TemporaryDirectory tempDirBase(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent);
 	soltestAssert(tempDirCurrent.path().is_absolute(), "");
 	soltestAssert(tempDirOther.path().is_absolute(), "");
 	soltestAssert(tempDirBase.path().is_absolute(), "");
 
 	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
 	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
-	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
-	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
-	boost::filesystem::path baseDirNoSymlinks = boost::filesystem::canonical(tempDirBase.path());
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent);
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther);
+	boost::filesystem::path baseDirNoSymlinks = boost::filesystem::canonical(tempDirBase);
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 	boost::filesystem::path expectedCurrentDir = "/" / currentDirNoSymlinks.relative_path();
@@ -547,14 +547,14 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_relative_base_path)
 {
 	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
 	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent);
 	soltestAssert(tempDirCurrent.path().is_absolute(), "");
 	soltestAssert(tempDirOther.path().is_absolute(), "");
 
 	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
 	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
-	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
-	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent);
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther);
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 	boost::filesystem::path expectedOtherDir = "/" / otherDirNoSymlinks.relative_path();
@@ -614,15 +614,14 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_relative_base_path)
 
 BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_names)
 {
-	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	boost::filesystem::create_directories(tempDir.path() / "x/y/z");
+	TemporaryDirectory tempDir({"x/y/z"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "x/y/z");
 	soltestAssert(tempDir.path().is_absolute(), "");
 
 	string uncPath = "//" + tempDir.path().relative_path().generic_string();
 	soltestAssert(FileReader::isUNCPath(uncPath), "");
 
-	boost::filesystem::path tempDirNoSymlinks = boost::filesystem::canonical(tempDir.path());
+	boost::filesystem::path tempDirNoSymlinks = boost::filesystem::canonical(tempDir);
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 	soltestAssert(expectedWorkDir.is_absolute() || expectedWorkDir.root_path() == "/", "");
@@ -782,9 +781,8 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_name
 
 BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
 {
-	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	TemporaryDirectory tempDir({"r/"}, TEST_CASE_NAME);
 	createFilesWithParentDirs({tempDir.path() / "x/y/z/contract.sol"});
-	boost::filesystem::create_directories(tempDir.path() / "r");
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "r");
 
 	if (
@@ -829,7 +827,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
 	};
 
 	FileReader::FileSystemPathSet expectedAllowedDirectories = {
-		boost::filesystem::canonical(tempDir.path()) / "x/y/z",
+		boost::filesystem::canonical(tempDir) / "x/y/z",
 	};
 
 	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
@@ -846,7 +844,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
 BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_and_stdin)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
-	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
 	boost::filesystem::create_directories(tempDir.path() / "base");
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
