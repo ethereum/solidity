@@ -262,7 +262,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--error-recovery",            // Ignored in assembly mode
 			"--overwrite",
 			"--evm-version=spuriousDragon",
-			"--experimental-via-ir",       // Ignored in assembly mode
 			"--revert-strings=strip",      // Accepted but has no effect in assembly mode
 			"--pretty-json",
 			"--json-indent=1",
@@ -357,7 +356,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"--output-dir=/tmp/out",           // Accepted but has no effect in Standard JSON mode
 		"--overwrite",                     // Accepted but has no effect in Standard JSON mode
 		"--evm-version=spuriousDragon",    // Ignored in Standard JSON mode
-		"--experimental-via-ir",           // Ignored in Standard JSON mode
 		"--revert-strings=strip",          // Accepted but has no effect in Standard JSON mode
 		"--pretty-json",
 		"--json-indent=1",
@@ -420,6 +418,32 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	BOOST_TEST(serr.str() == "");
 	BOOST_REQUIRE(parsedOptions.has_value());
 	BOOST_TEST(parsedOptions.value() == expectedOptions);
+}
+
+BOOST_AUTO_TEST_CASE(experimental_via_ir_invalid_input_modes)
+{
+	static array<string, 5> const inputModeOptions = {
+		"--assemble",
+		"--yul",
+		"--strict-assembly",
+		"--standard-json",
+		"--link",
+	};
+	for (string const& inputModeOption: inputModeOptions)
+	{
+		stringstream sout, serr;
+		vector<string> commandLine = {
+			"solc",
+			"--experimental-via-ir",
+			"file",
+			inputModeOption,
+		};
+		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+
+		BOOST_TEST(sout.str() == "");
+		BOOST_TEST(serr.str() == "The option --experimental-via-ir is only supported in the compiler mode.\n");
+		BOOST_REQUIRE(!parsedOptions.has_value());
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
