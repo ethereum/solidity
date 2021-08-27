@@ -32,7 +32,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
-#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/UniqueErrorReporter.h>
 
 #include <string>
 #include <unordered_map>
@@ -55,6 +55,7 @@ public:
 	SMTEncoder(
 		smt::EncodingContext& _context,
 		ModelCheckerSettings const& _settings,
+		langutil::UniqueErrorReporter& _errorReporter,
 		langutil::CharStreamProvider const& _charStreamProvider
 	);
 
@@ -420,11 +421,7 @@ protected:
 	/// or unchecked arithmetic.
 	bool m_checked = true;
 
-	/// Local SMTEncoder ErrorReporter.
-	/// This is necessary to show the "No SMT solver available"
-	/// warning before the others in case it's needed.
-	langutil::ErrorReporter m_errorReporter;
-	langutil::ErrorList m_smtErrors;
+	langutil::UniqueErrorReporter& m_errorReporter;
 
 	/// Stores the current function/modifier call/invocation path.
 	std::vector<CallStackEntry> m_callStack;

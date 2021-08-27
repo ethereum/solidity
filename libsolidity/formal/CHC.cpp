@@ -53,14 +53,13 @@ using namespace solidity::frontend::smt;
 
 CHC::CHC(
 	EncodingContext& _context,
-	ErrorReporter& _errorReporter,
+	UniqueErrorReporter& _errorReporter,
 	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
 	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
 	ModelCheckerSettings const& _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings, _charStreamProvider),
-	m_outerErrorReporter(_errorReporter)
+	SMTEncoder(_context, _settings, _errorReporter, _charStreamProvider)
 {
 	bool usesZ3 = m_settings.solvers.z3;
 #ifdef HAVE_Z3
@@ -79,7 +78,7 @@ void CHC::analyze(SourceUnit const& _source)
 		if (!m_noSolverWarning)
 		{
 			m_noSolverWarning = true;
-			m_outerErrorReporter.warning(
+			m_errorReporter.warning(
 				7649_error,
 				SourceLocation(),
 				"CHC analysis was not possible since no Horn solver was enabled."
@@ -111,7 +110,7 @@ void CHC::analyze(SourceUnit const& _source)
 	if (!ranSolver && !m_noSolverWarning)
 	{
 		m_noSolverWarning = true;
-		m_outerErrorReporter.warning(
+		m_errorReporter.warning(
 			3996_error,
 			SourceLocation(),
 #ifdef HAVE_Z3_DLOPEN
@@ -122,10 +121,6 @@ void CHC::analyze(SourceUnit const& _source)
 #endif
 		);
 	}
-	else
-		m_outerErrorReporter.append(m_errorReporter.errors());
-
-	m_errorReporter.clear();
 }
 
 vector<string> CHC::unhandledQueries() const

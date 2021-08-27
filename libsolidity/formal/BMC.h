@@ -36,7 +36,7 @@
 #include <libsolidity/interface/ReadFile.h>
 
 #include <libsmtutil/SolverInterface.h>
-#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/UniqueErrorReporter.h>
 
 #include <set>
 #include <string>
@@ -59,7 +59,7 @@ class BMC: public SMTEncoder
 public:
 	BMC(
 		smt::EncodingContext& _context,
-		langutil::ErrorReporter& _errorReporter,
+		langutil::UniqueErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		ModelCheckerSettings const& _settings,
@@ -185,9 +185,6 @@ private:
 	/// Flags used for better warning messages.
 	bool m_loopExecutionHappened = false;
 	bool m_externalFunctionCallHappened = false;
-
-	/// ErrorReporter that comes from CompilerStack.
-	langutil::ErrorReporter& m_outerErrorReporter;
 
 	std::vector<BMCVerificationTarget> m_verificationTargets;
 
