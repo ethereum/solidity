@@ -19,5 +19,3 @@ contract test {
 // Warning 6133: (129-136): Statement has no effect.
 // Warning 8364: (113-117): Assertion checker does not yet implement type type(struct test.s memory[7] memory)
 // Warning 8364: (129-136): Assertion checker does not yet implement type type(uint256[7] memory)
-// Warning 8364: (113-117): Assertion checker does not yet implement type type(struct test.s memory[7] memory)
-// Warning 8364: (129-136): Assertion checker does not yet implement type type(uint256[7] memory)

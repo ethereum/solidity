@@ -29,11 +29,3 @@ contract C {
 // Warning 8364: (171-173): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 6328: (125-145): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (149-183): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 7650: (132-136): Assertion checker does not yet support this expression.
-// Warning 8364: (132-134): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 7650: (140-144): Assertion checker does not yet support this expression.
-// Warning 8364: (140-142): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 7650: (156-160): Assertion checker does not yet support this expression.
-// Warning 8364: (156-158): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 7650: (171-175): Assertion checker does not yet support this expression.
-// Warning 8364: (171-173): Assertion checker does not yet implement type struct C.S storage ref

@@ -46,9 +46,10 @@ using namespace solidity::frontend;
 SMTEncoder::SMTEncoder(
 	smt::EncodingContext& _context,
 	ModelCheckerSettings const& _settings,
+	UniqueErrorReporter& _errorReporter,
 	langutil::CharStreamProvider const& _charStreamProvider
 ):
-	m_errorReporter(m_smtErrors),
+	m_errorReporter(_errorReporter),
 	m_context(_context),
 	m_settings(_settings),
 	m_charStreamProvider(_charStreamProvider)

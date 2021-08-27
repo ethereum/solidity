@@ -37,15 +37,14 @@ using namespace solidity::frontend;
 
 BMC::BMC(
 	smt::EncodingContext& _context,
-	ErrorReporter& _errorReporter,
+	UniqueErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	ModelCheckerSettings const& _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings, _charStreamProvider),
-	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout)),
-	m_outerErrorReporter(_errorReporter)
+	SMTEncoder(_context, _settings, _errorReporter, _charStreamProvider),
+	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout))
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
@@ -67,7 +66,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		if (!m_noSolverWarning)
 		{
 			m_noSolverWarning = true;
-			m_outerErrorReporter.warning(
+			m_errorReporter.warning(
 				7710_error,
 				SourceLocation(),
 				"BMC analysis was not possible since no SMT solver was found and enabled."
@@ -113,7 +112,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		if (!m_noSolverWarning)
 		{
 			m_noSolverWarning = true;
-			m_outerErrorReporter.warning(
+			m_errorReporter.warning(
 				8084_error,
 				SourceLocation(),
 				"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
@@ -124,10 +123,6 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 			);
 		}
 	}
-	else
-		m_outerErrorReporter.append(m_errorReporter.errors());
-
-	m_errorReporter.clear();
 }
 
 bool BMC::shouldInlineFunctionCall(

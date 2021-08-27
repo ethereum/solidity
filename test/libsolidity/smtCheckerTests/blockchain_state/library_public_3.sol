@@ -26,4 +26,3 @@ contract C {
 // Warning 6328: (309-325): CHC: Assertion violation happens here.
 // Warning 6328: (405-419): CHC: Assertion violation happens here.
 // Warning 6328: (464-486): CHC: Assertion violation happens here.
-// Warning 4588: (265-270): Assertion checker does not yet implement this type of function call.

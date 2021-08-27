@@ -40,6 +40,7 @@
 #include <libsmtutil/CHCSolverInterface.h>
 
 #include <liblangutil/SourceLocation.h>
+#include <liblangutil/UniqueErrorReporter.h>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -55,7 +56,7 @@ class CHC: public SMTEncoder
 public:
 	CHC(
 		smt::EncodingContext& _context,
-		langutil::ErrorReporter& _errorReporter,
+		langutil::UniqueErrorReporter& _errorReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		ModelCheckerSettings const& _settings,
@@ -415,9 +416,6 @@ private:
 
 	/// CHC solver.
 	std::unique_ptr<smtutil::CHCSolverInterface> m_interface;
-
-	/// ErrorReporter that comes from CompilerStack.
-	langutil::ErrorReporter& m_outerErrorReporter;
 };
 
 }

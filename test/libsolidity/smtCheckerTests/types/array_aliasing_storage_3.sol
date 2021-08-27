@@ -43,4 +43,3 @@ contract C
 // Warning 6328: (948-965): CHC: Assertion violation might happen here.
 // Warning 6368: (976-980): CHC: Out of bounds access might happen here.
 // Warning 4661: (948-965): BMC: Assertion violation happens here.
-// Warning 4661: (948-965): BMC: Assertion violation happens here.
