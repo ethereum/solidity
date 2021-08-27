@@ -24,4 +24,3 @@ contract C {
 // ----
 // Warning 6328: (315-331): CHC: Assertion violation happens here.
 // Warning 1236: (87-100): BMC: Insufficient funds happens here.
-// Warning 1236: (87-100): BMC: Insufficient funds happens here.

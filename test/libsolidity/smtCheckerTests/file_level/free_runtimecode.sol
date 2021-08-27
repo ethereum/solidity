@@ -15,6 +15,4 @@ contract D {
 // SMTEngine: all
 // ----
 // Warning 7507: (82-101): Assertion checker does not yet support this expression.
-// Warning 7507: (82-101): Assertion checker does not yet support this expression.
 // Warning 6328: (161-175): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()\n    test() -- internal call
-// Warning 7507: (82-101): Assertion checker does not yet support this expression.
