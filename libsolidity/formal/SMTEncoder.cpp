@@ -1977,26 +1977,32 @@ void SMTEncoder::assignment(
 		indexOrMemberAssignment(*left, _right);
 	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(left))
 	{
-		if (
-			auto funType = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type);
-			funType && funType->kind() == FunctionType::Kind::ArrayPush
-		)
+		if (auto funType = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type))
 		{
-			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
-			solAssert(memberAccess, "");
-			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
-			solAssert(symbArray, "");
+			if (funType->kind() == FunctionType::Kind::ArrayPush)
+			{
+				auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
+				solAssert(memberAccess, "");
+				auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+				solAssert(symbArray, "");
 
-			auto oldLength = symbArray->length();
-			auto store = smtutil::Expression::store(
-				symbArray->elements(),
-				symbArray->length() - 1,
-				_right
-			);
-			symbArray->increaseIndex();
-			m_context.addAssertion(symbArray->elements() == store);
-			m_context.addAssertion(symbArray->length() == oldLength);
-			assignment(memberAccess->expression(), symbArray->currentValue());
+				auto oldLength = symbArray->length();
+				auto store = smtutil::Expression::store(
+					symbArray->elements(),
+					symbArray->length() - 1,
+					_right
+				);
+				symbArray->increaseIndex();
+				m_context.addAssertion(symbArray->elements() == store);
+				m_context.addAssertion(symbArray->length() == oldLength);
+				assignment(memberAccess->expression(), symbArray->currentValue());
+			}
+			else if (funType->kind() == FunctionType::Kind::Internal)
+			{
+				for (auto type: funType->returnParameterTypes())
+					if (type->category() == Type::Category::Mapping || dynamic_cast<ReferenceType const*>(type))
+						resetReferences(type);
+			}
 		}
 	}
 	else
