@@ -145,8 +145,12 @@
 (assert
 (forall ( (abi_0 |abi_type|) (crypto_0 |crypto_type|) (error_0 Int) (error_1 Int) (expr_7_0 Int) (expr_8_0 Int) (expr_9_1 Bool) (funds_2_0 Int) (state_0 |state_type|) (state_1 |state_type|) (state_2 |state_type|) (state_3 |state_type|) (this_0 Int) (tx_0 |tx_type|) (x_3_0 Int) (x_3_1 Int) (x_3_2 Int))
 (=> error_target_3_0 false)))
-(check-sat)"}},"errors":[{"component":"general","errorCode":"3996","formattedMessage":"Warning: CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.
+(check-sat)"}},"errors":[{"component":"general","errorCode":"5840","formattedMessage":"Warning: CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
 
-","message":"CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"8084","formattedMessage":"Warning: BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.
+","message":"CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"3996","formattedMessage":"Warning: CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.
+
+","message":"CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"2788","formattedMessage":"Warning: BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
+
+","message":"BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"8084","formattedMessage":"Warning: BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.
 
 ","message":"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}
