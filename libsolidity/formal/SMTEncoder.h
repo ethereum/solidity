@@ -59,9 +59,6 @@ public:
 		langutil::CharStreamProvider const& _charStreamProvider
 	);
 
-	/// @returns true if engine should proceed with analysis.
-	bool analyze(SourceUnit const& _sources);
-
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
@@ -123,6 +120,8 @@ public:
 	static std::set<SourceUnit const*, ASTNode::CompareByID> sourceDependencies(SourceUnit const& _source);
 
 protected:
+	void resetSourceAnalysis();
+
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.

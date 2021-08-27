@@ -56,11 +56,9 @@ SMTEncoder::SMTEncoder(
 {
 }
 
-bool SMTEncoder::analyze(SourceUnit const& _source)
+void SMTEncoder::resetSourceAnalysis()
 {
-	state().prepareForSourceUnit(_source);
-
-	return true;
+	m_freeFunctions.clear();
 }
 
 bool SMTEncoder::visit(ContractDefinition const& _contract)

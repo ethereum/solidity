@@ -87,20 +87,19 @@ void CHC::analyze(SourceUnit const& _source)
 		return;
 	}
 
-	if (SMTEncoder::analyze(_source))
-	{
-		resetSourceAnalysis();
+	resetSourceAnalysis();
 
-		auto sources = sourceDependencies(_source);
-		collectFreeFunctions(sources);
-		createFreeConstants(sources);
-		for (auto const* source: sources)
-			defineInterfacesAndSummaries(*source);
-		for (auto const* source: sources)
-			source->accept(*this);
+	auto sources = sourceDependencies(_source);
+	collectFreeFunctions(sources);
+	createFreeConstants(sources);
+	state().prepareForSourceUnit(_source);
 
-		checkVerificationTargets();
-	}
+	for (auto const* source: sources)
+		defineInterfacesAndSummaries(*source);
+	for (auto const* source: sources)
+		source->accept(*this);
+
+	checkVerificationTargets();
 
 	bool ranSolver = true;
 	// If ranSolver is true here it's because an SMT solver callback was
@@ -947,6 +946,8 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 
 void CHC::resetSourceAnalysis()
 {
+	SMTEncoder::resetSourceAnalysis();
+
 	m_safeTargets.clear();
 	m_unsafeTargets.clear();
 	m_unprovedTargets.clear();
