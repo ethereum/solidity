@@ -78,10 +78,8 @@ void SymbolicState::reset()
 	m_state.reset();
 	m_tx.reset();
 	m_crypto.reset();
-	/// We don't reset m_abi's pointer nor clear m_abiMembers on purpose,
-	/// since it only helps to keep the already generated types.
-	solAssert(m_abi, "");
-	m_abi->reset();
+	if (m_abi)
+		m_abi->reset();
 }
 
 smtutil::Expression SymbolicState::balances() const

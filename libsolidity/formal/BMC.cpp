@@ -75,30 +75,30 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		return;
 	}
 
-	if (SMTEncoder::analyze(_source))
-	{
-		m_solvedTargets = move(_solvedTargets);
-		m_context.setSolver(m_interface.get());
-		m_context.reset();
-		m_context.setAssertionAccumulation(true);
-		m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
-		createFreeConstants(sourceDependencies(_source));
-		m_unprovedAmt = 0;
+	SMTEncoder::resetSourceAnalysis();
 
-		_source.accept(*this);
+	m_solvedTargets = move(_solvedTargets);
+	m_context.setSolver(m_interface.get());
+	m_context.reset();
+	m_context.setAssertionAccumulation(true);
+	m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
+	createFreeConstants(sourceDependencies(_source));
+	state().prepareForSourceUnit(_source);
+	m_unprovedAmt = 0;
 
-		if (m_unprovedAmt > 0 && !m_settings.showUnproved)
-			m_errorReporter.warning(
-				2788_error,
-				{},
-				"BMC: " +
-				to_string(m_unprovedAmt) +
-				" verification condition(s) could not be proved." +
-				" Enable the model checker option \"show unproved\" to see all of them." +
-				" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
-				" Consider increasing the timeout per query."
-			);
-	}
+	_source.accept(*this);
+
+	if (m_unprovedAmt > 0 && !m_settings.showUnproved)
+		m_errorReporter.warning(
+			2788_error,
+			{},
+			"BMC: " +
+			to_string(m_unprovedAmt) +
+			" verification condition(s) could not be proved." +
+			" Enable the model checker option \"show unproved\" to see all of them." +
+			" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
+			" Consider increasing the timeout per query."
+		);
 
 	// If this check is true, Z3 and CVC4 are not available
 	// and the query answers were not provided, since SMTPortfolio
