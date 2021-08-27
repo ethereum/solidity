@@ -368,7 +368,7 @@ jobs:
       - checkout
       - run:
           name: Install Java
-          command: apt -q update && apt install -y openjdk-14-jdk
+          command: apt -q update && apt install -y openjdk-16-jdk
       - run:
           name: Run tests
           command: ./scripts/test_antlr_grammar.sh
