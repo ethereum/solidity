@@ -31,7 +31,8 @@ void solidity::test::createFilesWithParentDirs(set<boost::filesystem::path> cons
 		if (!path.parent_path().empty())
 			boost::filesystem::create_directories(path.parent_path());
 
-		ofstream newFile(path.string());
+		// Use binary mode to avoid line ending conversion on Windows.
+		ofstream newFile(path.string(), std::ofstream::binary);
 		newFile << _content;
 
 		if (newFile.fail() || !boost::filesystem::exists(path))
