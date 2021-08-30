@@ -927,6 +927,16 @@ General Information)").c_str(),
 	else
 		m_options.input.mode = InputMode::Compiler;
 
+	if (
+		m_args.count(g_strExperimentalViaIR) > 0 &&
+		m_options.input.mode != InputMode::Compiler &&
+		m_options.input.mode != InputMode::CompilerWithASTImport
+	)
+	{
+		serr() << "The option --" << g_strExperimentalViaIR << " is only supported in the compiler mode." << endl;
+		return false;
+	}
+
 	if (!parseInputPathsAndRemappings())
 		return false;
 
