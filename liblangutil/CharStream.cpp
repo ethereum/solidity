@@ -128,3 +128,19 @@ string_view CharStream::text(SourceLocation const& _location) const
 		static_cast<size_t>(_location.end - _location.start)
 	);
 }
+
+string CharStream::singleLineSnippet(string const& _sourceCode, SourceLocation const& _location)
+{
+	if (!_location.hasText())
+		return {};
+
+	if (static_cast<size_t>(_location.start) >= _sourceCode.size())
+		return {};
+
+	string cut = _sourceCode.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
+	auto newLinePos = cut.find_first_of("\n");
+	if (newLinePos != string::npos)
+		cut = cut.substr(0, newLinePos) + "...";
+
+	return cut;
+}

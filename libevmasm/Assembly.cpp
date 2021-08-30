@@ -31,6 +31,7 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/GasMeter.h>
 
+#include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
 
 #include <json/json.h>
@@ -82,16 +83,7 @@ string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& 
 	if (it == _sourceCodes.end())
 		return {};
 
-	string const& source = it->second;
-	if (static_cast<size_t>(_location.start) >= source.size())
-		return {};
-
-	string cut = source.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
-	auto newLinePos = cut.find_first_of("\n");
-	if (newLinePos != string::npos)
-		cut = cut.substr(0, newLinePos) + "...";
-
-	return cut;
+	return CharStream::singleLineSnippet(it->second, _location);
 }
 
 class Functionalizer
