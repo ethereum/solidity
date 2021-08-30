@@ -551,6 +551,11 @@ smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, fronte
 	solAssert(_type, "");
 	if (isEnum(*_type) || isInteger(*_type) || isAddress(*_type) || isFixedBytes(*_type))
 		return _expr >= minValue(_type) && _expr <= maxValue(_type);
+	else if (
+		auto arrayType = dynamic_cast<ArrayType const*>(_type);
+		arrayType && !arrayType->isDynamicallySized()
+	)
+		return smtutil::Expression::tuple_get(_expr, 1) == arrayType->length();
 	else if (isArray(*_type) || isMapping(*_type))
 		/// Length cannot be negative.
 		return smtutil::Expression::tuple_get(_expr, 1) >= 0;
