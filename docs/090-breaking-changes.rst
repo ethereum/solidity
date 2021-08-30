@@ -15,7 +15,7 @@ Silent Changes of the Semantics
 New Restrictions
 ================
 
-- `error` is now a keyword and cannot be used as identifier anymore.
+...
 
 Interface Changes
 =================
