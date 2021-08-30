@@ -199,8 +199,8 @@ if (SANITIZE)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope")
 	elseif (sanitizer STREQUAL "undefined")
 		# The following flags not used by fuzzer but used by us may create problems, so consider
-		# disabling them: alignment, pointer-overflow, unsigned-shift-base.
-		# Flags are alphabetically sorted
+		# disabling them: alignment, pointer-overflow.
+		# Flags are alphabetically sorted and are for clang v10.0
 		list(APPEND undefinedSanitizerChecks
 			alignment
 			array-bounds
@@ -218,7 +218,6 @@ if (SANITIZE)
 			shift
 			signed-integer-overflow
 			unsigned-integer-overflow
-			unsigned-shift-base
 			unreachable
 			vla-bound
 			vptr
