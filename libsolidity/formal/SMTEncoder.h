@@ -71,6 +71,10 @@ public:
 	/// otherwise _expr.
 	static Expression const* innermostTuple(Expression const& _expr);
 
+	/// @returns {_funCall.expression(), nullptr} if function call option values are not given, and
+	/// {_funCall.expression().expression(), _funCall.expression()} if they are.
+	static std::pair<Expression const*, FunctionCallOptions const*> functionCallExpression(FunctionCall const& _funCall);
+
 	/// @returns the expression after stripping redundant syntactic sugar.
 	/// Currently supports stripping:
 	/// 1. 1-tuple; i.e. ((x)) -> x
