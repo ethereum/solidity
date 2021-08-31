@@ -105,8 +105,10 @@ otherwise, the ``value`` option would not be available.
 .. warning::
   Be careful that ``feed.info{value: 10, gas: 800}`` only locally sets the
   ``value`` and amount of ``gas`` sent with the function call, and the
-  parentheses at the end perform the actual call. So in this case, the
-  function is not called and the ``value`` and ``gas`` settings are lost.
+  parentheses at the end perform the actual call. So
+  ``feed.info{value: 10, gas: 800}`` does not call the function and
+  the ``value`` and ``gas`` settings are lost, only
+  ``feed.info{value: 10, gas: 800}()`` performs the function call.
 
 Due to the fact that the EVM considers a call to a non-existing contract to
 always succeed, Solidity uses the ``extcodesize`` opcode to check that
