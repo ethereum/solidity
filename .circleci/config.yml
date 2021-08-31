@@ -53,6 +53,25 @@ defaults:
       name: Correctness proofs for optimization rules
       command: scripts/run_proofs.sh
 
+  - run_soltest: &run_soltest
+      name: soltest
+      no_output_timeout: 30m
+      command: ./.circleci/soltest.sh
+
+  - run_soltest_all: &run_soltest_all
+      name: soltest_all
+      no_output_timeout: 30m
+      command: ./.circleci/soltest_all.sh
+
+  - run_cmdline_tests: &run_cmdline_tests
+      name: command line tests
+      no_output_timeout: 30m
+      command: ./test/cmdlineTests.sh
+
+  - run_docs_pragma_min_version: &run_docs_pragma_min_version
+      name: docs pragma version check
+      command: ./scripts/docs_version_pragma_check.sh
+
   # --------------------------------------------------------------------------
   # Artifacts Templates
 
@@ -114,17 +133,7 @@ defaults:
   - store_test_results: &store_test_results
       path: test_results/
 
-  - run_soltest: &run_soltest
-      name: soltest
-      no_output_timeout: 30m
-      command: ./.circleci/soltest.sh
-
-  - run_soltest_all: &run_soltest_all
-      name: soltest_all
-      no_output_timeout: 30m
-      command: ./.circleci/soltest_all.sh
-
-  - run_soltest_steps: &run_soltest_steps
+  - steps_soltest: &steps_soltest
       steps:
         - checkout
         - attach_workspace:
@@ -133,7 +142,7 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - run_soltest_all_steps: &run_soltest_all_steps
+  - steps_soltest_all: &steps_soltest_all
       steps:
         - checkout
         - attach_workspace:
@@ -142,12 +151,7 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - run_cmdline_tests: &run_cmdline_tests
-      name: command line tests
-      no_output_timeout: 30m
-      command: ./test/cmdlineTests.sh
-
-  - run_cmdline_tests_steps: &run_cmdline_tests_steps
+  - steps_cmdline_tests: &steps_cmdline_tests
       steps:
         - checkout
         - attach_workspace:
@@ -156,34 +160,30 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - run_docs_pragma_min_version: &run_docs_pragma_min_version
-      name: docs pragma version check
-      command: ./scripts/docs_version_pragma_check.sh
-
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
-      <<: *run_soltest_steps
+      <<: *steps_soltest
 
   - test_ubuntu2004_clang: &test_ubuntu2004_clang
       docker:
         - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
-      <<: *run_soltest_steps
+      <<: *steps_soltest
 
   - test_ubuntu2004: &test_ubuntu2004
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
       parallelism: 6
-      <<: *run_soltest_all_steps
+      <<: *steps_soltest_all
 
   - test_asan: &test_asan
       <<: *test_ubuntu2004
-      <<: *run_soltest_steps
+      <<: *steps_soltest
 
   - test_ubuntu2004_clang_cli: &test_ubuntu2004_clang_cli
       docker:
         - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
-      <<: *run_cmdline_tests_steps
+      <<: *steps_cmdline_tests
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -437,6 +437,32 @@ jobs:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
 
+  b_ubu: &b_ubu
+    resource_class: xlarge
+    docker:
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+    environment:
+      MAKEFLAGS: -j 10
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - store_artifacts: *artifacts_tools
+      - persist_to_workspace: *artifacts_executables
+
+  # x64 ASAN build, for testing for memory related bugs
+  b_ubu_asan: &b_ubu_asan
+    <<: *b_ubu
+    environment:
+      CMAKE_OPTIONS: -DSANITIZE=address
+      MAKEFLAGS: -j 10
+      CMAKE_BUILD_TYPE: Release
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
   b_ubu_clang: &b_ubu_clang
     resource_class: xlarge
     docker:
@@ -478,19 +504,6 @@ jobs:
       - run: *run_build
       - run: *gitter_notify_failure
       - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
-
-  b_ubu: &b_ubu
-    resource_class: xlarge
-    docker:
-      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
-    environment:
-      MAKEFLAGS: -j 10
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifacts_tools
       - persist_to_workspace: *artifacts_executables
 
   b_ubu_release: &b_ubu_release
@@ -697,19 +710,6 @@ jobs:
             - soljson.js
             - version.txt
 
-  # x64 ASAN build, for testing for memory related bugs
-  b_ubu_asan: &b_ubu_asan
-    <<: *b_ubu
-    environment:
-      CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 10
-      CMAKE_BUILD_TYPE: Release
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
-
   b_docs:
     docker:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
@@ -741,12 +741,9 @@ jobs:
             name: Install runtime dependencies
             command: |
               pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
-        - checkout
-        - attach_workspace:
-            at: build
-        - run: *run_soltest
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
+        - when:
+            condition: true
+            <<: *steps_soltest
 
   t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
     docker:
@@ -756,13 +753,7 @@ jobs:
       SOLTEST_FLAGS: --enforce-via-yul
       OPTIMIZE: 0
       TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_soltest
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+    <<: *steps_soltest
 
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
@@ -779,7 +770,7 @@ jobs:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
       TERM: xterm
-    <<: *run_cmdline_tests_steps
+    <<: *steps_cmdline_tests
 
   t_ubu_release_cli: &t_ubu_release_cli
     <<: *t_ubu_cli
@@ -789,7 +780,7 @@ jobs:
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-    <<: *run_cmdline_tests_steps
+    <<: *steps_cmdline_tests
 
   t_ubu_asan:
     <<: *test_asan
@@ -813,25 +804,19 @@ jobs:
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_soltest
+      - when:
+          condition: true
+          <<: *steps_soltest
       - run: *gitter_notify_failure
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
 
   t_ubu_ubsan_clang_cli:
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_cmdline_tests
+      - when:
+          condition: true
+          <<: *steps_cmdline_tests
       - run: *gitter_notify_failure
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
 
   t_ems_solcjs:
     docker:
@@ -1214,7 +1199,6 @@ workflows:
             branches:
               only:
                 - develop
-                - develop_060
 
     jobs:
       # OSSFUZZ builds and (regression) tests
