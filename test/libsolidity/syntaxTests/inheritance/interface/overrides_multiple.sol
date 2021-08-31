@@ -23,8 +23,6 @@ interface Sub is SuperA, SuperB {
 }
 
 // ----
-// TypeError 9456: (572-616): Overriding function is missing "override" specifier.
-// TypeError 9456: (572-616): Overriding function is missing "override" specifier.
 // TypeError 4327: (572-616): Function needs to specify overridden contracts "SuperA" and "SuperB".
 // TypeError 4327: (647-655): Function needs to specify overridden contracts "SuperA" and "SuperB".
 // TypeError 4327: (705-721): Function needs to specify overridden contract "SuperB".

@@ -1,6 +1,7 @@
 ### 0.8.8 (unreleased)
 
 Language Features:
+ * Inheritance: A function that overrides only a single interface function does not require the ``override`` specifier.
 
 
 Compiler Features:

@@ -33,10 +33,10 @@ Interfaces are denoted by their own keyword:
 
 Contracts can inherit interfaces as they would inherit other contracts.
 
-All functions declared in interfaces are implicitly ``virtual``, which means that
-they can be overridden. This does not automatically mean that an overriding function
-can be overridden again - this is only possible if the overriding
-function is marked ``virtual``.
+All functions declared in interfaces are implicitly ``virtual`` and any
+functions that override them do not need the ``override`` keyword.
+This does not automatically mean that an overriding function can be overridden again -
+this is only possible if the overriding function is marked ``virtual``.
 
 Interfaces can inherit from other interfaces. This has the same rules as normal
 inheritance.
