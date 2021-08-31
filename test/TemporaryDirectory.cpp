@@ -18,9 +18,11 @@
 
 #include <test/TemporaryDirectory.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
+
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
-#include <cassert>
 #include <regex>
 #include <iostream>
 
@@ -31,21 +33,39 @@ using namespace solidity::test;
 namespace fs = boost::filesystem;
 
 TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
-	m_path(fs::temp_directory_path() / fs::unique_path(_prefix + "%%%%-%%%%-%%%%-%%%%"))
+	m_path(fs::temp_directory_path() / fs::unique_path(_prefix + "-%%%%-%%%%-%%%%-%%%%"))
 {
 	// Prefix should just be a file name and not contain anything that would make us step out of /tmp.
-	assert(fs::path(_prefix) == fs::path(_prefix).stem());
+	soltestAssert(fs::path(_prefix) == fs::path(_prefix).stem(), "");
 
 	fs::create_directory(m_path);
+}
+
+TemporaryDirectory::TemporaryDirectory(
+	vector<boost::filesystem::path> const& _subdirectories,
+	string const& _prefix
+):
+	TemporaryDirectory(_prefix)
+{
+	for (boost::filesystem::path const& subdirectory: _subdirectories)
+	{
+		soltestAssert(!subdirectory.is_absolute() && subdirectory.root_path() != "/", "");
+		soltestAssert(
+			m_path.lexically_relative(subdirectory).empty() ||
+			*m_path.lexically_relative(subdirectory).begin() != "..",
+			""
+		);
+		boost::filesystem::create_directories(m_path / subdirectory);
+	}
 }
 
 TemporaryDirectory::~TemporaryDirectory()
 {
 	// A few paranoid sanity checks just to be extra sure we're not deleting someone's homework.
-	assert(m_path.string().find(fs::temp_directory_path().string()) == 0);
-	assert(!fs::equivalent(m_path, fs::temp_directory_path()));
-	assert(!fs::equivalent(m_path, m_path.root_path()));
-	assert(!m_path.empty());
+	soltestAssert(m_path.string().find(fs::temp_directory_path().string()) == 0, "");
+	soltestAssert(!fs::equivalent(m_path, fs::temp_directory_path()), "");
+	soltestAssert(!fs::equivalent(m_path, m_path.root_path()), "");
+	soltestAssert(!m_path.empty(), "");
 
 	boost::system::error_code errorCode;
 	uintmax_t numRemoved = fs::remove_all(m_path, errorCode);

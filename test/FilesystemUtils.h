@@ -35,16 +35,20 @@ void createFilesWithParentDirs(std::set<boost::filesystem::path> const& _paths, 
 
 /// Creates a file with the exact content specified in the second argument.
 /// Throws an exception if the file already exists or if the parent directory of the file does not.
-void createFileWithContent(boost::filesystem::path const& _path, std::string const& content);
+void createFileWithContent(boost::filesystem::path const& _path, std::string const& _content);
 
 /// Creates a symlink between two paths.
 /// The target does not have to exist.
+/// If @p directorySymlink is true, indicate to the operating system that this is a directory
+/// symlink. On some systems (e.g. Windows) it's possible to create a non-directory symlink pointing
+/// at a directory, which makes such a symlinks unusable.
 /// @returns true if the symlink has been successfully created, false if the filesystem does not
 /// support symlinks.
 /// Throws an exception of the operation fails for a different reason.
 bool createSymlinkIfSupportedByFilesystem(
 	boost::filesystem::path const& _targetPath,
-	boost::filesystem::path const& _linkName
+	boost::filesystem::path const& _linkName,
+	bool _directorySymlink
 );
 
 }

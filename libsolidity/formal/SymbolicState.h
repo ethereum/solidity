@@ -108,6 +108,8 @@ public:
 	smtutil::Expression state(unsigned _idx) const { return m_state.value(_idx); }
 	smtutil::SortPointer const& stateSort() const { return m_state.sort(); }
 	void newState() { m_state.newVar(); }
+
+	void newBalances();
 	/// @returns the symbolic balances.
 	smtutil::Expression balances() const;
 	/// @returns the symbolic balance of address `this`.
@@ -117,6 +119,9 @@ public:
 
 	/// Transfer _value from _from to _to.
 	void transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value);
+
+	/// Adds _value to _account's balance.
+	void addBalance(smtutil::Expression _account, smtutil::Expression _value);
 	//@}
 
 	/// Transaction data.
@@ -163,9 +168,6 @@ public:
 	//@}
 
 private:
-	/// Adds _value to _account's balance.
-	void addBalance(smtutil::Expression _account, smtutil::Expression _value);
-
 	/// Builds m_abi based on the abi.* calls _abiFunctions.
 	void buildABIFunctions(std::set<FunctionCall const*> const& _abiFunctions);
 

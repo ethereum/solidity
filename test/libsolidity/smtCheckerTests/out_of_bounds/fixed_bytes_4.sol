@@ -1,10 +1,11 @@
 contract C {
 	function r(bytes32 x, uint y) public pure {
 		x[0]; // safe access
-		x[y]; // oob access
+		// Disabled because of Spacer nondeterminism.
+		//x[y]; // oob access
 	}
 }
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (83-87): CHC: Out of bounds access happens here.
+// Warning 5667: (36-42): Unused function parameter. Remove or comment out the variable name to silence this warning.

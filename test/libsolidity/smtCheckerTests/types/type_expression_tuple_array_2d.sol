@@ -10,6 +10,3 @@ function f() public pure { (int[][]); }
 // Warning 8364: (42-47): Assertion checker does not yet implement type type(int256[] memory)
 // Warning 8364: (42-49): Assertion checker does not yet implement type type(int256[] memory[] memory)
 // Warning 8364: (41-50): Assertion checker does not yet implement type type(int256[] memory[] memory)
-// Warning 8364: (42-47): Assertion checker does not yet implement type type(int256[] memory)
-// Warning 8364: (42-49): Assertion checker does not yet implement type type(int256[] memory[] memory)
-// Warning 8364: (41-50): Assertion checker does not yet implement type type(int256[] memory[] memory)

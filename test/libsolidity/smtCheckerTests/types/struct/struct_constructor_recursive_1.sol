@@ -11,4 +11,3 @@ contract Test {
 // ----
 // Warning 2072: (104-133): Unused local variable.
 // Warning 8364: (138-180): Assertion checker does not yet implement type struct Test.RecursiveStruct memory
-// Warning 8364: (138-180): Assertion checker does not yet implement type struct Test.RecursiveStruct memory

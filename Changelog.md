@@ -11,12 +11,17 @@ Language Features:
 
 
 Compiler Features:
+ * Commandline Interface: Normalize paths specified on the command line and make them relative for files located inside base path.
  * Immutable variables can be read at construction time once they are initialized.
  * SMTChecker: Support low level ``call`` as external calls to unknown code.
+ * SMTChecker: Add constraints to better correlate ``address(this).balance`` and ``msg.value``.
+ * Commandline Interface: Disallowed the ``--experimental-via-ir`` option to be used with Standard Json, Assembler and Linker modes.
 
 
 Bugfixes:
  * SMTChecker: Fix false positive in external calls from constructors.
+ * SMTChecker: Fix internal error on some multi-source uses of ``abi.*``, cryptographic functions and constants.
+ * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
 
 
 

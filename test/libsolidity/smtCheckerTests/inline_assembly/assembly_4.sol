@@ -13,4 +13,3 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 7737: (82-101): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
-// Warning 7737: (82-101): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).

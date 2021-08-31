@@ -105,6 +105,7 @@ struct ErrorId
 	unsigned long long error = 0;
 	bool operator==(ErrorId const& _rhs) const { return error == _rhs.error; }
 	bool operator!=(ErrorId const& _rhs) const { return !(*this == _rhs); }
+	bool operator<(ErrorId const& _rhs) const { return error < _rhs.error; }
 };
 constexpr ErrorId operator"" _error(unsigned long long _error) { return ErrorId{ _error }; }
 

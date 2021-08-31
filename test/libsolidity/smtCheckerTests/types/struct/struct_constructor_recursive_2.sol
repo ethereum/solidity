@@ -16,6 +16,3 @@ contract Test {
 // Warning 7650: (199-204): Assertion checker does not yet support this expression.
 // Warning 8364: (199-202): Assertion checker does not yet implement type struct Test.RecursiveStruct memory
 // Warning 6328: (192-210): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nTest.constructor()\nTest.func()
-// Warning 8364: (143-188): Assertion checker does not yet implement type struct Test.RecursiveStruct memory
-// Warning 7650: (199-204): Assertion checker does not yet support this expression.
-// Warning 8364: (199-202): Assertion checker does not yet implement type struct Test.RecursiveStruct memory

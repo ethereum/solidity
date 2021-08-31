@@ -159,7 +159,15 @@ struct TupleSort: public Sort
 		name(std::move(_name)),
 		members(std::move(_members)),
 		components(std::move(_components))
-	{}
+	{
+		for (size_t i = 0; i < members.size(); ++i)
+			memberToIndex[members.at(i)] = i;
+	}
+
+	SortPointer memberSort(std::string const& _member)
+	{
+		return components.at(memberToIndex.at(_member));
+	}
 
 	bool operator==(Sort const& _other) const override
 	{
@@ -186,7 +194,9 @@ struct TupleSort: public Sort
 	std::string const name;
 	std::vector<std::string> const members;
 	std::vector<SortPointer> const components;
+	std::map<std::string, size_t> memberToIndex;
 };
+
 
 /** Frequently used sorts.*/
 struct SortProvider

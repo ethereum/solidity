@@ -8,4 +8,3 @@ contract C {
 // SMTEngine: chc
 // ----
 // Warning 3130: (56-120): Unknown option for "custom:smtchecker": "abstract-function"
-// Warning 3130: (56-120): Unknown option for "custom:smtchecker": "abstract-function"

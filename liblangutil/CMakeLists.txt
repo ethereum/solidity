@@ -25,6 +25,7 @@ set(sources
 	Token.cpp
 	Token.h
 	UndefMacros.h
+	UniqueErrorReporter.h
 )
 
 add_library(langutil ${sources})

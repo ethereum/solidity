@@ -40,8 +40,8 @@ ModelChecker::ModelChecker(
 	m_errorReporter(_errorReporter),
 	m_settings(move(_settings)),
 	m_context(),
-	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
-	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)
+	m_bmc(m_context, m_uniqueErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
+	m_chc(m_context, m_uniqueErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)
 {
 }
 
@@ -68,7 +68,7 @@ void ModelChecker::checkRequestedSourcesAndContracts(vector<shared_ptr<SourceUni
 	{
 		if (!exist.count(sourceName))
 		{
-			m_errorReporter.warning(
+			m_uniqueErrorReporter.warning(
 				9134_error,
 				SourceLocation(),
 				"Requested source \"" + sourceName + "\" does not exist."
@@ -79,7 +79,7 @@ void ModelChecker::checkRequestedSourcesAndContracts(vector<shared_ptr<SourceUni
 		// Requested contracts in source `s`.
 		for (auto const& contract: m_settings.contracts.contracts.at(sourceName))
 			if (!source.count(contract))
-				m_errorReporter.warning(
+				m_uniqueErrorReporter.warning(
 					7400_error,
 					SourceLocation(),
 					"Requested contract \"" + contract + "\" does not exist in source \"" + sourceName + "\"."
@@ -104,7 +104,7 @@ void ModelChecker::analyze(SourceUnit const& _source)
 					break;
 				}
 		solAssert(smtPragma, "");
-		m_errorReporter.warning(
+		m_uniqueErrorReporter.warning(
 			5523_error,
 			smtPragma->location(),
 			"The SMTChecker pragma has been deprecated and will be removed in the future. "
@@ -125,6 +125,9 @@ void ModelChecker::analyze(SourceUnit const& _source)
 
 	if (m_settings.engine.bmc)
 		m_bmc.analyze(_source, solvedTargets);
+
+	m_errorReporter.append(m_uniqueErrorReporter.errors());
+	m_uniqueErrorReporter.clear();
 }
 
 vector<string> ModelChecker::unhandledQueries()

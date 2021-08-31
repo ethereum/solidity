@@ -346,11 +346,11 @@ The full contract
         address payable public recipient;   // The account receiving the payments.
         uint256 public expiration;  // Timeout in case the recipient never closes.
 
-        constructor (address payable _recipient, uint256 duration)
+        constructor (address payable recipientAddress, uint256 duration)
             payable
         {
             sender = payable(msg.sender);
-            recipient = _recipient;
+            recipient = recipientAddress;
             expiration = block.timestamp + duration;
         }
 

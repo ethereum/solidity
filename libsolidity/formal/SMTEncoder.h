@@ -32,7 +32,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
-#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/UniqueErrorReporter.h>
 
 #include <string>
 #include <unordered_map>
@@ -55,11 +55,9 @@ public:
 	SMTEncoder(
 		smt::EncodingContext& _context,
 		ModelCheckerSettings const& _settings,
+		langutil::UniqueErrorReporter& _errorReporter,
 		langutil::CharStreamProvider const& _charStreamProvider
 	);
-
-	/// @returns true if engine should proceed with analysis.
-	bool analyze(SourceUnit const& _sources);
 
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
@@ -122,6 +120,8 @@ public:
 	static std::set<SourceUnit const*, ASTNode::CompareByID> sourceDependencies(SourceUnit const& _source);
 
 protected:
+	void resetSourceAnalysis();
+
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.
@@ -420,11 +420,7 @@ protected:
 	/// or unchecked arithmetic.
 	bool m_checked = true;
 
-	/// Local SMTEncoder ErrorReporter.
-	/// This is necessary to show the "No SMT solver available"
-	/// warning before the others in case it's needed.
-	langutil::ErrorReporter m_errorReporter;
-	langutil::ErrorList m_smtErrors;
+	langutil::UniqueErrorReporter& m_errorReporter;
 
 	/// Stores the current function/modifier call/invocation path.
 	std::vector<CallStackEntry> m_callStack;

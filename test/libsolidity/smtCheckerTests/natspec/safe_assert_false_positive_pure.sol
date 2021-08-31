@@ -23,7 +23,8 @@ contract C {
 }
 // ====
 // SMTEngine: chc
+// SMTIgnoreCex: yes
 // ----
 // Warning 2018: (33-335): Function state mutability can be restricted to view
 // Warning 2018: (457-524): Function state mutability can be restricted to pure
-// Warning 6328: (135-150): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, y = 0\n_x = 1\nz = 0\nt = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.g(1)\n    C.f1(1) -- internal call
+// Warning 6328: (135-150): CHC: Assertion violation happens here.

@@ -64,15 +64,15 @@ to receive their money - contracts cannot activate themselves.
         /// The function auctionEnd has already been called.
         error AuctionEndAlreadyCalled();
 
-        /// Create a simple auction with `_biddingTime`
+        /// Create a simple auction with `biddingTime`
         /// seconds bidding time on behalf of the
-        /// beneficiary address `_beneficiary`.
+        /// beneficiary address `beneficiaryAddress`.
         constructor(
-            uint _biddingTime,
-            address payable _beneficiary
+            uint biddingTime,
+            address payable beneficiaryAddress
         ) {
-            beneficiary = _beneficiary;
-            auctionEndTime = block.timestamp + _biddingTime;
+            beneficiary = beneficiaryAddress;
+            auctionEndTime = block.timestamp + biddingTime;
         }
 
         /// Bid on the auction with the value sent
@@ -232,26 +232,26 @@ invalid bids.
         // functions. `onlyBefore` is applied to `bid` below:
         // The new function body is the modifier's body where
         // `_` is replaced by the old function body.
-        modifier onlyBefore(uint _time) {
-            if (block.timestamp >= _time) revert TooLate(_time);
+        modifier onlyBefore(uint time) {
+            if (block.timestamp >= time) revert TooLate(time);
             _;
         }
-        modifier onlyAfter(uint _time) {
-            if (block.timestamp <= _time) revert TooEarly(_time);
+        modifier onlyAfter(uint time) {
+            if (block.timestamp <= time) revert TooEarly(time);
             _;
         }
 
         constructor(
-            uint _biddingTime,
-            uint _revealTime,
-            address payable _beneficiary
+            uint biddingTime,
+            uint revealTime,
+            address payable beneficiaryAddress
         ) {
-            beneficiary = _beneficiary;
-            biddingEnd = block.timestamp + _biddingTime;
-            revealEnd = biddingEnd + _revealTime;
+            beneficiary = beneficiaryAddress;
+            biddingEnd = block.timestamp + biddingTime;
+            revealEnd = biddingEnd + revealTime;
         }
 
-        /// Place a blinded bid with `_blindedBid` =
+        /// Place a blinded bid with `blindedBid` =
         /// keccak256(abi.encodePacked(value, fake, secret)).
         /// The sent ether is only refunded if the bid is correctly
         /// revealed in the revealing phase. The bid is valid if the
@@ -260,13 +260,13 @@ invalid bids.
         /// not the exact amount are ways to hide the real bid but
         /// still make the required deposit. The same address can
         /// place multiple bids.
-        function bid(bytes32 _blindedBid)
+        function bid(bytes32 blindedBid)
             external
             payable
             onlyBefore(biddingEnd)
         {
             bids[msg.sender].push(Bid({
-                blindedBid: _blindedBid,
+                blindedBid: blindedBid,
                 deposit: msg.value
             }));
         }
@@ -275,24 +275,24 @@ invalid bids.
         /// correctly blinded invalid bids and for all bids except for
         /// the totally highest.
         function reveal(
-            uint[] calldata _values,
-            bool[] calldata _fake,
-            bytes32[] calldata _secret
+            uint[] calldata values,
+            bool[] calldata fakes,
+            bytes32[] calldata secrets
         )
             external
             onlyAfter(biddingEnd)
             onlyBefore(revealEnd)
         {
             uint length = bids[msg.sender].length;
-            require(_values.length == length);
-            require(_fake.length == length);
-            require(_secret.length == length);
+            require(values.length == length);
+            require(fakes.length == length);
+            require(secrets.length == length);
 
             uint refund;
             for (uint i = 0; i < length; i++) {
                 Bid storage bidToCheck = bids[msg.sender][i];
                 (uint value, bool fake, bytes32 secret) =
-                        (_values[i], _fake[i], _secret[i]);
+                        (values[i], fakes[i], secrets[i]);
                 if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
                     // Bid was not actually revealed.
                     // Do not refund deposit.

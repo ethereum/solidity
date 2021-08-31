@@ -24,8 +24,9 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 
-#include <boost/range/algorithm/find_first_of.hpp>
-#include <boost/range/irange.hpp>
+#include <range/v3/algorithm/find_first_of.hpp>
+#include <range/v3/algorithm/find_if_not.hpp>
+#include <range/v3/view/subrange.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -52,8 +53,7 @@ string::const_iterator firstNonIdentifier(
 	if (currPos == _pos && isIdentifierStart(*currPos))
 	{
 		currPos++;
-		while (currPos != _end && isIdentifierPart(*currPos))
-			currPos++;
+		currPos = ranges::find_if_not(ranges::make_subrange(currPos, _end), isIdentifierPart);
 	}
 	return currPos;
 }
@@ -63,7 +63,7 @@ string::const_iterator firstWhitespaceOrNewline(
 	string::const_iterator _end
 )
 {
-	return boost::range::find_first_of(make_pair(_pos, _end), " \t\n");
+	return ranges::find_first_of(ranges::make_subrange(_pos, _end), " \t\n");
 }
 
 
@@ -72,10 +72,8 @@ string::const_iterator skipWhitespace(
 	string::const_iterator _end
 )
 {
-	auto currPos = _pos;
-	while (currPos != _end && (*currPos == ' ' || *currPos == '\t'))
-		currPos += 1;
-	return currPos;
+	auto isWhitespace = [](char const& c) { return (c == ' ' || c == '\t'); };
+	return ranges::find_if_not(ranges::make_subrange(_pos, _end), isWhitespace);
 }
 
 }

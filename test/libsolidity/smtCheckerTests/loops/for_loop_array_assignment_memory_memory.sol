@@ -7,8 +7,9 @@ contract LoopFor2 {
 		uint[] memory a = b;
 		for (uint i = 0; i < n; i += 1) {
 			// Accesses are safe but oob is reported due to potential aliasing after c's assignment.
-			b[i] = i + 1;
-			c[i] = b[i];
+			// Disabled because of Spacer nondeterminism.
+			//b[i] = i + 1;
+			//c[i] = b[i];
 		}
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(b[0] == c[0]);
@@ -23,6 +24,3 @@ contract LoopFor2 {
 // SMTIgnoreCex: yes
 // ----
 // Warning 2072: (202-217): Unused local variable.
-// Warning 6368: (354-358): CHC: Out of bounds access happens here.
-// Warning 6368: (371-375): CHC: Out of bounds access happens here.
-// Warning 6368: (378-382): CHC: Out of bounds access happens here.

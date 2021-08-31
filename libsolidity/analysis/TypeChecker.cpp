@@ -38,7 +38,6 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 
 #include <range/v3/view/zip.hpp>
 #include <range/v3/view/drop_exactly.hpp>
