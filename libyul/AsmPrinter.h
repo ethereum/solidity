@@ -28,6 +28,7 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceLocation.h>
 
 #include <map>
@@ -46,9 +47,11 @@ class AsmPrinter
 public:
 	explicit AsmPrinter(
 		Dialect const* _dialect = nullptr,
-		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
-		m_dialect(_dialect)
+		m_dialect(_dialect),
+		m_soliditySourceProvider(_soliditySourceProvider)
 	{
 		if (_sourceIndexToName)
 			for (auto&& [index, name]: *_sourceIndexToName)
@@ -58,8 +61,9 @@ public:
 
 	explicit AsmPrinter(
 		Dialect const& _dialect,
-		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
-	): AsmPrinter(&_dialect, _sourceIndexToName) {}
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
+	): AsmPrinter(&_dialect, _sourceIndexToName, _soliditySourceProvider) {}
 
 	std::string operator()(Literal const& _literal);
 	std::string operator()(Identifier const& _identifier);
@@ -79,7 +83,8 @@ public:
 	static std::string formatSourceLocationComment(
 		langutil::SourceLocation const& _location,
 		std::map<std::string, unsigned> const& _nameToSourceIndex,
-		bool _statement
+		bool _statement,
+		langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr
 	);
 
 private:
@@ -96,6 +101,7 @@ private:
 	Dialect const* const m_dialect = nullptr;
 	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
+	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
 };
 
 }

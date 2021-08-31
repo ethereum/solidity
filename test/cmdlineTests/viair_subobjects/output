@@ -16,7 +16,7 @@ Optimized IR:
 object "C_3" {
     code {
         {
-            /// @src 0:82:95
+            /// @src 0:82:95  "contract C {}"
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("C_3_deployed")
@@ -28,7 +28,7 @@ object "C_3" {
     object "C_3_deployed" {
         code {
             {
-                /// @src 0:82:95
+                /// @src 0:82:95  "contract C {}"
                 mstore(64, 128)
                 revert(0, 0)
             }
@@ -55,7 +55,7 @@ Optimized IR:
 object "D_16" {
     code {
         {
-            /// @src 0:96:165
+            /// @src 0:96:165  "contract D {..."
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("D_16_deployed")
@@ -67,7 +67,7 @@ object "D_16" {
     object "D_16_deployed" {
         code {
             {
-                /// @src 0:96:165
+                /// @src 0:96:165  "contract D {..."
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
@@ -76,22 +76,22 @@ object "D_16" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        /// @src 0:149:156
+                        /// @src 0:149:156  "new C()"
                         let _2 := datasize("C_3")
-                        let _3 := add(/** @src 0:96:165 */ 128, /** @src 0:149:156 */ _2)
-                        if or(gt(_3, 0xffffffffffffffff), lt(_3, /** @src 0:96:165 */ 128))
-                        /// @src 0:149:156
+                        let _3 := add(/** @src 0:96:165  "contract D {..." */ 128, /** @src 0:149:156  "new C()" */ _2)
+                        if or(gt(_3, 0xffffffffffffffff), lt(_3, /** @src 0:96:165  "contract D {..." */ 128))
+                        /// @src 0:149:156  "new C()"
                         {
-                            /// @src 0:96:165
+                            /// @src 0:96:165  "contract D {..."
                             mstore(_1, shl(224, 0x4e487b71))
                             mstore(4, 0x41)
                             revert(_1, 0x24)
                         }
-                        /// @src 0:149:156
-                        datacopy(/** @src 0:96:165 */ 128, /** @src 0:149:156 */ dataoffset("C_3"), _2)
-                        if iszero(create(/** @src 0:96:165 */ _1, 128, /** @src 0:149:156 */ _2))
+                        /// @src 0:149:156  "new C()"
+                        datacopy(/** @src 0:96:165  "contract D {..." */ 128, /** @src 0:149:156  "new C()" */ dataoffset("C_3"), _2)
+                        if iszero(create(/** @src 0:96:165  "contract D {..." */ _1, 128, /** @src 0:149:156  "new C()" */ _2))
                         {
-                            /// @src 0:96:165
+                            /// @src 0:96:165  "contract D {..."
                             let pos := mload(64)
                             returndatacopy(pos, _1, returndatasize())
                             revert(pos, returndatasize())
@@ -106,7 +106,7 @@ object "D_16" {
         object "C_3" {
             code {
                 {
-                    /// @src 0:82:95
+                    /// @src 0:82:95  "contract C {}"
                     mstore(64, 128)
                     if callvalue() { revert(0, 0) }
                     let _1 := datasize("C_3_deployed")
@@ -118,7 +118,7 @@ object "D_16" {
             object "C_3_deployed" {
                 code {
                     {
-                        /// @src 0:82:95
+                        /// @src 0:82:95  "contract C {}"
                         mstore(64, 128)
                         revert(0, 0)
                     }

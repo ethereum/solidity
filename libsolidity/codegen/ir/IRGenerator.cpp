@@ -45,8 +45,9 @@
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::util;
 using namespace solidity::frontend;
+using namespace solidity::langutil;
+using namespace solidity::util;
 
 namespace
 {
@@ -115,7 +116,7 @@ pair<string, string> IRGenerator::run(
 		" *                !USE AT YOUR OWN RISK!               *\n"
 		" *=====================================================*/\n\n";
 
-	return {warning + ir, warning + asmStack.print()};
+	return {warning + ir, warning + asmStack.print(m_context.soliditySourceProvider())};
 }
 
 string IRGenerator::generate(
@@ -1064,7 +1065,14 @@ void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionCon
 		m_context.internalDispatchClean(),
 		"Reset internal dispatch map without consuming it."
 	);
-	IRGenerationContext newContext(m_evmVersion, _context, m_context.revertStrings(), m_optimiserSettings, m_context.sourceIndices());
+	IRGenerationContext newContext(
+		m_evmVersion,
+		_context,
+		m_context.revertStrings(),
+		m_optimiserSettings,
+		m_context.sourceIndices(),
+		m_context.soliditySourceProvider()
+	);
 	newContext.copyFunctionIDsFrom(m_context);
 	m_context = move(newContext);
 

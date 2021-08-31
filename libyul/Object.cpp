@@ -35,8 +35,9 @@
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::yul;
+using namespace solidity::langutil;
 using namespace solidity::util;
+using namespace solidity::yul;
 
 namespace
 {
@@ -50,12 +51,15 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(Dialect const*) const
+string Data::toString(Dialect const*, CharStreamProvider const*) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
-string Object::toString(Dialect const* _dialect) const
+string Object::toString(
+	Dialect const* _dialect,
+	CharStreamProvider const* _soliditySourceProvider
+) const
 {
 	yulAssert(code, "No code");
 	yulAssert(debugData, "No debug data");
@@ -70,10 +74,10 @@ string Object::toString(Dialect const* _dialect) const
 			})) +
 			"\n";
 
-	string inner = "code " + AsmPrinter{_dialect, debugData->sourceNames}(*code);
+	string inner = "code " + AsmPrinter{_dialect, debugData->sourceNames, _soliditySourceProvider}(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_dialect);
+		inner += "\n" + obj->toString(_dialect, _soliditySourceProvider);
 
 	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }

@@ -8,7 +8,7 @@
 /// @use-src 0:\"A\"
 object \"C_7\" {
     code {
-        /// @src 0:79:121
+        /// @src 0:79:121  \"contract C { function f() public pure {} }\"
         mstore(64, 128)
         if callvalue()
         {
@@ -28,7 +28,7 @@ object \"C_7\" {
     /// @use-src 0:\"A\"
     object \"C_7_deployed\" {
         code {
-            /// @src 0:79:121
+            /// @src 0:79:121  \"contract C { function f() public pure {} }\"
             mstore(64, 128)
             if iszero(lt(calldatasize(), 4))
             {
@@ -68,7 +68,7 @@ object \"C_7\" {
             { tail := add(headStart, 0) }
             function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
             { revert(0, 0) }
-            /// @src 0:92:119
+            /// @src 0:92:119  \"function f() public pure {}\"
             function fun_f_6()
             { }
         }
