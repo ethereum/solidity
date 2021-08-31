@@ -18,6 +18,7 @@ object "D_8" {
             return(128, _1)
         }
     }
+    /// @use-src 0:"ir_with_assembly_no_memoryguard_runtime/input.sol", 1:"#utility.yul"
     object "D_8_deployed" {
         code {
             {

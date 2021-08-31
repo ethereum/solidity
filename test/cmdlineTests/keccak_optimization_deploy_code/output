@@ -22,6 +22,7 @@ object "C_12" {
             return(128, _1)
         }
     }
+    /// @use-src 0:"keccak_optimization_deploy_code/input.sol", 1:"#utility.yul"
     object "C_12_deployed" {
         code {
             {

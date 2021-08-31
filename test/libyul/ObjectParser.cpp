@@ -121,8 +121,9 @@ tuple<optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _so
 	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion::berlin());
 	ObjectParser objectParser{reporter, dialect};
 	CharStream stream(move(source), "");
-	objectParser.parse(make_shared<Scanner>(stream), false);
-	return {objectParser.sourceNameMapping(), std::move(errors)};
+	auto object = objectParser.parse(make_shared<Scanner>(stream), false);
+	BOOST_REQUIRE(object && object->debugData);
+	return {object->debugData->sourceNames, std::move(errors)};
 }
 
 }
@@ -194,7 +195,7 @@ BOOST_AUTO_TEST_CASE(use_src_empty)
 
 BOOST_AUTO_TEST_CASE(use_src_simple)
 {
-	auto const [mapping, _] = tryGetSourceLocationMapping(R"(@use-src 0:"contract.sol")");
+	auto const [mapping, _] = tryGetSourceLocationMapping(R"(@debug 0:"contract.sol")");
 	BOOST_REQUIRE(mapping.has_value());
 	BOOST_REQUIRE_EQUAL(mapping->size(), 1);
 	BOOST_REQUIRE_EQUAL(*mapping->at(0), "contract.sol");

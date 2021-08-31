@@ -133,7 +133,7 @@ string IRGenerator::generate(
 	};
 
 	Whiskers t(R"(
-		/// @use-src <useSrcMap>
+		/// @use-src <useSrcMapCreation>
 		object "<CreationObject>" {
 			code {
 				<sourceLocationComment>
@@ -147,6 +147,7 @@ string IRGenerator::generate(
 				<deploy>
 				<functions>
 			}
+			/// @use-src <useSrcMapDeployed>
 			object "<DeployedObject>" {
 				code {
 					<sourceLocationComment>
@@ -177,7 +178,7 @@ string IRGenerator::generate(
 		", "
 	);
 
-	t("useSrcMap", useSrcMap);
+	t("useSrcMapCreation", useSrcMap);
 	t("sourceLocationComment", sourceLocationComment(_contract, m_context));
 
 	t("CreationObject", IRNames::creationObject(_contract));
@@ -219,6 +220,7 @@ string IRGenerator::generate(
 	m_context.initializeInternalDispatch(move(internalDispatchMap));
 
 	// Do not register immutables to avoid assignment.
+	t("useSrcMapDeployed", useSrcMap);
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));

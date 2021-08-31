@@ -38,6 +38,7 @@ object "C_81" {
         }
 
     }
+    /// @use-src 0:"exp_base_literal/input.sol", 1:"#utility.yul"
     object "C_81_deployed" {
         code {
             /// @src 0:82:370

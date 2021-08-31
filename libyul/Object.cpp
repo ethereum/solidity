@@ -50,38 +50,32 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(Dialect const*, optional<SourceNameMap>) const
+string Data::toString(Dialect const*) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 string Object::toString(Dialect const* _dialect) const
 {
+	yulAssert(code, "No code");
+	yulAssert(debugData, "No debug data");
+
 	string useSrcComment;
 
-	if (debugData && debugData->sourceNames)
+	if (debugData->sourceNames)
 		useSrcComment =
 			"/// @use-src " +
 			joinHumanReadable(ranges::views::transform(*debugData->sourceNames, [](auto&& _pair) {
 				return to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
 			})) +
 			"\n";
-	return useSrcComment + toString(_dialect, debugData ? debugData->sourceNames : optional<SourceNameMap>{});
-}
 
-string Object::toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const
-{
-	yulAssert(code, "No code");
-	string inner = "code " + AsmPrinter{_dialect, _sourceNames}(*code);
+	string inner = "code " + AsmPrinter{_dialect, debugData->sourceNames}(*code);
 
 	for (auto const& obj: subObjects)
-	{
-		if (auto const* o = dynamic_cast<Object const*>(obj.get()))
-			yulAssert(!o->debugData || !o->debugData->sourceNames, "");
-		inner += "\n" + obj->toString(_dialect, _sourceNames);
-	}
+		inner += "\n" + obj->toString(_dialect);
 
-	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
+	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
 
 set<YulString> Object::qualifiedDataNames() const
