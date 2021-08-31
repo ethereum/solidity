@@ -131,12 +131,21 @@ string IRGenerator::generate(
 			subObjectsSources += _otherYulSources.at(subObject);
 		return subObjectsSources;
 	};
+	auto formatUseSrcMap = [](IRGenerationContext const& _context) -> string
+	{
+		return joinHumanReadable(
+			ranges::views::transform(_context.usedSourceNames(), [_context](string const& _sourceName) {
+				return to_string(_context.sourceIndices().at(_sourceName)) + ":" + escapeAndQuoteString(_sourceName);
+			}),
+			", "
+		);
+	};
 
 	Whiskers t(R"(
 		/// @use-src <useSrcMapCreation>
 		object "<CreationObject>" {
 			code {
-				<sourceLocationComment>
+				<sourceLocationCommentCreation>
 				<memoryInitCreation>
 				<callValueCheck>
 				<?library>
@@ -150,7 +159,7 @@ string IRGenerator::generate(
 			/// @use-src <useSrcMapDeployed>
 			object "<DeployedObject>" {
 				code {
-					<sourceLocationComment>
+					<sourceLocationCommentDeployed>
 					<memoryInitDeployed>
 					<?library>
 					let called_via_delegatecall := iszero(eq(loadimmutable("<library_address>"), address()))
@@ -169,19 +178,8 @@ string IRGenerator::generate(
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
-	auto invertedSourceIndicies = invertMap(m_context.sourceIndices());
-
-	string useSrcMap = joinHumanReadable(
-		ranges::views::transform(invertedSourceIndicies, [](auto&& _pair) {
-			return to_string(_pair.first) + ":" + escapeAndQuoteString(_pair.second);
-		}),
-		", "
-	);
-
-	t("useSrcMapCreation", useSrcMap);
-	t("sourceLocationComment", sourceLocationComment(_contract));
-
 	t("CreationObject", IRNames::creationObject(_contract));
+	t("sourceLocationCommentCreation", sourceLocationComment(_contract));
 	t("library", _contract.isLibrary());
 
 	FunctionDefinition const* constructor = _contract.constructor();
@@ -211,6 +209,7 @@ string IRGenerator::generate(
 	// This has to be called only after all other code generation for the creation object is complete.
 	bool creationInvolvesAssembly = m_context.inlineAssemblySeen();
 	t("memoryInitCreation", memoryInit(!creationInvolvesAssembly));
+	t("useSrcMapCreation", formatUseSrcMap(m_context));
 
 	resetContext(_contract, ExecutionContext::Deployed);
 
@@ -220,8 +219,8 @@ string IRGenerator::generate(
 	m_context.initializeInternalDispatch(move(internalDispatchMap));
 
 	// Do not register immutables to avoid assignment.
-	t("useSrcMapDeployed", useSrcMap);
 	t("DeployedObject", IRNames::deployedObject(_contract));
+	t("sourceLocationCommentDeployed", sourceLocationComment(_contract));
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));
 	set<FunctionDefinition const*> deployedFunctionList = generateQueuedFunctions();
@@ -231,6 +230,7 @@ string IRGenerator::generate(
 	t("metadataName", yul::Object::metadataName());
 	t("cborMetadata", toHex(_cborMetadata));
 
+	t("useSrcMapDeployed", formatUseSrcMap(m_context));
 
 	// This has to be called only after all other code generation for the deployed object is complete.
 	bool deployedInvolvesAssembly = m_context.inlineAssemblySeen();
@@ -1073,7 +1073,7 @@ void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionCon
 		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }
 
-string IRGenerator::sourceLocationComment(ASTNode const& _node) const
+string IRGenerator::sourceLocationComment(ASTNode const& _node)
 {
 	return ::sourceLocationComment(_node, m_context);
 }

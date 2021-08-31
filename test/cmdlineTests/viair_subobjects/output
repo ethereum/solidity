@@ -12,7 +12,7 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
-/// @use-src 0:"viair_subobjects/input.sol", 1:"#utility.yul"
+/// @use-src 0:"viair_subobjects/input.sol"
 object "C_3" {
     code {
         {
@@ -24,7 +24,7 @@ object "C_3" {
             return(128, _1)
         }
     }
-    /// @use-src 0:"viair_subobjects/input.sol", 1:"#utility.yul"
+    /// @use-src 0:"viair_subobjects/input.sol"
     object "C_3_deployed" {
         code {
             {
@@ -51,7 +51,7 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
-/// @use-src 0:"viair_subobjects/input.sol", 1:"#utility.yul"
+/// @use-src 0:"viair_subobjects/input.sol"
 object "D_16" {
     code {
         {
@@ -63,7 +63,7 @@ object "D_16" {
             return(128, _1)
         }
     }
-    /// @use-src 0:"viair_subobjects/input.sol", 1:"#utility.yul"
+    /// @use-src 0:"viair_subobjects/input.sol"
     object "D_16_deployed" {
         code {
             {
@@ -102,7 +102,7 @@ object "D_16" {
                 revert(0, 0)
             }
         }
-        /// @use-src 0:"viair_subobjects/input.sol", 1:"#utility.yul"
+        /// @use-src 0:"viair_subobjects/input.sol"
         object "C_3" {
             code {
                 {
@@ -114,7 +114,7 @@ object "D_16" {
                     return(128, _1)
                 }
             }
-            /// @use-src 0:"viair_subobjects/input.sol", 1:"#utility.yul"
+            /// @use-src 0:"viair_subobjects/input.sol"
             object "C_3_deployed" {
                 code {
                     {

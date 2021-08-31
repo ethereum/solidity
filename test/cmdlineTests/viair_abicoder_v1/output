@@ -7,7 +7,7 @@ IR:
  *=====================================================*/
 
 
-/// @use-src 0:"viair_abicoder_v1/input.sol", 1:"#utility.yul"
+/// @use-src 0:"viair_abicoder_v1/input.sol"
 object "test_11" {
     code {
         /// @src 0:79:169
@@ -38,7 +38,7 @@ object "test_11" {
         }
 
     }
-    /// @use-src 0:"viair_abicoder_v1/input.sol", 1:"#utility.yul"
+    /// @use-src 0:"viair_abicoder_v1/input.sol"
     object "test_11_deployed" {
         code {
             /// @src 0:79:169

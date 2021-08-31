@@ -6,7 +6,7 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
-/// @use-src 0:"name_simplifier/input.sol", 1:"#utility.yul"
+/// @use-src 0:"name_simplifier/input.sol"
 object "C_59" {
     code {
         {
@@ -18,7 +18,7 @@ object "C_59" {
             return(128, _1)
         }
     }
-    /// @use-src 0:"name_simplifier/input.sol", 1:"#utility.yul"
+    /// @use-src 0:"name_simplifier/input.sol"
     object "C_59_deployed" {
         code {
             {

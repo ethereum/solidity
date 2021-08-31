@@ -6,7 +6,7 @@
  *=====================================================*/
 
 
-/// @use-src 0:\"A\", 1:\"#utility.yul\"
+/// @use-src 0:\"A\"
 object \"C_3\" {
     code {
         /// @src 0:79:92
@@ -37,7 +37,7 @@ object \"C_3\" {
         }
 
     }
-    /// @use-src 0:\"A\", 1:\"#utility.yul\"
+    /// @use-src 0:\"A\"
     object \"C_3_deployed\" {
         code {
             /// @src 0:79:92
@@ -83,7 +83,7 @@ object \"C_3\" {
  *=====================================================*/
 
 
-/// @use-src 0:\"A\", 1:\"#utility.yul\"
+/// @use-src 0:\"A\"
 object \"D_16\" {
     code {
         /// @src 0:93:146
@@ -114,7 +114,7 @@ object \"D_16\" {
         }
 
     }
-    /// @use-src 0:\"A\", 1:\"#utility.yul\"
+    /// @use-src 0:\"A\"
     object \"D_16_deployed\" {
         code {
             /// @src 0:93:146
@@ -215,7 +215,7 @@ object \"D_16\" {
         *                !USE AT YOUR OWN RISK!               *
         *=====================================================*/
 
-        /// @use-src 0:\"A\", 1:\"#utility.yul\"
+        /// @use-src 0:\"A\"
         object \"C_3\" {
             code {
                 /// @src 0:79:92
@@ -246,7 +246,7 @@ object \"D_16\" {
                 }
 
             }
-            /// @use-src 0:\"A\", 1:\"#utility.yul\"
+            /// @use-src 0:\"A\"
             object \"C_3_deployed\" {
                 code {
                     /// @src 0:79:92

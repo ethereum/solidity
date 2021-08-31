@@ -73,8 +73,8 @@ struct IRNames
  * @returns a source location comment in the form of
  * `/// @src <sourceIndex>:<locationStart>:<locationEnd>`.
  */
-std::string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext const& _context);
-std::string sourceLocationComment(ASTNode const& _node, IRGenerationContext const& _context);
+std::string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext& _context);
+std::string sourceLocationComment(ASTNode const& _node, IRGenerationContext& _context);
 
 }
 
