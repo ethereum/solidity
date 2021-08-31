@@ -39,6 +39,8 @@ struct DebugData
 {
 	explicit DebugData(langutil::SourceLocation _location): location(std::move(_location)) {}
 	langutil::SourceLocation location;
+	/// ID in the source AST.
+	std::optional<int64_t> astID;
 	static std::shared_ptr<DebugData const> create(langutil::SourceLocation _location = {})
 	{
 		return std::make_shared<DebugData const>(_location);
