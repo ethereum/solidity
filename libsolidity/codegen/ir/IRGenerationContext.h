@@ -166,6 +166,8 @@ public:
 	void copyFunctionIDsFrom(IRGenerationContext const& _other);
 
 	std::map<std::string, unsigned> const& sourceIndices() const { return m_sourceIndices; }
+	void markSourceUsed(std::string const& _name) { m_usedSourceNames.insert(_name); }
+	std::set<std::string> const& usedSourceNames() const { return m_usedSourceNames; }
 
 	bool immutableRegistered(VariableDeclaration const& _varDecl) const { return m_immutableVariables.count(&_varDecl); }
 
@@ -175,6 +177,7 @@ private:
 	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
 	std::map<std::string, unsigned> m_sourceIndices;
+	std::set<std::string> m_usedSourceNames;
 	ContractDefinition const* m_mostDerivedContract = nullptr;
 	std::map<VariableDeclaration const*, IRVariable> m_localVariables;
 	/// Memory offsets reserved for the values of immutable variables during contract creation.

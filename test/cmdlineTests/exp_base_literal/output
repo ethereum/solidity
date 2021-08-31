@@ -7,7 +7,7 @@ IR:
  *=====================================================*/
 
 
-/// @use-src 0:"exp_base_literal/input.sol", 1:"#utility.yul"
+/// @use-src 0:"exp_base_literal/input.sol"
 object "C_81" {
     code {
         /// @src 0:82:370
@@ -38,7 +38,7 @@ object "C_81" {
         }
 
     }
-    /// @use-src 0:"exp_base_literal/input.sol", 1:"#utility.yul"
+    /// @use-src 0:"exp_base_literal/input.sol"
     object "C_81_deployed" {
         code {
             /// @src 0:82:370

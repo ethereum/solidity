@@ -127,9 +127,10 @@ string IRNames::zeroValue(Type const& _type, string const& _variableName)
 	return "zero_" + _type.identifier() + _variableName;
 }
 
-string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext const& _context)
+string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext& _context)
 {
 	solAssert(_location.sourceName, "");
+	_context.markSourceUsed(*_location.sourceName);
 	return "/// @src "
 		+ to_string(_context.sourceIndices().at(*_location.sourceName))
 		+ ":"
@@ -138,7 +139,7 @@ string sourceLocationComment(langutil::SourceLocation const& _location, IRGenera
 		+ to_string(_location.end);
 }
 
-string sourceLocationComment(ASTNode const& _node, IRGenerationContext const& _context)
+string sourceLocationComment(ASTNode const& _node, IRGenerationContext& _context)
 {
 	return sourceLocationComment(_node.location(), _context);
 }
