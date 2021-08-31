@@ -23,6 +23,9 @@ parameters:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:emscripten-6
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:092da5817bc032c91a806b4f73db2a1a31e5cc4c066d94d43eedd9f365df7154"
+  evm-version:
+    type: string
+    default: london
 
 orbs:
   win: circleci/windows@2.2.0
@@ -523,7 +526,7 @@ jobs:
   t_ubu_codecov:
     <<: *test_ubuntu2004
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
     steps:
       - checkout
@@ -642,7 +645,7 @@ jobs:
     macos:
       xcode: "11.0.0"
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       TERM: xterm
     steps:
@@ -731,7 +734,7 @@ jobs:
         # See https://github.com/ethereum/solidity/pull/11332
         - image: archlinux:base-20210131.0.14634
       environment:
-        EVM: constantinople
+        EVM: << pipeline.parameters.evm-version >>
         OPTIMIZE: 0
         TERM: xterm
         # For Archlinux we do not have prebuilt docker images and we would need to build evmone from source,
@@ -756,7 +759,7 @@ jobs:
     docker:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       SOLTEST_FLAGS: --enforce-via-yul
       OPTIMIZE: 0
       TERM: xterm
@@ -772,7 +775,7 @@ jobs:
   t_ubu_clang_soltest: &t_ubu_clang_soltest
     <<: *test_ubuntu2004_clang
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
 
   t_ubu_release_soltest: &t_ubu_release_soltest
@@ -795,23 +798,25 @@ jobs:
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
     <<: *run_cmdline_tests_steps
 
-  t_ubu_asan_constantinople:
+  t_ubu_asan:
     <<: *test_asan
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
-  t_ubu_asan_constantinople_clang:
+  t_ubu_asan_clang:
     <<: *test_ubuntu2004_clang
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ubu_ubsan_clang:
+    environment:
+      EVM: << pipeline.parameters.evm-version >>
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     steps:
@@ -1230,8 +1235,8 @@ workflows:
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags
       - b_ubu_asan_clang: *workflow_trigger_on_tags
-      - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
-      - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
+      - t_ubu_asan: *workflow_ubuntu2004_asan
+      - t_ubu_asan_clang: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
 
       # UBSan build and tests
