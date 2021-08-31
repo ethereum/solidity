@@ -116,12 +116,17 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 			case Token::Function:
 				nodes.push_back(parseFunctionDefinition(true));
 				break;
-			case Token::Error:
-				nodes.push_back(parseErrorDefinition());
-				break;
 			default:
+				if (
+					// Workaround because `error` is not a keyword.
+					m_scanner->currentToken() == Token::Identifier &&
+					currentLiteral() == "error" &&
+					m_scanner->peekNextToken() == Token::Identifier &&
+					m_scanner->peekNextNextToken() == Token::LParen
+				)
+					nodes.push_back(parseErrorDefinition());
 				// Constant variable.
-				if (variableDeclarationStart() && m_scanner->peekNextToken() != Token::EOS)
+				else if (variableDeclarationStart() && m_scanner->peekNextToken() != Token::EOS)
 				{
 					VarDeclParserOptions options;
 					options.kind = VarDeclKind::FileLevel;
@@ -359,7 +364,13 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 				subNodes.push_back(parseStructDefinition());
 			else if (currentTokenValue == Token::Enum)
 				subNodes.push_back(parseEnumDefinition());
-			else if (currentTokenValue == Token::Error)
+			else if (
+				// Workaround because `error` is not a keyword.
+				currentTokenValue == Token::Identifier &&
+				currentLiteral() == "error" &&
+				m_scanner->peekNextToken() == Token::Identifier &&
+				m_scanner->peekNextNextToken() == Token::LParen
+			)
 				subNodes.push_back(parseErrorDefinition());
 			else if (variableDeclarationStart())
 			{
@@ -930,7 +941,7 @@ ASTPointer<ErrorDefinition> Parser::parseErrorDefinition()
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
 
-	expectToken(Token::Error);
+	solAssert(*expectIdentifierToken() == "error", "");
 	auto&& [name, nameLocation] = expectIdentifierWithLocation();
 
 	ASTPointer<ParameterList> parameters = parseParameterList({});
