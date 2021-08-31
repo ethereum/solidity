@@ -76,6 +76,12 @@ public:
 	std::string operator()(Leave const& _continue);
 	std::string operator()(Block const& _block);
 
+	static std::string formatSourceLocationComment(
+		langutil::SourceLocation const& _location,
+		std::map<std::string, unsigned> const& _nameToSourceIndex,
+		bool _statement
+	);
+
 private:
 	std::string formatTypedName(TypedName _variable);
 	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
@@ -88,7 +94,7 @@ private:
 	}
 
 	Dialect const* const m_dialect = nullptr;
-	std::map<std::string const, unsigned> m_nameToSourceIndex;
+	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
 };
 
