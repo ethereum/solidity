@@ -18,6 +18,7 @@ object "C_7" {
             return(128, _1)
         }
     }
+    /// @use-src 0:"keccak_optimization_low_runs/input.sol", 1:"#utility.yul"
     object "C_7_deployed" {
         code {
             {

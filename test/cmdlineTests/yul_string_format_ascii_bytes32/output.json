@@ -37,6 +37,7 @@ object \"C_11\" {
         }
 
     }
+    /// @use-src 0:\"A\", 1:\"#utility.yul\"
     object \"C_11_deployed\" {
         code {
             /// @src 0:78:158

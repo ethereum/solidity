@@ -156,6 +156,7 @@ object \"C_54\" {
         }
 
     }
+    /// @use-src 0:\"C\", 1:\"D\", 2:\"#utility.yul\"
     object \"C_54_deployed\" {
         code {
             /// @src 0:79:428
@@ -780,6 +781,7 @@ object \"D_72\" {
         }
 
     }
+    /// @use-src 0:\"C\", 1:\"D\", 2:\"#utility.yul\"
     object \"D_72_deployed\" {
         code {
             /// @src 1:91:166
