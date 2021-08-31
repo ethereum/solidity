@@ -71,6 +71,15 @@ function update_expectation {
     local newExpectation="${1}"
     local expectationFile="${2}"
 
+    if [[ $newExpectation == "" || $newExpectation -eq 0 && $expectationFile == */exit ]]
+    then
+        if [[ -f $expectationFile ]]
+        then
+            rm "$expectationFile"
+        fi
+        return
+    fi
+
     echo "$newExpectation" > "$expectationFile"
     printLog "File $expectationFile updated to match the expectation."
 }
