@@ -42,7 +42,7 @@ string solidity::yul::reindent(string const& _code)
 {
 	int constexpr indentationWidth = 4;
 
-	auto const static countBraces = [](string const& _s) noexcept -> int
+	auto constexpr static countBraces = [](string const& _s) noexcept -> int
 	{
 		auto const i = _s.find("//");
 		auto const e = i == _s.npos ? end(_s) : next(begin(_s), static_cast<ptrdiff_t>(i));

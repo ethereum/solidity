@@ -78,7 +78,7 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 void FuzzerUtil::forceSMT(StringMap& _input)
 {
 	// Add SMT checker pragma if not already present in source
-	static const char* smtPragma = "pragma experimental SMTChecker;";
+	static auto constexpr smtPragma = "pragma experimental SMTChecker;";
 	for (auto &sourceUnit: _input)
 		if (sourceUnit.second.find(smtPragma) == string::npos)
 			sourceUnit.second += smtPragma;
