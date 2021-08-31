@@ -138,7 +138,7 @@ string CharStream::singleLineSnippet(string const& _sourceCode, SourceLocation c
 		return {};
 
 	string cut = _sourceCode.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
-	auto newLinePos = cut.find_first_of("\n");
+	auto newLinePos = cut.find_first_of("\n\r");
 	if (newLinePos != string::npos)
 		cut = cut.substr(0, newLinePos) + "...";
 
