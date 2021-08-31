@@ -13,9 +13,10 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
  * SMTChecker: Fix false positive in external calls from constructors.
  * SMTChecker: Fix internal error on some multi-source uses of ``abi.*``, cryptographic functions and constants.
- * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
+ * Type Checker: Disallow modifier declarations and definitions in interfaces.
 
 
 
