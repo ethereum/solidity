@@ -1784,12 +1784,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "min" || member == "max")
 		{
 			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
-			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
-
-			if (member == "min")
-				m_context << integerType->min();
+			if (IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument()))
+				m_context << (member == "min" ? integerType->min() : integerType->max());
+			else if (EnumType const* enumType = dynamic_cast<EnumType const*>(arg->typeArgument()))
+				m_context << (member == "min" ? enumType->minValue() : enumType->maxValue());
 			else
-				m_context << integerType->max();
+				solAssert(false, "min/max not available for the given type.");
+
 		}
 		else if ((set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{

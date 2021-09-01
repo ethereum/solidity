@@ -14,4 +14,4 @@ abstract contract Test is ERC165 {
     }
 }
 // ----
-// TypeError 4259: (592-597): Invalid type for argument in the function call. A contract type or an integer type is required, but type(contract super Test) provided.
+// TypeError 4259: (592-597): Invalid type for argument in the function call. An enum type, contract type or an integer type is required, but type(contract super Test) provided.

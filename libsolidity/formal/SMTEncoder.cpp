@@ -1284,8 +1284,10 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			auto const& memberName = _memberAccess.memberName();
 			if (memberName == "min" || memberName == "max")
 			{
-				IntegerType const& integerType = dynamic_cast<IntegerType const&>(*magicType->typeArgument());
-				defineExpr(_memberAccess, memberName == "min" ? integerType.minValue() : integerType.maxValue());
+				if (IntegerType const* integerType = dynamic_cast<IntegerType const*>(magicType->typeArgument()))
+					defineExpr(_memberAccess, memberName == "min" ? integerType->minValue() : integerType->maxValue());
+				else if (EnumType const* enumType = dynamic_cast<EnumType const*>(magicType->typeArgument()))
+					defineExpr(_memberAccess, memberName == "min" ? enumType->minValue() : enumType->maxValue());
 			}
 			else if (memberName == "interfaceId")
 			{

@@ -246,7 +246,10 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		Type::Category typeCategory = typeTypePtr->actualType()->category();
 		if (auto const* contractType = dynamic_cast<ContractType const*>(typeTypePtr->actualType()))
 			wrongType = contractType->isSuper();
-		else if (typeCategory != Type::Category::Integer)
+		else if (
+			typeCategory != Type::Category::Integer &&
+			typeCategory != Type::Category::Enum
+		)
 			wrongType = true;
 	}
 	else
@@ -257,7 +260,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			4259_error,
 			arguments.front()->location(),
 			"Invalid type for argument in the function call. "
-			"A contract type or an integer type is required, but " +
+			"An enum type, contract type or an integer type is required, but " +
 			type(*arguments.front())->toString(true) + " provided."
 		);
 

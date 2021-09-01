@@ -587,11 +587,14 @@ Enums cannot have more than 256 members.
 The data representation is the same as for enums in C: The options are represented by
 subsequent unsigned integer values starting from ``0``.
 
+Using ``type(NameOfEnum).min`` and ``type(NameOfEnum).max`` you can get the
+smallest and respectively largest value of the given enum.
+
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity ^0.8.8;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -611,6 +614,14 @@ subsequent unsigned integer values starting from ``0``.
 
         function getDefaultChoice() public pure returns (uint) {
             return uint(defaultChoice);
+        }
+
+        function getLargestValue() public pure returns (ActionChoices) {
+            return type(ActionChoices).max;
+        }
+
+        function getSmallestValue() public pure returns (ActionChoices) {
+            return type(ActionChoices).min;
         }
     }
 

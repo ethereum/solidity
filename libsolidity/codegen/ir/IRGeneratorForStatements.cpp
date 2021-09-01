@@ -1785,12 +1785,26 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "min" || member == "max")
 		{
 			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
-			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
 
-			if (member == "min")
-				define(_memberAccess) << formatNumber(integerType->min()) << "\n";
+			string requestedValue;
+			if (IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument()))
+			{
+				if (member == "min")
+					requestedValue = formatNumber(integerType->min());
+				else
+					requestedValue = formatNumber(integerType->max());
+			}
+			else if (EnumType const* enumType = dynamic_cast<EnumType const*>(arg->typeArgument()))
+			{
+				if (member == "min")
+					requestedValue = to_string(enumType->minValue());
+				else
+					requestedValue = to_string(enumType->maxValue());
+			}
 			else
-				define(_memberAccess) << formatNumber(integerType->max()) << "\n";
+				solAssert(false, "min/max requested on unexpected type.");
+
+			define(_memberAccess) << requestedValue << "\n";
 		}
 		else if (set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}.count(member))
 		{
