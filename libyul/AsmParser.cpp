@@ -135,7 +135,8 @@ void Parser::fetchSourceLocationFromComment()
 		regex_constants::ECMAScript | regex_constants::optimize
 	);
 	static regex const srcTagArgsRegex = regex(
-		R"~~(^(-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~", // index and location, e.g.: 1:234:-1
+		R"~~(^(-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~"  // index and location, e.g.: 1:234:-1
+		R"~~(("(?:[^"\\]|\\.)*"?)?)~~",                // optional code snippet, e.g.: "string memory s = \"abc\";..."
 		regex_constants::ECMAScript | regex_constants::optimize
 	);
 
@@ -164,8 +165,21 @@ void Parser::fetchSourceLocationFromComment()
 				return;
 			}
 
-			solAssert(srcTagArgsMatch.size() == 4, "");
+			solAssert(srcTagArgsMatch.size() == 5, "");
 			position += srcTagArgsMatch.position() + srcTagArgsMatch.length();
+
+			if (srcTagArgsMatch[4].matched && (
+				!boost::algorithm::ends_with(srcTagArgsMatch[4].str(), "\"") ||
+				boost::algorithm::ends_with(srcTagArgsMatch[4].str(), "\\\"")
+			))
+			{
+				m_errorReporter.syntaxError(
+					1544_error,
+					commentLocation,
+					"Invalid code snippet in source location mapping. Quote is not terminated."
+				);
+				return;
+			}
 
 			optional<int> const sourceIndex = toInt(srcTagArgsMatch[1].str());
 			optional<int> const start = toInt(srcTagArgsMatch[2].str());

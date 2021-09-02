@@ -624,6 +624,20 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_no_whitespace)
 	CHECK_LOCATION(result->debugData->location, "", -1, -1);
 }
 
+BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_separated_with_single_space)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 0:111:222 @src 1:333:444
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "source1", 333, 444);
+}
+
 BOOST_AUTO_TEST_CASE(customSourceLocations_leading_trailing_whitespace)
 {
 	ErrorList errorList;
@@ -654,6 +668,164 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_reference_original_sloc)
 
 	// -1 points to original source code, which in this case is `"source0"` (which is also
 	CHECK_LOCATION(varDecl.debugData->location, "", 10, 20);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"~~~(
+		{
+			/// @src 0:149:156  "new C(\"123\")"
+			let x := 123
+
+			let y := /** @src 1:96:165  "contract D {..." */ 128
+		}
+	)~~~";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	BOOST_REQUIRE_EQUAL(result->statements.size(), 2);
+
+	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
+	VariableDeclaration const& varX = get<VariableDeclaration>(result->statements.at(0));
+	CHECK_LOCATION(varX.debugData->location, "source0", 149, 156);
+
+	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(1)));
+	VariableDeclaration const& varY = get<VariableDeclaration>(result->statements.at(1));
+	BOOST_REQUIRE(!!varY.value);
+	BOOST_REQUIRE(holds_alternative<Literal>(*varY.value));
+	Literal const& literal128 = get<Literal>(*varY.value);
+	CHECK_LOCATION(literal128.debugData->location, "source1", 96, 165);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_empty_snippet)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 0:111:222 ""
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_before_snippet)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 0:111:222"abc" def
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 8387_error);
+	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_after_snippet)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 0:111:222 "abc"def
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_no_whitespace)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 0:111:222 "abc"@src 1:333:444 "abc"
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "source1", 333, 444);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_unterminated_quote)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 0:111:222 " abc @src 1:333:444
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 1544_error);
+	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_with_nested_locations)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"~~~(
+		{
+			/// @src 0:149:156  "new C(\"123\") /// @src 1:3:4 "
+			let x := 123
+
+			let y := /** @src 1:96:165  "function f() internal { \"\/** @src 0:6:7 *\/\"; }" */ 128
+		}
+	)~~~";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	BOOST_REQUIRE_EQUAL(result->statements.size(), 2);
+
+	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
+	VariableDeclaration const& varX = get<VariableDeclaration>(result->statements.at(0));
+	CHECK_LOCATION(varX.debugData->location, "source0", 149, 156);
+
+	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(1)));
+	VariableDeclaration const& varY = get<VariableDeclaration>(result->statements.at(1));
+	BOOST_REQUIRE(!!varY.value);
+	BOOST_REQUIRE(holds_alternative<Literal>(*varY.value));
+	Literal const& literal128 = get<Literal>(*varY.value);
+	CHECK_LOCATION(literal128.debugData->location, "source1", 96, 165);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_multiple_src_tags_on_one_line)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText =
+		"{\n"
+		"    /// "
+			R"~~(@src 1:2:3 ""@src 1:2:4 @src-1:2:5@src 1:2:6 @src 1:2:7     "" @src 1:2:8)~~"
+			R"~~( X "@src 0:10:20 "new C(\"123\") /// @src 1:4:5 "" XYZ)~~"
+			R"~~( @src0:20:30 "abc"@src0:2:4 @src-0:2:5@)~~"
+			R"~~( @some text with random @ signs @@@ @- @** 1:6:7 "src 1:8:9")~~"
+		"\n"
+		"    let x := 123\n"
+		"}\n";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	BOOST_REQUIRE_EQUAL(result->statements.size(), 1);
+
+	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
+	VariableDeclaration const& varX = get<VariableDeclaration>(result->statements.at(0));
+	CHECK_LOCATION(varX.debugData->location, "source1", 4, 5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
