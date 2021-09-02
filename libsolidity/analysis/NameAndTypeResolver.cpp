@@ -102,7 +102,12 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					else
 						for (Declaration const* declaration: declarations)
 							if (!DeclarationRegistrationHelper::registerDeclaration(
-								target, *declaration, alias.alias.get(), &alias.location, false, m_errorReporter
+								target,
+								*declaration,
+								alias.alias ? alias.alias.get() : &alias.symbol->name(),
+								&alias.location,
+								false,
+								m_errorReporter
 							))
 								error = true;
 				}
