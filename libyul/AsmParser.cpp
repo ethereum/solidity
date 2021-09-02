@@ -131,7 +131,8 @@ void Parser::fetchSourceLocationFromComment()
 		return;
 
 	static regex const lineRE = std::regex(
-		R"~~~((^|\s*)@src\s+(-1|\d+):(-1|\d+):(-1|\d+)(\s+|$))~~~",
+		R"~~(\s*@src\s+)~~"                           // tag: @src
+		R"~~((-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~", // index and location, e.g.: 1:234:-1
 		std::regex_constants::ECMAScript | std::regex_constants::optimize
 	);
 
@@ -141,11 +142,11 @@ void Parser::fetchSourceLocationFromComment()
 
 	for (auto const& matchResult: ranges::make_subrange(from, to))
 	{
-		solAssert(matchResult.size() == 6, "");
+		solAssert(matchResult.size() == 4, "");
 
-		auto const sourceIndex = toInt(matchResult[2].str());
-		auto const start = toInt(matchResult[3].str());
-		auto const end = toInt(matchResult[4].str());
+		auto const sourceIndex = toInt(matchResult[1].str());
+		auto const start = toInt(matchResult[2].str());
+		auto const end = toInt(matchResult[3].str());
 
 		auto const commentLocation = m_scanner->currentCommentLocation();
 		m_debugDataOverride = DebugData::create();
