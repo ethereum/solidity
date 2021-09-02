@@ -34,6 +34,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <cctype>
 #include <vector>
 #include <regex>
@@ -2078,7 +2079,8 @@ bool Parser::variableDeclarationStart()
 optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes)
 {
 	// We circumvent the scanner here, because it skips non-docstring comments.
-	static regex const licenseRegex("SPDX-License-Identifier:\\s*([a-zA-Z0-9 ()+.-]+)");
+	static regex const licenseNameRegex("([a-zA-Z0-9 ()+.-]+)");
+	static regex const licenseDeclarationRegex("SPDX-License-Identifier:\\s*(.+?)([\n\r]|(\\*/))");
 
 	// Search inside all parts of the source not covered by parsed nodes.
 	// This will leave e.g. "global comments".
@@ -2093,21 +2095,33 @@ optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> cons
 			sequencesToSearch.emplace_back(source.begin() + node->location().end, source.end());
 		}
 
-	vector<string> matches;
+	vector<string> licenseNames;
 	for (auto const& [start, end]: sequencesToSearch)
 	{
-		smatch match;
-		if (regex_search(start, end, match, licenseRegex))
-		{
-			string license{boost::trim_copy(string(match[1]))};
-			if (!license.empty())
-				matches.emplace_back(std::move(license));
-		}
+		auto declarationsBegin = std::sregex_iterator(start, end, licenseDeclarationRegex);
+		auto declarationsEnd = std::sregex_iterator();
+
+		for (std::sregex_iterator declIt = declarationsBegin; declIt != declarationsEnd; ++declIt)
+			if (!declIt->empty())
+			{
+				string license = boost::trim_copy(string((*declIt)[1]));
+				licenseNames.emplace_back(std::move(license));
+			}
 	}
 
-	if (matches.size() == 1)
-		return matches.front();
-	else if (matches.empty())
+	if (licenseNames.size() == 1)
+	{
+		string const& license = licenseNames.front();
+		if (regex_match(license, licenseNameRegex))
+			return license;
+		else
+			parserError(
+				1114_error,
+				{-1, -1, m_scanner->currentLocation().sourceName},
+				"Invalid SPDX license identifier."
+			);
+	}
+	else if (licenseNames.empty())
 		parserWarning(
 			1878_error,
 			{-1, -1, m_scanner->currentLocation().sourceName},

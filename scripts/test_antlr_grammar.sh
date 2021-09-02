@@ -120,7 +120,11 @@ done < <(
       # a variable declaration.
       grep -v -E 'revertStatement/non_called.sol' |
       # Skipping a test with "let basefee := ..."
-      grep -v -E 'inlineAssembly/basefee_berlin_function.sol'
+      grep -v -E 'inlineAssembly/basefee_berlin_function.sol' |
+      # Skipping license error, unrelated to the grammar
+      grep -v -E 'license/license_double5.sol' |
+      grep -v -E 'license/license_hidden_unicode.sol' |
+      grep -v -E 'license/license_unicode.sol'
 )
 
 YUL_FILES=()
