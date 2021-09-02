@@ -18,6 +18,7 @@ object "Arraysum_34" {
             return(128, _1)
         }
     }
+    /// @use-src 0:"optimizer_array_sload/input.sol", 1:"#utility.yul"
     object "Arraysum_34_deployed" {
         code {
             {

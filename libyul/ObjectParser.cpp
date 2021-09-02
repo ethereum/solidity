@@ -45,14 +45,15 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 	{
 		shared_ptr<Object> object;
 		m_scanner = _scanner;
-		m_sourceNameMapping = tryParseSourceNameMapping();
 
 		if (currentToken() == Token::LBrace)
 		{
 			// Special case: Code-only form.
 			object = make_shared<Object>();
 			object->name = "object"_yulstring;
-			object->code = parseBlock();
+			auto sourceNameMapping = tryParseSourceNameMapping();
+			object->debugData = make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
+			object->code = parseBlock(sourceNameMapping);
 			if (!object->code)
 				return nullptr;
 		}
@@ -60,7 +61,6 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 			object = parseObject();
 		if (!_reuseScanner)
 			expectToken(Token::EOS);
-		object->debugData = make_shared<ObjectDebugData>(ObjectDebugData{m_sourceNameMapping});
 		return object;
 	}
 	catch (FatalError const&)
@@ -75,16 +75,20 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 {
 	RecursionGuard guard(*this);
 
+	shared_ptr<Object> ret = make_shared<Object>();
+
+	auto sourceNameMapping = tryParseSourceNameMapping();
+	ret->debugData = make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
+
 	if (currentToken() != Token::Identifier || currentLiteral() != "object")
 		fatalParserError(4294_error, "Expected keyword \"object\".");
 	advance();
 
-	shared_ptr<Object> ret = make_shared<Object>();
 	ret->name = parseUniqueName(_containingObject);
 
 	expectToken(Token::LBrace);
 
-	ret->code = parseCode();
+	ret->code = parseCode(move(sourceNameMapping));
 
 	while (currentToken() != Token::RBrace)
 	{
@@ -103,13 +107,13 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 	return ret;
 }
 
-shared_ptr<Block> ObjectParser::parseCode()
+shared_ptr<Block> ObjectParser::parseCode(optional<SourceNameMap> _sourceNames)
 {
 	if (currentToken() != Token::Identifier || currentLiteral() != "code")
 		fatalParserError(4846_error, "Expected keyword \"code\".");
 	advance();
 
-	return parseBlock();
+	return parseBlock(move(_sourceNames));
 }
 
 optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
@@ -166,9 +170,9 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 	return nullopt;
 }
 
-shared_ptr<Block> ObjectParser::parseBlock()
+shared_ptr<Block> ObjectParser::parseBlock(optional<SourceNameMap> _sourceNames)
 {
-	Parser parser(m_errorReporter, m_dialect, m_sourceNameMapping);
+	Parser parser(m_errorReporter, m_dialect, move(_sourceNames));
 	shared_ptr<Block> block = parser.parseInline(m_scanner);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;

@@ -49,11 +49,8 @@ struct ObjectNode
 	/// Name of the object.
 	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
-protected:
-	virtual std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const = 0;
 
-	/// Object should have access to toString
-	friend struct Object;
+	virtual std::string toString(Dialect const* _dialect) const = 0;
 };
 
 /**
@@ -65,8 +62,7 @@ struct Data: public ObjectNode
 
 	bytes data;
 
-protected:
-	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
+	std::string toString(Dialect const* _dialect) const override;
 };
 
 
@@ -114,8 +110,6 @@ public:
 
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
-protected:
-	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
 };
 
 }

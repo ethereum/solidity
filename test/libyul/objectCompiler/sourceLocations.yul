@@ -10,6 +10,7 @@ object "a" {
       datasize("sub")
     )
   }
+  /// @use-src 3: "abc.sol" , 2: "def.sol"
   object "sub" {
     code {
       /// @src 2:70:72

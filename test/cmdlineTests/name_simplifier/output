@@ -18,6 +18,7 @@ object "C_59" {
             return(128, _1)
         }
     }
+    /// @use-src 0:"name_simplifier/input.sol", 1:"#utility.yul"
     object "C_59_deployed" {
         code {
             {
