@@ -35,10 +35,10 @@
 #include <src/libfuzzer/libfuzzer_macro.h>
 
 using namespace solidity;
+using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::yul::test::yul_fuzzer;
-using namespace solidity::langutil;
 using namespace std;
 
 DEFINE_PROTO_FUZZER(Program const& _input)

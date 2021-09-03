@@ -17,8 +17,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/AssemblyStack.h>
-#include <liblangutil/EVMVersion.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
+
+#include <liblangutil/EVMVersion.h>
 
 using namespace solidity;
 using namespace solidity::yul;

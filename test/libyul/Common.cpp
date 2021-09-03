@@ -23,8 +23,6 @@
 
 #include <test/Common.h>
 
-#include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
@@ -33,8 +31,9 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 
-#include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/test/unit_test.hpp>
 

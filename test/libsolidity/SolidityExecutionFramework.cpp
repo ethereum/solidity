@@ -21,17 +21,20 @@
  * Framework for executing Solidity contracts and testing them against C++ implementation.
  */
 
-#include <cstdlib>
-#include <iostream>
-#include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
+#include <boost/test/framework.hpp>
+
+#include <cstdlib>
+#include <iostream>
+
 using namespace solidity;
-using namespace solidity::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 using namespace std;
 
 bytes SolidityExecutionFramework::multiSourceCompileContract(

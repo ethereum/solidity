@@ -28,8 +28,8 @@
 
 #include <libyul/AssemblyStack.h>
 
-#include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libevmasm/Assembly.h>
