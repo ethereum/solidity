@@ -26,8 +26,8 @@
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmParser.h>
+#include <libyul/Utilities.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
-
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/Instruction.h>
 
@@ -185,9 +185,12 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
 				BuiltinContext&,
-				function<void(Expression const&)> _visitExpression
+				function<void(Expression const&)>
 			) {
-				visitArguments(_assembly, _call, _visitExpression);
+				yulAssert(_call.arguments.size() == 1, "");
+				Literal const* literal = get_if<Literal>(&_call.arguments.front());
+				yulAssert(literal, "");
+				_assembly.appendConstant(valueOfLiteral(*literal));
 			})
 		);
 
