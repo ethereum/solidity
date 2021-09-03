@@ -34,6 +34,7 @@
 
 #include <range/v3/algorithm/for_each.hpp>
 
+#include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/reverse.hpp>
 
 #ifdef HAVE_Z3_DLOPEN
@@ -743,13 +744,15 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	/// so we just add the nondet_interface predicate.
 
 	solAssert(m_currentContract, "");
-	if (isTrustedExternalCall(&_funCall.expression()))
+	auto [callExpr, callOptions] = functionCallExpression(_funCall);
+
+	if (isTrustedExternalCall(callExpr))
 	{
 		externalFunctionCallToTrustedCode(_funCall);
 		return;
 	}
 
-	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*callExpr->annotation().type);
 	auto kind = funType.kind();
 	solAssert(
 		kind == FunctionType::Kind::External ||
@@ -772,6 +775,19 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 
 	if (!m_currentFunction || m_currentFunction->isConstructor())
 		return;
+
+	if (callOptions)
+	{
+		optional<unsigned> valueIndex;
+		for (auto&& [i, name]: callOptions->names() | ranges::views::enumerate)
+			if (name && *name == "value")
+			{
+				valueIndex = i;
+				break;
+			}
+		solAssert(valueIndex, "");
+		state().addBalance(state().thisAddress(), 0 - expr(*callOptions->options().at(*valueIndex)));
+	}
 
 	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
 
@@ -829,6 +845,8 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 	state().newTx();
 	// set the transaction sender as this contract
 	m_context.addAssertion(state().txMember("msg.sender") == state().thisAddress());
+	// set the transaction value as 0
+	m_context.addAssertion(state().txMember("msg.value") == 0);
 	// set the origin to be the current transaction origin
 	m_context.addAssertion(state().txMember("tx.origin") == txOrigin);
 
@@ -1451,10 +1469,12 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		return smtutil::Expression(true);
 
 	auto contractAddressValue = [this](FunctionCall const& _f) {
-		FunctionType const& funType = dynamic_cast<FunctionType const&>(*_f.expression().annotation().type);
+		auto [callExpr, callOptions] = functionCallExpression(_f);
+
+		FunctionType const& funType = dynamic_cast<FunctionType const&>(*callExpr->annotation().type);
 		if (funType.kind() == FunctionType::Kind::Internal)
 			return state().thisAddress();
-		if (MemberAccess const* callBase = dynamic_cast<MemberAccess const*>(&_f.expression()))
+		if (MemberAccess const* callBase = dynamic_cast<MemberAccess const*>(callExpr))
 			return expr(callBase->expression());
 		solAssert(false, "Unreachable!");
 	};

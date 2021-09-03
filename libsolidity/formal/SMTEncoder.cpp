@@ -2590,6 +2590,16 @@ Expression const* SMTEncoder::innermostTuple(Expression const& _expr)
 	return expr;
 }
 
+pair<Expression const*, FunctionCallOptions const*> SMTEncoder::functionCallExpression(FunctionCall const& _funCall)
+{
+	Expression const* callExpr = &_funCall.expression();
+	auto const* callOptions = dynamic_cast<FunctionCallOptions const*>(callExpr);
+	if (callOptions)
+		callExpr = &callOptions->expression();
+
+	return {callExpr, callOptions};
+}
+
 Expression const* SMTEncoder::cleanExpression(Expression const& _expr)
 {
 	auto const* expr = &_expr;
@@ -2713,7 +2723,8 @@ FunctionDefinition const* SMTEncoder::functionCallToDefinition(
 	if (*_funCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return {};
 
-	Expression const* calledExpr = &_funCall.expression();
+	auto [calledExpr, callOptions] = functionCallExpression(_funCall);
+
 	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(calledExpr))
 	{
 		solAssert(fun->components().size() == 1, "");
