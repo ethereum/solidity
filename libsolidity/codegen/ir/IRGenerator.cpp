@@ -340,8 +340,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		m_context.resetLocalVariables();
 		Whiskers t(R"(
-			/// @ast-id <astID>
-			<sourceLocationComment>
+			<astIDComment><sourceLocationComment>
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
 				<retInit>
 				<body>
@@ -349,7 +348,10 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 			<contractSourceLocationComment>
 		)");
 
-		t("astID", to_string(_function.id()));
+		if (m_context.debugInfoSelection().astID)
+			t("astIDComment", "/// @ast-id " + to_string(_function.id()) + "\n");
+		else
+			t("astIDComment", "");
 		t("sourceLocationComment", dispenseLocationComment(_function));
 		t(
 			"contractSourceLocationComment",
@@ -409,8 +411,7 @@ string IRGenerator::generateModifier(
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		m_context.resetLocalVariables();
 		Whiskers t(R"(
-			/// @ast-id <astID>
-			<sourceLocationComment>
+			<astIDComment><sourceLocationComment>
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
 				<assignRetParams>
 				<evalArgs>
@@ -418,6 +419,7 @@ string IRGenerator::generateModifier(
 			}
 			<contractSourceLocationComment>
 		)");
+
 		t("functionName", functionName);
 		vector<string> retParamsIn;
 		for (auto const& varDecl: _function.returnParameters())
@@ -440,7 +442,11 @@ string IRGenerator::generateModifier(
 			_modifierInvocation.name().annotation().referencedDeclaration
 		);
 		solAssert(modifier, "");
-		t("astID", to_string(modifier->id()));
+
+		if (m_context.debugInfoSelection().astID)
+			t("astIDComment", "/// @ast-id " + to_string(modifier->id()) + "\n");
+		else
+			t("astIDComment", "");
 		t("sourceLocationComment", dispenseLocationComment(*modifier));
 		t(
 			"contractSourceLocationComment",
@@ -546,14 +552,18 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 			solAssert(paramTypes.empty(), "");
 			solUnimplementedAssert(type->sizeOnStack() == 1);
 			return Whiskers(R"(
-				/// @ast-id <astID>
-				<sourceLocationComment>
+				<astIDComment><sourceLocationComment>
 				function <functionName>() -> rval {
 					rval := loadimmutable("<id>")
 				}
 				<contractSourceLocationComment>
 			)")
-			("astID", to_string(_varDecl.id()))
+			(
+				"astIDComment",
+				m_context.debugInfoSelection().astID ?
+					"/// @ast-id " + to_string(_varDecl.id()) + "\n" :
+					""
+			)
 			("sourceLocationComment", dispenseLocationComment(_varDecl))
 			(
 				"contractSourceLocationComment",
@@ -567,14 +577,18 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		{
 			solAssert(paramTypes.empty(), "");
 			return Whiskers(R"(
-				/// @ast-id <astID>
-				<sourceLocationComment>
+				<astIDComment><sourceLocationComment>
 				function <functionName>() -> <ret> {
 					<ret> := <constantValueFunction>()
 				}
 				<contractSourceLocationComment>
 			)")
-			("astID", to_string(_varDecl.id()))
+			(
+				"astIDComment",
+				m_context.debugInfoSelection().astID ?
+					"/// @ast-id " + to_string(_varDecl.id()) + "\n" :
+					""
+			)
 			("sourceLocationComment", dispenseLocationComment(_varDecl))
 			(
 				"contractSourceLocationComment",
@@ -691,8 +705,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		}
 
 		return Whiskers(R"(
-			/// @ast-id <astID>
-			<sourceLocationComment>
+			<astIDComment><sourceLocationComment>
 			function <functionName>(<params>) -> <retVariables> {
 				<code>
 			}
@@ -702,7 +715,12 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		("params", joinHumanReadable(parameters))
 		("retVariables", joinHumanReadable(returnVariables))
 		("code", std::move(code))
-		("astID", to_string(_varDecl.id()))
+		(
+			"astIDComment",
+			m_context.debugInfoSelection().astID ?
+				"/// @ast-id " + to_string(_varDecl.id()) + "\n" :
+				""
+		)
 		("sourceLocationComment", dispenseLocationComment(_varDecl))
 		(
 			"contractSourceLocationComment",
@@ -829,7 +847,7 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 				for (ASTPointer<VariableDeclaration> const& varDecl: contract->constructor()->parameters())
 					params += m_context.addLocalVariable(*varDecl).stackSlots();
 
-			if (contract->constructor())
+			if (m_context.debugInfoSelection().astID && contract->constructor())
 				t("astIDComment", "/// @ast-id " + to_string(contract->constructor()->id()) + "\n");
 			else
 				t("astIDComment", "");

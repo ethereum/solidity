@@ -261,10 +261,16 @@ string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
 string AsmPrinter::formatSourceLocation(
 	SourceLocation const& _location,
 	map<string, unsigned> const& _nameToSourceIndex,
+	DebugInfoSelection const& _debugInfoSelection,
 	CharStreamProvider const* _soliditySourceProvider
 )
 {
 	yulAssert(!_nameToSourceIndex.empty(), "");
+	if (_debugInfoSelection.snippet)
+		yulAssert(_debugInfoSelection.location, "@src tag must always contain the source location");
+
+	if (_debugInfoSelection.none())
+		return "";
 
 	string sourceIndex = "-1";
 	string solidityCodeSnippet = "";
@@ -272,7 +278,7 @@ string AsmPrinter::formatSourceLocation(
 	{
 		sourceIndex = to_string(_nameToSourceIndex.at(*_location.sourceName));
 
-		if (_soliditySourceProvider)
+		if (_debugInfoSelection.snippet && _soliditySourceProvider)
 		{
 			solidityCodeSnippet = escapeAndQuoteString(
 				_soliditySourceProvider->charStream(*_location.sourceName).singleLineSnippet(_location)
@@ -298,12 +304,15 @@ string AsmPrinter::formatSourceLocation(
 
 string AsmPrinter::formatDebugData(shared_ptr<DebugData const> const& _debugData, bool _statement)
 {
-	if (!_debugData)
+	DebugInfoSelection debugInfoSelection = DebugInfoSelection::Default();
+
+	if (!_debugData || debugInfoSelection.none())
 		return "";
 
 	vector<string> items;
 	if (auto id = _debugData->astID)
-		items.emplace_back("@ast-id " + to_string(*id));
+		if (debugInfoSelection.astID)
+			items.emplace_back("@ast-id " + to_string(*id));
 
 	if (
 		m_lastLocation != _debugData->originLocation &&
@@ -315,6 +324,7 @@ string AsmPrinter::formatDebugData(shared_ptr<DebugData const> const& _debugData
 		items.emplace_back(formatSourceLocation(
 			_debugData->originLocation,
 			m_nameToSourceIndex,
+			debugInfoSelection,
 			m_soliditySourceProvider
 		));
 	}

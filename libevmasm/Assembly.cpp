@@ -96,13 +96,13 @@ public:
 		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes), m_assembly(_assembly)
 	{}
 
-	void feed(AssemblyItem const& _item)
+	void feed(AssemblyItem const& _item, DebugInfoSelection const& _debugInfoSelection)
 	{
 		if (_item.location().isValid() && _item.location() != m_location)
 		{
 			flush();
 			m_location = _item.location();
-			printLocation();
+			printLocation(_debugInfoSelection);
 		}
 
 		string expression = _item.toAssemblyText(m_assembly);
@@ -142,16 +142,29 @@ public:
 		m_pending.clear();
 	}
 
-	void printLocation()
+	void printLocation(DebugInfoSelection const& _debugInfoSelection)
 	{
-		if (!m_location.isValid())
+		if (!m_location.isValid() || (!_debugInfoSelection.location && !_debugInfoSelection.snippet))
 			return;
+
 		m_out << m_prefix << "    /*";
-		if (m_location.sourceName)
-			m_out << " " + escapeAndQuoteString(*m_location.sourceName);
-		if (m_location.hasText())
-			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
-		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
+
+		if (_debugInfoSelection.location)
+		{
+			if (m_location.sourceName)
+				m_out << " " + escapeAndQuoteString(*m_location.sourceName);
+			if (m_location.hasText())
+				m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
+		}
+
+		if (_debugInfoSelection.snippet)
+		{
+			if (_debugInfoSelection.location)
+				m_out << "  ";
+
+			m_out << locationFromSources(m_sourceCodes, m_location);
+		}
+
 		m_out << " */" << endl;
 	}
 
@@ -167,12 +180,17 @@ private:
 
 }
 
-void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+void Assembly::assemblyStream(
+	ostream& _out,
+	DebugInfoSelection const& _debugInfoSelection,
+	string const& _prefix,
+	StringMap const& _sourceCodes
+) const
 {
 	Functionalizer f(_out, _prefix, _sourceCodes, *this);
 
 	for (auto const& i: m_items)
-		f.feed(i);
+		f.feed(i, _debugInfoSelection);
 	f.flush();
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -185,7 +203,7 @@ void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap co
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			_out << endl << _prefix << "sub_" << i << ": assembly {\n";
-			m_subs[i]->assemblyStream(_out, _prefix + "    ", _sourceCodes);
+			m_subs[i]->assemblyStream(_out, _debugInfoSelection, _prefix + "    ", _sourceCodes);
 			_out << _prefix << "}" << endl;
 		}
 	}
@@ -194,10 +212,13 @@ void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap co
 		_out << endl << _prefix << "auxdata: 0x" << util::toHex(m_auxiliaryData) << endl;
 }
 
-string Assembly::assemblyString(StringMap const& _sourceCodes) const
+string Assembly::assemblyString(
+	DebugInfoSelection const& _debugInfoSelection,
+	StringMap const& _sourceCodes
+) const
 {
 	ostringstream tmp;
-	assemblyStream(tmp, "", _sourceCodes);
+	assemblyStream(tmp, _debugInfoSelection, "", _sourceCodes);
 	return tmp.str();
 }
 

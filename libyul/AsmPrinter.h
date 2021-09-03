@@ -29,6 +29,7 @@
 #include <libsolutil/CommonData.h>
 
 #include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceLocation.h>
 
 #include <map>
@@ -83,6 +84,7 @@ public:
 	static std::string formatSourceLocation(
 		langutil::SourceLocation const& _location,
 		std::map<std::string, unsigned> const& _nameToSourceIndex,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr
 	);
 
