@@ -52,6 +52,21 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _
 	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
 	return _a;
 }
+
+/// Concatenate the contents of a container onto a list
+template <class T, class U> std::list<T>& operator+=(std::list<T>& _a, U& _b)
+{
+	for (auto const& i: _b)
+		_a.push_back(T(i));
+	return _a;
+}
+/// Concatenate the contents of a container onto a list, move variant.
+template <class T, class U> std::list<T>& operator+=(std::list<T>& _a, U&& _b)
+{
+	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
+	return _a;
+}
+
 /// Concatenate the contents of a container onto a multiset
 template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U& _b)
 {
@@ -319,6 +334,44 @@ void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
 			++itb;
 		}
 	}
+}
+
+namespace detail
+{
+
+template<typename Container, typename Value>
+auto findOffset(Container&& _container, Value&& _value, int)
+-> decltype(_container.find(_value) == _container.end(), std::distance(_container.begin(), _container.find(_value)), std::optional<size_t>())
+{
+	auto it = _container.find(std::forward<Value>(_value));
+	auto end = _container.end();
+	if (it == end)
+		return std::nullopt;
+	return std::distance(_container.begin(), it);
+}
+template<typename Range, typename Value>
+auto findOffset(Range&& _range, Value&& _value, void*)
+-> decltype(std::find(std::begin(_range), std::end(_range), std::forward<Value>(_value)) == std::end(_range), std::optional<size_t>())
+{
+	auto begin = std::begin(_range);
+	auto end = std::end(_range);
+	auto it = std::find(begin, end, std::forward<Value>(_value));
+	if (it == end)
+		return std::nullopt;
+	return std::distance(begin, it);
+}
+
+}
+
+/// @returns an std::optional<size_t> containing the offset of the first element in @a _range that is equal to @a _value,
+/// if any, or std::nullopt otherwise.
+/// Uses a linear search (``std::find``) unless @a _range is a container and provides a
+/// suitable ``.find`` function (e.g. it will use the logarithmic ``.find`` function in ``std::set`` instead).
+template<typename Range>
+auto findOffset(Range&& _range, std::remove_reference_t<decltype(*std::cbegin(_range))> const& _value)
+-> decltype(detail::findOffset(std::forward<Range>(_range), _value, 0))
+{
+	return detail::findOffset(std::forward<Range>(_range), _value, 0);
 }
 
 // String conversion functions, mainly to/from hex/nibble/byte representations.

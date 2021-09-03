@@ -24,6 +24,7 @@
 #include <libyul/AST.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Dialect.h>
+#include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
 
 #include <functional>
@@ -54,8 +55,19 @@ struct FunctionCallReturnLabelSlot
 /// the function.
 struct FunctionReturnLabelSlot
 {
-	bool operator==(FunctionReturnLabelSlot const&) const { return true; }
-	bool operator<(FunctionReturnLabelSlot const&) const { return false; }
+	std::reference_wrapper<Scope::Function const> function;
+	bool operator==(FunctionReturnLabelSlot const& _rhs) const
+	{
+		// There can never be return label slots of different functions on stack simultaneously.
+		yulAssert(&function.get() == &_rhs.function.get(), "");
+		return true;
+	}
+	bool operator<(FunctionReturnLabelSlot const& _rhs) const
+	{
+		// There can never be return label slots of different functions on stack simultaneously.
+		yulAssert(&function.get() == &_rhs.function.get(), "");
+		return false;
+	}
 	static constexpr bool canBeFreelyGenerated = false;
 };
 /// A slot containing the current value of a particular variable.

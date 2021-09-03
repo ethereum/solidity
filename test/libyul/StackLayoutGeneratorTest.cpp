@@ -16,18 +16,21 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <test/libyul/ControlFlowGraphTest.h>
+#include <test/libyul/StackLayoutGeneratorTest.h>
 #include <test/libyul/Common.h>
 #include <test/Common.h>
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/StackHelpers.h>
+#include <libyul/backends/evm/StackLayoutGenerator.h>
 #include <libyul/Object.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/Visitor.h>
+
+#include <range/v3/view/reverse.hpp>
 
 #ifdef ISOLTEST
 #include <boost/process.hpp>
@@ -42,7 +45,7 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
 
-ControlFlowGraphTest::ControlFlowGraphTest(string const& _filename):
+StackLayoutGeneratorTest::StackLayoutGeneratorTest(string const& _filename):
 	TestCase(_filename)
 {
 	m_source = m_reader.source();
@@ -59,11 +62,11 @@ static std::string variableSlotToString(VariableSlot const& _slot)
 }
 }
 
-class ControlFlowGraphPrinter
+class StackLayoutPrinter
 {
 public:
-	ControlFlowGraphPrinter(std::ostream& _stream):
-	m_stream(_stream)
+	StackLayoutPrinter(std::ostream& _stream, StackLayout const& _stackLayout):
+	m_stream(_stream), m_stackLayout(_stackLayout)
 	{
 	}
 	void operator()(CFG::BasicBlock const& _block, bool _isMainEntry = true)
@@ -85,7 +88,7 @@ public:
 		CFG::FunctionInfo const& _info
 	)
 	{
-		m_stream << "FunctionEntry_" << _info.function.name.str() << "_" << getBlockId(*_info.entry) << " [label=\"";
+		m_stream << "FunctionEntry_" << _info.function.name.str() << " [label=\"";
 		m_stream << "function " << _info.function.name.str() << "(";
 		m_stream << joinHumanReadable(_info.parameters | ranges::views::transform(variableSlotToString));
 		m_stream << ")";
@@ -94,8 +97,11 @@ public:
 			m_stream << " -> ";
 			m_stream << joinHumanReadable(_info.returnVariables | ranges::views::transform(variableSlotToString));
 		}
-		m_stream << "\"];\n";
-		m_stream << "FunctionEntry_" << _info.function.name.str() << "_" << getBlockId(*_info.entry) << " -> Block" << getBlockId(*_info.entry) << ";\n";
+		m_stream << "\\l\\\n";
+		Stack functionEntryStack = {FunctionReturnLabelSlot{_info.function}};
+		functionEntryStack += _info.parameters | ranges::views::reverse;
+		m_stream << stackToString(functionEntryStack) << "\"];\n";
+		m_stream << "FunctionEntry_" << _info.function.name.str() << " -> Block" << getBlockId(*_info.entry) << ";\n";
 		(*this)(*_info.entry, false);
 	}
 
@@ -124,24 +130,34 @@ private:
 				}
 			}, entry->exit);
 
+		auto const& blockInfo = m_stackLayout.blockInfos.at(&_block);
+		m_stream << stackToString(blockInfo.entryLayout) << "\\l\\\n";
 		for (auto const& operation: _block.operations)
 		{
+			auto entryLayout = m_stackLayout.operationEntryLayout.at(&operation);
+			m_stream << stackToString(m_stackLayout.operationEntryLayout.at(&operation)) << "\\l\\\n";
 			std::visit(util::GenericVisitor{
 				[&](CFG::FunctionCall const& _call) {
-					m_stream << _call.function.get().name.str() << ": ";
+					m_stream << _call.function.get().name.str();
 				},
 				[&](CFG::BuiltinCall const& _call) {
-					m_stream << _call.functionCall.get().functionName.name.str() << ": ";
+					m_stream << _call.functionCall.get().functionName.name.str();
 
 				},
 				[&](CFG::Assignment const& _assignment) {
 					m_stream << "Assignment(";
 					m_stream << joinHumanReadable(_assignment.variables | ranges::views::transform(variableSlotToString));
-					m_stream << "): ";
+					m_stream << ")";
 				}
 			}, operation.operation);
-			m_stream << stackToString(operation.input) << " => " << stackToString(operation.output) << "\\l\\\n";
+			m_stream << "\\l\\\n";
+			soltestAssert(operation.input.size() <= entryLayout.size(), "Invalid Stack Layout.");
+			for (size_t i = 0; i < operation.input.size(); ++i)
+				entryLayout.pop_back();
+			entryLayout += operation.output;
+			m_stream << stackToString(entryLayout) << "\\l\\\n";
 		}
+		m_stream << stackToString(blockInfo.exitLayout) << "\\l\\\n";
 		m_stream << "\"];\n";
 		std::visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::MainExit const&)
@@ -191,12 +207,13 @@ private:
 		return id;
 	}
 	std::ostream& m_stream;
+	StackLayout const& m_stackLayout;
 	std::map<CFG::BasicBlock const*, size_t> m_blockIds;
 	size_t m_blockCount = 0;
 	std::list<CFG::BasicBlock const*> m_blocksToPrint;
 };
 
-TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult StackLayoutGeneratorTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	ErrorList errors;
 	auto [object, analysisInfo] = parse(m_source, *m_dialect, errors);
@@ -209,9 +226,10 @@ TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _
 	std::ostringstream output;
 
 	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, *object->code);
+	StackLayout stackLayout = StackLayoutGenerator::run(*cfg);
 
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
-	ControlFlowGraphPrinter printer{output};
+	StackLayoutPrinter printer{output, stackLayout};
 	printer(*cfg->entry);
 	for (auto function: cfg->functions)
 		printer(cfg->functionInfo.at(function));
@@ -223,14 +241,10 @@ TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _
 
 #ifdef ISOLTEST
 	char* graphDisplayer = nullptr;
-	// The environment variables specify an optional command that will receive the graph encoded in DOT through stdin.
-	// Examples for suitable commands are ``dot -Tx11:cairo`` or ``xdot -``.
 	if (result == TestResult::Failure)
-		// ISOLTEST_DISPLAY_GRAPHS_ON_FAILURE_COMMAND will run on all failing tests (intended for use during modifications).
-		graphDisplayer = getenv("ISOLTEST_DISPLAY_GRAPHS_ON_FAILURE_COMMAND");
+		graphDisplayer = getenv("ISOLTEST_DISPLAY_GRAPHS_FAILURE");
 	else if (result == TestResult::Success)
-		// ISOLTEST_DISPLAY_GRAPHS_ON_FAILURE_COMMAND will run on all succeeding tests (intended for use during reviews).
-		graphDisplayer = getenv("ISOLTEST_DISPLAY_GRAPHS_ON_SUCCESS_COMMAND");
+		graphDisplayer = getenv("ISOLTEST_DISPLAY_GRAPHS_SUCCESS");
 
 	if (graphDisplayer)
 	{
@@ -250,5 +264,4 @@ TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _
 #endif
 
 	return result;
-
 }
