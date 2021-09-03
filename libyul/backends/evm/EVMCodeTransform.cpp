@@ -239,9 +239,13 @@ void CodeTransform::operator()(FunctionCall const& _call)
 
 	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
 	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
-		builtin->generateCode(_call, m_assembly, m_builtinContext, [&](Expression const& _expression) {
-			visitExpression(_expression);
-		});
+	{
+		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
+			if (!builtin->literalArgument(i))
+				visitExpression(arg);
+		m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
+		builtin->generateCode(_call, m_assembly, m_builtinContext);
+	}
 	else
 	{
 		AbstractAssembly::LabelID returnLabel = m_assembly.newLabelId();
