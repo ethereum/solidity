@@ -179,7 +179,17 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			"memoryguard",
 			1,
 			1,
-			SideEffects{},
+			// Cannot be removed, but otherwise no side effects.
+			SideEffects{
+				true,
+				true,
+				false,
+				false,
+				true,
+				SideEffects::None,
+				SideEffects::None,
+				SideEffects::None
+			},
 			{LiteralKind::Number},
 			[](
 				FunctionCall const& _call,
