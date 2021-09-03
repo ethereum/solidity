@@ -594,6 +594,26 @@ bool CommandLineInterface::compile()
 
 		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
 		m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm);
+		m_compiler->enableEvmBytecodeGeneration(
+			m_options.compiler.estimateGas ||
+			m_options.compiler.outputs.asm_ ||
+			m_options.compiler.outputs.asmJson ||
+			m_options.compiler.outputs.opcodes ||
+			m_options.compiler.outputs.binary ||
+			m_options.compiler.outputs.binaryRuntime ||
+			(m_options.compiler.combinedJsonRequests && (
+				m_options.compiler.combinedJsonRequests->binary ||
+				m_options.compiler.combinedJsonRequests->binaryRuntime ||
+				m_options.compiler.combinedJsonRequests->opcodes ||
+				m_options.compiler.combinedJsonRequests->asm_ ||
+				m_options.compiler.combinedJsonRequests->generatedSources ||
+				m_options.compiler.combinedJsonRequests->generatedSourcesRuntime ||
+				m_options.compiler.combinedJsonRequests->srcMap ||
+				m_options.compiler.combinedJsonRequests->srcMapRuntime ||
+				m_options.compiler.combinedJsonRequests->funDebug ||
+				m_options.compiler.combinedJsonRequests->funDebugRuntime
+			))
+		);
 
 		OptimiserSettings settings = m_options.optimizer.enabled ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		if (m_options.optimizer.expectedExecutionsPerDeployment.has_value())
