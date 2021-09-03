@@ -47,7 +47,23 @@ struct StackLayout
 class StackLayoutGenerator
 {
 public:
+	struct StackTooDeep
+	{
+		/// Number of slots that need to be saved.
+		size_t deficit = 0;
+		/// Set of variables, eliminating which would decrease the stack deficit.
+		std::vector<YulString> variableChoices;
+	};
+
 	static StackLayout run(CFG const& _cfg);
+	/// @returns a map from function names to the stack too deep errors occurring in that function.
+	/// Requires @a _cfg to be a control flow graph generated from disambiguated Yul.
+	/// The empty string is mapped to the stack too deep errors of the main entry point.
+	static std::map<YulString, std::vector<StackTooDeep>> reportStackTooDeep(CFG const& _cfg);
+	/// @returns all stack too deep errors in the function named @a _functionName.
+	/// Requires @a _cfg to be a control flow graph generated from disambiguated Yul.
+	/// If @a _functionName is empty, the stack too deep errors of the main entry point are reported instead.
+	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulString _functionName);
 
 private:
 	StackLayoutGenerator(StackLayout& _context);
@@ -55,11 +71,11 @@ private:
 	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
 	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
 	/// Simultaneously stores the entry layout required for executing the operation in m_layout.
-	Stack propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation);
+	Stack propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation, bool _aggressiveStackCompression = false);
 
 	/// @returns the desired stack layout at the entry of @a _block, assuming the layout after
 	/// executing the block should be @a _exitStack.
-	Stack propagateStackThroughBlock(Stack _exitStack, CFG::BasicBlock const& _block);
+	Stack propagateStackThroughBlock(Stack _exitStack, CFG::BasicBlock const& _block, bool _aggressiveStackCompression = false);
 
 	/// Main algorithm walking the graph from entry to exit and propagating back the stack layouts to the entries.
 	/// Iteratively reruns itself along backwards jumps until the layout is stabilized.
@@ -85,6 +101,10 @@ private:
 	/// Calculates the ideal stack layout, s.t. both @a _stack1 and @a _stack2 can be achieved with minimal
 	/// stack shuffling when starting from the returned layout.
 	static Stack combineStack(Stack const& _stack1, Stack const& _stack2);
+
+	/// Walks through the CFG and reports any stack too deep errors that would occur when generating code for it
+	/// without countermeasures.
+	std::vector<StackTooDeep> reportStackTooDeep(CFG::BasicBlock const& _entry) const;
 
 	/// @returns a copy of @a _stack stripped of all duplicates and slots that can be freely generated.
 	/// Attempts to create a layout that requires a minimal amount of operations to reconstruct the original
