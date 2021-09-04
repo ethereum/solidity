@@ -604,6 +604,15 @@ defaults:
       nodejs_version: '14'
       resource_class: medium
 
+  - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
+      <<: *workflow_trigger_on_tags
+      name: b_ubu_asan_clang
+      cmake_options: -DSANITIZE=address
+  - job_b_ubu_ubsan_clang: &job_b_ubu_ubsan_clang
+      <<: *workflow_trigger_on_tags
+      name: b_ubu_ubsan_clang
+      cmake_options: -DSANITIZE=address
+
 # -----------------------------------------------------------------------------------------------
 jobs:
 
@@ -770,24 +779,18 @@ jobs:
       MAKEFLAGS: -j 10
     <<: *steps_build
 
-  b_ubu_asan_clang: &b_ubu_asan_clang
+  b_ubu_san_clang:
     # This runs a bit faster on large and xlarge but on nightly efficiency matters more.
+    parameters:
+      cmake_options:
+        type: string
     <<: *base_ubuntu2004_clang
     environment:
+      TERM: xterm
       CC: clang
       CXX: clang++
-      CMAKE_OPTIONS: -DSANITIZE=address
       MAKEFLAGS: -j 3
-    <<: *steps_build
-
-  b_ubu_ubsan_clang: &b_ubu_ubsan_clang
-    # This runs a bit faster on large and xlarge but on nightly efficiency matters more.
-    <<: *base_ubuntu2004_clang
-    environment:
-      CC: clang
-      CXX: clang++
-      CMAKE_OPTIONS: -DSANITIZE=undefined
-      MAKEFLAGS: -j 3
+      CMAKE_OPTIONS: << parameters.cmake_options >>
     <<: *steps_build
 
   b_ubu_release: &b_ubu_release
@@ -1506,13 +1509,13 @@ workflows:
 
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags
-      - b_ubu_asan_clang: *workflow_trigger_on_tags
+      - b_ubu_san_clang: *job_b_ubu_asan_clang
       - t_ubu_asan_soltest: *workflow_ubuntu2004_asan
       - t_ubu_asan_clang_soltest: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
 
       # UBSan build and tests
-      - b_ubu_ubsan_clang: *workflow_trigger_on_tags
+      - b_ubu_san_clang: *job_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_soltest: *workflow_ubuntu2004_ubsan_clang
       - t_ubu_ubsan_clang_cli: *workflow_ubuntu2004_ubsan_clang
 
