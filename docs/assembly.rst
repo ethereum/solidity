@@ -35,9 +35,9 @@ Example
 -------
 
 The following example provides library code to access the code of another contract and
-load it into a ``bytes`` variable. This is not possible with "plain Solidity" and the
-idea is that reusable assembly libraries can enhance the Solidity language
-without a compiler change.
+load it into a ``bytes`` variable. This is possible with "plain Solidity" too, by using
+``<address>.code``. But the point here is that reusable assembly libraries can enhance the
+Solidity language without a compiler change.
 
 .. code-block:: solidity
 
