@@ -214,6 +214,14 @@ defaults:
             command: ./test/lsp.py ./build/solc/solc
         - gitter_notify_failure_unless_pr
 
+  - steps_build: &steps_build
+      steps:
+        - checkout
+        - run: *run_build
+        - store_artifacts: *artifacts_solc
+        - persist_to_workspace: *artifacts_executables
+        - gitter_notify_failure_unless_pr
+
   - steps_soltest_all: &steps_soltest_all
       steps:
         - checkout
@@ -233,6 +241,14 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
         - gitter_notify_failure_unless_pr
+
+  - steps_install_dependencies_osx: &steps_install_dependencies_osx
+      steps:
+        - restore_cache:
+            keys:
+              - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+        - attach_workspace:
+            at: .
 
   # --------------------------------------------------------------------------
   # Base Image Templates
@@ -748,12 +764,7 @@ jobs:
       CMAKE_OPTIONS: -DSANITIZE=address
       MAKEFLAGS: -j 3
       CMAKE_BUILD_TYPE: Release
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
-      - gitter_notify_failure_unless_pr
+    <<: *steps_build
 
   b_ubu_clang: &b_ubu_clang
     <<: *base_ubuntu2004_clang_large
@@ -762,12 +773,7 @@ jobs:
       CC: clang
       CXX: clang++
       MAKEFLAGS: -j 10
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
-      - gitter_notify_failure_unless_pr
+    <<: *steps_build
 
   b_ubu_asan_clang: &b_ubu_asan_clang
     # This runs a bit faster on large and xlarge but on nightly efficiency matters more.
@@ -777,12 +783,7 @@ jobs:
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=address
       MAKEFLAGS: -j 3
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
-      - gitter_notify_failure_unless_pr
+    <<: *steps_build
 
   b_ubu_ubsan_clang: &b_ubu_ubsan_clang
     # This runs a bit faster on large and xlarge but on nightly efficiency matters more.
@@ -792,12 +793,7 @@ jobs:
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=undefined
       MAKEFLAGS: -j 3
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
-      - gitter_notify_failure_unless_pr
+    <<: *steps_build
 
   b_ubu_release: &b_ubu_release
     <<: *b_ubu
@@ -949,7 +945,7 @@ jobs:
             - build/test/tools/solfuzzer
       - gitter_notify_failure_unless_pr
 
-  t_osx_soltest:
+  t_osx_soltest: &t_osx_soltest
     <<: *base_osx
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -957,11 +953,9 @@ jobs:
       TERM: xterm
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-      - attach_workspace:
-          at: .
+      - when:
+          condition: true
+          <<: *steps_install_dependencies_osx
       - run: *run_soltest
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
@@ -971,11 +965,9 @@ jobs:
     <<: *base_osx
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-      - attach_workspace:
-          at: .
+      - when:
+          condition: true
+          <<: *steps_install_dependencies_osx
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
       - gitter_notify_failure_unless_pr
