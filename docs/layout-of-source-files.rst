@@ -54,16 +54,6 @@ Les pragmas expérimentaux suivants sont actuellement pris en charge :
 ABIEncoderV2
 ~~~~~~~~~~~~
 
-Pragma Expérimental
--------------------
-
-Le deuxième pragma est le ``experimental pragma``. Il peut être utilisé pour activer des fonctions du compilateur ou de la langue qui ne sont pas encore activées par défaut.
-Les pragmas expérimentaux suivants sont actuellement pris en charge :
-
-
-ABIEncoderV2
-~~~~~~~~~~~~
-
 Le nouvel encodeur ABI est capable d'encoder et de décoder arbitrairement des tableaux et des structures imbriqués. Il produit un code moins optimal (l'optimiseur pour cette partie du code est encore en développement) et n'a pas reçu autant de tests que l'ancien codeur. Vous pouvez l'activer en utilisant ``pragma experimental ABIEncoderV2;``. - we kept
 the same pragma, even though it is not considered experimental since Solidity 0.6.0
 anymore.
