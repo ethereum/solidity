@@ -119,6 +119,8 @@ private:
 
 	void resetContext(ContractDefinition const& _contract, ExecutionContext _context);
 
+	std::string sourceLocationComment(ASTNode const& _node) const;
+
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;
 
