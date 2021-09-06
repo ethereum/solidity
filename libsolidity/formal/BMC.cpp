@@ -188,7 +188,8 @@ bool BMC::visit(FunctionDefinition const& _function)
 	{
 		reset();
 		initFunction(_function);
-		m_context.addAssertion(state().txTypeConstraints() && state().txFunctionConstraints(_function));
+		if (_function.isConstructor() || _function.isPublic())
+			m_context.addAssertion(state().txTypeConstraints() && state().txFunctionConstraints(_function));
 		resetStateVariables();
 	}
 
