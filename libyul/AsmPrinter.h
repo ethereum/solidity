@@ -80,10 +80,9 @@ public:
 	std::string operator()(Leave const& _continue);
 	std::string operator()(Block const& _block);
 
-	static std::string formatSourceLocationComment(
+	static std::string formatSourceLocation(
 		langutil::SourceLocation const& _location,
 		std::map<std::string, unsigned> const& _nameToSourceIndex,
-		bool _statement,
 		langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr
 	);
 

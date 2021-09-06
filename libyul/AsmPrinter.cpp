@@ -258,10 +258,9 @@ string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
 		return ":" + _type.str();
 }
 
-string AsmPrinter::formatSourceLocationComment(
+string AsmPrinter::formatSourceLocation(
 	SourceLocation const& _location,
 	map<string, unsigned> const& _nameToSourceIndex,
-	bool _statement,
 	CharStreamProvider const* _soliditySourceProvider
 )
 {
@@ -294,27 +293,38 @@ string AsmPrinter::formatSourceLocationComment(
 		":" +
 		to_string(_location.end);
 
-	return
-		_statement ?
-		"/// " + joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ") :
-		"/** " + joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ") + " */ ";
+	return joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ");
 }
 
 string AsmPrinter::formatDebugData(shared_ptr<DebugData const> const& _debugData, bool _statement)
 {
-	if (
-		!_debugData ||
-		m_lastLocation == _debugData->location ||
-		m_nameToSourceIndex.empty()
-	)
+	if (!_debugData)
 		return "";
 
-	m_lastLocation = _debugData->location;
+	vector<string> items;
+	if (auto id = _debugData->astID)
+		items.emplace_back("@ast-id " + to_string(*id));
 
-	return formatSourceLocationComment(
-		_debugData->location,
-		m_nameToSourceIndex,
-		_statement,
-		m_soliditySourceProvider
-	) + (_statement ? "\n" : "");
+	if (
+		m_lastLocation != _debugData->location &&
+		!m_nameToSourceIndex.empty()
+	)
+	{
+		m_lastLocation = _debugData->location;
+
+		items.emplace_back(formatSourceLocation(
+			_debugData->location,
+			m_nameToSourceIndex,
+			m_soliditySourceProvider
+		));
+	}
+
+	string commentBody = joinHumanReadable(items, " ");
+	if (commentBody.empty())
+		return "";
+	else
+		return
+			_statement ?
+			"/// " + commentBody + "\n" :
+			"/** " + commentBody + " */ ";
 }
