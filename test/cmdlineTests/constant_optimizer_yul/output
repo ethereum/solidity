@@ -6,7 +6,7 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
-/// @use-src 0:"constant_optimizer_yul/input.sol", 1:"#utility.yul"
+/// @use-src 0:"constant_optimizer_yul/input.sol"
 object "C_12" {
     code {
         {
@@ -21,7 +21,7 @@ object "C_12" {
             return(128, _1)
         }
     }
-    /// @use-src 0:"constant_optimizer_yul/input.sol", 1:"#utility.yul"
+    /// @use-src 0:"constant_optimizer_yul/input.sol"
     object "C_12_deployed" {
         code {
             {

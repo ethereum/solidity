@@ -7,7 +7,7 @@ IR:
  *=====================================================*/
 
 
-/// @use-src 0:"revert_strings/input.sol", 1:"#utility.yul"
+/// @use-src 0:"revert_strings/input.sol"
 object "C_15" {
     code {
         /// @src 0:59:147
@@ -53,7 +53,7 @@ object "C_15" {
         }
 
     }
-    /// @use-src 0:"revert_strings/input.sol", 1:"#utility.yul"
+    /// @use-src 0:"revert_strings/input.sol"
     object "C_15_deployed" {
         code {
             /// @src 0:59:147
