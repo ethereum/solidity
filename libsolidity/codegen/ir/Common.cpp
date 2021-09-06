@@ -127,7 +127,7 @@ string IRNames::zeroValue(Type const& _type, string const& _variableName)
 	return "zero_" + _type.identifier() + _variableName;
 }
 
-string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext& _context)
+string dispenseLocationComment(langutil::SourceLocation const& _location, IRGenerationContext& _context)
 {
 	solAssert(_location.sourceName, "");
 	_context.markSourceUsed(*_location.sourceName);
@@ -139,9 +139,9 @@ string sourceLocationComment(langutil::SourceLocation const& _location, IRGenera
 		+ to_string(_location.end);
 }
 
-string sourceLocationComment(ASTNode const& _node, IRGenerationContext& _context)
+string dispenseLocationComment(ASTNode const& _node, IRGenerationContext& _context)
 {
-	return sourceLocationComment(_node.location(), _context);
+	return dispenseLocationComment(_node.location(), _context);
 }
 
 }

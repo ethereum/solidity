@@ -217,7 +217,7 @@ std::ostringstream& IRGeneratorForStatementsBase::appendCode(bool _addLocationCo
 		m_currentLocation.isValid() &&
 		m_lastLocation != m_currentLocation
 	)
-		m_code << sourceLocationComment(m_currentLocation, m_context) << "\n";
+		m_code << dispenseLocationComment(m_currentLocation, m_context) << "\n";
 
 	m_lastLocation = m_currentLocation;
 
@@ -340,7 +340,7 @@ string IRGeneratorForStatements::constantValueFunction(VariableDeclaration const
 					<ret> := <value>
 				}
 			)");
-			templ("sourceLocationComment", sourceLocationComment(_constant, m_context));
+			templ("sourceLocationComment", dispenseLocationComment(_constant, m_context));
 			templ("functionName", functionName);
 			IRGeneratorForStatements generator(m_context, m_utils);
 			solAssert(_constant.value(), "");

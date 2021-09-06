@@ -179,7 +179,7 @@ string IRGenerator::generate(
 		m_context.registerImmutableVariable(*var);
 
 	t("CreationObject", IRNames::creationObject(_contract));
-	t("sourceLocationCommentCreation", sourceLocationComment(_contract));
+	t("sourceLocationCommentCreation", dispenseLocationComment(_contract));
 	t("library", _contract.isLibrary());
 
 	FunctionDefinition const* constructor = _contract.constructor();
@@ -220,7 +220,7 @@ string IRGenerator::generate(
 
 	// Do not register immutables to avoid assignment.
 	t("DeployedObject", IRNames::deployedObject(_contract));
-	t("sourceLocationCommentDeployed", sourceLocationComment(_contract));
+	t("sourceLocationCommentDeployed", dispenseLocationComment(_contract));
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));
 	set<FunctionDefinition const*> deployedFunctionList = generateQueuedFunctions();
@@ -294,7 +294,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions(ContractDefin
 				}
 				<sourceLocationComment>
 			)");
-			templ("sourceLocationComment", sourceLocationComment(_contract));
+			templ("sourceLocationComment", dispenseLocationComment(_contract));
 			templ("functionName", funName);
 			templ("panic", m_utils.panicFunction(PanicCode::InvalidInternalFunction));
 			templ("in", suffixedVariableNameList("in_", 0, arity.in));
@@ -347,10 +347,10 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 			<contractSourceLocationComment>
 		)");
 
-		t("sourceLocationComment", sourceLocationComment(_function));
+		t("sourceLocationComment", dispenseLocationComment(_function));
 		t(
 			"contractSourceLocationComment",
-			sourceLocationComment(m_context.mostDerivedContract())
+			dispenseLocationComment(m_context.mostDerivedContract())
 		);
 
 		t("functionName", functionName);
@@ -436,10 +436,10 @@ string IRGenerator::generateModifier(
 			_modifierInvocation.name().annotation().referencedDeclaration
 		);
 		solAssert(modifier, "");
-		t("sourceLocationComment", sourceLocationComment(*modifier));
+		t("sourceLocationComment", dispenseLocationComment(*modifier));
 		t(
 			"contractSourceLocationComment",
-			sourceLocationComment(m_context.mostDerivedContract())
+			dispenseLocationComment(m_context.mostDerivedContract())
 		);
 
 		switch (*_modifierInvocation.name().annotation().requiredLookup)
@@ -499,10 +499,10 @@ string IRGenerator::generateFunctionWithModifierInner(FunctionDefinition const& 
 			}
 			<contractSourceLocationComment>
 		)");
-		t("sourceLocationComment", sourceLocationComment(_function));
+		t("sourceLocationComment", dispenseLocationComment(_function));
 		t(
 			"contractSourceLocationComment",
-			sourceLocationComment(m_context.mostDerivedContract())
+			dispenseLocationComment(m_context.mostDerivedContract())
 		);
 		t("functionName", functionName);
 		vector<string> retParams;
@@ -547,10 +547,10 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 				}
 				<contractSourceLocationComment>
 			)")
-			("sourceLocationComment", sourceLocationComment(_varDecl))
+			("sourceLocationComment", dispenseLocationComment(_varDecl))
 			(
 				"contractSourceLocationComment",
-				sourceLocationComment(m_context.mostDerivedContract())
+				dispenseLocationComment(m_context.mostDerivedContract())
 			)
 			("functionName", functionName)
 			("id", to_string(_varDecl.id()))
@@ -566,10 +566,10 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 				}
 				<contractSourceLocationComment>
 			)")
-			("sourceLocationComment", sourceLocationComment(_varDecl))
+			("sourceLocationComment", dispenseLocationComment(_varDecl))
 			(
 				"contractSourceLocationComment",
-				sourceLocationComment(m_context.mostDerivedContract())
+				dispenseLocationComment(m_context.mostDerivedContract())
 			)
 			("functionName", functionName)
 			("constantValueFunction", IRGeneratorForStatements(m_context, m_utils).constantValueFunction(_varDecl))
@@ -692,10 +692,10 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		("params", joinHumanReadable(parameters))
 		("retVariables", joinHumanReadable(returnVariables))
 		("code", std::move(code))
-		("sourceLocationComment", sourceLocationComment(_varDecl))
+		("sourceLocationComment", dispenseLocationComment(_varDecl))
 		(
 			"contractSourceLocationComment",
-			sourceLocationComment(m_context.mostDerivedContract())
+			dispenseLocationComment(m_context.mostDerivedContract())
 		)
 		.render();
 	});
@@ -818,14 +818,14 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 				for (ASTPointer<VariableDeclaration> const& varDecl: contract->constructor()->parameters())
 					params += m_context.addLocalVariable(*varDecl).stackSlots();
 
-			t("sourceLocationComment", sourceLocationComment(
+			t("sourceLocationComment", dispenseLocationComment(
 				contract->constructor() ?
 				dynamic_cast<ASTNode const&>(*contract->constructor()) :
 				dynamic_cast<ASTNode const&>(*contract)
 			));
 			t(
 				"contractSourceLocationComment",
-				sourceLocationComment(m_context.mostDerivedContract())
+				dispenseLocationComment(m_context.mostDerivedContract())
 			);
 
 			t("params", joinHumanReadable(params));
@@ -1073,7 +1073,7 @@ void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionCon
 		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }
 
-string IRGenerator::sourceLocationComment(ASTNode const& _node)
+string IRGenerator::dispenseLocationComment(ASTNode const& _node)
 {
-	return ::sourceLocationComment(_node, m_context);
+	return ::dispenseLocationComment(_node, m_context);
 }
