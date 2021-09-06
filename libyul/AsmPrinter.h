@@ -90,12 +90,12 @@ public:
 private:
 	std::string formatTypedName(TypedName _variable);
 	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
-	std::string formatSourceLocationComment(std::shared_ptr<DebugData const> const& _debugData, bool _statement);
+	std::string formatDebugData(std::shared_ptr<DebugData const> const& _debugData, bool _statement);
 	template <class T>
-	std::string formatSourceLocationComment(T const& _node)
+	std::string formatDebugData(T const& _node)
 	{
 		bool isExpression = std::is_constructible<Expression, T>::value;
-		return formatSourceLocationComment(_node.debugData, !isExpression);
+		return formatDebugData(_node.debugData, !isExpression);
 	}
 
 	Dialect const* const m_dialect = nullptr;
