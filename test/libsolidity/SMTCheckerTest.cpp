@@ -35,6 +35,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unproved\" choice."));
 
+	m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "any");
 	if (choice == "any")
 		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::All();

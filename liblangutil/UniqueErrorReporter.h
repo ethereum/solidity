@@ -58,11 +58,7 @@ public:
 
 	void warning(ErrorId _error, std::string const& _description)
 	{
-		if (!seen(_error, {}, _description))
-		{
-			m_errorReporter.warning(_error, _description);
-			markAsSeen(_error, {}, _description);
-		}
+		m_errorReporter.warning(_error, _description);
 	}
 
 	bool seen(ErrorId _error, SourceLocation const& _location, std::string const& _description) const
@@ -77,8 +73,8 @@ public:
 
 	void markAsSeen(ErrorId _error, SourceLocation const& _location, std::string const& _description)
 	{
-		solAssert(!seen(_error, _location, _description), "");
-		m_seenErrors[{_error, _location}] = _description;
+		if (_location != SourceLocation{})
+			m_seenErrors[{_error, _location}] = _description;
 	}
 
 	ErrorList const& errors() const { return m_errorReporter.errors(); }
