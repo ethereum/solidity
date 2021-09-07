@@ -560,6 +560,24 @@ bool SMTEncoder::visit(Conditional const& _op)
 	return false;
 }
 
+bool SMTEncoder::visit(FunctionCall const& _funCall)
+{
+	auto functionCallKind = *_funCall.annotation().kind;
+	if (functionCallKind != FunctionCallKind::FunctionCall)
+		return true;
+
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	// We do not want to visit the TypeTypes in the second argument of `abi.decode`.
+	// Those types are checked/used in SymbolicState::buildABIFunctions.
+	if (funType.kind() == FunctionType::Kind::ABIDecode)
+	{
+		if (auto arg = _funCall.arguments().front())
+			arg->accept(*this);
+		return false;
+	}
+	return true;
+}
+
 void SMTEncoder::endVisit(FunctionCall const& _funCall)
 {
 	auto functionCallKind = *_funCall.annotation().kind;
