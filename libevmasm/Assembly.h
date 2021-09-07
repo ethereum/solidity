@@ -165,7 +165,7 @@ protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
 	/// that are referenced in a super-assembly.
-	std::map<u256, u256> optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
+	std::map<u256, u256> const& optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
 
 	unsigned bytesRequired(unsigned subTagSize) const;
 
@@ -209,6 +209,10 @@ protected:
 	/// Map from a vector representing a path to a particular sub assembly to sub assembly id.
 	/// This map is used only for sub-assemblies which are not direct sub-assemblies (where path is having more than one value).
 	std::map<std::vector<size_t>, size_t> m_subPaths;
+
+	/// Contains the tag replacements relevant for super-assemblies.
+	/// If set, it means the optimizer has run and we will not run it again.
+	std::optional<std::map<u256, u256>> m_tagReplacements;
 
 	mutable LinkerObject m_assembledObject;
 	mutable std::vector<size_t> m_tagPositionsInBytecode;
