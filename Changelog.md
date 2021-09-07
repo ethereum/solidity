@@ -15,6 +15,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Opcode Optimizer: Prevent the optimizer from running multiple times to avoid potential bytecode differences for referenced code.
  * Name Resolver: Fix that when importing an aliased symbol using ``import {AliasedName} from "a.sol"`` it would use the original name of the symbol and not the aliased one.
  * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
  * SMTChecker: Fix false positive in external calls from constructors.

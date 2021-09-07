@@ -409,18 +409,21 @@ Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 	return *this;
 }
 
-map<u256, u256> Assembly::optimiseInternal(
+map<u256, u256> const& Assembly::optimiseInternal(
 	OptimiserSettings const& _settings,
 	std::set<size_t> _tagsReferencedFromOutside
 )
 {
+	if (m_tagReplacements)
+		return *m_tagReplacements;
+
 	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
 		OptimiserSettings settings = _settings;
 		// Disable creation mode for sub-assemblies.
 		settings.isCreation = false;
-		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(
+		map<u256, u256> const& subTagReplacements = m_subs[subId]->optimiseInternal(
 			settings,
 			JumpdestRemover::referencedTags(m_items, subId)
 		);
@@ -546,7 +549,8 @@ map<u256, u256> Assembly::optimiseInternal(
 			*this
 		);
 
-	return tagReplacements;
+	m_tagReplacements = move(tagReplacements);
+	return *m_tagReplacements;
 }
 
 LinkerObject const& Assembly::assemble() const
