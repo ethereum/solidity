@@ -2481,6 +2481,13 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			returnTypes = functionType->returnParameterTypes();
 			break;
 		}
+		case FunctionType::Kind::Wrap:
+		case FunctionType::Kind::Unwrap:
+		{
+			typeCheckFunctionGeneralChecks(_functionCall, functionType);
+			returnTypes = functionType->returnParameterTypes();
+			break;
+		}
 		default:
 		{
 			typeCheckFunctionCall(_functionCall, functionType);
