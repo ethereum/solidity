@@ -62,6 +62,26 @@ object "C_59" {
                 }
                 revert(0, 0)
             }
+            function panic_error_0x41()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+            function allocate_memory_1236() -> memPtr
+            {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, 32)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
+            function allocate_memory(size) -> memPtr
+            {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, and(add(size, 31), not(31)))
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
             function abi_encode_uint256_string(headStart, value0, value1) -> tail
             {
                 mstore(headStart, value0)
@@ -80,19 +100,11 @@ object "C_59" {
                 }
                 tail := add(add(headStart, and(add(length, 31), not(31))), 96)
             }
-            function allocate_memory_1236() -> memPtr
+            function panic_error_0x32()
             {
-                memPtr := mload(64)
-                let newFreePtr := add(memPtr, 32)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-            }
-            function allocate_memory(size) -> memPtr
-            {
-                memPtr := mload(64)
-                let newFreePtr := add(memPtr, and(add(size, 31), not(31)))
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x32)
+                revert(0, 0x24)
             }
             /// @src 0:381:623
             function fun_sumArray(var_s_mpos) -> var, var_mpos
@@ -117,19 +129,6 @@ object "C_59" {
                 mstore(add(memPtr, 128), "ring")
                 /// @src 0:500:619
                 var_mpos := memPtr
-            }
-            /// @src 0:346:625
-            function panic_error_0x32()
-            {
-                mstore(0, shl(224, 0x4e487b71))
-                mstore(4, 0x32)
-                revert(0, 0x24)
-            }
-            function panic_error_0x41()
-            {
-                mstore(0, shl(224, 0x4e487b71))
-                mstore(4, 0x41)
-                revert(0, 0x24)
             }
         }
         data ".metadata" hex"<BYTECODE REMOVED>"
