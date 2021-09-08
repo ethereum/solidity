@@ -130,37 +130,46 @@ void Parser::fetchSourceLocationFromComment()
 	if (m_scanner->currentCommentLiteral().empty())
 		return;
 
-	static regex const lineRE = std::regex(
+	static regex const tagRegex = regex(
 		R"~~(\s*@src\s+)~~"                           // tag: @src
 		R"~~((-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~", // index and location, e.g.: 1:234:-1
-		std::regex_constants::ECMAScript | std::regex_constants::optimize
+		regex_constants::ECMAScript | regex_constants::optimize
 	);
 
-	string const text = m_scanner->currentCommentLiteral();
-	auto from = sregex_iterator(text.begin(), text.end(), lineRE);
+	string const commentLiteral = m_scanner->currentCommentLiteral();
+	SourceLocation const commentLocation = m_scanner->currentCommentLocation();
+	auto from = sregex_iterator(commentLiteral.begin(), commentLiteral.end(), tagRegex);
 	auto to = sregex_iterator();
 
-	for (auto const& matchResult: ranges::make_subrange(from, to))
+	for (auto const& tagMatch: ranges::make_subrange(from, to))
 	{
-		solAssert(matchResult.size() == 4, "");
+		solAssert(tagMatch.size() == 4, "");
 
-		auto const sourceIndex = toInt(matchResult[1].str());
-		auto const start = toInt(matchResult[2].str());
-		auto const end = toInt(matchResult[3].str());
+		optional<int> const sourceIndex = toInt(tagMatch[1].str());
+		optional<int> const start = toInt(tagMatch[2].str());
+		optional<int> const end = toInt(tagMatch[3].str());
 
 		auto const commentLocation = m_scanner->currentCommentLocation();
 		m_debugDataOverride = DebugData::create();
-		if (!sourceIndex || !start || !end)
-			m_errorReporter.syntaxError(6367_error, commentLocation, "Invalid value in source location mapping. Could not parse location specification.");
+		if (!sourceIndex.has_value() || !start.has_value() || !end.has_value())
+			m_errorReporter.syntaxError(
+				6367_error,
+				commentLocation,
+				"Invalid value in source location mapping. Could not parse location specification."
+			);
 		else if (sourceIndex == -1)
-			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, nullptr});
-		else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(*sourceIndex))))
-			m_errorReporter.syntaxError(2674_error, commentLocation, "Invalid source mapping. Source index not defined via @use-src.");
+			m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), nullptr});
+		else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(sourceIndex.value()))))
+			m_errorReporter.syntaxError(
+				2674_error,
+				commentLocation,
+				"Invalid source mapping. Source index not defined via @use-src."
+			);
 		else
 		{
-			shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(*sourceIndex));
+			shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(sourceIndex.value()));
 			solAssert(sourceName, "");
-			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, move(sourceName)});
+			m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), move(sourceName)});
 		}
 	}
 }
