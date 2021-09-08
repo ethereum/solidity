@@ -520,6 +520,20 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_suffix)
 	CHECK_LOCATION(result->debugData->location, "", -1, -1);
 }
 
+BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_prefix)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// abc@src 0:111:222
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
+}
+
 BOOST_AUTO_TEST_CASE(customSourceLocations_unspecified)
 {
 	ErrorList errorList;
@@ -531,6 +545,37 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_unspecified)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_non_integer)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src a:b:c
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_bad_integer)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 111111111111111111111:222222222222222222222:333333333333333333333
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 6367_error);
 	CHECK_LOCATION(result->debugData->location, "", -1, -1);
 }
 
@@ -554,6 +599,31 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_ensure_last_match)
 
 	// Ensure the latest @src per documentation-comment is used (0:30:40).
 	CHECK_LOCATION(varDecl.debugData->location, "source0", 30, 40);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_no_whitespace)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 0:111:222@src 1:333:444
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "source1", 333, 444);
+}
+
+BOOST_AUTO_TEST_CASE(customSourceLocations_leading_trailing_whitespace)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = "///     @src 0:111:222    \n{}";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_reference_original_sloc)
