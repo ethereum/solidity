@@ -41,7 +41,7 @@ struct OptimiserStepContext
 	std::set<YulString> const& reservedIdentifiers;
 	/// The value nullopt represents creation code
 	std::optional<size_t> expectedExecutionsPerDeployment;
-	std::shared_ptr<u256> externalFreeMemoryPointerInitializer{};
+	u256* externalFreeMemoryPointerInitializer = nullptr;
 };
 
 

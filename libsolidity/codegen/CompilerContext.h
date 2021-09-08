@@ -315,11 +315,7 @@ public:
 
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
-	evmasm::AssemblyItem makeFreeMemoryInitPush(u256 _value)
-	{
-		m_freeMemoryInitPush = std::make_shared<u256>(_value);
-		return evmasm::AssemblyItem(m_freeMemoryInitPush);
-	}
+	void appendFreeMemoryInitPush(u256 _value);
 
 private:
 	/// Updates source location set in the assembly.
@@ -406,8 +402,8 @@ private:
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
 	/// Flag to check that appendYulUtilityFunctions() was called exactly once
 	bool m_appendYulUtilityFunctionsRan = false;
-	/// The assembly item that pushes the initial value of the free memory pointer.
-	std::shared_ptr<u256> m_freeMemoryInitPush;
+	/// The index of the assembly item that pushes the initial value of the free memory pointer.
+	std::optional<size_t> m_freeMemoryInitPush;
 };
 
 }

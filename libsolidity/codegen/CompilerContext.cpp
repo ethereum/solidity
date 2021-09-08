@@ -545,7 +545,13 @@ void CompilerContext::optimizeYul(
 
 	bool const isCreation = runtimeContext() != nullptr;
 	yul::GasMeter meter(_dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
-	solAssert(m_freeMemoryInitPush, "");
+	unique_ptr<u256> freeMemoryInitPushValue;
+	if (_system)
+	{
+		solAssert(m_freeMemoryInitPush, "");
+		solAssert(m_asm->items().size() > *m_freeMemoryInitPush, "");
+		freeMemoryInitPushValue = make_unique<u256>(m_asm->items().at(*m_freeMemoryInitPush).data());
+	}
 	yul::OptimiserSuite::run(
 		_dialect,
 		&meter,
@@ -554,8 +560,10 @@ void CompilerContext::optimizeYul(
 		_optimiserSettings.yulOptimiserSteps,
 		isCreation? nullopt : make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
 		_externalIdentifiers,
-		_system ? m_freeMemoryInitPush : shared_ptr<u256>{}
+		freeMemoryInitPushValue.get()
 	);
+	if (_system)
+		m_asm->items().at(*m_freeMemoryInitPush).setData(*freeMemoryInitPushValue);
 
 #ifdef SOL_OUTPUT_ASM
 	cout << "After optimizer:" << endl;
@@ -570,6 +578,12 @@ string CompilerContext::revertReasonIfDebug(string const& _message)
 		"mload(" + to_string(CompilerUtils::freeMemoryPointer) + ")",
 		_message
 	);
+}
+
+void CompilerContext::appendFreeMemoryInitPush(u256 _value)
+{
+	m_freeMemoryInitPush = m_asm->items().size();
+	m_asm->append(AssemblyItem(_value));
 }
 
 void CompilerContext::updateSourceLocation()
