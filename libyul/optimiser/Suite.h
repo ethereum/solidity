@@ -67,7 +67,7 @@ public:
 		std::string const& _optimisationSequence,
 		std::optional<size_t> _expectedExecutionsPerDeployment,
 		std::set<YulString> const& _externallyUsedIdentifiers = {},
-		std::shared_ptr<u256> _externalFreeMemoryPointerInitializer = {}
+		u256* _externalFreeMemoryPointerInitializer = nullptr
 	);
 
 	/// Ensures that specified sequence of step abbreviations is well-formed and can be executed.
@@ -93,7 +93,7 @@ private:
 		Debug _debug,
 		Block& _ast,
 		std::optional<size_t> expectedExecutionsPerDeployment,
-		std::shared_ptr<u256> _externalFreeMemoryPointerInitializer = {}
+		u256* _externalFreeMemoryPointerInitializer = nullptr
 
 	):
 		m_dispenser{_dialect, _ast, _externallyUsedIdentifiers},
