@@ -33,13 +33,8 @@ using namespace solidity::util;
 
 string MultiUseYulFunctionCollector::requestedFunctions()
 {
-	string result;
-	for (auto const& [name, code]: m_requestedFunctions)
-	{
-		solAssert(code != "<<STUB<<", "");
-		// std::map guarantees ascending order when iterating through its keys.
-		result += code;
-	}
+	string result = move(m_code);
+	m_code.clear();
 	m_requestedFunctions.clear();
 	return result;
 }
@@ -48,11 +43,11 @@ string MultiUseYulFunctionCollector::createFunction(string const& _name, functio
 {
 	if (!m_requestedFunctions.count(_name))
 	{
-		m_requestedFunctions[_name] = "<<STUB<<";
+		m_requestedFunctions.insert(_name);
 		string fun = _creator();
 		solAssert(!fun.empty(), "");
 		solAssert(fun.find("function " + _name + "(") != string::npos, "Function not properly named.");
-		m_requestedFunctions[_name] = std::move(fun);
+		m_code += move(fun);
 	}
 	return _name;
 }
@@ -65,13 +60,13 @@ string MultiUseYulFunctionCollector::createFunction(
 	solAssert(!_name.empty(), "");
 	if (!m_requestedFunctions.count(_name))
 	{
-		m_requestedFunctions[_name] = "<<STUB<<";
+		m_requestedFunctions.insert(_name);
 		vector<string> arguments;
 		vector<string> returnParameters;
 		string body = _creator(arguments, returnParameters);
 		solAssert(!body.empty(), "");
 
-		m_requestedFunctions[_name] = Whiskers(R"(
+		m_code += Whiskers(R"(
 			function <functionName>(<args>)<?+retParams> -> <retParams></+retParams> {
 				<body>
 			}
@@ -80,7 +75,7 @@ string MultiUseYulFunctionCollector::createFunction(
 		("args", joinHumanReadable(arguments))
 		("retParams", joinHumanReadable(returnParameters))
 		("body", body)
-		.render();;
+		.render();
 	}
 	return _name;
 }

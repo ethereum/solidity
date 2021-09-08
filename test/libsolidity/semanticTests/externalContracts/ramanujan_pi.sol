@@ -35,10 +35,10 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 526745
+// gas irOptimized: 528041
 // gas legacy: 733634
-// gas legacyOptimized: 478742
+// gas legacyOptimized: 479606
 // prb_pi() -> 3141592656369545286
-// gas irOptimized: 62867
+// gas irOptimized: 63027
 // gas legacy: 98903
 // gas legacyOptimized: 75735
