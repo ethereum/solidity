@@ -90,7 +90,7 @@ void OptimiserSuite::run(
 	string const& _optimisationSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers,
-	std::shared_ptr<u256> _externalFreeMemoryPointerInitializer
+	u256* _externalFreeMemoryPointerInitializer
 )
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
