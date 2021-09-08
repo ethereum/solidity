@@ -516,7 +516,10 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_suffix)
 	)";
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
-	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 8387_error);
 	CHECK_LOCATION(result->debugData->location, "", -1, -1);
 }
 
@@ -558,7 +561,10 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_non_integer)
 	)";
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
-	BOOST_REQUIRE(!!result && errorList.size() == 0);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 8387_error);
 	CHECK_LOCATION(result->debugData->location, "", -1, -1);
 }
 
@@ -611,8 +617,11 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_no_whitespace)
 	)";
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
-	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source1", 333, 444);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 8387_error);
+	CHECK_LOCATION(result->debugData->location, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_leading_trailing_whitespace)

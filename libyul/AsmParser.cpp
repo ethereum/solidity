@@ -131,46 +131,72 @@ void Parser::fetchSourceLocationFromComment()
 		return;
 
 	static regex const tagRegex = regex(
-		R"~~(\s*@src\s+)~~"                           // tag: @src
-		R"~~((-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~", // index and location, e.g.: 1:234:-1
+		R"~~(\s*(@[a-zA-Z0-9\-_]+)(?:\s+|$))~~",       // tag, e.g: @src
+		regex_constants::ECMAScript | regex_constants::optimize
+	);
+	static regex const srcTagArgsRegex = regex(
+		R"~~(^(-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~", // index and location, e.g.: 1:234:-1
 		regex_constants::ECMAScript | regex_constants::optimize
 	);
 
 	string const commentLiteral = m_scanner->currentCommentLiteral();
 	SourceLocation const commentLocation = m_scanner->currentCommentLocation();
-	auto from = sregex_iterator(commentLiteral.begin(), commentLiteral.end(), tagRegex);
-	auto to = sregex_iterator();
+	smatch tagMatch;
+	string::const_iterator position = commentLiteral.begin();
 
-	for (auto const& tagMatch: ranges::make_subrange(from, to))
+	while (regex_search(position, commentLiteral.end(), tagMatch, tagRegex))
 	{
-		solAssert(tagMatch.size() == 4, "");
+		solAssert(tagMatch.size() == 2, "");
+		position += tagMatch.position() + tagMatch.length();
 
-		optional<int> const sourceIndex = toInt(tagMatch[1].str());
-		optional<int> const start = toInt(tagMatch[2].str());
-		optional<int> const end = toInt(tagMatch[3].str());
-
-		auto const commentLocation = m_scanner->currentCommentLocation();
-		m_debugDataOverride = DebugData::create();
-		if (!sourceIndex.has_value() || !start.has_value() || !end.has_value())
-			m_errorReporter.syntaxError(
-				6367_error,
-				commentLocation,
-				"Invalid value in source location mapping. Could not parse location specification."
-			);
-		else if (sourceIndex == -1)
-			m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), nullptr});
-		else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(sourceIndex.value()))))
-			m_errorReporter.syntaxError(
-				2674_error,
-				commentLocation,
-				"Invalid source mapping. Source index not defined via @use-src."
-			);
-		else
+		if (tagMatch[1] == "@src")
 		{
-			shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(sourceIndex.value()));
-			solAssert(sourceName, "");
-			m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), move(sourceName)});
+			smatch srcTagArgsMatch;
+			if (!regex_search(position, commentLiteral.end(), srcTagArgsMatch, srcTagArgsRegex))
+			{
+				m_errorReporter.syntaxError(
+					8387_error,
+					commentLocation,
+					"Invalid values in source location mapping. Could not parse location specification."
+				);
+
+				// If the arguments to @src are malformed, we don't know where they end so we can't continue.
+				return;
+			}
+
+			solAssert(srcTagArgsMatch.size() == 4, "");
+			position += srcTagArgsMatch.position() + srcTagArgsMatch.length();
+
+			optional<int> const sourceIndex = toInt(srcTagArgsMatch[1].str());
+			optional<int> const start = toInt(srcTagArgsMatch[2].str());
+			optional<int> const end = toInt(srcTagArgsMatch[3].str());
+
+			m_debugDataOverride = DebugData::create();
+			if (!sourceIndex.has_value() || !start.has_value() || !end.has_value())
+				m_errorReporter.syntaxError(
+					6367_error,
+					commentLocation,
+					"Invalid value in source location mapping. "
+					"Expected non-negative integer values or -1 for source index and location."
+				);
+			else if (sourceIndex == -1)
+				m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), nullptr});
+			else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(sourceIndex.value()))))
+				m_errorReporter.syntaxError(
+					2674_error,
+					commentLocation,
+					"Invalid source mapping. Source index not defined via @use-src."
+				);
+			else
+			{
+				shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(sourceIndex.value()));
+				solAssert(sourceName, "");
+				m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), move(sourceName)});
+			}
 		}
+		else
+			// Ignore unrecognized tags.
+			continue;
 	}
 }
 
