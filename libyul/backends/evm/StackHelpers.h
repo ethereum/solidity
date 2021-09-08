@@ -342,6 +342,11 @@ private:
 
 /// Transforms @a _currentStack to @a _targetStack, invoking the provided shuffling operations.
 /// Modifies @a _currentStack itself after each invocation of the shuffling operations.
+/// @a _swap is a function with signature void(unsigned) that is called when the top most slot is swapped with
+/// the slot `depth` slots below the top. In terms of EVM opcodes this is supposed to be a `SWAP<depth>`.
+/// @a _pushOrDup is a function with signature void(StackSlot const&) that is called to push or dup the slot given as
+/// its argument to the stack top.
+/// @a _pop is a function with signature void() that is called when the top most slot is popped.
 template<typename Swap, typename PushOrDup, typename Pop>
 void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _swap, PushOrDup _pushOrDup, Pop _pop)
 {
