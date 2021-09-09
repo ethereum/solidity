@@ -57,7 +57,7 @@ vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 		stackLayout
 	);
 	// Create initial entry layout.
-	optimizedCodeTransform.createStackLayout(stackLayout.blockInfos.at(dfg->entry).entryLayout);
+	optimizedCodeTransform.createStackLayout(debugDataOf(*dfg->entry), stackLayout.blockInfos.at(dfg->entry).entryLayout);
 	optimizedCodeTransform(*dfg->entry);
 	for (Scope::Function const* function: dfg->functions)
 		optimizedCodeTransform(dfg->functionInfo.at(function));
@@ -220,7 +220,7 @@ void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression 
 	}, _expression);
 }
 
-void OptimizedEVMCodeTransform::createStackLayout(Stack _targetStack)
+void OptimizedEVMCodeTransform::createStackLayout(std::shared_ptr<DebugData const> _debugData, Stack _targetStack)
 {
 	static constexpr auto slotVariableName = [](StackSlot const& _slot) {
 		return std::visit(util::GenericVisitor{
@@ -231,6 +231,8 @@ void OptimizedEVMCodeTransform::createStackLayout(Stack _targetStack)
 
 	yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
 	// ::createStackLayout asserts that it has successfully achieved the target layout.
+	langutil::SourceLocation sourceLocation = _debugData ? _debugData->location : langutil::SourceLocation{};
+	m_assembly.setSourceLocation(sourceLocation);
 	::createStackLayout(
 		m_stack,
 		_targetStack | ranges::to<Stack>,
@@ -299,6 +301,7 @@ void OptimizedEVMCodeTransform::createStackLayout(Stack _targetStack)
 				{
 					m_assembly.setSourceLocation(locationOf(_literal));
 					m_assembly.appendConstant(_literal.value);
+					m_assembly.setSourceLocation(sourceLocation);
 				},
 				[&](FunctionReturnLabelSlot const&)
 				{
@@ -310,6 +313,7 @@ void OptimizedEVMCodeTransform::createStackLayout(Stack _targetStack)
 						m_returnLabels[&_returnLabel.call.get()] = m_assembly.newLabelId();
 					m_assembly.setSourceLocation(locationOf(_returnLabel.call.get()));
 					m_assembly.appendLabelReference(m_returnLabels.at(&_returnLabel.call.get()));
+					m_assembly.setSourceLocation(sourceLocation);
 				},
 				[&](VariableSlot const& _variable)
 				{
@@ -317,6 +321,7 @@ void OptimizedEVMCodeTransform::createStackLayout(Stack _targetStack)
 					{
 						m_assembly.setSourceLocation(locationOf(_variable));
 						m_assembly.appendConstant(0);
+						m_assembly.setSourceLocation(sourceLocation);
 						return;
 					}
 					yulAssert(false, "Variable not found on stack.");
@@ -346,6 +351,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 	// Assert that this is the first visit of the block and mark as generated.
 	yulAssert(m_generated.insert(&_block).second, "");
 
+	m_assembly.setSourceLocation(locationOf(_block));
 	auto const& blockInfo = m_stackLayout.blockInfos.at(&_block);
 
 	// Assert that the stack is valid for entering the block.
@@ -360,7 +366,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 	for (auto const& operation: _block.operations)
 	{
 		// Create required layout for entering the operation.
-		createStackLayout(m_stackLayout.operationEntryLayout.at(&operation));
+		createStackLayout(debugDataOf(operation.operation), m_stackLayout.operationEntryLayout.at(&operation));
 
 		// Assert that we have the inputs of the operation on stack top.
 		yulAssert(static_cast<int>(m_stack.size()) == m_assembly.stackHeight(), "");
@@ -385,6 +391,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 	}
 
 	// Exit the block.
+	m_assembly.setSourceLocation(locationOf(_block));
 	std::visit(util::GenericVisitor{
 		[&](CFG::BasicBlock::MainExit const&)
 		{
@@ -393,7 +400,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		[&](CFG::BasicBlock::Jump const& _jump)
 		{
 			// Create the stack expected at the jump target.
-			createStackLayout(m_stackLayout.blockInfos.at(_jump.target).entryLayout);
+			createStackLayout(debugDataOf(_jump), m_stackLayout.blockInfos.at(_jump.target).entryLayout);
 
 			// If this is the only jump to the block, we do not need a label and can directly continue with the target block.
 			if (!m_blockLabels.count(_jump.target) && _jump.target->entries.size() == 1)
@@ -417,7 +424,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
 		{
 			// Create the shared entry layout of the jump targets, which is stored as exit layout of the current block.
-			createStackLayout(blockInfo.exitLayout);
+			createStackLayout(debugDataOf(_conditionalJump), blockInfo.exitLayout);
 
 			// Create labels for the targets, if not already present.
 			if (!m_blockLabels.count(_conditionalJump.nonZero))
@@ -468,9 +475,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			exitStack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
 
 			// Create the function return layout and jump.
-			m_assembly.setSourceLocation(locationOf(*m_currentFunctionInfo));
-			createStackLayout(exitStack);
-			m_assembly.setSourceLocation(locationOf(*m_currentFunctionInfo));
+			createStackLayout(debugDataOf(_functionReturn), exitStack);
 			m_assembly.appendJump(0, AbstractAssembly::JumpType::OutOfFunction);
 		},
 		[&](CFG::BasicBlock::Terminated const&)
@@ -505,7 +510,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionInfo const& _functionInf
 	m_assembly.appendLabel(getFunctionLabel(_functionInfo.function));
 
 	// Create the entry layout of the function body block and visit.
-	createStackLayout(m_stackLayout.blockInfos.at(_functionInfo.entry).entryLayout);
+	createStackLayout(debugDataOf(_functionInfo), m_stackLayout.blockInfos.at(_functionInfo.entry).entryLayout);
 	(*this)(*_functionInfo.entry);
 
 	m_stack.clear();

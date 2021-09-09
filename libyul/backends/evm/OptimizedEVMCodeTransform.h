@@ -77,7 +77,8 @@ private:
 	static void validateSlot(StackSlot const& _slot, Expression const& _expression);
 
 	/// Shuffles m_stack to the desired @a _targetStack while emitting the shuffling code to m_assembly.
-	void createStackLayout(Stack _targetStack);
+	/// Sets the source locations to the one in @a _debugData.
+	void createStackLayout(std::shared_ptr<DebugData const> _debugData, Stack _targetStack);
 
 	/// Generate code for the given block @a _block.
 	/// Expects the current stack layout m_stack to be a stack layout that is compatible with the
