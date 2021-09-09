@@ -252,7 +252,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 			visitExpression(arg);
 		m_assembly.setSourceLocation(locationOf(_call));
 		m_assembly.appendJumpTo(
-			functionEntryID(_call.functionName.name, *function),
+			functionEntryID(*function),
 			static_cast<int>(function->returns.size() - function->arguments.size()) - 1,
 			AbstractAssembly::JumpType::IntoFunction
 		);
@@ -374,7 +374,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	m_assembly.setSourceLocation(locationOf(_function));
 	int const stackHeightBefore = m_assembly.stackHeight();
 
-	m_assembly.appendLabel(functionEntryID(_function.name, function));
+	m_assembly.appendLabel(functionEntryID(function));
 
 	m_assembly.setStackHeight(static_cast<int>(height));
 
@@ -563,6 +563,10 @@ void CodeTransform::operator()(Block const& _block)
 	Scope* originalScope = m_scope;
 	m_scope = m_info.scopes.at(&_block).get();
 
+	for (auto const& statement: _block.statements)
+		if (auto function = get_if<FunctionDefinition>(&statement))
+			createFunctionEntryID(*function);
+
 	int blockStartStackHeight = m_assembly.stackHeight();
 	visitStatements(_block.statements);
 
@@ -572,17 +576,30 @@ void CodeTransform::operator()(Block const& _block)
 	m_scope = originalScope;
 }
 
-AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope::Function const& _function)
+void CodeTransform::createFunctionEntryID(FunctionDefinition const& _function)
 {
-	if (!m_context->functionEntryIDs.count(&_function))
-	{
-		AbstractAssembly::LabelID id =
-			m_useNamedLabelsForFunctions ?
-			m_assembly.namedLabel(_name.str(), _function.arguments.size(), _function.returns.size(), {}) :
-			m_assembly.newLabelId();
-		m_context->functionEntryIDs[&_function] = id;
-	}
-	return m_context->functionEntryIDs[&_function];
+	Scope::Function& scopeFunction = std::get<Scope::Function>(m_scope->identifiers.at(_function.name));
+	yulAssert(!m_context->functionEntryIDs.count(&scopeFunction), "");
+
+	optional<size_t> astID;
+	if (_function.debugData)
+		astID = _function.debugData->astID;
+
+	m_context->functionEntryIDs[&scopeFunction] =
+		m_useNamedLabelsForFunctions ?
+		m_assembly.namedLabel(
+			_function.name.str(),
+			_function.parameters.size(),
+			_function.returnVariables.size(),
+			astID
+		) :
+		m_assembly.newLabelId();
+}
+
+AbstractAssembly::LabelID CodeTransform::functionEntryID(Scope::Function const& _scopeFunction) const
+{
+	yulAssert(m_context->functionEntryIDs.count(&_scopeFunction), "");
+	return m_context->functionEntryIDs.at(&_scopeFunction);
 }
 
 void CodeTransform::visitExpression(Expression const& _expression)
