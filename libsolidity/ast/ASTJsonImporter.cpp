@@ -133,6 +133,8 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createEnumDefinition(_json);
 	if (nodeType == "EnumValue")
 		return createEnumValue(_json);
+	if (nodeType == "UserDefinedValueTypeDefinition")
+		return createUserDefinedValueTypeDefinition(_json);
 	if (nodeType == "ParameterList")
 		return createParameterList(_json);
 	if (nodeType == "OverrideSpecifier")
@@ -384,6 +386,16 @@ ASTPointer<EnumValue> ASTJsonImporter::createEnumValue(Json::Value const& _node)
 	return createASTNode<EnumValue>(
 		_node,
 		memberAsASTString(_node, "name")
+	);
+}
+
+ASTPointer<UserDefinedValueTypeDefinition> ASTJsonImporter::createUserDefinedValueTypeDefinition(Json::Value const& _node)
+{
+	return createASTNode<UserDefinedValueTypeDefinition>(
+		_node,
+		memberAsASTString(_node, "name"),
+		createNameSourceLocation(_node),
+		convertJsonToASTNode<TypeName>(member(_node, "underlyingType"))
 	);
 }
 

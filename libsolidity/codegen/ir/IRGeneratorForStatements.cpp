@@ -1049,6 +1049,24 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		);
 		break;
 	}
+	case FunctionType::Kind::Wrap:
+	case FunctionType::Kind::Unwrap:
+	{
+		solAssert(arguments.size() == 1, "");
+		FunctionType::Kind kind = functionType->kind();
+		if (kind == FunctionType::Kind::Wrap)
+			solAssert(
+				type(*arguments.at(0)).isImplicitlyConvertibleTo(
+					dynamic_cast<UserDefinedValueType const&>(type(_functionCall)).underlyingType()
+				),
+				""
+			);
+		else
+			solAssert(type(*arguments.at(0)).category() == Type::Category::UserDefinedValueType, "");
+
+		define(_functionCall, *arguments.at(0));
+		break;
+	}
 	case FunctionType::Kind::Assert:
 	case FunctionType::Kind::Require:
 	{
@@ -2001,6 +2019,8 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		}
 		else if (EnumType const* enumType = dynamic_cast<EnumType const*>(&actualType))
 			define(_memberAccess) << to_string(enumType->memberValue(_memberAccess.memberName())) << "\n";
+		else if (dynamic_cast<UserDefinedValueType const*>(&actualType))
+			solAssert(member == "wrap" || member == "unwrap", "");
 		else if (auto const* arrayType = dynamic_cast<ArrayType const*>(&actualType))
 			solAssert(arrayType->isByteArray() && member == "concat", "");
 		else
@@ -2309,6 +2329,10 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		// no-op
 	}
 	else if (dynamic_cast<ImportDirective const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<UserDefinedValueTypeDefinition const*>(declaration))
 	{
 		// no-op
 	}

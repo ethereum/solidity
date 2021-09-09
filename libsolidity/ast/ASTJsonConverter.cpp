@@ -354,6 +354,20 @@ bool ASTJsonConverter::visit(EnumValue const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(UserDefinedValueTypeDefinition const& _node)
+{
+	solAssert(_node.underlyingType(), "");
+	std::vector<pair<string, Json::Value>> attributes = {
+		make_pair("name", _node.name()),
+		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
+		make_pair("underlyingType", toJson(*_node.underlyingType()))
+	};
+
+	setJsonNode(_node, "UserDefinedValueTypeDefinition", std::move(attributes));
+
+	return false;
+}
+
 bool ASTJsonConverter::visit(ParameterList const& _node)
 {
 	setJsonNode(_node, "ParameterList", {

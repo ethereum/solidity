@@ -727,6 +727,37 @@ public:
 };
 
 /**
+ * User defined value types, i.e., custom types, for example, `type MyInt is int`. Allows creating a
+ * zero cost abstraction over value type with stricter type requirements.
+ */
+class UserDefinedValueTypeDefinition: public Declaration
+{
+public:
+	UserDefinedValueTypeDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> _name,
+		SourceLocation _nameLocation,
+		ASTPointer<TypeName> _underlyingType
+	):
+		Declaration(_id, _location, _name, std::move(_nameLocation), Visibility::Default),
+		m_underlyingType(std::move(_underlyingType))
+	{
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	Type const* type() const override;
+
+	TypeName const* underlyingType() const { return m_underlyingType.get(); }
+
+private:
+	/// The name of the underlying type
+	ASTPointer<TypeName> m_underlyingType;
+};
+
+/**
  * Parameter list, used as function parameter list, return list and for try and catch.
  * None of the parameters is allowed to contain mappings (not even recursively
  * inside structs).

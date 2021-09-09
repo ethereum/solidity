@@ -19,6 +19,7 @@ sourceUnit: (
 	| constantVariableDeclaration
 	| structDefinition
 	| enumDefinition
+	| userDefinedValueTypeDefinition
 	| errorDefinition
 )* EOF;
 
@@ -89,6 +90,7 @@ contractBodyElement:
 	| receiveFunctionDefinition
 	| structDefinition
 	| enumDefinition
+	| userDefinedValueTypeDefinition
 	| stateVariableDeclaration
 	| eventDefinition
 	| errorDefinition
@@ -247,6 +249,11 @@ structMember: type=typeName name=identifier Semicolon;
  * Definition of an enum. Can occur at top-level within a source unit or within a contract, library or interface.
  */
 enumDefinition:	Enum name=identifier LBrace enumValues+=identifier (Comma enumValues+=identifier)* RBrace;
+/**
+ * Definition of a user defined value type. Can occur at top-level within a source unit or within a contract, library or interface.
+ */
+userDefinedValueTypeDefinition:
+	Type name=identifier Is elementaryTypeName[true] Semicolon;
 
 /**
  * The declaration of a state variable.

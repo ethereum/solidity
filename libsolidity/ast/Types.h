@@ -174,7 +174,7 @@ public:
 	enum class Category
 	{
 		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array, ArraySlice,
-		FixedBytes, Contract, Struct, Function, Enum, Tuple,
+		FixedBytes, Contract, Struct, Function, Enum, UserDefinedValueType, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module,
 		InaccessibleDynamic
 	};
@@ -1083,6 +1083,53 @@ private:
 };
 
 /**
+ * The type of a UserDefinedValueType.
+ */
+class UserDefinedValueType: public Type
+{
+public:
+	explicit UserDefinedValueType(UserDefinedValueTypeDefinition const& _definition):
+		m_definition(_definition)
+	{}
+
+	Category category() const override { return Category::UserDefinedValueType; }
+	Type const& underlyingType() const;
+	UserDefinedValueTypeDefinition const& definition() const { return m_definition; }
+
+	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
+	Type const* encodingType() const override { return &underlyingType(); }
+	TypeResult interfaceType(bool /* _inLibrary */) const override {return &underlyingType(); }
+	std::string richIdentifier() const override;
+	bool operator==(Type const& _other) const override;
+
+	unsigned calldataEncodedSize(bool _padded) const override { return underlyingType().calldataEncodedSize(_padded); }
+
+	bool leftAligned() const override { return underlyingType().leftAligned(); }
+	bool canBeStored() const override { return underlyingType().canBeStored(); }
+	u256 storageSize() const override { return underlyingType().storageSize(); }
+	bool isValueType() const override
+	{
+		solAssert(underlyingType().isValueType(), "");
+		return true;
+	}
+	bool nameable() const override
+	{
+		solAssert(underlyingType().nameable(), "");
+		return true;
+	}
+
+	std::string toString(bool _short) const override;
+	std::string canonicalName() const override { solAssert(false, ""); }
+	std::string signatureInExternalFunction(bool) const override { solAssert(false, ""); }
+
+protected:
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
+
+private:
+	UserDefinedValueTypeDefinition const& m_definition;
+};
+
+/**
  * Type that can hold a finite sequence of values of different types.
  * In some cases, the components are empty pointers (when used as placeholders).
  */
@@ -1150,6 +1197,8 @@ public:
 		RIPEMD160, ///< CALL to special contract for ripemd160
 		Event, ///< syntactic sugar for LOG*
 		Error, ///< creating an error instance in revert or require
+		Wrap, ///< customType.wrap(...) for user defined value types
+		Unwrap, ///< customType.unwrap(...) for user defined value types
 		SetGas, ///< modify the default gas value for the function call
 		SetValue, ///< modify the default value transfer for the function call
 		BlockHash, ///< BLOCKHASH
