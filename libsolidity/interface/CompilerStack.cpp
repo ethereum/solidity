@@ -1054,16 +1054,10 @@ size_t CompilerStack::functionEntryPoint(
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
-	shared_ptr<Compiler> const& compiler = contract(_contractName).compiler;
-	if (!compiler)
-		return 0;
-	evmasm::AssemblyItem tag = compiler->functionEntryLabel(_function);
-	if (tag.type() == evmasm::UndefinedItem)
-		return 0;
-	evmasm::AssemblyItems const& items = compiler->runtimeAssembly().items();
-	for (size_t i = 0; i < items.size(); ++i)
-		if (items.at(i).type() == evmasm::Tag && items.at(i).data() == tag.data())
-			return i;
+	for (auto&& [name, data]: contract(_contractName).runtimeObject.functionDebugData)
+		if (data.sourceID == _function.id())
+			if (data.instructionIndex)
+				return *data.instructionIndex;
 	return 0;
 }
 

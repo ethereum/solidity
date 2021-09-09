@@ -38,6 +38,7 @@
 
 #include <fstream>
 #include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/view/enumerate.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -761,8 +762,16 @@ LinkerObject const& Assembly::assemble() const
 	for (auto const& [name, tagInfo]: m_namedTags)
 	{
 		size_t position = m_tagPositionsInBytecode.at(tagInfo.id);
+		optional<size_t> tagIndex;
+		for (auto&& [index, item]: m_items | ranges::views::enumerate)
+			if (item.type() == Tag && static_cast<size_t>(item.data()) == tagInfo.id)
+			{
+				tagIndex = index;
+				break;
+			}
 		ret.functionDebugData[name] = {
 			position == numeric_limits<size_t>::max() ? nullopt : optional<size_t>{position},
+			tagIndex,
 			tagInfo.sourceID,
 			tagInfo.params,
 			tagInfo.returns
