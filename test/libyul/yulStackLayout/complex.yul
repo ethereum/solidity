@@ -162,7 +162,7 @@
 // [ c RET b a ]\l\
 // sstore\l\
 // [ c RET ]\l\
-// [ c RET ]\l\
+// [ c RET JUNK JUNK JUNK ]\l\
 // "];
 // Block8 -> Block8Exit [arrowhead=none];
 // Block8Exit [label="Jump" shape=oval];
@@ -296,7 +296,7 @@
 // [ c RET x b a 0xffff 0xff ]\l\
 // sstore\l\
 // [ c RET x b a ]\l\
-// [ c RET x b a ]\l\
+// [ c RET a b x ]\l\
 // "];
 // Block19 -> Block19Exit [arrowhead=none];
 // Block19Exit [label="BackwardsJump" shape=oval];

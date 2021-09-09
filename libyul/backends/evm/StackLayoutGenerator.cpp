@@ -400,6 +400,266 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 	}
 
 	stitchConditionalJumps(_entry);
+	std::map<CFG::BasicBlock const*, bool> terminates;
+	fillInJunk(_entry, terminates);
+}
+
+bool StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _entry, std::map<CFG::BasicBlock const*, bool>& _terminates)
+{
+	(void)_terminates;
+
+	util::BreadthFirstSearch<CFG::BasicBlock const*> reverseVisit;
+	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_entry}}.run([&](CFG::BasicBlock const* _block, auto _addChild){
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump) { _addChild(_jump.target); },
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				_addChild(_conditionalJump.zero);
+				_addChild(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&)
+			{
+				reverseVisit.verticesToTraverse.emplace_back(_block);
+			},
+			[&](CFG::BasicBlock::Terminated const&) {},
+		}, _entry.exit);
+	});
+	reverseVisit.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		for (auto const* entry: _block->entries)
+			_addChild(entry);
+	});
+
+	set<CFG::BasicBlock const*> needsCleanStackOnExit = move(reverseVisit.visited);
+
+	auto addJunkVisit = [&, seen = set<CFG::BasicBlock const*>{}](CFG::BasicBlock const& _block, auto& _recurse) mutable -> void {
+		if (seen.count(&_block))
+			return;
+		seen.insert(&_block);
+
+		if (!needsCleanStackOnExit.count(&_block))
+		{
+			Stack const &blockEntry = m_layout.blockInfos.at(&_block).entryLayout;
+			size_t nextLayoutSize = _block.operations.empty() ?
+				m_layout.blockInfos.at(&_block).exitLayout.size():
+				m_layout.operationEntryLayout.at(&_block.operations.front()).size();
+			if (nextLayoutSize < blockEntry.size())
+			{
+				size_t numJunk = blockEntry.size() - nextLayoutSize;
+				for (auto const &operation: _block.operations)
+				{
+					Stack &operationLayout = m_layout.operationEntryLayout.at(&operation);
+					operationLayout = Stack{numJunk, JunkSlot{}} + move(operationLayout);
+				}
+				Stack& exitLayout = m_layout.blockInfos.at(&_block).exitLayout;
+				exitLayout = Stack{numJunk, JunkSlot{}} + move(exitLayout);
+			}
+		}
+		Stack const& exitLayout = m_layout.blockInfos.at(&_block).exitLayout;
+
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&)
+			{
+			},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				if (!_jump.backwards)
+				{
+					if (!needsCleanStackOnExit.count(_jump.target))
+					{
+						Stack &entryLayout = m_layout.blockInfos.at(_jump.target).entryLayout;
+						if (entryLayout.size() < exitLayout.size())
+							entryLayout =
+								Stack{exitLayout.size() - entryLayout.size(), JunkSlot{}} + move(entryLayout);
+					}
+					_recurse(*_jump.target, _recurse);
+				}
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				if (!needsCleanStackOnExit.count(_conditionalJump.zero) && !needsCleanStackOnExit.count(_conditionalJump.nonZero))
+				{
+					Stack &zeroEntryLayout = m_layout.blockInfos.at(_conditionalJump.zero).entryLayout;
+					size_t zeroLayoutDiff = 0;
+					if (zeroEntryLayout.size() < exitLayout.size() - 1)
+						zeroLayoutDiff = exitLayout.size() - 1 - zeroEntryLayout.size();
+					Stack &nonZeroEntryLayout = m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout;
+
+					yulAssert(nonZeroEntryLayout.size() == zeroEntryLayout.size(), "");
+
+					zeroEntryLayout = Stack{zeroLayoutDiff, JunkSlot{}} + move(zeroEntryLayout);
+					nonZeroEntryLayout = Stack{zeroLayoutDiff, JunkSlot{}} + move(nonZeroEntryLayout);
+				}
+				_recurse(*_conditionalJump.zero, _recurse);
+				_recurse(*_conditionalJump.nonZero, _recurse);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&)
+			{
+			},
+			[&](CFG::BasicBlock::Terminated const&)
+			{
+			},
+		}, _block.exit);
+	};
+	addJunkVisit(_entry, addJunkVisit);
+
+	return true;
+
+#if 0
+
+
+	if (bool const* knownTerminates = util::valueOrNullptr(_terminates, &_block))
+		return *knownTerminates;
+
+	_terminates[&_block] = false;
+
+	bool terminates = std::visit(util::GenericVisitor{
+		[&](CFG::BasicBlock::MainExit const&) -> bool
+		{
+			return true;
+		},
+		[&](CFG::BasicBlock::Jump const& _jump) -> bool
+		{
+			if (_jump.backwards)
+				return false;
+			return fillInJunk(*_jump.target, _terminates);
+		},
+		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> bool
+		{
+			return fillInJunk(*_conditionalJump.zero, _terminates) && fillInJunk(*_conditionalJump.nonZero, _terminates);
+		},
+		[&](CFG::BasicBlock::FunctionReturn const&) -> bool
+		{
+			return false;
+		},
+		[&](CFG::BasicBlock::Terminated const&) -> bool
+		{
+			return true;
+		},
+	}, _block.exit);
+	_terminates[&_block] = terminates;
+
+	if (terminates)
+	{
+		auto const &entryLayout = m_layout.blockInfos.at(&_block).entryLayout;
+
+		auto evaluate = [&](Stack const& _candidate) -> size_t {
+			size_t numOps = 0;
+
+			auto swap = [&](unsigned _swapDepth)
+			{
+				++numOps;
+				if (_swapDepth > 16) numOps += 1000;
+			};
+			auto dupOrPush = [&](StackSlot const& _slot)
+			{
+				++numOps;
+				auto depth = util::findOffset(entryLayout | ranges::views::reverse, _slot);
+				if (depth && *depth >= 16)
+					numOps += 1000;
+			};
+			auto pop = [&]() { numOps++; };
+			Stack testStack = entryLayout;
+			createStackLayout(testStack, _candidate, swap, dupOrPush, pop);
+			return numOps;
+		};
+/*
+		size_t maxEntrySize = 0;
+		for (auto entry: _block.entries)
+		{
+			auto const &exitLayout = m_layout.blockInfos.at(entry).exitLayout;
+			if (exitLayout.size() > maxEntrySize)
+				maxEntrySize = exitLayout.size();
+		}
+
+		auto evaluate = [&](Stack const& _candidate) -> size_t {
+			size_t numOps = 0;
+			for (auto entry: _block.entries)
+			{
+				Stack entryExitLayout = m_layout.blockInfos.at(entry).exitLayout;
+				auto swap = [&](unsigned _swapDepth)
+				{
+					++numOps;
+					if (_swapDepth > 16) numOps += 1000;
+				};
+				auto dupOrPush = [&](StackSlot const& _slot)
+				{
+					++numOps;
+					auto depth = util::findOffset(entryExitLayout | ranges::views::reverse, _slot);
+					if (depth && *depth >= 16)
+						numOps += 1000;
+				};
+				auto pop = [&]() { numOps++; };
+				createStackLayout(entryExitLayout, _candidate, swap, dupOrPush, pop);
+			}
+			return numOps;
+		};*/
+
+		if (_block.operations.empty())
+			return terminates;
+
+		Stack candidate = m_layout.operationEntryLayout.at(&_block.operations.front());
+
+		size_t bestCost = evaluate(candidate);
+		Stack bestCandidate = candidate;
+		while (entryLayout.size() > candidate.size())
+		{
+			candidate.insert(candidate.begin(), JunkSlot{});
+			size_t cost = evaluate(candidate);
+			if (cost < bestCost)
+			{
+				bestCost = cost;
+				bestCandidate = candidate;
+			}
+		}
+
+		size_t junkToAdd = bestCandidate.size() - m_layout.operationEntryLayout.at(&_block.operations.front()).size();
+		if (junkToAdd)
+		{
+			util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_block}}.run([&](CFG::BasicBlock const* currentBlock, auto _addChild){
+				for (auto& operation: currentBlock->operations)
+				{
+					Stack& operationLayout = m_layout.operationEntryLayout.at(&operation);
+					operationLayout = Stack{junkToAdd, JunkSlot{}} + move(operationLayout);
+				}
+				Stack& blockExit = m_layout.blockInfos.at(currentBlock).exitLayout;
+				blockExit = Stack{junkToAdd, JunkSlot{}} + move(blockExit);
+				std::visit(util::GenericVisitor{
+					[&](CFG::BasicBlock::MainExit const&)
+					{
+					},
+					[&](CFG::BasicBlock::Jump const& _jump)
+					{
+						if (!_jump.backwards)
+						{
+							Stack& blockEntry = m_layout.blockInfos.at(_jump.target).entryLayout;
+							blockEntry = Stack{junkToAdd, JunkSlot{}} + move(blockEntry);
+							_addChild(_jump.target);
+						}
+					},
+					[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+					{
+
+						Stack& zeroEntry = m_layout.blockInfos.at(_conditionalJump.zero).entryLayout;
+						zeroEntry = Stack{junkToAdd, JunkSlot{}} + move(zeroEntry);
+						Stack& nonZeroEntry = m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout;
+						nonZeroEntry = Stack{junkToAdd, JunkSlot{}} + move(nonZeroEntry);
+						_addChild(_conditionalJump.zero);
+						_addChild(_conditionalJump.nonZero);
+					},
+					[&](CFG::BasicBlock::FunctionReturn const&)
+					{
+						yulAssert(false, "");
+					},
+					[&](CFG::BasicBlock::Terminated const&)
+					{
+					},
+				}, currentBlock->exit);
+			});
+		}
+	}
+	return terminates;
+#endif
 }
 
 optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
@@ -504,6 +764,7 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 			[&](CFG::BasicBlock::MainExit const&) {},
 			[&](CFG::BasicBlock::Jump const& _jump)
 			{
+				info.exitLayout = m_layout.blockInfos.at(_jump.target).entryLayout;
 				if (!_jump.backwards)
 					_addChild(_jump.target);
 			},
@@ -702,4 +963,40 @@ Stack StackLayoutGenerator::compressStack(Stack _stack)
 	}
 	while (firstDupOffset);
 	return _stack;
+}
+void StackLayoutGenerator::addJunkRecursive(CFG::BasicBlock const& _block, size_t _numJunk, std::set<CFG::BasicBlock const*>& _seen)
+{
+	if (_seen.count(&_block))
+		return;
+	_seen.insert(&_block);
+
+	for (auto const& operation: _block.operations)
+	{
+		Stack& operationLayout = m_layout.operationEntryLayout.at(&operation);
+		operationLayout = Stack{_numJunk, JunkSlot{}} + move(operationLayout);
+	}
+	Stack& exitLayout = m_layout.blockInfos.at(&_block).exitLayout;
+	exitLayout = Stack{_numJunk, JunkSlot{}} + move(exitLayout);
+
+	std::visit(util::GenericVisitor{
+		[&](CFG::BasicBlock::MainExit const&) {},
+		[&](CFG::BasicBlock::Jump const& _jump)
+		{
+			Stack& entryLayout = m_layout.blockInfos.at(_jump.target).entryLayout;
+			entryLayout = Stack{_numJunk, JunkSlot{}} + move(entryLayout);
+			if (!_jump.backwards)
+				addJunkRecursive(*_jump.target, _numJunk, _seen);
+		},
+		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+		{
+			Stack& zeroEntryLayout = m_layout.blockInfos.at(_conditionalJump.zero).entryLayout;
+			zeroEntryLayout = Stack{_numJunk, JunkSlot{}} + move(zeroEntryLayout);
+			Stack& nonZeroEntryLayout = m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout;
+			nonZeroEntryLayout = Stack{_numJunk, JunkSlot{}} + move(nonZeroEntryLayout);
+			addJunkRecursive(*_conditionalJump.zero, _numJunk, _seen);
+			addJunkRecursive(*_conditionalJump.nonZero, _numJunk, _seen);
+		},
+		[&](CFG::BasicBlock::FunctionReturn const&) { yulAssert(false, ""); },
+		[&](CFG::BasicBlock::Terminated const&) {},
+	}, _block.exit);
 }

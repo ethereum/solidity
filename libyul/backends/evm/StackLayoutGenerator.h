@@ -98,6 +98,8 @@ private:
 	/// exactly, except that slots not required after the jump are marked as `JunkSlot`s.
 	void stitchConditionalJumps(CFG::BasicBlock const& _block);
 
+	bool fillInJunk(CFG::BasicBlock const& _block, std::map<CFG::BasicBlock const*, bool>& _terminates);
+
 	/// Calculates the ideal stack layout, s.t. both @a _stack1 and @a _stack2 can be achieved with minimal
 	/// stack shuffling when starting from the returned layout.
 	static Stack combineStack(Stack const& _stack1, Stack const& _stack2);
@@ -110,6 +112,8 @@ private:
 	/// Attempts to create a layout that requires a minimal amount of operations to reconstruct the original
 	/// stack @a _stack.
 	static Stack compressStack(Stack _stack);
+
+	void addJunkRecursive(CFG::BasicBlock const& _block, size_t _numJunk, std::set<CFG::BasicBlock const*>& _seen);
 
 	StackLayout& m_layout;
 };
