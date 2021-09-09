@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_prefix)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
+	CHECK_LOCATION(result->debugData->location, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_unspecified)

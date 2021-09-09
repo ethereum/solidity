@@ -131,7 +131,7 @@ void Parser::fetchSourceLocationFromComment()
 		return;
 
 	static regex const tagRegex = regex(
-		R"~~(\s*(@[a-zA-Z0-9\-_]+)(?:\s+|$))~~",       // tag, e.g: @src
+		R"~~((?:^|\s+)(@[a-zA-Z0-9\-_]+)(?:\s+|$))~~", // tag, e.g: @src
 		regex_constants::ECMAScript | regex_constants::optimize
 	);
 	static regex const srcTagArgsRegex = regex(
