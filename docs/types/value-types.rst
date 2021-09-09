@@ -676,8 +676,9 @@ type with 18 decimals and a minimal library to do arithmetic operations on the t
         function mul(UFixed256x18 a, uint256 b) internal pure returns (UFixed256x18) {
             return UFixed256x18.wrap(UFixed256x18.unwrap(a) * b);
         }
-        /// Truncates UFixed256x18 to the nearest uint256 number.
-        function truncate(UFixed256x18 a) internal pure returns (uint256) {
+        /// Take the floor of a UFixed256x18 number.
+        /// @return the largest integer that does not exceed `a`.
+        function floor(UFixed256x18 a) internal pure returns (uint256) {
             return UFixed256x18.unwrap(a) / multiplier;
         }
         /// Turns a uint256 into a UFixed256x18 of the same value.
