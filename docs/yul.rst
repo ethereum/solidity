@@ -174,9 +174,37 @@ whitespace, i.e. there is no terminating ``;`` or newline required.
 Literals
 --------
 
-As literals, you can use integer constants in decimal or hexadecimal notation
-or strings as ASCII (`"abc"`) or HEX strings (`hex"616263"`) of up to
-32 bytes length.
+As literals, you can use:
+
+- Integer constants in decimal or hexadecimal notation.
+
+- ASCII strings (e.g. ``"abc"``), which may contain hex escapes ``\xNN`` and Unicode escapes ``\uNNNN`` where ``N`` are hexadecimal digits.
+  A string of this form represents an integer as follows:
+
+  1. The string is viewed as a byte sequence, by viewing
+     a non-escape ASCII character as a single byte whose value is the ASCII code,
+     an escape ``\xNN`` as single byte with that value, and
+     an escape ``\uNNNN`` as the UTF-8 sequence of bytes for that code point.
+
+  2. The byte sequence must not exceed 32 bytes.
+
+  3. The byte sequence is padded with zeros on the right to reach the number of bytes appropriate for the type of the literal.
+     In order words, the string is stored left-aligned.
+
+  4. The byte sequence represents an unsigned integer in base 256 in bit endian form.
+
+- Hex strings (e.g. ``hex"616263"``).
+  A string of this form represents an integer as follows:
+
+  1. The string is viewed as a byte sequence, by viewing
+     each pair of contiguous hex digits as a byte.
+
+  2. The byte sequence must not exceed 32 bytes (i.e. 64 hex digits).
+
+  3. The byte sequence is padded with zeros on the right to reach the number of bytes appropriate for the type of the literal.
+     In order words, the string is stored left-aligned.
+
+  4. The byte sequence represents an unsigned integer in base 256 in bit endian form.
 
 When compiling for the EVM, this will be translated into an
 appropriate ``PUSHi`` instruction. In the following example,
