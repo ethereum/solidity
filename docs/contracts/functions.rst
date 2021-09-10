@@ -155,12 +155,17 @@ When a function has multiple return types, the statement ``return (v0, v1, ..., 
 The number of components must be the same as the number of return variables
 and their types have to match, potentially after an :ref:`implicit conversion <types-conversion-elementary-types>`.
 
+.. _state-mutability:
+
+State Mutability
+================
+
 .. index:: ! view function, function;view
 
 .. _view-functions:
 
 View Functions
-==============
+--------------
 
 Functions can be declared ``view`` in which case they promise not to modify the state.
 
@@ -214,7 +219,7 @@ The following statements are considered modifying the state:
 .. _pure-functions:
 
 Pure Functions
-==============
+--------------
 
 Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
 
@@ -270,12 +275,17 @@ This behaviour is also in line with the ``STATICCALL`` opcode.
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
 
+.. _special-functions:
+
+Special Functions
+=================
+
 .. index:: ! receive ether function, function;receive ! receive
 
 .. _receive-ether-function:
 
 Receive Ether Function
-======================
+----------------------
 
 A contract can have at most one ``receive`` function, declared using
 ``receive() external payable { ... }``
@@ -346,7 +356,7 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 .. _fallback-function:
 
 Fallback Function
-=================
+-----------------
 
 A contract can have at most one ``fallback`` function, declared using either ``fallback () external [payable]``
 or ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
