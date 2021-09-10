@@ -1449,6 +1449,10 @@ TypeResult ReferenceType::unaryOperatorResult(Token _operator) const
 {
 	if (_operator != Token::Delete)
 		return nullptr;
+
+	if (containsNestedMapping())
+		return TypeResult::err("Contains a (possibly nested) mapping");
+
 	// delete can be used on everything except calldata references or storage pointers
 	// (storage references are ok)
 	switch (location())

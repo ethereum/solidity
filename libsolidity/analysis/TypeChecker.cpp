@@ -1594,11 +1594,18 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		requireLValue(_operation.subExpression(), false);
 	else
 		_operation.subExpression().accept(*this);
+
 	Type const* subExprType = type(_operation.subExpression());
-	Type const* t = type(_operation.subExpression())->unaryOperatorResult(op);
-	if (!t)
+	TypeResult result = subExprType->unaryOperatorResult(op);
+	Type const* t = result;
+	if (!result)
 	{
-		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->toString();
+		string description = "Unary operator " +
+			string(TokenTraits::toString(op)) +
+			" cannot be applied to type " +
+			subExprType->toString() +
+			(result.message().empty() ? "" : (": " + result.message()));
+
 		if (modifying)
 			// Cannot just report the error, ignore the unary operator, and continue,
 			// because the sub-expression was already processed with requireLValue()
@@ -2838,6 +2845,15 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			);
 
 		if (
+			funType->kind() == FunctionType::Kind::ArrayPop &&
+			exprType->containsNestedMapping()
+		)
+			m_errorReporter.typeError(
+				6298_error,
+				_memberAccess.location(),
+				"Storage arrays with nested mappings do not support .pop()."
+			);
+		else if (
 			funType->kind() == FunctionType::Kind::ArrayPush &&
 			arguments.value().numArguments() != 0 &&
 			exprType->containsNestedMapping()
