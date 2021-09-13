@@ -3499,7 +3499,9 @@ bool FunctionType::isPure() const
 		m_kind == Kind::ABIEncodeWithSelector ||
 		m_kind == Kind::ABIEncodeWithSignature ||
 		m_kind == Kind::ABIDecode ||
-		m_kind == Kind::MetaType;
+		m_kind == Kind::MetaType ||
+		m_kind == Kind::Wrap ||
+		m_kind == Kind::Unwrap;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
