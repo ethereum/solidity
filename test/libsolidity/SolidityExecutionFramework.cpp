@@ -25,6 +25,7 @@
 #include <test/libsolidity/util/Common.h>
 
 #include <liblangutil/DebugInfoSelection.h>
+#include <libyul/Exceptions.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -60,13 +61,14 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 	m_compiler.setEVMVersion(m_evmVersion);
 	m_compiler.setEOFVersion(m_eofVersion);
 	m_compiler.setOptimiserSettings(m_optimiserSettings);
-	m_compiler.enableEvmBytecodeGeneration(!m_compileViaYul);
-	m_compiler.enableIRGeneration(m_compileViaYul);
+	m_compiler.enableEvmBytecodeGeneration(true);
+	m_compiler.setViaIR(m_compileViaYul);
 	m_compiler.setRevertStringBehaviour(m_revertStrings);
 	if (!m_appendCBORMetadata) {
 		m_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	}
 	m_compiler.setMetadataHash(m_metadataHash);
+
 	if (!m_compiler.compile())
 	{
 		// The testing framework expects an exception for
@@ -80,49 +82,7 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 		BOOST_ERROR("Compiling contract failed");
 	}
 	string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);
-	evmasm::LinkerObject obj;
-	if (m_compileViaYul)
-	{
-		// Try compiling twice: If the first run fails due to stack errors, forcefully enable
-		// the optimizer.
-		for (bool forceEnableOptimizer: {false, true})
-		{
-			OptimiserSettings optimiserSettings = m_optimiserSettings;
-			if (!forceEnableOptimizer && !optimiserSettings.runYulOptimiser)
-			{
-				// Enable some optimizations on the first run
-				optimiserSettings.runYulOptimiser = true;
-				optimiserSettings.yulOptimiserSteps = "uljmul jmul";
-			}
-			else if (forceEnableOptimizer)
-				optimiserSettings = OptimiserSettings::full();
-
-			yul::YulStack asmStack(
-				m_evmVersion,
-				m_eofVersion,
-				yul::YulStack::Language::StrictAssembly,
-				optimiserSettings,
-				DebugInfoSelection::All()
-			);
-			bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
-			solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
-
-			try
-			{
-				asmStack.optimize();
-				obj = std::move(*asmStack.assemble(yul::YulStack::Machine::EVM).bytecode);
-				obj.link(_libraryAddresses);
-				break;
-			}
-			catch (...)
-			{
-				if (forceEnableOptimizer || optimiserSettings == OptimiserSettings::full())
-					throw;
-			}
-		}
-	}
-	else
-		obj = m_compiler.object(contractName);
+	evmasm::LinkerObject obj = m_compiler.object(contractName);
 	BOOST_REQUIRE(obj.linkReferences.empty());
 	if (m_showMetadata)
 		cout << "metadata: " << m_compiler.metadata(contractName) << endl;
