@@ -302,6 +302,27 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		modelChecker.settings == _other.modelChecker.settings;
 }
 
+OptimiserSettings CommandLineOptions::optimiserSettings() const
+{
+	OptimiserSettings settings;
+
+	if (optimizer.enabled)
+		settings = OptimiserSettings::standard();
+	else
+		settings = OptimiserSettings::minimal();
+
+	if (optimizer.noOptimizeYul)
+		settings.runYulOptimiser = false;
+
+	if (optimizer.expectedExecutionsPerDeployment.has_value())
+		settings.expectedExecutionsPerDeployment = optimizer.expectedExecutionsPerDeployment.value();
+
+	if (optimizer.yulSteps.has_value())
+		settings.yulOptimiserSteps = optimizer.yulSteps.value();
+
+	return settings;
+}
+
 bool CommandLineParser::parseInputPathsAndRemappings()
 {
 	m_options.input.ignoreMissingFiles = (m_args.count(g_strIgnoreMissingFiles) > 0);
@@ -940,6 +961,26 @@ General Information)").c_str(),
 	if (!parseInputPathsAndRemappings())
 		return false;
 
+	if (
+		m_options.input.mode != InputMode::Compiler &&
+		m_options.input.mode != InputMode::CompilerWithASTImport &&
+		m_options.input.mode != InputMode::Assembler
+	)
+	{
+		if (!m_args[g_strOptimizeRuns].defaulted())
+		{
+			serr() << "Option --" << g_strOptimizeRuns << " is only valid in compiler and assembler modes." << endl;
+			return false;
+		}
+
+		for (string const& option: {g_strOptimize, g_strNoOptimizeYul, g_strOptimizeYul, g_strYulOptimizations})
+			if (m_args.count(option) > 0)
+			{
+				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
+				return false;
+			}
+	}
+
 	if (m_options.input.mode == InputMode::StandardJson)
 		return true;
 
@@ -947,6 +988,9 @@ General Information)").c_str(),
 		for (string const& library: m_args[g_strLibraries].as<vector<string>>())
 			if (!parseLibraryOption(library))
 				return false;
+
+	if (m_options.input.mode == InputMode::Linker)
+		return true;
 
 	if (m_args.count(g_strEVMVersion))
 	{
@@ -958,6 +1002,33 @@ General Information)").c_str(),
 			return false;
 		}
 		m_options.output.evmVersion = *versionOption;
+	}
+
+	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
+	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
+	if (!m_args[g_strOptimizeRuns].defaulted())
+		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
+
+	if (m_args.count(g_strYulOptimizations))
+	{
+		OptimiserSettings optimiserSettings = m_options.optimiserSettings();
+		if (!optimiserSettings.runYulOptimiser)
+		{
+			serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
+			return false;
+		}
+
+		try
+		{
+			yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
+		}
+		catch (yul::OptimizerException const& _exception)
+		{
+			serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
+			return false;
+		}
+
+		m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
 	}
 
 	if (m_options.input.mode == InputMode::Assembler)
@@ -987,32 +1058,6 @@ General Information)").c_str(),
 		using Input = yul::AssemblyStack::Language;
 		using Machine = yul::AssemblyStack::Machine;
 		m_options.assembly.inputLanguage = m_args.count(g_strYul) ? Input::Yul : (m_args.count(g_strStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
-		m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
-		m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
-
-		if (!m_args[g_strOptimizeRuns].defaulted())
-			m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
-
-		if (m_args.count(g_strYulOptimizations))
-		{
-			if (!m_options.optimizer.enabled)
-			{
-				serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
-				return false;
-			}
-
-			try
-			{
-				yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
-			}
-			catch (yul::OptimizerException const& _exception)
-			{
-				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
-				return false;
-			}
-
-			m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
-		}
 
 		if (m_args.count(g_strMachine))
 		{
@@ -1077,9 +1122,6 @@ General Information)").c_str(),
 		serr() << "are only valid in assembly mode." << endl;
 		return false;
 	}
-
-	if (m_options.input.mode == InputMode::Linker)
-		return true;
 
 	if (m_args.count(g_strMetadataHash))
 	{
@@ -1164,36 +1206,6 @@ General Information)").c_str(),
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);
 	m_options.output.experimentalViaIR = (m_args.count(g_strExperimentalViaIR) > 0);
-	if (!m_args[g_strOptimizeRuns].defaulted())
-		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
-
-	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
-	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
-
-	OptimiserSettings settings = m_options.optimizer.enabled ? OptimiserSettings::standard() : OptimiserSettings::minimal();
-	if (m_options.optimizer.noOptimizeYul)
-		settings.runYulOptimiser = false;
-	if (m_args.count(g_strYulOptimizations))
-	{
-		if (!settings.runYulOptimiser)
-		{
-			serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
-			return false;
-		}
-
-		try
-		{
-			yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
-		}
-		catch (yul::OptimizerException const& _exception)
-		{
-			serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
-			return false;
-		}
-
-		m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
-	}
-
 	if (m_options.input.mode == InputMode::Compiler)
 		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 

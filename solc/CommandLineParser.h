@@ -102,6 +102,7 @@ struct CommandLineOptions
 	bool operator==(CommandLineOptions const& _other) const noexcept;
 	bool operator!=(CommandLineOptions const& _other) const noexcept { return !(*this == _other); }
 
+	OptimiserSettings optimiserSettings() const;
 
 	struct
 	{
@@ -169,7 +170,6 @@ struct CommandLineOptions
 		bool initialize = false;
 		ModelCheckerSettings settings;
 	} modelChecker;
-
 };
 
 /// Parses the command-line arguments and produces a filled-out CommandLineOptions structure.

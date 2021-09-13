@@ -12,11 +12,12 @@ Compiler Features:
  * SMTChecker: Support low level ``call`` as external calls to unknown code.
  * SMTChecker: Add constraints to better correlate ``address(this).balance`` and ``msg.value``.
  * SMTChecker: Support the ``value`` option for external function calls.
- * Commandline Interface: Disallowed the ``--experimental-via-ir`` option to be used with Standard Json, Assembler and Linker modes.
 
 
 Bugfixes:
  * Code Generator: Use stable source order for ABI functions.
+ * Commandline Interface: Report optimizer options as invalid in Standard JSON and linker modes instead of ignoring them.
+ * Commandline Interface: Disallow the ``--experimental-via-ir`` option in Standard JSON, Assembler and Linker modes.
  * Opcode Optimizer: Prevent the optimizer from running multiple times to avoid potential bytecode differences for referenced code.
  * Name Resolver: Fix that when importing an aliased symbol using ``import {AliasedName} from "a.sol"`` it would use the original name of the symbol and not the aliased one.
  * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
