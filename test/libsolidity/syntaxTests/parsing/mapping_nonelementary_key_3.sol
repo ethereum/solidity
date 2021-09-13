@@ -5,4 +5,4 @@ contract c {
 	mapping(S => uint) data;
 }
 // ----
-// TypeError 7804: (49-50): Only elementary types, contract types or enums are allowed as mapping keys.
+// TypeError 7804: (49-50): Only elementary types, user defined value types, contract types or enums are allowed as mapping keys.

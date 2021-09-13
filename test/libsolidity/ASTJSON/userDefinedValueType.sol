@@ -7,6 +7,7 @@ function f() {
 contract C {
     type MyAddress is address;
     type MyUInt is uint;
+    mapping(MyAddress => MyUInt) public m;
 }
 
 // ----

@@ -4,7 +4,7 @@
   {
     "C":
     [
-      21
+      27
     ],
     "MyAddress":
     [
@@ -19,7 +19,7 @@
       16
     ]
   },
-  "id": 22,
+  "id": 28,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -193,7 +193,7 @@
         "parameters": [],
         "src": "61:0:1"
       },
-      "scope": 22,
+      "scope": 28,
       "src": "48:47:1",
       "stateMutability": "nonpayable",
       "virtual": false,
@@ -205,10 +205,10 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 21,
+      "id": 27,
       "linearizedBaseContracts":
       [
-        21
+        27
       ],
       "name": "C",
       "nameLocation": "105:1:1",
@@ -253,12 +253,82 @@
               "typeString": "uint256"
             }
           }
+        },
+        {
+          "constant": false,
+          "functionSelector": "97682884",
+          "id": 26,
+          "mutability": "mutable",
+          "name": "m",
+          "nameLocation": "205:1:1",
+          "nodeType": "VariableDeclaration",
+          "scope": 27,
+          "src": "169:37:1",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_mapping$_t_userDefinedValueType$_MyAddress_$18_$_t_userDefinedValueType$_MyUInt_$20_$",
+            "typeString": "mapping(user defined type MyAddress => user defined type MyUInt)"
+          },
+          "typeName":
+          {
+            "id": 25,
+            "keyType":
+            {
+              "id": 22,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 21,
+                "name": "MyAddress",
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 18,
+                "src": "177:9:1"
+              },
+              "referencedDeclaration": 18,
+              "src": "177:9:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_userDefinedValueType$_MyAddress_$18",
+                "typeString": "user defined type MyAddress"
+              }
+            },
+            "nodeType": "Mapping",
+            "src": "169:28:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_mapping$_t_userDefinedValueType$_MyAddress_$18_$_t_userDefinedValueType$_MyUInt_$20_$",
+              "typeString": "mapping(user defined type MyAddress => user defined type MyUInt)"
+            },
+            "valueType":
+            {
+              "id": 24,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 23,
+                "name": "MyUInt",
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 20,
+                "src": "190:6:1"
+              },
+              "referencedDeclaration": 20,
+              "src": "190:6:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_userDefinedValueType$_MyUInt_$20",
+                "typeString": "user defined type MyUInt"
+              }
+            }
+          },
+          "visibility": "public"
         }
       ],
-      "scope": 22,
-      "src": "96:70:1",
+      "scope": 28,
+      "src": "96:113:1",
       "usedErrors": []
     }
   ],
-  "src": "0:167:1"
+  "src": "0:210:1"
 }
