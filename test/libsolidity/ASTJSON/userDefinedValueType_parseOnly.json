@@ -1,6 +1,6 @@
 {
   "absolutePath": "a",
-  "id": 22,
+  "id": 28,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -154,7 +154,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "id": 21,
+      "id": 27,
       "name": "C",
       "nameLocation": "105:1:1",
       "nodeType": "ContractDefinition",
@@ -190,11 +190,59 @@
             "src": "159:4:1",
             "typeDescriptions": {}
           }
+        },
+        {
+          "constant": false,
+          "id": 26,
+          "mutability": "mutable",
+          "name": "m",
+          "nameLocation": "205:1:1",
+          "nodeType": "VariableDeclaration",
+          "src": "169:37:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 25,
+            "keyType":
+            {
+              "id": 22,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 21,
+                "name": "MyAddress",
+                "nodeType": "IdentifierPath",
+                "src": "177:9:1"
+              },
+              "src": "177:9:1",
+              "typeDescriptions": {}
+            },
+            "nodeType": "Mapping",
+            "src": "169:28:1",
+            "typeDescriptions": {},
+            "valueType":
+            {
+              "id": 24,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 23,
+                "name": "MyUInt",
+                "nodeType": "IdentifierPath",
+                "src": "190:6:1"
+              },
+              "src": "190:6:1",
+              "typeDescriptions": {}
+            }
+          },
+          "visibility": "public"
         }
       ],
-      "src": "96:70:1",
+      "src": "96:113:1",
       "usedErrors": []
     }
   ],
-  "src": "0:167:1"
+  "src": "0:210:1"
 }
