@@ -870,21 +870,7 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 	if (auto decl = identifierToVariable(_identifier))
 	{
 		if (decl->isConstant())
-		{
-			if (RationalNumberType const* rationalType = isConstant(_identifier))
-			{
-				if (rationalType->isNegative())
-					defineExpr(_identifier, smtutil::Expression(u2s(rationalType->literalValue(nullptr))));
-				else
-					defineExpr(_identifier, smtutil::Expression(rationalType->literalValue(nullptr)));
-			}
-			else
-			{
-				solAssert(decl->value(), "");
-				decl->value()->accept(*this);
-				defineExpr(_identifier, expr(*decl->value(), _identifier.annotation().type));
-			}
-		}
+			defineExpr(_identifier, constantExpr(_identifier, *decl));
 		else
 			defineExpr(_identifier, currentValue(*decl));
 	}
@@ -899,6 +885,9 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 	}
 	// Ignore type identifiers
 	else if (dynamic_cast<TypeType const*>(_identifier.annotation().type))
+		return;
+	// Ignore module identifiers
+	else if (dynamic_cast<ModuleType const*>(_identifier.annotation().type))
 		return;
 	// Ignore the builtin abi, it is handled in FunctionCall.
 	// TODO: ignore MagicType in general (abi, block, msg, tx, type)
@@ -1287,11 +1276,13 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 
 	createExpr(_memberAccess);
 
-	auto const& exprType = _memberAccess.expression().annotation().type;
+	Expression const* memberExpr = innermostTuple(_memberAccess.expression());
+
+	auto const& exprType = memberExpr->annotation().type;
 	solAssert(exprType, "");
 	if (exprType->category() == Type::Category::Magic)
 	{
-		if (auto const* identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression()))
+		if (auto const* identifier = dynamic_cast<Identifier const*>(memberExpr))
 		{
 			auto const& name = identifier->name();
 			solAssert(name == "block" || name == "msg" || name == "tx", "");
@@ -1328,14 +1319,14 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	}
 	else if (smt::isNonRecursiveStruct(*exprType))
 	{
-		_memberAccess.expression().accept(*this);
-		auto const& symbStruct = dynamic_pointer_cast<smt::SymbolicStructVariable>(m_context.expression(_memberAccess.expression()));
+		memberExpr->accept(*this);
+		auto const& symbStruct = dynamic_pointer_cast<smt::SymbolicStructVariable>(m_context.expression(*memberExpr));
 		defineExpr(_memberAccess, symbStruct->member(_memberAccess.memberName()));
 		return false;
 	}
 	else if (exprType->category() == Type::Category::TypeType)
 	{
-		auto const* decl = expressionToDeclaration(_memberAccess.expression());
+		auto const* decl = expressionToDeclaration(*memberExpr);
 		if (dynamic_cast<EnumDefinition const*>(decl))
 		{
 			auto enumType = dynamic_cast<EnumType const*>(accessType);
@@ -1355,10 +1346,10 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	}
 	else if (exprType->category() == Type::Category::Address)
 	{
-		_memberAccess.expression().accept(*this);
+		memberExpr->accept(*this);
 		if (_memberAccess.memberName() == "balance")
 		{
-			defineExpr(_memberAccess, state().balance(expr(_memberAccess.expression())));
+			defineExpr(_memberAccess, state().balance(expr(*memberExpr)));
 			setSymbolicUnknownValue(*m_context.expression(_memberAccess), m_context);
 			m_uninterpretedTerms.insert(&_memberAccess);
 			return false;
@@ -1366,10 +1357,10 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	}
 	else if (exprType->category() == Type::Category::Array)
 	{
-		_memberAccess.expression().accept(*this);
+		memberExpr->accept(*this);
 		if (_memberAccess.memberName() == "length")
 		{
-			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_memberAccess.expression()));
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*memberExpr));
 			solAssert(symbArray, "");
 			defineExpr(_memberAccess, symbArray->length());
 			m_uninterpretedTerms.insert(&_memberAccess);
@@ -1390,6 +1381,15 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	{
 		defineExpr(_memberAccess, functionType->externalIdentifier());
 		return false;
+	}
+	else if (exprType->category() == Type::Category::Module)
+	{
+		if (auto const* var = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			solAssert(var->isConstant(), "");
+			defineExpr(_memberAccess, constantExpr(_memberAccess, *var));
+			return false;
+		}
 	}
 	else
 		m_errorReporter.warning(
@@ -3048,6 +3048,24 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
 
 	return args;
+}
+
+smtutil::Expression SMTEncoder::constantExpr(Expression const& _expr, VariableDeclaration const& _var)
+{
+	if (RationalNumberType const* rationalType = isConstant(_expr))
+	{
+		if (rationalType->isNegative())
+			return smtutil::Expression(u2s(rationalType->literalValue(nullptr)));
+		else
+			return smtutil::Expression(rationalType->literalValue(nullptr));
+	}
+	else
+	{
+		solAssert(_var.value(), "");
+		_var.value()->accept(*this);
+		return expr(*_var.value(), _expr.annotation().type);
+	}
+	solAssert(false, "");
 }
 
 void SMTEncoder::collectFreeFunctions(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)

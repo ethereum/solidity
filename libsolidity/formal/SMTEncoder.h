@@ -393,6 +393,8 @@ protected:
 	/// type conversion.
 	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
 
+	smtutil::Expression constantExpr(Expression const& _expr, VariableDeclaration const& _var);
+
 	/// Traverses all source units available collecting free functions
 	/// and internal library functions in m_freeFunctions.
 	void collectFreeFunctions(std::set<SourceUnit const*, ASTNode::CompareByID> const& _sources);
