@@ -533,11 +533,13 @@ LinkerObject const& Assembly::assemble() const
 	unsigned bytesRequiredForCode = codeSize(static_cast<unsigned>(subTagSize));
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
 	map<size_t, pair<size_t, size_t>> tagRef;
+	set<size_t> isStaticTagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
+	constexpr unsigned bytesPerStaticTag = 2;
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
@@ -572,6 +574,16 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back(tagPush);
 			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerTag);
+			break;
+		}
+		case StaticJump:
+		case StaticJumpI:
+		{
+			ret.bytecode.push_back(static_cast<uint8_t>((i.type() == StaticJump) ? Instruction::RJUMP : Instruction::RJUMPI));
+			ret.bytecode.push_back(tagPush);
+			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
+			isStaticTagRef.insert(ret.bytecode.size());
+			ret.bytecode.resize(ret.bytecode.size() + bytesPerStaticTag);
 			break;
 		}
 		case PushData:
@@ -699,9 +711,17 @@ LinkerObject const& Assembly::assemble() const
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
-		assertThrow(numberEncodingSize(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
-		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
-		toBigEndian(pos, r);
+		if (isStaticTagRef.count(i.first)) {
+			pos = pos - (i.first + bytesPerStaticTag); // TODO: do properly
+			assertThrow(numberEncodingSize(pos) <= bytesPerStaticTag, AssemblyException, "Tag too large for reserved space.");
+			//pos = static_cast<uint16_t>(spos);
+			bytesRef r(ret.bytecode.data() + i.first, bytesPerStaticTag);
+			toBigEndian(pos, r);
+		} else {
+			assertThrow(numberEncodingSize(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
+			bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
+			toBigEndian(pos, r);
+		}
 	}
 	for (auto const& [name, tagInfo]: m_namedTags)
 	{

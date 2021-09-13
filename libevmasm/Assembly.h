@@ -83,8 +83,14 @@ public:
 		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
 	}
 
+	AssemblyItem appendStaticJump() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(StaticJump, m_usedTags++); }
+	AssemblyItem appendStaticJumpI() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(StaticJumpI, m_usedTags++); }
+//	AssemblyItem appendJump() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(StaticJump, m_usedTags++); }
+//	AssemblyItem appendJumpI() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(StaticJumpI, m_usedTags++); }
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
+	AssemblyItem appendStaticJump(AssemblyItem const& _tag) { /*force typecheck*/_tag.pushTag(); return AssemblyItem(StaticJump, _tag.data()); }
+	AssemblyItem appendStaticJumpI(AssemblyItem const& _tag) { /*force typecheck*/_tag.pushTag(); return AssemblyItem(StaticJumpI, _tag.data()); }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMPI); return ret; }
 

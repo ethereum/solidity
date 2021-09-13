@@ -62,7 +62,7 @@ AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 
 pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 {
-	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+	assertThrow(m_type == StaticJump || m_type == StaticJumpI || m_type == PushTag || m_type == Tag, util::Exception, "");
 	u256 combined = u256(data());
 	size_t subId = static_cast<size_t>((combined >> 64) - 1);
 	size_t tag = static_cast<size_t>(combined & 0xffffffffffffffffULL);
@@ -159,6 +159,9 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 	}
 	case VerbatimBytecode:
 		return std::get<2>(*m_verbatimBytecode).size();
+	case StaticJump:
+	case StaticJumpI:
+		return 3;
 	default:
 		break;
 	}
