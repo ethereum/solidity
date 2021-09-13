@@ -70,8 +70,6 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	case Operation:
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
-	case PushString:
-		return 1 + 32;
 	case Push:
 		return 1 + max<size_t>(1, util::bytesRequired(data()));
 	case PushSubSize:
@@ -118,7 +116,6 @@ size_t AssemblyItem::returnValues() const
 	case Operation:
 		return static_cast<size_t>(instructionInfo(instruction()).ret);
 	case Push:
-	case PushString:
 	case PushTag:
 	case PushData:
 	case PushSub:
@@ -147,7 +144,6 @@ bool AssemblyItem::canBeFunctional() const
 	case Operation:
 		return !isDupInstruction(instruction()) && !isSwapInstruction(instruction());
 	case Push:
-	case PushString:
 	case PushTag:
 	case PushData:
 	case PushSub:
@@ -194,9 +190,6 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	}
 	case Push:
 		text = toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add);
-		break;
-	case PushString:
-		text = string("data_") + util::toHex(data());
 		break;
 	case PushTag:
 	{
@@ -275,9 +268,6 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 		break;
 	case Push:
 		_out << " PUSH " << hex << _item.data() << dec;
-		break;
-	case PushString:
-		_out << " PushString"  << hex << (unsigned)_item.data() << dec;
 		break;
 	case PushTag:
 	{

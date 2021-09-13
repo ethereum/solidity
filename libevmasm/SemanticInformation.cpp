@@ -41,7 +41,6 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	case VerbatimBytecode:
 		return true;
 	case Push:
-	case PushString:
 	case PushTag:
 	case PushSub:
 	case PushSubSize:
