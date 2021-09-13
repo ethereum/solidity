@@ -42,11 +42,11 @@ struct SMTSolverChoice
 	bool smtlib2 = false;
 	bool z3 = false;
 
-	static constexpr SMTSolverChoice All() { return {true, true, true}; }
-	static constexpr SMTSolverChoice CVC4() { return {true, false, false}; }
-	static constexpr SMTSolverChoice SMTLIB2() { return {false, true, false}; }
-	static constexpr SMTSolverChoice Z3() { return {false, false, true}; }
-	static constexpr SMTSolverChoice None() { return {false, false, false}; }
+	static constexpr SMTSolverChoice All() noexcept { return {true, true, true}; }
+	static constexpr SMTSolverChoice CVC4() noexcept { return {true, false, false}; }
+	static constexpr SMTSolverChoice SMTLIB2() noexcept { return {false, true, false}; }
+	static constexpr SMTSolverChoice Z3() noexcept { return {false, false, true}; }
+	static constexpr SMTSolverChoice None() noexcept { return {false, false, false}; }
 
 	static std::optional<SMTSolverChoice> fromString(std::string const& _solvers)
 	{
@@ -101,9 +101,9 @@ struct SMTSolverChoice
 		return true;
 	}
 
-	bool none() { return !some(); }
-	bool some() { return cvc4 || smtlib2 || z3; }
-	bool all() { return cvc4 && smtlib2 && z3; }
+	bool none() const noexcept { return !some(); }
+	bool some() const noexcept { return cvc4 || smtlib2 || z3; }
+	bool all() const noexcept { return cvc4 && smtlib2 && z3; }
 };
 
 enum class CheckResult
