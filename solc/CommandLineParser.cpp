@@ -67,6 +67,7 @@ static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
 static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
+static string const g_strDebugInfo = "debug-info";
 static string const g_strIPFS = "ipfs";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
@@ -252,6 +253,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		output.evmVersion == _other.output.evmVersion &&
 		output.experimentalViaIR == _other.output.experimentalViaIR &&
 		output.revertStrings == _other.output.revertStrings &&
+		output.debugInfoSelection == _other.output.debugInfoSelection &&
 		output.stopAfter == _other.output.stopAfter &&
 		input.mode == _other.input.mode &&
 		assembly.targetMachine == _other.assembly.targetMachine &&
@@ -596,6 +598,13 @@ General Information)").c_str(),
 			"Strip revert (and require) reason strings or add additional debugging information."
 		)
 		(
+			g_strDebugInfo.c_str(),
+			po::value<string>()->default_value(toString(DebugInfoSelection::Default())),
+			("Debug info components to be included in the produced EVM assembly and Yul code. "
+			"Value can be all, none or a comma-separated list containing one or more of the "
+			"following components: " + joinHumanReadable(DebugInfoSelection::componentMap() | ranges::views::keys) + ".").c_str()
+		)
+		(
 			g_strStopAfter.c_str(),
 			po::value<string>()->value_name("stage"),
 			"Stop execution after the given compiler stage. Valid options: \"parsing\"."
@@ -935,6 +944,12 @@ bool CommandLineParser::processArgs()
 				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
 				return false;
 			}
+
+		if (!m_args[g_strDebugInfo].defaulted())
+		{
+			serr() << "Option --" << g_strDebugInfo << " is only valid in compiler and assembler modes." << endl;
+			return false;
+		}
 	}
 
 	if (m_args.count(g_strColor) > 0)
@@ -959,6 +974,23 @@ bool CommandLineParser::processArgs()
 			return false;
 		}
 		m_options.output.revertStrings = *revertStrings;
+	}
+
+	if (!m_args[g_strDebugInfo].defaulted())
+	{
+		string optionValue = m_args[g_strDebugInfo].as<string>();
+		m_options.output.debugInfoSelection = DebugInfoSelection::fromString(optionValue);
+		if (!m_options.output.debugInfoSelection.has_value())
+		{
+			serr() << "Invalid value for --" << g_strDebugInfo << " option: " << optionValue << endl;
+			return false;
+		}
+
+		if (m_options.output.debugInfoSelection->snippet && !m_options.output.debugInfoSelection->location)
+		{
+			serr() << "To use 'snippet' with --" << g_strDebugInfo << " you must select also 'location'." << endl;
+			return false;
+		}
 	}
 
 	if (!parseCombinedJsonOption())

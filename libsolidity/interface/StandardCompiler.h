@@ -26,6 +26,8 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolutil/JSON.h>
 
+#include <liblangutil/DebugInfoSelection.h>
+
 #include <optional>
 #include <utility>
 #include <variant>
@@ -78,6 +80,7 @@ private:
 		std::vector<ImportRemapper::Remapping> remappings;
 		RevertStrings revertStrings = RevertStrings::Default;
 		OptimiserSettings optimiserSettings = OptimiserSettings::minimal();
+		std::optional<langutil::DebugInfoSelection> debugInfoSelection;
 		std::map<std::string, util::h160> libraries;
 		bool metadataLiteralSources = false;
 		CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::IPFS;

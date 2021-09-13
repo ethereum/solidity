@@ -33,7 +33,6 @@
 
 #include <libsmtutil/Exceptions.h>
 
-#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/JSON.h>
@@ -798,7 +797,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 
 	if (settings.isMember("debug"))
 	{
-		if (auto result = checkKeys(settings["debug"], {"revertStrings"}, "settings.debug"))
+		if (auto result = checkKeys(settings["debug"], {"revertStrings", "debugInfo"}, "settings.debug"))
 			return *result;
 
 		if (settings["debug"].isMember("revertStrings"))
@@ -814,6 +813,31 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 					"Only \"default\", \"strip\" and \"debug\" are implemented for settings.debug.revertStrings for now."
 				);
 			ret.revertStrings = *revertStrings;
+		}
+
+		if (settings["debug"].isMember("debugInfo"))
+		{
+			if (!settings["debug"]["debugInfo"].isArray())
+				return formatFatalError("JSONError", "settings.debug.debugInfo must be an array.");
+
+			vector<string> components;
+			for (Json::Value const& arrayValue: settings["debug"]["debugInfo"])
+				components.push_back(arrayValue.asString());
+
+			optional<DebugInfoSelection> debugInfoSelection = DebugInfoSelection::fromComponents(
+				components,
+				true /* _acceptWildcards */
+			);
+			if (!debugInfoSelection.has_value())
+				return formatFatalError("JSONError", "Invalid value in settings.debug.debugInfo.");
+
+			if (debugInfoSelection->snippet && !debugInfoSelection->location)
+				return formatFatalError(
+					"JSONError",
+					"To use 'snippet' with settings.debug.debugInfo you must select also 'location'."
+				);
+
+			ret.debugInfoSelection = debugInfoSelection.value();
 		}
 	}
 
@@ -1034,6 +1058,8 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.setRemappings(move(_inputsAndSettings.remappings));
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
 	compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
+	if (_inputsAndSettings.debugInfoSelection.has_value())
+		compilerStack.selectDebugInfo(_inputsAndSettings.debugInfoSelection.value());
 	compilerStack.setLibraries(_inputsAndSettings.libraries);
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
@@ -1364,7 +1390,9 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		_inputsAndSettings.evmVersion,
 		AssemblyStack::Language::StrictAssembly,
 		_inputsAndSettings.optimiserSettings,
-		DebugInfoSelection::Default()
+		_inputsAndSettings.debugInfoSelection.has_value() ?
+			_inputsAndSettings.debugInfoSelection.value() :
+			DebugInfoSelection::Default()
 	);
 	string const& sourceName = _inputsAndSettings.sources.begin()->first;
 	string const& sourceContents = _inputsAndSettings.sources.begin()->second;

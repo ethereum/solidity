@@ -1,0 +1,13 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_debug_info_in_yul_and_evm_asm_print_all/in.sol"]}
+	},
+	"settings": {
+		"debug": {"debugInfo": ["*"]},
+		"optimizer": {"enabled": true},
+		"outputSelection": {
+			"*": {"*": ["ir", "irOptimized", "evm.assembly"]}
+		}
+	}
+}
