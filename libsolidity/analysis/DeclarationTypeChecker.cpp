@@ -253,12 +253,13 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 		{
 			case Type::Category::Enum:
 			case Type::Category::Contract:
+			case Type::Category::UserDefinedValueType:
 				break;
 			default:
 				m_errorReporter.fatalTypeError(
 					7804_error,
 					typeName->location(),
-					"Only elementary types, contract types or enums are allowed as mapping keys."
+					"Only elementary types, user defined value types, contract types or enums are allowed as mapping keys."
 				);
 				break;
 		}
