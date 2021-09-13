@@ -34,6 +34,7 @@ contract C {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // convertParent() -> 1

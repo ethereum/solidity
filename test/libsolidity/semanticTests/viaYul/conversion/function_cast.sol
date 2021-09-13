@@ -16,6 +16,7 @@ contract C {
 	}
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // f(uint256): 2 -> 4

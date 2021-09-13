@@ -21,6 +21,7 @@ contract c {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // storageEmpty -> 1

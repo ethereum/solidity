@@ -23,6 +23,7 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // data(uint256): 0 -> 8

@@ -8,8 +8,9 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f(uint256): 0 -> 1, 1
 // f(uint256): 1 -> 2, -2

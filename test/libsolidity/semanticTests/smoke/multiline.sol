@@ -4,6 +4,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // allowNonExistingFunctions: true
 // compileToEwasm: also
 // compileViaYul: also

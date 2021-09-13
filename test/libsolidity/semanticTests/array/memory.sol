@@ -11,6 +11,7 @@ contract C {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // h(uint256[4]): 1, 2, 3, 4 -> 10

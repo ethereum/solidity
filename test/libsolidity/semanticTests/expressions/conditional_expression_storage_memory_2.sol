@@ -24,6 +24,7 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // f(bool): true -> 1

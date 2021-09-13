@@ -18,6 +18,7 @@ contract test {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // constructor(), 20 wei ->

@@ -12,6 +12,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // f(bytes[2]): 0x20, 0x40, 0x40, 2, "ab" ->

@@ -17,6 +17,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // EVMVersion: >=byzantium
 // compileViaYul: also
 // ----

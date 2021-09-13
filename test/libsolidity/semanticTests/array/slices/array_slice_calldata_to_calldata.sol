@@ -21,6 +21,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // g((uint128,uint256[3],uint32)[],uint256,uint256): 0x60, 1, 3, 4, 55, 1, 2, 3, 66, 66, 2, 3, 4, 77, 77, 3, 4, 5, 88, 88, 4, 5, 6, 99 -> 0x20, 2, 66, 2, 3, 4, 77, 77, 3, 4, 5, 88

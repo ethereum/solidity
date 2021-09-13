@@ -7,7 +7,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 90572315268751552425567948436632610904688605307, 90572315268751552425567948436632610904688605307

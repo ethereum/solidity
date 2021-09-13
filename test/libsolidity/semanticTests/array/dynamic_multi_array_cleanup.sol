@@ -14,6 +14,7 @@ contract c {
     function clear() public { delete data; }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // storageEmpty -> 1

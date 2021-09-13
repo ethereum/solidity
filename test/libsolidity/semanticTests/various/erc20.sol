@@ -94,6 +94,7 @@ contract ERC20 {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // constructor()

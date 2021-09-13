@@ -12,6 +12,7 @@ contract C {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // len() -> 0

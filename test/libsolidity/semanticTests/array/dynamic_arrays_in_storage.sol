@@ -40,6 +40,7 @@ contract c {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // getLengths() -> 0, 0

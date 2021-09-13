@@ -18,6 +18,7 @@ contract A {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // EVMVersion: >=constantinople
 // compileViaYul: also
 // ----

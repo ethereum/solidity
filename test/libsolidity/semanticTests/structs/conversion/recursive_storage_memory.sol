@@ -22,6 +22,7 @@ contract CopyTest {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // run() -> 2, 23, 42

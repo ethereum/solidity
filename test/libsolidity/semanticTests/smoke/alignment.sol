@@ -19,6 +19,7 @@ contract D {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // stateBool() -> true

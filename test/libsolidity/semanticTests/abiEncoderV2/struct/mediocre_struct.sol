@@ -9,6 +9,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // f(uint256,(address)[2],uint256): 7, 0, 0, 8 -> 7, 0, 8

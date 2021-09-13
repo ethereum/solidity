@@ -29,6 +29,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // test_simple(uint256): 0 -> 3, 4, 5

@@ -37,6 +37,7 @@ contract C is B {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // test() -> 5, 10

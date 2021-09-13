@@ -232,6 +232,7 @@ contract test {
 	}
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
 // compileViaYul: also
 // ----

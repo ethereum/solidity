@@ -18,6 +18,7 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // g() -> 0, 42, 0, 0, 84, 21

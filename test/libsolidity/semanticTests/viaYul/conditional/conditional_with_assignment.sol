@@ -8,6 +8,7 @@ contract A {
 	}
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
 // compileViaYul: also
 // ----

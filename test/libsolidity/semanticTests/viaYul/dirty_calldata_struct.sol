@@ -13,6 +13,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: true
 // ----
 // f((uint16[])): 0x20, 0x20, 0x01, 0x0180 -> true

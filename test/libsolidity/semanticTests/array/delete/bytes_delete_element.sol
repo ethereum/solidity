@@ -15,6 +15,7 @@ contract c {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // test1() -> true

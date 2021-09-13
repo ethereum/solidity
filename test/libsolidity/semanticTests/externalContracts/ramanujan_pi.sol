@@ -32,6 +32,7 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // constructor()

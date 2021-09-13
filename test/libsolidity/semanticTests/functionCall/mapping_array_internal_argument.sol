@@ -17,6 +17,7 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // set(uint8,uint8,uint8,uint8,uint8): 1, 21, 22, 42, 43 -> 0, 0, 0, 0

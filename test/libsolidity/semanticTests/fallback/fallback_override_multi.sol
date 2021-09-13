@@ -16,6 +16,7 @@ contract C is B, A {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // EVMVersion: >=byzantium
 // compileViaYul: also
 // ----

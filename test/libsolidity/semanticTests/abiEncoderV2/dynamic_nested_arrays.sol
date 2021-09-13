@@ -26,6 +26,7 @@ contract C {
 	}
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // test() -> 12, 3, 4, 0x66, 5, 0x85, 13

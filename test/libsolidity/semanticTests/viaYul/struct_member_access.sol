@@ -30,6 +30,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // EVMVersion: >homestead
 // compileViaYul: also
 // ----

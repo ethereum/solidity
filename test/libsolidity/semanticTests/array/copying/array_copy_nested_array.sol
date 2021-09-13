@@ -12,6 +12,7 @@ contract c {
 }
 
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // test(uint256[2][]): 32, 3, 7, 8, 9, 10, 11, 12 -> 10

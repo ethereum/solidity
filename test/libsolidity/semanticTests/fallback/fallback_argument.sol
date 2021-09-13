@@ -10,6 +10,7 @@ contract A {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // EVMVersion: >=byzantium
 // compileViaYul: also
 // ----

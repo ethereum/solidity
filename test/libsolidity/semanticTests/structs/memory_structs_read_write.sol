@@ -51,8 +51,9 @@ contract Test {
 }
 
 // ====
-// compileViaYul: also
+// requiresYulOptimizer: full
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // testInit() -> 0, 0, 0, 0, true
 // testCopyRead() -> 1, 2, 3, 4

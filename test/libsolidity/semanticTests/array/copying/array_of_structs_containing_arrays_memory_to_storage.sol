@@ -23,6 +23,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: true
 // ----
 // f() -> 3, 3, 3, 1

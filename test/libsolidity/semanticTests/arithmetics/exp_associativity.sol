@@ -31,6 +31,7 @@ contract C {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // test_hardcode1(uint256,uint256,uint256): 2, 3, 4 -> 2417851639229258349412352

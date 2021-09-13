@@ -13,6 +13,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // createEvent(uint256): 42 ->

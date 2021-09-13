@@ -288,6 +288,7 @@ contract Test {
 /// testMul() -> true
 //
 // ====
+// requiresYulOptimizer: full
 // EVMVersion: >=constantinople
 // compileViaYul: also
 // ----

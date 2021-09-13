@@ -15,6 +15,7 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // set(uint8,uint8,uint8): 1, 21, 42 -> 0, 0

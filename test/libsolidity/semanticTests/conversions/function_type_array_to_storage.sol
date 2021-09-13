@@ -37,6 +37,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // testViewToDefault() -> 12, 22

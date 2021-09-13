@@ -18,6 +18,7 @@ contract B is A {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // g() -> 23

@@ -10,6 +10,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // createEvent(uint256): 42 ->

@@ -47,11 +47,12 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 1965559
-// gas legacy: 2602700
+// gas irOptimized: 1965132
+// gas legacy: 2480887
 // gas legacyOptimized: 1874490
 // div(int256,int256): 3141592653589793238, 88714123 -> 35412542528203691288251815328
 // gas irOptimized: 22244

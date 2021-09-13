@@ -58,8 +58,9 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // constructor()
 // f(): true, true -> true, true

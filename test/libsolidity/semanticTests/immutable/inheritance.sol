@@ -27,6 +27,7 @@ contract D is B, C {
 	}
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // f() -> 4, 3, 2, 1

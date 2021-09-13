@@ -34,6 +34,7 @@ contract c {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // test() -> 0x02000202

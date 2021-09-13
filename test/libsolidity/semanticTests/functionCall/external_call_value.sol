@@ -11,6 +11,7 @@ contract C {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // g(uint256), 1 ether: 4 -> 1000000000000000000000, 4

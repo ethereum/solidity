@@ -13,6 +13,7 @@ contract c {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // setData1(uint256,uint256,uint256): 10, 5, 4 ->

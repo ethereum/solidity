@@ -22,6 +22,7 @@ contract C {
 	}
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // library: L

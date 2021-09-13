@@ -4,6 +4,7 @@ contract c {
     mapping(uint => bytes) data;
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // set(uint256): 1, 2 -> true

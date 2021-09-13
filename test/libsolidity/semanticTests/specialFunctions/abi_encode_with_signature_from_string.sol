@@ -9,6 +9,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: false
 // compileViaYul: also
 // ----

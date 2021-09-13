@@ -23,6 +23,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // EVMVersion: >homestead
 // compileViaYul: also
 // ----

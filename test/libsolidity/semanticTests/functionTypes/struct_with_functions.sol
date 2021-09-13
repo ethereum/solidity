@@ -29,6 +29,7 @@ contract Flow {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
 // compileViaYul: also
 // ----

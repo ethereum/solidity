@@ -35,6 +35,7 @@ contract D {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // f() -> 3

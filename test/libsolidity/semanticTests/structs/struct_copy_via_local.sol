@@ -17,6 +17,7 @@ contract c {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
 // compileViaYul: also
 // ----

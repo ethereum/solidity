@@ -37,6 +37,7 @@ contract Test {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // test() -> 24

@@ -11,6 +11,7 @@ contract C {
     receive() external payable {}
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // (), 1 ether

@@ -48,6 +48,7 @@ contract test {
     }
 }
 // ====
+// requiresYulOptimizer: full
 // compileViaYul: also
 // ----
 // constructor()

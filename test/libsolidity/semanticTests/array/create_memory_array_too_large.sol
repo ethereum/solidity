@@ -20,6 +20,7 @@ contract C {
         return x[2];
     }}
 // ====
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
 // compileViaYul: also
 // ----

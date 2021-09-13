@@ -29,6 +29,7 @@ contract Flow {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // f() -> 1, 2

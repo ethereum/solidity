@@ -19,6 +19,7 @@ contract C is A {
 	}
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // getM(uint256,uint256): 0, 0 -> 0

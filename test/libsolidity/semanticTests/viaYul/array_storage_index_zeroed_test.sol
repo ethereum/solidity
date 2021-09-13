@@ -50,6 +50,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // test_zeroed_indicies(uint256): 1 ->

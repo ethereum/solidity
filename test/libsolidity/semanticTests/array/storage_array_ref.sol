@@ -40,6 +40,7 @@ contract Store is BinarySearch {
 }
 
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // find(uint256): 7 -> -1

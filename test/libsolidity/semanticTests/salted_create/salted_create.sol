@@ -17,6 +17,7 @@ contract A {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // EVMVersion: >=constantinople
 // compileViaYul: also
 // ----

@@ -17,6 +17,7 @@ contract C {
     }
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // mapValue(uint256): 42 -> 0x24

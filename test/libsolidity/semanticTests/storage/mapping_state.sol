@@ -16,6 +16,7 @@ contract Ballot {
 	}
 }
 // ====
+// requiresYulOptimizer: minimalStack
 // compileViaYul: also
 // ----
 // getVoteCount(address): 0 -> 0

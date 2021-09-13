@@ -25,7 +25,8 @@ contract Test {
 	}
 }
 // ====
-// compileViaYul: also
+// requiresYulOptimizer: minimalStack
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // withinArray() -> FAILURE

@@ -46,6 +46,7 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // compileViaYul: also
+// requiresYulOptimizer: minimalStack
 // ----
 // a() -> FAILURE, hex"4e487b"
 // b() -> FAILURE, hex"4e487b710000"
