@@ -47,7 +47,6 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 	case Push:
 	case PushTag:
 	case PushData:
-	case PushString:
 	case PushSub:
 	case PushSubSize:
 	case PushProgramSize:

@@ -250,10 +250,6 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 			collection.append(
 				createJsonValue("PUSH", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
 			break;
-		case PushString:
-			collection.append(
-				createJsonValue("PUSH tag", sourceIndex, i.location().start, i.location().end, m_strings.at(h256(i.data()))));
-			break;
 		case PushTag:
 			if (i.data() == 0)
 				collection.append(
@@ -621,19 +617,6 @@ LinkerObject const& Assembly::assemble() const
 		case Operation:
 			ret.bytecode.push_back(static_cast<uint8_t>(i.instruction()));
 			break;
-		case PushString:
-		{
-			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
-			unsigned ii = 0;
-			for (auto j: m_strings.at(h256(i.data())))
-				if (++ii > 32)
-					break;
-				else
-					ret.bytecode.push_back(uint8_t(j));
-			while (ii++ < 32)
-				ret.bytecode.push_back(0);
-			break;
-		}
 		case Push:
 		{
 			unsigned b = max<unsigned>(1, util::bytesRequired(i.data()));
