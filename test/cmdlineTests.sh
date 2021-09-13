@@ -37,8 +37,26 @@ source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
-AUTOUPDATE=false
-[[ $1 == --update ]] && AUTOUPDATE=true && shift
+autoupdate=false
+no_smt=false
+declare -a selected_tests
+while [[ $# -gt 0 ]]
+do
+    case "$1" in
+        --update)
+            autoupdate=true
+            shift
+            ;;
+        --no-smt)
+            no_smt=true
+            shift
+            ;;
+        *)
+            selected_tests+=("$1")
+            shift
+            ;;
+    esac
+done
 
 case "$OSTYPE" in
     msys)
@@ -91,7 +109,7 @@ function ask_expectation_update
         local newExpectation="${1}"
         local expectationFile="${2}"
 
-        if [[ $AUTOUPDATE == true ]]
+        if [[ $autoupdate == true ]]
         then
             update_expectation "$newExpectation" "$expectationFile"
         else
@@ -302,18 +320,11 @@ test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid rem
 printTask "Running general commandline tests..."
 (
     cd "$REPO_ROOT"/test/cmdlineTests/
-    for tdir in ${*:-*/}
+    (( ${#selected_tests[@]} > 0 )) || selected_tests=(*)
+    for tdir in "${selected_tests[@]}"
     do
         if ! [[ -d $tdir ]]; then
-            if [[ $tdir =~ ^--.*$ ]]; then
-                if [[ $tdir == "--update" ]]; then
-                    printError "The --update option must be given before any positional arguments."
-                else
-                    printError "Invalid option: $tdir."
-                fi
-            else
-                printError "Test directory not found: $tdir"
-            fi
+            printError "Test directory not found: $tdir"
             exit 1
         fi
 
@@ -321,6 +332,13 @@ printTask "Running general commandline tests..."
 
         # Strip trailing slash from $tdir.
         tdir=$(basename "${tdir}")
+        if [[ $no_smt == true ]]
+        then
+            if [[ $tdir =~ .*model_checker_.* ]]; then
+                printWarning "  --- > skipped"
+                continue
+            fi
+        fi
 
         inputFiles="$(ls -1 "${tdir}/input."* 2> /dev/null || true)"
         inputCount="$(echo "${inputFiles}" | wc -w)"
