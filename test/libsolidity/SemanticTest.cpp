@@ -81,6 +81,16 @@ SemanticTest::SemanticTest(
 		m_enforceCompileToEwasm = false;
 	}
 
+	string requiresYulOptimizer = m_reader.stringSetting("requiresYulOptimizer", "false");
+	if (requiresYulOptimizer == "false")
+		m_requiresYulOptimizer = RequiresYulOptimizer::False;
+	else if (requiresYulOptimizer == "minimalStack")
+		m_requiresYulOptimizer = RequiresYulOptimizer::MinimalStack;
+	else if (requiresYulOptimizer == "full")
+		m_requiresYulOptimizer = RequiresYulOptimizer::Full;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid requiresYulOptimizer value: " + requiresYulOptimizer + "."));
+
 	string compileToEwasm = m_reader.stringSetting("compileToEwasm", "false");
 	if (compileToEwasm == "also")
 		m_testCaseWantsEwasmRun = true;
@@ -307,7 +317,52 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 		result = runTest(_stream, _linePrefix, _formatted, false, false);
 
 	if ((m_testCaseWantsYulRun || m_enforceViaYul) && result == TestResult::Success)
-		result = runTest(_stream, _linePrefix, _formatted, true, false);
+	{
+		if (solidity::test::CommonOptions::get().optimize)
+			result = runTest(_stream, _linePrefix, _formatted, true, false);
+		else
+			for (auto requiresYulOptimizer: {RequiresYulOptimizer::False, RequiresYulOptimizer::MinimalStack, RequiresYulOptimizer::Full})
+			{
+				ScopedSaveAndRestore optimizerSettings(m_optimiserSettings, OptimiserSettings::minimal());
+				if (requiresYulOptimizer == RequiresYulOptimizer::MinimalStack)
+				{
+					m_optimiserSettings.runYulOptimiser = true;
+					m_optimiserSettings.yulOptimiserSteps = "uljmul jmul";
+				}
+				else if (requiresYulOptimizer == RequiresYulOptimizer::Full)
+					m_optimiserSettings = OptimiserSettings::full();
+				try
+				{
+					result = runTest(_stream, _linePrefix, _formatted, true, false);
+					if (m_requiresYulOptimizer != requiresYulOptimizer)
+					{
+						static constexpr auto settingToString = [](RequiresYulOptimizer _setting) {
+							switch (_setting)
+							{
+								case RequiresYulOptimizer::False:
+									return "false";
+								case RequiresYulOptimizer::MinimalStack:
+									return "minimalStack";
+								case RequiresYulOptimizer::Full:
+									return "full";
+							}
+							return "unknown";
+						};
+						m_canUpdateYulOptimizerRequirement = requiresYulOptimizer;
+						AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) << _linePrefix << endl
+						   << _linePrefix << "requiresYulOptimizer is set to " << settingToString(m_requiresYulOptimizer)
+						   << " but should be " << settingToString(requiresYulOptimizer) << endl;
+						return TestResult::Failure;
+					}
+					break;
+				}
+				catch (yul::StackTooDeepError const&)
+				{
+					if (requiresYulOptimizer == RequiresYulOptimizer::Full)
+						throw;
+				}
+			}
+	}
 
 	if ((m_testCaseWantsEwasmRun || m_enforceCompileToEwasm) && result == TestResult::Success)
 	{
@@ -330,7 +385,8 @@ TestCase::TestResult SemanticTest::runTest(
 	string const& _linePrefix,
 	bool _formatted,
 	bool _isYulRun,
-	bool _isEwasmRun)
+	bool _isEwasmRun
+)
 {
 	bool success = true;
 	m_gasCostFailure = false;
@@ -666,11 +722,26 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 	}
 	else if (m_canEnableYulRun)
 		_stream << _linePrefix << "// compileViaYul: also\n";
+	if (m_canUpdateYulOptimizerRequirement)
+	{
+		switch (*m_canUpdateYulOptimizerRequirement)
+		{
+			case RequiresYulOptimizer::False:
+				break;
+			case RequiresYulOptimizer::MinimalStack:
+				_stream << _linePrefix << "// requiresYulOptimizer: minimalStack\n";
+				break;
+			case RequiresYulOptimizer::Full:
+				_stream << _linePrefix << "// requiresYulOptimizer: full\n";
+				break;
+		}
+	}
 
 	for (auto const& [settingName, settingValue]: settings)
 		if (
 			!(settingName == "compileToEwasm" && m_canEnableEwasmRun) &&
-			!(settingName == "compileViaYul" && (m_canEnableYulRun || m_canEnableEwasmRun))
+			!(settingName == "compileViaYul" && (m_canEnableYulRun || m_canEnableEwasmRun)) &&
+			!(settingName == "requiresYulOptimizer" && m_canUpdateYulOptimizerRequirement)
 		)
 			_stream << _linePrefix << "// " << settingName << ": " << settingValue<< endl;
 }

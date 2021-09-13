@@ -85,7 +85,17 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
-	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun, bool _isEwasmRun);
+	enum class RequiresYulOptimizer
+	{
+		False, MinimalStack, Full
+	};
+	TestResult runTest(
+		std::ostream& _stream,
+		std::string const& _linePrefix,
+		bool _formatted,
+		bool _isYulRun,
+		bool _isEwasmRun
+	);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
 	std::map<std::string, Builtin> makeBuiltins();
 	std::vector<SideEffectHook> makeSideEffectHooks() const;
@@ -108,6 +118,8 @@ private:
 	bool m_canEnableEwasmRun = false;
 	bool m_gasCostFailure = false;
 	bool m_enforceGasCost = false;
+	RequiresYulOptimizer m_requiresYulOptimizer = RequiresYulOptimizer::False;
+	std::optional<RequiresYulOptimizer> m_canUpdateYulOptimizerRequirement;
 	u256 m_enforceGasCostMinValue;
 };
 
