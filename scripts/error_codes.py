@@ -194,6 +194,7 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
         "9804", # Tested in test/libyul/ObjectParser.cpp.
         "2674",
         "6367",
+        "8387",
         "3805", # "This is a pre-release compiler version, please do not use it in production."
                 # The warning may or may not exist in a compiler build.
         "4591", # "There are more than 256 warnings. Ignoring the rest."
