@@ -1269,15 +1269,15 @@ void CompilerStack::assemble(
 
 	compiledContract.evmAssembly = _assembly;
 	solAssert(compiledContract.evmAssembly, "");
-	try
-	{
+//	try
+//	{
 		// Assemble deployment (incl. runtime)  object.
 		compiledContract.object = compiledContract.evmAssembly->assemble();
-	}
-	catch (evmasm::AssemblyException const&)
-	{
-		solAssert(false, "Assembly exception for bytecode");
-	}
+//	}
+//	catch (evmasm::AssemblyException const&)
+//	{
+//		solAssert(false, "Assembly exception for bytecode");
+//	}
 	solAssert(compiledContract.object.immutableReferences.empty(), "Leftover immutables.");
 
 	compiledContract.evmRuntimeAssembly = _runtimeAssembly;

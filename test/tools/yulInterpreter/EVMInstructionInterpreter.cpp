@@ -377,6 +377,8 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
 	case Instruction::JUMPDEST:
+	case Instruction::RJUMP:
+	case Instruction::RJUMPI:
 	case Instruction::PUSH1:
 	case Instruction::PUSH2:
 	case Instruction::PUSH3:
