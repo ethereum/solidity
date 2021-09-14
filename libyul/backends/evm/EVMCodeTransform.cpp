@@ -44,16 +44,6 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-namespace
-{
-
-langutil::SourceLocation extractSourceLocationFromDebugData(shared_ptr<DebugData const> const& _debugData)
-{
-	return _debugData ? _debugData->location : langutil::SourceLocation{};
-}
-
-}
-
 CodeTransform::CodeTransform(
 	AbstractAssembly& _assembly,
 	AsmAnalysisInfo& _analysisInfo,
@@ -155,13 +145,13 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	}
 	else
 	{
-		m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_varDecl.debugData));
+		m_assembly.setSourceLocation(locationOf(_varDecl));
 		size_t variablesLeft = numVariables;
 		while (variablesLeft--)
 			m_assembly.appendConstant(u256(0));
 	}
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_varDecl.debugData));
+	m_assembly.setSourceLocation(locationOf(_varDecl));
 	bool atTopOfStack = true;
 	for (size_t varIndex = 0; varIndex < numVariables; ++varIndex)
 	{
@@ -223,13 +213,13 @@ void CodeTransform::operator()(Assignment const& _assignment)
 	std::visit(*this, *_assignment.value);
 	expectDeposit(static_cast<int>(_assignment.variableNames.size()), height);
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_assignment.debugData));
+	m_assembly.setSourceLocation(locationOf(_assignment));
 	generateMultiAssignment(_assignment.variableNames);
 }
 
 void CodeTransform::operator()(ExpressionStatement const& _statement)
 {
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_statement.debugData));
+	m_assembly.setSourceLocation(locationOf(_statement));
 	std::visit(*this, _statement.expression);
 }
 
@@ -237,13 +227,13 @@ void CodeTransform::operator()(FunctionCall const& _call)
 {
 	yulAssert(m_scope, "");
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
+	m_assembly.setSourceLocation(locationOf(_call));
 	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
 		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
 			if (!builtin->literalArgument(i))
 				visitExpression(arg);
-		m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
+		m_assembly.setSourceLocation(locationOf(_call));
 		builtin->generateCode(_call, m_assembly, m_builtinContext);
 	}
 	else
@@ -260,7 +250,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		yulAssert(function->arguments.size() == _call.arguments.size(), "");
 		for (auto const& arg: _call.arguments | ranges::views::reverse)
 			visitExpression(arg);
-		m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
+		m_assembly.setSourceLocation(locationOf(_call));
 		m_assembly.appendJumpTo(
 			functionEntryID(_call.functionName.name, *function),
 			static_cast<int>(function->returns.size() - function->arguments.size()) - 1,
@@ -272,7 +262,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 
 void CodeTransform::operator()(Identifier const& _identifier)
 {
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_identifier.debugData));
+	m_assembly.setSourceLocation(locationOf(_identifier));
 	// First search internals, then externals.
 	yulAssert(m_scope, "");
 	if (m_scope->lookup(_identifier.name, GenericVisitor{
@@ -304,19 +294,19 @@ void CodeTransform::operator()(Identifier const& _identifier)
 
 void CodeTransform::operator()(Literal const& _literal)
 {
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_literal.debugData));
+	m_assembly.setSourceLocation(locationOf(_literal));
 	m_assembly.appendConstant(valueOfLiteral(_literal));
 }
 
 void CodeTransform::operator()(If const& _if)
 {
 	visitExpression(*_if.condition);
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_if.debugData));
+	m_assembly.setSourceLocation(locationOf(_if));
 	m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
 	AbstractAssembly::LabelID end = m_assembly.newLabelId();
 	m_assembly.appendJumpToIf(end);
 	(*this)(_if.body);
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_if.debugData));
+	m_assembly.setSourceLocation(locationOf(_if));
 	m_assembly.appendLabel(end);
 }
 
@@ -331,7 +321,7 @@ void CodeTransform::operator()(Switch const& _switch)
 		if (c.value)
 		{
 			(*this)(*c.value);
-			m_assembly.setSourceLocation(extractSourceLocationFromDebugData(c.debugData));
+			m_assembly.setSourceLocation(locationOf(c));
 			AbstractAssembly::LabelID bodyLabel = m_assembly.newLabelId();
 			caseBodies[&c] = bodyLabel;
 			yulAssert(m_assembly.stackHeight() == expressionHeight + 1, "");
@@ -343,24 +333,24 @@ void CodeTransform::operator()(Switch const& _switch)
 			// default case
 			(*this)(c.body);
 	}
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_switch.debugData));
+	m_assembly.setSourceLocation(locationOf(_switch));
 	m_assembly.appendJumpTo(end);
 
 	size_t numCases = caseBodies.size();
 	for (auto const& c: caseBodies)
 	{
-		m_assembly.setSourceLocation(extractSourceLocationFromDebugData(c.first->debugData));
+		m_assembly.setSourceLocation(locationOf(*c.first));
 		m_assembly.appendLabel(c.second);
 		(*this)(c.first->body);
 		// Avoid useless "jump to next" for the last case.
 		if (--numCases > 0)
 		{
-			m_assembly.setSourceLocation(extractSourceLocationFromDebugData(c.first->debugData));
+			m_assembly.setSourceLocation(locationOf(*c.first));
 			m_assembly.appendJumpTo(end);
 		}
 	}
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_switch.debugData));
+	m_assembly.setSourceLocation(locationOf(_switch));
 	m_assembly.appendLabel(end);
 	m_assembly.appendInstruction(evmasm::Instruction::POP);
 }
@@ -381,7 +371,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_context->variableStackHeights[&var] = height++;
 	}
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_function.debugData));
+	m_assembly.setSourceLocation(locationOf(_function));
 	int const stackHeightBefore = m_assembly.stackHeight();
 
 	m_assembly.appendLabel(functionEntryID(_function.name, function));
@@ -417,7 +407,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 	subTransform(_function.body);
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_function.debugData));
+	m_assembly.setSourceLocation(locationOf(_function));
 	if (!subTransform.m_stackErrors.empty())
 	{
 		m_assembly.markAsInvalid();
@@ -508,11 +498,11 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	AbstractAssembly::LabelID postPart = m_assembly.newLabelId();
 	AbstractAssembly::LabelID loopEnd = m_assembly.newLabelId();
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_forLoop.debugData));
+	m_assembly.setSourceLocation(locationOf(_forLoop));
 	m_assembly.appendLabel(loopStart);
 
 	visitExpression(*_forLoop.condition);
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_forLoop.debugData));
+	m_assembly.setSourceLocation(locationOf(_forLoop));
 	m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
 	m_assembly.appendJumpToIf(loopEnd);
 
@@ -520,12 +510,12 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	m_context->forLoopStack.emplace(Context::ForLoopLabels{ {postPart, stackHeightBody}, {loopEnd, stackHeightBody} });
 	(*this)(_forLoop.body);
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_forLoop.debugData));
+	m_assembly.setSourceLocation(locationOf(_forLoop));
 	m_assembly.appendLabel(postPart);
 
 	(*this)(_forLoop.post);
 
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_forLoop.debugData));
+	m_assembly.setSourceLocation(locationOf(_forLoop));
 	m_assembly.appendJumpTo(loopStart);
 	m_assembly.appendLabel(loopEnd);
 
@@ -545,7 +535,7 @@ int CodeTransform::appendPopUntil(int _targetDepth)
 void CodeTransform::operator()(Break const& _break)
 {
 	yulAssert(!m_context->forLoopStack.empty(), "Invalid break-statement. Requires surrounding for-loop in code generation.");
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_break.debugData));
+	m_assembly.setSourceLocation(locationOf(_break));
 
 	Context::JumpInfo const& jump = m_context->forLoopStack.top().done;
 	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
@@ -554,7 +544,7 @@ void CodeTransform::operator()(Break const& _break)
 void CodeTransform::operator()(Continue const& _continue)
 {
 	yulAssert(!m_context->forLoopStack.empty(), "Invalid continue-statement. Requires surrounding for-loop in code generation.");
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_continue.debugData));
+	m_assembly.setSourceLocation(locationOf(_continue));
 
 	Context::JumpInfo const& jump = m_context->forLoopStack.top().post;
 	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
@@ -564,7 +554,7 @@ void CodeTransform::operator()(Leave const& _leaveStatement)
 {
 	yulAssert(m_functionExitLabel, "Invalid leave-statement. Requires surrounding function in code generation.");
 	yulAssert(m_functionExitStackHeight, "");
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_leaveStatement.debugData));
+	m_assembly.setSourceLocation(locationOf(_leaveStatement));
 	m_assembly.appendJumpTo(*m_functionExitLabel, appendPopUntil(*m_functionExitStackHeight));
 }
 
@@ -676,7 +666,7 @@ void CodeTransform::visitStatements(vector<Statement> const& _statements)
 		auto const* functionDefinition = std::get_if<FunctionDefinition>(&statement);
 		if (functionDefinition && !jumpTarget)
 		{
-			m_assembly.setSourceLocation(extractSourceLocationFromDebugData(functionDefinition->debugData));
+			m_assembly.setSourceLocation(locationOf(*functionDefinition));
 			jumpTarget = m_assembly.newLabelId();
 			m_assembly.appendJumpTo(*jumpTarget, 0);
 		}
@@ -697,7 +687,7 @@ void CodeTransform::visitStatements(vector<Statement> const& _statements)
 
 void CodeTransform::finalizeBlock(Block const& _block, optional<int> blockStartStackHeight)
 {
-	m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_block.debugData));
+	m_assembly.setSourceLocation(locationOf(_block));
 
 	freeUnusedVariables();
 

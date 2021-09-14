@@ -52,7 +52,7 @@ shared_ptr<DebugData const> updateLocationEndFrom(
 	langutil::SourceLocation const& _location
 )
 {
-	SourceLocation updatedLocation = _debugData->location;
+	SourceLocation updatedLocation = _debugData ? _debugData->location : langutil::SourceLocation{};
 	updatedLocation.end = _location.end;
 	return make_shared<DebugData const>(updatedLocation);
 }
@@ -245,7 +245,7 @@ Statement Parser::parseStatement()
 		_if.condition = make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
 		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			_if.debugData = updateLocationEndFrom(_if.debugData, _if.body.debugData->location);
+			_if.debugData = updateLocationEndFrom(_if.debugData, locationOf(_if.body));
 		return Statement{move(_if)};
 	}
 	case Token::Switch:
@@ -264,7 +264,7 @@ Statement Parser::parseStatement()
 		if (_switch.cases.empty())
 			fatalParserError(2418_error, "Switch statement without any cases.");
 		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			_switch.debugData = updateLocationEndFrom(_switch.debugData, _switch.cases.back().body.debugData->location);
+			_switch.debugData = updateLocationEndFrom(_switch.debugData, locationOf(_switch.cases.back().body));
 		return Statement{move(_switch)};
 	}
 	case Token::For:
@@ -378,7 +378,7 @@ Case Parser::parseCase()
 		yulAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
 	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		_case.debugData = updateLocationEndFrom(_case.debugData, _case.body.debugData->location);
+		_case.debugData = updateLocationEndFrom(_case.debugData, locationOf(_case.body));
 	return _case;
 }
 
@@ -399,7 +399,7 @@ ForLoop Parser::parseForLoop()
 	m_currentForLoopComponent = ForLoopComponent::ForLoopBody;
 	forLoop.body = parseBlock();
 	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		forLoop.debugData = updateLocationEndFrom(forLoop.debugData, forLoop.body.debugData->location);
+		forLoop.debugData = updateLocationEndFrom(forLoop.debugData, locationOf(forLoop.body));
 
 	m_currentForLoopComponent = outerForLoopComponent;
 
@@ -419,7 +419,7 @@ Expression Parser::parseExpression()
 			if (m_dialect.builtin(_identifier.name))
 				fatalParserError(
 					7104_error,
-					_identifier.debugData->location,
+					locationOf(_identifier),
 					"Builtin function \"" + _identifier.name.str() + "\" must be called."
 				);
 			return move(_identifier);
@@ -515,7 +515,7 @@ VariableDeclaration Parser::parseVariableDeclaration()
 			varDecl.debugData = updateLocationEndFrom(varDecl.debugData, locationOf(*varDecl.value));
 	}
 	else if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		varDecl.debugData = updateLocationEndFrom(varDecl.debugData, varDecl.variables.back().debugData->location);
+		varDecl.debugData = updateLocationEndFrom(varDecl.debugData, locationOf(varDecl.variables.back()));
 
 	return varDecl;
 }
@@ -562,7 +562,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	funDef.body = parseBlock();
 	m_insideFunction = preInsideFunction;
 	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		funDef.debugData = updateLocationEndFrom(funDef.debugData, funDef.body.debugData->location);
+		funDef.debugData = updateLocationEndFrom(funDef.debugData, locationOf(funDef.body));
 
 	m_currentForLoopComponent = outerForLoopComponent;
 	return funDef;
