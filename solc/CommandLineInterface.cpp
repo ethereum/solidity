@@ -564,10 +564,90 @@ bool CommandLineInterface::processInput()
 	return false;
 }
 
+Json::Value CommandLineInterface::translateSources(FileReader::StringMap const& _sourceCodes) const
+{
+	Json::Value sources = Json::objectValue;
+	for (auto const& pair: _sourceCodes)
+	{
+		sources[pair.first] = Json::objectValue;
+		sources[pair.first]["content"] = pair.second;
+	}
+	return sources;
+}
+
+Json::Value CommandLineInterface::translateSettings() const
+{
+	Json::Value settings = Json::objectValue;
+	if (m_options.output.stopAfter == CompilerStack::State::Parsed)
+		settings["stopAfter"] = "parsing";
+	else if (m_options.output.stopAfter != CompilerStack::State::CompilationSuccessful)
+		// The other options are not supported.
+		solAssert(false, "");
+
+	// TODO: remappigns
+
+	// TODO: optimizer settings
+
+	settings["evmVersion"] = m_options.output.evmVersion.name();
+	settings["viaIR"] = m_options.output.experimentalViaIR;
+
+	// TODO: debug
+
+	// TODO: metadata
+
+	// TODO: libraries
+
+	// TODO: proper output selection (this just requests everything)
+	settings["outputSelection"] = Json::objectValue;
+	settings["outputSelection"]["*"] = Json::objectValue;
+	settings["outputSelection"]["*"][""] = Json::arrayValue;
+	settings["outputSelection"]["*"][""].append("ast");
+	settings["outputSelection"]["*"]["*"] = Json::arrayValue;
+	settings["outputSelection"]["*"]["*"].append("*");
+
+	// TODO: modelChecker
+
+	return settings;
+}
+
 bool CommandLineInterface::compile()
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
+	StandardCompiler compiler(m_fileReader.reader());
+
+	// Create Standard JSON Input
+	Json::Value standardJsonInput = Json::objectValue;
+	standardJsonInput["language"] = "Solidity";
+	standardJsonInput["sources"] = translateSources(m_fileReader.sourceCodes());
+	standardJsonInput["settings"] = translateSettings();
+
+	// Perform the compilation and keep the Standard JSON Output
+	// TODO: support parser error recovery
+	// TODO: support displaying error ids
+	// TODO: support colours in error output
+	m_standardJsonOutput = make_unique<Json::Value>(compiler.compile(standardJsonInput));
+	solAssert(m_standardJsonOutput->isObject(), "");
+
+	bool successful = true;
+	if (m_standardJsonOutput->isMember("errors"))
+	{
+		m_hasOutput = true;
+		for (auto const& error: m_standardJsonOutput->get("errors", Json::Value()))
+		{
+			sout() << error["formattedMessage"].asString() << endl;
+			if (error["severity"] == "error")
+			{
+				successful = false;
+			}
+		}
+	}
+
+	if (!successful)
+		return m_options.input.errorRecovery;
+	return true;
+
+/*
 	m_compiler = make_unique<CompilerStack>(m_fileReader.reader());
 
 	SourceReferenceFormatter formatter(serr(false), *m_compiler, coloredOutput(m_options), m_options.formatting.withErrorIds);
@@ -707,6 +787,7 @@ bool CommandLineInterface::compile()
 	}
 
 	return true;
+*/
 }
 
 void CommandLineInterface::handleCombinedJSON()
@@ -1088,6 +1169,8 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 void CommandLineInterface::outputCompilationResults()
 {
+	(void)needsHumanTargetedStdout;
+/*
 	handleCombinedJSON();
 
 	// do we need AST output?
@@ -1141,6 +1224,7 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(true, contract);
 		handleNatspec(false, contract);
 	} // end of contracts iteration
+*/
 
 	if (!m_hasOutput)
 	{

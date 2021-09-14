@@ -76,6 +76,9 @@ private:
 
 	bool assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine);
 
+	Json::Value translateSources(FileReader::StringMap const& _sourceCodes) const;
+	Json::Value translateSettings() const;
+
 	void outputCompilationResults();
 
 	void handleCombinedJSON();
@@ -125,6 +128,7 @@ private:
 	FileReader m_fileReader;
 	std::optional<std::string> m_standardJsonInput;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;
+	std::unique_ptr<Json::Value> m_standardJsonOutput;
 	CommandLineOptions m_options;
 };
 
