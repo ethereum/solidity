@@ -15,6 +15,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Fix ICE on assigning to calldata structs and statically-sized calldata arrays in inline assembly.
  * Code Generator: Use stable source order for ABI functions.
  * Commandline Interface: Report optimizer options as invalid in Standard JSON and linker modes instead of ignoring them.
  * Commandline Interface: Disallow the ``--experimental-via-ir`` option in Standard JSON, Assembler and Linker modes.

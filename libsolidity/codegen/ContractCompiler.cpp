@@ -860,15 +860,28 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (variable->type()->dataStoredIn(DataLocation::CallData))
 			{
-				auto const* arrayType = dynamic_cast<ArrayType const*>(variable->type());
-				solAssert(
-					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData),
-					""
-				);
-				solAssert(suffix == "offset" || suffix == "length", "");
-				solAssert(variable->type()->sizeOnStack() == 2, "");
-				if (suffix == "length")
-					stackDiff--;
+				if (auto const* arrayType = dynamic_cast<ArrayType const*>(variable->type()))
+				{
+					if (arrayType->isDynamicallySized())
+					{
+						solAssert(suffix == "offset" || suffix == "length", "");
+						solAssert(variable->type()->sizeOnStack() == 2, "");
+						if (suffix == "length")
+							stackDiff--;
+					}
+					else
+					{
+						solAssert(variable->type()->sizeOnStack() == 1, "");
+						solAssert(suffix.empty(), "");
+					}
+				}
+				else
+				{
+					auto const* structType = dynamic_cast<StructType const*>(variable->type());
+					solAssert(structType, "");
+					solAssert(variable->type()->sizeOnStack() == 1, "");
+					solAssert(suffix.empty(), "");
+				}
 			}
 			else
 				solAssert(suffix.empty(), "");
