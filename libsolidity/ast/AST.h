@@ -751,6 +751,7 @@ public:
 	Type const* type() const override;
 
 	TypeName const* underlyingType() const { return m_underlyingType.get(); }
+	bool isVisibleViaContractTypeAccess() const override { return true; }
 
 private:
 	/// The name of the underlying type
