@@ -83,18 +83,16 @@ struct Continue { std::shared_ptr<DebugData const> debugData; };
 /// Leave statement (valid within function)
 struct Leave { std::shared_ptr<DebugData const> debugData; };
 
-struct LocationExtractor
-{
-	template <class T> langutil::SourceLocation operator()(T const& _node) const
-	{
-		return _node.debugData ? _node.debugData->location : langutil::SourceLocation{};
-	}
-};
-
 /// Extracts the source location from a Yul node.
 template <class T> inline langutil::SourceLocation locationOf(T const& _node)
 {
-	return std::visit(LocationExtractor(), _node);
+	return _node.debugData ? _node.debugData->location : langutil::SourceLocation{};
+}
+
+/// Extracts the source location from a Yul node.
+template <class... Args> inline langutil::SourceLocation locationOf(std::variant<Args...> const& _node)
+{
+	return std::visit([](auto const& _arg) { return locationOf(_arg); }, _node);
 }
 
 struct DebugDataExtractor
