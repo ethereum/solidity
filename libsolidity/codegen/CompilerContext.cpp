@@ -562,7 +562,7 @@ void CompilerContext::optimizeYul(
 		_optimiserSettings.yulOptimiserSteps,
 		isCreation? nullopt : make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
 		_externalIdentifiers,
-		freeMemoryInitPushValue.get()
+		nullptr // (force disabled for fuzzing) freeMemoryInitPushValue.get()
 	);
 	if (_system)
 		m_asm->items().at(*m_freeMemoryInitPush).setData(*freeMemoryInitPushValue);
