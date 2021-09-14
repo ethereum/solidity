@@ -83,32 +83,28 @@ struct Continue { std::shared_ptr<DebugData const> debugData; };
 /// Leave statement (valid within function)
 struct Leave { std::shared_ptr<DebugData const> debugData; };
 
-struct LocationExtractor
-{
-	template <class T> langutil::SourceLocation operator()(T const& _node) const
-	{
-		return _node.debugData ? _node.debugData->location : langutil::SourceLocation{};
-	}
-};
-
 /// Extracts the source location from a Yul node.
 template <class T> inline langutil::SourceLocation locationOf(T const& _node)
 {
-	return std::visit(LocationExtractor(), _node);
+	return _node.debugData ? _node.debugData->location : langutil::SourceLocation{};
 }
 
-struct DebugDataExtractor
+/// Extracts the source location from a Yul node.
+template <class... Args> inline langutil::SourceLocation locationOf(std::variant<Args...> const& _node)
 {
-	template <class T> std::shared_ptr<DebugData const> const& operator()(T const& _node) const
-	{
-		return _node.debugData;
-	}
-};
+	return std::visit([](auto const& _arg) { return locationOf(_arg); }, _node);
+}
 
 /// Extracts the debug data from a Yul node.
-template <class T> inline std::shared_ptr<DebugData const> const& debugDataOf(T const& _node)
+template <class T> inline std::shared_ptr<DebugData const> debugDataOf(T const& _node)
 {
-	return std::visit(DebugDataExtractor(), _node);
+	return _node.debugData;
+}
+
+/// Extracts the debug data from a Yul node.
+template <class... Args> inline std::shared_ptr<DebugData const> debugDataOf(std::variant<Args...> const& _node)
+{
+	return std::visit([](auto const& _arg) { return debugDataOf(_arg); }, _node);
 }
 
 }
