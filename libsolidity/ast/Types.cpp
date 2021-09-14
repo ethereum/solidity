@@ -2565,8 +2565,26 @@ vector<tuple<string, Type const*>> UserDefinedValueType::makeStackItems() const
 
 BoolResult TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 {
-	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
+	if (auto arrayType = dynamic_cast<ArrayType const*>(&_other))
 	{
+		if (!m_isArrayLiteral)
+			return false;
+
+		if (!(
+			arrayType->isDynamicallySized() ||
+			arrayType->length() == m_components.size()
+		))
+			return false;
+
+		for (Type const* t: m_components)
+			if (!t->isImplicitlyConvertibleTo(arrayType->baseType()))
+				return false;
+		return true;
+	}
+	else if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
+	{
+		if (m_isArrayLiteral != tupleType->m_isArrayLiteral)
+			return false;
 		TypePointers const& targets = tupleType->components();
 		if (targets.empty())
 			return components().empty();
@@ -2585,19 +2603,20 @@ BoolResult TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 
 string TupleType::richIdentifier() const
 {
-	return "t_tuple" + identifierList(components());
+	return (m_isArrayLiteral ? "t_arrayLiteral" : "t_tuple") + identifierList(components());
 }
 
 bool TupleType::operator==(Type const& _other) const
 {
 	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
-		return components() == tupleType->components();
+		return components() == tupleType->components() && m_isArrayLiteral == tupleType->m_isArrayLiteral;
 	else
 		return false;
 }
 
 string TupleType::toString(bool _short) const
 {
+	// TODO
 	if (components().empty())
 		return "tuple()";
 	string str = "tuple(";
@@ -2640,7 +2659,8 @@ Type const* TupleType::mobileType() const
 		else
 			mobiles.push_back(nullptr);
 	}
-	return TypeProvider::tuple(move(mobiles));
+	// TODO correct?
+	return TypeProvider::tuple(move(mobiles), m_isArrayLiteral);
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, Kind _kind):

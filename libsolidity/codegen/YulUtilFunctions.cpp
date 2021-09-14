@@ -3256,6 +3256,11 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		solAssert(_to.category() == Type::Category::Array, "");
 		return arrayConversionFunction(fromArrayType, dynamic_cast<ArrayType const&>(_to));
 	}
+	else if (auto tupleType = dynamic_cast<TupleType const*>(&_from))
+	{
+		if (tupleType->isArrayLiteral())
+			return arrayLiteralConversionFunction(*tupleType, dynamic_cast<ArrayType const&>(_to));
+	}
 
 	if (_from.sizeOnStack() != 1 || _to.sizeOnStack() != 1)
 		return conversionFunctionSpecial(_from, _to);
@@ -3418,10 +3423,8 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			break;
 		}
 		case Type::Category::Tuple:
-		{
-			solUnimplementedAssert(false, "Tuple conversion not implemented.");
+			solAssert(false, "");
 			break;
-		}
 		case Type::Category::TypeType:
 		{
 			TypeType const& typeType = dynamic_cast<decltype(typeType)>(_from);
@@ -3703,6 +3706,34 @@ string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayTy
 		return templ.render();
 	});
 }
+
+string YulUtilFunctions::arrayLiteralConversionFunction(TupleType const& _from, ArrayType const& _to)
+{
+	solUnimplementedAssert(_to.dataStoredIn(DataLocation::Memory, "");
+
+	string functionName =
+		"convert_arrayliteral_" +
+		_from.identifier() +
+		"_to_" +
+		_to.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&](vector<string>& _args, vector<string>& _ret) {
+		_args = _from.stackItems();
+		_ret = "converted";
+		Whiskers templ(R"(
+			// Copy the array to a free position in memory
+			converted := <allocate>(<length>)
+			<?dynamic>
+				mstore(converted, <length>)
+			</dynamic>
+			<#items>
+				mstore(<pos>, <var>)
+			</items>
+		)");
+		return templ.render();
+	});
+}
+
 
 string YulUtilFunctions::cleanupFunction(Type const& _type)
 {

@@ -530,6 +530,8 @@ private:
 	/// Special case of conversion functions - handles all array conversions.
 	std::string arrayConversionFunction(ArrayType const& _from, ArrayType const& _to);
 
+	std::string arrayLiteralConversionFunction(TupleType const& _from, ArrayType const& _to);
+
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
 	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);

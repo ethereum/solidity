@@ -1136,7 +1136,10 @@ private:
 class TupleType: public CompositeType
 {
 public:
-	explicit TupleType(std::vector<Type const*> _types = {}): m_components(std::move(_types)) {}
+	explicit TupleType(std::vector<Type const*> _types = {}, bool _arrayLiteral = false):
+		m_components(std::move(_types)),
+		m_isArrayLiteral(_arrayLiteral)
+	{}
 
 	Category category() const override { return Category::Tuple; }
 
@@ -1150,6 +1153,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	Type const* mobileType() const override;
 
+	bool isArrayLiteral() const { return m_isArrayLiteral; }
 	std::vector<Type const*> const& components() const { return m_components; }
 
 protected:
@@ -1166,6 +1170,7 @@ protected:
 
 private:
 	std::vector<Type const*> const m_components;
+	bool const m_isArrayLiteral;
 };
 
 /**
