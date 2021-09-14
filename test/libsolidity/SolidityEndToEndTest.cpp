@@ -35,6 +35,8 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/ErrorCodes.h>
 
+#include <libyul/Exceptions.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <range/v3/view/transform.hpp>
@@ -51,15 +53,31 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace solidity::langutil;
 
-#define ALSO_VIA_YUL(CODE)                      \
-{                                               \
-	m_compileViaYul = false;                    \
-	{ CODE }                                    \
-                                                \
-	m_compileViaYul = true;                     \
-	reset();                                    \
-	{ CODE }                                    \
+#define ALSO_VIA_YUL(CODE)                                      \
+{                                                               \
+	m_compileViaYul = false;                                    \
+	RUN_AND_RERUN_WITH_OPTIMIZER_ON_STACK_ERROR(CODE)           \
+                                                                \
+	m_compileViaYul = true;                                     \
+	reset();                                                    \
+	RUN_AND_RERUN_WITH_OPTIMIZER_ON_STACK_ERROR(CODE)           \
 }
+
+#define RUN_AND_RERUN_WITH_OPTIMIZER_ON_STACK_ERROR(CODE)       \
+{                                                               \
+	try                                                         \
+	{ CODE }                                                    \
+	catch (yul::StackTooDeepError const&)                       \
+	{                                                           \
+		if (m_optimiserSettings == OptimiserSettings::full())   \
+			throw;                                              \
+                                                                \
+		reset();                                                \
+		m_optimiserSettings = OptimiserSettings::full();        \
+		{ CODE }                                                \
+	}                                                           \
+}
+
 
 namespace solidity::frontend::test
 {
