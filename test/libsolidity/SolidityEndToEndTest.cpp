@@ -35,6 +35,8 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/ErrorCodes.h>
 
+#include <libyul/Exceptions.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <range/v3/view/transform.hpp>
@@ -51,24 +53,37 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace solidity::langutil;
 
-#define ALSO_VIA_YUL(CODE)                      \
-{                                               \
-	m_doEwasmTestrun = true;                    \
-                                                \
-	m_compileViaYul = false;                    \
-	m_compileToEwasm = false;                   \
-	{ CODE }                                    \
-                                                \
-	m_compileViaYul = true;                     \
-	reset();                                    \
-	{ CODE }                                    \
-                                                \
-	if (m_doEwasmTestrun)                       \
-	{                                           \
-		m_compileToEwasm = true;                \
-		reset();                                \
-		{ CODE }                                \
-	}                                           \
+#define RUN_AND_RERUN_WITH_OPTIMIZER_ON_STACK_ERROR(CODE)       \
+{                                                               \
+	try { CODE }                                                \
+	catch (yul::StackTooDeepError const&)                       \
+	{                                                           \
+	    if (m_optimiserSettings == OptimiserSettings::full())   \
+	        throw;                                              \
+	    reset();                                                \
+	    m_optimiserSettings = OptimiserSettings::full();        \
+        { CODE }                                                \
+	}                                                           \
+}
+
+#define ALSO_VIA_YUL(CODE)                                  \
+{                                                           \
+	m_doEwasmTestrun = true;                                \
+                                                            \
+	m_compileViaYul = false;                                \
+	m_compileToEwasm = false;                               \
+    RUN_AND_RERUN_WITH_OPTIMIZER_ON_STACK_ERROR(CODE)       \
+                                                            \
+	m_compileViaYul = true;                                 \
+	reset();                                                \
+	RUN_AND_RERUN_WITH_OPTIMIZER_ON_STACK_ERROR(CODE)       \
+                                                            \
+	if (m_doEwasmTestrun)                                   \
+	{                                                       \
+		m_compileToEwasm = true;                            \
+		reset();                                            \
+        RUN_AND_RERUN_WITH_OPTIMIZER_ON_STACK_ERROR(CODE)   \
+	}                                                       \
 }
 
 #define DISABLE_EWASM_TESTRUN() \
