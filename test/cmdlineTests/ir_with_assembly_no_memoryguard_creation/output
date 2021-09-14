@@ -10,7 +10,7 @@ Optimized IR:
 object "D_12" {
     code {
         {
-            /// @src 0:82:161
+            /// @src 0:82:161  "contract D {..."
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("D_12_deployed")
@@ -22,7 +22,7 @@ object "D_12" {
     object "D_12_deployed" {
         code {
             {
-                /// @src 0:82:161
+                /// @src 0:82:161  "contract D {..."
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {

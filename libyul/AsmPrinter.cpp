@@ -27,6 +27,7 @@
 #include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -38,6 +39,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
@@ -256,7 +258,49 @@ string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
 		return ":" + _type.str();
 }
 
-string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const& _debugData,  bool _statement)
+string AsmPrinter::formatSourceLocationComment(
+	SourceLocation const& _location,
+	map<string, unsigned> const& _nameToSourceIndex,
+	bool _statement,
+	CharStreamProvider const* _soliditySourceProvider
+)
+{
+	yulAssert(!_nameToSourceIndex.empty(), "");
+
+	string sourceIndex = "-1";
+	string solidityCodeSnippet = "";
+	if (_location.sourceName)
+	{
+		sourceIndex = to_string(_nameToSourceIndex.at(*_location.sourceName));
+
+		if (_soliditySourceProvider)
+		{
+			solidityCodeSnippet = escapeAndQuoteString(
+				_soliditySourceProvider->charStream(*_location.sourceName).singleLineSnippet(_location)
+			);
+
+			// On top of escaping quotes we also escape the slash inside any `*/` to guard against
+			// it prematurely terminating multi-line comment blocks. We do not escape all slashes
+			// because the ones without `*` are not dangerous and ignoring them reduces visual noise.
+			boost::replace_all(solidityCodeSnippet, "*/", "*\\/");
+		}
+	}
+
+	string sourceLocation =
+		"@src " +
+		sourceIndex +
+		":" +
+		to_string(_location.start) +
+		":" +
+		to_string(_location.end);
+
+	return
+		_statement ?
+		"/// " + joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ") :
+		"/** " + joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ") + " */ ";
+}
+
+string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const& _debugData, bool _statement)
 {
 	if (
 		!_debugData ||
@@ -267,19 +311,10 @@ string AsmPrinter::formatSourceLocationComment(shared_ptr<DebugData const> const
 
 	m_lastLocation = _debugData->location;
 
-	string sourceIndex = "-1";
-	if (_debugData->location.sourceName)
-		sourceIndex = to_string(m_nameToSourceIndex.at(*_debugData->location.sourceName));
-
-	string sourceLocation =
-		"@src " +
-		sourceIndex +
-		":" +
-		to_string(_debugData->location.start) +
-		":" +
-		to_string(_debugData->location.end);
-	return
-		_statement ?
-		"/// " + sourceLocation + "\n" :
-		"/** " + sourceLocation + " */ ";
+	return formatSourceLocationComment(
+		_debugData->location,
+		m_nameToSourceIndex,
+		_statement,
+		m_soliditySourceProvider
+	) + (_statement ? "\n" : "");
 }

@@ -22,9 +22,13 @@
 
 #include <libsolutil/CommonIO.h>
 
+#include <libyul/AsmPrinter.h>
+
 using namespace std;
-using namespace solidity::util;
+using namespace solidity::langutil;
 using namespace solidity::frontend;
+using namespace solidity::util;
+using namespace solidity::yul;
 
 namespace solidity::frontend
 {
@@ -131,12 +135,12 @@ string dispenseLocationComment(langutil::SourceLocation const& _location, IRGene
 {
 	solAssert(_location.sourceName, "");
 	_context.markSourceUsed(*_location.sourceName);
-	return "/// @src "
-		+ to_string(_context.sourceIndices().at(*_location.sourceName))
-		+ ":"
-		+ to_string(_location.start)
-		+ ":"
-		+ to_string(_location.end);
+	return AsmPrinter::formatSourceLocationComment(
+		_location,
+		_context.sourceIndices(),
+		true /* _statement */,
+		_context.soliditySourceProvider()
+	);
 }
 
 string dispenseLocationComment(ASTNode const& _node, IRGenerationContext& _context)

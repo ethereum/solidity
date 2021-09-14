@@ -192,6 +192,7 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     # white list of ids which are not covered by tests
     white_ids = {
         "9804", # Tested in test/libyul/ObjectParser.cpp.
+        "1544",
         "2674",
         "6367",
         "8387",

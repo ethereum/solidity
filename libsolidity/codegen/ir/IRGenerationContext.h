@@ -29,6 +29,7 @@
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/codegen/ir/Common.h>
 
+#include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/Common.h>
@@ -72,13 +73,15 @@ public:
 		ExecutionContext _executionContext,
 		RevertStrings _revertStrings,
 		OptimiserSettings _optimiserSettings,
-		std::map<std::string, unsigned> _sourceIndices
+		std::map<std::string, unsigned> _sourceIndices,
+		langutil::CharStreamProvider const* _soliditySourceProvider
 	):
 		m_evmVersion(_evmVersion),
 		m_executionContext(_executionContext),
 		m_revertStrings(_revertStrings),
 		m_optimiserSettings(std::move(_optimiserSettings)),
-		m_sourceIndices(std::move(_sourceIndices))
+		m_sourceIndices(std::move(_sourceIndices)),
+		m_soliditySourceProvider(_soliditySourceProvider)
 	{}
 
 	MultiUseYulFunctionCollector& functionCollector() { return m_functions; }
@@ -171,6 +174,8 @@ public:
 
 	bool immutableRegistered(VariableDeclaration const& _varDecl) const { return m_immutableVariables.count(&_varDecl); }
 
+	langutil::CharStreamProvider const* soliditySourceProvider() const { return m_soliditySourceProvider; }
+
 private:
 	langutil::EVMVersion m_evmVersion;
 	ExecutionContext m_executionContext;
@@ -214,6 +219,8 @@ private:
 	std::map<int64_t, uint64_t> m_functionIDs;
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
+
+	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
 };
 
 }

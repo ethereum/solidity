@@ -10,7 +10,7 @@ Optimized IR:
 object "C_7" {
     code {
         {
-            /// @src 0:80:112
+            /// @src 0:80:112  "contract C..."
             mstore(64, 128)
             if callvalue()
             {
@@ -29,7 +29,7 @@ object "C_7" {
     object "C_7_deployed" {
         code {
             {
-                /// @src 0:80:112
+                /// @src 0:80:112  "contract C..."
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {

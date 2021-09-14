@@ -24,6 +24,8 @@
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
 
+#include <liblangutil/CharStreamProvider.h>
+
 #include <libsolutil/Common.h>
 
 #include <memory>
@@ -49,8 +51,10 @@ struct ObjectNode
 	/// Name of the object.
 	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
-
-	virtual std::string toString(Dialect const* _dialect) const = 0;
+	virtual std::string toString(
+		Dialect const* _dialect,
+		langutil::CharStreamProvider const* _soliditySourceProvider
+	) const = 0;
 };
 
 /**
@@ -62,7 +66,10 @@ struct Data: public ObjectNode
 
 	bytes data;
 
-	std::string toString(Dialect const* _dialect) const override;
+	std::string toString(
+		Dialect const* _dialect,
+		langutil::CharStreamProvider const* _soliditySourceProvider
+	) const override;
 };
 
 
@@ -79,7 +86,10 @@ struct Object: public ObjectNode
 {
 public:
 	/// @returns a (parseable) string representation.
-	std::string toString(Dialect const* _dialect) const;
+	std::string toString(
+		Dialect const* _dialect,
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
+	) const;
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself

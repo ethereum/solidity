@@ -26,7 +26,6 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmJsonConverter.h>
-#include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
