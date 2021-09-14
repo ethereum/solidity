@@ -2555,7 +2555,7 @@ bool UserDefinedValueType::operator==(Type const& _other) const
 
 string UserDefinedValueType::toString(bool /* _short */) const
 {
-	return "user defined type " + definition().name();
+	return "user defined type " + *definition().annotation().canonicalName;
 }
 
 vector<tuple<string, Type const*>> UserDefinedValueType::makeStackItems() const
