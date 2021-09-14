@@ -36,7 +36,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type MyAddress",
+//         "internalType": "user defined type C.MyAddress",
 //         "name": "",
 //         "type": "address"
 //       }
@@ -64,7 +64,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type MyBytes32",
+//         "internalType": "user defined type C.MyBytes32",
 //         "name": "",
 //         "type": "bytes32"
 //       }
@@ -92,7 +92,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type MyUInt8",
+//         "internalType": "user defined type C.MyUInt8",
 //         "name": "",
 //         "type": "uint8"
 //       }
@@ -104,7 +104,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type MyAddress",
+//         "internalType": "user defined type C.MyAddress",
 //         "name": "a",
 //         "type": "address"
 //       }
@@ -132,7 +132,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type MyBytes32",
+//         "internalType": "user defined type C.MyBytes32",
 //         "name": "a",
 //         "type": "bytes32"
 //       }
@@ -160,7 +160,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type MyUInt8",
+//         "internalType": "user defined type C.MyUInt8",
 //         "name": "a",
 //         "type": "uint8"
 //       }

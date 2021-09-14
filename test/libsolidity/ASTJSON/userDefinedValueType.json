@@ -269,7 +269,7 @@
           "typeDescriptions":
           {
             "typeIdentifier": "t_mapping$_t_userDefinedValueType$_MyAddress_$18_$_t_userDefinedValueType$_MyUInt_$20_$",
-            "typeString": "mapping(user defined type MyAddress => user defined type MyUInt)"
+            "typeString": "mapping(user defined type C.MyAddress => user defined type C.MyUInt)"
           },
           "typeName":
           {
@@ -291,7 +291,7 @@
               "typeDescriptions":
               {
                 "typeIdentifier": "t_userDefinedValueType$_MyAddress_$18",
-                "typeString": "user defined type MyAddress"
+                "typeString": "user defined type C.MyAddress"
               }
             },
             "nodeType": "Mapping",
@@ -299,7 +299,7 @@
             "typeDescriptions":
             {
               "typeIdentifier": "t_mapping$_t_userDefinedValueType$_MyAddress_$18_$_t_userDefinedValueType$_MyUInt_$20_$",
-              "typeString": "mapping(user defined type MyAddress => user defined type MyUInt)"
+              "typeString": "mapping(user defined type C.MyAddress => user defined type C.MyUInt)"
             },
             "valueType":
             {
@@ -318,7 +318,7 @@
               "typeDescriptions":
               {
                 "typeIdentifier": "t_userDefinedValueType$_MyUInt_$20",
-                "typeString": "user defined type MyUInt"
+                "typeString": "user defined type C.MyUInt"
               }
             }
           },
