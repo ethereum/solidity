@@ -134,7 +134,7 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 )
 {
 	auto result = std::make_unique<CFG>();
-	result->entry = &result->makeBlock();
+	result->entry = &result->makeBlock(debugDataOf(_block));
 
 	ControlFlowGraphBuilder builder(*result, _analysisInfo, _dialect);
 	builder.m_currentBlock = result->entry;
@@ -233,7 +233,7 @@ void ControlFlowGraphBuilder::operator()(ExpressionStatement const& _exprStmt)
 			if (builtin->controlFlowSideEffects.terminates)
 			{
 				m_currentBlock->exit = CFG::BasicBlock::Terminated{};
-				m_currentBlock = &m_graph.makeBlock();
+				m_currentBlock = &m_graph.makeBlock(debugDataOf(*m_currentBlock));
 			}
 }
 
@@ -246,15 +246,19 @@ void ControlFlowGraphBuilder::operator()(Block const& _block)
 
 void ControlFlowGraphBuilder::operator()(If const& _if)
 {
-	auto&& [ifBranch, afterIf] = makeConditionalJump(std::visit(*this, *_if.condition));
-	m_currentBlock = ifBranch;
+	auto& ifBranch = m_graph.makeBlock(debugDataOf(_if.body));
+	auto& afterIf = m_graph.makeBlock(debugDataOf(*m_currentBlock));
+	makeConditionalJump(debugDataOf(_if), std::visit(*this, *_if.condition), ifBranch, afterIf);
+	m_currentBlock = &ifBranch;
 	(*this)(_if.body);
-	jump(*afterIf);
+	jump(debugDataOf(_if.body), afterIf);
 }
 
 void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
+	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
+
 	auto ghostVariableId = m_graph.ghostVariables.size();
 	YulString ghostVariableName("GHOST[" + to_string(ghostVariableId) + "]");
 	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulstring, ghostVariableName});
@@ -273,43 +277,46 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 
 	// Artificially generate:
 	// eq(<literal>, <ghostVariable>)
-	auto makeValueCompare = [&](Literal const& _value) {
+	auto makeValueCompare = [&](Case const& _case) {
 		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
-			_value.debugData,
+			debugDataOf(_case),
 			yul::Identifier{{}, "eq"_yulstring},
-			{_value, Identifier{{}, ghostVariableName}}
+			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
-			Stack{ghostVarSlot, LiteralSlot{valueOfLiteral(_value), _value.debugData}},
+			Stack{ghostVarSlot, LiteralSlot{valueOfLiteral(*_case.value), debugDataOf(*_case.value)}},
 			Stack{TemporarySlot{ghostCall, 0}},
-			CFG::BuiltinCall{_switch.debugData, *equalityBuiltin, ghostCall, 2},
+			CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
 		});
 		return operation.output.front();
 	};
-	CFG::BasicBlock& afterSwitch = m_graph.makeBlock();
+	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
 	yulAssert(!_switch.cases.empty(), "");
 	for (auto const& switchCase: _switch.cases | ranges::views::drop_last(1))
 	{
 		yulAssert(switchCase.value, "");
-		auto&& [caseBranch, elseBranch] = makeConditionalJump(makeValueCompare(*switchCase.value));
-		m_currentBlock = caseBranch;
+		auto& caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
+		auto& elseBranch = m_graph.makeBlock(debugDataOf(_switch));
+		makeConditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, elseBranch);
+		m_currentBlock = &caseBranch;
 		(*this)(switchCase.body);
-		jump(afterSwitch);
-		m_currentBlock = elseBranch;
+		jump(debugDataOf(switchCase.body), afterSwitch);
+		m_currentBlock = &elseBranch;
 	}
 	Case const& switchCase = _switch.cases.back();
 	if (switchCase.value)
 	{
-		CFG::BasicBlock& caseBranch = m_graph.makeBlock();
-		makeConditionalJump(makeValueCompare(*switchCase.value), caseBranch, afterSwitch);
+		CFG::BasicBlock& caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
+		makeConditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, afterSwitch);
 		m_currentBlock = &caseBranch;
 	}
 	(*this)(switchCase.body);
-	jump(afterSwitch);
+	jump(debugDataOf(switchCase.body), afterSwitch);
 }
 
 void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 {
+	shared_ptr<DebugData const> preLoopDebugData = debugDataOf(_loop);
 	ScopedSaveAndRestore scopeRestore(m_scope, m_info.scopes.at(&_loop.pre).get());
 	(*this)(_loop.pre);
 
@@ -317,10 +324,10 @@ void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 	if (auto const* literalCondition = get_if<yul::Literal>(_loop.condition.get()))
 		constantCondition = valueOfLiteral(*literalCondition) != 0;
 
-	CFG::BasicBlock& loopCondition = m_graph.makeBlock();
-	CFG::BasicBlock& loopBody = m_graph.makeBlock();
-	CFG::BasicBlock& post = m_graph.makeBlock();
-	CFG::BasicBlock& afterLoop = m_graph.makeBlock();
+	CFG::BasicBlock& loopCondition = m_graph.makeBlock(debugDataOf(*_loop.condition));
+	CFG::BasicBlock& loopBody = m_graph.makeBlock(debugDataOf(_loop.body));
+	CFG::BasicBlock& post = m_graph.makeBlock(debugDataOf(_loop.post));
+	CFG::BasicBlock& afterLoop = m_graph.makeBlock(preLoopDebugData);
 
 	ScopedSaveAndRestore scopedSaveAndRestore(m_forLoopInfo, ForLoopInfo{afterLoop, post});
 
@@ -328,48 +335,49 @@ void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 	{
 		if (*constantCondition)
 		{
-			jump(loopBody);
+			jump(debugDataOf(_loop.pre), loopBody);
 			(*this)(_loop.body);
-			jump(post);
+			jump(debugDataOf(_loop.body), post);
 			(*this)(_loop.post);
-			jump(loopBody, true);
+			jump(debugDataOf(_loop.post), loopBody, true);
 		}
 		else
-			jump(afterLoop);
+			jump(debugDataOf(_loop.pre), afterLoop);
 	}
 	else
 	{
-		jump(loopCondition);
-		makeConditionalJump(std::visit(*this, *_loop.condition), loopBody, afterLoop);
+		jump(debugDataOf(_loop.pre), loopCondition);
+		makeConditionalJump(debugDataOf(*_loop.condition), std::visit(*this, *_loop.condition), loopBody, afterLoop);
 		m_currentBlock = &loopBody;
 		(*this)(_loop.body);
-		jump(post);
+		jump(debugDataOf(_loop.body), post);
 		(*this)(_loop.post);
-		jump(loopCondition, true);
+		jump(debugDataOf(_loop.post), loopCondition, true);
 	}
 
 	m_currentBlock = &afterLoop;
 }
 
-void ControlFlowGraphBuilder::operator()(Break const&)
+void ControlFlowGraphBuilder::operator()(Break const& _break)
 {
 	yulAssert(m_forLoopInfo.has_value(), "");
-	jump(m_forLoopInfo->afterLoop);
-	m_currentBlock = &m_graph.makeBlock();
+	jump(debugDataOf(_break), m_forLoopInfo->afterLoop);
+	m_currentBlock = &m_graph.makeBlock(debugDataOf(*m_currentBlock));
 }
 
-void ControlFlowGraphBuilder::operator()(Continue const&)
+void ControlFlowGraphBuilder::operator()(Continue const& _continue)
 {
 	yulAssert(m_forLoopInfo.has_value(), "");
-	jump(m_forLoopInfo->post);
-	m_currentBlock = &m_graph.makeBlock();
+	jump(debugDataOf(_continue), m_forLoopInfo->post);
+	m_currentBlock = &m_graph.makeBlock(debugDataOf(*m_currentBlock));
 }
 
-void ControlFlowGraphBuilder::operator()(Leave const&)
+// '_leave' and '__leave' are reserved in VisualStudio
+void ControlFlowGraphBuilder::operator()(Leave const& leave_)
 {
-	yulAssert(m_currentFunctionExit.has_value(), "");
-	m_currentBlock->exit = *m_currentFunctionExit;
-	m_currentBlock = &m_graph.makeBlock();
+	yulAssert(m_currentFunction.has_value(), "");
+	m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{debugDataOf(leave_), *m_currentFunction};
+	m_currentBlock = &m_graph.makeBlock(debugDataOf(*m_currentBlock));
 }
 
 void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
@@ -386,7 +394,7 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 	auto&& [it, inserted] = m_graph.functionInfo.emplace(std::make_pair(&function, CFG::FunctionInfo{
 		_function.debugData,
 		function,
-		&m_graph.makeBlock(),
+		&m_graph.makeBlock(debugDataOf(_function.body)),
 		_function.parameters | ranges::views::transform([&](auto const& _param) {
 			return VariableSlot{
 				std::get<Scope::Variable>(virtualFunctionScope->identifiers.at(_param.name)),
@@ -404,10 +412,10 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 	CFG::FunctionInfo& functionInfo = it->second;
 
 	ControlFlowGraphBuilder builder{m_graph, m_info, m_dialect};
-	builder.m_currentFunctionExit = CFG::BasicBlock::FunctionReturn{&functionInfo};
+	builder.m_currentFunction = &functionInfo;
 	builder.m_currentBlock = functionInfo.entry;
 	builder(_function.body);
-	builder.m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{&functionInfo};
+	builder.m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{debugDataOf(_function), &functionInfo};
 }
 
 
@@ -497,18 +505,16 @@ Scope::Variable const& ControlFlowGraphBuilder::lookupVariable(YulString _name) 
 	yulAssert(false, "External identifier access unimplemented.");
 }
 
-std::pair<CFG::BasicBlock*, CFG::BasicBlock*> ControlFlowGraphBuilder::makeConditionalJump(StackSlot _condition)
-{
-	CFG::BasicBlock& nonZero = m_graph.makeBlock();
-	CFG::BasicBlock& zero = m_graph.makeBlock();
-	makeConditionalJump(move(_condition), nonZero, zero);
-	return {&nonZero, &zero};
-}
-
-void ControlFlowGraphBuilder::makeConditionalJump(StackSlot _condition, CFG::BasicBlock& _nonZero, CFG::BasicBlock& _zero)
+void ControlFlowGraphBuilder::makeConditionalJump(
+	shared_ptr<DebugData const> _debugData,
+	StackSlot _condition,
+	CFG::BasicBlock& _nonZero,
+	CFG::BasicBlock& _zero
+)
 {
 	yulAssert(m_currentBlock, "");
 	m_currentBlock->exit = CFG::BasicBlock::ConditionalJump{
+		move(_debugData),
 		move(_condition),
 		&_nonZero,
 		&_zero
@@ -518,10 +524,14 @@ void ControlFlowGraphBuilder::makeConditionalJump(StackSlot _condition, CFG::Bas
 	m_currentBlock = nullptr;
 }
 
-void ControlFlowGraphBuilder::jump(CFG::BasicBlock& _target, bool backwards)
+void ControlFlowGraphBuilder::jump(
+	shared_ptr<DebugData const> _debugData,
+	CFG::BasicBlock& _target,
+	bool backwards
+)
 {
 	yulAssert(m_currentBlock, "");
-	m_currentBlock->exit = CFG::BasicBlock::Jump{&_target, backwards};
+	m_currentBlock->exit = CFG::BasicBlock::Jump{move(_debugData), &_target, backwards};
 	_target.entries.emplace_back(m_currentBlock);
 	m_currentBlock = &_target;
 }

@@ -172,18 +172,25 @@ struct CFG
 		struct MainExit {};
 		struct ConditionalJump
 		{
+			std::shared_ptr<DebugData const> debugData;
 			StackSlot condition;
 			BasicBlock* nonZero = nullptr;
 			BasicBlock* zero = nullptr;
 		};
 		struct Jump
 		{
+			std::shared_ptr<DebugData const> debugData;
 			BasicBlock* target = nullptr;
 			/// The only backwards jumps are jumps from loop post to loop condition.
 			bool backwards = false;
 		};
-		struct FunctionReturn { CFG::FunctionInfo* info = nullptr; };
+		struct FunctionReturn
+		{
+			std::shared_ptr<DebugData const> debugData;
+			CFG::FunctionInfo* info = nullptr;
+		};
 		struct Terminated {};
+		std::shared_ptr<DebugData const> debugData;
 		std::vector<BasicBlock*> entries;
 		std::vector<Operation> operations;
 		std::variant<MainExit, Jump, ConditionalJump, FunctionReturn, Terminated> exit = MainExit{};
@@ -216,9 +223,9 @@ struct CFG
 	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
 	std::list<yul::FunctionCall> ghostCalls;
 
-	BasicBlock& makeBlock()
+	BasicBlock& makeBlock(std::shared_ptr<DebugData const> _debugData)
 	{
-		return blocks.emplace_back(BasicBlock{});
+		return blocks.emplace_back(BasicBlock{move(_debugData), {}, {}});
 	}
 };
 

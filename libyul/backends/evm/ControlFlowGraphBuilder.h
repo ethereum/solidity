@@ -62,13 +62,18 @@ private:
 
 	Scope::Function const& lookupFunction(YulString _name) const;
 	Scope::Variable const& lookupVariable(YulString _name) const;
-	/// @returns a pair of newly created blocks, the first element being the non-zero branch, the second element the
-	/// zero branch.
 	/// Resets m_currentBlock to enforce a subsequent explicit reassignment.
-	std::pair<CFG::BasicBlock*, CFG::BasicBlock*> makeConditionalJump(StackSlot _condition);
-	/// Resets m_currentBlock to enforce a subsequent explicit reassignment.
-	void makeConditionalJump(StackSlot _condition, CFG::BasicBlock& _nonZero, CFG::BasicBlock& _zero);
-	void jump(CFG::BasicBlock& _target, bool _backwards = false);
+	void makeConditionalJump(
+		std::shared_ptr<DebugData const> _debugData,
+		StackSlot _condition,
+		CFG::BasicBlock& _nonZero,
+		CFG::BasicBlock& _zero
+	);
+	void jump(
+		std::shared_ptr<DebugData const> _debugData,
+		CFG::BasicBlock& _target,
+		bool _backwards = false
+	);
 	CFG& m_graph;
 	AsmAnalysisInfo const& m_info;
 	Dialect const& m_dialect;
@@ -80,7 +85,7 @@ private:
 		std::reference_wrapper<CFG::BasicBlock> post;
 	};
 	std::optional<ForLoopInfo> m_forLoopInfo;
-	std::optional<CFG::BasicBlock::FunctionReturn> m_currentFunctionExit;
+	std::optional<CFG::FunctionInfo*> m_currentFunction;
 };
 
 }
