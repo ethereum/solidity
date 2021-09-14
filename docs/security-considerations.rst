@@ -389,6 +389,10 @@ code.
 Always use the latest version of the compiler to be notified about all recently
 introduced warnings.
 
+Messages of type ``info`` issued by the compiler are not dangerous, and simply
+represent extra suggestions and optional information that the compiler thinks
+might be useful to the user.
+
 Restrict the Amount of Ether
 ============================
 

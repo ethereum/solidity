@@ -36,14 +36,14 @@ using namespace solidity::frontend;
 bool PostTypeChecker::check(ASTNode const& _astRoot)
 {
 	_astRoot.accept(*this);
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }
 
 bool PostTypeChecker::finalize()
 {
 	for (auto& checker: m_checkers)
 		checker->finalize();
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }
 
 bool PostTypeChecker::visit(ContractDefinition const& _contractDefinition)

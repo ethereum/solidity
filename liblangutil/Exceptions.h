@@ -120,7 +120,15 @@ public:
 		ParserError,
 		TypeError,
 		SyntaxError,
-		Warning
+		Warning,
+		Info
+	};
+
+	enum class Severity
+	{
+		Error,
+		Warning,
+		Info
 	};
 
 	Error(
@@ -139,21 +147,63 @@ public:
 	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
 	{
 		for (auto e: _list)
-		{
 			if (e->type() == _type)
 				return e.get();
-		}
 		return nullptr;
 	}
-	static bool containsOnlyWarnings(ErrorList const& _list)
+
+	static Severity errorSeverity(Type _type)
+	{
+		if (_type == Type::Info)
+			return Severity::Info;
+		if (_type == Type::Warning)
+			return Severity::Warning;
+		return Severity::Error;
+	}
+
+	static bool isError(Severity _severity)
+	{
+		return _severity == Severity::Error;
+	}
+
+	static bool isError(Type _type)
+	{
+		return isError(errorSeverity(_type));
+	}
+
+	static bool containsErrors(ErrorList const& _list)
 	{
 		for (auto e: _list)
-		{
-			if (e->type() != Type::Warning)
-				return false;
-		}
-		return true;
+			if (isError(e->type()))
+				return true;
+		return false;
 	}
+
+	static std::string formatErrorSeverity(Severity _severity)
+	{
+		if (_severity == Severity::Info)
+			return "Info";
+		if (_severity == Severity::Warning)
+			return "Warning";
+		solAssert(isError(_severity), "");
+		return "Error";
+	}
+
+	static std::string formatErrorSeverityLowercase(Severity _severity)
+	{
+		switch (_severity)
+		{
+		case Severity::Info:
+			return "info";
+		case Severity::Warning:
+			return "warning";
+		case Severity::Error:
+			solAssert(isError(_severity), "");
+			return "error";
+		}
+		solAssert(false, "");
+	}
+
 private:
 	ErrorId m_errorId;
 	Type m_type;

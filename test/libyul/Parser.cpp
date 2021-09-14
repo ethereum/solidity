@@ -85,7 +85,7 @@ shared_ptr<Block> parse(string const& _source, Dialect const& _dialect, ErrorRep
 	return {};
 }
 
-std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
+std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarningsAndInfos = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -98,11 +98,11 @@ std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect con
 	else
 	{
 		// If success is true, there might still be an error in the assembly stage.
-		if (_allowWarnings && Error::containsOnlyWarnings(errors))
+		if (_allowWarningsAndInfos && !Error::containsErrors(errors))
 			return {};
 		else if (!errors.empty())
 		{
-			if (!_allowWarnings)
+			if (!_allowWarningsAndInfos)
 				BOOST_CHECK_EQUAL(errors.size(), 1);
 			return *errors.front();
 		}
@@ -110,15 +110,15 @@ std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect con
 	return {};
 }
 
-bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarnings = true)
+bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = true)
 {
-	return !parseAndReturnFirstError(_source, _dialect, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);
 }
 
-Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarnings = false)
+Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = false)
 {
 
-	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarnings);
+	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);
 	BOOST_REQUIRE(error);
 	return *error;
 }

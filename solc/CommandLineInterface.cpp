@@ -976,7 +976,7 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 			m_hasOutput = true;
 			formatter.printErrorInformation(*error);
 		}
-		if (!Error::containsOnlyWarnings(stack.errors()))
+		if (Error::containsErrors(stack.errors()))
 			successful = false;
 	}
 

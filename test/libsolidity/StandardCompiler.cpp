@@ -41,6 +41,19 @@ namespace solidity::frontend::test
 namespace
 {
 
+langutil::Error::Severity str2Severity(string const& _cat)
+{
+	map<string, langutil::Error::Severity> cats{
+		{"info", langutil::Error::Severity::Info},
+		{"Info", langutil::Error::Severity::Info},
+		{"warning", langutil::Error::Severity::Warning},
+		{"Warning", langutil::Error::Severity::Warning},
+		{"error", langutil::Error::Severity::Error},
+		{"Error", langutil::Error::Severity::Error}
+	};
+	return cats.at(_cat);
+}
+
 /// Helper to match a specific error type and message
 bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
 {
@@ -68,7 +81,7 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 	{
 		BOOST_REQUIRE(error.isObject());
 		BOOST_REQUIRE(error["severity"].isString());
-		if (error["severity"].asString() != "warning")
+		if (langutil::Error::isError(str2Severity(error["severity"].asString())))
 			return false;
 	}
 

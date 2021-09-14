@@ -200,7 +200,7 @@ TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _
 {
 	ErrorList errors;
 	auto [object, analysisInfo] = parse(m_source, *m_dialect, errors);
-	if (!object || !analysisInfo || !Error::containsOnlyWarnings(errors))
+	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		return TestResult::FatalError;

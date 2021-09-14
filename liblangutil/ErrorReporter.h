@@ -63,6 +63,8 @@ public:
 		SecondarySourceLocation const& _secondaryLocation
 	);
 
+	void info(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+
 	void error(
 		ErrorId _error,
 		Error::Type _type,
@@ -118,13 +120,13 @@ public:
 
 	void clear();
 
-	/// @returns true iff there is any error (ignores warnings).
+	/// @returns true iff there is any error (ignores warnings and infos).
 	bool hasErrors() const
 	{
 		return m_errorCount > 0;
 	}
 
-	/// @returns the number of errors (ignores warnings).
+	/// @returns the number of errors (ignores warnings and infos).
 	unsigned errorCount() const
 	{
 		return m_errorCount;
@@ -183,9 +185,11 @@ private:
 
 	unsigned m_errorCount = 0;
 	unsigned m_warningCount = 0;
+	unsigned m_infoCount = 0;
 
 	unsigned const c_maxWarningsAllowed = 256;
 	unsigned const c_maxErrorsAllowed = 256;
+	unsigned const c_maxInfosAllowed = 256;
 };
 
 }
