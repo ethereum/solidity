@@ -200,7 +200,7 @@ string Assembly::assemblyString(StringMap const& _sourceCodes) const
 
 Json::Value Assembly::createJsonValue(string _name, int _source, int _begin, int _end, string _value, string _jumpType)
 {
-	Json::Value value;
+	Json::Value value{Json::objectValue};
 	value["name"] = _name;
 	value["source"] = _source;
 	value["begin"] = _begin;
@@ -222,8 +222,9 @@ string Assembly::toStringInHex(u256 _value)
 Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) const
 {
 	Json::Value root;
+	root[".code"] = Json::arrayValue;
 
-	Json::Value& collection = root[".code"] = Json::arrayValue;
+	Json::Value& collection = root[".code"];
 	for (AssemblyItem const& i: m_items)
 	{
 		int sourceIndex = -1;
@@ -317,7 +318,8 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
-		Json::Value& data = root[".data"] = Json::objectValue;
+		root[".data"] = Json::objectValue;
+		Json::Value& data = root[".data"];
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
 				data[toStringInHex((u256)i.first)] = toHex(i.second);
