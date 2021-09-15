@@ -113,6 +113,7 @@ object "test_11" {
                 ret := 0
             }
 
+            /// @ast-id 10
             /// @src 0:99:167  "function f() public pure returns (bool) {..."
             function fun_f_10() -> var__5 {
                 /// @src 0:133:137  "bool"

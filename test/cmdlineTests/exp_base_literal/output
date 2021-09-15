@@ -288,6 +288,7 @@ object "C_81" {
                 power := exp(1, exponent)
             }
 
+            /// @ast-id 80
             /// @src 0:96:368  "function f(uint a, uint b, uint c, uint d) public pure returns (uint, int, uint, uint) {..."
             function fun_f_80(var_a_4, var_b_6, var_c_8, var_d_10) -> var__13, var__15, var__17, var__19 {
                 /// @src 0:160:164  "uint"

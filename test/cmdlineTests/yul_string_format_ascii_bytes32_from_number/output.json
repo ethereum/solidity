@@ -127,6 +127,7 @@ object \"C_11\" {
                 converted := cleanup_t_bytes4(shift_left_224(cleanup_t_rational_1633837924_by_1(value)))
             }
 
+            /// @ast-id 10
             /// @src 0:91:157  \"function f() external pure returns (bytes4) { return 0x61626364; }\"
             function fun_f_10() -> var__5 {
                 /// @src 0:127:133  \"bytes4\"
