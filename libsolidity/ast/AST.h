@@ -750,6 +750,8 @@ public:
 
 	Type const* type() const override;
 
+	TypeDeclarationAnnotation& annotation() const override;
+
 	TypeName const* underlyingType() const { return m_underlyingType.get(); }
 	bool isVisibleViaContractTypeAccess() const override { return true; }
 
