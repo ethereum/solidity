@@ -21,18 +21,18 @@ contract C {
 // compileViaYul: also
 // ----
 // getX() -> 0
-// gas irOptimized: 23353
+// gas irOptimized: 23379
 // gas legacy: 23608
 // gas legacyOptimized: 23311
 // setX(int256): 5 ->
-// gas irOptimized: 43511
+// gas irOptimized: 43510
 // gas legacy: 43724
 // gas legacyOptimized: 43516
 // getX() -> 5
-// gas irOptimized: 23353
+// gas irOptimized: 23379
 // gas legacy: 23608
 // gas legacyOptimized: 23311
 // add(int256,int256): 200, 99 -> 299
-// gas irOptimized: 21794
+// gas irOptimized: 21764
 // gas legacy: 22523
 // gas legacyOptimized: 21813

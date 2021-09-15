@@ -8,17 +8,18 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x10
-// JUMP
-// JUMPDEST
-// POP
-// POP
-// POP
-// POP
-// PUSH1 0x0
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// SWAP2
-// JUMP
-// JUMPDEST
+//     /* "":212:254   */
+//   stop
+//     /* "":218:252   */
+// tag_1:
+//   pop
+//   pop
+//   pop
+//   pop
+//     /* "":247:248   */
+//   0x00
+//     /* "":244:245   */
+//   0x00
+//     /* "":218:252   */
+//   swap2
+//   jump	// out
