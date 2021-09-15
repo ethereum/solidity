@@ -252,18 +252,17 @@ object "C_15" {
                 mstore(array, length)
                 dst := add(array, 0x20)
 
-                let src := offset
-                if gt(add(src, mul(length, 0x20)), end) {
+                let srcEnd := add(offset, mul(length, 0x20))
+                if gt(srcEnd, end) {
                     revert_error_81385d8c0b31fffe14be1da910c8bd3a80be4cfa248e04f42ec0faea3132a8ef()
                 }
-                for { let i := 0 } lt(i, length) { i := add(i, 1) }
+                for { let src := offset } lt(src, srcEnd) { src := add(src, 0x20) }
                 {
 
                     let elementPos := src
 
                     mstore(dst, abi_decode_t_uint256(elementPos, end))
                     dst := add(dst, 0x20)
-                    src := add(src, 0x20)
                 }
             }
 
@@ -282,11 +281,11 @@ object "C_15" {
                 mstore(array, length)
                 dst := add(array, 0x20)
 
-                let src := offset
-                if gt(add(src, mul(length, 0x20)), end) {
+                let srcEnd := add(offset, mul(length, 0x20))
+                if gt(srcEnd, end) {
                     revert_error_81385d8c0b31fffe14be1da910c8bd3a80be4cfa248e04f42ec0faea3132a8ef()
                 }
-                for { let i := 0 } lt(i, length) { i := add(i, 1) }
+                for { let src := offset } lt(src, srcEnd) { src := add(src, 0x20) }
                 {
 
                     let innerOffset := calldataload(src)
@@ -295,7 +294,6 @@ object "C_15" {
 
                     mstore(dst, abi_decode_t_array$_t_uint256_$dyn_memory_ptr(elementPos, end))
                     dst := add(dst, 0x20)
-                    src := add(src, 0x20)
                 }
             }
 
