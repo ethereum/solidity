@@ -804,6 +804,51 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_with_nested_locati
 	CHECK_LOCATION(literal128.debugData->location, "source1", 96, 165);
 }
 
+BOOST_AUTO_TEST_CASE(astid)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src -1:-1:-1 @ast-id 7
+		{
+			/** @ast-id 2 */
+			function f(x) -> y {}
+			mstore(1, 2)
+		}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_CHECK(result->debugData->astID == int64_t(7));
+	auto const& funDef = get<FunctionDefinition>(result->statements.at(0));
+	BOOST_CHECK(funDef.debugData->astID == int64_t(2));
+	BOOST_CHECK(funDef.parameters.at(0).debugData->astID == nullopt);
+	BOOST_CHECK(debugDataOf(result->statements.at(1))->astID == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(astid_reset)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src -1:-1:-1 @ast-id 7 @src 1:1:1
+		{
+			/** @ast-id 2 */
+			function f(x) -> y {}
+			mstore(1, 2)
+		}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_CHECK(result->debugData->astID == int64_t(7));
+	auto const& funDef = get<FunctionDefinition>(result->statements.at(0));
+	BOOST_CHECK(funDef.debugData->astID == int64_t(2));
+	BOOST_CHECK(funDef.parameters.at(0).debugData->astID == nullopt);
+	BOOST_CHECK(debugDataOf(result->statements.at(1))->astID == nullopt);
+}
+
+
 BOOST_AUTO_TEST_CASE(customSourceLocations_multiple_src_tags_on_one_line)
 {
 	ErrorList errorList;
