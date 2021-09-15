@@ -37,9 +37,11 @@ source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
+pushd "${REPO_ROOT}/test/cmdlineTests" > /dev/null
 autoupdate=false
 no_smt=false
 declare -a selected_tests
+declare -a patterns_with_no_matches
 while [[ $# -gt 0 ]]
 do
     case "$1" in
@@ -52,11 +54,25 @@ do
             shift
             ;;
         *)
-            selected_tests+=("$1")
+            matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut --characters 3- | sort)
+
+            if [[ $matching_tests == "" ]]; then
+                patterns_with_no_matches+=("$1")
+                printWarning "No tests matching pattern '$1' found."
+            else
+                # shellcheck disable=SC2206 # We do not support test names containing spaces.
+                selected_tests+=($matching_tests)
+            fi
+
             shift
             ;;
     esac
 done
+
+if (( ${#selected_tests[@]} == 0 && ${#patterns_with_no_matches[@]} == 0 )); then
+    selected_tests=(*)
+fi
+popd > /dev/null
 
 case "$OSTYPE" in
     msys)
@@ -69,7 +85,7 @@ case "$OSTYPE" in
         SOLC="${SOLIDITY_BUILD_DIR}/solc/solc"
         ;;
 esac
-echo "${SOLC}"
+echo "Using solc binary at ${SOLC}"
 
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
@@ -320,7 +336,6 @@ test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid rem
 printTask "Running general commandline tests..."
 (
     cd "$REPO_ROOT"/test/cmdlineTests/
-    (( ${#selected_tests[@]} > 0 )) || selected_tests=(*)
     for tdir in "${selected_tests[@]}"
     do
         if ! [[ -d $tdir ]]; then
