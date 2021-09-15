@@ -33,7 +33,7 @@ RUN apt-get update; \
 		ninja-build git wget \
 		libbz2-dev zlib1g-dev git curl uuid-dev \
 		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4; \
-    apt-get install -qy python3-pip sphinx-doc sphinx-common;
+    apt-get install -qy python3-pip;
 
 # Install cmake 3.21.2 (minimum requirement is cmake 3.10)
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-Linux-x86_64.sh; \
