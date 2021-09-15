@@ -4,20 +4,7 @@
     "function_debug_info_via_yul/input.sol:C":
     {
       "function-debug": {},
-      "function-debug-runtime":
-      {
-        "abi_encode_uint256":
-        {
-          "parameterSlots": 2,
-          "returnSlots": 1
-        },
-        "calldata_array_index_access_uint256_dyn_calldata":
-        {
-          "entryPoint": 168,
-          "parameterSlots": 2,
-          "returnSlots": 1
-        }
-      }
+      "function-debug-runtime": {}
     }
   },
   "version": "<VERSION REMOVED>"

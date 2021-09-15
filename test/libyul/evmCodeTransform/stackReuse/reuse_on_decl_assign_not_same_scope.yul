@@ -8,10 +8,10 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x5
-// DUP1
-// DUP1
-// DUP2
-// SSTORE
-// POP
-// POP
+//     /* "":15:16   */
+//   0x05
+//     /* "":126:138   */
+//   dup1
+//   sstore
+//     /* "":0:146   */
+//   stop

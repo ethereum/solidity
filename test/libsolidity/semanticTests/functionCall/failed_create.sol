@@ -18,7 +18,7 @@ contract C {
 // compileViaYul: also
 // ----
 // constructor(), 20 wei
-// gas irOptimized: 219233
+// gas irOptimized: 220113
 // gas legacy: 288299
 // gas legacyOptimized: 177933
 // f(uint256): 20 -> 1370859564726510389319704988634906228201275401179
@@ -26,7 +26,7 @@ contract C {
 // f(uint256): 20 -> FAILURE
 // x() -> 1
 // stack(uint256): 1023 -> FAILURE
-// gas irOptimized: 349023
+// gas irOptimized: 345821
 // gas legacy: 535367
 // gas legacyOptimized: 354656
 // x() -> 1
