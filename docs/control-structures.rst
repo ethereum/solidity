@@ -65,9 +65,10 @@ uses up at least one stack slot and there are only 1024 slots available.
 External Function Calls
 -----------------------
 
-The expressions ``this.g(8);`` and ``c.g(2);`` (where ``c`` is a contract
-instance) are also valid function calls, but this time, the function
-will be called "externally", via a message call and not directly via jumps.
+Functions can also be called using the ``this.g(8);`` and ``c.g(2);`` notation, where
+``c`` is a contract instance and ``g`` is a function belonging to ``c``.
+Calling the function ``g`` via either way results in it being called "externally", using a
+message call and not directly via jumps.
 Please note that function calls on ``this`` cannot be used in the constructor,
 as the actual contract has not been created yet.
 
