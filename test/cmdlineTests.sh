@@ -85,7 +85,7 @@ case "$OSTYPE" in
         SOLC="${SOLIDITY_BUILD_DIR}/solc/solc"
         ;;
 esac
-echo "${SOLC}"
+echo "Using solc binary at ${SOLC}"
 
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
