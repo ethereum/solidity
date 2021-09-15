@@ -36,7 +36,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type C.MyAddress",
+//         "internalType": "C.MyAddress",
 //         "name": "",
 //         "type": "address"
 //       }
@@ -50,7 +50,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type MyByte1",
+//         "internalType": "MyByte1",
 //         "name": "",
 //         "type": "bytes1"
 //       }
@@ -64,7 +64,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type C.MyBytes32",
+//         "internalType": "C.MyBytes32",
 //         "name": "",
 //         "type": "bytes32"
 //       }
@@ -78,7 +78,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type MyInt",
+//         "internalType": "MyInt",
 //         "name": "",
 //         "type": "int256"
 //       }
@@ -92,7 +92,7 @@ contract C {
 //     "outputs":
 //     [
 //       {
-//         "internalType": "user defined type C.MyUInt8",
+//         "internalType": "C.MyUInt8",
 //         "name": "",
 //         "type": "uint8"
 //       }
@@ -104,7 +104,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type C.MyAddress",
+//         "internalType": "C.MyAddress",
 //         "name": "a",
 //         "type": "address"
 //       }
@@ -118,7 +118,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type MyByte1",
+//         "internalType": "MyByte1",
 //         "name": "a",
 //         "type": "bytes1"
 //       }
@@ -132,7 +132,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type C.MyBytes32",
+//         "internalType": "C.MyBytes32",
 //         "name": "a",
 //         "type": "bytes32"
 //       }
@@ -146,7 +146,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type MyInt",
+//         "internalType": "MyInt",
 //         "name": "a",
 //         "type": "int256"
 //       }
@@ -160,7 +160,7 @@ contract C {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "user defined type C.MyUInt8",
+//         "internalType": "C.MyUInt8",
 //         "name": "a",
 //         "type": "uint8"
 //       }
