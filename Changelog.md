@@ -25,6 +25,7 @@ Bugfixes:
  * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
  * SMTChecker: Fix false positive in external calls from constructors.
  * SMTChecker: Fix internal error on some multi-source uses of ``abi.*``, cryptographic functions and constants.
+ * SMTChecker: Fix BMC's constraints regarding internal functions.
  * Type Checker: Disallow modifier declarations and definitions in interfaces.
  * Yul Optimizer: Fix a crash in LoadResolver, when ``keccak256`` has particular non-identifier arguments.
 
