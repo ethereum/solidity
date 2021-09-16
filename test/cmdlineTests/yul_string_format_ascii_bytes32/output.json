@@ -116,6 +116,7 @@ object \"C_11\" {
                 converted := 0x6162636162630000000000000000000000000000000000000000000000000000
             }
 
+            /// @ast-id 10
             /// @src 0:91:156  \"function f() external pure returns (bytes32) { return \\\"abcabc\\\"; }\"
             function fun_f_10() -> var__5 {
                 /// @src 0:127:134  \"bytes32\"

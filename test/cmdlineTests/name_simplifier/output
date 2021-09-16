@@ -105,7 +105,7 @@ object "C_59" {
                 mstore(4, 0x32)
                 revert(0, 0x24)
             }
-            /// @src 0:381:623  "function sumArray(S[] memory _s) public returns (uint, string memory) {..."
+            /// @ast-id 58 @src 0:381:623  "function sumArray(S[] memory _s) public returns (uint, string memory) {..."
             function fun_sumArray(var_s_mpos) -> var, var_mpos
             {
                 /// @src 0:346:625  "contract C {..."

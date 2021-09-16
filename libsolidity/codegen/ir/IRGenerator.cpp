@@ -340,6 +340,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		m_context.resetLocalVariables();
 		Whiskers t(R"(
+			/// @ast-id <astID>
 			<sourceLocationComment>
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
 				<retInit>
@@ -348,6 +349,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 			<contractSourceLocationComment>
 		)");
 
+		t("astID", to_string(_function.id()));
 		t("sourceLocationComment", dispenseLocationComment(_function));
 		t(
 			"contractSourceLocationComment",
@@ -407,6 +409,7 @@ string IRGenerator::generateModifier(
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		m_context.resetLocalVariables();
 		Whiskers t(R"(
+			/// @ast-id <astID>
 			<sourceLocationComment>
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
 				<assignRetParams>
@@ -437,6 +440,7 @@ string IRGenerator::generateModifier(
 			_modifierInvocation.name().annotation().referencedDeclaration
 		);
 		solAssert(modifier, "");
+		t("astID", to_string(modifier->id()));
 		t("sourceLocationComment", dispenseLocationComment(*modifier));
 		t(
 			"contractSourceLocationComment",
@@ -542,12 +546,14 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 			solAssert(paramTypes.empty(), "");
 			solUnimplementedAssert(type->sizeOnStack() == 1, "");
 			return Whiskers(R"(
+				/// @ast-id <astID>
 				<sourceLocationComment>
 				function <functionName>() -> rval {
 					rval := loadimmutable("<id>")
 				}
 				<contractSourceLocationComment>
 			)")
+			("astID", to_string(_varDecl.id()))
 			("sourceLocationComment", dispenseLocationComment(_varDecl))
 			(
 				"contractSourceLocationComment",
@@ -561,12 +567,14 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		{
 			solAssert(paramTypes.empty(), "");
 			return Whiskers(R"(
+				/// @ast-id <astID>
 				<sourceLocationComment>
 				function <functionName>() -> <ret> {
 					<ret> := <constantValueFunction>()
 				}
 				<contractSourceLocationComment>
 			)")
+			("astID", to_string(_varDecl.id()))
 			("sourceLocationComment", dispenseLocationComment(_varDecl))
 			(
 				"contractSourceLocationComment",
@@ -683,6 +691,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		}
 
 		return Whiskers(R"(
+			/// @ast-id <astID>
 			<sourceLocationComment>
 			function <functionName>(<params>) -> <retVariables> {
 				<code>
@@ -693,6 +702,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		("params", joinHumanReadable(parameters))
 		("retVariables", joinHumanReadable(returnVariables))
 		("code", std::move(code))
+		("astID", to_string(_varDecl.id()))
 		("sourceLocationComment", dispenseLocationComment(_varDecl))
 		(
 			"contractSourceLocationComment",
@@ -804,7 +814,7 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 		m_context.resetLocalVariables();
 		m_context.functionCollector().createFunction(IRNames::constructor(*contract), [&]() {
 			Whiskers t(R"(
-				<sourceLocationComment>
+				<astIDComment><sourceLocationComment>
 				function <functionName>(<params><comma><baseParams>) {
 					<evalBaseArguments>
 					<sourceLocationComment>
@@ -819,6 +829,10 @@ void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 				for (ASTPointer<VariableDeclaration> const& varDecl: contract->constructor()->parameters())
 					params += m_context.addLocalVariable(*varDecl).stackSlots();
 
+			if (contract->constructor())
+				t("astIDComment", "/// @ast-id " + to_string(contract->constructor()->id()) + "\n");
+			else
+				t("astIDComment", "");
 			t("sourceLocationComment", dispenseLocationComment(
 				contract->constructor() ?
 				dynamic_cast<ASTNode const&>(*contract->constructor()) :

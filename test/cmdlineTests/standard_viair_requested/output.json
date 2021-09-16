@@ -187,6 +187,7 @@ object \"D_16\" {
                 revert(pos, returndatasize())
             }
 
+            /// @ast-id 15
             /// @src 0:106:144  \"function f() public { C c = new C(); }\"
             function fun_f_15() {
 

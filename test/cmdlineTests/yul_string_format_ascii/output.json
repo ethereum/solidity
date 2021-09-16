@@ -192,6 +192,7 @@ object \"C_11\" {
                 converted := copy_literal_to_memory_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21()
             }
 
+            /// @ast-id 10
             /// @src 0:91:162  \"function f() external pure returns (string memory) { return \\\"abcabc\\\"; }\"
             function fun_f_10() -> var__5_mpos {
                 /// @src 0:127:140  \"string memory\"
