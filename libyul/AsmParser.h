@@ -35,6 +35,7 @@
 #include <memory>
 #include <variant>
 #include <vector>
+#include <string_view>
 
 namespace solidity::yul
 {
@@ -68,8 +69,8 @@ public:
 		}
 	{}
 
-	/// Constructs a Yul parser that is using the source locations
-	/// from the comments (via @src).
+	/// Constructs a Yul parser that is using the debug data
+	/// from the comments (via @src and other tags).
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
@@ -105,7 +106,13 @@ protected:
 
 	langutil::Token advance() override;
 
-	void fetchSourceLocationFromComment();
+	void fetchDebugDataFromComment();
+
+	std::optional<std::pair<std::string_view, langutil::SourceLocation>>
+	parseSrcComment(
+		std::string_view _arguments,
+		langutil::SourceLocation const& _commentLocation
+	);
 
 	/// Creates a DebugData object with the correct source location set.
 	std::shared_ptr<DebugData const> createDebugData() const;

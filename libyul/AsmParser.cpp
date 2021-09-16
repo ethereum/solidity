@@ -104,7 +104,7 @@ unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner)
 	{
 		m_scanner = _scanner;
 		if (m_sourceNames)
-			fetchSourceLocationFromComment();
+			fetchDebugDataFromComment();
 		return make_unique<Block>(parseBlock());
 	}
 	catch (FatalError const&)
@@ -119,99 +119,107 @@ langutil::Token Parser::advance()
 {
 	auto const token = ParserBase::advance();
 	if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
-		fetchSourceLocationFromComment();
+		fetchDebugDataFromComment();
 	return token;
 }
 
-void Parser::fetchSourceLocationFromComment()
+void Parser::fetchDebugDataFromComment()
 {
 	solAssert(m_sourceNames.has_value(), "");
-
-	if (m_scanner->currentCommentLiteral().empty())
-		return;
 
 	static regex const tagRegex = regex(
 		R"~~((?:^|\s+)(@[a-zA-Z0-9\-_]+)(?:\s+|$))~~", // tag, e.g: @src
 		regex_constants::ECMAScript | regex_constants::optimize
 	);
-	static regex const srcTagArgsRegex = regex(
-		R"~~(^(-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~"  // index and location, e.g.: 1:234:-1
-		R"~~(("(?:[^"\\]|\\.)*"?)?)~~",                // optional code snippet, e.g.: "string memory s = \"abc\";..."
-		regex_constants::ECMAScript | regex_constants::optimize
-	);
 
-	string const commentLiteral = m_scanner->currentCommentLiteral();
-	SourceLocation const commentLocation = m_scanner->currentCommentLocation();
-	smatch tagMatch;
-	string::const_iterator position = commentLiteral.begin();
+	string_view commentLiteral = m_scanner->currentCommentLiteral();
+	match_results<string_view::const_iterator> match;
 
-	while (regex_search(position, commentLiteral.end(), tagMatch, tagRegex))
+	langutil::SourceLocation sourceLocation = m_debugDataOverride->location;
+
+	while (regex_search(commentLiteral.cbegin(), commentLiteral.cend(), match, tagRegex))
 	{
-		solAssert(tagMatch.size() == 2, "");
-		position += tagMatch.position() + tagMatch.length();
+		solAssert(match.size() == 2, "");
+		commentLiteral = commentLiteral.substr(static_cast<size_t>(match.position() + match.length()));
 
-		if (tagMatch[1] == "@src")
+		if (match[1] == "@src")
 		{
-			smatch srcTagArgsMatch;
-			if (!regex_search(position, commentLiteral.end(), srcTagArgsMatch, srcTagArgsRegex))
-			{
-				m_errorReporter.syntaxError(
-					8387_error,
-					commentLocation,
-					"Invalid values in source location mapping. Could not parse location specification."
-				);
-
-				// If the arguments to @src are malformed, we don't know where they end so we can't continue.
-				return;
-			}
-
-			solAssert(srcTagArgsMatch.size() == 5, "");
-			position += srcTagArgsMatch.position() + srcTagArgsMatch.length();
-
-			if (srcTagArgsMatch[4].matched && (
-				!boost::algorithm::ends_with(srcTagArgsMatch[4].str(), "\"") ||
-				boost::algorithm::ends_with(srcTagArgsMatch[4].str(), "\\\"")
-			))
-			{
-				m_errorReporter.syntaxError(
-					1544_error,
-					commentLocation,
-					"Invalid code snippet in source location mapping. Quote is not terminated."
-				);
-				return;
-			}
-
-			optional<int> const sourceIndex = toInt(srcTagArgsMatch[1].str());
-			optional<int> const start = toInt(srcTagArgsMatch[2].str());
-			optional<int> const end = toInt(srcTagArgsMatch[3].str());
-
-			m_debugDataOverride = DebugData::create();
-			if (!sourceIndex.has_value() || !start.has_value() || !end.has_value())
-				m_errorReporter.syntaxError(
-					6367_error,
-					commentLocation,
-					"Invalid value in source location mapping. "
-					"Expected non-negative integer values or -1 for source index and location."
-				);
-			else if (sourceIndex == -1)
-				m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), nullptr});
-			else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(sourceIndex.value()))))
-				m_errorReporter.syntaxError(
-					2674_error,
-					commentLocation,
-					"Invalid source mapping. Source index not defined via @use-src."
-				);
+			if (auto parseResult = parseSrcComment(commentLiteral, m_scanner->currentCommentLocation()))
+				tie(commentLiteral, sourceLocation) = *parseResult;
 			else
-			{
-				shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(sourceIndex.value()));
-				solAssert(sourceName, "");
-				m_debugDataOverride = DebugData::create(SourceLocation{start.value(), end.value(), move(sourceName)});
-			}
+				break;
 		}
 		else
 			// Ignore unrecognized tags.
 			continue;
 	}
+
+	m_debugDataOverride = DebugData::create(sourceLocation);
+}
+
+optional<pair<string_view, SourceLocation>> Parser::parseSrcComment(
+	string_view const _arguments,
+	langutil::SourceLocation const& _commentLocation
+)
+{
+	static regex const argsRegex = regex(
+		R"~~(^(-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~"  // index and location, e.g.: 1:234:-1
+		R"~~(("(?:[^"\\]|\\.)*"?)?)~~",                // optional code snippet, e.g.: "string memory s = \"abc\";..."
+		regex_constants::ECMAScript | regex_constants::optimize
+	);
+	match_results<string_view::const_iterator> match;
+	if (!regex_search(_arguments.cbegin(), _arguments.cend(), match, argsRegex))
+	{
+		m_errorReporter.syntaxError(
+			8387_error,
+			_commentLocation,
+			"Invalid values in source location mapping. Could not parse location specification."
+		);
+		return nullopt;
+	}
+
+	solAssert(match.size() == 5, "");
+	string_view tail = _arguments.substr(static_cast<size_t>(match.position() + match.length()));
+
+	if (match[4].matched && (
+		!boost::algorithm::ends_with(match[4].str(), "\"") ||
+		boost::algorithm::ends_with(match[4].str(), "\\\"")
+	))
+	{
+		m_errorReporter.syntaxError(
+			1544_error,
+			_commentLocation,
+			"Invalid code snippet in source location mapping. Quote is not terminated."
+		);
+		return {{tail, SourceLocation{}}};
+	}
+
+	optional<int> const sourceIndex = toInt(match[1].str());
+	optional<int> const start = toInt(match[2].str());
+	optional<int> const end = toInt(match[3].str());
+
+	if (!sourceIndex.has_value() || !start.has_value() || !end.has_value())
+		m_errorReporter.syntaxError(
+			6367_error,
+			_commentLocation,
+			"Invalid value in source location mapping. "
+			"Expected non-negative integer values or -1 for source index and location."
+		);
+	else if (sourceIndex == -1)
+		return {{tail, SourceLocation{start.value(), end.value(), nullptr}}};
+	else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(sourceIndex.value()))))
+		m_errorReporter.syntaxError(
+			2674_error,
+			_commentLocation,
+			"Invalid source mapping. Source index not defined via @use-src."
+		);
+	else
+	{
+		shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(sourceIndex.value()));
+		solAssert(sourceName, "");
+		return {{tail, SourceLocation{start.value(), end.value(), move(sourceName)}}};
+	}
+	return {{tail, SourceLocation{}}};
 }
 
 Block Parser::parseBlock()
