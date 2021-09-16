@@ -335,6 +335,16 @@ The following are dependencies for all builds of Solidity:
 
     Starting from 0.5.10 linking against Boost 1.70+ should work without manual intervention.
 
+.. note::
+    The default build configuration requires a specific Z3 version (the latest one at the time the
+    code was last updated). Changes introduced between Z3 releases often result in slightly different
+    (but still valid) results being returned. Our SMT tests do not account for these differences and
+    will likely fail with a different version than the one they were written for. This does not mean
+    that a build using a different version is faulty. If you pass ``-DSTRICT_Z3_VERSION=OFF`` option
+    to CMake, you can build with any version that satisfies the requirement given in the table above.
+    If you do this, however, please remember to pass the ``--no-smt`` option to ``scripts/tests.sh``
+    to skip the SMT tests.
+
 Minimum Compiler Versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
