@@ -29,6 +29,7 @@
 #include <liblangutil/SourceLocation.h>
 
 #include <memory>
+#include <optional>
 
 namespace solidity::yul
 {
@@ -37,12 +38,22 @@ using Type = YulString;
 
 struct DebugData
 {
-	explicit DebugData(langutil::SourceLocation _location): location(std::move(_location)) {}
-	langutil::SourceLocation location;
-	static std::shared_ptr<DebugData const> create(langutil::SourceLocation _location = {})
+	explicit DebugData(langutil::SourceLocation _location, std::optional<int64_t> _astID = {}):
+		location(std::move(_location)),
+		astID(std::move(_astID))
+	{}
+
+	static std::shared_ptr<DebugData const> create(
+		langutil::SourceLocation _location = {},
+		std::optional<int64_t> _astID = {}
+	)
 	{
-		return std::make_shared<DebugData const>(_location);
+		return std::make_shared<DebugData const>(std::move(_location), std::move(_astID));
 	}
+
+	langutil::SourceLocation location;
+	/// ID in the (Solidity) source AST.
+	std::optional<int64_t> astID;
 };
 
 struct TypedName { std::shared_ptr<DebugData const> debugData; YulString name; Type type; };

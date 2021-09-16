@@ -103,7 +103,7 @@ unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner)
 	try
 	{
 		m_scanner = _scanner;
-		if (m_sourceNames)
+		if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
 			fetchDebugDataFromComment();
 		return make_unique<Block>(parseBlock());
 	}
@@ -136,6 +136,8 @@ void Parser::fetchDebugDataFromComment()
 	match_results<string_view::const_iterator> match;
 
 	langutil::SourceLocation sourceLocation = m_debugDataOverride->location;
+	// Empty for each new node.
+	optional<int> astID;
 
 	while (regex_search(commentLiteral.cbegin(), commentLiteral.cend(), match, tagRegex))
 	{
@@ -149,12 +151,19 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
+		else if (match[1] == "@ast-id")
+		{
+			if (auto parseResult = parseASTIDComment(commentLiteral, m_scanner->currentCommentLocation()))
+				tie(commentLiteral, astID) = *parseResult;
+			else
+				break;
+		}
 		else
 			// Ignore unrecognized tags.
 			continue;
 	}
 
-	m_debugDataOverride = DebugData::create(sourceLocation);
+	m_debugDataOverride = DebugData::create(sourceLocation, astID);
 }
 
 optional<pair<string_view, SourceLocation>> Parser::parseSrcComment(
@@ -220,6 +229,38 @@ optional<pair<string_view, SourceLocation>> Parser::parseSrcComment(
 		return {{tail, SourceLocation{start.value(), end.value(), move(sourceName)}}};
 	}
 	return {{tail, SourceLocation{}}};
+}
+
+optional<pair<string_view, optional<int>>> Parser::parseASTIDComment(
+	string_view _arguments,
+	langutil::SourceLocation const& _commentLocation
+)
+{
+	static regex const argRegex = regex(
+		R"~~(^(\d+)(?:\s|$))~~",
+		regex_constants::ECMAScript | regex_constants::optimize
+	);
+	match_results<string_view::const_iterator> match;
+	optional<int> astID;
+	bool matched = regex_search(_arguments.cbegin(), _arguments.cend(), match, argRegex);
+	string_view tail = _arguments;
+	if (matched)
+	{
+		solAssert(match.size() == 2, "");
+		tail = _arguments.substr(static_cast<size_t>(match.position() + match.length()));
+
+		astID = toInt(match[1].str());
+	}
+
+	if (!matched || !astID || *astID < 0 || static_cast<int64_t>(*astID) != *astID)
+	{
+		m_errorReporter.syntaxError(1749_error, _commentLocation, "Invalid argument for @ast-id.");
+		astID = nullopt;
+	}
+	if (matched)
+		return {{_arguments, astID}};
+	else
+		return nullopt;
 }
 
 Block Parser::parseBlock()

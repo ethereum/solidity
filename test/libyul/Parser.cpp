@@ -804,6 +804,129 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_with_nested_locati
 	CHECK_LOCATION(literal128.debugData->location, "source1", 96, 165);
 }
 
+BOOST_AUTO_TEST_CASE(astid)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src -1:-1:-1 @ast-id 7
+		{
+			/** @ast-id 2 */
+			function f(x) -> y {}
+			mstore(1, 2)
+		}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_CHECK(result->debugData->astID == int64_t(7));
+	auto const& funDef = get<FunctionDefinition>(result->statements.at(0));
+	BOOST_CHECK(funDef.debugData->astID == int64_t(2));
+	BOOST_CHECK(funDef.parameters.at(0).debugData->astID == nullopt);
+	BOOST_CHECK(debugDataOf(result->statements.at(1))->astID == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(astid_reset)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src -1:-1:-1 @ast-id 7 @src 1:1:1
+		{
+			/** @ast-id 2 */
+			function f(x) -> y {}
+			mstore(1, 2)
+		}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_CHECK(result->debugData->astID == int64_t(7));
+	auto const& funDef = get<FunctionDefinition>(result->statements.at(0));
+	BOOST_CHECK(funDef.debugData->astID == int64_t(2));
+	BOOST_CHECK(funDef.parameters.at(0).debugData->astID == nullopt);
+	BOOST_CHECK(debugDataOf(result->statements.at(1))->astID == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(astid_multi)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src -1:-1:-1 @ast-id 7 @src 1:1:1 @ast-id 8
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_CHECK(result->debugData->astID == int64_t(8));
+}
+
+BOOST_AUTO_TEST_CASE(astid_invalid)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src -1:-1:-1 @ast-id abc @src 1:1:1
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 1749_error);
+	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+}
+
+BOOST_AUTO_TEST_CASE(astid_too_large)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @ast-id 9223372036854775808
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 1749_error);
+}
+
+BOOST_AUTO_TEST_CASE(astid_way_too_large)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @ast-id 999999999999999999999999999999999999999
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 1749_error);
+}
+
+BOOST_AUTO_TEST_CASE(astid_not_fully_numeric)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @ast-id 9x
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(errorList.size() == 1);
+	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
+	BOOST_TEST(errorList[0]->errorId() == 1749_error);
+}
+
 BOOST_AUTO_TEST_CASE(customSourceLocations_multiple_src_tags_on_one_line)
 {
 	ErrorList errorList;
