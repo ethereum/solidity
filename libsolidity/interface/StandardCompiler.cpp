@@ -1312,16 +1312,49 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 {
-	if (_inputsAndSettings.sources.size() != 1)
-		return formatFatalError("JSONError", "Yul mode only supports exactly one input file.");
-	if (!_inputsAndSettings.smtLib2Responses.empty())
-		return formatFatalError("JSONError", "Yul mode does not support smtlib2responses.");
-	if (!_inputsAndSettings.remappings.empty())
-		return formatFatalError("JSONError", "Field \"settings.remappings\" cannot be used for Yul.");
-	if (_inputsAndSettings.revertStrings != RevertStrings::Default)
-		return formatFatalError("JSONError", "Field \"settings.debug.revertStrings\" cannot be used for Yul.");
-
 	Json::Value output = Json::objectValue;
+	output["errors"] = std::move(_inputsAndSettings.errors);
+
+	if (_inputsAndSettings.sources.size() != 1)
+	{
+		output["errors"].append(formatError(
+			Error::Severity::Error,
+			"JSONError",
+			"general",
+			"Yul mode only supports exactly one input file."
+		));
+		return output;
+	}
+	if (!_inputsAndSettings.smtLib2Responses.empty())
+	{
+		output["errors"].append(formatError(
+			Error::Severity::Error,
+			"JSONError",
+			"general",
+			"Yul mode does not support smtlib2responses."
+		));
+		return output;
+	}
+	if (!_inputsAndSettings.remappings.empty())
+	{
+		output["errors"].append(formatError(
+			Error::Severity::Error,
+			"JSONError",
+			"general",
+			"Field \"settings.remappings\" cannot be used for Yul."
+		));
+		return output;
+	}
+	if (_inputsAndSettings.revertStrings != RevertStrings::Default)
+	{
+		output["errors"].append(formatError(
+			Error::Severity::Error,
+			"JSONError",
+			"general",
+			"Field \"settings.debug.revertStrings\" cannot be used for Yul."
+		));
+		return output;
+	}
 
 	AssemblyStack stack(
 		_inputsAndSettings.evmVersion,
@@ -1333,16 +1366,23 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	// Inconsistent state - stop here to receive error reports from users
 	if (!stack.parseAndAnalyze(sourceName, sourceContents) && stack.errors().empty())
-		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
+	{
+		output["errors"].append(formatError(
+			Error::Severity::Error,
+			"InternalCompilerError",
+			"general",
+			"No error reported, but compilation failed."
+		));
+		return output;
+	}
 
 	if (!stack.errors().empty())
 	{
-		Json::Value errors = Json::arrayValue;
 		for (auto const& error: stack.errors())
 		{
 			auto err = dynamic_pointer_cast<Error const>(error);
 
-			errors.append(formatErrorWithException(
+			output["errors"].append(formatErrorWithException(
 				stack,
 				*error,
 				Error::errorSeverity(err->type()),
@@ -1351,7 +1391,6 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 				""
 			));
 		}
-		output["errors"] = errors;
 		return output;
 	}
 
