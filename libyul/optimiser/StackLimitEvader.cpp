@@ -163,6 +163,6 @@ void StackLimitEvader::run(
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");
-		literal->value = YulString{util::toCompactHexWithPrefix(reservedMemory)};
+		literal->value = YulString{toCompactHexWithPrefix(reservedMemory)};
 	}
 }

@@ -29,6 +29,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/LazyInit.h>
 #include <libsolutil/Result.h>

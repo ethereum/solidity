@@ -52,6 +52,7 @@
 #include <range/v3/view/reverse.hpp>
 
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 using namespace solidity;

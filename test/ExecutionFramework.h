@@ -169,7 +169,7 @@ public:
 	static bytes encode(size_t _value) { return encode(u256(_value)); }
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(uint8_t _value) { return bytes(31, 0) + bytes{_value}; }
-	static bytes encode(u256 const& _value) { return util::toBigEndian(_value); }
+	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
 	/// @returns the fixed-point encoding of a rational number with a given
 	/// number of fractional bits.
 	static bytes encode(std::pair<rational, int> const& _valueAndPrecision)

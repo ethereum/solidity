@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <set>
+#include <limits>
 
 namespace solidity::yul
 {

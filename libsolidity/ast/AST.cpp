@@ -274,7 +274,7 @@ uint32_t ContractDefinition::interfaceId() const
 {
 	uint32_t result{0};
 	for (auto const& function: interfaceFunctionList(false))
-		result ^= util::fromBigEndian<uint32_t>(function.first.ref());
+		result ^= fromBigEndian<uint32_t>(function.first.ref());
 	return result;
 }
 

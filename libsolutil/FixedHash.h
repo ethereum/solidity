@@ -25,6 +25,7 @@
 #pragma once
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 #include <boost/functional/hash.hpp>
 #include <boost/io/ios_state.hpp>

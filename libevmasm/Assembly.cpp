@@ -36,9 +36,11 @@
 
 #include <json/json.h>
 
-#include <fstream>
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/enumerate.hpp>
+
+#include <fstream>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -67,7 +69,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 
 		for (AssemblyItem const& i: m_items)
 			ret += i.bytesRequired(tagSize);
-		if (util::numberEncodingSize(ret) <= tagSize)
+		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
 }
@@ -178,7 +180,7 @@ void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap co
 		_out << _prefix << "stop" << endl;
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
-				_out << _prefix << "data_" << toHex(u256(i.first)) << " " << toHex(i.second) << endl;
+				_out << _prefix << "data_" << toHex(u256(i.first)) << " " << util::toHex(i.second) << endl;
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
@@ -189,7 +191,7 @@ void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap co
 	}
 
 	if (m_auxiliaryData.size() > 0)
-		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
+		_out << endl << _prefix << "auxdata: 0x" << util::toHex(m_auxiliaryData) << endl;
 }
 
 string Assembly::assemblyString(StringMap const& _sourceCodes) const
@@ -309,7 +311,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
 		case VerbatimBytecode:
-			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, toHex(i.verbatimData())));
+			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, util::toHex(i.verbatimData())));
 			break;
 		default:
 			assertThrow(false, InvalidOpcode, "");
@@ -321,7 +323,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		Json::Value& data = root[".data"] = Json::objectValue;
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
-				data[toStringInHex((u256)i.first)] = toHex(i.second);
+				data[toStringInHex((u256)i.first)] = util::toHex(i.second);
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
@@ -332,7 +334,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 	}
 
 	if (m_auxiliaryData.size() > 0)
-		root[".auxdata"] = toHex(m_auxiliaryData);
+		root[".auxdata"] = util::toHex(m_auxiliaryData);
 
 	return root;
 }
@@ -596,14 +598,14 @@ LinkerObject const& Assembly::assemble() const
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
-	unsigned bytesPerTag = util::numberEncodingSize(bytesRequiredForCode);
+	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
 
-	unsigned bytesPerDataRef = util::numberEncodingSize(bytesRequiredIncludingData);
+	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingData);
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
@@ -620,7 +622,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case Push:
 		{
-			unsigned b = max<unsigned>(1, util::numberEncodingSize(i.data()));
+			unsigned b = max<unsigned>(1, numberEncodingSize(i.data()));
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
@@ -650,7 +652,7 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
 			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
-			unsigned b = max<unsigned>(1, util::numberEncodingSize(s));
+			unsigned b = max<unsigned>(1, numberEncodingSize(s));
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
@@ -755,7 +757,7 @@ LinkerObject const& Assembly::assemble() const
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
-		assertThrow(util::numberEncodingSize(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
+		assertThrow(numberEncodingSize(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);
 	}

@@ -78,10 +78,11 @@
 
 #include <json/json.h>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <utility>
 #include <map>
-
-#include <boost/algorithm/string/replace.hpp>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -1558,7 +1559,7 @@ public:
 		// The already encoded key-value pairs
 		ret += m_data;
 		// 16-bit big endian length
-		ret += util::toCompactBigEndian(size, 2);
+		ret += toCompactBigEndian(size, 2);
 		return ret;
 	}
 

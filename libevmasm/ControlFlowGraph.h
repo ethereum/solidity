@@ -24,11 +24,13 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
 #include <libevmasm/ExpressionClasses.h>
+
+#include <vector>
+#include <memory>
+#include <limits>
 
 namespace solidity::evmasm
 {

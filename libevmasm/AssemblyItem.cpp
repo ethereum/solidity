@@ -21,11 +21,13 @@
 #include <libevmasm/Assembly.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/FixedHash.h>
 #include <liblangutil/SourceLocation.h>
 
 #include <fstream>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -71,7 +73,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
 	case Push:
-		return 1 + max<size_t>(1, util::numberEncodingSize(data()));
+		return 1 + max<size_t>(1, numberEncodingSize(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 1 + 4;		// worst case: a 16MB program
@@ -189,7 +191,7 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		break;
 	}
 	case Push:
-		text = toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add);
+		text = toHex(toCompactBigEndian(data(), 1), util::HexPrefix::Add);
 		break;
 	case PushTag:
 	{
@@ -207,7 +209,7 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		text = string("tag_") + to_string(static_cast<size_t>(data())) + ":";
 		break;
 	case PushData:
-		text = string("data_") + util::toHex(data());
+		text = string("data_") + toHex(data());
 		break;
 	case PushSub:
 	case PushSubSize:
@@ -226,16 +228,16 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		text = string("bytecodeSize");
 		break;
 	case PushLibraryAddress:
-		text = string("linkerSymbol(\"") + util::toHex(data()) + string("\")");
+		text = string("linkerSymbol(\"") + toHex(data()) + string("\")");
 		break;
 	case PushDeployTimeAddress:
 		text = string("deployTimeAddress()");
 		break;
 	case PushImmutable:
-		text = string("immutable(\"") + toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
+		text = string("immutable(\"") + "0x" + util::toHex(toCompactBigEndian(data(), 1)) + "\")";
 		break;
 	case AssignImmutable:
-		text = string("assignImmutable(\"") + toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
+		text = string("assignImmutable(\"") + "0x" + util::toHex(toCompactBigEndian(data(), 1)) + "\")";
 		break;
 	case UndefinedItem:
 		assertThrow(false, AssemblyException, "Invalid assembly item.");

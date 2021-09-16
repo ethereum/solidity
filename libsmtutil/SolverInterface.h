@@ -22,6 +22,7 @@
 #include <libsmtutil/Sorts.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 
 #include <range/v3/view.hpp>
 

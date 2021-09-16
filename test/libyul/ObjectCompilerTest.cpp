@@ -81,7 +81,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 		solAssert(obj.bytecode, "");
 
 		m_obtainedResult = "Text:\n" + obj.assembly + "\n";
-		m_obtainedResult += "Binary:\n" + toHex(obj.bytecode->bytecode) + "\n";
+		m_obtainedResult += "Binary:\n" + util::toHex(obj.bytecode->bytecode) + "\n";
 	}
 	else
 	{
@@ -95,7 +95,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 		else
 			m_obtainedResult +=
 				"Bytecode: " +
-				toHex(obj.bytecode->bytecode) +
+				util::toHex(obj.bytecode->bytecode) +
 				"\nOpcodes: " +
 				boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode)) +
 				"\nSourceMappings:" +

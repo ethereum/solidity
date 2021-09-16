@@ -32,6 +32,7 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <limits>
 
 using namespace std;
 using namespace solidity::util;

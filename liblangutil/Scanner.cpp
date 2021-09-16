@@ -59,6 +59,7 @@
 #include <optional>
 #include <string_view>
 #include <tuple>
+#include <array>
 
 using namespace std;
 
