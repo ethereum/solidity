@@ -21,8 +21,8 @@
 #
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
-FROM gcr.io/oss-fuzz-base/base-clang as base
-LABEL version="12"
+FROM gcr.io/oss-fuzz-base/base-clang:latest as base
+LABEL version="13"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
