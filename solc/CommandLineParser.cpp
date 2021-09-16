@@ -838,6 +838,37 @@ bool CommandLineParser::parseArgs(int _argc, char const* const* _argv, bool _int
 
 bool CommandLineParser::processArgs()
 {
+	if (!checkMutuallyExclusive({
+		g_strStandardJSON,
+		g_strLink,
+		g_strAssemble,
+		g_strStrictAssembly,
+		g_strYul,
+		g_strImportAst,
+	}))
+		return false;
+
+	if (m_args.count(g_strStandardJSON) > 0)
+		m_options.input.mode = InputMode::StandardJson;
+	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
+		m_options.input.mode = InputMode::Assembler;
+	else if (m_args.count(g_strLink) > 0)
+		m_options.input.mode = InputMode::Linker;
+	else if (m_args.count(g_strImportAst) > 0)
+		m_options.input.mode = InputMode::CompilerWithASTImport;
+	else
+		m_options.input.mode = InputMode::Compiler;
+
+	if (
+		m_args.count(g_strExperimentalViaIR) > 0 &&
+		m_options.input.mode != InputMode::Compiler &&
+		m_options.input.mode != InputMode::CompilerWithASTImport
+	)
+	{
+		serr() << "The option --" << g_strExperimentalViaIR << " is only supported in the compiler mode." << endl;
+		return false;
+	}
+
 	if (!checkMutuallyExclusive({g_strColor, g_strNoColor}))
 		return false;
 
@@ -855,6 +886,26 @@ bool CommandLineParser::processArgs()
 	for (auto& option: conflictingWithStopAfter)
 		if (!checkMutuallyExclusive({g_strStopAfter, option}))
 			return false;
+
+	if (
+		m_options.input.mode != InputMode::Compiler &&
+		m_options.input.mode != InputMode::CompilerWithASTImport &&
+		m_options.input.mode != InputMode::Assembler
+	)
+	{
+		if (!m_args[g_strOptimizeRuns].defaulted())
+		{
+			serr() << "Option --" << g_strOptimizeRuns << " is only valid in compiler and assembler modes." << endl;
+			return false;
+		}
+
+		for (string const& option: {g_strOptimize, g_strNoOptimizeYul, g_strOptimizeYul, g_strYulOptimizations})
+			if (m_args.count(option) > 0)
+			{
+				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
+				return false;
+			}
+	}
 
 	if (m_args.count(g_strColor) > 0)
 		m_options.formatting.coloredOutput = true;
@@ -950,59 +1001,8 @@ bool CommandLineParser::processArgs()
 			m_options.output.stopAfter = CompilerStack::State::Parsed;
 	}
 
-	if (!checkMutuallyExclusive({
-		g_strStandardJSON,
-		g_strLink,
-		g_strAssemble,
-		g_strStrictAssembly,
-		g_strYul,
-		g_strImportAst,
-	}))
-		return false;
-
-	if (m_args.count(g_strStandardJSON) > 0)
-		m_options.input.mode = InputMode::StandardJson;
-	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
-		m_options.input.mode = InputMode::Assembler;
-	else if (m_args.count(g_strLink) > 0)
-		m_options.input.mode = InputMode::Linker;
-	else if (m_args.count(g_strImportAst) > 0)
-		m_options.input.mode = InputMode::CompilerWithASTImport;
-	else
-		m_options.input.mode = InputMode::Compiler;
-
-	if (
-		m_args.count(g_strExperimentalViaIR) > 0 &&
-		m_options.input.mode != InputMode::Compiler &&
-		m_options.input.mode != InputMode::CompilerWithASTImport
-	)
-	{
-		serr() << "The option --" << g_strExperimentalViaIR << " is only supported in the compiler mode." << endl;
-		return false;
-	}
-
 	if (!parseInputPathsAndRemappings())
 		return false;
-
-	if (
-		m_options.input.mode != InputMode::Compiler &&
-		m_options.input.mode != InputMode::CompilerWithASTImport &&
-		m_options.input.mode != InputMode::Assembler
-	)
-	{
-		if (!m_args[g_strOptimizeRuns].defaulted())
-		{
-			serr() << "Option --" << g_strOptimizeRuns << " is only valid in compiler and assembler modes." << endl;
-			return false;
-		}
-
-		for (string const& option: {g_strOptimize, g_strNoOptimizeYul, g_strOptimizeYul, g_strYulOptimizations})
-			if (m_args.count(option) > 0)
-			{
-				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
-				return false;
-			}
-	}
 
 	if (m_options.input.mode == InputMode::StandardJson)
 		return true;
