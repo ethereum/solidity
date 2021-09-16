@@ -22,6 +22,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 8364: (B:115-116): Assertion checker does not yet implement type module "A"
 // Warning 6328: (B:238-252): CHC: Assertion violation happens here.\nCounterexample:\ndata = {x: 0}\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nState: data = {x: 0}\nC.g()\n    C.f(7) -- internal call\n        A:set({x: 0}, 7) -- internal call\n        A:set({x: 0}, 8) -- internal call
 // Warning 6328: (B:308-322): CHC: Assertion violation happens here.\nCounterexample:\ndata = {x: 0}\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nState: data = {x: 0}\nC.g()\n    C.f(7) -- internal call\n        A:set({x: 0}, 7) -- internal call\n        A:set({x: 0}, 8) -- internal call
