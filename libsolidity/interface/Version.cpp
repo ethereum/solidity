@@ -23,11 +23,7 @@
 
 #include <libsolidity/interface/Version.h>
 
-#include <liblangutil/Exceptions.h>
-#include <libsolutil/CommonData.h>
-#include <libsolutil/Common.h>
 #include <solidity/BuildInfo.h>
-#include <string>
 
 using namespace std;
 
