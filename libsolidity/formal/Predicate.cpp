@@ -200,7 +200,8 @@ bool Predicate::isInterface() const
 
 string Predicate::formatSummaryCall(
 	vector<smtutil::Expression> const& _args,
-	langutil::CharStreamProvider const& _charStreamProvider
+	langutil::CharStreamProvider const& _charStreamProvider,
+	bool _appendTxVars
 ) const
 {
 	solAssert(isSummary(), "");
@@ -214,19 +215,67 @@ string Predicate::formatSummaryCall(
 	}
 
 	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
-	/// Here we are interested in preInputVars to format the function call,
-	/// and in txData to retrieve `msg.value`.
+	/// Here we are interested in preInputVars to format the function call.
 
-	string value;
-	if (auto v = readTxVars(_args.at(4)).at("msg.value"))
+	string txModel;
+
+	if (_appendTxVars)
 	{
-		bigint x(*v);
-		if (x > 0)
-			value = "{ value: " + *v + " }";
+		set<string> txVars;
+		if (isFunctionSummary())
+		{
+			solAssert(programFunction(), "");
+			if (programFunction()->isPayable())
+				txVars.insert("msg.value");
+		}
+		else if (isConstructorSummary())
+		{
+			FunctionDefinition const* fun = programFunction();
+			if (fun && fun->isPayable())
+				txVars.insert("msg.value");
+		}
+
+		struct TxVarsVisitor: public ASTConstVisitor
+		{
+			bool visit(MemberAccess const& _memberAccess)
+			{
+				Expression const* memberExpr = SMTEncoder::innermostTuple(_memberAccess.expression());
+
+				Type const* exprType = memberExpr->annotation().type;
+				solAssert(exprType, "");
+				if (exprType->category() == Type::Category::Magic)
+					if (auto const* identifier = dynamic_cast<Identifier const*>(memberExpr))
+					{
+						ASTString const& name = identifier->name();
+						if (name == "block" || name == "msg" || name == "tx")
+							txVars.insert(name + "." + _memberAccess.memberName());
+					}
+
+				return true;
+			}
+
+			set<string> txVars;
+		} txVarsVisitor;
+
+		if (auto fun = programFunction())
+		{
+			fun->accept(txVarsVisitor);
+			txVars += txVarsVisitor.txVars;
+		}
+
+		// Here we are interested in txData from the summary predicate.
+		auto txValues = readTxVars(_args.at(4));
+		vector<string> values;
+		for (auto const& _var: txVars)
+			if (auto v = txValues.at(_var))
+				values.push_back(_var + ": " + *v);
+
+		if (!values.empty())
+			txModel = "{ " + boost::algorithm::join(values, ", ") + " }";
 	}
 
 	if (auto contract = programContract())
-		return contract->name() + ".constructor()" + value;
+		return contract->name() + ".constructor()" + txModel;
 
 	auto stateVars = stateVariables();
 	solAssert(stateVars.has_value(), "");
@@ -262,7 +311,7 @@ string Predicate::formatSummaryCall(
 		solAssert(fun->annotation().contract, "");
 		prefix = fun->annotation().contract->name() + ".";
 	}
-	return prefix + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")" + value;
+	return prefix + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")" + txModel;
 }
 
 vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expression> const& _args) const
@@ -384,7 +433,27 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 	{
 		solAssert(_expr.sort->kind == Kind::Int, "");
 		solAssert(_expr.arguments.empty(), "");
-		// TODO assert that _expr.name is a number.
+
+		if (
+			_type->category() == Type::Category::Address ||
+			_type->category() == Type::Category::FixedBytes
+		)
+		{
+			try
+			{
+				if (_expr.name == "0")
+					return "0x0";
+				// For some reason the code below returns "0x" for "0".
+				return toHex(toCompactBigEndian(bigint(_expr.name)), HexPrefix::Add, HexCase::Lower);
+			}
+			catch (out_of_range const&)
+			{
+			}
+			catch (invalid_argument const&)
+			{
+			}
+		}
+
 		return _expr.name;
 	}
 	if (smt::isBool(*_type))
@@ -526,9 +595,9 @@ map<string, optional<string>> Predicate::readTxVars(smtutil::Expression const& _
 		{"block.number", TypeProvider::uint256()},
 		{"block.timestamp", TypeProvider::uint256()},
 		{"blockhash", TypeProvider::array(DataLocation::Memory, TypeProvider::uint256())},
-		{"msg.data", TypeProvider::bytesMemory()},
+		{"msg.data", TypeProvider::array(DataLocation::CallData)},
 		{"msg.sender", TypeProvider::address()},
-		{"msg.sig", TypeProvider::uint256()},
+		{"msg.sig", TypeProvider::fixedBytes(4)},
 		{"msg.value", TypeProvider::uint256()},
 		{"tx.gasprice", TypeProvider::uint256()},
 		{"tx.origin", TypeProvider::address()}

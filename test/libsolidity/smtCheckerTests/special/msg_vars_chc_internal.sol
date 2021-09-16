@@ -21,8 +21,11 @@ contract C {
 		assert(sender == msg.sender); // should hold with CHC
 		assert(sig == msg.sig); // should hold with CHC
 		assert(value == msg.value); // should hold with CHC
+
+		assert(msg.value == 10); // should fail
 	}
 }
 // ====
 // SMTEngine: chc
 // ----
+// Warning 6328: (621-644): CHC: Assertion violation happens here.\nCounterexample:\ndata = [0x26, 0x12, 0x1f, 0xf0], sender = 0x0, sig = 0x26121ff0, value = 0\n\nTransaction trace:\nC.constructor()\nState: data = [], sender = 0x0, sig = 0x0, value = 0\nC.f(){ msg.data: [0x26, 0x12, 0x1f, 0xf0], msg.sender: 0x0, msg.sig: 0x26121ff0, msg.value: 0 }\n    C.g() -- internal call
