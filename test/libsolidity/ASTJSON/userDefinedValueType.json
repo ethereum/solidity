@@ -91,7 +91,7 @@
                 "typeDescriptions":
                 {
                   "typeIdentifier": "t_userDefinedValueType$_MyAddress_$2",
-                  "typeString": "user defined type MyAddress"
+                  "typeString": "MyAddress"
                 },
                 "typeName":
                 {
@@ -110,7 +110,7 @@
                   "typeDescriptions":
                   {
                     "typeIdentifier": "t_userDefinedValueType$_MyAddress_$2",
-                    "typeString": "user defined type MyAddress"
+                    "typeString": "MyAddress"
                   }
                 },
                 "visibility": "internal"
@@ -141,7 +141,7 @@
                 "typeDescriptions":
                 {
                   "typeIdentifier": "t_userDefinedValueType$_MyUInt_$4",
-                  "typeString": "user defined type MyUInt"
+                  "typeString": "MyUInt"
                 },
                 "typeName":
                 {
@@ -160,7 +160,7 @@
                   "typeDescriptions":
                   {
                     "typeIdentifier": "t_userDefinedValueType$_MyUInt_$4",
-                    "typeString": "user defined type MyUInt"
+                    "typeString": "MyUInt"
                   }
                 },
                 "visibility": "internal"
@@ -269,7 +269,7 @@
           "typeDescriptions":
           {
             "typeIdentifier": "t_mapping$_t_userDefinedValueType$_MyAddress_$18_$_t_userDefinedValueType$_MyUInt_$20_$",
-            "typeString": "mapping(user defined type C.MyAddress => user defined type C.MyUInt)"
+            "typeString": "mapping(C.MyAddress => C.MyUInt)"
           },
           "typeName":
           {
@@ -291,7 +291,7 @@
               "typeDescriptions":
               {
                 "typeIdentifier": "t_userDefinedValueType$_MyAddress_$18",
-                "typeString": "user defined type C.MyAddress"
+                "typeString": "C.MyAddress"
               }
             },
             "nodeType": "Mapping",
@@ -299,7 +299,7 @@
             "typeDescriptions":
             {
               "typeIdentifier": "t_mapping$_t_userDefinedValueType$_MyAddress_$18_$_t_userDefinedValueType$_MyUInt_$20_$",
-              "typeString": "mapping(user defined type C.MyAddress => user defined type C.MyUInt)"
+              "typeString": "mapping(C.MyAddress => C.MyUInt)"
             },
             "valueType":
             {
@@ -318,7 +318,7 @@
               "typeDescriptions":
               {
                 "typeIdentifier": "t_userDefinedValueType$_MyUInt_$20",
-                "typeString": "user defined type C.MyUInt"
+                "typeString": "C.MyUInt"
               }
             }
           },
