@@ -7,7 +7,7 @@ IR:
  *=====================================================*/
 
 
-/// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "C_2" {
     code {
         /// @src 0:265:278  "contract C {}"
@@ -38,7 +38,7 @@ object "C_2" {
         /// @src 0:265:278  "contract C {}"
 
     }
-    /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
     object "C_2_deployed" {
         code {
             /// @src 0:265:278  "contract C {}"
@@ -85,7 +85,7 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
-/// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "C_2" {
     code {
         {
@@ -97,7 +97,7 @@ object "C_2" {
             return(128, _1)
         }
     }
-    /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
     object "C_2_deployed" {
         code {
             {
@@ -119,7 +119,7 @@ IR:
  *=====================================================*/
 
 
-/// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "D_27" {
     code {
         /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
@@ -150,7 +150,7 @@ object "D_27" {
         /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
 
     }
-    /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
     object "D_27_deployed" {
         code {
             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
@@ -376,7 +376,7 @@ object "D_27" {
         *                !USE AT YOUR OWN RISK!               *
         *=====================================================*/
 
-        /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+        /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
         object "C_2" {
             code {
                 /// @src 0:265:278  "contract C {}"
@@ -407,7 +407,7 @@ object "D_27" {
                 /// @src 0:265:278  "contract C {}"
 
             }
-            /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+            /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
             object "C_2_deployed" {
                 code {
                     /// @src 0:265:278  "contract C {}"
@@ -459,7 +459,7 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
-/// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "D_27" {
     code {
         {
@@ -471,7 +471,7 @@ object "D_27" {
             return(128, _1)
         }
     }
-    /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
     object "D_27_deployed" {
         code {
             {
@@ -550,7 +550,7 @@ object "D_27" {
                 mstore(memPtr_1, 39)
             }
         }
-        /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+        /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
         object "C_2" {
             code {
                 {
@@ -562,7 +562,7 @@ object "D_27" {
                     return(128, _1)
                 }
             }
-            /// @use-src 0:"yul_source_locations_code_snippet_escaping/input.sol"
+            /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
             object "C_2_deployed" {
                 code {
                     {
