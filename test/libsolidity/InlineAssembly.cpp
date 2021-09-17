@@ -28,6 +28,7 @@
 
 #include <libyul/AssemblyStack.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -59,7 +60,12 @@ std::optional<Error> parseAndReturnFirstError(
 	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
 )
 {
-	AssemblyStack stack(solidity::test::CommonOptions::get().evmVersion(), _language, solidity::frontend::OptimiserSettings::none());
+	AssemblyStack stack(
+		solidity::test::CommonOptions::get().evmVersion(),
+		_language,
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::None()
+	);
 	bool success = false;
 	try
 	{
@@ -125,7 +131,12 @@ Error expectError(
 
 void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
-	AssemblyStack stack(solidity::test::CommonOptions::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
+	AssemblyStack stack(
+		solidity::test::CommonOptions::get().evmVersion(),
+		AssemblyStack::Language::Assembly,
+		OptimiserSettings::none(),
+		DebugInfoSelection::None()
+	);
 	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	if (_canWarn)
 		BOOST_REQUIRE(!Error::containsErrors(stack.errors()));
@@ -210,7 +221,12 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
-	AssemblyStack stack(solidity::test::CommonOptions::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
+	AssemblyStack stack(
+		solidity::test::CommonOptions::get().evmVersion(),
+		AssemblyStack::Language::Assembly,
+		OptimiserSettings::none(),
+		DebugInfoSelection::None()
+	);
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);

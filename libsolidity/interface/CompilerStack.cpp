@@ -271,6 +271,13 @@ void CompilerStack::setMetadataHash(MetadataHash _metadataHash)
 	m_metadataHash = _metadataHash;
 }
 
+void CompilerStack::selectDebugInfo(DebugInfoSelection _debugInfoSelection)
+{
+	if (m_stackState >= CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must select debug info components before compilation."));
+	m_debugInfoSelection = _debugInfoSelection;
+}
+
 void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _response)
 {
 	if (m_stackState >= ParsedAndImported)
@@ -882,7 +889,7 @@ string CompilerStack::assemblyString(string const& _contractName, StringMap cons
 
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
-		return currentContract.evmAssembly->assemblyString(DebugInfoSelection::Default(), _sourceCodes);
+		return currentContract.evmAssembly->assemblyString(m_debugInfoSelection, _sourceCodes);
 	else
 		return string();
 }
@@ -1319,7 +1326,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings, sourceIndices(), this);
+	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings, sourceIndices(), m_debugInfoSelection, this);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(
 		_contract,
 		createCBORMetadata(compiledContract, /* _forIR */ true),
@@ -1342,7 +1349,12 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::AssemblyStack stack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	yul::AssemblyStack stack(
+		m_evmVersion,
+		yul::AssemblyStack::Language::StrictAssembly,
+		m_optimiserSettings,
+		m_debugInfoSelection
+	);
 	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
 	stack.optimize();
 
@@ -1369,7 +1381,12 @@ void CompilerStack::generateEwasm(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::AssemblyStack stack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	yul::AssemblyStack stack(
+		m_evmVersion,
+		yul::AssemblyStack::Language::StrictAssembly,
+		m_optimiserSettings,
+		m_debugInfoSelection
+	);
 	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
 
 	stack.optimize();

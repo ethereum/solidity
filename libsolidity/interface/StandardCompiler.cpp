@@ -28,9 +28,14 @@
 #include <libyul/AssemblyStack.h>
 #include <libyul/Exceptions.h>
 #include <libyul/optimiser/Suite.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libevmasm/Instruction.h>
+
 #include <libsmtutil/Exceptions.h>
+
+#include <liblangutil/DebugInfoSelection.h>
+#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libsolutil/JSON.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/CommonData.h>
@@ -1358,7 +1363,8 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	AssemblyStack stack(
 		_inputsAndSettings.evmVersion,
 		AssemblyStack::Language::StrictAssembly,
-		_inputsAndSettings.optimiserSettings
+		_inputsAndSettings.optimiserSettings,
+		DebugInfoSelection::Default()
 	);
 	string const& sourceName = _inputsAndSettings.sources.begin()->first;
 	string const& sourceContents = _inputsAndSettings.sources.begin()->second;

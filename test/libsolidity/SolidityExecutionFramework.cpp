@@ -23,6 +23,7 @@
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -34,6 +35,7 @@
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::langutil;
 using namespace solidity::test;
 using namespace std;
 
@@ -94,8 +96,12 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 				else if (forceEnableOptimizer)
 					optimiserSettings = OptimiserSettings::full();
 
-				yul::AssemblyStack
-					asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, optimiserSettings);
+				yul::AssemblyStack asmStack(
+					m_evmVersion,
+					yul::AssemblyStack::Language::StrictAssembly,
+					optimiserSettings,
+					DebugInfoSelection::All()
+				);
 				bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
 				solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
 

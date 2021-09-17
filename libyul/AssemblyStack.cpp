@@ -249,7 +249,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 	MachineAssemblyObject creationObject;
 	creationObject.bytecode = make_shared<evmasm::LinkerObject>(creationAssembly->assemble());
 	yulAssert(creationObject.bytecode->immutableReferences.empty(), "Leftover immutables.");
-	creationObject.assembly = creationAssembly->assemblyString();
+	creationObject.assembly = creationAssembly->assemblyString(m_debugInfoSelection);
 	creationObject.sourceMappings = make_unique<string>(
 		evmasm::AssemblyItem::computeSourceMapping(
 			creationAssembly->items(),
@@ -261,7 +261,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 	if (deployedAssembly)
 	{
 		deployedObject.bytecode = make_shared<evmasm::LinkerObject>(deployedAssembly->assemble());
-		deployedObject.assembly = deployedAssembly->assemblyString();
+		deployedObject.assembly = deployedAssembly->assemblyString(m_debugInfoSelection);
 		deployedObject.sourceMappings = make_unique<string>(
 			evmasm::AssemblyItem::computeSourceMapping(
 				deployedAssembly->items(),
@@ -314,11 +314,13 @@ AssemblyStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 	return {make_shared<evmasm::Assembly>(assembly), {}};
 }
 
-string AssemblyStack::print(CharStreamProvider const* _soliditySourceProvider) const
+string AssemblyStack::print(
+	CharStreamProvider const* _soliditySourceProvider
+) const
 {
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
-	return m_parserResult->toString(&languageToDialect(m_language, m_evmVersion), _soliditySourceProvider) + "\n";
+	return m_parserResult->toString(&languageToDialect(m_language, m_evmVersion), m_debugInfoSelection, _soliditySourceProvider) + "\n";
 }
 
 shared_ptr<Object> AssemblyStack::parserResult() const

@@ -30,6 +30,7 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <src/libfuzzer/libfuzzer_macro.h>
@@ -64,7 +65,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	AssemblyStack stack(
 		version,
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		DebugInfoSelection::All()
 	);
 
 	// Parse protobuf mutated YUL code

@@ -49,9 +49,11 @@ public:
 	explicit AsmPrinter(
 		Dialect const* _dialect = nullptr,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
 		m_dialect(_dialect),
+		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{
 		if (_sourceIndexToName)
@@ -59,12 +61,12 @@ public:
 				m_nameToSourceIndex[*name] = index;
 	}
 
-
 	explicit AsmPrinter(
 		Dialect const& _dialect,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
-	): AsmPrinter(&_dialect, _sourceIndexToName, _soliditySourceProvider) {}
+	): AsmPrinter(&_dialect, _sourceIndexToName, _debugInfoSelection, _soliditySourceProvider) {}
 
 	std::string operator()(Literal const& _literal);
 	std::string operator()(Identifier const& _identifier);
@@ -102,6 +104,7 @@ private:
 	Dialect const* const m_dialect = nullptr;
 	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
+	langutil::DebugInfoSelection m_debugInfoSelection = {};
 	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
 };
 

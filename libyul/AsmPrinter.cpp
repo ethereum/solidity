@@ -304,14 +304,12 @@ string AsmPrinter::formatSourceLocation(
 
 string AsmPrinter::formatDebugData(shared_ptr<DebugData const> const& _debugData, bool _statement)
 {
-	DebugInfoSelection debugInfoSelection = DebugInfoSelection::Default();
-
-	if (!_debugData || debugInfoSelection.none())
+	if (!_debugData || m_debugInfoSelection.none())
 		return "";
 
 	vector<string> items;
 	if (auto id = _debugData->astID)
-		if (debugInfoSelection.astID)
+		if (m_debugInfoSelection.astID)
 			items.emplace_back("@ast-id " + to_string(*id));
 
 	if (
@@ -324,7 +322,7 @@ string AsmPrinter::formatDebugData(shared_ptr<DebugData const> const& _debugData
 		items.emplace_back(formatSourceLocation(
 			_debugData->originLocation,
 			m_nameToSourceIndex,
-			debugInfoSelection,
+			m_debugInfoSelection,
 			m_soliditySourceProvider
 		));
 	}

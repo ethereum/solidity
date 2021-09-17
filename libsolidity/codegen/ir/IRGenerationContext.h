@@ -75,6 +75,7 @@ public:
 		RevertStrings _revertStrings,
 		OptimiserSettings _optimiserSettings,
 		std::map<std::string, unsigned> _sourceIndices,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	):
 		m_evmVersion(_evmVersion),
@@ -82,6 +83,7 @@ public:
 		m_revertStrings(_revertStrings),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_sourceIndices(std::move(_sourceIndices)),
+		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{}
 
@@ -222,7 +224,7 @@ private:
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
 
-	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();
+	langutil::DebugInfoSelection m_debugInfoSelection = {};
 	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
 };
 

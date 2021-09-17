@@ -26,6 +26,7 @@
 #include <libyul/AssemblyStack.h>
 #include <libyul/AsmAnalysisInfo.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -67,7 +68,8 @@ bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool
 	AssemblyStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
 	);
 	if (stack.parseAndAnalyze("", m_source))
 	{

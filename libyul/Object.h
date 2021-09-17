@@ -25,6 +25,7 @@
 #include <libyul/YulString.h>
 
 #include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 
 #include <libsolutil/Common.h>
 
@@ -54,6 +55,7 @@ struct ObjectNode
 	YulString name;
 	virtual std::string toString(
 		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const = 0;
 };
@@ -69,6 +71,7 @@ struct Data: public ObjectNode
 
 	std::string toString(
 		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const override;
 };
@@ -89,6 +92,7 @@ public:
 	/// @returns a (parseable) string representation.
 	std::string toString(
 		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
 

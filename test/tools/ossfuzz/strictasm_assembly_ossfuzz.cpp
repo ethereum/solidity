@@ -19,6 +19,7 @@
 #include <libyul/AssemblyStack.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 
 using namespace solidity;
@@ -39,7 +40,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	AssemblyStack stack(
 		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		langutil::DebugInfoSelection::All()
 	);
 
 	if (!stack.parseAndAnalyze("source", input))
