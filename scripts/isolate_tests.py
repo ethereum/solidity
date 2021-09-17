@@ -58,7 +58,7 @@ def extract_yul_docs_cases(path):
             if line.startswith("//"):
                 continue
             if not line.startswith("object") and not line.startswith("{"):
-                return indent("{{\n{}\n}}\n\n".format(code.rstrip()), "    ")
+                return indent(f"{{\n{code.rstrip()}\n}}\n\n", "    ")
             break
 
         return code
@@ -107,7 +107,8 @@ def write_cases(f, solidityTests, yulTests):
         # When code examples are extracted they are indented by 8 spaces, which violates the style guide,
         # so before checking remove 4 spaces from each line.
         remainder = dedent(test)
-        sol_filename = 'test_%s_%s.%s' % (hashlib.sha256(test.encode("utf-8")).hexdigest(), cleaned_filename, language)
+        hash = hashlib.sha256(test.encode("utf-8")).hexdigest()
+        sol_filename = f'test_{hash}_{cleaned_filename}.{language}'
         with open(sol_filename, mode='w', encoding='utf8', newline='') as fi:
             fi.write(remainder)
 
