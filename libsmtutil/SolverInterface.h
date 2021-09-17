@@ -65,7 +65,7 @@ struct SMTSolverChoice
 		return solvers;
 	}
 
-	SMTSolverChoice& operator&(SMTSolverChoice const& _other)
+	SMTSolverChoice& operator&=(SMTSolverChoice const& _other)
 	{
 		cvc4 &= _other.cvc4;
 		smtlib2 &= _other.smtlib2;
@@ -73,9 +73,10 @@ struct SMTSolverChoice
 		return *this;
 	}
 
-	SMTSolverChoice& operator&=(SMTSolverChoice const& _other)
+	SMTSolverChoice operator&(SMTSolverChoice _other) const noexcept
 	{
-		return *this & _other;
+		_other &= *this;
+		return _other;
 	}
 
 	bool operator!=(SMTSolverChoice const& _other) const noexcept { return !(*this == _other); }
