@@ -370,7 +370,7 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	Token op = _assignment.assignmentOperator();
 	solAssert(TokenTraits::isAssignmentOp(op), "");
 
-	if (!smt::isSupportedType(*_assignment.annotation().type))
+	if (!isSupportedType(*_assignment.annotation().type))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
 
@@ -404,6 +404,9 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 void SMTEncoder::endVisit(TupleExpression const& _tuple)
 {
 	if (_tuple.annotation().type->category() == Type::Category::Function)
+		return;
+
+	if (_tuple.annotation().type->category() == Type::Category::TypeType)
 		return;
 
 	createExpr(_tuple);
@@ -575,6 +578,17 @@ bool SMTEncoder::visit(FunctionCall const& _funCall)
 			arg->accept(*this);
 		return false;
 	}
+	// We do not really need to visit the expression in a wrap/unwrap no-op call,
+	// so we just ignore the function call expression to avoid "unsupported" warnings.
+	else if (
+		funType.kind() == FunctionType::Kind::Wrap ||
+		funType.kind() == FunctionType::Kind::Unwrap
+	)
+	{
+		if (auto arg = _funCall.arguments().front())
+			arg->accept(*this);
+		return false;
+	}
 	return true;
 }
 
@@ -640,6 +654,10 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
 		visitAddMulMod(_funCall);
+		break;
+	case FunctionType::Kind::Unwrap:
+	case FunctionType::Kind::Wrap:
+		visitWrapUnwrap(_funCall);
 		break;
 	case FunctionType::Kind::Send:
 	case FunctionType::Kind::Transfer:
@@ -846,6 +864,13 @@ void SMTEncoder::visitAddMulMod(FunctionCall const& _funCall)
 		defineExpr(_funCall, divModWithSlacks(x * y, k, intType).second);
 }
 
+void SMTEncoder::visitWrapUnwrap(FunctionCall const& _funCall)
+{
+	auto const& args = _funCall.arguments();
+	solAssert(args.size() == 1, "");
+	defineExpr(_funCall, expr(*args.front()));
+}
+
 void SMTEncoder::visitObjectCreation(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
@@ -888,6 +913,9 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		return;
 	// Ignore module identifiers
 	else if (dynamic_cast<ModuleType const*>(_identifier.annotation().type))
+		return;
+	// Ignore user defined value type identifiers
+	else if (dynamic_cast<UserDefinedValueType const*>(_identifier.annotation().type))
 		return;
 	// Ignore the builtin abi, it is handled in FunctionCall.
 	// TODO: ignore MagicType in general (abi, block, msg, tx, type)
@@ -944,7 +972,7 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 	auto var = dynamic_cast<VariableDeclaration const*>(access.annotation().referencedDeclaration);
 	solAssert(var, "");
 	solAssert(m_context.knownExpression(_funCall), "");
-	auto paramExpectedTypes = FunctionType(*var).parameterTypes();
+	auto paramExpectedTypes = replaceUserTypes(FunctionType(*var).parameterTypes());
 	auto actualArguments = _funCall.arguments();
 	solAssert(actualArguments.size() == paramExpectedTypes.size(), "");
 	deque<smtutil::Expression> symbArguments;
@@ -1164,7 +1192,7 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 void SMTEncoder::visitFunctionIdentifier(Identifier const& _identifier)
 {
 	auto const& fType = dynamic_cast<FunctionType const&>(*_identifier.annotation().type);
-	if (fType.returnParameterTypes().size() == 1)
+	if (replaceUserTypes(fType.returnParameterTypes()).size() == 1)
 	{
 		defineGlobalVariable(fType.identifier(), _identifier);
 		m_context.createExpression(_identifier, m_context.globalSymbol(fType.identifier()));
@@ -1647,7 +1675,7 @@ void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _ex
 		m_context.globalSymbol(_name)->increaseIndex();
 	// The default behavior is not to increase the index since
 	// most of the global values stay the same throughout a tx.
-	if (smt::isSupportedType(*_expr.annotation().type))
+	if (isSupportedType(*_expr.annotation().type))
 		defineExpr(_expr, m_context.globalSymbol(_name)->currentValue());
 }
 
@@ -1843,9 +1871,10 @@ smtutil::Expression SMTEncoder::bitwiseOperation(
 
 void SMTEncoder::compareOperation(BinaryOperation const& _op)
 {
-	auto const& commonType = _op.annotation().commonType;
+	auto commonType = _op.annotation().commonType;
 	solAssert(commonType, "");
-	if (smt::isSupportedType(*commonType))
+
+	if (isSupportedType(*commonType))
 	{
 		smtutil::Expression left(expr(_op.leftExpression(), commonType));
 		smtutil::Expression right(expr(_op.rightExpression(), commonType));
@@ -1978,7 +2007,7 @@ void SMTEncoder::assignment(
 
 	Expression const* left = cleanExpression(_left);
 
-	if (!smt::isSupportedType(*_type))
+	if (!isSupportedType(*_type))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
 		if (auto varDecl = identifierToVariable(*left))
@@ -2019,7 +2048,7 @@ void SMTEncoder::assignment(
 			}
 			else if (funType->kind() == FunctionType::Kind::Internal)
 			{
-				for (auto type: funType->returnParameterTypes())
+				for (auto type: replaceUserTypes(funType->returnParameterTypes()))
 					if (type->category() == Type::Category::Mapping || dynamic_cast<ReferenceType const*>(type))
 						resetReferences(type);
 			}
@@ -2356,6 +2385,11 @@ bool SMTEncoder::sameTypeOrSubtype(Type const* _a, Type const* _b)
 	return false;
 }
 
+bool SMTEncoder::isSupportedType(Type const& _type) const
+{
+	return smt::isSupportedType(*underlyingType(&_type));
+}
+
 Type const* SMTEncoder::typeWithoutPointer(Type const* _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
@@ -2417,7 +2451,7 @@ smtutil::Expression SMTEncoder::expr(Expression const& _e, Type const* _targetTy
 		createExpr(_e);
 	}
 
-	return m_context.expression(_e)->currentValue(_targetType);
+	return m_context.expression(_e)->currentValue(underlyingType(_targetType));
 }
 
 void SMTEncoder::createExpr(Expression const& _e)
@@ -2606,6 +2640,22 @@ Expression const* SMTEncoder::innermostTuple(Expression const& _expr)
 	}
 	solAssert(expr, "");
 	return expr;
+}
+
+Type const* SMTEncoder::underlyingType(Type const* _type)
+{
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+		_type = &userType->underlyingType();
+	return _type;
+}
+
+TypePointers SMTEncoder::replaceUserTypes(TypePointers const& _types)
+{
+	return applyMap(_types, [](auto _type) {
+		if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+			return &userType->underlyingType();
+		return _type;
+	});
 }
 
 pair<Expression const*, FunctionCallOptions const*> SMTEncoder::functionCallExpression(FunctionCall const& _funCall)

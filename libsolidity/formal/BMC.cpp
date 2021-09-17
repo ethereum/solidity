@@ -483,6 +483,8 @@ void BMC::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::BlockHash:
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
+	case FunctionType::Kind::Unwrap:
+	case FunctionType::Kind::Wrap:
 		[[fallthrough]];
 	default:
 		SMTEncoder::endVisit(_funCall);

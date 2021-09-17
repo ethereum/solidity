@@ -237,7 +237,7 @@ string Predicate::formatSummaryCall(
 	auto last = first + static_cast<int>(fun->parameters().size());
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
-	auto inTypes = FunctionType(*fun).parameterTypes();
+	auto inTypes = SMTEncoder::replaceUserTypes(FunctionType(*fun).parameterTypes());
 	vector<optional<string>> functionArgsCex = formatExpressions(vector<smtutil::Expression>(first, last), inTypes);
 	vector<string> functionArgs;
 
@@ -317,7 +317,7 @@ vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expre
 
 	vector<smtutil::Expression> inValues(first, last);
 	solAssert(inValues.size() == inParams.size(), "");
-	auto inTypes = FunctionType(*function).parameterTypes();
+	auto inTypes = SMTEncoder::replaceUserTypes(FunctionType(*function).parameterTypes());
 	return formatExpressions(inValues, inTypes);
 }
 
@@ -339,7 +339,7 @@ vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expr
 
 	vector<smtutil::Expression> outValues(first, _args.end());
 	solAssert(outValues.size() == function->returnParameters().size(), "");
-	auto outTypes = FunctionType(*function).returnParameterTypes();
+	auto outTypes = SMTEncoder::replaceUserTypes(FunctionType(*function).returnParameterTypes());
 	return formatExpressions(outValues, outTypes);
 }
 

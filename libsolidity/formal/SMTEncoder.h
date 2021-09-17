@@ -71,6 +71,12 @@ public:
 	/// otherwise _expr.
 	static Expression const* innermostTuple(Expression const& _expr);
 
+	/// @returns the underlying type if _type is UserDefinedValueType,
+	/// and _type otherwise.
+	static Type const* underlyingType(Type const* _type);
+
+	static TypePointers replaceUserTypes(TypePointers const& _types);
+
 	/// @returns {_funCall.expression(), nullptr} if function call option values are not given, and
 	/// {_funCall.expression().expression(), _funCall.expression()} if they are.
 	static std::pair<Expression const*, FunctionCallOptions const*> functionCallExpression(FunctionCall const& _funCall);
@@ -207,6 +213,7 @@ protected:
 	void visitCryptoFunction(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
 	virtual void visitAddMulMod(FunctionCall const& _funCall);
+	void visitWrapUnwrap(FunctionCall const& _funCall);
 	void visitObjectCreation(FunctionCall const& _funCall);
 	void visitTypeConversion(FunctionCall const& _funCall);
 	void visitStructConstructorCall(FunctionCall const& _funCall);
@@ -318,6 +325,8 @@ protected:
 	Type const* typeWithoutPointer(Type const* _type);
 	/// @returns whether _a or a subtype of _a is the same as _b.
 	bool sameTypeOrSubtype(Type const* _a, Type const* _b);
+
+	bool isSupportedType(Type const& _type) const;
 
 	/// Given the state of the symbolic variables at the end of two different branches,
 	/// create a merged state using the given branch condition.
