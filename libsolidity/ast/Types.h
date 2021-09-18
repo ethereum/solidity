@@ -205,7 +205,7 @@ public:
     /// @returns true iff this type can be safely (memory representation are unaffected
     /// by conversion) implicitly convertible. This is currently only true for contracts
     /// and conversions from address payable to address.
-    virtual BoolResult isSafelyImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
+	virtual BoolResult isSafelyImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
 
 	virtual BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const
 	{
@@ -926,7 +926,7 @@ public:
 	Category category() const override { return Category::Contract; }
 	/// Contracts can be implicitly converted only to base contracts.
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
-    BoolResult isSafelyImplicitlyConvertibleTo(Type const& _other) const override;
+	BoolResult isSafelyImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	/// Contracts can only be explicitly converted to address types and base contracts.
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	TypeResult unaryOperatorResult(Token _operator) const override;
@@ -1360,12 +1360,12 @@ public:
 	/// @returns true iff the return types are equal (does not check parameter types)
 	bool hasEqualReturnTypes(FunctionType const& _other) const;
     /// @returns true iff the return types are equal or the return types are contracts and can be implicitly converted
-    bool hasSafelyImplicitlyConvertibleReturnTypes(FunctionType const& _other) const;
+	bool hasSafelyImplicitlyConvertibleReturnTypes(FunctionType const& _other) const;
 	/// @returns true iff the function type is equal to the given type, ignoring state mutability differences.
 	bool equalExcludingStateMutability(FunctionType const& _other) const;
     /// @returns true iff the function type is equal to the given type or equal and return types can be safely
     /// implicitly convertible, ignoring state mutability differences.
-    bool compatibleExcludingStateMutability(FunctionType const& _other) const;
+	bool compatibleExcludingStateMutability(FunctionType const& _other) const;
 
 	/// @returns true if the ABI is NOT used for this call (only meaningful for external calls)
 	bool isBareCall() const;

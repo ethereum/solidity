@@ -406,9 +406,9 @@ BoolResult AddressType::isImplicitlyConvertibleTo(Type const& _other) const
 	return other.m_stateMutability <= m_stateMutability;
 }
 
-BoolResult AddressType::isSafelyImplicitlyConvertibleTo(Type const& _other) const
+BoolResult AddressType::isSafelyImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-    return isImplicitlyConvertibleTo(_other);
+	return isImplicitlyConvertibleTo(_convertTo);
 }
 
 BoolResult AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -1404,7 +1404,7 @@ BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 BoolResult ContractType::isSafelyImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-    return isImplicitlyConvertibleTo(_convertTo);
+	return isImplicitlyConvertibleTo(_convertTo);
 }
 
 
@@ -3410,16 +3410,16 @@ bool FunctionType::hasEqualReturnTypes(FunctionType const& _other) const
 
 bool FunctionType::hasSafelyImplicitlyConvertibleReturnTypes(FunctionType const& _other) const
 {
-    if (m_returnParameterTypes.size() != _other.m_returnParameterTypes.size())
-        return false;
-    return equal(
-            m_returnParameterTypes.cbegin(),
-            m_returnParameterTypes.cend(),
-            _other.m_returnParameterTypes.cbegin(),
-            [](Type const* _a, Type const* _b) -> bool {
-                return _a->isSafelyImplicitlyConvertibleTo(*_b);
-            }
-    );
+	if (m_returnParameterTypes.size() != _other.m_returnParameterTypes.size())
+		return false;
+	return equal(
+		m_returnParameterTypes.cbegin(),
+		m_returnParameterTypes.cend(),
+		_other.m_returnParameterTypes.cbegin(),
+		[](Type const* _a, Type const* _b) -> bool {
+			return _a->isSafelyImplicitlyConvertibleTo(*_b);
+		}
+	);
 }
 
 bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) const
@@ -3444,22 +3444,22 @@ bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) con
 
 bool FunctionType::compatibleExcludingStateMutability(FunctionType const& _other) const
 {
-    if (m_kind != _other.m_kind)
-        return false;
+	if (m_kind != _other.m_kind)
+		return false;
 
-    if (!hasEqualParameterTypes(_other) || !hasSafelyImplicitlyConvertibleReturnTypes(_other))
-        return false;
+	if (!hasEqualParameterTypes(_other) || !hasSafelyImplicitlyConvertibleReturnTypes(_other))
+		return false;
 
     //@todo this is ugly, but cannot be prevented right now
-    if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet || m_saltSet != _other.m_saltSet)
-        return false;
+	if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet || m_saltSet != _other.m_saltSet)
+		return false;
 
-    if (bound() != _other.bound())
-        return false;
+	if (bound() != _other.bound())
+		return false;
 
-    solAssert(!bound() || *selfType() == *_other.selfType(), "");
+	solAssert(!bound() || *selfType() == *_other.selfType(), "");
 
-    return true;
+	return true;
 }
 
 
