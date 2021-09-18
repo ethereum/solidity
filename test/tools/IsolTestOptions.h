@@ -35,6 +35,7 @@ struct IsolTestOptions: CommonOptions
 	std::string testFilter = std::string{};
 
 	IsolTestOptions(std::string* _editor);
+	void addOptions() override;
 	bool parse(int _argc, char const* const* _argv) override;
 	void validate() const override;
 };

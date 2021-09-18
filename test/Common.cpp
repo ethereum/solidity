@@ -92,6 +92,11 @@ CommonOptions::CommonOptions(std::string _caption):
 		po::options_description::m_default_line_length - 23
 	)
 {
+
+}
+
+void CommonOptions::addOptions() 
+{
 	options.add_options()
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")

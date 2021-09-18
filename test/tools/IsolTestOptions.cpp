@@ -59,6 +59,13 @@ std::string editorPath()
 IsolTestOptions::IsolTestOptions(std::string* _editor):
 	CommonOptions(description)
 {
+	enforceViaYul = true;
+	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
+	enforceGasTestMinValue = 100000;
+}
+
+void IsolTestOptions::addOptions()
+{
 	options.add_options()
 		("editor", po::value<std::string>(_editor)->default_value(editorPath()), "Path to editor for opening test files.")
 		("help", po::bool_switch(&showHelp), "Show this help screen.")
@@ -76,9 +83,6 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		std::cout << options << std::endl;
 		return false;
 	}
-	enforceViaYul = true;
-	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
-	enforceGasTestMinValue = 100000;
 
 	return res;
 }
