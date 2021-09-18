@@ -1363,6 +1363,9 @@ public:
     bool hasSafelyImplicitlyConvertibleReturnTypes(FunctionType const& _other) const;
 	/// @returns true iff the function type is equal to the given type, ignoring state mutability differences.
 	bool equalExcludingStateMutability(FunctionType const& _other) const;
+    /// @returns true iff the function type is equal to the given type or equal and return types can be safely
+    /// implicitly convertible, ignoring state mutability differences.
+    bool compatibleExcludingStateMutability(FunctionType const& _other) const;
 
 	/// @returns true if the ABI is NOT used for this call (only meaningful for external calls)
 	bool isBareCall() const;

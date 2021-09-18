@@ -2994,7 +2994,7 @@ BoolResult FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (convertTo.kind() != kind())
 		return BoolResult::err("Special functions can not be converted to function types.");
 
-	if (!equalExcludingStateMutability(convertTo))
+	if (!compatibleExcludingStateMutability(convertTo))
 		return false;
 
 	// non-payable should not be convertible to payable
@@ -3441,6 +3441,27 @@ bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) con
 
 	return true;
 }
+
+bool FunctionType::compatibleExcludingStateMutability(FunctionType const& _other) const
+{
+    if (m_kind != _other.m_kind)
+        return false;
+
+    if (!hasEqualParameterTypes(_other) || !hasSafelyImplicitlyConvertibleReturnTypes(_other))
+        return false;
+
+    //@todo this is ugly, but cannot be prevented right now
+    if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet || m_saltSet != _other.m_saltSet)
+        return false;
+
+    if (bound() != _other.bound())
+        return false;
+
+    solAssert(!bound() || *selfType() == *_other.selfType(), "");
+
+    return true;
+}
+
 
 bool FunctionType::isBareCall() const
 {
