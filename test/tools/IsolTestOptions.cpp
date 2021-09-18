@@ -70,9 +70,9 @@ void IsolTestOptions::addOptions()
 	CommonOptions::addOptions();
 	options.add_options()
 		("editor", po::value<std::string>(editor)->default_value(editorPath()), "Path to editor for opening test files.")
-		("help", po::bool_switch(&showHelp), "Show this help screen.")
-		("no-color", po::bool_switch(&noColor), "Don't use colors.")
-		("accept-updates", po::bool_switch(&acceptUpdates), "Automatically accept expectation updates.")
+		("help", po::bool_switch(&showHelp)->default_value(showHelp), "Show this help screen.")
+		("no-color", po::bool_switch(&noColor)->default_value(noColor), "Don't use colors.")
+		("accept-updates", po::bool_switch(&acceptUpdates)->default_value(acceptUpdates), "Automatically accept expectation updates.")
 		("test,t", po::value<std::string>(&testFilter)->default_value("*/*"), "Filters which test units to include.");
 }
 
