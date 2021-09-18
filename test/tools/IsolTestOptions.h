@@ -33,9 +33,9 @@ struct IsolTestOptions: CommonOptions
 	bool noColor = false;
 	bool acceptUpdates = false;
 	std::string testFilter = std::string{};
-	std::string editor = std::string{};
+	std::string* editor = nullptr;
 
-	explicit IsolTestOptions(const std::string* _editor);
+	explicit IsolTestOptions(std::string* _editor);
 	void addOptions() override;
 	bool parse(int _argc, char const* const* _argv) override;
 	void validate() const override;
