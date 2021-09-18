@@ -734,13 +734,19 @@ do not have a default.
 Conversions:
 
 A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
-their parameter types are identical, their return types are identical,
+their parameter types are identical, their return types are identical or return types of
+``A`` can be safely converted to return types of ``B``,
 their internal/external property is identical and the state mutability of ``A``
 is more restrictive than the state mutability of ``B``. In particular:
 
 - ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
 - ``view`` functions can be converted to ``non-payable`` functions
 - ``payable`` functions can be converted to ``non-payable`` functions
+
+Current available safe conversions are:
+
+- Contract types are safely convertible to contracts they inherit from
+- ``address payable`` is safely convertible to ``address``
 
 No other conversions between function types are possible.
 
