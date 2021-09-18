@@ -596,7 +596,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		{
 			solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
 
-			if (!functionType->hasEqualReturnTypes(*superType))
+			if (!functionType->hasSafelyImplicitlyConvertibleReturnTypes(*superType))
 				overrideError(
 					_overriding,
 					_super,

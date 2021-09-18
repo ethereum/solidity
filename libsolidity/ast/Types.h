@@ -201,6 +201,12 @@ public:
 	static std::string escapeIdentifier(std::string const& _identifier);
 
 	virtual BoolResult isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
+
+    /// @returns true iff this type can be safely (memory representation are unaffected
+    /// by conversion) implicitly convertible. This is currently only true for contracts
+    /// and conversions from address payable to address.
+    virtual BoolResult isSafelyImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
+
 	virtual BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const
 	{
 		return isImplicitlyConvertibleTo(_convertTo);
@@ -408,6 +414,7 @@ public:
 
 	std::string richIdentifier() const override;
 	BoolResult isImplicitlyConvertibleTo(Type const& _other) const override;
+	BoolResult isSafelyImplicitlyConvertibleTo(Type const& _other) const override;
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	TypeResult unaryOperatorResult(Token _operator) const override;
 	TypeResult binaryOperatorResult(Token _operator, Type const* _other) const override;
@@ -919,6 +926,7 @@ public:
 	Category category() const override { return Category::Contract; }
 	/// Contracts can be implicitly converted only to base contracts.
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+    BoolResult isSafelyImplicitlyConvertibleTo(Type const& _other) const override;
 	/// Contracts can only be explicitly converted to address types and base contracts.
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	TypeResult unaryOperatorResult(Token _operator) const override;
@@ -1351,6 +1359,8 @@ public:
 	bool hasEqualParameterTypes(FunctionType const& _other) const;
 	/// @returns true iff the return types are equal (does not check parameter types)
 	bool hasEqualReturnTypes(FunctionType const& _other) const;
+    /// @returns true iff the return types are equal or the return types are contracts and can be implicitly converted
+    bool hasSafelyImplicitlyConvertibleReturnTypes(FunctionType const& _other) const;
 	/// @returns true iff the function type is equal to the given type, ignoring state mutability differences.
 	bool equalExcludingStateMutability(FunctionType const& _other) const;
 

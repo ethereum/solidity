@@ -406,6 +406,11 @@ BoolResult AddressType::isImplicitlyConvertibleTo(Type const& _other) const
 	return other.m_stateMutability <= m_stateMutability;
 }
 
+BoolResult AddressType::isSafelyImplicitlyConvertibleTo(Type const& _other) const
+{
+    return isImplicitlyConvertibleTo(_other);
+}
+
 BoolResult AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if ((_convertTo.category() == category()) || isImplicitlyConvertibleTo(_convertTo))
@@ -1396,6 +1401,12 @@ BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	}
 	return false;
 }
+
+BoolResult ContractType::isSafelyImplicitlyConvertibleTo(Type const& _convertTo) const
+{
+    return isImplicitlyConvertibleTo(_convertTo);
+}
+
 
 BoolResult ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
@@ -3395,6 +3406,20 @@ bool FunctionType::hasEqualReturnTypes(FunctionType const& _other) const
 		_other.m_returnParameterTypes.cbegin(),
 		[](Type const* _a, Type const* _b) -> bool { return *_a == *_b; }
 	);
+}
+
+bool FunctionType::hasSafelyImplicitlyConvertibleReturnTypes(FunctionType const& _other) const
+{
+    if (m_returnParameterTypes.size() != _other.m_returnParameterTypes.size())
+        return false;
+    return equal(
+            m_returnParameterTypes.cbegin(),
+            m_returnParameterTypes.cend(),
+            _other.m_returnParameterTypes.cbegin(),
+            [](Type const* _a, Type const* _b) -> bool {
+                return _a->isSafelyImplicitlyConvertibleTo(*_b);
+            }
+    );
 }
 
 bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) const
