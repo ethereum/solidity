@@ -59,6 +59,7 @@ std::string editorPath()
 IsolTestOptions::IsolTestOptions(std::string* _editor):
 	CommonOptions(description)
 {
+	editor = _editor;
 	enforceViaYul = true;
 	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
 	enforceGasTestMinValue = 100000;

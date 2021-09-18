@@ -144,6 +144,7 @@ void CommonOptions::validate() const
 bool CommonOptions::parse(int argc, char const* const* argv)
 {
 	po::variables_map arguments;
+	addOptions();
 
 	po::command_line_parser cmdLineParser(argc, argv);
 	cmdLineParser.options(options);
