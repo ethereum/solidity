@@ -293,7 +293,7 @@ string AsmPrinter::formatSourceLocation(
 		":" +
 		to_string(_location.end);
 
-	return joinHumanReadable(vector<string>{sourceLocation, solidityCodeSnippet}, "  ");
+	return sourceLocation + (solidityCodeSnippet.empty() ? "" : "  ") + solidityCodeSnippet;
 }
 
 string AsmPrinter::formatDebugData(shared_ptr<DebugData const> const& _debugData, bool _statement)

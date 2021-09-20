@@ -599,15 +599,15 @@ object \"C_54\" {
             let newFreePtr := add(160, and(add(argSize, 31), not(31)))
             if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, 160))
             {
-                mstore(/** @src -1:-1:-1   */ 0, /** @src 0:79:435  \"contract C...\" */ shl(224, 0x4e487b71))
+                mstore(/** @src -1:-1:-1 */ 0, /** @src 0:79:435  \"contract C...\" */ shl(224, 0x4e487b71))
                 mstore(4, 0x41)
-                revert(/** @src -1:-1:-1   */ 0, /** @src 0:79:435  \"contract C...\" */ 0x24)
+                revert(/** @src -1:-1:-1 */ 0, /** @src 0:79:435  \"contract C...\" */ 0x24)
             }
             mstore(64, newFreePtr)
             codecopy(160, programSize, argSize)
             if slt(argSize, 32)
             {
-                revert(/** @src -1:-1:-1   */ 0, 0)
+                revert(/** @src -1:-1:-1 */ 0, 0)
             }
             /// @src 0:79:435  \"contract C...\"
             constructor_C(mload(160))
@@ -1431,15 +1431,15 @@ object \"D_72\" {
             let newFreePtr := add(160, and(add(argSize, 31), not(31)))
             if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, 160))
             {
-                mstore(/** @src -1:-1:-1   */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
+                mstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
                 mstore(4, 0x41)
-                revert(/** @src -1:-1:-1   */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
+                revert(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
             }
             mstore(64, newFreePtr)
             codecopy(160, programSize, argSize)
             if slt(argSize, 32)
             {
-                revert(/** @src -1:-1:-1   */ 0, 0)
+                revert(/** @src -1:-1:-1 */ 0, 0)
             }
             /// @src 1:91:166  \"contract D is C(3)...\"
             constructor_D(mload(160))
