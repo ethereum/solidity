@@ -102,7 +102,10 @@ struct InterpreterState
 	ControlFlowState controlFlowState = ControlFlowState::Default;
 
 	/// Prints execution trace and non-zero storage to @param _out.
-	void dumpTraceAndState(std::ostream& _out) const;
+	/// Flag @param _disableMemoryTrace, if set, does not produce a memory dump. This
+	/// avoids false positives reports by the fuzzer when certain optimizer steps are
+	/// activated e.g., Redundant store eliminator, Equal store eliminator.
+	void dumpTraceAndState(std::ostream& _out, bool _disableMemoryTrace) const;
 	/// Prints non-zero storage to @param _out.
 	void dumpStorage(std::ostream& _out) const;
 };
@@ -124,18 +127,29 @@ struct Scope
 class Interpreter: public ASTWalker
 {
 public:
-	static void run(InterpreterState& _state, Dialect const& _dialect, Block const& _ast);
+	/// Executes the Yul interpreter. Flag @param _disableMemoryTracing if set ensures that
+	/// instructions that write to memory do not affect @param _state. This
+	/// avoids false positives reports by the fuzzer when certain optimizer steps are
+	/// activated e.g., Redundant store eliminator, Equal store eliminator.
+	static void run(
+		InterpreterState& _state,
+		Dialect const& _dialect,
+		Block const& _ast,
+		bool _disableMemoryTracing
+	);
 
 	Interpreter(
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
+		bool _disableMemoryTracing,
 		std::map<YulString, u256> _variables = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
 		m_variables(std::move(_variables)),
-		m_scope(&_scope)
+		m_scope(&_scope),
+		m_disableMemoryTrace(_disableMemoryTracing)
 	{
 	}
 
@@ -173,6 +187,7 @@ private:
 	/// Values of variables.
 	std::map<YulString, u256> m_variables;
 	Scope* m_scope;
+	bool m_disableMemoryTrace;
 };
 
 /**
@@ -185,12 +200,14 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
-		std::map<YulString, u256> const& _variables
+		std::map<YulString, u256> const& _variables,
+		bool _disableMemoryTrace
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
-		m_scope(_scope)
+		m_scope(_scope),
+		m_disableMemoryTrace(_disableMemoryTrace)
 	{}
 
 	void operator()(Literal const&) override;
@@ -226,6 +243,8 @@ private:
 	std::vector<u256> m_values;
 	/// Current expression nesting level
 	unsigned m_nestingLevel = 0;
+	/// Flag to disable memory tracing
+	bool m_disableMemoryTrace;
 };
 
 }

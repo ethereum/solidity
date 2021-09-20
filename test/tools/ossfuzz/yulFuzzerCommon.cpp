@@ -26,6 +26,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	ostream& _os,
 	shared_ptr<yul::Block> _ast,
 	Dialect const& _dialect,
+	bool _disableMemoryTracing,
 	bool _outputStorageOnly,
 	size_t _maxSteps,
 	size_t _maxTraceSize,
@@ -52,7 +53,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	TerminationReason reason = TerminationReason::None;
 	try
 	{
-		Interpreter::run(state, _dialect, *_ast);
+		Interpreter::run(state, _dialect, *_ast, _disableMemoryTracing);
 	}
 	catch (StepLimitReached const&)
 	{
@@ -74,7 +75,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	if (_outputStorageOnly)
 		state.dumpStorage(_os);
 	else
-		state.dumpTraceAndState(_os);
+		state.dumpTraceAndState(_os, _disableMemoryTracing);
 	return reason;
 }
 
