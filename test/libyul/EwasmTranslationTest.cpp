@@ -108,13 +108,18 @@ string EwasmTranslationTest::interpret()
 	state.maxExprNesting = 64;
 	try
 	{
-		Interpreter::run(state, WasmDialect{}, *m_object->code);
+		Interpreter::run(
+			state,
+			WasmDialect{},
+			*m_object->code,
+			/*disableMemoryTracing=*/false
+		);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{
 	}
 
 	stringstream result;
-	state.dumpTraceAndState(result);
+	state.dumpTraceAndState(result, false);
 	return result.str();
 }
