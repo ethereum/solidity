@@ -306,14 +306,14 @@ string AsmPrinter::formatDebugData(shared_ptr<DebugData const> const& _debugData
 		items.emplace_back("@ast-id " + to_string(*id));
 
 	if (
-		m_lastLocation != _debugData->location &&
+		m_lastLocation != _debugData->originLocation &&
 		!m_nameToSourceIndex.empty()
 	)
 	{
-		m_lastLocation = _debugData->location;
+		m_lastLocation = _debugData->originLocation;
 
 		items.emplace_back(formatSourceLocation(
-			_debugData->location,
+			_debugData->originLocation,
 			m_nameToSourceIndex,
 			m_soliditySourceProvider
 		));

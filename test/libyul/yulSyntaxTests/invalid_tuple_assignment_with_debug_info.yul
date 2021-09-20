@@ -5,4 +5,4 @@ object "C" {
     }
 }
 // ----
-// DeclarationError 3812: Variable count mismatch for declaration of "x, y": 2 variables and 1 values.
+// DeclarationError 3812: (59-72): Variable count mismatch for declaration of "x, y": 2 variables and 1 values.

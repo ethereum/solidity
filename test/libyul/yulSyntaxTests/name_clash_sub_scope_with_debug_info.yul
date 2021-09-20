@@ -8,4 +8,4 @@ object "C" {
     }
 }
 // ----
-// DeclarationError 6052: (0-0): Function name g already taken in this scope.
+// DeclarationError 6052: (109-124): Function name g already taken in this scope.

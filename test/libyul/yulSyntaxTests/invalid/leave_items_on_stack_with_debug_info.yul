@@ -6,4 +6,4 @@ object "C" {
     }
 }
 // ----
-// TypeError 3083: (0-0): Top-level expressions are not supposed to return values (this expression returns 1 value). Use ``pop()`` or assign them.
+// TypeError 3083: (82-97): Top-level expressions are not supposed to return values (this expression returns 1 value). Use ``pop()`` or assign them.

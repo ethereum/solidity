@@ -38,20 +38,34 @@ using Type = YulString;
 
 struct DebugData
 {
-	explicit DebugData(langutil::SourceLocation _location, std::optional<int64_t> _astID = {}):
-		location(std::move(_location)),
+	explicit DebugData(
+		langutil::SourceLocation _nativeLocation,
+		langutil::SourceLocation _originLocation = {},
+		std::optional<int64_t> _astID = {}
+	):
+		nativeLocation(std::move(_nativeLocation)),
+		originLocation(std::move(_originLocation)),
 		astID(std::move(_astID))
 	{}
 
 	static std::shared_ptr<DebugData const> create(
-		langutil::SourceLocation _location = {},
+		langutil::SourceLocation _nativeLocation = {},
+		langutil::SourceLocation _originLocation = {},
 		std::optional<int64_t> _astID = {}
 	)
 	{
-		return std::make_shared<DebugData const>(std::move(_location), std::move(_astID));
+		return std::make_shared<DebugData const>(
+			std::move(_nativeLocation),
+			std::move(_originLocation),
+			std::move(_astID)
+		);
 	}
 
-	langutil::SourceLocation location;
+	/// Location in the Yul code.
+	langutil::SourceLocation nativeLocation;
+	/// Location in the original source that the Yul code was produced from.
+	/// Optional. Only present if the Yul source contains location annotations.
+	langutil::SourceLocation originLocation;
 	/// ID in the (Solidity) source AST.
 	std::optional<int64_t> astID;
 };
@@ -94,16 +108,28 @@ struct Continue { std::shared_ptr<DebugData const> debugData; };
 /// Leave statement (valid within function)
 struct Leave { std::shared_ptr<DebugData const> debugData; };
 
-/// Extracts the source location from a Yul node.
-template <class T> inline langutil::SourceLocation locationOf(T const& _node)
+/// Extracts the IR source location from a Yul node.
+template <class T> inline langutil::SourceLocation nativeLocationOf(T const& _node)
 {
-	return _node.debugData ? _node.debugData->location : langutil::SourceLocation{};
+	return _node.debugData ? _node.debugData->nativeLocation : langutil::SourceLocation{};
 }
 
-/// Extracts the source location from a Yul node.
-template <class... Args> inline langutil::SourceLocation locationOf(std::variant<Args...> const& _node)
+/// Extracts the IR source location from a Yul node.
+template <class... Args> inline langutil::SourceLocation nativeLocationOf(std::variant<Args...> const& _node)
 {
-	return std::visit([](auto const& _arg) { return locationOf(_arg); }, _node);
+	return std::visit([](auto const& _arg) { return nativeLocationOf(_arg); }, _node);
+}
+
+/// Extracts the original source location from a Yul node.
+template <class T> inline langutil::SourceLocation originLocationOf(T const& _node)
+{
+	return _node.debugData ? _node.debugData->originLocation : langutil::SourceLocation{};
+}
+
+/// Extracts the original source location from a Yul node.
+template <class... Args> inline langutil::SourceLocation originLocationOf(std::variant<Args...> const& _node)
+{
+	return std::visit([](auto const& _arg) { return originLocationOf(_arg); }, _node);
 }
 
 /// Extracts the debug data from a Yul node.

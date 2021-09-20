@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_empty_block)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 234, 543);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_block_with_children)
@@ -232,12 +232,12 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_with_children)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result);
-	CHECK_LOCATION(result->debugData->location, "source0", 234, 543);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 	BOOST_REQUIRE_EQUAL(3, result->statements.size());
-	CHECK_LOCATION(locationOf(result->statements.at(0)), "source0", 234, 543);
-	CHECK_LOCATION(locationOf(result->statements.at(1)), "source0", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(0)), "source0", 234, 543);
+	CHECK_LOCATION(originLocationOf(result->statements.at(1)), "source0", 123, 432);
 	// [2] is inherited source location
-	CHECK_LOCATION(locationOf(result->statements.at(2)), "source0", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(2)), "source0", 123, 432);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_block_different_sources)
@@ -255,12 +255,12 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_different_sources)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 234, 543);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 	BOOST_REQUIRE_EQUAL(3, result->statements.size());
-	CHECK_LOCATION(locationOf(result->statements.at(0)), "source0", 234, 543);
-	CHECK_LOCATION(locationOf(result->statements.at(1)), "source1", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(0)), "source0", 234, 543);
+	CHECK_LOCATION(originLocationOf(result->statements.at(1)), "source1", 123, 432);
 	// [2] is inherited source location
-	CHECK_LOCATION(locationOf(result->statements.at(2)), "source1", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(2)), "source1", 123, 432);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_block_nested)
@@ -277,9 +277,9 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_nested)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 234, 543);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 	BOOST_REQUIRE_EQUAL(2, result->statements.size());
-	CHECK_LOCATION(locationOf(result->statements.at(1)), "source0", 343, 434);
+	CHECK_LOCATION(originLocationOf(result->statements.at(1)), "source0", 343, 434);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_block_switch_case)
@@ -301,19 +301,19 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_switch_case)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 234, 543);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 
 	BOOST_REQUIRE_EQUAL(2, result->statements.size());
 	BOOST_REQUIRE(holds_alternative<Switch>(result->statements.at(1)));
 	auto const& switchStmt = get<Switch>(result->statements.at(1));
 
-	CHECK_LOCATION(switchStmt.debugData->location, "source0", 343, 434);
+	CHECK_LOCATION(switchStmt.debugData->originLocation, "source0", 343, 434);
 	BOOST_REQUIRE_EQUAL(1, switchStmt.cases.size());
-	CHECK_LOCATION(switchStmt.cases.at(0).debugData->location, "source0", 3141, 59265);
+	CHECK_LOCATION(switchStmt.cases.at(0).debugData->originLocation, "source0", 3141, 59265);
 
 	auto const& caseBody = switchStmt.cases.at(0).body;
 	BOOST_REQUIRE_EQUAL(1, caseBody.statements.size());
-	CHECK_LOCATION(locationOf(caseBody.statements.at(0)), "source0", 271, 828);
+	CHECK_LOCATION(originLocationOf(caseBody.statements.at(0)), "source0", 271, 828);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_inherit_into_outer_scope)
@@ -334,19 +334,19 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_inherit_into_outer_scope)
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 
-	CHECK_LOCATION(result->debugData->location, "source0", 1, 100);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 1, 100);
 
 	BOOST_REQUIRE_EQUAL(3, result->statements.size());
-	CHECK_LOCATION(locationOf(result->statements.at(0)), "source0", 1, 100);
+	CHECK_LOCATION(originLocationOf(result->statements.at(0)), "source0", 1, 100);
 
 	// First child element must be a block itself with one statement.
 	BOOST_REQUIRE(holds_alternative<Block>(result->statements.at(0)));
 	BOOST_REQUIRE_EQUAL(get<Block>(result->statements.at(0)).statements.size(), 1);
-	CHECK_LOCATION(locationOf(get<Block>(result->statements.at(0)).statements.at(0)), "source0", 123, 432);
+	CHECK_LOCATION(originLocationOf(get<Block>(result->statements.at(0)).statements.at(0)), "source0", 123, 432);
 
 	// The next two elements have an inherited source location from the prior inner scope.
-	CHECK_LOCATION(locationOf(result->statements.at(1)), "source0", 123, 432);
-	CHECK_LOCATION(locationOf(result->statements.at(2)), "source0", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(1)), "source0", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(2)), "source0", 123, 432);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_assign_empty)
@@ -365,8 +365,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_assign_empty)
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0); // should still parse
 	BOOST_REQUIRE_EQUAL(2, result->statements.size());
-	CHECK_LOCATION(locationOf(result->statements.at(0)), "source0", 123, 432);
-	CHECK_LOCATION(locationOf(result->statements.at(1)), "source1", 1, 10);
+	CHECK_LOCATION(originLocationOf(result->statements.at(0)), "source0", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(1)), "source1", 1, 10);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_source_index)
@@ -407,10 +407,10 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_1)
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 
 	BOOST_REQUIRE_EQUAL(1, result->statements.size());
-	CHECK_LOCATION(locationOf(result->statements.at(0)), "source0", 123, 432);
+	CHECK_LOCATION(originLocationOf(result->statements.at(0)), "source0", 123, 432);
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varDecl = get<VariableDeclaration>(result->statements.at(0));
-	CHECK_LOCATION(locationOf(*varDecl.value), "source0", 234, 2026);
+	CHECK_LOCATION(originLocationOf(*varDecl.value), "source0", 234, 2026);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_2)
@@ -429,20 +429,20 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_2)
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(1, result->statements.size());
-	CHECK_LOCATION(result->debugData->location, "source0", 0, 5);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 0, 5);
 
 	// `let x := add(1, `
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varDecl = get<VariableDeclaration>(result->statements.at(0));
-	CHECK_LOCATION(varDecl.debugData->location, "source0", 0, 5);
+	CHECK_LOCATION(varDecl.debugData->originLocation, "source0", 0, 5);
 	BOOST_REQUIRE(!!varDecl.value);
 	BOOST_REQUIRE(holds_alternative<FunctionCall>(*varDecl.value));
 	FunctionCall const& call = get<FunctionCall>(*varDecl.value);
-	CHECK_LOCATION(call.debugData->location, "source1", 2, 3);
+	CHECK_LOCATION(call.debugData->originLocation, "source1", 2, 3);
 
 	// `2`
 	BOOST_REQUIRE_EQUAL(2, call.arguments.size());
-	CHECK_LOCATION(locationOf(call.arguments.at(1)), "source0", 4, 8);
+	CHECK_LOCATION(originLocationOf(call.arguments.at(1)), "source0", 4, 8);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_3)
@@ -463,24 +463,24 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_3)
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(2, result->statements.size());
-	CHECK_LOCATION(result->debugData->location, "source1", 23, 45);
+	CHECK_LOCATION(result->debugData->originLocation, "source1", 23, 45);
 
 	BOOST_REQUIRE(holds_alternative<Block>(result->statements.at(0)));
 	Block const& innerBlock = get<Block>(result->statements.at(0));
-	CHECK_LOCATION(innerBlock.debugData->location, "source1", 23, 45);
+	CHECK_LOCATION(innerBlock.debugData->originLocation, "source1", 23, 45);
 
 	BOOST_REQUIRE_EQUAL(1, innerBlock.statements.size());
 	BOOST_REQUIRE(holds_alternative<ExpressionStatement>(result->statements.at(1)));
 	ExpressionStatement const& sstoreStmt = get<ExpressionStatement>(innerBlock.statements.at(0));
 	BOOST_REQUIRE(holds_alternative<FunctionCall>(sstoreStmt.expression));
 	FunctionCall const& sstoreCall = get<FunctionCall>(sstoreStmt.expression);
-	CHECK_LOCATION(sstoreCall.debugData->location, "source1", 23, 45);
+	CHECK_LOCATION(sstoreCall.debugData->originLocation, "source1", 23, 45);
 
 	BOOST_REQUIRE(holds_alternative<ExpressionStatement>(result->statements.at(1)));
 	ExpressionStatement mstoreStmt = get<ExpressionStatement>(result->statements.at(1));
 	BOOST_REQUIRE(holds_alternative<FunctionCall>(mstoreStmt.expression));
 	FunctionCall const& mstoreCall = get<FunctionCall>(mstoreStmt.expression);
-	CHECK_LOCATION(mstoreCall.debugData->location, "source0", 420, 680);
+	CHECK_LOCATION(mstoreCall.debugData->originLocation, "source0", 420, 680);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_comments_after_valid)
@@ -499,11 +499,11 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_comments_after_valid)
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(1, result->statements.size());
-	CHECK_LOCATION(result->debugData->location, "source1", 23, 45);
+	CHECK_LOCATION(result->debugData->originLocation, "source1", 23, 45);
 
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varDecl = get<VariableDeclaration>(result->statements.at(0));
-	CHECK_LOCATION(varDecl.debugData->location, "source0", 420, 680);
+	CHECK_LOCATION(varDecl.debugData->originLocation, "source0", 420, 680);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_suffix)
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_suffix)
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
 	BOOST_TEST(errorList[0]->errorId() == 8387_error);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_prefix)
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_prefix)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_unspecified)
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_unspecified)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_non_integer)
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_non_integer)
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
 	BOOST_TEST(errorList[0]->errorId() == 8387_error);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_bad_integer)
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_bad_integer)
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
 	BOOST_TEST(errorList[0]->errorId() == 6367_error);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_ensure_last_match)
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_ensure_last_match)
 	VariableDeclaration const& varDecl = get<VariableDeclaration>(result->statements.at(0));
 
 	// Ensure the latest @src per documentation-comment is used (0:30:40).
-	CHECK_LOCATION(varDecl.debugData->location, "source0", 30, 40);
+	CHECK_LOCATION(varDecl.debugData->originLocation, "source0", 30, 40);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_no_whitespace)
@@ -621,7 +621,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_no_whitespace)
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
 	BOOST_TEST(errorList[0]->errorId() == 8387_error);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_separated_with_single_space)
@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_separated_with_single_s
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source1", 333, 444);
+	CHECK_LOCATION(result->debugData->originLocation, "source1", 333, 444);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_leading_trailing_whitespace)
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_leading_trailing_whitespace)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 111, 222);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_reference_original_sloc)
@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_reference_original_sloc)
 	VariableDeclaration const& varDecl = get<VariableDeclaration>(result->statements.at(0));
 
 	// -1 points to original source code, which in this case is `"source0"` (which is also
-	CHECK_LOCATION(varDecl.debugData->location, "", 10, 20);
+	CHECK_LOCATION(varDecl.debugData->originLocation, "", 10, 20);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets)
@@ -689,14 +689,14 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets)
 
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varX = get<VariableDeclaration>(result->statements.at(0));
-	CHECK_LOCATION(varX.debugData->location, "source0", 149, 156);
+	CHECK_LOCATION(varX.debugData->originLocation, "source0", 149, 156);
 
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(1)));
 	VariableDeclaration const& varY = get<VariableDeclaration>(result->statements.at(1));
 	BOOST_REQUIRE(!!varY.value);
 	BOOST_REQUIRE(holds_alternative<Literal>(*varY.value));
 	Literal const& literal128 = get<Literal>(*varY.value);
-	CHECK_LOCATION(literal128.debugData->location, "source1", 96, 165);
+	CHECK_LOCATION(literal128.debugData->originLocation, "source1", 96, 165);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_empty_snippet)
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_empty_snippet)
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 111, 222);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_before_snippet)
@@ -727,7 +727,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_befo
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
 	BOOST_TEST(errorList[0]->errorId() == 8387_error);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_after_snippet)
@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_afte
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source0", 111, 222);
+	CHECK_LOCATION(result->debugData->originLocation, "source0", 111, 222);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_no_whitespace)
@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_no_whites
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
 	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
-	CHECK_LOCATION(result->debugData->location, "source1", 333, 444);
+	CHECK_LOCATION(result->debugData->originLocation, "source1", 333, 444);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_unterminated_quote)
@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_untermina
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
 	BOOST_TEST(errorList[0]->errorId() == 1544_error);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_with_nested_locations)
@@ -794,14 +794,14 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_with_nested_locati
 
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varX = get<VariableDeclaration>(result->statements.at(0));
-	CHECK_LOCATION(varX.debugData->location, "source0", 149, 156);
+	CHECK_LOCATION(varX.debugData->originLocation, "source0", 149, 156);
 
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(1)));
 	VariableDeclaration const& varY = get<VariableDeclaration>(result->statements.at(1));
 	BOOST_REQUIRE(!!varY.value);
 	BOOST_REQUIRE(holds_alternative<Literal>(*varY.value));
 	Literal const& literal128 = get<Literal>(*varY.value);
-	CHECK_LOCATION(literal128.debugData->location, "source1", 96, 165);
+	CHECK_LOCATION(literal128.debugData->originLocation, "source1", 96, 165);
 }
 
 BOOST_AUTO_TEST_CASE(astid)
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(astid_invalid)
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
 	BOOST_TEST(errorList[0]->errorId() == 1749_error);
-	CHECK_LOCATION(result->debugData->location, "", -1, -1);
+	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
 
 BOOST_AUTO_TEST_CASE(astid_too_large)
@@ -948,7 +948,7 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_multiple_src_tags_on_one_line)
 
 	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varX = get<VariableDeclaration>(result->statements.at(0));
-	CHECK_LOCATION(varX.debugData->location, "source1", 4, 5);
+	CHECK_LOCATION(varX.debugData->originLocation, "source1", 4, 5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -201,9 +201,9 @@ bool ReferencesResolver::visit(Return const& _return)
 
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
-	validateYulIdentifierName(_function.name, _function.debugData->location);
+	validateYulIdentifierName(_function.name, nativeLocationOf(_function));
 	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
-		validateYulIdentifierName(varName.name, varName.debugData->location);
+		validateYulIdentifierName(varName.name, nativeLocationOf(varName));
 
 	bool wasInsideFunction = m_yulInsideFunction;
 	m_yulInsideFunction = true;
@@ -238,7 +238,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	{
 		m_errorReporter.declarationError(
 			4718_error,
-			_identifier.debugData->location,
+			nativeLocationOf(_identifier),
 			"Multiple matching identifiers. Resolving overloaded identifiers is not supported."
 		);
 		return;
@@ -251,7 +251,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		)
 			m_errorReporter.declarationError(
 				9467_error,
-				_identifier.debugData->location,
+				nativeLocationOf(_identifier),
 				"Identifier not found. Use \".slot\" and \".offset\" to access storage variables."
 			);
 		return;
@@ -261,7 +261,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		{
 			m_errorReporter.declarationError(
 				6578_error,
-				_identifier.debugData->location,
+				nativeLocationOf(_identifier),
 				"Cannot access local Solidity variables from inside an inline assembly function."
 			);
 			return;
@@ -275,7 +275,7 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 {
 	for (auto const& identifier: _varDecl.variables)
 	{
-		validateYulIdentifierName(identifier.name, identifier.debugData->location);
+		validateYulIdentifierName(identifier.name, nativeLocationOf(identifier));
 
 
 		if (
@@ -289,7 +289,7 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 			if (!ssl.infos.empty())
 				m_errorReporter.declarationError(
 					3859_error,
-					identifier.debugData->location,
+					nativeLocationOf(identifier),
 					ssl,
 					"This declaration shadows a declaration outside the inline assembly block."
 				);

@@ -409,7 +409,7 @@ bool ControlFlowBuilder::visit(InlineAssembly const& _inlineAssembly)
 void ControlFlowBuilder::visit(yul::Statement const& _statement)
 {
 	solAssert(m_currentNode && m_inlineAssembly, "");
-	m_currentNode->location = langutil::SourceLocation::smallestCovering(m_currentNode->location, locationOf(_statement));
+	m_currentNode->location = langutil::SourceLocation::smallestCovering(m_currentNode->location, nativeLocationOf(_statement));
 	ASTWalker::visit(_statement);
 }
 
@@ -501,7 +501,7 @@ void ControlFlowBuilder::operator()(yul::Identifier const& _identifier)
 			m_currentNode->variableOccurrences.emplace_back(
 				*declaration,
 				VariableOccurrence::Kind::Access,
-				_identifier.debugData->location
+				nativeLocationOf(_identifier)
 			);
 	}
 }
@@ -517,7 +517,7 @@ void ControlFlowBuilder::operator()(yul::Assignment const& _assignment)
 				m_currentNode->variableOccurrences.emplace_back(
 					*declaration,
 					VariableOccurrence::Kind::Assignment,
-					variable.debugData->location
+					nativeLocationOf(variable)
 				);
 }
 
