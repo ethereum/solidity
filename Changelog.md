@@ -27,6 +27,7 @@ Important Bugfixes:
 
 Bugfixes:
  * AST: Export ``canonicalName`` for ``UserDefinedValueTypeDefinition`` and ``ContractDefinition``.
+ * Code Generator: Fixes source mappings for immutables.
 
 
 

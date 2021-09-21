@@ -88,9 +88,11 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 		return 1 + 32;
 	case AssignImmutable:
 		if (m_immutableOccurrences)
-			return 1 + (3 + 32) * *m_immutableOccurrences;
+			// (DUP DUP PUSH <n> ADD MSTORE)* (PUSH <n> ADD MSTORE)
+			return (*m_immutableOccurrences - 1) * (5 + 32) + (3 + 32);
 		else
-			return 1 + (3 + 32) * 1024; // 1024 occurrences are beyond the maximum code size anyways.
+			// POP POP
+			return 2;
 	case VerbatimBytecode:
 		return std::get<2>(*m_verbatimBytecode).size();
 	default:
@@ -334,6 +336,7 @@ std::string AssemblyItem::computeSourceMapping(
 	int prevSourceIndex = -1;
 	int prevModifierDepth = -1;
 	char prevJump = 0;
+
 	for (auto const& item: _items)
 	{
 		if (!ret.empty())
@@ -401,6 +404,18 @@ std::string AssemblyItem::computeSourceMapping(
 				}
 			}
 		}
+
+		// Append empty items if this AssignImmutable was referenced more than once.
+		// For n immutable occurrences the first (n - 1) occurrences will
+		// generate 5 opcodes and the last will generate 3 opcodes,
+		// because it is reusing the 2 top-most elements on the stack.
+		if (item.immutableOccurrences())
+		{
+			auto const n = (item.immutableOccurrences() - 1) * 5 + 3;
+			ret += string(n - 1, ';');
+		}
+		else if (item.type() == AssemblyItemType::AssignImmutable)
+			ret += ';'; // two POP's
 
 		prevStart = location.start;
 		prevLength = length;

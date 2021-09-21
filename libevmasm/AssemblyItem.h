@@ -27,6 +27,7 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
+#include <optional>
 #include <iostream>
 #include <sstream>
 
@@ -169,7 +170,8 @@ public:
 
 	size_t m_modifierDepth = 0;
 
-	void setImmutableOccurrences(size_t _n) const { m_immutableOccurrences = std::make_shared<size_t>(_n); }
+	void setImmutableOccurrences(size_t _n) const { m_immutableOccurrences = _n; }
+	size_t immutableOccurrences() const noexcept { return m_immutableOccurrences.value_or(0); }
 
 private:
 	AssemblyItemType m_type;
@@ -184,7 +186,7 @@ private:
 	/// e.g. PushSubSize, PushTag, PushSub, etc.
 	mutable std::shared_ptr<u256> m_pushedValue;
 	/// Number of PushImmutable's with the same hash. Only used for AssignImmutable.
-	mutable std::shared_ptr<size_t> m_immutableOccurrences;
+	mutable std::optional<size_t> m_immutableOccurrences;
 };
 
 inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength)

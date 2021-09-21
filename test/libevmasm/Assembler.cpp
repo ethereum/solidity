@@ -165,6 +165,89 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
+{
+	// Tests for 1, 2, 3 number of immutables.
+	for (int numImmutables = 1; numImmutables <= 3; ++numImmutables)
+	{
+		BOOST_TEST_MESSAGE("NumImmutables: "s + to_string(numImmutables));
+		// Tests for the cases 1, 2, 3 occurrences of an immutable reference.
+		for (int numActualRefs = 1; numActualRefs <= 3; ++numActualRefs)
+		{
+			BOOST_TEST_MESSAGE("NumActualRefs: "s + to_string(numActualRefs));
+			auto const NumExpectedMappings =
+				(
+					2 +                        // PUSH <a> PUSH <b>
+					(numActualRefs - 1) * 5 +  // DUP DUP PUSH <n> ADD MTOSRE
+					3                          // PUSH <n> ADD MSTORkhbE
+				) * numImmutables;
+
+			auto constexpr NumSubs = 1;
+			auto constexpr NumOpcodesWithoutMappings =
+				NumSubs +                  // PUSH <addr> for every sub assembly
+				1;                         // INVALID
+
+			auto assemblyName = make_shared<string>("root.asm");
+			auto subName = make_shared<string>("sub.asm");
+
+			map<string, unsigned> indices = {
+				{ *assemblyName, 0 },
+				{ *subName, 1 }
+			};
+
+			auto subAsm = make_shared<Assembly>();
+			for (int8_t i = 0; i < numImmutables; ++i)
+			{
+				for (int r = 0; r < numActualRefs; ++r)
+				{
+					subAsm->setSourceLocation(SourceLocation{10*i, 10*i + 6 + r, subName});
+					subAsm->appendImmutable(string(1, 'a' + i)); // "a", "b", ...
+				}
+			}
+
+			Assembly assembly;
+			for (int8_t i = 1; i <= numImmutables; ++i)
+			{
+				assembly.setSourceLocation({10*i, 10*i + 3+i, assemblyName});
+				assembly.append(u256(0x71));              // immutble value
+				assembly.append(u256(0));                 // target... modules?
+				assembly.appendImmutableAssignment(string(1, 'a' + i - 1));
+			}
+
+			assembly.appendSubroutine(subAsm);
+
+			checkCompilation(assembly);
+
+			string const sourceMappings = AssemblyItem::computeSourceMapping(assembly.items(), indices);
+			auto const numberOfMappings = std::count(sourceMappings.begin(), sourceMappings.end(), ';');
+
+			LinkerObject const& obj = assembly.assemble();
+			string const disassembly = disassemble(obj.bytecode, "\n");
+			auto const numberOfOpcodes = std::count(disassembly.begin(), disassembly.end(), '\n');
+
+			#if 0 // {{{ debug prints
+			{
+				LinkerObject const& subObj = assembly.sub(0).assemble();
+				string const subDisassembly = disassemble(subObj.bytecode, "\n");
+				cout << '\n';
+				cout << "### immutables: " << numImmutables << ", refs: " << numActualRefs << '\n';
+				cout << " - srcmap: \"" << sourceMappings << "\"\n";
+				cout << " - src mappings: " << numberOfMappings << '\n';
+				cout << " - opcodes: " << numberOfOpcodes << '\n';
+				cout << " - subs: " << assembly.numSubs() << '\n';
+				cout << " - sub opcodes " << std::count(subDisassembly.begin(), subDisassembly.end(), '\n') << '\n';
+				cout << " - sub srcmaps " << AssemblyItem::computeSourceMapping(subAsm->items(), indices) << '\n';
+				cout << " - main bytecode:\n\t" << disassemble(obj.bytecode, "\n\t");
+				cout << "\r - sub bytecode:\n\t" << disassemble(subObj.bytecode, "\n\t");
+			}
+			#endif // }}}
+
+			BOOST_REQUIRE_EQUAL(NumExpectedMappings, numberOfMappings);
+			BOOST_REQUIRE_EQUAL(NumExpectedMappings, numberOfOpcodes - NumOpcodesWithoutMappings);
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(immutable)
 {
 	map<string, unsigned> indices = {

@@ -675,8 +675,11 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case PushImmutable:
 			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
+			// Maps keccak back to the "identifier" string of that immutable.
 			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
+			// Record the bytecode offset of the PUSH32 argument.
 			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
+			// Advance bytecode by 32 bytes (default initialized).
 			ret.bytecode.resize(ret.bytecode.size() + 32);
 			break;
 		case VerbatimBytecode:
@@ -684,6 +687,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case AssignImmutable:
 		{
+			// Expect 2 elements on stack (source, dest_base)
 			auto const& offsets = immutableReferencesBySub[i.data()].second;
 			for (size_t i = 0; i < offsets.size(); ++i)
 			{
