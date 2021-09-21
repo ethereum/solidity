@@ -5,5 +5,5 @@ object "C" {
     }
 }
 // ----
-// ParserError 6913: Call or assignment expected.
+// ParserError 6913: (65-66): Call or assignment expected.
 // ParserError 2314: (67-68): Expected end of source but got '}'

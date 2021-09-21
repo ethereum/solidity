@@ -97,9 +97,10 @@ public:
 protected:
 	langutil::SourceLocation currentLocation() const override
 	{
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			return ParserBase::currentLocation();
-		return m_locationOverride;
+		if (m_useSourceLocationFrom == UseSourceLocationFrom::LocationOverride)
+			return m_locationOverride;
+
+		return ParserBase::currentLocation();
 	}
 
 	langutil::Token advance() override;
