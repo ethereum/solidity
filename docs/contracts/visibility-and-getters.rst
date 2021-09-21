@@ -1,20 +1,41 @@
 .. index:: ! visibility, external, public, private, internal
 
+.. |visibility-caveat| replace:: Making something ``private`` or ``internal`` only prevents other contracts from reading or modifying the information, but it will still be visible to the whole world outside of the blockchain.
+
 .. _visibility-and-getters:
 
 **********************
 Visibility and Getters
 **********************
 
-Solidity knows two kinds of function calls: internal
-ones that do not create an actual EVM call (also called
-a "message call") and external
-ones that do. Because of that, there are four types of visibility for
-functions and state variables.
+State Variable Visibility
+=========================
 
-Functions have to be specified as being ``external``,
-``public``, ``internal`` or ``private``.
-For state variables, ``external`` is not possible.
+``public``
+    Public state variables differ from internal ones only in that the compiler automatically generates
+    :ref:`getter functions<getter-functions>` for them, which allows other contracts to read their values.
+    When used within the same contract, the external access (e.g. ``this.x``) invokes the getter
+    while internal access (e.g. ``x``) gets the variable value directly from storage.
+    Setter functions are not generated so other contracts cannot directly modify their values.
+
+``internal``
+    Internal state variables can only be accessed from within the contract they are defined in
+    and in derived contracts.
+    They cannot be accessed externally.
+    This is the default visibility level for state variables.
+
+``private``
+    Private state variables are like internal ones but they are not visible in derived contracts.
+
+.. warning::
+    |visibility-caveat|
+
+Function Visibility
+===================
+
+Solidity knows two kinds of function calls: external ones that do create an actual EVM message call and internal ones that do not.
+Furthermore, internal functions can be made inaccessible to derived contracts.
+This gives rise to four types of visibility for functions.
 
 ``external``
     External functions are part of the contract interface,
@@ -24,27 +45,19 @@ For state variables, ``external`` is not possible.
 
 ``public``
     Public functions are part of the contract interface
-    and can be either called internally or via
-    messages. For public state variables, an automatic getter
-    function (see below) is generated.
+    and can be either called internally or via message calls.
 
 ``internal``
-    Those functions and state variables can only be
-    accessed internally (i.e. from within the current contract
-    or contracts deriving from it), without using ``this``.
-    This is the default visibility level for state variables.
+    Internal functions can only be accessed from within the current contract
+    or contracts deriving from it.
+    They cannot be accessed externally.
+    Since they are not exposed to the outside through the contract's ABI, they can take parameters of internal types like mappings or storage references.
 
 ``private``
-    Private functions and state variables are only
-    visible for the contract they are defined in and not in
-    derived contracts.
+    Private functions are like internal ones but they are not visible in derived contracts.
 
-.. note::
-    Everything that is inside a contract is visible to
-    all observers external to the blockchain. Making something ``private``
-    only prevents other contracts from reading or modifying
-    the information, but it will still be visible to the
-    whole world outside of the blockchain.
+.. warning::
+    |visibility-caveat|
 
 The visibility specifier is given after the type for
 state variables and between parameter list and
