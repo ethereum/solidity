@@ -19,15 +19,15 @@ Compiler Features:
 Bugfixes:
  * Code Generator: Fix ICE on assigning to calldata structs and statically-sized calldata arrays in inline assembly.
  * Code Generator: Use stable source order for ABI functions.
- * Commandline Interface: Report optimizer options as invalid in Standard JSON and linker modes instead of ignoring them.
  * Commandline Interface: Disallow the ``--experimental-via-ir`` option in Standard JSON, Assembler and Linker modes.
- * Opcode Optimizer: Prevent the optimizer from running multiple times to avoid potential bytecode differences for referenced code.
+ * Commandline Interface: Report optimizer options as invalid in Standard JSON and linker modes instead of ignoring them.
  * Name Resolver: Fix that when importing an aliased symbol using ``import {AliasedName} from "a.sol"`` it would use the original name of the symbol and not the aliased one.
+ * Opcode Optimizer: Prevent the optimizer from running multiple times to avoid potential bytecode differences for referenced code.
  * Parser: Properly check for multiple SPDX license identifiers next to each other and validate them.
+ * SMTChecker: Fix BMC's constraints regarding internal functions.
  * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
  * SMTChecker: Fix false positive in external calls from constructors.
  * SMTChecker: Fix internal error on some multi-source uses of ``abi.*``, cryptographic functions and constants.
- * SMTChecker: Fix BMC's constraints regarding internal functions.
  * Standard JSON: Fix non-fatal errors in Yul mode being discarded if followed by a fatal error.
  * Type Checker: Disallow modifier declarations and definitions in interfaces.
  * Yul Optimizer: Fix a crash in LoadResolver, when ``keccak256`` has particular non-identifier arguments.
