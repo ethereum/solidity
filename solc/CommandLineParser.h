@@ -195,7 +195,7 @@ public:
 	/// CommandLineOptions structure has been fully initialized. false if there were errors - in
 	/// this case CommandLineOptions may be only partially filled out. May also return false if
 	/// there is not further processing necessary and the program should just exit.
-	bool parse(int _argc, char const* const* _argv, bool interactiveTerminal);
+	bool parse(int _argc, char const* const* _argv, bool _interactiveTerminal);
 
 	CommandLineOptions const& options() const { return m_options; }
 
@@ -203,6 +203,24 @@ public:
 	bool hasOutput() const { return m_hasOutput; }
 
 private:
+	/// @returns a specification of all named command-line options accepted by the compiler.
+	/// The object can be used to parse command-line arguments or to generate the help screen.
+	static boost::program_options::options_description optionsDescription();
+
+	/// @returns a specification of all positional command-line arguments accepted by the compiler.
+	/// The object can be used to parse command-line arguments or to generate the help screen.
+	static boost::program_options::positional_options_description positionalOptionsDescription();
+
+	/// Uses boost::program_options to parse the command-line arguments and leaves the result in @a m_args.
+	/// Also handles the arguments that result in information being printed followed by immediate exit.
+	/// @returns false if parsing fails due to syntactical errors or the arguments not matching the description.
+	bool parseArgs(int _argc, char const* const* _argv, bool _interactiveTerminal);
+
+	/// Validates parsed arguments stored in @a m_args and fills out the internal CommandLineOptions
+	/// structure.
+	/// @return false if there are any validation errors, true otherwise.
+	bool processArgs();
+
 	/// Parses the value supplied to --combined-json.
 	/// @return false if there are any validation errors, true otherwise.
 	bool parseCombinedJsonOption();

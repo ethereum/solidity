@@ -323,6 +323,16 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 	return settings;
 }
 
+bool CommandLineParser::parse(int _argc, char const* const* _argv, bool _interactiveTerminal)
+{
+	m_hasOutput = false;
+
+	if (!parseArgs(_argc, _argv, _interactiveTerminal))
+		return false;
+
+	return processArgs();
+}
+
 bool CommandLineParser::parseInputPathsAndRemappings()
 {
 	m_options.input.ignoreMissingFiles = (m_args.count(g_strIgnoreMissingFiles) > 0);
@@ -478,10 +488,8 @@ bool CommandLineParser::parseLibraryOption(string const& _input)
 	return true;
 }
 
-bool CommandLineParser::parse(int _argc, char const* const* _argv, bool interactiveTerminal)
+po::options_description CommandLineParser::optionsDescription()
 {
-	m_hasOutput = false;
-
 	// Declare the supported options.
 	po::options_description desc((R"(solc, the Solidity commandline compiler.
 
@@ -780,12 +788,22 @@ General Information)").c_str(),
 	;
 	desc.add(smtCheckerOptions);
 
-	po::options_description allOptions = desc;
-	allOptions.add_options()(g_strInputFile.c_str(), po::value<vector<string>>(), "input file");
+	desc.add_options()(g_strInputFile.c_str(), po::value<vector<string>>(), "input file");
+	return desc;
+}
 
+po::positional_options_description CommandLineParser::positionalOptionsDescription()
+{
 	// All positional options should be interpreted as input files
 	po::positional_options_description filesPositions;
 	filesPositions.add(g_strInputFile.c_str(), -1);
+	return filesPositions;
+}
+
+bool CommandLineParser::parseArgs(int _argc, char const* const* _argv, bool _interactiveTerminal)
+{
+	po::options_description allOptions = optionsDescription();
+	po::positional_options_description filesPositions = positionalOptionsDescription();
 
 	// parse the compiler arguments
 	try
@@ -798,6 +816,56 @@ General Information)").c_str(),
 	catch (po::error const& _exception)
 	{
 		serr() << _exception.what() << endl;
+		return false;
+	}
+
+	if (m_args.count(g_strHelp) || (_interactiveTerminal && _argc == 1))
+	{
+		sout() << allOptions;
+		return false;
+	}
+
+	if (m_args.count(g_strVersion))
+		printVersionAndExit();
+
+	if (m_args.count(g_strLicense))
+		printLicenseAndExit();
+
+	po::notify(m_args);
+
+	return true;
+}
+
+bool CommandLineParser::processArgs()
+{
+	if (!checkMutuallyExclusive({
+		g_strStandardJSON,
+		g_strLink,
+		g_strAssemble,
+		g_strStrictAssembly,
+		g_strYul,
+		g_strImportAst,
+	}))
+		return false;
+
+	if (m_args.count(g_strStandardJSON) > 0)
+		m_options.input.mode = InputMode::StandardJson;
+	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
+		m_options.input.mode = InputMode::Assembler;
+	else if (m_args.count(g_strLink) > 0)
+		m_options.input.mode = InputMode::Linker;
+	else if (m_args.count(g_strImportAst) > 0)
+		m_options.input.mode = InputMode::CompilerWithASTImport;
+	else
+		m_options.input.mode = InputMode::Compiler;
+
+	if (
+		m_args.count(g_strExperimentalViaIR) > 0 &&
+		m_options.input.mode != InputMode::Compiler &&
+		m_options.input.mode != InputMode::CompilerWithASTImport
+	)
+	{
+		serr() << "The option --" << g_strExperimentalViaIR << " is only supported in the compiler mode." << endl;
 		return false;
 	}
 
@@ -819,24 +887,32 @@ General Information)").c_str(),
 		if (!checkMutuallyExclusive({g_strStopAfter, option}))
 			return false;
 
+	if (
+		m_options.input.mode != InputMode::Compiler &&
+		m_options.input.mode != InputMode::CompilerWithASTImport &&
+		m_options.input.mode != InputMode::Assembler
+	)
+	{
+		if (!m_args[g_strOptimizeRuns].defaulted())
+		{
+			serr() << "Option --" << g_strOptimizeRuns << " is only valid in compiler and assembler modes." << endl;
+			return false;
+		}
+
+		for (string const& option: {g_strOptimize, g_strNoOptimizeYul, g_strOptimizeYul, g_strYulOptimizations})
+			if (m_args.count(option) > 0)
+			{
+				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
+				return false;
+			}
+	}
+
 	if (m_args.count(g_strColor) > 0)
 		m_options.formatting.coloredOutput = true;
 	else if (m_args.count(g_strNoColor) > 0)
 		m_options.formatting.coloredOutput = false;
 
 	m_options.formatting.withErrorIds = m_args.count(g_strErrorIds);
-
-	if (m_args.count(g_strHelp) || (interactiveTerminal && _argc == 1))
-	{
-		sout() << desc;
-		return false;
-	}
-
-	if (m_args.count(g_strVersion))
-		printVersionAndExit();
-
-	if (m_args.count(g_strLicense))
-		printLicenseAndExit();
 
 	if (m_args.count(g_strRevertStrings))
 	{
@@ -895,8 +971,6 @@ General Information)").c_str(),
 
 	m_options.compiler.estimateGas = (m_args.count(g_strGas) > 0);
 
-	po::notify(m_args);
-
 	if (m_args.count(g_strBasePath))
 		m_options.input.basePath = m_args[g_strBasePath].as<string>();
 
@@ -927,59 +1001,8 @@ General Information)").c_str(),
 			m_options.output.stopAfter = CompilerStack::State::Parsed;
 	}
 
-	if (!checkMutuallyExclusive({
-		g_strStandardJSON,
-		g_strLink,
-		g_strAssemble,
-		g_strStrictAssembly,
-		g_strYul,
-		g_strImportAst,
-	}))
-		return false;
-
-	if (m_args.count(g_strStandardJSON) > 0)
-		m_options.input.mode = InputMode::StandardJson;
-	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
-		m_options.input.mode = InputMode::Assembler;
-	else if (m_args.count(g_strLink) > 0)
-		m_options.input.mode = InputMode::Linker;
-	else if (m_args.count(g_strImportAst) > 0)
-		m_options.input.mode = InputMode::CompilerWithASTImport;
-	else
-		m_options.input.mode = InputMode::Compiler;
-
-	if (
-		m_args.count(g_strExperimentalViaIR) > 0 &&
-		m_options.input.mode != InputMode::Compiler &&
-		m_options.input.mode != InputMode::CompilerWithASTImport
-	)
-	{
-		serr() << "The option --" << g_strExperimentalViaIR << " is only supported in the compiler mode." << endl;
-		return false;
-	}
-
 	if (!parseInputPathsAndRemappings())
 		return false;
-
-	if (
-		m_options.input.mode != InputMode::Compiler &&
-		m_options.input.mode != InputMode::CompilerWithASTImport &&
-		m_options.input.mode != InputMode::Assembler
-	)
-	{
-		if (!m_args[g_strOptimizeRuns].defaulted())
-		{
-			serr() << "Option --" << g_strOptimizeRuns << " is only valid in compiler and assembler modes." << endl;
-			return false;
-		}
-
-		for (string const& option: {g_strOptimize, g_strNoOptimizeYul, g_strOptimizeYul, g_strYulOptimizations})
-			if (m_args.count(option) > 0)
-			{
-				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
-				return false;
-			}
-	}
 
 	if (m_options.input.mode == InputMode::StandardJson)
 		return true;
