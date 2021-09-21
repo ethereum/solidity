@@ -61,7 +61,6 @@ public:
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
 		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
-		m_debugDataOverride{},
 		m_useSourceLocationFrom{
 			_locationOverride ?
 			UseSourceLocationFrom::LocationOverride :
@@ -79,7 +78,6 @@ public:
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
 		m_sourceNames{std::move(_sourceNames)},
-		m_debugDataOverride{DebugData::create()},
 		m_useSourceLocationFrom{
 			m_sourceNames.has_value() ?
 			UseSourceLocationFrom::Comments :
@@ -154,7 +152,8 @@ private:
 
 	std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> m_sourceNames;
 	langutil::SourceLocation m_locationOverride;
-	std::shared_ptr<DebugData const> m_debugDataOverride;
+	langutil::SourceLocation m_locationFromComment;
+	std::optional<int64_t> m_astIDFromComment;
 	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;

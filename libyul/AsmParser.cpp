@@ -80,7 +80,7 @@ std::shared_ptr<DebugData const> Parser::createDebugData() const
 		case UseSourceLocationFrom::LocationOverride:
 			return DebugData::create(m_locationOverride);
 		case UseSourceLocationFrom::Comments:
-			return m_debugDataOverride;
+			return DebugData::create(m_locationFromComment, m_astIDFromComment);
 	}
 	solAssert(false, "");
 }
@@ -135,7 +135,7 @@ void Parser::fetchDebugDataFromComment()
 	string_view commentLiteral = m_scanner->currentCommentLiteral();
 	match_results<string_view::const_iterator> match;
 
-	langutil::SourceLocation sourceLocation = m_debugDataOverride->location;
+	langutil::SourceLocation sourceLocation = m_locationFromComment;
 	// Empty for each new node.
 	optional<int> astID;
 
@@ -163,7 +163,8 @@ void Parser::fetchDebugDataFromComment()
 			continue;
 	}
 
-	m_debugDataOverride = DebugData::create(sourceLocation, astID);
+	m_locationFromComment = sourceLocation;
+	m_astIDFromComment = astID;
 }
 
 optional<pair<string_view, SourceLocation>> Parser::parseSrcComment(
