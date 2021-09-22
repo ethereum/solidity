@@ -409,6 +409,7 @@ bool ControlFlowBuilder::visit(InlineAssembly const& _inlineAssembly)
 void ControlFlowBuilder::visit(yul::Statement const& _statement)
 {
 	solAssert(m_currentNode && m_inlineAssembly, "");
+	solAssert(nativeLocationOf(_statement) == originLocationOf(_statement), "");
 	m_currentNode->location = langutil::SourceLocation::smallestCovering(m_currentNode->location, nativeLocationOf(_statement));
 	ASTWalker::visit(_statement);
 }
@@ -496,14 +497,15 @@ void ControlFlowBuilder::operator()(yul::Identifier const& _identifier)
 	solAssert(m_currentNode && m_inlineAssembly, "");
 	auto const& externalReferences = m_inlineAssembly->annotation().externalReferences;
 	if (externalReferences.count(&_identifier))
-	{
 		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(externalReferences.at(&_identifier).declaration))
+		{
+			solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
 			m_currentNode->variableOccurrences.emplace_back(
 				*declaration,
 				VariableOccurrence::Kind::Access,
 				nativeLocationOf(_identifier)
 			);
-	}
+		}
 }
 
 void ControlFlowBuilder::operator()(yul::Assignment const& _assignment)
@@ -514,11 +516,14 @@ void ControlFlowBuilder::operator()(yul::Assignment const& _assignment)
 	for (auto const& variable: _assignment.variableNames)
 		if (externalReferences.count(&variable))
 			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(externalReferences.at(&variable).declaration))
+			{
+				solAssert(nativeLocationOf(variable) == originLocationOf(variable), "");
 				m_currentNode->variableOccurrences.emplace_back(
 					*declaration,
 					VariableOccurrence::Kind::Assignment,
 					nativeLocationOf(variable)
 				);
+			}
 }
 
 void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)

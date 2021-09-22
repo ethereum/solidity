@@ -55,7 +55,10 @@ T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 	T r;
 	SourceLocation nativeLocation = createSourceLocation(_node);
 	yulAssert(nativeLocation.hasText(), "Invalid source location in Asm AST");
-	r.debugData = DebugData::create(nativeLocation);
+	// TODO: We should add originLocation to the AST.
+	// While it's not included, we'll use nativeLocation for it because we only support importing
+	// inline assembly as a part of a Solidity AST and there these locations are always the same.
+	r.debugData = DebugData::create(nativeLocation, nativeLocation);
 	return r;
 }
 

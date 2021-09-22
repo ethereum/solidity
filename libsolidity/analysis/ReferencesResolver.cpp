@@ -201,9 +201,13 @@ bool ReferencesResolver::visit(Return const& _return)
 
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
+	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
 	validateYulIdentifierName(_function.name, nativeLocationOf(_function));
 	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
+	{
+		solAssert(nativeLocationOf(varName) == originLocationOf(varName), "");
 		validateYulIdentifierName(varName.name, nativeLocationOf(varName));
+	}
 
 	bool wasInsideFunction = m_yulInsideFunction;
 	m_yulInsideFunction = true;
@@ -213,6 +217,8 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
+	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
+
 	static set<string> suffixes{"slot", "offset", "length"};
 	string suffix;
 	for (string const& s: suffixes)
@@ -275,8 +281,8 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 {
 	for (auto const& identifier: _varDecl.variables)
 	{
+		solAssert(nativeLocationOf(identifier) == originLocationOf(identifier), "");
 		validateYulIdentifierName(identifier.name, nativeLocationOf(identifier));
-
 
 		if (
 			auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
