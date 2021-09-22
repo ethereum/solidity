@@ -103,7 +103,7 @@ bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 
 size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
 {
-	return evmasm::bytesRequired(_items, 3); // assume 3 byte addresses
+	return evmasm::bytesRequired(_items, 3, Precision::Approximate); // assume 3 byte addresses
 }
 
 void ConstantOptimisationMethod::replaceConstants(

@@ -13,6 +13,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Fix constructor source mappings for immutables.
  * Commandline Interface: Fix extra newline character being appended to sources passed through standard input, affecting their hashes.
  * Commandline Interface: Report output selection options unsupported by the selected input mode instead of ignoring them.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
