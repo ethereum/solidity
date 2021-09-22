@@ -20,6 +20,7 @@
                                 "ast":
                                 {
                                     "nodeType": "YulBlock",
+                                    "origin": "0:3989:1",
                                     "src": "0:3989:1",
                                     "statements":
                                     [
@@ -27,11 +28,13 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "47:35:1",
                                                 "src": "47:35:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "57:19:1",
                                                         "src": "57:19:1",
                                                         "value":
                                                         {
@@ -40,6 +43,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "73:2:1",
                                                                     "src": "73:2:1",
                                                                     "type": "",
                                                                     "value": "64"
@@ -49,9 +53,11 @@
                                                             {
                                                                 "name": "mload",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "67:5:1",
                                                                 "src": "67:5:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "67:9:1",
                                                             "src": "67:9:1"
                                                         },
                                                         "variableNames":
@@ -59,6 +65,7 @@
                                                             {
                                                                 "name": "memPtr",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "57:6:1",
                                                                 "src": "57:6:1"
                                                             }
                                                         ]
@@ -67,11 +74,13 @@
                                             },
                                             "name": "allocate_unbounded",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "7:75:1",
                                             "returnVariables":
                                             [
                                                 {
                                                     "name": "memPtr",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "40:6:1",
                                                     "src": "40:6:1",
                                                     "type": ""
                                                 }
@@ -82,6 +91,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "177:28:1",
                                                 "src": "177:28:1",
                                                 "statements":
                                                 [
@@ -93,6 +103,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "194:1:1",
                                                                     "src": "194:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -100,6 +111,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "197:1:1",
                                                                     "src": "197:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -109,24 +121,29 @@
                                                             {
                                                                 "name": "revert",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "187:6:1",
                                                                 "src": "187:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "187:12:1",
                                                             "src": "187:12:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "187:12:1",
                                                         "src": "187:12:1"
                                                     }
                                                 ]
                                             },
                                             "name": "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "88:117:1",
                                             "src": "88:117:1"
                                         },
                                         {
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "300:28:1",
                                                 "src": "300:28:1",
                                                 "statements":
                                                 [
@@ -138,6 +155,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "317:1:1",
                                                                     "src": "317:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -145,6 +163,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "320:1:1",
                                                                     "src": "320:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -154,24 +173,29 @@
                                                             {
                                                                 "name": "revert",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "310:6:1",
                                                                 "src": "310:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "310:12:1",
                                                             "src": "310:12:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "310:12:1",
                                                         "src": "310:12:1"
                                                     }
                                                 ]
                                             },
                                             "name": "revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "211:117:1",
                                             "src": "211:117:1"
                                         },
                                         {
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "423:28:1",
                                                 "src": "423:28:1",
                                                 "statements":
                                                 [
@@ -183,6 +207,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "440:1:1",
                                                                     "src": "440:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -190,6 +215,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "443:1:1",
                                                                     "src": "443:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -199,29 +225,35 @@
                                                             {
                                                                 "name": "revert",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "433:6:1",
                                                                 "src": "433:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "433:12:1",
                                                             "src": "433:12:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "433:12:1",
                                                         "src": "433:12:1"
                                                     }
                                                 ]
                                             },
                                             "name": "revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "334:117:1",
                                             "src": "334:117:1"
                                         },
                                         {
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "505:54:1",
                                                 "src": "505:54:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "515:38:1",
                                                         "src": "515:38:1",
                                                         "value":
                                                         {
@@ -233,11 +265,13 @@
                                                                         {
                                                                             "name": "value",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "533:5:1",
                                                                             "src": "533:5:1"
                                                                         },
                                                                         {
                                                                             "kind": "number",
                                                                             "nodeType": "YulLiteral",
+                                                                            "origin": "540:2:1",
                                                                             "src": "540:2:1",
                                                                             "type": "",
                                                                             "value": "31"
@@ -247,9 +281,11 @@
                                                                     {
                                                                         "name": "add",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "529:3:1",
                                                                         "src": "529:3:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "529:14:1",
                                                                     "src": "529:14:1"
                                                                 },
                                                                 {
@@ -258,6 +294,7 @@
                                                                         {
                                                                             "kind": "number",
                                                                             "nodeType": "YulLiteral",
+                                                                            "origin": "549:2:1",
                                                                             "src": "549:2:1",
                                                                             "type": "",
                                                                             "value": "31"
@@ -267,9 +304,11 @@
                                                                     {
                                                                         "name": "not",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "545:3:1",
                                                                         "src": "545:3:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "545:7:1",
                                                                     "src": "545:7:1"
                                                                 }
                                                             ],
@@ -277,9 +316,11 @@
                                                             {
                                                                 "name": "and",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "525:3:1",
                                                                 "src": "525:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "525:28:1",
                                                             "src": "525:28:1"
                                                         },
                                                         "variableNames":
@@ -287,6 +328,7 @@
                                                             {
                                                                 "name": "result",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "515:6:1",
                                                                 "src": "515:6:1"
                                                             }
                                                         ]
@@ -295,11 +337,13 @@
                                             },
                                             "name": "round_up_to_mul_of_32",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "457:102:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "value",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "488:5:1",
                                                     "src": "488:5:1",
                                                     "type": ""
                                                 }
@@ -309,6 +353,7 @@
                                                 {
                                                     "name": "result",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "498:6:1",
                                                     "src": "498:6:1",
                                                     "type": ""
                                                 }
@@ -319,6 +364,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "593:152:1",
                                                 "src": "593:152:1",
                                                 "statements":
                                                 [
@@ -330,6 +376,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "610:1:1",
                                                                     "src": "610:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -337,6 +384,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "613:77:1",
                                                                     "src": "613:77:1",
                                                                     "type": "",
                                                                     "value": "35408467139433450592217433187231851964531694900788300625387963629091585785856"
@@ -346,12 +394,15 @@
                                                             {
                                                                 "name": "mstore",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "603:6:1",
                                                                 "src": "603:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "603:88:1",
                                                             "src": "603:88:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "603:88:1",
                                                         "src": "603:88:1"
                                                     },
                                                     {
@@ -362,6 +413,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "707:1:1",
                                                                     "src": "707:1:1",
                                                                     "type": "",
                                                                     "value": "4"
@@ -369,6 +421,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "710:4:1",
                                                                     "src": "710:4:1",
                                                                     "type": "",
                                                                     "value": "0x41"
@@ -378,12 +431,15 @@
                                                             {
                                                                 "name": "mstore",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "700:6:1",
                                                                 "src": "700:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "700:15:1",
                                                             "src": "700:15:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "700:15:1",
                                                         "src": "700:15:1"
                                                     },
                                                     {
@@ -394,6 +450,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "731:1:1",
                                                                     "src": "731:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -401,6 +458,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "734:4:1",
                                                                     "src": "734:4:1",
                                                                     "type": "",
                                                                     "value": "0x24"
@@ -410,29 +468,35 @@
                                                             {
                                                                 "name": "revert",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "724:6:1",
                                                                 "src": "724:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "724:15:1",
                                                             "src": "724:15:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "724:15:1",
                                                         "src": "724:15:1"
                                                     }
                                                 ]
                                             },
                                             "name": "panic_error_0x41",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "565:180:1",
                                             "src": "565:180:1"
                                         },
                                         {
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "794:238:1",
                                                 "src": "794:238:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulVariableDeclaration",
+                                                        "origin": "804:58:1",
                                                         "src": "804:58:1",
                                                         "value":
                                                         {
@@ -441,6 +505,7 @@
                                                                 {
                                                                     "name": "memPtr",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "826:6:1",
                                                                     "src": "826:6:1"
                                                                 },
                                                                 {
@@ -449,6 +514,7 @@
                                                                         {
                                                                             "name": "size",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "856:4:1",
                                                                             "src": "856:4:1"
                                                                         }
                                                                     ],
@@ -456,9 +522,11 @@
                                                                     {
                                                                         "name": "round_up_to_mul_of_32",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "834:21:1",
                                                                         "src": "834:21:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "834:27:1",
                                                                     "src": "834:27:1"
                                                                 }
                                                             ],
@@ -466,9 +534,11 @@
                                                             {
                                                                 "name": "add",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "822:3:1",
                                                                 "src": "822:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "822:40:1",
                                                             "src": "822:40:1"
                                                         },
                                                         "variables":
@@ -476,6 +546,7 @@
                                                             {
                                                                 "name": "newFreePtr",
                                                                 "nodeType": "YulTypedName",
+                                                                "origin": "808:10:1",
                                                                 "src": "808:10:1",
                                                                 "type": ""
                                                             }
@@ -485,6 +556,7 @@
                                                         "body":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "973:22:1",
                                                             "src": "973:22:1",
                                                             "statements":
                                                             [
@@ -496,12 +568,15 @@
                                                                         {
                                                                             "name": "panic_error_0x41",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "975:16:1",
                                                                             "src": "975:16:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "975:18:1",
                                                                         "src": "975:18:1"
                                                                     },
                                                                     "nodeType": "YulExpressionStatement",
+                                                                    "origin": "975:18:1",
                                                                     "src": "975:18:1"
                                                                 }
                                                             ]
@@ -516,11 +591,13 @@
                                                                         {
                                                                             "name": "newFreePtr",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "916:10:1",
                                                                             "src": "916:10:1"
                                                                         },
                                                                         {
                                                                             "kind": "number",
                                                                             "nodeType": "YulLiteral",
+                                                                            "origin": "928:18:1",
                                                                             "src": "928:18:1",
                                                                             "type": "",
                                                                             "value": "0xffffffffffffffff"
@@ -530,9 +607,11 @@
                                                                     {
                                                                         "name": "gt",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "913:2:1",
                                                                         "src": "913:2:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "913:34:1",
                                                                     "src": "913:34:1"
                                                                 },
                                                                 {
@@ -541,11 +620,13 @@
                                                                         {
                                                                             "name": "newFreePtr",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "952:10:1",
                                                                             "src": "952:10:1"
                                                                         },
                                                                         {
                                                                             "name": "memPtr",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "964:6:1",
                                                                             "src": "964:6:1"
                                                                         }
                                                                     ],
@@ -553,9 +634,11 @@
                                                                     {
                                                                         "name": "lt",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "949:2:1",
                                                                         "src": "949:2:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "949:22:1",
                                                                     "src": "949:22:1"
                                                                 }
                                                             ],
@@ -563,12 +646,15 @@
                                                             {
                                                                 "name": "or",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "910:2:1",
                                                                 "src": "910:2:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "910:62:1",
                                                             "src": "910:62:1"
                                                         },
                                                         "nodeType": "YulIf",
+                                                        "origin": "907:88:1",
                                                         "src": "907:88:1"
                                                     },
                                                     {
@@ -579,6 +665,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "1011:2:1",
                                                                     "src": "1011:2:1",
                                                                     "type": "",
                                                                     "value": "64"
@@ -586,6 +673,7 @@
                                                                 {
                                                                     "name": "newFreePtr",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1015:10:1",
                                                                     "src": "1015:10:1"
                                                                 }
                                                             ],
@@ -593,29 +681,35 @@
                                                             {
                                                                 "name": "mstore",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1004:6:1",
                                                                 "src": "1004:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1004:22:1",
                                                             "src": "1004:22:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "1004:22:1",
                                                         "src": "1004:22:1"
                                                     }
                                                 ]
                                             },
                                             "name": "finalize_allocation",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "751:281:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "memPtr",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "780:6:1",
                                                     "src": "780:6:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "size",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "788:4:1",
                                                     "src": "788:4:1",
                                                     "type": ""
                                                 }
@@ -626,11 +720,13 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "1079:88:1",
                                                 "src": "1079:88:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "1089:30:1",
                                                         "src": "1089:30:1",
                                                         "value":
                                                         {
@@ -639,9 +735,11 @@
                                                             {
                                                                 "name": "allocate_unbounded",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1099:18:1",
                                                                 "src": "1099:18:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1099:20:1",
                                                             "src": "1099:20:1"
                                                         },
                                                         "variableNames":
@@ -649,6 +747,7 @@
                                                             {
                                                                 "name": "memPtr",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1089:6:1",
                                                                 "src": "1089:6:1"
                                                             }
                                                         ]
@@ -661,11 +760,13 @@
                                                                 {
                                                                     "name": "memPtr",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1148:6:1",
                                                                     "src": "1148:6:1"
                                                                 },
                                                                 {
                                                                     "name": "size",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1156:4:1",
                                                                     "src": "1156:4:1"
                                                                 }
                                                             ],
@@ -673,23 +774,28 @@
                                                             {
                                                                 "name": "finalize_allocation",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1128:19:1",
                                                                 "src": "1128:19:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1128:33:1",
                                                             "src": "1128:33:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "1128:33:1",
                                                         "src": "1128:33:1"
                                                     }
                                                 ]
                                             },
                                             "name": "allocate_memory",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "1038:129:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "size",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1063:4:1",
                                                     "src": "1063:4:1",
                                                     "type": ""
                                                 }
@@ -699,6 +805,7 @@
                                                 {
                                                     "name": "memPtr",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1072:6:1",
                                                     "src": "1072:6:1",
                                                     "type": ""
                                                 }
@@ -709,6 +816,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "1255:229:1",
                                                 "src": "1255:229:1",
                                                 "statements":
                                                 [
@@ -716,6 +824,7 @@
                                                         "body":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "1360:22:1",
                                                             "src": "1360:22:1",
                                                             "statements":
                                                             [
@@ -727,12 +836,15 @@
                                                                         {
                                                                             "name": "panic_error_0x41",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "1362:16:1",
                                                                             "src": "1362:16:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "1362:18:1",
                                                                         "src": "1362:18:1"
                                                                     },
                                                                     "nodeType": "YulExpressionStatement",
+                                                                    "origin": "1362:18:1",
                                                                     "src": "1362:18:1"
                                                                 }
                                                             ]
@@ -744,11 +856,13 @@
                                                                 {
                                                                     "name": "length",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1332:6:1",
                                                                     "src": "1332:6:1"
                                                                 },
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "1340:18:1",
                                                                     "src": "1340:18:1",
                                                                     "type": "",
                                                                     "value": "0xffffffffffffffff"
@@ -758,16 +872,20 @@
                                                             {
                                                                 "name": "gt",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1329:2:1",
                                                                 "src": "1329:2:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1329:30:1",
                                                             "src": "1329:30:1"
                                                         },
                                                         "nodeType": "YulIf",
+                                                        "origin": "1326:56:1",
                                                         "src": "1326:56:1"
                                                     },
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "1392:25:1",
                                                         "src": "1392:25:1",
                                                         "value":
                                                         {
@@ -776,11 +894,13 @@
                                                                 {
                                                                     "name": "length",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1404:6:1",
                                                                     "src": "1404:6:1"
                                                                 },
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "1412:4:1",
                                                                     "src": "1412:4:1",
                                                                     "type": "",
                                                                     "value": "0x20"
@@ -790,9 +910,11 @@
                                                             {
                                                                 "name": "mul",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1400:3:1",
                                                                 "src": "1400:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1400:17:1",
                                                             "src": "1400:17:1"
                                                         },
                                                         "variableNames":
@@ -800,12 +922,14 @@
                                                             {
                                                                 "name": "size",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1392:4:1",
                                                                 "src": "1392:4:1"
                                                             }
                                                         ]
                                                     },
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "1454:23:1",
                                                         "src": "1454:23:1",
                                                         "value":
                                                         {
@@ -814,11 +938,13 @@
                                                                 {
                                                                     "name": "size",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1466:4:1",
                                                                     "src": "1466:4:1"
                                                                 },
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "1472:4:1",
                                                                     "src": "1472:4:1",
                                                                     "type": "",
                                                                     "value": "0x20"
@@ -828,9 +954,11 @@
                                                             {
                                                                 "name": "add",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1462:3:1",
                                                                 "src": "1462:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1462:15:1",
                                                             "src": "1462:15:1"
                                                         },
                                                         "variableNames":
@@ -838,6 +966,7 @@
                                                             {
                                                                 "name": "size",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1454:4:1",
                                                                 "src": "1454:4:1"
                                                             }
                                                         ]
@@ -846,11 +975,13 @@
                                             },
                                             "name": "array_allocation_size_t_array$_t_uint256_$dyn_memory_ptr",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "1173:311:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "length",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1239:6:1",
                                                     "src": "1239:6:1",
                                                     "type": ""
                                                 }
@@ -860,6 +991,7 @@
                                                 {
                                                     "name": "size",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1250:4:1",
                                                     "src": "1250:4:1",
                                                     "type": ""
                                                 }
@@ -870,6 +1002,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "1579:28:1",
                                                 "src": "1579:28:1",
                                                 "statements":
                                                 [
@@ -881,6 +1014,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "1596:1:1",
                                                                     "src": "1596:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -888,6 +1022,7 @@
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "1599:1:1",
                                                                     "src": "1599:1:1",
                                                                     "type": "",
                                                                     "value": "0"
@@ -897,34 +1032,41 @@
                                                             {
                                                                 "name": "revert",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1589:6:1",
                                                                 "src": "1589:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1589:12:1",
                                                             "src": "1589:12:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "1589:12:1",
                                                         "src": "1589:12:1"
                                                     }
                                                 ]
                                             },
                                             "name": "revert_error_81385d8c0b31fffe14be1da910c8bd3a80be4cfa248e04f42ec0faea3132a8ef",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "1490:117:1",
                                             "src": "1490:117:1"
                                         },
                                         {
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "1658:32:1",
                                                 "src": "1658:32:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "1668:16:1",
                                                         "src": "1668:16:1",
                                                         "value":
                                                         {
                                                             "name": "value",
                                                             "nodeType": "YulIdentifier",
+                                                            "origin": "1679:5:1",
                                                             "src": "1679:5:1"
                                                         },
                                                         "variableNames":
@@ -932,6 +1074,7 @@
                                                             {
                                                                 "name": "cleaned",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1668:7:1",
                                                                 "src": "1668:7:1"
                                                             }
                                                         ]
@@ -940,11 +1083,13 @@
                                             },
                                             "name": "cleanup_t_uint256",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "1613:77:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "value",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1640:5:1",
                                                     "src": "1640:5:1",
                                                     "type": ""
                                                 }
@@ -954,6 +1099,7 @@
                                                 {
                                                     "name": "cleaned",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1650:7:1",
                                                     "src": "1650:7:1",
                                                     "type": ""
                                                 }
@@ -964,6 +1110,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "1739:79:1",
                                                 "src": "1739:79:1",
                                                 "statements":
                                                 [
@@ -971,6 +1118,7 @@
                                                         "body":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "1796:16:1",
                                                             "src": "1796:16:1",
                                                             "statements":
                                                             [
@@ -982,6 +1130,7 @@
                                                                             {
                                                                                 "kind": "number",
                                                                                 "nodeType": "YulLiteral",
+                                                                                "origin": "1805:1:1",
                                                                                 "src": "1805:1:1",
                                                                                 "type": "",
                                                                                 "value": "0"
@@ -989,6 +1138,7 @@
                                                                             {
                                                                                 "kind": "number",
                                                                                 "nodeType": "YulLiteral",
+                                                                                "origin": "1808:1:1",
                                                                                 "src": "1808:1:1",
                                                                                 "type": "",
                                                                                 "value": "0"
@@ -998,12 +1148,15 @@
                                                                         {
                                                                             "name": "revert",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "1798:6:1",
                                                                             "src": "1798:6:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "1798:12:1",
                                                                         "src": "1798:12:1"
                                                                     },
                                                                     "nodeType": "YulExpressionStatement",
+                                                                    "origin": "1798:12:1",
                                                                     "src": "1798:12:1"
                                                                 }
                                                             ]
@@ -1018,6 +1171,7 @@
                                                                         {
                                                                             "name": "value",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "1762:5:1",
                                                                             "src": "1762:5:1"
                                                                         },
                                                                         {
@@ -1026,6 +1180,7 @@
                                                                                 {
                                                                                     "name": "value",
                                                                                     "nodeType": "YulIdentifier",
+                                                                                    "origin": "1787:5:1",
                                                                                     "src": "1787:5:1"
                                                                                 }
                                                                             ],
@@ -1033,9 +1188,11 @@
                                                                             {
                                                                                 "name": "cleanup_t_uint256",
                                                                                 "nodeType": "YulIdentifier",
+                                                                                "origin": "1769:17:1",
                                                                                 "src": "1769:17:1"
                                                                             },
                                                                             "nodeType": "YulFunctionCall",
+                                                                            "origin": "1769:24:1",
                                                                             "src": "1769:24:1"
                                                                         }
                                                                     ],
@@ -1043,9 +1200,11 @@
                                                                     {
                                                                         "name": "eq",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "1759:2:1",
                                                                         "src": "1759:2:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "1759:35:1",
                                                                     "src": "1759:35:1"
                                                                 }
                                                             ],
@@ -1053,23 +1212,28 @@
                                                             {
                                                                 "name": "iszero",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1752:6:1",
                                                                 "src": "1752:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1752:43:1",
                                                             "src": "1752:43:1"
                                                         },
                                                         "nodeType": "YulIf",
+                                                        "origin": "1749:63:1",
                                                         "src": "1749:63:1"
                                                     }
                                                 ]
                                             },
                                             "name": "validator_revert_t_uint256",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "1696:122:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "value",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1732:5:1",
                                                     "src": "1732:5:1",
                                                     "type": ""
                                                 }
@@ -1080,11 +1244,13 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "1876:87:1",
                                                 "src": "1876:87:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "1886:29:1",
                                                         "src": "1886:29:1",
                                                         "value":
                                                         {
@@ -1093,6 +1259,7 @@
                                                                 {
                                                                     "name": "offset",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1908:6:1",
                                                                     "src": "1908:6:1"
                                                                 }
                                                             ],
@@ -1100,9 +1267,11 @@
                                                             {
                                                                 "name": "calldataload",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1895:12:1",
                                                                 "src": "1895:12:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1895:20:1",
                                                             "src": "1895:20:1"
                                                         },
                                                         "variableNames":
@@ -1110,6 +1279,7 @@
                                                             {
                                                                 "name": "value",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1886:5:1",
                                                                 "src": "1886:5:1"
                                                             }
                                                         ]
@@ -1122,6 +1292,7 @@
                                                                 {
                                                                     "name": "value",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "1951:5:1",
                                                                     "src": "1951:5:1"
                                                                 }
                                                             ],
@@ -1129,29 +1300,35 @@
                                                             {
                                                                 "name": "validator_revert_t_uint256",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "1924:26:1",
                                                                 "src": "1924:26:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "1924:33:1",
                                                             "src": "1924:33:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "1924:33:1",
                                                         "src": "1924:33:1"
                                                     }
                                                 ]
                                             },
                                             "name": "abi_decode_t_uint256",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "1824:139:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "offset",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1854:6:1",
                                                     "src": "1854:6:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "end",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1862:3:1",
                                                     "src": "1862:3:1",
                                                     "type": ""
                                                 }
@@ -1161,6 +1338,7 @@
                                                 {
                                                     "name": "value",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "1870:5:1",
                                                     "src": "1870:5:1",
                                                     "type": ""
                                                 }
@@ -1171,11 +1349,13 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "2088:608:1",
                                                 "src": "2088:608:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "2098:90:1",
                                                         "src": "2098:90:1",
                                                         "value":
                                                         {
@@ -1187,6 +1367,7 @@
                                                                         {
                                                                             "name": "length",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2180:6:1",
                                                                             "src": "2180:6:1"
                                                                         }
                                                                     ],
@@ -1194,9 +1375,11 @@
                                                                     {
                                                                         "name": "array_allocation_size_t_array$_t_uint256_$dyn_memory_ptr",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "2123:56:1",
                                                                         "src": "2123:56:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "2123:64:1",
                                                                     "src": "2123:64:1"
                                                                 }
                                                             ],
@@ -1204,9 +1387,11 @@
                                                             {
                                                                 "name": "allocate_memory",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2107:15:1",
                                                                 "src": "2107:15:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2107:81:1",
                                                             "src": "2107:81:1"
                                                         },
                                                         "variableNames":
@@ -1214,17 +1399,20 @@
                                                             {
                                                                 "name": "array",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2098:5:1",
                                                                 "src": "2098:5:1"
                                                             }
                                                         ]
                                                     },
                                                     {
                                                         "nodeType": "YulVariableDeclaration",
+                                                        "origin": "2197:16:1",
                                                         "src": "2197:16:1",
                                                         "value":
                                                         {
                                                             "name": "array",
                                                             "nodeType": "YulIdentifier",
+                                                            "origin": "2208:5:1",
                                                             "src": "2208:5:1"
                                                         },
                                                         "variables":
@@ -1232,6 +1420,7 @@
                                                             {
                                                                 "name": "dst",
                                                                 "nodeType": "YulTypedName",
+                                                                "origin": "2201:3:1",
                                                                 "src": "2201:3:1",
                                                                 "type": ""
                                                             }
@@ -1245,11 +1434,13 @@
                                                                 {
                                                                     "name": "array",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2230:5:1",
                                                                     "src": "2230:5:1"
                                                                 },
                                                                 {
                                                                     "name": "length",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2237:6:1",
                                                                     "src": "2237:6:1"
                                                                 }
                                                             ],
@@ -1257,16 +1448,20 @@
                                                             {
                                                                 "name": "mstore",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2223:6:1",
                                                                 "src": "2223:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2223:21:1",
                                                             "src": "2223:21:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "2223:21:1",
                                                         "src": "2223:21:1"
                                                     },
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "2253:23:1",
                                                         "src": "2253:23:1",
                                                         "value":
                                                         {
@@ -1275,11 +1470,13 @@
                                                                 {
                                                                     "name": "array",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2264:5:1",
                                                                     "src": "2264:5:1"
                                                                 },
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "2271:4:1",
                                                                     "src": "2271:4:1",
                                                                     "type": "",
                                                                     "value": "0x20"
@@ -1289,9 +1486,11 @@
                                                             {
                                                                 "name": "add",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2260:3:1",
                                                                 "src": "2260:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2260:16:1",
                                                             "src": "2260:16:1"
                                                         },
                                                         "variableNames":
@@ -1299,12 +1498,14 @@
                                                             {
                                                                 "name": "dst",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2253:3:1",
                                                                 "src": "2253:3:1"
                                                             }
                                                         ]
                                                     },
                                                     {
                                                         "nodeType": "YulVariableDeclaration",
+                                                        "origin": "2286:44:1",
                                                         "src": "2286:44:1",
                                                         "value":
                                                         {
@@ -1313,6 +1514,7 @@
                                                                 {
                                                                     "name": "offset",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2304:6:1",
                                                                     "src": "2304:6:1"
                                                                 },
                                                                 {
@@ -1321,11 +1523,13 @@
                                                                         {
                                                                             "name": "length",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2316:6:1",
                                                                             "src": "2316:6:1"
                                                                         },
                                                                         {
                                                                             "kind": "number",
                                                                             "nodeType": "YulLiteral",
+                                                                            "origin": "2324:4:1",
                                                                             "src": "2324:4:1",
                                                                             "type": "",
                                                                             "value": "0x20"
@@ -1335,9 +1539,11 @@
                                                                     {
                                                                         "name": "mul",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "2312:3:1",
                                                                         "src": "2312:3:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "2312:17:1",
                                                                     "src": "2312:17:1"
                                                                 }
                                                             ],
@@ -1345,9 +1551,11 @@
                                                             {
                                                                 "name": "add",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2300:3:1",
                                                                 "src": "2300:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2300:30:1",
                                                             "src": "2300:30:1"
                                                         },
                                                         "variables":
@@ -1355,6 +1563,7 @@
                                                             {
                                                                 "name": "srcEnd",
                                                                 "nodeType": "YulTypedName",
+                                                                "origin": "2290:6:1",
                                                                 "src": "2290:6:1",
                                                                 "type": ""
                                                             }
@@ -1364,6 +1573,7 @@
                                                         "body":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "2358:103:1",
                                                             "src": "2358:103:1",
                                                             "statements":
                                                             [
@@ -1375,12 +1585,15 @@
                                                                         {
                                                                             "name": "revert_error_81385d8c0b31fffe14be1da910c8bd3a80be4cfa248e04f42ec0faea3132a8ef",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2372:77:1",
                                                                             "src": "2372:77:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "2372:79:1",
                                                                         "src": "2372:79:1"
                                                                     },
                                                                     "nodeType": "YulExpressionStatement",
+                                                                    "origin": "2372:79:1",
                                                                     "src": "2372:79:1"
                                                                 }
                                                             ]
@@ -1392,11 +1605,13 @@
                                                                 {
                                                                     "name": "srcEnd",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2345:6:1",
                                                                     "src": "2345:6:1"
                                                                 },
                                                                 {
                                                                     "name": "end",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2353:3:1",
                                                                     "src": "2353:3:1"
                                                                 }
                                                             ],
@@ -1404,28 +1619,34 @@
                                                             {
                                                                 "name": "gt",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2342:2:1",
                                                                 "src": "2342:2:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2342:15:1",
                                                             "src": "2342:15:1"
                                                         },
                                                         "nodeType": "YulIf",
+                                                        "origin": "2339:122:1",
                                                         "src": "2339:122:1"
                                                     },
                                                     {
                                                         "body":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "2546:144:1",
                                                             "src": "2546:144:1",
                                                             "statements":
                                                             [
                                                                 {
                                                                     "nodeType": "YulVariableDeclaration",
+                                                                    "origin": "2561:21:1",
                                                                     "src": "2561:21:1",
                                                                     "value":
                                                                     {
                                                                         "name": "src",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "2579:3:1",
                                                                         "src": "2579:3:1"
                                                                     },
                                                                     "variables":
@@ -1433,6 +1654,7 @@
                                                                         {
                                                                             "name": "elementPos",
                                                                             "nodeType": "YulTypedName",
+                                                                            "origin": "2565:10:1",
                                                                             "src": "2565:10:1",
                                                                             "type": ""
                                                                         }
@@ -1446,6 +1668,7 @@
                                                                             {
                                                                                 "name": "dst",
                                                                                 "nodeType": "YulIdentifier",
+                                                                                "origin": "2603:3:1",
                                                                                 "src": "2603:3:1"
                                                                             },
                                                                             {
@@ -1454,11 +1677,13 @@
                                                                                     {
                                                                                         "name": "elementPos",
                                                                                         "nodeType": "YulIdentifier",
+                                                                                        "origin": "2629:10:1",
                                                                                         "src": "2629:10:1"
                                                                                     },
                                                                                     {
                                                                                         "name": "end",
                                                                                         "nodeType": "YulIdentifier",
+                                                                                        "origin": "2641:3:1",
                                                                                         "src": "2641:3:1"
                                                                                     }
                                                                                 ],
@@ -1466,9 +1691,11 @@
                                                                                 {
                                                                                     "name": "abi_decode_t_uint256",
                                                                                     "nodeType": "YulIdentifier",
+                                                                                    "origin": "2608:20:1",
                                                                                     "src": "2608:20:1"
                                                                                 },
                                                                                 "nodeType": "YulFunctionCall",
+                                                                                "origin": "2608:37:1",
                                                                                 "src": "2608:37:1"
                                                                             }
                                                                         ],
@@ -1476,16 +1703,20 @@
                                                                         {
                                                                             "name": "mstore",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2596:6:1",
                                                                             "src": "2596:6:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "2596:50:1",
                                                                         "src": "2596:50:1"
                                                                     },
                                                                     "nodeType": "YulExpressionStatement",
+                                                                    "origin": "2596:50:1",
                                                                     "src": "2596:50:1"
                                                                 },
                                                                 {
                                                                     "nodeType": "YulAssignment",
+                                                                    "origin": "2659:21:1",
                                                                     "src": "2659:21:1",
                                                                     "value":
                                                                     {
@@ -1494,11 +1725,13 @@
                                                                             {
                                                                                 "name": "dst",
                                                                                 "nodeType": "YulIdentifier",
+                                                                                "origin": "2670:3:1",
                                                                                 "src": "2670:3:1"
                                                                             },
                                                                             {
                                                                                 "kind": "number",
                                                                                 "nodeType": "YulLiteral",
+                                                                                "origin": "2675:4:1",
                                                                                 "src": "2675:4:1",
                                                                                 "type": "",
                                                                                 "value": "0x20"
@@ -1508,9 +1741,11 @@
                                                                         {
                                                                             "name": "add",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2666:3:1",
                                                                             "src": "2666:3:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "2666:14:1",
                                                                         "src": "2666:14:1"
                                                                     },
                                                                     "variableNames":
@@ -1518,6 +1753,7 @@
                                                                         {
                                                                             "name": "dst",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2659:3:1",
                                                                             "src": "2659:3:1"
                                                                         }
                                                                     ]
@@ -1531,11 +1767,13 @@
                                                                 {
                                                                     "name": "src",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2499:3:1",
                                                                     "src": "2499:3:1"
                                                                 },
                                                                 {
                                                                     "name": "srcEnd",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2504:6:1",
                                                                     "src": "2504:6:1"
                                                                 }
                                                             ],
@@ -1543,20 +1781,25 @@
                                                             {
                                                                 "name": "lt",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2496:2:1",
                                                                 "src": "2496:2:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2496:15:1",
                                                             "src": "2496:15:1"
                                                         },
                                                         "nodeType": "YulForLoop",
+                                                        "origin": "2470:220:1",
                                                         "post":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "2512:25:1",
                                                             "src": "2512:25:1",
                                                             "statements":
                                                             [
                                                                 {
                                                                     "nodeType": "YulAssignment",
+                                                                    "origin": "2514:21:1",
                                                                     "src": "2514:21:1",
                                                                     "value":
                                                                     {
@@ -1565,11 +1808,13 @@
                                                                             {
                                                                                 "name": "src",
                                                                                 "nodeType": "YulIdentifier",
+                                                                                "origin": "2525:3:1",
                                                                                 "src": "2525:3:1"
                                                                             },
                                                                             {
                                                                                 "kind": "number",
                                                                                 "nodeType": "YulLiteral",
+                                                                                "origin": "2530:4:1",
                                                                                 "src": "2530:4:1",
                                                                                 "type": "",
                                                                                 "value": "0x20"
@@ -1579,9 +1824,11 @@
                                                                         {
                                                                             "name": "add",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2521:3:1",
                                                                             "src": "2521:3:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "2521:14:1",
                                                                         "src": "2521:14:1"
                                                                     },
                                                                     "variableNames":
@@ -1589,6 +1836,7 @@
                                                                         {
                                                                             "name": "src",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2514:3:1",
                                                                             "src": "2514:3:1"
                                                                         }
                                                                     ]
@@ -1598,16 +1846,19 @@
                                                         "pre":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "2474:21:1",
                                                             "src": "2474:21:1",
                                                             "statements":
                                                             [
                                                                 {
                                                                     "nodeType": "YulVariableDeclaration",
+                                                                    "origin": "2476:17:1",
                                                                     "src": "2476:17:1",
                                                                     "value":
                                                                     {
                                                                         "name": "offset",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "2487:6:1",
                                                                         "src": "2487:6:1"
                                                                     },
                                                                     "variables":
@@ -1615,6 +1866,7 @@
                                                                         {
                                                                             "name": "src",
                                                                             "nodeType": "YulTypedName",
+                                                                            "origin": "2480:3:1",
                                                                             "src": "2480:3:1",
                                                                             "type": ""
                                                                         }
@@ -1628,23 +1880,27 @@
                                             },
                                             "name": "abi_decode_available_length_t_array$_t_uint256_$dyn_memory_ptr",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "1986:710:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "offset",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "2058:6:1",
                                                     "src": "2058:6:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "length",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "2066:6:1",
                                                     "src": "2066:6:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "end",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "2074:3:1",
                                                     "src": "2074:3:1",
                                                     "type": ""
                                                 }
@@ -1654,6 +1910,7 @@
                                                 {
                                                     "name": "array",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "2082:5:1",
                                                     "src": "2082:5:1",
                                                     "type": ""
                                                 }
@@ -1664,6 +1921,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "2796:293:1",
                                                 "src": "2796:293:1",
                                                 "statements":
                                                 [
@@ -1671,6 +1929,7 @@
                                                         "body":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "2845:83:1",
                                                             "src": "2845:83:1",
                                                             "statements":
                                                             [
@@ -1682,12 +1941,15 @@
                                                                         {
                                                                             "name": "revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2847:77:1",
                                                                             "src": "2847:77:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "2847:79:1",
                                                                         "src": "2847:79:1"
                                                                     },
                                                                     "nodeType": "YulExpressionStatement",
+                                                                    "origin": "2847:79:1",
                                                                     "src": "2847:79:1"
                                                                 }
                                                             ]
@@ -1705,11 +1967,13 @@
                                                                                 {
                                                                                     "name": "offset",
                                                                                     "nodeType": "YulIdentifier",
+                                                                                    "origin": "2824:6:1",
                                                                                     "src": "2824:6:1"
                                                                                 },
                                                                                 {
                                                                                     "kind": "number",
                                                                                     "nodeType": "YulLiteral",
+                                                                                    "origin": "2832:4:1",
                                                                                     "src": "2832:4:1",
                                                                                     "type": "",
                                                                                     "value": "0x1f"
@@ -1719,14 +1983,17 @@
                                                                             {
                                                                                 "name": "add",
                                                                                 "nodeType": "YulIdentifier",
+                                                                                "origin": "2820:3:1",
                                                                                 "src": "2820:3:1"
                                                                             },
                                                                             "nodeType": "YulFunctionCall",
+                                                                            "origin": "2820:17:1",
                                                                             "src": "2820:17:1"
                                                                         },
                                                                         {
                                                                             "name": "end",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "2839:3:1",
                                                                             "src": "2839:3:1"
                                                                         }
                                                                     ],
@@ -1734,9 +2001,11 @@
                                                                     {
                                                                         "name": "slt",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "2816:3:1",
                                                                         "src": "2816:3:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "2816:27:1",
                                                                     "src": "2816:27:1"
                                                                 }
                                                             ],
@@ -1744,16 +2013,20 @@
                                                             {
                                                                 "name": "iszero",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2809:6:1",
                                                                 "src": "2809:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2809:35:1",
                                                             "src": "2809:35:1"
                                                         },
                                                         "nodeType": "YulIf",
+                                                        "origin": "2806:122:1",
                                                         "src": "2806:122:1"
                                                     },
                                                     {
                                                         "nodeType": "YulVariableDeclaration",
+                                                        "origin": "2937:34:1",
                                                         "src": "2937:34:1",
                                                         "value":
                                                         {
@@ -1762,6 +2035,7 @@
                                                                 {
                                                                     "name": "offset",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "2964:6:1",
                                                                     "src": "2964:6:1"
                                                                 }
                                                             ],
@@ -1769,9 +2043,11 @@
                                                             {
                                                                 "name": "calldataload",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2951:12:1",
                                                                 "src": "2951:12:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2951:20:1",
                                                             "src": "2951:20:1"
                                                         },
                                                         "variables":
@@ -1779,6 +2055,7 @@
                                                             {
                                                                 "name": "length",
                                                                 "nodeType": "YulTypedName",
+                                                                "origin": "2941:6:1",
                                                                 "src": "2941:6:1",
                                                                 "type": ""
                                                             }
@@ -1786,6 +2063,7 @@
                                                     },
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "2980:103:1",
                                                         "src": "2980:103:1",
                                                         "value":
                                                         {
@@ -1797,11 +2075,13 @@
                                                                         {
                                                                             "name": "offset",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3056:6:1",
                                                                             "src": "3056:6:1"
                                                                         },
                                                                         {
                                                                             "kind": "number",
                                                                             "nodeType": "YulLiteral",
+                                                                            "origin": "3064:4:1",
                                                                             "src": "3064:4:1",
                                                                             "type": "",
                                                                             "value": "0x20"
@@ -1811,19 +2091,23 @@
                                                                     {
                                                                         "name": "add",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3052:3:1",
                                                                         "src": "3052:3:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "3052:17:1",
                                                                     "src": "3052:17:1"
                                                                 },
                                                                 {
                                                                     "name": "length",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "3071:6:1",
                                                                     "src": "3071:6:1"
                                                                 },
                                                                 {
                                                                     "name": "end",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "3079:3:1",
                                                                     "src": "3079:3:1"
                                                                 }
                                                             ],
@@ -1831,9 +2115,11 @@
                                                             {
                                                                 "name": "abi_decode_available_length_t_array$_t_uint256_$dyn_memory_ptr",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2989:62:1",
                                                                 "src": "2989:62:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "2989:94:1",
                                                             "src": "2989:94:1"
                                                         },
                                                         "variableNames":
@@ -1841,6 +2127,7 @@
                                                             {
                                                                 "name": "array",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "2980:5:1",
                                                                 "src": "2980:5:1"
                                                             }
                                                         ]
@@ -1849,17 +2136,20 @@
                                             },
                                             "name": "abi_decode_t_array$_t_uint256_$dyn_memory_ptr",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "2719:370:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "offset",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "2774:6:1",
                                                     "src": "2774:6:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "end",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "2782:3:1",
                                                     "src": "2782:3:1",
                                                     "type": ""
                                                 }
@@ -1869,6 +2159,7 @@
                                                 {
                                                     "name": "array",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "2790:5:1",
                                                     "src": "2790:5:1",
                                                     "type": ""
                                                 }
@@ -1879,6 +2170,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "3186:448:1",
                                                 "src": "3186:448:1",
                                                 "statements":
                                                 [
@@ -1886,6 +2178,7 @@
                                                         "body":
                                                         {
                                                             "nodeType": "YulBlock",
+                                                            "origin": "3232:83:1",
                                                             "src": "3232:83:1",
                                                             "statements":
                                                             [
@@ -1897,12 +2190,15 @@
                                                                         {
                                                                             "name": "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3234:77:1",
                                                                             "src": "3234:77:1"
                                                                         },
                                                                         "nodeType": "YulFunctionCall",
+                                                                        "origin": "3234:79:1",
                                                                         "src": "3234:79:1"
                                                                     },
                                                                     "nodeType": "YulExpressionStatement",
+                                                                    "origin": "3234:79:1",
                                                                     "src": "3234:79:1"
                                                                 }
                                                             ]
@@ -1917,11 +2213,13 @@
                                                                         {
                                                                             "name": "dataEnd",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3207:7:1",
                                                                             "src": "3207:7:1"
                                                                         },
                                                                         {
                                                                             "name": "headStart",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3216:9:1",
                                                                             "src": "3216:9:1"
                                                                         }
                                                                     ],
@@ -1929,14 +2227,17 @@
                                                                     {
                                                                         "name": "sub",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3203:3:1",
                                                                         "src": "3203:3:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "3203:23:1",
                                                                     "src": "3203:23:1"
                                                                 },
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "3228:2:1",
                                                                     "src": "3228:2:1",
                                                                     "type": "",
                                                                     "value": "32"
@@ -1946,21 +2247,26 @@
                                                             {
                                                                 "name": "slt",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "3199:3:1",
                                                                 "src": "3199:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "3199:32:1",
                                                             "src": "3199:32:1"
                                                         },
                                                         "nodeType": "YulIf",
+                                                        "origin": "3196:119:1",
                                                         "src": "3196:119:1"
                                                     },
                                                     {
                                                         "nodeType": "YulBlock",
+                                                        "origin": "3325:302:1",
                                                         "src": "3325:302:1",
                                                         "statements":
                                                         [
                                                             {
                                                                 "nodeType": "YulVariableDeclaration",
+                                                                "origin": "3340:45:1",
                                                                 "src": "3340:45:1",
                                                                 "value":
                                                                 {
@@ -1972,11 +2278,13 @@
                                                                                 {
                                                                                     "name": "headStart",
                                                                                     "nodeType": "YulIdentifier",
+                                                                                    "origin": "3371:9:1",
                                                                                     "src": "3371:9:1"
                                                                                 },
                                                                                 {
                                                                                     "kind": "number",
                                                                                     "nodeType": "YulLiteral",
+                                                                                    "origin": "3382:1:1",
                                                                                     "src": "3382:1:1",
                                                                                     "type": "",
                                                                                     "value": "0"
@@ -1986,9 +2294,11 @@
                                                                             {
                                                                                 "name": "add",
                                                                                 "nodeType": "YulIdentifier",
+                                                                                "origin": "3367:3:1",
                                                                                 "src": "3367:3:1"
                                                                             },
                                                                             "nodeType": "YulFunctionCall",
+                                                                            "origin": "3367:17:1",
                                                                             "src": "3367:17:1"
                                                                         }
                                                                     ],
@@ -1996,9 +2306,11 @@
                                                                     {
                                                                         "name": "calldataload",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3354:12:1",
                                                                         "src": "3354:12:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "3354:31:1",
                                                                     "src": "3354:31:1"
                                                                 },
                                                                 "variables":
@@ -2006,6 +2318,7 @@
                                                                     {
                                                                         "name": "offset",
                                                                         "nodeType": "YulTypedName",
+                                                                        "origin": "3344:6:1",
                                                                         "src": "3344:6:1",
                                                                         "type": ""
                                                                     }
@@ -2015,6 +2328,7 @@
                                                                 "body":
                                                                 {
                                                                     "nodeType": "YulBlock",
+                                                                    "origin": "3432:83:1",
                                                                     "src": "3432:83:1",
                                                                     "statements":
                                                                     [
@@ -2026,12 +2340,15 @@
                                                                                 {
                                                                                     "name": "revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db",
                                                                                     "nodeType": "YulIdentifier",
+                                                                                    "origin": "3434:77:1",
                                                                                     "src": "3434:77:1"
                                                                                 },
                                                                                 "nodeType": "YulFunctionCall",
+                                                                                "origin": "3434:79:1",
                                                                                 "src": "3434:79:1"
                                                                             },
                                                                             "nodeType": "YulExpressionStatement",
+                                                                            "origin": "3434:79:1",
                                                                             "src": "3434:79:1"
                                                                         }
                                                                     ]
@@ -2043,11 +2360,13 @@
                                                                         {
                                                                             "name": "offset",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3404:6:1",
                                                                             "src": "3404:6:1"
                                                                         },
                                                                         {
                                                                             "kind": "number",
                                                                             "nodeType": "YulLiteral",
+                                                                            "origin": "3412:18:1",
                                                                             "src": "3412:18:1",
                                                                             "type": "",
                                                                             "value": "0xffffffffffffffff"
@@ -2057,16 +2376,20 @@
                                                                     {
                                                                         "name": "gt",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3401:2:1",
                                                                         "src": "3401:2:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "3401:30:1",
                                                                     "src": "3401:30:1"
                                                                 },
                                                                 "nodeType": "YulIf",
+                                                                "origin": "3398:117:1",
                                                                 "src": "3398:117:1"
                                                             },
                                                             {
                                                                 "nodeType": "YulAssignment",
+                                                                "origin": "3529:88:1",
                                                                 "src": "3529:88:1",
                                                                 "value":
                                                                 {
@@ -2078,11 +2401,13 @@
                                                                                 {
                                                                                     "name": "headStart",
                                                                                     "nodeType": "YulIdentifier",
+                                                                                    "origin": "3589:9:1",
                                                                                     "src": "3589:9:1"
                                                                                 },
                                                                                 {
                                                                                     "name": "offset",
                                                                                     "nodeType": "YulIdentifier",
+                                                                                    "origin": "3600:6:1",
                                                                                     "src": "3600:6:1"
                                                                                 }
                                                                             ],
@@ -2090,14 +2415,17 @@
                                                                             {
                                                                                 "name": "add",
                                                                                 "nodeType": "YulIdentifier",
+                                                                                "origin": "3585:3:1",
                                                                                 "src": "3585:3:1"
                                                                             },
                                                                             "nodeType": "YulFunctionCall",
+                                                                            "origin": "3585:22:1",
                                                                             "src": "3585:22:1"
                                                                         },
                                                                         {
                                                                             "name": "dataEnd",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3609:7:1",
                                                                             "src": "3609:7:1"
                                                                         }
                                                                     ],
@@ -2105,9 +2433,11 @@
                                                                     {
                                                                         "name": "abi_decode_t_array$_t_uint256_$dyn_memory_ptr",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3539:45:1",
                                                                         "src": "3539:45:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "3539:78:1",
                                                                     "src": "3539:78:1"
                                                                 },
                                                                 "variableNames":
@@ -2115,6 +2445,7 @@
                                                                     {
                                                                         "name": "value0",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3529:6:1",
                                                                         "src": "3529:6:1"
                                                                     }
                                                                 ]
@@ -2125,17 +2456,20 @@
                                             },
                                             "name": "abi_decode_tuple_t_array$_t_uint256_$dyn_memory_ptr",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "3095:539:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "headStart",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3156:9:1",
                                                     "src": "3156:9:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "dataEnd",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3167:7:1",
                                                     "src": "3167:7:1",
                                                     "type": ""
                                                 }
@@ -2145,6 +2479,7 @@
                                                 {
                                                     "name": "value0",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3179:6:1",
                                                     "src": "3179:6:1",
                                                     "type": ""
                                                 }
@@ -2155,6 +2490,7 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "3705:53:1",
                                                 "src": "3705:53:1",
                                                 "statements":
                                                 [
@@ -2166,6 +2502,7 @@
                                                                 {
                                                                     "name": "pos",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "3722:3:1",
                                                                     "src": "3722:3:1"
                                                                 },
                                                                 {
@@ -2174,6 +2511,7 @@
                                                                         {
                                                                             "name": "value",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3745:5:1",
                                                                             "src": "3745:5:1"
                                                                         }
                                                                     ],
@@ -2181,9 +2519,11 @@
                                                                     {
                                                                         "name": "cleanup_t_uint256",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3727:17:1",
                                                                         "src": "3727:17:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "3727:24:1",
                                                                     "src": "3727:24:1"
                                                                 }
                                                             ],
@@ -2191,29 +2531,35 @@
                                                             {
                                                                 "name": "mstore",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "3715:6:1",
                                                                 "src": "3715:6:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "3715:37:1",
                                                             "src": "3715:37:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "3715:37:1",
                                                         "src": "3715:37:1"
                                                     }
                                                 ]
                                             },
                                             "name": "abi_encode_t_uint256_to_t_uint256_fromStack",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "3640:118:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "value",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3693:5:1",
                                                     "src": "3693:5:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "pos",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3700:3:1",
                                                     "src": "3700:3:1",
                                                     "type": ""
                                                 }
@@ -2224,11 +2570,13 @@
                                             "body":
                                             {
                                                 "nodeType": "YulBlock",
+                                                "origin": "3862:124:1",
                                                 "src": "3862:124:1",
                                                 "statements":
                                                 [
                                                     {
                                                         "nodeType": "YulAssignment",
+                                                        "origin": "3872:26:1",
                                                         "src": "3872:26:1",
                                                         "value":
                                                         {
@@ -2237,11 +2585,13 @@
                                                                 {
                                                                     "name": "headStart",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "3884:9:1",
                                                                     "src": "3884:9:1"
                                                                 },
                                                                 {
                                                                     "kind": "number",
                                                                     "nodeType": "YulLiteral",
+                                                                    "origin": "3895:2:1",
                                                                     "src": "3895:2:1",
                                                                     "type": "",
                                                                     "value": "32"
@@ -2251,9 +2601,11 @@
                                                             {
                                                                 "name": "add",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "3880:3:1",
                                                                 "src": "3880:3:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "3880:18:1",
                                                             "src": "3880:18:1"
                                                         },
                                                         "variableNames":
@@ -2261,6 +2613,7 @@
                                                             {
                                                                 "name": "tail",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "3872:4:1",
                                                                 "src": "3872:4:1"
                                                             }
                                                         ]
@@ -2273,6 +2626,7 @@
                                                                 {
                                                                     "name": "value0",
                                                                     "nodeType": "YulIdentifier",
+                                                                    "origin": "3952:6:1",
                                                                     "src": "3952:6:1"
                                                                 },
                                                                 {
@@ -2281,11 +2635,13 @@
                                                                         {
                                                                             "name": "headStart",
                                                                             "nodeType": "YulIdentifier",
+                                                                            "origin": "3965:9:1",
                                                                             "src": "3965:9:1"
                                                                         },
                                                                         {
                                                                             "kind": "number",
                                                                             "nodeType": "YulLiteral",
+                                                                            "origin": "3976:1:1",
                                                                             "src": "3976:1:1",
                                                                             "type": "",
                                                                             "value": "0"
@@ -2295,9 +2651,11 @@
                                                                     {
                                                                         "name": "add",
                                                                         "nodeType": "YulIdentifier",
+                                                                        "origin": "3961:3:1",
                                                                         "src": "3961:3:1"
                                                                     },
                                                                     "nodeType": "YulFunctionCall",
+                                                                    "origin": "3961:17:1",
                                                                     "src": "3961:17:1"
                                                                 }
                                                             ],
@@ -2305,29 +2663,35 @@
                                                             {
                                                                 "name": "abi_encode_t_uint256_to_t_uint256_fromStack",
                                                                 "nodeType": "YulIdentifier",
+                                                                "origin": "3908:43:1",
                                                                 "src": "3908:43:1"
                                                             },
                                                             "nodeType": "YulFunctionCall",
+                                                            "origin": "3908:71:1",
                                                             "src": "3908:71:1"
                                                         },
                                                         "nodeType": "YulExpressionStatement",
+                                                        "origin": "3908:71:1",
                                                         "src": "3908:71:1"
                                                     }
                                                 ]
                                             },
                                             "name": "abi_encode_tuple_t_uint256__to_t_uint256__fromStack_reversed",
                                             "nodeType": "YulFunctionDefinition",
+                                            "origin": "3764:222:1",
                                             "parameters":
                                             [
                                                 {
                                                     "name": "headStart",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3834:9:1",
                                                     "src": "3834:9:1",
                                                     "type": ""
                                                 },
                                                 {
                                                     "name": "value0",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3846:6:1",
                                                     "src": "3846:6:1",
                                                     "type": ""
                                                 }
@@ -2337,6 +2701,7 @@
                                                 {
                                                     "name": "tail",
                                                     "nodeType": "YulTypedName",
+                                                    "origin": "3857:4:1",
                                                     "src": "3857:4:1",
                                                     "type": ""
                                                 }

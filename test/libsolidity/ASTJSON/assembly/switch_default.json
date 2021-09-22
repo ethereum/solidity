@@ -39,6 +39,7 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "61:33:1",
                   "src": "61:33:1",
                   "statements":
                   [
@@ -49,15 +50,18 @@
                           "body":
                           {
                             "nodeType": "YulBlock",
+                            "origin": "79:2:1",
                             "src": "79:2:1",
                             "statements": []
                           },
                           "nodeType": "YulCase",
+                          "origin": "72:9:1",
                           "src": "72:9:1",
                           "value":
                           {
                             "kind": "number",
                             "nodeType": "YulLiteral",
+                            "origin": "77:1:1",
                             "src": "77:1:1",
                             "type": "",
                             "value": "0"
@@ -67,10 +71,12 @@
                           "body":
                           {
                             "nodeType": "YulBlock",
+                            "origin": "90:2:1",
                             "src": "90:2:1",
                             "statements": []
                           },
                           "nodeType": "YulCase",
+                          "origin": "82:10:1",
                           "src": "82:10:1",
                           "value": "default"
                         }
@@ -79,11 +85,13 @@
                       {
                         "kind": "number",
                         "nodeType": "YulLiteral",
+                        "origin": "70:1:1",
                         "src": "70:1:1",
                         "type": "",
                         "value": "0"
                       },
                       "nodeType": "YulSwitch",
+                      "origin": "63:29:1",
                       "src": "63:29:1"
                     }
                   ]

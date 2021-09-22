@@ -81,16 +81,19 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "77:10:1",
                   "src": "77:10:1",
                   "statements":
                   [
                     {
                       "nodeType": "YulAssignment",
+                      "origin": "79:6:1",
                       "src": "79:6:1",
                       "value":
                       {
                         "kind": "number",
                         "nodeType": "YulLiteral",
+                        "origin": "84:1:1",
                         "src": "84:1:1",
                         "type": "",
                         "value": "7"
@@ -100,6 +103,7 @@
                         {
                           "name": "x",
                           "nodeType": "YulIdentifier",
+                          "origin": "79:1:1",
                           "src": "79:1:1"
                         }
                       ]

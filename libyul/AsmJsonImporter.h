@@ -44,12 +44,13 @@ public:
 	yul::Block createBlock(Json::Value const& _node);
 
 private:
-	langutil::SourceLocation const createSourceLocation(Json::Value const& _node);
+	std::shared_ptr<yul::DebugData const> createDebugData(Json::Value const& _node) const;
+
 	template <class T>
 	T createAsmNode(Json::Value const& _node);
 	/// helper function to access member functions of the JSON
 	/// and throw an error if it does not exist
-	Json::Value member(Json::Value const& _node, std::string const& _name);
+	Json::Value member(Json::Value const& _node, std::string const& _name) const;
 
 	yul::Statement createStatement(Json::Value const& _node);
 	yul::Expression createExpression(Json::Value const& _node);

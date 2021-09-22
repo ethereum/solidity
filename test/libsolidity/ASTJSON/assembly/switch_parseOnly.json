@@ -27,16 +27,19 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "61:129:1",
                   "src": "61:129:1",
                   "statements":
                   [
                     {
                       "nodeType": "YulVariableDeclaration",
+                      "origin": "75:10:1",
                       "src": "75:10:1",
                       "value":
                       {
                         "kind": "number",
                         "nodeType": "YulLiteral",
+                        "origin": "84:1:1",
                         "src": "84:1:1",
                         "type": "",
                         "value": "0"
@@ -46,6 +49,7 @@
                         {
                           "name": "f",
                           "nodeType": "YulTypedName",
+                          "origin": "79:1:1",
                           "src": "79:1:1",
                           "type": ""
                         }
@@ -58,16 +62,19 @@
                           "body":
                           {
                             "nodeType": "YulBlock",
+                            "origin": "139:10:1",
                             "src": "139:10:1",
                             "statements":
                             [
                               {
                                 "nodeType": "YulAssignment",
+                                "origin": "141:6:1",
                                 "src": "141:6:1",
                                 "value":
                                 {
                                   "kind": "number",
                                   "nodeType": "YulLiteral",
+                                  "origin": "146:1:1",
                                   "src": "146:1:1",
                                   "type": "",
                                   "value": "1"
@@ -77,6 +84,7 @@
                                   {
                                     "name": "f",
                                     "nodeType": "YulIdentifier",
+                                    "origin": "141:1:1",
                                     "src": "141:1:1"
                                   }
                                 ]
@@ -84,11 +92,13 @@
                             ]
                           },
                           "nodeType": "YulCase",
+                          "origin": "132:17:1",
                           "src": "132:17:1",
                           "value":
                           {
                             "kind": "number",
                             "nodeType": "YulLiteral",
+                            "origin": "137:1:1",
                             "src": "137:1:1",
                             "type": "",
                             "value": "0"
@@ -98,16 +108,19 @@
                           "body":
                           {
                             "nodeType": "YulBlock",
+                            "origin": "170:10:1",
                             "src": "170:10:1",
                             "statements":
                             [
                               {
                                 "nodeType": "YulAssignment",
+                                "origin": "172:6:1",
                                 "src": "172:6:1",
                                 "value":
                                 {
                                   "kind": "number",
                                   "nodeType": "YulLiteral",
+                                  "origin": "177:1:1",
                                   "src": "177:1:1",
                                   "type": "",
                                   "value": "2"
@@ -117,6 +130,7 @@
                                   {
                                     "name": "f",
                                     "nodeType": "YulIdentifier",
+                                    "origin": "172:1:1",
                                     "src": "172:1:1"
                                   }
                                 ]
@@ -124,6 +138,7 @@
                             ]
                           },
                           "nodeType": "YulCase",
+                          "origin": "162:18:1",
                           "src": "162:18:1",
                           "value": "default"
                         }
@@ -135,12 +150,15 @@
                         {
                           "name": "calldatasize",
                           "nodeType": "YulIdentifier",
+                          "origin": "105:12:1",
                           "src": "105:12:1"
                         },
                         "nodeType": "YulFunctionCall",
+                        "origin": "105:14:1",
                         "src": "105:14:1"
                       },
                       "nodeType": "YulSwitch",
+                      "origin": "98:82:1",
                       "src": "98:82:1"
                     }
                   ]

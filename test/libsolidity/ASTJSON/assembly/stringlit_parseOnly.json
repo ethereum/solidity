@@ -27,17 +27,20 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "56:18:1",
                   "src": "56:18:1",
                   "statements":
                   [
                     {
                       "nodeType": "YulVariableDeclaration",
+                      "origin": "58:14:1",
                       "src": "58:14:1",
                       "value":
                       {
                         "hexValue": "616263",
                         "kind": "string",
                         "nodeType": "YulLiteral",
+                        "origin": "67:5:1",
                         "src": "67:5:1",
                         "type": "",
                         "value": "abc"
@@ -47,6 +50,7 @@
                         {
                           "name": "x",
                           "nodeType": "YulTypedName",
+                          "origin": "62:1:1",
                           "src": "62:1:1",
                           "type": ""
                         }

@@ -27,11 +27,13 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "61:6:1",
                   "src": "61:6:1",
                   "statements":
                   [
                     {
                       "nodeType": "YulBlock",
+                      "origin": "63:2:1",
                       "src": "63:2:1",
                       "statements": []
                     }

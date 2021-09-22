@@ -27,6 +27,7 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "61:49:1",
                   "src": "61:49:1",
                   "statements":
                   [
@@ -34,15 +35,18 @@
                       "body":
                       {
                         "nodeType": "YulBlock",
+                        "origin": "90:18:1",
                         "src": "90:18:1",
                         "statements":
                         [
                           {
                             "nodeType": "YulBreak",
+                            "origin": "92:5:1",
                             "src": "92:5:1"
                           },
                           {
                             "nodeType": "YulContinue",
+                            "origin": "98:8:1",
                             "src": "98:8:1"
                           }
                         ]
@@ -51,14 +55,17 @@
                       {
                         "kind": "number",
                         "nodeType": "YulLiteral",
+                        "origin": "70:1:1",
                         "src": "70:1:1",
                         "type": "",
                         "value": "1"
                       },
                       "nodeType": "YulForLoop",
+                      "origin": "63:45:1",
                       "post":
                       {
                         "nodeType": "YulBlock",
+                        "origin": "72:17:1",
                         "src": "72:17:1",
                         "statements":
                         [
@@ -73,6 +80,7 @@
                                     {
                                       "kind": "number",
                                       "nodeType": "YulLiteral",
+                                      "origin": "84:1:1",
                                       "src": "84:1:1",
                                       "type": "",
                                       "value": "0"
@@ -82,9 +90,11 @@
                                   {
                                     "name": "sload",
                                     "nodeType": "YulIdentifier",
+                                    "origin": "78:5:1",
                                     "src": "78:5:1"
                                   },
                                   "nodeType": "YulFunctionCall",
+                                  "origin": "78:8:1",
                                   "src": "78:8:1"
                                 }
                               ],
@@ -92,12 +102,15 @@
                               {
                                 "name": "pop",
                                 "nodeType": "YulIdentifier",
+                                "origin": "74:3:1",
                                 "src": "74:3:1"
                               },
                               "nodeType": "YulFunctionCall",
+                              "origin": "74:13:1",
                               "src": "74:13:1"
                             },
                             "nodeType": "YulExpressionStatement",
+                            "origin": "74:13:1",
                             "src": "74:13:1"
                           }
                         ]
@@ -105,6 +118,7 @@
                       "pre":
                       {
                         "nodeType": "YulBlock",
+                        "origin": "67:2:1",
                         "src": "67:2:1",
                         "statements": []
                       },

@@ -27,6 +27,7 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "72:78:1",
                   "src": "72:78:1",
                   "statements":
                   [
@@ -34,6 +35,7 @@
                       "body":
                       {
                         "nodeType": "YulBlock",
+                        "origin": "94:50:1",
                         "src": "94:50:1",
                         "statements":
                         [
@@ -41,20 +43,24 @@
                             "body":
                             {
                               "nodeType": "YulBlock",
+                              "origin": "118:3:1",
                               "src": "118:3:1",
                               "statements": []
                             },
                             "name": "f2",
                             "nodeType": "YulFunctionDefinition",
+                            "origin": "104:17:1",
                             "src": "104:17:1"
                           },
                           {
                             "nodeType": "YulAssignment",
+                            "origin": "130:6:1",
                             "src": "130:6:1",
                             "value":
                             {
                               "kind": "number",
                               "nodeType": "YulLiteral",
+                              "origin": "135:1:1",
                               "src": "135:1:1",
                               "type": "",
                               "value": "2"
@@ -64,6 +70,7 @@
                               {
                                 "name": "x",
                                 "nodeType": "YulIdentifier",
+                                "origin": "130:1:1",
                                 "src": "130:1:1"
                               }
                             ]
@@ -72,6 +79,7 @@
                       },
                       "name": "f1",
                       "nodeType": "YulFunctionDefinition",
+                      "origin": "80:64:1",
                       "src": "80:64:1"
                     }
                   ]

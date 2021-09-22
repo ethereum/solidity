@@ -62,9 +62,10 @@ public:
 	Json::Value operator()(Label const& _node) const;
 
 private:
-	static std::string formatLocation(langutil::SourceLocation const& _location, std::optional<size_t> const& m_sourceIndex);
+	static std::string formatLocationWithFileName(langutil::SourceLocation const& _location);
+	static std::string formatLocationWithFileIndex(langutil::SourceLocation const& _location, std::optional<size_t> const& m_sourceIndex);
 
-	Json::Value createAstNode(langutil::SourceLocation const& _location, std::string _nodeType) const;
+	Json::Value createAstNode(yul::DebugData const* _debugData, std::string _nodeType) const;
 
 	template <class T>
 	Json::Value vectorOfVariantsToJson(std::vector<T> const& vec) const;

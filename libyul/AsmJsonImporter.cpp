@@ -42,27 +42,27 @@ namespace solidity::yul
 
 using SourceLocation = langutil::SourceLocation;
 
-SourceLocation const AsmJsonImporter::createSourceLocation(Json::Value const& _node)
+shared_ptr<DebugData const> AsmJsonImporter::createDebugData(Json::Value const& _node) const
 {
 	yulAssert(member(_node, "src").isString(), "'src' must be a string");
+	yulAssert(member(_node, "origin").isString(), "'origin' must be a string");
 
-	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_sourceNames);
+	SourceLocation nativeLocation = solidity::langutil::parseSourceLocation(_node["src"].asString(), m_sourceNames);
+	SourceLocation originLocation = solidity::langutil::parseSourceLocation(_node["origin"].asString(), m_sourceNames);
+
+	yulAssert(nativeLocation.hasText(), "Invalid source location in Asm AST");
+	return DebugData::create(nativeLocation, originLocation);
 }
 
 template <class T>
 T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 {
 	T r;
-	SourceLocation nativeLocation = createSourceLocation(_node);
-	yulAssert(nativeLocation.hasText(), "Invalid source location in Asm AST");
-	// TODO: We should add originLocation to the AST.
-	// While it's not included, we'll use nativeLocation for it because we only support importing
-	// inline assembly as a part of a Solidity AST and there these locations are always the same.
-	r.debugData = DebugData::create(nativeLocation, nativeLocation);
+	r.debugData = createDebugData(_node);
 	return r;
 }
 
-Json::Value AsmJsonImporter::member(Json::Value const& _node, string const& _name)
+Json::Value AsmJsonImporter::member(Json::Value const& _node, string const& _name) const
 {
 	if (!_node.isMember(_name))
 		return Json::nullValue;

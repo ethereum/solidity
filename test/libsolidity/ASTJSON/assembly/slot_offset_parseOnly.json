@@ -86,16 +86,19 @@
                 "AST":
                 {
                   "nodeType": "YulBlock",
+                  "origin": "95:45:1",
                   "src": "95:45:1",
                   "statements":
                   [
                     {
                       "nodeType": "YulVariableDeclaration",
+                      "origin": "97:17:1",
                       "src": "97:17:1",
                       "value":
                       {
                         "name": "s.offset",
                         "nodeType": "YulIdentifier",
+                        "origin": "106:8:1",
                         "src": "106:8:1"
                       },
                       "variables":
@@ -103,6 +106,7 @@
                         {
                           "name": "x",
                           "nodeType": "YulTypedName",
+                          "origin": "101:1:1",
                           "src": "101:1:1",
                           "type": ""
                         }
@@ -110,6 +114,7 @@
                     },
                     {
                       "nodeType": "YulVariableDeclaration",
+                      "origin": "115:23:1",
                       "src": "115:23:1",
                       "value":
                       {
@@ -118,11 +123,13 @@
                           {
                             "name": "s.slot",
                             "nodeType": "YulIdentifier",
+                            "origin": "128:6:1",
                             "src": "128:6:1"
                           },
                           {
                             "kind": "number",
                             "nodeType": "YulLiteral",
+                            "origin": "136:1:1",
                             "src": "136:1:1",
                             "type": "",
                             "value": "2"
@@ -132,9 +139,11 @@
                         {
                           "name": "mul",
                           "nodeType": "YulIdentifier",
+                          "origin": "124:3:1",
                           "src": "124:3:1"
                         },
                         "nodeType": "YulFunctionCall",
+                        "origin": "124:14:1",
                         "src": "124:14:1"
                       },
                       "variables":
@@ -142,6 +151,7 @@
                         {
                           "name": "y",
                           "nodeType": "YulTypedName",
+                          "origin": "119:1:1",
                           "src": "119:1:1",
                           "type": ""
                         }
