@@ -27,6 +27,7 @@
 #include <libsolutil/UTF8.h>
 
 using namespace std;
+using namespace solidity::langutil;
 
 namespace solidity::yul
 {
@@ -183,14 +184,23 @@ Json::Value AsmJsonConverter::operator()(Leave const& _node) const
 	return createAstNode(nativeLocationOf(_node), "YulLeave");
 }
 
-Json::Value AsmJsonConverter::createAstNode(langutil::SourceLocation const& _location, string _nodeType) const
+string AsmJsonConverter::formatLocation(SourceLocation const& _location, optional<size_t> const& _sourceIndex)
+{
+	return
+		to_string(_location.start) +
+		":" +
+		to_string(_location.length()) +
+		":" +
+		(_sourceIndex.has_value() ? to_string(_sourceIndex.value()) : "-1");
+}
+
+Json::Value AsmJsonConverter::createAstNode(SourceLocation const& _location, string _nodeType) const
 {
 	Json::Value ret{Json::objectValue};
 	ret["nodeType"] = std::move(_nodeType);
-	int length = -1;
-	if (_location.start >= 0 && _location.end >= 0)
-		length = _location.end - _location.start;
-	ret["src"] = to_string(_location.start) + ":" + to_string(length) + ":" + (m_sourceIndex.has_value() ? to_string(m_sourceIndex.value()) : "-1");
+
+	ret["src"] = formatLocation(_location, m_sourceIndex);
+
 	return ret;
 }
 

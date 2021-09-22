@@ -79,6 +79,10 @@ struct SourceLocation
 
 	bool hasText() const { return sourceName && 0 <= start && start <= end; }
 
+	/// @returns the length of text covered by the location if both @a start and @a end are defined.
+	/// Otherwise returns -1.
+	int length() const { return (start >= 0 && end >= 0 ? end - start : -1); }
+
 	/// @returns the smallest SourceLocation that contains both @param _a and @param _b.
 	/// Assumes that @param _a and @param _b refer to the same source (exception: if the source of either one
 	/// is unset, the source of the other will be used for the result, even if that is unset as well).
