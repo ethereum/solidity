@@ -31,6 +31,7 @@
 
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -178,9 +179,12 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 	tuple["declaration"] = idOrNull(_info.second.declaration);
 	tuple["isSlot"] = Json::Value(_info.second.suffix == "slot");
 	tuple["isOffset"] = Json::Value(_info.second.suffix == "offset");
+
 	if (!_info.second.suffix.empty())
 		tuple["suffix"] = Json::Value(_info.second.suffix);
+
 	tuple["valueSize"] = Json::Value(Json::LargestUInt(_info.second.valueSize));
+
 	return tuple;
 }
 

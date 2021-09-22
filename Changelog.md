@@ -1,6 +1,7 @@
 ### 0.8.10 (unreleased)
 
 Language Features:
+ * Inline Assembly: Support ``.address`` and ``.selector`` on external function pointers to access their address and function selector.
 
 
 Compiler Features:

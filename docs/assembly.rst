@@ -136,6 +136,27 @@ evaluate to the address of the variable in calldata, not the value itself.
 The variable can also be assigned a new offset, but note that no validation to ensure that
 the variable will not point beyond ``calldatasize()`` is performed.
 
+For external function pointers the address and the function selector can be
+accessed using ``x.address`` and ``x.selector``.
+The selector consists of four right-aligned bytes.
+Both values are can be assigned to. For example:
+
+.. code-block:: solidity
+    :force:
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.10 <0.9.0;
+
+    contract C {
+        // Assigns a new selector and address to the return variable @fun
+        function combineToFunctionPointer(address newAddress, uint newSelector) public pure returns (function() external fun) {
+            assembly {
+                fun.selector := newSelector
+                fun.address  := newAddress
+            }
+        }
+    }
+
 For dynamic calldata arrays, you can access
 their calldata offset (in bytes) and length (number of elements) using ``x.offset`` and ``x.length``.
 Both expressions can also be assigned to, but as for the static case, no validation will be performed
