@@ -46,17 +46,6 @@ using namespace solidity::yul;
 namespace
 {
 
-[[nodiscard]]
-shared_ptr<DebugData const> updateLocationEndFrom(
-	shared_ptr<DebugData const> const& _debugData,
-	langutil::SourceLocation const& _location
-)
-{
-	SourceLocation updatedLocation = _debugData ? _debugData->location : langutil::SourceLocation{};
-	updatedLocation.end = _location.end;
-	return make_shared<DebugData const>(updatedLocation);
-}
-
 optional<int> toInt(string const& _value)
 {
 	try
@@ -76,13 +65,43 @@ std::shared_ptr<DebugData const> Parser::createDebugData() const
 	switch (m_useSourceLocationFrom)
 	{
 		case UseSourceLocationFrom::Scanner:
-			return DebugData::create(ParserBase::currentLocation());
+			return DebugData::create(ParserBase::currentLocation(), ParserBase::currentLocation());
 		case UseSourceLocationFrom::LocationOverride:
-			return DebugData::create(m_locationOverride);
+			return DebugData::create(m_locationOverride, m_locationOverride);
 		case UseSourceLocationFrom::Comments:
-			return m_debugDataOverride;
+			return DebugData::create(ParserBase::currentLocation(), m_locationFromComment, m_astIDFromComment);
 	}
 	solAssert(false, "");
+}
+
+void Parser::updateLocationEndFrom(
+	shared_ptr<DebugData const>& _debugData,
+	SourceLocation const& _location
+) const
+{
+	solAssert(_debugData, "");
+
+	switch (m_useSourceLocationFrom)
+	{
+		case UseSourceLocationFrom::Scanner:
+		{
+			DebugData updatedDebugData = *_debugData;
+			updatedDebugData.nativeLocation.end = _location.end;
+			updatedDebugData.originLocation.end = _location.end;
+			_debugData = make_shared<DebugData const>(move(updatedDebugData));
+			break;
+		}
+		case UseSourceLocationFrom::LocationOverride:
+			// Ignore the update. The location we're overriding with is not supposed to change
+			break;
+		case UseSourceLocationFrom::Comments:
+		{
+			DebugData updatedDebugData = *_debugData;
+			updatedDebugData.nativeLocation.end = _location.end;
+			_debugData = make_shared<DebugData const>(move(updatedDebugData));
+			break;
+		}
+	}
 }
 
 unique_ptr<Block> Parser::parse(CharStream& _charStream)
@@ -135,7 +154,7 @@ void Parser::fetchDebugDataFromComment()
 	string_view commentLiteral = m_scanner->currentCommentLiteral();
 	match_results<string_view::const_iterator> match;
 
-	langutil::SourceLocation sourceLocation = m_debugDataOverride->location;
+	langutil::SourceLocation originLocation = m_locationFromComment;
 	// Empty for each new node.
 	optional<int> astID;
 
@@ -147,7 +166,7 @@ void Parser::fetchDebugDataFromComment()
 		if (match[1] == "@src")
 		{
 			if (auto parseResult = parseSrcComment(commentLiteral, m_scanner->currentCommentLocation()))
-				tie(commentLiteral, sourceLocation) = *parseResult;
+				tie(commentLiteral, originLocation) = *parseResult;
 			else
 				break;
 		}
@@ -163,7 +182,8 @@ void Parser::fetchDebugDataFromComment()
 			continue;
 	}
 
-	m_debugDataOverride = DebugData::create(sourceLocation, astID);
+	m_locationFromComment = originLocation;
+	m_astIDFromComment = astID;
 }
 
 optional<pair<string_view, SourceLocation>> Parser::parseSrcComment(
@@ -270,8 +290,7 @@ Block Parser::parseBlock()
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
-	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		block.debugData = updateLocationEndFrom(block.debugData, currentLocation());
+	updateLocationEndFrom(block.debugData, currentLocation());
 	advance();
 	return block;
 }
@@ -293,8 +312,7 @@ Statement Parser::parseStatement()
 		advance();
 		_if.condition = make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			_if.debugData = updateLocationEndFrom(_if.debugData, locationOf(_if.body));
+		updateLocationEndFrom(_if.debugData, nativeLocationOf(_if.body));
 		return Statement{move(_if)};
 	}
 	case Token::Switch:
@@ -312,8 +330,7 @@ Statement Parser::parseStatement()
 			fatalParserError(4904_error, "Case not allowed after default case.");
 		if (_switch.cases.empty())
 			fatalParserError(2418_error, "Switch statement without any cases.");
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			_switch.debugData = updateLocationEndFrom(_switch.debugData, locationOf(_switch.cases.back().body));
+		updateLocationEndFrom(_switch.debugData, nativeLocationOf(_switch.cases.back().body));
 		return Statement{move(_switch)};
 	}
 	case Token::For:
@@ -395,8 +412,7 @@ Statement Parser::parseStatement()
 		expectToken(Token::AssemblyAssign);
 
 		assignment.value = make_unique<Expression>(parseExpression());
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			assignment.debugData = updateLocationEndFrom(assignment.debugData, locationOf(*assignment.value));
+		updateLocationEndFrom(assignment.debugData, nativeLocationOf(*assignment.value));
 
 		return Statement{move(assignment)};
 	}
@@ -426,8 +442,7 @@ Case Parser::parseCase()
 	else
 		yulAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
-	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		_case.debugData = updateLocationEndFrom(_case.debugData, locationOf(_case.body));
+	updateLocationEndFrom(_case.debugData, nativeLocationOf(_case.body));
 	return _case;
 }
 
@@ -447,8 +462,7 @@ ForLoop Parser::parseForLoop()
 	forLoop.post = parseBlock();
 	m_currentForLoopComponent = ForLoopComponent::ForLoopBody;
 	forLoop.body = parseBlock();
-	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		forLoop.debugData = updateLocationEndFrom(forLoop.debugData, locationOf(forLoop.body));
+	updateLocationEndFrom(forLoop.debugData, nativeLocationOf(forLoop.body));
 
 	m_currentForLoopComponent = outerForLoopComponent;
 
@@ -468,7 +482,7 @@ Expression Parser::parseExpression()
 			if (m_dialect.builtin(_identifier.name))
 				fatalParserError(
 					7104_error,
-					locationOf(_identifier),
+					nativeLocationOf(_identifier),
 					"Builtin function \"" + _identifier.name.str() + "\" must be called."
 				);
 			return move(_identifier);
@@ -527,8 +541,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		if (currentToken() == Token::Colon)
 		{
 			expectToken(Token::Colon);
-			if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-				literal.debugData = updateLocationEndFrom(literal.debugData, currentLocation());
+			updateLocationEndFrom(literal.debugData, currentLocation());
 			literal.type = expectAsmIdentifier();
 		}
 
@@ -560,11 +573,10 @@ VariableDeclaration Parser::parseVariableDeclaration()
 	{
 		expectToken(Token::AssemblyAssign);
 		varDecl.value = make_unique<Expression>(parseExpression());
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			varDecl.debugData = updateLocationEndFrom(varDecl.debugData, locationOf(*varDecl.value));
+		updateLocationEndFrom(varDecl.debugData, nativeLocationOf(*varDecl.value));
 	}
-	else if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		varDecl.debugData = updateLocationEndFrom(varDecl.debugData, locationOf(varDecl.variables.back()));
+	else
+		updateLocationEndFrom(varDecl.debugData, nativeLocationOf(varDecl.variables.back()));
 
 	return varDecl;
 }
@@ -610,8 +622,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	m_insideFunction = true;
 	funDef.body = parseBlock();
 	m_insideFunction = preInsideFunction;
-	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		funDef.debugData = updateLocationEndFrom(funDef.debugData, locationOf(funDef.body));
+	updateLocationEndFrom(funDef.debugData, nativeLocationOf(funDef.body));
 
 	m_currentForLoopComponent = outerForLoopComponent;
 	return funDef;
@@ -638,8 +649,7 @@ FunctionCall Parser::parseCall(variant<Literal, Identifier>&& _initialOp)
 			ret.arguments.emplace_back(parseExpression());
 		}
 	}
-	if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-		ret.debugData = updateLocationEndFrom(ret.debugData, currentLocation());
+	updateLocationEndFrom(ret.debugData, currentLocation());
 	expectToken(Token::RParen);
 	return ret;
 }
@@ -652,8 +662,7 @@ TypedName Parser::parseTypedName()
 	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			typedName.debugData = updateLocationEndFrom(typedName.debugData, currentLocation());
+		updateLocationEndFrom(typedName.debugData, currentLocation());
 		typedName.type = expectAsmIdentifier();
 	}
 	else

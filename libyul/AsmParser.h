@@ -61,7 +61,6 @@ public:
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
 		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
-		m_debugDataOverride{},
 		m_useSourceLocationFrom{
 			_locationOverride ?
 			UseSourceLocationFrom::LocationOverride :
@@ -79,7 +78,6 @@ public:
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
 		m_sourceNames{std::move(_sourceNames)},
-		m_debugDataOverride{DebugData::create()},
 		m_useSourceLocationFrom{
 			m_sourceNames.has_value() ?
 			UseSourceLocationFrom::Comments :
@@ -99,9 +97,10 @@ public:
 protected:
 	langutil::SourceLocation currentLocation() const override
 	{
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
-			return ParserBase::currentLocation();
-		return m_locationOverride;
+		if (m_useSourceLocationFrom == UseSourceLocationFrom::LocationOverride)
+			return m_locationOverride;
+
+		return ParserBase::currentLocation();
 	}
 
 	langutil::Token advance() override;
@@ -120,6 +119,11 @@ protected:
 
 	/// Creates a DebugData object with the correct source location set.
 	std::shared_ptr<DebugData const> createDebugData() const;
+
+	void updateLocationEndFrom(
+		std::shared_ptr<DebugData const>& _debugData,
+		langutil::SourceLocation const& _location
+	) const;
 
 	/// Creates an inline assembly node with the current source location.
 	template <class T> T createWithLocation() const
@@ -154,7 +158,8 @@ private:
 
 	std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> m_sourceNames;
 	langutil::SourceLocation m_locationOverride;
-	std::shared_ptr<DebugData const> m_debugDataOverride;
+	langutil::SourceLocation m_locationFromComment;
+	std::optional<int64_t> m_astIDFromComment;
 	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;
