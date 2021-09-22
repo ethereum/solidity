@@ -11,21 +11,21 @@ object "Contract" {
 // ----
 // Assembly:
 //     /* "source":33:54   */
-//   jump(tag_1)
-// tag_2:
+//   jump(tag_3)
+// tag_1:
 //     /* "source":48:52   */
-//   tag_4
+//   tag_5
 //     /* "source":50:51   */
 //   0x01
 //     /* "source":48:52   */
-//   tag_5
+//   tag_2
 //   jump	// in
-// tag_4:
+// tag_5:
 //     /* "source":33:54   */
-// tag_3:
+// tag_4:
 //   jump	// out
 //     /* "source":59:104   */
-// tag_5:
+// tag_2:
 //     /* "source":78:79   */
 //   dup1
 //     /* "source":75:89   */
@@ -46,20 +46,20 @@ object "Contract" {
 //     /* "source":92:101   */
 //   add
 //     /* "source":90:102   */
-//   tag_5
+//   tag_2
 //   jump	// in
 // tag_8:
 //     /* "source":59:104   */
 //   pop
 // tag_6:
 //   jump	// out
-// tag_1:
+// tag_3:
 //     /* "source":109:113   */
 //   tag_9
 //     /* "source":111:112   */
 //   0x01
 //     /* "source":109:113   */
-//   tag_5
+//   tag_2
 //   jump	// in
 // tag_9:
 // Bytecode: 6026565b600b6001600e565b5b565b8015601857506024565b602260028201600e565b505b565b602e6001600e565b
