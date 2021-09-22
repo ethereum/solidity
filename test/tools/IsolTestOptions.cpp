@@ -56,14 +56,21 @@ std::string editorPath()
 
 }
 
-IsolTestOptions::IsolTestOptions(std::string* _editor):
+IsolTestOptions::IsolTestOptions():
 	CommonOptions(description)
 {
+	enforceViaYul = true;
+	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
+}
+
+void IsolTestOptions::addOptions()
+{
+	CommonOptions::addOptions();
 	options.add_options()
-		("editor", po::value<std::string>(_editor)->default_value(editorPath()), "Path to editor for opening test files.")
-		("help", po::bool_switch(&showHelp), "Show this help screen.")
-		("no-color", po::bool_switch(&noColor), "Don't use colors.")
-		("accept-updates", po::bool_switch(&acceptUpdates), "Automatically accept expectation updates.")
+		("editor", po::value<std::string>(&editor)->default_value(editorPath()), "Path to editor for opening test files.")
+		("help", po::bool_switch(&showHelp)->default_value(showHelp), "Show this help screen.")
+		("no-color", po::bool_switch(&noColor)->default_value(noColor), "Don't use colors.")
+		("accept-updates", po::bool_switch(&acceptUpdates)->default_value(acceptUpdates), "Automatically accept expectation updates.")
 		("test,t", po::value<std::string>(&testFilter)->default_value("*/*"), "Filters which test units to include.");
 }
 
@@ -76,15 +83,13 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		std::cout << options << std::endl;
 		return false;
 	}
-	enforceViaYul = true;
-	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
-	enforceGasTestMinValue = 100000;
 
 	return res;
 }
 
 void IsolTestOptions::validate() const
 {
+	CommonOptions::validate();
 	static std::string filterString{"[a-zA-Z0-9_/*]*"};
 	static std::regex filterExpression{filterString};
 	assertThrow(

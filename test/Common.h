@@ -70,6 +70,7 @@ struct CommonOptions
 
 	langutil::EVMVersion evmVersion() const;
 
+	virtual void addOptions();
 	virtual bool parse(int argc, char const* const* argv);
 	// Throws a ConfigException on error
 	virtual void validate() const;
