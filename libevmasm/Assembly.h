@@ -167,7 +167,7 @@ protected:
 	/// that are referenced in a super-assembly.
 	std::map<u256, u256> const& optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
 
-	unsigned bytesRequired(unsigned subTagSize) const;
+	unsigned codeSize(unsigned subTagSize) const;
 
 private:
 	static Json::Value createJsonValue(

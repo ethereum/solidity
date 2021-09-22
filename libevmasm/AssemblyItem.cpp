@@ -71,7 +71,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
 	case Push:
-		return 1 + max<size_t>(1, util::bytesRequired(data()));
+		return 1 + max<size_t>(1, util::numberEncodingSize(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 1 + 4;		// worst case: a 16MB program

@@ -192,7 +192,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 	if (_value < 0x10000)
 		// Very small value, not worth computing
 		return AssemblyItems{_value};
-	else if (util::bytesRequired(~_value) < util::bytesRequired(_value))
+	else if (util::numberEncodingSize(~_value) < util::numberEncodingSize(_value))
 		// Negated is shorter to represent
 		return findRepresentation(~_value) + AssemblyItems{Instruction::NOT};
 	else
