@@ -1,0 +1,618 @@
+{
+    "sources":
+    {
+        "C":
+        {
+            "ast":
+            {
+                "absolutePath": "C",
+                "exportedSymbols":
+                {
+                    "C":
+                    [
+                        31
+                    ]
+                },
+                "id": 32,
+                "license": "GPL-2.0",
+                "nodeType": "SourceUnit",
+                "nodes":
+                [
+                    {
+                        "id": 1,
+                        "literals":
+                        [
+                            "solidity",
+                            ">=",
+                            "0.0"
+                        ],
+                        "nodeType": "PragmaDirective",
+                        "src": "36:22:0"
+                    },
+                    {
+                        "abstract": false,
+                        "baseContracts": [],
+                        "contractDependencies": [],
+                        "contractKind": "contract",
+                        "fullyImplemented": true,
+                        "id": 31,
+                        "linearizedBaseContracts":
+                        [
+                            31
+                        ],
+                        "name": "C",
+                        "nameLocation": "69:1:0",
+                        "nodeType": "ContractDefinition",
+                        "nodes":
+                        [
+                            {
+                                "constant": false,
+                                "id": 4,
+                                "mutability": "mutable",
+                                "name": "x",
+                                "nameLocation": "84:1:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 31,
+                                "src": "77:8:0",
+                                "stateVariable": true,
+                                "storageLocation": "default",
+                                "typeDescriptions":
+                                {
+                                    "typeIdentifier": "t_array$_t_uint256_$dyn_storage",
+                                    "typeString": "uint256[]"
+                                },
+                                "typeName":
+                                {
+                                    "baseType":
+                                    {
+                                        "id": 2,
+                                        "name": "uint",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "77:4:0",
+                                        "typeDescriptions":
+                                        {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "id": 3,
+                                    "nodeType": "ArrayTypeName",
+                                    "src": "77:6:0",
+                                    "typeDescriptions":
+                                    {
+                                        "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                        "typeString": "uint256[]"
+                                    }
+                                },
+                                "visibility": "internal"
+                            },
+                            {
+                                "body":
+                                {
+                                    "id": 29,
+                                    "nodeType": "Block",
+                                    "src": "112:344:0",
+                                    "statements":
+                                    [
+                                        {
+                                            "assignments":
+                                            [
+                                                8
+                                            ],
+                                            "declarations":
+                                            [
+                                                {
+                                                    "constant": false,
+                                                    "id": 8,
+                                                    "mutability": "mutable",
+                                                    "name": "y_slot",
+                                                    "nameLocation": "127:6:0",
+                                                    "nodeType": "VariableDeclaration",
+                                                    "scope": 29,
+                                                    "src": "122:11:0",
+                                                    "stateVariable": false,
+                                                    "storageLocation": "default",
+                                                    "typeDescriptions":
+                                                    {
+                                                        "typeIdentifier": "t_uint256",
+                                                        "typeString": "uint256"
+                                                    },
+                                                    "typeName":
+                                                    {
+                                                        "id": 7,
+                                                        "name": "uint",
+                                                        "nodeType": "ElementaryTypeName",
+                                                        "src": "122:4:0",
+                                                        "typeDescriptions":
+                                                        {
+                                                            "typeIdentifier": "t_uint256",
+                                                            "typeString": "uint256"
+                                                        }
+                                                    },
+                                                    "visibility": "internal"
+                                                }
+                                            ],
+                                            "id": 10,
+                                            "initialValue":
+                                            {
+                                                "hexValue": "32",
+                                                "id": 9,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": true,
+                                                "kind": "number",
+                                                "lValueRequested": false,
+                                                "nodeType": "Literal",
+                                                "src": "136:1:0",
+                                                "typeDescriptions":
+                                                {
+                                                    "typeIdentifier": "t_rational_2_by_1",
+                                                    "typeString": "int_const 2"
+                                                },
+                                                "value": "2"
+                                            },
+                                            "nodeType": "VariableDeclarationStatement",
+                                            "src": "122:15:0"
+                                        },
+                                        {
+                                            "assignments":
+                                            [
+                                                12
+                                            ],
+                                            "declarations":
+                                            [
+                                                {
+                                                    "constant": false,
+                                                    "id": 12,
+                                                    "mutability": "mutable",
+                                                    "name": "y_offset",
+                                                    "nameLocation": "152:8:0",
+                                                    "nodeType": "VariableDeclaration",
+                                                    "scope": 29,
+                                                    "src": "147:13:0",
+                                                    "stateVariable": false,
+                                                    "storageLocation": "default",
+                                                    "typeDescriptions":
+                                                    {
+                                                        "typeIdentifier": "t_uint256",
+                                                        "typeString": "uint256"
+                                                    },
+                                                    "typeName":
+                                                    {
+                                                        "id": 11,
+                                                        "name": "uint",
+                                                        "nodeType": "ElementaryTypeName",
+                                                        "src": "147:4:0",
+                                                        "typeDescriptions":
+                                                        {
+                                                            "typeIdentifier": "t_uint256",
+                                                            "typeString": "uint256"
+                                                        }
+                                                    },
+                                                    "visibility": "internal"
+                                                }
+                                            ],
+                                            "id": 14,
+                                            "initialValue":
+                                            {
+                                                "hexValue": "33",
+                                                "id": 13,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": true,
+                                                "kind": "number",
+                                                "lValueRequested": false,
+                                                "nodeType": "Literal",
+                                                "src": "163:1:0",
+                                                "typeDescriptions":
+                                                {
+                                                    "typeIdentifier": "t_rational_3_by_1",
+                                                    "typeString": "int_const 3"
+                                                },
+                                                "value": "3"
+                                            },
+                                            "nodeType": "VariableDeclarationStatement",
+                                            "src": "147:17:0"
+                                        },
+                                        {
+                                            "assignments":
+                                            [
+                                                19
+                                            ],
+                                            "declarations":
+                                            [
+                                                {
+                                                    "constant": false,
+                                                    "id": 19,
+                                                    "mutability": "mutable",
+                                                    "name": "y",
+                                                    "nameLocation": "189:1:0",
+                                                    "nodeType": "VariableDeclaration",
+                                                    "scope": 29,
+                                                    "src": "174:16:0",
+                                                    "stateVariable": false,
+                                                    "storageLocation": "storage",
+                                                    "typeDescriptions":
+                                                    {
+                                                        "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                                        "typeString": "uint256[]"
+                                                    },
+                                                    "typeName":
+                                                    {
+                                                        "baseType":
+                                                        {
+                                                            "id": 17,
+                                                            "name": "uint",
+                                                            "nodeType": "ElementaryTypeName",
+                                                            "src": "174:4:0",
+                                                            "typeDescriptions":
+                                                            {
+                                                                "typeIdentifier": "t_uint256",
+                                                                "typeString": "uint256"
+                                                            }
+                                                        },
+                                                        "id": 18,
+                                                        "nodeType": "ArrayTypeName",
+                                                        "src": "174:6:0",
+                                                        "typeDescriptions":
+                                                        {
+                                                            "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                                            "typeString": "uint256[]"
+                                                        }
+                                                    },
+                                                    "visibility": "internal"
+                                                }
+                                            ],
+                                            "id": 21,
+                                            "initialValue":
+                                            {
+                                                "id": 20,
+                                                "name": "x",
+                                                "nodeType": "Identifier",
+                                                "overloadedDeclarations": [],
+                                                "referencedDeclaration": 4,
+                                                "src": "193:1:0",
+                                                "typeDescriptions":
+                                                {
+                                                    "typeIdentifier": "t_array$_t_uint256_$dyn_storage",
+                                                    "typeString": "uint256[] storage ref"
+                                                }
+                                            },
+                                            "nodeType": "VariableDeclarationStatement",
+                                            "src": "174:20:0"
+                                        },
+                                        {
+                                            "AST":
+                                            {
+                                                "nodeType": "YulBlock",
+                                                "src": "214:218:0",
+                                                "statements":
+                                                [
+                                                    {
+                                                        "expression":
+                                                        {
+                                                            "arguments":
+                                                            [
+                                                                {
+                                                                    "name": "y_slot",
+                                                                    "nodeType": "YulIdentifier",
+                                                                    "src": "232:6:0"
+                                                                }
+                                                            ],
+                                                            "functionName":
+                                                            {
+                                                                "name": "pop",
+                                                                "nodeType": "YulIdentifier",
+                                                                "src": "228:3:0"
+                                                            },
+                                                            "nodeType": "YulFunctionCall",
+                                                            "src": "228:11:0"
+                                                        },
+                                                        "nodeType": "YulExpressionStatement",
+                                                        "src": "228:11:0"
+                                                    },
+                                                    {
+                                                        "expression":
+                                                        {
+                                                            "arguments":
+                                                            [
+                                                                {
+                                                                    "name": "y_offset",
+                                                                    "nodeType": "YulIdentifier",
+                                                                    "src": "256:8:0"
+                                                                }
+                                                            ],
+                                                            "functionName":
+                                                            {
+                                                                "name": "pop",
+                                                                "nodeType": "YulIdentifier",
+                                                                "src": "252:3:0"
+                                                            },
+                                                            "nodeType": "YulFunctionCall",
+                                                            "src": "252:13:0"
+                                                        },
+                                                        "nodeType": "YulExpressionStatement",
+                                                        "src": "252:13:0"
+                                                    },
+                                                    {
+                                                        "nodeType": "YulVariableDeclaration",
+                                                        "src": "279:21:0",
+                                                        "value":
+                                                        {
+                                                            "arguments": [],
+                                                            "functionName":
+                                                            {
+                                                                "name": "f",
+                                                                "nodeType": "YulIdentifier",
+                                                                "src": "297:1:0"
+                                                            },
+                                                            "nodeType": "YulFunctionCall",
+                                                            "src": "297:3:0"
+                                                        },
+                                                        "variables":
+                                                        [
+                                                            {
+                                                                "name": "z1",
+                                                                "nodeType": "YulTypedName",
+                                                                "src": "283:2:0",
+                                                                "type": ""
+                                                            },
+                                                            {
+                                                                "name": "z2",
+                                                                "nodeType": "YulTypedName",
+                                                                "src": "287:2:0",
+                                                                "type": ""
+                                                            },
+                                                            {
+                                                                "name": "z3",
+                                                                "nodeType": "YulTypedName",
+                                                                "src": "291:2:0",
+                                                                "type": ""
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "body":
+                                                        {
+                                                            "nodeType": "YulBlock",
+                                                            "src": "338:84:0",
+                                                            "statements":
+                                                            [
+                                                                {
+                                                                    "nodeType": "YulAssignment",
+                                                                    "src": "356:6:0",
+                                                                    "value":
+                                                                    {
+                                                                        "kind": "number",
+                                                                        "nodeType": "YulLiteral",
+                                                                        "src": "361:1:0",
+                                                                        "type": "",
+                                                                        "value": "1"
+                                                                    },
+                                                                    "variableNames":
+                                                                    [
+                                                                        {
+                                                                            "name": "a",
+                                                                            "nodeType": "YulIdentifier",
+                                                                            "src": "356:1:0"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "nodeType": "YulAssignment",
+                                                                    "src": "379:6:0",
+                                                                    "value":
+                                                                    {
+                                                                        "kind": "number",
+                                                                        "nodeType": "YulLiteral",
+                                                                        "src": "384:1:0",
+                                                                        "type": "",
+                                                                        "value": "2"
+                                                                    },
+                                                                    "variableNames":
+                                                                    [
+                                                                        {
+                                                                            "name": "b",
+                                                                            "nodeType": "YulIdentifier",
+                                                                            "src": "379:1:0"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "nodeType": "YulAssignment",
+                                                                    "src": "402:6:0",
+                                                                    "value":
+                                                                    {
+                                                                        "kind": "number",
+                                                                        "nodeType": "YulLiteral",
+                                                                        "src": "407:1:0",
+                                                                        "type": "",
+                                                                        "value": "3"
+                                                                    },
+                                                                    "variableNames":
+                                                                    [
+                                                                        {
+                                                                            "name": "c",
+                                                                            "nodeType": "YulIdentifier",
+                                                                            "src": "402:1:0"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "name": "f",
+                                                        "nodeType": "YulFunctionDefinition",
+                                                        "returnVariables":
+                                                        [
+                                                            {
+                                                                "name": "a",
+                                                                "nodeType": "YulTypedName",
+                                                                "src": "330:1:0",
+                                                                "type": ""
+                                                            },
+                                                            {
+                                                                "name": "b",
+                                                                "nodeType": "YulTypedName",
+                                                                "src": "333:1:0",
+                                                                "type": ""
+                                                            },
+                                                            {
+                                                                "name": "c",
+                                                                "nodeType": "YulTypedName",
+                                                                "src": "336:1:0",
+                                                                "type": ""
+                                                            }
+                                                        ],
+                                                        "src": "314:108:0"
+                                                    }
+                                                ]
+                                            },
+                                            "evmVersion": "london",
+                                            "externalReferences":
+                                            [
+                                                {
+                                                    "declaration": 12,
+                                                    "isOffset": false,
+                                                    "isSlot": false,
+                                                    "src": "256:8:0",
+                                                    "valueSize": 1
+                                                },
+                                                {
+                                                    "declaration": 8,
+                                                    "isOffset": false,
+                                                    "isSlot": false,
+                                                    "src": "232:6:0",
+                                                    "valueSize": 1
+                                                }
+                                            ],
+                                            "id": 22,
+                                            "nodeType": "InlineAssembly",
+                                            "src": "205:227:0"
+                                        },
+                                        {
+                                            "expression":
+                                            {
+                                                "id": 27,
+                                                "isConstant": false,
+                                                "isLValue": false,
+                                                "isPure": false,
+                                                "lValueRequested": false,
+                                                "leftHandSide":
+                                                {
+                                                    "baseExpression":
+                                                    {
+                                                        "id": 23,
+                                                        "name": "y",
+                                                        "nodeType": "Identifier",
+                                                        "overloadedDeclarations": [],
+                                                        "referencedDeclaration": 19,
+                                                        "src": "441:1:0",
+                                                        "typeDescriptions":
+                                                        {
+                                                            "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                                                            "typeString": "uint256[] storage pointer"
+                                                        }
+                                                    },
+                                                    "id": 25,
+                                                    "indexExpression":
+                                                    {
+                                                        "hexValue": "30",
+                                                        "id": 24,
+                                                        "isConstant": false,
+                                                        "isLValue": false,
+                                                        "isPure": true,
+                                                        "kind": "number",
+                                                        "lValueRequested": false,
+                                                        "nodeType": "Literal",
+                                                        "src": "443:1:0",
+                                                        "typeDescriptions":
+                                                        {
+                                                            "typeIdentifier": "t_rational_0_by_1",
+                                                            "typeString": "int_const 0"
+                                                        },
+                                                        "value": "0"
+                                                    },
+                                                    "isConstant": false,
+                                                    "isLValue": true,
+                                                    "isPure": false,
+                                                    "lValueRequested": true,
+                                                    "nodeType": "IndexAccess",
+                                                    "src": "441:4:0",
+                                                    "typeDescriptions":
+                                                    {
+                                                        "typeIdentifier": "t_uint256",
+                                                        "typeString": "uint256"
+                                                    }
+                                                },
+                                                "nodeType": "Assignment",
+                                                "operator": "=",
+                                                "rightHandSide":
+                                                {
+                                                    "hexValue": "32",
+                                                    "id": 26,
+                                                    "isConstant": false,
+                                                    "isLValue": false,
+                                                    "isPure": true,
+                                                    "kind": "number",
+                                                    "lValueRequested": false,
+                                                    "nodeType": "Literal",
+                                                    "src": "448:1:0",
+                                                    "typeDescriptions":
+                                                    {
+                                                        "typeIdentifier": "t_rational_2_by_1",
+                                                        "typeString": "int_const 2"
+                                                    },
+                                                    "value": "2"
+                                                },
+                                                "src": "441:8:0",
+                                                "typeDescriptions":
+                                                {
+                                                    "typeIdentifier": "t_uint256",
+                                                    "typeString": "uint256"
+                                                }
+                                            },
+                                            "id": 28,
+                                            "nodeType": "ExpressionStatement",
+                                            "src": "441:8:0"
+                                        }
+                                    ]
+                                },
+                                "id": 30,
+                                "implemented": true,
+                                "kind": "fallback",
+                                "modifiers": [],
+                                "name": "",
+                                "nameLocation": "-1:-1:-1",
+                                "nodeType": "FunctionDefinition",
+                                "parameters":
+                                {
+                                    "id": 5,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [],
+                                    "src": "100:2:0"
+                                },
+                                "returnParameters":
+                                {
+                                    "id": 6,
+                                    "nodeType": "ParameterList",
+                                    "parameters": [],
+                                    "src": "112:0:0"
+                                },
+                                "scope": 31,
+                                "src": "92:364:0",
+                                "stateMutability": "nonpayable",
+                                "virtual": false,
+                                "visibility": "external"
+                            }
+                        ],
+                        "scope": 32,
+                        "src": "60:398:0",
+                        "usedErrors": []
+                    }
+                ],
+                "src": "36:423:0"
+            },
+            "id": 0
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_ast_with_inline_assembly/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {"": ["ast"]}
+		}
+	}
+}
