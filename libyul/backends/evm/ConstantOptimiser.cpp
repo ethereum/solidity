@@ -128,7 +128,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 
 	Representation routine = represent(_value);
 
-	if (bytesRequired(~_value) < bytesRequired(_value))
+	if (numberEncodingSize(~_value) < numberEncodingSize(_value))
 		// Negated is shorter to represent
 		routine = min(move(routine), represent("not"_yulstring, findRepresentation(~_value)));
 

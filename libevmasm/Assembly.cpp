@@ -57,7 +57,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	return m_items.back();
 }
 
-unsigned Assembly::bytesRequired(unsigned subTagSize) const
+unsigned Assembly::codeSize(unsigned subTagSize) const
 {
 	for (unsigned tagSize = subTagSize; true; ++tagSize)
 	{
@@ -67,7 +67,7 @@ unsigned Assembly::bytesRequired(unsigned subTagSize) const
 
 		for (AssemblyItem const& i: m_items)
 			ret += i.bytesRequired(tagSize);
-		if (util::bytesRequired(ret) <= tagSize)
+		if (util::numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
 }
@@ -590,20 +590,20 @@ LinkerObject const& Assembly::assemble() const
 			"Cannot push and assign immutables in the same assembly subroutine."
 		);
 
-	unsigned bytesRequiredForCode = bytesRequired(static_cast<unsigned>(subTagSize));
+	unsigned bytesRequiredForCode = codeSize(static_cast<unsigned>(subTagSize));
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
 	map<size_t, pair<size_t, size_t>> tagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
-	unsigned bytesPerTag = util::bytesRequired(bytesRequiredForCode);
+	unsigned bytesPerTag = util::numberEncodingSize(bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
 
-	unsigned bytesPerDataRef = util::bytesRequired(bytesRequiredIncludingData);
+	unsigned bytesPerDataRef = util::numberEncodingSize(bytesRequiredIncludingData);
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
@@ -620,7 +620,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case Push:
 		{
-			unsigned b = max<unsigned>(1, util::bytesRequired(i.data()));
+			unsigned b = max<unsigned>(1, util::numberEncodingSize(i.data()));
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
@@ -650,7 +650,7 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
 			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
-			unsigned b = max<unsigned>(1, util::bytesRequired(s));
+			unsigned b = max<unsigned>(1, util::numberEncodingSize(s));
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
@@ -755,7 +755,7 @@ LinkerObject const& Assembly::assemble() const
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
-		assertThrow(util::bytesRequired(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
+		assertThrow(util::numberEncodingSize(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);
 	}

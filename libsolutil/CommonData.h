@@ -512,7 +512,7 @@ inline std::string formatNumber(u256 const& _value)
 
 /// Determine bytes required to encode the given integer value. @returns 0 if @a _i is zero.
 template <class T>
-inline unsigned bytesRequired(T _i)
+inline unsigned numberEncodingSize(T _i)
 {
 	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
 	unsigned i = 0;
