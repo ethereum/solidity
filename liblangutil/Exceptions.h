@@ -47,16 +47,16 @@ struct InvalidAstError: virtual util::Exception {};
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::solidity::langutil::InternalCompilerError, DESCRIPTION)
+	assertThrowWithDefaultDescription(CONDITION, ::solidity::langutil::InternalCompilerError, DESCRIPTION, "Solidity assertion failed")
 
 #define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::solidity::langutil::UnimplementedFeatureError, DESCRIPTION)
+	assertThrowWithDefaultDescription(CONDITION, ::solidity::langutil::UnimplementedFeatureError, DESCRIPTION, "Unimplemented feature")
 
 #define solUnimplemented(DESCRIPTION) \
 	solUnimplementedAssert(false, DESCRIPTION)
 
 #define astAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::solidity::langutil::InvalidAstError, DESCRIPTION)
+	assertThrowWithDefaultDescription(CONDITION, ::solidity::langutil::InvalidAstError, DESCRIPTION, "AST assertion failed")
 
 using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
 

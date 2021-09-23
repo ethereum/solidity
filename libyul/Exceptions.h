@@ -53,6 +53,6 @@ struct StackTooDeepError: virtual YulException
 
 /// Assertion that throws an YulAssertion containing the given description if it is not met.
 #define yulAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::solidity::yul::YulAssertion, DESCRIPTION)
+	assertThrowWithDefaultDescription(CONDITION, ::solidity::yul::YulAssertion, DESCRIPTION, "Yul assertion failed")
 
 }
