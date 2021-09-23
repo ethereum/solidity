@@ -26,6 +26,7 @@
 
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 
 #include <list>
 

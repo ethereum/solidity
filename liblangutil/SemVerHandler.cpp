@@ -26,6 +26,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <functional>
+#include <limits>
 
 using namespace std;
 using namespace solidity;

@@ -31,7 +31,21 @@
 #include <sstream>
 #include <string>
 
-namespace solidity::util
+namespace solidity
+{
+
+inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
+{
+	std::ostringstream ss;
+	ss << std::hex;
+	std::copy(_bytes.begin(), _bytes.end(), std::ostream_iterator<int>(ss, ","));
+	std::string result = ss.str();
+	result.pop_back();
+	os << "[" + result + "]";
+	return os;
+}
+
+namespace util
 {
 
 /// Retrieves and returns the contents of the given file as a std::string.
@@ -61,4 +75,5 @@ std::string absolutePath(std::string const& _path, std::string const& _reference
 /// Helper function to return path converted strings.
 std::string sanitizePath(std::string const& _path);
 
+}
 }

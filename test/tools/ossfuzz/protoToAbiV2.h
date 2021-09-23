@@ -6,6 +6,7 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Whiskers.h>
+#include <libsolutil/Numeric.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -505,7 +506,7 @@ public:
 	// Note: Don't change HexPrefix::Add. See comment in fixedByteValueAsString().
 	static std::string maskUnsignedIntToHex(unsigned _counter, unsigned _numMaskNibbles)
 	{
-		return toHex(maskUnsignedInt(_counter, _numMaskNibbles), util::HexPrefix::Add);
+		return "0x" + toHex(maskUnsignedInt(_counter, _numMaskNibbles));
 	}
 
 	/// Dynamically sized arrays can have a length of at least zero

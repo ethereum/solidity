@@ -36,7 +36,7 @@
 #include <range/v3/view/transform.hpp>
 
 #include <optional>
-
+#include <limits>
 
 using namespace std;
 using namespace solidity;

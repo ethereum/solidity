@@ -266,7 +266,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 			_varDecl.immutable() ?
 			IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
 			IRLValue{*_varDecl.annotation().type, IRLValue::Storage{
-				util::toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
+				toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
 				m_context.storageLocationOfStateVariable(_varDecl).second
 			}},
 			*_varDecl.value()

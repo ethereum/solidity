@@ -31,6 +31,8 @@
 
 #include <range/v3/view/reverse.hpp>
 
+#include <limits>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;

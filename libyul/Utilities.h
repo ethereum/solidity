@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 #include <libyul/ASTForward.h>
 
 namespace solidity::yul

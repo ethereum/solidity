@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 
 #include <liblangutil/Exceptions.h>
 

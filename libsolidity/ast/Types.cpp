@@ -1135,7 +1135,7 @@ IntegerType const* RationalNumberType::integerType() const
 		return nullptr;
 	else
 		return TypeProvider::integer(
-			max(util::numberEncodingSize(value), 1u) * 8,
+			max(numberEncodingSize(value), 1u) * 8,
 			negative ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
 		);
 }
@@ -1169,7 +1169,7 @@ FixedPointType const* RationalNumberType::fixedPointType() const
 	if (v > u256(-1))
 		return nullptr;
 
-	unsigned totalBits = max(util::numberEncodingSize(v), 1u) * 8;
+	unsigned totalBits = max(numberEncodingSize(v), 1u) * 8;
 	solAssert(totalBits <= 256, "");
 
 	return TypeProvider::fixedPoint(

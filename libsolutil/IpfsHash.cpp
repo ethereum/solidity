@@ -21,6 +21,7 @@
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/picosha2.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 using namespace std;
 using namespace solidity;

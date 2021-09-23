@@ -40,7 +40,7 @@ using namespace solidity::langutil;
 
 using solidity::util::Whiskers;
 using solidity::util::h256;
-using solidity::util::toCompactHexWithPrefix;
+using solidity::toCompactHexWithPrefix;
 
 unsigned const CompilerUtils::dataStartOffset = 4;
 size_t const CompilerUtils::freeMemoryPointer = 64;

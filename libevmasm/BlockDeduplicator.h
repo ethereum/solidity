@@ -25,6 +25,8 @@
 #pragma once
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
+
 
 #include <cstddef>
 #include <vector>

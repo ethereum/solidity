@@ -24,6 +24,8 @@
 
 #include <libevmasm/AssemblyItem.h>
 
+#include <limits>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;

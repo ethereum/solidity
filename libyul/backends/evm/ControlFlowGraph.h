@@ -27,6 +27,8 @@
 #include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
 
+#include <libsolutil/Numeric.h>
+
 #include <functional>
 #include <list>
 #include <vector>
