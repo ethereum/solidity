@@ -1217,7 +1217,7 @@ string YulUtilFunctions::extractByteArrayLengthFunction()
 std::string YulUtilFunctions::resizeArrayFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
-	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
+	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32);
 
 	if (_type.isByteArray())
 		return resizeDynamicByteArrayFunction(_type);
@@ -1259,7 +1259,7 @@ string YulUtilFunctions::cleanUpStorageArrayEndFunction(ArrayType const& _type)
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.baseType()->category() != Type::Category::Mapping, "");
 	solAssert(!_type.isByteArray(), "");
-	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "");
+	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32);
 
 	string functionName = "cleanup_storage_array_end_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&](vector<string>& _args, vector<string>&) {
@@ -1555,7 +1555,7 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type, Type c
 	if (!_fromType)
 		_fromType = _type.baseType();
 	else if (_fromType->isValueType())
-		solUnimplementedAssert(*_fromType == *_type.baseType(), "");
+		solUnimplementedAssert(*_fromType == *_type.baseType());
 
 	string functionName =
 		string{"array_push_from_"} +
@@ -3304,10 +3304,10 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				if (auto const* toFixedBytes = dynamic_cast<FixedBytesType const*>(&_to))
 					convert = shiftLeftFunction(256 - toFixedBytes->numBytes() * 8);
 				else if (dynamic_cast<FixedPointType const*>(&_to))
-					solUnimplementedAssert(false, "");
+					solUnimplemented("");
 				else if (dynamic_cast<IntegerType const*>(&_to))
 				{
-					solUnimplementedAssert(fromCategory != Type::Category::FixedPoint, "");
+					solUnimplementedAssert(fromCategory != Type::Category::FixedPoint);
 					convert = identityFunction();
 				}
 				else if (toCategory == Type::Category::Enum)
@@ -3346,8 +3346,8 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				body = "converted := value";
 			else
 			{
-				solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
-				solUnimplementedAssert(fromStructType.location() != DataLocation::Memory, "");
+				solUnimplementedAssert(toStructType.location() == DataLocation::Memory);
+				solUnimplementedAssert(fromStructType.location() != DataLocation::Memory);
 
 				if (fromStructType.location() == DataLocation::CallData)
 					body = Whiskers(R"(
@@ -3416,7 +3416,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		}
 		case Type::Category::Tuple:
 		{
-			solUnimplementedAssert(false, "Tuple conversion not implemented.");
+			solUnimplemented("Tuple conversion not implemented.");
 			break;
 		}
 		case Type::Category::TypeType:
@@ -4107,7 +4107,7 @@ string YulUtilFunctions::zeroValueFunction(Type const& _type, bool _splitFunctio
 			else if (auto const* structType = dynamic_cast<StructType const*>(&_type))
 				templ("zeroValue", allocateAndInitializeMemoryStructFunction(*structType) + "()");
 			else
-				solUnimplementedAssert(false, "");
+				solUnimplemented("");
 		}
 
 		return templ.render();

@@ -1259,7 +1259,7 @@ bool CommandLineParser::processArgs()
 	if (m_options.input.mode == InputMode::Compiler)
 		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 
-	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
+	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport);
 	return true;
 }
 

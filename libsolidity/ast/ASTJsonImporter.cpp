@@ -61,7 +61,7 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit(map<string
 		m_sourceNames.emplace_back(make_shared<string const>(src.first));
 	for (auto const& srcPair: _sourceList)
 	{
-		astAssert(!srcPair.second.isNull(), "");
+		astAssert(!srcPair.second.isNull());
 		astAssert(member(srcPair.second,"nodeType") == "SourceUnit", "The 'nodeType' of the highest node must be 'SourceUnit'.");
 		m_sourceUnits[srcPair.first] = createSourceUnit(srcPair.second, srcPair.first);
 	}
@@ -485,17 +485,17 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 	if (mutabilityStr == "constant")
 	{
 		mutability = VariableDeclaration::Mutability::Constant;
-		astAssert(memberAsBool(_node, "constant"), "");
+		astAssert(memberAsBool(_node, "constant"));
 	}
 	else
 	{
-		astAssert(!memberAsBool(_node, "constant"), "");
+		astAssert(!memberAsBool(_node, "constant"));
 		if (mutabilityStr == "mutable")
 			mutability = VariableDeclaration::Mutability::Mutable;
 		else if (mutabilityStr == "immutable")
 			mutability = VariableDeclaration::Mutability::Immutable;
 		else
-			astAssert(false, "");
+			astAssert(false);
 	}
 
 	return createASTNode<VariableDeclaration>(

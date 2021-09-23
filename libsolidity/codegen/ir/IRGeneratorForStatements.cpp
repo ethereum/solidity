@@ -108,7 +108,7 @@ private:
 	{
 		auto const& reference = m_references.at(&_identifier);
 		auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
-		solUnimplementedAssert(varDecl, "");
+		solUnimplementedAssert(varDecl);
 		string const& suffix = reference.suffix;
 
 		string value;
@@ -737,7 +737,7 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 			) << "(" << IRVariable(_unaryOperation.subExpression()).name() << ")\n";
 		}
 		else
-			solUnimplementedAssert(false, "Unary operator not yet implemented");
+			solUnimplemented("Unary operator not yet implemented");
 	}
 	else if (resultType.category() == Type::Category::FixedBytes)
 	{
@@ -755,7 +755,7 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 		appendSimpleUnaryOperation(_unaryOperation, _unaryOperation.subExpression());
 	}
 	else
-		solUnimplementedAssert(false, "Unary operator not yet implemented");
+		solUnimplemented("Unary operator not yet implemented");
 
 	return false;
 }
@@ -1546,7 +1546,7 @@ void IRGeneratorForStatements::endVisit(FunctionCallOptions const& _options)
 	setLocation(_options);
 	FunctionType const& previousType = dynamic_cast<FunctionType const&>(*_options.expression().annotation().type);
 
-	solUnimplementedAssert(!previousType.bound(), "");
+	solUnimplementedAssert(!previousType.bound());
 
 	// Copy over existing values.
 	for (auto const& item: previousType.stackItems())
@@ -1716,7 +1716,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		{
 			solUnimplementedAssert(
 				dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type).kind() ==
-				FunctionType::Kind::External, ""
+				FunctionType::Kind::External
 			);
 			define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("address"));
 		}
@@ -2264,7 +2264,7 @@ void IRGeneratorForStatements::endVisit(IndexRangeAccess const& _indexRangeAcces
 			break;
 		}
 		default:
-			solUnimplementedAssert(false, "Index range accesses is implemented only on calldata arrays.");
+			solUnimplemented("Index range accesses is implemented only on calldata arrays.");
 	}
 }
 
@@ -2910,8 +2910,8 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 			[&](IRLValue::Stack const& _stack) { assign(_stack.variable, _value); },
 			[&](IRLValue::Immutable const& _immutable)
 			{
-				solUnimplementedAssert(_lvalue.type.isValueType(), "");
-				solUnimplementedAssert(_lvalue.type.sizeOnStack() == 1, "");
+				solUnimplementedAssert(_lvalue.type.isValueType());
+				solUnimplementedAssert(_lvalue.type.sizeOnStack() == 1);
 				solAssert(_lvalue.type == *_immutable.variable->type(), "");
 				size_t memOffset = m_context.immutableMemoryOffset(*_immutable.variable);
 
@@ -2970,8 +2970,8 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 			define(result, _stack.variable);
 		},
 		[&](IRLValue::Immutable const& _immutable) {
-			solUnimplementedAssert(_lvalue.type.isValueType(), "");
-			solUnimplementedAssert(_lvalue.type.sizeOnStack() == 1, "");
+			solUnimplementedAssert(_lvalue.type.isValueType());
+			solUnimplementedAssert(_lvalue.type.sizeOnStack() == 1);
 			solAssert(_lvalue.type == *_immutable.variable->type(), "");
 			if (m_context.executionContext() == IRGenerationContext::ExecutionContext::Creation)
 			{

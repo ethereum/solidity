@@ -60,8 +60,8 @@ void CHCSmtLib2Interface::reset()
 
 void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
 {
-	smtAssert(_expr.sort, "");
-	smtAssert(_expr.sort->kind == Kind::Function, "");
+	smtAssert(_expr.sort);
+	smtAssert(_expr.sort->kind == Kind::Function);
 	if (!m_variables.count(_expr.name))
 	{
 		auto fSort = dynamic_pointer_cast<FunctionSort>(_expr.sort);
@@ -124,7 +124,7 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expre
 
 void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	smtAssert(_sort, "");
+	smtAssert(_sort);
 	if (_sort->kind == Kind::Function)
 		declareFunction(_name, _sort);
 	else if (!m_variables.count(_name))
@@ -172,13 +172,13 @@ string CHCSmtLib2Interface::forall()
 
 void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
 {
-	smtAssert(_sort, "");
-	smtAssert(_sort->kind == Kind::Function, "");
+	smtAssert(_sort);
+	smtAssert(_sort->kind == Kind::Function);
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
 		auto fSort = dynamic_pointer_cast<FunctionSort>(_sort);
-		smtAssert(fSort->codomain, "");
+		smtAssert(fSort->codomain);
 		string domain = toSmtLibSort(fSort->domain);
 		string codomain = toSmtLibSort(*fSort->codomain);
 		m_variables.insert(_name);
