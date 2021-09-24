@@ -313,7 +313,8 @@ The following are dependencies for all builds of Solidity:
 +===================================+=======================================================+
 | `CMake`_ (version 3.13+)          | Cross-platform build file generator.                  |
 +-----------------------------------+-------------------------------------------------------+
-| `Boost`_  (version 1.65+)         | C++ libraries.                                        |
+| `Boost`_ (version 1.77+ on        | C++ libraries.                                        |
+| Windows, 1.65+ otherwise)         |                                                       |
 +-----------------------------------+-------------------------------------------------------+
 | `Git`_                            | Command-line tool for retrieving source code.         |
 +-----------------------------------+-------------------------------------------------------+
@@ -377,6 +378,8 @@ You need to install the following dependencies for Windows builds of Solidity:
 | `Visual Studio 2019 Build Tools`_ | C++ compiler                                          |
 +-----------------------------------+-------------------------------------------------------+
 | `Visual Studio 2019`_  (Optional) | C++ compiler and dev environment.                     |
++-----------------------------------+-------------------------------------------------------+
+| `Boost`_ (version 1.77+)          | C++ libraries.                                        |
 +-----------------------------------+-------------------------------------------------------+
 
 If you already have one IDE and only need the compiler and libraries,
