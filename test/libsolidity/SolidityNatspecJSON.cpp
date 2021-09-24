@@ -63,8 +63,8 @@ public:
 
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
-			"Expected:\n" << expectedDocumentation.toStyledString() <<
-			"\n but got:\n" << generatedDocumentation.toStyledString()
+			"Expected:\n" << util::jsonPrettyPrint(expectedDocumentation) <<
+			"\n but got:\n" << util::jsonPrettyPrint(generatedDocumentation)
 		);
 	}
 
@@ -2089,8 +2089,8 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inehrit_complex)
 
 	BOOST_CHECK_MESSAGE(
 		expectedDocumentation == generatedDocumentation,
-		"Expected:\n" << expectedDocumentation.toStyledString() <<
-		"\n but got:\n" << generatedDocumentation.toStyledString()
+		"Expected:\n" << util::jsonPrettyPrint(expectedDocumentation) <<
+		"\n but got:\n" << util::jsonPrettyPrint(generatedDocumentation)
 	);
 }
 

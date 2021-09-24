@@ -37,7 +37,7 @@ using namespace solidity::frontend;
 
 Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 {
-	Json::Value doc;
+	Json::Value doc{Json::objectValue};
 
 	doc["version"] = Json::Value(c_natspecVersion);
 	doc["kind"]    = Json::Value("user");
@@ -50,7 +50,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 		if (!value.empty())
 		{
 			// add the constructor, only if we have any documentation to add
-			Json::Value user;
+			Json::Value user{Json::objectValue};
 			user["notice"] = Json::Value(value);
 			doc["methods"]["constructor"] = user;
 		}
@@ -90,7 +90,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 		string value = extractDoc(error->annotation().docTags, "notice");
 		if (!value.empty())
 		{
-			Json::Value errorDoc;
+			Json::Value errorDoc{Json::objectValue};
 			errorDoc["notice"] = value;
 			doc["errors"][error->functionType(true)->externalSignature()].append(move(errorDoc));
 		}
@@ -225,7 +225,10 @@ Json::Value Natspec::extractCustomDoc(multimap<string, DocTag> const& _tags)
 	for (auto const& [tag, value]: _tags)
 		if (boost::starts_with(tag, "custom"))
 			concatenated[tag] += value.content;
-	Json::Value result;
+	// We do not want to create an object if there are no custom tags found.
+	if (concatenated.empty())
+		return Json::nullValue;
+	Json::Value result{Json::objectValue};
 	for (auto& [tag, value]: concatenated)
 		result[tag] = move(value);
 	return result;

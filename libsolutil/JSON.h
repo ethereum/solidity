@@ -38,8 +38,8 @@ struct JsonFormat
 {
 	enum Format
 	{
-		Compact,
-		Pretty
+		Compact, // No unnecessary whitespace (including new lines and indentation)
+		Pretty,  // Nicely indented, with new lines
 	};
 
 	static constexpr uint32_t defaultIndent = 2;

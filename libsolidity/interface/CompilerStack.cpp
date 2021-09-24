@@ -1426,7 +1426,7 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 
 string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) const
 {
-	Json::Value meta;
+	Json::Value meta{Json::objectValue};
 	meta["version"] = 1;
 	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;

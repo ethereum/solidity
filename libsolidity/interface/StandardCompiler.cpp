@@ -59,7 +59,7 @@ Json::Value formatError(
 	Json::Value const& _secondarySourceLocation = Json::Value()
 )
 {
-	Json::Value error = Json::objectValue;
+	Json::Value error{Json::objectValue};
 	error["type"] = _type;
 	error["component"] = _component;
 	error["severity"] = Error::formatErrorSeverityLowercase(_severity);
@@ -74,7 +74,7 @@ Json::Value formatError(
 
 Json::Value formatFatalError(string const& _type, string const& _message)
 {
-	Json::Value output = Json::objectValue;
+	Json::Value output{Json::objectValue};
 	output["errors"] = Json::arrayValue;
 	output["errors"].append(formatError(Error::Severity::Error, _type, "general", _message));
 	return output;
@@ -82,23 +82,22 @@ Json::Value formatFatalError(string const& _type, string const& _message)
 
 Json::Value formatSourceLocation(SourceLocation const* location)
 {
-	Json::Value sourceLocation;
-	if (location && location->sourceName)
-	{
-		sourceLocation["file"] = *location->sourceName;
-		sourceLocation["start"] = location->start;
-		sourceLocation["end"] = location->end;
-	}
+	if (!location || !location->sourceName)
+		return Json::nullValue;
 
+	Json::Value sourceLocation{Json::objectValue};
+	sourceLocation["file"] = *location->sourceName;
+	sourceLocation["start"] = location->start;
+	sourceLocation["end"] = location->end;
 	return sourceLocation;
 }
 
 Json::Value formatSecondarySourceLocation(SecondarySourceLocation const* _secondaryLocation)
 {
 	if (!_secondaryLocation)
-		return {};
+		return Json::nullValue;
 
-	Json::Value secondarySourceLocation = Json::arrayValue;
+	Json::Value secondarySourceLocation{Json::arrayValue};
 	for (auto const& location: _secondaryLocation->infos)
 	{
 		Json::Value msg = formatSourceLocation(&location.second);
@@ -330,7 +329,7 @@ bool isIRRequested(Json::Value const& _outputSelection)
 
 Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 {
-	Json::Value ret(Json::objectValue);
+	Json::Value ret{Json::objectValue};
 
 	for (auto const& ref: linkReferences)
 	{
@@ -345,7 +344,7 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 		Json::Value fileObject = ret.get(file, Json::objectValue);
 		Json::Value libraryArray = fileObject.get(name, Json::arrayValue);
 
-		Json::Value entry = Json::objectValue;
+		Json::Value entry{Json::objectValue};
 		entry["start"] = Json::UInt(ref.first);
 		entry["length"] = 20;
 
@@ -359,7 +358,7 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 
 Json::Value formatImmutableReferences(map<u256, pair<string, vector<size_t>>> const& _immutableReferences)
 {
-	Json::Value ret(Json::objectValue);
+	Json::Value ret{Json::objectValue};
 
 	for (auto const& immutableReference: _immutableReferences)
 	{
@@ -367,7 +366,7 @@ Json::Value formatImmutableReferences(map<u256, pair<string, vector<size_t>>> co
 		Json::Value array(Json::arrayValue);
 		for (size_t byteOffset: byteOffsets)
 		{
-			Json::Value byteRange(Json::objectValue);
+			Json::Value byteRange{Json::objectValue};
 			byteRange["start"] = Json::UInt(byteOffset);
 			byteRange["length"] = Json::UInt(32); // immutable references are currently always 32 bytes wide
 			array.append(byteRange);
@@ -386,7 +385,7 @@ Json::Value collectEVMObject(
 	function<bool(string)> const& _artifactRequested
 )
 {
-	Json::Value output = Json::objectValue;
+	Json::Value output{Json::objectValue};
 	if (_artifactRequested("object"))
 		output["object"] = _object.toHex();
 	if (_artifactRequested("opcodes"))
