@@ -100,12 +100,13 @@ Running the Tests
 -----------------
 
 Solidity includes different types of tests, most of them bundled into the
-`Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
+`Boost C++ Test Framework <https://www.boost.org/doc/libs/release/libs/test/doc/html/index.html>`_ application ``soltest``.
 Running ``build/test/soltest`` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
 
 The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
-including those bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest`` (or its wrapper ``scripts/soltest.sh``),
-as well as command line tests and compilation tests.
+including those bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/release/libs/test/doc/html/index.html>`_
+application ``soltest`` (or its wrapper ``scripts/soltest.sh``), as well as command line tests and
+compilation tests.
 
 The test system automatically tries to discover the location of the ``evmone`` library
 starting from the current directory. The required file is called ``libevmone.so`` on Linux systems,
@@ -137,9 +138,9 @@ Or, for example, to run all the tests for the yul disambiguator:
 
 See especially:
 
-- `show_progress (-p) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/show_progress.html>`_ to show test completion,
-- `run_test (-t) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/run_test.html>`_ to run specific tests cases, and
-- `report-level (-r) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/report_level.html>`_ give a more detailed report.
+- `show_progress (-p) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/show_progress.html>`_ to show test completion,
+- `run_test (-t) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/run_test.html>`_ to run specific tests cases, and
+- `report-level (-r) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/report_level.html>`_ give a more detailed report.
 
 .. note ::
 
