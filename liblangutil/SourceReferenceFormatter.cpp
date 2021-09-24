@@ -19,12 +19,12 @@
  * Formatting functions for errors referencing positions and locations in the source.
  */
 
-#include <liblangutil/SourceReferenceFormatter.h>
-#include <liblangutil/Exceptions.h>
+#include <iomanip>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libsolutil/UTF8.h>
-#include <iomanip>
 #include <string_view>
 
 using namespace std;
@@ -35,7 +35,6 @@ using namespace solidity::util::formatting;
 
 namespace
 {
-
 std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
 {
 	std::string output;
@@ -49,25 +48,31 @@ std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
 
 std::string SourceReferenceFormatter::formatErrorInformation(Error const& _error, CharStream const& _charStream)
 {
-	return formatErrorInformation(
-		_error,
-		SingletonCharStreamProvider(_charStream)
-	);
+	return formatErrorInformation(_error, SingletonCharStreamProvider(_charStream));
 }
 
-AnsiColorized SourceReferenceFormatter::normalColored() const
-{
-	return AnsiColorized(m_stream, m_colored, {WHITE});
-}
+AnsiColorized SourceReferenceFormatter::normalColored() const { return AnsiColorized(m_stream, m_colored, {WHITE}); }
 
 AnsiColorized SourceReferenceFormatter::frameColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {BOLD, BLUE});
 }
 
-AnsiColorized SourceReferenceFormatter::errorColored() const
+AnsiColorized SourceReferenceFormatter::errorColored() const { return AnsiColorized(m_stream, m_colored, {BOLD, RED}); }
+
+AnsiColorized SourceReferenceFormatter::infoColored() const
 {
-	return AnsiColorized(m_stream, m_colored, {BOLD, RED});
+	return AnsiColorized(m_stream, m_colored, {BOLD, WHITE});
+}
+
+AnsiColorized SourceReferenceFormatter::warningColored() const
+{
+	return AnsiColorized(m_stream, m_colored, {BOLD, YELLOW});
+}
+
+AnsiColorized SourceReferenceFormatter::unknownColored() const
+{
+	return AnsiColorized(m_stream, m_colored, {BOLD, WHITE});
 }
 
 AnsiColorized SourceReferenceFormatter::messageColored() const
@@ -133,11 +138,10 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 		frameColored() << '|';
 
 		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
-		diagColored() << (
-			locationLength == 0 ?
-			"^" :
-			replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^')
-		);
+		diagColored()
+			<< (locationLength == 0
+					? "^"
+					: replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^'));
 		m_stream << '\n';
 	}
 	else
@@ -164,10 +168,20 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
 {
 	// exception header line
-	errorColored() << _msg.severity;
-	if (m_withErrorIds && _msg.errorId.has_value())
-		errorColored() << " (" << _msg.errorId.value().error << ")";
-	messageColored() << ": " << _msg.primary.message << '\n';
+	if (_msg.errorId.has_value())
+	{
+		if (_msg.severity == "Error")
+			errorColored() << " (" << _msg.errorId.value().error << ")";
+
+		else if (_msg.severity == "Warning")
+			warningColored() << " (" << _msg.errorId.value().error << ")";
+
+		else if (_msg.severity == "Info")
+			infoColored() << " (" << _msg.errorId.value().error << ")";
+
+		else
+			unknownColored() << " (" << _msg.errorId.value().error << ")";
+	}
 
 	printSourceLocation(_msg.primary);
 
@@ -181,7 +195,8 @@ void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtracto
 	m_stream << '\n';
 }
 
-void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _severity)
+void SourceReferenceFormatter::printExceptionInformation(
+	util::Exception const& _exception, std::string const& _severity)
 {
 	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _exception, _severity));
 }
