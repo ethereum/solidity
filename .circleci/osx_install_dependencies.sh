@@ -35,6 +35,21 @@
 
 set -eu
 
+function validate_checksum {
+  local package="$1"
+  local expected_checksum="$2"
+
+  local actual_checksum
+  actual_checksum=$(sha256sum "$package")
+  if [[ $actual_checksum != "${expected_checksum}  ${package}" ]]
+  then
+    >&2 echo "ERROR: Wrong checksum for package $package."
+    >&2 echo "Actual:   $actual_checksum"
+    >&2 echo "Expected: $expected_checksum"
+    exit 1
+  fi
+}
+
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
   git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
@@ -52,6 +67,7 @@ then
   z3_dir="z3-${z3_version}-x64-osx-10.15.7"
   z3_package="${z3_dir}.zip"
   wget "https://github.com/Z3Prover/z3/releases/download/z3-${z3_version}/${z3_package}"
+  validate_checksum "$z3_package" a1f6ef3c99456147c4d3f2652dc6bc90951c4ab3fe7741a255eb794f0ab8938c
   unzip "$z3_package"
   rm "$z3_package"
   cp "${z3_dir}/bin/libz3.a" /usr/local/lib
@@ -63,6 +79,7 @@ then
   evmone_version="0.8.0"
   evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
+  validate_checksum "$evmone_package" e8efef478822f0ed6d0493e89004181e895893f93963152a2a81589acc3a0828
   tar xzpf "$evmone_package" -C /usr/local
   rm "$evmone_package"
 
@@ -70,6 +87,7 @@ then
   hera_version="0.5.0"
   hera_package="hera-${hera_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ewasm/hera/releases/download/v${hera_version}/${hera_package}"
+  validate_checksum "$hera_package" 190050d7ace384ecd79ec1b1f607a9ff40e196b4eec75932958d4814d221d059
   tar xzpf "$hera_package" -C /usr/local
   rm "$hera_package"
 fi
