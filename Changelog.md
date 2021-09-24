@@ -4,6 +4,7 @@ Breaking changes:
  * Disallow ``.pop()`` on arrays containing nested mappings.
  * Disallow ``delete`` on types that contain nested mappings.
  * Inline Assembly: Consider functions, function parameters and return variables for shadowing checks.
+ * Commandline Interface: Remapping targets are not automatically added to allowed paths.
 
 
 ### 0.8.10 (unreleased)
