@@ -19,12 +19,12 @@
  * Formatting functions for errors referencing positions and locations in the source.
  */
 
-#include <iomanip>
+#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/Exceptions.h>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
-#include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 #include <libsolutil/UTF8.h>
+#include <iomanip>
 #include <string_view>
 
 using namespace std;
@@ -35,6 +35,7 @@ using namespace solidity::util::formatting;
 
 namespace
 {
+
 std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
 {
 	std::string output;
@@ -48,17 +49,26 @@ std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
 
 std::string SourceReferenceFormatter::formatErrorInformation(Error const& _error, CharStream const& _charStream)
 {
-	return formatErrorInformation(_error, SingletonCharStreamProvider(_charStream));
+	return formatErrorInformation(
+		_error,
+		SingletonCharStreamProvider(_charStream)
+	);
 }
 
-AnsiColorized SourceReferenceFormatter::normalColored() const { return AnsiColorized(m_stream, m_colored, {WHITE}); }
+AnsiColorized SourceReferenceFormatter::normalColored() const
+{
+	return AnsiColorized(m_stream, m_colored, {WHITE});
+}
 
 AnsiColorized SourceReferenceFormatter::frameColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {BOLD, BLUE});
 }
 
-AnsiColorized SourceReferenceFormatter::errorColored() const { return AnsiColorized(m_stream, m_colored, {BOLD, RED}); }
+AnsiColorized SourceReferenceFormatter::errorColored() const
+{
+	return AnsiColorized(m_stream, m_colored, {BOLD, RED});
+}
 
 AnsiColorized SourceReferenceFormatter::infoColored() const
 {
@@ -138,10 +148,11 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 		frameColored() << '|';
 
 		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
-		diagColored()
-			<< (locationLength == 0
-					? "^"
-					: replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^'));
+		diagColored() << (
+			locationLength == 0 ?
+			"^" :
+			replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^')
+		);
 		m_stream << '\n';
 	}
 	else
@@ -195,8 +206,7 @@ void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtracto
 	m_stream << '\n';
 }
 
-void SourceReferenceFormatter::printExceptionInformation(
-	util::Exception const& _exception, std::string const& _severity)
+void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _severity)
 {
 	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _exception, _severity));
 }

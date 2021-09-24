@@ -23,44 +23,31 @@
 
 #pragma once
 
-#include <liblangutil/SourceLocation.h>
+#include <libsolutil/Exceptions.h>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Exceptions.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/facilities/overload.hpp>
 
-#include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
 
 namespace solidity::langutil
 {
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
-struct CompilerError: virtual util::Exception
-{
-};
-struct StackTooDeepError: virtual CompilerError
-{
-};
-struct InternalCompilerError: virtual util::Exception
-{
-};
-struct FatalError: virtual util::Exception
-{
-};
-struct UnimplementedFeatureError: virtual util::Exception
-{
-};
-struct InvalidAstError: virtual util::Exception
-{
-};
+struct CompilerError: virtual util::Exception {};
+struct StackTooDeepError: virtual CompilerError {};
+struct InternalCompilerError: virtual util::Exception {};
+struct FatalError: virtual util::Exception {};
+struct UnimplementedFeatureError: virtual util::Exception {};
+struct InvalidAstError: virtual util::Exception {};
 
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
@@ -173,7 +160,7 @@ struct ErrorId
 	bool operator!=(ErrorId const& _rhs) const { return !(*this == _rhs); }
 	bool operator<(ErrorId const& _rhs) const { return error < _rhs.error; }
 };
-constexpr ErrorId operator"" _error(unsigned long long _error) { return ErrorId{_error}; }
+constexpr ErrorId operator"" _error(unsigned long long _error) { return ErrorId{ _error }; }
 
 class Error: virtual public util::Exception
 {
@@ -202,7 +189,8 @@ public:
 		Type _type,
 		std::string const& _description,
 		SourceLocation const& _location = SourceLocation(),
-		SecondarySourceLocation const& _secondaryLocation = SecondarySourceLocation());
+		SecondarySourceLocation const& _secondaryLocation = SecondarySourceLocation()
+	);
 
 	ErrorId errorId() const { return m_errorId; }
 	Type type() const { return m_type; }
@@ -226,9 +214,15 @@ public:
 		return Severity::Error;
 	}
 
-	static bool isError(Severity _severity) { return _severity == Severity::Error; }
+	static bool isError(Severity _severity)
+	{
+		return _severity == Severity::Error;
+	}
 
-	static bool isError(Type _type) { return isError(errorSeverity(_type)); }
+	static bool isError(Type _type)
+	{
+		return isError(errorSeverity(_type));
+	}
 
 	static bool containsErrors(ErrorList const& _list)
 	{
@@ -248,7 +242,7 @@ public:
 		return "Error";
 	}
 
-	static std::optional<std::string> stringToSeverity(Severity _severity)
+    static std::optional<std::string> stringToSeverity(Severity _severity)
 	{
 		return _severity ? std::optional<std::string>{"Error, Warning, Info"} : std::nullopt;
 	}
@@ -273,4 +267,5 @@ private:
 	Type m_type;
 	std::string m_typeName;
 };
+
 }
