@@ -15,4 +15,4 @@ TEMPDIR=$(mktemp -d)
     make
     make install
 )
-rm -rf "$TEMPDIR"
+rm -r "$TEMPDIR"

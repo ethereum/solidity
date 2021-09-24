@@ -53,23 +53,23 @@ then
   z3_package="${z3_dir}.zip"
   wget "https://github.com/Z3Prover/z3/releases/download/z3-${z3_version}/${z3_package}"
   unzip "$z3_package"
-  rm -f "$z3_package"
+  rm "$z3_package"
   cp "${z3_dir}/bin/libz3.a" /usr/local/lib
   cp "${z3_dir}/bin/z3" /usr/local/bin
   cp "${z3_dir}/include/"* /usr/local/include
-  rm -rf "$z3_dir"
+  rm -r "$z3_dir"
 
   # evmone
   evmone_version="0.8.0"
   evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
   tar xzpf "$evmone_package" -C /usr/local
-  rm -f "$evmone_package"
+  rm "$evmone_package"
 
   # hera
   hera_version="0.5.0"
   hera_package="hera-${hera_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ewasm/hera/releases/download/v${hera_version}/${hera_package}"
   tar xzpf "$hera_package" -C /usr/local
-  rm -f "$hera_package"
+  rm "$hera_package"
 fi
