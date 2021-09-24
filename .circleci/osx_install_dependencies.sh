@@ -48,23 +48,28 @@ then
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3
-  z3_version="z3-4.8.12"
-  osx_version="osx-10.15.7"
-  wget "https://github.com/Z3Prover/z3/releases/download/$z3_version/$z3_version-x64-$osx_version.zip"
-  unzip "$z3_version-x64-$osx_version.zip"
-  rm -f "$z3_version-x64-$osx_version.zip"
-  cp "$z3_version-x64-$osx_version/bin/libz3.a" /usr/local/lib
-  cp "$z3_version-x64-$osx_version/bin/z3" /usr/local/bin
-  cp "$z3_version-x64-$osx_version"/include/* /usr/local/include
-  rm -rf "$z3_version-x64-$osx_version"
+  z3_version="4.8.12"
+  z3_dir="z3-${z3_version}-x64-osx-10.15.7"
+  z3_package="${z3_dir}.zip"
+  wget "https://github.com/Z3Prover/z3/releases/download/z3-${z3_version}/${z3_package}"
+  unzip "$z3_package"
+  rm -f "$z3_package"
+  cp "${z3_dir}/bin/libz3.a" /usr/local/lib
+  cp "${z3_dir}/bin/z3" /usr/local/bin
+  cp "${z3_dir}/include/"* /usr/local/include
+  rm -rf "$z3_dir"
 
   # evmone
-  wget https://github.com/ethereum/evmone/releases/download/v0.8.0/evmone-0.8.0-darwin-x86_64.tar.gz
-  tar xzpf evmone-0.8.0-darwin-x86_64.tar.gz -C /usr/local
-  rm -f evmone-0.8.0-darwin-x86_64.tar.gz
+  evmone_version="0.8.0"
+  evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
+  wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
+  tar xzpf "$evmone_package" -C /usr/local
+  rm -f "$evmone_package"
 
   # hera
-  wget https://github.com/ewasm/hera/releases/download/v0.5.0/hera-0.5.0-darwin-x86_64.tar.gz
-  tar xzpf hera-0.5.0-darwin-x86_64.tar.gz -C /usr/local
-  rm -f hera-0.5.0-darwin-x86_64.tar.gz
+  hera_version="0.5.0"
+  hera_package="hera-${hera_version}-darwin-x86_64.tar.gz"
+  wget "https://github.com/ewasm/hera/releases/download/v${hera_version}/${hera_package}"
+  tar xzpf "$hera_package" -C /usr/local
+  rm -f "$hera_package"
 fi

@@ -4,9 +4,11 @@ set -eu
 TEMPDIR=$(mktemp -d)
 (
     cd "$TEMPDIR"
-    wget https://github.com/open-source-parsers/jsoncpp/archive/1.7.4.tar.gz
-    tar xvzf "1.7.4.tar.gz"
-    cd "jsoncpp-1.7.4"
+    jsoncpp_version="1.7.4"
+    jsoncpp_package="jsoncpp-${jsoncpp_version}.tar.gz"
+    wget -O "$jsoncpp_package" https://github.com/open-source-parsers/jsoncpp/archive/${jsoncpp_version}.tar.gz
+    tar xvzf "$jsoncpp_package"
+    cd "jsoncpp-${jsoncpp_version}"
     mkdir -p build
     cd build
     cmake -DARCHIVE_INSTALL_DIR=. -G "Unix Makefiles" ..

@@ -31,7 +31,9 @@ REPO_ROOT="$(dirname "$0")"/..
     fi
     # Add dependencies
     mkdir -p "$SOLDIR/deps/downloads/" 2>/dev/null || true
-    wget -O "$SOLDIR/deps/downloads/jsoncpp-1.9.3.tar.gz" https://github.com/open-source-parsers/jsoncpp/archive/1.9.3.tar.gz
+    jsoncpp_version="1.9.3"
+    jsoncpp_package_path="$SOLDIR/deps/downloads/jsoncpp-${jsoncpp_version}.tar.gz"
+    wget -O "$jsoncpp_package_path" "https://github.com/open-source-parsers/jsoncpp/archive/${jsoncpp_version}.tar.gz"
     mkdir -p "$REPO_ROOT/upload"
     tar --owner 0 --group 0 -czf "$REPO_ROOT/upload/solidity_$versionstring.tar.gz" -C "$TEMPDIR" "solidity_$versionstring"
     rm -r "$TEMPDIR"
