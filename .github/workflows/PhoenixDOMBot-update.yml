@@ -2,7 +2,7 @@
 # Auto-configuration PhoenixDOMSmart contract full update 
     with PhoenixDOM APIs and PhoenixDOMData sync
 
-name: PhoenixDOMBot-update CI
+name: PhenixDOMSolidity CI
 
 # Controls when the workflow will run
 on:
