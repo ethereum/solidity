@@ -1,6 +1,6 @@
 # This  workflow to help you get started with Actions
-# Auto-configuration PhoenixDOMSmart contract full update 
-    with PhoenixDOM APIs and PhoenixDOMData sync
+# Auto-configuration PhoenixDOMSmartContract full update 
+    with PhoenixDOMApi.json and PhoenixDOMData sync
 
 name: PhenixDOMSolidity CI
 
