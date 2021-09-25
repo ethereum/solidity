@@ -79,6 +79,16 @@ struct DPLL
 };
 
 
+/**
+ * Component that satisfies the SMT SolverInterface and uses an LP solver plus the DPLL
+ * algorithm internally.
+ * It uses a rational relaxation of the integer program and thus will not be able to answer
+ * "satisfiable", but its answers are still correct.
+ *
+ * TODO are integers always non-negative?
+ *
+ * Integers are unbounded.
+ */
 class BooleanLPSolver: public smtutil::SolverInterface
 {
 public:

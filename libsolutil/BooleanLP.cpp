@@ -566,6 +566,10 @@ pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& 
 
 	CheckResult result = CheckResult::UNKNOWN;
 	map<string, rational> model;
+	// TODO we really should do the below, and probably even before and after each boolean decision.
+	// It is very likely that we have some complicated boolean condition in the program, but
+	// the unconditional things are already unsatisfiable.
+
 	// TODO could run this check already even though not all variables are assigned
 	// and return unsat if it is already unsat.
 	if (_dpll.clauses.empty())
