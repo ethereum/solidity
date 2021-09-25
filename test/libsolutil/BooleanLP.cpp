@@ -254,29 +254,55 @@ BOOST_AUTO_TEST_CASE(boolean_complex)
 	infeasible();
 }
 
-BOOST_AUTO_TEST_CASE(magic_square)
+BOOST_AUTO_TEST_CASE(magic_square_3)
 {
 	vector<Expression> vars;
 	for (size_t i = 0; i < 9; i++)
 		vars.push_back(variable(string{static_cast<char>('a' + i)}));
+	Expression sum = variable("sum");
 	for (Expression const& var: vars)
 		solver.addAssertion(1 <= var && var <= 9);
-	// If we assert all to be mutually distinct, the problems gets too large.
 	for (size_t i = 0; i < 9; i++)
-		for (size_t j = i + 7; j < 9; j++)
+		for (size_t j = i + 1; j < 9; j++)
 			solver.addAssertion(vars[i] != vars[j]);
-	for (size_t i = 0; i < 4; i++)
-		solver.addAssertion(vars[i] != vars[i + 1]);
 	for (size_t i = 0; i < 3; i++)
-		solver.addAssertion(vars[i] + vars[i + 3] + vars[i + 6] == 15);
+		solver.addAssertion(vars[i] + vars[i + 3] + vars[i + 6] == sum);
 	for (size_t i = 0; i < 9; i += 3)
-		solver.addAssertion(vars[i] + vars[i + 1] + vars[i + 2] == 15);
+		solver.addAssertion(vars[i] + vars[i + 1] + vars[i + 2] == sum);
+	solver.addAssertion(vars[0] + vars[4] + vars[8] == sum);
+	solver.addAssertion(vars[2] + vars[4] + vars[6] == sum);
 	feasible({
-		{vars[0], "1"}, {vars[1], "0"}, {vars[2], "5"},
-		{vars[3], "1"}, {vars[4], "0"}, {vars[5], "5"},
-		{vars[6], "1"}, {vars[7], "0"}, {vars[8], "5"}
+		{sum, "15"},
+		{vars[0], "8"}, {vars[1], "3"}, {vars[2], "4"},
+		{vars[3], "1"}, {vars[4], "5"}, {vars[5], "9"},
+		{vars[6], "6"}, {vars[7], "7"}, {vars[8], "2"}
 	});
 }
+
+// This still takes too long.
+//
+//BOOST_AUTO_TEST_CASE(magic_square_4)
+//{
+//	vector<Expression> vars;
+//	for (size_t i = 0; i < 16; i++)
+//		vars.push_back(variable(string{static_cast<char>('a' + i)}));
+//	for (Expression const& var: vars)
+//		solver.addAssertion(1 <= var && var <= 16);
+//	for (size_t i = 0; i < 16; i++)
+//		for (size_t j = i + 1; j < 16; j++)
+//			solver.addAssertion(vars[i] != vars[j]);
+//	for (size_t i = 0; i < 4; i++)
+//		solver.addAssertion(vars[i] + vars[i + 4] + vars[i + 8] + vars[i + 12] == 34);
+//	for (size_t i = 0; i < 16; i += 4)
+//		solver.addAssertion(vars[i] + vars[i + 1] + vars[i + 2] + vars[i + 3] == 34);
+//	solver.addAssertion(vars[0] + vars[5] + vars[10] + vars[15] == 34);
+//	solver.addAssertion(vars[3] + vars[6] + vars[9] + vars[12] == 34);
+//	feasible({
+//		{vars[0], "9"}, {vars[1], "5"}, {vars[2], "1"},
+//		{vars[3], "4"}, {vars[4], "3"}, {vars[5], "8"},
+//		{vars[6], "2"}, {vars[7], "7"}, {vars[8], "6"}
+//	});
+//}
 
 BOOST_AUTO_TEST_CASE(boolean_complex_2)
 {
@@ -285,16 +311,16 @@ BOOST_AUTO_TEST_CASE(boolean_complex_2)
 	Expression a = booleanVariable("a");
 	Expression b = booleanVariable("b");
 	solver.addAssertion(x != 20);
-	feasible({{x, "19"}});
+	feasible({{x, "21"}});
 	solver.addAssertion(x <= 5 || (x > 7 && x != 8));
-	solver.addAssertion(a = (x == 9));
-	feasible({{a, "1"}, {b, "0"}, {x, "5"}});
-//	solver.addAssertion(!a || (x == 10));
-//	solver.addAssertion(b == !a);
-//	solver.addAssertion(b == (x < 200));
-//	feasible({{a, "1"}, {b, "0"}, {x, "5"}});
-//	solver.addAssertion(a && b);
-//	infeasible();
+	solver.addAssertion(a == (x == 9));
+	feasible({{a, "0"}, {b, "unknown"}, {x, "21"}});
+	solver.addAssertion(!a || (x == 10));
+	solver.addAssertion(b == !a);
+	solver.addAssertion(b == (x < 200));
+	feasible({{a, "0"}, {b, "1"}, {x, "199"}});
+	solver.addAssertion(a && b);
+	infeasible();
 }
 
 

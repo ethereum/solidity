@@ -247,8 +247,9 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const& _expressionsToEvaluate)
 {
-	cout << "Solving boolean constraint system" << endl;
-	cout << toString() << endl;
+//	cout << "Solving boolean constraint system" << endl;
+//	cout << toString() << endl;
+//	cout << "--------------" << endl;
 
 	if (m_state.back().infeasible)
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});
@@ -554,27 +555,25 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 
 
 // TODO as input we do not need the full solving state, only the bounds
+// (and the variable names)
 pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& _solvingState, DPLL _dpll)
 {
-	//cout << "Running dpll on" << endl << toString(_solvingState.bounds) << "\n" << toString(_dpll) << endl;
+	//cout << "Running dpll on" << endl << toString(_solvingState.bounds) << "\nwith clauses\n" << toString(_dpll) << endl;
 
+	// Simplify clauses with only one literal.
+	// TODO Maybe this could already analyze clauses and add bounds?
 	auto&& [simplifyResult, booleanModel] = _dpll.simplify();
 	if (!simplifyResult)
 		return {CheckResult::UNSATISFIABLE, {}};
 
-	cout << "Simplified to" << endl << toString(_solvingState.bounds) << "\n" << toString(_dpll) << endl;
+//	cout << "Simplified to" << endl << toString(_solvingState.bounds) << "\nwith clauses\n" << toString(_dpll) << endl;
+//	cout << "----------" << endl;
 
 	CheckResult result = CheckResult::UNKNOWN;
 	map<string, rational> model;
-	// TODO we really should do the below, and probably even before and after each boolean decision.
-	// It is very likely that we have some complicated boolean condition in the program, but
-	// the unconditional things are already unsatisfiable.
 
-	// TODO could run this check already even though not all variables are assigned
-	// and return unsat if it is already unsat.
-	if (_dpll.clauses.empty())
 	{
-		cout << "Invoking LP..." << endl;
+		//cout << "Invoking LP..." << endl;
 		_solvingState.constraints.clear();
 		for (size_t c: _dpll.constraints)
 			_solvingState.constraints.emplace_back(constraint(c));
@@ -589,19 +588,22 @@ pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& 
 		switch (lpResult)
 		{
 		case LPResult::Infeasible:
+//			cout << "Infeasible." << endl;
 			result = CheckResult::UNSATISFIABLE;
 			break;
 		case LPResult::Feasible:
+		case LPResult::Unbounded:
+//			cout << "Feasible." << endl;
 			// TODO this is actually wrong, but difficult to test otherwise.
 			result = CheckResult::SATISFIABLE;
 			break;
 		case LPResult::Unknown:
-		case LPResult::Unbounded:
+//			cout << "Unknown." << endl;
 			result = CheckResult::UNKNOWN;
 			break;
 		}
 	}
-	else
+	if (result != CheckResult::UNSATISFIABLE && !_dpll.clauses.empty())
 	{
 		size_t varIndex = _dpll.findUnassignedVariable();
 
@@ -609,18 +611,18 @@ pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& 
 		if (_dpll.setVariable(varIndex, true))
 		{
 			booleanModel[varIndex] = true;
-			cout << "Trying " << variableName(varIndex) << " = true\n";
+			//cout << "Trying " << variableName(varIndex) << " = true\n";
 			tie(result, model) = runDPLL(_solvingState, move(_dpll));
 			// TODO actually we should also handle UNKNOWN here.
 		}
 		// TODO it will never be "satisfiable"
 		if (result != CheckResult::SATISFIABLE)
 		{
-			cout << "Trying " << variableName(varIndex) << " = false\n";
+			//cout << "Trying " << variableName(varIndex) << " = false\n";
 			if (!copy.setVariable(varIndex, false))
 				return {CheckResult::UNSATISFIABLE, {}};
 			booleanModel[varIndex] = false;
-			/*auto&& [result, model] = */runDPLL(_solvingState, move(copy));
+			tie(result, model) = runDPLL(_solvingState, move(copy));
 		}
 	}
 	if (result == CheckResult::SATISFIABLE)

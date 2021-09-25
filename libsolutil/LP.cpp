@@ -230,7 +230,7 @@ vector<rational> solutionVector(Tableau const& _tableau)
 /// Tries for a number of iterations and then gives up.
 pair<LPResult, Tableau> simplexEq(Tableau _tableau)
 {
-	size_t const iterations = min<size_t>(60, 50 + _tableau.objective.size() * 2);
+	size_t const iterations = min<size_t>(120, 50 + _tableau.objective.size() * 2);
 	for (size_t step = 0; step <= iterations; ++step)
 	{
 		optional<size_t> pivotColumn = findPivotColumn(_tableau);
@@ -277,7 +277,9 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 
 	LPResult result;
 	tie(result, _tableau) = simplexEq(move(_tableau));
-	solAssert(result == LPResult::Feasible || result == LPResult::Unbounded, "");
+	solAssert(result != LPResult::Infeasible, "");
+	if (result == LPResult::Unknown)
+		return make_pair(LPResult::Unknown, Tableau{});
 
 	vector<rational> optimum = solutionVector(_tableau);
 
