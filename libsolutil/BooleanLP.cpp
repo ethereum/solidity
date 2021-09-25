@@ -157,7 +157,7 @@ void BooleanLPSolver::pop()
 
 void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	// Internal variables are '$<number>'
+	// Internal variables are '$<number>', so escape `$` to `$$`.
 	string name = (_name.empty() || _name.at(0) != '$') ? _name : "$$" + _name;
 	// TODO This will not be an integer variable in our model.
 	// Introduce a new kind?
@@ -562,7 +562,7 @@ pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& 
 	if (!simplifyResult)
 		return {CheckResult::UNSATISFIABLE, {}};
 
-	//cout << "Simplified to" << endl << toString(_solvingState.bounds) << "\n" << toString(_dpll) << endl;
+	cout << "Simplified to" << endl << toString(_solvingState.bounds) << "\n" << toString(_dpll) << endl;
 
 	CheckResult result = CheckResult::UNKNOWN;
 	map<string, rational> model;
@@ -570,7 +570,7 @@ pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& 
 	// and return unsat if it is already unsat.
 	if (_dpll.clauses.empty())
 	{
-		//cout << "Invoking LP..." << endl;
+		cout << "Invoking LP..." << endl;
 		_solvingState.constraints.clear();
 		for (size_t c: _dpll.constraints)
 			_solvingState.constraints.emplace_back(constraint(c));
@@ -587,10 +587,14 @@ pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& 
 		case LPResult::Infeasible:
 			result = CheckResult::UNSATISFIABLE;
 			break;
+		case LPResult::Feasible:
+			// TODO this is actually wrong, but difficult to test otherwise.
+			result = CheckResult::SATISFIABLE;
+			break;
 		case LPResult::Unknown:
 		case LPResult::Unbounded:
-		case LPResult::Feasible:
 			result = CheckResult::UNKNOWN;
+			break;
 		}
 	}
 	else
@@ -601,14 +605,14 @@ pair<CheckResult, map<string, rational>> BooleanLPSolver::runDPLL(SolvingState& 
 		if (_dpll.setVariable(varIndex, true))
 		{
 			booleanModel[varIndex] = true;
-			// cout << "Trying " << variableName(varIndex) << " = true\n";
+			cout << "Trying " << variableName(varIndex) << " = true\n";
 			tie(result, model) = runDPLL(_solvingState, move(_dpll));
 			// TODO actually we should also handle UNKNOWN here.
 		}
 		// TODO it will never be "satisfiable"
 		if (result != CheckResult::SATISFIABLE)
 		{
-			// cout << "Trying " << variableName(varIndex) << " = false\n";
+			cout << "Trying " << variableName(varIndex) << " = false\n";
 			if (!copy.setVariable(varIndex, false))
 				return {CheckResult::UNSATISFIABLE, {}};
 			booleanModel[varIndex] = false;
