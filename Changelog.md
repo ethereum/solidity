@@ -1,4 +1,4 @@
-### 0.8.8 (unreleased)
+### 0.8.8 (2021-09-27)
 
 Language Features:
  * Inheritance: A function that overrides only a single interface function does not require the ``override`` specifier.
