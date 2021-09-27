@@ -56,7 +56,8 @@ do
         *)
             matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut --characters 3- | sort)
 
-            if [[ $matching_tests == "" ]]; then
+            if [[ $matching_tests == "" ]]
+            then
                 patterns_with_no_matches+=("$1")
                 printWarning "No tests matching pattern '$1' found."
             else
@@ -69,7 +70,8 @@ do
     esac
 done
 
-if (( ${#selected_tests[@]} == 0 && ${#patterns_with_no_matches[@]} == 0 )); then
+if (( ${#selected_tests[@]} == 0 && ${#patterns_with_no_matches[@]} == 0 ))
+then
     selected_tests=(*)
 fi
 popd > /dev/null
@@ -94,7 +96,8 @@ then
 fi
 
 # extend stack size in case we run via ASAN
-if [[ -n "${CIRCLECI}" ]] || [[ -n "$CI" ]]; then
+if [[ -n "${CIRCLECI}" ]] || [[ -n "$CI" ]]
+then
     ulimit -s 16384
     ulimit -a
 fi
@@ -169,7 +172,10 @@ function test_solc_behaviour()
     # shellcheck disable=SC2064
     trap "rm -f $stdout_path $stderr_path" EXIT
 
-    if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
+    if [[ "$exit_code_expected" = "" ]]
+    then
+        exit_code_expected="0"
+    fi
 
     [[ $filename == "" ]] || solc_args+=("$filename")
 
@@ -338,19 +344,27 @@ printTask "Running general commandline tests..."
     cd "$REPO_ROOT"/test/cmdlineTests/
     for tdir in "${selected_tests[@]}"
     do
-        if ! [[ -d $tdir ]]; then
+        if ! [[ -d $tdir ]]
+        then
             printError "Test directory not found: $tdir"
             exit 1
         fi
 
         printTask " - ${tdir}"
 
+        if [[ $(ls -A "$tdir") == "" ]]
+        then
+            printWarning "   ---> skipped (test dir empty)"
+            continue
+        fi
+
         # Strip trailing slash from $tdir.
         tdir=$(basename "${tdir}")
         if [[ $no_smt == true ]]
         then
-            if [[ $tdir =~ .*model_checker_.* ]]; then
-                printWarning "  --- > skipped"
+            if [[ $tdir =~ .*model_checker_.* ]]
+            then
+                printWarning "   ---> skipped (SMT test)"
                 continue
             fi
         fi
