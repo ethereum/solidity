@@ -56,8 +56,11 @@ public:
 
 	SourceUnitName apply(ImportPath const& _path, std::string const& _context) const;
 
-	// Parses a remapping of the format "context:prefix=target".
-	static std::optional<Remapping> parseRemapping(std::string const& _remapping);
+	/// @returns true if the string can be parsed as a remapping
+	static bool isRemapping(std::string_view _input);
+
+	/// Parses a remapping of the format "context:prefix=target".
+	static std::optional<Remapping> parseRemapping(std::string_view _input);
 
 private:
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum

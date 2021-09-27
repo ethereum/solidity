@@ -338,11 +338,17 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 	m_options.input.ignoreMissingFiles = (m_args.count(g_strIgnoreMissingFiles) > 0);
 
 	if (m_args.count(g_strInputFile))
-		for (string path: m_args[g_strInputFile].as<vector<string>>())
+		for (string const& positionalArg: m_args[g_strInputFile].as<vector<string>>())
 		{
-			auto eq = find(path.begin(), path.end(), '=');
-			if (eq != path.end())
+			if (ImportRemapper::isRemapping(positionalArg))
 			{
+				optional<ImportRemapper::Remapping> remapping = ImportRemapper::parseRemapping(positionalArg);
+				if (!remapping.has_value())
+				{
+					serr() << "Invalid remapping: \"" << positionalArg << "\"." << endl;
+					return false;
+				}
+
 				if (m_options.input.mode == InputMode::StandardJson)
 				{
 					serr() << "Import remappings are not accepted on the command line in Standard JSON mode." << endl;
@@ -350,21 +356,24 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 					return false;
 				}
 
-				if (auto r = ImportRemapper::parseRemapping(path))
-					m_options.input.remappings.emplace_back(std::move(*r));
-				else
+				if (!remapping->target.empty())
 				{
-					serr() << "Invalid remapping: \"" << path << "\"." << endl;
-					return false;
+					// If the target is a directory, whitelist it. Otherwise whitelist containing dir.
+					// NOTE: /a/b/c/ is a directory while /a/b/c is not.
+					boost::filesystem::path remappingDir = remapping->target;
+					if (remappingDir.filename() != "..")
+						// As an exception we'll treat /a/b/c/.. as a directory too. It would be
+						// unintuitive to whitelist /a/b/c when the target is equivalent to /a/b/.
+						remappingDir.remove_filename();
+					m_options.input.allowedDirectories.insert(remappingDir.empty() ? "." : remappingDir);
 				}
 
-				string remappingTarget(eq + 1, path.end());
-				m_options.input.allowedDirectories.insert(boost::filesystem::path(remappingTarget).remove_filename());
+				m_options.input.remappings.emplace_back(move(remapping.value()));
 			}
-			else if (path == "-")
+			else if (positionalArg == "-")
 				m_options.input.addStdin = true;
 			else
-				m_options.input.paths.insert(path);
+				m_options.input.paths.insert(positionalArg);
 		}
 
 	if (m_options.input.mode == InputMode::StandardJson)
@@ -977,17 +986,9 @@ bool CommandLineParser::processArgs()
 	if (m_args.count(g_strAllowPaths))
 	{
 		vector<string> paths;
-		for (string const& path: boost::split(paths, m_args[g_strAllowPaths].as<string>(), boost::is_any_of(",")))
-		{
-			auto filesystem_path = boost::filesystem::path(path);
-			// If the given path had a trailing slash, the Boost filesystem
-			// path will have it's last component set to '.'. This breaks
-			// path comparison in later parts of the code, so we need to strip
-			// it.
-			if (filesystem_path.filename() == ".")
-				filesystem_path.remove_filename();
-			m_options.input.allowedDirectories.insert(filesystem_path);
-		}
+		for (string const& allowedPath: boost::split(paths, m_args[g_strAllowPaths].as<string>(), boost::is_any_of(",")))
+			if (!allowedPath.empty())
+				m_options.input.allowedDirectories.insert(allowedPath);
 	}
 
 	if (m_args.count(g_strStopAfter))

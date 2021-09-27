@@ -160,6 +160,7 @@ set(solcli_sources
     solc/Common.cpp
     solc/Common.h
     solc/CommandLineInterface.cpp
+    solc/CommandLineInterfaceAllowPaths.cpp
     solc/CommandLineParser.cpp
 )
 detect_stray_source_files("${solcli_sources}" "solc/")

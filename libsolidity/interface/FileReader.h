@@ -39,22 +39,19 @@ public:
 	using PathMap = std::map<SourceUnitName, boost::filesystem::path>;
 	using FileSystemPathSet = std::set<boost::filesystem::path>;
 
+	enum SymlinkResolution {
+		Disabled, ///< Do not resolve symbolic links in the path.
+		Enabled,  ///< Follow symbolic links. The path should contain no symlinks.
+	};
+
 	/// Constructs a FileReader with a base path and a set of allowed directories that
 	/// will be used when requesting files from this file reader instance.
-	explicit FileReader(
-		boost::filesystem::path _basePath = {},
-		FileSystemPathSet _allowedDirectories = {}
-	):
-		m_allowedDirectories(std::move(_allowedDirectories)),
-		m_sourceCodes()
-	{
-		setBasePath(_basePath);
-	}
+	explicit FileReader(boost::filesystem::path _basePath = {}, FileSystemPathSet _allowedDirectories = {});
 
 	void setBasePath(boost::filesystem::path const& _path);
 	boost::filesystem::path const& basePath() const noexcept { return m_basePath; }
 
-	void allowDirectory(boost::filesystem::path _path) { m_allowedDirectories.insert(std::move(_path)); }
+	void allowDirectory(boost::filesystem::path _path);
 	FileSystemPathSet const& allowedDirectories() const noexcept { return m_allowedDirectories; }
 
 	StringMap const& sourceCodes() const noexcept { return m_sourceCodes; }
@@ -90,11 +87,16 @@ public:
 
 	/// Normalizes a filesystem path to make it include all components up to the filesystem root,
 	/// remove small, inconsequential differences that do not affect the meaning and make it look
-	/// the same on all platforms (if possible). Symlinks in the path are not resolved.
+	/// the same on all platforms (if possible).
 	/// The resulting path uses forward slashes as path separators, has no redundant separators,
 	/// has no redundant . or .. segments and has no root name if removing it does not change the meaning.
 	/// The path does not have to actually exist.
-	static boost::filesystem::path normalizeCLIPathForVFS(boost::filesystem::path const& _path);
+	/// @param _path Path to normalize.
+	/// @param _symlinkResolution If @a Disabled, any symlinks present in @a _path are preserved.
+	static boost::filesystem::path normalizeCLIPathForVFS(
+		boost::filesystem::path const& _path,
+		SymlinkResolution _symlinkResolution = SymlinkResolution::Disabled
+	);
 
 	/// @returns true if all the path components of @a _prefix are present at the beginning of @a _path.
 	/// Both paths must be absolute (or have slash as root) and normalized (no . or .. segments, no
