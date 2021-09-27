@@ -1316,32 +1316,42 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			solAssert(name == "block" || name == "msg" || name == "tx", "");
 			defineExpr(_memberAccess, state().txMember(name + "." + _memberAccess.memberName()));
 		}
-		else if (auto magicType = dynamic_cast<MagicType const*>(exprType); magicType->kind() == MagicType::Kind::MetaType)
+		else if (auto magicType = dynamic_cast<MagicType const*>(exprType))
 		{
-			auto const& memberName = _memberAccess.memberName();
-			if (memberName == "min" || memberName == "max")
+			if (magicType->kind() == MagicType::Kind::Block)
+				defineExpr(_memberAccess, state().txMember("block." + _memberAccess.memberName()));
+			else if (magicType->kind() == MagicType::Kind::Message)
+				defineExpr(_memberAccess, state().txMember("msg." + _memberAccess.memberName()));
+			else if (magicType->kind() == MagicType::Kind::Transaction)
+				defineExpr(_memberAccess, state().txMember("tx." + _memberAccess.memberName()));
+			else if (magicType->kind() == MagicType::Kind::MetaType)
 			{
-				if (IntegerType const* integerType = dynamic_cast<IntegerType const*>(magicType->typeArgument()))
-					defineExpr(_memberAccess, memberName == "min" ? integerType->minValue() : integerType->maxValue());
-				else if (EnumType const* enumType = dynamic_cast<EnumType const*>(magicType->typeArgument()))
-					defineExpr(_memberAccess, memberName == "min" ? enumType->minValue() : enumType->maxValue());
+				auto const& memberName = _memberAccess.memberName();
+				if (memberName == "min" || memberName == "max")
+				{
+					if (IntegerType const* integerType = dynamic_cast<IntegerType const*>(magicType->typeArgument()))
+						defineExpr(_memberAccess, memberName == "min" ? integerType->minValue() : integerType->maxValue());
+					else if (EnumType const* enumType = dynamic_cast<EnumType const*>(magicType->typeArgument()))
+						defineExpr(_memberAccess, memberName == "min" ? enumType->minValue() : enumType->maxValue());
+				}
+				else if (memberName == "interfaceId")
+				{
+					ContractDefinition const& contract = dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition();
+					defineExpr(_memberAccess, contract.interfaceId());
+				}
+				else
+					// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
+					//       at all usable in the SMT checker currently
+					m_errorReporter.warning(
+						7507_error,
+						_memberAccess.location(),
+						"Assertion checker does not yet support this expression."
+					);
+
 			}
-			else if (memberName == "interfaceId")
-			{
-				ContractDefinition const& contract = dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition();
-				defineExpr(_memberAccess, contract.interfaceId());
-			}
-			else
-				// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
-				//       at all usable in the SMT checker currently
-				m_errorReporter.warning(
-					7507_error,
-					_memberAccess.location(),
-					"Assertion checker does not yet support this expression."
-				);
 		}
 		else
-			solUnimplementedAssert(false, "");
+			solAssert(false, "");
 
 		return false;
 	}
@@ -1419,12 +1429,12 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			return false;
 		}
 	}
-	else
-		m_errorReporter.warning(
-			7650_error,
-			_memberAccess.location(),
-			"Assertion checker does not yet support this expression."
-		);
+
+	m_errorReporter.warning(
+		7650_error,
+		_memberAccess.location(),
+		"Assertion checker does not yet support this expression."
+	);
 
 	return true;
 }
