@@ -31,7 +31,15 @@ REPO_ROOT="$(dirname "$0")"/..
     fi
     # Add dependencies
     mkdir -p "$SOLDIR/deps/downloads/" 2>/dev/null || true
-    wget -O "$SOLDIR/deps/downloads/jsoncpp-1.9.3.tar.gz" https://github.com/open-source-parsers/jsoncpp/archive/1.9.3.tar.gz
+    jsoncpp_version="1.9.3"
+    jsoncpp_package_path="$SOLDIR/deps/downloads/jsoncpp-${jsoncpp_version}.tar.gz"
+    jsoncpp_sha256=8593c1d69e703563d94d8c12244e2e18893eeb9a8a9f8aa3d09a327aa45c8f7d
+    wget -O "$jsoncpp_package_path" "https://github.com/open-source-parsers/jsoncpp/archive/${jsoncpp_version}.tar.gz"
+    if ! [ "$(sha256sum "$jsoncpp_package_path")" = "${jsoncpp_sha256}  ${jsoncpp_package_path}" ]
+    then
+        >&2 echo "ERROR: Downloaded jsoncpp source package has wrong checksum."
+        exit 1
+    fi
     mkdir -p "$REPO_ROOT/upload"
     tar --owner 0 --group 0 -czf "$REPO_ROOT/upload/solidity_$versionstring.tar.gz" -C "$TEMPDIR" "solidity_$versionstring"
     rm -r "$TEMPDIR"
