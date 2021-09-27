@@ -10,10 +10,10 @@ Compiler Features:
  * Commandline Interface: Do not implicitly run evm bytecode generation unless needed for the requested output.
  * Commandline Interface: Normalize paths specified on the command line and make them relative for files located inside base path.
  * Immutable variables can be read at construction time once they are initialized.
- * SMTChecker: Support low level ``call`` as external calls to unknown code.
  * SMTChecker: Add constraints to better correlate ``address(this).balance`` and ``msg.value``.
- * SMTChecker: Support the ``value`` option for external function calls.
  * SMTChecker: Support constants via modules.
+ * SMTChecker: Support low level ``call`` as external calls to unknown code.
+ * SMTChecker: Support the ``value`` option for external function calls.
  * SMTChecker: Support user defined value types.
 
 
