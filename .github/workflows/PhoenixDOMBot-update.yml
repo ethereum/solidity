@@ -2,7 +2,7 @@
 # Auto-configuration PhoenixDOMSmartContract full update 
     with PhoenixDOMApi.json and PhoenixDOMData sync
 
-name: PhenixDOMSolidity CI
+name: PhoenixDOMSolidity CI
 
 # Controls when the workflow will run
 on:
