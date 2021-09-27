@@ -2,7 +2,7 @@
 
 Language Features:
  * Inheritance: A function that overrides only a single interface function does not require the ``override`` specifier.
- * Type System: Support ``type().min`` and ``type().max`` for enums.
+ * Type System: Support ``type(E).min`` and ``type(E).max`` for enums.
  * User Defined Value Type: allows creating a zero cost abstraction over a value type with stricter type requirements.
 
 
