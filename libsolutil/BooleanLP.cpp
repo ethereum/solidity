@@ -242,14 +242,16 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 		addAssertion(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1);
 	else if (_expr.name == ">")
 		addAssertion(_expr.arguments.at(1) < _expr.arguments.at(0));
+	else
+		cout << "Unknown operator " << _expr.name << endl;
 }
 
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const& _expressionsToEvaluate)
 {
-	cout << "Solving boolean constraint system" << endl;
-	cout << toString() << endl;
-	cout << "--------------" << endl;
+//	cout << "Solving boolean constraint system" << endl;
+//	cout << toString() << endl;
+//	cout << "--------------" << endl;
 
 	if (m_state.back().infeasible)
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});
@@ -330,6 +332,8 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 				Literal::PositiveVariable,
 				m_state.back().variables.at(_expr.name)
 			};
+		else
+			cout << "cannot encode " << _expr.name << " - not a boolean literal variable." << endl;
 	}
 	else if (_expr.name == "not")
 		return negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0)));

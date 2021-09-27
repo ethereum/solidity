@@ -165,7 +165,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 
 	if (bodyTerminates)
 	{
-		cout << "Body always terminates." << endl;
+		//cout << "Body always terminates." << endl;
 		if (isBoolean(*_if.condition))
 			m_solver->addAssertion(!cond);
 		else
@@ -267,9 +267,27 @@ void ReasoningBasedSimplifier::handleDeclaration(
 	}
 	//case evmasm::Instruction::MUL:
 		// TODO encode constants?
-	//case evmasm::Instruction::DIV:
+	case evmasm::Instruction::DIV:
+		m_solver->addAssertion(variable <= *x);
+		break;
 	case evmasm::Instruction::ADDMOD:
 		m_solver->addAssertion(variable < *z);
+		break;
+	case evmasm::Instruction::SHL:
+		if (holds_alternative<Literal>(_arguments.at(0)))
+		{
+			u256 shiftAmount = valueOfLiteral(get<Literal>(_arguments.at(0)));
+			cout << "shift by " << shiftAmount << endl;
+		}
+		break;
+	case evmasm::Instruction::SHR:
+		if (holds_alternative<Literal>(_arguments.at(0)))
+		{
+			u256 shiftAmount = valueOfLiteral(get<Literal>(_arguments.at(0)));
+			cout << "shift by " << shiftAmount << endl;
+		}
+		break;
+	case evmasm::Instruction::SAR:
 		break;
 	case evmasm::Instruction::LT:
 		m_solver->addAssertion(variable == (*x < *y));
@@ -281,7 +299,12 @@ void ReasoningBasedSimplifier::handleDeclaration(
 	//	case evmasm::Instruction::SGT:
 	// TODO
 	case evmasm::Instruction::EQ:
-		m_solver->addAssertion(variable == (*x == *y));
+		if (isBoolean(_arguments.at(0)) == isBoolean(_arguments.at(1)))
+			m_solver->addAssertion(variable == (*x == *y));
+		else if (isBoolean(_arguments.at(0)))
+			m_solver->addAssertion(variable == ((*x && *y >= 1) || (!*x && *y == 0)));
+		else
+			m_solver->addAssertion(variable == ((*y && *x >= 1) || (!*y && *x == 0)));
 		break;
 	case evmasm::Instruction::ISZERO:
 		if (isBoolean(_arguments.at(0)))
@@ -313,6 +336,7 @@ void ReasoningBasedSimplifier::handleDeclaration(
 		break;
 	// TODO all builtins whose return values can be restricted.
 	default:
+		cout << "Not handling instruction " << evmasm::instructionInfo(_instruction).name << endl;
 		break;
 	}
 }
