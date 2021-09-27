@@ -274,10 +274,7 @@ BOOST_FIXTURE_TEST_CASE(allow_path_should_work_with_various_path_forms, AllowPat
 	// Paths going beyond root allowed
 	BOOST_TEST(checkImport(import, {"--allow-paths=/../../"}));
 	BOOST_TEST(checkImport(import, {"--allow-paths=/../.."}));
-#if !defined(_WIN32) || BOOST_VERSION > 107600
-	// This throws on Windows due to a bug in Boost: https://github.com/boostorg/filesystem/issues/201
 	BOOST_TEST(checkImport(import, {"--allow-paths=/../../a/../"}));
-#endif
 	BOOST_TEST(checkImport(import, {"--allow-paths=/../../" + m_portablePrefix}));
 
 	// File named like a directory
