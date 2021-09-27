@@ -33,7 +33,7 @@ This parameter has effects on the following (this might change in the future):
 - the size of the binary search in the function dispatch routine
 - the way constants like large numbers or strings are stored
 
-.. index:: allowed paths, --allow-paths, base path, --base-path
+.. index:: allowed paths, --allow-paths, base path, --base-path, include paths, --include-path
 
 Base Path and Import Remapping
 ------------------------------
@@ -49,9 +49,9 @@ This essentially instructs the compiler to search for anything starting with
 ``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin``.
 
 When accessing the filesystem to search for imports, :ref:`paths that do not start with ./
-or ../ <direct-imports>` are treated as relative to the directory specified using
-``--base-path`` option (or the current working directory if base path is not specified).
-Furthermore, the part added via ``--base-path`` will not appear in the contract metadata.
+or ../ <direct-imports>` are treated as relative to the directories specified using
+``--base-path`` and ``--include-path`` options (or the current working directory if base path is not specified).
+Furthermore, the part of the path added via these options will not appear in the contract metadata.
 
 For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
 Directories of source files specified on the command line and target paths of

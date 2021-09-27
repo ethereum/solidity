@@ -117,6 +117,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"a:b=c/d",
 			":contract.sol=",
 			"--base-path=/home/user/",
+			"--include-path=/usr/lib/include/",
+			"--include-path=/home/user/include",
 			"--allow-paths=/tmp,/home,project,../contracts",
 			"--ignore-missing",
 			"--error-recovery",
@@ -168,6 +170,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 		expectedOptions.input.addStdin = true;
 		expectedOptions.input.basePath = "/home/user/";
+		expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
+
 		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
 		expectedOptions.input.ignoreMissingFiles = true;
 		expectedOptions.input.errorRecovery = (inputMode == InputMode::Compiler);
@@ -257,6 +261,8 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"a:b=c/d",
 			":contract.yul=",
 			"--base-path=/home/user/",
+			"--include-path=/usr/lib/include/",
+			"--include-path=/home/user/include",
 			"--allow-paths=/tmp,/home,project,../contracts",
 			"--ignore-missing",
 			"--error-recovery",            // Ignored in assembly mode
@@ -307,6 +313,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		};
 		expectedOptions.input.addStdin = true;
 		expectedOptions.input.basePath = "/home/user/";
+		expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
 		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
 		expectedOptions.input.ignoreMissingFiles = true;
 		expectedOptions.output.overwriteFiles = true;
@@ -350,6 +357,8 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"input.json",
 		"--standard-json",
 		"--base-path=/home/user/",
+		"--include-path=/usr/lib/include/",
+		"--include-path=/home/user/include",
 		"--allow-paths=/tmp,/home,project,../contracts",
 		"--ignore-missing",
 		"--error-recovery",                // Ignored in Standard JSON mode
@@ -390,6 +399,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.input.mode = InputMode::StandardJson;
 	expectedOptions.input.paths = {"input.json"};
 	expectedOptions.input.basePath = "/home/user/";
+	expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
 	expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts"};
 	expectedOptions.input.ignoreMissingFiles = true;
 	expectedOptions.output.dir = "/tmp/out";

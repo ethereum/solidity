@@ -422,8 +422,29 @@ bool CommandLineInterface::readInputFiles()
 		}
 	}
 
+	for (boost::filesystem::path const& includePath: m_options.input.includePaths)
+		m_fileReader.addIncludePath(includePath);
+
 	for (boost::filesystem::path const& allowedDirectory: m_options.input.allowedDirectories)
 		m_fileReader.allowDirectory(allowedDirectory);
+
+	map<std::string, set<boost::filesystem::path>> collisions =
+		m_fileReader.detectSourceUnitNameCollisions(m_options.input.paths);
+	if (!collisions.empty())
+	{
+		auto pathToQuotedString = [](boost::filesystem::path const& _path){ return "\"" + _path.string() + "\""; };
+
+		serr() << "Source unit name collision detected. ";
+		serr() << "The specified values of base path and/or include paths would result in multiple ";
+		serr() << "input files being assigned the same source unit name:" << endl;
+		for (auto const& [sourceUnitName, normalizedInputPaths]: collisions)
+		{
+			serr() << sourceUnitName << " matches: ";
+			serr() << joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) << endl;
+		}
+
+		return false;
+	}
 
 	for (boost::filesystem::path const& infile: m_options.input.paths)
 	{

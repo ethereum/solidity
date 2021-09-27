@@ -111,6 +111,7 @@ struct CommandLineOptions
 		std::vector<ImportRemapper::Remapping> remappings;
 		bool addStdin = false;
 		boost::filesystem::path basePath = "";
+		std::vector<boost::filesystem::path> includePaths;
 		FileReader::FileSystemPathSet allowedDirectories;
 		bool ignoreMissingFiles = false;
 		bool errorRecovery = false;

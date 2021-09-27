@@ -72,8 +72,9 @@ The initial content of the VFS depends on how you invoke the compiler:
        solc contract.sol /usr/local/dapp-bin/token.sol
 
    The source unit name of a file loaded this way is constructed by converting its path to a
-   canonical form and making it relative to the base path if it is located inside.
-   See :ref:`Base Path Normalization and Stripping <base-path-normalization-and-stripping>` for
+   canonical form and, if possible, making it relative to either the base path or one of the
+   include paths.
+   See :ref:`CLI Path Normalization and Stripping <cli-path-normalization-and-stripping>` for
    a detailed description of this process.
 
    .. index:: standard JSON
@@ -295,16 +296,36 @@ Here are some examples of what you can expect if they are not:
 
     The use of relative imports containing leading ``..`` segments is not recommended.
     The same effect can be achieved in a more reliable way by using direct imports with
-    :ref:`base path <base-path>` and :ref:`import remapping <import-remapping>`.
+    :ref:`base path and include paths <base-and-include-paths>`.
 
-.. index:: ! base path, ! --base-path
-.. _base-path:
+.. index:: ! base path, ! --base-path, ! include paths, ! --include-path
+.. _base-and-include-paths:
 
-Base Path
-=========
+Base Path and Include Paths
+===========================
 
-The base path specifies the directory that the Host Filesystem Loader will load files from.
-It is simply prepended to a source unit name before the filesystem lookup is performed.
+The base path and include paths represent directories that the Host Filesystem Loader will load files from.
+When a source unit name is passed to the loader, it prepends the base path to it and performs a
+filesystem lookup.
+If the lookup does not succeed, the same is done with all directories on the include path list.
+
+It is recommended to set the base path to the root directory of your project and use include paths to
+specify additional locations that may contain libraries your project depends on.
+This lets you import from these libraries in a uniform way, no matter where they are located in the
+filesystem relative to your project.
+For example, if you use npm to install packages and your contract imports
+``@openzeppelin/contracts/utils/Strings.sol``, you can use these options to tell the compiler that
+the library can be found in one of the npm package directories:
+
+.. code-block:: bash
+
+    solc contract.sol \
+        --base-path . \
+        --include-path node_modules/ \
+        --include-path /usr/local/lib/node_modules/
+
+Your contract will compile (with the same exact metadata) no matter whether you install the library
+in the local or global package directory or even directly under your project root.
 
 By default the base path is empty, which leaves the source unit name unchanged.
 When the source unit name is a relative path, this results in the file being looked up in the
@@ -314,10 +335,23 @@ interpreted as absolute paths on disk.
 If the base path itself is relative, it is interpreted as relative to the current working directory
 of the compiler.
 
-.. _base-path-normalization-and-stripping:
+.. note::
 
-Base Path Normalization and Stripping
--------------------------------------
+    Include paths cannot have empty values and must be used together with a non-empty base path.
+
+.. note::
+
+    Include paths and base path can overlap as long as it does not make import resolution ambiguous.
+    For example, you can specify a directory inside base path as an include directory or have an
+    include directory that is a subdirectory of another include directory.
+    The compiler will only issue an error if the source unit name passed to the Host Filesystem
+    Loader represents an existing path when combined with multiple include paths or an include path
+    and base path.
+
+.. _cli-path-normalization-and-stripping:
+
+CLI Path Normalization and Stripping
+------------------------------------
 
 On the command line the compiler behaves just as you would expect from any other program:
 it accepts paths in a format native to the platform and relative paths are relative to the current
@@ -326,7 +360,7 @@ The source unit names assigned to files whose paths are specified on the command
 should not change just because the project is being compiled on a different platform or because the
 compiler happens to have been invoked from a different directory.
 To achieve this, paths to source files coming from the command line must be converted to a canonical
-form, and, if possible, made relative to the base path.
+form, and, if possible, made relative to the base path or one of the include paths.
 
 The normalization rules are as follows:
 
@@ -357,7 +391,8 @@ The normalization rules are as follows:
     You can avoid such situations by ensuring that all the files are available within a single
     directory tree on the same drive.
 
-Once canonicalized, the base path is stripped from all source file paths that start with it.
+After normalization the compiler attempts to make the source file path relative.
+It tries the base path first and then the include paths in the order they were given.
 If the base path is empty or not specified, it is treated as if it was equal to the path to the
 current working directory (with all symbolic links resolved).
 The result is accepted only if the normalized directory path is the exact prefix of the normalized
@@ -365,6 +400,16 @@ file path.
 Otherwise the file path remains absolute.
 This makes the conversion unambiguous and ensures that the relative path does not start with ``../``.
 The resulting file path becomes the source unit name.
+
+.. note::
+
+    The relative path produced by stripping must remain unique within the base path and include paths.
+    For example the compiler will issue an error for the following command if both
+    ``/project/contract.sol`` and ``/lib/contract.sol`` exist:
+
+    .. code-block:: bash
+
+        solc /project/contract.sol --base-path /project --include-path /lib
 
 .. note::
 
@@ -388,11 +433,11 @@ locations that are considered safe by default:
   - The directories used as :ref:`remapping <import-remapping>` targets.
     If the target is not a directory (i.e does not end with ``/``, ``/.`` or ``/..``) the directory
     containing the target is used instead.
-  - Base path.
+  - Base path and include paths.
 
 - In Standard JSON mode:
 
-  - Base path.
+  - Base path and include paths.
 
 Additional directories can be whitelisted using the ``--allow-paths`` option.
 The option accepts a comma-separated list of paths:
@@ -403,6 +448,7 @@ The option accepts a comma-separated list of paths:
     solc token/contract.sol \
         lib/util.sol=libs/util.sol \
         --base-path=token/ \
+        --include-path=/lib/ \
         --allow-paths=../utils/,/tmp/libraries
 
 When the compiler is invoked with the command shown above, the Host Filesystem Loader will allow
@@ -410,6 +456,7 @@ importing files from the following directories:
 
 - ``/home/user/project/token/`` (because ``token/`` contains the input file and also because it is
   the base path),
+- ``/lib/`` (because ``/lib/`` is one of the include paths),
 - ``/home/user/project/libs/`` (because ``libs/`` is a directory containing a remapping target),
 - ``/home/user/utils/`` (because of ``../utils/`` passed to ``--allow-paths``),
 - ``/tmp/libraries/`` (because of ``/tmp/libraries`` passed to ``--allow-paths``),
@@ -491,6 +538,13 @@ Loader, which will then look in ``/project/dapp-bin/library/iterable_mapping.sol
     To be able to reproduce the same bytecode with such a remapping on a different machine, you
     would need to recreate parts of your local directory structure in the VFS and (if you rely on
     Host Filesystem Loader) also in the host filesystem.
+
+    To avoid having your local directory structure embedded in the metadata, it is recommended to
+    designate the directories containing libraries as *include paths* instead.
+    For example, in the example above ``--include-path /home/user/packages/`` would let you use
+    imports starting with ``mymath/``.
+    Unlike remapping, the option on its own will not make ``mymath`` appear as ``@math`` but this
+    can be achieved by creating a symbolic link or renaming the package subdirectory.
 
 As a more complex example, suppose you rely on a module that uses an old version of dapp-bin that
 you checked out to ``/project/dapp-bin_old``, then you can run:

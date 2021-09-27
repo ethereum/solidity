@@ -21,33 +21,61 @@
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <range/v3/view/transform.hpp>
+
+#include <range/v3/range/conversion.hpp>
+
+#include <functional>
 
 using solidity::frontend::ReadCallback;
 using solidity::langutil::InternalCompilerError;
 using solidity::util::errinfo_comment;
 using solidity::util::readFileAsString;
+using solidity::util::joinHumanReadable;
+using std::map;
+using std::reference_wrapper;
 using std::string;
+using std::vector;
 
 namespace solidity::frontend
 {
 
 FileReader::FileReader(
 	boost::filesystem::path _basePath,
+	vector<boost::filesystem::path> const& _includePaths,
 	FileSystemPathSet _allowedDirectories
 ):
 	m_allowedDirectories(std::move(_allowedDirectories)),
 	m_sourceCodes()
 {
 	setBasePath(_basePath);
+	for (boost::filesystem::path const& includePath: _includePaths)
+		addIncludePath(includePath);
+
 	for (boost::filesystem::path const& allowedDir: m_allowedDirectories)
 		solAssert(!allowedDir.empty(), "");
 }
 
 void FileReader::setBasePath(boost::filesystem::path const& _path)
 {
-	m_basePath = (_path.empty() ? "" : normalizeCLIPathForVFS(_path));
+	if (_path.empty())
+	{
+		// Empty base path is a special case that does not make sense when include paths are used.
+		solAssert(m_includePaths.empty(), "");
+		m_basePath = "";
+	}
+	else
+		m_basePath = normalizeCLIPathForVFS(_path);
+}
+
+void FileReader::addIncludePath(boost::filesystem::path const& _path)
+{
+	solAssert(!m_basePath.empty(), "");
+	solAssert(!_path.empty(), "");
+	m_includePaths.push_back(normalizeCLIPathForVFS(_path));
 }
 
 void FileReader::allowDirectory(boost::filesystem::path _path)
@@ -58,10 +86,7 @@ void FileReader::allowDirectory(boost::filesystem::path _path)
 
 void FileReader::setSource(boost::filesystem::path const& _path, SourceCode _source)
 {
-	boost::filesystem::path normalizedPath = normalizeCLIPathForVFS(_path);
-	boost::filesystem::path prefix = (m_basePath.empty() ? normalizeCLIPathForVFS(".") : m_basePath);
-
-	m_sourceCodes[stripPrefixIfPresent(prefix, normalizedPath).generic_string()] = std::move(_source);
+	m_sourceCodes[cliPathToSourceUnitName(_path)] = std::move(_source);
 }
 
 void FileReader::setStdin(SourceCode _source)
@@ -87,12 +112,38 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 		if (strippedSourceUnitName.find("file://") == 0)
 			strippedSourceUnitName.erase(0, 7);
 
-		auto canonicalPath = normalizeCLIPathForVFS(m_basePath / strippedSourceUnitName, SymlinkResolution::Enabled);
+		vector<boost::filesystem::path> candidates;
+		vector<reference_wrapper<boost::filesystem::path>> prefixes = {m_basePath};
+		prefixes += (m_includePaths | ranges::to<vector<reference_wrapper<boost::filesystem::path>>>);
+
+		for (auto const& prefix: prefixes)
+		{
+			boost::filesystem::path canonicalPath = normalizeCLIPathForVFS(prefix / strippedSourceUnitName, SymlinkResolution::Enabled);
+
+			if (boost::filesystem::exists(canonicalPath))
+				candidates.push_back(std::move(canonicalPath));
+		}
+
+		auto pathToQuotedString = [](boost::filesystem::path const& _path){ return "\"" + _path.string() + "\""; };
+
+		if (candidates.empty())
+			return ReadCallback::Result{false, "File not found."};
+
+		if (candidates.size() >= 2)
+			return ReadCallback::Result{
+				false,
+				"Ambiguous import. "
+				"Multiple matching files found inside base path and/or include paths: " +
+				joinHumanReadable(candidates | ranges::views::transform(pathToQuotedString), ", ") +
+				"."
+			};
+
 		FileSystemPathSet extraAllowedPaths = {m_basePath.empty() ? "." : m_basePath};
+		extraAllowedPaths += m_includePaths;
 
 		bool isAllowed = false;
 		for (boost::filesystem::path const& allowedDir: m_allowedDirectories + extraAllowedPaths)
-			if (isPathPrefix(normalizeCLIPathForVFS(allowedDir, SymlinkResolution::Enabled), canonicalPath))
+			if (isPathPrefix(normalizeCLIPathForVFS(allowedDir, SymlinkResolution::Enabled), candidates[0]))
 			{
 				isAllowed = true;
 				break;
@@ -101,14 +152,12 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 		if (!isAllowed)
 			return ReadCallback::Result{false, "File outside of allowed directories."};
 
-		if (!boost::filesystem::exists(canonicalPath))
-			return ReadCallback::Result{false, "File not found."};
-
-		if (!boost::filesystem::is_regular_file(canonicalPath))
+		if (!boost::filesystem::is_regular_file(candidates[0]))
 			return ReadCallback::Result{false, "Not a valid file."};
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		auto contents = readFileAsString(canonicalPath);
+		auto contents = readFileAsString(candidates[0]);
+		solAssert(m_sourceCodes.count(_sourceUnitName) == 0, "");
 		m_sourceCodes[_sourceUnitName] = contents;
 		return ReadCallback::Result{true, contents};
 	}
@@ -124,6 +173,41 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	{
 		return ReadCallback::Result{false, "Unknown exception in read callback."};
 	}
+}
+
+string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath)
+{
+	vector<boost::filesystem::path> prefixes = {m_basePath.empty() ? normalizeCLIPathForVFS(".") : m_basePath};
+	prefixes += m_includePaths;
+
+	boost::filesystem::path normalizedPath = normalizeCLIPathForVFS(_cliPath);
+	for (boost::filesystem::path const& prefix: prefixes)
+		if (isPathPrefix(prefix, normalizedPath))
+		{
+			// Multiple prefixes can potentially match the path. We take the first one.
+			normalizedPath = stripPrefixIfPresent(prefix, normalizedPath);
+			break;
+		}
+
+	return normalizedPath.generic_string();
+}
+
+map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths)
+{
+	map<string, FileReader::FileSystemPathSet> nameToPaths;
+	for (boost::filesystem::path const& cliPath: _cliPaths)
+	{
+		string sourceUnitName = cliPathToSourceUnitName(cliPath);
+		boost::filesystem::path normalizedPath = normalizeCLIPathForVFS(cliPath);
+		nameToPaths[sourceUnitName].insert(normalizedPath);
+	}
+
+	map<string, FileReader::FileSystemPathSet> collisions;
+	for (auto&& [sourceUnitName, cliPaths]: nameToPaths)
+		if (cliPaths.size() >= 2)
+			collisions[sourceUnitName] = std::move(cliPaths);
+
+	return collisions;
 }
 
 boost::filesystem::path FileReader::normalizeCLIPathForVFS(
