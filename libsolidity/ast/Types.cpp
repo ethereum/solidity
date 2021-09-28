@@ -2537,6 +2537,7 @@ Type const& UserDefinedValueType::underlyingType() const
 {
 	Type const* type = m_definition.underlyingType()->annotation().type;
 	solAssert(type, "");
+	solAssert(type->category() != Category::UserDefinedValueType, "");
 	return *type;
 }
 

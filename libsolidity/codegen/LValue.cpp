@@ -113,6 +113,7 @@ void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool
 		if (!m_padded)
 		{
 			solAssert(m_dataType->calldataEncodedSize(false) == 1, "Invalid non-padded type.");
+			solAssert(m_dataType->category() != Type::Category::UserDefinedValueType, "");
 			if (m_dataType->category() == Type::Category::FixedBytes)
 				m_context << u256(0) << Instruction::BYTE;
 			m_context << Instruction::SWAP1 << Instruction::MSTORE8;
@@ -233,7 +234,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 		if (m_dataType->category() == Type::Category::FixedPoint)
 			// implementation should be very similar to the integer case.
 			solUnimplemented("Not yet implemented - FixedPointType.");
-		if (m_dataType->category() == Type::Category::FixedBytes)
+		if (m_dataType->leftAligned())
 		{
 			CompilerUtils(m_context).leftShiftNumberOnStack(256 - 8 * m_dataType->storageBytes());
 			cleaned = true;
@@ -329,10 +330,13 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 						Instruction::AND;
 				}
 			}
-			else if (m_dataType->category() == Type::Category::FixedBytes)
+			else if (m_dataType->leftAligned())
 			{
-				solAssert(_sourceType.category() == Type::Category::FixedBytes, "source not fixed bytes");
-				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes());
+				solAssert(_sourceType.category() == Type::Category::FixedBytes || (
+					_sourceType.encodingType() &&
+					_sourceType.encodingType()->category() == Type::Category::FixedBytes
+				), "source not fixed bytes");
+				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * m_dataType->storageBytes());
 			}
 			else
 			{

@@ -2965,7 +2965,7 @@ string YulUtilFunctions::prepareStoreFunction(Type const& _type)
 				}
 			)");
 			templ("functionName", functionName);
-			if (_type.category() == Type::Category::FixedBytes)
+			if (_type.leftAligned())
 				templ("actualPrepare", shiftRightFunction(256 - 8 * _type.storageBytes()) + "(value)");
 			else
 				templ("actualPrepare", "value");
@@ -3304,6 +3304,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				bodyTemplate("cleanOutput", cleanupFunction(_to));
 				string convert;
 
+				solAssert(_to.category() != Type::Category::UserDefinedValueType, "");
 				if (auto const* toFixedBytes = dynamic_cast<FixedBytesType const*>(&_to))
 					convert = shiftLeftFunction(256 - toFixedBytes->numBytes() * 8);
 				else if (dynamic_cast<FixedPointType const*>(&_to))
