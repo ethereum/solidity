@@ -1108,6 +1108,8 @@ public:
 	bool leftAligned() const override { return underlyingType().leftAligned(); }
 	bool canBeStored() const override { return underlyingType().canBeStored(); }
 	u256 storageSize() const override { return underlyingType().storageSize(); }
+	unsigned storageBytes() const override { return underlyingType().storageBytes(); }
+
 	bool isValueType() const override
 	{
 		solAssert(underlyingType().isValueType(), "");
@@ -1117,6 +1119,25 @@ public:
 	{
 		solAssert(underlyingType().nameable(), "");
 		return true;
+	}
+
+	bool containsNestedMapping() const override
+	{
+		solAssert(nameable(), "Called for a non nameable type.");
+		solAssert(!underlyingType().containsNestedMapping(), "");
+		return false;
+	}
+
+	bool hasSimpleZeroValueInMemory() const override
+	{
+		solAssert(underlyingType().hasSimpleZeroValueInMemory(), "");
+		return true;
+	}
+
+	bool dataStoredIn(DataLocation _loc) const override
+	{
+		solAssert(!underlyingType().dataStoredIn(_loc), "");
+		return false;
 	}
 
 	std::string toString(bool _short) const override;
