@@ -594,7 +594,7 @@ smallest and respectively largest value of the given enum.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.8;
+    pragma solidity >=0.8.8;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -657,7 +657,7 @@ type with 18 decimals and a minimal library to do arithmetic operations on the t
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.8;
+    pragma solidity >=0.8.8 <0.9.0;
 
     // Represent a 18 decimal, 256 bit wide fixed point type using a user defined value type.
     type UFixed256x18 is uint256;
