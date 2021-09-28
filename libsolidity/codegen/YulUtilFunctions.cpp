@@ -2416,7 +2416,7 @@ string YulUtilFunctions::copyArrayFromStorageToMemoryFunction(ArrayType const& _
 	return m_functionCollector.createFunction(functionName, [&]() {
 		if (_from.baseType()->isValueType())
 		{
-			solAssert(_from.baseType() == _to.baseType(), "");
+			solAssert(*_from.baseType() == *_to.baseType(), "");
 			ABIFunctions abi(m_evmVersion, m_revertStrings, m_functionCollector);
 			return Whiskers(R"(
 				function <functionName>(slot) -> memPtr {
