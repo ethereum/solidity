@@ -1121,6 +1121,25 @@ public:
 		return true;
 	}
 
+	bool containsNestedMapping() const override
+	{
+		solAssert(nameable(), "Called for a non nameable type.");
+		solAssert(!underlyingType().containsNestedMapping(), "");
+		return false;
+	}
+
+	bool hasSimpleZeroValueInMemory() const override
+	{
+		solAssert(underlyingType().hasSimpleZeroValueInMemory(), "");
+		return true;
+	}
+
+	bool dataStoredIn(DataLocation _loc) const override
+	{
+		solAssert(!underlyingType().dataStoredIn(_loc), "");
+		return false;
+	}
+
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override { solAssert(false, ""); }
 	std::string signatureInExternalFunction(bool) const override { solAssert(false, ""); }
