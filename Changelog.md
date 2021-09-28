@@ -8,7 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+* User Defined Value Type: Fix storage layout of user defined value types for underlying types shorter than 32 bytes.
 
 
 ### 0.8.8 (2021-09-27)

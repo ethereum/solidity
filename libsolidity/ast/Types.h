@@ -1108,6 +1108,8 @@ public:
 	bool leftAligned() const override { return underlyingType().leftAligned(); }
 	bool canBeStored() const override { return underlyingType().canBeStored(); }
 	u256 storageSize() const override { return underlyingType().storageSize(); }
+	unsigned storageBytes() const override { return underlyingType().storageBytes(); }
+
 	bool isValueType() const override
 	{
 		solAssert(underlyingType().isValueType(), "");
