@@ -159,7 +159,9 @@ void ImmutableItem::retrieveValue(SourceLocation const&, bool) const
 	if (m_context.runtimeContext())
 		CompilerUtils(m_context).loadFromMemory(
 			static_cast<unsigned>(m_context.immutableMemoryOffset(m_variable)),
-			*m_dataType
+			*m_dataType,
+			false,
+			true
 		);
 	else
 		for (auto&& slotName: m_context.immutableVariableSlotNames(m_variable))
@@ -178,7 +180,7 @@ void ImmutableItem::storeValue(Type const& _sourceType, SourceLocation const&, b
 		utils.moveIntoStack(m_dataType->sizeOnStack());
 	else
 		utils.copyToStackTop(m_dataType->sizeOnStack() + 1, m_dataType->sizeOnStack());
-	utils.storeInMemoryDynamic(*m_dataType, false);
+	utils.storeInMemoryDynamic(*m_dataType);
 	m_context << Instruction::POP;
 }
 
