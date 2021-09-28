@@ -13,6 +13,7 @@ description: |
   It is possible to create contracts for voting, crowdfunding, blind auctions,
   multi-signature wallets and more.
 
+base: core20
 grade: stable
 confinement: strict
 
@@ -27,7 +28,7 @@ parts:
     source-type: git
     plugin: cmake
     build-packages: [build-essential, libboost-all-dev]
-    stage-packages: [libicu60]
+    stage-packages: [libicu66]
     override-build: |
       if git describe --exact-match --tags 2> /dev/null
       then
@@ -41,7 +42,6 @@ parts:
     plugin: make
     build-packages: [python]
     stage-packages: [libstdc++6]
-    makefile: build/Makefile
     override-build: |
       python scripts/mk_make.py
       cd build
