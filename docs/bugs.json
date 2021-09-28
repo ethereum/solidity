@@ -1,5 +1,15 @@
 [
     {
+        "uid": "SOL-2021-3",
+        "name": "SignedImmutables",
+        "summary": "Immutable variables of signed integer type shorter than 256 bits can lead to values with invalid higher order bits if inline assembly is used.",
+        "description": "When immutable variables of signed integer type shorter than 256 bits are read, their higher order bits were unconditionally set to zero. The correct operation would be to sign-extend the value, i.e. set the higher order bits to one if the sign bit is one. This sign-extension is performed by Solidity just prior to when it matters, i.e. when a value is stored in memory, when it is compared or when a division is performed. Because of that, to our knowledge, the only way to access the value in its unclean state is by reading it through inline assembly.",
+        "link": "https://blog.soliditylang.org/2021/09/29/signed-immutables-bug/",
+        "introduced": "0.6.5",
+        "fixed": "0.8.9",
+        "severity": "very low"
+    },
+    {
         "uid": "SOL-2021-2",
         "name": "ABIDecodeTwoDimensionalArrayMemory",
         "summary": "If used on memory byte arrays, result of the function ``abi.decode`` can depend on the contents of memory outside of the actual byte array that is decoded.",
