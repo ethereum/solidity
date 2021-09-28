@@ -3072,10 +3072,7 @@ u256 FunctionType::storageSize() const
 
 bool FunctionType::leftAligned() const
 {
-	if (m_kind == Kind::External)
-		return true;
-	else
-		solAssert(false, "Alignment property of non-exportable function type requested.");
+	return m_kind == Kind::External;
 }
 
 unsigned FunctionType::storageBytes() const

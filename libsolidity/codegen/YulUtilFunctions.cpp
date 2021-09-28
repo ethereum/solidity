@@ -2923,16 +2923,9 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type)
 				return templ.render();
 			}
 
-		bool leftAligned = false;
-		if (
-			encodingType->category() != Type::Category::Function ||
-			dynamic_cast<FunctionType const&>(*encodingType).kind() == FunctionType::Kind::External
-		)
-			leftAligned = encodingType->leftAligned();
-
 		if (storageBytes == 32)
 			templ("cleaned", "value");
-		else if (leftAligned)
+		else if (encodingType->leftAligned())
 			templ("cleaned", shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
 		else
 			templ("cleaned", "and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");

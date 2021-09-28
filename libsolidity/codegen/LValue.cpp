@@ -237,19 +237,6 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 		if (type->category() == Type::Category::FixedPoint)
 			// implementation should be very similar to the integer case.
 			solUnimplemented("Not yet implemented - FixedPointType.");
-		if (type->leftAligned())
-		{
-			CompilerUtils(m_context).leftShiftNumberOnStack(256 - 8 * type->storageBytes());
-			cleaned = true;
-		}
-		else if (
-			type->category() == Type::Category::Integer &&
-			dynamic_cast<IntegerType const&>(*type).isSigned()
-		)
-		{
-			m_context << u256(type->storageBytes() - 1) << Instruction::SIGNEXTEND;
-			cleaned = true;
-		}
 		else if (FunctionType const* fun = dynamic_cast<decltype(fun)>(type))
 		{
 			if (fun->kind() == FunctionType::Kind::External)
@@ -264,6 +251,20 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 				m_context << Instruction::MUL << Instruction::OR;
 			}
 		}
+		else if (type->leftAligned())
+		{
+			CompilerUtils(m_context).leftShiftNumberOnStack(256 - 8 * type->storageBytes());
+			cleaned = true;
+		}
+		else if (
+			type->category() == Type::Category::Integer &&
+			dynamic_cast<IntegerType const&>(*type).isSigned()
+		)
+		{
+			m_context << u256(type->storageBytes() - 1) << Instruction::SIGNEXTEND;
+			cleaned = true;
+		}
+
 		if (!cleaned)
 		{
 			solAssert(type->sizeOnStack() == 1, "");
