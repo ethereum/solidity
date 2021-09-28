@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * AST: Export ``canonicalName`` for ``UserDefinedValueTypeDefinition`` and ``ContractDefinition``.
 
 
 

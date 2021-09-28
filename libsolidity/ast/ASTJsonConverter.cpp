@@ -275,6 +275,7 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("nodes", toJson(_node.subNodes())),
 		make_pair("scope", idOrNull(_node.scope()))
 	};
+	addIfSet(attributes, "canonicalName", _node.annotation().canonicalName);
 
 	if (_node.annotation().unimplementedDeclarations.has_value())
 		attributes.emplace_back("fullyImplemented", _node.annotation().unimplementedDeclarations->empty());
@@ -361,6 +362,7 @@ bool ASTJsonConverter::visit(UserDefinedValueTypeDefinition const& _node)
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
 		make_pair("underlyingType", toJson(*_node.underlyingType()))
 	};
+	addIfSet(attributes, "canonicalName", _node.annotation().canonicalName);
 
 	setJsonNode(_node, "UserDefinedValueTypeDefinition", std::move(attributes));
 

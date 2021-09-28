@@ -24,6 +24,7 @@
   "nodes":
   [
     {
+      "canonicalName": "MyAddress",
       "id": 2,
       "name": "MyAddress",
       "nameLocation": "5:9:1",
@@ -44,6 +45,7 @@
       }
     },
     {
+      "canonicalName": "MyUInt",
       "id": 4,
       "name": "MyUInt",
       "nameLocation": "32:6:1",
@@ -202,6 +204,7 @@
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
@@ -216,6 +219,7 @@
       "nodes":
       [
         {
+          "canonicalName": "C.MyAddress",
           "id": 18,
           "name": "MyAddress",
           "nameLocation": "118:9:1",
@@ -236,6 +240,7 @@
           }
         },
         {
+          "canonicalName": "C.MyUInt",
           "id": 20,
           "name": "MyUInt",
           "nameLocation": "149:6:1",

@@ -30,6 +30,7 @@
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "A",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
@@ -64,6 +65,7 @@
           "src": "29:1:1"
         }
       ],
+      "canonicalName": "B",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
@@ -99,6 +101,7 @@
           "src": "49:1:1"
         }
       ],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
@@ -135,6 +138,7 @@
           "src": "69:1:1"
         }
       ],
+      "canonicalName": "D",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
@@ -172,6 +176,7 @@
           "src": "89:1:1"
         }
       ],
+      "canonicalName": "E",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
