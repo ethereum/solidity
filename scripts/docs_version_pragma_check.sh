@@ -124,7 +124,7 @@ function findMinimalVersion()
         fi
     done
 
-    if [[ "$version" == "" ]]
+    if [[ "$version" == "" && "$greater" == false ]]
     then
         printError "No release ${sign}${pragmaVersion} was listed in available releases!"
         exit 1
