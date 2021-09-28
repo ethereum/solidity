@@ -64,3 +64,6 @@ This means the following source mappings represent the same information:
 ``1:2:1;1:9:1;2:1:2;2:1:2;2:1:2``
 
 ``1:2:1;:9;2:1:2;;``
+
+Important to note is that :ref:`verbatim <yul-verbatim>` verbatim instructions
+do not have individual but only one source mapping.
