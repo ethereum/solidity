@@ -2912,9 +2912,12 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type)
 		)");
 		templ("functionName", functionName);
 
-		unsigned storageBytes = _type.storageBytes();
-		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
-			if (type->isSigned() && storageBytes != 32)
+		Type const* encodingType = &_type;
+		if (_type.category() == Type::Category::UserDefinedValueType)
+			encodingType = _type.encodingType();
+		unsigned storageBytes = encodingType->storageBytes();
+		if (IntegerType const* intType = dynamic_cast<IntegerType const*>(encodingType))
+			if (intType->isSigned() && storageBytes != 32)
 			{
 				templ("cleaned", "signextend(" + to_string(storageBytes - 1) + ", value)");
 				return templ.render();
@@ -2922,10 +2925,10 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type)
 
 		bool leftAligned = false;
 		if (
-			_type.category() != Type::Category::Function ||
-			dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External
+			encodingType->category() != Type::Category::Function ||
+			dynamic_cast<FunctionType const&>(*encodingType).kind() == FunctionType::Kind::External
 		)
-			leftAligned = _type.leftAligned();
+			leftAligned = encodingType->leftAligned();
 
 		if (storageBytes == 32)
 			templ("cleaned", "value");
