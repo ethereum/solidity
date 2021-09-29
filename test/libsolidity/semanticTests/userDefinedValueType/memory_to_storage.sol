@@ -25,19 +25,19 @@ contract C {
 // ----
 // s() -> 0, 0, 0x00, 0
 // f((uint8,uint16,bytes2,uint8)): 1, 0xff, "ab", 15 ->
-// gas irOptimized: 110788
+// gas irOptimized: 44551
 // gas legacy: 111668
-// gas legacyOptimized: 110908
+// gas legacyOptimized: 44671
 // s() -> 1, 0xff, 0x6162000000000000000000000000000000000000000000000000000000000000, 15
 // g(uint16[]): 0x20, 3, 1, 2, 3 -> 0x20, 3, 1, 2, 3
-// gas irOptimized: 113144
+// gas irOptimized: 69671
 // gas legacy: 114806
-// gas legacyOptimized: 113085
+// gas legacyOptimized: 74834
 // small(uint256): 0 -> 1
 // small(uint256): 1 -> 2
 // h(bytes2[]): 0x20, 3, "ab", "cd", "ef" -> 0x20, 3, "ab", "cd", "ef"
-// gas irOptimized: 113317
+// gas irOptimized: 69928
 // gas legacy: 114496
-// gas legacyOptimized: 113214
+// gas legacyOptimized: 74921
 // l(uint256): 0 -> 0x6162000000000000000000000000000000000000000000000000000000000000
 // l(uint256): 1 -> 0x6364000000000000000000000000000000000000000000000000000000000000
