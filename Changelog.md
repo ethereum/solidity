@@ -1,4 +1,4 @@
-### 0.8.9 (unreleased)
+### 0.8.9 (2021-09-29)
 
 Important Bugfixes:
  * Immutables: Properly perform sign extension on signed immutables.
