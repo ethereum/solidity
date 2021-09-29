@@ -19,7 +19,7 @@ confinement: strict
 
 apps:
   solc:
-    command: solc
+    command: usr/local/bin/solc
     plugs: [home]
 
 parts:
