@@ -2,6 +2,7 @@
 
 Important Bugfixes:
  * Immutables: Properly perform sign extension on signed immutables.
+ * User Defined Value Type: Fix storage layout of user defined value types for underlying types shorter than 32 bytes.
 
 
 Bugfixes:

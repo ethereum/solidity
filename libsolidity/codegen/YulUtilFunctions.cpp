@@ -2912,24 +2912,20 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type)
 		)");
 		templ("functionName", functionName);
 
-		unsigned storageBytes = _type.storageBytes();
-		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
-			if (type->isSigned() && storageBytes != 32)
+		Type const* encodingType = &_type;
+		if (_type.category() == Type::Category::UserDefinedValueType)
+			encodingType = _type.encodingType();
+		unsigned storageBytes = encodingType->storageBytes();
+		if (IntegerType const* intType = dynamic_cast<IntegerType const*>(encodingType))
+			if (intType->isSigned() && storageBytes != 32)
 			{
 				templ("cleaned", "signextend(" + to_string(storageBytes - 1) + ", value)");
 				return templ.render();
 			}
 
-		bool leftAligned = false;
-		if (
-			_type.category() != Type::Category::Function ||
-			dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External
-		)
-			leftAligned = _type.leftAligned();
-
 		if (storageBytes == 32)
 			templ("cleaned", "value");
-		else if (leftAligned)
+		else if (encodingType->leftAligned())
 			templ("cleaned", shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
 		else
 			templ("cleaned", "and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
@@ -2965,7 +2961,7 @@ string YulUtilFunctions::prepareStoreFunction(Type const& _type)
 				}
 			)");
 			templ("functionName", functionName);
-			if (_type.category() == Type::Category::FixedBytes)
+			if (_type.leftAligned())
 				templ("actualPrepare", shiftRightFunction(256 - 8 * _type.storageBytes()) + "(value)");
 			else
 				templ("actualPrepare", "value");
@@ -3304,6 +3300,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				bodyTemplate("cleanOutput", cleanupFunction(_to));
 				string convert;
 
+				solAssert(_to.category() != Type::Category::UserDefinedValueType, "");
 				if (auto const* toFixedBytes = dynamic_cast<FixedBytesType const*>(&_to))
 					convert = shiftLeftFunction(256 - toFixedBytes->numBytes() * 8);
 				else if (dynamic_cast<FixedPointType const*>(&_to))

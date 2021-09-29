@@ -113,6 +113,7 @@ void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool
 		if (!m_padded)
 		{
 			solAssert(m_dataType->calldataEncodedSize(false) == 1, "Invalid non-padded type.");
+			solAssert(m_dataType->category() != Type::Category::UserDefinedValueType, "");
 			if (m_dataType->category() == Type::Category::FixedBytes)
 				m_context << u256(0) << Instruction::BYTE;
 			m_context << Instruction::SWAP1 << Instruction::MSTORE8;
@@ -226,27 +227,17 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 		m_context << Instruction::POP << Instruction::SLOAD;
 	else
 	{
+		Type const* type = m_dataType;
+		if (type->category() == Type::Category::UserDefinedValueType)
+			type = type->encodingType();
 		bool cleaned = false;
 		m_context
 			<< Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
 			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
-		if (m_dataType->category() == Type::Category::FixedPoint)
+		if (type->category() == Type::Category::FixedPoint)
 			// implementation should be very similar to the integer case.
 			solUnimplemented("Not yet implemented - FixedPointType.");
-		if (m_dataType->category() == Type::Category::FixedBytes)
-		{
-			CompilerUtils(m_context).leftShiftNumberOnStack(256 - 8 * m_dataType->storageBytes());
-			cleaned = true;
-		}
-		else if (
-			m_dataType->category() == Type::Category::Integer &&
-			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
-		)
-		{
-			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
-			cleaned = true;
-		}
-		else if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
+		else if (FunctionType const* fun = dynamic_cast<decltype(fun)>(type))
 		{
 			if (fun->kind() == FunctionType::Kind::External)
 			{
@@ -260,10 +251,24 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 				m_context << Instruction::MUL << Instruction::OR;
 			}
 		}
+		else if (type->leftAligned())
+		{
+			CompilerUtils(m_context).leftShiftNumberOnStack(256 - 8 * type->storageBytes());
+			cleaned = true;
+		}
+		else if (
+			type->category() == Type::Category::Integer &&
+			dynamic_cast<IntegerType const&>(*type).isSigned()
+		)
+		{
+			m_context << u256(type->storageBytes() - 1) << Instruction::SIGNEXTEND;
+			cleaned = true;
+		}
+
 		if (!cleaned)
 		{
-			solAssert(m_dataType->sizeOnStack() == 1, "");
-			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << Instruction::AND;
+			solAssert(type->sizeOnStack() == 1, "");
+			m_context << ((u256(0x1) << (8 * type->storageBytes())) - 1) << Instruction::AND;
 		}
 	}
 }
@@ -329,10 +334,13 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 						Instruction::AND;
 				}
 			}
-			else if (m_dataType->category() == Type::Category::FixedBytes)
+			else if (m_dataType->leftAligned())
 			{
-				solAssert(_sourceType.category() == Type::Category::FixedBytes, "source not fixed bytes");
-				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes());
+				solAssert(_sourceType.category() == Type::Category::FixedBytes || (
+					_sourceType.encodingType() &&
+					_sourceType.encodingType()->category() == Type::Category::FixedBytes
+				), "source not fixed bytes");
+				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * m_dataType->storageBytes());
 			}
 			else
 			{
