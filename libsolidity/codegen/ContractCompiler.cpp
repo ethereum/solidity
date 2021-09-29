@@ -192,7 +192,12 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	auto const& immutables = contractType.immutableVariables();
 	// Push all immutable values on the stack.
 	for (auto const& immutable: immutables)
-		CompilerUtils(m_context).loadFromMemory(static_cast<unsigned>(m_context.immutableMemoryOffset(*immutable)), *immutable->annotation().type);
+		CompilerUtils(m_context).loadFromMemory(
+			static_cast<unsigned>(m_context.immutableMemoryOffset(*immutable)),
+			*immutable->annotation().type,
+			false,
+			true
+	);
 	m_context.pushSubroutineSize(m_context.runtimeSub());
 	if (immutables.empty())
 		m_context << Instruction::DUP1;
@@ -439,7 +444,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
 	{
-		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
+		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true, false);
 
 		// stack now is: <can-call-non-view-functions>? <funhash>
 		vector<FixedHash<4>> sortedIDs;
