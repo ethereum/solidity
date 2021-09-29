@@ -1589,5 +1589,9 @@
             "SignedImmutables"
         ],
         "released": "2021-09-27"
+    },
+    "0.8.9": {
+        "bugs": [],
+        "released": "2021-09-29"
     }
 }
