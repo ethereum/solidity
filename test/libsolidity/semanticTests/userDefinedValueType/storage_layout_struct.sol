@@ -136,6 +136,19 @@ contract C {
        }
    }
 
+   function read_contents_asm() external returns (bytes32 rxa, bytes32 rya, bytes32 rxb, bytes32 ryb) {
+       b.a = MyInt64.wrap(-2);
+       b.b = MyInt64.wrap(-3);
+       HalfSlot memory x = b;
+       MyInt64 y = b.a;
+       MyInt64 z = b.b;
+       assembly {
+           rxa := mload(x)
+           rya := y
+           rxb := mload(add(x, 0x20))
+           ryb := z
+       }
+   }
 }
 
 // ====
@@ -165,3 +178,4 @@ contract C {
 // storage_rd() -> 7, 0
 // set_rd(int96,address): 39614081257132168796771975167, 1461501637330902918203684832716283019655932542975 ->
 // read_slot(uint256): 7 -> -39614081257132168796771975169
+// read_contents_asm() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd
