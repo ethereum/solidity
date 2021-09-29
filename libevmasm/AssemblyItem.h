@@ -171,7 +171,8 @@ public:
 	size_t m_modifierDepth = 0;
 
 	void setImmutableOccurrences(size_t _n) const { m_immutableOccurrences = _n; }
-	size_t immutableOccurrences() const noexcept { return m_immutableOccurrences.value_or(0); }
+
+	size_t opcodeCount() const noexcept;
 
 private:
 	AssemblyItemType m_type;

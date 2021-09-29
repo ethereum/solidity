@@ -21,15 +21,16 @@
  * Tests for the assembler.
  */
 
-#include <libsolutil/JSON.h>
 #include <libevmasm/Assembly.h>
+#include <libsolutil/JSON.h>
+#include <libyul/Exceptions.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <memory>
 #include <string>
 #include <tuple>
-#include <memory>
-#include <libyul/Exceptions.h>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -196,22 +197,22 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 			};
 
 			auto subAsm = make_shared<Assembly>();
-			for (int8_t i = 0; i < numImmutables; ++i)
+			for (char i = 0; i < numImmutables; ++i)
 			{
 				for (int r = 0; r < numActualRefs; ++r)
 				{
 					subAsm->setSourceLocation(SourceLocation{10*i, 10*i + 6 + r, subName});
-					subAsm->appendImmutable(string(1, 'a' + i)); // "a", "b", ...
+					subAsm->appendImmutable(string(1, char('a' + i))); // "a", "b", ...
 				}
 			}
 
 			Assembly assembly;
-			for (int8_t i = 1; i <= numImmutables; ++i)
+			for (char i = 1; i <= numImmutables; ++i)
 			{
 				assembly.setSourceLocation({10*i, 10*i + 3+i, assemblyName});
 				assembly.append(u256(0x71));              // immutble value
 				assembly.append(u256(0));                 // target... modules?
-				assembly.appendImmutableAssignment(string(1, 'a' + i - 1));
+				assembly.appendImmutableAssignment(string(1, char('a' + i - 1)));
 			}
 
 			assembly.appendSubroutine(subAsm);

@@ -65,5 +65,6 @@ This means the following source mappings represent the same information:
 
 ``1:2:1;:9;2:1:2;;``
 
-Important to note is that :ref:`verbatim <yul-verbatim>` verbatim instructions
-do not have individual but only one source mapping.
+Important to note is that when the :ref:`verbatim <yul-verbatim>` builtin is used,
+the source mappings will be invalid: The builtin is considered a single
+instruction instead of potentially multiple.

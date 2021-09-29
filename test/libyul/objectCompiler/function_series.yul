@@ -11,15 +11,15 @@ object "Contract" {
 // ----
 // Assembly:
 //     /* "source":33:48   */
-//   jump(tag_1)
-// tag_2:
-// tag_3:
+//   jump(tag_3)
+// tag_1:
+// tag_4:
 //   jump	// out
 //     /* "source":53:68   */
-// tag_4:
+// tag_2:
 // tag_5:
 //   jump	// out
-// tag_1:
+// tag_3:
 //     /* "source":83:84   */
 //   0x01
 //     /* "source":80:81   */

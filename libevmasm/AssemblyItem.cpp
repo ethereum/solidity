@@ -87,7 +87,9 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	case PushImmutable:
 		return 1 + 32;
 	case AssignImmutable:
-		if (m_immutableOccurrences)
+		if (!m_immutableOccurrences)
+			return 0;
+		else if (m_immutableOccurrences.value() != 0)
 			// (DUP DUP PUSH <n> ADD MSTORE)* (PUSH <n> ADD MSTORE)
 			return (*m_immutableOccurrences - 1) * (5 + 32) + (3 + 32);
 		else
@@ -324,6 +326,27 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	return _out;
 }
 
+size_t AssemblyItem::opcodeCount() const noexcept
+{
+	switch (m_type)
+	{
+		case AssemblyItemType::AssignImmutable:
+			// Append empty items if this AssignImmutable was referenced more than once.
+			// For n immutable occurrences the first (n - 1) occurrences will
+			// generate 5 opcodes and the last will generate 3 opcodes,
+			// because it is reusing the 2 top-most elements on the stack.
+			if (!m_immutableOccurrences)
+				// AssignImmutable without any uses does not need to be assigned to at all.
+				return 0;
+			else if (m_immutableOccurrences.value() != 0)
+				return (*m_immutableOccurrences - 1) * 5 + 3;
+			else
+				return 2; // two POP's
+		default:
+			return 1;
+	}
+}
+
 std::string AssemblyItem::computeSourceMapping(
 	AssemblyItems const& _items,
 	map<string, unsigned> const& _sourceIndicesMap
@@ -405,17 +428,8 @@ std::string AssemblyItem::computeSourceMapping(
 			}
 		}
 
-		// Append empty items if this AssignImmutable was referenced more than once.
-		// For n immutable occurrences the first (n - 1) occurrences will
-		// generate 5 opcodes and the last will generate 3 opcodes,
-		// because it is reusing the 2 top-most elements on the stack.
-		if (item.immutableOccurrences())
-		{
-			auto const n = (item.immutableOccurrences() - 1) * 5 + 3;
-			ret += string(n - 1, ';');
-		}
-		else if (item.type() == AssemblyItemType::AssignImmutable)
-			ret += ';'; // two POP's
+		if (item.opcodeCount() > 1)
+			ret += string(item.opcodeCount() - 1, ';');
 
 		prevStart = location.start;
 		prevLength = length;
