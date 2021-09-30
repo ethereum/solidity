@@ -56,10 +56,8 @@ static string const g_strAllowPaths = "allow-paths";
 static string const g_strBasePath = "base-path";
 static string const g_strIncludePath = "include-path";
 static string const g_strAsm = "asm";
-static string const g_strAsmJson = "asm-json";
 static string const g_strAssemble = "assemble";
 static string const g_strAst = "ast";
-static string const g_strAstCompactJson = "ast-compact-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCombinedJson = "combined-json";
@@ -76,8 +74,6 @@ static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
 static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
-static string const g_strIR = "ir";
-static string const g_strIROptimized = "ir-optimized";
 static string const g_strIPFS = "ipfs";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
@@ -213,27 +209,22 @@ bool CommandLineParser::checkMutuallyExclusive(vector<string> const& _optionName
 
 bool CompilerOutputs::operator==(CompilerOutputs const& _other) const noexcept
 {
-	static_assert(
-		sizeof(*this) == 15 * sizeof(bool),
-		"Remember to update code below if you add/remove fields."
-	);
+	for (bool CompilerOutputs::* member: componentMap() | ranges::views::values)
+		if (this->*member != _other.*member)
+			return false;
+	return true;
+}
 
-	return
-		astCompactJson == _other.astCompactJson &&
-		asm_ == _other.asm_ &&
-		asmJson == _other.asmJson &&
-		opcodes == _other.opcodes &&
-		binary == _other.binary &&
-		binaryRuntime == _other.binaryRuntime &&
-		abi == _other.abi &&
-		ir == _other.ir &&
-		irOptimized == _other.irOptimized &&
-		ewasm == _other.ewasm &&
-		signatureHashes == _other.signatureHashes &&
-		natspecUser == _other.natspecUser &&
-		natspecDev == _other.natspecDev &&
-		metadata == _other.metadata &&
-		storageLayout == _other.storageLayout;
+string const& CompilerOutputs::componentName(bool CompilerOutputs::* _component)
+{
+	solAssert(_component, "");
+
+	// NOTE: Linear search is not optimal but it's simpler than getting pointers-to-members to work as map keys.
+	for (auto const& [componentName, component]: CompilerOutputs::componentMap())
+		if (component == _component)
+			return componentName;
+
+	solAssert(false, "");
 }
 
 bool CombinedJsonRequests::operator==(CombinedJsonRequests const& _other) const noexcept
@@ -511,7 +502,7 @@ at standard output or in files in the output directory, if specified.
 Imports are automatically read from the filesystem, but it is also possible to
 remap paths using the context:prefix=path syntax.
 Example:
-solc --)" + g_strBinary + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
+solc --)" + CompilerOutputs::componentName(&CompilerOutputs::binary) + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
 
 General Information)").c_str(),
 		po::options_description::m_default_line_length,
@@ -683,21 +674,21 @@ General Information)").c_str(),
 
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
-		(g_strAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
-		(g_strAsm.c_str(), "EVM assembly of the contracts.")
-		(g_strAsmJson.c_str(), "EVM assembly of the contracts in JSON format.")
-		(g_strOpcodes.c_str(), "Opcodes of the contracts.")
-		(g_strBinary.c_str(), "Binary of the contracts in hex.")
-		(g_strBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
-		(g_strAbi.c_str(), "ABI specification of the contracts.")
-		(g_strIR.c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
-		(g_strIROptimized.c_str(), "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
-		(g_strEwasm.c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
-		(g_strSignatureHashes.c_str(), "Function signature hashes of the contracts.")
-		(g_strNatspecUser.c_str(), "Natspec user documentation of all contracts.")
-		(g_strNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
-		(g_strMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_strStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.")
+		(CompilerOutputs::componentName(&CompilerOutputs::astCompactJson).c_str(), "AST of all source files in a compact JSON format.")
+		(CompilerOutputs::componentName(&CompilerOutputs::asm_).c_str(), "EVM assembly of the contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::asmJson).c_str(), "EVM assembly of the contracts in JSON format.")
+		(CompilerOutputs::componentName(&CompilerOutputs::opcodes).c_str(), "Opcodes of the contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::binary).c_str(), "Binary of the contracts in hex.")
+		(CompilerOutputs::componentName(&CompilerOutputs::binaryRuntime).c_str(), "Binary of the runtime part of the contracts in hex.")
+		(CompilerOutputs::componentName(&CompilerOutputs::abi).c_str(), "ABI specification of the contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::ewasm).c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
+		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables.")
 	;
 	desc.add(outputComponents);
 
@@ -889,14 +880,14 @@ bool CommandLineParser::processArgs()
 		return false;
 
 	array<string, 8> const conflictingWithStopAfter{
-		g_strBinary,
-		g_strIR,
-		g_strIROptimized,
-		g_strEwasm,
+		CompilerOutputs::componentName(&CompilerOutputs::binary),
+		CompilerOutputs::componentName(&CompilerOutputs::ir),
+		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
 		g_strGas,
-		g_strAsm,
-		g_strAsmJson,
-		g_strOpcodes
+		CompilerOutputs::componentName(&CompilerOutputs::asm_),
+		CompilerOutputs::componentName(&CompilerOutputs::asmJson),
+		CompilerOutputs::componentName(&CompilerOutputs::opcodes),
 	};
 
 	for (auto& option: conflictingWithStopAfter)
@@ -965,25 +956,8 @@ bool CommandLineParser::processArgs()
 		m_options.formatting.json.indent = m_args[g_strJsonIndent].as<uint32_t>();
 	}
 
-	static_assert(
-		sizeof(m_options.compiler.outputs) == 15 * sizeof(bool),
-		"Remember to update code below if you add/remove fields."
-	);
-	m_options.compiler.outputs.astCompactJson = (m_args.count(g_strAstCompactJson) > 0);
-	m_options.compiler.outputs.asm_ = (m_args.count(g_strAsm) > 0);
-	m_options.compiler.outputs.asmJson = (m_args.count(g_strAsmJson) > 0);
-	m_options.compiler.outputs.opcodes = (m_args.count(g_strOpcodes) > 0);
-	m_options.compiler.outputs.binary = (m_args.count(g_strBinary) > 0);
-	m_options.compiler.outputs.binaryRuntime = (m_args.count(g_strBinaryRuntime) > 0);
-	m_options.compiler.outputs.abi = (m_args.count(g_strAbi) > 0);
-	m_options.compiler.outputs.ir = (m_args.count(g_strIR) > 0);
-	m_options.compiler.outputs.irOptimized = (m_args.count(g_strIROptimized) > 0);
-	m_options.compiler.outputs.ewasm = (m_args.count(g_strEwasm) > 0);
-	m_options.compiler.outputs.signatureHashes = (m_args.count(g_strSignatureHashes) > 0);
-	m_options.compiler.outputs.natspecUser = (m_args.count(g_strNatspecUser) > 0);
-	m_options.compiler.outputs.natspecDev = (m_args.count(g_strNatspecDev) > 0);
-	m_options.compiler.outputs.metadata = (m_args.count(g_strMetadata) > 0);
-	m_options.compiler.outputs.storageLayout = (m_args.count(g_strStorageLayout) > 0);
+	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
 
 	m_options.compiler.estimateGas = (m_args.count(g_strGas) > 0);
 

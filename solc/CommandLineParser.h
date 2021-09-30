@@ -56,6 +56,29 @@ struct CompilerOutputs
 	bool operator!=(CompilerOutputs const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(CompilerOutputs const& _other) const noexcept;
 
+	static std::string const& componentName(bool CompilerOutputs::* _component);
+	static auto const& componentMap()
+	{
+		static std::map<std::string, bool CompilerOutputs::*> const components = {
+			{"ast-compact-json", &CompilerOutputs::astCompactJson},
+			{"asm", &CompilerOutputs::asm_},
+			{"asm-json", &CompilerOutputs::asmJson},
+			{"opcodes", &CompilerOutputs::opcodes},
+			{"bin", &CompilerOutputs::binary},
+			{"bin-runtime", &CompilerOutputs::binaryRuntime},
+			{"abi", &CompilerOutputs::abi},
+			{"ir", &CompilerOutputs::ir},
+			{"ir-optimized", &CompilerOutputs::irOptimized},
+			{"ewasm", &CompilerOutputs::ewasm},
+			{"hashes", &CompilerOutputs::signatureHashes},
+			{"userdoc", &CompilerOutputs::natspecUser},
+			{"devdoc", &CompilerOutputs::natspecDev},
+			{"metadata", &CompilerOutputs::metadata},
+			{"storage-layout", &CompilerOutputs::storageLayout},
+		};
+		return components;
+	}
+
 	bool astCompactJson = false;
 	bool asm_ = false;
 	bool asmJson = false;
