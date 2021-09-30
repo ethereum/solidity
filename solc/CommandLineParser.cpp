@@ -51,23 +51,16 @@ ostream& CommandLineParser::serr()
 #define cout
 #define cerr
 
-static string const g_strAbi = "abi";
 static string const g_strAllowPaths = "allow-paths";
 static string const g_strBasePath = "base-path";
 static string const g_strIncludePath = "include-path";
-static string const g_strAsm = "asm";
 static string const g_strAssemble = "assemble";
-static string const g_strAst = "ast";
-static string const g_strBinary = "bin";
-static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCombinedJson = "combined-json";
 static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
 static string const g_strExperimentalViaIR = "experimental-via-ir";
-static string const g_strGeneratedSources = "generated-sources";
-static string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strImportAst = "import-ast";
@@ -79,7 +72,6 @@ static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strMachine = "machine";
-static string const g_strMetadata = "metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerContracts = "model-checker-contracts";
@@ -89,11 +81,8 @@ static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved
 static string const g_strModelCheckerSolvers = "model-checker-solvers";
 static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
-static string const g_strNatspecDev = "devdoc";
-static string const g_strNatspecUser = "userdoc";
 static string const g_strNone = "none";
 static string const g_strNoOptimizeYul = "no-optimize-yul";
-static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOptimizeYul = "optimize-yul";
@@ -101,7 +90,6 @@ static string const g_strYulOptimizations = "yul-optimizations";
 static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
 static string const g_strRevertStrings = "revert-strings";
-static string const g_strStorageLayout = "storage-layout";
 static string const g_strStopAfter = "stop-after";
 static string const g_strParsing = "parsing";
 
@@ -114,13 +102,8 @@ static set<string> const g_revertStringsArgs
 	revertStringsToString(RevertStrings::VerboseDebug)
 };
 
-static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
-static string const g_strSrcMap = "srcmap";
-static string const g_strSrcMapRuntime = "srcmap-runtime";
-static string const g_strFunDebug = "function-debug";
-static string const g_strFunDebugRuntime = "function-debug-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strSwarm = "swarm";
@@ -131,28 +114,6 @@ static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
 static string const g_strErrorIds = "error-codes";
-
-/// Possible arguments to for --combined-json
-static set<string> const g_combinedJsonArgs
-{
-	g_strAbi,
-	g_strAsm,
-	g_strAst,
-	g_strBinary,
-	g_strBinaryRuntime,
-	g_strFunDebug,
-	g_strFunDebugRuntime,
-	g_strGeneratedSources,
-	g_strGeneratedSourcesRuntime,
-	g_strMetadata,
-	g_strNatspecUser,
-	g_strNatspecDev,
-	g_strOpcodes,
-	g_strSignatureHashes,
-	g_strSrcMap,
-	g_strSrcMapRuntime,
-	g_strStorageLayout
-};
 
 /// Possible arguments to for --machine
 static set<string> const g_machineArgs
@@ -229,29 +190,21 @@ string const& CompilerOutputs::componentName(bool CompilerOutputs::* _component)
 
 bool CombinedJsonRequests::operator==(CombinedJsonRequests const& _other) const noexcept
 {
-	static_assert(
-		sizeof(*this) == 17 * sizeof(bool),
-		"Remember to update code below if you add/remove fields."
-	);
+	for (bool CombinedJsonRequests::* member: componentMap() | ranges::views::values)
+		if (this->*member != _other.*member)
+			return false;
+	return true;
+}
 
-	return
-		abi == _other.abi &&
-		metadata == _other.metadata &&
-		binary == _other.binary &&
-		binaryRuntime == _other.binaryRuntime &&
-		opcodes == _other.opcodes &&
-		asm_ == _other.asm_ &&
-		storageLayout == _other.storageLayout &&
-		generatedSources == _other.generatedSources &&
-		generatedSourcesRuntime == _other.generatedSourcesRuntime &&
-		srcMap == _other.srcMap &&
-		srcMapRuntime == _other.srcMapRuntime &&
-		funDebug == _other.funDebug &&
-		funDebugRuntime == _other.funDebugRuntime &&
-		signatureHashes == _other.signatureHashes &&
-		natspecDev == _other.natspecDev &&
-		natspecUser == _other.natspecUser &&
-		ast == _other.ast;
+string const& CombinedJsonRequests::componentName(bool CombinedJsonRequests::* _component)
+{
+	solAssert(_component, "");
+
+	for (auto const& [componentName, component]: CombinedJsonRequests::componentMap())
+		if (component == _component)
+			return componentName;
+
+	solAssert(false, "");
 }
 
 bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noexcept
@@ -614,7 +567,7 @@ General Information)").c_str(),
 			g_strImportAst.c_str(),
 			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
 			"Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
-			"--" + g_strCombinedJson + " " + g_strAst).c_str()
+			"--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
 		)
 	;
 	desc.add(alternativeInputModes);
@@ -700,7 +653,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strCombinedJson.c_str(),
-			po::value<string>()->value_name(joinHumanReadable(g_combinedJsonArgs, ",")),
+			po::value<string>()->value_name(joinHumanReadable(CombinedJsonRequests::componentMap() | ranges::views::keys, ",")),
 			"Output a single json document containing the specified information."
 		)
 	;
@@ -1244,30 +1197,15 @@ bool CommandLineParser::parseCombinedJsonOption()
 
 	set<string> requests;
 	for (string const& item: boost::split(requests, m_args[g_strCombinedJson].as<string>(), boost::is_any_of(",")))
-		if (!g_combinedJsonArgs.count(item))
+		if (CombinedJsonRequests::componentMap().count(item) == 0)
 		{
 			serr() << "Invalid option to --" << g_strCombinedJson << ": " << item << endl;
 			return false;
 		}
 
 	m_options.compiler.combinedJsonRequests = CombinedJsonRequests{};
-	m_options.compiler.combinedJsonRequests->abi = (requests.count(g_strAbi) > 0);
-	m_options.compiler.combinedJsonRequests->metadata = (requests.count("metadata") > 0);
-	m_options.compiler.combinedJsonRequests->binary = (requests.count(g_strBinary) > 0);
-	m_options.compiler.combinedJsonRequests->binaryRuntime = (requests.count(g_strBinaryRuntime) > 0);
-	m_options.compiler.combinedJsonRequests->opcodes = (requests.count(g_strOpcodes) > 0);
-	m_options.compiler.combinedJsonRequests->asm_ = (requests.count(g_strAsm) > 0);
-	m_options.compiler.combinedJsonRequests->storageLayout = (requests.count(g_strStorageLayout) > 0);
-	m_options.compiler.combinedJsonRequests->generatedSources = (requests.count(g_strGeneratedSources) > 0);
-	m_options.compiler.combinedJsonRequests->generatedSourcesRuntime = (requests.count(g_strGeneratedSourcesRuntime) > 0);
-	m_options.compiler.combinedJsonRequests->srcMap = (requests.count(g_strSrcMap) > 0);
-	m_options.compiler.combinedJsonRequests->srcMapRuntime = (requests.count(g_strSrcMapRuntime) > 0);
-	m_options.compiler.combinedJsonRequests->funDebug = (requests.count(g_strFunDebug) > 0);
-	m_options.compiler.combinedJsonRequests->funDebugRuntime = (requests.count(g_strFunDebugRuntime) > 0);
-	m_options.compiler.combinedJsonRequests->signatureHashes = (requests.count(g_strSignatureHashes) > 0);
-	m_options.compiler.combinedJsonRequests->natspecDev = (requests.count(g_strNatspecDev) > 0);
-	m_options.compiler.combinedJsonRequests->natspecUser = (requests.count(g_strNatspecUser) > 0);
-	m_options.compiler.combinedJsonRequests->ast = (requests.count(g_strAst) > 0);
+	for (auto&& [componentName, component]: CombinedJsonRequests::componentMap())
+		m_options.compiler.combinedJsonRequests.value().*component = (requests.count(componentName) > 0);
 
 	return true;
 }

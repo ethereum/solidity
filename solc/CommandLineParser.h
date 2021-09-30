@@ -101,6 +101,31 @@ struct CombinedJsonRequests
 	bool operator!=(CombinedJsonRequests const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(CombinedJsonRequests const& _other) const noexcept;
 
+	static std::string const& componentName(bool CombinedJsonRequests::* _component);
+	static auto const& componentMap()
+	{
+		static std::map<std::string, bool CombinedJsonRequests::*> const components = {
+			{"abi", &CombinedJsonRequests::abi},
+			{"metadata", &CombinedJsonRequests::metadata},
+			{"bin", &CombinedJsonRequests::binary},
+			{"bin-runtime", &CombinedJsonRequests::binaryRuntime},
+			{"opcodes", &CombinedJsonRequests::opcodes},
+			{"asm", &CombinedJsonRequests::asm_},
+			{"storage-layout", &CombinedJsonRequests::storageLayout},
+			{"generated-sources", &CombinedJsonRequests::generatedSources},
+			{"generated-sources-runtime", &CombinedJsonRequests::generatedSourcesRuntime},
+			{"srcmap", &CombinedJsonRequests::srcMap},
+			{"srcmap-runtime", &CombinedJsonRequests::srcMapRuntime},
+			{"function-debug", &CombinedJsonRequests::funDebug},
+			{"function-debug-runtime", &CombinedJsonRequests::funDebugRuntime},
+			{"hashes", &CombinedJsonRequests::signatureHashes},
+			{"devdoc", &CombinedJsonRequests::natspecDev},
+			{"userdoc", &CombinedJsonRequests::natspecUser},
+			{"ast", &CombinedJsonRequests::ast},
+		};
+		return components;
+	}
+
 	bool abi = false;
 	bool metadata = false;
 	bool binary = false;
