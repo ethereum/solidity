@@ -63,7 +63,6 @@ static string const g_strAstCompactJson = "ast-compact-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCombinedJson = "combined-json";
-static string const g_strCompactJSON = "compact-format";
 static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVMVersion = "evm-version";
@@ -75,7 +74,6 @@ static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
-static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
 static string const g_strIR = "ir";
@@ -146,12 +144,10 @@ static set<string> const g_combinedJsonArgs
 	g_strAst,
 	g_strBinary,
 	g_strBinaryRuntime,
-	g_strCompactJSON,
 	g_strFunDebug,
 	g_strFunDebugRuntime,
 	g_strGeneratedSources,
 	g_strGeneratedSourcesRuntime,
-	g_strInterface,
 	g_strMetadata,
 	g_strNatspecUser,
 	g_strNatspecDev,
@@ -627,7 +623,7 @@ General Information)").c_str(),
 			g_strImportAst.c_str(),
 			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
 			"Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
-			"--" + g_strCombinedJson + " " + g_strAst + "," + g_strCompactJSON).c_str()
+			"--" + g_strCombinedJson + " " + g_strAst).c_str()
 		)
 	;
 	desc.add(alternativeInputModes);

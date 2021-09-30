@@ -95,7 +95,7 @@ private:
 
 	/// Tries to read @ m_sourceCodes as a JSONs holding ASTs
 	/// such that they can be imported into the compiler  (importASTs())
-	/// (produced by --combined-json ast,compact-format <file.sol>
+	/// (produced by --combined-json ast <file.sol>
 	/// or standard-json output
 	std::map<std::string, Json::Value> parseAstFromInput();
 
