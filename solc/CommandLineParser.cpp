@@ -578,7 +578,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strRevertStrings.c_str(),
-			po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
+			po::value<string>()->value_name(joinHumanReadable(g_revertStringsArgs, ",")),
 			"Strip revert (and require) reason strings or add additional debugging information."
 		)
 		(
@@ -632,12 +632,12 @@ General Information)").c_str(),
 	assemblyModeOptions.add_options()
 		(
 			g_strMachine.c_str(),
-			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
+			po::value<string>()->value_name(joinHumanReadable(g_machineArgs, ",")),
 			"Target machine in assembly or Yul mode."
 		)
 		(
 			g_strYulDialect.c_str(),
-			po::value<string>()->value_name(boost::join(g_yulDialectArgs, ",")),
+			po::value<string>()->value_name(joinHumanReadable(g_yulDialectArgs, ",")),
 			"Input dialect to use in assembly or yul mode."
 		)
 	;
@@ -709,7 +709,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strCombinedJson.c_str(),
-			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
+			po::value<string>()->value_name(joinHumanReadable(g_combinedJsonArgs, ",")),
 			"Output a single json document containing the specified information."
 		)
 	;
@@ -719,7 +719,7 @@ General Information)").c_str(),
 	metadataOptions.add_options()
 		(
 			g_strMetadataHash.c_str(),
-			po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
+			po::value<string>()->value_name(joinHumanReadable(g_metadataHashArgs, ",")),
 			"Choose hash method for the bytecode metadata or disable it."
 		)
 		(
