@@ -450,6 +450,12 @@ bool CommandLineParser::parseOutputSelection()
 			CompilerOutputs::componentMap() |
 			ranges::views::keys |
 			ranges::to<set>();
+		static set<string> const assemblerModeOutputs = {
+			CompilerOutputs::componentName(&CompilerOutputs::asm_),
+			CompilerOutputs::componentName(&CompilerOutputs::binary),
+			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+			CompilerOutputs::componentName(&CompilerOutputs::ewasm),
+		};
 
 		switch (_mode)
 		{
@@ -461,6 +467,7 @@ bool CommandLineParser::parseOutputSelection()
 		case InputMode::CompilerWithASTImport:
 			return contains(compilerModeOutputs, _outputName);
 		case InputMode::Assembler:
+			return contains(assemblerModeOutputs, _outputName);
 		case InputMode::StandardJson:
 		case InputMode::Linker:
 			return false;
@@ -471,6 +478,16 @@ bool CommandLineParser::parseOutputSelection()
 
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
+
+	if (m_options.input.mode == InputMode::Assembler && m_options.compiler.outputs == CompilerOutputs{})
+	{
+		// In assembly mode keep the default outputs enabled for backwards-compatibility.
+		// TODO: Remove this (must be done in a breaking release).
+		m_options.compiler.outputs.asm_ = true;
+		m_options.compiler.outputs.binary = true;
+		m_options.compiler.outputs.irOptimized = true;
+		m_options.compiler.outputs.ewasm = true;
+	}
 
 	vector<string> unsupportedOutputs;
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())

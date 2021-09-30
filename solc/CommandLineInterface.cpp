@@ -1042,34 +1042,54 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 		yul::AssemblyStack& stack = assemblyStacks[src.first];
 
-		sout() << endl << "Pretty printed source:" << endl;
-		sout() << stack.print() << endl;
+		if (m_options.compiler.outputs.irOptimized)
+		{
+			// NOTE: This actually outputs unoptimized code when the optimizer is disabled but
+			// 'ir' output in StandardCompiler works the same way.
+			sout() << endl << "Pretty printed source:" << endl;
+			sout() << stack.print() << endl;
+		}
 
 		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
 		{
 			stack.translate(yul::AssemblyStack::Language::Ewasm);
 			stack.optimize();
 
-			sout() << endl << "==========================" << endl;
-			sout() << endl << "Translated source:" << endl;
-			sout() << stack.print() << endl;
+			// TODO: This isn't ewasm but it's only present when we're doing Yul->EWASM translation.
+			// It should get its own output flag in the future.
+			if (m_options.compiler.outputs.ewasm)
+			{
+				sout() << endl << "==========================" << endl;
+				sout() << endl << "Translated source:" << endl;
+				sout() << stack.print() << endl;
+			}
 		}
 
 		yul::MachineAssemblyObject object;
 		object = stack.assemble(_targetMachine);
 		object.bytecode->link(m_options.linker.libraries);
 
-		sout() << endl << "Binary representation:" << endl;
-		if (object.bytecode)
-			sout() << object.bytecode->toHex() << endl;
-		else
-			serr() << "No binary representation found." << endl;
+		if (m_options.compiler.outputs.binary)
+		{
+			sout() << endl << "Binary representation:" << endl;
+			if (object.bytecode)
+				sout() << object.bytecode->toHex() << endl;
+			else
+				serr() << "No binary representation found." << endl;
+		}
 
-		sout() << endl << "Text representation:" << endl;
-		if (!object.assembly.empty())
-			sout() << object.assembly << endl;
-		else
-			serr() << "No text representation found." << endl;
+		solAssert(_targetMachine == yul::AssemblyStack::Machine::Ewasm || _targetMachine == yul::AssemblyStack::Machine::EVM, "");
+		if (
+			(_targetMachine == yul::AssemblyStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
+			(_targetMachine == yul::AssemblyStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
+		)
+		{
+			sout() << endl << "Text representation:" << endl;
+			if (!object.assembly.empty())
+				sout() << object.assembly << endl;
+			else
+				serr() << "No text representation found." << endl;
+		}
 	}
 
 	return true;

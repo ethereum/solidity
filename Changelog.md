@@ -7,6 +7,7 @@ Language Features:
 Compiler Features:
  * Commandline Interface: Accept nested brackets in step sequences passed to ``--yul-optimizations``.
  * Commandline Interface: Add ``--debug-info`` option for selecting how much extra debug information should be included in the produced EVM assembly and Yul code.
+ * Commandline Interface: Support ``--asm``, ``--bin``, ``--ir-optimized`` and ``--ewasm`` output selection options in assembler mode.
  * Commandline Interface: Use different colors when printing errors, warnings and infos.
  * SMTChecker: Output values for ``block.*``, ``msg.*`` and ``tx.*`` variables that are present in the called functions.
  * SMTChecker: Report contract invariants and reentrancy properties. This can be enabled via the CLI option ``--model-checker-invariants`` or the Standard JSON option ``settings.modelChecker.invariants``.

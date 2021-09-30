@@ -297,6 +297,10 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 				"underflow,"
 				"divByZero",
 			"--model-checker-timeout=5",   // Ignored in assembly mode
+			"--asm",
+			"--bin",
+			"--ir-optimized",
+			"--ewasm",
 		};
 		commandLine += assemblyOptions;
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
@@ -333,6 +337,10 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		};
 		expectedOptions.formatting.coloredOutput = false;
 		expectedOptions.formatting.withErrorIds = true;
+		expectedOptions.compiler.outputs.asm_ = true;
+		expectedOptions.compiler.outputs.binary = true;
+		expectedOptions.compiler.outputs.irOptimized = true;
+		expectedOptions.compiler.outputs.ewasm = true;
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
 		{
 			expectedOptions.optimizer.enabled = true;
