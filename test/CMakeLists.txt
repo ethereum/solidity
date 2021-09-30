@@ -130,6 +130,8 @@ set(libyul_sources
     libyul/CompilabilityChecker.cpp
     libyul/ControlFlowGraphTest.cpp
     libyul/ControlFlowGraphTest.h
+    libyul/ControlFlowSideEffectsTest.cpp
+    libyul/ControlFlowSideEffectsTest.h
     libyul/EVMCodeTransformTest.cpp
     libyul/EVMCodeTransformTest.h
     libyul/EwasmTranslationTest.cpp

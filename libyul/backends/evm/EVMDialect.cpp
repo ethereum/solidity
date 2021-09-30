@@ -57,8 +57,20 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.parameters.resize(static_cast<size_t>(info.args));
 	f.returns.resize(static_cast<size_t>(info.ret));
 	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
-	f.controlFlowSideEffects.terminates = evmasm::SemanticInformation::terminatesControlFlow(_instruction);
-	f.controlFlowSideEffects.reverts = evmasm::SemanticInformation::reverts(_instruction);
+	if (evmasm::SemanticInformation::terminatesControlFlow(_instruction))
+	{
+		f.controlFlowSideEffects.canContinue = false;
+		if (evmasm::SemanticInformation::reverts(_instruction))
+		{
+			f.controlFlowSideEffects.canTerminate = false;
+			f.controlFlowSideEffects.canRevert = true;
+		}
+		else
+		{
+			f.controlFlowSideEffects.canTerminate = true;
+			f.controlFlowSideEffects.canRevert = false;
+		}
+	}
 	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
 	f.literalArguments.clear();
 	f.instruction = _instruction;
