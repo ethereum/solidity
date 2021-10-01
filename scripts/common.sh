@@ -33,6 +33,12 @@ else
     function printLog() { echo "$(tput setaf 3)$1$(tput sgr0)"; }
 fi
 
+function fail()
+{
+    printError "$@"
+    return 1
+}
+
 safe_kill()
 {
     local PID=${1}

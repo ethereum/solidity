@@ -323,8 +323,7 @@ printTask "Testing unknown options..."
     then
         echo "Passed"
     else
-        printError "Incorrect response to unknown options: $output"
-        exit 1
+        fail "Incorrect response to unknown options: $output"
     fi
 )
 
@@ -346,8 +345,7 @@ printTask "Running general commandline tests..."
     do
         if ! [[ -d $tdir ]]
         then
-            printError "Test directory not found: $tdir"
-            exit 1
+            fail "Test directory not found: $tdir"
         fi
 
         printTask " - ${tdir}"
@@ -383,7 +381,7 @@ printTask "Running general commandline tests..."
 
         if [ "${inputFile}" = "${tdir}/input.json" ]
         then
-            ! [ -e "${tdir}/stdin" ] || { printError "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."; exit 1; }
+            ! [ -e "${tdir}/stdin" ] || fail "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."
 
             stdin="${inputFile}"
             inputFile=""
@@ -394,7 +392,7 @@ printTask "Running general commandline tests..."
             if [ -e "${tdir}/stdin" ]
             then
                 stdin="${tdir}/stdin"
-                [ -f "${tdir}/stdin" ] || { printError "'stdin' is not a regular file."; exit 1; }
+                [ -f "${tdir}/stdin" ] || fail "'stdin' is not a regular file."
             else
                 stdin=""
             fi
@@ -543,22 +541,19 @@ SOLTMPDIR=$(mktemp -d)
     # This should fail
     if [[ ! ("$output" =~ "No input files given") || ($result == 0) ]]
     then
-        printError "Incorrect response to empty input arg list: $output"
-        exit 1
+        fail "Incorrect response to empty input arg list: $output"
     fi
 
     # The contract should be compiled
     if ! output=$(echo 'contract C {} ' | "$SOLC" - --bin 2>/dev/null | grep -q "<stdin>:C")
     then
-        printError "Failed to compile a simple contract from standard input"
-        exit 1
+        fail "Failed to compile a simple contract from standard input"
     fi
 
     # This should not fail
     if ! output=$(echo '' | "$SOLC" --ast-compact-json - 2>/dev/null)
     then
-        printError "Incorrect response to --ast-compact-json option with empty stdin"
-        exit 1
+        fail "Incorrect response to --ast-compact-json option with empty stdin"
     fi
 )
 rm -r "$SOLTMPDIR"
