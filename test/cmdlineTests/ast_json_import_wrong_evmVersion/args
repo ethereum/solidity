@@ -1,1 +1,1 @@
---evm-version=homestead --import-ast --combined-json ast,compact-format --pretty-json
+--evm-version=homestead --import-ast --combined-json ast --pretty-json
