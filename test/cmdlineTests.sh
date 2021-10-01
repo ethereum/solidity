@@ -283,7 +283,7 @@ EOF
         [[ $stderr_expectation_file == "" ]] && exit 1
     fi
 
-    rm -f "$stdout_path" "$stderr_path"
+    rm "$stdout_path" "$stderr_path"
 }
 
 
@@ -471,7 +471,7 @@ SOLTMPDIR=$(mktemp -d)
         compileFull "${opts[@]}" "$SOLTMPDIR/$f"
     done
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 echo "Done."
 
 printTask "Testing library checksum..."
@@ -497,7 +497,7 @@ SOLTMPDIR=$(mktemp -d)
     # Now the placeholder and explanation should be gone.
     grep -q -v '[/_]' C.bin
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 printTask "Testing overwriting files..."
 SOLTMPDIR=$(mktemp -d)
@@ -510,7 +510,7 @@ SOLTMPDIR=$(mktemp -d)
     # Unless we force
     echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 printTask "Testing assemble, yul, strict-assembly and optimize..."
 (
@@ -574,7 +574,7 @@ SOLTMPDIR=$(mktemp -d)
         exit 1
     fi
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 printTask "Testing AST export with stop-after=parsing..."
 "$REPO_ROOT/test/stopAfterParseTests.sh"
@@ -590,6 +590,6 @@ SOLTMPDIR=$(mktemp -d)
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 echo "Commandline tests successful."
