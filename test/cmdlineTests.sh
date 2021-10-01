@@ -26,7 +26,7 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
-set -e
+set -eo pipefail
 
 ## GLOBAL VARIABLES
 
