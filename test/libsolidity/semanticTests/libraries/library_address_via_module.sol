@@ -42,7 +42,7 @@ contract C {
 // EVMVersion: >=byzantium
 // compileViaYul: also
 // ----
-// library: L
+// library: "a.sol":L
 // addr() -> false
 // g(uint256): 1 -> 1
 // g(uint256): 2 -> 4
