@@ -485,7 +485,6 @@ printTask "Testing linking itself..."
 SOLTMPDIR=$(mktemp -d)
 (
     cd "$SOLTMPDIR"
-    set -e
     echo 'library L { function f() public pure {} } contract C { function f() public pure { L.f(); } }' > x.sol
     "$SOLC" --bin -o . x.sol 2>/dev/null
     # Explanation and placeholder should be there
@@ -502,7 +501,6 @@ rm -r "$SOLTMPDIR"
 printTask "Testing overwriting files..."
 SOLTMPDIR=$(mktemp -d)
 (
-    set -e
     # First time it works
     echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Second time it fails
@@ -538,7 +536,7 @@ printTask "Testing standard input..."
 SOLTMPDIR=$(mktemp -d)
 (
     set +e
-    output=$("$SOLC" --bin  2>&1)
+    output=$("$SOLC" --bin 2>&1)
     result=$?
     set -e
 
@@ -563,6 +561,7 @@ SOLTMPDIR=$(mktemp -d)
         exit 1
     fi
 )
+rm -r "$SOLTMPDIR"
 
 printTask "Testing AST import..."
 SOLTMPDIR=$(mktemp -d)
