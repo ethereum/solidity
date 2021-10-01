@@ -4,3 +4,12 @@
     {{ super() }}
 	<a href="{{ pathto('genindex') }}">Keyword Index</a>
   {% endblock %}
+
+  {%- block extrahead %}
+	<script src="https://unpkg.com/wikipedia-preview@1.4.0/dist/wikipedia-preview.production.js"></script>
+	  <script>
+            wikipediaPreview.init({
+              detectLinks: true
+            })
+	  </script>
+  {% endblock %}
