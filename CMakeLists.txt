@@ -34,6 +34,7 @@ endif()
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
+option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
 
 # Setup cccache.
 include(EthCcache)
@@ -63,8 +64,29 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 
 include(EthOptions)
 configure_project(TESTS)
+set(LATEST_Z3_VERSION "4.8.12")
+set(MINIMUM_Z3_VERSION "4.8.0")
+find_package(Z3)
+if (${Z3_FOUND})
+  if (${STRICT_Z3_VERSION})
+    if (NOT ("${Z3_VERSION_STRING}" VERSION_EQUAL ${LATEST_Z3_VERSION}))
+      message(
+        FATAL_ERROR
+        "SMTChecker tests require Z3 ${LATEST_Z3_VERSION} for all tests to pass.\n\
+Build with -DSTRICT_Z3_VERSION=OFF if you want to use a different version. \
+You can also use -DUSE_Z3=OFF to build without Z3. In both cases use --no-smt when running tests."
+      )
+    endif()
+  else()
+    if ("${Z3_VERSION_STRING}" VERSION_LESS ${MINIMUM_Z3_VERSION})
+      message(
+        FATAL_ERROR
+        "Solidity requires Z3 ${MINIMUM_Z3_VERSION} or newer. You can also use -DUSE_Z3=OFF to build without Z3."
+      )
+    endif()
+  endif()
+endif()
 
-find_package(Z3 4.8.0)
 if(${USE_Z3_DLOPEN})
   add_definitions(-DHAVE_Z3)
   add_definitions(-DHAVE_Z3_DLOPEN)
