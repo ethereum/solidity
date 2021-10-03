@@ -66,7 +66,7 @@ Shifts
 ^^^^^^
 
 The result of a shift operation has the type of the left operand, truncating the result to match the type.
-The right operand must be of unsigned type, trying to shift by an signed type will produce a compilation error.
+The right operand must be of unsigned type, trying to shift by a signed type will produce a compilation error.
 
 Shifts can be "simulated" using multiplication by powers of two in the following way. Note that the truncation
 to the type of the left operand is always performed at the end, but not mentioned explicitly.
