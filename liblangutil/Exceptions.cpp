@@ -80,5 +80,5 @@ static std::optional<Severity> severityFromString(std::string _severity)
 
     _severity[0] = toupper(_severity[0]);
 
-    return std::make_optional<std::string>(_severity).has_value() ? std::optional<std::string>(_severity).value() : std::nullopt;
+    return std::make_optional<std::string>(_severity).has_value() ? std::optional<std::string>(_severity) : std::nullopt;
 }
