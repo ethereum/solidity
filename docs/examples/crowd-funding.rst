@@ -27,11 +27,11 @@ The full contract
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.5;
+pragma solidity 0.8.8;
  
 contract CrowdFunding {
     mapping(address => uint) public contributors;
-    address public admin;
+    address public immutable admin;
     uint public noOfContributors;
     uint public minimumContribution;
     uint public deadline; //timestamp
