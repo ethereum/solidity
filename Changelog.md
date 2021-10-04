@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
 
 
 
