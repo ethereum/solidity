@@ -55,13 +55,6 @@ std::string SourceReferenceFormatter::formatErrorInformation(Error const& _error
 	);
 }
 
-enum class Severity//have to define if used in switch
-{
-    Error,
-    Warning,
-    Info
-};
-
 AnsiColorized SourceReferenceFormatter::normalColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {WHITE});
@@ -188,7 +181,7 @@ void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtracto
 	// exception header line
 	if (_msg.errorId.has_value())
 	{
-        switch(stringToSeverity(_msg.severity))
+        switch(severityFromString(_msg.severity))
         {
             case Severity::Error : errorColored() << " (" << _msg.errorId.value().error << ")";
                 break;
@@ -201,6 +194,7 @@ void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtracto
 
             default : unknownColored() << " (" << _msg.errorId.value().error << ")";
         }
+    }
 
 	printSourceLocation(_msg.primary);
 

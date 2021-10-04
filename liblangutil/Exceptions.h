@@ -33,8 +33,6 @@
 #include <boost/preprocessor/facilities/overload.hpp>
 
 #include <string>
-#include <regex>
-#include <optional>
 #include <utility>
 #include <vector>
 #include <memory>
@@ -242,19 +240,6 @@ public:
 			return "Warning";
 		solAssert(isError(_severity), "");
 		return "Error";
-	}
-
-    static std::optional<Severity> stringToSeverity(std::string _severity)
-	{
-        _severity = tolower(_severity);
-
-        _severity = std::regex_replace(_severity, std::regex("^ +| +$|( ) +"), "$1");
-
-        _severity.erase(_severity.begin(), std::find_if(_severity.begin(), _severity.end(), std::bind1st(std::not_equal_to<char>(), ' ')));
-
-        _severity[0] = toupper(_severity[0]);
-
-        return std::make_optional<Severity>(_severity).has_value() ? std::optional<Severity>(_severity).value() : std::nullopt;
 	}
 
 	static std::string formatErrorSeverityLowercase(Severity _severity)

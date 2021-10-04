@@ -71,3 +71,14 @@ Error::Error(
 	if (!_description.empty())
 		*this << util::errinfo_comment(_description);
 }
+
+static std::optional<Severity> severityFromString(std::string _severity)
+{
+    boost::algorithm::to_lower(_severity);
+
+    _severity = boost::algorithm::trim_copy(_severity);
+
+    _severity[0] = toupper(_severity[0]);
+
+    return std::make_optional<Severity>(_severity).has_value() ? std::optional<Severity>(_severity).value() : std::nullopt;
+}
