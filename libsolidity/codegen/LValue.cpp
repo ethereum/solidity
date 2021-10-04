@@ -155,7 +155,7 @@ ImmutableItem::ImmutableItem(CompilerContext& _compilerContext, VariableDeclarat
 
 void ImmutableItem::retrieveValue(SourceLocation const&, bool) const
 {
-	solUnimplementedAssert(m_dataType->isValueType(), "");
+	solUnimplementedAssert(m_dataType->isValueType());
 
 	if (m_context.runtimeContext())
 		CompilerUtils(m_context).loadFromMemory(
@@ -172,7 +172,7 @@ void ImmutableItem::retrieveValue(SourceLocation const&, bool) const
 void ImmutableItem::storeValue(Type const& _sourceType, SourceLocation const&, bool _move) const
 {
 	CompilerUtils utils(m_context);
-	solUnimplementedAssert(m_dataType->isValueType(), "");
+	solUnimplementedAssert(m_dataType->isValueType());
 	solAssert(_sourceType.isValueType(), "");
 
 	utils.convertType(_sourceType, *m_dataType, true);

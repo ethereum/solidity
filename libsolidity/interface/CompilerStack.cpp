@@ -253,7 +253,7 @@ void CompilerStack::setRevertStringBehaviour(RevertStrings _revertStrings)
 {
 	if (m_stackState >= ParsedAndImported)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set revert string settings before parsing."));
-	solUnimplementedAssert(_revertStrings != RevertStrings::VerboseDebug, "");
+	solUnimplementedAssert(_revertStrings != RevertStrings::VerboseDebug);
 	m_revertStrings = _revertStrings;
 }
 

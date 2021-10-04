@@ -2112,8 +2112,7 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 	solUnimplementedAssert(
 		arrayType->location() == DataLocation::CallData &&
 		arrayType->isDynamicallySized() &&
-		!arrayType->baseType()->isDynamicallyEncoded(),
-		""
+		!arrayType->baseType()->isDynamicallyEncoded()
 	);
 
 	if (_indexAccess.startExpression())

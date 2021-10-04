@@ -544,7 +544,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		if (_varDecl.immutable())
 		{
 			solAssert(paramTypes.empty(), "");
-			solUnimplementedAssert(type->sizeOnStack() == 1, "");
+			solUnimplementedAssert(type->sizeOnStack() == 1);
 			return Whiskers(R"(
 				/// @ast-id <astID>
 				<sourceLocationComment>
@@ -925,8 +925,8 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 	else
 		for (VariableDeclaration const* immutable: ContractType(_contract).immutableVariables())
 		{
-			solUnimplementedAssert(immutable->type()->isValueType(), "");
-			solUnimplementedAssert(immutable->type()->sizeOnStack() == 1, "");
+			solUnimplementedAssert(immutable->type()->isValueType());
+			solUnimplementedAssert(immutable->type()->sizeOnStack() == 1);
 			immutables.emplace_back(map<string, string>{
 				{"immutableName"s, to_string(immutable->id())},
 				{"value"s, "mload(" + to_string(m_context.immutableMemoryOffset(*immutable)) + ")"}
