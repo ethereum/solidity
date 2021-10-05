@@ -5,10 +5,11 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Output values for ``block.*``, ``msg.*`` and ``tx.*`` variables that are present in the called functions.
 
 
 Bugfixes:
-  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
+ * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
 
 
 

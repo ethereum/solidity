@@ -15,4 +15,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (229-243): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 2\ny = 3\n\nTransaction trace:\nC.constructor()\nC.g()\n    f(2) -- internal call\n    f([97, 98, 99]) -- internal call
+// Warning 6328: (229-243): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 2\ny = 3\n\nTransaction trace:\nC.constructor()\nC.g()\n    f(2) -- internal call\n    f([0x61, 0x62, 0x63]) -- internal call

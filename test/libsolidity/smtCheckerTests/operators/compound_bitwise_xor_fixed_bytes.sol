@@ -13,4 +13,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 6321: (51-57): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6328: (178-195): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0\na = 255\nb = 240\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (178-195): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0x0\na = 0xff\nb = 0xf0\n\nTransaction trace:\nC.constructor()\nC.f()

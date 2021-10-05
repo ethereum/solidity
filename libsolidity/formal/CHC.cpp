@@ -1892,7 +1892,10 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			if (!pred->isConstructorSummary())
 				for (unsigned v: callGraph[node])
 					_dfs(node, v, depth + 1, _dfs);
-			calls.push_front(string(depth * 4, ' ') + pred->formatSummaryCall(nodeArgs(node), m_charStreamProvider));
+
+			bool appendTxVars = pred->isConstructorSummary() || pred->isFunctionSummary() || pred->isExternalCallUntrusted();
+
+			calls.push_front(string(depth * 4, ' ') + pred->formatSummaryCall(nodeArgs(node), m_charStreamProvider, appendTxVars));
 			if (pred->isInternalCall())
 				calls.front() += " -- internal call";
 			else if (pred->isExternalCallTrusted())

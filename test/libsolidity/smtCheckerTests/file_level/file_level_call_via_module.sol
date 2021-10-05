@@ -18,5 +18,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (b.sol:208-222): CHC: Assertion violation happens here.\nCounterexample:\n\na = 7\nb = 3\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        a.sol:f(2) -- internal call\n        a.sol:f([97, 98, 99]) -- internal call
-// Warning 6328: (b.sol:274-288): CHC: Assertion violation happens here.\nCounterexample:\n\na = 7\nb = 3\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        a.sol:f(2) -- internal call\n        a.sol:f([97, 98, 99]) -- internal call
+// Warning 6328: (b.sol:208-222): CHC: Assertion violation happens here.\nCounterexample:\n\na = 7\nb = 3\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        a.sol:f(2) -- internal call\n        a.sol:f([0x61, 0x62, 0x63]) -- internal call
+// Warning 6328: (b.sol:274-288): CHC: Assertion violation happens here.\nCounterexample:\n\na = 7\nb = 3\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        a.sol:f(2) -- internal call\n        a.sol:f([0x61, 0x62, 0x63]) -- internal call
