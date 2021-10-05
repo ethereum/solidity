@@ -26,7 +26,7 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
-set -e
+set -eo pipefail
 
 ## GLOBAL VARIABLES
 
@@ -283,7 +283,7 @@ EOF
         [[ $stderr_expectation_file == "" ]] && exit 1
     fi
 
-    rm -f "$stdout_path" "$stderr_path"
+    rm "$stdout_path" "$stderr_path"
 }
 
 
@@ -295,7 +295,7 @@ function test_solc_assembly_output()
 
     local expected_object="object \"object\" { code ${expected} }"
 
-    output=$(echo "${input}" | "$SOLC" - "${solc_args[@]}" 2>/dev/null)
+    output=$(echo "${input}" | msg_on_error --no-stderr "$SOLC" - "${solc_args[@]}")
     empty=$(echo "$output" | tr '\n' ' ' | tr -s ' ' | sed -ne "/${expected_object}/p")
     if [ -z "$empty" ]
     then
@@ -323,8 +323,7 @@ printTask "Testing unknown options..."
     then
         echo "Passed"
     else
-        printError "Incorrect response to unknown options: $output"
-        exit 1
+        fail "Incorrect response to unknown options: $output"
     fi
 )
 
@@ -346,8 +345,7 @@ printTask "Running general commandline tests..."
     do
         if ! [[ -d $tdir ]]
         then
-            printError "Test directory not found: $tdir"
-            exit 1
+            fail "Test directory not found: $tdir"
         fi
 
         printTask " - ${tdir}"
@@ -383,7 +381,7 @@ printTask "Running general commandline tests..."
 
         if [ "${inputFile}" = "${tdir}/input.json" ]
         then
-            ! [ -e "${tdir}/stdin" ] || { printError "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."; exit 1; }
+            ! [ -e "${tdir}/stdin" ] || fail "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."
 
             stdin="${inputFile}"
             inputFile=""
@@ -394,7 +392,7 @@ printTask "Running general commandline tests..."
             if [ -e "${tdir}/stdin" ]
             then
                 stdin="${tdir}/stdin"
-                [ -f "${tdir}/stdin" ] || { printError "'stdin' is not a regular file."; exit 1; }
+                [ -f "${tdir}/stdin" ] || fail "'stdin' is not a regular file."
             else
                 stdin=""
             fi
@@ -471,52 +469,50 @@ SOLTMPDIR=$(mktemp -d)
         compileFull "${opts[@]}" "$SOLTMPDIR/$f"
     done
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 echo "Done."
 
 printTask "Testing library checksum..."
-echo '' | "$SOLC" - --link --libraries a=0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
+echo '' | msg_on_error --no-stdout "$SOLC" - --link --libraries a=0x90f20564390eAe531E810af625A22f51385Cd222
 echo '' | "$SOLC" - --link --libraries a=0x80f20564390eAe531E810af625A22f51385Cd222 &>/dev/null && exit 1
 
 printTask "Testing long library names..."
-echo '' | "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname=0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
+echo '' | msg_on_error --no-stdout "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname=0x90f20564390eAe531E810af625A22f51385Cd222
 
 printTask "Testing linking itself..."
 SOLTMPDIR=$(mktemp -d)
 (
     cd "$SOLTMPDIR"
-    set -e
     echo 'library L { function f() public pure {} } contract C { function f() public pure { L.f(); } }' > x.sol
-    "$SOLC" --bin -o . x.sol 2>/dev/null
+    msg_on_error --no-stderr "$SOLC" --bin -o . x.sol
     # Explanation and placeholder should be there
     grep -q '//' C.bin && grep -q '__' C.bin
     # But not in library file.
     grep -q -v '[/_]' L.bin
     # Now link
-    "$SOLC" --link --libraries x.sol:L=0x90f20564390eAe531E810af625A22f51385Cd222 C.bin
+    msg_on_error "$SOLC" --link --libraries x.sol:L=0x90f20564390eAe531E810af625A22f51385Cd222 C.bin
     # Now the placeholder and explanation should be gone.
     grep -q -v '[/_]' C.bin
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 printTask "Testing overwriting files..."
 SOLTMPDIR=$(mktemp -d)
 (
-    set -e
     # First time it works
-    echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create"
     # Second time it fails
-    echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null && exit 1
+    echo 'contract C {}' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null && exit 1
     # Unless we force
-    echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create"
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 printTask "Testing assemble, yul, strict-assembly and optimize..."
 (
-    echo '{}' | "$SOLC" - --assemble &>/dev/null
-    echo '{}' | "$SOLC" - --yul &>/dev/null
-    echo '{}' | "$SOLC" - --strict-assembly &>/dev/null
+    echo '{}' | msg_on_error --silent "$SOLC" - --assemble
+    echo '{}' | msg_on_error --silent "$SOLC" - --yul
+    echo '{}' | msg_on_error --silent "$SOLC" - --strict-assembly
 
     # Test options above in conjunction with --optimize.
     # Using both, --assemble and --optimize should fail.
@@ -538,31 +534,27 @@ printTask "Testing standard input..."
 SOLTMPDIR=$(mktemp -d)
 (
     set +e
-    output=$("$SOLC" --bin  2>&1)
+    output=$("$SOLC" --bin 2>&1)
     result=$?
     set -e
 
     # This should fail
     if [[ ! ("$output" =~ "No input files given") || ($result == 0) ]]
     then
-        printError "Incorrect response to empty input arg list: $output"
-        exit 1
+        fail "Incorrect response to empty input arg list: $output"
     fi
 
     # The contract should be compiled
-    if ! output=$(echo 'contract C {} ' | "$SOLC" - --bin 2>/dev/null | grep -q "<stdin>:C")
+    if ! echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --bin | grep -q "<stdin>:C"
     then
-        printError "Failed to compile a simple contract from standard input"
-        exit 1
+        fail "Failed to compile a simple contract from standard input"
     fi
 
     # This should not fail
-    if ! output=$(echo '' | "$SOLC" --ast-compact-json - 2>/dev/null)
-    then
-        printError "Incorrect response to --ast-compact-json option with empty stdin"
-        exit 1
-    fi
+    echo '' | msg_on_error --silent --msg "Incorrect response to --ast-compact-json option with empty stdin" \
+        "$SOLC" --ast-compact-json -
 )
+rm -r "$SOLTMPDIR"
 
 printTask "Testing AST import..."
 SOLTMPDIR=$(mktemp -d)
@@ -574,7 +566,7 @@ SOLTMPDIR=$(mktemp -d)
         exit 1
     fi
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 printTask "Testing AST export with stop-after=parsing..."
 "$REPO_ROOT/test/stopAfterParseTests.sh"
@@ -590,6 +582,6 @@ SOLTMPDIR=$(mktemp -d)
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
 )
-rm -rf "$SOLTMPDIR"
+rm -r "$SOLTMPDIR"
 
 echo "Commandline tests successful."
