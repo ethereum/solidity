@@ -27,11 +27,21 @@ The full contract
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.5;
+
+pragma solidity 0.8.8;
  
+ error DeadlinePassed();
+ error MinimumContributionNotMet();
+ error DeadlineNotPassed();
+ error TheGoalWasMet();
+ error Unauthorized();
+ error YouAreNotaContributor();
+ error YouAlreadyVoted();
+ error RequestAlreadyCompleted();
+ error NeedMoreThan50percentContributors();
 contract CrowdFunding {
     mapping(address => uint) public contributors;
-    address public admin;
+    address public immutable admin;
     uint public noOfContributors;
     uint public minimumContribution;
     uint public deadline; //timestamp
@@ -75,8 +85,13 @@ contract CrowdFunding {
     
     
     function contribute() public payable {
-        require(block.timestamp < deadline, "The Deadline has passed!");
-        require(msg.value >= minimumContribution, "The Minimum Contribution not met!");
+        if(block.timestamp >= deadline){
+            revert DeadlinePassed();
+        }
+        if(msg.value < minimumContribution){
+            revert MinimumContributionNotMet();
+        }
+     
         
         // incrementing the no. of contributors the first time when 
         // someone sends eth to the contract
@@ -90,23 +105,22 @@ contract CrowdFunding {
         emit ContributeEvent(msg.sender, msg.value);
     }
     
- 
-    function getBalance() public view returns(uint) {
-        return address(this).balance;
-    }
-    
+
  
     // a contributor can get a refund if goal was not reached within the deadline
     function getRefund() public {
-        require(block.timestamp > deadline, "Deadline has not passed");
-        require(raisedAmount < goal, "The goal was met");
-        require(contributors[msg.sender] > 0);
+        if(block.timestamp <= deadline){
+            revert DeadlineNotPassed();
+        }
+       if(raisedAmount >= goal){
+           revert TheGoalWasMet();
+       }
+       if(contributors[msg.sender] <= 0){
+           revert Unauthorized();
+       }
+     
         
-        address payable recipient = payable(msg.sender);
-        uint value = contributors[msg.sender];
-        recipient.transfer(value);
-        // equivalent to:
-        // payable(msg.sender).transfer(contributors[msg.sender]);
+         payable(msg.sender).transfer(contributors[msg.sender]);
         
         contributors[msg.sender] = 0;
  
@@ -129,10 +143,16 @@ contract CrowdFunding {
     
     
     function voteRequest(uint _requestNo) public {
-        require(contributors[msg.sender] > 0, "You must be a contributor to vote!");
+        if(contributors[msg.sender]<=0){
+            revert YouAreNotaContributor();
+        }
+     
         
         Request storage thisRequest = requests[_requestNo];
-        require(thisRequest.voters[msg.sender] == false, "You have already voted!");
+        if(thisRequest.voters[msg.sender] == true){
+            revert YouAlreadyVoted();
+        }
+        
         
         thisRequest.voters[msg.sender] = true;
         thisRequest.noOfVoters++;
@@ -141,9 +161,15 @@ contract CrowdFunding {
     
     function makePayment(uint _requestNo) public onlyAdmin {
         Request storage thisRequest = requests[_requestNo];
-        require(thisRequest.completed == false, "The request has been already completed!");
+        if(thisRequest.completed == true){
+            revert RequestAlreadyCompleted();
+        }
         
-        require(thisRequest.noOfVoters > noOfContributors / 2, "The request needs more than 50% of the contributors.");
+        if(thisRequest.noOfVoters <= noOfContributors / 2){
+            revert NeedMoreThan50percentContributors();
+        }
+        
+        
         thisRequest.recipient.transfer(thisRequest.value);
         thisRequest.completed = true;
         
