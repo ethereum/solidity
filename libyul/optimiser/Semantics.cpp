@@ -182,8 +182,19 @@ pair<TerminationFinder::ControlFlow, size_t> TerminationFinder::firstUncondition
 TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement const& _statement)
 {
 	if (
+		holds_alternative<VariableDeclaration>(_statement) &&
+		std::get<VariableDeclaration>(_statement).value &&
+		containsNonContinuingFunctionCall(*std::get<VariableDeclaration>(_statement).value)
+	)
+		return ControlFlow::Terminate;
+	else if (
+		holds_alternative<Assignment>(_statement) &&
+		containsNonContinuingFunctionCall(*std::get<Assignment>(_statement).value)
+	)
+		return ControlFlow::Terminate;
+	else if (
 		holds_alternative<ExpressionStatement>(_statement) &&
-		isTerminatingBuiltin(std::get<ExpressionStatement>(_statement))
+		containsNonContinuingFunctionCall(std::get<ExpressionStatement>(_statement).expression)
 	)
 		return ControlFlow::Terminate;
 	else if (holds_alternative<Break>(_statement))
@@ -196,10 +207,18 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 		return ControlFlow::FlowOut;
 }
 
-bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
+bool TerminationFinder::containsNonContinuingFunctionCall(Expression const& _expr)
 {
-	if (holds_alternative<FunctionCall>(_exprStmnt.expression))
-		if (auto instruction = toEVMInstruction(m_dialect, std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
-			return evmasm::SemanticInformation::terminatesControlFlow(*instruction);
+	if (auto functionCall = std::get_if<FunctionCall>(&_expr))
+	{
+		for (auto const& arg: functionCall->arguments)
+			if (containsNonContinuingFunctionCall(arg))
+				return true;
+
+		if (auto builtin = m_dialect.builtin(functionCall->functionName.name))
+			return !builtin->controlFlowSideEffects.canContinue;
+		else if (m_functionSideEffects && m_functionSideEffects->count(functionCall->functionName.name))
+			return !m_functionSideEffects->at(functionCall->functionName.name).canContinue;
+	}
 	return false;
 }
