@@ -828,7 +828,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			if (!identifierInfo.suffix.empty())
 			{
 				string const& suffix = identifierInfo.suffix;
-				solAssert((set<string>{"offset", "slot", "length"}).count(suffix), "");
+				solAssert((set<string>{"offset", "slot", "length", "selector", "address"}).count(suffix), "");
 				if (!var->isConstant() && (var->isStateVariable() || var->type()->dataStoredIn(DataLocation::Storage)))
 				{
 					if (suffix != "slot" && suffix != "offset")
@@ -858,6 +858,19 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					if (suffix != "offset" && suffix != "length")
 					{
 						m_errorReporter.typeError(1536_error, nativeLocationOf(_identifier), "Calldata variables only support \".offset\" and \".length\".");
+						return false;
+					}
+				}
+				else if (auto const* fpType = dynamic_cast<FunctionTypePointer>(var->type()))
+				{
+					if (suffix != "selector" && suffix != "address")
+					{
+						m_errorReporter.typeError(9272_error, nativeLocationOf(_identifier), "Variables of type function pointer only support \".selector\" and \".address\".");
+						return false;
+					}
+					if (fpType->kind() != FunctionType::Kind::External)
+					{
+						m_errorReporter.typeError(8533_error, nativeLocationOf(_identifier), "Only Variables of type external function pointer support \".selector\" and \".address\".");
 						return false;
 					}
 				}

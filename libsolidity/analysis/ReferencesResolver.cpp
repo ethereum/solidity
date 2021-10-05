@@ -219,13 +219,15 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
 	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
 
-	static set<string> suffixes{"slot", "offset", "length"};
+	static set<string> suffixes{"slot", "offset", "length", "address", "selector"};
 	string suffix;
 	for (string const& s: suffixes)
 		if (boost::algorithm::ends_with(_identifier.name.str(), "." + s))
 			suffix = s;
 
-	// Could also use `pathFromCurrentScope`, split by '.'
+	// Could also use `pathFromCurrentScope`, split by '.'.
+	// If we do that, suffix should only be set for when it has a special
+	// meaning, not for normal identifierPaths.
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
 	if (!suffix.empty())
 	{

@@ -124,7 +124,9 @@ done < <(
       # Skipping license error, unrelated to the grammar
       grep -v -E 'license/license_double5.sol' |
       grep -v -E 'license/license_hidden_unicode.sol' |
-      grep -v -E 'license/license_unicode.sol'
+      grep -v -E 'license/license_unicode.sol' |
+      # Skipping tests with 'something.address' as 'address' as the grammar fails on those
+      grep -v -E 'inlineAssembly/external_function_pointer_address.*.sol'
 )
 
 YUL_FILES=()

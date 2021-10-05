@@ -188,6 +188,18 @@ private:
 			solAssert(suffix == "offset" || suffix == "length", "");
 			value = IRVariable{*varDecl}.part(suffix).name();
 		}
+		else if (
+			auto const* functionType = dynamic_cast<FunctionType const*>(varDecl->type());
+			functionType && functionType->kind() == FunctionType::Kind::External
+		)
+		{
+			solAssert(suffix == "selector" || suffix == "address", "");
+			solAssert(varDecl->type()->sizeOnStack() == 2, "");
+			if (suffix == "selector")
+				value = IRVariable{*varDecl}.part("functionSelector").name();
+			else
+				value = IRVariable{*varDecl}.part("address").name();
+		}
 		else
 			solAssert(false, "");
 
