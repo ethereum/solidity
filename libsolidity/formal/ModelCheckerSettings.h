@@ -95,6 +95,7 @@ struct ModelCheckerInvariants
 	static ModelCheckerInvariants Default() { return *fromString("default"); }
 	/// Adds all targets, including underflow and overflow.
 	static ModelCheckerInvariants All() { return *fromString("all"); }
+	static ModelCheckerInvariants None() { return {{}}; }
 
 	static std::optional<ModelCheckerInvariants> fromString(std::string const& _invs);
 
