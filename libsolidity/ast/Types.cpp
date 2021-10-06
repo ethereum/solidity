@@ -2559,6 +2559,11 @@ string UserDefinedValueType::toString(bool /* _short */) const
 	return *definition().annotation().canonicalName;
 }
 
+string UserDefinedValueType::canonicalName() const
+{
+	return *definition().annotation().canonicalName;
+}
+
 vector<tuple<string, Type const*>> UserDefinedValueType::makeStackItems() const
 {
 	return underlyingType().stackItems();
