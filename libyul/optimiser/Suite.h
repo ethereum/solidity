@@ -75,12 +75,7 @@ public:
 	static void validateSequence(std::string_view _stepAbbreviations);
 
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
-	void runSequence(std::string_view _stepAbbreviations, Block& _ast);
-	void runSequenceUntilStable(
-		std::vector<std::string> const& _steps,
-		Block& _ast,
-		size_t maxRounds = MaxRounds
-	);
+	void runSequence(std::string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable = false);
 
 	static std::map<std::string, std::unique_ptr<OptimiserStep>> const& allSteps();
 	static std::map<std::string, char> const& stepNameToAbbreviationMap();
