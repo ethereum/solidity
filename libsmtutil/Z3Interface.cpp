@@ -279,6 +279,19 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 	if (_expr.is_const() || _expr.is_var())
 		return Expression(_expr.to_string(), {}, sort);
 
+	if (_expr.is_quantifier())
+	{
+		string quantifierName;
+		if (_expr.is_exists())
+			quantifierName = "exists";
+		else if (_expr.is_forall())
+			quantifierName = "forall";
+		else if (_expr.is_lambda())
+			quantifierName = "lambda";
+		else
+			smtAssert(false, "");
+		return Expression(quantifierName, {fromZ3Expr(_expr.body())}, sort);
+	}
 	smtAssert(_expr.is_app(), "");
 	vector<Expression> arguments;
 	for (unsigned i = 0; i < _expr.num_args(); ++i)
@@ -290,33 +303,44 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 	else if (_expr.is_not())
 		return !arguments[0];
 	else if (_expr.is_and())
-		return arguments[0] && arguments[1];
+		return Expression::mkAnd(arguments);
 	else if (_expr.is_or())
-		return arguments[0] || arguments[1];
+		return Expression::mkOr(arguments);
 	else if (_expr.is_implies())
 		return Expression::implies(arguments[0], arguments[1]);
 	else if (_expr.is_eq())
+	{
+		smtAssert(arguments.size() == 2, "");
 		return arguments[0] == arguments[1];
+	}
 	else if (kind == Z3_OP_ULT || kind == Z3_OP_SLT)
 		return arguments[0] < arguments[1];
-	else if (kind == Z3_OP_ULEQ || kind == Z3_OP_SLEQ)
+	else if (kind == Z3_OP_LE || kind == Z3_OP_ULEQ || kind == Z3_OP_SLEQ)
 		return arguments[0] <= arguments[1];
 	else if (kind == Z3_OP_GT || kind == Z3_OP_SGT)
 		return arguments[0] > arguments[1];
-	else if (kind == Z3_OP_UGEQ || kind == Z3_OP_SGEQ)
+	else if (kind == Z3_OP_GE || kind == Z3_OP_UGEQ || kind == Z3_OP_SGEQ)
 		return arguments[0] >= arguments[1];
 	else if (kind == Z3_OP_ADD)
-		return arguments[0] + arguments[1];
+		return Expression::mkPlus(arguments);
 	else if (kind == Z3_OP_SUB)
+	{
+		smtAssert(arguments.size() == 2, "");
 		return arguments[0] - arguments[1];
+	}
 	else if (kind == Z3_OP_MUL)
-		return arguments[0] * arguments[1];
+		return Expression::mkMul(arguments);
 	else if (kind == Z3_OP_DIV)
+	{
+		smtAssert(arguments.size() == 2, "");
 		return arguments[0] / arguments[1];
+	}
 	else if (kind == Z3_OP_MOD)
 		return arguments[0] % arguments[1];
 	else if (kind == Z3_OP_XOR)
 		return arguments[0] ^ arguments[1];
+	else if (kind == Z3_OP_BNOT)
+		return !arguments[0];
 	else if (kind == Z3_OP_BSHL)
 		return arguments[0] << arguments[1];
 	else if (kind == Z3_OP_BLSHR)
@@ -324,9 +348,11 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 	else if (kind == Z3_OP_BASHR)
 		return Expression::ashr(arguments[0], arguments[1]);
 	else if (kind == Z3_OP_INT2BV)
-		smtAssert(false, "");
+		return Expression::int2bv(arguments[0], _expr.get_sort().bv_size());
 	else if (kind == Z3_OP_BV2INT)
-		smtAssert(false, "");
+		return Expression::bv2int(arguments[0]);
+	else if (kind == Z3_OP_EXTRACT)
+		return Expression("extract", arguments, sort);
 	else if (kind == Z3_OP_SELECT)
 		return Expression::select(arguments[0], arguments[1]);
 	else if (kind == Z3_OP_STORE)
@@ -342,7 +368,9 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		return Expression::tuple_constructor(Expression(sortSort), arguments);
 	}
 	else if (kind == Z3_OP_DT_ACCESSOR)
-		smtAssert(false, "");
+		return Expression("dt_accessor_" + _expr.decl().name().str(), arguments, sort);
+	else if (kind == Z3_OP_DT_IS)
+		return Expression("dt_is", {arguments.at(0)}, sort);
 	else if (kind == Z3_OP_UNINTERPRETED)
 		return Expression(_expr.decl().name().str(), arguments, fromZ3Sort(_expr.get_sort()));
 
