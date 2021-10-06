@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(cli_input)
 		{"a", "b", "c/d/e/"},
 	};
 	map<string, string> expectedSources = {
-		{"<stdin>", "\n"},
+		{"<stdin>", ""},
 		{(expectedDir1 / "input1.sol").generic_string(), ""},
 		{(expectedDir2 / "input2.sol").generic_string(), ""},
 	};
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_and_stdin)
 	expectedOptions.modelChecker.initialize = true;
 
 	map<string, string> expectedSources = {
-		{"<stdin>", "\n"},
+		{"<stdin>", ""},
 	};
 	FileReader::FileSystemPathSet expectedAllowedDirectories = {};
 
