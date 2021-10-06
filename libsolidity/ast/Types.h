@@ -1141,7 +1141,7 @@ public:
 	}
 
 	std::string toString(bool _short) const override;
-	std::string canonicalName() const override { solAssert(false, ""); }
+	std::string canonicalName() const override;
 	std::string signatureInExternalFunction(bool) const override { solAssert(false, ""); }
 
 protected:
