@@ -1,16 +1,10 @@
 {
 	"language": "Solidity",
-	"sources":
-	{
-		"A":
-		{
-			"content": "//SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; contract C { function f() public pure {} }"
-		}
+	"sources": {
+		"A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_without_yul/in.sol"]}
 	},
-	"settings":
-	{
-		"optimizer": {
-			"details": { "yulDetails": 7 }
+	"settings": {
+		"optimizer": {"details": {"yulDetails": 7}
 		}
 	}
 }
