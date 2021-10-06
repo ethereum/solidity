@@ -18,3 +18,4 @@ contract C is B {
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :C:\n(!(y <= 41) && !(y >= 43))\n

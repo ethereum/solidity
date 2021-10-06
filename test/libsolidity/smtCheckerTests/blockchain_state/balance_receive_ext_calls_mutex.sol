@@ -22,3 +22,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (277-310): CHC: Assertion violation happens here.
+// Info 1180: Reentrancy property(ies) for :C:\n((!lock || (((:var 3).balances[address(this)] + ((- 1) * (:var 1).balances[address(this)])) <= 0)) && !(<errorCode> = 1) && (lock' || !lock) && (!lock || (((:var 3).balances[address(this)] + ((- 1) * (:var 1).balances[address(this)])) >= 0)))\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(address(this).balance == x)\n<errorCode> = 2 -> Assertion failed at assert(address(this).balance < x)\n

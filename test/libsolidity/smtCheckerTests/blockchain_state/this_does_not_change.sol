@@ -9,4 +9,6 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
+// Info 1180: Contract invariant(s) for :C:\n(((address(this) + ((- 1) * t)) <= 0) && ((address(this) + ((- 1) * t)) >= 0))\n

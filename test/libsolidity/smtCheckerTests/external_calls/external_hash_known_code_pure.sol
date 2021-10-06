@@ -30,3 +30,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (398-420): CHC: Assertion violation happens here.
+// Info 1180: Reentrancy property(ies) for :C:\n!(<errorCode> = 1)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(prevOwner == owner)\n<errorCode> = 3 -> Assertion failed at assert(sig_1 == sig_2)\n

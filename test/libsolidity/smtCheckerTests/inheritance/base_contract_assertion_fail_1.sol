@@ -16,3 +16,4 @@ contract C is B {
 // SMTEngine: all
 // ----
 // Warning 6328: (52-66): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 1\n\nTransaction trace:\nC.constructor()\nState: y = 0, x = 0\nC.g()\n    B.f() -- internal call\nState: y = 0, x = 1\nB.f()
+// Info 1180: Contract invariant(s) for :B:\n(x <= 0)\n

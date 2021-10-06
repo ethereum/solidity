@@ -18,3 +18,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 6328: (167-181): CHC: Assertion violation happens here.
+// Info 1180: Reentrancy property(ies) for :C:\n!(<errorCode> = 1)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Overflow at ++x\n<errorCode> = 3 -> Assertion failed at assert(x < 10)\n

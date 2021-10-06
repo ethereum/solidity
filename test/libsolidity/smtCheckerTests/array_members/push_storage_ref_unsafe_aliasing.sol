@@ -12,6 +12,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 6368: (188-192): CHC: Out of bounds access happens here.\nCounterexample:\na = []\nb = [32]\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()
 // Warning 6368: (188-195): CHC: Out of bounds access happens here.\nCounterexample:\n\nb = [32]\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()

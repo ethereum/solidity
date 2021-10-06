@@ -22,3 +22,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 6328: (307-326): CHC: Assertion violation happens here.
+// Info 1180: Contract invariant(s) for :C:\n!(m.b.length <= 2)\n

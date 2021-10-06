@@ -22,3 +22,4 @@ contract C
 // Warning 6368: (152-162): CHC: Out of bounds access might happen here.
 // Warning 6368: (177-184): CHC: Out of bounds access might happen here.
 // Warning 6368: (177-187): CHC: Out of bounds access might happen here.
+// Info 1180: Contract invariant(s) for :C:\n!(c.length <= 0)\n
