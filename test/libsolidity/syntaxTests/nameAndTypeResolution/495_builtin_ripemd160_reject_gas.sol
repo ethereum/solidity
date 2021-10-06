@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9582: (47-60): Member "gas" not found or not visible after argument-dependent lookup in function (bytes memory) pure returns (bytes20).
+// TypeError 9582: (47-60): Member "gas" not found or not visible after argument-dependent lookup in ripemd160(bytes memory) pure returns (bytes20).

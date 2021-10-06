@@ -57,7 +57,7 @@
                 "typeDescriptions":
                 {
                   "typeIdentifier": "t_function_error_pure$__$returns$__$",
-                  "typeString": "function () pure"
+                  "typeString": "error ()"
                 }
               },
               "id": 6,

@@ -467,19 +467,23 @@ bool AddressType::operator==(Type const& _other) const
 
 MemberList::MemberMap AddressType::nativeMembers(ASTNode const*) const
 {
+	auto const magicFunc = [](FunctionType const* _functionType) -> MemberList::Member {
+		return {FunctionType::magicName(_functionType->kind()), _functionType};
+	};
+
 	MemberList::MemberMap members = {
-		{"balance", TypeProvider::uint256()},
-		{"code", TypeProvider::array(DataLocation::Memory)},
-		{"codehash",  TypeProvider::fixedBytes(32)},
-		{"call", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
-		{"callcode", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
-		{"delegatecall", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false, StateMutability::NonPayable)},
-		{"staticcall", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)}
+		{"balance"sv, TypeProvider::uint256()},
+		{"code"sv, TypeProvider::array(DataLocation::Memory)},
+		{"codehash"sv,  TypeProvider::fixedBytes(32)},
+		magicFunc(TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)),
+		magicFunc(TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)),
+		magicFunc(TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false, StateMutability::NonPayable)),
+		magicFunc(TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View))
 	};
 	if (m_stateMutability == StateMutability::Payable)
 	{
-		members.emplace_back(MemberList::Member{"send", TypeProvider::function(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send, false, StateMutability::NonPayable)});
-		members.emplace_back(MemberList::Member{"transfer", TypeProvider::function(strings{"uint"}, strings(), FunctionType::Kind::Transfer, false, StateMutability::NonPayable)});
+		members.emplace_back(magicFunc(TypeProvider::function(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send, false, StateMutability::NonPayable)));
+		members.emplace_back(magicFunc(TypeProvider::function(strings{"uint"}, strings(), FunctionType::Kind::Transfer, false, StateMutability::NonPayable)));
 	}
 	return members;
 }
@@ -1806,28 +1810,32 @@ MemberList::MemberMap ArrayType::nativeMembers(ASTNode const*) const
 		members.emplace_back("length", TypeProvider::uint256());
 		if (isDynamicallySized() && location() == DataLocation::Storage)
 		{
+			auto const magicBoundFunc = [](FunctionType const* _functionType) -> MemberList::Member {
+				return {FunctionType::magicName(_functionType->kind()), _functionType->asBoundFunction()};
+			};
 			Type const* thisAsPointer = TypeProvider::withLocation(this, location(), true);
-			members.emplace_back("push", TypeProvider::function(
+
+			members.emplace_back(magicBoundFunc(TypeProvider::function(
 				TypePointers{thisAsPointer},
 				TypePointers{baseType()},
 				strings{string()},
 				strings{string()},
 				FunctionType::Kind::ArrayPush
-			)->asBoundFunction());
-			members.emplace_back("push", TypeProvider::function(
+			)));
+			members.emplace_back(magicBoundFunc(TypeProvider::function(
 				TypePointers{thisAsPointer, baseType()},
 				TypePointers{},
 				strings{string(),string()},
 				strings{},
 				FunctionType::Kind::ArrayPush
-			)->asBoundFunction());
-			members.emplace_back("pop", TypeProvider::function(
+			)));
+			members.emplace_back(magicBoundFunc(TypeProvider::function(
 				TypePointers{thisAsPointer},
 				TypePointers{},
 				strings{string()},
 				strings{},
 				FunctionType::Kind::ArrayPop
-			)->asBoundFunction());
+			)));
 		}
 	}
 	return members;
@@ -3030,22 +3038,96 @@ string FunctionType::canonicalName() const
 	return "function";
 }
 
+string_view FunctionType::magicName(Kind _kind) // TODO(pr): maybe call it languageIdentifier(.) instead
+{
+	switch (_kind)
+	{
+	// magic funcs and vars
+	case Kind::AddMod: return "addmod"sv;
+	case Kind::Assert: return "assert"sv;
+	case Kind::BlockHash: return "blockhash"sv;
+	case Kind::ECRecover: return "ecrecover"sv;
+	case Kind::Require: return "require"sv;
+	case Kind::GasLeft: return "gasleft"sv;
+	case Kind::KECCAK256: return "keccak256"sv; // NB: sha3 is an alias to keccak256
+	case Kind::MulMod: return "mulmod"sv;
+	case Kind::Revert: return "revert"sv;
+	case Kind::RIPEMD160: return "ripemd160"sv;
+	case Kind::Selfdestruct: return "selfdestruct"sv; // NB: suicide() is an alias to selfdestruct()
+	case Kind::SHA256: return "sha256"sv;
+	case Kind::MetaType: return "type"sv;
+
+	// native members: ArrayType
+	case Kind::ArrayPop: return "pop"sv;
+	case Kind::ArrayPush: return "push"sv;
+
+	// native members: AddressType
+	case Kind::BareCall: return "call"sv;
+	case Kind::BareCallCode: return "callcode"sv;
+	case Kind::BareDelegateCall: return "delegatecall"sv;
+	case Kind::BareStaticCall: return "staticcall"sv;
+	case Kind::Send: return "send"sv;
+	case Kind::Transfer: return "transfer"sv;
+
+	// FunctionType
+	case Kind::SetValue: return "value"sv;
+	case Kind::SetGas: return "gas"sv;
+
+	// TypeType
+	case Kind::Unwrap: return "unwrap"sv;
+	case Kind::Wrap: return "wrap"sv;
+	case Kind::BytesConcat: return "concat"sv;
+
+	// MagicType
+	case Kind::ABIEncode: return "encode"sv;
+	case Kind::ABIDecode: return "decode"sv;
+	case Kind::ABIEncodePacked: return "encodePacked"sv;
+	case Kind::ABIEncodeWithSelector: return "encodeWithSelector"sv;
+	case Kind::ABIEncodeWithSignature: return "encodeWithSignature"sv;
+
+
+	// user defined
+	case Kind::Error:
+	case Kind::Event:
+	case Kind::Creation:
+	case Kind::Declaration:
+	case Kind::DelegateCall:
+	case Kind::External:
+	case Kind::Internal:
+	case Kind::ObjectCreation:
+		break;
+	}
+
+	return ""sv;
+}
+
 string FunctionType::toString(bool _short) const
 {
-	string name = "function ";
-	if (m_kind == Kind::Declaration)
+	string name;
+
+	if (m_kind == Kind::Event)
+		name += "event " + m_declaration->name();
+	else if (m_kind == Kind::Error)
+		name += "error " + m_declaration->name();
+	else if (magicName(m_kind) != "")
+		name += magicName(m_kind);
+	else if (m_kind == Kind::Declaration)
 	{
+		name += "function ";
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope()))
 			name += *contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
+	else
+		name += "function ";
+
 	name += '(';
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
 	name += ")";
-	if (m_stateMutability != StateMutability::NonPayable)
+	if (m_stateMutability != StateMutability::NonPayable && m_kind != Kind::Error)
 		name += " " + stateMutabilityToString(m_stateMutability);
 	if (m_kind == Kind::External)
 		name += " external";
@@ -3190,6 +3272,11 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 
 MemberList::MemberMap FunctionType::nativeMembers(ASTNode const* _scope) const
 {
+	auto const magicFunc = [](FunctionType const* _functionType) -> MemberList::Member {
+		return {FunctionType::magicName(_functionType->kind()), _functionType};
+	};
+
+
 	switch (m_kind)
 	{
 	case Kind::Declaration:
@@ -3229,40 +3316,34 @@ MemberList::MemberMap FunctionType::nativeMembers(ASTNode const* _scope) const
 		if (m_kind != Kind::BareDelegateCall)
 		{
 			if (isPayable())
-				members.emplace_back(
-					"value",
-					TypeProvider::function(
-						parseElementaryTypeVector({"uint"}),
-						TypePointers{copyAndSetCallOptions(false, true, false)},
-						strings(1, ""),
-						strings(1, ""),
-						Kind::SetValue,
-						false,
-						StateMutability::Pure,
-						nullptr,
-						m_gasSet,
-						m_valueSet,
-						m_saltSet
-					)
-				);
-		}
-		if (m_kind != Kind::Creation)
-			members.emplace_back(
-				"gas",
-				TypeProvider::function(
+				members.emplace_back(magicFunc(TypeProvider::function(
 					parseElementaryTypeVector({"uint"}),
-					TypePointers{copyAndSetCallOptions(true, false, false)},
+					TypePointers{copyAndSetCallOptions(false, true, false)},
 					strings(1, ""),
 					strings(1, ""),
-					Kind::SetGas,
+					Kind::SetValue,
 					false,
 					StateMutability::Pure,
 					nullptr,
 					m_gasSet,
 					m_valueSet,
 					m_saltSet
-				)
-			);
+				)));
+		}
+		if (m_kind != Kind::Creation)
+			members.emplace_back(magicFunc(TypeProvider::function(
+				parseElementaryTypeVector({"uint"}),
+				TypePointers{copyAndSetCallOptions(true, false, false)},
+				strings(1, ""),
+				strings(1, ""),
+				Kind::SetGas,
+				false,
+				StateMutability::Pure,
+				nullptr,
+				m_gasSet,
+				m_valueSet,
+				m_saltSet
+			)));
 		return members;
 	}
 	case Kind::DelegateCall:
@@ -3720,6 +3801,11 @@ vector<tuple<string, Type const*>> TypeType::makeStackItems() const
 
 MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) const
 {
+	auto const magicFunc = [](FunctionType const* _functionType) -> MemberList::Member {
+		return {FunctionType::magicName(_functionType->kind()), _functionType};
+	};
+
+
 	MemberList::MemberMap members;
 	if (m_actualType->category() == Category::Contract)
 	{
@@ -3794,8 +3880,7 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 	else if (m_actualType->category() == Category::UserDefinedValueType)
 	{
 		auto& userDefined = dynamic_cast<UserDefinedValueType const&>(*m_actualType);
-		members.emplace_back(
-			"wrap",
+		members.emplace_back(magicFunc(
 			TypeProvider::function(
 				TypePointers{&userDefined.underlyingType()},
 				TypePointers{&userDefined},
@@ -3805,9 +3890,8 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 				false, /*_arbitraryParameters */
 				StateMutability::Pure
 			)
-		);
-		members.emplace_back(
-			"unwrap",
+		));
+		members.emplace_back(magicFunc(
 			TypeProvider::function(
 				TypePointers{&userDefined},
 				TypePointers{&userDefined.underlyingType()},
@@ -3817,13 +3901,13 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 				false, /* _arbitraryParameters */
 				StateMutability::Pure
 			)
-		);
+		));
 	}
 	else if (
 		auto const* arrayType = dynamic_cast<ArrayType const*>(m_actualType);
 		arrayType && arrayType->isByteArray()
 	)
-		members.emplace_back("concat", TypeProvider::function(
+		members.emplace_back(magicFunc(TypeProvider::function(
 			TypePointers{},
 			TypePointers{TypeProvider::bytesMemory()},
 			strings{},
@@ -3831,7 +3915,7 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 			FunctionType::Kind::BytesConcat,
 			/* _arbitraryParameters */ true,
 			StateMutability::Pure
-		));
+		)));
 
 	return members;
 }
@@ -3947,35 +4031,39 @@ bool MagicType::operator==(Type const& _other) const
 
 MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 {
+	auto const magicFunc = [](FunctionType const* _functionType) -> MemberList::Member {
+		return {FunctionType::magicName(_functionType->kind()), _functionType};
+	};
+
 	switch (m_kind)
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", TypeProvider::payableAddress()},
-			{"timestamp", TypeProvider::uint256()},
-			{"blockhash", TypeProvider::function(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
-			{"difficulty", TypeProvider::uint256()},
-			{"number", TypeProvider::uint256()},
-			{"gaslimit", TypeProvider::uint256()},
-			{"chainid", TypeProvider::uint256()},
-			{"basefee", TypeProvider::uint256()}
+			{"coinbase"sv, TypeProvider::payableAddress()},
+			{"timestamp"sv, TypeProvider::uint256()},
+			magicFunc(TypeProvider::function(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
+			{"difficulty"sv, TypeProvider::uint256()},
+			{"number"sv, TypeProvider::uint256()},
+			{"gaslimit"sv, TypeProvider::uint256()},
+			{"chainid"sv, TypeProvider::uint256()},
+			{"basefee"sv, TypeProvider::uint256()}
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", TypeProvider::address()},
-			{"gas", TypeProvider::uint256()},
-			{"value", TypeProvider::uint256()},
-			{"data", TypeProvider::array(DataLocation::CallData)},
-			{"sig", TypeProvider::fixedBytes(4)}
+			{"sender"sv, TypeProvider::address()},
+			{"gas"sv, TypeProvider::uint256()},
+			{"value"sv, TypeProvider::uint256()},
+			{"data"sv, TypeProvider::array(DataLocation::CallData)},
+			{"sig"sv, TypeProvider::fixedBytes(4)}
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", TypeProvider::address()},
-			{"gasprice", TypeProvider::uint256()}
+			{"origin"sv, TypeProvider::address()},
+			{"gasprice"sv, TypeProvider::uint256()}
 		});
 	case Kind::ABI:
 		return MemberList::MemberMap({
-			{"encode", TypeProvider::function(
+			magicFunc(TypeProvider::function(
 				TypePointers{},
 				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{},
@@ -3983,8 +4071,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				FunctionType::Kind::ABIEncode,
 				true,
 				StateMutability::Pure
-			)},
-			{"encodePacked", TypeProvider::function(
+			)),
+			magicFunc(TypeProvider::function(
 				TypePointers{},
 				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{},
@@ -3992,8 +4080,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				FunctionType::Kind::ABIEncodePacked,
 				true,
 				StateMutability::Pure
-			)},
-			{"encodeWithSelector", TypeProvider::function(
+			)),
+			magicFunc(TypeProvider::function(
 				TypePointers{TypeProvider::fixedBytes(4)},
 				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{1, ""},
@@ -4001,8 +4089,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				FunctionType::Kind::ABIEncodeWithSelector,
 				true,
 				StateMutability::Pure
-			)},
-			{"encodeWithSignature", TypeProvider::function(
+			)),
+			magicFunc(TypeProvider::function(
 				TypePointers{TypeProvider::array(DataLocation::Memory, true)},
 				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{1, ""},
@@ -4010,8 +4098,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				FunctionType::Kind::ABIEncodeWithSignature,
 				true,
 				StateMutability::Pure
-			)},
-			{"decode", TypeProvider::function(
+			)),
+			magicFunc(TypeProvider::function(
 				TypePointers(),
 				TypePointers(),
 				strings{},
@@ -4019,7 +4107,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				FunctionType::Kind::ABIDecode,
 				true,
 				StateMutability::Pure
-			)}
+			))
 		});
 	case Kind::MetaType:
 	{

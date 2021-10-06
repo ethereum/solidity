@@ -101,7 +101,7 @@ public:
 	struct Member
 	{
 		/// Manual constructor for members that are not taken from a declaration.
-		Member(char const* _name, Type const* _type):
+		Member(std::string_view _name, Type const* _type):
 			name(_name),
 			type(_type),
 			declaration(nullptr)
@@ -1244,6 +1244,11 @@ public:
 		/// Cannot be called.
 		Declaration,
 	};
+
+	/// Returns the magic name of this function kind, if there is any.
+	///
+	/// If there is no magic or native name for this function, an empty string is returned instead.
+	static std::string_view magicName(Kind _kind);
 
 	/// Creates the type of a function.
 	/// @arg _kind must be Kind::Internal, Kind::External or Kind::Declaration.

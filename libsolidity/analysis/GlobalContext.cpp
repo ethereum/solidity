@@ -37,7 +37,7 @@ namespace solidity::frontend
 namespace
 {
 /// Magic variables get negative ids for easy differentiation
-int magicVariableToID(std::string const& _name)
+int magicVariableToID(std::string const& _name) // TODO(pr): I think that should be a FunctionType::Kind instead of string.
 {
 	if (_name == "abi") return -1;
 	else if (_name == "addmod") return -2;
@@ -71,37 +71,45 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 		return make_shared<MagicVariableDeclaration>(magicVariableToID(_name), _name, _type);
 	};
 
+	static auto const magicFunDecl = [](FunctionType const* _type) -> shared_ptr<MagicVariableDeclaration> {
+		auto const kind = _type->kind();
+		return make_shared<MagicVariableDeclaration>(
+			magicVariableToID(string(FunctionType::magicName(kind))),
+			ASTString(FunctionType::magicName(kind)),
+			_type
+		);
+	};
+
 	return {
-		magicVarDecl("abi", TypeProvider::magic(MagicType::Kind::ABI)),
-		magicVarDecl("addmod", TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
-		magicVarDecl("assert", TypeProvider::function(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
-		magicVarDecl("block", TypeProvider::magic(MagicType::Kind::Block)),
-		magicVarDecl("blockhash", TypeProvider::function(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
-		magicVarDecl("ecrecover", TypeProvider::function(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
-		magicVarDecl("gasleft", TypeProvider::function(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
-		magicVarDecl("keccak256", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
-		magicVarDecl("msg", TypeProvider::magic(MagicType::Kind::Message)),
-		magicVarDecl("mulmod", TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
-		magicVarDecl("now", TypeProvider::uint256()),
-		magicVarDecl("require", TypeProvider::function(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
-		magicVarDecl("require", TypeProvider::function(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
-		magicVarDecl("revert", TypeProvider::function(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
-		magicVarDecl("revert", TypeProvider::function(strings{"string memory"}, strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
-		magicVarDecl("ripemd160", TypeProvider::function(strings{"bytes memory"}, strings{"bytes20"}, FunctionType::Kind::RIPEMD160, false, StateMutability::Pure)),
-		magicVarDecl("selfdestruct", TypeProvider::function(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
-		magicVarDecl("sha256", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
-		magicVarDecl("sha3", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
-		magicVarDecl("suicide", TypeProvider::function(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
-		magicVarDecl("tx", TypeProvider::magic(MagicType::Kind::Transaction)),
+		// magic functions
+		magicFunDecl(TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
+		magicFunDecl(TypeProvider::function(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
+		magicFunDecl(TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"string memory"}, strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"bytes memory"}, strings{"bytes20"}, FunctionType::Kind::RIPEMD160, false, StateMutability::Pure)),
+		magicFunDecl(TypeProvider::function(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
+		magicFunDecl(TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
 		// Accepts a MagicType that can be any contract type or an Integer type and returns a
 		// MagicType. The TypeChecker handles the correctness of the input and output types.
-		magicVarDecl("type", TypeProvider::function(
-			strings{},
-			strings{},
-			FunctionType::Kind::MetaType,
-			true,
-			StateMutability::Pure
-		)),
+		magicFunDecl(TypeProvider::function(strings{}, strings{}, FunctionType::Kind::MetaType, true, StateMutability::Pure)),
+
+		// Aliases: sha3 and suicide() are an alias() to keccak256() and selfdestruct()
+		magicVarDecl("sha3", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+		magicVarDecl("suicide", TypeProvider::function(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
+
+		// magic variables
+		magicVarDecl("abi", TypeProvider::magic(MagicType::Kind::ABI)),
+		magicVarDecl("block", TypeProvider::magic(MagicType::Kind::Block)),
+		magicVarDecl("msg", TypeProvider::magic(MagicType::Kind::Message)),
+		magicVarDecl("now", TypeProvider::uint256()),
+		magicVarDecl("tx", TypeProvider::magic(MagicType::Kind::Transaction)),
 	};
 }
 
