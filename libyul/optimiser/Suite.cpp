@@ -89,7 +89,7 @@ void OptimiserSuite::run(
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
-	string const& _optimisationSequence,
+	string_view _optimisationSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers
 )
@@ -269,7 +269,7 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	return lookupTable;
 }
 
-void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
+void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 {
 	int8_t nestingLevel = 0;
 	for (char abbreviation: _stepAbbreviations)
@@ -308,19 +308,16 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 	assertThrow(nestingLevel == 0, OptimizerException, "Unbalanced brackets");
 }
 
-void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+void OptimiserSuite::runSequence(string_view _stepAbbreviations, Block& _ast)
 {
 	validateSequence(_stepAbbreviations);
 
-	string input = _stepAbbreviations;
-	ranges::actions::remove(input, ' ');
-	ranges::actions::remove(input, '\n');
-
-	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
+	auto abbreviationsToSteps = [](string_view _sequence) -> vector<string>
 	{
 		vector<string> steps;
 		for (char abbreviation: _sequence)
-			steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+			if (abbreviation != ' ' && abbreviation != '\n')
+				steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
 		return steps;
 	};
 
@@ -328,17 +325,17 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 	// `aaa` or `[bbb]` can be empty. For example we consider a sequence like `fgo[aaf]Oo` to have
 	// four segments, the last of which is an empty bracket.
 	size_t currentPairStart = 0;
-	while (currentPairStart < input.size())
+	while (currentPairStart < _stepAbbreviations.size())
 	{
-		size_t openingBracket = input.find('[', currentPairStart);
-		size_t closingBracket = input.find(']', openingBracket);
-		size_t firstCharInside = (openingBracket == string::npos ? input.size() : openingBracket + 1);
+		size_t openingBracket = _stepAbbreviations.find('[', currentPairStart);
+		size_t closingBracket = _stepAbbreviations.find(']', openingBracket);
+		size_t firstCharInside = (openingBracket == string::npos ? _stepAbbreviations.size() : openingBracket + 1);
 		yulAssert((openingBracket == string::npos) == (closingBracket == string::npos), "");
 
-		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingBracket - currentPairStart)), _ast);
-		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingBracket - firstCharInside)), _ast);
+		runSequence(abbreviationsToSteps(_stepAbbreviations.substr(currentPairStart, openingBracket - currentPairStart)), _ast);
+		runSequenceUntilStable(abbreviationsToSteps(_stepAbbreviations.substr(firstCharInside, closingBracket - firstCharInside)), _ast);
 
-		currentPairStart = (closingBracket == string::npos ? input.size() : closingBracket + 1);
+		currentPairStart = (closingBracket == string::npos ? _stepAbbreviations.size() : closingBracket + 1);
 	}
 }
 
