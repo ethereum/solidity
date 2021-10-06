@@ -25,6 +25,7 @@
 #include <libyul/YulString.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 
 #include <map>
 

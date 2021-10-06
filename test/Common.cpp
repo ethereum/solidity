@@ -92,21 +92,26 @@ CommonOptions::CommonOptions(std::string _caption):
 		po::options_description::m_default_line_length - 23
 	)
 {
+
+}
+
+void CommonOptions::addOptions()
+{
 	options.add_options()
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("vm", po::value<std::vector<fs::path>>(&vmPaths), "path to evmc library, can be supplied multiple times.")
-		("ewasm", po::bool_switch(&ewasm), "tries to automatically find an ewasm vm and enable ewasm test-execution.")
-		("no-semantic-tests", po::bool_switch(&disableSemanticTests), "disable semantic tests")
-		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
-		("optimize", po::bool_switch(&optimize), "enables optimization")
-		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
-		("enforce-compile-to-ewasm", po::bool_switch(&enforceCompileToEwasm), "Enforce compiling all tests to Ewasm to see if additional tests can be activated.")
-		("enforce-gas-cost", po::bool_switch(&enforceGasTest), "Enforce checking gas cost in semantic tests.")
-		("enforce-gas-cost-min-value", po::value(&enforceGasTestMinValue), "Threshold value to enforce adding gas checks to a test.")
-		("abiencoderv1", po::bool_switch(&useABIEncoderV1), "enables abi encoder v1")
-		("show-messages", po::bool_switch(&showMessages), "enables message output")
-		("show-metadata", po::bool_switch(&showMetadata), "enables metadata output");
+		("ewasm", po::bool_switch(&ewasm)->default_value(ewasm), "tries to automatically find an ewasm vm and enable ewasm test-execution.")
+		("no-semantic-tests", po::bool_switch(&disableSemanticTests)->default_value(disableSemanticTests), "disable semantic tests")
+		("no-smt", po::bool_switch(&disableSMT)->default_value(disableSMT), "disable SMT checker")
+		("optimize", po::bool_switch(&optimize)->default_value(optimize), "enables optimization")
+		("enforce-via-yul", po::value<bool>(&enforceViaYul)->default_value(enforceViaYul)->implicit_value(true), "Enforce compiling all tests via yul to see if additional tests can be activated.")
+		("enforce-compile-to-ewasm", po::bool_switch(&enforceCompileToEwasm)->default_value(enforceCompileToEwasm), "Enforce compiling all tests to Ewasm to see if additional tests can be activated.")
+		("enforce-gas-cost", po::value<bool>(&enforceGasTest)->default_value(enforceGasTest)->implicit_value(true), "Enforce checking gas cost in semantic tests.")
+		("enforce-gas-cost-min-value", po::value(&enforceGasTestMinValue)->default_value(enforceGasTestMinValue), "Threshold value to enforce adding gas checks to a test.")
+		("abiencoderv1", po::bool_switch(&useABIEncoderV1)->default_value(useABIEncoderV1), "enables abi encoder v1")
+		("show-messages", po::bool_switch(&showMessages)->default_value(showMessages), "enables message output")
+		("show-metadata", po::bool_switch(&showMetadata)->default_value(showMetadata), "enables metadata output");
 }
 
 void CommonOptions::validate() const
@@ -139,6 +144,7 @@ void CommonOptions::validate() const
 bool CommonOptions::parse(int argc, char const* const* argv)
 {
 	po::variables_map arguments;
+	addOptions();
 
 	po::command_line_parser cmdLineParser(argc, argv);
 	cmdLineParser.options(options);

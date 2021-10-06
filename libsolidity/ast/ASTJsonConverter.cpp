@@ -26,12 +26,12 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmJsonConverter.h>
-#include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -172,16 +172,19 @@ void ASTJsonConverter::appendExpressionAttributes(
 	_attributes += exprAttributes;
 }
 
-Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifier const* ,InlineAssemblyAnnotation::ExternalIdentifierInfo> _info) const
+Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> _info) const
 {
 	Json::Value tuple(Json::objectValue);
-	tuple["src"] = sourceLocationToString(_info.first->debugData->location);
+	tuple["src"] = sourceLocationToString(nativeLocationOf(*_info.first));
 	tuple["declaration"] = idOrNull(_info.second.declaration);
 	tuple["isSlot"] = Json::Value(_info.second.suffix == "slot");
 	tuple["isOffset"] = Json::Value(_info.second.suffix == "offset");
+
 	if (!_info.second.suffix.empty())
 		tuple["suffix"] = Json::Value(_info.second.suffix);
+
 	tuple["valueSize"] = Json::Value(Json::LargestUInt(_info.second.valueSize));
+
 	return tuple;
 }
 
@@ -276,6 +279,7 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("nodes", toJson(_node.subNodes())),
 		make_pair("scope", idOrNull(_node.scope()))
 	};
+	addIfSet(attributes, "canonicalName", _node.annotation().canonicalName);
 
 	if (_node.annotation().unimplementedDeclarations.has_value())
 		attributes.emplace_back("fullyImplemented", _node.annotation().unimplementedDeclarations->empty());
@@ -351,6 +355,21 @@ bool ASTJsonConverter::visit(EnumValue const& _node)
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
 	});
+	return false;
+}
+
+bool ASTJsonConverter::visit(UserDefinedValueTypeDefinition const& _node)
+{
+	solAssert(_node.underlyingType(), "");
+	std::vector<pair<string, Json::Value>> attributes = {
+		make_pair("name", _node.name()),
+		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
+		make_pair("underlyingType", toJson(*_node.underlyingType()))
+	};
+	addIfSet(attributes, "canonicalName", _node.annotation().canonicalName);
+
+	setJsonNode(_node, "UserDefinedValueTypeDefinition", std::move(attributes));
+
 	return false;
 }
 

@@ -233,6 +233,10 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	bool abstract = false;
 	shared_ptr<SymbolicVariable> var;
 	frontend::Type const* type = &_type;
+
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(type))
+		return newSymbolicVariable(userType->underlyingType(), _uniqueName, _context);
+
 	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;

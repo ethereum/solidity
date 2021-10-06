@@ -22,6 +22,7 @@
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "A",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
@@ -79,6 +80,7 @@
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "B",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
@@ -164,6 +166,7 @@
           "src": "117:1:1"
         }
       ],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,

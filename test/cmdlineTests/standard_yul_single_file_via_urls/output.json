@@ -1,0 +1,19 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Cannot import url (\"in.yul\"): File not found.",
+            "message": "Cannot import url (\"in.yul\"): File not found.",
+            "severity": "error",
+            "type": "IOError"
+        },
+        {
+            "component": "general",
+            "formattedMessage": "Yul mode only supports exactly one input file.",
+            "message": "Yul mode only supports exactly one input file.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

@@ -36,6 +36,8 @@
 #include <functional>
 #include <utility>
 #include <type_traits>
+#include <list>
+#include <algorithm>
 
 /// Operators need to stay in the global namespace.
 
@@ -52,6 +54,21 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _
 	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
 	return _a;
 }
+
+/// Concatenate the contents of a container onto a list
+template <class T, class U> std::list<T>& operator+=(std::list<T>& _a, U& _b)
+{
+	for (auto const& i: _b)
+		_a.push_back(T(i));
+	return _a;
+}
+/// Concatenate the contents of a container onto a list, move variant.
+template <class T, class U> std::list<T>& operator+=(std::list<T>& _a, U&& _b)
+{
+	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
+	return _a;
+}
+
 /// Concatenate the contents of a container onto a multiset
 template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U& _b)
 {
@@ -321,6 +338,44 @@ void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
 	}
 }
 
+namespace detail
+{
+
+template<typename Container, typename Value>
+auto findOffset(Container&& _container, Value&& _value, int)
+-> decltype(_container.find(_value) == _container.end(), std::distance(_container.begin(), _container.find(_value)), std::optional<size_t>())
+{
+	auto it = _container.find(std::forward<Value>(_value));
+	auto end = _container.end();
+	if (it == end)
+		return std::nullopt;
+	return std::distance(_container.begin(), it);
+}
+template<typename Range, typename Value>
+auto findOffset(Range&& _range, Value&& _value, void*)
+-> decltype(std::find(std::begin(_range), std::end(_range), std::forward<Value>(_value)) == std::end(_range), std::optional<size_t>())
+{
+	auto begin = std::begin(_range);
+	auto end = std::end(_range);
+	auto it = std::find(begin, end, std::forward<Value>(_value));
+	if (it == end)
+		return std::nullopt;
+	return std::distance(begin, it);
+}
+
+}
+
+/// @returns an std::optional<size_t> containing the offset of the first element in @a _range that is equal to @a _value,
+/// if any, or std::nullopt otherwise.
+/// Uses a linear search (``std::find``) unless @a _range is a container and provides a
+/// suitable ``.find`` function (e.g. it will use the logarithmic ``.find`` function in ``std::set`` instead).
+template<typename Range>
+auto findOffset(Range&& _range, std::remove_reference_t<decltype(*std::cbegin(_range))> const& _value)
+-> decltype(detail::findOffset(std::forward<Range>(_range), _value, 0))
+{
+	return detail::findOffset(std::forward<Range>(_range), _value, 0);
+}
+
 // String conversion functions, mainly to/from hex/nibble/byte representations.
 
 enum class WhenError
@@ -378,94 +433,6 @@ inline bytes asBytes(std::string const& _b)
 	return bytes((uint8_t const*)_b.data(), (uint8_t const*)(_b.data() + _b.size()));
 }
 
-// Big-endian to/from host endian conversion functions.
-
-/// Converts a templated integer value to the big-endian byte-stream represented on a templated collection.
-/// The size of the collection object will be unchanged. If it is too small, it will not represent the
-/// value properly, if too big then the additional elements will be zeroed out.
-/// @a Out will typically be either std::string or bytes.
-/// @a T will typically by unsigned, u160, u256 or bigint.
-template <class T, class Out>
-inline void toBigEndian(T _val, Out& o_out)
-{
-	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
-	for (auto i = o_out.size(); i != 0; _val >>= 8, i--)
-	{
-		T v = _val & (T)0xff;
-		o_out[i - 1] = (typename Out::value_type)(uint8_t)v;
-	}
-}
-
-/// Converts a big-endian byte-stream represented on a templated collection to a templated integer value.
-/// @a In will typically be either std::string or bytes.
-/// @a T will typically by unsigned, u256 or bigint.
-template <class T, class In>
-inline T fromBigEndian(In const& _bytes)
-{
-	T ret = (T)0;
-	for (auto i: _bytes)
-		ret = (T)((ret << 8) | (uint8_t)(typename std::make_unsigned<typename In::value_type>::type)i);
-	return ret;
-}
-inline bytes toBigEndian(u256 _val) { bytes ret(32); toBigEndian(_val, ret); return ret; }
-
-/// Convenience function for toBigEndian.
-/// @returns a byte array just big enough to represent @a _val.
-template <class T>
-inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
-{
-	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
-	unsigned i = 0;
-	for (T v = _val; v; ++i, v >>= 8) {}
-	bytes ret(std::max<unsigned>(_min, i), 0);
-	toBigEndian(_val, ret);
-	return ret;
-}
-
-/// Convenience function for conversion of a u256 to hex
-inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
-{
-	std::string str = toHex(toBigEndian(val));
-	return (prefix == HexPrefix::Add) ? "0x" + str : str;
-}
-
-template <class T>
-inline std::string toCompactHexWithPrefix(T _value)
-{
-	return toHex(toCompactBigEndian(_value, 1), HexPrefix::Add);
-}
-
-/// Returns decimal representation for small numbers and hex for large numbers.
-inline std::string formatNumber(bigint const& _value)
-{
-	if (_value < 0)
-		return "-" + formatNumber(-_value);
-	if (_value > 0x1000000)
-		return toHex(toCompactBigEndian(_value, 1), HexPrefix::Add);
-	else
-		return _value.str();
-}
-
-inline std::string formatNumber(u256 const& _value)
-{
-	if (_value > 0x1000000)
-		return toCompactHexWithPrefix(_value);
-	else
-		return _value.str();
-}
-
-
-// Algorithms for string and string-like collections.
-
-/// Determine bytes required to encode the given integer value. @returns 0 if @a _i is zero.
-template <class T>
-inline unsigned bytesRequired(T _i)
-{
-	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
-	unsigned i = 0;
-	for (; _i != 0; ++i, _i >>= 8) {}
-	return i;
-}
 template <class T, class V>
 bool contains(T const& _t, V const& _v)
 {

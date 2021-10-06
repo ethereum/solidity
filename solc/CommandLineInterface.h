@@ -74,13 +74,7 @@ private:
 	/// @returns the full object with library placeholder hints in hex.
 	static std::string objectWithLinkRefsHex(evmasm::LinkerObject const& _obj);
 
-	bool assemble(
-		yul::AssemblyStack::Language _language,
-		yul::AssemblyStack::Machine _targetMachine,
-		bool _optimize,
-		std::optional<unsigned int> _expectedExecutionsPerDeployment = std::nullopt,
-		std::optional<std::string> _yulOptimiserSteps = std::nullopt
-	);
+	bool assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine);
 
 	void outputCompilationResults();
 
@@ -101,7 +95,7 @@ private:
 
 	/// Tries to read @ m_sourceCodes as a JSONs holding ASTs
 	/// such that they can be imported into the compiler  (importASTs())
-	/// (produced by --combined-json ast,compact-format <file.sol>
+	/// (produced by --combined-json ast <file.sol>
 	/// or standard-json output
 	std::map<std::string, Json::Value> parseAstFromInput();
 

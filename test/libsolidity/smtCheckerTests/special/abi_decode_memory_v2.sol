@@ -9,6 +9,3 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 8364: (183-189): Assertion checker does not yet implement type type(uint256[] memory)
-// Warning 8364: (183-192): Assertion checker does not yet implement type type(uint256[] memory[2] memory)
-// Warning 8364: (173-174): Assertion checker does not yet implement type type(struct C.S storage pointer)

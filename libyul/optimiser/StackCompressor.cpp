@@ -31,6 +31,8 @@
 
 #include <libyul/AST.h>
 
+#include <libsolutil/CommonData.h>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -47,16 +49,19 @@ class RematCandidateSelector: public DataFlowAnalyzer
 public:
 	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 
-	/// @returns a set of tuples of rematerialisation costs, variable to rematerialise
-	/// and variables that occur in its expression.
-	/// Note that this set is sorted by cost.
-	set<tuple<size_t, YulString, set<YulString>>> candidates()
+	/// @returns a map from rematerialisation costs to a vector of variables to rematerialise
+	/// and variables that occur in their expression.
+	/// While the map is sorted by cost, the contained vectors are sorted by the order of occurrence.
+	map<size_t, vector<tuple<YulString, set<YulString>>>> candidates()
 	{
-		set<tuple<size_t, YulString, set<YulString>>> cand;
-		for (auto const& codeCost: m_expressionCodeCost)
+		map<size_t, vector<tuple<YulString, set<YulString>>>> cand;
+		for (auto const& candidate: m_candidates)
 		{
-			size_t numRef = m_numReferences[codeCost.first];
-			cand.emplace(make_tuple(codeCost.second * numRef, codeCost.first, m_references[codeCost.first]));
+			if (size_t const* cost = util::valueOrNullptr(m_expressionCodeCost, candidate))
+			{
+				size_t numRef = m_numReferences[candidate];
+				cand[*cost * numRef].emplace_back(candidate, m_references[candidate]);
+			}
 		}
 		return cand;
 	}
@@ -69,7 +74,11 @@ public:
 		{
 			YulString varName = _varDecl.variables.front().name;
 			if (m_value.count(varName))
+			{
+				yulAssert(!m_expressionCodeCost.count(varName), "");
+				m_candidates.emplace_back(varName);
 				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *m_value[varName].value);
+			}
 		}
 	}
 
@@ -105,11 +114,39 @@ public:
 		m_expressionCodeCost.erase(_variable);
 	}
 
+	/// All candidate variables in order of occurrence.
+	vector<YulString> m_candidates;
 	/// Candidate variables and the code cost of their value.
 	map<YulString, size_t> m_expressionCodeCost;
 	/// Number of references to each candidate variable.
 	map<YulString, size_t> m_numReferences;
 };
+
+/// Selects at most @a _numVariables among @a _candidates.
+set<YulString> chooseVarsToEliminate(
+	map<size_t, vector<tuple<YulString, set<YulString>>>> const& _candidates,
+	size_t _numVariables
+)
+{
+	set<YulString> varsToEliminate;
+	for (auto&& [cost, candidates]: _candidates)
+		for (auto&& [candidate, references]: candidates)
+		{
+			if (varsToEliminate.size() >= _numVariables)
+				return varsToEliminate;
+			// If a variable we would like to eliminate references another one
+			// we already selected for elimination, then stop selecting
+			// candidates. If we would add that variable, then the cost calculation
+			// for the previous variable would be off. Furthermore, we
+			// do not skip the variable because it would be better to properly re-compute
+			// the costs of all other variables instead.
+			for (YulString const& referencedVar: references)
+				if (varsToEliminate.count(referencedVar))
+					return varsToEliminate;
+			varsToEliminate.insert(candidate);
+		}
+	return varsToEliminate;
+}
 
 template <typename ASTNode>
 void eliminateVariables(
@@ -121,32 +158,7 @@ void eliminateVariables(
 {
 	RematCandidateSelector selector{_dialect};
 	selector(_node);
-
-	// Select at most _numVariables
-	set<YulString> varsToEliminate;
-	for (auto const& costs: selector.candidates())
-	{
-		if (varsToEliminate.size() >= _numVariables)
-			break;
-		// If a variable we would like to eliminate references another one
-		// we already selected for elimination, then stop selecting
-		// candidates. If we would add that variable, then the cost calculation
-		// for the previous variable would be off. Furthermore, we
-		// do not skip the variable because it would be better to properly re-compute
-		// the costs of all other variables instead.
-		bool referencesVarToEliminate = false;
-		for (YulString const& referencedVar: get<2>(costs))
-			if (varsToEliminate.count(referencedVar))
-			{
-				referencesVarToEliminate = true;
-				break;
-			}
-		if (referencesVarToEliminate)
-			break;
-		varsToEliminate.insert(get<1>(costs));
-	}
-
-	Rematerialiser::run(_dialect, _node, std::move(varsToEliminate));
+	Rematerialiser::run(_dialect, _node, chooseVarsToEliminate(selector.candidates(), _numVariables));
 	UnusedPruner::runUntilStabilised(_dialect, _node, _allowMSizeOptimization);
 }
 

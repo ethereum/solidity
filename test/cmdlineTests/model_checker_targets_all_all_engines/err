@@ -1,13 +1,13 @@
 Warning: CHC: Underflow (resulting value less than 0) happens here.
 Counterexample:
 arr = []
-a = 0
+a = 0x0
 x = 0
 
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 0)
+test.f(0x0, 0)
  --> model_checker_targets_all_all_engines/input.sol:7:3:
   |
 7 | 		--x;
@@ -16,13 +16,13 @@ test.f(0, 0)
 Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 Counterexample:
 arr = []
-a = 0
+a = 0x0
 x = 1
 
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 2)
+test.f(0x0, 2)
  --> model_checker_targets_all_all_engines/input.sol:8:3:
   |
 8 | 		x + type(uint).max;
@@ -31,13 +31,13 @@ test.f(0, 2)
 Warning: CHC: Division by zero happens here.
 Counterexample:
 arr = []
-a = 0
+a = 0x0
 x = 0
 
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 1)
+test.f(0x0, 1)
  --> model_checker_targets_all_all_engines/input.sol:9:3:
   |
 9 | 		2 / x;
@@ -46,13 +46,13 @@ test.f(0, 1)
 Warning: CHC: Assertion violation happens here.
 Counterexample:
 arr = []
-a = 0
+a = 0x0
 x = 0
 
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 1)
+test.f(0x0, 1)
   --> model_checker_targets_all_all_engines/input.sol:11:3:
    |
 11 | 		assert(x > 0);
@@ -61,13 +61,13 @@ test.f(0, 1)
 Warning: CHC: Empty array "pop" happens here.
 Counterexample:
 arr = []
-a = 0
+a = 0x0
 x = 0
 
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 1)
+test.f(0x0, 1)
   --> model_checker_targets_all_all_engines/input.sol:12:3:
    |
 12 | 		arr.pop();
@@ -76,13 +76,13 @@ test.f(0, 1)
 Warning: CHC: Out of bounds access happens here.
 Counterexample:
 arr = []
-a = 0
+a = 0x0
 x = 0
 
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 1)
+test.f(0x0, 1)
   --> model_checker_targets_all_all_engines/input.sol:13:3:
    |
 13 | 		arr[x];

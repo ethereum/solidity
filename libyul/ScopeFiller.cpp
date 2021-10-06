@@ -53,7 +53,7 @@ bool ScopeFiller::operator()(ExpressionStatement const& _expr)
 bool ScopeFiller::operator()(VariableDeclaration const& _varDecl)
 {
 	for (auto const& variable: _varDecl.variables)
-		if (!registerVariable(variable, _varDecl.debugData->location, *m_currentScope))
+		if (!registerVariable(variable, nativeLocationOf(_varDecl), *m_currentScope))
 			return false;
 	return true;
 }
@@ -68,7 +68,7 @@ bool ScopeFiller::operator()(FunctionDefinition const& _funDef)
 
 	bool success = true;
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
-		if (!registerVariable(var, _funDef.debugData->location, varScope))
+		if (!registerVariable(var, nativeLocationOf(_funDef), varScope))
 			success = false;
 
 	if (!(*this)(_funDef.body))
@@ -162,7 +162,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 		//@TODO secondary location
 		m_errorReporter.declarationError(
 			6052_error,
-			_funDef.debugData->location,
+			nativeLocationOf(_funDef),
 			"Function name " + _funDef.name.str() + " already taken in this scope."
 		);
 		return false;

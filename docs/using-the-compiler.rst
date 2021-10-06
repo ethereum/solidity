@@ -33,7 +33,7 @@ This parameter has effects on the following (this might change in the future):
 - the size of the binary search in the function dispatch routine
 - the way constants like large numbers or strings are stored
 
-.. index:: allowed paths, --allow-paths, base path, --base-path
+.. index:: allowed paths, --allow-paths, base path, --base-path, include paths, --include-path
 
 Base Path and Import Remapping
 ------------------------------
@@ -47,16 +47,13 @@ it is also possible to provide :ref:`path redirects <import-remapping>` using ``
 
 This essentially instructs the compiler to search for anything starting with
 ``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin``.
-``solc`` will not read files from the filesystem that lie outside of
-the remapping targets and outside of the directories where explicitly specified source
-files reside, so things like ``import "/etc/passwd";`` only work if you add ``/=/`` as a remapping.
 
 When accessing the filesystem to search for imports, :ref:`paths that do not start with ./
-or ../ <relative-imports>` are treated as relative to the directory specified using
-``--base-path`` option (or the current working directory if base path is not specified).
-Furthermore, the part added via ``--base-path`` will not appear in the contract metadata.
+or ../ <direct-imports>` are treated as relative to the directories specified using
+``--base-path`` and ``--include-path`` options (or the current working directory if base path is not specified).
+Furthermore, the part of the path added via these options will not appear in the contract metadata.
 
-For security reasons the compiler has restrictions on what directories it can access.
+For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
 Directories of source files specified on the command line and target paths of
 remappings are automatically allowed to be accessed by the file reader, but everything
 else is rejected by default.
@@ -437,7 +434,7 @@ Output Description
 .. code-block:: javascript
 
     {
-      // Optional: not present if no errors/warnings were encountered
+      // Optional: not present if no errors/warnings/infos were encountered
       "errors": [
         {
           // Optional: Location within the source file.
@@ -460,7 +457,7 @@ Output Description
           "type": "TypeError",
           // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
           "component": "general",
-          // Mandatory ("error" or "warning")
+          // Mandatory ("error", "warning" or "info", but please note that this may be extended in the future)
           "severity": "error",
           // Optional: unique code for the cause of the error
           "errorCode": "3141",
@@ -604,6 +601,7 @@ Error Types
 11. ``CompilerError``: Invalid use of the compiler stack - this should be reported as an issue.
 12. ``FatalError``: Fatal error not processed correctly - this should be reported as an issue.
 13. ``Warning``: A warning, which didn't stop the compilation, but should be addressed if possible.
+14. ``Info``: Information that the compiler thinks the user might find useful, but is not dangerous and does not necessarily need to be addressed.
 
 
 .. _compiler-tools:

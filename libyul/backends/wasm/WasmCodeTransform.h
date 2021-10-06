@@ -28,6 +28,7 @@
 #include <libyul/optimiser/TypeInfo.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 
 #include <stack>
 #include <map>

@@ -143,6 +143,8 @@ set(libyul_sources
     libyul/ObjectCompilerTest.h
     libyul/ObjectParser.cpp
     libyul/Parser.cpp
+    libyul/StackLayoutGeneratorTest.cpp
+    libyul/StackLayoutGeneratorTest.h
     libyul/SyntaxTest.h
     libyul/SyntaxTest.cpp
     libyul/YulInterpreterTest.cpp
@@ -158,6 +160,7 @@ set(solcli_sources
     solc/Common.cpp
     solc/Common.h
     solc/CommandLineInterface.cpp
+    solc/CommandLineInterfaceAllowPaths.cpp
     solc/CommandLineParser.cpp
 )
 detect_stray_source_files("${solcli_sources}" "solc/")

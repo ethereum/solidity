@@ -50,7 +50,7 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 1770739
+// gas irOptimized: 1769431
 // gas legacy: 2356230
 // gas legacyOptimized: 1746528
 // div(uint256,uint256): 3141592653589793238, 88714123 -> 35412542528203691288251815328
@@ -58,7 +58,7 @@ contract test {
 // gas legacy: 22497
 // gas legacyOptimized: 22010
 // exp(uint256): 3141592653589793238 -> 23140692632779268978
-// gas irOptimized: 24245
+// gas irOptimized: 24234
 // gas legacy: 25104
 // gas legacyOptimized: 24258
 // exp2(uint256): 3141592653589793238 -> 8824977827076287620

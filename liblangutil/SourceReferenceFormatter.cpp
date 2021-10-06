@@ -164,7 +164,7 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
 {
 	// exception header line
-	errorColored() << _msg.category;
+	errorColored() << _msg.severity;
 	if (m_withErrorIds && _msg.errorId.has_value())
 		errorColored() << " (" << _msg.errorId.value().error << ")";
 	messageColored() << ": " << _msg.primary.message << '\n';
@@ -181,9 +181,9 @@ void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtracto
 	m_stream << '\n';
 }
 
-void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _category)
+void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _severity)
 {
-	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _exception, _category));
+	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _exception, _severity));
 }
 
 void SourceReferenceFormatter::printErrorInformation(ErrorList const& _errors)

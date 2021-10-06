@@ -26,8 +26,8 @@
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmParser.h>
+#include <libyul/Utilities.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
-
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/Instruction.h>
 
@@ -46,19 +46,6 @@ using namespace solidity::util;
 namespace
 {
 
-void visitArguments(
-	AbstractAssembly& _assembly,
-	FunctionCall const& _call,
-	function<void(Expression const&)> _visitExpression
-)
-{
-	for (auto const& arg: _call.arguments | ranges::views::reverse)
-		_visitExpression(arg);
-
-	_assembly.setSourceLocation(_call.debugData->location);
-}
-
-
 pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	string const& _name,
 	evmasm::Instruction _instruction
@@ -76,12 +63,10 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.literalArguments.clear();
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](
-		FunctionCall const& _call,
+		FunctionCall const&,
 		AbstractAssembly& _assembly,
-		BuiltinContext&,
-		std::function<void(Expression const&)> _visitExpression
+		BuiltinContext&
 	) {
-		visitArguments(_assembly, _call, _visitExpression);
 		_assembly.appendInstruction(_instruction);
 	};
 
@@ -94,7 +79,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	size_t _returns,
 	SideEffects _sideEffects,
 	vector<optional<LiteralKind>> _literalArguments,
-	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void(Expression const&)>)> _generateCode
+	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&)> _generateCode
 )
 {
 	yulAssert(_literalArguments.size() == _params || _literalArguments.empty(), "");
@@ -166,12 +151,10 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 		builtins.emplace(createFunction("linkersymbol", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
-			BuiltinContext&,
-			function<void(Expression const&)>
+			BuiltinContext&
 		) {
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			_assembly.setSourceLocation(_call.debugData->location);
 			_assembly.appendLinkerSymbol(std::get<Literal>(arg).value.str());
 		}));
 
@@ -184,24 +167,24 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
-				BuiltinContext&,
-				function<void(Expression const&)> _visitExpression
+				BuiltinContext&
 			) {
-				visitArguments(_assembly, _call, _visitExpression);
+				yulAssert(_call.arguments.size() == 1, "");
+				Literal const* literal = get_if<Literal>(&_call.arguments.front());
+				yulAssert(literal, "");
+				_assembly.appendConstant(valueOfLiteral(*literal));
 			})
 		);
 
 		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
-			BuiltinContext& _context,
-			std::function<void(Expression const&)> const&
+			BuiltinContext& _context
 		) {
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
 			YulString dataName = std::get<Literal>(arg).value;
-			_assembly.setSourceLocation(_call.debugData->location);
 			if (_context.currentObject->name == dataName)
 				_assembly.appendAssemblySize();
 			else
@@ -217,14 +200,12 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
-			BuiltinContext& _context,
-			std::function<void(Expression const&)> const&
+			BuiltinContext& _context
 		) {
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
 			YulString dataName = std::get<Literal>(arg).value;
-			_assembly.setSourceLocation(_call.debugData->location);
 			if (_context.currentObject->name == dataName)
 				_assembly.appendConstant(0);
 			else
@@ -244,12 +225,10 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			SideEffects{false, true, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
 			{},
 			[](
-				FunctionCall const& _call,
+				FunctionCall const&,
 				AbstractAssembly& _assembly,
-				BuiltinContext&,
-				std::function<void(Expression const&)> _visitExpression
+				BuiltinContext&
 			) {
-				visitArguments(_assembly, _call, _visitExpression);
 				_assembly.appendInstruction(evmasm::Instruction::CODECOPY);
 			}
 		));
@@ -262,15 +241,10 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
-				BuiltinContext&,
-				std::function<void(Expression const&)> _visitExpression
+				BuiltinContext&
 			) {
 				yulAssert(_call.arguments.size() == 3, "");
-
-				_visitExpression(_call.arguments[2]);
 				YulString identifier = std::get<Literal>(_call.arguments[1]).value;
-				_visitExpression(_call.arguments[0]);
-				_assembly.setSourceLocation(_call.debugData->location);
 				_assembly.appendImmutableAssignment(identifier.str());
 			}
 		));
@@ -283,11 +257,9 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
-				BuiltinContext&,
-				std::function<void(Expression const&)>
+				BuiltinContext&
 			) {
 				yulAssert(_call.arguments.size() == 1, "");
-				_assembly.setSourceLocation(_call.debugData->location);
 				_assembly.appendImmutable(std::get<Literal>(_call.arguments.front()).value.str());
 			}
 		));
@@ -387,15 +359,11 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 			[=](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
-				BuiltinContext&,
-				std::function<void(Expression const&)> _visitExpression
+				BuiltinContext&
 			) {
 				yulAssert(_call.arguments.size() == (1 + _arguments), "");
-				for (Expression const& arg: _call.arguments | ranges::views::tail | ranges::views::reverse)
-					_visitExpression(arg);
 				Expression const& bytecode = _call.arguments.front();
 
-				_assembly.setSourceLocation(_call.debugData->location);
 				_assembly.appendVerbatim(
 					asBytes(std::get<Literal>(bytecode).value.str()),
 					_arguments,
@@ -456,24 +424,19 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 	m_functions["popbool"_yulstring].name = "popbool"_yulstring;
 	m_functions["popbool"_yulstring].parameters = {"bool"_yulstring};
 	m_functions.insert(createFunction("bool_to_u256", 1, 1, {}, {}, [](
-		FunctionCall const& _call,
-		AbstractAssembly& _assembly,
-		BuiltinContext&,
-		std::function<void(Expression const&)> _visitExpression
-	) {
-		visitArguments(_assembly, _call, _visitExpression);
-	}));
+		FunctionCall const&,
+		AbstractAssembly&,
+		BuiltinContext&
+	) {}));
 	m_functions["bool_to_u256"_yulstring].parameters = {"bool"_yulstring};
 	m_functions["bool_to_u256"_yulstring].returns = {"u256"_yulstring};
 	m_functions.insert(createFunction("u256_to_bool", 1, 1, {}, {}, [](
-		FunctionCall const& _call,
+		FunctionCall const&,
 		AbstractAssembly& _assembly,
-		BuiltinContext&,
-		std::function<void(Expression const&)> _visitExpression
+		BuiltinContext&
 	) {
 		// TODO this should use a Panic.
 		// A value larger than 1 causes an invalid instruction.
-		visitArguments(_assembly, _call, _visitExpression);
 		_assembly.appendConstant(2);
 		_assembly.appendInstruction(evmasm::Instruction::DUP2);
 		_assembly.appendInstruction(evmasm::Instruction::LT);

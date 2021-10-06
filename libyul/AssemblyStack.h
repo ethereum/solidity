@@ -116,7 +116,7 @@ public:
 	langutil::ErrorList const& errors() const { return m_errors; }
 
 	/// Pretty-print the input after having parsed it.
-	std::string print() const;
+	std::string print(langutil::CharStreamProvider const* _soliditySourceProvider = nullptr) const;
 
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;

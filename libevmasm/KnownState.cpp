@@ -415,7 +415,7 @@ KnownState::Id KnownState::applyKeccak256(
 	{
 		bytes data;
 		for (Id a: arguments)
-			data += util::toBigEndian(*m_expressionClasses->knownConstant(a));
+			data += toBigEndian(*m_expressionClasses->knownConstant(a));
 		data.resize(length);
 		v = m_expressionClasses->find(AssemblyItem(u256(util::keccak256(data)), _location));
 	}

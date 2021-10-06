@@ -64,7 +64,16 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	yulAssert(_object.code, "No code.");
 	// We do not catch and re-throw the stack too deep exception here because it is a YulException,
 	// which should be native to this part of the code.
-	CodeTransform transform{m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context, _optimize};
+	CodeTransform transform{
+		m_assembly,
+		*_object.analysisInfo,
+		*_object.code,
+		m_dialect,
+		context,
+		_optimize,
+		{},
+		true /* _useNamedLabelsForFunctions */
+	};
 	transform(*_object.code);
 	if (!transform.stackErrors().empty())
 		BOOST_THROW_EXCEPTION(transform.stackErrors().front());

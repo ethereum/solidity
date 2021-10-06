@@ -149,7 +149,8 @@ public:
 	/// with _args.
 	std::string formatSummaryCall(
 		std::vector<smtutil::Expression> const& _args,
-		langutil::CharStreamProvider const& _charStreamProvider
+		langutil::CharStreamProvider const& _charStreamProvider,
+		bool _appendTxVars = false
 	) const;
 
 	/// @returns the values of the state variables from _args at the point

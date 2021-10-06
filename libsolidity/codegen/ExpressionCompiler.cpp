@@ -957,6 +957,35 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			);
 			break;
 		}
+		case FunctionType::Kind::Wrap:
+		case FunctionType::Kind::Unwrap:
+		{
+			solAssert(arguments.size() == 1, "");
+			Type const* argumentType = arguments.at(0)->annotation().type;
+			Type const* functionCallType = _functionCall.annotation().type;
+			solAssert(argumentType, "");
+			solAssert(functionCallType, "");
+			FunctionType::Kind kind = functionType->kind();
+			if (kind == FunctionType::Kind::Wrap)
+			{
+				solAssert(
+					argumentType->isImplicitlyConvertibleTo(
+						dynamic_cast<UserDefinedValueType const&>(*functionCallType).underlyingType()
+					),
+					""
+				);
+				solAssert(argumentType->isImplicitlyConvertibleTo(*function.parameterTypes()[0]), "");
+			}
+			else
+				solAssert(
+					dynamic_cast<UserDefinedValueType const&>(*argumentType) ==
+					dynamic_cast<UserDefinedValueType const&>(*function.parameterTypes()[0]),
+					""
+				);
+
+			acceptAndConvert(*arguments[0], *function.parameterTypes()[0]);
+			break;
+		}
 		case FunctionType::Kind::BlockHash:
 		{
 			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
@@ -1784,12 +1813,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "min" || member == "max")
 		{
 			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
-			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
-
-			if (member == "min")
-				m_context << integerType->min();
+			if (IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument()))
+				m_context << (member == "min" ? integerType->min() : integerType->max());
+			else if (EnumType const* enumType = dynamic_cast<EnumType const*>(arg->typeArgument()))
+				m_context << (member == "min" ? enumType->minValue() : enumType->maxValue());
 			else
-				m_context << integerType->max();
+				solAssert(false, "min/max not available for the given type.");
+
 		}
 		else if ((set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{
@@ -2082,8 +2112,7 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 	solUnimplementedAssert(
 		arrayType->location() == DataLocation::CallData &&
 		arrayType->isDynamicallySized() &&
-		!arrayType->baseType()->isDynamicallyEncoded(),
-		""
+		!arrayType->baseType()->isDynamicallyEncoded()
 	);
 
 	if (_indexAccess.startExpression())
@@ -2153,6 +2182,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		// no-op
 	}
 	else if (dynamic_cast<EnumDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<UserDefinedValueTypeDefinition const*>(declaration))
 	{
 		// no-op
 	}

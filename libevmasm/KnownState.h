@@ -24,14 +24,6 @@
 
 #pragma once
 
-#include <utility>
-#include <vector>
-#include <map>
-#include <set>
-#include <tuple>
-#include <memory>
-#include <ostream>
-
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wredeclared-class-member"
@@ -57,6 +49,15 @@
 #include <libsolutil/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SemanticInformation.h>
+
+#include <limits>
+#include <utility>
+#include <vector>
+#include <map>
+#include <set>
+#include <tuple>
+#include <memory>
+#include <ostream>
 
 namespace solidity::langutil
 {

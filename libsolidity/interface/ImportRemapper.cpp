@@ -20,10 +20,12 @@
 #include <liblangutil/Exceptions.h>
 
 using std::equal;
+using std::find;
 using std::move;
+using std::nullopt;
 using std::optional;
 using std::string;
-using std::string;
+using std::string_view;
 using std::vector;
 
 namespace solidity::frontend
@@ -77,24 +79,29 @@ SourceUnitName ImportRemapper::apply(ImportPath const& _path, string const& _con
 	return path;
 }
 
-optional<ImportRemapper::Remapping> ImportRemapper::parseRemapping(string const& _remapping)
+bool ImportRemapper::isRemapping(string_view _input)
 {
-	auto eq = find(_remapping.begin(), _remapping.end(), '=');
-	if (eq == _remapping.end())
-		return {};
+	return _input.find("=") != string::npos;
+}
 
-	auto colon = find(_remapping.begin(), eq, ':');
+optional<ImportRemapper::Remapping> ImportRemapper::parseRemapping(string_view _input)
+{
+	auto equals = find(_input.cbegin(), _input.cend(), '=');
+	if (equals == _input.end())
+		return nullopt;
 
-	Remapping r;
+	auto const colon = find(_input.cbegin(), equals, ':');
 
-	r.context = colon == eq ? string() : string(_remapping.begin(), colon);
-	r.prefix = colon == eq ? string(_remapping.begin(), eq) : string(colon + 1, eq);
-	r.target = string(eq + 1, _remapping.end());
+	Remapping remapping{
+		(colon == equals ? "" : string(_input.cbegin(), colon)),
+		(colon == equals ? string(_input.cbegin(), equals) : string(colon + 1, equals)),
+		string(equals + 1, _input.cend()),
+	};
 
-	if (r.prefix.empty())
-		return {};
+	if (remapping.prefix.empty())
+		return nullopt;
 
-	return r;
+	return remapping;
 }
 
 }

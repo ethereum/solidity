@@ -29,7 +29,7 @@ bytes YulAssembler::assemble()
 		!m_stack.parseAndAnalyze("source", m_yulProgram) ||
 		!m_stack.parserResult()->code ||
 		!m_stack.parserResult()->analysisInfo ||
-		!langutil::Error::containsOnlyWarnings(m_stack.errors())
+		langutil::Error::containsErrors(m_stack.errors())
 	)
 		yulAssert(false, "Yul program could not be parsed successfully.");
 

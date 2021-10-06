@@ -188,7 +188,8 @@ bool BMC::visit(FunctionDefinition const& _function)
 	{
 		reset();
 		initFunction(_function);
-		m_context.addAssertion(state().txTypeConstraints() && state().txFunctionConstraints(_function));
+		if (_function.isConstructor() || _function.isPublic())
+			m_context.addAssertion(state().txTypeConstraints() && state().txFunctionConstraints(_function));
 		resetStateVariables();
 	}
 
@@ -482,6 +483,8 @@ void BMC::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::BlockHash:
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
+	case FunctionType::Kind::Unwrap:
+	case FunctionType::Kind::Wrap:
 		[[fallthrough]];
 	default:
 		SMTEncoder::endVisit(_funCall);

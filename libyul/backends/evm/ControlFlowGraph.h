@@ -24,7 +24,10 @@
 #include <libyul/AST.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Dialect.h>
+#include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
+
+#include <libsolutil/Numeric.h>
 
 #include <functional>
 #include <list>
@@ -54,8 +57,19 @@ struct FunctionCallReturnLabelSlot
 /// the function.
 struct FunctionReturnLabelSlot
 {
-	bool operator==(FunctionReturnLabelSlot const&) const { return true; }
-	bool operator<(FunctionReturnLabelSlot const&) const { return false; }
+	std::reference_wrapper<Scope::Function const> function;
+	bool operator==(FunctionReturnLabelSlot const& _rhs) const
+	{
+		// There can never be return label slots of different functions on stack simultaneously.
+		yulAssert(&function.get() == &_rhs.function.get(), "");
+		return true;
+	}
+	bool operator<(FunctionReturnLabelSlot const& _rhs) const
+	{
+		// There can never be return label slots of different functions on stack simultaneously.
+		yulAssert(&function.get() == &_rhs.function.get(), "");
+		return false;
+	}
 	static constexpr bool canBeFreelyGenerated = false;
 };
 /// A slot containing the current value of a particular variable.
@@ -131,6 +145,9 @@ struct CFG
 		std::shared_ptr<DebugData const> debugData;
 		std::reference_wrapper<Scope::Function const> function;
 		std::reference_wrapper<yul::FunctionCall const> functionCall;
+		/// True, if the call is recursive, i.e. entering the function involves a control flow path (potentially involving
+		/// more intermediate function calls) that leads back to this very call.
+		bool recursive = false;
 	};
 	struct Assignment
 	{
@@ -157,18 +174,25 @@ struct CFG
 		struct MainExit {};
 		struct ConditionalJump
 		{
+			std::shared_ptr<DebugData const> debugData;
 			StackSlot condition;
 			BasicBlock* nonZero = nullptr;
 			BasicBlock* zero = nullptr;
 		};
 		struct Jump
 		{
+			std::shared_ptr<DebugData const> debugData;
 			BasicBlock* target = nullptr;
 			/// The only backwards jumps are jumps from loop post to loop condition.
 			bool backwards = false;
 		};
-		struct FunctionReturn { CFG::FunctionInfo* info = nullptr; };
+		struct FunctionReturn
+		{
+			std::shared_ptr<DebugData const> debugData;
+			CFG::FunctionInfo* info = nullptr;
+		};
 		struct Terminated {};
+		std::shared_ptr<DebugData const> debugData;
 		std::vector<BasicBlock*> entries;
 		std::vector<Operation> operations;
 		std::variant<MainExit, Jump, ConditionalJump, FunctionReturn, Terminated> exit = MainExit{};
@@ -201,9 +225,9 @@ struct CFG
 	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
 	std::list<yul::FunctionCall> ghostCalls;
 
-	BasicBlock& makeBlock()
+	BasicBlock& makeBlock(std::shared_ptr<DebugData const> _debugData)
 	{
-		return blocks.emplace_back(BasicBlock{});
+		return blocks.emplace_back(BasicBlock{move(_debugData), {}, {}});
 	}
 };
 

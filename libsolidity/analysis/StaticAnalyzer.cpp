@@ -86,7 +86,7 @@ StaticAnalyzer::~StaticAnalyzer()
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }
 
 bool StaticAnalyzer::visit(ContractDefinition const& _contract)

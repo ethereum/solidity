@@ -38,6 +38,7 @@ add_executable(isoltest
 	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/SyntaxTest.cpp
+	../libyul/StackLayoutGeneratorTest.cpp
 	../libyul/YulOptimizerTest.cpp
 	../libyul/YulOptimizerTestCommon.cpp
 	../libyul/YulInterpreterTest.cpp

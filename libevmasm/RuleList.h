@@ -51,7 +51,7 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 }
 
 // This works around a bug fixed with Boost 1.64.
-// https://www.boost.org/doc/libs/1_68_0/libs/multiprecision/doc/html/boost_multiprecision/map/hist.html#boost_multiprecision.map.hist.multiprecision_2_3_1_boost_1_64
+// https://www.boost.org/doc/libs/release/libs/multiprecision/doc/html/boost_multiprecision/map/hist.html#boost_multiprecision.map.hist.multiprecision_2_3_1_boost_1_64
 template <class S> S shlWorkaround(S const& _x, unsigned _amount)
 {
 	return u256((bigint(_x) << _amount) & u256(-1));

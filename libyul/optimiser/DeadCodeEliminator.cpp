@@ -27,6 +27,7 @@
 #include <libevmasm/SemanticInformation.h>
 
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 using namespace solidity;

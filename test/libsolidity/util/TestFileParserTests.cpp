@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(call_effects)
 	std::map<std::string, Builtin> builtins;
 	builtins["builtin_returning_call_effect"] = [](FunctionCall const&) -> std::optional<bytes>
 	{
-		return util::toBigEndian(u256(0x1234));
+		return toBigEndian(u256(0x1234));
 	};
 	builtins["builtin_returning_call_effect_no_ret"] = [](FunctionCall const&) -> std::optional<bytes>
 	{

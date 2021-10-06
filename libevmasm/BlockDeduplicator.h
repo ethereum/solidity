@@ -25,6 +25,8 @@
 #pragma once
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
+
 
 #include <cstddef>
 #include <vector>
@@ -64,9 +66,14 @@ private:
 	/// Iterator that skips tags and skips to the end if (all branches of) the control
 	/// flow does not continue to the next instruction.
 	/// If the arguments are supplied to the constructor, replaces items on the fly.
-	struct BlockIterator: std::iterator<std::forward_iterator_tag, AssemblyItem const>
+	struct BlockIterator
 	{
 	public:
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = AssemblyItem const;
+		using difference_type = std::ptrdiff_t;
+		using pointer = AssemblyItem const*;
+		using reference = AssemblyItem const&;
 		BlockIterator(
 			AssemblyItems::const_iterator _it,
 			AssemblyItems::const_iterator _end,

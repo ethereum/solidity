@@ -27,6 +27,7 @@
 #include <iterator>
 #include <string>
 #include <regex>
+#include <limits>
 
 using namespace std;
 using namespace solidity::yul;

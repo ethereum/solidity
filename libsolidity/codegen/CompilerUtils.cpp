@@ -40,7 +40,7 @@ using namespace solidity::langutil;
 
 using solidity::util::Whiskers;
 using solidity::util::h256;
-using solidity::util::toCompactHexWithPrefix;
+using solidity::toCompactHexWithPrefix;
 
 unsigned const CompilerUtils::dataStartOffset = 4;
 size_t const CompilerUtils::freeMemoryPointer = 64;
@@ -771,6 +771,33 @@ void CompilerUtils::convertType(
 		return;
 	Type::Category stackTypeCategory = _typeOnStack.category();
 	Type::Category targetTypeCategory = _targetType.category();
+
+	if (stackTypeCategory == Type::Category::UserDefinedValueType)
+	{
+		solAssert(_cleanupNeeded, "");
+		auto& userDefined = dynamic_cast<UserDefinedValueType const&>(_typeOnStack);
+		solAssert(_typeOnStack == _targetType || _targetType == userDefined.underlyingType(), "");
+		return convertType(
+			userDefined.underlyingType(),
+			_targetType,
+			_cleanupNeeded,
+			_chopSignBits,
+			_asPartOfArgumentDecoding
+		);
+	}
+	if (targetTypeCategory == Type::Category::UserDefinedValueType)
+	{
+		solAssert(_cleanupNeeded, "");
+		auto& userDefined = dynamic_cast<UserDefinedValueType const&>(_targetType);
+		solAssert(_typeOnStack.isImplicitlyConvertibleTo(userDefined.underlyingType()), "");
+		return convertType(
+			_typeOnStack,
+			userDefined.underlyingType(),
+			_cleanupNeeded,
+			_chopSignBits,
+			_asPartOfArgumentDecoding
+		);
+	}
 
 	if (auto contrType = dynamic_cast<ContractType const*>(&_typeOnStack))
 		solAssert(!contrType->isSuper(), "Cannot convert magic variable \"super\"");
@@ -1525,10 +1552,13 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWords)
 {
 	solAssert(_type.isValueType(), "");
+	Type const* type = &_type;
+	if (auto const* userDefined = dynamic_cast<UserDefinedValueType const*>(type))
+		type = &userDefined->underlyingType();
 
-	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
+	unsigned numBytes = type->calldataEncodedSize(_padToWords);
 	bool isExternalFunctionType = false;
-	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
+	if (auto const* funType = dynamic_cast<FunctionType const*>(type))
 		if (funType->kind() == FunctionType::Kind::External)
 			isExternalFunctionType = true;
 	if (numBytes == 0)
@@ -1543,21 +1573,20 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 		splitExternalFunctionType(true);
 	else if (numBytes != 32)
 	{
-		bool leftAligned = _type.category() == Type::Category::FixedBytes;
 		// add leading or trailing zeros by dividing/multiplying depending on alignment
 		unsigned shiftFactor = (32 - numBytes) * 8;
 		rightShiftNumberOnStack(shiftFactor);
-		if (leftAligned)
+		if (type->leftAligned())
 		{
 			leftShiftNumberOnStack(shiftFactor);
 			cleanupNeeded = false;
 		}
-		else if (IntegerType const* intType = dynamic_cast<IntegerType const*>(&_type))
+		else if (IntegerType const* intType = dynamic_cast<IntegerType const*>(type))
 			if (!intType->isSigned())
 				cleanupNeeded = false;
 	}
 	if (_fromCalldata)
-		convertType(_type, _type, cleanupNeeded, false, true);
+		convertType(_type, *type, cleanupNeeded, false, true);
 
 	return numBytes;
 }
@@ -1612,12 +1641,10 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords, 
 		"Memory store of more than 32 bytes requested (Type: " + _type.toString(true) + ")."
 	);
 
-	bool leftAligned = _type.category() == Type::Category::FixedBytes;
-
 	if (_cleanup)
 		convertType(_type, _type, true);
 
-	if (numBytes != 32 && !leftAligned && !_padToWords)
+	if (numBytes != 32 && !_type.leftAligned() && !_padToWords)
 		// shift the value accordingly before storing
 		leftShiftNumberOnStack((32 - numBytes) * 8);
 

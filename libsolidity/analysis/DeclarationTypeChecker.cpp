@@ -140,6 +140,30 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 	return false;
 }
 
+void DeclarationTypeChecker::endVisit(UserDefinedValueTypeDefinition const& _userDefined)
+{
+	TypeName const* typeName = _userDefined.underlyingType();
+	solAssert(typeName, "");
+	if (!dynamic_cast<ElementaryTypeName const*>(typeName))
+		m_errorReporter.fatalTypeError(
+			8657_error,
+			typeName->location(),
+			"The underlying type for a user defined value type has to be an elementary value type."
+		);
+
+	Type const* type = typeName->annotation().type;
+	solAssert(type, "");
+	solAssert(!dynamic_cast<UserDefinedValueType const*>(type), "");
+	if (!type->isValueType())
+		m_errorReporter.typeError(
+			8129_error,
+			_userDefined.location(),
+			"The underlying type of the user defined value type \"" +
+			_userDefined.name() +
+			"\" is not a value type."
+		);
+}
+
 void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 {
 	if (_typeName.annotation().type)
@@ -158,6 +182,8 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::contract(*contract);
+	else if (auto userDefinedValueType = dynamic_cast<UserDefinedValueTypeDefinition const*>(declaration))
+		_typeName.annotation().type = TypeProvider::userDefinedValueType(*userDefinedValueType);
 	else
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
@@ -227,12 +253,13 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 		{
 			case Type::Category::Enum:
 			case Type::Category::Contract:
+			case Type::Category::UserDefinedValueType:
 				break;
 			default:
 				m_errorReporter.fatalTypeError(
 					7804_error,
 					typeName->location(),
-					"Only elementary types, contract types or enums are allowed as mapping keys."
+					"Only elementary types, user defined value types, contract types or enums are allowed as mapping keys."
 				);
 				break;
 		}

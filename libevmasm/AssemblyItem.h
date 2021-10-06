@@ -38,7 +38,6 @@ enum AssemblyItemType
 	UndefinedItem,
 	Operation,
 	Push,
-	PushString,
 	PushTag,
 	PushSub,
 	PushSubSize,

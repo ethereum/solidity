@@ -1,13 +1,13 @@
 Warning: CHC: Division by zero happens here.
 Counterexample:
 arr = []
-a = 0
+a = 0x0
 x = 0
 
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 1)
+test.f(0x0, 1)
  --> model_checker_targets_div_by_zero_chc/input.sol:9:3:
   |
 9 | 		2 / x;

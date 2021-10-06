@@ -91,7 +91,7 @@ void SyntaxTest::parseAndAnalyze()
 					return error->type() == Error::Type::CodeGenerationError;
 				});
 				auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
-					return error->type() != Error::Type::Warning;
+					return Error::isError(error->type());
 				});
 				// failing compilation after successful analysis is a rare case,
 				// it assumes that errors contain exactly one error, and the error is of type Error::Type::CodeGenerationError

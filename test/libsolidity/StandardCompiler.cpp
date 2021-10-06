@@ -41,6 +41,19 @@ namespace solidity::frontend::test
 namespace
 {
 
+langutil::Error::Severity str2Severity(string const& _cat)
+{
+	map<string, langutil::Error::Severity> cats{
+		{"info", langutil::Error::Severity::Info},
+		{"Info", langutil::Error::Severity::Info},
+		{"warning", langutil::Error::Severity::Warning},
+		{"Warning", langutil::Error::Severity::Warning},
+		{"error", langutil::Error::Severity::Error},
+		{"Error", langutil::Error::Severity::Error}
+	};
+	return cats.at(_cat);
+}
+
 /// Helper to match a specific error type and message
 bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
 {
@@ -68,7 +81,7 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 	{
 		BOOST_REQUIRE(error.isObject());
 		BOOST_REQUIRE(error["severity"].isString());
-		if (error["severity"].asString() != "warning")
+		if (langutil::Error::isError(str2Severity(error["severity"].asString())))
 			return false;
 	}
 
@@ -472,7 +485,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK_EQUAL(
 		util::jsonCompactPrint(result["sources"]["fileA"]["ast"]),
 		"{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]},\"id\":2,\"nodeType\":\"SourceUnit\",\"nodes\":[{\"abstract\":false,"
-		"\"baseContracts\":[],\"contractDependencies\":[],\"contractKind\":\"contract\",\"fullyImplemented\":true,\"id\":1,"
+		"\"baseContracts\":[],\"canonicalName\":\"A\",\"contractDependencies\":[],\"contractKind\":\"contract\",\"fullyImplemented\":true,\"id\":1,"
 		"\"linearizedBaseContracts\":[1],\"name\":\"A\",\"nameLocation\":\"9:1:0\",\"nodeType\":\"ContractDefinition\",\"nodes\":[],\"scope\":2,"
 		"\"src\":\"0:14:0\",\"usedErrors\":[]}],\"src\":\"0:14:0\"}"
 	);

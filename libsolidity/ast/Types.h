@@ -29,6 +29,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/LazyInit.h>
 #include <libsolutil/Result.h>
@@ -174,7 +175,7 @@ public:
 	enum class Category
 	{
 		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array, ArraySlice,
-		FixedBytes, Contract, Struct, Function, Enum, Tuple,
+		FixedBytes, Contract, Struct, Function, Enum, UserDefinedValueType, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module,
 		InaccessibleDynamic
 	};
@@ -1071,9 +1072,83 @@ public:
 	/// @returns the value that the string has in the Enum
 	unsigned int memberValue(ASTString const& _member) const;
 	size_t numberOfMembers() const;
+	unsigned int minValue() const { return 0; }
+	unsigned int maxValue() const
+	{
+		solAssert(numberOfMembers() <= 256, "");
+		return static_cast<unsigned int>(numberOfMembers()) - 1;
+	}
 
 private:
 	EnumDefinition const& m_enum;
+};
+
+/**
+ * The type of a UserDefinedValueType.
+ */
+class UserDefinedValueType: public Type
+{
+public:
+	explicit UserDefinedValueType(UserDefinedValueTypeDefinition const& _definition):
+		m_definition(_definition)
+	{}
+
+	Category category() const override { return Category::UserDefinedValueType; }
+	Type const& underlyingType() const;
+	UserDefinedValueTypeDefinition const& definition() const { return m_definition; }
+
+	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
+	Type const* encodingType() const override { return &underlyingType(); }
+	TypeResult interfaceType(bool /* _inLibrary */) const override {return &underlyingType(); }
+	std::string richIdentifier() const override;
+	bool operator==(Type const& _other) const override;
+
+	unsigned calldataEncodedSize(bool _padded) const override { return underlyingType().calldataEncodedSize(_padded); }
+
+	bool leftAligned() const override { return underlyingType().leftAligned(); }
+	bool canBeStored() const override { return underlyingType().canBeStored(); }
+	u256 storageSize() const override { return underlyingType().storageSize(); }
+	unsigned storageBytes() const override { return underlyingType().storageBytes(); }
+
+	bool isValueType() const override
+	{
+		solAssert(underlyingType().isValueType(), "");
+		return true;
+	}
+	bool nameable() const override
+	{
+		solAssert(underlyingType().nameable(), "");
+		return true;
+	}
+
+	bool containsNestedMapping() const override
+	{
+		solAssert(nameable(), "Called for a non nameable type.");
+		solAssert(!underlyingType().containsNestedMapping(), "");
+		return false;
+	}
+
+	bool hasSimpleZeroValueInMemory() const override
+	{
+		solAssert(underlyingType().hasSimpleZeroValueInMemory(), "");
+		return true;
+	}
+
+	bool dataStoredIn(DataLocation _loc) const override
+	{
+		solAssert(!underlyingType().dataStoredIn(_loc), "");
+		return false;
+	}
+
+	std::string toString(bool _short) const override;
+	std::string canonicalName() const override { solAssert(false, ""); }
+	std::string signatureInExternalFunction(bool) const override { solAssert(false, ""); }
+
+protected:
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
+
+private:
+	UserDefinedValueTypeDefinition const& m_definition;
 };
 
 /**
@@ -1144,6 +1219,8 @@ public:
 		RIPEMD160, ///< CALL to special contract for ripemd160
 		Event, ///< syntactic sugar for LOG*
 		Error, ///< creating an error instance in revert or require
+		Wrap, ///< customType.wrap(...) for user defined value types
+		Unwrap, ///< customType.unwrap(...) for user defined value types
 		SetGas, ///< modify the default gas value for the function call
 		SetValue, ///< modify the default value transfer for the function call
 		BlockHash, ///< BLOCKHASH

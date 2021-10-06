@@ -24,7 +24,6 @@
 #include <iostream>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/JSON.h>
 #include <test/Metadata.h>
 
 using namespace std;
@@ -170,30 +169,35 @@ std::optional<map<string, string>> parseCBORMetadata(bytes const& _metadata)
 	}
 }
 
-bool isValidMetadata(string const& _metadata)
+bool isValidMetadata(string const& _serialisedMetadata)
 {
 	Json::Value metadata;
-	if (!util::jsonParseStrict(_metadata, metadata))
+	if (!util::jsonParseStrict(_serialisedMetadata, metadata))
 		return false;
 
+	return isValidMetadata(metadata);
+}
+
+bool isValidMetadata(Json::Value const& _metadata)
+{
 	if (
-		!metadata.isObject() ||
-		!metadata.isMember("version") ||
-		!metadata.isMember("language") ||
-		!metadata.isMember("compiler") ||
-		!metadata.isMember("settings") ||
-		!metadata.isMember("sources") ||
-		!metadata.isMember("output") ||
-		!metadata["settings"].isMember("evmVersion") ||
-		!metadata["settings"].isMember("metadata") ||
-		!metadata["settings"]["metadata"].isMember("bytecodeHash")
+		!_metadata.isObject() ||
+		!_metadata.isMember("version") ||
+		!_metadata.isMember("language") ||
+		!_metadata.isMember("compiler") ||
+		!_metadata.isMember("settings") ||
+		!_metadata.isMember("sources") ||
+		!_metadata.isMember("output") ||
+		!_metadata["settings"].isMember("evmVersion") ||
+		!_metadata["settings"].isMember("metadata") ||
+		!_metadata["settings"]["metadata"].isMember("bytecodeHash")
 	)
 		return false;
 
-	if (!metadata["version"].isNumeric() || metadata["version"] != 1)
+	if (!_metadata["version"].isNumeric() || _metadata["version"] != 1)
 		return false;
 
-	if (!metadata["language"].isString() || metadata["language"].asString() != "Solidity")
+	if (!_metadata["language"].isString() || _metadata["language"].asString() != "Solidity")
 		return false;
 
 	/// @TODO add more strict checks

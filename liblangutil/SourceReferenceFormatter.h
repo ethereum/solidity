@@ -52,7 +52,7 @@ public:
 	/// Prints source location if it is given.
 	void printSourceLocation(SourceReference const& _ref);
 	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
-	void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
+	void printExceptionInformation(util::Exception const& _exception, std::string const& _severity);
 	void printErrorInformation(langutil::ErrorList const& _errors);
 	void printErrorInformation(Error const& _error);
 
@@ -77,7 +77,7 @@ public:
 	{
 		return formatExceptionInformation(
 			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error",
+			Error::formatErrorSeverity(Error::errorSeverity(_error.type())),
 			_charStreamProvider
 		);
 	}

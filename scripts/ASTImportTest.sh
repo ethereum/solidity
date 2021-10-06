@@ -42,15 +42,24 @@ function testImportExportEquivalence {
 
     if $SOLC "$nth_input_file" "${all_input_files[@]}" > /dev/null 2>&1
     then
+        ! [[ -e stderr.txt ]] || { echo "stderr.txt already exists. Refusing to overwrite."; exit 1; }
+
         # save exported json as expected result (silently)
-        $SOLC --combined-json ast,compact-format --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> /dev/null
+        $SOLC --combined-json ast --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> /dev/null
         # import it, and export it again as obtained result (silently)
-        if ! $SOLC --import-ast --combined-json ast,compact-format --pretty-json expected.json > obtained.json 2> /dev/null
+        if ! $SOLC --import-ast --combined-json ast --pretty-json expected.json > obtained.json 2> stderr.txt
         then
             # For investigating, use exit 1 here so the script stops at the
             # first failing test
             # exit 1
             FAILED=$((FAILED + 1))
+            echo -e "ERROR: AST reimport failed for input file $nth_input_file"
+            echo
+            echo "Compiler stderr:"
+            cat ./stderr.txt
+            echo
+            echo "Compiler stdout:"
+            cat ./obtained.json
             return 1
         fi
         DIFF="$(diff expected.json obtained.json)"
@@ -72,6 +81,7 @@ function testImportExportEquivalence {
         fi
         TESTED=$((TESTED + 1))
         rm expected.json obtained.json
+        rm -f stderr.txt
     else
         # echo "contract $solfile could not be compiled "
         UNCOMPILABLE=$((UNCOMPILABLE + 1))

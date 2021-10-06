@@ -159,8 +159,15 @@ void RedundantStoreBase::merge(TrackedStores& _target, vector<TrackedStores>&& _
 
 void StatementRemover::operator()(Block& _block)
 {
-	ranges::actions::remove_if(_block.statements, [&](Statement const& _statement) -> bool {
-		return m_toRemove.count(&_statement);
-	});
+	util::iterateReplacing(
+		_block.statements,
+		[&](Statement& _statement) -> std::optional<vector<Statement>>
+		{
+			if (m_toRemove.count(&_statement))
+				return {vector<Statement>{}};
+			else
+				return nullopt;
+		}
+	);
 	ASTModifier::operator()(_block);
 }

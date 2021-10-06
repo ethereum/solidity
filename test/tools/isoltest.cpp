@@ -121,8 +121,6 @@ public:
 		fs::path const& _basepath,
 		fs::path const& _path
 	);
-
-	static string editor;
 private:
 	enum class Request
 	{
@@ -145,7 +143,6 @@ private:
 	static bool m_exitRequested;
 };
 
-string TestTool::editor;
 bool TestTool::m_exitRequested = false;
 
 TestTool::Result TestTool::process()
@@ -258,7 +255,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 			}
 		case 'e':
 			cout << endl << endl;
-			if (system((TestTool::editor + " \"" + m_path.string() + "\"").c_str()))
+			if (system((m_options.editor + " \"" + m_path.string() + "\"").c_str()))
 				cerr << "Error running editor command." << endl << endl;
 			return Request::Rerun;
 		case 'q':
@@ -425,7 +422,7 @@ int main(int argc, char const *argv[])
 		setupTerminal();
 
 		{
-			auto options = std::make_unique<solidity::test::IsolTestOptions>(&TestTool::editor);
+			auto options = std::make_unique<solidity::test::IsolTestOptions>();
 
 			if (!options->parse(argc, argv))
 				return -1;

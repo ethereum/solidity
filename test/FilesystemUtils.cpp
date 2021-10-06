@@ -31,7 +31,8 @@ void solidity::test::createFilesWithParentDirs(set<boost::filesystem::path> cons
 		if (!path.parent_path().empty())
 			boost::filesystem::create_directories(path.parent_path());
 
-		ofstream newFile(path.string());
+		// Use binary mode to avoid line ending conversion on Windows.
+		ofstream newFile(path.string(), std::ofstream::binary);
 		newFile << _content;
 
 		if (newFile.fail() || !boost::filesystem::exists(path))
@@ -53,12 +54,16 @@ void solidity::test::createFileWithContent(boost::filesystem::path const& _path,
 }
 
 bool solidity::test::createSymlinkIfSupportedByFilesystem(
-	boost::filesystem::path const& _targetPath,
+	boost::filesystem::path _targetPath,
 	boost::filesystem::path const& _linkName,
 	bool _directorySymlink
 )
 {
 	boost::system::error_code symlinkCreationError;
+
+	// NOTE: On Windows / works as a separator in a symlink target only if the target is absolute.
+	// Convert path separators to native ones to avoid this problem.
+	_targetPath.make_preferred();
 
 	if (_directorySymlink)
 		boost::filesystem::create_directory_symlink(_targetPath, _linkName, symlinkCreationError);

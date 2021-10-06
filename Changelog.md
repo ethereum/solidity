@@ -6,23 +6,72 @@ Breaking changes:
  * Inline Assembly: Consider functions, function parameters and return variables for shadowing checks.
 
 
-### 0.8.8 (unreleased)
+### 0.8.10 (unreleased)
 
 Language Features:
+ * Inline Assembly: Support ``.address`` and ``.selector`` on external function pointers to access their address and function selector.
 
 
 Compiler Features:
- * Commandline Interface: Normalize paths specified on the command line and make them relative for files located inside base path.
- * Immutable variables can be read at construction time once they are initialized.
- * SMTChecker: Support low level ``call`` as external calls to unknown code.
- * SMTChecker: Add constraints to better correlate ``address(this).balance`` and ``msg.value``.
- * Commandline Interface: Disallowed the ``--experimental-via-ir`` option to be used with Standard Json, Assembler and Linker modes.
+ * SMTChecker: Output values for ``block.*``, ``msg.*`` and ``tx.*`` variables that are present in the called functions.
 
 
 Bugfixes:
+ * Commandline Interface: Fix extra newline character being appended to sources passed through standard input, affecting their hashes.
+ * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
+
+
+
+
+### 0.8.9 (2021-09-29)
+
+Important Bugfixes:
+ * Immutables: Properly perform sign extension on signed immutables.
+ * User Defined Value Type: Fix storage layout of user defined value types for underlying types shorter than 32 bytes.
+
+
+Bugfixes:
+ * AST: Export ``canonicalName`` for ``UserDefinedValueTypeDefinition`` and ``ContractDefinition``.
+
+
+
+### 0.8.8 (2021-09-27)
+
+Language Features:
+ * Inheritance: A function that overrides only a single interface function does not require the ``override`` specifier.
+ * Type System: Support ``type(E).min`` and ``type(E).max`` for enums.
+ * User Defined Value Type: allows creating a zero cost abstraction over a value type with stricter type requirements.
+
+
+Compiler Features:
+ * Commandline Interface: Add ``--include-path`` option for specifying extra directories that may contain importable code (e.g. packaged third-party libraries).
+ * Commandline Interface: Do not implicitly run evm bytecode generation unless needed for the requested output.
+ * Commandline Interface: Normalize paths specified on the command line and make them relative for files located inside base path and/or include paths.
+ * Immutable variables can be read at construction time once they are initialized.
+ * SMTChecker: Add constraints to better correlate ``address(this).balance`` and ``msg.value``.
+ * SMTChecker: Support constants via modules.
+ * SMTChecker: Support low level ``call`` as external calls to unknown code.
+ * SMTChecker: Support the ``value`` option for external function calls.
+ * SMTChecker: Support user defined value types.
+
+
+Bugfixes:
+ * Code Generator: Fix ICE on assigning to calldata structs and statically-sized calldata arrays in inline assembly.
+ * Code Generator: Use stable source order for ABI functions.
+ * Commandline Interface: Disallow the ``--experimental-via-ir`` option in Standard JSON, Assembler and Linker modes.
+ * Commandline Interface: Fix resolution of paths whitelisted with ``--allowed-paths`` or implicitly due to base path, remappings and files being compiled. Correctly handle paths that do not match imports exactly due to being relative, non-normalized or empty.
+ * Commandline Interface: Report optimizer options as invalid in Standard JSON and linker modes instead of ignoring them.
+ * Name Resolver: Fix that when importing an aliased symbol using ``import {AliasedName} from "a.sol"`` it would use the original name of the symbol and not the aliased one.
+ * Opcode Optimizer: Prevent the optimizer from running multiple times to avoid potential bytecode differences for referenced code.
+ * Parser: Properly check for multiple SPDX license identifiers next to each other and validate them.
+ * SMTChecker: Fix BMC's constraints regarding internal functions.
+ * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
  * SMTChecker: Fix false positive in external calls from constructors.
  * SMTChecker: Fix internal error on some multi-source uses of ``abi.*``, cryptographic functions and constants.
- * SMTChecker: Fix false negative caused by ``push`` on storage array references returned by internal functions.
+ * Standard JSON: Fix non-fatal errors in Yul mode being discarded if followed by a fatal error.
+ * Type Checker: Correct wrong error message in inline assembly complaining about ``.slot`` or ``.offset` not valid when actually ``.length`` was used.
+ * Type Checker: Disallow modifier declarations and definitions in interfaces.
+ * Yul Optimizer: Fix a crash in LoadResolver, when ``keccak256`` has particular non-identifier arguments.
 
 
 

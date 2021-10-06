@@ -16,7 +16,7 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (225-256): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 283686952306183\nd = 0\ne = 0\ng = 0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (352-399): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 283686952306183\nd = 5233100606242806050944357496980485\ne = 0\ng = 0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (526-589): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 283686952306183\nd = 5233100606242806050944357496980485\ne = 96533667595335344310996525432040024692804347064549891\ng = 0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (732-811): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 283686952306183\nd = 5233100606242806050944357496980485\ne = 96533667595335344310996525432040024692804347064549891\ng = 1780731860627700044956966451854862080991451332659079878538166652776284161\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (225-256): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x0\ne = 0x0\ng = 0x0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (352-399): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x010203040506070809000102030405\ne = 0x0\ng = 0x0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (526-589): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x010203040506070809000102030405\ne = 0x0102030405060708090001020304050607080900010203\ng = 0x0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (732-811): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x010203040506070809000102030405\ne = 0x0102030405060708090001020304050607080900010203\ng = 0x01020304050607080900010203040506070809000102030405060708090001\n\nTransaction trace:\nC.constructor()\nC.f()

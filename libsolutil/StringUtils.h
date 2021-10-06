@@ -24,10 +24,12 @@
 
 #pragma once
 
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
+
+#include <limits>
 #include <string>
 #include <vector>
-
-#include <libsolutil/CommonData.h>
 
 namespace solidity::util
 {

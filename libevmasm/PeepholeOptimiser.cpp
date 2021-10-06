@@ -112,7 +112,7 @@ struct PushPop: SimplePeepholeOptimizerMethod<PushPop, 2>
 		auto t = _push.type();
 		return _pop == Instruction::POP && (
 			SemanticInformation::isDupInstruction(_push) ||
-			t == Push || t == PushString || t == PushTag || t == PushSub ||
+			t == Push || t == PushTag || t == PushSub ||
 			t == PushSubSize || t == PushProgramSize || t == PushData || t == PushLibraryAddress
 		);
 	}

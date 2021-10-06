@@ -102,7 +102,12 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					else
 						for (Declaration const* declaration: declarations)
 							if (!DeclarationRegistrationHelper::registerDeclaration(
-								target, *declaration, alias.alias.get(), &alias.location, false, m_errorReporter
+								target,
+								*declaration,
+								alias.alias ? alias.alias.get() : &alias.symbol->name(),
+								&alias.location,
+								false,
+								m_errorReporter
 							))
 								error = true;
 				}
@@ -607,13 +612,31 @@ bool DeclarationRegistrationHelper::visitNode(ASTNode& _node)
 
 	if (auto* declaration = dynamic_cast<Declaration*>(&_node))
 		registerDeclaration(*declaration);
+
+	if (auto* annotation = dynamic_cast<TypeDeclarationAnnotation*>(&_node.annotation()))
+	{
+		string canonicalName = dynamic_cast<Declaration const&>(_node).name();
+		solAssert(!canonicalName.empty(), "");
+
+		for (
+			ASTNode const* scope = m_currentScope;
+			scope != nullptr;
+			scope = m_scopes[scope]->enclosingNode()
+		)
+			if (auto decl = dynamic_cast<Declaration const*>(scope))
+			{
+				solAssert(!decl->name().empty(), "");
+				canonicalName = decl->name() + "." + canonicalName;
+			}
+
+		annotation->canonicalName = canonicalName;
+	}
+
 	if (dynamic_cast<ScopeOpener const*>(&_node))
 		enterNewSubScope(_node);
 
 	if (auto* variableScope = dynamic_cast<VariableScope*>(&_node))
 		m_currentFunction = variableScope;
-	if (auto* annotation = dynamic_cast<TypeDeclarationAnnotation*>(&_node.annotation()))
-		annotation->canonicalName = currentCanonicalName();
 
 	return true;
 }
@@ -661,25 +684,6 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 
 	solAssert(_declaration.annotation().scope == m_currentScope, "");
 	solAssert(_declaration.annotation().contract == m_currentContract, "");
-}
-
-string DeclarationRegistrationHelper::currentCanonicalName() const
-{
-	string ret;
-	for (
-		ASTNode const* scope = m_currentScope;
-		scope != nullptr;
-		scope = m_scopes[scope]->enclosingNode()
-	)
-	{
-		if (auto decl = dynamic_cast<Declaration const*>(scope))
-		{
-			if (!ret.empty())
-				ret = "." + ret;
-			ret = decl->name() + ret;
-		}
-	}
-	return ret;
 }
 
 }

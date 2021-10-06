@@ -274,7 +274,7 @@ uint32_t ContractDefinition::interfaceId() const
 {
 	uint32_t result{0};
 	for (auto const& function: interfaceFunctionList(false))
-		result ^= util::fromBigEndian<uint32_t>(function.first.ref());
+		result ^= fromBigEndian<uint32_t>(function.first.ref());
 	return result;
 }
 
@@ -333,6 +333,17 @@ multimap<std::string, FunctionDefinition const*> const& ContractDefinition::defi
 TypeNameAnnotation& TypeName::annotation() const
 {
 	return initAnnotation<TypeNameAnnotation>();
+}
+
+Type const* UserDefinedValueTypeDefinition::type() const
+{
+	solAssert(m_underlyingType->annotation().type, "");
+	return TypeProvider::typeType(TypeProvider::userDefinedValueType(*this));
+}
+
+TypeDeclarationAnnotation& UserDefinedValueTypeDefinition::annotation() const
+{
+	return initAnnotation<TypeDeclarationAnnotation>();
 }
 
 Type const* StructDefinition::type() const

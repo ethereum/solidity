@@ -18,6 +18,7 @@
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "L",
       "contractDependencies": [],
       "contractKind": "library",
       "fullyImplemented": true,
@@ -37,6 +38,7 @@
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,

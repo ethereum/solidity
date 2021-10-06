@@ -176,9 +176,6 @@ private:
 
 	static bool isOverloadedFunction(Declaration const& _declaration1, Declaration const& _declaration2);
 
-	/// @returns the canonical name of the current scope.
-	std::string currentCanonicalName() const;
-
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 	ASTNode const* m_currentScope = nullptr;
 	VariableScope* m_currentFunction = nullptr;

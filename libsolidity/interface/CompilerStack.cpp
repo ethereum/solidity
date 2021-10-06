@@ -78,10 +78,11 @@
 
 #include <json/json.h>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <utility>
 #include <map>
-
-#include <boost/algorithm/string/replace.hpp>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -252,7 +253,7 @@ void CompilerStack::setRevertStringBehaviour(RevertStrings _revertStrings)
 {
 	if (m_stackState >= ParsedAndImported)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set revert string settings before parsing."));
-	solUnimplementedAssert(_revertStrings != RevertStrings::VerboseDebug, "");
+	solUnimplementedAssert(_revertStrings != RevertStrings::VerboseDebug);
 	m_revertStrings = _revertStrings;
 }
 
@@ -338,7 +339,7 @@ bool CompilerStack::parse()
 		Source& source = m_sources[path];
 		source.ast = parser.parse(*source.charStream);
 		if (!source.ast)
-			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
+			solAssert(Error::containsErrors(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
 		{
 			source.ast->annotation().path = path;
@@ -357,7 +358,7 @@ bool CompilerStack::parse()
 		m_stackState = Parsed;
 	else
 		m_stackState = ParsedAndImported;
-	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
+	if (Error::containsErrors(m_errorReporter.errors()))
 		m_hasError = true;
 
 	storeContractDefinitions();
@@ -741,9 +742,10 @@ Json::Value CompilerStack::generatedSources(string const& _contractName, bool _r
 	return sources.init([&]{
 		Json::Value sources{Json::arrayValue};
 		// If there is no compiler, then no bytecode was generated and thus no
-		// sources were generated.
+		// sources were generated (or we compiled "via IR").
 		if (c.compiler)
 		{
+			solAssert(!m_viaIR, "");
 			string source =
 				_runtime ?
 				c.compiler->runtimeGeneratedYulUtilityCode() :
@@ -1000,20 +1002,12 @@ Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
 	return methodIdentifiers;
 }
 
-string const& CompilerStack::metadata(string const& _contractName) const
+bytes CompilerStack::cborMetadata(string const& _contractName, bool _forIR) const
 {
 	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
-	return metadata(contract(_contractName));
-}
-
-bytes CompilerStack::cborMetadata(string const& _contractName) const
-{
-	if (m_stackState < AnalysisPerformed)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
-
-	return createCBORMetadata(contract(_contractName));
+	return createCBORMetadata(contract(_contractName), _forIR);
 }
 
 string const& CompilerStack::metadata(Contract const& _contract) const
@@ -1023,7 +1017,7 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
-	return _contract.metadata.init([&]{ return createMetadata(_contract); });
+	return _contract.metadata.init([&]{ return createMetadata(_contract, m_viaIR); });
 }
 
 CharStream const& CompilerStack::charStream(string const& _sourceName) const
@@ -1062,16 +1056,10 @@ size_t CompilerStack::functionEntryPoint(
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
-	shared_ptr<Compiler> const& compiler = contract(_contractName).compiler;
-	if (!compiler)
-		return 0;
-	evmasm::AssemblyItem tag = compiler->functionEntryLabel(_function);
-	if (tag.type() == evmasm::UndefinedItem)
-		return 0;
-	evmasm::AssemblyItems const& items = compiler->runtimeAssembly().items();
-	for (size_t i = 0; i < items.size(); ++i)
-		if (items.at(i).type() == evmasm::Tag && items.at(i).data() == tag.data())
-			return i;
+	for (auto&& [name, data]: contract(_contractName).runtimeObject.functionDebugData)
+		if (data.sourceID == _function.id())
+			if (data.instructionIndex)
+				return *data.instructionIndex;
 	return 0;
 }
 
@@ -1265,6 +1253,7 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, shared_ptr<Compiler const>>& _otherCompilers
 )
 {
+	solAssert(!m_viaIR, "");
 	solAssert(m_stackState >= AnalysisPerformed, "");
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
@@ -1283,7 +1272,8 @@ void CompilerStack::compileContract(
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	compiledContract.compiler = compiler;
 
-	bytes cborEncodedMetadata = createCBORMetadata(compiledContract);
+	solAssert(!m_viaIR, "");
+	bytes cborEncodedMetadata = createCBORMetadata(compiledContract, /* _forIR */ false);
 
 	try
 	{
@@ -1329,10 +1319,10 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings, sourceIndices());
+	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings, sourceIndices(), this);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(
 		_contract,
-		createCBORMetadata(compiledContract),
+		createCBORMetadata(compiledContract, /* _forIR */ true),
 		otherYulSources
 	);
 }
@@ -1434,9 +1424,9 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 	return it->second;
 }
 
-string CompilerStack::createMetadata(Contract const& _contract) const
+string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) const
 {
-	Json::Value meta;
+	Json::Value meta{Json::objectValue};
 	meta["version"] = 1;
 	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
@@ -1510,8 +1500,8 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	static vector<string> hashes{"ipfs", "bzzr1", "none"};
 	meta["settings"]["metadata"]["bytecodeHash"] = hashes.at(unsigned(m_metadataHash));
 
-	if (m_viaIR)
-		meta["settings"]["viaIR"] = m_viaIR;
+	if (_forIR)
+		meta["settings"]["viaIR"] = _forIR;
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		*_contract.contract->annotation().canonicalName;
@@ -1569,7 +1559,7 @@ public:
 		// The already encoded key-value pairs
 		ret += m_data;
 		// 16-bit big endian length
-		ret += util::toCompactBigEndian(size, 2);
+		ret += toCompactBigEndian(size, 2);
 		return ret;
 	}
 
@@ -1617,7 +1607,7 @@ private:
 	bytes m_data;
 };
 
-bytes CompilerStack::createCBORMetadata(Contract const& _contract) const
+bytes CompilerStack::createCBORMetadata(Contract const& _contract, bool _forIR) const
 {
 	if (m_metadataFormat == MetadataFormat::NoMetadata)
 		return bytes{};
@@ -1626,7 +1616,7 @@ bytes CompilerStack::createCBORMetadata(Contract const& _contract) const
 		_contract.contract->sourceUnit().annotation().experimentalFeatures
 	);
 
-	string meta = metadata(_contract);
+	string meta = (_forIR == m_viaIR ? metadata(_contract) : createMetadata(_contract, _forIR));
 
 	MetadataCBOREncoder encoder;
 
@@ -1637,7 +1627,7 @@ bytes CompilerStack::createCBORMetadata(Contract const& _contract) const
 	else
 		solAssert(m_metadataHash == MetadataHash::None, "Invalid metadata hash");
 
-	if (experimentalMode || m_viaIR)
+	if (experimentalMode || _forIR)
 		encoder.pushBool("experimental", true);
 	if (m_metadataFormat == MetadataFormat::WithReleaseVersionTag)
 		encoder.pushBytes("solc", VersionCompactBytes);

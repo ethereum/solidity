@@ -56,7 +56,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 
 		FunctionType const* externalFunctionType = it.second->interfaceFunctionType();
 		solAssert(!!externalFunctionType, "");
-		Json::Value method;
+		Json::Value method{Json::objectValue};
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
 		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
@@ -80,7 +80,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		FunctionType constrType(*constructor);
 		FunctionType const* externalFunctionType = constrType.interfaceFunctionType();
 		solAssert(!!externalFunctionType, "");
-		Json::Value method;
+		Json::Value method{Json::objectValue};
 		method["type"] = "constructor";
 		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 		method["inputs"] = formatTypeList(
@@ -96,23 +96,22 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		{
 			auto const* externalFunctionType = FunctionType(*fallbackOrReceive).interfaceFunctionType();
 			solAssert(!!externalFunctionType, "");
-			Json::Value method;
+			Json::Value method{Json::objectValue};
 			method["type"] = TokenTraits::toString(fallbackOrReceive->kind());
 			method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 			abi.emplace(std::move(method));
 		}
 	for (auto const& it: _contractDef.interfaceEvents())
 	{
-		Json::Value event;
+		Json::Value event{Json::objectValue};
 		event["type"] = "event";
 		event["name"] = it->name();
 		event["anonymous"] = it->isAnonymous();
-		Json::Value params(Json::arrayValue);
+		Json::Value params{Json::arrayValue};
 		for (auto const& p: it->parameters())
 		{
 			Type const* type = p->annotation().type->interfaceType(false);
 			solAssert(type, "");
-			Json::Value input;
 			auto param = formatType(p->name(), *type, *p->annotation().type, false);
 			param["indexed"] = p->isIndexed();
 			params.append(std::move(param));
@@ -123,7 +122,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 
 	for (ErrorDefinition const* error: _contractDef.interfaceErrors())
 	{
-		Json::Value errorJson;
+		Json::Value errorJson{Json::objectValue};
 		errorJson["type"] = "error";
 		errorJson["name"] = error->name();
 		errorJson["inputs"] = Json::arrayValue;
@@ -151,7 +150,7 @@ Json::Value ABI::formatTypeList(
 	bool _forLibrary
 )
 {
-	Json::Value params(Json::arrayValue);
+	Json::Value params{Json::arrayValue};
 	solAssert(_names.size() == _encodingTypes.size(), "Names and types vector size does not match");
 	solAssert(_names.size() == _solidityTypes.size(), "");
 	for (unsigned i = 0; i < _names.size(); ++i)
@@ -169,7 +168,7 @@ Json::Value ABI::formatType(
 	bool _forLibrary
 )
 {
-	Json::Value ret;
+	Json::Value ret{Json::objectValue};
 	ret["name"] = _name;
 	ret["internalType"] = _solidityType.toString(true);
 	string suffix = (_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)) ? " storage" : "";

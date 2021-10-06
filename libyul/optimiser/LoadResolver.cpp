@@ -97,6 +97,13 @@ void LoadResolver::tryEvaluateKeccak(
 	std::vector<Expression> const& _arguments
 )
 {
+	yulAssert(_arguments.size() == 2, "");
+	Identifier const* memoryKey = std::get_if<Identifier>(&_arguments.at(0));
+	Identifier const* length = std::get_if<Identifier>(&_arguments.at(1));
+
+	if (!memoryKey || !length)
+		return;
+
 	// The costs are only correct for hashes of 32 bytes or 1 word (when rounded up).
 	GasMeter gasMeter{
 		dynamic_cast<EVMDialect const&>(m_dialect),
@@ -120,13 +127,6 @@ void LoadResolver::tryEvaluateKeccak(
 	// `costOfLiteral = 7200` and `costOfKeccak = 9000` for runtime context.
 	// For creation context: `costOfLiteral = 531` and `costOfKeccak = 90`.
 	if (costOfLiteral > costOfKeccak)
-		return;
-
-	yulAssert(_arguments.size() == 2, "");
-	Identifier const* memoryKey = std::get_if<Identifier>(&_arguments.at(0));
-	Identifier const* length = std::get_if<Identifier>(&_arguments.at(1));
-
-	if (!memoryKey || !length)
 		return;
 
 	auto memoryValue = util::valueOrNullptr(m_memory, memoryKey->name);

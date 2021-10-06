@@ -27,6 +27,8 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <liblangutil/ErrorReporter.h>
 
+#include <limits>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;

@@ -24,6 +24,7 @@
 #include <libyul/ASTForward.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 #include <vector>
 

@@ -101,12 +101,13 @@ class Statistics:
         self.missing_metadata_count += sum(1 for c in contract_reports if c.metadata is None)
 
     def __str__(self) -> str:
-        return "test cases: {}, contracts: {}, errors: {}, missing bytecode: {}, missing metadata: {}".format(
-            self.file_count,
-            str(self.contract_count) + ('+' if self.error_count > 0 else ''),
-            self.error_count,
-            self.missing_bytecode_count,
-            self.missing_metadata_count,
+        contract_count = str(self.contract_count) + ('+' if self.error_count > 0 else '')
+        return (
+            f"test cases: {self.file_count}, "
+            f"contracts: {contract_count}, "
+            f"errors: {self.error_count}, "
+            f"missing bytecode: {self.missing_bytecode_count}, "
+            f"missing metadata: {self.missing_metadata_count}"
         )
 
 

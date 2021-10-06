@@ -74,16 +74,9 @@ string solidity::util::readFileAsString(boost::filesystem::path const& _file)
 
 string solidity::util::readUntilEnd(istream& _stdin)
 {
-	string ret;
-	while (!_stdin.eof())
-	{
-		string tmp;
-		// NOTE: this will read until EOF or NL
-		getline(_stdin, tmp);
-		ret.append(tmp);
-		ret.append("\n");
-	}
-	return ret;
+	ostringstream ss;
+	ss << _stdin.rdbuf();
+	return ss.str();
 }
 
 #if defined(_WIN32)

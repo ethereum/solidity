@@ -61,7 +61,7 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit(map<string
 		m_sourceNames.emplace_back(make_shared<string const>(src.first));
 	for (auto const& srcPair: _sourceList)
 	{
-		astAssert(!srcPair.second.isNull(), "");
+		astAssert(!srcPair.second.isNull());
 		astAssert(member(srcPair.second,"nodeType") == "SourceUnit", "The 'nodeType' of the highest node must be 'SourceUnit'.");
 		m_sourceUnits[srcPair.first] = createSourceUnit(srcPair.second, srcPair.first);
 	}
@@ -133,6 +133,8 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createEnumDefinition(_json);
 	if (nodeType == "EnumValue")
 		return createEnumValue(_json);
+	if (nodeType == "UserDefinedValueTypeDefinition")
+		return createUserDefinedValueTypeDefinition(_json);
 	if (nodeType == "ParameterList")
 		return createParameterList(_json);
 	if (nodeType == "OverrideSpecifier")
@@ -387,6 +389,16 @@ ASTPointer<EnumValue> ASTJsonImporter::createEnumValue(Json::Value const& _node)
 	);
 }
 
+ASTPointer<UserDefinedValueTypeDefinition> ASTJsonImporter::createUserDefinedValueTypeDefinition(Json::Value const& _node)
+{
+	return createASTNode<UserDefinedValueTypeDefinition>(
+		_node,
+		memberAsASTString(_node, "name"),
+		createNameSourceLocation(_node),
+		convertJsonToASTNode<TypeName>(member(_node, "underlyingType"))
+	);
+}
+
 ASTPointer<ParameterList> ASTJsonImporter::createParameterList(Json::Value const&  _node)
 {
 	std::vector<ASTPointer<VariableDeclaration>> parameters;
@@ -473,17 +485,17 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 	if (mutabilityStr == "constant")
 	{
 		mutability = VariableDeclaration::Mutability::Constant;
-		astAssert(memberAsBool(_node, "constant"), "");
+		astAssert(memberAsBool(_node, "constant"));
 	}
 	else
 	{
-		astAssert(!memberAsBool(_node, "constant"), "");
+		astAssert(!memberAsBool(_node, "constant"));
 		if (mutabilityStr == "mutable")
 			mutability = VariableDeclaration::Mutability::Mutable;
 		else if (mutabilityStr == "immutable")
 			mutability = VariableDeclaration::Mutability::Immutable;
 		else
-			astAssert(false, "");
+			astAssert(false);
 	}
 
 	return createASTNode<VariableDeclaration>(
