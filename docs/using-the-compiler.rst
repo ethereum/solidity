@@ -418,6 +418,8 @@ Input Description
           "divModWithSlacks": true,
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
+          // Choose which types of invariants should be reported to the user: contract, reentrancy.
+          "invariants": ["contract", "reentrancy"],
           // Choose whether to output all unproved targets. The default is `false`.
           "showUnproved": true,
           // Choose which solvers should be used, if available.
