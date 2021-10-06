@@ -23,6 +23,7 @@
 #endif
 
 #include <libsolidity/formal/ArraySlicePredicate.h>
+#include <libsolidity/formal/Invariants.h>
 #include <libsolidity/formal/PredicateInstance.h>
 #include <libsolidity/formal/PredicateSort.h>
 #include <libsolidity/formal/SymbolicTypes.h>
@@ -32,14 +33,16 @@
 #include <libsmtutil/CHCSmtLib2Interface.h>
 #include <libsolutil/Algorithms.h>
 
-#include <range/v3/algorithm/for_each.hpp>
-
-#include <range/v3/view/enumerate.hpp>
-#include <range/v3/view/reverse.hpp>
-
 #ifdef HAVE_Z3_DLOPEN
 #include <z3_version.h>
 #endif
+
+#include <boost/algorithm/string.hpp>
+
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/view.hpp>
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/reverse.hpp>
 
 #include <charconv>
 #include <queue>
@@ -971,6 +974,7 @@ void CHC::resetSourceAnalysis()
 	m_safeTargets.clear();
 	m_unsafeTargets.clear();
 	m_unprovedTargets.clear();
+	m_invariants.clear();
 	m_functionTargetIds.clear();
 	m_verificationTargets.clear();
 	m_queryPlaceholders.clear();
@@ -1128,8 +1132,8 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(node.get()))
 		{
 			string suffix = contract->name() + "_" + to_string(contract->id());
-			m_interfaces[contract] = createSymbolicBlock(interfaceSort(*contract, state()), "interface_" + uniquePrefix() + "_" + suffix, PredicateType::Interface, contract);
-			m_nondetInterfaces[contract] = createSymbolicBlock(nondetInterfaceSort(*contract, state()), "nondet_interface_" + uniquePrefix() + "_" + suffix, PredicateType::NondetInterface, contract);
+			m_interfaces[contract] = createSymbolicBlock(interfaceSort(*contract, state()), "interface_" + uniquePrefix() + "_" + suffix, PredicateType::Interface, contract, contract);
+			m_nondetInterfaces[contract] = createSymbolicBlock(nondetInterfaceSort(*contract, state()), "nondet_interface_" + uniquePrefix() + "_" + suffix, PredicateType::NondetInterface, contract, contract);
 			m_constructorSummaries[contract] = createConstructorBlock(*contract, "summary_constructor");
 
 			for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*contract))
@@ -1527,11 +1531,12 @@ void CHC::addRule(smtutil::Expression const& _rule, string const& _ruleName)
 	m_interface->addRule(_rule, _ruleName);
 }
 
-pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
+tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
 {
 	CheckResult result;
+	smtutil::Expression invariant(true);
 	CHCSolverInterface::CexGraph cex;
-	tie(result, cex) = m_interface->query(_query);
+	tie(result, invariant, cex) = m_interface->query(_query);
 	switch (result)
 	{
 	case CheckResult::SATISFIABLE:
@@ -1546,8 +1551,9 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 			spacer->setSpacerOptions(false);
 
 			CheckResult resultNoOpt;
+			smtutil::Expression invariantNoOpt(true);
 			CHCSolverInterface::CexGraph cexNoOpt;
-			tie(resultNoOpt, cexNoOpt) = m_interface->query(_query);
+			tie(resultNoOpt, invariantNoOpt, cexNoOpt) = m_interface->query(_query);
 
 			if (resultNoOpt == CheckResult::SATISFIABLE)
 				cex = move(cexNoOpt);
@@ -1568,7 +1574,7 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 		m_errorReporter.warning(1218_error, _location, "CHC: Error trying to invoke SMT solver.");
 		break;
 	}
-	return {result, cex};
+	return {result, invariant, cex};
 }
 
 void CHC::verificationTargetEncountered(
@@ -1715,6 +1721,34 @@ void CHC::checkVerificationTargets()
 			" Consider increasing the timeout per query."
 		);
 
+	if (!m_settings.invariants.invariants.empty())
+	{
+		string msg;
+		for (auto pred: m_invariants | ranges::views::keys)
+		{
+			ASTNode const* node = pred->programNode();
+			string what;
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node))
+				what = contract->fullyQualifiedName();
+			else
+				solAssert(false, "");
+
+			string invType;
+			if (pred->type() == PredicateType::Interface)
+				invType = "Contract invariant(s)";
+			else if (pred->type() == PredicateType::NondetInterface)
+				invType = "Reentrancy property(ies)";
+			else
+				solAssert(false, "");
+
+			msg += invType + " for " + what + ":\n";
+			for (auto const& inv: m_invariants.at(pred))
+				msg += inv + "\n";
+		}
+		if (!msg.empty())
+			m_errorReporter.info(1180_error, msg);
+	}
+
 	// There can be targets in internal functions that are not reachable from the external interface.
 	// These are safe by definition and are not even checked by the CHC engine, but this information
 	// must still be reported safe by the BMC engine.
@@ -1748,9 +1782,19 @@ void CHC::checkAndReportTarget(
 	createErrorBlock();
 	connectBlocks(_target.value, error(), _target.constraints);
 	auto const& location = _target.errorNode->location();
-	auto const& [result, model] = query(error(), location);
+	auto [result, invariant, model] = query(error(), location);
 	if (result == CheckResult::UNSATISFIABLE)
+	{
 		m_safeTargets[_target.errorNode].insert(_target.type);
+		set<Predicate const*> predicates;
+		for (auto const* pred: m_interfaces | ranges::views::values)
+			predicates.insert(pred);
+		for (auto const* pred: m_nondetInterfaces | ranges::views::values)
+			predicates.insert(pred);
+		map<Predicate const*, set<string>> invariants = collectInvariants(invariant, predicates, m_settings.invariants);
+		for (auto pred: invariants | ranges::views::keys)
+			m_invariants[pred] += move(invariants.at(pred));
+	}
 	else if (result == CheckResult::SATISFIABLE)
 	{
 		solAssert(!_satMsg.empty(), "");
