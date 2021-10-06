@@ -99,7 +99,7 @@ function compileFull()
         printError "Inside directory:"
         echo "    $(pwd)"
         printError "Input was:"
-        cat -- "${files[@]}"
+        echo "${files[@]}"
         false
     fi
 }
