@@ -72,6 +72,8 @@ public:
 		std::string const& _description
 	);
 
+	void info(ErrorId _error, std::string const& _description);
+
 	void declarationError(
 		ErrorId _error,
 		SourceLocation const& _location,

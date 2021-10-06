@@ -61,6 +61,20 @@ public:
 		m_errorReporter.warning(_error, _description);
 	}
 
+	void info(ErrorId _error, SourceLocation const& _location, std::string const& _description)
+	{
+		if (!seen(_error, _location, _description))
+		{
+			m_errorReporter.info(_error, _location, _description);
+			markAsSeen(_error, _location, _description);
+		}
+	}
+
+	void info(ErrorId _error, std::string const& _description)
+	{
+		m_errorReporter.info(_error, _description);
+	}
+
 	bool seen(ErrorId _error, SourceLocation const& _location, std::string const& _description) const
 	{
 		if (m_seenErrors.count({_error, _location}))
