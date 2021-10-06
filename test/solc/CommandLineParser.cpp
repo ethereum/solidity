@@ -149,6 +149,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--model-checker-contracts=contract1.yul:A,contract2.yul:B",
 			"--model-checker-div-mod-no-slacks",
 			"--model-checker-engine=bmc",
+			"--model-checker-invariants=contract,reentrancy",
 			"--model-checker-show-unproved",
 			"--model-checker-solvers=z3,smtlib2",
 			"--model-checker-targets=underflow,divByZero",
@@ -212,6 +213,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			{{{"contract1.yul", {"A"}}, {"contract2.yul", {"B"}}}},
 			true,
 			{true, false},
+			{{InvariantType::Contract, InvariantType::Reentrancy}},
 			true,
 			{false, true, true},
 			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
@@ -285,6 +287,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 				"contract2.yul:B",
 			"--model-checker-div-mod-no-slacks", // Ignored in assembly mode
 			"--model-checker-engine=bmc",  // Ignored in assembly mode
+			"--model-checker-invariants=contract,reentrancy",  // Ignored in assembly mode
 			"--model-checker-show-unproved", // Ignored in assembly mode
 			"--model-checker-solvers=z3,smtlib2", // Ignored in assembly mode
 			"--model-checker-targets="     // Ignored in assembly mode
@@ -375,6 +378,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 			"contract2.yul:B",
 		"--model-checker-div-mod-no-slacks", // Ignored in Standard JSON mode
 		"--model-checker-engine=bmc",      // Ignored in Standard JSON mode
+		"--model-checker-invariants=contract,reentrancy",      // Ignored in Standard JSON mode
 		"--model-checker-show-unproved",      // Ignored in Standard JSON mode
 		"--model-checker-solvers=z3,smtlib2", // Ignored in Standard JSON mode
 		"--model-checker-targets="         // Ignored in Standard JSON mode
