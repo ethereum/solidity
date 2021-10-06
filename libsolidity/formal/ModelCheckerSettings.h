@@ -87,6 +87,31 @@ struct ModelCheckerEngine
 	bool operator==(ModelCheckerEngine const& _other) const noexcept { return bmc == _other.bmc && chc == _other.chc; }
 };
 
+enum class InvariantType { Contract, Reentrancy };
+
+struct ModelCheckerInvariants
+{
+	/// Adds the default targets, that is, all except underflow and overflow.
+	static ModelCheckerInvariants Default() { return *fromString("default"); }
+	/// Adds all targets, including underflow and overflow.
+	static ModelCheckerInvariants All() { return *fromString("all"); }
+
+	static std::optional<ModelCheckerInvariants> fromString(std::string const& _invs);
+
+	bool has(InvariantType _inv) const { return invariants.count(_inv); }
+
+	/// @returns true if the @p _target is valid,
+	/// and false otherwise.
+	bool setFromString(std::string const& _target);
+
+	static std::map<std::string, InvariantType> const validInvariants;
+
+	bool operator!=(ModelCheckerInvariants const& _other) const noexcept { return !(*this == _other); }
+	bool operator==(ModelCheckerInvariants const& _other) const noexcept { return invariants == _other.invariants; }
+
+	std::set<InvariantType> invariants;
+};
+
 enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray, OutOfBounds };
 
 struct ModelCheckerTargets
@@ -123,6 +148,7 @@ struct ModelCheckerSettings
 	/// might prefer the precise encoding.
 	bool divModNoSlacks = false;
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
+	ModelCheckerInvariants invariants = ModelCheckerInvariants::Default();
 	bool showUnproved = false;
 	smtutil::SMTSolverChoice solvers = smtutil::SMTSolverChoice::All();
 	ModelCheckerTargets targets = ModelCheckerTargets::Default();
@@ -135,6 +161,7 @@ struct ModelCheckerSettings
 			contracts == _other.contracts &&
 			divModNoSlacks == _other.divModNoSlacks &&
 			engine == _other.engine &&
+			invariants == _other.invariants &&
 			showUnproved == _other.showUnproved &&
 			solvers == _other.solvers &&
 			targets == _other.targets &&

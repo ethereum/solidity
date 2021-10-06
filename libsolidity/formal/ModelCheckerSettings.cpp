@@ -25,6 +25,40 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
+map<string, InvariantType> const ModelCheckerInvariants::validInvariants{
+	{"contract", InvariantType::Contract},
+	{"reentrancy", InvariantType::Reentrancy}
+};
+
+std::optional<ModelCheckerInvariants> ModelCheckerInvariants::fromString(string const& _invs)
+{
+	set<InvariantType> chosenInvs;
+	if (_invs == "default")
+	{
+		// The default is that no invariants are reported.
+	}
+	else if (_invs == "all")
+		for (auto&& v: validInvariants | ranges::views::values)
+			chosenInvs.insert(v);
+	else
+		for (auto&& t: _invs | ranges::views::split(',') | ranges::to<vector<string>>())
+		{
+			if (!validInvariants.count(t))
+				return {};
+			chosenInvs.insert(validInvariants.at(t));
+		}
+
+	return ModelCheckerInvariants{chosenInvs};
+}
+
+bool ModelCheckerInvariants::setFromString(string const& _inv)
+{
+	if (!validInvariants.count(_inv))
+		return false;
+	invariants.insert(validInvariants.at(_inv));
+	return true;
+}
+
 using TargetType = VerificationTargetType;
 map<string, TargetType> const ModelCheckerTargets::targetStrings{
 	{"constantCondition", TargetType::ConstantCondition},
