@@ -424,7 +424,8 @@ printTask "Compiling various other contracts and libraries..."
     do
         echo " - $dir"
         cd "$dir"
-        compileFull --expect-warnings ./*.sol ./*/*.sol
+        # shellcheck disable=SC2046 # These file names are not supposed to contain spaces.
+        compileFull --expect-warnings $(find . -name '*.sol')
         cd ..
     done
 )

@@ -20,7 +20,7 @@
 # ------------------------------------------------------------------------------
 
 YULARGS=(--strict-assembly)
-FULLARGS=(--optimize --ignore-missing --combined-json "abi,asm,ast,bin,bin-runtime,devdoc,hashes,metadata,opcodes,srcmap,srcmap-runtime,userdoc")
+FULLARGS=(--optimize --combined-json "abi,asm,ast,bin,bin-runtime,devdoc,hashes,metadata,opcodes,srcmap,srcmap-runtime,userdoc")
 OLDARGS=(--optimize --combined-json "abi,asm,ast,bin,bin-runtime,devdoc,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc")
 function compileFull()
 {
