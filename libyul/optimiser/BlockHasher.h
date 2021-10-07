@@ -67,8 +67,10 @@ public:
 	static constexpr uint64_t fnvPrime = 1099511628211u;
 	static constexpr uint64_t fnvEmptyHash = 14695981039346656037u;
 
-private:
+	uint64_t currentHash() const { return m_hash; }
+
 	BlockHasher(std::map<Block const*, uint64_t>& _blockHashes): m_blockHashes(_blockHashes) {}
+private:
 
 	void hash8(uint8_t _value)
 	{

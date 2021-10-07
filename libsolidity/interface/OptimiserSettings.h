@@ -57,7 +57,7 @@ struct OptimiserSettings
 			"gvif"                     // Run full inliner
 			"CTUcarrLsTFOtfDncarrIulc" // SSA plus simplify
 		"]"
-		"jmuljuljul VcTOcul jmul";     // Make source short and pretty
+		"[y] jmuljuljul VcTOcul jmul";     // Make source short and pretty
 
 	/// No optimisations at all - not recommended.
 	static OptimiserSettings none()

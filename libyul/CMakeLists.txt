@@ -143,6 +143,8 @@ add_library(yul
 	optimiser/FunctionGrouper.h
 	optimiser/FunctionHoister.cpp
 	optimiser/FunctionHoister.h
+	optimiser/FunctionOutliner.h
+	optimiser/FunctionOutliner.cpp
 	optimiser/FunctionSpecializer.cpp
 	optimiser/FunctionSpecializer.h
 	optimiser/InlinableExpressionFunctionFinder.cpp

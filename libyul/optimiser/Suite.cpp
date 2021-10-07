@@ -37,6 +37,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/FunctionOutliner.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
@@ -199,6 +200,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			FunctionGrouper,
 			FunctionHoister,
 			FunctionSpecializer,
+			FunctionOutliner,
 			LiteralRematerialiser,
 			LoadResolver,
 			LoopInvariantCodeMotion,
@@ -238,6 +240,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{FullInliner::name,                   'i'},
 		{FunctionGrouper::name,               'g'},
 		{FunctionHoister::name,               'h'},
+		{FunctionOutliner::name,              'y'},
 		{FunctionSpecializer::name,           'F'},
 		{LiteralRematerialiser::name,         'T'},
 		{LoadResolver::name,                  'L'},
