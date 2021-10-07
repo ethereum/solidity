@@ -306,13 +306,13 @@ void SourceUpgrade::tryCompile() const
 	{
 		error() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
 	}
-	catch (std::exception const& _e)
+	catch (std::exception const& _exception)
 	{
-		error() << (_e.what() ? ": " + string(_e.what()) : ".") << endl;
+		error() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
 	}
 	catch (...)
 	{
-		error() << "Unknown exception during compilation." << endl;
+		error() << "Unknown exception during compilation: " << boost::current_exception_diagnostic_information() << endl;
 	}
 }
 
@@ -517,7 +517,7 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 		}
 		catch (...)
 		{
-			return ReadCallback::Result{false, "Unknown exception in read callback."};
+			return ReadCallback::Result{false, "Unknown exception in read callback: " + boost::current_exception_diagnostic_information()};
 		}
 	};
 

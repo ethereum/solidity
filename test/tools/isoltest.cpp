@@ -201,15 +201,13 @@ TestTool::Result TestTool::process()
 	catch (std::exception const& _e)
 	{
 		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Exception during test" <<
-			(_e.what() ? ": " + string(_e.what()) : ".") <<
-			endl;
+			"Exception during test: " << boost::diagnostic_information(_e) << endl;
 		return Result::Exception;
 	}
 	catch (...)
 	{
 		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Unknown exception during test." << endl;
+			"Unknown exception during test: " << boost::current_exception_diagnostic_information() << endl;
 		return Result::Exception;
 	}
 }

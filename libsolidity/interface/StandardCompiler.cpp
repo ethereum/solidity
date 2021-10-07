@@ -1151,13 +1151,13 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			"Exception during compilation: " + boost::diagnostic_information(_exception)
 		));
 	}
-	catch (std::exception const& _e)
+	catch (std::exception const& _exception)
 	{
 		errors.append(formatError(
 			Error::Severity::Error,
 			"Exception",
 			"general",
-			"Unknown exception during compilation" + (_e.what() ? ": " + string(_e.what()) : ".")
+			"Unknown exception during compilation: " + boost::diagnostic_information(_exception)
 		));
 	}
 	catch (...)
@@ -1166,7 +1166,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			Error::Severity::Error,
 			"Exception",
 			"general",
-			"Unknown exception during compilation."
+			"Unknown exception during compilation: " + boost::current_exception_diagnostic_information()
 		));
 	}
 
@@ -1481,7 +1481,7 @@ Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 	}
 	catch (...)
 	{
-		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compile");
+		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compile: " +  boost::current_exception_diagnostic_information());
 	}
 }
 
