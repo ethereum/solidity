@@ -118,6 +118,7 @@ registering with a username and password, all you need is an Ethereum keypair.
         // Sends an amount of existing coins
         // from any caller to an address
         function send(address receiver, uint amount) public {
+            require(amount > 0);
             if (amount > balances[msg.sender])
                 revert InsufficientBalance({
                     requested: amount,
