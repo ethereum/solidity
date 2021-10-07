@@ -45,4 +45,40 @@ pre {
 /* menu section headers */
 .wy-menu .caption {
     color: #65afff !important;
+
+/* Link to Remix IDE shown next to code snippets */
+p.remix-link-container {
+    position: relative;
+    right: -100%;        /* Positioned next to the the top-right corner of the code block following it. */
 }
+
+a.remix-link {
+    position: absolute;  /* Remove it from normal flow not to affect the original position of the snippet. */
+    top: 0.5em;
+    width: 3.236em;      /* Size of the margin (= right-side padding in .wy-nav-content in the current theme). */
+}
+
+a.remix-link .link-icon {
+    background: url("../img/share-solid.svg") no-repeat;
+    display: block;
+    width: 1.5em;
+    height: 1.5em;
+    margin: auto;
+}
+
+a.remix-link .link-text {
+    display: none;       /* Visible only on hover. */
+    width: 3.3em;        /* Narrow enough to get two lines of text. */
+    margin: auto;
+    text-align: center;
+    font-size: 0.8em;
+    line-height: normal;
+    color: black;
+}
+
+a.remix-link:hover {
+    opacity: 0.5;
+}
+
+a.remix-link:hover .link-text {
+    display: block;
