@@ -1,1 +1,12 @@
-{"errors":[{"component":"general","formattedMessage":"Unknown key \"notThere\"","message":"Unknown key \"notThere\"","severity":"error","type":"JSONError"}]}
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Unknown key \"notThere\"",
+            "message": "Unknown key \"notThere\"",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}
