@@ -41,9 +41,9 @@ parts:
     source-tag: z3-4.8.4
     plugin: make
     build-packages: [python3]
-    stage-packages: [libstdc++6]
+    stage-packages: [libstdc++6, libgomp1]
     override-build: |
-      python scripts/mk_make.py
+      python3 scripts/mk_make.py
       cd build
       make -j -l $(grep -c "^processor" /proc/cpuinfo)
       make install DESTDIR=$SNAPCRAFT_PART_INSTALL
