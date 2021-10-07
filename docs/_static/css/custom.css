@@ -45,6 +45,7 @@ pre {
 /* menu section headers */
 .wy-menu .caption {
     color: #65afff !important;
+}
 
 /* Link to Remix IDE shown next to code snippets */
 p.remix-link-container {
@@ -82,3 +83,4 @@ a.remix-link:hover {
 
 a.remix-link:hover .link-text {
     display: block;
+}
