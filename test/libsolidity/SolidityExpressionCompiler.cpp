@@ -112,9 +112,14 @@ bytes compileFirstExpression(
 		if (!sourceUnit)
 			return bytes();
 	}
-	catch(boost::exception const& _e)
+	catch (boost::exception const& _e)
 	{
-		auto msg = std::string("Parsing source code failed with: \n") + boost::diagnostic_information(_e);
+		string msg = "Parsing source code failed with:\n" + boost::diagnostic_information(_e);
+		BOOST_FAIL(msg);
+	}
+	catch (...)
+	{
+		string msg = "Parsing source code failed with:\n" + boost::current_exception_diagnostic_information();
 		BOOST_FAIL(msg);
 	}
 

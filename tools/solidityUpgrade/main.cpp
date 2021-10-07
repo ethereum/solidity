@@ -86,6 +86,10 @@ int main(int argc, char** argv)
 	{
 		cerr << "Exception while processing input: " << boost::diagnostic_information(_exception) << endl;
 	}
+	catch (...)
+	{
+		cerr << "Unknown exception while processing input: " << boost::current_exception_diagnostic_information() << endl;
+	}
 
 	return 0;
 }
