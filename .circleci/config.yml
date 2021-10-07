@@ -627,14 +627,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
       - save_cache:
-          key: dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
           paths:
             - /usr/local/bin
             - /usr/local/sbin
@@ -663,7 +663,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: .
       - run: *run_soltest
@@ -679,7 +679,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: .
       - run: *run_cmdline_tests
@@ -886,14 +886,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+            - dependencies-win-{{ arch }}-{{ checksum "scripts/install_deps.ps1" }}
       # DO NOT EDIT between here and save_cache, but rather edit .\scripts\install_deps.ps1
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: "Installing dependencies"
           command: .\scripts\install_deps.ps1
       - save_cache:
-          key: dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+          key: dependencies-win-{{ arch }}-{{ checksum "scripts/install_deps.ps1" }}
           paths:
             - .\deps
       - run:
