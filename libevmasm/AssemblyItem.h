@@ -172,9 +172,9 @@ public:
 
 	void setImmutableOccurrences(size_t _n) const { m_immutableOccurrences = _n; }
 
+private:
 	size_t opcodeCount() const noexcept;
 
-private:
 	AssemblyItemType m_type;
 	Instruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation

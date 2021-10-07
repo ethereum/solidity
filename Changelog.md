@@ -11,6 +11,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Fixes source mappings for immutables.
  * Commandline Interface: Fix extra newline character being appended to sources passed through standard input, affecting their hashes.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
  * TypeChecker: Fix internal error when using user defined value types in public library functions.
@@ -27,7 +28,6 @@ Important Bugfixes:
 
 Bugfixes:
  * AST: Export ``canonicalName`` for ``UserDefinedValueTypeDefinition`` and ``ContractDefinition``.
- * Code Generator: Fixes source mappings for immutables.
 
 
 
