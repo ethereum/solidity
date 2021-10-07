@@ -78,6 +78,9 @@
 #include <range/v3/view/map.hpp>
 #include <range/v3/action/remove.hpp>
 
+#include <limits>
+#include <tuple>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -87,7 +90,7 @@ void OptimiserSuite::run(
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
-	string const& _optimisationSequence,
+	string_view _optimisationSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers
 )
@@ -267,9 +270,9 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	return lookupTable;
 }
 
-void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
+void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 {
-	bool insideLoop = false;
+	int8_t nestingLevel = 0;
 	for (char abbreviation: _stepAbbreviations)
 		switch (abbreviation)
 		{
@@ -277,12 +280,12 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 		case '\n':
 			break;
 		case '[':
-			assertThrow(!insideLoop, OptimizerException, "Nested brackets are not supported");
-			insideLoop = true;
+			assertThrow(nestingLevel < numeric_limits<int8_t>::max(), OptimizerException, "Brackets nested too deep");
+			nestingLevel++;
 			break;
 		case ']':
-			assertThrow(insideLoop, OptimizerException, "Unbalanced brackets");
-			insideLoop = false;
+			nestingLevel--;
+			assertThrow(nestingLevel >= 0, OptimizerException, "Unbalanced brackets");
 			break;
 		default:
 		{
@@ -301,43 +304,99 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 				OptimizerException,
 				"'"s + abbreviation + "' is invalid in the current environment: " + *invalid
 			);
-
 		}
 		}
-	assertThrow(!insideLoop, OptimizerException, "Unbalanced brackets");
+	assertThrow(nestingLevel == 0, OptimizerException, "Unbalanced brackets");
 }
 
-void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+void OptimiserSuite::runSequence(string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable)
 {
 	validateSequence(_stepAbbreviations);
 
-	string input = _stepAbbreviations;
-	ranges::actions::remove(input, ' ');
-	ranges::actions::remove(input, '\n');
+	// This splits 'aaa[bbb]ccc...' into 'aaa' and '[bbb]ccc...'.
+	auto extractNonNestedPrefix = [](string_view _tail) -> tuple<string_view, string_view>
+	{
+		for (size_t i = 0; i < _tail.size(); ++i)
+		{
+			yulAssert(_tail[i] != ']');
+			if (_tail[i] == '[')
+				return {_tail.substr(0, i), _tail.substr(i)};
+		}
+		return {_tail, {}};
+	};
 
-	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
+	// This splits '[bbb]ccc...' into 'bbb' and 'ccc...'.
+	auto extractBracketContent = [](string_view _tail) -> tuple<string_view, string_view>
+	{
+		yulAssert(!_tail.empty() && _tail[0] == '[');
+
+		size_t contentLength = 0;
+		int8_t nestingLevel = 1;
+		for (char abbreviation: _tail.substr(1))
+		{
+			if (abbreviation == '[')
+			{
+				yulAssert(nestingLevel < numeric_limits<int8_t>::max());
+				++nestingLevel;
+			}
+			else if (abbreviation == ']')
+			{
+				--nestingLevel;
+				if (nestingLevel == 0)
+					break;
+			}
+			++contentLength;
+		}
+		yulAssert(nestingLevel == 0);
+		yulAssert(_tail[contentLength + 1] == ']');
+
+		return {_tail.substr(1, contentLength), _tail.substr(contentLength + 2)};
+	};
+
+	auto abbreviationsToSteps = [](string_view _sequence) -> vector<string>
 	{
 		vector<string> steps;
 		for (char abbreviation: _sequence)
-			steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+			if (abbreviation != ' ' && abbreviation != '\n')
+				steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
 		return steps;
 	};
 
-	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa[bbb]`
-	// `aaa` or `[bbb]` can be empty. For example we consider a sequence like `fgo[aaf]Oo` to have
-	// four segments, the last of which is an empty bracket.
-	size_t currentPairStart = 0;
-	while (currentPairStart < input.size())
+	vector<tuple<string_view, bool>> subsequences;
+	string_view tail = _stepAbbreviations;
+	while (!tail.empty())
 	{
-		size_t openingBracket = input.find('[', currentPairStart);
-		size_t closingBracket = input.find(']', openingBracket);
-		size_t firstCharInside = (openingBracket == string::npos ? input.size() : openingBracket + 1);
-		yulAssert((openingBracket == string::npos) == (closingBracket == string::npos), "");
+		string_view subsequence;
+		tie(subsequence, tail) = extractNonNestedPrefix(tail);
+		if (subsequence.size() > 0)
+			subsequences.push_back({subsequence, false});
 
-		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingBracket - currentPairStart)), _ast);
-		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingBracket - firstCharInside)), _ast);
+		if (tail.empty())
+			break;
 
-		currentPairStart = (closingBracket == string::npos ? input.size() : closingBracket + 1);
+		tie(subsequence, tail) = extractBracketContent(tail);
+		if (subsequence.size() > 0)
+			subsequences.push_back({subsequence, true});
+	}
+
+	size_t codeSize = 0;
+	for (size_t round = 0; round < MaxRounds; ++round)
+	{
+		for (auto const& [subsequence, repeat]: subsequences)
+		{
+			if (repeat)
+				runSequence(subsequence, _ast, true);
+			else
+				runSequence(abbreviationsToSteps(subsequence), _ast);
+		}
+
+		if (!_repeatUntilStable)
+			break;
+
+		size_t newSize = CodeSize::codeSizeIncludingFunctions(_ast);
+		if (newSize == codeSize)
+			break;
+		codeSize = newSize;
 	}
 }
 
@@ -363,26 +422,5 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}
-	}
-}
-
-void OptimiserSuite::runSequenceUntilStable(
-	std::vector<string> const& _steps,
-	Block& _ast,
-	size_t maxRounds
-)
-{
-	if (_steps.empty())
-		return;
-
-	size_t codeSize = 0;
-	for (size_t rounds = 0; rounds < maxRounds; ++rounds)
-	{
-		size_t newSize = CodeSize::codeSizeIncludingFunctions(_ast);
-		if (newSize == codeSize)
-			break;
-		codeSize = newSize;
-
-		runSequence(_steps, _ast);
 	}
 }

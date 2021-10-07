@@ -1,14 +1,14 @@
 {
 	"language": "Solidity",
 	"sources": {
-		"A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_invalid_nesting/in.sol"]}
+		"A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_unbalanced_opening_bracket/in.sol"]}
 	},
 	"settings": {
 		"optimizer": {
 			"details": {
 				"yul": true,
 				"yulDetails": {
-					"optimizerSteps": "a[a][aa[aa]]a"
+					"optimizerSteps": "a[a]["
 				}
 			}
 		}

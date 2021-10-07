@@ -29,6 +29,7 @@
 
 #include <set>
 #include <string>
+#include <string_view>
 #include <memory>
 
 namespace solidity::yul
@@ -64,22 +65,17 @@ public:
 		GasMeter const* _meter,
 		Object& _object,
 		bool _optimizeStackAllocation,
-		std::string const& _optimisationSequence,
+		std::string_view _optimisationSequence,
 		std::optional<size_t> _expectedExecutionsPerDeployment,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
 
 	/// Ensures that specified sequence of step abbreviations is well-formed and can be executed.
 	/// @throw OptimizerException if the sequence is invalid
-	static void validateSequence(std::string const& _stepAbbreviations);
+	static void validateSequence(std::string_view _stepAbbreviations);
 
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
-	void runSequence(std::string const& _stepAbbreviations, Block& _ast);
-	void runSequenceUntilStable(
-		std::vector<std::string> const& _steps,
-		Block& _ast,
-		size_t maxRounds = MaxRounds
-	);
+	void runSequence(std::string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable = false);
 
 	static std::map<std::string, std::unique_ptr<OptimiserStep>> const& allSteps();
 	static std::map<std::string, char> const& stepNameToAbbreviationMap();
