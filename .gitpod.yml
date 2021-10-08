@@ -1,0 +1,15 @@
+tasks:
+# Based off of https://docs.soliditylang.org/en/latest/installing-solidity.html#building-from-source
+# Note the Gitpod container image already includes:
+#   - cmake
+#   - gcc version 9.3
+#   - Ubuntu clang version 13
+#   - Installation of z3 is required as the one that ships in the container image is out of date
+  - name: Open contributing guide
+    command: gp preview https://docs.soliditylang.org/en/latest/contributing.html
+
+  - name: Install deps and build Solidity
+    init: |
+      ./scripts/install_deps.sh
+      brew install z3
+      ./scripts/build.sh
