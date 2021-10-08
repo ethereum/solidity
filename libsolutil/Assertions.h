@@ -61,14 +61,9 @@ inline std::string stringOrDefault(std::string _string, std::string _defaultStri
 	do \
 	{ \
 		if (!(_condition)) \
-			::boost::throw_exception( \
-				_exceptionType() << \
-				::solidity::util::errinfo_comment( \
-					::solidity::util::assertions::stringOrDefault(_description, _defaultDescription) \
-				) << \
-				::boost::throw_function(ETH_FUNC) << \
-				::boost::throw_file(__FILE__) << \
-				::boost::throw_line(__LINE__) \
+			solThrow( \
+				_exceptionType, \
+				::solidity::util::assertions::stringOrDefault(_description, _defaultDescription) \
 			); \
 	} \
 	while (false)

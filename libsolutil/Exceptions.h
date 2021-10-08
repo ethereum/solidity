@@ -43,6 +43,19 @@ struct Exception: virtual std::exception, virtual boost::exception
 private:
 };
 
+/// Throws an exception with a given description and extra information about the location the
+/// exception was thrown from.
+/// @param _exceptionType The type of the exception to throw (not an instance).
+/// @param _description The message that describes the error.
+#define solThrow(_exceptionType, _description) \
+	::boost::throw_exception( \
+		_exceptionType() << \
+		::solidity::util::errinfo_comment(_description) << \
+		::boost::throw_function(ETH_FUNC) << \
+		::boost::throw_file(__FILE__) << \
+		::boost::throw_line(__LINE__) \
+	)
+
 #define DEV_SIMPLE_EXCEPTION(X) struct X: virtual ::solidity::util::Exception { const char* what() const noexcept override { return #X; } }
 
 DEV_SIMPLE_EXCEPTION(InvalidAddress);
