@@ -52,6 +52,8 @@ enum AssemblyItemType
 	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
 };
 
+enum class ImmutableReferences { Count, Ignore };
+
 class Assembly;
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
@@ -148,7 +150,7 @@ public:
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
-	size_t bytesRequired(size_t _addressLength) const;
+	size_t bytesRequired(size_t _addressLength, ImmutableReferences _immutableReferences) const;
 	size_t arguments() const;
 	size_t returnValues() const;
 	size_t deposit() const { return returnValues() - arguments(); }
@@ -190,11 +192,11 @@ private:
 	mutable std::optional<size_t> m_immutableOccurrences;
 };
 
-inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength)
+inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength,  ImmutableReferences _immutableReferences)
 {
 	size_t size = 0;
 	for (AssemblyItem const& item: _items)
-		size += item.bytesRequired(_addressLength);
+		size += item.bytesRequired(_addressLength, _immutableReferences);
 	return size;
 }
 

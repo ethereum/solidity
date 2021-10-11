@@ -1,1 +1,3 @@
-{"contracts":{"a.sol":{"A":{"evm":{"deployedBytecode":{"immutableReferences":{"6":[{"length":32,"start":75}]}}}}}},"sources":{"a.sol":{"id":0}}}
+{"errors":[{"component":"general","formattedMessage":"InternalCompilerError: Solidity assertion failed
+
+","message":"Internal compiler error (/solidity/libevmasm/AssemblyItem.cpp:90):Solidity assertion failed","severity":"error","type":"InternalCompilerError"}],"sources":{"a.sol":{"id":0}}}

@@ -65,7 +65,7 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(data);
 }
 
-size_t AssemblyItem::bytesRequired(size_t _addressLength) const
+size_t AssemblyItem::bytesRequired(size_t _addressLength, ImmutableReferences _immutableReferences) const
 {
 	switch (m_type)
 	{
@@ -87,6 +87,9 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	case PushImmutable:
 		return 1 + 32;
 	case AssignImmutable:
+		if (_immutableReferences == ImmutableReferences.Ignore)
+			return 0;
+
 		solAssert(m_immutableOccurrences, "");
 
 		if (m_immutableOccurrences.value() != 0)
