@@ -553,7 +553,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	if (fs::exists(pathName) && !m_options.output.overwriteFiles)
 	{
 		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
-		m_error = true;
+		m_outputFailed = true;
 		return;
 	}
 	ofstream outFile(pathName);
@@ -561,7 +561,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	if (!outFile)
 	{
 		serr() << "Could not write to file \"" << pathName << "\"." << endl;
-		m_error = true;
+		m_outputFailed = true;
 		return;
 	}
 }
@@ -855,7 +855,7 @@ bool CommandLineInterface::actOnInput()
 		solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 		outputCompilationResults();
 	}
-	return !m_error;
+	return !m_outputFailed;
 }
 
 bool CommandLineInterface::link()
