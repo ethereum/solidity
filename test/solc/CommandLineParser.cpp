@@ -30,8 +30,6 @@
 #include <libsmtutil/SolverInterface.h>
 #include <libsolidity/interface/Version.h>
 
-#include <boost/algorithm/string.hpp>
-
 #include <map>
 #include <optional>
 #include <ostream>
@@ -48,16 +46,12 @@ using namespace solidity::yul;
 namespace
 {
 
-optional<CommandLineOptions> parseCommandLine(vector<string> const& _commandLine, ostream& _stdout, ostream& _stderr)
+optional<CommandLineOptions> parseCommandLine(vector<string> const& _commandLine, ostream& _stderr)
 {
 	vector<char const*> argv = test::makeArgv(_commandLine);
 
-	CommandLineParser cliParser(_stdout, _stderr);
-	bool success = cliParser.parse(
-		static_cast<int>(_commandLine.size()),
-		argv.data(),
-		false // interactiveTerminal
-	);
+	CommandLineParser cliParser(_stderr);
+	bool success = cliParser.parse(static_cast<int>(_commandLine.size()), argv.data());
 
 	if (!success)
 		return nullopt;
@@ -81,24 +75,34 @@ BOOST_AUTO_TEST_CASE(no_options)
 	expectedOptions.modelChecker.initialize = true;
 	expectedOptions.modelChecker.settings = {};
 
-	stringstream sout, serr;
-	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+	stringstream serr;
+	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
 
-	BOOST_TEST(sout.str() == "");
 	BOOST_TEST(serr.str() == "");
 	BOOST_REQUIRE(parsedOptions.has_value());
 	BOOST_TEST(parsedOptions.value() == expectedOptions);
 }
 
-BOOST_AUTO_TEST_CASE(help)
+BOOST_AUTO_TEST_CASE(help_license_version)
 {
-	stringstream sout, serr;
-	optional<CommandLineOptions> parsedOptions = parseCommandLine({"solc", "--help"}, sout, serr);
+	map<string, InputMode> expectedModePerOption = {
+		{"--help", InputMode::Help},
+		{"--license", InputMode::License},
+		{"--version", InputMode::Version},
+	};
 
-	BOOST_TEST(serr.str() == "");
-	BOOST_TEST(boost::starts_with(sout.str(), "solc, the Solidity commandline compiler."));
-	BOOST_TEST(sout.str().find("Usage: solc [options] [input_file...]") != string::npos);
-	BOOST_TEST(!parsedOptions.has_value());
+	for (auto const& [option, expectedMode]: expectedModePerOption)
+	{
+		stringstream serr;
+		optional<CommandLineOptions> parsedOptions = parseCommandLine({"solc", option}, serr);
+
+		CommandLineOptions expectedOptions;
+		expectedOptions.input.mode = expectedMode;
+
+		BOOST_TEST(serr.str() == "");
+		BOOST_REQUIRE(parsedOptions.has_value());
+		BOOST_TEST(parsedOptions.value() == expectedOptions);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(cli_mode_options)
@@ -220,10 +224,9 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			5,
 		};
 
-		stringstream sout, serr;
-		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+		stringstream serr;
+		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
 
-		BOOST_TEST(sout.str() == "");
 		BOOST_TEST(serr.str() == "");
 		BOOST_REQUIRE(parsedOptions.has_value());
 		BOOST_TEST(parsedOptions.value() == expectedOptions);
@@ -337,10 +340,9 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		}
 
-		stringstream sout, serr;
-		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+		stringstream serr;
+		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
 
-		BOOST_TEST(sout.str() == "");
 		BOOST_TEST(serr.str() == "Warning: Yul is still experimental. Please use the output with care.\n");
 		BOOST_REQUIRE(parsedOptions.has_value());
 		BOOST_TEST(parsedOptions.value() == expectedOptions);
@@ -406,10 +408,9 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.compiler.combinedJsonRequests->abi = true;
 	expectedOptions.compiler.combinedJsonRequests->binary = true;
 
-	stringstream sout, serr;
-	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+	stringstream serr;
+	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
 
-	BOOST_TEST(sout.str() == "");
 	BOOST_TEST(serr.str() == "");
 	BOOST_REQUIRE(parsedOptions.has_value());
 	BOOST_TEST(parsedOptions.value() == expectedOptions);
@@ -426,11 +427,10 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 	for (auto const& [optionName, inputModes]: invalidOptionInputModeCombinations)
 		for (string const& inputMode: inputModes)
 		{
-			stringstream sout, serr;
+			stringstream serr;
 			vector<string> commandLine = {"solc", optionName, "file", inputMode};
-			optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+			optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
 
-			BOOST_TEST(sout.str() == "");
 			BOOST_TEST(serr.str() == "The following options are not supported in the current input mode: " + optionName + "\n");
 			BOOST_REQUIRE(!parsedOptions.has_value());
 		}
