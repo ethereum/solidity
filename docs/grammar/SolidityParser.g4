@@ -12,6 +12,7 @@ options { tokenVocab=SolidityLexer; }
 sourceUnit: (
 	pragmaDirective
 	| importDirective
+	| usingDirective
 	| contractDefinition
 	| interfaceDefinition
 	| libraryDefinition
@@ -311,10 +312,10 @@ errorDefinition:
 	Semicolon;
 
 /**
- * Using directive to bind library functions to types.
- * Can occur within contracts and libraries.
+ * Using directive to bind library functions and free functions to types.
+ * Can occur within contracts and libraries and at the file level.
  */
-usingDirective: Using identifierPath For (Mul | typeName) Semicolon;
+usingDirective: Using (identifierPath | (LBrace identifierPath (Comma identifierPath)* RBrace)) For (Mul | typeName) Semicolon;
 /**
  * A type name can be an elementary type, a function type, a mapping type, a user-defined type
  * (e.g. a contract or struct) or an array type.

@@ -7,4 +7,4 @@ library L {
     }
 }
 // ----
-// TypeError 4357: (120-121): Library name expected.
+// TypeError 4357: (120-121): Library name expected. If you want to attach a function, use '{...}'.

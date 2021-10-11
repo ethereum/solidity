@@ -25,6 +25,7 @@
 #include <liblangutil/ErrorReporter.h>
 
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/Visitor.h>
 
 #include <range/v3/view/transform.hpp>
 
@@ -451,12 +452,39 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 
 bool DeclarationTypeChecker::visit(UsingForDirective const& _usingFor)
 {
-	ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
-		_usingFor.libraryName().annotation().referencedDeclaration
-	);
+	if (_usingFor.usesBraces())
+	{
+		for (ASTPointer<IdentifierPath> const& function: _usingFor.functionsOrLibrary())
+			if (auto functionDefinition = dynamic_cast<FunctionDefinition const*>(function->annotation().referencedDeclaration))
+			{
+				if (!functionDefinition->isFree() && !(
+					dynamic_cast<ContractDefinition const*>(functionDefinition->scope()) &&
+					dynamic_cast<ContractDefinition const*>(functionDefinition->scope())->isLibrary()
+				))
+					m_errorReporter.typeError(
+						4167_error,
+						function->location(),
+						"Only file-level functions and library functions can be bound to a type in a \"using\" statement"
+					);
+			}
+			else
+				m_errorReporter.fatalTypeError(8187_error, function->location(), "Expected function name." );
+	}
+	else
+	{
+		ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
+			_usingFor.functionsOrLibrary().front()->annotation().referencedDeclaration
+		);
+		if (!library || !library->isLibrary())
+			m_errorReporter.fatalTypeError(
+				4357_error,
+				_usingFor.functionsOrLibrary().front()->location(),
+				"Library name expected. If you want to attach a function, use '{...}'."
+			);
+	}
 
-	if (!library || !library->isLibrary())
-		m_errorReporter.fatalTypeError(4357_error, _usingFor.libraryName().location(), "Library name expected.");
+	// We do not visit _usingFor.functions() because it will lead to an error since
+	// library names cannot be mentioned stand-alone.
 
 	if (_usingFor.typeName())
 		_usingFor.typeName()->accept(*this);
