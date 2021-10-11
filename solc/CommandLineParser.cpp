@@ -38,14 +38,6 @@ namespace po = boost::program_options;
 namespace solidity::frontend
 {
 
-ostream& CommandLineParser::serr()
-{
-	m_hasOutput = true;
-	return m_serr;
-}
-
-#define cerr
-
 static string const g_strAllowPaths = "allow-paths";
 static string const g_strBasePath = "base-path";
 static string const g_strIncludePath = "include-path";
@@ -278,8 +270,6 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 
 void CommandLineParser::parse(int _argc, char const* const* _argv)
 {
-	m_hasOutput = false;
-
 	parseArgs(_argc, _argv);
 	processArgs();
 }
@@ -1167,8 +1157,6 @@ void CommandLineParser::processArgs()
 				"The selected input language is not directly supported when targeting the Ewasm machine "
 				"and automatic translation is not available."
 			);
-
-		serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
 		return;
 	}
 	else if (countEnabledOptions({g_strYulDialect, g_strMachine}) >= 1)

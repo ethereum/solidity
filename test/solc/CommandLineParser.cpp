@@ -51,8 +51,7 @@ CommandLineOptions parseCommandLine(vector<string> const& _commandLine)
 {
 	vector<char const*> argv = test::makeArgv(_commandLine);
 
-	stringstream serr;
-	CommandLineParser cliParser(serr);
+	CommandLineParser cliParser;
 	cliParser.parse(static_cast<int>(_commandLine.size()), argv.data());
 	return cliParser.options();
 }

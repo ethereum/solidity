@@ -583,7 +583,7 @@ void CommandLineInterface::createJson(string const& _fileName, string const& _js
 
 bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 {
-	CommandLineParser parser(serr(/* _markAsUsed */ false));
+	CommandLineParser parser;
 
 	if (isatty(fileno(stdin)) && _argc == 1)
 	{
@@ -604,7 +604,6 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 		return false;
 	}
 
-	m_hasOutput = m_hasOutput || parser.hasOutput();
 	m_options = parser.options();
 
 	return true;
@@ -1002,6 +1001,8 @@ string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _
 bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine)
 {
 	solAssert(m_options.input.mode == InputMode::Assembler, "");
+
+	serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
 
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;

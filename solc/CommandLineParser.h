@@ -238,19 +238,12 @@ struct CommandLineOptions
 class CommandLineParser
 {
 public:
-	explicit CommandLineParser(std::ostream& _serr):
-		m_serr(_serr)
-	{}
-
 	/// Parses the command-line arguments and fills out the internal CommandLineOptions structure.
 	/// @throws CommandLineValidationError if the arguments cannot be properly parsed or are invalid.
 	/// When an exception is thrown, the @p CommandLineOptions may be only partially filled out.
 	void parse(int _argc, char const* const* _argv);
 
 	CommandLineOptions const& options() const { return m_options; }
-
-	/// Returns true if the parser has written anything to any of its output streams.
-	bool hasOutput() const { return m_hasOutput; }
 
 	static void printHelp(std::ostream& _out) { _out << optionsDescription(); }
 
@@ -291,13 +284,6 @@ private:
 	void checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
 	size_t countEnabledOptions(std::vector<std::string> const& _optionNames) const;
 	static std::string joinOptionNames(std::vector<std::string> const& _optionNames, std::string _separator = ", ");
-
-	/// Returns the stream that should receive error output. Sets m_hasOutput to true if the
-	/// stream has ever been used.
-	std::ostream& serr();
-
-	std::ostream& m_serr;
-	bool m_hasOutput = false;
 
 	CommandLineOptions m_options;
 
