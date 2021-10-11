@@ -9,7 +9,7 @@ Credits and Attribution
 Website icons
 =============
 
-.. |icon-share-solid| image:: _static/img/share-solid.svg
+.. |icon-share-solid| image:: _static/img/solid-share-arrow.svg
 .. _share icon: https://fontawesome.com/v5.15/icons/share?style=solid
 .. _Font Awesome Free License: https://fontawesome.com/license/free
 
