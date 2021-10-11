@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(help)
 {
 	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles({"solc", "--help"}, "", /* _processInput */ true);
 
-	BOOST_TEST(!result.success);
+	BOOST_TEST(result.success);
 	BOOST_TEST(boost::starts_with(result.stdoutContent, "solc, the Solidity commandline compiler."));
 	BOOST_TEST(result.stderrContent == "");
 	BOOST_TEST(result.options.input.mode == InputMode::Help);
