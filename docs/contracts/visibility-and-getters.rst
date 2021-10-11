@@ -209,3 +209,39 @@ to select individual struct members or provide a key for the mapping:
         b = data[arg1][arg2][arg3].b;
         e = data[arg1][arg2][arg3].e;
     }
+
+The following contract loads some data and uses the getter:
+
+.. code-block:: solidity
+
+    contract Test is Complex {
+        function verify() public {
+            uint a;
+            bytes3 b;
+            bytes memory e;
+
+            // Load data:
+            if(data[7][false].length == 0) {
+                data[7][false].push();
+                data[7][false][0].d.push();
+                data[7][false][0].e = new bytes(1);
+
+                // We won't be able to retrieve these
+                // values with the generated getter:
+                data[7][false][0].map[5] = 6;
+                data[7][false][0].c[0] = 8;
+                data[7][false][0].d[0] = 9;
+
+                // but we still can retrieve these:
+                data[7][false][0].a = 1;
+                data[7][false][0].b = 0x020304;
+                data[7][false][0].e[0] = 0x0a;
+            }
+                   
+            // like this:
+            (a, b, e) = this.data(7, false, 0);
+            assert(a == 1);
+            assert(b == 0x020304);
+            assert(e[0] == 0x0a);
+        }
+    }
