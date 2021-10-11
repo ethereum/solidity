@@ -7,4 +7,4 @@ interface I {
     function g() external;
 }
 // ----
-// TypeError 9088: (60-76): The "using for" directive is not allowed inside interfaces.
+// SyntaxError 9088: (60-76): The "using for" directive is not allowed inside interfaces.

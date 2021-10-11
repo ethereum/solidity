@@ -32,6 +32,7 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -311,10 +312,25 @@ bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 
 bool ASTJsonConverter::visit(UsingForDirective const& _node)
 {
-	setJsonNode(_node, "UsingForDirective", {
-		make_pair("libraryName", toJson(_node.libraryName())),
+	vector<pair<string, Json::Value>> attributes = {
 		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::nullValue)
-	});
+	};
+	if (_node.usesBraces())
+	{
+		Json::Value functionList;
+		for (auto const& function: _node.functionsOrLibrary())
+		{
+			Json::Value functionNode;
+			functionNode["function"] = toJson(*function);
+			functionList.append(move(functionNode));
+		}
+		attributes.emplace_back("functionList", move(functionList));
+	}
+	else
+		attributes.emplace_back("libraryName", toJson(*_node.functionsOrLibrary().front()));
+
+	setJsonNode(_node, "UsingForDirective", move(attributes));
+
 	return false;
 }
 
