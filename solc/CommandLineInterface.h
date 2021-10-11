@@ -66,6 +66,8 @@ public:
 	std::optional<std::string> const& standardJsonInput() const { return m_standardJsonInput; }
 
 private:
+	void printVersion();
+	void printLicense();
 	bool compile();
 	bool link();
 	void writeLinkedFiles();

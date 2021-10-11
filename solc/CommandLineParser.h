@@ -48,6 +48,9 @@ namespace solidity::frontend
 
 enum class InputMode
 {
+	Help,
+	License,
+	Version,
 	Compiler,
 	CompilerWithASTImport,
 	StandardJson,
@@ -230,33 +233,27 @@ struct CommandLineOptions
 
 /// Parses the command-line arguments and produces a filled-out CommandLineOptions structure.
 /// Validates provided values and prints error messages in case of errors.
-///
-/// The class is also responsible for handling options that only result in printing informational
-/// text, without the need to invoke the compiler - printing usage banner, version or license.
 class CommandLineParser
 {
 public:
-	explicit CommandLineParser(std::ostream& _sout, std::ostream& _serr):
-		m_sout(_sout),
+	explicit CommandLineParser(std::ostream& _serr):
 		m_serr(_serr)
 	{}
 
 	/// Parses the command-line arguments and fills out the internal CommandLineOptions structure.
-	/// Performs validation and prints error messages. If requested, prints usage banner, version
-	/// or license.
-	/// @param interactiveTerminal specifies whether the terminal is taking input from the user.
-	/// This is used to determine whether to provide more user-friendly output in some situations.
-	/// E.g. whether to print help text when no arguments are provided.
+	/// Performs validation and prints error messages.
 	/// @return true if there were no validation errors when parsing options and the
 	/// CommandLineOptions structure has been fully initialized. false if there were errors - in
 	/// this case CommandLineOptions may be only partially filled out. May also return false if
 	/// there is not further processing necessary and the program should just exit.
-	bool parse(int _argc, char const* const* _argv, bool _interactiveTerminal);
+	bool parse(int _argc, char const* const* _argv);
 
 	CommandLineOptions const& options() const { return m_options; }
 
 	/// Returns true if the parser has written anything to any of its output streams.
 	bool hasOutput() const { return m_hasOutput; }
+
+	static void printHelp(std::ostream& _out) { _out << optionsDescription(); }
 
 private:
 	/// @returns a specification of all named command-line options accepted by the compiler.
@@ -270,7 +267,7 @@ private:
 	/// Uses boost::program_options to parse the command-line arguments and leaves the result in @a m_args.
 	/// Also handles the arguments that result in information being printed followed by immediate exit.
 	/// @returns false if parsing fails due to syntactical errors or the arguments not matching the description.
-	bool parseArgs(int _argc, char const* const* _argv, bool _interactiveTerminal);
+	bool parseArgs(int _argc, char const* const* _argv);
 
 	/// Validates parsed arguments stored in @a m_args and fills out the internal CommandLineOptions
 	/// structure.
@@ -294,20 +291,13 @@ private:
 	bool parseOutputSelection();
 
 	bool checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
-	[[noreturn]] void printVersionAndExit();
-	[[noreturn]] void printLicenseAndExit();
 	size_t countEnabledOptions(std::vector<std::string> const& _optionNames) const;
 	static std::string joinOptionNames(std::vector<std::string> const& _optionNames, std::string _separator = ", ");
-
-	/// Returns the stream that should receive normal output. Sets m_hasOutput to true if the
-	/// stream has ever been used.
-	std::ostream& sout();
 
 	/// Returns the stream that should receive error output. Sets m_hasOutput to true if the
 	/// stream has ever been used.
 	std::ostream& serr();
 
-	std::ostream& m_sout;
 	std::ostream& m_serr;
 	bool m_hasOutput = false;
 

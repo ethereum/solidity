@@ -29,6 +29,8 @@
 
 #include <libsolutil/JSON.h>
 
+#include <boost/algorithm/string.hpp>
+
 #include <range/v3/view/transform.hpp>
 
 #include <map>
@@ -110,9 +112,42 @@ namespace solidity::frontend::test
 
 BOOST_AUTO_TEST_SUITE(CommandLineInterfaceTest)
 
+BOOST_AUTO_TEST_CASE(help)
+{
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles({"solc", "--help"}, "", /* _processInput */ true);
+
+	BOOST_TEST(!result.success);
+	BOOST_TEST(boost::starts_with(result.stdoutContent, "solc, the Solidity commandline compiler."));
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.options.input.mode == InputMode::Help);
+}
+
+BOOST_AUTO_TEST_CASE(license)
+{
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles({"solc", "--license"}, "", /* _processInput */ true);
+
+	BOOST_TEST(result.success);
+	BOOST_TEST(boost::starts_with(result.stdoutContent, "Most of the code is licensed under GPLv3"));
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.options.input.mode == InputMode::License);
+}
+
+BOOST_AUTO_TEST_CASE(version)
+{
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles({"solc", "--version"}, "", /* _processInput */ true);
+
+	BOOST_TEST(result.success);
+	BOOST_TEST(boost::ends_with(result.stdoutContent, "Version: " + solidity::frontend::VersionString + "\n"));
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.options.input.mode == InputMode::Version);
+}
+
 BOOST_AUTO_TEST_CASE(multiple_input_modes)
 {
-	array<string, 6> inputModeOptions = {
+	array<string, 9> inputModeOptions = {
+		"--help",
+		"--license",
+		"--version",
 		"--standard-json",
 		"--link",
 		"--assemble",
@@ -122,7 +157,7 @@ BOOST_AUTO_TEST_CASE(multiple_input_modes)
 	};
 	string expectedMessage =
 		"The following options are mutually exclusive: "
-		"--standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast. "
+		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast. "
 		"Select at most one.\n";
 
 	for (string const& mode1: inputModeOptions)
