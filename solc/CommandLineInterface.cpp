@@ -607,7 +607,7 @@ bool CommandLineInterface::processInput()
 	{
 	case InputMode::Help:
 		CommandLineParser::printHelp(sout());
-		return false;
+		break;
 	case InputMode::License:
 		printLicense();
 		break;
