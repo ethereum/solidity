@@ -38,4 +38,4 @@ set(sources
 )
 
 add_library(evmasm ${sources})
-target_link_libraries(evmasm PUBLIC solutil)
+target_link_libraries(evmasm PUBLIC solutil fmt::fmt-header-only)
