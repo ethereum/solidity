@@ -160,6 +160,17 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
+  - steps_restore_cache_homebrew_workaround: &steps_restore_cache_homebrew_workaround
+      steps:
+        - run:
+            # FIXME: For some reason restore_cache fails saying that it cannot remove the scm/ dir.
+            # The directory contains only two files: `git` (wrapper script over git) and `svn` (symlink
+            # to `git`). This looks like a bug in restore_cache. Removing scm/ is a workaround.
+            # See https://github.com/ethereum/solidity/pull/12106 for more details.
+            name: Workaround for restore_cache + /usr/local/Homebrew/Library/Homebrew/shims/scm/
+            command: |
+              rm -r /usr/local/Homebrew/Library/Homebrew/shims/scm/
+
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
@@ -625,6 +636,9 @@ jobs:
       MAKEFLAGS: -j 5
     steps:
       - checkout
+      - when:
+          condition: true
+          <<: *steps_restore_cache_homebrew_workaround
       - restore_cache:
           keys:
             - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
@@ -661,6 +675,9 @@ jobs:
       TERM: xterm
     steps:
       - checkout
+      - when:
+          condition: true
+          <<: *steps_restore_cache_homebrew_workaround
       - restore_cache:
           keys:
             - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
@@ -677,6 +694,9 @@ jobs:
       TERM: xterm
     steps:
       - checkout
+      - when:
+          condition: true
+          <<: *steps_restore_cache_homebrew_workaround
       - restore_cache:
           keys:
             - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
