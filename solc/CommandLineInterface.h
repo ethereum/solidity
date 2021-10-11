@@ -55,11 +55,8 @@ public:
 	bool parseArguments(int _argc, char const* const* _argv);
 	/// Read the content of all input files and initialize the file reader.
 	bool readInputFiles();
-	/// Parse the files and create source code objects
+	/// Parse the files, create source code objects, print the output.
 	bool processInput();
-	/// Perform actions on the input depending on provided compiler arguments
-	/// @returns true on success.
-	bool actOnInput();
 
 	CommandLineOptions const& options() const { return m_options; }
 	FileReader const& fileReader() const { return m_fileReader; }

@@ -65,8 +65,7 @@ int main(int argc, char** argv)
 		bool success =
 			cli.parseArguments(argc, argv) &&
 			cli.readInputFiles() &&
-			cli.processInput() &&
-			cli.actOnInput();
+			cli.processInput();
 
 		return success ? 0 : 1;
 	}
