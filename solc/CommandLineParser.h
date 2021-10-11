@@ -286,6 +286,8 @@ private:
 	/// @return false if there are any validation errors, true otherwise.
 	bool parseLibraryOption(std::string const& _input);
 
+	bool parseOutputSelection();
+
 	bool checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
 	[[noreturn]] void printVersionAndExit();
 	[[noreturn]] void printLicenseAndExit();

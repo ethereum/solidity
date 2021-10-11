@@ -137,6 +137,14 @@ static set<string> const g_metadataHashArgs
 	g_strNone
 };
 
+static map<InputMode, string> const g_inputModeName = {
+	{InputMode::Compiler, "compiler"},
+	{InputMode::CompilerWithASTImport, "compiler (AST import)"},
+	{InputMode::Assembler, "assembler"},
+	{InputMode::StandardJson, "standard JSON"},
+	{InputMode::Linker, "linker"},
+};
+
 void CommandLineParser::printVersionAndExit()
 {
 	sout() <<
@@ -456,6 +464,47 @@ bool CommandLineParser::parseLibraryOption(string const& _input)
 			}
 			m_options.linker.libraries[libName] = address;
 		}
+
+	return true;
+}
+
+bool CommandLineParser::parseOutputSelection()
+{
+	static auto outputSupported = [](InputMode _mode, string_view _outputName)
+	{
+		static set<string> const compilerModeOutputs =
+			CompilerOutputs::componentMap() |
+			ranges::views::keys |
+			ranges::to<set>();
+
+		switch (_mode)
+		{
+		case InputMode::Compiler:
+		case InputMode::CompilerWithASTImport:
+			return contains(compilerModeOutputs, _outputName);
+		case InputMode::Assembler:
+		case InputMode::StandardJson:
+		case InputMode::Linker:
+			return false;
+		}
+
+		solAssert(false, "");
+	};
+
+	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
+
+	vector<string> unsupportedOutputs;
+	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+		if (m_options.compiler.outputs.*outputComponent && !outputSupported(m_options.input.mode, optionName))
+			unsupportedOutputs.push_back(optionName);
+
+	if (!unsupportedOutputs.empty())
+	{
+		serr() << "The following outputs are not supported in " << g_inputModeName.at(m_options.input.mode) << " mode: ";
+		serr() << joinOptionNames(unsupportedOutputs) << ".";
+		return false;
+	}
 
 	return true;
 }
@@ -930,8 +979,8 @@ bool CommandLineParser::processArgs()
 		m_options.formatting.json.indent = m_args[g_strJsonIndent].as<uint32_t>();
 	}
 
-	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
-		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
+	if (!parseOutputSelection())
+		return false;
 
 	m_options.compiler.estimateGas = (m_args.count(g_strGas) > 0);
 
