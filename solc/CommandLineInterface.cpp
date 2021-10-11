@@ -23,6 +23,8 @@
  */
 #include <solc/CommandLineInterface.h>
 
+#include <solc/Exceptions.h>
+
 #include "license.h"
 #include "solidity/BuildInfo.h"
 
@@ -592,9 +594,16 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 		return false;
 	}
 
-	bool success = parser.parse(_argc, _argv);
-	if (!success)
+	try
+	{
+		parser.parse(_argc, _argv);
+	}
+	catch (CommandLineValidationError const& _exception)
+	{
+		serr() << _exception.what() << endl;
 		return false;
+	}
+
 	m_hasOutput = m_hasOutput || parser.hasOutput();
 	m_options = parser.options();
 

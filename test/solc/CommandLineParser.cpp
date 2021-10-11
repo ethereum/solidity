@@ -19,6 +19,7 @@
 /// Unit tests for solc/CommandLineParser.h
 
 #include <solc/CommandLineParser.h>
+#include <solc/Exceptions.h>
 
 #include <test/solc/Common.h>
 
@@ -46,17 +47,14 @@ using namespace solidity::yul;
 namespace
 {
 
-optional<CommandLineOptions> parseCommandLine(vector<string> const& _commandLine, ostream& _stderr)
+CommandLineOptions parseCommandLine(vector<string> const& _commandLine)
 {
 	vector<char const*> argv = test::makeArgv(_commandLine);
 
-	CommandLineParser cliParser(_stderr);
-	bool success = cliParser.parse(static_cast<int>(_commandLine.size()), argv.data());
-
-	if (!success)
-		return nullopt;
-	else
-		return cliParser.options();
+	stringstream serr;
+	CommandLineParser cliParser(serr);
+	cliParser.parse(static_cast<int>(_commandLine.size()), argv.data());
+	return cliParser.options();
 }
 
 } // namespace
@@ -75,12 +73,9 @@ BOOST_AUTO_TEST_CASE(no_options)
 	expectedOptions.modelChecker.initialize = true;
 	expectedOptions.modelChecker.settings = {};
 
-	stringstream serr;
-	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
+	CommandLineOptions parsedOptions = parseCommandLine(commandLine);
 
-	BOOST_TEST(serr.str() == "");
-	BOOST_REQUIRE(parsedOptions.has_value());
-	BOOST_TEST(parsedOptions.value() == expectedOptions);
+	BOOST_TEST(parsedOptions == expectedOptions);
 }
 
 BOOST_AUTO_TEST_CASE(help_license_version)
@@ -93,15 +88,12 @@ BOOST_AUTO_TEST_CASE(help_license_version)
 
 	for (auto const& [option, expectedMode]: expectedModePerOption)
 	{
-		stringstream serr;
-		optional<CommandLineOptions> parsedOptions = parseCommandLine({"solc", option}, serr);
+		CommandLineOptions parsedOptions = parseCommandLine({"solc", option});
 
 		CommandLineOptions expectedOptions;
 		expectedOptions.input.mode = expectedMode;
 
-		BOOST_TEST(serr.str() == "");
-		BOOST_REQUIRE(parsedOptions.has_value());
-		BOOST_TEST(parsedOptions.value() == expectedOptions);
+		BOOST_TEST(parsedOptions == expectedOptions);
 	}
 }
 
@@ -226,12 +218,9 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			5,
 		};
 
-		stringstream serr;
-		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
+		CommandLineOptions parsedOptions = parseCommandLine(commandLine);
 
-		BOOST_TEST(serr.str() == "");
-		BOOST_REQUIRE(parsedOptions.has_value());
-		BOOST_TEST(parsedOptions.value() == expectedOptions);
+		BOOST_TEST(parsedOptions == expectedOptions);
 	}
 }
 
@@ -352,12 +341,9 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		}
 
-		stringstream serr;
-		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
+		CommandLineOptions parsedOptions = parseCommandLine(commandLine);
 
-		BOOST_TEST(serr.str() == "Warning: Yul is still experimental. Please use the output with care.\n");
-		BOOST_REQUIRE(parsedOptions.has_value());
-		BOOST_TEST(parsedOptions.value() == expectedOptions);
+		BOOST_TEST(parsedOptions == expectedOptions);
 	}
 }
 
@@ -420,12 +406,9 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.compiler.combinedJsonRequests->abi = true;
 	expectedOptions.compiler.combinedJsonRequests->binary = true;
 
-	stringstream serr;
-	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
+	CommandLineOptions parsedOptions = parseCommandLine(commandLine);
 
-	BOOST_TEST(serr.str() == "");
-	BOOST_REQUIRE(parsedOptions.has_value());
-	BOOST_TEST(parsedOptions.value() == expectedOptions);
+	BOOST_TEST(parsedOptions == expectedOptions);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
@@ -441,10 +424,11 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 		{
 			stringstream serr;
 			vector<string> commandLine = {"solc", optionName, "file", inputMode};
-			optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, serr);
 
-			BOOST_TEST(serr.str() == "The following options are not supported in the current input mode: " + optionName + "\n");
-			BOOST_REQUIRE(!parsedOptions.has_value());
+			string expectedMessage = "The following options are not supported in the current input mode: " + optionName;
+			auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
+
+			BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
 		}
 }
 

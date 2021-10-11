@@ -17,7 +17,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <solc/CommandLineParser.h>
+
+#include <solc/Exceptions.h>
+
 #include <libyul/optimiser/Suite.h>
+
 #include <liblangutil/EVMVersion.h>
 
 #include <boost/algorithm/string.hpp>
@@ -131,6 +135,9 @@ static set<string> const g_metadataHashArgs
 };
 
 static map<InputMode, string> const g_inputModeName = {
+	{InputMode::Help, "help"},
+	{InputMode::License, "license"},
+	{InputMode::Version, "version"},
 	{InputMode::Compiler, "compiler"},
 	{InputMode::CompilerWithASTImport, "compiler (AST import)"},
 	{InputMode::Assembler, "assembler"},
@@ -138,15 +145,16 @@ static map<InputMode, string> const g_inputModeName = {
 	{InputMode::Linker, "linker"},
 };
 
-bool CommandLineParser::checkMutuallyExclusive(vector<string> const& _optionNames)
+void CommandLineParser::checkMutuallyExclusive(vector<string> const& _optionNames)
 {
 	if (countEnabledOptions(_optionNames) > 1)
 	{
-		serr() << "The following options are mutually exclusive: " << joinOptionNames(_optionNames) << ". ";
-		serr() << "Select at most one." << endl;
-		return false;
+		solThrow(
+			CommandLineValidationError,
+			"The following options are mutually exclusive: " + joinOptionNames(_optionNames) + ". " +
+			"Select at most one."
+		);
 	}
-	return true;
 }
 
 bool CompilerOutputs::operator==(CompilerOutputs const& _other) const noexcept
@@ -268,17 +276,15 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 	return settings;
 }
 
-bool CommandLineParser::parse(int _argc, char const* const* _argv)
+void CommandLineParser::parse(int _argc, char const* const* _argv)
 {
 	m_hasOutput = false;
 
-	if (!parseArgs(_argc, _argv))
-		return false;
-
-	return processArgs();
+	parseArgs(_argc, _argv);
+	processArgs();
 }
 
-bool CommandLineParser::parseInputPathsAndRemappings()
+void CommandLineParser::parseInputPathsAndRemappings()
 {
 	m_options.input.ignoreMissingFiles = (m_args.count(g_strIgnoreMissingFiles) > 0);
 
@@ -289,17 +295,14 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 			{
 				optional<ImportRemapper::Remapping> remapping = ImportRemapper::parseRemapping(positionalArg);
 				if (!remapping.has_value())
-				{
-					serr() << "Invalid remapping: \"" << positionalArg << "\"." << endl;
-					return false;
-				}
+					solThrow(CommandLineValidationError, "Invalid remapping: \"" + positionalArg + "\".");
 
 				if (m_options.input.mode == InputMode::StandardJson)
-				{
-					serr() << "Import remappings are not accepted on the command line in Standard JSON mode." << endl;
-					serr() << "Please put them under 'settings.remappings' in the JSON input." << endl;
-					return false;
-				}
+					solThrow(
+						CommandLineValidationError,
+						"Import remappings are not accepted on the command line in Standard JSON mode.\n"
+						"Please put them under 'settings.remappings' in the JSON input."
+					);
 
 				if (!remapping->target.empty())
 				{
@@ -324,26 +327,24 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 	if (m_options.input.mode == InputMode::StandardJson)
 	{
 		if (m_options.input.paths.size() > 1 || (m_options.input.paths.size() == 1 && m_options.input.addStdin))
-		{
-			serr() << "Too many input files for --" << g_strStandardJSON << "." << endl;
-			serr() << "Please either specify a single file name or provide its content on standard input." << endl;
-			return false;
-		}
+			solThrow(
+				CommandLineValidationError,
+				"Too many input files for --" + g_strStandardJSON + ".\n"
+				"Please either specify a single file name or provide its content on standard input."
+			);
 		else if (m_options.input.paths.size() == 0)
 			// Standard JSON mode input used to be handled separately and zero files meant "read from stdin".
 			// Keep it working that way for backwards-compatibility.
 			m_options.input.addStdin = true;
 	}
 	else if (m_options.input.paths.size() == 0 && !m_options.input.addStdin)
-	{
-		serr() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
-		return false;
-	}
-
-	return true;
+		solThrow(
+			CommandLineValidationError,
+			"No input files given. If you wish to use the standard input please specify \"-\" explicitly."
+		);
 }
 
-bool CommandLineParser::parseLibraryOption(string const& _input)
+void CommandLineParser::parseLibraryOption(string const& _input)
 {
 	namespace fs = boost::filesystem;
 	string data = _input;
@@ -378,71 +379,71 @@ bool CommandLineParser::parseLibraryOption(string const& _input)
 			{
 				separator = lib.rfind(':');
 				if (separator == string::npos)
-				{
-					serr() << "Equal sign separator missing in library address specifier \"" << lib << "\"" << endl;
-					return false;
-				}
+					solThrow(
+						CommandLineValidationError,
+						"Equal sign separator missing in library address specifier \"" + lib + "\""
+					);
 				else
 					isSeparatorEqualSign = false; // separator is colon
 			}
 			else
 				if (lib.rfind('=') != lib.find('='))
-				{
-					serr() << "Only one equal sign \"=\" is allowed in the address string \"" << lib << "\"." << endl;
-					return false;
-				}
+					solThrow(
+						CommandLineValidationError,
+						"Only one equal sign \"=\" is allowed in the address string \"" + lib + "\"."
+					);
 
 			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(separator));
 			boost::trim(libName);
 			if (m_options.linker.libraries.count(libName))
-			{
-				serr() << "Address specified more than once for library \"" << libName << "\"." << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineValidationError,
+					"Address specified more than once for library \"" + libName + "\"."
+				);
 
 			string addrString(lib.begin() + static_cast<ptrdiff_t>(separator) + 1, lib.end());
 			boost::trim(addrString);
 			if (addrString.empty())
-			{
-				serr() << "Empty address provided for library \"" << libName << "\"." << endl;
-				serr() << "Note that there should not be any whitespace after the " << (isSeparatorEqualSign ? "equal sign" : "colon") << "." << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineValidationError,
+					"Empty address provided for library \"" + libName + "\".\n"
+					"Note that there should not be any whitespace after the " +
+					(isSeparatorEqualSign ? "equal sign" : "colon") + "."
+				);
 
 			if (addrString.substr(0, 2) == "0x")
 				addrString = addrString.substr(2);
 			else
-			{
-				serr() << "The address " << addrString << " is not prefixed with \"0x\"." << endl;
-				serr() << "Note that the address must be prefixed with \"0x\"." << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineValidationError,
+					"The address " + addrString + " is not prefixed with \"0x\".\n"
+					"Note that the address must be prefixed with \"0x\"."
+				);
 
 			if (addrString.length() != 40)
-			{
-				serr() << "Invalid length for address for library \"" << libName << "\": " << addrString.length() << " instead of 40 characters." << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineValidationError,
+					"Invalid length for address for library \"" + libName + "\": " +
+					to_string(addrString.length()) + " instead of 40 characters."
+				);
 			if (!passesAddressChecksum(addrString, false))
-			{
-				serr() << "Invalid checksum on address for library \"" << libName << "\": " << addrString << endl;
-				serr() << "The correct checksum is " << getChecksummedAddress(addrString) << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineValidationError,
+					"Invalid checksum on address for library \"" + libName + "\": " + addrString + "\n"
+					"The correct checksum is " + getChecksummedAddress(addrString)
+				);
 			bytes binAddr = fromHex(addrString);
 			h160 address(binAddr, h160::AlignRight);
 			if (binAddr.size() > 20 || address == h160())
-			{
-				serr() << "Invalid address for library \"" << libName << "\": " << addrString << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineValidationError,
+					"Invalid address for library \"" + libName + "\": " + addrString
+				);
 			m_options.linker.libraries[libName] = address;
 		}
-
-	return true;
 }
 
-bool CommandLineParser::parseOutputSelection()
+void CommandLineParser::parseOutputSelection()
 {
 	static auto outputSupported = [](InputMode _mode, string_view _outputName)
 	{
@@ -498,13 +499,11 @@ bool CommandLineParser::parseOutputSelection()
 			unsupportedOutputs.push_back(optionName);
 
 	if (!unsupportedOutputs.empty())
-	{
-		serr() << "The following outputs are not supported in " << g_inputModeName.at(m_options.input.mode) << " mode: ";
-		serr() << joinOptionNames(unsupportedOutputs) << ".";
-		return false;
-	}
-
-	return true;
+		solThrow(
+			CommandLineValidationError,
+			"The following outputs are not supported in " + g_inputModeName.at(m_options.input.mode) + " mode: " +
+			joinOptionNames(unsupportedOutputs) + "."
+		);
 }
 
 po::options_description CommandLineParser::optionsDescription()
@@ -843,7 +842,7 @@ po::positional_options_description CommandLineParser::positionalOptionsDescripti
 	return filesPositions;
 }
 
-bool CommandLineParser::parseArgs(int _argc, char const* const* _argv)
+void CommandLineParser::parseArgs(int _argc, char const* const* _argv)
 {
 	po::options_description allOptions = optionsDescription();
 	po::positional_options_description filesPositions = positionalOptionsDescription();
@@ -858,18 +857,15 @@ bool CommandLineParser::parseArgs(int _argc, char const* const* _argv)
 	}
 	catch (po::error const& _exception)
 	{
-		serr() << _exception.what() << endl;
-		return false;
+		solThrow(CommandLineValidationError, _exception.what());
 	}
 
 	po::notify(m_args);
-
-	return true;
 }
 
-bool CommandLineParser::processArgs()
+void CommandLineParser::processArgs()
 {
-	if (!checkMutuallyExclusive({
+	checkMutuallyExclusive({
 		g_strHelp,
 		g_strLicense,
 		g_strVersion,
@@ -879,8 +875,7 @@ bool CommandLineParser::processArgs()
 		g_strStrictAssembly,
 		g_strYul,
 		g_strImportAst,
-	}))
-		return false;
+	});
 
 	if (m_args.count(g_strHelp) > 0)
 		m_options.input.mode = InputMode::Help;
@@ -904,7 +899,7 @@ bool CommandLineParser::processArgs()
 		m_options.input.mode == InputMode::License ||
 		m_options.input.mode == InputMode::Version
 	)
-		return true;
+		return;
 
 	map<string, set<InputMode>> validOptionInputModeCombinations = {
 		// TODO: This should eventually contain all options.
@@ -919,13 +914,13 @@ bool CommandLineParser::processArgs()
 	}
 
 	if (!invalidOptionsForCurrentInputMode.empty())
-	{
-		serr() << "The following options are not supported in the current input mode: " << joinOptionNames(invalidOptionsForCurrentInputMode) << endl;
-		return false;
-	}
+		solThrow(
+			CommandLineValidationError,
+			"The following options are not supported in the current input mode: " +
+			joinOptionNames(invalidOptionsForCurrentInputMode)
+		);
 
-	if (!checkMutuallyExclusive({g_strColor, g_strNoColor}))
-		return false;
+	checkMutuallyExclusive({g_strColor, g_strNoColor});
 
 	array<string, 9> const conflictingWithStopAfter{
 		CompilerOutputs::componentName(&CompilerOutputs::binary),
@@ -940,8 +935,7 @@ bool CommandLineParser::processArgs()
 	};
 
 	for (auto& option: conflictingWithStopAfter)
-		if (!checkMutuallyExclusive({g_strStopAfter, option}))
-			return false;
+		checkMutuallyExclusive({g_strStopAfter, option});
 
 	if (
 		m_options.input.mode != InputMode::Compiler &&
@@ -950,23 +944,23 @@ bool CommandLineParser::processArgs()
 	)
 	{
 		if (!m_args[g_strOptimizeRuns].defaulted())
-		{
-			serr() << "Option --" << g_strOptimizeRuns << " is only valid in compiler and assembler modes." << endl;
-			return false;
-		}
+			solThrow(
+				CommandLineValidationError,
+				"Option --" + g_strOptimizeRuns + " is only valid in compiler and assembler modes."
+			);
 
 		for (string const& option: {g_strOptimize, g_strNoOptimizeYul, g_strOptimizeYul, g_strYulOptimizations})
 			if (m_args.count(option) > 0)
-			{
-				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
-				return false;
-			}
+				solThrow(
+					CommandLineValidationError,
+					"Option --" + option + " is only valid in compiler and assembler modes."
+				);
 
 		if (!m_args[g_strDebugInfo].defaulted())
-		{
-			serr() << "Option --" << g_strDebugInfo << " is only valid in compiler and assembler modes." << endl;
-			return false;
-		}
+			solThrow(
+				CommandLineValidationError,
+				"Option --" + g_strDebugInfo + " is only valid in compiler and assembler modes."
+			);
 	}
 
 	if (m_args.count(g_strColor) > 0)
@@ -981,15 +975,15 @@ bool CommandLineParser::processArgs()
 		string revertStringsString = m_args[g_strRevertStrings].as<string>();
 		std::optional<RevertStrings> revertStrings = revertStringsFromString(revertStringsString);
 		if (!revertStrings)
-		{
-			serr() << "Invalid option for --" << g_strRevertStrings << ": " << revertStringsString << endl;
-			return false;
-		}
+			solThrow(
+				CommandLineValidationError,
+				"Invalid option for --" + g_strRevertStrings + ": " + revertStringsString
+			);
 		if (*revertStrings == RevertStrings::VerboseDebug)
-		{
-			serr() << "Only \"default\", \"strip\" and \"debug\" are implemented for --" << g_strRevertStrings << " for now." << endl;
-			return false;
-		}
+			solThrow(
+				CommandLineValidationError,
+				"Only \"default\", \"strip\" and \"debug\" are implemented for --" + g_strRevertStrings + " for now."
+			);
 		m_options.output.revertStrings = *revertStrings;
 	}
 
@@ -998,20 +992,13 @@ bool CommandLineParser::processArgs()
 		string optionValue = m_args[g_strDebugInfo].as<string>();
 		m_options.output.debugInfoSelection = DebugInfoSelection::fromString(optionValue);
 		if (!m_options.output.debugInfoSelection.has_value())
-		{
-			serr() << "Invalid value for --" << g_strDebugInfo << " option: " << optionValue << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid value for --" + g_strDebugInfo + " option: " + optionValue);
 
 		if (m_options.output.debugInfoSelection->snippet && !m_options.output.debugInfoSelection->location)
-		{
-			serr() << "To use 'snippet' with --" << g_strDebugInfo << " you must select also 'location'." << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "To use 'snippet' with --" + g_strDebugInfo + " you must select also 'location'.");
 	}
 
-	if (!parseCombinedJsonOption())
-		return false;
+	parseCombinedJsonOption();
 
 	if (m_args.count(g_strOutputDir))
 		m_options.output.dir = m_args.at(g_strOutputDir).as<string>();
@@ -1028,8 +1015,7 @@ bool CommandLineParser::processArgs()
 		m_options.formatting.json.indent = m_args[g_strJsonIndent].as<uint32_t>();
 	}
 
-	if (!parseOutputSelection())
-		return false;
+	parseOutputSelection();
 
 	m_options.compiler.estimateGas = (m_args.count(g_strGas) > 0);
 
@@ -1039,18 +1025,13 @@ bool CommandLineParser::processArgs()
 	if (m_args.count(g_strIncludePath) > 0)
 	{
 		if (m_options.input.basePath.empty())
-		{
-			serr() << "--" << g_strIncludePath << " option requires a non-empty base path." << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "--" + g_strIncludePath + " option requires a non-empty base path.");
 
 		for (string const& includePath: m_args[g_strIncludePath].as<vector<string>>())
 		{
 			if (includePath.empty())
-			{
-				serr() << "Empty values are not allowed in --" << g_strIncludePath << "." << endl;
-				return false;
-			}
+				solThrow(CommandLineValidationError, "Empty values are not allowed in --" + g_strIncludePath + ".");
+
 			m_options.input.includePaths.push_back(includePath);
 		}
 	}
@@ -1066,37 +1047,29 @@ bool CommandLineParser::processArgs()
 	if (m_args.count(g_strStopAfter))
 	{
 		if (m_args[g_strStopAfter].as<string>() != "parsing")
-		{
-			serr() << "Valid options for --" << g_strStopAfter << " are: \"parsing\".\n";
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Valid options for --" + g_strStopAfter + " are: \"parsing\".\n");
 		else
 			m_options.output.stopAfter = CompilerStack::State::Parsed;
 	}
 
-	if (!parseInputPathsAndRemappings())
-		return false;
+	parseInputPathsAndRemappings();
 
 	if (m_options.input.mode == InputMode::StandardJson)
-		return true;
+		return;
 
 	if (m_args.count(g_strLibraries))
 		for (string const& library: m_args[g_strLibraries].as<vector<string>>())
-			if (!parseLibraryOption(library))
-				return false;
+			parseLibraryOption(library);
 
 	if (m_options.input.mode == InputMode::Linker)
-		return true;
+		return;
 
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
 		std::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
 		if (!versionOption)
-		{
-			serr() << "Invalid option for --" << g_strEVMVersion << ": " << versionOptionStr << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strEVMVersion + ": " + versionOptionStr);
 		m_options.output.evmVersion = *versionOption;
 	}
 
@@ -1109,10 +1082,7 @@ bool CommandLineParser::processArgs()
 	{
 		OptimiserSettings optimiserSettings = m_options.optimiserSettings();
 		if (!optimiserSettings.runYulOptimiser)
-		{
-			serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "--" + g_strYulOptimizations + " is invalid if Yul optimizer is disabled");
 
 		try
 		{
@@ -1120,8 +1090,10 @@ bool CommandLineParser::processArgs()
 		}
 		catch (yul::OptimizerException const& _exception)
 		{
-			serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
-			return false;
+			solThrow(
+				CommandLineValidationError,
+				"Invalid optimizer step sequence in --" + g_strYulOptimizations + ": " + _exception.what()
+			);
 		}
 
 		m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
@@ -1142,12 +1114,11 @@ bool CommandLineParser::processArgs()
 			auto optionEnabled = [&](string const& name){ return m_args.count(name) > 0; };
 			auto enabledOptions = nonAssemblyModeOptions | ranges::views::filter(optionEnabled) | ranges::to_vector;
 
-			serr() << "The following options are invalid in assembly mode: ";
-			serr() << joinOptionNames(enabledOptions) << ".";
+			string message = "The following options are invalid in assembly mode: " + joinOptionNames(enabledOptions) + ".";
 			if (m_args.count(g_strOptimizeYul) || m_args.count(g_strNoOptimizeYul))
-				serr() << " Optimization is disabled by default and can be enabled with --" << g_strOptimize << "." << endl;
-			serr() << endl;
-			return false;
+				message += " Optimization is disabled by default and can be enabled with --" + g_strOptimize + ".";
+
+			solThrow(CommandLineValidationError, message);
 		}
 
 		// switch to assembly mode
@@ -1163,10 +1134,7 @@ bool CommandLineParser::processArgs()
 			else if (machine == g_strEwasm)
 				m_options.assembly.targetMachine = Machine::Ewasm;
 			else
-			{
-				serr() << "Invalid option for --" << g_strMachine << ": " << machine << endl;
-				return false;
-			}
+				solThrow(CommandLineValidationError, "Invalid option for --" + g_strMachine + ": " + machine);
 		}
 		if (m_options.assembly.targetMachine == Machine::Ewasm && m_options.assembly.inputLanguage == Input::StrictAssembly)
 			m_options.assembly.inputLanguage = Input::Ewasm;
@@ -1179,45 +1147,35 @@ bool CommandLineParser::processArgs()
 			{
 				m_options.assembly.inputLanguage = Input::Ewasm;
 				if (m_options.assembly.targetMachine != Machine::Ewasm)
-				{
-					serr() << "If you select Ewasm as --" << g_strYulDialect << ", ";
-					serr() << "--" << g_strMachine << " has to be Ewasm as well." << endl;
-					return false;
-				}
+					solThrow(
+						CommandLineValidationError,
+						"If you select Ewasm as --" + g_strYulDialect + ", "
+						"--" + g_strMachine + " has to be Ewasm as well."
+					);
 			}
 			else
-			{
-				serr() << "Invalid option for --" << g_strYulDialect << ": " << dialect << endl;
-				return false;
-			}
+				solThrow(CommandLineValidationError, "Invalid option for --" + g_strYulDialect + ": " + dialect);
 		}
 		if (m_options.optimizer.enabled && (m_options.assembly.inputLanguage != Input::StrictAssembly && m_options.assembly.inputLanguage != Input::Ewasm))
-		{
-			serr() <<
-				"Optimizer can only be used for strict assembly. Use --" <<
-				g_strStrictAssembly <<
-				"." <<
-				endl;
-			return false;
-		}
+			solThrow(
+				CommandLineValidationError,
+				"Optimizer can only be used for strict assembly. Use --"  + g_strStrictAssembly + "."
+			);
 		if (m_options.assembly.targetMachine == Machine::Ewasm && m_options.assembly.inputLanguage != Input::StrictAssembly && m_options.assembly.inputLanguage != Input::Ewasm)
-		{
-			serr() << "The selected input language is not directly supported when targeting the Ewasm machine ";
-			serr() << "and automatic translation is not available." << endl;
-			return false;
-		}
-		serr() <<
-			"Warning: Yul is still experimental. Please use the output with care." <<
-			endl;
+			solThrow(
+				CommandLineValidationError,
+				"The selected input language is not directly supported when targeting the Ewasm machine "
+				"and automatic translation is not available."
+			);
 
-		return true;
+		serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
+		return;
 	}
 	else if (countEnabledOptions({g_strYulDialect, g_strMachine}) >= 1)
-	{
-		serr() << "--" << g_strYulDialect << " and --" << g_strMachine << " ";
-		serr() << "are only valid in assembly mode." << endl;
-		return false;
-	}
+		solThrow(
+			CommandLineValidationError,
+			"--" + g_strYulDialect + " and --" + g_strMachine + " are only valid in assembly mode."
+		);
 
 	if (m_args.count(g_strMetadataHash))
 	{
@@ -1229,10 +1187,7 @@ bool CommandLineParser::processArgs()
 		else if (hashStr == g_strNone)
 			m_options.metadata.hash = CompilerStack::MetadataHash::None;
 		else
-		{
-			serr() << "Invalid option for --" << g_strMetadataHash << ": " << hashStr << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strMetadataHash + ": " + hashStr);
 	}
 
 	if (m_args.count(g_strModelCheckerContracts))
@@ -1240,10 +1195,7 @@ bool CommandLineParser::processArgs()
 		string contractsStr = m_args[g_strModelCheckerContracts].as<string>();
 		optional<ModelCheckerContracts> contracts = ModelCheckerContracts::fromString(contractsStr);
 		if (!contracts)
-		{
-			serr() << "Invalid option for --" << g_strModelCheckerContracts << ": " << contractsStr << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strModelCheckerContracts + ": " + contractsStr);
 		m_options.modelChecker.settings.contracts = move(*contracts);
 	}
 
@@ -1255,10 +1207,7 @@ bool CommandLineParser::processArgs()
 		string engineStr = m_args[g_strModelCheckerEngine].as<string>();
 		optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(engineStr);
 		if (!engine)
-		{
-			serr() << "Invalid option for --" << g_strModelCheckerEngine << ": " << engineStr << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strModelCheckerEngine + ": " + engineStr);
 		m_options.modelChecker.settings.engine = *engine;
 	}
 
@@ -1267,10 +1216,7 @@ bool CommandLineParser::processArgs()
 		string invsStr = m_args[g_strModelCheckerInvariants].as<string>();
 		optional<ModelCheckerInvariants> invs = ModelCheckerInvariants::fromString(invsStr);
 		if (!invs)
-		{
-			serr() << "Invalid option for --" << g_strModelCheckerInvariants << ": " << invsStr << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strModelCheckerInvariants + ": " + invsStr);
 		m_options.modelChecker.settings.invariants = *invs;
 	}
 
@@ -1282,10 +1228,7 @@ bool CommandLineParser::processArgs()
 		string solversStr = m_args[g_strModelCheckerSolvers].as<string>();
 		optional<smtutil::SMTSolverChoice> solvers = smtutil::SMTSolverChoice::fromString(solversStr);
 		if (!solvers)
-		{
-			serr() << "Invalid option for --" << g_strModelCheckerSolvers << ": " << solversStr << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strModelCheckerSolvers + ": " + solversStr);
 		m_options.modelChecker.settings.solvers = *solvers;
 	}
 
@@ -1294,10 +1237,7 @@ bool CommandLineParser::processArgs()
 		string targetsStr = m_args[g_strModelCheckerTargets].as<string>();
 		optional<ModelCheckerTargets> targets = ModelCheckerTargets::fromString(targetsStr);
 		if (!targets)
-		{
-			serr() << "Invalid option for --" << g_strModelCheckerTargets << ": " << targetsStr << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strModelCheckerTargets + ": " + targetsStr);
 		m_options.modelChecker.settings.targets = *targets;
 	}
 
@@ -1319,27 +1259,21 @@ bool CommandLineParser::processArgs()
 		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport);
-	return true;
 }
 
-bool CommandLineParser::parseCombinedJsonOption()
+void CommandLineParser::parseCombinedJsonOption()
 {
 	if (!m_args.count(g_strCombinedJson))
-		return true;
+		return;
 
 	set<string> requests;
 	for (string const& item: boost::split(requests, m_args[g_strCombinedJson].as<string>(), boost::is_any_of(",")))
 		if (CombinedJsonRequests::componentMap().count(item) == 0)
-		{
-			serr() << "Invalid option to --" << g_strCombinedJson << ": " << item << endl;
-			return false;
-		}
+			solThrow(CommandLineValidationError, "Invalid option to --" + g_strCombinedJson + ": " + item);
 
 	m_options.compiler.combinedJsonRequests = CombinedJsonRequests{};
 	for (auto&& [componentName, component]: CombinedJsonRequests::componentMap())
 		m_options.compiler.combinedJsonRequests.value().*component = (requests.count(componentName) > 0);
-
-	return true;
 }
 
 size_t CommandLineParser::countEnabledOptions(vector<string> const& _optionNames) const
