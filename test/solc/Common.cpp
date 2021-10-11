@@ -70,6 +70,10 @@ string test::stripPreReleaseWarning(string const& _stderrContent)
 		R"(Warning( \(3805\))?: This is a pre-release compiler version, please do not use it in production\.\n)"
 		R"((\n)?)"
 	};
+	static regex const noOutputRegex{
+		R"(Compiler run successful, no output requested\.\n)"
+	};
 
-	return regex_replace(_stderrContent, preReleaseWarningRegex, "");
+	string output = regex_replace(_stderrContent, preReleaseWarningRegex, "");
+	return regex_replace(move(output), noOutputRegex, "");
 }

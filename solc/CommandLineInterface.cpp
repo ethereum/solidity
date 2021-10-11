@@ -610,10 +610,10 @@ bool CommandLineInterface::processInput()
 		return false;
 	case InputMode::License:
 		printLicense();
-		return true;
+		break;
 	case InputMode::Version:
 		printVersion();
-		return true;
+		break;
 	case InputMode::StandardJson:
 	{
 		solAssert(m_standardJsonInput.has_value(), "");
@@ -621,21 +621,25 @@ bool CommandLineInterface::processInput()
 		StandardCompiler compiler(m_fileReader.reader(), m_options.formatting.json);
 		sout() << compiler.compile(move(m_standardJsonInput.value())) << endl;
 		m_standardJsonInput.reset();
-		return true;
+		break;
 	}
 	case InputMode::Assembler:
-	{
-		return assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine);
-	}
+		if (!assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine))
+			return false;
+		break;
 	case InputMode::Linker:
-		return link();
+		if (!link())
+			return false;
+		writeLinkedFiles();
+		break;
 	case InputMode::Compiler:
 	case InputMode::CompilerWithASTImport:
-		return compile();
+		if (!compile())
+			return false;
+		outputCompilationResults();
 	}
 
-	solAssert(false, "");
-	return false;
+	return !m_outputFailed;
 }
 
 void CommandLineInterface::printVersion()
@@ -881,29 +885,6 @@ void CommandLineInterface::handleAst()
 			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 		}
 	}
-}
-
-bool CommandLineInterface::actOnInput()
-{
-	switch (m_options.input.mode)
-	{
-	case InputMode::Help:
-	case InputMode::License:
-	case InputMode::Version:
-	case InputMode::StandardJson:
-	case InputMode::Assembler:
-		// Already done in "processInput" phase.
-		break;
-	case InputMode::Linker:
-		writeLinkedFiles();
-		break;
-	case InputMode::Compiler:
-	case InputMode::CompilerWithASTImport:
-		outputCompilationResults();
-		break;
-	}
-
-	return !m_outputFailed;
 }
 
 bool CommandLineInterface::link()
