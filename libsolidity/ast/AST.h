@@ -33,6 +33,7 @@
 #include <libevmasm/Instruction.h>
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/LazyInit.h>
+#include <libsolutil/Visitor.h>
 
 #include <json/json.h>
 
@@ -630,9 +631,16 @@ private:
 };
 
 /**
- * `using LibraryName for uint` will attach all functions from the library LibraryName
- * to `uint` if the first parameter matches the type. `using LibraryName for *` attaches
- * the function to any matching type.
+ * Using for directive:
+ *
+ * 1. `using LibraryName for T` attaches all functions from the library `LibraryName` to the type `T`
+ * 2. `using LibraryName for *` attaches to all types.
+ * 3. `using {f1, f2, ..., fn} for T` attaches the functions `f1`, `f2`, ...,
+ *     `fn`, respectively to `T`.
+ *
+ * For version 3, T has to be implicitly convertible to the first parameter type of
+ * all functions, and this is checked at the point of the using statement. For versions 1 and
+ * 2, this check is only done when a function is called.
  */
 class UsingForDirective: public ASTNode
 {
@@ -640,23 +648,28 @@ public:
 	UsingForDirective(
 		int64_t _id,
 		SourceLocation const& _location,
-		ASTPointer<IdentifierPath> _libraryName,
+		std::vector<ASTPointer<IdentifierPath>> _functions,
+		bool _usesBraces,
 		ASTPointer<TypeName> _typeName
 	):
-		ASTNode(_id, _location), m_libraryName(std::move(_libraryName)), m_typeName(std::move(_typeName))
+		ASTNode(_id, _location), m_functions(_functions), m_usesBraces(_usesBraces), m_typeName(std::move(_typeName))
 	{
-		solAssert(m_libraryName != nullptr, "Name cannot be null.");
 	}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	IdentifierPath const& libraryName() const { return *m_libraryName; }
 	/// @returns the type name the library is attached to, null for `*`.
 	TypeName const* typeName() const { return m_typeName.get(); }
 
+	/// @returns a list of functions or the single library.
+	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functions; }
+	bool usesBraces() const { return m_usesBraces; }
+
 private:
-	ASTPointer<IdentifierPath> m_libraryName;
+	/// Either the single library or a list of functions.
+	std::vector<ASTPointer<IdentifierPath>> m_functions;
+	bool m_usesBraces;
 	ASTPointer<TypeName> m_typeName;
 };
 

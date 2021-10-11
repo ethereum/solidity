@@ -6,71 +6,89 @@
 Using For
 *********
 
-The directive ``using A for B;`` can be used to attach library
-functions (from the library ``A``) to any type (``B``)
-in the context of a contract.
+The directive ``using A for B;`` can be used to attach
+functions (``A``) as member functions to any type (``B``).
 These functions will receive the object they are called on
 as their first parameter (like the ``self`` variable in Python).
 
-The effect of ``using A for *;`` is that the functions from
-the library ``A`` are attached to *any* type.
+It is valid either at file level or inside a contract,
+at contract level.
 
-In both situations, *all* functions in the library are attached,
+The first part, ``A``, can be one of:
+
+- a list of file-level or library functions (``using {f, g, h, L.t} for uint;``) -
+  only those functions will be attached to the type.
+- the name of a library (``using L for uint;``) -
+  all functions (both public and internal ones) of the library are attached to the type
+
+At file level, the second part, ``B``, has to be an explicit type (without data location specifier).
+Inside contracts, you can also use ``using L for *;``,
+which has the effect that all functions of the library ``L``
+are attached to *all* types.
+
+If you specify a library, *all* functions in the library are attached,
 even those where the type of the first parameter does not
 match the type of the object. The type is checked at the
 point the function is called and function overload
 resolution is performed.
 
+If you use a list of functions (``using {f, g, h, L.t} for uint;``),
+then the type (``uint``) has to be implicitly convertible to the
+first parameter of each of these functions. This check is
+performed even if none of these functions are called.
+
 The ``using A for B;`` directive is active only within the current
-contract, including within all of its functions, and has no effect
-outside of the contract in which it is used. The directive
-may only be used inside a contract, not inside any of its functions.
+scope (either the contract or the current module/source unit),
+including within all of its functions, and has no effect
+outside of the contract or module in which it is used.
 
 Let us rewrite the set example from the
-:ref:`libraries` in this way:
+:ref:`libraries` section in this way, using file-level functions
+instead of library functions.
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity ^0.8.13;
 
-
-    // This is the same code as before, just without comments
     struct Data { mapping(uint => bool) flags; }
+    // Now we attach functions to the type.
+    // The attached functions can be used throughout the rest of the module.
+    // If you import the module, you have to
+    // repeat the using directive there, for example as
+    //   import "flags.sol" as Flags;
+    //   using {Flags.insert, Flags.remove, Flags.contains}
+    //     for Flags.Data;
+    using {insert, remove, contains} for Data;
 
-    library Set {
-        function insert(Data storage self, uint value)
-            public
-            returns (bool)
-        {
-            if (self.flags[value])
-                return false; // already there
-            self.flags[value] = true;
-            return true;
-        }
+    function insert(Data storage self, uint value)
+        returns (bool)
+    {
+        if (self.flags[value])
+            return false; // already there
+        self.flags[value] = true;
+        return true;
+    }
 
-        function remove(Data storage self, uint value)
-            public
-            returns (bool)
-        {
-            if (!self.flags[value])
-                return false; // not there
-            self.flags[value] = false;
-            return true;
-        }
+    function remove(Data storage self, uint value)
+        returns (bool)
+    {
+        if (!self.flags[value])
+            return false; // not there
+        self.flags[value] = false;
+        return true;
+    }
 
-        function contains(Data storage self, uint value)
-            public
-            view
-            returns (bool)
-        {
-            return self.flags[value];
-        }
+    function contains(Data storage self, uint value)
+        public
+        view
+        returns (bool)
+    {
+        return self.flags[value];
     }
 
 
     contract C {
-        using Set for Data; // this is the crucial change
         Data knownValues;
 
         function register(uint value) public {
@@ -82,12 +100,13 @@ Let us rewrite the set example from the
         }
     }
 
-It is also possible to extend elementary types in that way:
+It is also possible to extend built-in types in that way.
+In this example, we will use a library.
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.8 <0.9.0;
+    pragma solidity ^0.8.13;
 
     library Search {
         function indexOf(uint[] storage self, uint value)
@@ -100,9 +119,9 @@ It is also possible to extend elementary types in that way:
             return type(uint).max;
         }
     }
+    using Search for uint[];
 
     contract C {
-        using Search for uint[];
         uint[] data;
 
         function append(uint value) public {
