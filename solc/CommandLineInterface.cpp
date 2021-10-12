@@ -937,6 +937,7 @@ void CommandLineInterface::writeLinkedFiles()
 			if (!outFile)
 			{
 				serr() << "Could not write to file " << src.first << ". Aborting." << endl;
+				m_outputFailed = true;
 				return;
 			}
 		}

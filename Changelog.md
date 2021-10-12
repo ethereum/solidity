@@ -15,6 +15,7 @@ Compiler Features:
 Bugfixes:
  * Commandline Interface: Fix extra newline character being appended to sources passed through standard input, affecting their hashes.
  * Commandline Interface: Report output selection options unsupported by the selected input mode instead of ignoring them.
+ * Commandline Interface: Don't return zero exit code when writing linked files to disk fails.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
  * TypeChecker: Fix internal error when using user defined value types in public library functions.
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
