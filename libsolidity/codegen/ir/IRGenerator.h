@@ -49,6 +49,7 @@ public:
 		RevertStrings _revertStrings,
 		OptimiserSettings _optimiserSettings,
 		std::map<std::string, unsigned> _sourceIndices,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	):
 		m_evmVersion(_evmVersion),
@@ -59,6 +60,7 @@ public:
 			_revertStrings,
 			std::move(_optimiserSettings),
 			std::move(_sourceIndices),
+			_debugInfoSelection,
 			_soliditySourceProvider
 		),
 		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector())

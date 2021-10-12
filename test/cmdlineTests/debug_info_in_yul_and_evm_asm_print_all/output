@@ -1,0 +1,213 @@
+
+======= debug_info_in_yul_and_evm_asm_print_all/input.sol:C =======
+EVM assembly:
+    /* "debug_info_in_yul_and_evm_asm_print_all/input.sol":60:101  contract C {... */
+  mstore(0x40, 0x80)
+  callvalue
+  dup1
+  iszero
+  tag_1
+  jumpi
+  0x00
+  dup1
+  revert
+tag_1:
+  pop
+  dataSize(sub_0)
+  dup1
+  dataOffset(sub_0)
+  0x00
+  codecopy
+  0x00
+  return
+stop
+
+sub_0: assembly {
+        /* "debug_info_in_yul_and_evm_asm_print_all/input.sol":60:101  contract C {... */
+      mstore(0x40, 0x80)
+      callvalue
+      dup1
+      iszero
+      tag_1
+      jumpi
+      0x00
+      dup1
+      revert
+    tag_1:
+      pop
+      jumpi(tag_2, lt(calldatasize, 0x04))
+      shr(0xe0, calldataload(0x00))
+      dup1
+      0x26121ff0
+      eq
+      tag_3
+      jumpi
+    tag_2:
+      0x00
+      dup1
+      revert
+        /* "debug_info_in_yul_and_evm_asm_print_all/input.sol":77:99  function f() public {} */
+    tag_3:
+      stop
+
+    auxdata: <AUXDATA REMOVED>
+}
+
+IR:
+/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+
+/// @use-src 0:"debug_info_in_yul_and_evm_asm_print_all/input.sol"
+object "C_6" {
+    code {
+        /// @src 0:60:101  "contract C {..."
+        mstore(64, 128)
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_C_6()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset("C_6_deployed"), datasize("C_6_deployed"))
+
+        return(_1, datasize("C_6_deployed"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        /// @src 0:60:101  "contract C {..."
+        function constructor_C_6() {
+
+            /// @src 0:60:101  "contract C {..."
+
+        }
+        /// @src 0:60:101  "contract C {..."
+
+    }
+    /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_all/input.sol"
+    object "C_6_deployed" {
+        code {
+            /// @src 0:60:101  "contract C {..."
+            mstore(64, 128)
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x26121ff0
+                {
+                    // f()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    fun_f_5()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+            if iszero(calldatasize()) {  }
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function abi_decode_tuple_(headStart, dataEnd)   {
+                if slt(sub(dataEnd, headStart), 0) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            /// @ast-id 5
+            /// @src 0:77:99  "function f() public {}"
+            function fun_f_5() {
+
+            }
+            /// @src 0:60:101  "contract C {..."
+
+        }
+
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+
+}
+
+
+Optimized IR:
+/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+/// @use-src 0:"debug_info_in_yul_and_evm_asm_print_all/input.sol"
+object "C_6" {
+    code {
+        {
+            /// @src 0:60:101  "contract C {..."
+            mstore(64, 128)
+            if callvalue() { revert(0, 0) }
+            let _1 := datasize("C_6_deployed")
+            codecopy(128, dataoffset("C_6_deployed"), _1)
+            return(128, _1)
+        }
+    }
+    /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_all/input.sol"
+    object "C_6_deployed" {
+        code {
+            {
+                /// @src 0:60:101  "contract C {..."
+                mstore(64, 128)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_1)))
+                    {
+                        if callvalue() { revert(_1, _1) }
+                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        return(128, _1)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}

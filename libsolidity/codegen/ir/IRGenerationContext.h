@@ -30,6 +30,7 @@
 #include <libsolidity/codegen/ir/Common.h>
 
 #include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/Common.h>
@@ -74,6 +75,7 @@ public:
 		RevertStrings _revertStrings,
 		OptimiserSettings _optimiserSettings,
 		std::map<std::string, unsigned> _sourceIndices,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	):
 		m_evmVersion(_evmVersion),
@@ -81,6 +83,7 @@ public:
 		m_revertStrings(_revertStrings),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_sourceIndices(std::move(_sourceIndices)),
+		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{}
 
@@ -174,6 +177,7 @@ public:
 
 	bool immutableRegistered(VariableDeclaration const& _varDecl) const { return m_immutableVariables.count(&_varDecl); }
 
+	langutil::DebugInfoSelection debugInfoSelection() const { return m_debugInfoSelection; }
 	langutil::CharStreamProvider const* soliditySourceProvider() const { return m_soliditySourceProvider; }
 
 private:
@@ -220,6 +224,7 @@ private:
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
 
+	langutil::DebugInfoSelection m_debugInfoSelection = {};
 	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
 };
 

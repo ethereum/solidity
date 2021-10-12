@@ -30,6 +30,7 @@
 #include <libyul/AST.h>
 #include <libyul/Object.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -82,7 +83,8 @@ bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bo
 	m_stack = AssemblyStack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
 	);
 	if (m_stack.parseAndAnalyze("", m_source))
 	{

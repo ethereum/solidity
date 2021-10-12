@@ -27,6 +27,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AssemblyStack.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -58,7 +59,8 @@ pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source
 	AssemblyStack stack(
 		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::Default()
 	);
 	if (stack.parseAndAnalyze("--INPUT--", _source))
 	{

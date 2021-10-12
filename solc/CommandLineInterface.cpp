@@ -631,6 +631,8 @@ bool CommandLineInterface::compile()
 		m_compiler->setViaIR(m_options.output.experimentalViaIR);
 		m_compiler->setEVMVersion(m_options.output.evmVersion);
 		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
+		if (m_options.output.debugInfoSelection.has_value())
+			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
@@ -972,7 +974,10 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(
 			m_options.output.evmVersion,
 			_language,
-			m_options.optimiserSettings()
+			m_options.optimiserSettings(),
+			m_options.output.debugInfoSelection.has_value() ?
+				m_options.output.debugInfoSelection.value() :
+				DebugInfoSelection::Default()
 		);
 
 		if (!stack.parseAndAnalyze(src.first, src.second))

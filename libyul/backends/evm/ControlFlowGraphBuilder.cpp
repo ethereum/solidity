@@ -23,7 +23,6 @@
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
-#include <libyul/AsmPrinter.h>
 
 #include <libsolutil/cxx20.h>
 #include <libsolutil/Visitor.h>

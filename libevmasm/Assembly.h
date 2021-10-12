@@ -24,6 +24,7 @@
 #include <libevmasm/LinkerObject.h>
 #include <libevmasm/Exceptions.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/Common.h>
@@ -142,10 +143,12 @@ public:
 
 	/// Create a text representation of the assembly.
 	std::string assemblyString(
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		StringMap const& _sourceCodes = StringMap()
 	) const;
 	void assemblyStream(
 		std::ostream& _out,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		std::string const& _prefix = "",
 		StringMap const& _sourceCodes = StringMap()
 	) const;

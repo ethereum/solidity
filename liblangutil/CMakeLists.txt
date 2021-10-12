@@ -3,6 +3,8 @@ set(sources
 	Common.h
 	CharStream.cpp
 	CharStream.h
+	DebugInfoSelection.cpp
+	DebugInfoSelection.h
 	ErrorReporter.cpp
 	ErrorReporter.h
 	EVMVersion.h

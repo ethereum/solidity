@@ -24,7 +24,6 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
-#include <libyul/AssemblyStack.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <boost/program_options.hpp>

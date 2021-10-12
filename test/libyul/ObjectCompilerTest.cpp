@@ -26,6 +26,7 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/algorithm/string.hpp>
@@ -64,7 +65,8 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	AssemblyStack stack(
 		EVMVersion(),
 		m_wasm ? AssemblyStack::Language::Ewasm : AssemblyStack::Language::StrictAssembly,
-		OptimiserSettings::preset(m_optimisationPreset)
+		OptimiserSettings::preset(m_optimisationPreset),
+		DebugInfoSelection::All()
 	);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{

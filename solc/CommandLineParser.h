@@ -24,8 +24,12 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
 #include <libsolidity/interface/ImportRemapper.h>
+
 #include <libyul/AssemblyStack.h>
+
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
+
 #include <libsolutil/JSON.h>
 
 #include <boost/program_options.hpp>
@@ -174,6 +178,7 @@ struct CommandLineOptions
 		langutil::EVMVersion evmVersion;
 		bool experimentalViaIR = false;
 		RevertStrings revertStrings = RevertStrings::Default;
+		std::optional<langutil::DebugInfoSelection> debugInfoSelection;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
 	} output;
 
