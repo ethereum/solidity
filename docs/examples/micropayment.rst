@@ -11,7 +11,7 @@ sign and verify signatures, and setup the payment channel.
 Creating and verifying signatures
 =================================
 
-Imagine Alice wants to send a quantity of Ether to Bob, i.e.
+Imagine Alice wants to send some Ether to Bob, i.e.
 Alice is the sender and Bob is the recipient.
 
 Alice only needs to send cryptographically signed messages off-chain
