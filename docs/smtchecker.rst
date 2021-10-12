@@ -518,6 +518,45 @@ which has the following form:
         "source2.sol": ["contract2", "contract3"]
     }
 
+Trusted External Calls
+======================
+
+By default, the SMTChecker does not assume that compile-time available code
+is the same as the runtime code for external calls. Take the following contracts
+as an example:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0;
+
+    contract Ext {
+        uint public x;
+        function setX(uint _x) public { x = _x; }
+    }
+    contract MyContract {
+        function callExt(Ext _e) public {
+            _e.setX(42);
+            assert(_e.x() == 42);
+        }
+    }
+
+When ``MyContract.callExt`` is called, an address is given as the argument.
+At deployment time, we cannot know for sure that address ``_e`` actually
+contains a deployment of contract ``Ext``.
+Therefore, the SMTChecker will warn that the assertion above can be violated,
+which is true, if ``_e`` contains another contract than ``Ext``.
+
+However, it can be useful to treat these external calls as trusted, for example,
+to test that different implementations of an interface conform to the same property.
+This means assuming that address ``_e`` indeed was deployed as contract ``Ext``.
+This mode can be enabled via the CLI option ``--model-checker-ext-calls=trusted``
+or the JSON field ``settings.modelChecker.extCalls: "trusted"``.
+
+Please be aware that enabling this mode makes the SMTChecker analysis much more
+computationally costly, since it needs to keep track of all deployed contracts
+and their storage.
+
 Reported Inferred Inductive Invariants
 ======================================
 
