@@ -1,3 +1,43 @@
 {"errors":[{"component":"general","errorCode":"7400","formattedMessage":"Warning: Requested contract \"C\" does not exist in source \"Source\".
 
-","message":"Requested contract \"C\" does not exist in source \"Source\".","severity":"warning","type":"Warning"}],"sources":{"Source":{"id":0}}}
+","message":"Requested contract \"C\" does not exist in source \"Source\".","severity":"warning","type":"Warning"},{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+y = 0
+
+Transaction trace:
+B.constructor()
+B.g(0)
+ --> Source:5:7:
+  |
+5 | \t\t\t\t\t\tassert(y > 0);
+  | \t\t\t\t\t\t^^^^^^^^^^^^^
+
+","message":"CHC: Assertion violation happens here.
+Counterexample:
+
+y = 0
+
+Transaction trace:
+B.constructor()
+B.g(0)","severity":"warning","sourceLocation":{"end":137,"file":"Source","start":124},"type":"Warning"},{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+x = 0
+
+Transaction trace:
+A.constructor()
+A.f(0)
+  --> Source:10:7:
+   |
+10 | \t\t\t\t\t\tassert(x > 0);
+   | \t\t\t\t\t\t^^^^^^^^^^^^^
+
+","message":"CHC: Assertion violation happens here.
+Counterexample:
+
+x = 0
+
+Transaction trace:
+A.constructor()
+A.f(0)","severity":"warning","sourceLocation":{"end":231,"file":"Source","start":218},"type":"Warning"}],"sources":{"Source":{"id":0}}}

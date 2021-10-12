@@ -4,7 +4,7 @@ Counterexample:
 y = 0
 
 Transaction trace:
-A.constructor()
+B.constructor()
 B.g(0)
  --> Source:5:7:
   |
@@ -17,7 +17,7 @@ Counterexample:
 y = 0
 
 Transaction trace:
-A.constructor()
+B.constructor()
 B.g(0)","severity":"warning","sourceLocation":{"end":137,"file":"Source","start":124},"type":"Warning"},{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation happens here.
 Counterexample:
 

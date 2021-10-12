@@ -1,0 +1,31 @@
+{"errors":[{"component":"general","errorCode":"2018","formattedMessage":"Warning: Function state mutability can be restricted to pure
+ --> A:4:7:
+  |
+4 | \t\t\t\t\t\tfunction f() public view returns (uint) {
+  | \t\t\t\t\t\t^ (Relevant source part starts here and spans across multiple lines).
+
+","message":"Function state mutability can be restricted to pure","severity":"warning","sourceLocation":{"end":152,"file":"A","start":85},"type":"Warning"},{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+e = 0
+x = 43
+
+Transaction trace:
+test.constructor()
+test.g(0)
+    e.f() -- untrusted external call
+  --> A:12:8:
+   |
+12 | \t\t\t\t\t\t\tassert(x == 42);
+   | \t\t\t\t\t\t\t^^^^^^^^^^^^^^^
+
+","message":"CHC: Assertion violation happens here.
+Counterexample:
+
+e = 0
+x = 43
+
+Transaction trace:
+test.constructor()
+test.g(0)
+    e.f() -- untrusted external call","severity":"warning","sourceLocation":{"end":265,"file":"A","start":250},"type":"Warning"}],"sources":{"A":{"id":0}}}

@@ -1,0 +1,5 @@
+Warning: Function state mutability can be restricted to pure
+ --> model_checker_ext_calls_trusted_chc/input.sol:5:2:
+  |
+5 | 	function f() public view returns (uint) {
+  | 	^ (Relevant source part starts here and spans across multiple lines).

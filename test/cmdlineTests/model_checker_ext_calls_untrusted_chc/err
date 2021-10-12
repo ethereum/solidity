@@ -1,0 +1,20 @@
+Warning: Function state mutability can be restricted to pure
+ --> model_checker_ext_calls_untrusted_chc/input.sol:5:2:
+  |
+5 | 	function f() public view returns (uint) {
+  | 	^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+e = 0
+x = 43
+
+Transaction trace:
+test.constructor()
+test.g(0)
+    e.f() -- untrusted external call
+  --> model_checker_ext_calls_untrusted_chc/input.sol:13:3:
+   |
+13 | 		assert(x == 42);
+   | 		^^^^^^^^^^^^^^^

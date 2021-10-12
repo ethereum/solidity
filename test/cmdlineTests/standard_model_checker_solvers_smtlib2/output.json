@@ -1,37 +1,11 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x2bcd3328dc8d31e869efd5e0dfdb16a6fa26f0a9c2829ea55670262be485e401":"(set-option :produce-models true)
-(set-logic ALL)
-(declare-fun |x_3_3| () Int)
-(declare-fun |error_0| () Int)
-(declare-fun |this_0| () Int)
-(declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
-(declare-fun |state_0| () |state_type|)
-(declare-datatypes ((|bytes_tuple| 0)) (((|bytes_tuple| (|bytes_tuple_accessor_array| (Array Int Int)) (|bytes_tuple_accessor_length| Int)))))
-(declare-datatypes ((|tx_type| 0)) (((|tx_type| (|block.basefee| Int) (|block.chainid| Int) (|block.coinbase| Int) (|block.difficulty| Int) (|block.gaslimit| Int) (|block.number| Int) (|block.timestamp| Int) (|blockhash| (Array Int Int)) (|msg.data| |bytes_tuple|) (|msg.sender| Int) (|msg.sig| Int) (|msg.value| Int) (|tx.gasprice| Int) (|tx.origin| Int)))))
-(declare-fun |tx_0| () |tx_type|)
-(declare-datatypes ((|ecrecover_input_type| 0)) (((|ecrecover_input_type| (|hash| Int) (|v| Int) (|r| Int) (|s| Int)))))
-(declare-datatypes ((|crypto_type| 0)) (((|crypto_type| (|ecrecover| (Array |ecrecover_input_type| Int)) (|keccak256| (Array |bytes_tuple| Int)) (|ripemd160| (Array |bytes_tuple| Int)) (|sha256| (Array |bytes_tuple| Int))))))
-(declare-fun |crypto_0| () |crypto_type|)
-(declare-datatypes ((|abi_type| 0)) (((|abi_type|))))
-(declare-fun |abi_0| () |abi_type|)
-(declare-fun |x_3_4| () Int)
-(declare-fun |x_3_0| () Int)
-(declare-fun |expr_7_0| () Int)
-(declare-fun |expr_8_0| () Int)
-(declare-fun |expr_9_1| () Bool)
+{"auxiliaryInputRequested":{"smtlib2queries":{"0x4191d1d50f837c8a5806f8d9e8776ed3fb9f34284b91adf9f99baf8c91e6e951":"(set-logic HORN)
 
-(assert (and (and (and true true) (and (= expr_9_1 (> expr_7_0 expr_8_0)) (and (=> (and true true) true) (and (= expr_8_0 0) (and (=> (and true true) (and (>= expr_7_0 0) (<= expr_7_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_7_0 x_3_0) (and (and (>= x_3_0 0) (<= x_3_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.basefee| tx_0) 0) (<= (|block.basefee| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|msg.value| tx_0) 0) (<= (|msg.value| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.gasprice| tx_0) 0) (<= (|tx.gasprice| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (and (and (and (and (and (= (|msg.value| tx_0) 0) (= (|msg.sig| tx_0) 3017696395)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 179)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 222)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 100)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 139)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4))) true)))))))) (not expr_9_1)))
-(declare-const |EVALEXPR_0| Int)
-(assert (= |EVALEXPR_0| x_3_0))
-(check-sat)
-(get-value (|EVALEXPR_0| ))
-","0x4e70784a8a93c7429a716aa8b778f3de5d1f63b30158452534da5d44e5967d2b":"(set-logic HORN)
-
-(declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
 (declare-datatypes ((|bytes_tuple| 0)) (((|bytes_tuple| (|bytes_tuple_accessor_array| (Array Int Int)) (|bytes_tuple_accessor_length| Int)))))
 (declare-datatypes ((|tx_type| 0)) (((|tx_type| (|block.basefee| Int) (|block.chainid| Int) (|block.coinbase| Int) (|block.difficulty| Int) (|block.gaslimit| Int) (|block.number| Int) (|block.timestamp| Int) (|blockhash| (Array Int Int)) (|msg.data| |bytes_tuple|) (|msg.sender| Int) (|msg.sig| Int) (|msg.value| Int) (|tx.gasprice| Int) (|tx.origin| Int)))))
 (declare-datatypes ((|ecrecover_input_type| 0)) (((|ecrecover_input_type| (|hash| Int) (|v| Int) (|r| Int) (|s| Int)))))
 (declare-datatypes ((|crypto_type| 0)) (((|crypto_type| (|ecrecover| (Array |ecrecover_input_type| Int)) (|keccak256| (Array |bytes_tuple| Int)) (|ripemd160| (Array |bytes_tuple| Int)) (|sha256| (Array |bytes_tuple| Int))))))
 (declare-datatypes ((|abi_type| 0)) (((|abi_type|))))
+(declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
 (declare-fun |interface_0_C_14_0| (Int |abi_type| |crypto_type| |state_type| ) Bool)
 (declare-fun |nondet_interface_1_C_14_0| (Int Int |abi_type| |crypto_type| |state_type| |state_type| ) Bool)
 (declare-fun |summary_constructor_2_C_14_0| (Int Int |abi_type| |crypto_type| |tx_type| |state_type| |state_type| ) Bool)
@@ -118,7 +92,7 @@
 (declare-fun |implicit_constructor_entry_13_C_14_0| (Int Int |abi_type| |crypto_type| |tx_type| |state_type| |state_type| ) Bool)
 (assert
 (forall ( (abi_0 |abi_type|) (crypto_0 |crypto_type|) (error_0 Int) (error_1 Int) (expr_7_0 Int) (expr_8_0 Int) (expr_9_1 Bool) (funds_2_0 Int) (state_0 |state_type|) (state_1 |state_type|) (state_2 |state_type|) (state_3 |state_type|) (this_0 Int) (tx_0 |tx_type|) (x_3_0 Int) (x_3_1 Int) (x_3_2 Int))
-(=> (and (and (and (and (= state_1 state_0) (= error_0 0)) true) true) (>= (select (|balances| state_1) this_0) (|msg.value| tx_0))) (implicit_constructor_entry_13_C_14_0 error_0 this_0 abi_0 crypto_0 tx_0 state_0 state_1))))
+(=> (and (and (and (and (and (= state_1 state_0) (= error_0 0)) true) true) true) (>= (select (|balances| state_1) this_0) (|msg.value| tx_0))) (implicit_constructor_entry_13_C_14_0 error_0 this_0 abi_0 crypto_0 tx_0 state_0 state_1))))
 
 
 (assert
@@ -145,7 +119,33 @@
 (assert
 (forall ( (abi_0 |abi_type|) (crypto_0 |crypto_type|) (error_0 Int) (error_1 Int) (expr_7_0 Int) (expr_8_0 Int) (expr_9_1 Bool) (funds_2_0 Int) (state_0 |state_type|) (state_1 |state_type|) (state_2 |state_type|) (state_3 |state_type|) (this_0 Int) (tx_0 |tx_type|) (x_3_0 Int) (x_3_1 Int) (x_3_2 Int))
 (=> error_target_3_0 false)))
-(check-sat)"}},"errors":[{"component":"general","errorCode":"5840","formattedMessage":"Warning: CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
+(check-sat)","0x7055aeeeb9520a728582e032a5dab802f846b6bf0481dd08434bb01522903b0d":"(set-option :produce-models true)
+(set-logic ALL)
+(declare-fun |x_3_3| () Int)
+(declare-fun |error_0| () Int)
+(declare-fun |this_0| () Int)
+(declare-datatypes ((|bytes_tuple| 0)) (((|bytes_tuple| (|bytes_tuple_accessor_array| (Array Int Int)) (|bytes_tuple_accessor_length| Int)))))
+(declare-datatypes ((|tx_type| 0)) (((|tx_type| (|block.basefee| Int) (|block.chainid| Int) (|block.coinbase| Int) (|block.difficulty| Int) (|block.gaslimit| Int) (|block.number| Int) (|block.timestamp| Int) (|blockhash| (Array Int Int)) (|msg.data| |bytes_tuple|) (|msg.sender| Int) (|msg.sig| Int) (|msg.value| Int) (|tx.gasprice| Int) (|tx.origin| Int)))))
+(declare-fun |tx_0| () |tx_type|)
+(declare-datatypes ((|ecrecover_input_type| 0)) (((|ecrecover_input_type| (|hash| Int) (|v| Int) (|r| Int) (|s| Int)))))
+(declare-datatypes ((|crypto_type| 0)) (((|crypto_type| (|ecrecover| (Array |ecrecover_input_type| Int)) (|keccak256| (Array |bytes_tuple| Int)) (|ripemd160| (Array |bytes_tuple| Int)) (|sha256| (Array |bytes_tuple| Int))))))
+(declare-fun |crypto_0| () |crypto_type|)
+(declare-datatypes ((|abi_type| 0)) (((|abi_type|))))
+(declare-fun |abi_0| () |abi_type|)
+(declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
+(declare-fun |state_0| () |state_type|)
+(declare-fun |x_3_4| () Int)
+(declare-fun |x_3_0| () Int)
+(declare-fun |expr_7_0| () Int)
+(declare-fun |expr_8_0| () Int)
+(declare-fun |expr_9_1| () Bool)
+
+(assert (and (and (and true true) (and (= expr_9_1 (> expr_7_0 expr_8_0)) (and (=> (and true true) true) (and (= expr_8_0 0) (and (=> (and true true) (and (>= expr_7_0 0) (<= expr_7_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_7_0 x_3_0) (and (and (>= x_3_0 0) (<= x_3_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.basefee| tx_0) 0) (<= (|block.basefee| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|msg.value| tx_0) 0) (<= (|msg.value| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.gasprice| tx_0) 0) (<= (|tx.gasprice| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (and (and (and (and (and (= (|msg.value| tx_0) 0) (= (|msg.sig| tx_0) 3017696395)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 179)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 222)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 100)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 139)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4))) true)))))))) (not expr_9_1)))
+(declare-const |EVALEXPR_0| Int)
+(assert (= |EVALEXPR_0| x_3_0))
+(check-sat)
+(get-value (|EVALEXPR_0| ))
+"}},"errors":[{"component":"general","errorCode":"5840","formattedMessage":"Warning: CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
 
 ","message":"CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"3996","formattedMessage":"Warning: CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.
 
