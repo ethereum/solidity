@@ -229,6 +229,8 @@ protected:
 
 	bool isPublicGetter(Expression const& _expr);
 
+	smtutil::Expression contractAddressValue(FunctionCall const& _f);
+
 	/// Encodes a modifier or function body according to the modifier
 	/// visit depth.
 	void visitFunctionOrModifier();
