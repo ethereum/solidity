@@ -17,6 +17,7 @@ Bugfixes:
  * Commandline Interface: Report output selection options unsupported by the selected input mode instead of ignoring them.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
  * TypeChecker: Fix internal error when using user defined value types in public library functions.
+ * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
 
 
 
