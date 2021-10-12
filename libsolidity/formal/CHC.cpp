@@ -2053,60 +2053,63 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		Predicate const* summaryPredicate = Predicate::predicate(summaryNode.name);
 		auto const& summaryArgs = summaryNode.arguments;
 
-		auto stateVars = summaryPredicate->stateVariables();
-		solAssert(stateVars.has_value(), "");
-		auto stateValues = summaryPredicate->summaryStateValues(summaryArgs);
-		solAssert(stateValues.size() == stateVars->size(), "");
-
-		if (first)
+		if (!summaryPredicate->programVariable())
 		{
-			first = false;
-			/// Generate counterexample message local to the failed target.
-			localState = formatVariableModel(*stateVars, stateValues, ", ") + "\n";
+			auto stateVars = summaryPredicate->stateVariables();
+			solAssert(stateVars.has_value(), "");
+			auto stateValues = summaryPredicate->summaryStateValues(summaryArgs);
+			solAssert(stateValues.size() == stateVars->size(), "");
 
-			if (auto calledFun = summaryPredicate->programFunction())
+			if (first)
 			{
-				auto inValues = summaryPredicate->summaryPostInputValues(summaryArgs);
-				auto const& inParams = calledFun->parameters();
-				if (auto inStr = formatVariableModel(inParams, inValues, "\n"); !inStr.empty())
-					localState += inStr + "\n";
-				auto outValues = summaryPredicate->summaryPostOutputValues(summaryArgs);
-				auto const& outParams = calledFun->returnParameters();
-				if (auto outStr = formatVariableModel(outParams, outValues, "\n"); !outStr.empty())
-					localState += outStr + "\n";
+				first = false;
+				/// Generate counterexample message local to the failed target.
+				localState = formatVariableModel(*stateVars, stateValues, ", ") + "\n";
 
-				optional<unsigned> localErrorId;
-				solidity::util::BreadthFirstSearch<unsigned> bfs{{summaryId}};
-				bfs.run([&](auto _nodeId, auto&& _addChild) {
-					auto const& children = _graph.edges.at(_nodeId);
-					if (
-						children.size() == 1 &&
-						nodePred(children.front())->isFunctionErrorBlock()
-					)
-					{
-						localErrorId = children.front();
-						bfs.abort();
-					}
-					ranges::for_each(children, _addChild);
-				});
-
-				if (localErrorId.has_value())
+				if (auto calledFun = summaryPredicate->programFunction())
 				{
-					auto const* localError = nodePred(*localErrorId);
-					solAssert(localError && localError->isFunctionErrorBlock(), "");
-					auto const [localValues, localVars] = localError->localVariableValues(nodeArgs(*localErrorId));
-					if (auto localStr = formatVariableModel(localVars, localValues, "\n"); !localStr.empty())
-						localState += localStr + "\n";
+					auto inValues = summaryPredicate->summaryPostInputValues(summaryArgs);
+					auto const& inParams = calledFun->parameters();
+					if (auto inStr = formatVariableModel(inParams, inValues, "\n"); !inStr.empty())
+						localState += inStr + "\n";
+					auto outValues = summaryPredicate->summaryPostOutputValues(summaryArgs);
+					auto const& outParams = calledFun->returnParameters();
+					if (auto outStr = formatVariableModel(outParams, outValues, "\n"); !outStr.empty())
+						localState += outStr + "\n";
+
+					optional<unsigned> localErrorId;
+					solidity::util::BreadthFirstSearch<unsigned> bfs{{summaryId}};
+					bfs.run([&](auto _nodeId, auto&& _addChild) {
+						auto const& children = _graph.edges.at(_nodeId);
+						if (
+							children.size() == 1 &&
+							nodePred(children.front())->isFunctionErrorBlock()
+						)
+						{
+							localErrorId = children.front();
+							bfs.abort();
+						}
+						ranges::for_each(children, _addChild);
+					});
+
+					if (localErrorId.has_value())
+					{
+						auto const* localError = nodePred(*localErrorId);
+						solAssert(localError && localError->isFunctionErrorBlock(), "");
+						auto const [localValues, localVars] = localError->localVariableValues(nodeArgs(*localErrorId));
+						if (auto localStr = formatVariableModel(localVars, localValues, "\n"); !localStr.empty())
+							localState += localStr + "\n";
+					}
 				}
 			}
-		}
-		else
-		{
-			auto modelMsg = formatVariableModel(*stateVars, stateValues, ", ");
-			/// We report the state after every tx in the trace except for the last, which is reported
-			/// first in the code above.
-			if (!modelMsg.empty())
-				path.emplace_back("State: " + modelMsg);
+			else
+			{
+				auto modelMsg = formatVariableModel(*stateVars, stateValues, ", ");
+				/// We report the state after every tx in the trace except for the last, which is reported
+				/// first in the code above.
+				if (!modelMsg.empty())
+					path.emplace_back("State: " + modelMsg);
+			}
 		}
 
 		string txCex = summaryPredicate->formatSummaryCall(summaryArgs, m_charStreamProvider);
@@ -2132,6 +2135,12 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			else if (pred->isExternalCallUntrusted())
 			{
 				calls.front() += " -- untrusted external call";
+				if (calls.size() > callTraceSize + 1)
+					calls.front() += ", synthesized as:";
+			}
+			else if (pred->programVariable())
+			{
+				calls.front() += "-- action on external contract in state variable \"" + pred->programVariable()->name() + "\"";
 				if (calls.size() > callTraceSize + 1)
 					calls.front() += ", synthesized as:";
 			}
@@ -2190,7 +2199,8 @@ map<unsigned, vector<unsigned>> CHC::summaryCalls(CHCSolverInterface::CexGraph c
 			nodePred->isInternalCall() ||
 			nodePred->isExternalCallTrusted() ||
 			nodePred->isExternalCallUntrusted() ||
-			rootPred->isExternalCallUntrusted()
+			rootPred->isExternalCallUntrusted() ||
+			rootPred->programVariable()
 		))
 		{
 			calls[root].push_back(node);
