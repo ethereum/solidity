@@ -104,10 +104,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	try
 	{
 		if (_kind != ReadCallback::kindString(ReadCallback::Kind::ReadFile))
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-				"ReadFile callback used as callback kind " +
-				_kind
-			));
+			solAssert(false, "ReadFile callback used as callback kind " + _kind);
 		string strippedSourceUnitName = _sourceUnitName;
 		if (strippedSourceUnitName.find("file://") == 0)
 			strippedSourceUnitName.erase(0, 7);
