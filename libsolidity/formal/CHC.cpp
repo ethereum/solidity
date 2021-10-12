@@ -853,17 +853,11 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 		""
 	);
 
-	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall;
-
 	solAssert(m_currentContract, "");
 	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	if (function)
-	{
-		usesStaticCall |= function->stateMutability() == StateMutability::Pure ||
-			function->stateMutability() == StateMutability::View;
 		for (auto var: function->returnParameters())
 			m_context.variable(*var)->increaseIndex();
-	}
 
 	if (!m_currentFunction || m_currentFunction->isConstructor())
 		return;
@@ -883,7 +877,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 
 	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
 
-	if (!usesStaticCall)
+	if (!usesStaticCall(_funCall))
 	{
 		state().newState();
 		for (auto const* var: m_stateVariables)
@@ -1162,6 +1156,14 @@ set<unsigned> CHC::transactionVerificationTargetsIds(ASTNode const* _txRoot)
 			_addChild({{}, called});
 	});
 	return verificationTargetsIds;
+}
+
+bool CHC::usesStaticCall(FunctionCall const& _funCall)
+{
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	auto kind = funType.kind();
+	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
+	return (function && (function->stateMutability() == StateMutability::Pure || function->stateMutability() == StateMutability::View)) || kind == FunctionType::Kind::BareStaticCall;
 }
 
 optional<CHC::CHCNatspecOption> CHC::natspecOptionFromString(string const& _option)

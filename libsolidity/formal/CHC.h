@@ -136,6 +136,7 @@ private:
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
 	void setCurrentBlock(Predicate const& _block);
 	std::set<unsigned> transactionVerificationTargetsIds(ASTNode const* _txRoot);
+	bool usesStaticCall(FunctionCall const& _funCall);
 	//@}
 
 	/// SMT Natspec and abstraction helpers.
