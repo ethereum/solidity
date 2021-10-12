@@ -944,7 +944,7 @@ string IRGenerator::callValueCheck()
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 {
 	Whiskers t(R"X(
-		if iszero(lt(calldatasize(), 4))
+		<?+cases>if iszero(lt(calldatasize(), 4))
 		{
 			let selector := <shr224>(calldataload(0))
 			switch selector
@@ -962,8 +962,8 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 			}
 			</cases>
 			default {}
-		}
-		if iszero(calldatasize()) { <receiveEther> }
+		}</+cases>
+		<?+receiveEther>if iszero(calldatasize()) { <receiveEther> }</+receiveEther>
 		<fallback>
 	)X");
 	t("shr224", m_utils.shiftRightFunction(224));

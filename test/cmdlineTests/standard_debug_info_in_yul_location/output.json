@@ -218,7 +218,7 @@ object \"C_54\" {
 
                 default {}
             }
-            if iszero(calldatasize()) {  }
+
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -639,7 +639,7 @@ object \"C_54\" {
                     case 0x26121ff0 {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
-                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_568(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
+                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_566(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
                         /// @src 0:79:435  \"contract C...\"
                         let memPos := mload(64)
                         return(memPos, sub(abi_encode_int256(memPos, ret), memPos))
@@ -663,7 +663,7 @@ object \"C_54\" {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
                         let memPos_3 := mload(64)
-                        return(memPos_3, sub(abi_encode_int256_567(memPos_3), memPos_3))
+                        return(memPos_3, sub(abi_encode_int256_565(memPos_3), memPos_3))
                     }
                 }
                 revert(0, 0)
@@ -672,7 +672,7 @@ object \"C_54\" {
             {
                 if slt(add(dataEnd, not(3)), 0) { revert(0, 0) }
             }
-            function abi_encode_int256_567(headStart) -> tail
+            function abi_encode_int256_565(headStart) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, /** @src 0:124:126  \"41\" */ 0x29)
@@ -689,7 +689,7 @@ object \"C_54\" {
                 mstore(4, 0x11)
                 revert(0, 0x24)
             }
-            function checked_add_int256_568(y) -> sum
+            function checked_add_int256_566(y) -> sum
             {
                 if and(1, sgt(y, sub(shl(255, 1), 42))) { panic_error_0x11() }
                 sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ y)
@@ -1050,7 +1050,7 @@ object \"D_72\" {
 
                 default {}
             }
-            if iszero(calldatasize()) {  }
+
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -1479,7 +1479,7 @@ object \"D_72\" {
                     case 0x26121ff0 {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
-                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_568(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
+                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_566(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
                         /// @src 1:91:166  \"contract D is C(3)...\"
                         let memPos := mload(64)
                         return(memPos, sub(abi_encode_int256(memPos, ret), memPos))
@@ -1503,7 +1503,7 @@ object \"D_72\" {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
                         let memPos_3 := mload(64)
-                        return(memPos_3, sub(abi_encode_int256_567(memPos_3), memPos_3))
+                        return(memPos_3, sub(abi_encode_int256_565(memPos_3), memPos_3))
                     }
                 }
                 revert(0, 0)
@@ -1512,7 +1512,7 @@ object \"D_72\" {
             {
                 if slt(add(dataEnd, not(3)), 0) { revert(0, 0) }
             }
-            function abi_encode_int256_567(headStart) -> tail
+            function abi_encode_int256_565(headStart) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, /** @src 0:124:126  \"41\" */ 0x29)
@@ -1529,7 +1529,7 @@ object \"D_72\" {
                 mstore(4, 0x11)
                 revert(0, 0x24)
             }
-            function checked_add_int256_568(y) -> sum
+            function checked_add_int256_566(y) -> sum
             {
                 if and(1, sgt(y, sub(shl(255, 1), 42))) { panic_error_0x11() }
                 sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ y)

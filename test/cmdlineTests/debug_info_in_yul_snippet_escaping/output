@@ -44,14 +44,6 @@ object "C_2" {
             /// @src 0:265:278  "contract C {}"
             mstore(64, 128)
 
-            if iszero(lt(calldatasize(), 4))
-            {
-                let selector := shift_right_224_unsigned(calldataload(0))
-                switch selector
-
-                default {}
-            }
-            if iszero(calldatasize()) {  }
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -175,7 +167,7 @@ object "D_27" {
 
                 default {}
             }
-            if iszero(calldatasize()) {  }
+
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -413,14 +405,6 @@ object "D_27" {
                     /// @src 0:265:278  "contract C {}"
                     mstore(64, 128)
 
-                    if iszero(lt(calldatasize(), 4))
-                    {
-                        let selector := shift_right_224_unsigned(calldataload(0))
-                        switch selector
-
-                        default {}
-                    }
-                    if iszero(calldatasize()) {  }
                     revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
                     function shift_right_224_unsigned(value) -> newValue {
@@ -499,7 +483,7 @@ object "D_27" {
                             revert(pos, returndatasize())
                         }
                         mstore(add(allocate_memory_array_string(), 32), "/*")
-                        let memPtr := allocate_memory_array_string_482()
+                        let memPtr := allocate_memory_array_string_480()
                         mstore(add(memPtr, 32), 0x2f2a2a204073726320303a39363a313635202022636f6e74726163742044207b)
                         mstore(add(memPtr, 64), shl(200, 0x2e2e2e22202a2f))
                         let memPos := mload(64)
@@ -540,7 +524,7 @@ object "D_27" {
                 memPtr := memPtr_1
                 mstore(memPtr_1, 2)
             }
-            function allocate_memory_array_string_482() -> memPtr
+            function allocate_memory_array_string_480() -> memPtr
             {
                 let memPtr_1 := mload(64)
                 let newFreePtr := add(memPtr_1, 96)
