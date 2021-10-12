@@ -838,13 +838,17 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	solAssert(m_currentContract, "");
 	auto [callExpr, callOptions] = functionCallExpression(_funCall);
 
-	if (isTrustedExternalCall(callExpr))
+	if (
+		encodeExternalCallsAsTrusted() ||
+		isTrustedExternalCall(callExpr)
+	)
 	{
 		externalFunctionCallToTrustedCode(_funCall);
 		return;
 	}
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*callExpr->annotation().type);
+
 	auto kind = funType.kind();
 	solAssert(
 		kind == FunctionType::Kind::External ||
@@ -862,18 +866,8 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	if (!m_currentFunction || m_currentFunction->isConstructor())
 		return;
 
-	if (callOptions)
-	{
-		optional<unsigned> valueIndex;
-		for (auto&& [i, name]: callOptions->names() | ranges::views::enumerate)
-			if (name && *name == "value")
-			{
-				valueIndex = i;
-				break;
-			}
-		if (valueIndex)
-			state().addBalance(state().thisAddress(), 0 - expr(*callOptions->options().at(*valueIndex)));
-	}
+	if (Expression const* value = valueOption(callOptions))
+		decreaseBalanceFromOptionsValue(*value);
 
 	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
 
@@ -917,7 +911,10 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 {
 	solAssert(m_currentContract, "");
-	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+
+	auto [callExpr, callOptions] = functionCallExpression(_funCall);
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*callExpr->annotation().type);
+
 	auto kind = funType.kind();
 	solAssert(kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
 
@@ -927,14 +924,25 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 
 	// External call creates a new transaction.
 	auto originalTx = state().tx();
-	auto txOrigin = state().txMember("tx.origin");
-	state().newTx();
-	// set the transaction sender as this contract
-	m_context.addAssertion(state().txMember("msg.sender") == state().thisAddress());
-	// set the transaction value as 0
-	m_context.addAssertion(state().txMember("msg.value") == 0);
-	// set the origin to be the current transaction origin
-	m_context.addAssertion(state().txMember("tx.origin") == txOrigin);
+	Expression const* value = valueOption(callOptions);
+	newTxConstraints(value);
+
+	auto calledAddress = contractAddressValue(_funCall);
+	if (value)
+	{
+		decreaseBalanceFromOptionsValue(*value);
+		state().addBalance(calledAddress, expr(*value));
+	}
+
+	if (encodeExternalCallsAsTrusted())
+	{
+		// The order here is important!! Write should go first.
+
+		// Load the caller contract's state variables into the global state.
+		state().writeStateVars(*m_currentContract, state().thisAddress());
+		// Load the called contract's state variables from the global state.
+		state().readStateVars(*function->annotation().contract, contractAddressValue(_funCall));
+	}
 
 	smtutil::Expression pred = predicate(_funCall);
 
@@ -951,6 +959,17 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 		(errorFlag().currentValue() > 0)
 	);
 	m_context.addAssertion(errorFlag().currentValue() == 0);
+
+	if (!usesStaticCall(_funCall))
+		if (encodeExternalCallsAsTrusted())
+		{
+			// The order here is important!! Write should go first.
+
+			// Load the called contract's state variables into the global state.
+			state().writeStateVars(*function->annotation().contract, contractAddressValue(_funCall));
+			// Load the caller contract's state variables from the global state.
+			state().readStateVars(*m_currentContract, state().thisAddress());
+		}
 }
 
 void CHC::unknownFunctionCall(FunctionCall const&)
@@ -1588,18 +1607,19 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
 	solAssert(kind != FunctionType::Kind::Internal || function->isFree() || (contract && contract->isLibrary()) || util::contains(hierarchy, contract), "");
 
-	bool usesStaticCall = function->stateMutability() == StateMutability::Pure || function->stateMutability() == StateMutability::View;
+	if (kind == FunctionType::Kind::Internal)
+		contract = m_currentContract;
 
-	args += currentStateVariables(*m_currentContract);
-	args += symbolicArguments(_funCall, m_currentContract);
-	if (!m_currentContract->isLibrary() && !usesStaticCall)
+	args += currentStateVariables(*contract);
+	args += symbolicArguments(_funCall, contract);
+	if (!usesStaticCall(_funCall))
 	{
 		state().newState();
-		for (auto const& var: m_stateVariables)
+		for (auto const& var: stateVariablesIncludingInheritedAndPrivate(*contract))
 			m_context.variable(*var)->increaseIndex();
 	}
 	args += vector<smtutil::Expression>{state().state()};
-	args += currentStateVariables(*m_currentContract);
+	args += currentStateVariables(*contract);
 
 	for (auto var: function->parameters() + function->returnParameters())
 	{
@@ -1610,14 +1630,14 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		args.push_back(currentValue(*var));
 	}
 
-	Predicate const& summary = *m_summaries.at(m_currentContract).at(function);
-	auto from = smt::function(summary, m_currentContract, m_context);
+	Predicate const& summary = *m_summaries.at(contract).at(function);
+	auto from = smt::function(summary, contract, m_context);
 	Predicate const& callPredicate = *createSummaryBlock(
 		*function,
-		*m_currentContract,
+		*contract,
 		kind == FunctionType::Kind::Internal ? PredicateType::InternalCall : PredicateType::ExternalCallTrusted
 	);
-	auto to = smt::function(callPredicate, m_currentContract, m_context);
+	auto to = smt::function(callPredicate, contract, m_context);
 	addRule(smtutil::Expression::implies(from, to), to.name);
 
 	return callPredicate(args);
