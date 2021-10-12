@@ -586,4 +586,26 @@ optional<smtutil::Expression> symbolicTypeConversion(frontend::Type const* _from
 	return std::nullopt;
 }
 
+smtutil::Expression member(smtutil::Expression const& _tuple, string const& _member)
+{
+	TupleSort const& _sort = dynamic_cast<TupleSort const&>(*_tuple.sort);
+	return smtutil::Expression::tuple_get(
+		_tuple,
+		_sort.memberToIndex.at(_member)
+	);
+}
+
+smtutil::Expression assignMember(smtutil::Expression const _tuple, map<string, smtutil::Expression> const& _values)
+{
+	TupleSort const& _sort = dynamic_cast<TupleSort const&>(*_tuple.sort);
+	vector<smtutil::Expression> args;
+	for (auto const& m: _sort.members)
+		if (auto* value = util::valueOrNullptr(_values, m))
+			args.emplace_back(*value);
+		else
+			args.emplace_back(member(_tuple, m));
+	auto sortExpr = smtutil::Expression(make_shared<smtutil::SortSort>(_tuple.sort), _tuple.name);
+	return smtutil::Expression::tuple_constructor(sortExpr, args);
+}
+
 }

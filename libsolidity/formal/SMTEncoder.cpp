@@ -3063,7 +3063,7 @@ RationalNumberType const* SMTEncoder::isConstant(Expression const& _expr)
 	return nullptr;
 }
 
-set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
+set<FunctionCall const*, ASTCompareByID<FunctionCall>> SMTEncoder::collectABICalls(ASTNode const* _node)
 {
 	struct ABIFunctions: public ASTConstVisitor
 	{
@@ -3085,7 +3085,7 @@ set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
 				}
 		}
 
-		set<FunctionCall const*> abiCalls;
+		set<FunctionCall const*, ASTCompareByID<FunctionCall>> abiCalls;
 	};
 
 	return ABIFunctions(_node).abiCalls;

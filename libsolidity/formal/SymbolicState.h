@@ -62,7 +62,8 @@ private:
  * - this (the address of the currently executing contract)
  * - state, represented as a tuple of:
  *   - balances
- *   - TODO: potentially storage of contracts
+ *   - array of address => bool representing whether an address is used by a contract
+ *   - storage of contracts
  * - block and transaction properties, represented as a tuple of:
  *   - blockhash
  *   - block basefee
@@ -99,29 +100,40 @@ public:
 	/// @returns the symbolic value of the currently executing contract's address.
 	smtutil::Expression thisAddress() const { return m_thisAddress.currentValue(); }
 	smtutil::Expression thisAddress(unsigned _idx) const { return m_thisAddress.valueAtIndex(_idx); }
+	smtutil::Expression newThisAddress() { return m_thisAddress.increaseIndex(); }
 	smtutil::SortPointer const& thisAddressSort() const { return m_thisAddress.sort(); }
 	//@}
 
 	/// Blockchain state.
 	//@{
-	smtutil::Expression state() const { return m_state.value(); }
-	smtutil::Expression state(unsigned _idx) const { return m_state.value(_idx); }
-	smtutil::SortPointer const& stateSort() const { return m_state.sort(); }
-	void newState() { m_state.newVar(); }
+	smtutil::Expression state() const { solAssert(m_state, ""); return m_state->value(); }
+	smtutil::Expression state(unsigned _idx) const { solAssert(m_state, ""); return m_state->value(_idx); }
+	smtutil::SortPointer const& stateSort() const { solAssert(m_state, ""); return m_state->sort(); }
+	void newState() { solAssert(m_state, ""); m_state->newVar(); }
 
 	void newBalances();
+
+	/// Balance.
 	/// @returns the symbolic balances.
 	smtutil::Expression balances() const;
 	/// @returns the symbolic balance of address `this`.
 	smtutil::Expression balance() const;
 	/// @returns the symbolic balance of an address.
 	smtutil::Expression balance(smtutil::Expression _address) const;
-
 	/// Transfer _value from _from to _to.
 	void transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value);
 
 	/// Adds _value to _account's balance.
 	void addBalance(smtutil::Expression _account, smtutil::Expression _value);
+
+	/// Storage.
+	smtutil::Expression storage(ContractDefinition const& _contract) const;
+	smtutil::Expression storage(ContractDefinition const& _contract, smtutil::Expression _address) const;
+	smtutil::Expression addressActive(smtutil::Expression _address) const;
+	void setAddressActive(smtutil::Expression _address, bool _active);
+
+	void writeStateVars(ContractDefinition const& _contract, smtutil::Expression _address);
+	void readStateVars(ContractDefinition const& _contract, smtutil::Expression _address);
 	//@}
 
 	/// Transaction data.
@@ -148,11 +160,15 @@ public:
 	smtutil::Expression cryptoFunction(std::string const& _member) const { return m_crypto.member(_member); }
 	//@}
 
+	/// Calls the internal methods that build
+	/// - the symbolic ABI functions based on the abi.* calls
+	///   in _source and referenced sources.
+	/// - the symbolic storages for all contracts in _source and
+	///   referenced sources.
+	void prepareForSourceUnit(SourceUnit const& _source, bool _storage);
+
 	/// ABI functions.
 	//@{
-	/// Calls the internal methods that build the symbolic ABI functions
-	/// based on the abi.* calls in _source and referenced sources.
-	void prepareForSourceUnit(SourceUnit const& _source);
 	smtutil::Expression abiFunction(FunctionCall const* _funCall);
 	using SymbolicABIFunction = std::tuple<
 		std::string,
@@ -168,8 +184,15 @@ public:
 	//@}
 
 private:
+	std::string contractSuffix(ContractDefinition const& _contract) const;
+	std::string contractStorageKey(ContractDefinition const& _contract) const;
+	std::string stateVarStorageKey(VariableDeclaration const& _var, ContractDefinition const& _contract) const;
+
+	/// Builds state.storage based on _contracts.
+	void buildState(std::set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> const& _contracts, bool _allStorages);
+
 	/// Builds m_abi based on the abi.* calls _abiFunctions.
-	void buildABIFunctions(std::set<FunctionCall const*> const& _abiFunctions);
+	void buildABIFunctions(std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> const& _abiFunctions);
 
 	EncodingContext& m_context;
 
@@ -185,11 +208,14 @@ private:
 		m_context
 	};
 
-	BlockchainVariable m_state{
-		"state",
-		{{"balances", std::make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort)}},
-		m_context
-	};
+	/// m_state is a tuple of
+	/// - balances: array of address to balance of address.
+	/// - isActive: array of address to Boolean, where element is true iff address is used.
+	/// - storage: tuple containing the storage of every contract, where
+	/// each element of the tuple represents a contract,
+	/// and is defined by an array where the index is the contract's address
+	/// and the element is a tuple containing the state variables of that contract.
+	std::unique_ptr<BlockchainVariable> m_state;
 
 	BlockchainVariable m_tx{
 		"tx",

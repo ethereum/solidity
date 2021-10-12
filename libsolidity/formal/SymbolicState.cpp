@@ -22,6 +22,10 @@
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SMTEncoder.h>
 
+#include <libsmtutil/Sorts.h>
+
+#include <range/v3/view.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::smtutil;
@@ -58,16 +62,8 @@ smtutil::Expression BlockchainVariable::member(string const& _member) const
 
 smtutil::Expression BlockchainVariable::assignMember(string const& _member, smtutil::Expression const& _value)
 {
-	vector<smtutil::Expression> args;
-	for (auto const& m: m_members)
-		if (m.first == _member)
-			args.emplace_back(_value);
-		else
-			args.emplace_back(member(m.first));
-	m_tuple->increaseIndex();
-	auto tuple = m_tuple->currentValue();
-	auto sortExpr = smtutil::Expression(make_shared<smtutil::SortSort>(tuple.sort), tuple.name);
-	m_context.addAssertion(tuple == smtutil::Expression::tuple_constructor(sortExpr, args));
+	smtutil::Expression newTuple = smt::assignMember(m_tuple->currentValue(), {{_member, _value}});
+	m_context.addAssertion(m_tuple->increaseIndex() == newTuple);
 	return m_tuple->currentValue();
 }
 
@@ -75,16 +71,19 @@ void SymbolicState::reset()
 {
 	m_error.resetIndex();
 	m_thisAddress.resetIndex();
-	m_state.reset();
 	m_tx.reset();
 	m_crypto.reset();
 	if (m_abi)
 		m_abi->reset();
+	/// We don't reset nor clear these pointers on purpose,
+	/// since it only helps to keep the already generated types.
+	if (m_state)
+		m_state->reset();
 }
 
 smtutil::Expression SymbolicState::balances() const
 {
-	return m_state.member("balances");
+	return m_state->member("balances");
 }
 
 smtutil::Expression SymbolicState::balance() const
@@ -107,24 +106,84 @@ void SymbolicState::newBalances()
 	auto tupleSort = dynamic_pointer_cast<TupleSort>(stateSort());
 	auto balanceSort = tupleSort->components.at(tupleSort->memberToIndex.at("balances"));
 	SymbolicVariable newBalances(balanceSort, "fresh_balances_" + to_string(m_context.newUniqueId()), m_context);
-	m_state.assignMember("balances", newBalances.currentValue());
+	m_state->assignMember("balances", newBalances.currentValue());
 }
 
 void SymbolicState::transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value)
 {
-	unsigned indexBefore = m_state.index();
+	unsigned indexBefore = m_state->index();
 	addBalance(_from, 0 - _value);
 	addBalance(_to, move(_value));
-	unsigned indexAfter = m_state.index();
+	unsigned indexAfter = m_state->index();
 	solAssert(indexAfter > indexBefore, "");
-	m_state.newVar();
+	m_state->newVar();
 	/// Do not apply the transfer operation if _from == _to.
 	auto newState = smtutil::Expression::ite(
 		move(_from) == move(_to),
-		m_state.value(indexBefore),
-		m_state.value(indexAfter)
+		m_state->value(indexBefore),
+		m_state->value(indexAfter)
 	);
-	m_context.addAssertion(m_state.value() == newState);
+	m_context.addAssertion(m_state->value() == newState);
+}
+
+smtutil::Expression SymbolicState::storage(ContractDefinition const& _contract) const
+{
+	return smt::member(m_state->member("storage"), contractStorageKey(_contract));
+}
+
+smtutil::Expression SymbolicState::storage(ContractDefinition const& _contract, smtutil::Expression _address) const
+{
+	return smtutil::Expression::select(storage(_contract), move(_address));
+}
+
+smtutil::Expression SymbolicState::addressActive(smtutil::Expression _address) const
+{
+	return smtutil::Expression::select(m_state->member("isActive"), move(_address));
+}
+
+void SymbolicState::setAddressActive(
+	smtutil::Expression _address,
+	bool _active
+)
+{
+	m_state->assignMember("isActive", smtutil::Expression::store(
+		m_state->member("isActive"),
+		move(_address),
+		smtutil::Expression(_active))
+	);
+}
+
+void SymbolicState::writeStateVars(ContractDefinition const& _contract, smtutil::Expression _address)
+{
+	auto stateVars = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);
+	if (stateVars.empty())
+		return;
+
+	map<string, smtutil::Expression> values;
+	for (auto var: stateVars)
+		values.emplace(stateVarStorageKey(*var, _contract), m_context.variable(*var)->currentValue());
+
+	smtutil::Expression thisStorage = storage(_contract, _address);
+	smtutil::Expression newStorage = smt::assignMember(thisStorage, values);
+	auto newContractStorage = smtutil::Expression::store(
+		storage(_contract), move(_address), newStorage
+	);
+	smtutil::Expression newAllStorage = smt::assignMember(m_state->member("storage"), {{contractStorageKey(_contract), newContractStorage}});
+	m_state->assignMember("storage", newAllStorage);
+}
+
+void SymbolicState::readStateVars(ContractDefinition const& _contract, smtutil::Expression _address)
+{
+	auto stateVars = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);
+	if (stateVars.empty())
+		return;
+
+	auto contractStorage = storage(_contract, move(_address));
+	for (auto var: stateVars)
+		m_context.addAssertion(
+			m_context.variable(*var)->increaseIndex() ==
+			smt::member(contractStorage, stateVarStorageKey(*var, _contract))
+		);
 }
 
 void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression _value)
@@ -134,7 +193,7 @@ void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression
 		_address,
 		balance(_address) + move(_value)
 	);
-	m_state.assignMember("balances", newBalances);
+	m_state->assignMember("balances", newBalances);
 }
 
 smtutil::Expression SymbolicState::txMember(string const& _member) const
@@ -187,17 +246,99 @@ smtutil::Expression SymbolicState::txFunctionConstraints(FunctionDefinition cons
 	return conj;
 }
 
-void SymbolicState::prepareForSourceUnit(SourceUnit const& _source)
+void SymbolicState::prepareForSourceUnit(SourceUnit const& _source, bool _storage)
 {
-	set<FunctionCall const*> abiCalls = SMTEncoder::collectABICalls(&_source);
-	for (auto const& source: _source.referencedSourceUnits(true))
+	auto allSources = _source.referencedSourceUnits(true);
+	allSources.insert(&_source);
+	set<FunctionCall const*, ASTCompareByID<FunctionCall>> abiCalls;
+	set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> contracts;
+	for (auto const& source: allSources)
+	{
 		abiCalls += SMTEncoder::collectABICalls(source);
+		for (auto node: source->nodes())
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+				contracts.insert(contract);
+	}
+	buildState(contracts, _storage);
 	buildABIFunctions(abiCalls);
 }
 
 /// Private helpers.
 
-void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFunctions)
+string SymbolicState::contractSuffix(ContractDefinition const& _contract) const
+{
+	return "_" + _contract.name() + "_" + to_string(_contract.id());
+}
+
+string SymbolicState::contractStorageKey(ContractDefinition const& _contract) const
+{
+	return "storage" + contractSuffix(_contract);
+}
+
+string SymbolicState::stateVarStorageKey(VariableDeclaration const& _var, ContractDefinition const& _contract) const
+{
+	return _var.name() + "_" + to_string(_var.id()) + contractSuffix(_contract);
+}
+
+void SymbolicState::buildState(set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> const& _contracts, bool _allStorages)
+{
+	map<string, SortPointer> stateMembers{
+		{"balances", make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort)}
+	};
+
+	if (_allStorages)
+	{
+		vector<string> memberNames;
+		vector<SortPointer> memberSorts;
+		for (auto contract: _contracts)
+		{
+			string suffix = contractSuffix(*contract);
+
+			// z3 doesn't like empty tuples, so if the contract has 0
+			// state vars we can't put it there.
+			auto stateVars = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*contract);
+			if (stateVars.empty())
+				continue;
+
+			auto names = applyMap(stateVars, [&](auto var) {
+				return var->name() + "_" + to_string(var->id()) + suffix;
+			});
+			auto sorts = applyMap(stateVars, [](auto var) { return smtSortAbstractFunction(*var->type()); });
+
+			string name = "storage" + suffix;
+			auto storageTuple = make_shared<smtutil::TupleSort>(
+				name + "_type", names, sorts
+			);
+
+			auto storageSort = make_shared<smtutil::ArraySort>(
+				smtSort(*TypeProvider::address()),
+				storageTuple
+			);
+
+			memberNames.emplace_back(name);
+			memberSorts.emplace_back(storageSort);
+		}
+
+		stateMembers.emplace(
+			"isActive",
+			make_shared<smtutil::ArraySort>(smtSort(*TypeProvider::address()), smtutil::SortProvider::boolSort)
+		);
+		stateMembers.emplace(
+			"storage",
+			make_shared<smtutil::TupleSort>(
+				"storage_type", memberNames, memberSorts
+			)
+		);
+	}
+
+	m_state = make_unique<BlockchainVariable>(
+		"state",
+		move(stateMembers),
+		m_context
+	);
+}
+
+void SymbolicState::buildABIFunctions(set<FunctionCall const*, ASTCompareByID<FunctionCall>> const& _abiFunctions)
 {
 	map<string, SortPointer> functions;
 
