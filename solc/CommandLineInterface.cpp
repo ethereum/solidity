@@ -404,7 +404,7 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
-bool CommandLineInterface::readInputFiles()
+void CommandLineInterface::readInputFiles()
 {
 	solAssert(!m_standardJsonInput.has_value(), "");
 
@@ -413,7 +413,7 @@ bool CommandLineInterface::readInputFiles()
 		m_options.input.mode == InputMode::License ||
 		m_options.input.mode == InputMode::Version
 	)
-		return true;
+		return;
 
 	m_fileReader.setBasePath(m_options.input.basePath);
 
@@ -501,8 +501,6 @@ bool CommandLineInterface::readInputFiles()
 
 	if (m_fileReader.sourceCodes().empty() && !m_standardJsonInput.has_value())
 		solThrow(CommandLineValidationError, "All specified input files either do not exist or are not regular files.");
-
-	return true;
 }
 
 map<string, Json::Value> CommandLineInterface::parseAstFromInput()
@@ -568,6 +566,30 @@ void CommandLineInterface::createJson(string const& _fileName, string const& _js
 	createFile(boost::filesystem::basename(_fileName) + string(".json"), _json);
 }
 
+bool CommandLineInterface::run(int _argc, char const* const* _argv)
+{
+	try
+	{
+		if (!parseArguments(_argc, _argv))
+			return false;
+
+		readInputFiles();
+		processInput();
+		return true;
+	}
+	catch (CommandLineError const& _exception)
+	{
+		m_hasOutput = true;
+
+		// There might be no message in the exception itself if the error output is bulky and has
+		// already been printed to stderr (this happens e.g. for compiler errors).
+		if (_exception.what() != ""s)
+			serr() << _exception.what() << endl;
+
+		return false;
+	}
+}
+
 bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 {
 	CommandLineParser parser;
@@ -581,22 +603,13 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 		return false;
 	}
 
-	try
-	{
-		parser.parse(_argc, _argv);
-	}
-	catch (CommandLineValidationError const& _exception)
-	{
-		serr() << _exception.what() << endl;
-		return false;
-	}
-
+	parser.parse(_argc, _argv);
 	m_options = parser.options();
 
 	return true;
 }
 
-bool CommandLineInterface::processInput()
+void CommandLineInterface::processInput()
 {
 	switch (m_options.input.mode)
 	{
@@ -619,18 +632,15 @@ bool CommandLineInterface::processInput()
 		break;
 	}
 	case InputMode::Assembler:
-		if (!assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine))
-			return false;
+		assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine);
 		break;
 	case InputMode::Linker:
-		if (!link())
-			return false;
+		link();
 		writeLinkedFiles();
 		break;
 	case InputMode::Compiler:
 	case InputMode::CompilerWithASTImport:
-		if (!compile())
-			return false;
+		compile();
 		outputCompilationResults();
 	}
 
@@ -651,7 +661,7 @@ void CommandLineInterface::printLicense()
 	sout() << licenseText << endl;
 }
 
-bool CommandLineInterface::compile()
+void CommandLineInterface::compile()
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
@@ -714,6 +724,8 @@ bool CommandLineInterface::compile()
 			}
 			catch (Exception const& _exc)
 			{
+				// FIXME: AST import is missing proper validations. This hack catches failing
+				// assertions and presents them as if they were compiler errors.
 				solThrow(CommandLineExecutionError, "Failed to import AST: "s + _exc.what());
 			}
 		}
@@ -754,8 +766,6 @@ bool CommandLineInterface::compile()
 			solThrow(CommandLineExecutionError, "");
 		}
 	}
-
-	return true;
 }
 
 void CommandLineInterface::handleCombinedJSON()
@@ -884,7 +894,7 @@ void CommandLineInterface::handleAst()
 	}
 }
 
-bool CommandLineInterface::link()
+void CommandLineInterface::link()
 {
 	solAssert(m_options.input.mode == InputMode::Linker, "");
 
@@ -945,8 +955,6 @@ bool CommandLineInterface::link()
 			src.second.resize(src.second.size() - 1);
 	}
 	m_fileReader.setSources(move(sourceCodes));
-
-	return true;
 }
 
 void CommandLineInterface::writeLinkedFiles()
@@ -986,7 +994,7 @@ string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _
 	return out;
 }
 
-bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine)
+void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine)
 {
 	solAssert(m_options.input.mode == InputMode::Assembler, "");
 
@@ -1090,8 +1098,6 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 				serr() << "No text representation found." << endl;
 		}
 	}
-
-	return true;
 }
 
 void CommandLineInterface::outputCompilationResults()
@@ -1128,13 +1134,9 @@ void CommandLineInterface::outputCompilationResults()
 				ret = m_compiler->assemblyString(contract, m_fileReader.sourceCodes());
 
 			if (!m_options.output.dir.empty())
-			{
 				createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
-			}
 			else
-			{
 				sout() << "EVM assembly:" << endl << ret << endl;
-			}
 		}
 
 		if (m_options.compiler.estimateGas)
