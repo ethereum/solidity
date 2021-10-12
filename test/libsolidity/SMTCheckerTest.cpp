@@ -29,6 +29,16 @@ using namespace solidity::frontend::test;
 
 SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, EVMVersion{})
 {
+	auto contract = m_reader.stringSetting("SMTContract", "");
+	if (!contract.empty())
+		m_modelCheckerSettings.contracts.contracts[""] = {contract};
+
+	auto extCallsMode = ModelCheckerExtCalls::fromString(m_reader.stringSetting("SMTExtCalls", "untrusted"));
+	if (extCallsMode)
+		m_modelCheckerSettings.externalCalls = *extCallsMode;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT external calls mode."));
+
 	auto const& showUnproved = m_reader.stringSetting("SMTShowUnproved", "yes");
 	if (showUnproved == "no")
 		m_modelCheckerSettings.showUnproved = false;
@@ -49,8 +59,13 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	m_modelCheckerSettings.solvers &= ModelChecker::availableSolvers();
 
 	/// Underflow and Overflow are not enabled by default for Solidity >=0.8.7,
-	/// so we explicitly enable all targets for the tests.
-	m_modelCheckerSettings.targets = ModelCheckerTargets::All();
+	/// so we explicitly enable all targets for the tests,
+	/// if the targets were not explicitly set by the test.
+	auto targets = ModelCheckerTargets::fromString(m_reader.stringSetting("SMTTargets", "all"));
+	if (targets)
+		m_modelCheckerSettings.targets = *targets;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT targets."));
 
 	auto engine = ModelCheckerEngine::fromString(m_reader.stringSetting("SMTEngine", "all"));
 	if (engine)
