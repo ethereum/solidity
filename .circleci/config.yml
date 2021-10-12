@@ -160,6 +160,17 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
+  - steps_restore_cache_homebrew_workaround: &steps_restore_cache_homebrew_workaround
+      steps:
+        - run:
+            # FIXME: For some reason restore_cache fails saying that it cannot remove the scm/ dir.
+            # The directory contains only two files: `git` (wrapper script over git) and `svn` (symlink
+            # to `git`). This looks like a bug in restore_cache. Removing scm/ is a workaround.
+            # See https://github.com/ethereum/solidity/pull/12106 for more details.
+            name: Workaround for restore_cache + /usr/local/Homebrew/Library/Homebrew/shims/scm/
+            command: |
+              rm -r /usr/local/Homebrew/Library/Homebrew/shims/scm/
+
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
@@ -625,16 +636,19 @@ jobs:
       MAKEFLAGS: -j 5
     steps:
       - checkout
+      - when:
+          condition: true
+          <<: *steps_restore_cache_homebrew_workaround
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
       - save_cache:
-          key: dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
           paths:
             - /usr/local/bin
             - /usr/local/sbin
@@ -661,9 +675,12 @@ jobs:
       TERM: xterm
     steps:
       - checkout
+      - when:
+          condition: true
+          <<: *steps_restore_cache_homebrew_workaround
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: .
       - run: *run_soltest
@@ -677,9 +694,12 @@ jobs:
       TERM: xterm
     steps:
       - checkout
+      - when:
+          condition: true
+          <<: *steps_restore_cache_homebrew_workaround
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: .
       - run: *run_cmdline_tests
@@ -886,14 +906,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+            - dependencies-win-{{ arch }}-{{ checksum "scripts/install_deps.ps1" }}
       # DO NOT EDIT between here and save_cache, but rather edit .\scripts\install_deps.ps1
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: "Installing dependencies"
           command: .\scripts\install_deps.ps1
       - save_cache:
-          key: dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+          key: dependencies-win-{{ arch }}-{{ checksum "scripts/install_deps.ps1" }}
           paths:
             - .\deps
       - run:
