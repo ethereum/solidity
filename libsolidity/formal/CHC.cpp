@@ -829,6 +829,53 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 	m_context.addAssertion(errorFlag().currentValue() == 0);
 }
 
+void CHC::addNondetCalls(ContractDefinition const& _contract)
+{
+	for (auto var: _contract.stateVariables())
+		if (auto contractType = dynamic_cast<ContractType const*>(var->type()))
+		{
+			auto const& symbVar = m_context.variable(*var);
+			m_context.addAssertion(symbVar->currentValue() == symbVar->valueAtIndex(0));
+			nondetCall(contractType->contractDefinition(), *var);
+		}
+}
+
+void CHC::nondetCall(ContractDefinition const& _contract, VariableDeclaration const& _var)
+{
+	auto address = m_context.variable(_var)->currentValue();
+	// Load the called contract's state variables from the global state.
+	state().readStateVars(_contract, address);
+
+	m_context.addAssertion(state().state() == state().state(0));
+	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables(_contract);
+
+	state().newState();
+	for (auto const* var: _contract.stateVariables())
+		m_context.variable(*var)->increaseIndex();
+
+	auto error = errorFlag().increaseIndex();
+
+	Predicate const& callPredicate = *createSymbolicBlock(
+		nondetInterfaceSort(_contract, state()),
+		"nondet_call_" + uniquePrefix(),
+		PredicateType::FunctionSummary,
+		&_var,
+		m_currentContract
+	);
+	auto postCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables(_contract);
+	vector<smtutil::Expression> stateExprs{error, address, state().abi(), state().crypto()};
+
+	auto nondet = (*m_nondetInterfaces.at(&_contract))(stateExprs + preCallState + postCallState);
+	auto nondetCall = callPredicate(stateExprs + preCallState + postCallState);
+
+	addRule(smtutil::Expression::implies(nondet, nondetCall), nondetCall.name);
+
+	m_context.addAssertion(nondetCall);
+
+	// Load the called contract's state variables into the global state.
+	state().writeStateVars(_contract, address);
+}
+
 void CHC::externalFunctionCall(FunctionCall const& _funCall)
 {
 	/// In external function calls we do not add a "predicate call"
@@ -1322,6 +1369,13 @@ void CHC::defineExternalFunctionInterface(FunctionDefinition const& _function, C
 	// Assume that address(this).balance cannot overflow.
 	m_context.addAssertion(smt::symbolicUnknownConstraints(state().balance(state().thisAddress()) + k.currentValue(), TypeProvider::uint256()));
 	state().addBalance(state().thisAddress(), k.currentValue());
+
+	if (encodeExternalCallsAsTrusted())
+		// If the contract has state variables that are addresses to other contracts,
+		// we need to encode the fact that those contracts may have been called in between
+		// transactions to _contract.
+		// We do that by adding nondet_interface constraints for those contracts.
+		addNondetCalls(*m_currentContract);
 
 	errorFlag().increaseIndex();
 	m_context.addAssertion(summaryCall(_function));

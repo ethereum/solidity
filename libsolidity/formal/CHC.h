@@ -115,6 +115,8 @@ private:
 	void internalFunctionCall(FunctionCall const& _funCall);
 	void externalFunctionCall(FunctionCall const& _funCall);
 	void externalFunctionCallToTrustedCode(FunctionCall const& _funCall);
+	void addNondetCalls(ContractDefinition const& _contract);
+	void nondetCall(ContractDefinition const& _contract, VariableDeclaration const& _var);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
 	void makeOutOfBoundsVerificationTarget(IndexAccess const& _access) override;
