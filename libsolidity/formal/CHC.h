@@ -110,10 +110,14 @@ private:
 	void popInlineFrame(CallableDeclaration const& _callable) override;
 
 	void visitAssert(FunctionCall const& _funCall);
+	void visitPublicGetter(FunctionCall const& _funCall) override;
 	void visitAddMulMod(FunctionCall const& _funCall) override;
+	void visitDeployment(FunctionCall const& _funCall);
 	void internalFunctionCall(FunctionCall const& _funCall);
 	void externalFunctionCall(FunctionCall const& _funCall);
 	void externalFunctionCallToTrustedCode(FunctionCall const& _funCall);
+	void addNondetCalls(ContractDefinition const& _contract);
+	void nondetCall(ContractDefinition const& _contract, VariableDeclaration const& _var);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
 	void makeOutOfBoundsVerificationTarget(IndexAccess const& _access) override;
@@ -135,6 +139,7 @@ private:
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
 	void setCurrentBlock(Predicate const& _block);
 	std::set<unsigned> transactionVerificationTargetsIds(ASTNode const* _txRoot);
+	bool usesStaticCall(FunctionCall const& _funCall);
 	//@}
 
 	/// SMT Natspec and abstraction helpers.
@@ -148,6 +153,10 @@ private:
 	/// @returns true if _function is Natspec annotated to be abstracted by
 	/// nondeterministic values.
 	bool abstractAsNondet(FunctionDefinition const& _function);
+
+	/// @returns true if external calls should be considered trusted.
+	/// If that's the case, their code is used if available at compile time.
+	bool encodeExternalCallsAsTrusted();
 	//@}
 
 	/// Sort helpers.
@@ -310,6 +319,20 @@ private:
 	unsigned newErrorId();
 
 	smt::SymbolicIntVariable& errorFlag();
+
+	/// Adds to the solver constraints that
+	/// - propagate tx.origin
+	/// - set the current contract as msg.sender
+	/// - set the msg.value as _value, if not nullptr
+	void newTxConstraints(Expression const* _value);
+
+	/// @returns the expression representing the value sent in
+	/// an external call if present,
+	/// and nullptr otherwise.
+	frontend::Expression const* valueOption(FunctionCallOptions const* _options);
+
+	/// Adds constraints that decrease the balance of the caller by _value.
+	void decreaseBalanceFromOptionsValue(Expression const& _value);
 	//@}
 
 	/// Predicates.

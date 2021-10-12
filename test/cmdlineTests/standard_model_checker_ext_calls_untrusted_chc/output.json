@@ -1,0 +1,50 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "6328",
+            "formattedMessage": "Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+e = 0
+x = 1
+
+Transaction trace:
+test.constructor()
+test.g(0)
+    e.f() -- untrusted external call
+  --> A:10:8:
+   |
+10 | \t\t\t\t\t\t\tassert(x == 0);
+   | \t\t\t\t\t\t\t^^^^^^^^^^^^^^
+
+",
+            "message": "CHC: Assertion violation happens here.
+Counterexample:
+
+e = 0
+x = 1
+
+Transaction trace:
+test.constructor()
+test.g(0)
+    e.f() -- untrusted external call",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 254,
+                "file": "A",
+                "start": 240
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

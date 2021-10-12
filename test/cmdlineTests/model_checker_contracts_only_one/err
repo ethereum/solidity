@@ -4,7 +4,7 @@ Counterexample:
 x = 0
 
 Transaction trace:
-A.constructor()
+B.constructor()
 B.f(0)
  --> model_checker_contracts_only_one/input.sol:5:3:
   |

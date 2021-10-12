@@ -11,4 +11,7 @@ contract C {
 		assert(g == 0x0001020304050607080900010203040506070809000102030405060708090001); // should hold
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
