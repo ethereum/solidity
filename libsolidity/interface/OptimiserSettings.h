@@ -44,20 +44,20 @@ struct OptimiserSettings
 	static char constexpr DefaultYulOptimiserSteps[] =
 		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
 		"["
-			"xarrscLM"                 // Turn into SSA and simplify
+			"xa[r]scLM"                // Turn into SSA and simplify
 			"cCTUtTOntnfDIul"          // Perform structural simplification
 			"Lcul"                     // Simplify again
-			"Vcul jj"                  // Reverse SSA
+			"Vcul [j]"                 // Reverse SSA
 
 			// should have good "compilability" property here.
 
 			"Tpeul"                    // Run functional expression inliner
-			"xarulrul"                 // Prune a bit more in SSA
-			"xarrcL"                   // Turn into SSA again and simplify
+			"xa[rul]"                  // Prune a bit more in SSA
+			"xa[r]cL"                  // Turn into SSA again and simplify
 			"gvif"                     // Run full inliner
-			"CTUcarrLsTFOtfDncarrIulc" // SSA plus simplify
+			"CTUca[r]LsTFOtfDnca[r]Iulc" // SSA plus simplify
 		"]"
-		"jmuljuljul VcTOcul jmul";     // Make source short and pretty
+		"jmul[jul] VcTOcul jmul";      // Make source short and pretty
 
 	/// No optimisations at all - not recommended.
 	static OptimiserSettings none()
