@@ -71,6 +71,17 @@ map<string, TargetType> const ModelCheckerTargets::targetStrings{
 	{"outOfBounds", TargetType::OutOfBounds}
 };
 
+map<TargetType, string> const ModelCheckerTargets::targetTypeToString{
+	{TargetType::ConstantCondition, "Constant condition"},
+	{TargetType::Underflow, "Underflow"},
+	{TargetType::Overflow, "Overflow"},
+	{TargetType::DivByZero, "Division by zero"},
+	{TargetType::Balance, "Insufficient balance"},
+	{TargetType::Assert, "Assertion failed"},
+	{TargetType::PopEmptyArray, "Empty array pop"},
+	{TargetType::OutOfBounds, "Out of bounds access"}
+};
+
 std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(string const& _targets)
 {
 	set<TargetType> chosenTargets;

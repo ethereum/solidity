@@ -131,6 +131,8 @@ struct ModelCheckerTargets
 
 	static std::map<std::string, VerificationTargetType> const targetStrings;
 
+	static std::map<VerificationTargetType, std::string> const targetTypeToString;
+
 	bool operator!=(ModelCheckerTargets const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(ModelCheckerTargets const& _other) const noexcept { return targets == _other.targets; }
 
