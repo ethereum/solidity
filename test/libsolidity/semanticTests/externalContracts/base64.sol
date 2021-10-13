@@ -33,7 +33,7 @@ contract test {
 // EVMVersion: >=constantinople
 // ----
 // constructor()
-// gas irOptimized: 438376
+// gas irOptimized: 414909
 // gas legacy: 750723
 // gas legacyOptimized: 536620
 // encode_inline_asm(bytes): 0x20, 0 -> 0x20, 0
@@ -51,10 +51,10 @@ contract test {
 // encode_no_asm(bytes): 0x20, 5, "fooba" -> 0x20, 8, "Zm9vYmE="
 // encode_no_asm(bytes): 0x20, 6, "foobar" -> 0x20, 8, "Zm9vYmFy"
 // encode_inline_asm_large()
-// gas irOptimized: 1387039
+// gas irOptimized: 1374039
 // gas legacy: 1688033
 // gas legacyOptimized: 1205033
 // encode_no_asm_large()
-// gas irOptimized: 3316107
+// gas irOptimized: 3291100
 // gas legacy: 4765077
 // gas legacyOptimized: 2908077

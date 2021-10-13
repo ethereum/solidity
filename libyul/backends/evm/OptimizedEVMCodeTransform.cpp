@@ -71,7 +71,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Validate stack.
 	{
 		yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
-		yulAssert(m_stack.size() >= _call.function.get().arguments.size() + 1, "");
+		yulAssert(m_stack.size() >= _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0), "");
 		// Assert that we got the correct arguments on stack for the call.
 		for (auto&& [arg, slot]: ranges::zip_view(
 			_call.functionCall.get().arguments | ranges::views::reverse,
@@ -79,10 +79,13 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		))
 			validateSlot(slot, arg);
 		// Assert that we got the correct return label on stack.
-		auto const* returnLabelSlot = get_if<FunctionCallReturnLabelSlot>(
-			&m_stack.at(m_stack.size() - _call.functionCall.get().arguments.size() - 1)
-		);
-		yulAssert(returnLabelSlot && &returnLabelSlot->call.get() == &_call.functionCall.get(), "");
+		if (_call.canContinue)
+		{
+			auto const* returnLabelSlot = get_if<FunctionCallReturnLabelSlot>(
+				&m_stack.at(m_stack.size() - _call.functionCall.get().arguments.size() - 1)
+			);
+			yulAssert(returnLabelSlot && &returnLabelSlot->call.get() == &_call.functionCall.get(), "");
+		}
 	}
 
 	// Emit code.
@@ -90,16 +93,17 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		m_assembly.setSourceLocation(originLocationOf(_call));
 		m_assembly.appendJumpTo(
 			getFunctionLabel(_call.function),
-			static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - 1,
+			static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
 			AbstractAssembly::JumpType::IntoFunction
 		);
-		m_assembly.appendLabel(m_returnLabels.at(&_call.functionCall.get()));
+		if (_call.canContinue)
+			m_assembly.appendLabel(m_returnLabels.at(&_call.functionCall.get()));
 	}
 
 	// Update stack.
 	{
 		// Remove arguments and return label from m_stack.
-		for (size_t i = 0; i < _call.function.get().arguments.size() + 1; ++i)
+		for (size_t i = 0; i < _call.function.get().arguments.size() + (_call.canContinue ? 1 : 0); ++i)
 			m_stack.pop_back();
 		// Push return values to m_stack.
 		for (size_t index: ranges::views::iota(0u, _call.function.get().returns.size()))
@@ -479,8 +483,9 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		},
 		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn)
 		{
-			yulAssert(m_currentFunctionInfo, "");
-			yulAssert(m_currentFunctionInfo == _functionReturn.info, "");
+			yulAssert(m_currentFunctionInfo);
+			yulAssert(m_currentFunctionInfo == _functionReturn.info);
+			yulAssert(m_currentFunctionInfo->canContinue);
 
 			// Construct the function return layout, which is fully determined by the function signature.
 			Stack exitStack = m_currentFunctionInfo->returnVariables | ranges::views::transform([](auto const& _varSlot){
@@ -494,11 +499,13 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		},
 		[&](CFG::BasicBlock::Terminated const&)
 		{
-			// Assert that the last builtin call was in fact terminating.
-			yulAssert(!_block.operations.empty(), "");
-			CFG::BuiltinCall const* builtinCall = get_if<CFG::BuiltinCall>(&_block.operations.back().operation);
-			yulAssert(builtinCall, "");
-			yulAssert(builtinCall->builtin.get().controlFlowSideEffects.terminatesOrReverts(), "");
+			yulAssert(!_block.operations.empty());
+			if (CFG::BuiltinCall const* builtinCall = get_if<CFG::BuiltinCall>(&_block.operations.back().operation))
+				yulAssert(builtinCall->builtin.get().controlFlowSideEffects.terminatesOrReverts(), "");
+			else if (CFG::FunctionCall const* functionCall = get_if<CFG::FunctionCall>(&_block.operations.back().operation))
+				yulAssert(!functionCall->canContinue);
+			else
+				yulAssert(false);
 		}
 	}, _block.exit);
 	// TODO: We could assert that the last emitted assembly item terminated or was an (unconditional) jump.
@@ -515,7 +522,8 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionInfo const& _functionInf
 	yulAssert(m_stack.empty() && m_assembly.stackHeight() == 0, "");
 
 	// Create function entry layout in m_stack.
-	m_stack.emplace_back(FunctionReturnLabelSlot{_functionInfo.function});
+	if (_functionInfo.canContinue)
+		m_stack.emplace_back(FunctionReturnLabelSlot{_functionInfo.function});
 	for (auto const& param: _functionInfo.parameters | ranges::views::reverse)
 		m_stack.emplace_back(param);
 	m_assembly.setStackHeight(static_cast<int>(m_stack.size()));

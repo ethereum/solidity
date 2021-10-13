@@ -27,21 +27,18 @@
 // Entry -> Block0;
 // Block0 [label="\
 // [ ]\l\
-// [ RET[h] RET[h] RET[i] ]\l\
+// [ RET[i] ]\l\
 // i\l\
-// [ RET[h] RET[h] TMP[i, 0] TMP[i, 1] ]\l\
-// [ RET[h] RET[h] TMP[i, 0] TMP[i, 1] ]\l\
+// [ TMP[i, 0] TMP[i, 1] ]\l\
+// [ TMP[i, 0] TMP[i, 1] ]\l\
 // Assignment(x, y)\l\
-// [ RET[h] RET[h] x y ]\l\
-// [ RET[h] y RET[h] x ]\l\
-// h\l\
-// [ RET[h] y ]\l\
-// [ RET[h] y ]\l\
+// [ x y ]\l\
+// [ x ]\l\
 // h\l\
 // [ ]\l\
 // [ ]\l\
 // "];
-// Block0Exit [label="MainExit"];
+// Block0Exit [label="Terminated"];
 // Block0 -> Block0Exit;
 //
 // FunctionEntry_f [label="function f(a, b) -> r\l\
@@ -83,19 +80,16 @@
 // [ RET x ]"];
 // FunctionEntry_h -> Block3;
 // Block3 [label="\
-// [ RET RET[h] RET[f] 0x00 x ]\l\
-// [ RET RET[h] RET[f] 0x00 x ]\l\
+// [ RET[f] 0x00 x ]\l\
+// [ RET[f] 0x00 x ]\l\
 // f\l\
-// [ RET RET[h] TMP[f, 0] ]\l\
-// [ RET RET[h] TMP[f, 0] ]\l\
+// [ TMP[f, 0] ]\l\
+// [ TMP[f, 0] ]\l\
 // h\l\
-// [ RET ]\l\
-// [ RET RET[g] ]\l\
-// g\l\
-// [ RET ]\l\
-// [ RET ]\l\
+// [ ]\l\
+// [ ]\l\
 // "];
-// Block3Exit [label="FunctionReturn[h]"];
+// Block3Exit [label="Terminated"];
 // Block3 -> Block3Exit;
 //
 // FunctionEntry_i [label="function i() -> v, w\l\

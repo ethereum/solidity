@@ -54,7 +54,7 @@ StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 	StackLayoutGenerator{stackLayout}.processEntryPoint(*_cfg.entry);
 
 	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
-		StackLayoutGenerator{stackLayout}.processEntryPoint(*functionInfo.entry);
+		StackLayoutGenerator{stackLayout}.processEntryPoint(*functionInfo.entry, &functionInfo);
 
 	return stackLayout;
 }
@@ -331,7 +331,7 @@ Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::Ba
 	return stack;
 }
 
-void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
+void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG::FunctionInfo const* _functionInfo)
 {
 	list<CFG::BasicBlock const*> toVisit{&_entry};
 	set<CFG::BasicBlock const*> visited;
@@ -402,7 +402,7 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 	}
 
 	stitchConditionalJumps(_entry);
-	fillInJunk(_entry);
+	fillInJunk(_entry, _functionInfo);
 }
 
 optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
@@ -707,7 +707,7 @@ Stack StackLayoutGenerator::compressStack(Stack _stack)
 	return _stack;
 }
 
-void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
+void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::FunctionInfo const* _functionInfo)
 {
 	/// Recursively adds junk to the subgraph starting on @a _entry.
 	/// Since it is only called on cut-vertices, the full subgraph retains proper stack balance.
@@ -767,10 +767,56 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
 		createStackLayout(_source, _target, swap, dupOrPush, pop);
 		return opGas;
 	};
+	/// @returns the number of junk slots to be prepended to @a _targetLayout for an optimal transition from
+	/// @a _entryLayout to @a _targetLayout.
+	auto getBestNumJunk = [&](Stack const& _entryLayout, Stack const& _targetLayout) -> size_t {
+		size_t bestCost = evaluateTransform(_entryLayout, _targetLayout);
+		size_t bestNumJunk = 0;
+		size_t maxJunk = _entryLayout.size();
+		for (size_t numJunk = 1; numJunk <= maxJunk; ++numJunk)
+		{
+			size_t cost = evaluateTransform(_entryLayout, Stack{numJunk, JunkSlot{}} + _targetLayout);
+			if (cost < bestCost)
+			{
+				bestCost = cost;
+				bestNumJunk = numJunk;
+			}
+		}
+		return bestNumJunk;
+	};
+
+	if (_functionInfo && !_functionInfo->canContinue && _block.allowsJunk())
+	{
+		size_t bestNumJunk = getBestNumJunk(
+			_functionInfo->parameters | ranges::views::reverse | ranges::to<Stack>,
+			m_layout.blockInfos.at(&_block).entryLayout
+		);
+		if (bestNumJunk > 0)
+			addJunkRecursive(&_block, bestNumJunk);
+	}
+
 	/// Traverses the CFG and at each block that allows junk, i.e. that is a cut-vertex that never leads to a function
 	/// return, checks if adding junk reduces the shuffling cost upon entering and if so recursively adds junk
 	/// to the spanned subgraph.
 	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_block}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		if (_block->allowsJunk())
+		{
+			auto& blockInfo = m_layout.blockInfos.at(_block);
+			Stack entryLayout = blockInfo.entryLayout;
+			Stack const& nextLayout = _block->operations.empty() ? blockInfo.exitLayout : m_layout.operationEntryLayout.at(&_block->operations.front());
+			if (entryLayout != nextLayout)
+			{
+				size_t bestNumJunk = getBestNumJunk(
+					entryLayout,
+					nextLayout
+				);
+				if (bestNumJunk > 0)
+				{
+					addJunkRecursive(_block, bestNumJunk);
+					blockInfo.entryLayout = entryLayout;
+				}
+			}
+		}
 		std::visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::MainExit const&) {},
 			[&](CFG::BasicBlock::Jump const& _jump)
@@ -779,32 +825,6 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
 			},
 			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
 			{
-				for (CFG::BasicBlock* exit: {_conditionalJump.zero, _conditionalJump.nonZero})
-					if (exit->allowsJunk())
-					{
-						auto& blockInfo = m_layout.blockInfos.at(exit);
-						Stack entryLayout = blockInfo.entryLayout;
-						Stack nextLayout = exit->operations.empty() ? blockInfo.exitLayout : m_layout.operationEntryLayout.at(&exit->operations.front());
-
-						size_t bestCost = evaluateTransform(entryLayout, nextLayout);
-						size_t bestNumJunk = 0;
-						size_t maxJunk = entryLayout.size();
-						for (size_t numJunk = 1; numJunk <= maxJunk; ++numJunk)
-						{
-							size_t cost = evaluateTransform(entryLayout, Stack{numJunk, JunkSlot{}} + nextLayout);
-							if (cost < bestCost)
-							{
-								bestCost = cost;
-								bestNumJunk = numJunk;
-							}
-						}
-
-						if (bestNumJunk > 0)
-						{
-							addJunkRecursive(exit, bestNumJunk);
-							blockInfo.entryLayout = entryLayout;
-						}
-					}
 				_addChild(_conditionalJump.zero);
 				_addChild(_conditionalJump.nonZero);
 			},
