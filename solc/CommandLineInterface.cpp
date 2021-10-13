@@ -546,19 +546,12 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 
 	string pathName = (m_options.output.dir / _fileName).string();
 	if (fs::exists(pathName) && !m_options.output.overwriteFiles)
-	{
-		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
-		m_outputFailed = true;
-		return;
-	}
+		solThrow(CommandLineOutputError, "Refusing to overwrite existing file \"" + pathName + "\" (use --overwrite to force).");
+
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
-	{
-		serr() << "Could not write to file \"" << pathName << "\"." << endl;
-		m_outputFailed = true;
-		return;
-	}
+		solThrow(CommandLineOutputError, "Could not write to file \"" + pathName + "\".");
 }
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)
@@ -643,9 +636,6 @@ void CommandLineInterface::processInput()
 		compile();
 		outputCompilationResults();
 	}
-
-	if (m_outputFailed)
-		solThrow(CommandLineOutputError, "Failed to write all output files to disk.");
 }
 
 void CommandLineInterface::printVersion()
@@ -969,10 +959,7 @@ void CommandLineInterface::writeLinkedFiles()
 			ofstream outFile(src.first);
 			outFile << src.second;
 			if (!outFile)
-			{
-				m_outputFailed = true;
 				solThrow(CommandLineOutputError, "Could not write to file " + src.first + ". Aborting.");
-			}
 		}
 	sout() << "Linking completed." << endl;
 }

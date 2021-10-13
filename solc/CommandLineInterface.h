@@ -136,7 +136,6 @@ private:
 	std::ostream& m_sout;
 	std::ostream& m_serr;
 	bool m_hasOutput = false;
-	bool m_outputFailed = false; ///< If true, creation or write to some of the output files failed.
 	FileReader m_fileReader;
 	std::optional<std::string> m_standardJsonInput;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;
