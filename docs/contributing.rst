@@ -110,19 +110,18 @@ The test system automatically tries to discover the location of
 the `evmone <https://github.com/ethereum/evmone/releases>`_ for running the semantic tests.
 
 The ``evmone`` library must be located in the ``deps`` or ``deps/lib`` directory relative to the
-current working directory or up to the project root. Alternatively an explicit location
-to the ``evmone`` shared object can be specified via the ``ETH_EVMONE`` environment variable.
+current working directory, to its parent or its parent's parent. Alternatively an explicit location
+for the ``evmone`` shared object can be specified via the ``ETH_EVMONE`` environment variable.
 
-If running semantic tests is not required, the command line
-parameter ``--no-semantic-tests`` must be passed to ``./scripts/soltest.sh``.
-
-The tests that use ``evmone`` are ``libsolidity/semanticTests``, ``libsolidity/GasCosts``,
-``libsolidity/SolidityEndToEndTest``.
+``evmone`` is needed mainly for running semantic and gas tests.
+If you do not have it installed, you can skip these tests by passing the ``--no-semantic-tests``
+flag to ``scripts/soltest.sh``.
 
 Running Ewasm tests is disabled by default and can be explicitly enabled
 via ``./scripts/soltest.sh --ewasm`` and requires `hera <https://github.com/ewasm/hera>`_
 to be found by ``soltest``.
-The ``hera`` library can is using the same search path as described above for ``evmone``.
+The mechanism for locating the ``hera`` library is the same as for ``evmone``, except that the
+variable for specifying an explicit location is called ``ETH_HERA``.
 
 The ``evmone`` and ``hera`` libraries should both end with the file name
 extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
