@@ -50,11 +50,16 @@ function validate_checksum {
   fi
 }
 
+(( $# <= 1 )) || { >&2 echo "Wrong number of arguments"; false; }
+
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
-  git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
-  git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask fetch --unshallow
-  brew update
+  if (( $# == 0 )) || [[ $1 != "--no-homebrew-update" ]]
+  then
+    git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+    git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask fetch --unshallow
+    brew update
+  fi
   brew unlink python
   brew install boost
   brew install cmake
