@@ -163,13 +163,19 @@ defaults:
   - steps_restore_cache_homebrew_workaround: &steps_restore_cache_homebrew_workaround
       steps:
         - run:
-            # FIXME: For some reason restore_cache fails saying that it cannot remove the scm/ dir.
-            # The directory contains only two files: `git` (wrapper script over git) and `svn` (symlink
-            # to `git`). This looks like a bug in restore_cache. Removing scm/ is a workaround.
-            # See https://github.com/ethereum/solidity/pull/12106 for more details.
+            # FIXME: Remove this workaround when CircleCI fixes restore_cache.
+            # Homebrew has recently replaced one of its dirs with a symlink to another.
+            # This makes tar used by restore_cache fail - the image contains an older version of
+            # Homebrew installed where it's a directory and tar refuses to overwrite a dir with a link.
+            # To work around this, we always update Homebrew to a newer version that already has
+            # a symlink there. Simply removing the dir does not fix this because the dir contains
+            # a git wrapper that Homebrew uses to update itself. Replacing the dir with a link does
+            # not fix it either because then Homebrew update fails.
             name: Workaround for restore_cache + /usr/local/Homebrew/Library/Homebrew/shims/scm/
             command: |
-              rm -r /usr/local/Homebrew/Library/Homebrew/shims/scm/
+              git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+              git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask fetch --unshallow
+              brew update
 
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
@@ -646,7 +652,7 @@ jobs:
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
-          command: ./.circleci/osx_install_dependencies.sh
+          command: ./.circleci/osx_install_dependencies.sh --no-homebrew-update
       - save_cache:
           key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
           paths:
