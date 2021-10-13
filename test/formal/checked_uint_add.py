@@ -1,6 +1,7 @@
+from opcodes import GT, SUB
 from rule import Rule
-from opcodes import *
-from util import *
+from util import BVUnsignedMax, BVUnsignedUpCast
+from z3 import BitVec, BVAddNoOverflow, Not
 
 """
 Overflow checked unsigned integer addition.

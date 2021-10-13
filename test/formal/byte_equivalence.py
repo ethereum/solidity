@@ -1,5 +1,6 @@
+from opcodes import BYTE
 from rule import Rule
-from opcodes import *
+from z3 import BitVec, BitVecVal, Concat, Extract
 
 """
 Checks that the byte opcode (implemented using shift) is equivalent to a
