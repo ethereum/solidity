@@ -19,6 +19,9 @@
 # (c) 2016-2019 solidity contributors.
 # ------------------------------------------------------------------------------
 
+# The fail() function defined below requires set -e to be enabled.
+set -e
+
 # Save the initial working directory so that printStackTrace() can access it even if the sourcing
 # changes directory. The paths returned by `caller` are relative to it.
 _initial_work_dir=$(pwd)
@@ -78,6 +81,8 @@ function printStackTrace
 function fail()
 {
     printError "$@"
+
+    # Using return rather than exit lets the invoking code handle the failure by suppressing the exit code.
     return 1
 }
 
@@ -120,7 +125,7 @@ function msg_on_error()
                 shift
                 ;;
             *)
-                fail "Invalid option for msg_on_error: $1"
+                assertFail "Invalid option for msg_on_error: $1"
                 ;;
         esac
     done
