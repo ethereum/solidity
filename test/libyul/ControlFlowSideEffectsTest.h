@@ -14,31 +14,27 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * AST walker that finds all function definitions and stores them into a map indexed by the function names.
- */
+// SPDX-License-Identifier: GPL-3.0
+
 #pragma once
 
-#include <libyul/optimiser/ASTWalker.h>
+#include <test/TestCase.h>
 
-#include <map>
+#include <iosfwd>
+#include <string>
+#include <vector>
+#include <memory>
 
-namespace solidity::yul
+namespace solidity::yul::test
 {
 
-/**
- * AST walker that finds all function definitions and stores them into a map indexed by the function names.
- *
- * Prerequisite: Disambiguator
- */
-class FunctionDefinitionCollector: ASTWalker
+class ControlFlowSideEffectsTest: public solidity::frontend::test::TestCase
 {
 public:
-	static std::map<YulString, FunctionDefinition const*> run(Block const& _block);
-private:
-	using ASTWalker::operator();
-	void operator()(FunctionDefinition const& _functionDefinition) override;
-	std::map<YulString, FunctionDefinition const*> m_functionDefinitions;
+	static std::unique_ptr<TestCase> create(Config const& _config)
+	{ return std::make_unique<ControlFlowSideEffectsTest>(_config.filename); }
+	explicit ControlFlowSideEffectsTest(std::string const& _filename);
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 };
 
 }

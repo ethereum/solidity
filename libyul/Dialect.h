@@ -22,8 +22,8 @@
 #pragma once
 
 #include <libyul/YulString.h>
-#include <libyul/SideEffects.h>
 #include <libyul/ControlFlowSideEffects.h>
+#include <libyul/SideEffects.h>
 
 #include <vector>
 #include <set>

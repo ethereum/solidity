@@ -18,22 +18,32 @@
 
 #pragma once
 
-#include <set>
-
 namespace solidity::yul
 {
 
 /**
- * Side effects of code related to control flow.
+ * Side effects of a user-defined or builtin function.
+ *
+ * Each of the three booleans represents a reachability condition. There is an implied
+ * fourth alternative, which is going out of gas while executing the function. Since
+ * this can always happen and depends on the supply of gas, it is not considered.
+ *
+ * If all three booleans are false, it means that the function always leads to infinite
+ * recursion.
  */
 struct ControlFlowSideEffects
 {
-	/// If true, this code terminates the control flow.
-	/// State may or may not be reverted as indicated by the ``reverts`` flag.
-	bool terminates = false;
-	/// If true, this code reverts all state changes in the transaction.
-	/// Whenever this is true, ``terminates`` has to be true as well.
-	bool reverts = false;
+	/// If true, the function contains at least one reachable branch that terminates successfully.
+	bool canTerminate = false;
+	/// If true, the function contains at least one reachable branch that reverts.
+	bool canRevert = false;
+	/// If true, the function has a regular outgoing control-flow.
+	bool canContinue = true;
+
+	bool terminatesOrReverts() const
+	{
+		return (canTerminate || canRevert) && !canContinue;
+	}
 };
 
 }
