@@ -2,5 +2,9 @@
 
 {% block menu %}
     {{ super() }}
-    <a href="{{ pathto('genindex') }}">Keyword Index</a>
+    <ul>
+        <li>
+            <a href="{{ pathto('genindex') }}">Keyword Index</a>
+        </li>
+    </ul>
 {% endblock %}
