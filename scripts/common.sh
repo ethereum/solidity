@@ -138,24 +138,30 @@ function msg_on_error()
         rm "$stdout_file" "$stderr_file"
         return 0
     else
-        printError "Command failed: $SOLC ${command[*]}"
+        printError ""
+        printError "Command failed: ${error_message}"
+        printError "    command: $SOLC ${command[*]}"
         if [[ -s "$stdout_file" ]]
         then
-            printError "stdout:"
+            printError "--- stdout ---"
+            printError "-----------"
             >&2 cat "$stdout_file"
+            printError "--------------"
         else
-            printError "stdout: <EMPTY>"
+            printError "    stdout: <EMPTY>"
         fi
         if [[ -s "$stderr_file" ]]
         then
-            printError "stderr:"
+            printError "--- stderr ---"
             >&2 cat "$stderr_file"
+            printError "--------------"
         else
-            printError "stderr: <EMPTY>"
+            printError "    stderr: <EMPTY>"
         fi
 
-        printError "$error_message"
         rm "$stdout_file" "$stderr_file"
+
+        printStackTrace
         return 1
     fi
 }
