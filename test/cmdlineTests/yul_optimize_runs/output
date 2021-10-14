@@ -13,7 +13,7 @@ object "RunsTest1" {
     object "Runtime" {
         code {
             {
-                mstore(0, 0xabc1234500000000000000000000000000000000000000000000000000000000)
+                sstore(0, 0xabc1234500000000000000000000000000000000000000000000000000000000)
             }
         }
     }
@@ -21,7 +21,7 @@ object "RunsTest1" {
 
 
 Binary representation:
-602480600d600039806000f3fe7fabc1234500000000000000000000000000000000000000000000000000000000600052
+602480600d600039806000f3fe7fabc1234500000000000000000000000000000000000000000000000000000000600055
 
 Text representation:
     /* "yul_optimize_runs/input.yul":106:125   */
@@ -47,6 +47,5 @@ sub_0: assembly {
         /* "yul_optimize_runs/input.yul":277:278   */
       0x00
         /* "yul_optimize_runs/input.yul":270:288   */
-      mstore
+      sstore
 }
-
