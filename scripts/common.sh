@@ -33,10 +33,43 @@ else
     function printLog() { echo "$(tput setaf 3)$1$(tput sgr0)"; }
 fi
 
+function printStackTrace
+{
+    printWarning ""
+    printWarning "Stack trace:"
+
+    local frame=1
+    while caller "$frame" > /dev/null
+    do
+        local lineNumber file function
+
+        # `caller` returns something that could already be printed as a stacktrace but we can make
+        # it more readable by rearranging the components.
+        # NOTE: This assumes that paths do not contain spaces.
+        lineNumber=$(caller "$frame" | cut --delimiter " " --field 1)
+        function=$(caller "$frame" | cut --delimiter " " --field 2)
+        file=$(caller "$frame" | cut --delimiter " " --field 3)
+        >&2 printf "    %s:%d in function %s()\n" "$file" "$lineNumber" "$function"
+
+        ((frame++))
+    done
+}
+
 function fail()
 {
     printError "$@"
     return 1
+}
+
+function assertFail()
+{
+    printError ""
+    (( $# == 0 )) && printError "Assertion failed."
+    (( $# == 1 )) && printError "Assertion failed: $1"
+    printStackTrace
+
+    # Intentionally using exit here because assertion failures are not supposed to be handled.
+    exit 2
 }
 
 function msg_on_error()
