@@ -19,6 +19,10 @@
 # (c) 2016-2019 solidity contributors.
 # ------------------------------------------------------------------------------
 
+# Save the initial working directory so that printStackTrace() can access it even if the sourcing
+# changes directory. The paths returned by `caller` are relative to it.
+_initial_work_dir=$(pwd)
+
 if [ "$CIRCLECI" ]
 then
     export TERM="${TERM:-xterm}"
@@ -41,7 +45,7 @@ function printStackTrace
     local frame=1
     while caller "$frame" > /dev/null
     do
-        local lineNumber file function
+        local lineNumber line file function
 
         # `caller` returns something that could already be printed as a stacktrace but we can make
         # it more readable by rearranging the components.
@@ -49,7 +53,23 @@ function printStackTrace
         lineNumber=$(caller "$frame" | cut --delimiter " " --field 1)
         function=$(caller "$frame" | cut --delimiter " " --field 2)
         file=$(caller "$frame" | cut --delimiter " " --field 3)
+
+        # Paths in the output from `caller` can be relative or absolute (depends on how the path
+        # with which the script was invoked) and if they're relative, they're not necessarily
+        # relative to the current working dir. This is a heuristic that will work if they're absolute,
+        # relative to current dir, or relative to the dir that was current when the script started.
+        # If neither works, it gives up.
+        line=$(
+            {
+                tail "--lines=+${lineNumber}" "$file" ||
+                tail "--lines=+${lineNumber}" "${_initial_work_dir}/${file}"
+            } 2> /dev/null |
+            head --lines=1 |
+            sed -e 's/^[[:space:]]*//'
+        ) || line="<failed to find source line>"
+
         >&2 printf "    %s:%d in function %s()\n" "$file" "$lineNumber" "$function"
+        >&2 printf "        %s\n" "$line"
 
         ((frame++))
     done
