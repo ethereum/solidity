@@ -10,6 +10,5 @@ tasks:
 
   - name: Install deps and build Solidity
     init: |
-      ./scripts/install_deps.sh
-      brew install z3
-      ./scripts/build.sh
+      sudo apt-get -y update
+      sudo apt-get -y install build-essential libboost-all-dev libz3-dev
