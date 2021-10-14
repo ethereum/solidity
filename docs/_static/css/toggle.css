@@ -75,3 +75,9 @@ html.transition *:after {
     transition: ease-in-out 200ms !important;
     transition-delay: 0 !important;
 }
+
+nav.wy-nav-side {
+    /* The default padding of 2em is too small and the "Keyword Index" link gets obscured
+     * by the version toggle. */
+    padding-bottom: 3em;
+}
