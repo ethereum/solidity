@@ -52,7 +52,9 @@ void CodeGenerator::assemble(
 		builtinContext,
 		_optimizeStackAllocation,
 		_identifierAccessCodeGen,
-		_useNamedLabelsForFunctions
+			_useNamedLabelsForFunctions ?
+			CodeTransform::UseNamedLabels::YesAndForceUnique :
+			CodeTransform::UseNamedLabels::Never
 	);
 	transform(_parsedData);
 	if (!transform.stackErrors().empty())

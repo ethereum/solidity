@@ -64,6 +64,10 @@ struct CodeTransformContext
 class CodeTransform
 {
 public:
+	/// Use named labels for functions 1) Yes and check that the names are unique
+	/// 2) For none of the functions 3) for the first function of each name.
+	enum class UseNamedLabels { YesAndForceUnique, Never, ForFirstFunctionOfEachName };
+
 	/// Create the code transformer.
 	/// @param _identifierAccessCodeGen used to generate code for identifiers external to the inline assembly
 	/// As a side-effect of its construction, translates the Yul code and appends it to the
@@ -78,7 +82,7 @@ public:
 		BuiltinContext& _builtinContext,
 		bool _allowStackOpt = false,
 		ExternalIdentifierAccess::CodeGenerator const& _identifierAccessCodeGen = {},
-		bool _useNamedLabelsForFunctions = false
+		UseNamedLabels _useNamedLabelsForFunctions = UseNamedLabels::Never
 	): CodeTransform(
 		_assembly,
 		_analysisInfo,
@@ -108,7 +112,7 @@ protected:
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
-		bool _useNamedLabelsForFunctions,
+		UseNamedLabels _useNamedLabelsForFunctions,
 		std::shared_ptr<Context> _context,
 		std::vector<TypedName> _delayedReturnVariables,
 		std::optional<AbstractAssembly::LabelID> _functionExitLabel
@@ -193,7 +197,8 @@ private:
 	EVMDialect const& m_dialect;
 	BuiltinContext& m_builtinContext;
 	bool const m_allowStackOpt = true;
-	bool const m_useNamedLabelsForFunctions = false;
+	UseNamedLabels const m_useNamedLabelsForFunctions = UseNamedLabels::Never;
+	std::set<YulString> m_assignedNamedLabels;
 	ExternalIdentifierAccess::CodeGenerator m_identifierAccessCodeGen;
 	std::shared_ptr<Context> m_context;
 

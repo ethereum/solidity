@@ -19,6 +19,7 @@ Bugfixes:
  * Commandline Interface: Don't return zero exit code when writing linked files to disk fails.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
  * TypeChecker: Fix internal error when using user defined value types in public library functions.
+ * Yul Assembler: Fix internal error when function names are not unique.
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
 
 

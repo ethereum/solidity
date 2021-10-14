@@ -52,7 +52,7 @@ CodeTransform::CodeTransform(
 	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
-	bool _useNamedLabelsForFunctions,
+	UseNamedLabels _useNamedLabelsForFunctions,
 	shared_ptr<Context> _context,
 	vector<TypedName> _delayedReturnVariables,
 	optional<AbstractAssembly::LabelID> _functionExitLabel
@@ -405,7 +405,11 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	if (!m_allowStackOpt)
 		subTransform.setupReturnVariablesAndFunctionExit();
 
+	subTransform.m_assignedNamedLabels = move(m_assignedNamedLabels);
+
 	subTransform(_function.body);
+
+	m_assignedNamedLabels = move(subTransform.m_assignedNamedLabels);
 
 	m_assembly.setSourceLocation(originLocationOf(_function));
 	if (!subTransform.m_stackErrors.empty())
@@ -585,8 +589,16 @@ void CodeTransform::createFunctionEntryID(FunctionDefinition const& _function)
 	if (_function.debugData)
 		astID = _function.debugData->astID;
 
+	bool nameAlreadySeen = !m_assignedNamedLabels.insert(_function.name).second;
+
+	if (m_useNamedLabelsForFunctions == UseNamedLabels::YesAndForceUnique)
+		yulAssert(!nameAlreadySeen);
+
 	m_context->functionEntryIDs[&scopeFunction] =
-		m_useNamedLabelsForFunctions ?
+		(
+			m_useNamedLabelsForFunctions != UseNamedLabels::Never &&
+			!nameAlreadySeen
+		) ?
 		m_assembly.namedLabel(
 			_function.name.str(),
 			_function.parameters.size(),
