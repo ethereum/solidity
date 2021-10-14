@@ -959,10 +959,13 @@ to ``loadimmutable("name")`` in the runtime code.
 
 linkersymbol
 ^^^^^^^^^^^^
-
-The function ``linkersymbol("fq_library_name")`` is a placeholder for an address literal to be
-substituted by the linker. Its first and only argument must be a string literal and represents the
-fully qualified library name used with the ``--libraries`` option.
+The function ``linkersymbol("library_id")`` is a placeholder for an address literal to be substituted
+by the linker.
+Its first and only argument must be a string literal and uniquely represents the address to be inserted.
+Identifiers can be arbitrary but when the compiler produces Yul code from Solidity sources,
+it uses a library name qualified with the name of the source unit that defines that library.
+To link the code with a particular library address, the same identifier must be provided to the
+``--libraries`` option on the command line.
 
 For example this code
 
