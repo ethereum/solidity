@@ -160,35 +160,6 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - steps_homebrew_workaround_before_restore_cache: &steps_homebrew_workaround_before_restore_cache
-      steps:
-        - run:
-            # Homebrew has recently replaced one of its dirs with a symlink to another.
-            # This makes tar used by restore_cache fail - the image contains an older version of
-            # Homebrew installed where it's a directory and tar refuses to overwrite a dir with a link.
-            # Removing the directory manually is a workaround that works only in case we do have
-            # cached files to restore. If we don't, we still need this dir because it contains
-            # a git wrapper that Homebrew uses to update itself. The solution is to just rename the
-            # dir before restore_cache and renamed it back afterwards.
-            # See https://github.com/ethereum/solidity/pull/12106 for more details.
-            name: Workaround for restore_cache + /usr/local/Homebrew/Library/Homebrew/shims/scm/
-            command: |
-              cd /usr/local/Homebrew/Library/Homebrew/shims/
-              mv scm/ scm-backup/
-
-  - steps_homebrew_workaround_after_restore_cache: &steps_homebrew_workaround_after_restore_cache
-      steps:
-        - run:
-            name: Workaround for restore_cache + /usr/local/Homebrew/Library/Homebrew/shims/scm/
-            command: |
-              cd /usr/local/Homebrew/Library/Homebrew/shims/
-              if ! [[ -e scm/ ]]
-              then
-                mv scm-backup/ scm/
-              else
-                rm -r scm-backup/
-              fi
-
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
@@ -654,19 +625,11 @@ jobs:
       MAKEFLAGS: -j 5
     steps:
       - checkout
-      - when:
-          condition: true
-          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
-          <<: *steps_homebrew_workaround_before_restore_cache
       - restore_cache:
           keys:
             - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
-      - when:
-          condition: true
-          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
-          <<: *steps_homebrew_workaround_after_restore_cache
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
@@ -698,17 +661,9 @@ jobs:
       TERM: xterm
     steps:
       - checkout
-      - when:
-          condition: true
-          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
-          <<: *steps_homebrew_workaround_before_restore_cache
       - restore_cache:
           keys:
             - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-      - when:
-          condition: true
-          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
-          <<: *steps_homebrew_workaround_after_restore_cache
       - attach_workspace:
           at: .
       - run: *run_soltest
@@ -722,17 +677,9 @@ jobs:
       TERM: xterm
     steps:
       - checkout
-      - when:
-          condition: true
-          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
-          <<: *steps_homebrew_workaround_before_restore_cache
       - restore_cache:
           keys:
             - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-      - when:
-          condition: true
-          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
-          <<: *steps_homebrew_workaround_after_restore_cache
       - attach_workspace:
           at: .
       - run: *run_cmdline_tests
