@@ -57,6 +57,7 @@ then
   brew install cmake
   brew install wget
   brew install coreutils
+  brew install diffutils
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3
