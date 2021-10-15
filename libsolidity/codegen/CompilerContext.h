@@ -46,6 +46,7 @@
 #include <stack>
 #include <queue>
 #include <utility>
+#include <limits>
 
 namespace solidity::frontend
 {

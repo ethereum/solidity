@@ -192,8 +192,11 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     # white list of ids which are not covered by tests
     white_ids = {
         "9804", # Tested in test/libyul/ObjectParser.cpp.
+        "1544",
+        "1749",
         "2674",
         "6367",
+        "8387",
         "3805", # "This is a pre-release compiler version, please do not use it in production."
                 # The warning may or may not exist in a compiler build.
         "4591", # "There are more than 256 warnings. Ignoring the rest."
@@ -225,7 +228,7 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
 
     old_source_only_ids = {
         "1584", "1823",
-        "1988", "2066", "3356",
+        "1988", "2066", "2833", "3356",
         "3893", "3996", "4010", "4802",
         "5272", "5622", "7128", "7400",
         "7589", "7593", "7649", "7710",
@@ -258,9 +261,9 @@ def main(argv):
     no_confirm = False
     examine_coverage = False
     next_id = False
-    opts, args = getopt.getopt(argv, "", ["check", "fix", "no-confirm", "examine-coverage", "next"])
+    opts, _args = getopt.getopt(argv, "", ["check", "fix", "no-confirm", "examine-coverage", "next"])
 
-    for opt, arg in opts:
+    for opt, _arg in opts:
         if opt == "--check":
             check = True
         elif opt == "--fix":

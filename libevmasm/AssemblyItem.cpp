@@ -21,11 +21,13 @@
 #include <libevmasm/Assembly.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/FixedHash.h>
 #include <liblangutil/SourceLocation.h>
 
 #include <fstream>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -63,17 +65,15 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(data);
 }
 
-size_t AssemblyItem::bytesRequired(size_t _addressLength) const
+size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) const
 {
 	switch (m_type)
 	{
 	case Operation:
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
-	case PushString:
-		return 1 + 32;
 	case Push:
-		return 1 + max<size_t>(1, util::bytesRequired(data()));
+		return 1 + max<size_t>(1, numberEncodingSize(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 1 + 4;		// worst case: a 16MB program
@@ -87,10 +87,25 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	case PushImmutable:
 		return 1 + 32;
 	case AssignImmutable:
-		if (m_immutableOccurrences)
-			return 1 + (3 + 32) * *m_immutableOccurrences;
+	{
+		unsigned long immutableOccurrences = 0;
+
+		// Skip exact immutables count if no precise count was requested
+		if (_precision == Precision::Approximate)
+			immutableOccurrences = 1; // Assume one immut. ref.
 		else
-			return 1 + (3 + 32) * 1024; // 1024 occurrences are beyond the maximum code size anyways.
+		{
+			solAssert(m_immutableOccurrences, "No immutable references. `bytesRequired()` called before assembly()?");
+			immutableOccurrences = m_immutableOccurrences.value();
+		}
+
+		if (immutableOccurrences != 0)
+			// (DUP DUP PUSH <n> ADD MSTORE)* (PUSH <n> ADD MSTORE)
+			return (immutableOccurrences - 1) * (5 + 32) + (3 + 32);
+		else
+			// POP POP
+			return 2;
+	}
 	case VerbatimBytecode:
 		return std::get<2>(*m_verbatimBytecode).size();
 	default:
@@ -118,7 +133,6 @@ size_t AssemblyItem::returnValues() const
 	case Operation:
 		return static_cast<size_t>(instructionInfo(instruction()).ret);
 	case Push:
-	case PushString:
 	case PushTag:
 	case PushData:
 	case PushSub:
@@ -147,7 +161,6 @@ bool AssemblyItem::canBeFunctional() const
 	case Operation:
 		return !isDupInstruction(instruction()) && !isSwapInstruction(instruction());
 	case Push:
-	case PushString:
 	case PushTag:
 	case PushData:
 	case PushSub:
@@ -193,10 +206,7 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		break;
 	}
 	case Push:
-		text = toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add);
-		break;
-	case PushString:
-		text = string("data_") + util::toHex(data());
+		text = toHex(toCompactBigEndian(data(), 1), util::HexPrefix::Add);
 		break;
 	case PushTag:
 	{
@@ -214,7 +224,7 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		text = string("tag_") + to_string(static_cast<size_t>(data())) + ":";
 		break;
 	case PushData:
-		text = string("data_") + util::toHex(data());
+		text = string("data_") + toHex(data());
 		break;
 	case PushSub:
 	case PushSubSize:
@@ -233,16 +243,16 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		text = string("bytecodeSize");
 		break;
 	case PushLibraryAddress:
-		text = string("linkerSymbol(\"") + util::toHex(data()) + string("\")");
+		text = string("linkerSymbol(\"") + toHex(data()) + string("\")");
 		break;
 	case PushDeployTimeAddress:
 		text = string("deployTimeAddress()");
 		break;
 	case PushImmutable:
-		text = string("immutable(\"") + toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
+		text = string("immutable(\"") + "0x" + util::toHex(toCompactBigEndian(data(), 1)) + "\")";
 		break;
 	case AssignImmutable:
-		text = string("assignImmutable(\"") + toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
+		text = string("assignImmutable(\"") + "0x" + util::toHex(toCompactBigEndian(data(), 1)) + "\")";
 		break;
 	case UndefinedItem:
 		assertThrow(false, AssemblyException, "Invalid assembly item.");
@@ -275,9 +285,6 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 		break;
 	case Push:
 		_out << " PUSH " << hex << _item.data() << dec;
-		break;
-	case PushString:
-		_out << " PushString"  << hex << (unsigned)_item.data() << dec;
 		break;
 	case PushTag:
 	{
@@ -330,6 +337,26 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	return _out;
 }
 
+size_t AssemblyItem::opcodeCount() const noexcept
+{
+	switch (m_type)
+	{
+		case AssemblyItemType::AssignImmutable:
+			// Append empty items if this AssignImmutable was referenced more than once.
+			// For n immutable occurrences the first (n - 1) occurrences will
+			// generate 5 opcodes and the last will generate 3 opcodes,
+			// because it is reusing the 2 top-most elements on the stack.
+			solAssert(m_immutableOccurrences, "");
+
+			if (m_immutableOccurrences.value() != 0)
+				return (*m_immutableOccurrences - 1) * 5 + 3;
+			else
+				return 2; // two POP's
+		default:
+			return 1;
+	}
+}
+
 std::string AssemblyItem::computeSourceMapping(
 	AssemblyItems const& _items,
 	map<string, unsigned> const& _sourceIndicesMap
@@ -342,6 +369,7 @@ std::string AssemblyItem::computeSourceMapping(
 	int prevSourceIndex = -1;
 	int prevModifierDepth = -1;
 	char prevJump = 0;
+
 	for (auto const& item: _items)
 	{
 		if (!ret.empty())
@@ -409,6 +437,9 @@ std::string AssemblyItem::computeSourceMapping(
 				}
 			}
 		}
+
+		if (item.opcodeCount() > 1)
+			ret += string(item.opcodeCount() - 1, ';');
 
 		prevStart = location.start;
 		prevLength = length;

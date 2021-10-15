@@ -103,7 +103,7 @@ bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 
 size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
 {
-	return evmasm::bytesRequired(_items, 3); // assume 3 byte addresses
+	return evmasm::bytesRequired(_items, 3, Precision::Approximate); // assume 3 byte addresses
 }
 
 void ConstantOptimisationMethod::replaceConstants(
@@ -133,7 +133,7 @@ bigint LiteralMethod::gasNeeded() const
 	return combineGas(
 		simpleRunGas({Instruction::PUSH1}),
 		// PUSHX plus data
-		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas) + dataGas(util::toCompactBigEndian(m_value, 1)),
+		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas) + dataGas(toCompactBigEndian(m_value, 1)),
 		0
 	);
 }
@@ -146,13 +146,13 @@ bigint CodeCopyMethod::gasNeeded() const
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
 		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		// Data gas for data itself
-		dataGas(util::toBigEndian(m_value))
+		dataGas(toBigEndian(m_value))
 	);
 }
 
 AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 {
-	bytes data = util::toBigEndian(m_value);
+	bytes data = toBigEndian(m_value);
 	assertThrow(data.size() == 32, OptimizerException, "Invalid number encoding.");
 	AssemblyItems actualCopyRoutine = copyRoutine();
 	actualCopyRoutine[4] = _assembly.newData(data);
@@ -192,7 +192,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 	if (_value < 0x10000)
 		// Very small value, not worth computing
 		return AssemblyItems{_value};
-	else if (util::bytesRequired(~_value) < util::bytesRequired(_value))
+	else if (numberEncodingSize(~_value) < numberEncodingSize(_value))
 		// Negated is shorter to represent
 		return findRepresentation(~_value) + AssemblyItems{Instruction::NOT};
 	else

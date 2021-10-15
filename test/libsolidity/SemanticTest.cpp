@@ -131,7 +131,7 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 			"isoltest_builtin_test",
 			[](FunctionCall const&) -> optional<bytes>
 			{
-				return util::toBigEndian(u256(0x1234));
+				return toBigEndian(u256(0x1234));
 			}
 		},
 		{
@@ -139,7 +139,7 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 			[](FunctionCall const& _call) -> optional<bytes>
 			{
 				if (_call.arguments.parameters.empty())
-					return util::toBigEndian(0);
+					return toBigEndian(0);
 				else
 					return _call.arguments.rawBytes();
 			}
@@ -154,7 +154,7 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 					address = h160(_call.arguments.parameters.at(0).rawString);
 				else
 					address = m_contractAddress;
-				return util::toBigEndian(balanceAt(address));
+				return toBigEndian(balanceAt(address));
 			}
 		},
 		{

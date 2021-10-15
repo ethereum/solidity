@@ -284,15 +284,17 @@
 //             let _5 := 0x40
 //             calldatacopy(0xe0, add(_3, 164), _5)
 //             calldatacopy(0x20, add(_3, 100), _5)
-//             mstore(0x120, sub(_2, c))
-//             mstore(0x60, k)
+//             let _6 := 0x120
+//             mstore(_6, sub(_2, c))
+//             let _7 := 0x60
+//             mstore(_7, k)
 //             mstore(0xc0, a)
-//             let result := call(gas(), 7, 0, 0xe0, 0x60, 0x1a0, _5)
-//             let result_1 := and(result, call(gas(), 7, 0, 0x20, 0x60, 0x120, _5))
-//             let _6 := 0x160
-//             let result_2 := and(result_1, call(gas(), 7, 0, 0x80, 0x60, _6, _5))
-//             let result_3 := and(result_2, call(gas(), 6, 0, 0x120, 0x80, _6, _5))
-//             result := and(result_3, call(gas(), 6, 0, _6, 0x80, b, _5))
+//             let result := call(gas(), 7, 0, 0xe0, _7, 0x1a0, _5)
+//             let result_1 := and(result, call(gas(), 7, 0, 0x20, _7, _6, _5))
+//             let _8 := 0x160
+//             let result_2 := and(result_1, call(gas(), 7, 0, 0x80, _7, _8, _5))
+//             let result_3 := and(result_2, call(gas(), 6, 0, _6, 0x80, _8, _5))
+//             result := and(result_3, call(gas(), 6, 0, _8, 0x80, b, _5))
 //             if eq(i, m)
 //             {
 //                 mstore(0x260, mload(0x20))
@@ -302,8 +304,8 @@
 //             }
 //             if gt(i, m)
 //             {
-//                 mstore(0x60, c)
-//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, 0x220, _5))
+//                 mstore(_7, c)
+//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, _7, 0x220, _5))
 //                 let result_5 := and(result_4, call(gas(), 6, 0, 0x220, 0x80, 0x260, _5))
 //                 result := and(result_5, call(gas(), 6, 0, 0x1a0, 0x80, 0x1e0, _5))
 //             }

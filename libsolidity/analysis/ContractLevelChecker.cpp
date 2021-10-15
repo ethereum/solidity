@@ -71,7 +71,7 @@ bool ContractLevelChecker::check(SourceUnit const& _sourceUnit)
 	findDuplicateDefinitions(
 		filterDeclarations<EventDefinition>(*_sourceUnit.annotation().exportedSymbols)
 	);
-	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
+	if (Error::containsErrors(m_errorReporter.errors()))
 		noErrors = false;
 	for (ASTPointer<ASTNode> const& node: _sourceUnit.nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -97,7 +97,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkPayableFallbackWithoutReceive(_contract);
 	checkStorageSize(_contract);
 
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }
 
 void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _contract)

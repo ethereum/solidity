@@ -211,7 +211,7 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	struct ExternalIdentifierInfo
 	{
 		Declaration const* declaration = nullptr;
-		/// Suffix used, one of "slot", "offset", "length" or empty.
+		/// Suffix used, one of "slot", "offset", "length", "address", "selector" or empty.
 		std::string suffix;
 		size_t valueSize = size_t(-1);
 	};

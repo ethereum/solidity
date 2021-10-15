@@ -19,6 +19,7 @@
 
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/SourceReferenceFormatter.h>
+#include <libsolutil/Numeric.h>
 
 using namespace std;
 using namespace solidity;

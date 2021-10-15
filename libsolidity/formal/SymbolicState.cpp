@@ -270,6 +270,8 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 					t = TypeProvider::uint256();
 				else if (t->category() == frontend::Type::Category::StringLiteral)
 					t = TypeProvider::bytesMemory();
+				else if (auto userType = dynamic_cast<UserDefinedValueType const*>(t))
+					t = &userType->underlyingType();
 		};
 		replaceTypes(inTypes);
 		replaceTypes(outTypes);

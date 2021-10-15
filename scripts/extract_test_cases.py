@@ -23,7 +23,7 @@ def extract_test_cases(_path):
     for l in lines:
         if inside:
             if l.strip().endswith(')' + delimiter + '";'):
-                with open('%03d_%s.sol' % (ctr, test_name), mode='wb', encoding='utf8') as f:
+                with open(f'{ctr:03d}_{test_name}.sol', mode='wb', encoding='utf8') as f:
                     f.write(test)
                 ctr += 1
                 inside = False

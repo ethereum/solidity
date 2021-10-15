@@ -24,8 +24,12 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
 #include <libsolidity/interface/ImportRemapper.h>
+
 #include <libyul/AssemblyStack.h>
+
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
+
 #include <libsolutil/JSON.h>
 
 #include <boost/program_options.hpp>
@@ -55,6 +59,30 @@ struct CompilerOutputs
 {
 	bool operator!=(CompilerOutputs const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(CompilerOutputs const& _other) const noexcept;
+	friend std::ostream& operator<<(std::ostream& _out, CompilerOutputs const& _requests);
+
+	static std::string const& componentName(bool CompilerOutputs::* _component);
+	static auto const& componentMap()
+	{
+		static std::map<std::string, bool CompilerOutputs::*> const components = {
+			{"ast-compact-json", &CompilerOutputs::astCompactJson},
+			{"asm", &CompilerOutputs::asm_},
+			{"asm-json", &CompilerOutputs::asmJson},
+			{"opcodes", &CompilerOutputs::opcodes},
+			{"bin", &CompilerOutputs::binary},
+			{"bin-runtime", &CompilerOutputs::binaryRuntime},
+			{"abi", &CompilerOutputs::abi},
+			{"ir", &CompilerOutputs::ir},
+			{"ir-optimized", &CompilerOutputs::irOptimized},
+			{"ewasm", &CompilerOutputs::ewasm},
+			{"hashes", &CompilerOutputs::signatureHashes},
+			{"userdoc", &CompilerOutputs::natspecUser},
+			{"devdoc", &CompilerOutputs::natspecDev},
+			{"metadata", &CompilerOutputs::metadata},
+			{"storage-layout", &CompilerOutputs::storageLayout},
+		};
+		return components;
+	}
 
 	bool astCompactJson = false;
 	bool asm_ = false;
@@ -77,6 +105,32 @@ struct CombinedJsonRequests
 {
 	bool operator!=(CombinedJsonRequests const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(CombinedJsonRequests const& _other) const noexcept;
+	friend std::ostream& operator<<(std::ostream& _out, CombinedJsonRequests const& _requests);
+
+	static std::string const& componentName(bool CombinedJsonRequests::* _component);
+	static auto const& componentMap()
+	{
+		static std::map<std::string, bool CombinedJsonRequests::*> const components = {
+			{"abi", &CombinedJsonRequests::abi},
+			{"metadata", &CombinedJsonRequests::metadata},
+			{"bin", &CombinedJsonRequests::binary},
+			{"bin-runtime", &CombinedJsonRequests::binaryRuntime},
+			{"opcodes", &CombinedJsonRequests::opcodes},
+			{"asm", &CombinedJsonRequests::asm_},
+			{"storage-layout", &CombinedJsonRequests::storageLayout},
+			{"generated-sources", &CombinedJsonRequests::generatedSources},
+			{"generated-sources-runtime", &CombinedJsonRequests::generatedSourcesRuntime},
+			{"srcmap", &CombinedJsonRequests::srcMap},
+			{"srcmap-runtime", &CombinedJsonRequests::srcMapRuntime},
+			{"function-debug", &CombinedJsonRequests::funDebug},
+			{"function-debug-runtime", &CombinedJsonRequests::funDebugRuntime},
+			{"hashes", &CombinedJsonRequests::signatureHashes},
+			{"devdoc", &CombinedJsonRequests::natspecDev},
+			{"userdoc", &CombinedJsonRequests::natspecUser},
+			{"ast", &CombinedJsonRequests::ast},
+		};
+		return components;
+	}
 
 	bool abi = false;
 	bool metadata = false;
@@ -102,6 +156,7 @@ struct CommandLineOptions
 	bool operator==(CommandLineOptions const& _other) const noexcept;
 	bool operator!=(CommandLineOptions const& _other) const noexcept { return !(*this == _other); }
 
+	OptimiserSettings optimiserSettings() const;
 
 	struct
 	{
@@ -110,6 +165,7 @@ struct CommandLineOptions
 		std::vector<ImportRemapper::Remapping> remappings;
 		bool addStdin = false;
 		boost::filesystem::path basePath = "";
+		std::vector<boost::filesystem::path> includePaths;
 		FileReader::FileSystemPathSet allowedDirectories;
 		bool ignoreMissingFiles = false;
 		bool errorRecovery = false;
@@ -122,6 +178,7 @@ struct CommandLineOptions
 		langutil::EVMVersion evmVersion;
 		bool experimentalViaIR = false;
 		RevertStrings revertStrings = RevertStrings::Default;
+		std::optional<langutil::DebugInfoSelection> debugInfoSelection;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
 	} output;
 
@@ -169,7 +226,6 @@ struct CommandLineOptions
 		bool initialize = false;
 		ModelCheckerSettings settings;
 	} modelChecker;
-
 };
 
 /// Parses the command-line arguments and produces a filled-out CommandLineOptions structure.
@@ -195,7 +251,7 @@ public:
 	/// CommandLineOptions structure has been fully initialized. false if there were errors - in
 	/// this case CommandLineOptions may be only partially filled out. May also return false if
 	/// there is not further processing necessary and the program should just exit.
-	bool parse(int _argc, char const* const* _argv, bool interactiveTerminal);
+	bool parse(int _argc, char const* const* _argv, bool _interactiveTerminal);
 
 	CommandLineOptions const& options() const { return m_options; }
 
@@ -203,6 +259,24 @@ public:
 	bool hasOutput() const { return m_hasOutput; }
 
 private:
+	/// @returns a specification of all named command-line options accepted by the compiler.
+	/// The object can be used to parse command-line arguments or to generate the help screen.
+	static boost::program_options::options_description optionsDescription();
+
+	/// @returns a specification of all positional command-line arguments accepted by the compiler.
+	/// The object can be used to parse command-line arguments or to generate the help screen.
+	static boost::program_options::positional_options_description positionalOptionsDescription();
+
+	/// Uses boost::program_options to parse the command-line arguments and leaves the result in @a m_args.
+	/// Also handles the arguments that result in information being printed followed by immediate exit.
+	/// @returns false if parsing fails due to syntactical errors or the arguments not matching the description.
+	bool parseArgs(int _argc, char const* const* _argv, bool _interactiveTerminal);
+
+	/// Validates parsed arguments stored in @a m_args and fills out the internal CommandLineOptions
+	/// structure.
+	/// @return false if there are any validation errors, true otherwise.
+	bool processArgs();
+
 	/// Parses the value supplied to --combined-json.
 	/// @return false if there are any validation errors, true otherwise.
 	bool parseCombinedJsonOption();
@@ -216,6 +290,8 @@ private:
 	/// It then tries to parse the contents and appends to m_options.libraries.
 	/// @return false if there are any validation errors, true otherwise.
 	bool parseLibraryOption(std::string const& _input);
+
+	bool parseOutputSelection();
 
 	bool checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
 	[[noreturn]] void printVersionAndExit();

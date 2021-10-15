@@ -23,6 +23,7 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Scanner.h>
 
 #include <libyul/AssemblyStack.h>
@@ -60,7 +61,8 @@ pair<bool, ErrorList> parse(string const& _source)
 		AssemblyStack asmStack(
 			solidity::test::CommonOptions::get().evmVersion(),
 			AssemblyStack::Language::StrictAssembly,
-			solidity::frontend::OptimiserSettings::none()
+			solidity::frontend::OptimiserSettings::none(),
+			DebugInfoSelection::All()
 		);
 		bool success = asmStack.parseAndAnalyze("source", _source);
 		return {success, asmStack.errors()};
@@ -72,7 +74,7 @@ pair<bool, ErrorList> parse(string const& _source)
 	return {false, {}};
 }
 
-optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarnings = true)
+optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarningsAndInfos = true)
 {
 	bool success;
 	ErrorList errors;
@@ -85,11 +87,11 @@ optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarni
 	else
 	{
 		// If success is true, there might still be an error in the assembly stage.
-		if (_allowWarnings && Error::containsOnlyWarnings(errors))
+		if (_allowWarningsAndInfos && !Error::containsErrors(errors))
 			return {};
 		else if (!errors.empty())
 		{
-			if (!_allowWarnings)
+			if (!_allowWarningsAndInfos)
 				BOOST_CHECK_EQUAL(errors.size(), 1);
 			return *errors.front();
 		}
@@ -97,15 +99,15 @@ optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarni
 	return {};
 }
 
-bool successParse(string const& _source, bool _allowWarnings = true)
+bool successParse(string const& _source, bool _allowWarningsAndInfos = true)
 {
-	return !parseAndReturnFirstError(_source, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _allowWarningsAndInfos);
 }
 
-Error expectError(string const& _source, bool _allowWarnings = false)
+Error expectError(string const& _source, bool _allowWarningsAndInfos = false)
 {
 
-	auto error = parseAndReturnFirstError(_source, _allowWarnings);
+	auto error = parseAndReturnFirstError(_source, _allowWarningsAndInfos);
 	BOOST_REQUIRE(error);
 	return *error;
 }
@@ -121,8 +123,9 @@ tuple<optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _so
 	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion::berlin());
 	ObjectParser objectParser{reporter, dialect};
 	CharStream stream(move(source), "");
-	objectParser.parse(make_shared<Scanner>(stream), false);
-	return {objectParser.sourceNameMapping(), std::move(errors)};
+	auto object = objectParser.parse(make_shared<Scanner>(stream), false);
+	BOOST_REQUIRE(object && object->debugData);
+	return {object->debugData->sourceNames, std::move(errors)};
 }
 
 }
@@ -180,7 +183,8 @@ BOOST_AUTO_TEST_CASE(to_string)
 	AssemblyStack asmStack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
 	);
 	BOOST_REQUIRE(asmStack.parseAndAnalyze("source", code));
 	BOOST_CHECK_EQUAL(asmStack.print(), expectation);

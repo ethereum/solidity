@@ -25,6 +25,7 @@
 
 #include <string>
 #include <set>
+#include <iostream>
 
 using namespace std;
 using namespace solidity;

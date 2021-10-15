@@ -409,7 +409,8 @@ bool ControlFlowBuilder::visit(InlineAssembly const& _inlineAssembly)
 void ControlFlowBuilder::visit(yul::Statement const& _statement)
 {
 	solAssert(m_currentNode && m_inlineAssembly, "");
-	m_currentNode->location = langutil::SourceLocation::smallestCovering(m_currentNode->location, locationOf(_statement));
+	solAssert(nativeLocationOf(_statement) == originLocationOf(_statement), "");
+	m_currentNode->location = langutil::SourceLocation::smallestCovering(m_currentNode->location, nativeLocationOf(_statement));
 	ASTWalker::visit(_statement);
 }
 
@@ -496,14 +497,15 @@ void ControlFlowBuilder::operator()(yul::Identifier const& _identifier)
 	solAssert(m_currentNode && m_inlineAssembly, "");
 	auto const& externalReferences = m_inlineAssembly->annotation().externalReferences;
 	if (externalReferences.count(&_identifier))
-	{
 		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(externalReferences.at(&_identifier).declaration))
+		{
+			solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
 			m_currentNode->variableOccurrences.emplace_back(
 				*declaration,
 				VariableOccurrence::Kind::Access,
-				_identifier.debugData->location
+				nativeLocationOf(_identifier)
 			);
-	}
+		}
 }
 
 void ControlFlowBuilder::operator()(yul::Assignment const& _assignment)
@@ -514,11 +516,14 @@ void ControlFlowBuilder::operator()(yul::Assignment const& _assignment)
 	for (auto const& variable: _assignment.variableNames)
 		if (externalReferences.count(&variable))
 			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(externalReferences.at(&variable).declaration))
+			{
+				solAssert(nativeLocationOf(variable) == originLocationOf(variable), "");
 				m_currentNode->variableOccurrences.emplace_back(
 					*declaration,
 					VariableOccurrence::Kind::Assignment,
-					variable.debugData->location
+					nativeLocationOf(variable)
 				);
+			}
 }
 
 void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
@@ -528,14 +533,14 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 	yul::ASTWalker::operator()(_functionCall);
 
 	if (auto const *builtinFunction = m_inlineAssembly->dialect().builtin(_functionCall.functionName.name))
-		if (builtinFunction->controlFlowSideEffects.terminates)
-		{
-			if (builtinFunction->controlFlowSideEffects.reverts)
-				connect(m_currentNode, m_revertNode);
-			else
-				connect(m_currentNode, m_transactionReturnNode);
+	{
+		if (builtinFunction->controlFlowSideEffects.canTerminate)
+			connect(m_currentNode, m_transactionReturnNode);
+		if (builtinFunction->controlFlowSideEffects.canRevert)
+			connect(m_currentNode, m_revertNode);
+		if (!builtinFunction->controlFlowSideEffects.canContinue)
 			m_currentNode = newLabel();
-		}
+	}
 }
 
 void ControlFlowBuilder::operator()(yul::FunctionDefinition const&)
@@ -548,7 +553,7 @@ void ControlFlowBuilder::operator()(yul::FunctionDefinition const&)
 void ControlFlowBuilder::operator()(yul::Leave const&)
 {
 	// This has to be implemented, if we ever decide to visit functions.
-	solUnimplementedAssert(false, "");
+	solUnimplemented("");
 }
 
 bool ControlFlowBuilder::visit(VariableDeclaration const& _variableDeclaration)

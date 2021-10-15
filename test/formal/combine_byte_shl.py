@@ -1,5 +1,6 @@
+from opcodes import BYTE, SHL
 from rule import Rule
-from opcodes import *
+from z3 import BitVec, ULE
 
 """
 byte(A, shl(B, X))

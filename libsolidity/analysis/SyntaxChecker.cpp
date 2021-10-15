@@ -41,7 +41,7 @@ using namespace solidity::util;
 bool SyntaxChecker::checkSyntax(ASTNode const& _astRoot)
 {
 	_astRoot.accept(*this);
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }
 
 bool SyntaxChecker::visit(SourceUnit const& _sourceUnit)

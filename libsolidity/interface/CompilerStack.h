@@ -35,10 +35,11 @@
 
 #include <libsmtutil/SolverInterface.h>
 
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
-#include <liblangutil/CharStreamProvider.h>
 
 #include <libevmasm/LinkerObject.h>
 
@@ -203,6 +204,9 @@ public:
 	/// @param _metadataHash can be IPFS, Bzzr1, None
 	void setMetadataHash(MetadataHash _metadataHash);
 
+	/// Select components of debug info that should be included in comments in generated assembly.
+	void selectDebugInfo(langutil::DebugInfoSelection _debugInfoSelection);
+
 	/// Sets the sources. Must be set before parsing.
 	void setSources(StringMap _sources);
 
@@ -326,11 +330,16 @@ public:
 	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
 	Json::Value methodIdentifiers(std::string const& _contractName) const;
 
-	/// @returns the Contract Metadata
-	std::string const& metadata(std::string const& _contractName) const;
+	/// @returns the Contract Metadata matching the pipeline selected using the viaIR setting.
+	std::string const& metadata(std::string const& _contractName) const { return metadata(contract(_contractName)); }
 
-	/// @returns the cbor-encoded metadata.
-	bytes cborMetadata(std::string const& _contractName) const;
+	/// @returns the CBOR-encoded metadata matching the pipeline selected using the viaIR setting.
+	bytes cborMetadata(std::string const& _contractName) const { return cborMetadata(_contractName, m_viaIR); }
+
+	/// @returns the CBOR-encoded metadata.
+	/// @param _forIR If true, the metadata for the IR codegen is used. Otherwise it's the metadata
+	///               for the EVM codegen
+	bytes cborMetadata(std::string const& _contractName, bool _forIR) const;
 
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
@@ -339,6 +348,7 @@ public:
 	/// This is mostly a workaround to avoid bytecode and gas differences between compiler builds
 	/// caused by differences in metadata. Should only be used for testing.
 	void setMetadataFormat(MetadataFormat _metadataFormat) { m_metadataFormat = _metadataFormat; }
+
 private:
 	/// The state per source unit. Filled gradually during parsing.
 	struct Source
@@ -437,11 +447,14 @@ private:
 	/// Can only be called after state is SourcesSet.
 	Source const& source(std::string const& _sourceName) const;
 
+	/// @param _forIR If true, include a flag that indicates that the bytecode comes from the
+	///               experimental IR codegen.
 	/// @returns the metadata JSON as a compact string for the given contract.
-	std::string createMetadata(Contract const& _contract) const;
+	std::string createMetadata(Contract const& _contract, bool _forIR) const;
 
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
-	bytes createCBORMetadata(Contract const& _contract) const;
+	/// @param _forIR If true, use the metadata for the IR codegen. Otherwise the one for EVM codegen.
+	bytes createCBORMetadata(Contract const& _contract, bool _forIR) const;
 
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
@@ -459,9 +472,9 @@ private:
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json::Value const& natspecDev(Contract const&) const;
 
-	/// @returns the Contract Metadata
+	/// @returns the Contract Metadata matching the pipeline selected using the viaIR setting.
 	/// This will generate the metadata and store it in the Contract object if it is not present yet.
-	std::string const& metadata(Contract const&) const;
+	std::string const& metadata(Contract const& _contract) const;
 
 	/// @returns the offset of the entry point of the given function into the list of assembly items
 	/// or zero if it is not found or does not exist.
@@ -496,6 +509,7 @@ private:
 	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	MetadataHash m_metadataHash = MetadataHash::IPFS;
+	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
 	bool m_importedSources = false;

@@ -31,12 +31,16 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/GasMeter.h>
 
+#include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
 
 #include <json/json.h>
 
-#include <fstream>
 #include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/view/enumerate.hpp>
+
+#include <fstream>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -44,18 +48,18 @@ using namespace solidity::evmasm;
 using namespace solidity::langutil;
 using namespace solidity::util;
 
-AssemblyItem const& Assembly::append(AssemblyItem const& _i)
+AssemblyItem const& Assembly::append(AssemblyItem _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += static_cast<int>(_i.deposit());
-	m_items.emplace_back(_i);
+	m_items.emplace_back(move(_i));
 	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
 	m_items.back().m_modifierDepth = m_currentModifierDepth;
 	return m_items.back();
 }
 
-unsigned Assembly::bytesRequired(unsigned subTagSize) const
+unsigned Assembly::codeSize(unsigned subTagSize) const
 {
 	for (unsigned tagSize = subTagSize; true; ++tagSize)
 	{
@@ -64,8 +68,8 @@ unsigned Assembly::bytesRequired(unsigned subTagSize) const
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			ret += i.bytesRequired(tagSize);
-		if (util::bytesRequired(ret) <= tagSize)
+			ret += i.bytesRequired(tagSize, Precision::Approximate);
+		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
 }
@@ -82,16 +86,7 @@ string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& 
 	if (it == _sourceCodes.end())
 		return {};
 
-	string const& source = it->second;
-	if (static_cast<size_t>(_location.start) >= source.size())
-		return {};
-
-	string cut = source.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
-	auto newLinePos = cut.find_first_of("\n");
-	if (newLinePos != string::npos)
-		cut = cut.substr(0, newLinePos) + "...";
-
-	return cut;
+	return CharStream::singleLineSnippet(it->second, _location);
 }
 
 class Functionalizer
@@ -101,13 +96,13 @@ public:
 		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes), m_assembly(_assembly)
 	{}
 
-	void feed(AssemblyItem const& _item)
+	void feed(AssemblyItem const& _item, DebugInfoSelection const& _debugInfoSelection)
 	{
 		if (_item.location().isValid() && _item.location() != m_location)
 		{
 			flush();
 			m_location = _item.location();
-			printLocation();
+			printLocation(_debugInfoSelection);
 		}
 
 		string expression = _item.toAssemblyText(m_assembly);
@@ -147,16 +142,29 @@ public:
 		m_pending.clear();
 	}
 
-	void printLocation()
+	void printLocation(DebugInfoSelection const& _debugInfoSelection)
 	{
-		if (!m_location.isValid())
+		if (!m_location.isValid() || (!_debugInfoSelection.location && !_debugInfoSelection.snippet))
 			return;
+
 		m_out << m_prefix << "    /*";
-		if (m_location.sourceName)
-			m_out << " " + escapeAndQuoteString(*m_location.sourceName);
-		if (m_location.hasText())
-			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
-		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
+
+		if (_debugInfoSelection.location)
+		{
+			if (m_location.sourceName)
+				m_out << " " + escapeAndQuoteString(*m_location.sourceName);
+			if (m_location.hasText())
+				m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
+		}
+
+		if (_debugInfoSelection.snippet)
+		{
+			if (_debugInfoSelection.location)
+				m_out << "  ";
+
+			m_out << locationFromSources(m_sourceCodes, m_location);
+		}
+
 		m_out << " */" << endl;
 	}
 
@@ -172,12 +180,17 @@ private:
 
 }
 
-void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+void Assembly::assemblyStream(
+	ostream& _out,
+	DebugInfoSelection const& _debugInfoSelection,
+	string const& _prefix,
+	StringMap const& _sourceCodes
+) const
 {
 	Functionalizer f(_out, _prefix, _sourceCodes, *this);
 
 	for (auto const& i: m_items)
-		f.feed(i);
+		f.feed(i, _debugInfoSelection);
 	f.flush();
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -185,30 +198,33 @@ void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap co
 		_out << _prefix << "stop" << endl;
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
-				_out << _prefix << "data_" << toHex(u256(i.first)) << " " << toHex(i.second) << endl;
+				_out << _prefix << "data_" << toHex(u256(i.first)) << " " << util::toHex(i.second) << endl;
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			_out << endl << _prefix << "sub_" << i << ": assembly {\n";
-			m_subs[i]->assemblyStream(_out, _prefix + "    ", _sourceCodes);
+			m_subs[i]->assemblyStream(_out, _debugInfoSelection, _prefix + "    ", _sourceCodes);
 			_out << _prefix << "}" << endl;
 		}
 	}
 
 	if (m_auxiliaryData.size() > 0)
-		_out << endl << _prefix << "auxdata: 0x" << toHex(m_auxiliaryData) << endl;
+		_out << endl << _prefix << "auxdata: 0x" << util::toHex(m_auxiliaryData) << endl;
 }
 
-string Assembly::assemblyString(StringMap const& _sourceCodes) const
+string Assembly::assemblyString(
+	DebugInfoSelection const& _debugInfoSelection,
+	StringMap const& _sourceCodes
+) const
 {
 	ostringstream tmp;
-	assemblyStream(tmp, "", _sourceCodes);
+	assemblyStream(tmp, _debugInfoSelection, "", _sourceCodes);
 	return tmp.str();
 }
 
 Json::Value Assembly::createJsonValue(string _name, int _source, int _begin, int _end, string _value, string _jumpType)
 {
-	Json::Value value;
+	Json::Value value{Json::objectValue};
 	value["name"] = _name;
 	value["source"] = _source;
 	value["begin"] = _begin;
@@ -230,8 +246,9 @@ string Assembly::toStringInHex(u256 _value)
 Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) const
 {
 	Json::Value root;
+	root[".code"] = Json::arrayValue;
 
-	Json::Value& collection = root[".code"] = Json::arrayValue;
+	Json::Value& collection = root[".code"];
 	for (AssemblyItem const& i: m_items)
 	{
 		int sourceIndex = -1;
@@ -257,10 +274,6 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		case Push:
 			collection.append(
 				createJsonValue("PUSH", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
-			break;
-		case PushString:
-			collection.append(
-				createJsonValue("PUSH tag", sourceIndex, i.location().start, i.location().end, m_strings.at(h256(i.data()))));
 			break;
 		case PushTag:
 			if (i.data() == 0)
@@ -320,7 +333,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
 		case VerbatimBytecode:
-			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, toHex(i.verbatimData())));
+			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, util::toHex(i.verbatimData())));
 			break;
 		default:
 			assertThrow(false, InvalidOpcode, "");
@@ -329,10 +342,11 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
-		Json::Value& data = root[".data"] = Json::objectValue;
+		root[".data"] = Json::objectValue;
+		Json::Value& data = root[".data"];
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
-				data[toStringInHex((u256)i.first)] = toHex(i.second);
+				data[toStringInHex((u256)i.first)] = util::toHex(i.second);
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
@@ -343,7 +357,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 	}
 
 	if (m_auxiliaryData.size() > 0)
-		root[".auxdata"] = toHex(m_auxiliaryData);
+		root[".auxdata"] = util::toHex(m_auxiliaryData);
 
 	return root;
 }
@@ -409,18 +423,21 @@ Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 	return *this;
 }
 
-map<u256, u256> Assembly::optimiseInternal(
+map<u256, u256> const& Assembly::optimiseInternal(
 	OptimiserSettings const& _settings,
 	std::set<size_t> _tagsReferencedFromOutside
 )
 {
+	if (m_tagReplacements)
+		return *m_tagReplacements;
+
 	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
 		OptimiserSettings settings = _settings;
 		// Disable creation mode for sub-assemblies.
 		settings.isCreation = false;
-		map<u256, u256> subTagReplacements = m_subs[subId]->optimiseInternal(
+		map<u256, u256> const& subTagReplacements = m_subs[subId]->optimiseInternal(
 			settings,
 			JumpdestRemover::referencedTags(m_items, subId)
 		);
@@ -546,7 +563,8 @@ map<u256, u256> Assembly::optimiseInternal(
 			*this
 		);
 
-	return tagReplacements;
+	m_tagReplacements = move(tagReplacements);
+	return *m_tagReplacements;
 }
 
 LinkerObject const& Assembly::assemble() const
@@ -597,20 +615,20 @@ LinkerObject const& Assembly::assemble() const
 			"Cannot push and assign immutables in the same assembly subroutine."
 		);
 
-	unsigned bytesRequiredForCode = bytesRequired(static_cast<unsigned>(subTagSize));
+	unsigned bytesRequiredForCode = codeSize(static_cast<unsigned>(subTagSize));
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
 	map<size_t, pair<size_t, size_t>> tagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
-	unsigned bytesPerTag = util::bytesRequired(bytesRequiredForCode);
+	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
 
-	unsigned bytesPerDataRef = util::bytesRequired(bytesRequiredIncludingData);
+	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingData);
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
@@ -625,22 +643,9 @@ LinkerObject const& Assembly::assemble() const
 		case Operation:
 			ret.bytecode.push_back(static_cast<uint8_t>(i.instruction()));
 			break;
-		case PushString:
-		{
-			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
-			unsigned ii = 0;
-			for (auto j: m_strings.at(h256(i.data())))
-				if (++ii > 32)
-					break;
-				else
-					ret.bytecode.push_back(uint8_t(j));
-			while (ii++ < 32)
-				ret.bytecode.push_back(0);
-			break;
-		}
 		case Push:
 		{
-			unsigned b = max<unsigned>(1, util::bytesRequired(i.data()));
+			unsigned b = max<unsigned>(1, numberEncodingSize(i.data()));
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
@@ -670,7 +675,7 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
 			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
-			unsigned b = max<unsigned>(1, util::bytesRequired(s));
+			unsigned b = max<unsigned>(1, numberEncodingSize(s));
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
@@ -691,8 +696,11 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case PushImmutable:
 			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
+			// Maps keccak back to the "identifier" string of that immutable.
 			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
+			// Record the bytecode offset of the PUSH32 argument.
 			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
+			// Advance bytecode by 32 bytes (default initialized).
 			ret.bytecode.resize(ret.bytecode.size() + 32);
 			break;
 		case VerbatimBytecode:
@@ -700,6 +708,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case AssignImmutable:
 		{
+			// Expect 2 elements on stack (source, dest_base)
 			auto const& offsets = immutableReferencesBySub[i.data()].second;
 			for (size_t i = 0; i < offsets.size(); ++i)
 			{
@@ -775,15 +784,23 @@ LinkerObject const& Assembly::assemble() const
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
-		assertThrow(util::bytesRequired(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
+		assertThrow(numberEncodingSize(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);
 	}
 	for (auto const& [name, tagInfo]: m_namedTags)
 	{
 		size_t position = m_tagPositionsInBytecode.at(tagInfo.id);
+		optional<size_t> tagIndex;
+		for (auto&& [index, item]: m_items | ranges::views::enumerate)
+			if (item.type() == Tag && static_cast<size_t>(item.data()) == tagInfo.id)
+			{
+				tagIndex = index;
+				break;
+			}
 		ret.functionDebugData[name] = {
 			position == numeric_limits<size_t>::max() ? nullopt : optional<size_t>{position},
+			tagIndex,
 			tagInfo.sourceID,
 			tagInfo.params,
 			tagInfo.returns

@@ -17,12 +17,15 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:61232feea23c8c57e82cf5fae890f8b86bbec353cdc04f2fcba383ca589e1d8b"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-11
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:4acb2674eab3e7939d6dc6caa0b8320f4dd79484325242b58473ca2875792d90"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-13
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:c26a7ffc9fc243a4ec3105b9dc1edcdd964ad0e9665c83172b7ebda74bbf3021"
   emscripten-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:emscripten-6
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:092da5817bc032c91a806b4f73db2a1a31e5cc4c066d94d43eedd9f365df7154"
+  evm-version:
+    type: string
+    default: london
 
 orbs:
   win: circleci/windows@2.2.0
@@ -49,6 +52,25 @@ defaults:
   - run_proofs: &run_proofs
       name: Correctness proofs for optimization rules
       command: scripts/run_proofs.sh
+
+  - run_soltest: &run_soltest
+      name: soltest
+      no_output_timeout: 30m
+      command: ./.circleci/soltest.sh
+
+  - run_soltest_all: &run_soltest_all
+      name: soltest_all
+      no_output_timeout: 30m
+      command: ./.circleci/soltest_all.sh
+
+  - run_cmdline_tests: &run_cmdline_tests
+      name: command line tests
+      no_output_timeout: 30m
+      command: ./test/cmdlineTests.sh
+
+  - run_docs_pragma_min_version: &run_docs_pragma_min_version
+      name: docs pragma version check
+      command: ./scripts/docs_version_pragma_check.sh
 
   # --------------------------------------------------------------------------
   # Artifacts Templates
@@ -111,17 +133,7 @@ defaults:
   - store_test_results: &store_test_results
       path: test_results/
 
-  - run_soltest: &run_soltest
-      name: soltest
-      no_output_timeout: 30m
-      command: ./.circleci/soltest.sh
-
-  - run_soltest_all: &run_soltest_all
-      name: soltest_all
-      no_output_timeout: 30m
-      command: ./.circleci/soltest_all.sh
-
-  - run_soltest_steps: &run_soltest_steps
+  - steps_soltest: &steps_soltest
       steps:
         - checkout
         - attach_workspace:
@@ -130,7 +142,7 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - run_soltest_all_steps: &run_soltest_all_steps
+  - steps_soltest_all: &steps_soltest_all
       steps:
         - checkout
         - attach_workspace:
@@ -139,12 +151,7 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - run_cmdline_tests: &run_cmdline_tests
-      name: command line tests
-      no_output_timeout: 30m
-      command: ./test/cmdlineTests.sh
-
-  - run_cmdline_tests_steps: &run_cmdline_tests_steps
+  - steps_cmdline_tests: &steps_cmdline_tests
       steps:
         - checkout
         - attach_workspace:
@@ -153,34 +160,59 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - run_docs_pragma_min_version: &run_docs_pragma_min_version
-      name: docs pragma version check
-      command: ./scripts/docs_version_pragma_check.sh
+  - steps_homebrew_workaround_before_restore_cache: &steps_homebrew_workaround_before_restore_cache
+      steps:
+        - run:
+            # Homebrew has recently replaced one of its dirs with a symlink to another.
+            # This makes tar used by restore_cache fail - the image contains an older version of
+            # Homebrew installed where it's a directory and tar refuses to overwrite a dir with a link.
+            # Removing the directory manually is a workaround that works only in case we do have
+            # cached files to restore. If we don't, we still need this dir because it contains
+            # a git wrapper that Homebrew uses to update itself. The solution is to just rename the
+            # dir before restore_cache and renamed it back afterwards.
+            # See https://github.com/ethereum/solidity/pull/12106 for more details.
+            name: Workaround for restore_cache + /usr/local/Homebrew/Library/Homebrew/shims/scm/
+            command: |
+              cd /usr/local/Homebrew/Library/Homebrew/shims/
+              mv scm/ scm-backup/
+
+  - steps_homebrew_workaround_after_restore_cache: &steps_homebrew_workaround_after_restore_cache
+      steps:
+        - run:
+            name: Workaround for restore_cache + /usr/local/Homebrew/Library/Homebrew/shims/scm/
+            command: |
+              cd /usr/local/Homebrew/Library/Homebrew/shims/
+              if ! [[ -e scm/ ]]
+              then
+                mv scm-backup/ scm/
+              else
+                rm -r scm-backup/
+              fi
 
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
-      <<: *run_soltest_steps
+      <<: *steps_soltest
 
   - test_ubuntu2004_clang: &test_ubuntu2004_clang
       docker:
         - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
-      <<: *run_soltest_steps
+      <<: *steps_soltest
 
   - test_ubuntu2004: &test_ubuntu2004
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
       parallelism: 6
-      <<: *run_soltest_all_steps
+      <<: *steps_soltest_all
 
   - test_asan: &test_asan
       <<: *test_ubuntu2004
-      <<: *run_soltest_steps
+      <<: *steps_soltest
 
   - test_ubuntu2004_clang_cli: &test_ubuntu2004_clang_cli
       docker:
         - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
-      <<: *run_cmdline_tests_steps
+      <<: *steps_cmdline_tests
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -434,6 +466,32 @@ jobs:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
 
+  b_ubu: &b_ubu
+    resource_class: xlarge
+    docker:
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+    environment:
+      MAKEFLAGS: -j 10
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - store_artifacts: *artifacts_tools
+      - persist_to_workspace: *artifacts_executables
+
+  # x64 ASAN build, for testing for memory related bugs
+  b_ubu_asan: &b_ubu_asan
+    <<: *b_ubu
+    environment:
+      CMAKE_OPTIONS: -DSANITIZE=address
+      MAKEFLAGS: -j 10
+      CMAKE_BUILD_TYPE: Release
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
   b_ubu_clang: &b_ubu_clang
     resource_class: xlarge
     docker:
@@ -477,19 +535,6 @@ jobs:
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
 
-  b_ubu: &b_ubu
-    resource_class: xlarge
-    docker:
-      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
-    environment:
-      MAKEFLAGS: -j 10
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifacts_tools
-      - persist_to_workspace: *artifacts_executables
-
   b_ubu_release: &b_ubu_release
     <<: *b_ubu
     environment:
@@ -523,7 +568,7 @@ jobs:
   t_ubu_codecov:
     <<: *test_ubuntu2004
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
     steps:
       - checkout
@@ -586,9 +631,7 @@ jobs:
 
   b_archlinux:
     docker:
-      # FIXME: Newer releases won't work until CircleCI updates its host machines.
-      # See https://github.com/ethereum/solidity/pull/11332
-      - image: archlinux:base-20210131.0.14634
+      - image: archlinux:base
     environment:
       TERM: xterm
       MAKEFLAGS: -j 3
@@ -611,16 +654,24 @@ jobs:
       MAKEFLAGS: -j 5
     steps:
       - checkout
+      - when:
+          condition: true
+          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
+          <<: *steps_homebrew_workaround_before_restore_cache
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
+      - when:
+          condition: true
+          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
+          <<: *steps_homebrew_workaround_after_restore_cache
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
       - save_cache:
-          key: dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
           paths:
             - /usr/local/bin
             - /usr/local/sbin
@@ -642,14 +693,22 @@ jobs:
     macos:
       xcode: "11.0.0"
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       TERM: xterm
     steps:
       - checkout
+      - when:
+          condition: true
+          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
+          <<: *steps_homebrew_workaround_before_restore_cache
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      - when:
+          condition: true
+          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
+          <<: *steps_homebrew_workaround_after_restore_cache
       - attach_workspace:
           at: .
       - run: *run_soltest
@@ -663,9 +722,17 @@ jobs:
       TERM: xterm
     steps:
       - checkout
+      - when:
+          condition: true
+          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
+          <<: *steps_homebrew_workaround_before_restore_cache
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      - when:
+          condition: true
+          # FIXME: Remove this workaround when CircleCI fixes restore_cache.
+          <<: *steps_homebrew_workaround_after_restore_cache
       - attach_workspace:
           at: .
       - run: *run_cmdline_tests
@@ -696,19 +763,6 @@ jobs:
             - soljson.js
             - version.txt
 
-  # x64 ASAN build, for testing for memory related bugs
-  b_ubu_asan: &b_ubu_asan
-    <<: *b_ubu
-    environment:
-      CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 10
-      CMAKE_BUILD_TYPE: Release
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
-
   b_docs:
     docker:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
@@ -727,52 +781,38 @@ jobs:
 
   t_archlinux_soltest: &t_archlinux_soltest
       docker:
-        # FIXME: Newer releases won't work until CircleCI updates its host machines.
-        # See https://github.com/ethereum/solidity/pull/11332
-        - image: archlinux:base-20210131.0.14634
+        - image: archlinux:base
       environment:
-        EVM: constantinople
+        EVM: << pipeline.parameters.evm-version >>
         OPTIMIZE: 0
         TERM: xterm
         # For Archlinux we do not have prebuilt docker images and we would need to build evmone from source,
         # thus we forgo semantics tests to speed things up.
-        # FIXME: Z3 4.8.11 prerelease is now in main Arch Linux repos but it makes some of our SMT
-        # tests hang. Disabling SMT tests until we get a proper release.
-        # See https://github.com/Z3Prover/z3/issues/5330 for more details.
-        SOLTEST_FLAGS: --no-semantic-tests --no-smt
+        SOLTEST_FLAGS: --no-semantic-tests
       steps:
         - run:
             name: Install runtime dependencies
             command: |
               pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
-        - checkout
-        - attach_workspace:
-            at: build
-        - run: *run_soltest
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
+        - when:
+            condition: true
+            <<: *steps_soltest
 
   t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
     docker:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       SOLTEST_FLAGS: --enforce-via-yul
       OPTIMIZE: 0
       TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_soltest
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+    <<: *steps_soltest
 
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
     <<: *test_ubuntu2004_clang
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
 
   t_ubu_release_soltest: &t_ubu_release_soltest
@@ -783,7 +823,7 @@ jobs:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
       TERM: xterm
-    <<: *run_cmdline_tests_steps
+    <<: *steps_cmdline_tests
 
   t_ubu_release_cli: &t_ubu_release_cli
     <<: *t_ubu_cli
@@ -793,47 +833,43 @@ jobs:
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-    <<: *run_cmdline_tests_steps
+    <<: *steps_cmdline_tests
 
-  t_ubu_asan_constantinople:
+  t_ubu_asan:
     <<: *test_asan
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
-  t_ubu_asan_constantinople_clang:
+  t_ubu_asan_clang:
     <<: *test_ubuntu2004_clang
     environment:
-      EVM: constantinople
+      EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ubu_ubsan_clang:
+    environment:
+      EVM: << pipeline.parameters.evm-version >>
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_soltest
+      - when:
+          condition: true
+          <<: *steps_soltest
       - run: *gitter_notify_failure
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
 
   t_ubu_ubsan_clang_cli:
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_cmdline_tests
+      - when:
+          condition: true
+          <<: *steps_cmdline_tests
       - run: *gitter_notify_failure
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
 
   t_ems_solcjs:
     docker:
@@ -903,14 +939,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+            - dependencies-win-{{ arch }}-{{ checksum "scripts/install_deps.ps1" }}
       # DO NOT EDIT between here and save_cache, but rather edit .\scripts\install_deps.ps1
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: "Installing dependencies"
           command: .\scripts\install_deps.ps1
       - save_cache:
-          key: dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+          key: dependencies-win-{{ arch }}-{{ checksum "scripts/install_deps.ps1" }}
           paths:
             - .\deps
       - run:
@@ -1024,7 +1060,7 @@ jobs:
 
   b_bytecode_ems:
     docker:
-      - image: circleci/node:14
+      - image: circleci/node:16
     environment:
       SOLC_EMSCRIPTEN: "On"
     steps:
@@ -1216,7 +1252,6 @@ workflows:
             branches:
               only:
                 - develop
-                - develop_060
 
     jobs:
       # OSSFUZZ builds and (regression) tests
@@ -1230,8 +1265,8 @@ workflows:
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags
       - b_ubu_asan_clang: *workflow_trigger_on_tags
-      - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
-      - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
+      - t_ubu_asan: *workflow_ubuntu2004_asan
+      - t_ubu_asan_clang: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
 
       # UBSan build and tests

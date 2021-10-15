@@ -34,6 +34,9 @@ add_library(yul
 	AssemblyStack.cpp
 	CompilabilityChecker.cpp
 	CompilabilityChecker.h
+	ControlFlowSideEffects.h
+	ControlFlowSideEffectsCollector.cpp
+	ControlFlowSideEffectsCollector.h
 	Dialect.cpp
 	Dialect.h
 	Exceptions.h
@@ -68,6 +71,11 @@ add_library(yul
 	backends/evm/EVMMetrics.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
+	backends/evm/OptimizedEVMCodeTransform.cpp
+	backends/evm/OptimizedEVMCodeTransform.h
+	backends/evm/StackHelpers.h
+	backends/evm/StackLayoutGenerator.cpp
+	backends/evm/StackLayoutGenerator.h
 	backends/evm/VariableReferenceCounter.h
 	backends/evm/VariableReferenceCounter.cpp
 	backends/wasm/EVMToEwasmTranslator.cpp
@@ -211,4 +219,4 @@ add_library(yul
 	optimiser/VarNameCleaner.h
 )
 
-target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil)
+target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil fmt::fmt-header-only)

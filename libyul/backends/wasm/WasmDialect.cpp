@@ -129,8 +129,9 @@ WasmDialect::WasmDialect()
 	m_functions["unreachable"_yulstring].sideEffects.storage = SideEffects::None;
 	m_functions["unreachable"_yulstring].sideEffects.memory = SideEffects::None;
 	m_functions["unreachable"_yulstring].sideEffects.otherState = SideEffects::None;
-	m_functions["unreachable"_yulstring].controlFlowSideEffects.terminates = true;
-	m_functions["unreachable"_yulstring].controlFlowSideEffects.reverts = true;
+	m_functions["unreachable"_yulstring].controlFlowSideEffects.canTerminate = false;
+	m_functions["unreachable"_yulstring].controlFlowSideEffects.canRevert = true;
+	m_functions["unreachable"_yulstring].controlFlowSideEffects.canContinue = false;
 
 	addFunction("datasize", {i64}, {i64}, true, {LiteralKind::String});
 	addFunction("dataoffset", {i64}, {i64}, true, {LiteralKind::String});
@@ -215,11 +216,11 @@ void WasmDialect::addExternals()
 		{"eth", "log", {i32ptr, i32, i32, i32ptr, i32ptr, i32ptr, i32ptr}, {}},
 		{"eth", "getBlockNumber", {}, {i64}},
 		{"eth", "getTxOrigin", {i32ptr}, {}},
-		{"eth", "finish", {i32ptr, i32}, {}, ControlFlowSideEffects{true, false}},
-		{"eth", "revert", {i32ptr, i32}, {}, ControlFlowSideEffects{true, true}},
+		{"eth", "finish", {i32ptr, i32}, {}, ControlFlowSideEffects{true, false, false}},
+		{"eth", "revert", {i32ptr, i32}, {}, ControlFlowSideEffects{false, true, false}},
 		{"eth", "getReturnDataSize", {}, {i32}},
 		{"eth", "returnDataCopy", {i32ptr, i32, i32}, {}},
-		{"eth", "selfDestruct", {i32ptr}, {}, ControlFlowSideEffects{true, false}},
+		{"eth", "selfDestruct", {i32ptr}, {}, ControlFlowSideEffects{false, true, false}},
 		{"eth", "getBlockTimestamp", {}, {i64}},
 		{"debug", "print32", {i32}, {}},
 		{"debug", "print64", {i64}, {}},
@@ -240,7 +241,7 @@ void WasmDialect::addExternals()
 		// TODO some of them are side effect free.
 		f.sideEffects = SideEffects::worst();
 		f.sideEffects.cannotLoop = true;
-		f.sideEffects.movableApartFromEffects = !ext.controlFlowSideEffects.terminates;
+		f.sideEffects.movableApartFromEffects = !ext.controlFlowSideEffects.terminatesOrReverts();
 		f.controlFlowSideEffects = ext.controlFlowSideEffects;
 		f.isMSize = false;
 		f.literalArguments.clear();

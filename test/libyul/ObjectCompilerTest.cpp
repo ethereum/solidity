@@ -26,6 +26,7 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/algorithm/string.hpp>
@@ -64,7 +65,8 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	AssemblyStack stack(
 		EVMVersion(),
 		m_wasm ? AssemblyStack::Language::Ewasm : AssemblyStack::Language::StrictAssembly,
-		OptimiserSettings::preset(m_optimisationPreset)
+		OptimiserSettings::preset(m_optimisationPreset),
+		DebugInfoSelection::All()
 	);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{
@@ -81,7 +83,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 		solAssert(obj.bytecode, "");
 
 		m_obtainedResult = "Text:\n" + obj.assembly + "\n";
-		m_obtainedResult += "Binary:\n" + toHex(obj.bytecode->bytecode) + "\n";
+		m_obtainedResult += "Binary:\n" + util::toHex(obj.bytecode->bytecode) + "\n";
 	}
 	else
 	{
@@ -95,7 +97,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 		else
 			m_obtainedResult +=
 				"Bytecode: " +
-				toHex(obj.bytecode->bytecode) +
+				util::toHex(obj.bytecode->bytecode) +
 				"\nOpcodes: " +
 				boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode)) +
 				"\nSourceMappings:" +

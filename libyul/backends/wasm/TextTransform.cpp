@@ -25,6 +25,7 @@
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
@@ -54,7 +55,7 @@ string TextTransform::run(wasm::Module const& _module)
 			"    ;; (@custom \"" +
 			name +
 			"\" \"" +
-			toHex(BinaryTransform::run(module)) +
+			util::toHex(BinaryTransform::run(module)) +
 			"\")\n";
 	for (auto const& [name, data]: _module.customSections)
 		ret +=
@@ -62,7 +63,7 @@ string TextTransform::run(wasm::Module const& _module)
 			"    ;; (@custom \"" +
 			name +
 			"\" \"" +
-			toHex(data) +
+			util::toHex(data) +
 			"\")\n";
 	for (wasm::FunctionImport const& imp: _module.imports)
 	{

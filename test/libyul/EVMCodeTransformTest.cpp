@@ -47,7 +47,12 @@ TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = m_stackOpt;
-	AssemblyStack stack(EVMVersion{}, AssemblyStack::Language::StrictAssembly, settings);
+	AssemblyStack stack(
+		EVMVersion{},
+		AssemblyStack::Language::StrictAssembly,
+		settings,
+		DebugInfoSelection::All()
+	);
 	if (!stack.parseAndAnalyze("", m_source))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;

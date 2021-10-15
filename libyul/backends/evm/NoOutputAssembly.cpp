@@ -26,6 +26,7 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <range/v3/view/iota.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -135,21 +136,11 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	for (auto& fun: m_functions)
 	{
 		size_t returns = fun.second.returns.size();
-		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&, std::function<void(Expression const&)> _visitExpression)
+		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
 		{
-			size_t visited = 0;
-			for (size_t j = 0; j < _call.arguments.size(); j++)
-			{
-				size_t const i = _call.arguments.size() - j - 1;
+			for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
 				if (!fun.second.literalArgument(i))
-				{
-					_visitExpression(_call.arguments[i]);
-					visited++;
-				}
-			}
-
-			for (size_t i = 0; i < visited; i++)
-				_assembly.appendInstruction(evmasm::Instruction::POP);
+					_assembly.appendInstruction(evmasm::Instruction::POP);
 
 			for (size_t i = 0; i < returns; i++)
 				_assembly.appendConstant(u256(0));

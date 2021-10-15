@@ -52,9 +52,10 @@ struct BuiltinFunctionForEVM: public BuiltinFunction
 {
 	std::optional<evmasm::Instruction> instruction;
 	/// Function to generate code for the given function call and append it to the abstract
-	/// assembly. The fourth parameter is called to visit (and generate code for) the given
-	/// argument.
-	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void(Expression const&)>)> generateCode;
+	/// assembly. Expects all non-literal arguments of the call to be on stack in reverse order
+	/// (i.e. right-most argument pushed first).
+	/// Expects the caller to set the source location.
+	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&)> generateCode;
 };
 
 

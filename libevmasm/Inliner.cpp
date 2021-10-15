@@ -36,7 +36,7 @@
 #include <range/v3/view/transform.hpp>
 
 #include <optional>
-
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -63,7 +63,7 @@ template<typename RangeType>
 uint64_t codeSize(RangeType const& _itemRange)
 {
 	return ranges::accumulate(_itemRange | ranges::views::transform(
-		[](auto const& _item) { return _item.bytesRequired(2); }
+		[](auto const& _item) { return _item.bytesRequired(2, Precision::Approximate); }
 	), 0u);
 }
 /// @returns the tag id, if @a _item is a PushTag or Tag into the current subassembly, nullopt otherwise.

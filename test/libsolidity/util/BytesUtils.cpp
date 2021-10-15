@@ -21,6 +21,7 @@
 #include <test/libsolidity/util/SoltestErrors.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -108,7 +109,7 @@ bytes BytesUtils::convertFixedPoint(string const& _literal, size_t& o_fractional
 		u256 value(valueInteger);
 		if (negative)
 			value = s2u(-u2s(value));
-		return util::toBigEndian(value);
+		return toBigEndian(value);
 	}
 	catch (std::exception const&)
 	{
@@ -193,7 +194,7 @@ string BytesUtils::formatHexString(bytes const& _bytes)
 {
 	stringstream os;
 
-	os << "hex\"" << toHex(_bytes) << "\"";
+	os << "hex\"" << util::toHex(_bytes) << "\"";
 
 	return os.str();
 }

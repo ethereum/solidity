@@ -118,6 +118,15 @@ public:
 	/// Returns an empty string view if the source location does not `hasText()`.
 	std::string_view text(SourceLocation const& _location) const;
 
+	/// @returns the first line of the referenced source fragment. If the fragment is longer than
+	/// one line, appends an ellipsis to indicate that.
+	std::string singleLineSnippet(SourceLocation const& _location) const
+	{
+		return singleLineSnippet(m_source, _location);
+	}
+
+	static std::string singleLineSnippet(std::string const& _sourceCode, SourceLocation const& _location);
+
 private:
 	std::string m_source;
 	std::string m_name;

@@ -30,6 +30,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -63,7 +64,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	AssemblyStack stack(
 		version,
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		DebugInfoSelection::All()
 	);
 
 	// Parse protobuf mutated YUL code
@@ -71,7 +73,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		!stack.parseAndAnalyze("source", yul_source) ||
 		!stack.parserResult()->code ||
 		!stack.parserResult()->analysisInfo ||
-		!Error::containsOnlyWarnings(stack.errors())
+		Error::containsErrors(stack.errors())
 	)
 	{
 		SourceReferenceFormatter formatter(std::cout, stack, false, false);

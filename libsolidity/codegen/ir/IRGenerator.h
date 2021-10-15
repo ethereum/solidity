@@ -28,7 +28,10 @@
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
+
+#include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/EVMVersion.h>
+
 #include <string>
 
 namespace solidity::frontend
@@ -45,11 +48,21 @@ public:
 		langutil::EVMVersion _evmVersion,
 		RevertStrings _revertStrings,
 		OptimiserSettings _optimiserSettings,
-		std::map<std::string, unsigned> _sourceIndices
+		std::map<std::string, unsigned> _sourceIndices,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
+		langutil::CharStreamProvider const* _soliditySourceProvider
 	):
 		m_evmVersion(_evmVersion),
 		m_optimiserSettings(_optimiserSettings),
-		m_context(_evmVersion, ExecutionContext::Creation, _revertStrings, std::move(_optimiserSettings), std::move(_sourceIndices)),
+		m_context(
+			_evmVersion,
+			ExecutionContext::Creation,
+			_revertStrings,
+			std::move(_optimiserSettings),
+			std::move(_sourceIndices),
+			_debugInfoSelection,
+			_soliditySourceProvider
+		),
 		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector())
 	{}
 
@@ -118,6 +131,8 @@ private:
 	std::string memoryInit(bool _useMemoryGuard);
 
 	void resetContext(ContractDefinition const& _contract, ExecutionContext _context);
+
+	std::string dispenseLocationComment(ASTNode const& _node);
 
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;

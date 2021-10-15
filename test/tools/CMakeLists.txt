@@ -33,11 +33,13 @@ add_executable(isoltest
 	../libsolidity/SMTCheckerTest.cpp
 	../libyul/Common.cpp
 	../libyul/ControlFlowGraphTest.cpp
+	../libyul/ControlFlowSideEffectsTest.cpp
 	../libyul/EVMCodeTransformTest.cpp
 	../libyul/EwasmTranslationTest.cpp
 	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/SyntaxTest.cpp
+	../libyul/StackLayoutGeneratorTest.cpp
 	../libyul/YulOptimizerTest.cpp
 	../libyul/YulOptimizerTestCommon.cpp
 	../libyul/YulInterpreterTest.cpp

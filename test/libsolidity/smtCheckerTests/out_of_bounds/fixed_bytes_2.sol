@@ -6,4 +6,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (83-87): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = 0\ny = 4\n = 0\n\nTransaction trace:\nC.constructor()\nC.r(0, 4)
+// Warning 6368: (83-87): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = 0x0\ny = 4\n = 0x0\n\nTransaction trace:\nC.constructor()\nC.r(0x0, 4)

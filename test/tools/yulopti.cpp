@@ -118,7 +118,7 @@ public:
 		size_t _columns
 	)
 	{
-		yulAssert(_columns > 0, "");
+		yulAssert(_columns > 0);
 
 		auto hasShorterString = [](auto const& a, auto const& b) { return a.second.size() < b.second.size(); };
 		size_t longestDescriptionLength = std::max(
@@ -151,7 +151,7 @@ public:
 				);
 			});
 
-		yulAssert(sortedOptions.size() > 0, "");
+		yulAssert(sortedOptions.size() > 0);
 		size_t rows = (sortedOptions.size() - 1) / _columns + 1;
 		for (size_t row = 0; row < rows; ++row)
 		{

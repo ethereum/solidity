@@ -24,6 +24,7 @@
 #include <libevmasm/LinkerObject.h>
 #include <libevmasm/Exceptions.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/Common.h>
@@ -64,7 +65,7 @@ public:
 	AssemblyItem newPushImmutable(std::string const& _identifier);
 	AssemblyItem newImmutableAssignment(std::string const& _identifier);
 
-	AssemblyItem const& append(AssemblyItem const& _i);
+	AssemblyItem const& append(AssemblyItem _i);
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
@@ -142,10 +143,12 @@ public:
 
 	/// Create a text representation of the assembly.
 	std::string assemblyString(
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		StringMap const& _sourceCodes = StringMap()
 	) const;
 	void assemblyStream(
 		std::ostream& _out,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		std::string const& _prefix = "",
 		StringMap const& _sourceCodes = StringMap()
 	) const;
@@ -165,9 +168,9 @@ protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
 	/// that are referenced in a super-assembly.
-	std::map<u256, u256> optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
+	std::map<u256, u256> const& optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
 
-	unsigned bytesRequired(unsigned subTagSize) const;
+	unsigned codeSize(unsigned subTagSize) const;
 
 private:
 	static Json::Value createJsonValue(
@@ -209,6 +212,10 @@ protected:
 	/// Map from a vector representing a path to a particular sub assembly to sub assembly id.
 	/// This map is used only for sub-assemblies which are not direct sub-assemblies (where path is having more than one value).
 	std::map<std::vector<size_t>, size_t> m_subPaths;
+
+	/// Contains the tag replacements relevant for super-assemblies.
+	/// If set, it means the optimizer has run and we will not run it again.
+	std::optional<std::map<u256, u256>> m_tagReplacements;
 
 	mutable LinkerObject m_assembledObject;
 	mutable std::vector<size_t> m_tagPositionsInBytecode;

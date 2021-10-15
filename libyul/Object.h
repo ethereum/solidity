@@ -24,10 +24,14 @@
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
 
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
+
 #include <libsolutil/Common.h>
 
 #include <memory>
 #include <set>
+#include <limits>
 
 namespace solidity::yul
 {
@@ -49,11 +53,11 @@ struct ObjectNode
 	/// Name of the object.
 	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
-protected:
-	virtual std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const = 0;
-
-	/// Object should have access to toString
-	friend struct Object;
+	virtual std::string toString(
+		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
+		langutil::CharStreamProvider const* _soliditySourceProvider
+	) const = 0;
 };
 
 /**
@@ -65,8 +69,11 @@ struct Data: public ObjectNode
 
 	bytes data;
 
-protected:
-	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
+	std::string toString(
+		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
+		langutil::CharStreamProvider const* _soliditySourceProvider
+	) const override;
 };
 
 
@@ -83,7 +90,11 @@ struct Object: public ObjectNode
 {
 public:
 	/// @returns a (parseable) string representation.
-	std::string toString(Dialect const* _dialect) const;
+	std::string toString(
+		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
+	) const;
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
@@ -114,8 +125,6 @@ public:
 
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
-protected:
-	std::string toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const override;
 };
 
 }

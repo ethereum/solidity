@@ -40,6 +40,7 @@
 #include <range/v3/view/transform.hpp>
 
 #include <cstdlib>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -102,8 +103,8 @@ std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
 	std::string message =
 			"Invalid encoded data\n"
 			"   Result                                                           Expectation\n";
-	auto resultHex = boost::replace_all_copy(toHex(_result), "0", ".");
-	auto expectedHex = boost::replace_all_copy(toHex(_expectation), "0", ".");
+	auto resultHex = boost::replace_all_copy(util::toHex(_result), "0", ".");
+	auto expectedHex = boost::replace_all_copy(util::toHex(_expectation), "0", ".");
 	for (size_t i = 0; i < std::max(resultHex.size(), expectedHex.size()); i += 0x40)
 	{
 		std::string result{i >= resultHex.size() ? string{} : resultHex.substr(i, 0x40)};
@@ -163,7 +164,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 			cout << "CALL   " << m_sender.hex() << " -> " << m_contractAddress.hex() << ":" << endl;
 		if (_value > 0)
 			cout << " value: " << _value << endl;
-		cout << " in:      " << toHex(_data) << endl;
+		cout << " in:      " << util::toHex(_data) << endl;
 	}
 	evmc_message message = {};
 	message.input_data = _data.data();
@@ -194,7 +195,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 
 	if (m_showMessages)
 	{
-		cout << " out:     " << toHex(m_output) << endl;
+		cout << " out:     " << util::toHex(m_output) << endl;
 		cout << " result: " << static_cast<size_t>(result.status_code) << endl;
 		cout << " gas used: " << m_gasUsed.str() << endl;
 	}

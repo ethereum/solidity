@@ -114,7 +114,7 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> YulOptimize
 	shared_ptr<Object> object;
 	shared_ptr<AsmAnalysisInfo> analysisInfo;
 	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_dialect, errors);
-	if (!object || !analysisInfo || !Error::containsOnlyWarnings(errors))
+	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		CharStream charStream(_source, "");

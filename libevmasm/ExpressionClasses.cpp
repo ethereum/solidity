@@ -29,6 +29,7 @@
 
 #include <functional>
 #include <tuple>
+#include <limits>
 
 using namespace std;
 using namespace solidity;

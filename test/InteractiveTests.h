@@ -31,7 +31,9 @@
 #include <test/libyul/YulOptimizerTest.h>
 #include <test/libyul/YulInterpreterTest.h>
 #include <test/libyul/ObjectCompilerTest.h>
+#include <test/libyul/ControlFlowSideEffectsTest.h>
 #include <test/libyul/FunctionSideEffects.h>
+#include <test/libyul/StackLayoutGeneratorTest.h>
 #include <test/libyul/SyntaxTest.h>
 
 #include <boost/filesystem.hpp>
@@ -56,11 +58,12 @@ struct Testsuite
 Testsuite const g_interactiveTestsuites[] = {
 /*
 	Title                   Path           Subpath                SMT   NeedsVM Creator function */
-	{"Ewasm Translation",      "libyul",      "ewasmTranslationTests", false, false, &yul::test::EwasmTranslationTest::create},
 	{"Yul Optimizer",          "libyul",      "yulOptimizerTests",     false, false, &yul::test::YulOptimizerTest::create},
 	{"Yul Interpreter",        "libyul",      "yulInterpreterTests",   false, false, &yul::test::YulInterpreterTest::create},
 	{"Yul Object Compiler",    "libyul",      "objectCompiler",        false, false, &yul::test::ObjectCompilerTest::create},
 	{"Yul Control Flow Graph", "libyul",      "yulControlFlowGraph",   false, false, &yul::test::ControlFlowGraphTest::create},
+	{"Yul Stack Layout",       "libyul",      "yulStackLayout",        false, false, &yul::test::StackLayoutGeneratorTest::create},
+	{"Control Flow Side Effects","libyul",    "controlFlowSideEffects",false, false, &yul::test::ControlFlowSideEffectsTest::create},
 	{"Function Side Effects",  "libyul",      "functionSideEffects",   false, false, &yul::test::FunctionSideEffects::create},
 	{"Yul Syntax",             "libyul",      "yulSyntaxTests",        false, false, &yul::test::SyntaxTest::create},
 	{"EVM Code Transform",     "libyul",      "evmCodeTransform",      false, false, &yul::test::EVMCodeTransformTest::create, {"nooptions"}},
@@ -70,7 +73,8 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"JSON AST",               "libsolidity", "ASTJSON",               false, false, &ASTJSONTest::create},
 	{"JSON ABI",               "libsolidity", "ABIJson",               false, false, &ABIJsonTest::create},
 	{"SMT Checker",            "libsolidity", "smtCheckerTests",       true,  false, &SMTCheckerTest::create},
-	{"Gas Estimates",          "libsolidity", "gasTests",              false, false, &GasTest::create}
+	{"Gas Estimates",          "libsolidity", "gasTests",              false, false, &GasTest::create},
+	{"Ewasm Translation",      "libyul",      "ewasmTranslationTests", false, false, &yul::test::EwasmTranslationTest::create}
 };
 
 }

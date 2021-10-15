@@ -1,0 +1,1 @@
+--ir --ir-optimized --asm --optimize --debug-info location,all,none

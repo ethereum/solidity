@@ -46,7 +46,7 @@ void createFileWithContent(boost::filesystem::path const& _path, std::string con
 /// support symlinks.
 /// Throws an exception of the operation fails for a different reason.
 bool createSymlinkIfSupportedByFilesystem(
-	boost::filesystem::path const& _targetPath,
+	boost::filesystem::path _targetPath,
 	boost::filesystem::path const& _linkName,
 	bool _directorySymlink
 );

@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		if (CommonOptions::get().useABIEncoderV1)
 			CHECK_DEPLOY_GAS(133045, 129731, evmVersion);
 		else
-			CHECK_DEPLOY_GAS(144679, 121229, evmVersion);
+			CHECK_DEPLOY_GAS(144999, 121229, evmVersion);
 	}
 	// This is only correct on >=Constantinople.
 	else if (!CommonOptions::get().useABIEncoderV1)
@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(138693, 123969, evmVersion);
+				CHECK_DEPLOY_GAS(139013, 123969, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(123301, 110969, evmVersion);
+				CHECK_DEPLOY_GAS(123361, 110969, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())

@@ -61,7 +61,6 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/AsmPrinter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/CompilabilityChecker.h>
 

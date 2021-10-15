@@ -23,6 +23,8 @@
 
 #include <libsolidity/interface/OptimiserSettings.h>
 
+#include <liblangutil/DebugInfoSelection.h>
+
 namespace solidity::test::fuzzer
 {
 class YulAssembler
@@ -36,7 +38,8 @@ public:
 		m_stack(
 			_version,
 			solidity::yul::AssemblyStack::Language::StrictAssembly,
-			_optSettings
+			_optSettings,
+			langutil::DebugInfoSelection::All()
 		),
 		m_yulProgram(_yulSource),
 		m_optimiseYul(_optSettings.runYulOptimiser)

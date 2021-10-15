@@ -1,6 +1,7 @@
+from opcodes import AND, ISZERO, GT, DIV
 from rule import Rule
-from opcodes import *
-from util import *
+from util import BVUnsignedUpCast, BVUnsignedMax
+from z3 import BitVec, Not, BVMulNoOverflow
 
 """
 Overflow checked unsigned integer multiplication.

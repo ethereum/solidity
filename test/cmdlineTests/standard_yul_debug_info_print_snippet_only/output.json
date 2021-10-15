@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "To use 'snippet' with settings.debug.debugInfo you must select also 'location'.",
+            "message": "To use 'snippet' with settings.debug.debugInfo you must select also 'location'.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

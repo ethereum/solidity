@@ -102,14 +102,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 		# Some Linux-specific Clang settings.  We don't want these for OS X.
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-
-			# TODO - Is this even necessary?  Why?
-			# See http://stackoverflow.com/questions/19774778/when-is-it-necessary-to-use-use-the-flag-stdlib-libstdc.
-			add_compile_options(-stdlib=libstdc++)
-
-			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
-			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
-
 			# Use fancy colors in the compiler diagnostics
 			add_compile_options(-fcolor-diagnostics)
 
@@ -200,6 +192,10 @@ if (SANITIZE)
 	elseif (sanitizer STREQUAL "undefined")
 		# The following flags not used by fuzzer but used by us may create problems, so consider
 		# disabling them: alignment, pointer-overflow.
+		# The following flag is not used by us to reduce terminal noise
+		# i.e., warnings printed on stderr: unsigned-integer-overflow
+		# Note: The C++ standard does not officially consider unsigned integer overflows
+		# to be undefined behavior since they are implementation independent.
 		# Flags are alphabetically sorted and are for clang v10.0
 		list(APPEND undefinedSanitizerChecks
 			alignment
@@ -217,18 +213,12 @@ if (SANITIZE)
 			returns-nonnull-attribute
 			shift
 			signed-integer-overflow
-			unsigned-integer-overflow
 			unreachable
 			vla-bound
 			vptr
 		)
 		list(JOIN undefinedSanitizerChecks "," sanitizerChecks)
-		list(REMOVE_ITEM undefinedSanitizerChecks unsigned-integer-overflow)
-		# The fuzzer excludes reports of unsigned-integer-overflow. Hence, we remove it
-		# from the -fno-sanitize-recover checks. Consider reducing this list if we do not
-		# want to be notified about other failed checks.
-		list(JOIN undefinedSanitizerChecks "," dontRecoverFromChecks)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${sanitizerChecks} -fno-sanitize-recover=${dontRecoverFromChecks}")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${sanitizerChecks} -fno-sanitize-recover=${sanitizerChecks}")
 	endif()
 endif()
 

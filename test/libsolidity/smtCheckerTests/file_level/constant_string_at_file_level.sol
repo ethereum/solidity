@@ -38,4 +38,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (968-983): CHC: Assertion violation happens here.\nCounterexample:\n\nw = 56\nz = 1\nt = 44048180624707321370159228589897778088919435935156254407473833945046349512704\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n    C.g() -- internal call\n    C.h() -- internal call\n    C.i() -- internal call
+// Warning 6328: (968-983): CHC: Assertion violation happens here.\nCounterexample:\n\nw = 56\nz = 1\nt = 0x61626300ff5f5f00000000000000000000000000000000000000000000000000\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n    C.g() -- internal call\n    C.h() -- internal call\n    C.i() -- internal call

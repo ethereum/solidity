@@ -58,9 +58,9 @@ optional<string> compileAndCheckLicenseMetadata(string const& _contractName, cha
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata(_contractName);
-	BOOST_CHECK(solidity::test::isValidMetadata(serialisedMetadata));
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
+	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
 	BOOST_REQUIRE(metadata["sources"].isMember("A.sol"));
@@ -250,9 +250,9 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("A");
-	BOOST_CHECK(solidity::test::isValidMetadata(serialisedMetadata));
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
+	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
 	BOOST_CHECK(metadata["sources"].isMember("A"));
@@ -291,9 +291,9 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("C");
-	BOOST_CHECK(solidity::test::isValidMetadata(serialisedMetadata));
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
+	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 3);
 	BOOST_CHECK(metadata["sources"].isMember("A"));
@@ -320,8 +320,8 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 		string metadata_str = compilerStack.metadata("test");
 		Json::Value metadata;
-		util::jsonParseStrict(metadata_str, metadata);
-		BOOST_CHECK(solidity::test::isValidMetadata(metadata_str));
+		BOOST_REQUIRE(util::jsonParseStrict(metadata_str, metadata));
+		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 		BOOST_CHECK(metadata.isMember("settings"));
 		BOOST_CHECK(metadata["settings"].isMember("metadata"));
 		BOOST_CHECK(metadata["settings"]["metadata"].isMember("bytecodeHash"));
@@ -344,24 +344,42 @@ BOOST_AUTO_TEST_CASE(metadata_viair)
 		}
 	)";
 
-	auto check = [](char const* _src, bool _viair)
+	auto check = [](char const* _src, bool _viaIR)
 	{
 		CompilerStack compilerStack;
 		compilerStack.setSources({{"", std::string(_src)}});
 		compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 		compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
-		compilerStack.setViaIR(_viair);
+		compilerStack.setViaIR(_viaIR);
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
-		string metadata_str = compilerStack.metadata("test");
+
 		Json::Value metadata;
-		util::jsonParseStrict(metadata_str, metadata);
-		BOOST_CHECK(solidity::test::isValidMetadata(metadata_str));
+		BOOST_REQUIRE(util::jsonParseStrict(compilerStack.metadata("test"), metadata));
+		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 		BOOST_CHECK(metadata.isMember("settings"));
-		if (_viair)
+		if (_viaIR)
 		{
 			BOOST_CHECK(metadata["settings"].isMember("viaIR"));
 			BOOST_CHECK(metadata["settings"]["viaIR"].asBool());
 		}
+		else
+			BOOST_CHECK(!metadata["settings"].isMember("viaIR"));
+
+		BOOST_CHECK(compilerStack.cborMetadata("test") == compilerStack.cborMetadata("test", _viaIR));
+		BOOST_CHECK(compilerStack.cborMetadata("test") != compilerStack.cborMetadata("test", !_viaIR));
+
+		map<string, string> const parsedCBORMetadata = requireParsedCBORMetadata(
+			compilerStack.runtimeObject("test").bytecode,
+			CompilerStack::MetadataFormat::WithReleaseVersionTag
+		);
+
+		if (_viaIR)
+		{
+			BOOST_CHECK(parsedCBORMetadata.count("experimental") == 1);
+			BOOST_CHECK(parsedCBORMetadata.at("experimental") == "true");
+		}
+		else
+			BOOST_CHECK(parsedCBORMetadata.count("experimental") == 0);
 	};
 
 	check(sourceCode, true);
@@ -381,9 +399,9 @@ BOOST_AUTO_TEST_CASE(metadata_revert_strings)
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("A");
-	BOOST_CHECK(solidity::test::isValidMetadata(serialisedMetadata));
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
+	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 	BOOST_CHECK_EQUAL(metadata["settings"]["debug"]["revertStrings"], "strip");
 }
@@ -437,28 +455,6 @@ BOOST_AUTO_TEST_CASE(metadata_license_gpl3_or_apache2)
 		}
 	)";
 	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0 OR Apache-2.0");
-}
-
-BOOST_AUTO_TEST_CASE(metadata_license_ignored_unicode)
-{
-	char const* sourceCode = R"(
-		// SPDX-License-Identifier: ⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒
-		pragma solidity >=0.0;
-		contract C {
-		}
-	)";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
-}
-
-BOOST_AUTO_TEST_CASE(metadata_license_ignored_stray_unicode)
-{
-	char const* sourceCode = R"(
-		// SPDX-License-Identifier: GPL-3.0 ⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒
-		pragma solidity >=0.0;
-		contract C {
-		}
-	)";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
 }
 
 BOOST_AUTO_TEST_CASE(metadata_license_bidi_marks)
@@ -552,15 +548,6 @@ BOOST_AUTO_TEST_CASE(metadata_license_natspec_multiline)
 	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
 }
 
-BOOST_AUTO_TEST_CASE(metadata_license_no_whitespace)
-{
-	char const* sourceCode = R"(
-		//SPDX-License-Identifier:GPL-3.0
-		contract C {}
-	)";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
-}
-
 BOOST_AUTO_TEST_CASE(metadata_license_no_whitespace_multiline)
 {
 	char const* sourceCode = R"(
@@ -574,6 +561,15 @@ BOOST_AUTO_TEST_CASE(metadata_license_nonempty_line)
 {
 	char const* sourceCode = R"(
 		pragma solidity >= 0.0; // SPDX-License-Identifier: GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_no_whitespace)
+{
+	char const* sourceCode = R"(
+		//SPDX-License-Identifier:GPL-3.0
 		contract C {}
 	)";
 	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");

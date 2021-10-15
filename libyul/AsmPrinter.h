@@ -28,6 +28,8 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceLocation.h>
 
 #include <map>
@@ -46,20 +48,25 @@ class AsmPrinter
 public:
 	explicit AsmPrinter(
 		Dialect const* _dialect = nullptr,
-		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
-		m_dialect(_dialect)
+		m_dialect(_dialect),
+		m_debugInfoSelection(_debugInfoSelection),
+		m_soliditySourceProvider(_soliditySourceProvider)
 	{
 		if (_sourceIndexToName)
 			for (auto&& [index, name]: *_sourceIndexToName)
 				m_nameToSourceIndex[*name] = index;
 	}
 
-
 	explicit AsmPrinter(
 		Dialect const& _dialect,
-		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
-	): AsmPrinter(&_dialect, _sourceIndexToName) {}
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
+	): AsmPrinter(&_dialect, _sourceIndexToName, _debugInfoSelection, _soliditySourceProvider) {}
 
 	std::string operator()(Literal const& _literal);
 	std::string operator()(Identifier const& _identifier);
@@ -76,20 +83,29 @@ public:
 	std::string operator()(Leave const& _continue);
 	std::string operator()(Block const& _block);
 
+	static std::string formatSourceLocation(
+		langutil::SourceLocation const& _location,
+		std::map<std::string, unsigned> const& _nameToSourceIndex,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
+		langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr
+	);
+
 private:
 	std::string formatTypedName(TypedName _variable);
 	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
-	std::string formatSourceLocationComment(std::shared_ptr<DebugData const> const& _debugData, bool _statement);
+	std::string formatDebugData(std::shared_ptr<DebugData const> const& _debugData, bool _statement);
 	template <class T>
-	std::string formatSourceLocationComment(T const& _node)
+	std::string formatDebugData(T const& _node)
 	{
 		bool isExpression = std::is_constructible<Expression, T>::value;
-		return formatSourceLocationComment(_node.debugData, !isExpression);
+		return formatDebugData(_node.debugData, !isExpression);
 	}
 
 	Dialect const* const m_dialect = nullptr;
-	std::map<std::string const, unsigned> m_nameToSourceIndex;
+	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
+	langutil::DebugInfoSelection m_debugInfoSelection = {};
+	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
 };
 
 }

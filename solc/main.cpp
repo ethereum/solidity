@@ -22,11 +22,16 @@
  */
 
 #include <solc/CommandLineInterface.h>
+
+#include <liblangutil/Exceptions.h>
+
 #include <boost/exception/all.hpp>
+
 #include <clocale>
 #include <iostream>
 
 using namespace std;
+using namespace solidity;
 
 /*
 The equivalent of setlocale(LC_ALL, "C") is called before any user code is run.
@@ -53,24 +58,52 @@ static void setDefaultOrCLocale()
 
 int main(int argc, char** argv)
 {
-	setDefaultOrCLocale();
-	solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
-	if (!cli.parseArguments(argc, argv))
-		return 1;
-	if (!cli.readInputFiles())
-		return 1;
-	if (!cli.processInput())
-		return 1;
-	bool success = false;
 	try
 	{
-		success = cli.actOnInput();
+		setDefaultOrCLocale();
+		solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
+		bool success =
+			cli.parseArguments(argc, argv) &&
+			cli.readInputFiles() &&
+			cli.processInput() &&
+			cli.actOnInput();
+
+		return success ? 0 : 1;
+	}
+	catch (smtutil::SMTLogicError const& _exception)
+	{
+		cerr << "SMT logic error:" << endl;
+		cerr << boost::diagnostic_information(_exception);
+		return 1;
+	}
+	catch (langutil::UnimplementedFeatureError const& _exception)
+	{
+		cerr << "Unimplemented feature:" << endl;
+		cerr << boost::diagnostic_information(_exception);
+		return 1;
+	}
+	catch (langutil::InternalCompilerError const& _exception)
+	{
+		cerr << "Internal compiler error:" << endl;
+		cerr << boost::diagnostic_information(_exception);
+		return 1;
 	}
 	catch (boost::exception const& _exception)
 	{
-		cerr << "Exception during output generation: " << boost::diagnostic_information(_exception) << endl;
-		success = false;
+		cerr << "Uncaught exception:" << endl;
+		cerr << boost::diagnostic_information(_exception) << endl;
+		return 1;
 	}
-
-	return success ? 0 : 1;
+	catch (std::exception const& _exception)
+	{
+		cerr << "Uncaught exception:" << endl;
+		cerr << boost::diagnostic_information(_exception) << endl;
+		return 1;
+	}
+	catch (...)
+	{
+		cerr << "Uncaught exception" << endl;
+		cerr << boost::current_exception_diagnostic_information() << endl;
+		return 1;
+	}
 }

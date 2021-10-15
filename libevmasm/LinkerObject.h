@@ -48,6 +48,7 @@ struct LinkerObject
 	struct FunctionDebugData
 	{
 		std::optional<size_t> bytecodeOffset;
+		std::optional<size_t> instructionIndex;
 		std::optional<size_t> sourceID;
 		size_t params = {};
 		size_t returns = {};

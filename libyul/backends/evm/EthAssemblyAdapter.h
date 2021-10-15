@@ -24,7 +24,9 @@
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/AsmAnalysis.h>
 #include <liblangutil/SourceLocation.h>
+
 #include <functional>
+#include <limits>
 
 namespace solidity::evmasm
 {

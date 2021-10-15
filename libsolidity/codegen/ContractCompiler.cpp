@@ -52,6 +52,7 @@
 #include <range/v3/view/reverse.hpp>
 
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
@@ -191,7 +192,12 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	auto const& immutables = contractType.immutableVariables();
 	// Push all immutable values on the stack.
 	for (auto const& immutable: immutables)
-		CompilerUtils(m_context).loadFromMemory(static_cast<unsigned>(m_context.immutableMemoryOffset(*immutable)), *immutable->annotation().type);
+		CompilerUtils(m_context).loadFromMemory(
+			static_cast<unsigned>(m_context.immutableMemoryOffset(*immutable)),
+			*immutable->annotation().type,
+			false,
+			true
+	);
 	m_context.pushSubroutineSize(m_context.runtimeSub());
 	if (immutables.empty())
 		m_context << Instruction::DUP1;
@@ -438,7 +444,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
 	{
-		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
+		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true, false);
 
 		// stack now is: <can-call-non-view-functions>? <funhash>
 		vector<FixedHash<4>> sortedIDs;
@@ -817,6 +823,16 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 							if (suffix == "length")
 								stackDiff--;
 						}
+						else if (
+							auto const* functionType = dynamic_cast<FunctionType const*>(variable->type());
+							functionType && functionType->kind() == FunctionType::Kind::External
+						)
+						{
+							solAssert(suffix == "selector" || suffix == "address", "");
+							solAssert(variable->type()->sizeOnStack() == 2, "");
+							if (suffix == "selector")
+								stackDiff--;
+						}
 						else
 							solAssert(false, "");
 					}
@@ -860,14 +876,37 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (variable->type()->dataStoredIn(DataLocation::CallData))
 			{
-				auto const* arrayType = dynamic_cast<ArrayType const*>(variable->type());
-				solAssert(
-					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData),
-					""
-				);
-				solAssert(suffix == "offset" || suffix == "length", "");
+				if (auto const* arrayType = dynamic_cast<ArrayType const*>(variable->type()))
+				{
+					if (arrayType->isDynamicallySized())
+					{
+						solAssert(suffix == "offset" || suffix == "length", "");
+						solAssert(variable->type()->sizeOnStack() == 2, "");
+						if (suffix == "length")
+							stackDiff--;
+					}
+					else
+					{
+						solAssert(variable->type()->sizeOnStack() == 1, "");
+						solAssert(suffix.empty(), "");
+					}
+				}
+				else
+				{
+					auto const* structType = dynamic_cast<StructType const*>(variable->type());
+					solAssert(structType, "");
+					solAssert(variable->type()->sizeOnStack() == 1, "");
+					solAssert(suffix.empty(), "");
+				}
+			}
+			else if (
+				auto const* functionType = dynamic_cast<FunctionType const*>(variable->type());
+				functionType && functionType->kind() == FunctionType::Kind::External
+			)
+			{
+				solAssert(suffix == "selector" || suffix == "address", "");
 				solAssert(variable->type()->sizeOnStack() == 2, "");
-				if (suffix == "length")
+				if (suffix == "selector")
 					stackDiff--;
 			}
 			else

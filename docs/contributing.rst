@@ -86,12 +86,10 @@ Running the Compiler Tests
 Prerequisites
 -------------
 
-Some tests require the `evmone <https://github.com/ethereum/evmone/releases>`_
-library, others require `libz3 <https://github.com/Z3Prover/z3>`_. The test script
-tries to discover the location of the ``evmone`` library, which can be located
-in the current directory, installed on the system level, or the ``deps`` folder
-in the project top level. The required file is called ``libevmone.so`` on Linux
-systems, ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS.
+For running all compiler tests you may want to optionally install a few
+dependencies (`evmone <https://github.com/ethereum/evmone/releases>`_,
+`libz3 <https://github.com/Z3Prover/z3>`_, and
+`libhera <https://github.com/ewasm/hera>`_).
 
 On macOS some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.
@@ -100,20 +98,36 @@ Running the Tests
 -----------------
 
 Solidity includes different types of tests, most of them bundled into the
-`Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
+`Boost C++ Test Framework <https://www.boost.org/doc/libs/release/libs/test/doc/html/index.html>`_ application ``soltest``.
 Running ``build/test/soltest`` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
 
 The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
-including those bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest`` (or its wrapper ``scripts/soltest.sh``),
-as well as command line tests and compilation tests.
+including those bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/release/libs/test/doc/html/index.html>`_
+application ``soltest`` (or its wrapper ``scripts/soltest.sh``), as well as command line tests and
+compilation tests.
 
-The test system automatically tries to discover the location of the ``evmone`` library
-starting from the current directory. The required file is called ``libevmone.so`` on Linux systems,
-``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
-use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
-``libsolidity/SolidityEndToEndTest``, part of the soltest suite. To run all tests, download the library from
-`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.8.0>`_
-and place it in the project root path or inside the ``deps`` folder.
+The test system automatically tries to discover the location of
+the `evmone <https://github.com/ethereum/evmone/releases>`_ for running the semantic tests.
+
+The ``evmone`` library must be located in the ``deps`` or ``deps/lib`` directory relative to the
+current working directory, to its parent or its parent's parent. Alternatively an explicit location
+for the ``evmone`` shared object can be specified via the ``ETH_EVMONE`` environment variable.
+
+``evmone`` is needed mainly for running semantic and gas tests.
+If you do not have it installed, you can skip these tests by passing the ``--no-semantic-tests``
+flag to ``scripts/soltest.sh``.
+
+Running Ewasm tests is disabled by default and can be explicitly enabled
+via ``./scripts/soltest.sh --ewasm`` and requires `hera <https://github.com/ewasm/hera>`_
+to be found by ``soltest``.
+The mechanism for locating the ``hera`` library is the same as for ``evmone``, except that the
+variable for specifying an explicit location is called ``ETH_HERA``.
+
+The ``evmone`` and ``hera`` libraries should both end with the file name
+extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
+
+For running SMT tests, the ``libz3`` library must be installed and locatable
+by ``cmake`` during compiler configure stage.
 
 If the ``libz3`` library is not installed on your system, you should disable the
 SMT tests by exporting ``SMT_FLAGS=--no-smt`` before running ``./scripts/tests.sh`` or
@@ -137,9 +151,9 @@ Or, for example, to run all the tests for the yul disambiguator:
 
 See especially:
 
-- `show_progress (-p) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/show_progress.html>`_ to show test completion,
-- `run_test (-t) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/run_test.html>`_ to run specific tests cases, and
-- `report-level (-r) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/report_level.html>`_ give a more detailed report.
+- `show_progress (-p) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/show_progress.html>`_ to show test completion,
+- `run_test (-t) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/run_test.html>`_ to run specific tests cases, and
+- `report-level (-r) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/report_level.html>`_ give a more detailed report.
 
 .. note ::
 

@@ -31,6 +31,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <optional>
+#include <limits>
 
 using namespace std;
 using namespace solidity;

@@ -11,7 +11,7 @@ import time
 
 DESCRIPTION = """Regressor is a tool to run regression tests in a CI env."""
 
-class PrintDotsThread(object):
+class PrintDotsThread:
     """Prints a dot every "interval" (default is 300) seconds"""
 
     def __init__(self, interval=300):
@@ -30,7 +30,7 @@ class PrintDotsThread(object):
             print(".")
             time.sleep(self.interval)
 
-class regressor():
+class regressor:
     _re_sanitizer_log = re.compile(r"""ERROR: (libFuzzer|UndefinedBehaviorSanitizer)""")
 
     def __init__(self, description, args):
@@ -101,22 +101,20 @@ class regressor():
         """
 
         testStatus = []
-        for fuzzer in glob.iglob("{}/*_ossfuzz".format(self._fuzzer_path)):
+        for fuzzer in glob.iglob(f"{self._fuzzer_path}/*_ossfuzz"):
             basename = os.path.basename(fuzzer)
-            logfile = os.path.join(self._logpath, "{}.log".format(basename))
-            corpus_dir = "/tmp/solidity-fuzzing-corpus/{0}_seed_corpus" \
-                .format(basename)
-            cmd = "find {0} -type f | xargs -n1 sh -c '{1} $0 || exit 255'".format(corpus_dir, fuzzer)
+            logfile = os.path.join(self._logpath, f"{basename}.log")
+            corpus_dir = f"/tmp/solidity-fuzzing-corpus/{basename}_seed_corpus"
+            cmd = f"find {corpus_dir} -type f | xargs -n1 sh -c '{fuzzer} $0 || exit 255'"
             self.run_cmd(cmd, logfile=logfile)
             ret = self.process_log(logfile)
             if not ret:
                 print(
-                    "\t[-] libFuzzer reported failure for {0}. "
-                    "Failure logged to test_results".format(
-                        basename))
+                    f"\t[-] libFuzzer reported failure for {basename}. "
+                    "Failure logged to test_results")
                 testStatus.append(False)
             else:
-                print("\t[+] {0} passed regression tests.".format(basename))
+                print(f"\t[+] {basename} passed regression tests.")
                 testStatus.append(True)
         return all(testStatus)
 

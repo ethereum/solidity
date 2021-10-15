@@ -1,6 +1,7 @@
+from opcodes import LT
 from rule import Rule
-from opcodes import *
-from util import *
+from util import BVUnsignedMax, BVUnsignedUpCast
+from z3 import BVSubNoUnderflow, BitVec, Not
 
 """
 Overflow checked unsigned integer subtraction.

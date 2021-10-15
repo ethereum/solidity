@@ -44,9 +44,7 @@ def writeSourceToFile(lines):
         os.system("mkdir -p " + filePath)
     with open(srcName, mode='a+', encoding='utf8', newline='') as f:
         createdSources.append(srcName)
-        i = 0
         for idx, line in enumerate(lines[1:]):
-
             # write to file
             if line[:12] != "==== Source:":
                 f.write(line)
@@ -65,7 +63,7 @@ if __name__ == '__main__':
         # decide if file has multiple sources
         with open(filePath, mode='r', encoding='utf8', newline='') as f:
             lines = f.read().splitlines()
-        if lines[0][:12] == "==== Source:":
+        if len(lines) >= 1 and lines[0][:12] == "==== Source:":
             hasMultipleSources = True
             writeSourceToFile(lines)
 

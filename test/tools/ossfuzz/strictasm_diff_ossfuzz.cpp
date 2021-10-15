@@ -22,6 +22,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AssemblyStack.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 
@@ -61,7 +62,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	AssemblyStack stack(
 		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		DebugInfoSelection::All()
 	);
 	try
 	{

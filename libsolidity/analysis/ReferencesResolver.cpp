@@ -201,9 +201,13 @@ bool ReferencesResolver::visit(Return const& _return)
 
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
-	validateYulIdentifierName(_function.name, _function.debugData->location);
+	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
+	validateYulIdentifierName(_function.name, nativeLocationOf(_function));
 	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
-		validateYulIdentifierName(varName.name, varName.debugData->location);
+	{
+		solAssert(nativeLocationOf(varName) == originLocationOf(varName), "");
+		validateYulIdentifierName(varName.name, nativeLocationOf(varName));
+	}
 
 	bool wasInsideFunction = m_yulInsideFunction;
 	m_yulInsideFunction = true;
@@ -213,13 +217,17 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
-	static set<string> suffixes{"slot", "offset", "length"};
+	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
+
+	static set<string> suffixes{"slot", "offset", "length", "address", "selector"};
 	string suffix;
 	for (string const& s: suffixes)
 		if (boost::algorithm::ends_with(_identifier.name.str(), "." + s))
 			suffix = s;
 
-	// Could also use `pathFromCurrentScope`, split by '.'
+	// Could also use `pathFromCurrentScope`, split by '.'.
+	// If we do that, suffix should only be set for when it has a special
+	// meaning, not for normal identifierPaths.
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
 	if (!suffix.empty())
 	{
@@ -238,7 +246,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	{
 		m_errorReporter.declarationError(
 			4718_error,
-			_identifier.debugData->location,
+			nativeLocationOf(_identifier),
 			"Multiple matching identifiers. Resolving overloaded identifiers is not supported."
 		);
 		return;
@@ -251,7 +259,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		)
 			m_errorReporter.declarationError(
 				9467_error,
-				_identifier.debugData->location,
+				nativeLocationOf(_identifier),
 				"Identifier not found. Use \".slot\" and \".offset\" to access storage variables."
 			);
 		return;
@@ -261,7 +269,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		{
 			m_errorReporter.declarationError(
 				6578_error,
-				_identifier.debugData->location,
+				nativeLocationOf(_identifier),
 				"Cannot access local Solidity variables from inside an inline assembly function."
 			);
 			return;
@@ -274,7 +282,10 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 {
 	for (auto const& identifier: _varDecl.variables)
-		validateYulIdentifierName(identifier.name, identifier.debugData->location);
+	{
+		solAssert(nativeLocationOf(identifier) == originLocationOf(identifier), "");
+		validateYulIdentifierName(identifier.name, nativeLocationOf(identifier));
+	}
 
 	if (_varDecl.value)
 		visit(*_varDecl.value);

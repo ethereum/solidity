@@ -117,6 +117,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"a:b=c/d",
 			":contract.sol=",
 			"--base-path=/home/user/",
+			"--include-path=/usr/lib/include/",
+			"--include-path=/home/user/include",
 			"--allow-paths=/tmp,/home,project,../contracts",
 			"--ignore-missing",
 			"--error-recovery",
@@ -125,6 +127,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--evm-version=spuriousDragon",
 			"--experimental-via-ir",
 			"--revert-strings=strip",
+			"--debug-info=location",
 			"--pretty-json",
 			"--json-indent=7",
 			"--no-color",
@@ -168,7 +171,9 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 		expectedOptions.input.addStdin = true;
 		expectedOptions.input.basePath = "/home/user/";
-		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "", "c", "/usr/lib"};
+		expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
+
+		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
 		expectedOptions.input.ignoreMissingFiles = true;
 		expectedOptions.input.errorRecovery = (inputMode == InputMode::Compiler);
 		expectedOptions.output.dir = "/tmp/out";
@@ -176,6 +181,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
 		expectedOptions.output.experimentalViaIR = true;
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
+		expectedOptions.output.debugInfoSelection = DebugInfoSelection::fromString("location");
 		expectedOptions.formatting.json = JsonFormat{JsonFormat::Pretty, 7};
 		expectedOptions.linker.libraries = {
 			{"dir1/file1.sol:L", h160("1234567890123456789012345678901234567890")},
@@ -257,12 +263,15 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"a:b=c/d",
 			":contract.yul=",
 			"--base-path=/home/user/",
+			"--include-path=/usr/lib/include/",
+			"--include-path=/home/user/include",
 			"--allow-paths=/tmp,/home,project,../contracts",
 			"--ignore-missing",
 			"--error-recovery",            // Ignored in assembly mode
 			"--overwrite",
 			"--evm-version=spuriousDragon",
 			"--revert-strings=strip",      // Accepted but has no effect in assembly mode
+			"--debug-info=location",
 			"--pretty-json",
 			"--json-indent=1",
 			"--no-color",
@@ -283,10 +292,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 				"underflow,"
 				"divByZero",
 			"--model-checker-timeout=5",   // Ignored in assembly mode
-
-			// Accepted but has no effect in assembly mode
-			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 		};
 		commandLine += assemblyOptions;
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
@@ -307,11 +312,13 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		};
 		expectedOptions.input.addStdin = true;
 		expectedOptions.input.basePath = "/home/user/";
-		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "", "c", "/usr/lib"};
+		expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
+		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
 		expectedOptions.input.ignoreMissingFiles = true;
 		expectedOptions.output.overwriteFiles = true;
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
+		expectedOptions.output.debugInfoSelection = DebugInfoSelection::fromString("location");
 		expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 1};
 		expectedOptions.assembly.targetMachine = expectedMachine;
 		expectedOptions.assembly.inputLanguage = expectedLanguage;
@@ -321,11 +328,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		};
 		expectedOptions.formatting.coloredOutput = false;
 		expectedOptions.formatting.withErrorIds = true;
-		expectedOptions.compiler.outputs = {
-			true, true, true, true, true,
-			true, true, true, true, true,
-			true, true, true, true, true,
-		};
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
 		{
 			expectedOptions.optimizer.enabled = true;
@@ -350,6 +352,8 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"input.json",
 		"--standard-json",
 		"--base-path=/home/user/",
+		"--include-path=/usr/lib/include/",
+		"--include-path=/home/user/include",
 		"--allow-paths=/tmp,/home,project,../contracts",
 		"--ignore-missing",
 		"--error-recovery",                // Ignored in Standard JSON mode
@@ -368,9 +372,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"--combined-json=abi,bin",         // Accepted but has no effect in Standard JSON mode
 		"--metadata-hash=swarm",           // Ignored in Standard JSON mode
 		"--metadata-literal",              // Ignored in Standard JSON mode
-		"--optimize",                      // Ignored in Standard JSON mode
-		"--optimize-runs=1000",            // Ignored in Standard JSON mode
-		"--yul-optimizations=agf",
 		"--model-checker-contracts="       // Ignored in Standard JSON mode
 			"contract1.yul:A,"
 			"contract2.yul:B",
@@ -382,10 +383,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 			"underflow,"
 			"divByZero",
 		"--model-checker-timeout=5",       // Ignored in Standard JSON mode
-
-		// Accepted but has no effect in Standard JSON mode
-		"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-		"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 	};
 
 	CommandLineOptions expectedOptions;
@@ -393,6 +390,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.input.mode = InputMode::StandardJson;
 	expectedOptions.input.paths = {"input.json"};
 	expectedOptions.input.basePath = "/home/user/";
+	expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
 	expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts"};
 	expectedOptions.input.ignoreMissingFiles = true;
 	expectedOptions.output.dir = "/tmp/out";
@@ -401,11 +399,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 1};
 	expectedOptions.formatting.coloredOutput = false;
 	expectedOptions.formatting.withErrorIds = true;
-	expectedOptions.compiler.outputs = {
-		true, true, true, true, true,
-		true, true, true, true, true,
-		true, true, true, true, true,
-	};
 	expectedOptions.compiler.estimateGas = true;
 	expectedOptions.compiler.combinedJsonRequests = CombinedJsonRequests{};
 	expectedOptions.compiler.combinedJsonRequests->abi = true;

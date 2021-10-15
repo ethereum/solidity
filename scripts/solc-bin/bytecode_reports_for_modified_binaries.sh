@@ -109,7 +109,6 @@ cd "$tmp_dir"
 git clone https://github.com/ethereum/solc-js.git "$solcjs_dir"
 cd "$solcjs_dir"
 npm install
-rm soljson.js
 
 cd "${solc_bin_dir}/${platform}/"
 echo "Commit range: ${base_ref}..${top_ref}"

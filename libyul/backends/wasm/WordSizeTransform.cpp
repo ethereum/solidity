@@ -27,6 +27,7 @@
 #include <array>
 #include <map>
 #include <variant>
+#include <limits>
 
 using namespace std;
 using namespace solidity;

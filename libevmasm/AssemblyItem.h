@@ -27,6 +27,7 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
+#include <optional>
 #include <iostream>
 #include <sstream>
 
@@ -38,7 +39,6 @@ enum AssemblyItemType
 	UndefinedItem,
 	Operation,
 	Push,
-	PushString,
 	PushTag,
 	PushSub,
 	PushSubSize,
@@ -51,6 +51,8 @@ enum AssemblyItemType
 	AssignImmutable, ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
 	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
 };
+
+enum class Precision { Precise , Approximate };
 
 class Assembly;
 class AssemblyItem;
@@ -148,7 +150,10 @@ public:
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
-	size_t bytesRequired(size_t _addressLength) const;
+	/// @param _precision Whether to return a precise count (which involves
+	///                   counting immutable references which are only set after
+	///                   a call to `assemble()`) or an approx. count.
+	size_t bytesRequired(size_t _addressLength, Precision _precision = Precision::Precise) const;
 	size_t arguments() const;
 	size_t returnValues() const;
 	size_t deposit() const { return returnValues() - arguments(); }
@@ -170,9 +175,11 @@ public:
 
 	size_t m_modifierDepth = 0;
 
-	void setImmutableOccurrences(size_t _n) const { m_immutableOccurrences = std::make_shared<size_t>(_n); }
+	void setImmutableOccurrences(size_t _n) const { m_immutableOccurrences = _n; }
 
 private:
+	size_t opcodeCount() const noexcept;
+
 	AssemblyItemType m_type;
 	Instruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
@@ -185,14 +192,14 @@ private:
 	/// e.g. PushSubSize, PushTag, PushSub, etc.
 	mutable std::shared_ptr<u256> m_pushedValue;
 	/// Number of PushImmutable's with the same hash. Only used for AssignImmutable.
-	mutable std::shared_ptr<size_t> m_immutableOccurrences;
+	mutable std::optional<size_t> m_immutableOccurrences;
 };
 
-inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength)
+inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength,  Precision _precision = Precision::Precise)
 {
 	size_t size = 0;
 	for (AssemblyItem const& item: _items)
-		size += item.bytesRequired(_addressLength);
+		size += item.bytesRequired(_addressLength, _precision);
 	return size;
 }
 

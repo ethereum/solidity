@@ -31,6 +31,8 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Algorithms.h>
 
+#include <limits>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;

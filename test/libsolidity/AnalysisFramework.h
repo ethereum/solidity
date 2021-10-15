@@ -66,8 +66,8 @@ protected:
 		std::string const& _signature
 	);
 
-	// filter out the warnings in m_warningsToFilter or all warnings if _includeWarnings is false
-	langutil::ErrorList filterErrors(langutil::ErrorList const& _errorList, bool _includeWarnings) const;
+	// filter out the warnings in m_warningsToFilter or all warnings and infos if _includeWarningsAndInfos is false
+	langutil::ErrorList filterErrors(langutil::ErrorList const& _errorList, bool _includeWarningsAndInfos) const;
 
 	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
 	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};

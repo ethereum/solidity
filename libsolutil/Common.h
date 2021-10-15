@@ -45,8 +45,6 @@
 #error "Unsupported Boost version. At least 1.65 required."
 #endif
 
-#include <boost/multiprecision/cpp_int.hpp>
-
 #include <map>
 #include <utility>
 #include <vector>
@@ -61,65 +59,11 @@ using bytes = std::vector<uint8_t>;
 using bytesRef = util::vector_ref<uint8_t>;
 using bytesConstRef = util::vector_ref<uint8_t const>;
 
-// Numeric types.
-using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;
-using u256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-using s256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
-
 // Map types.
 using StringMap = std::map<std::string, std::string>;
 
 // String types.
 using strings = std::vector<std::string>;
-
-/// Interprets @a _u as a two's complement signed number and returns the resulting s256.
-inline s256 u2s(u256 _u)
-{
-	static bigint const c_end = bigint(1) << 256;
-	if (boost::multiprecision::bit_test(_u, 255))
-		return s256(-(c_end - _u));
-	else
-		return s256(_u);
-}
-
-/// @returns the two's complement signed representation of the signed number _u.
-inline u256 s2u(s256 _u)
-{
-	static bigint const c_end = bigint(1) << 256;
-	if (_u >= 0)
-		return u256(_u);
-	else
-		return u256(c_end + _u);
-}
-
-inline u256 exp256(u256 _base, u256 _exponent)
-{
-	using boost::multiprecision::limb_type;
-	u256 result = 1;
-	while (_exponent)
-	{
-		if (boost::multiprecision::bit_test(_exponent, 0))
-			result *= _base;
-		_base *= _base;
-		_exponent >>= 1;
-	}
-	return result;
-}
-
-/// Checks whether _mantissa * (X ** _exp) fits into 4096 bits,
-/// where X is given indirectly via _log2OfBase = log2(X).
-bool fitsPrecisionBaseX(bigint const& _mantissa, double _log2OfBase, uint32_t _exp);
-
-inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
-{
-	std::ostringstream ss;
-	ss << std::hex;
-	std::copy(_bytes.begin(), _bytes.end(), std::ostream_iterator<int>(ss, ","));
-	std::string result = ss.str();
-	result.pop_back();
-	os << "[" + result + "]";
-	return os;
-}
 
 /// RAII utility class whose destructor calls a given function.
 class ScopeGuard

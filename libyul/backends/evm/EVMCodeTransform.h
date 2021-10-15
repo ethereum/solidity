@@ -142,7 +142,8 @@ public:
 
 private:
 	AbstractAssembly::LabelID labelFromIdentifier(Identifier const& _identifier);
-	AbstractAssembly::LabelID functionEntryID(YulString _name, Scope::Function const& _function);
+	void createFunctionEntryID(FunctionDefinition const& _function);
+	AbstractAssembly::LabelID functionEntryID(Scope::Function const& _scopeFunction) const;
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(Expression const& _expression);
 

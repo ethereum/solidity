@@ -246,7 +246,10 @@ public:
 
 	/// @returns the declared name.
 	ASTString const& name() const { return *m_name; }
+
+	/// @returns the location of the declared name itself or empty location if not available or unknown.
 	SourceLocation const& nameLocation() const noexcept { return m_nameLocation; }
+
 	bool noVisibilitySpecified() const { return m_visibility == Visibility::Default; }
 	Visibility visibility() const { return m_visibility == Visibility::Default ? defaultVisibility() : m_visibility; }
 	bool isPublic() const { return visibility() >= Visibility::Public; }
@@ -724,6 +727,40 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	Type const* type() const override;
+};
+
+/**
+ * User defined value types, i.e., custom types, for example, `type MyInt is int`. Allows creating a
+ * zero cost abstraction over value type with stricter type requirements.
+ */
+class UserDefinedValueTypeDefinition: public Declaration
+{
+public:
+	UserDefinedValueTypeDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> _name,
+		SourceLocation _nameLocation,
+		ASTPointer<TypeName> _underlyingType
+	):
+		Declaration(_id, _location, _name, std::move(_nameLocation), Visibility::Default),
+		m_underlyingType(std::move(_underlyingType))
+	{
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	Type const* type() const override;
+
+	TypeDeclarationAnnotation& annotation() const override;
+
+	TypeName const* underlyingType() const { return m_underlyingType.get(); }
+	bool isVisibleViaContractTypeAccess() const override { return true; }
+
+private:
+	/// The name of the underlying type
+	ASTPointer<TypeName> m_underlyingType;
 };
 
 /**

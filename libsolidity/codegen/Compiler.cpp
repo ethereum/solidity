@@ -60,8 +60,3 @@ std::shared_ptr<evmasm::Assembly> Compiler::runtimeAssemblyPtr() const
 	solAssert(m_context.runtimeContext(), "");
 	return m_context.runtimeContext()->assemblyPtr();
 }
-
-evmasm::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const
-{
-	return m_runtimeContext.functionEntryLabelIfExists(_function);
-}

@@ -33,6 +33,80 @@ else
     function printLog() { echo "$(tput setaf 3)$1$(tput sgr0)"; }
 fi
 
+function fail()
+{
+    printError "$@"
+    return 1
+}
+
+function msg_on_error()
+{
+    local error_message
+    local no_stdout=false
+    local no_stderr=false
+
+    while [[ $1 =~ ^-- ]]
+    do
+        case "$1" in
+            --msg)
+                error_message="$2"
+                shift
+                shift
+                ;;
+            --no-stdout)
+                no_stdout=true
+                shift
+                ;;
+            --no-stderr)
+                no_stderr=true
+                shift
+                ;;
+            --silent)
+                no_stdout=true
+                no_stderr=true
+                shift
+                ;;
+            *)
+                fail "Invalid option for msg_on_error: $1"
+                ;;
+        esac
+    done
+
+    local command=("$@")
+
+    local stdout_file stderr_file
+    stdout_file="$(mktemp -t cmdline_test_command_stdout_XXXXXX.txt)"
+    stderr_file="$(mktemp -t cmdline_test_command_stderr_XXXXXX.txt)"
+
+    if "${command[@]}" > "$stdout_file" 2> "$stderr_file"
+    then
+        [[ $no_stdout == "true" ]] || cat "$stdout_file"
+        [[ $no_stderr == "true" ]] || >&2 cat "$stderr_file"
+        rm "$stdout_file" "$stderr_file"
+        return 0
+    else
+        printError "Command failed: $SOLC ${command[*]}"
+        if [[ -s "$stdout_file" ]]
+        then
+            printError "stdout:"
+            >&2 cat "$stdout_file"
+        else
+            printError "stdout: <EMPTY>"
+        fi
+        if [[ -s "$stderr_file" ]]
+        then
+            printError "stderr:"
+            >&2 cat "$stderr_file"
+        else
+            printError "stderr: <EMPTY>"
+        fi
+
+        printError "$error_message"
+        rm "$stdout_file" "$stderr_file"
+        return 1
+    fi
+}
+
 safe_kill()
 {
     local PID=${1}

@@ -315,7 +315,7 @@ optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(
 	{
 		uint64_t slot = m_memorySlots.at(_variable);
 		yulAssert(slot < m_numRequiredSlots, "");
-		return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
+		return YulString{toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
 	}
 	else
 		return nullopt;

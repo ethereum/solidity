@@ -1,5 +1,6 @@
+from opcodes import SIGNEXTEND
 from rule import Rule
-from opcodes import *
+from z3 import BitVec, BitVecVal, Extract, SignExt, UGT
 
 """
 Checking the implementation of SIGNEXTEND using Z3's native SignExt and Extract

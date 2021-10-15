@@ -68,5 +68,5 @@ bool PostTypeContractLevelChecker::check(ContractDefinition const& _contract)
 			errorHashes[hash][signature] = error->location();
 	}
 
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }

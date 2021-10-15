@@ -189,11 +189,13 @@ string Whiskers::replace(
 			if (conditionName[0] == '+')
 			{
 				string tag = conditionName.substr(1);
-				assertThrow(
-					_parameters.count(tag),
-					WhiskersError, "Tag " + tag + " used as condition but was not set."
-				);
-				conditionValue = !_parameters.at(tag).empty();
+
+				if (_parameters.count(tag))
+					conditionValue = !_parameters.at(tag).empty();
+				else if (_listParameters.count(tag))
+					conditionValue = !_listParameters.at(tag).empty();
+				else
+					assertThrow(false, WhiskersError, "Tag " + tag + " used as condition but was not set.");
 			}
 			else
 			{

@@ -856,7 +856,7 @@ void EVMHostPrinter::selfdestructRecords()
 
 void EVMHostPrinter::callRecords()
 {
-	static const auto callKind = [](evmc_call_kind _kind) -> string
+	static auto constexpr callKind = [](evmc_call_kind _kind) -> string
 	{
 		switch (_kind)
 		{

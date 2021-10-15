@@ -22,6 +22,7 @@
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/Object.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -52,26 +53,6 @@ ControlFlowGraphTest::ControlFlowGraphTest(string const& _filename):
 
 namespace
 {
-static std::string stackSlotToString(StackSlot const& _slot)
-{
-	return std::visit(util::GenericVisitor{
-		[](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + _ret.call.get().functionName.name.str() + "]"; },
-		[](FunctionReturnLabelSlot const&) -> std::string { return "RET"; },
-		[](VariableSlot const& _var) { return _var.variable.get().name.str(); },
-		[](LiteralSlot const& _lit) { return util::toCompactHexWithPrefix(_lit.value); },
-		[](TemporarySlot const& _tmp) -> std::string { return "TMP[" + _tmp.call.get().functionName.name.str() + ", " + std::to_string(_tmp.index) + "]"; },
-		[](JunkSlot const&) -> std::string { return "JUNK"; }
-	}, _slot);
-}
-
-static std::string stackToString(Stack const& _stack)
-{
-	std::string result("[ ");
-	for (auto const& slot: _stack)
-		result += stackSlotToString(slot) + ' ';
-	result += ']';
-	return result;
-}
 static std::string variableSlotToString(VariableSlot const& _slot)
 {
 	return _slot.variable.get().name.str();
@@ -219,7 +200,7 @@ TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _
 {
 	ErrorList errors;
 	auto [object, analysisInfo] = parse(m_source, *m_dialect, errors);
-	if (!object || !analysisInfo || !Error::containsOnlyWarnings(errors))
+	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		return TestResult::FatalError;
