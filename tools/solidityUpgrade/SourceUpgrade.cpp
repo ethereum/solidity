@@ -533,7 +533,7 @@ void SourceUpgrade::resetCompiler()
 
 void SourceUpgrade::resetCompiler(ReadCallback::Callback const& _callback)
 {
-	m_compiler.reset(new CompilerStack(_callback));
+	m_compiler = std::make_unique<CompilerStack>(_callback);
 	m_compiler->setSources(m_sourceCodes);
 	m_compiler->setParserErrorRecovery(true);
 }
