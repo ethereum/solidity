@@ -25,7 +25,6 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
 
-#include <boost/range/adaptor/map.hpp>
 #include <memory>
 
 using namespace std;
