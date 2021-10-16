@@ -41,7 +41,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/range/algorithm/copy.hpp>
 
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/reverse.hpp>
