@@ -580,7 +580,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 						"." +
 						contractName +
 						"." +
-						artifact + 
+						artifact +
 						"\" must be a valid artifact"
 					)
 				}
