@@ -516,7 +516,7 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 
 bool isCorrectOutputSelectionArtifact(std::string const& _artifact)
 {
-	static set<std::string> const outputSelectionArtifacts = vector<std::string>{
+	static set<std::string> const outputSelectionArtifacts = set<std::string>{
 		"*",
 		"ir", "irOptimized",
 		"wast", "wasm", "ewasm.wast", "ewasm.wasm",
