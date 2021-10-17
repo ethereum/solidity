@@ -572,7 +572,9 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 						"\" must be a string array"
 					);
 				auto const& artifact = output.asString();
-				if (!isCorrectOutputSelectionArtifact(artifact)) {
+				if (!isCorrectOutputSelectionArtifact(
+					artifact
+				)) {
 					return formatFatalError(
 						"JSONError",
 						"\"settings.outputSelection." +
