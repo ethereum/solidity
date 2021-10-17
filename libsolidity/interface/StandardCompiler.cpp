@@ -514,6 +514,24 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 	return checkKeys(_input, keys, "settings.metadata");
 }
 
+bool isCorrectOutputSelectionArtifact(std::string const& _artifact)
+{
+	static set<std::string> const outputSelectionArtifacts = vector<std::string>{
+		"*",
+		"ir", "irOptimized",
+		"wast", "wasm", "ewasm.wast", "ewasm.wasm",
+		"evm.gasEstimates", "evm.legacyAssembly", "evm.assembly"
+	} + evmObjectComponents("bytecode") + evmObjectComponents("deployedBytecode") + {
+		"abi",
+		"devdoc",
+		"userdoc",
+		"metadata",
+		"storageLayout"
+	};
+
+	return outputSelectionArtifacts.count(_artifact);
+}
+
 std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelection)
 {
 	if (!!_outputSelection && !_outputSelection.isObject())
@@ -543,7 +561,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 					"\" must be a string array"
 				);
 
-			for (auto const& output: contractVal)
+			for (auto const& output: contractVal) {
 				if (!output.isString())
 					return formatFatalError(
 						"JSONError",
@@ -553,6 +571,20 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 						contractName +
 						"\" must be a string array"
 					);
+				auto const& artifact = output.asString();
+				if (!isCorrectOutputSelectionArtifact(artifact)) {
+					return formatFatalError(
+						"JSONError",
+						"\"settings.outputSelection." +
+						sourceName +
+						"." +
+						contractName +
+						"." +
+						artifact + 
+						"\" must be a valid artifact"
+					)
+				}
+			}
 		}
 	}
 
