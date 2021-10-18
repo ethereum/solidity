@@ -1265,6 +1265,7 @@ Abbreviation Full name
 ``a``        ``SSATransform``
 ``t``        ``StructuralSimplifier``
 ``u``        ``UnusedPruner``
+``p``        ``UnusedFunctionParameterPruner``
 ``d``        ``VarDeclInitializer``
 ============ ===============================
 

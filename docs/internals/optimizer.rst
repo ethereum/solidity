@@ -275,7 +275,7 @@ The following transformation steps are the main components:
 - Common Subexpression Eliminator
 - Expression Simplifier
 - Redundant Assign Eliminator
-- Full Function Inliner
+- Full Inliner
 
 Optimizer Steps
 ---------------
@@ -297,7 +297,8 @@ on the individual steps and their sequence below.
 - :ref:`for-loop-condition-into-body`.
 - :ref:`for-loop-condition-out-of-body`.
 - :ref:`for-loop-init-rewriter`.
-- :ref:`functional-inliner`.
+- :ref:`expression-inliner`.
+- :ref:`full-inliner`.
 - :ref:`function-grouper`.
 - :ref:`function-hoister`.
 - :ref:`function-specializer`.
@@ -1082,9 +1083,9 @@ The actual removal of the function is performed by the Unused Pruner.
 Function Inlining
 -----------------
 
-.. _functional-inliner:
+.. _expression-inliner:
 
-FunctionalInliner
+ExpressionInliner
 ^^^^^^^^^^^^^^^^^
 
 This component of the optimizer performs restricted function inlining by inlining functions that can be
@@ -1107,12 +1108,12 @@ The result of this inlining is always a single expression.
 
 This component can only be used on sources with unique names.
 
-.. _full-function-inliner:
+.. _full-inliner:
 
-FullFunctionInliner
-^^^^^^^^^^^^^^^^^^^
+FullInliner
+^^^^^^^^^^^
 
-The Full Function Inliner replaces certain calls of certain functions
+The Full Inliner replaces certain calls of certain functions
 by the function's body. This is not very helpful in most cases, because
 it just increases the code size but does not have a benefit. Furthermore,
 code is usually very expensive and we would often rather have shorter
