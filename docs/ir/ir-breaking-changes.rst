@@ -1,3 +1,6 @@
+
+.. index: ir breaking changes
+
 *********************************
 Solidity IR-based Codegen Changes
 *********************************
@@ -35,13 +38,15 @@ hiding new and different behavior in existing code.
 
   We have the same behavior for implicit delete, for example when array of structs is shortened.
 
-- Function modifiers are implemented in a slightly different way regarding function parameters.
+- Function modifiers are implemented in a slightly different way regarding function parameters and return variables.
   This especially has an effect if the placeholder ``_;`` is evaluated multiple times in a modifier.
-  In the old code generator, each function parameter has a fixed slot on the stack. If the function
-  is run multiple times because ``_;`` is used multiple times or used in a loop, then a change to the
-  function parameter's value is visible in the next execution of the function.
+  In the old code generator, each function parameter and return variable has a fixed slot on the stack.
+  If the function is run multiple times because ``_;`` is used multiple times or used in a loop, then a
+  change to the function parameter's or return variable's value is visible in the next execution of the function.
   The new code generator implements modifiers using actual functions and passes function parameters on.
-  This means that multiple executions of a function will get the same values for the parameters.
+  This means that multiple evaluations of a function's body will get the same values for the parameters,
+  and the effect on return variables is that they are reset to their default (zero) value for each
+  execution.
 
   .. code-block:: solidity
 
@@ -56,6 +61,35 @@ hiding new and different behavior in existing code.
 
   If you execute ``f(0)`` in the old code generator, it will return ``2``, while
   it will return ``1`` when using the new code generator.
+
+  .. code-block:: solidity
+
+      // SPDX-License-Identifier: GPL-3.0
+      pragma solidity >=0.7.1 <0.9.0;
+
+      contract C {
+          bool active = true;
+          modifier mod()
+          {
+              _;
+              active = false;
+              _;
+          }
+          function foo() external mod() returns (uint ret)
+          {
+              if (active)
+                  ret = 1; // Same as ``return 1``
+          }
+      }
+
+  The function ``C.foo()`` returns the following values:
+
+  - Old code generator: ``1`` as the return variable is initialized to ``0`` only once before the first ``_;``
+    evaluation and then overwritten by the ``return 1;``. It is not initialized again for the second ``_;``
+    evaluation and ``foo()`` does not explicitly assign it either (due to ``active == false``), thus it keeps
+    its first value.
+  - New code generator: ``0`` as all parameters, including return parameters, will be re-initialized before
+    each ``_;`` evaluation.
 
 - The order of contract initialization has changed in case of inheritance.
 
