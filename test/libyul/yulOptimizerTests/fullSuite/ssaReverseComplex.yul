@@ -7,7 +7,7 @@
         a := mload(b)
         b := mload(a)
     }
-    mstore(a, b)
+    sstore(a, b)
 }
 // ----
 // step: fullSuite
@@ -21,6 +21,6 @@
 //             a := mload(mload(mload(b)))
 //             b := mload(a)
 //         }
-//         mstore(a, b)
+//         sstore(a, b)
 //     }
 // }

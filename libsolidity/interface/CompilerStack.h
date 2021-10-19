@@ -35,10 +35,11 @@
 
 #include <libsmtutil/SolverInterface.h>
 
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
-#include <liblangutil/CharStreamProvider.h>
 
 #include <libevmasm/LinkerObject.h>
 
@@ -202,6 +203,9 @@ public:
 	/// to store the metadata in the bytecode.
 	/// @param _metadataHash can be IPFS, Bzzr1, None
 	void setMetadataHash(MetadataHash _metadataHash);
+
+	/// Select components of debug info that should be included in comments in generated assembly.
+	void selectDebugInfo(langutil::DebugInfoSelection _debugInfoSelection);
 
 	/// Sets the sources. Must be set before parsing.
 	void setSources(StringMap _sources);
@@ -505,6 +509,7 @@ private:
 	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	MetadataHash m_metadataHash = MetadataHash::IPFS;
+	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
 	bool m_importedSources = false;

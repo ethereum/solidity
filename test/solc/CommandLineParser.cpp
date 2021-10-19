@@ -127,6 +127,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--evm-version=spuriousDragon",
 			"--experimental-via-ir",
 			"--revert-strings=strip",
+			"--debug-info=location",
 			"--pretty-json",
 			"--json-indent=7",
 			"--no-color",
@@ -180,6 +181,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
 		expectedOptions.output.experimentalViaIR = true;
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
+		expectedOptions.output.debugInfoSelection = DebugInfoSelection::fromString("location");
 		expectedOptions.formatting.json = JsonFormat{JsonFormat::Pretty, 7};
 		expectedOptions.linker.libraries = {
 			{"dir1/file1.sol:L", h160("1234567890123456789012345678901234567890")},
@@ -269,6 +271,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--overwrite",
 			"--evm-version=spuriousDragon",
 			"--revert-strings=strip",      // Accepted but has no effect in assembly mode
+			"--debug-info=location",
 			"--pretty-json",
 			"--json-indent=1",
 			"--no-color",
@@ -289,10 +292,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 				"underflow,"
 				"divByZero",
 			"--model-checker-timeout=5",   // Ignored in assembly mode
-
-			// Accepted but has no effect in assembly mode
-			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 		};
 		commandLine += assemblyOptions;
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
@@ -319,6 +318,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.output.overwriteFiles = true;
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
+		expectedOptions.output.debugInfoSelection = DebugInfoSelection::fromString("location");
 		expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 1};
 		expectedOptions.assembly.targetMachine = expectedMachine;
 		expectedOptions.assembly.inputLanguage = expectedLanguage;
@@ -328,11 +328,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		};
 		expectedOptions.formatting.coloredOutput = false;
 		expectedOptions.formatting.withErrorIds = true;
-		expectedOptions.compiler.outputs = {
-			true, true, true, true, true,
-			true, true, true, true, true,
-			true, true, true, true, true,
-		};
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
 		{
 			expectedOptions.optimizer.enabled = true;
@@ -388,10 +383,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 			"underflow,"
 			"divByZero",
 		"--model-checker-timeout=5",       // Ignored in Standard JSON mode
-
-		// Accepted but has no effect in Standard JSON mode
-		"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-		"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 	};
 
 	CommandLineOptions expectedOptions;
@@ -408,11 +399,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 1};
 	expectedOptions.formatting.coloredOutput = false;
 	expectedOptions.formatting.withErrorIds = true;
-	expectedOptions.compiler.outputs = {
-		true, true, true, true, true,
-		true, true, true, true, true,
-		true, true, true, true, true,
-	};
 	expectedOptions.compiler.estimateGas = true;
 	expectedOptions.compiler.combinedJsonRequests = CombinedJsonRequests{};
 	expectedOptions.compiler.combinedJsonRequests->abi = true;

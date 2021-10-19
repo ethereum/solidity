@@ -533,14 +533,14 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 	yul::ASTWalker::operator()(_functionCall);
 
 	if (auto const *builtinFunction = m_inlineAssembly->dialect().builtin(_functionCall.functionName.name))
-		if (builtinFunction->controlFlowSideEffects.terminates)
-		{
-			if (builtinFunction->controlFlowSideEffects.reverts)
-				connect(m_currentNode, m_revertNode);
-			else
-				connect(m_currentNode, m_transactionReturnNode);
+	{
+		if (builtinFunction->controlFlowSideEffects.canTerminate)
+			connect(m_currentNode, m_transactionReturnNode);
+		if (builtinFunction->controlFlowSideEffects.canRevert)
+			connect(m_currentNode, m_revertNode);
+		if (!builtinFunction->controlFlowSideEffects.canContinue)
 			m_currentNode = newLabel();
-		}
+	}
 }
 
 void ControlFlowBuilder::operator()(yul::FunctionDefinition const&)

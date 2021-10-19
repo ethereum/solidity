@@ -67,6 +67,7 @@ static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
 static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
+static string const g_strDebugInfo = "debug-info";
 static string const g_strIPFS = "ipfs";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
@@ -135,6 +136,14 @@ static set<string> const g_metadataHashArgs
 	g_strIPFS,
 	g_strSwarm,
 	g_strNone
+};
+
+static map<InputMode, string> const g_inputModeName = {
+	{InputMode::Compiler, "compiler"},
+	{InputMode::CompilerWithASTImport, "compiler (AST import)"},
+	{InputMode::Assembler, "assembler"},
+	{InputMode::StandardJson, "standard JSON"},
+	{InputMode::Linker, "linker"},
 };
 
 void CommandLineParser::printVersionAndExit()
@@ -244,6 +253,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		output.evmVersion == _other.output.evmVersion &&
 		output.experimentalViaIR == _other.output.experimentalViaIR &&
 		output.revertStrings == _other.output.revertStrings &&
+		output.debugInfoSelection == _other.output.debugInfoSelection &&
 		output.stopAfter == _other.output.stopAfter &&
 		input.mode == _other.input.mode &&
 		assembly.targetMachine == _other.assembly.targetMachine &&
@@ -460,6 +470,47 @@ bool CommandLineParser::parseLibraryOption(string const& _input)
 	return true;
 }
 
+bool CommandLineParser::parseOutputSelection()
+{
+	static auto outputSupported = [](InputMode _mode, string_view _outputName)
+	{
+		static set<string> const compilerModeOutputs =
+			CompilerOutputs::componentMap() |
+			ranges::views::keys |
+			ranges::to<set>();
+
+		switch (_mode)
+		{
+		case InputMode::Compiler:
+		case InputMode::CompilerWithASTImport:
+			return contains(compilerModeOutputs, _outputName);
+		case InputMode::Assembler:
+		case InputMode::StandardJson:
+		case InputMode::Linker:
+			return false;
+		}
+
+		solAssert(false, "");
+	};
+
+	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
+
+	vector<string> unsupportedOutputs;
+	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+		if (m_options.compiler.outputs.*outputComponent && !outputSupported(m_options.input.mode, optionName))
+			unsupportedOutputs.push_back(optionName);
+
+	if (!unsupportedOutputs.empty())
+	{
+		serr() << "The following outputs are not supported in " << g_inputModeName.at(m_options.input.mode) << " mode: ";
+		serr() << joinOptionNames(unsupportedOutputs) << ".";
+		return false;
+	}
+
+	return true;
+}
+
 po::options_description CommandLineParser::optionsDescription()
 {
 	// Declare the supported options.
@@ -545,6 +596,13 @@ General Information)").c_str(),
 			g_strRevertStrings.c_str(),
 			po::value<string>()->value_name(joinHumanReadable(g_revertStringsArgs, ",")),
 			"Strip revert (and require) reason strings or add additional debugging information."
+		)
+		(
+			g_strDebugInfo.c_str(),
+			po::value<string>()->default_value(toString(DebugInfoSelection::Default())),
+			("Debug info components to be included in the produced EVM assembly and Yul code. "
+			"Value can be all, none or a comma-separated list containing one or more of the "
+			"following components: " + joinHumanReadable(DebugInfoSelection::componentMap() | ranges::views::keys) + ".").c_str()
 		)
 		(
 			g_strStopAfter.c_str(),
@@ -886,6 +944,12 @@ bool CommandLineParser::processArgs()
 				serr() << "Option --" << option << " is only valid in compiler and assembler modes." << endl;
 				return false;
 			}
+
+		if (!m_args[g_strDebugInfo].defaulted())
+		{
+			serr() << "Option --" << g_strDebugInfo << " is only valid in compiler and assembler modes." << endl;
+			return false;
+		}
 	}
 
 	if (m_args.count(g_strColor) > 0)
@@ -912,6 +976,23 @@ bool CommandLineParser::processArgs()
 		m_options.output.revertStrings = *revertStrings;
 	}
 
+	if (!m_args[g_strDebugInfo].defaulted())
+	{
+		string optionValue = m_args[g_strDebugInfo].as<string>();
+		m_options.output.debugInfoSelection = DebugInfoSelection::fromString(optionValue);
+		if (!m_options.output.debugInfoSelection.has_value())
+		{
+			serr() << "Invalid value for --" << g_strDebugInfo << " option: " << optionValue << endl;
+			return false;
+		}
+
+		if (m_options.output.debugInfoSelection->snippet && !m_options.output.debugInfoSelection->location)
+		{
+			serr() << "To use 'snippet' with --" << g_strDebugInfo << " you must select also 'location'." << endl;
+			return false;
+		}
+	}
+
 	if (!parseCombinedJsonOption())
 		return false;
 
@@ -930,8 +1011,8 @@ bool CommandLineParser::processArgs()
 		m_options.formatting.json.indent = m_args[g_strJsonIndent].as<uint32_t>();
 	}
 
-	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
-		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
+	if (!parseOutputSelection())
+		return false;
 
 	m_options.compiler.estimateGas = (m_args.count(g_strGas) > 0);
 

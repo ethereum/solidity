@@ -11,7 +11,7 @@ import time
 
 DESCRIPTION = """Regressor is a tool to run regression tests in a CI env."""
 
-class PrintDotsThread(object):
+class PrintDotsThread:
     """Prints a dot every "interval" (default is 300) seconds"""
 
     def __init__(self, interval=300):
@@ -30,7 +30,7 @@ class PrintDotsThread(object):
             print(".")
             time.sleep(self.interval)
 
-class regressor():
+class regressor:
     _re_sanitizer_log = re.compile(r"""ERROR: (libFuzzer|UndefinedBehaviorSanitizer)""")
 
     def __init__(self, description, args):

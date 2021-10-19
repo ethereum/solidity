@@ -51,13 +51,14 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(Dialect const*, CharStreamProvider const*) const
+string Data::toString(Dialect const*, DebugInfoSelection const&, CharStreamProvider const*) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 string Object::toString(
 	Dialect const* _dialect,
+	DebugInfoSelection const& _debugInfoSelection,
 	CharStreamProvider const* _soliditySourceProvider
 ) const
 {
@@ -74,10 +75,15 @@ string Object::toString(
 			})) +
 			"\n";
 
-	string inner = "code " + AsmPrinter{_dialect, debugData->sourceNames, _soliditySourceProvider}(*code);
+	string inner = "code " + AsmPrinter(
+		_dialect,
+		debugData->sourceNames,
+		_debugInfoSelection,
+		_soliditySourceProvider
+	)(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_dialect, _soliditySourceProvider);
+		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
 
 	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }

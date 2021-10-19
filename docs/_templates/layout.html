@@ -1,6 +1,10 @@
 {% extends "!layout.html" %}
 
-  {% block menu %}
+{% block menu %}
     {{ super() }}
-	<a href="{{ pathto('genindex') }}">Keyword Index</a>
-  {% endblock %}
+    <ul>
+        <li>
+            <a href="{{ pathto('genindex') }}">Keyword Index</a>
+        </li>
+    </ul>
+{% endblock %}

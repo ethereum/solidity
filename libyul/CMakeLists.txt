@@ -34,6 +34,9 @@ add_library(yul
 	AssemblyStack.cpp
 	CompilabilityChecker.cpp
 	CompilabilityChecker.h
+	ControlFlowSideEffects.h
+	ControlFlowSideEffectsCollector.cpp
+	ControlFlowSideEffectsCollector.h
 	Dialect.cpp
 	Dialect.h
 	Exceptions.h
@@ -216,4 +219,4 @@ add_library(yul
 	optimiser/VarNameCleaner.h
 )
 
-target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil)
+target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil fmt::fmt-header-only)

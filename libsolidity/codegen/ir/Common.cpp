@@ -135,11 +135,15 @@ string dispenseLocationComment(langutil::SourceLocation const& _location, IRGene
 {
 	solAssert(_location.sourceName, "");
 	_context.markSourceUsed(*_location.sourceName);
-	return "/// " + AsmPrinter::formatSourceLocation(
+
+	string debugInfo = AsmPrinter::formatSourceLocation(
 		_location,
 		_context.sourceIndices(),
+		_context.debugInfoSelection(),
 		_context.soliditySourceProvider()
 	);
+
+	return debugInfo.empty() ? "" : "/// " + debugInfo;
 }
 
 string dispenseLocationComment(ASTNode const& _node, IRGenerationContext& _context)

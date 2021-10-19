@@ -23,7 +23,6 @@
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
-#include <libyul/AsmPrinter.h>
 
 #include <libsolutil/cxx20.h>
 #include <libsolutil/Visitor.h>
@@ -230,7 +229,7 @@ void ControlFlowGraphBuilder::operator()(ExpressionStatement const& _exprStmt)
 	//       not only for builtins.
 	if (auto const* funCall = get_if<FunctionCall>(&_exprStmt.expression))
 		if (BuiltinFunction const* builtin = m_dialect.builtin(funCall->functionName.name))
-			if (builtin->controlFlowSideEffects.terminates)
+			if (builtin->controlFlowSideEffects.terminatesOrReverts())
 			{
 				m_currentBlock->exit = CFG::BasicBlock::Terminated{};
 				m_currentBlock = &m_graph.makeBlock(debugDataOf(*m_currentBlock));

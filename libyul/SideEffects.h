@@ -94,7 +94,7 @@ struct SideEffects
 			cannotLoop && _other.cannotLoop,
 			otherState + _other.otherState,
 			storage + _other.storage,
-			memory +  _other.memory
+			memory + _other.memory
 		};
 	}
 

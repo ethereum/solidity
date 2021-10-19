@@ -1,5 +1,6 @@
+from opcodes import SIGNEXTEND
 from rule import Rule
-from opcodes import *
+from z3 import BitVec, BitVecVal, If, UGE, ULT
 
 """
 Rule:
@@ -34,4 +35,3 @@ rule3.check(
     SIGNEXTEND(A, SIGNEXTEND(B, X)),
     SIGNEXTEND(If(ULT(A, B), A, B), X)
 )
-

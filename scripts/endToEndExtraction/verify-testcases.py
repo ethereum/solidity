@@ -158,7 +158,7 @@ class TraceAnalyser:
         for trace_id, trace in enumerate(left.traces):
             left_trace = trace
             right_trace = right.traces[trace_id]
-            assert (left_trace.kind == right_trace.kind)
+            assert left_trace.kind == right_trace.kind
             if str(left_trace) != str(right_trace):
                 mismatch_info = "    " + str(left_trace) + "\n"
                 mismatch_info += "    " + str(right_trace) + "\n"
@@ -179,7 +179,7 @@ def main(argv):
     extracted_tests_trace_file = None
     end_to_end_trace_file = None
     try:
-        opts, args = getopt.getopt(argv, "s:e:")
+        opts, _args = getopt.getopt(argv, "s:e:")
     except getopt.GetoptError:
         print("verify-testcases.py [-s <path to semantic-trace>] [-e <path to endToEndExtraction-trace>]")
         sys.exit(2)

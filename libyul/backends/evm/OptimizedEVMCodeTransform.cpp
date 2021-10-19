@@ -484,7 +484,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			yulAssert(!_block.operations.empty(), "");
 			CFG::BuiltinCall const* builtinCall = get_if<CFG::BuiltinCall>(&_block.operations.back().operation);
 			yulAssert(builtinCall, "");
-			yulAssert(builtinCall->builtin.get().controlFlowSideEffects.terminates, "");
+			yulAssert(builtinCall->builtin.get().controlFlowSideEffects.terminatesOrReverts(), "");
 		}
 	}, _block.exit);
 	// TODO: We could assert that the last emitted assembly item terminated or was an (unconditional) jump.

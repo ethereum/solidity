@@ -24,8 +24,12 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
 #include <libsolidity/interface/ImportRemapper.h>
+
 #include <libyul/AssemblyStack.h>
+
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
+
 #include <libsolutil/JSON.h>
 
 #include <boost/program_options.hpp>
@@ -174,6 +178,7 @@ struct CommandLineOptions
 		langutil::EVMVersion evmVersion;
 		bool experimentalViaIR = false;
 		RevertStrings revertStrings = RevertStrings::Default;
+		std::optional<langutil::DebugInfoSelection> debugInfoSelection;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
 	} output;
 
@@ -285,6 +290,8 @@ private:
 	/// It then tries to parse the contents and appends to m_options.libraries.
 	/// @return false if there are any validation errors, true otherwise.
 	bool parseLibraryOption(std::string const& _input);
+
+	bool parseOutputSelection();
 
 	bool checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
 	[[noreturn]] void printVersionAndExit();

@@ -13,12 +13,21 @@ Language Features:
 
 
 Compiler Features:
+ * Commandline Interface: Accept nested brackets in step sequences passed to ``--yul-optimizations``.
+ * Commandline Interface: Add ``--debug-info`` option for selecting how much extra debug information should be included in the produced EVM assembly and Yul code.
  * SMTChecker: Output values for ``block.*``, ``msg.*`` and ``tx.*`` variables that are present in the called functions.
+ * Standard JSON: Accept nested brackets in step sequences passed to ``settings.optimizer.details.yulDetails.optimizerSteps``.
+ * Standard JSON: Add ``settings.debug.debugInfo`` option for selecting how much extra debug information should be included in the produced EVM assembly and Yul code.
 
 
 Bugfixes:
+ * Code Generator: Fix constructor source mappings for immutables.
  * Commandline Interface: Fix extra newline character being appended to sources passed through standard input, affecting their hashes.
+ * Commandline Interface: Report output selection options unsupported by the selected input mode instead of ignoring them.
+ * Commandline Interface: Don't return zero exit code when writing linked files to disk fails.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
+ * TypeChecker: Fix internal error when using user defined value types in public library functions.
+ * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
 
 
 

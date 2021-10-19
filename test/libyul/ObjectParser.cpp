@@ -23,6 +23,7 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Scanner.h>
 
 #include <libyul/AssemblyStack.h>
@@ -60,7 +61,8 @@ pair<bool, ErrorList> parse(string const& _source)
 		AssemblyStack asmStack(
 			solidity::test::CommonOptions::get().evmVersion(),
 			AssemblyStack::Language::StrictAssembly,
-			solidity::frontend::OptimiserSettings::none()
+			solidity::frontend::OptimiserSettings::none(),
+			DebugInfoSelection::All()
 		);
 		bool success = asmStack.parseAndAnalyze("source", _source);
 		return {success, asmStack.errors()};
@@ -181,7 +183,8 @@ BOOST_AUTO_TEST_CASE(to_string)
 	AssemblyStack asmStack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
 	);
 	BOOST_REQUIRE(asmStack.parseAndAnalyze("source", code));
 	BOOST_CHECK_EQUAL(asmStack.print(), expectation);

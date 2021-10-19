@@ -41,7 +41,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/range/algorithm/copy.hpp>
 
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/reverse.hpp>
@@ -2559,6 +2558,11 @@ bool UserDefinedValueType::operator==(Type const& _other) const
 }
 
 string UserDefinedValueType::toString(bool /* _short */) const
+{
+	return *definition().annotation().canonicalName;
+}
+
+string UserDefinedValueType::canonicalName() const
 {
 	return *definition().annotation().canonicalName;
 }

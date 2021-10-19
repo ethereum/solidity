@@ -1,6 +1,7 @@
+from opcodes import AND, DIV, GT, SDIV, SGT, SLT
 from rule import Rule
-from opcodes import *
-from util import *
+from util import BVSignedMax, BVSignedMin, BVSignedUpCast
+from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, Not, Or
 
 """
 Overflow checked signed integer multiplication.

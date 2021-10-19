@@ -413,7 +413,7 @@ def commandline_parser() -> ArgumentParser:
         action='store_true',
         help="Immediately exit and print compiler output if the compiler exits with an error.",
     )
-    return parser;
+    return parser
 
 
 if __name__ == "__main__":

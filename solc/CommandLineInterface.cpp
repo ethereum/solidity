@@ -553,7 +553,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	if (fs::exists(pathName) && !m_options.output.overwriteFiles)
 	{
 		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
-		m_error = true;
+		m_outputFailed = true;
 		return;
 	}
 	ofstream outFile(pathName);
@@ -561,7 +561,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	if (!outFile)
 	{
 		serr() << "Could not write to file \"" << pathName << "\"." << endl;
-		m_error = true;
+		m_outputFailed = true;
 		return;
 	}
 }
@@ -631,6 +631,8 @@ bool CommandLineInterface::compile()
 		m_compiler->setViaIR(m_options.output.experimentalViaIR);
 		m_compiler->setEVMVersion(m_options.output.evmVersion);
 		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
+		if (m_options.output.debugInfoSelection.has_value())
+			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
@@ -699,30 +701,6 @@ bool CommandLineInterface::compile()
 		formatter.printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
-	catch (InternalCompilerError const& _exception)
-	{
-		serr() <<
-			"Internal compiler error during compilation:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
-		return false;
-	}
-	catch (UnimplementedFeatureError const& _exception)
-	{
-		serr() <<
-			"Unimplemented feature:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
-		return false;
-	}
-	catch (smtutil::SMTLogicError const& _exception)
-	{
-		serr() <<
-			"SMT logic error during analysis:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
-		return false;
-	}
 	catch (Error const& _error)
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)
@@ -733,23 +711,6 @@ bool CommandLineInterface::compile()
 			formatter.printExceptionInformation(_error, _error.typeName());
 		}
 
-		return false;
-	}
-	catch (Exception const& _exception)
-	{
-		serr() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
-		return false;
-	}
-	catch (std::exception const& _e)
-	{
-		serr() << "Unknown exception during compilation" << (
-			_e.what() ? ": " + string(_e.what()) : "."
-		) << endl;
-		return false;
-	}
-	catch (...)
-	{
-		serr() << "Unknown exception during compilation." << endl;
 		return false;
 	}
 
@@ -894,7 +855,7 @@ bool CommandLineInterface::actOnInput()
 		solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 		outputCompilationResults();
 	}
-	return !m_error;
+	return !m_outputFailed;
 }
 
 bool CommandLineInterface::link()
@@ -976,6 +937,7 @@ void CommandLineInterface::writeLinkedFiles()
 			if (!outFile)
 			{
 				serr() << "Could not write to file " << src.first << ". Aborting." << endl;
+				m_outputFailed = true;
 				return;
 			}
 		}
@@ -1013,34 +975,16 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(
 			m_options.output.evmVersion,
 			_language,
-			m_options.optimiserSettings()
+			m_options.optimiserSettings(),
+			m_options.output.debugInfoSelection.has_value() ?
+				m_options.output.debugInfoSelection.value() :
+				DebugInfoSelection::Default()
 		);
 
-		try
-		{
-			if (!stack.parseAndAnalyze(src.first, src.second))
-				successful = false;
-			else
-				stack.optimize();
-		}
-		catch (Exception const& _exception)
-		{
-			serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
-			return false;
-		}
-		catch (std::exception const& _e)
-		{
-			serr() <<
-				"Unknown exception during compilation" <<
-				(_e.what() ? ": " + string(_e.what()) : ".") <<
-				endl;
-			return false;
-		}
-		catch (...)
-		{
-			serr() << "Unknown exception in assembler." << endl;
-			return false;
-		}
+		if (!stack.parseAndAnalyze(src.first, src.second))
+			successful = false;
+		else
+			stack.optimize();
 	}
 
 	for (auto const& sourceAndStack: assemblyStacks)
@@ -1074,29 +1018,8 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
 		{
-			try
-			{
-				stack.translate(yul::AssemblyStack::Language::Ewasm);
-				stack.optimize();
-			}
-			catch (Exception const& _exception)
-			{
-				serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
-				return false;
-			}
-			catch (std::exception const& _e)
-			{
-				serr() <<
-					"Unknown exception during compilation" <<
-					(_e.what() ? ": " + string(_e.what()) : ".") <<
-					endl;
-				return false;
-			}
-			catch (...)
-			{
-				serr() << "Unknown exception in assembler." << endl;
-				return false;
-			}
+			stack.translate(yul::AssemblyStack::Language::Ewasm);
+			stack.optimize();
 
 			sout() << endl << "==========================" << endl;
 			sout() << endl << "Translated source:" << endl;
@@ -1104,28 +1027,8 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		}
 
 		yul::MachineAssemblyObject object;
-		try
-		{
-			object = stack.assemble(_targetMachine);
-			object.bytecode->link(m_options.linker.libraries);
-		}
-		catch (Exception const& _exception)
-		{
-			serr() << "Exception while assembling: " << boost::diagnostic_information(_exception) << endl;
-			return false;
-		}
-		catch (std::exception const& _e)
-		{
-			serr() << "Unknown exception during compilation" << (
-				_e.what() ? ": " + string(_e.what()) : "."
-			) << endl;
-			return false;
-		}
-		catch (...)
-		{
-			serr() << "Unknown exception while assembling." << endl;
-			return false;
-		}
+		object = stack.assemble(_targetMachine);
+		object.bytecode->link(m_options.linker.libraries);
 
 		sout() << endl << "Binary representation:" << endl;
 		if (object.bytecode)

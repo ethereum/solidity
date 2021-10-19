@@ -9,7 +9,6 @@ from os import path, walk
 from sys import exit
 from textwrap import dedent
 import subprocess
-import sys
 
 PROJECT_ROOT = path.dirname(path.dirname(path.realpath(__file__)))
 PYLINT_RCFILE = f"{PROJECT_ROOT}/scripts/pylintrc"

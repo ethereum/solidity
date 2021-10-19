@@ -22,9 +22,10 @@
 
 #pragma once
 
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
-#include <liblangutil/CharStreamProvider.h>
 
 #include <libyul/Object.h>
 #include <libyul/ObjectParser.h>
@@ -69,12 +70,24 @@ public:
 	enum class Machine { EVM, Ewasm };
 
 	AssemblyStack():
-		AssemblyStack(langutil::EVMVersion{}, Language::Assembly, solidity::frontend::OptimiserSettings::none())
+		AssemblyStack(
+			langutil::EVMVersion{},
+			Language::Assembly,
+			solidity::frontend::OptimiserSettings::none(),
+			langutil::DebugInfoSelection::Default()
+		)
 	{}
-	AssemblyStack(langutil::EVMVersion _evmVersion, Language _language, solidity::frontend::OptimiserSettings _optimiserSettings):
+
+	AssemblyStack(
+		langutil::EVMVersion _evmVersion,
+		Language _language,
+		solidity::frontend::OptimiserSettings _optimiserSettings,
+		langutil::DebugInfoSelection const& _debugInfoSelection
+	):
 		m_language(_language),
 		m_evmVersion(_evmVersion),
 		m_optimiserSettings(std::move(_optimiserSettings)),
+		m_debugInfoSelection(_debugInfoSelection),
 		m_errorReporter(m_errors)
 	{}
 
@@ -116,7 +129,9 @@ public:
 	langutil::ErrorList const& errors() const { return m_errors; }
 
 	/// Pretty-print the input after having parsed it.
-	std::string print(langutil::CharStreamProvider const* _soliditySourceProvider = nullptr) const;
+	std::string print(
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
+	) const;
 
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
@@ -132,6 +147,7 @@ private:
 	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;
 	solidity::frontend::OptimiserSettings m_optimiserSettings;
+	langutil::DebugInfoSelection m_debugInfoSelection{};
 
 	std::unique_ptr<langutil::CharStream> m_charStream;
 

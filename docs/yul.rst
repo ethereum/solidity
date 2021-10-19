@@ -1002,6 +1002,8 @@ within one Yul subobject. If at least one ``memoryguard`` call is found in a sub
 the additional optimiser steps will be run on it.
 
 
+.. _yul-verbatim:
+
 verbatim
 ^^^^^^^^
 
@@ -1263,6 +1265,7 @@ Abbreviation Full name
 ``a``        ``SSATransform``
 ``t``        ``StructuralSimplifier``
 ``u``        ``UnusedPruner``
+``p``        ``UnusedFunctionParameterPruner``
 ``d``        ``VarDeclInitializer``
 ============ ===============================
 

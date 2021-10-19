@@ -1,11 +1,6 @@
 Solidity
 ========
 
-.. image:: logo.svg
-    :width: 120px
-    :alt: Solidity logo
-    :align: center
-
 Solidity is an object-oriented, high-level language for implementing smart
 contracts. Smart contracts are programs which govern the behaviour of accounts
 within the Ethereum state.
@@ -22,8 +17,10 @@ With Solidity you can create contracts for uses such as voting, crowdfunding, bl
 and multi-signature wallets.
 
 When deploying contracts, you should use the latest released
-version of Solidity. This is because breaking changes as well as
-new features and bug fixes are introduced regularly. We currently use
+version of Solidity. Apart from exceptional cases, only the latest version receives
+`security fixes<https://github.com/ethereum/solidity/security/policy#supported-versions>`.
+Furthermore, breaking changes as well as
+new features are introduced regularly. We currently use
 a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
 
 .. warning::

@@ -1,6 +1,7 @@
+from opcodes import AND, EQ, SUB
 from rule import Rule
-from opcodes import *
-from util import *
+from util import BVSignedMin, BVSignedUpCast
+from z3 import BitVec, BVSDivNoOverflow, Not
 
 """
 Overflow checked signed integer division.

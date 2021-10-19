@@ -1,6 +1,6 @@
 import sys
 
-from z3 import *
+from z3 import sat, Solver, unknown, unsat
 
 class Rule:
 	def __init__(self):

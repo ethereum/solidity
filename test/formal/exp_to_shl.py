@@ -1,6 +1,6 @@
+from opcodes import SHL
 from rule import Rule
-from opcodes import *
-from util import *
+from z3 import BitVec, If
 
 """
 Checking conversion of exp(2, X) to shl(X, 1)

@@ -179,16 +179,6 @@ case $(uname -s) in
                 . /etc/os-release
                 install_z3=""
                 case $VERSION_ID in
-                    7)
-                        #wheezy
-                        echo "Installing solidity dependencies on Debian Wheezy (7.x)."
-                        echo "ERROR - 'install_deps.sh' doesn't have Debian Wheezy support yet."
-                        echo "See https://docs.soliditylang.org/en/latest/installing-solidity.html for manual instructions."
-                        echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
-                        echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
-                        exit 1
-                        ;;
                     8)
                         #jessie
                         echo "Installing solidity dependencies on Debian Jesse (8.x)."
@@ -277,30 +267,9 @@ case $(uname -s) in
                         echo "Installing solidity dependencies on Ubuntu Trusty Tahr (14.04)."
                         echo "Or, you may also be running Linux Mint Qiana / Rebecca / Rafaela / Rosa (base: Ubuntu Trusty Tahr (14.04).)"
                         ;;
-                    utopic)
-                        echo "Installing solidity dependencies on Ubuntu Utopic Unicorn (14.10)."
-                        ;;
-                    vivid)
-                        echo "Installing solidity dependencies on Ubuntu Vivid Vervet (15.04)."
-                        ;;
-                    wily)
-                        echo "Installing solidity dependencies on Ubuntu Wily Werewolf (15.10)."
-                        ;;
                     xenial|sarah|serena|sonya|sylvia)
                         echo "Installing solidity dependencies on Ubuntu Xenial Xerus (16.04)."
                         echo "Or, you may also be running Linux Mint Sarah / Serena / Sonya / Sylvia (base: Ubuntu Xenial Xerus (16.04).)"
-                        install_z3="libz3-dev"
-                        ;;
-                    yakkety)
-                        echo "Installing solidity dependencies on Ubuntu Yakkety Yak (16.10)."
-                        install_z3="libz3-dev"
-                        ;;
-                    zesty)
-                        echo "Installing solidity dependencies on Ubuntu Zesty (17.04)."
-                        install_z3="libz3-dev"
-                        ;;
-                    artful)
-                        echo "Installing solidity dependencies on Ubuntu Artful (17.10)."
                         install_z3="libz3-dev"
                         ;;
                     bionic)
@@ -308,6 +277,10 @@ case $(uname -s) in
                         install_z3="libz3-dev"
                         ;;
                     focal)
+                        echo "Installing solidity dependencies."
+                        install_z3="libz3-dev"
+                        ;;
+                    hirsute)
                         echo "Installing solidity dependencies."
                         install_z3="libz3-dev"
                         ;;
@@ -325,7 +298,7 @@ case $(uname -s) in
                         echo "ERROR - Unknown or unsupported Ubuntu version ($(lsb_release -cs))"
                         echo "ERROR - This might not work, but we are trying anyway."
                         echo "Please drop us a message at https://gitter.im/ethereum/solidity-dev."
-                        echo "We only support Trusty, Utopic, Vivid, Wily, Xenial, Yakkety, Zesty, Artful and Bionic."
+                        echo "We only support Trusty, Xenial, Bionic, Focal, and Hirsute."
                         install_z3="libz3-dev"
                         ;;
                 esac

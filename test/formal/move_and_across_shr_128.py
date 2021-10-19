@@ -1,5 +1,6 @@
+from opcodes import AND, SHR
 from rule import Rule
-from opcodes import *
+from z3 import BitVec, BitVecVal, ULT
 
 """
 Rule:
@@ -25,12 +26,12 @@ BitWidth = BitVecVal(n_bits, n_bits)
 rule.require(ULT(B, BitWidth))
 
 # Non optimized result
-nonopt_1 = SHR(B, AND(X, A));
-nonopt_2 = SHR(B, AND(A, X));
+nonopt_1 = SHR(B, AND(X, A))
+nonopt_2 = SHR(B, AND(A, X))
 
 # Optimized result
-Mask = SHR(B, A);
-opt = AND(SHR(B, X), Mask);
+Mask = SHR(B, A)
+opt = AND(SHR(B, X), Mask)
 
 rule.check(nonopt_1, opt)
 rule.check(nonopt_2, opt)

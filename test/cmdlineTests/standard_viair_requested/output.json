@@ -43,14 +43,6 @@ object \"C_3\" {
             /// @src 0:79:92  \"contract C {}\"
             mstore(64, 128)
 
-            if iszero(lt(calldatasize(), 4))
-            {
-                let selector := shift_right_224_unsigned(calldataload(0))
-                switch selector
-
-                default {}
-            }
-            if iszero(calldatasize()) {  }
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -139,7 +131,7 @@ object \"D_16\" {
 
                 default {}
             }
-            if iszero(calldatasize()) {  }
+
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -253,14 +245,6 @@ object \"D_16\" {
                     /// @src 0:79:92  \"contract C {}\"
                     mstore(64, 128)
 
-                    if iszero(lt(calldatasize(), 4))
-                    {
-                        let selector := shift_right_224_unsigned(calldataload(0))
-                        switch selector
-
-                        default {}
-                    }
-                    if iszero(calldatasize()) {  }
                     revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
                     function shift_right_224_unsigned(value) -> newValue {

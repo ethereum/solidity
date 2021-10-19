@@ -7,7 +7,7 @@ object "RunsTest1" {
     object "Runtime" {
         code {
             let funcSel := shl(224, 0xabc12345)
-            mstore(0, funcSel)
+            sstore(0, funcSel)
         }
     }
 }

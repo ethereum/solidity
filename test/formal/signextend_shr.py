@@ -1,5 +1,6 @@
+from opcodes import SIGNEXTEND, SAR, SHR
 from rule import Rule
-from opcodes import *
+from z3 import BitVec,  BitVecVal, ULE
 
 """
 Rule:
@@ -28,4 +29,3 @@ rule.check(
     SIGNEXTEND(A, SHR(B, X)),
     SAR(B, X)
 )
-

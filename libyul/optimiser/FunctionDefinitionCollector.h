@@ -34,7 +34,7 @@ namespace solidity::yul
 class FunctionDefinitionCollector: ASTWalker
 {
 public:
-	static std::map<YulString, FunctionDefinition const*> run(Block& _block);
+	static std::map<YulString, FunctionDefinition const*> run(Block const& _block);
 private:
 	using ASTWalker::operator();
 	void operator()(FunctionDefinition const& _functionDefinition) override;

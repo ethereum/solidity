@@ -37,6 +37,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <fmt/format.h>
+
 #include <memory>
 #include <functional>
 
@@ -618,7 +620,7 @@ void AsmAnalyzer::expectValidType(YulString _type, SourceLocation const& _locati
 		m_errorReporter.typeError(
 			5473_error,
 			_location,
-			"\"" + _type.str() + "\" is not a valid type (user defined types are not yet supported)."
+			fmt::format("\"{}\" is not a valid type (user defined types are not yet supported).", _type)
 		);
 }
 
@@ -628,11 +630,7 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 		m_errorReporter.typeError(
 			3781_error,
 			_location,
-			"Expected a value of type \"" +
-			_expectedType.str() +
-			"\" but got \"" +
-			_givenType.str() +
-			"\""
+			fmt::format("Expected a value of type \"{}\" but got \"{}\".", _expectedType, _givenType)
 		);
 }
 
@@ -664,14 +662,12 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		m_errorReporter.typeError(
 			_errorId,
 			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is " +
-			vmKindMessage +
-			" VMs " +
-			"(you are currently compiling for \"" +
-			m_evmVersion.name() +
-			"\")."
+			fmt::format(
+				"The \"{instruction}\" instruction is {kind} VMs (you are currently compiling for \"{version}\").",
+				fmt::arg("instruction", boost::to_lower_copy(instructionInfo(_instr).name)),
+				fmt::arg("kind", vmKindMessage),
+				fmt::arg("version", m_evmVersion.name())
+			)
 		);
 	};
 

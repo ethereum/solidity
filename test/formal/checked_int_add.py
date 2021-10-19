@@ -1,6 +1,7 @@
+from opcodes import AND, ISZERO, SGT, SLT, SUB
 from rule import Rule
-from opcodes import *
-from util import *
+from util import BVSignedMax, BVSignedMin, BVSignedUpCast
+from z3 import BitVec, BVAddNoOverflow, BVAddNoUnderflow, Not
 
 """
 Overflow checked signed integer addition.
