@@ -150,18 +150,6 @@ void DeclarationTypeChecker::endVisit(UserDefinedValueTypeDefinition const& _use
 			typeName->location(),
 			"The underlying type for a user defined value type has to be an elementary value type."
 		);
-
-	Type const* type = typeName->annotation().type;
-	solAssert(type, "");
-	solAssert(!dynamic_cast<UserDefinedValueType const*>(type), "");
-	if (!type->isValueType())
-		m_errorReporter.typeError(
-			8129_error,
-			_userDefined.location(),
-			"The underlying type of the user defined value type \"" +
-			_userDefined.name() +
-			"\" is not a value type."
-		);
 }
 
 void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)

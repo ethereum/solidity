@@ -338,6 +338,22 @@ void TypeChecker::endVisit(ModifierDefinition const& _modifier)
 		m_errorReporter.typeError(8063_error, _modifier.location(), "Modifiers without implementation must be marked virtual.");
 }
 
+void TypeChecker::endVisit(UserDefinedValueTypeDefinition const& _userDefined)
+{
+	solAssert(_userDefined.underlyingType());
+	Type const* underlyingType = _userDefined.underlyingType()->annotation().type;
+	solAssert(underlyingType, "");
+	solAssert(!dynamic_cast<UserDefinedValueType const*>(underlyingType), "");
+	if (!underlyingType->isValueType())
+		m_errorReporter.typeError(
+			8129_error,
+			_userDefined.location(),
+			"The underlying type of the user defined value type \"" +
+			_userDefined.name() +
+			"\" is not a value type."
+		);
+}
+
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	if (_function.markedVirtual())
