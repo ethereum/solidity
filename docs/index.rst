@@ -18,7 +18,7 @@ and multi-signature wallets.
 
 When deploying contracts, you should use the latest released
 version of Solidity. Apart from exceptional cases, only the latest version receives
-`security fixes<https://github.com/ethereum/solidity/security/policy#supported-versions>`.
+`security fixes <https://github.com/ethereum/solidity/security/policy#supported-versions>`_.
 Furthermore, breaking changes as well as
 new features are introduced regularly. We currently use
 a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
