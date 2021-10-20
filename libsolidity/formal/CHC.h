@@ -252,11 +252,13 @@ private:
 	void verificationTargetEncountered(ASTNode const* const _errorNode, VerificationTargetType _type, smtutil::Expression const& _errorCondition);
 
 	void checkVerificationTargets();
-	// Forward declaration. Definition is below.
+	// Forward declarations. Definitions are below.
 	struct CHCVerificationTarget;
+	struct CHCQueryPlaceholder;
 	void checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& _target);
 	void checkAndReportTarget(
 		CHCVerificationTarget const& _target,
+		std::vector<CHCQueryPlaceholder> const& _placeholders,
 		langutil::ErrorId _errorReporterId,
 		std::string _satMsg,
 		std::string _unknownMsg = ""

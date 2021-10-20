@@ -7,7 +7,6 @@
 ","message":"Return value of low-level calls not used.","severity":"warning","sourceLocation":{"end":143,"file":"A","start":132},"type":"Warning"},{"component":"general","errorCode":"1180","formattedMessage":"Info: Contract invariant(s) for A:test:
 (x <= 0)
 Reentrancy property(ies) for A:test:
-(!(x <= 0) || (x' <= 0))
 ((!(x <= 0) || !(<errorCode> >= 3)) && (!(x <= 0) || (x' <= 0)))
 ((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0)))
 <errorCode> = 0 -> no errors
@@ -18,7 +17,6 @@ Reentrancy property(ies) for A:test:
 ","message":"Contract invariant(s) for A:test:
 (x <= 0)
 Reentrancy property(ies) for A:test:
-(!(x <= 0) || (x' <= 0))
 ((!(x <= 0) || !(<errorCode> >= 3)) && (!(x <= 0) || (x' <= 0)))
 ((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0)))
 <errorCode> = 0 -> no errors
