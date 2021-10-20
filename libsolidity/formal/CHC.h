@@ -110,6 +110,7 @@ private:
 	void popInlineFrame(CallableDeclaration const& _callable) override;
 
 	void visitAssert(FunctionCall const& _funCall);
+	void visitPublicGetter(FunctionCall const& _funCall) override;
 	void visitAddMulMod(FunctionCall const& _funCall) override;
 	void visitDeployment(FunctionCall const& _funCall);
 	void internalFunctionCall(FunctionCall const& _funCall);

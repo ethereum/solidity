@@ -130,7 +130,7 @@ bool BMC::shouldInlineFunctionCall(
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	if (funType.kind() == FunctionType::Kind::External)
-		return isTrustedExternalCall(&_funCall.expression());
+		return isExternalCallToThis(&_funCall.expression());
 	else if (funType.kind() != FunctionType::Kind::Internal)
 		return false;
 
@@ -567,7 +567,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	if (shouldInlineFunctionCall(_funCall, currentScopeContract(), m_currentContract))
 		inlineFunctionCall(_funCall);
-	else if (isPublicGetter(_funCall.expression()))
+	else if (publicGetter(_funCall.expression()))
 	{
 		// Do nothing here.
 		// The processing happens in SMT Encoder, but we need to prevent the resetting of the state variables.

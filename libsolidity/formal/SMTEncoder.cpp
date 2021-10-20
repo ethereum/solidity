@@ -646,7 +646,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		visitGasLeft(_funCall);
 		break;
 	case FunctionType::Kind::External:
-		if (isPublicGetter(_funCall.expression()))
+		if (publicGetter(_funCall.expression()))
 			visitPublicGetter(_funCall);
 		break;
 	case FunctionType::Kind::ABIDecode:
@@ -995,9 +995,8 @@ vector<string> structGetterReturnedMembers(StructType const& _structType)
 
 void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 {
-	MemberAccess const& access = dynamic_cast<MemberAccess const&>(_funCall.expression());
-	auto var = dynamic_cast<VariableDeclaration const*>(access.annotation().referencedDeclaration);
-	solAssert(var, "");
+	auto var = publicGetter(_funCall.expression());
+	solAssert(var && var->isStateVariable(), "");
 	solAssert(m_context.knownExpression(_funCall), "");
 	auto paramExpectedTypes = replaceUserTypes(FunctionType(*var).parameterTypes());
 	auto actualArguments = _funCall.arguments();
@@ -2800,16 +2799,13 @@ smtutil::Expression SMTEncoder::contractAddressValue(FunctionCall const& _f)
 	solAssert(false, "Unreachable!");
 }
 
-bool SMTEncoder::isPublicGetter(Expression const& _expr) {
-	if (!isTrustedExternalCall(&_expr))
-		return false;
-	auto varDecl = dynamic_cast<VariableDeclaration const*>(
-		dynamic_cast<MemberAccess const&>(_expr).annotation().referencedDeclaration
-	);
-	return varDecl != nullptr;
+VariableDeclaration const* SMTEncoder::publicGetter(Expression const& _expr) const {
+	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expr))
+		return dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration);
+	return nullptr;
 }
 
-bool SMTEncoder::isTrustedExternalCall(Expression const* _expr) {
+bool SMTEncoder::isExternalCallToThis(Expression const* _expr) {
 	auto memberAccess = dynamic_cast<MemberAccess const*>(_expr);
 	if (!memberAccess)
 		return false;

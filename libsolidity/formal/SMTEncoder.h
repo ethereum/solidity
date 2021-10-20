@@ -219,7 +219,7 @@ protected:
 	void visitTypeConversion(FunctionCall const& _funCall);
 	void visitStructConstructorCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
-	void visitPublicGetter(FunctionCall const& _funCall);
+	virtual void visitPublicGetter(FunctionCall const& _funCall);
 
 	/// @returns true if @param _contract is set for analysis in the settings
 	/// and it is not abstract.
@@ -227,7 +227,10 @@ protected:
 	/// @returns true if @param _source is set for analysis in the settings.
 	bool shouldAnalyze(SourceUnit const& _source) const;
 
-	bool isPublicGetter(Expression const& _expr);
+	/// @returns the state variable returned by a public getter if
+	/// @a _expr is a call to a public getter,
+	/// otherwise nullptr.
+	VariableDeclaration const* publicGetter(Expression const& _expr) const;
 
 	smtutil::Expression contractAddressValue(FunctionCall const& _f);
 
@@ -394,9 +397,9 @@ protected:
 	/// otherwise nullptr.
 	MemberAccess const* isEmptyPush(Expression const& _expr) const;
 
-	/// @returns true if the given identifier is a contract which is known and trusted.
+	/// @returns true if the given expression is `this`.
 	/// This means we don't have to abstract away effects of external function calls to this contract.
-	static bool isTrustedExternalCall(Expression const* _expr);
+	static bool isExternalCallToThis(Expression const* _expr);
 
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
