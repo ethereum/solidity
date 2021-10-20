@@ -430,9 +430,6 @@ locations that are considered safe by default:
 - Outside of Standard JSON mode:
 
   - The directories containing input files listed on the command line.
-  - The directories used as :ref:`remapping <import-remapping>` targets.
-    If the target is not a directory (i.e does not end with ``/``, ``/.`` or ``/..``) the directory
-    containing the target is used instead.
   - Base path and include paths.
 
 - In Standard JSON mode:
@@ -446,7 +443,6 @@ The option accepts a comma-separated list of paths:
 
     cd /home/user/project/
     solc token/contract.sol \
-        lib/util.sol=libs/util.sol \
         --base-path=token/ \
         --include-path=/lib/ \
         --allow-paths=../utils/,/tmp/libraries
@@ -457,7 +453,6 @@ importing files from the following directories:
 - ``/home/user/project/token/`` (because ``token/`` contains the input file and also because it is
   the base path),
 - ``/lib/`` (because ``/lib/`` is one of the include paths),
-- ``/home/user/project/libs/`` (because ``libs/`` is a directory containing a remapping target),
 - ``/home/user/utils/`` (because of ``../utils/`` passed to ``--allow-paths``),
 - ``/tmp/libraries/`` (because of ``/tmp/libraries`` passed to ``--allow-paths``),
 

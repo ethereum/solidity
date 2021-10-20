@@ -54,8 +54,7 @@ or ../ <direct-imports>` are treated as relative to the directories specified us
 Furthermore, the part of the path added via these options will not appear in the contract metadata.
 
 For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
-Directories of source files specified on the command line and target paths of
-remappings are automatically allowed to be accessed by the file reader, but everything
+Directories of source files specified on the command line are automatically allowed to be accessed by the file reader, but everything
 else is rejected by default.
 Additional paths (and their subdirectories) can be allowed via the
 ``--allow-paths /sample/path,/another/sample/path`` switch.
