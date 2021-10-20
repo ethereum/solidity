@@ -267,7 +267,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--include-path=/home/user/include",
 			"--allow-paths=/tmp,/home,project,../contracts",
 			"--ignore-missing",
-			"--error-recovery",            // Ignored in assembly mode
 			"--overwrite",
 			"--evm-version=spuriousDragon",
 			"--revert-strings=strip",      // Accepted but has no effect in assembly mode
@@ -356,7 +355,6 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"--include-path=/home/user/include",
 		"--allow-paths=/tmp,/home,project,../contracts",
 		"--ignore-missing",
-		"--error-recovery",                // Ignored in Standard JSON mode
 		"--output-dir=/tmp/out",           // Accepted but has no effect in Standard JSON mode
 		"--overwrite",                     // Accepted but has no effect in Standard JSON mode
 		"--evm-version=spuriousDragon",    // Ignored in Standard JSON mode
@@ -413,30 +411,25 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	BOOST_TEST(parsedOptions.value() == expectedOptions);
 }
 
-BOOST_AUTO_TEST_CASE(experimental_via_ir_invalid_input_modes)
+BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 {
-	static array<string, 5> const inputModeOptions = {
-		"--assemble",
-		"--yul",
-		"--strict-assembly",
-		"--standard-json",
-		"--link",
+	map<string, vector<string>> invalidOptionInputModeCombinations = {
+		// TODO: This should eventually contain all options.
+		{"--error-recovery", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
+		{"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}}
 	};
-	for (string const& inputModeOption: inputModeOptions)
-	{
-		stringstream sout, serr;
-		vector<string> commandLine = {
-			"solc",
-			"--experimental-via-ir",
-			"file",
-			inputModeOption,
-		};
-		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
 
-		BOOST_TEST(sout.str() == "");
-		BOOST_TEST(serr.str() == "The option --experimental-via-ir is only supported in the compiler mode.\n");
-		BOOST_REQUIRE(!parsedOptions.has_value());
-	}
+	for (auto const& [optionName, inputModes]: invalidOptionInputModeCombinations)
+		for (string const& inputMode: inputModes)
+		{
+			stringstream sout, serr;
+			vector<string> commandLine = {"solc", optionName, "file", inputMode};
+			optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+
+			BOOST_TEST(sout.str() == "");
+			BOOST_TEST(serr.str() == "The following options are not supported in the current input mode: " + optionName + "\n");
+			BOOST_REQUIRE(!parsedOptions.has_value());
+		}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

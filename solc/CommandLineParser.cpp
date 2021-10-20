@@ -898,13 +898,21 @@ bool CommandLineParser::processArgs()
 	else
 		m_options.input.mode = InputMode::Compiler;
 
-	if (
-		m_args.count(g_strExperimentalViaIR) > 0 &&
-		m_options.input.mode != InputMode::Compiler &&
-		m_options.input.mode != InputMode::CompilerWithASTImport
-	)
+	map<string, set<InputMode>> validOptionInputModeCombinations = {
+		// TODO: This should eventually contain all options.
+		{g_strErrorRecovery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strExperimentalViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+	};
+	vector<string> invalidOptionsForCurrentInputMode;
+	for (auto const& [optionName, inputModes]: validOptionInputModeCombinations)
 	{
-		serr() << "The option --" << g_strExperimentalViaIR << " is only supported in the compiler mode." << endl;
+		if (m_args.count(optionName) > 0 && inputModes.count(m_options.input.mode) == 0)
+			invalidOptionsForCurrentInputMode.push_back(optionName);
+	}
+
+	if (!invalidOptionsForCurrentInputMode.empty())
+	{
+		serr() << "The following options are not supported in the current input mode: " << joinOptionNames(invalidOptionsForCurrentInputMode) << endl;
 		return false;
 	}
 
