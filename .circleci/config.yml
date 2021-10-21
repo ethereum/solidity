@@ -73,6 +73,34 @@ defaults:
       command: ./scripts/docs_version_pragma_check.sh
 
   # --------------------------------------------------------------------------
+  # Notification Templates
+  - gitter_notify_failure_unless_pr: &gitter_notify_failure_unless_pr
+      name: Gitter notify failure (if not running on a PR)
+      command: |
+        if [[ $CI_PULL_REQUEST == "" ]]
+        then
+          curl -X POST -i \
+          -H "Content-Type: application/json" \
+          -H "Accept: application/json" \
+          -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages" \
+          -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+        fi
+      when: on_fail
+
+  - gitter_notify_success_unless_pr: &gitter_notify_success_unless_pr
+      name: Gitter notify success (if not running on a PR)
+      command: |
+        if [[ $CI_PULL_REQUEST == "" ]]
+        then
+          curl -X POST -i \
+          -H "Content-Type: application/json" \
+          -H "Accept: application/json" \
+          -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages" \
+          -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+        fi
+      when: on_success
+
+  # --------------------------------------------------------------------------
   # Artifacts Templates
 
   # the whole build directory
@@ -337,34 +365,6 @@ defaults:
       <<: *workflow_trigger_on_tags
       requires:
         - b_win_release
-
-  # --------------------------------------------------------------------------
-  # Notification Templates
-  - gitter_notify_failure_unless_pr: &gitter_notify_failure_unless_pr
-      name: Gitter notify failure (if not running on a PR)
-      command: |
-        if [[ $CI_PULL_REQUEST == "" ]]
-        then
-          curl -X POST -i \
-          -H "Content-Type: application/json" \
-          -H "Accept: application/json" \
-          -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages" \
-          -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
-        fi
-      when: on_fail
-
-  - gitter_notify_success_unless_pr: &gitter_notify_success_unless_pr
-      name: Gitter notify success (if not running on a PR)
-      command: |
-        if [[ $CI_PULL_REQUEST == "" ]]
-        then
-          curl -X POST -i \
-          -H "Content-Type: application/json" \
-          -H "Accept: application/json" \
-          -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages" \
-          -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
-        fi
-      when: on_success
 
 # -----------------------------------------------------------------------------------------------
 jobs:
