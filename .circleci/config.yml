@@ -129,7 +129,7 @@ defaults:
       destination: test_results/
 
   # --------------------------------------------------------------------------
-  # Tests Templates
+  # Step Templates
 
   # store_test_results helper
   - store_test_results: &store_test_results
@@ -164,6 +164,9 @@ defaults:
         - run: *run_cmdline_tests
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
+
+  # --------------------------------------------------------------------------
+  # Base Image Templates
 
   - base_ubuntu1604_clang: &base_ubuntu1604_clang
       docker:
