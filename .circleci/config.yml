@@ -92,10 +92,8 @@ defaults:
 
   # compiled tool executable target
   - artifacts_tools: &artifacts_tools
-      root: build/tools/
-      paths:
-        - solidity-upgrade
-        - yul-phaser
+      path: build/tools/solidity-upgrade
+      destination: solidity-upgrade
 
   # compiled executable targets
   - artifacts_executables: &artifacts_executables
