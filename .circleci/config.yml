@@ -189,6 +189,7 @@ defaults:
         - run: *run_soltest
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
+        - gitter_notify_failure_unless_pr
 
   - steps_soltest_all: &steps_soltest_all
       steps:
@@ -198,6 +199,7 @@ defaults:
         - run: *run_soltest_all
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
+        - gitter_notify_failure_unless_pr
 
   - steps_cmdline_tests: &steps_cmdline_tests
       steps:
@@ -207,6 +209,7 @@ defaults:
         - run: *run_cmdline_tests
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
+        - gitter_notify_failure_unless_pr
 
   # --------------------------------------------------------------------------
   # Base Image Templates
@@ -396,6 +399,7 @@ jobs:
       - run:
           name: Check spelling
           command: ~/.local/bin/codespell -S "*.enc,.git,Dockerfile*" -I ./scripts/codespell_whitelist.txt
+      - gitter_notify_failure_unless_pr
 
   chk_docs_examples:
     <<: *base_node_latest
@@ -409,6 +413,7 @@ jobs:
       - run:
           name: Test Docs examples
           command: ./test/docsCodeStyle.sh
+      - gitter_notify_failure_unless_pr
 
   chk_coding_style:
     <<: *base_buildpack_focal
@@ -426,6 +431,7 @@ jobs:
       - run:
           name: Check for broken symlinks
           command: ./scripts/check_symlinks.sh
+      - gitter_notify_failure_unless_pr
 
   chk_errorcodes:
     <<: *base_python
@@ -434,6 +440,7 @@ jobs:
       - run:
           name: Check for error codes
           command: ./scripts/error_codes.py --check
+      - gitter_notify_failure_unless_pr
 
   chk_pylint:
     <<: *base_buildpack_focal
@@ -449,6 +456,7 @@ jobs:
       - run:
           name: Linting Python Scripts
           command: ./scripts/pylint_all.py
+      - gitter_notify_failure_unless_pr
 
   chk_antlr_grammar:
     <<: *base_buildpack_focal
@@ -460,6 +468,7 @@ jobs:
       - run:
           name: Run tests
           command: ./scripts/test_antlr_grammar.sh
+      - gitter_notify_failure_unless_pr
 
   chk_buglist:
     <<: *base_node_latest
@@ -474,6 +483,7 @@ jobs:
       - run:
           name: Test buglist
           command: ./test/buglistTests.js
+      - gitter_notify_failure_unless_pr
 
   chk_proofs:
     <<: *base_buildpack_latest
@@ -486,12 +496,14 @@ jobs:
             apt-get -qy install python3-pip
             pip3 install --user z3-solver
       - run: *run_proofs
+      - gitter_notify_failure_unless_pr
 
   chk_docs_pragma_min_version:
     <<: *base_ubuntu2004
     steps:
       - checkout
       - run: *run_docs_pragma_min_version
+      - gitter_notify_failure_unless_pr
 
   t_ubu_pyscripts:
     <<: *base_ubuntu2004
@@ -500,6 +512,7 @@ jobs:
       - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
+      - gitter_notify_failure_unless_pr
 
   t_win_pyscripts:
     <<: *base_win_powershell
@@ -509,6 +522,7 @@ jobs:
       - run:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
+      - gitter_notify_failure_unless_pr
 
   b_ubu: &b_ubu
     <<: *base_ubuntu2004_xlarge
@@ -519,6 +533,7 @@ jobs:
       - store_artifacts: *artifact_solidity_upgrade
       - store_artifacts: *artifact_yul_phaser
       - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
@@ -532,6 +547,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
 
   b_ubu_clang: &b_ubu_clang
     <<: *base_ubuntu2004_clang_xlarge
@@ -540,6 +556,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
 
   b_ubu_asan_clang: &b_ubu_asan_clang
     <<: *base_ubuntu2004_clang
@@ -553,6 +570,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
 
   b_ubu_ubsan_clang: &b_ubu_ubsan_clang
     <<: *base_ubuntu2004_clang
@@ -586,6 +604,7 @@ jobs:
           name: strip binary
           command: strip build/solc/solc
       - store_artifacts: *artifacts_solc
+      - gitter_notify_failure_unless_pr
 
   b_ubu_codecov:
     <<: *base_ubuntu2004_xlarge
@@ -597,6 +616,7 @@ jobs:
       - checkout
       - run: *run_build
       - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
 
   t_ubu_codecov:
     <<: *base_ubuntu2004
@@ -619,6 +639,7 @@ jobs:
           name: "Coverage: All"
           command: codecov --flags all --gcov-root build
       - store_artifacts: *artifacts_test_results
+      - gitter_notify_failure_unless_pr
 
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
@@ -631,6 +652,7 @@ jobs:
     steps:
       - checkout
       - run: *run_build
+      - gitter_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
     <<: *base_ubuntu1604_clang
@@ -639,6 +661,7 @@ jobs:
       - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
       - persist_to_workspace: *artifacts_executables_ossfuzz
+      - gitter_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
     <<: *base_ubuntu1604_clang
@@ -671,6 +694,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
 
   b_osx:
     <<: *base_osx
@@ -707,6 +731,7 @@ jobs:
             - build/solc/solc
             - build/test/soltest
             - build/test/tools/solfuzzer
+      - gitter_notify_failure_unless_pr
 
   t_osx_soltest:
     <<: *base_osx
@@ -724,6 +749,7 @@ jobs:
       - run: *run_soltest
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
+      - gitter_notify_failure_unless_pr
 
   t_osx_cli:
     <<: *base_osx
@@ -736,6 +762,7 @@ jobs:
           at: .
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
+      - gitter_notify_failure_unless_pr
 
   b_ems:
     <<: *base_ems_xlarge
@@ -756,6 +783,7 @@ jobs:
           paths:
             - soljson.js
             - version.txt
+      - gitter_notify_failure_unless_pr
 
   b_docs:
     <<: *base_ubuntu2004
@@ -768,6 +796,7 @@ jobs:
       - store_artifacts:
           path: docs/_build/html/
           destination: docs-html
+      - gitter_notify_failure_unless_pr
 
   t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2004
@@ -850,19 +879,11 @@ jobs:
     <<: *base_ubuntu2004_clang
     environment:
       EVM: << pipeline.parameters.evm-version >>
-    steps:
-      - when:
-          condition: true
-          <<: *steps_soltest
-      - gitter_notify_failure_unless_pr
+    <<: *steps_soltest
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2004_clang
-    steps:
-      - when:
-          condition: true
-          <<: *steps_cmdline_tests
-      - gitter_notify_failure_unless_pr
+    <<: *steps_cmdline_tests
 
   t_ems_solcjs:
     <<: *base_ubuntu2004
@@ -882,6 +903,7 @@ jobs:
             node --version
             npm --version
             test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+      - gitter_notify_failure_unless_pr
 
   t_ems_ext_hardhat:
     <<: *base_node_latest
@@ -907,6 +929,7 @@ jobs:
             # NOTE: This is expected to work without running `yarn build` first.
             cd hardhat/packages/hardhat-core
             yarn test
+      - gitter_notify_failure_unless_pr
 
   t_ems_ext:
     parameters:
@@ -918,9 +941,6 @@ jobs:
       nodejs_version:
         type: integer
         default: 14
-      gitter_notify:
-        type: boolean
-        default: no
     docker:
       - image: circleci/node:<<parameters.nodejs_version>>
     environment:
@@ -939,11 +959,7 @@ jobs:
           name: External <<parameters.project>> tests
           command: |
             test/externalTests/<<parameters.project>>.sh /tmp/workspace/soljson.js
-      - when:
-          condition: <<parameters.gitter_notify>>
-          steps:
-            - gitter_notify_failure_unless_pr
-            - gitter_notify_success_unless_pr
+      - gitter_notify_failure_unless_pr
 
   b_win: &b_win
     <<: *base_win_powershell
@@ -974,6 +990,7 @@ jobs:
           paths:
             - .\solc\*\solc.exe
             - .\test\*\soltest.exe
+      - gitter_notify_failure_unless_pr
 
   b_win_release:
     <<: *b_win
@@ -996,6 +1013,7 @@ jobs:
           command: .circleci/soltest.ps1
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
+      - gitter_notify_failure_unless_pr
 
   t_win_release_soltest:
     <<: *t_win_soltest
@@ -1019,6 +1037,7 @@ jobs:
           paths:
             - bytecode-report-ubuntu-json.txt
             - bytecode-report-ubuntu-cli.txt
+      - gitter_notify_failure_unless_pr
 
   b_bytecode_osx:
     <<: *base_osx
@@ -1039,6 +1058,7 @@ jobs:
           paths:
             - bytecode-report-osx-json.txt
             - bytecode-report-osx-cli.txt
+      - gitter_notify_failure_unless_pr
 
   b_bytecode_win:
     <<: *base_win_cmd
@@ -1062,6 +1082,7 @@ jobs:
           paths:
             - bytecode-report-windows-json.txt
             - bytecode-report-windows-cli.txt
+      - gitter_notify_failure_unless_pr
 
   b_bytecode_ems:
     <<: *base_node_latest
@@ -1078,6 +1099,7 @@ jobs:
           root: .
           paths:
             - bytecode-report-emscripten.txt
+      - gitter_notify_failure_unless_pr
 
   t_bytecode_compare:
     <<: *base_ubuntu2004
@@ -1114,6 +1136,7 @@ jobs:
           # NOTE: store_artifacts does not support the 'when' attribute.
           # Fortunately when the artifact does not exist it just says "No artifact files found" and ignores it.
           path: all-bytecode-reports.zip
+      - gitter_notify_failure_unless_pr
 
 workflows:
   version: 2
@@ -1284,4 +1307,3 @@ workflows:
           <<: *workflow_emscripten
           name: t_ems_test_ext_colony
           project: colony
-          gitter_notify: yes
