@@ -33,23 +33,22 @@
 using solidity::frontend::ReadCallback;
 using solidity::langutil::InternalCompilerError;
 using solidity::util::errinfo_comment;
-using solidity::util::readFileAsString;
 using solidity::util::joinHumanReadable;
+using solidity::util::readFileAsString;
 using std::map;
 using std::reference_wrapper;
 using std::string;
 using std::vector;
 
-namespace solidity::frontend
+namespace solidity
 {
-
+namespace frontend
+{
 FileReader::FileReader(
 	boost::filesystem::path _basePath,
 	vector<boost::filesystem::path> const& _includePaths,
-	FileSystemPathSet _allowedDirectories
-):
-	m_allowedDirectories(std::move(_allowedDirectories)),
-	m_sourceCodes()
+	FileSystemPathSet _allowedDirectories)
+	: m_allowedDirectories(std::move(_allowedDirectories)), m_sourceCodes()
 {
 	setBasePath(_basePath);
 	for (boost::filesystem::path const& includePath: _includePaths)
@@ -89,15 +88,9 @@ void FileReader::setSource(boost::filesystem::path const& _path, SourceCode _sou
 	m_sourceCodes[cliPathToSourceUnitName(_path)] = std::move(_source);
 }
 
-void FileReader::setStdin(SourceCode _source)
-{
-	m_sourceCodes["<stdin>"] = std::move(_source);
-}
+void FileReader::setStdin(SourceCode _source) { m_sourceCodes["<stdin>"] = std::move(_source); }
 
-void FileReader::setSources(StringMap _sources)
-{
-	m_sourceCodes = std::move(_sources);
-}
+void FileReader::setSources(StringMap _sources) { m_sourceCodes = std::move(_sources); }
 
 ReadCallback::Result FileReader::readFile(string const& _kind, string const& _sourceUnitName)
 {
@@ -115,13 +108,14 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 
 		for (auto const& prefix: prefixes)
 		{
-			boost::filesystem::path canonicalPath = normalizeCLIPathForVFS(prefix / strippedSourceUnitName, SymlinkResolution::Enabled);
+			boost::filesystem::path canonicalPath
+				= normalizeCLIPathForVFS(prefix / strippedSourceUnitName, SymlinkResolution::Enabled);
 
 			if (boost::filesystem::exists(canonicalPath))
 				candidates.push_back(std::move(canonicalPath));
 		}
 
-		auto pathToQuotedString = [](boost::filesystem::path const& _path){ return "\"" + _path.string() + "\""; };
+		auto pathToQuotedString = [](boost::filesystem::path const& _path) { return "\"" + _path.string() + "\""; };
 
 		if (candidates.empty())
 			return ReadCallback::Result{false, "File not found."};
@@ -130,10 +124,8 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 			return ReadCallback::Result{
 				false,
 				"Ambiguous import. "
-				"Multiple matching files found inside base path and/or include paths: " +
-				joinHumanReadable(candidates | ranges::views::transform(pathToQuotedString), ", ") +
-				"."
-			};
+				"Multiple matching files found inside base path and/or include paths: "
+					+ joinHumanReadable(candidates | ranges::views::transform(pathToQuotedString), ", ") + "."};
 
 		FileSystemPathSet extraAllowedPaths = {m_basePath.empty() ? "." : m_basePath};
 		extraAllowedPaths += m_includePaths;
@@ -168,7 +160,8 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 	catch (...)
 	{
-		return ReadCallback::Result{false, "Unknown exception in read callback: " + boost::current_exception_diagnostic_information()};
+		return ReadCallback::
+			Result{false, "Unknown exception in read callback: " + boost::current_exception_diagnostic_information()};
 	}
 }
 
@@ -189,7 +182,8 @@ string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPa
 	return normalizedPath.generic_string();
 }
 
-map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths)
+map<string, FileReader::FileSystemPathSet>
+FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths)
 {
 	map<string, FileReader::FileSystemPathSet> nameToPaths;
 	for (boost::filesystem::path const& cliPath: _cliPaths)
@@ -207,10 +201,8 @@ map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameColli
 	return collisions;
 }
 
-boost::filesystem::path FileReader::normalizeCLIPathForVFS(
-	boost::filesystem::path const& _path,
-	SymlinkResolution _symlinkResolution
-)
+boost::filesystem::path
+FileReader::normalizeCLIPathForVFS(boost::filesystem::path const& _path, SymlinkResolution _symlinkResolution)
 {
 	// Detailed normalization rules:
 	// - Makes the path either be absolute or have slash as root (note that on Windows paths with
@@ -249,7 +241,8 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(
 		// The three corner cases in which lexically_normal() includes a trailing slash in the
 		// normalized path but weakly_canonical() does not. Note that the trailing slash is not
 		// ignored when comparing paths with ==.
-		if ((_path == "." || _path == "./" || _path == "../") && !boost::ends_with(normalizedPath.generic_string(), "/"))
+		if ((_path == "." || _path == "./" || _path == "../")
+			&& !boost::ends_with(normalizedPath.generic_string(), "/"))
 			normalizedPath = normalizedPath.parent_path() / (normalizedPath.filename().string() + "/");
 	}
 	else
@@ -280,7 +273,8 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(
 	if (dotDotPrefix.empty())
 		normalizedPathNoDotDot = normalizedRootPath / normalizedPath.relative_path();
 	else
-		normalizedPathNoDotDot = normalizedRootPath / normalizedPath.lexically_relative(normalizedPath.root_path() / dotDotPrefix);
+		normalizedPathNoDotDot
+			= normalizedRootPath / normalizedPath.lexically_relative(normalizedPath.root_path() / dotDotPrefix);
 	solAssert(!hasDotDotSegments(normalizedPathNoDotDot), "");
 
 	// NOTE: On Windows lexically_normal() converts all separators to forward slashes. Convert them back.
@@ -309,19 +303,18 @@ bool FileReader::isPathPrefix(boost::filesystem::path const& _prefix, boost::fil
 		// Before 1.72.0 lexically_relative() was not handling paths with empty, dot and dot dot segments
 		// correctly (see https://github.com/boostorg/filesystem/issues/76). The only case where this
 		// is possible after our normalization is a directory name ending in a slash (filename is a dot).
-		_prefix.filename_is_dot() ? _prefix.parent_path() : _prefix
-	);
+		_prefix.filename_is_dot() ? _prefix.parent_path() : _prefix);
 	return !strippedPath.empty() && *strippedPath.begin() != "..";
 }
 
-boost::filesystem::path FileReader::stripPrefixIfPresent(boost::filesystem::path const& _prefix, boost::filesystem::path const& _path)
+boost::filesystem::path
+FileReader::stripPrefixIfPresent(boost::filesystem::path const& _prefix, boost::filesystem::path const& _path)
 {
 	if (!isPathPrefix(_prefix, _path))
 		return _path;
 
-	boost::filesystem::path strippedPath = _path.lexically_relative(
-		_prefix.filename_is_dot() ? _prefix.parent_path() : _prefix
-	);
+	boost::filesystem::path strippedPath
+		= _path.lexically_relative(_prefix.filename_is_dot() ? _prefix.parent_path() : _prefix);
 	solAssert(strippedPath.empty() || *strippedPath.begin() != "..", "");
 	return strippedPath;
 }
@@ -352,15 +345,13 @@ bool FileReader::isUNCPath(boost::filesystem::path const& _path)
 {
 	string rootName = _path.root_name().string();
 
-	return (
-		rootName.size() == 2 ||
-		(rootName.size() > 2 && rootName[2] != rootName[1])
-	) && (
-		(rootName[0] == '/' && rootName[1] == '/')
+	return (rootName.size() == 2 || (rootName.size() > 2 && rootName[2] != rootName[1]))
+		   && ((rootName[0] == '/' && rootName[1] == '/')
 #if defined(_WIN32)
-		|| (rootName[0] == '\\' && rootName[1] == '\\')
+			   || (rootName[0] == '\\' && rootName[1] == '\\')
 #endif
-	);
+		   );
 }
 
+}
 }
