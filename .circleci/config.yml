@@ -223,12 +223,12 @@ defaults:
       environment:
         TERM: xterm
 
-  - base_win_powershell: &base_win
+  - base_win_powershell: &base_win_powershell
       executor:
         name: win/default
         shell: powershell.exe
 
-  - base_win_cmd: &base_win
+  - base_win_cmd: &base_win_cmd
       executor:
         name: win/default
         shell: powershell.exe
