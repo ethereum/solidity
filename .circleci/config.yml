@@ -337,24 +337,30 @@ defaults:
 
   # --------------------------------------------------------------------------
   # Notification Templates
-  - gitter_notify_failure: &gitter_notify_failure
-      name: Gitter notify failure
-      command: >-
-        curl -X POST -i
-        -i -H "Content-Type: application/json"
-        -H "Accept: application/json"
-        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+  - gitter_notify_failure_unless_pr: &gitter_notify_failure_unless_pr
+      name: Gitter notify failure (if not running on a PR)
+      command: |
+        if [[ $CI_PULL_REQUEST == "" ]]
+        then
+          curl -X POST -i \
+          -H "Content-Type: application/json" \
+          -H "Accept: application/json" \
+          -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages" \
+          -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+        fi
       when: on_fail
 
-  - gitter_notify_success: &gitter_notify_success
-      name: Gitter notify success
-      command: >-
-        curl -X POST -i
-        -i -H "Content-Type: application/json"
-        -H "Accept: application/json"
-        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+  - gitter_notify_success_unless_pr: &gitter_notify_success_unless_pr
+      name: Gitter notify success (if not running on a PR)
+      command: |
+        if [[ $CI_PULL_REQUEST == "" ]]
+        then
+          curl -X POST -i \
+          -H "Content-Type: application/json" \
+          -H "Accept: application/json" \
+          -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages" \
+          -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+        fi
       when: on_success
 
 # -----------------------------------------------------------------------------------------------
@@ -540,9 +546,9 @@ jobs:
     steps:
       - checkout
       - run: *run_build
-      - run: *gitter_notify_failure
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - run: *gitter_notify_failure_unless_pr
 
   b_ubu_release: &b_ubu_release
     <<: *b_ubu
@@ -628,10 +634,10 @@ jobs:
             git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
             scripts/regressions.py -o test_results
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
+      - run: *gitter_notify_failure_unless_pr
+      - run: *gitter_notify_success_unless_pr
 
   b_archlinux:
     <<: *base_archlinux
@@ -829,7 +835,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_soltest
-      - run: *gitter_notify_failure
+      - run: *gitter_notify_failure_unless_pr
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2004_clang
@@ -837,7 +843,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_cmdline_tests
-      - run: *gitter_notify_failure
+      - run: *gitter_notify_failure_unless_pr
 
   t_ems_solcjs:
     <<: *base_ubuntu2004
@@ -892,8 +898,8 @@ jobs:
       - when:
           condition: <<parameters.gitter_notify>>
           steps:
-            - run: *gitter_notify_failure
-            - run: *gitter_notify_success
+            - run: *gitter_notify_failure_unless_pr
+            - run: *gitter_notify_success_unless_pr
 
   b_win: &b_win
     <<: *base_win_powershell
