@@ -144,6 +144,7 @@ defaults:
         - run: *run_soltest
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
+        - run: *gitter_notify_failure_unless_pr
 
   - steps_soltest_all: &steps_soltest_all
       steps:
@@ -153,6 +154,7 @@ defaults:
         - run: *run_soltest_all
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
+        - run: *gitter_notify_failure_unless_pr
 
   - steps_cmdline_tests: &steps_cmdline_tests
       steps:
@@ -162,6 +164,7 @@ defaults:
         - run: *run_cmdline_tests
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
+        - run: *gitter_notify_failure_unless_pr
 
   # --------------------------------------------------------------------------
   # Base Image Templates
@@ -514,6 +517,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - run: *gitter_notify_failure_unless_pr
 
   b_ubu_clang: &b_ubu_clang
     <<: *base_ubuntu2004_clang_xlarge
@@ -535,6 +539,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - run: *gitter_notify_failure_unless_pr
 
   b_ubu_ubsan_clang: &b_ubu_ubsan_clang
     <<: *base_ubuntu2004_clang
@@ -579,6 +584,7 @@ jobs:
       - checkout
       - run: *run_build
       - persist_to_workspace: *artifacts_executables
+      - run: *gitter_notify_failure_unless_pr
 
   t_ubu_codecov:
     <<: *base_ubuntu2004
@@ -601,6 +607,7 @@ jobs:
           name: "Coverage: All"
           command: codecov --flags all --gcov-root build
       - store_artifacts: *artifacts_test_results
+      - run: *gitter_notify_failure_unless_pr
 
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
@@ -621,6 +628,7 @@ jobs:
       - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
       - persist_to_workspace: *artifacts_executables_ossfuzz
+      - run: *gitter_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
     <<: *base_ubuntu1604_clang
@@ -737,6 +745,7 @@ jobs:
           paths:
             - soljson.js
             - version.txt
+      - run: *gitter_notify_failure_unless_pr
 
   b_docs:
     <<: *base_ubuntu2004
@@ -831,19 +840,11 @@ jobs:
     <<: *base_ubuntu2004_clang
     environment:
       EVM: << pipeline.parameters.evm-version >>
-    steps:
-      - when:
-          condition: true
-          <<: *steps_soltest
-      - run: *gitter_notify_failure_unless_pr
+    <<: *steps_soltest
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2004_clang
-    steps:
-      - when:
-          condition: true
-          <<: *steps_cmdline_tests
-      - run: *gitter_notify_failure_unless_pr
+    <<: *steps_cmdline_tests
 
   t_ems_solcjs:
     <<: *base_ubuntu2004
@@ -874,9 +875,6 @@ jobs:
       nodejs_version:
         type: integer
         default: 14
-      gitter_notify:
-        type: boolean
-        default: no
     docker:
       - image: circleci/node:<<parameters.nodejs_version>>
     environment:
@@ -895,11 +893,7 @@ jobs:
           name: External <<parameters.project>> tests
           command: |
             test/externalTests/<<parameters.project>>.sh /tmp/workspace/soljson.js
-      - when:
-          condition: <<parameters.gitter_notify>>
-          steps:
-            - run: *gitter_notify_failure_unless_pr
-            - run: *gitter_notify_success_unless_pr
+      - run: *gitter_notify_failure_unless_pr
 
   b_win: &b_win
     <<: *base_win_powershell
@@ -1213,6 +1207,8 @@ workflows:
                 - develop
 
     jobs:
+      # NOTE: Any job added here should contain the gitter_notify_failure_unless_pr step
+
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
       - t_ubu_ossfuzz: *workflow_ubuntu1604_ossfuzz
@@ -1239,4 +1235,3 @@ workflows:
           <<: *workflow_emscripten
           name: t_ems_test_ext_colony
           project: colony
-          gitter_notify: yes
