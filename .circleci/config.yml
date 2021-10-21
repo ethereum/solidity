@@ -31,7 +31,7 @@ orbs:
   win: circleci/windows@2.2.0
 
 commands:
-  gitter_notify:
+  gitter_notify_unless_pr:
     description: "Posts a notification to the main room on Gitter (if not running on a PR)."
     parameters:
       event:
@@ -44,6 +44,8 @@ commands:
           name: "Gitter notification"
           when: << parameters.condition >>
           command: |
+            [[ $CI_PULL_REQUEST == "" ]] || { echo "Running on a PR - notification skipped."; exit 0; }
+
             [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ Nightly job **${CIRCLE_JOB}** failed on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
             [[ "<< parameters.event >>" == "success" ]] && message=" ✅ Nightly job **${CIRCLE_JOB}** succeeded on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
 
@@ -55,17 +57,17 @@ commands:
               --header "Authorization: Bearer ${GITTER_API_TOKEN}" \
               --data "{\"text\":\"${message}\"}"
 
-  gitter_notify_failure:
+  gitter_notify_failure_unless_pr:
     description: "Posts a failure notification to the main room on Gitter (if not running on a PR)."
     steps:
-      - gitter_notify:
+      - gitter_notify_unless_pr:
           event: failure
           condition: on_fail
 
-  gitter_notify_success:
+  gitter_notify_success_unless_pr:
     description: "Posts a success notification to the main room on Gitter (if not running on a PR)."
     steps:
-      - gitter_notify:
+      - gitter_notify_unless_pr:
           event: success
           condition: on_success
 
@@ -562,9 +564,9 @@ jobs:
     steps:
       - checkout
       - run: *run_build
-      - gitter_notify_failure
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
 
   b_ubu_release: &b_ubu_release
     <<: *b_ubu
@@ -650,10 +652,10 @@ jobs:
             git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
             scripts/regressions.py -o test_results
-      - gitter_notify_failure
-      - gitter_notify_success
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
+      - gitter_notify_failure_unless_pr
+      - gitter_notify_success_unless_pr
 
   b_archlinux:
     <<: *base_archlinux
@@ -852,7 +854,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_soltest
-      - gitter_notify_failure
+      - gitter_notify_failure_unless_pr
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2004_clang
@@ -860,7 +862,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_cmdline_tests
-      - gitter_notify_failure
+      - gitter_notify_failure_unless_pr
 
   t_ems_solcjs:
     <<: *base_ubuntu2004
@@ -940,8 +942,8 @@ jobs:
       - when:
           condition: <<parameters.gitter_notify>>
           steps:
-            - gitter_notify_failure
-            - gitter_notify_success
+            - gitter_notify_failure_unless_pr
+            - gitter_notify_success_unless_pr
 
   b_win: &b_win
     <<: *base_win_powershell
