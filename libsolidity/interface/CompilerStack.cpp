@@ -83,6 +83,7 @@
 #include <utility>
 #include <map>
 #include <limits>
+#include <string>
 
 using namespace std;
 using namespace solidity;
@@ -1248,7 +1249,9 @@ void CompilerStack::assemble(
 		m_errorReporter.warning(
 			5574_error,
 			_contract.location(),
-			"Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
+			"Contract code size is "s +
+			to_string(compiledContract.runtimeObject.bytecode.size()) +
+			" bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
 			"This contract may not be deployable on mainnet. "
 			"Consider enabling the optimizer (with a low \"runs\" value!), "
 			"turning off revert strings, or using libraries."
