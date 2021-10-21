@@ -491,7 +491,7 @@ jobs:
       - checkout
       - run: *run_docs_pragma_min_version
 
-  t_pyscripts_ubu:
+  t_ubu_pyscripts:
     <<: *base_ubuntu2004
     steps:
       - checkout
@@ -499,7 +499,7 @@ jobs:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
 
-  t_pyscripts_win:
+  t_win_pyscripts:
     <<: *base_win_powershell
     steps:
       - run: git config --global core.autocrlf false
@@ -767,7 +767,7 @@ jobs:
           path: docs/_build/html/
           destination: docs-html
 
-  t_ubu_soltest: &t_ubu_soltest
+  t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2004
     parallelism: 6
     <<: *steps_soltest_all
@@ -806,10 +806,10 @@ jobs:
       OPTIMIZE: 0
     <<: *steps_soltest
 
-  t_ubu_release_soltest: &t_ubu_release_soltest
+  t_ubu_release_soltest_all: &t_ubu_release_soltest_all
     # NOTE: This definition is identical to t_ubu_soltest_all but in the workflow we make it depend on
     # a different job (b_ubu_release) so the workspace it attaches contains a different executable.
-    <<: *t_ubu_soltest
+    <<: *t_ubu_soltest_all
 
   t_ubu_cli: &t_ubu_cli
     <<: *base_ubuntu2004
@@ -825,7 +825,7 @@ jobs:
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
     <<: *steps_cmdline_tests
 
-  t_ubu_asan:
+  t_ubu_asan_soltest:
     <<: *base_ubuntu2004
     parallelism: 6
     environment:
@@ -835,7 +835,7 @@ jobs:
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
     <<: *steps_soltest
 
-  t_ubu_asan_clang:
+  t_ubu_asan_clang_soltest:
     <<: *base_ubuntu2004_clang
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -844,7 +844,7 @@ jobs:
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
     <<: *steps_soltest
 
-  t_ubu_ubsan_clang:
+  t_ubu_ubsan_clang_soltest:
     <<: *base_ubuntu2004_clang
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -978,7 +978,7 @@ jobs:
     environment:
       FORCE_RELEASE: ON
 
-  t_win: &t_win
+  t_win_soltest: &t_win_soltest
     <<: *base_win_powershell
     steps:
       # NOTE: Git's default core.autocrlf is fine for running soltest. We get additional coverage
@@ -995,8 +995,8 @@ jobs:
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
-  t_win_release:
-    <<: *t_win
+  t_win_release_soltest:
+    <<: *t_win_soltest
 
   b_bytecode_ubu:
     <<: *base_ubuntu2004
@@ -1128,8 +1128,8 @@ workflows:
       - chk_errorcodes: *workflow_trigger_on_tags
       - chk_antlr_grammar: *workflow_trigger_on_tags
       - chk_docs_pragma_min_version: *workflow_trigger_on_tags
-      - t_pyscripts_ubu: *workflow_trigger_on_tags
-      - t_pyscripts_win: *workflow_trigger_on_tags
+      - t_ubu_pyscripts: *workflow_trigger_on_tags
+      - t_win_pyscripts: *workflow_trigger_on_tags
 
       # build-only
       - b_docs: *workflow_trigger_on_tags
@@ -1151,7 +1151,7 @@ workflows:
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu2004
-      - t_ubu_soltest: *workflow_ubuntu2004
+      - t_ubu_soltest_all: *workflow_ubuntu2004
       - t_ubu_soltest_enforce_yul: *workflow_ubuntu2004
       - b_ubu_clang: *workflow_trigger_on_tags
       - t_ubu_clang_soltest: *workflow_ubuntu2004_clang
@@ -1159,7 +1159,7 @@ workflows:
       # Ubuntu fake release build and tests
       - b_ubu_release: *workflow_trigger_on_tags
       - t_ubu_release_cli: *workflow_ubuntu2004_release
-      - t_ubu_release_soltest: *workflow_ubuntu2004_release
+      - t_ubu_release_soltest_all: *workflow_ubuntu2004_release
 
       # Emscripten build and tests that take 15 minutes or less
       - b_ems: *workflow_trigger_on_tags
@@ -1222,8 +1222,8 @@ workflows:
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
       - b_win_release: *workflow_trigger_on_tags
-      - t_win: *workflow_win
-      - t_win_release: *workflow_win_release
+      - t_win_soltest: *workflow_win
+      - t_win_release_soltest: *workflow_win_release
 
       # Bytecode comparison:
       - b_bytecode_ubu:
@@ -1267,13 +1267,13 @@ workflows:
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags
       - b_ubu_asan_clang: *workflow_trigger_on_tags
-      - t_ubu_asan: *workflow_ubuntu2004_asan
-      - t_ubu_asan_clang: *workflow_ubuntu2004_asan_clang
+      - t_ubu_asan_soltest: *workflow_ubuntu2004_asan
+      - t_ubu_asan_clang_soltest: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
 
       # UBSan build and tests
       - b_ubu_ubsan_clang: *workflow_trigger_on_tags
-      - t_ubu_ubsan_clang: *workflow_ubuntu2004_ubsan_clang
+      - t_ubu_ubsan_clang_soltest: *workflow_ubuntu2004_ubsan_clang
       - t_ubu_ubsan_clang_cli: *workflow_ubuntu2004_ubsan_clang
 
       # Emscripten build and tests that take more than 15 minutes to execute
