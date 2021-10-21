@@ -232,7 +232,7 @@ defaults:
   - base_win_cmd: &base_win_cmd
       executor:
         name: win/default
-        shell: powershell.exe
+        shell: cmd.exe
 
   - base_osx: &base_osx
       macos:
