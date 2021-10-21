@@ -170,7 +170,7 @@ defaults:
       destination: test_results/
 
   # --------------------------------------------------------------------------
-  # Tests Templates
+  # Step Templates
 
   # store_test_results helper
   - store_test_results: &store_test_results
@@ -181,6 +181,9 @@ defaults:
         - checkout
         - attach_workspace:
             at: build
+        # NOTE: Different build jobs produce different soltest executables (release/debug,
+        # clang/gcc, windows/linux/macos, etc.). The executable used by these steps comes from the
+        # attached workspace and we only see the items added to the workspace by jobs we depend on.
         - run: *run_soltest
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
@@ -203,22 +206,20 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - test_ubuntu1604_clang: &test_ubuntu1604_clang
+  # --------------------------------------------------------------------------
+  # Base Image Templates
+
+  - base_ubuntu1604_clang: &base_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
-      <<: *steps_soltest
 
-  - test_ubuntu2004_clang: &test_ubuntu2004_clang
+  - base_ubuntu2004_clang: &base_ubuntu2004_clang
       docker:
         - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
-      <<: *steps_soltest
 
-  - test_ubuntu2004: &test_ubuntu2004
+  - base_ubuntu2004: &base_ubuntu2004
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
-      parallelism: 6
-      <<: *steps_soltest_all
-
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -551,7 +552,8 @@ jobs:
       - persist_to_workspace: *artifacts_executables
 
   t_ubu_codecov:
-    <<: *test_ubuntu2004
+    <<: *base_ubuntu2004
+    parallelism: 6
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
@@ -598,7 +600,7 @@ jobs:
       - persist_to_workspace: *artifacts_executables_ossfuzz
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *test_ubuntu1604_clang
+    <<: *base_ubuntu1604_clang
     steps:
       - checkout
       - attach_workspace:
@@ -739,7 +741,9 @@ jobs:
           destination: docs-html
 
   t_ubu_soltest: &t_ubu_soltest
-    <<: *test_ubuntu2004
+    <<: *base_ubuntu2004
+    parallelism: 6
+    <<: *steps_soltest_all
 
   t_archlinux_soltest: &t_archlinux_soltest
       docker:
@@ -772,12 +776,15 @@ jobs:
 
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
-    <<: *test_ubuntu2004_clang
+    <<: *base_ubuntu2004_clang
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
+    <<: *steps_soltest
 
   t_ubu_release_soltest: &t_ubu_release_soltest
+    # NOTE: This definition is identical to t_ubu_soltest_all but in the workflow we make it depend on
+    # a different job (b_ubu_release) so the workspace it attaches contains a different executable.
     <<: *t_ubu_soltest
 
   t_ubu_cli: &t_ubu_cli
@@ -798,20 +805,23 @@ jobs:
     <<: *steps_cmdline_tests
 
   t_ubu_asan:
-    <<: *test_ubuntu2004
+    <<: *base_ubuntu2004
+    parallelism: 6
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
+    <<: *steps_soltest
 
   t_ubu_asan_clang:
-    <<: *test_ubuntu2004_clang
+    <<: *base_ubuntu2004_clang
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
+    <<: *steps_soltest
 
   t_ubu_ubsan_clang:
     environment:
