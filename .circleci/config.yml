@@ -219,14 +219,6 @@ defaults:
       parallelism: 6
       <<: *steps_soltest_all
 
-  - test_asan: &test_asan
-      <<: *test_ubuntu2004
-      <<: *steps_soltest
-
-  - test_ubuntu2004_clang_cli: &test_ubuntu2004_clang_cli
-      docker:
-        - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
-      <<: *steps_cmdline_tests
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -806,7 +798,7 @@ jobs:
     <<: *steps_cmdline_tests
 
   t_ubu_asan:
-    <<: *test_asan
+    <<: *test_ubuntu2004
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
