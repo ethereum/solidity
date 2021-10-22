@@ -205,6 +205,8 @@ public:
 		return nullptr;
 	}
 
+    static std::optional<Severity> severityFromString(std::string _severity);
+
 	static Severity errorSeverity(Type _type)
 	{
 		if (_type == Type::Info)

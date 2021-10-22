@@ -72,13 +72,17 @@ Error::Error(
 		*this << util::errinfo_comment(_description);
 }
 
-static std::optional<Severity> severityFromString(std::string _severity)
+static optional<Severity> severityFromString(string _severity)
 {
     boost::algorithm::to_lower(_severity);
 
     _severity = boost::algorithm::trim_copy(_severity);
 
-    _severity[0] = toupper(_severity[0]);
+    if (_severity == formatErrorSeverityLowercase(Severity::Error)) { return Severity::Error; }
 
-    return std::make_optional<std::string>(_severity).has_value() ? std::optional<std::string>(_severity) : std::nullopt;
+    else if (_severity == formatErrorSeverityLowercase(Severity::Warning)) { return Severity::Warning; }
+
+    else if (_severity == formatErrorSeverityLowercase(Severity::Info)) { return Severity::Info; }
+
+    else return std::make_optional<Severity>(_severity).has_value() ? std::optional<Severity>(_severity) : std::nullopt;
 }
