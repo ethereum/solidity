@@ -268,7 +268,7 @@ In the new code generator, function pointers use the AST IDs of the functions as
 calls through function pointers always have to use an internal dispatch function that uses the ``switch`` statement to select
 the right function.
 
-The ID ``0`` is reserved for uninitialized function pointers which then cause a panic in the disptach function when called.
+The ID ``0`` is reserved for uninitialized function pointers which then cause a panic in the dispatch function when called.
 
 In the old code generator, internal function pointers are initialized with a special function that always causes a panic.
 This causes a storage write at construction time for internal function pointers in storage.
