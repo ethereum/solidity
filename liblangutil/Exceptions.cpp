@@ -23,6 +23,9 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
@@ -72,17 +75,14 @@ Error::Error(
 		*this << util::errinfo_comment(_description);
 }
 
-static optional<Severity> severityFromString(string _severity)
+optional<Error::Severity> Error::severityFromString(string _input)
 {
-    boost::algorithm::to_lower(_severity);
+	boost::algorithm::to_lower(_input);
+	boost::algorithm::trim(_input);
 
-    _severity = boost::algorithm::trim_copy(_severity);
+	for (Severity severity: {Severity::Error, Severity::Warning, Severity::Info})
+		if (_input == formatErrorSeverityLowercase(severity))
+			return severity;
 
-    if (_severity == formatErrorSeverityLowercase(Severity::Error)) { return Severity::Error; }
-
-    else if (_severity == formatErrorSeverityLowercase(Severity::Warning)) { return Severity::Warning; }
-
-    else if (_severity == formatErrorSeverityLowercase(Severity::Info)) { return Severity::Info; }
-
-    else return std::make_optional<Severity>(_severity).has_value() ? std::optional<Severity>(_severity) : std::nullopt;
+	return nullopt;
 }

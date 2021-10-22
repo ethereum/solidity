@@ -111,6 +111,7 @@ struct InvalidAstError: virtual util::Exception {};
 		"AST assertion failed" \
 	)
 
+
 using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
 
 class SecondarySourceLocation
@@ -205,8 +206,6 @@ public:
 		return nullptr;
 	}
 
-    static std::optional<Severity> severityFromString(std::string _severity);
-
 	static Severity errorSeverity(Type _type)
 	{
 		if (_type == Type::Info)
@@ -258,6 +257,8 @@ public:
 		}
 		solAssert(false, "");
 	}
+
+	static std::optional<Severity> severityFromString(std::string _input);
 
 private:
 	ErrorId m_errorId;

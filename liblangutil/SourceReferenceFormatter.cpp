@@ -65,24 +65,21 @@ AnsiColorized SourceReferenceFormatter::frameColored() const
 	return AnsiColorized(m_stream, m_colored, {BOLD, BLUE});
 }
 
-AnsiColorized SourceReferenceFormatter::errorColored() const
+AnsiColorized SourceReferenceFormatter::errorColored(optional<Error::Severity> _severity) const
 {
-	return AnsiColorized(m_stream, m_colored, {BOLD, RED});
-}
+	// We used to color messages of any severity as errors so this seems like a good default
+	// for cases where severity cannot be determined.
+	char const* textColor = RED;
 
-AnsiColorized SourceReferenceFormatter::infoColored() const
-{
-	return AnsiColorized(m_stream, m_colored, {BOLD, WHITE});
-}
+	if (_severity.has_value())
+		switch (_severity.value())
+		{
+		case Error::Severity::Error: textColor = RED; break;
+		case Error::Severity::Warning: textColor = YELLOW; break;
+		case Error::Severity::Info: textColor = WHITE; break;
+		}
 
-AnsiColorized SourceReferenceFormatter::warningColored() const
-{
-	return AnsiColorized(m_stream, m_colored, {BOLD, YELLOW});
-}
-
-AnsiColorized SourceReferenceFormatter::unknownColored() const
-{
-	return AnsiColorized(m_stream, m_colored, {BOLD, WHITE});
+	return AnsiColorized(m_stream, m_colored, {BOLD, textColor});
 }
 
 AnsiColorized SourceReferenceFormatter::messageColored() const
@@ -179,22 +176,11 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
 {
 	// exception header line
-	if (_msg.errorId.has_value())
-	{
-        switch(severityFromString(_msg.severity))
-        {
-            case Severity::Error : errorColored() << " (" << _msg.errorId.value().error << ")";
-                break;
-
-            case Severity::Warning : warningColored() << " (" << _msg.errorId.value().error << ")";
-                break;
-
-            case Severity::Info : infoColored() << " (" << _msg.errorId.value().error << ")";
-                break;
-
-            default : unknownColored() << " (" << _msg.errorId.value().error << ")";
-        }
-    }
+	optional<Error::Severity> severity = Error::severityFromString(_msg.severity);
+	errorColored(severity) << _msg.severity;
+	if (m_withErrorIds && _msg.errorId.has_value())
+		errorColored(severity) << " (" << _msg.errorId.value().error << ")";
+	messageColored() << ": " << _msg.primary.message << '\n';
 
 	printSourceLocation(_msg.primary);
 
