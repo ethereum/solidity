@@ -1477,7 +1477,7 @@ void CompilerUtils::popStackElement(Type const& _type)
 
 void CompilerUtils::popStackSlots(size_t _amount)
 {
-	for (size_t i = 0; i < _amount; ++i)
+	for (auto i = _amount; i > 0; --i)
 		m_context << Instruction::POP;
 }
 
