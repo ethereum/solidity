@@ -418,6 +418,13 @@ defaults:
         tags:
           only: /.*/
 
+  - workflow_trigger_on_releases: &workflow_trigger_on_releases
+      filters:
+        tags:
+          only: /^v.*/
+        branches:
+          ignore: /.*/
+
   - workflow_ubuntu2004: &workflow_ubuntu2004
       <<: *workflow_trigger_on_tags
       requires:
@@ -1416,6 +1423,46 @@ jobs:
           path: all-bytecode-reports.zip
       - gitter_notify_failure_unless_pr
 
+  c_release_binaries:
+    <<: *base_ubuntu2004
+    steps:
+      - checkout
+      - attach_workspace:
+          at: workspace
+      - run:
+          name: Gather and rename binaries from dependent jobs
+          command: |
+            mkdir github/
+            cp workspace/solc/solc             github/solc-static-linux
+            cp workspace/build/solc/solc       github/solc-macos
+            cp workspace/solc/Release/solc.exe github/solc-windows.exe
+            cp workspace/soljson.js            github/soljson.js
+
+            cd github/
+            tar --create --file ../github-binaries.tar *
+      - store_artifacts:
+          path: github-binaries.tar
+      - run:
+          name: Rename binaries to solc-bin naming convention
+          command: |
+            full_version=$(
+              github/solc-static-linux --version |
+              sed -En 's/^Version: ([0-9.]+.*\+commit\.[0-9a-f]+(\.mod)?).*$/\1/p'
+            )
+
+            mkdir -p solc-bin/{linux-amd64,macosx-amd64,windows-amd64,bin}
+
+            mv github/solc-static-linux "solc-bin/linux-amd64/solc-linux-amd64-${full_version}"
+            mv github/solc-macos        "solc-bin/macosx-amd64/solc-macosx-amd64-${full_version}"
+            mv github/solc-windows.exe  "solc-bin/windows-amd64/solc-windows-amd64-${full_version}.exe"
+            mv github/soljson.js        "solc-bin/bin/soljson-${full_version}.js"
+
+            cd solc-bin/
+            tar --create --file ../solc-bin-binaries.tar *
+      - store_artifacts:
+          path: solc-bin-binaries.tar
+      - gitter_notify_failure_unless_pr
+
 workflows:
   version: 2
 
@@ -1535,6 +1582,15 @@ workflows:
             - b_bytecode_win
             - b_bytecode_osx
             - b_bytecode_ems
+
+      # Final artifacts
+      - c_release_binaries:
+          <<: *workflow_trigger_on_releases
+          requires:
+            - b_ubu_static
+            - b_osx
+            - b_win_release
+            - b_ems
 
   nightly:
 
