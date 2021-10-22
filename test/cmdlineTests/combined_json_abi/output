@@ -1,7 +1,7 @@
 {
    "contracts":
    {
-      "pretty_json_combined/input.sol:C":
+      "combined_json_abi/input.sol:C":
       {
          "abi": []
       }

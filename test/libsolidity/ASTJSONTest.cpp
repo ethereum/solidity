@@ -20,6 +20,7 @@
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 
 #include <test/Common.h>
 #include <test/libsolidity/ASTJSONTest.h>
@@ -248,7 +249,7 @@ bool ASTJSONTest::runTest(
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		ostringstream result;
-		ASTJsonConverter(_compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first));
+		ASTJsonConverter(_compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first), JsonFormat{ JsonFormat::Pretty });
 		_variant.result += result.str();
 		if (i != m_sources.size() - 1)
 			_variant.result += ",";

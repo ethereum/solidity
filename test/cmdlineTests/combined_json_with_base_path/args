@@ -1,1 +1,1 @@
---combined-json ast --base-path . --allow-paths .
+--combined-json ast --pretty-json --base-path . --allow-paths .

@@ -317,7 +317,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 	if (!m_options.compiler.outputs.abi)
 		return;
 
-	string data = jsonCompactPrint(removeNullMembers(m_compiler->contractABI(_contract)));
+	string data = jsonPrint(removeNullMembers(m_compiler->contractABI(_contract)), m_options.formatting.json);
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
@@ -331,7 +331,7 @@ void CommandLineInterface::handleStorageLayout(string const& _contract)
 	if (!m_options.compiler.outputs.storageLayout)
 		return;
 
-	string data = jsonCompactPrint(removeNullMembers(m_compiler->storageLayout(_contract)));
+	string data = jsonPrint(removeNullMembers(m_compiler->storageLayout(_contract)), m_options.formatting.json);
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
 	else
@@ -361,12 +361,13 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 
 	if (enabled)
 	{
-		std::string output = jsonPrettyPrint(
+		std::string output = jsonPrint(
 			removeNullMembers(
 				_natspecDev ?
 				m_compiler->natspecDev(_contract) :
 				m_compiler->natspecUser(_contract)
-			)
+			),
+			m_options.formatting.json
 		);
 
 		if (!m_options.output.dir.empty())
@@ -892,7 +893,7 @@ void CommandLineInterface::handleAst()
 		{
 			stringstream data;
 			string postfix = "";
-			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first), m_options.formatting.json);
 			postfix += "_json";
 			boost::filesystem::path path(sourceCode.first);
 			createFile(path.filename().string() + postfix + ".ast", data.str());
@@ -904,7 +905,7 @@ void CommandLineInterface::handleAst()
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
 			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first), m_options.formatting.json);
 		}
 	}
 }
@@ -1146,7 +1147,7 @@ void CommandLineInterface::outputCompilationResults()
 		{
 			string ret;
 			if (m_options.compiler.outputs.asmJson)
-				ret = jsonPrettyPrint(removeNullMembers(m_compiler->assemblyJSON(contract)));
+				ret = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
 			else
 				ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
 
