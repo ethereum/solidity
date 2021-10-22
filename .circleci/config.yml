@@ -36,7 +36,7 @@ commands:
     parameters:
       event:
         type: enum
-        enum: ["failure", "success"]
+        enum: ["failure", "success", "release"]
       condition:
         type: string
     steps:
@@ -58,6 +58,10 @@ commands:
 
             [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ [${workflow_name}] Job ${job} failed on **${CIRCLE_BRANCH}**. Please see [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
             [[ "<< parameters.event >>" == "success" ]] && message=" ✅ [${workflow_name}] Job ${job} succeeded on **${CIRCLE_BRANCH}**. Please see [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
+            [[ "<< parameters.event >>" == "release" ]] && message=" 📦 Release binaries for version **${CIRCLE_TAG}** are ready and attached as artifacts to [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}). **Please make sure the whole workflow succeeded before using them.**"
+
+            # The release notification only makes sense on tagged commits. If the commit is untagged, just bail out.
+            [[ "<< parameters.event >>" == "release" ]] && { [[ $CIRCLE_TAG != "" ]] || { echo "Not a tagged commit - notification skipped."; exit 0; } }
 
             curl "https://api.gitter.im/v1/rooms/${GITTER_NOTIFY_ROOM_ID}/chatMessages" \
               --request POST \
@@ -79,6 +83,13 @@ commands:
     steps:
       - gitter_notify_unless_pr:
           event: success
+          condition: on_success
+
+  gitter_notify_release_unless_pr:
+    description: "Posts a release notification to the main room on Gitter (if not running on a PR)."
+    steps:
+      - gitter_notify_unless_pr:
+          event: release
           condition: on_success
 
 defaults:
@@ -1462,6 +1473,7 @@ jobs:
       - store_artifacts:
           path: solc-bin-binaries.tar
       - gitter_notify_failure_unless_pr
+      - gitter_notify_release_unless_pr
 
 workflows:
   version: 2
