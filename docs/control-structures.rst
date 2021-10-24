@@ -288,7 +288,7 @@ which only need to be created if there is a dispute.
     re-created at the same address after having been destroyed. Yet, it is possible
     for that newly created contract to have a different deployed bytecode even
     though the creation bytecode has been the same (which is a requirement because
-    otherwise the address would change). This is due to the fact that the compiler
+    otherwise the address would change). This is due to the fact that the constructor
     can query external state that might have changed between the two creations
     and incorporate that into the deployed bytecode before it is stored.
 
