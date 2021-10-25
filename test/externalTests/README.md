@@ -13,16 +13,17 @@ these projects *can* be upgraded at all.
 ### Recommended workflow
 
 #### Adding a new external project
-1. Create a fork of the upstream repository in https://github.com/solidity-external-tests/. If the
-    project consists of several repositories, fork them all.
-2. Remove all the branches except for main one (`master`, `develop`, `main`, etc). This branch is
-    going to be always kept up to date with the upstream repository and should not contain any extra
-    commits.
+1. If the upstream code cannot be compiled without modifications, create a fork of the repository
+   in https://github.com/solidity-external-tests/.
+2. In our fork, remove all the branches except for main one (`master`, `develop`, `main`, etc).
+    This branch is going to be always kept up to date with the upstream repository and should not
+    contain any extra commits.
     - If the project is not up to date with the latest compiler version but has a branch that is,
         try to use that branch instead.
-3. Create a new branch named after the main branch and the compiler version from our `develop`
-    branch. E.g. if the latest Solidity version is 0.7.5 and the main branch of the external project
-    is called `master`, create `master_070`. This is where we will be adding our own commits.
+3. In our fork, create a new branch named after the main branch and the compiler version from our
+ `develop` branch.
+     E.g. if the latest Solidity version is 0.7.5 and the main branch of the external project
+     is called `master`, create `master_070`. This is where we will be adding our own commits.
 4. Create a script for compiling/testing the project and put it in `test/externalTests/` in the
     Solidity repository.
     - The script should apply workarounds necessary to make the project actually use the compiler
@@ -39,12 +40,12 @@ these projects *can* be upgraded at all.
     and add necessary workarounds there. Continuing the example above, the new branch would be
     called `master_080` and should be rebased on top of `master_070`.
     - The fewer commits in these branches, the better. Ideally, any changes needed to make the compiler
-        work should be submitted upstream and our branches should just be tracking the main upstream
-        branch without any extra commits.
+        work should be submitted upstream and our scripts should be using the upstream repository
+        directly.
 
 #### Updating external projects for a PR that introduces breaking changes in the compiler
 If a PR to our `breaking` branch introduces changes that will make an external project no longer
-compile or pass its tests, the fork needs to be modified:
+compile or pass its tests, the fork needs to be modified (or created if it does not yet exist):
 - If a branch specific to the compiler version from `breaking` does not exist yet:
     1. Create the branch. It should be based on the version-specific branch used on `develop`.
     2. Make your PR modify the project script in `test/externalScripts/` to use the new branch.
@@ -84,7 +85,7 @@ to use the updated copies of the branches and can be discarded aferwards without
 When a non-backwards-compatible version becomes the most recent release, `breaking` branch
 gets merged into `develop` which automatically results in a switch to the newer version-specific
 branches if they exist. If no changes on our part were necessary, it is completely fine to keep using
-e.g. the `master_060` of an external project in in Solidity 0.8.x.
+e.g. the `master_060` of an external project in Solidity 0.8.x.
 
 Since each project is handled separately, this approach may result in a mix of version-specific branches
 between different external projects. For example, in one project we could could have `master_050` on
