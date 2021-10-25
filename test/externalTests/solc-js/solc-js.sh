@@ -28,7 +28,6 @@ verify_version_input "$1" "$2"
 SOLJSON="$1"
 VERSION="$2"
 
-function install_fn { echo "Nothing to install."; }
 function compile_fn { echo "Nothing to compile."; }
 function test_fn { npm test; }
 

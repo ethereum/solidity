@@ -27,25 +27,36 @@ source test/externalTests/common.sh
 verify_input "$1"
 SOLJSON="$1"
 
-function install_fn { npm install --package-lock; }
 function compile_fn { npx truffle compile; }
 function test_fn { npm test; }
 
 function gnosis_safe_test
 {
-    OPTIMIZER_LEVEL=2
-    CONFIG="truffle-config.js"
+    local repo="https://github.com/solidity-external-tests/safe-contracts.git"
+    local branch=development_080
+    local config_file="truffle-config.js"
+    local min_optimizer_level=2
+    local max_optimizer_level=3
 
-    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/safe-contracts.git development_080
+    setup_solcjs "$DIR" "$SOLJSON"
+    download_project "$repo" "$branch" "$DIR"
 
     sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080|g' package.json
 
     # Remove the lock file (if it exists) to prevent it from overriding our changes in package.json
     rm -f package-lock.json
 
-    run_install "$SOLJSON" install_fn
+    replace_version_pragmas
+    force_truffle_solc_modules "$SOLJSON"
+    force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
+    npm install --package-lock
 
-    truffle_run_test "$SOLJSON" compile_fn test_fn
+    replace_version_pragmas
+    force_truffle_solc_modules "$SOLJSON"
+
+    for level in $(seq "$min_optimizer_level" "$max_optimizer_level"); do
+        truffle_run_test "$config_file" "${DIR}/solc" "$level" compile_fn test_fn
+    done
 }
 
 external_test Gnosis-Safe gnosis_safe_test
