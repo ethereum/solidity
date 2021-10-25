@@ -212,7 +212,8 @@ ControlFlowSideEffectsCollector::ControlFlowSideEffectsCollector(
 			if (calledSideEffects->canRevert)
 				sideEffects.canRevert = true;
 
-			for (YulString callee: util::valueOrDefault(m_functionCalls, _function))
+			set<YulString> emptySet;
+			for (YulString callee: util::valueOrDefault(m_functionCalls, _function, emptySet))
 				_recurse(callee, _recurse);
 		};
 		for (auto const& call: calls)
