@@ -33,7 +33,7 @@ function ens_test
     export OPTIMIZER_LEVEL=1
     export CONFIG="truffle-config.js"
 
-    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/ens.git master_080
+    truffle_setup "$SOLJSON" https://github.com/ensdomains/ens.git master
 
     # Use latest Truffle. Older versions crash on the output from 0.8.0.
     force_truffle_version ^5.1.55
