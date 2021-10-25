@@ -30,6 +30,44 @@ parameters:
 orbs:
   win: circleci/windows@2.2.0
 
+commands:
+  gitter_notify:
+    description: "Posts a notification to the main room on Gitter (if not running on a PR)."
+    parameters:
+      event:
+        type: enum
+        enum: ["failure", "success"]
+      condition:
+        type: string
+    steps:
+      - run:
+          name: "Gitter notification"
+          command: |
+            [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ Nightly job **${CIRCLE_JOB}** failed on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
+            [[ "<< parameters.event >>" == "success" ]] && message=" ✅ Nightly job **${CIRCLE_JOB}** succeeded on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
+
+            curl "https://api.gitter.im/v1/rooms/${GITTER_NOTIFY_ROOM_ID}/chatMessages" \
+              --request POST \
+              --include \
+              --header "Content-Type: application/json" \
+              --header "Accept: application/json" \
+              --header "Authorization: Bearer ${GITTER_API_TOKEN}" \
+              --data "{\"text\":\"${message}\"}"
+
+  gitter_notify_failure:
+    description: "Posts a failure notification to the main room on Gitter (if not running on a PR)."
+    steps:
+      - gitter_notify:
+          event: failure
+          condition: on_fail
+
+  gitter_notify_success:
+    description: "Posts a success notification to the main room on Gitter (if not running on a PR)."
+    steps:
+      - gitter_notify:
+          event: success
+          condition: on_success
+
 defaults:
 
   # --------------------------------------------------------------------------
@@ -267,28 +305,6 @@ defaults:
       requires:
         - b_win_release
 
-  # --------------------------------------------------------------------------
-  # Notification Templates
-  - gitter_notify_failure: &gitter_notify_failure
-      name: Gitter notify failure
-      command: >-
-        curl -X POST -i
-        -i -H "Content-Type: application/json"
-        -H "Accept: application/json"
-        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
-      when: on_fail
-
-  - gitter_notify_success: &gitter_notify_success
-      name: Gitter notify success
-      command: >-
-        curl -X POST -i
-        -i -H "Content-Type: application/json"
-        -H "Accept: application/json"
-        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
-      when: on_success
-
 # -----------------------------------------------------------------------------------------------
 jobs:
 
@@ -507,7 +523,7 @@ jobs:
     steps:
       - checkout
       - run: *run_build
-      - run: *gitter_notify_failure
+      - gitter_notify_failure
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
 
@@ -600,8 +616,8 @@ jobs:
             git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
             scripts/regressions.py -o test_results
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
+      - gitter_notify_failure
+      - gitter_notify_success
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -813,7 +829,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_soltest
-      - run: *gitter_notify_failure
+      - gitter_notify_failure
 
   t_ubu_ubsan_clang_cli:
     docker:
@@ -822,7 +838,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_cmdline_tests
-      - run: *gitter_notify_failure
+      - gitter_notify_failure
 
   t_ems_solcjs:
     docker:
@@ -906,8 +922,8 @@ jobs:
       - when:
           condition: <<parameters.gitter_notify>>
           steps:
-            - run: *gitter_notify_failure
-            - run: *gitter_notify_success
+            - gitter_notify_failure
+            - gitter_notify_success
 
   b_win: &b_win
     executor:
