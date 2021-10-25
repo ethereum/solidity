@@ -18,6 +18,9 @@
 #
 # (c) 2020 solidity contributors.
 #------------------------------------------------------------------------------
+
+set -e
+
 source scripts/common.sh
 source test/externalTests/common.sh
 
