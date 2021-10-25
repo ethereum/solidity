@@ -1220,6 +1220,14 @@ void TypeChecker::endVisit(RevertStatement const& _revert)
 		m_errorReporter.typeError(1885_error, errorCall.expression().location(), "Expression has to be an error.");
 }
 
+void TypeChecker::endVisit(ArrayTypeName const& _typeName)
+{
+	solAssert(
+		_typeName.baseType().annotation().type &&
+		_typeName.baseType().annotation().type->storageBytes() != 0,
+		"Illegal base type of storage size zero for array."
+	);
+}
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
