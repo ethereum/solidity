@@ -258,6 +258,8 @@ public:
 		solAssert(false, "");
 	}
 
+	static std::optional<Severity> severityFromString(std::string _input);
+
 private:
 	ErrorId m_errorId;
 	Type m_type;
