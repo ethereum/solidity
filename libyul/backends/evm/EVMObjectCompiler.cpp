@@ -72,7 +72,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		context,
 		_optimize,
 		{},
-		true /* _useNamedLabelsForFunctions */
+		CodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
 	};
 	transform(*_object.code);
 	if (!transform.stackErrors().empty())

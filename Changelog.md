@@ -21,6 +21,7 @@ Bugfixes:
  * Commandline Interface: Disallow ``--error-recovery`` option outside of the compiler mode.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
  * TypeChecker: Fix internal error when using user defined value types in public library functions.
+ * Yul Assembler: Fix internal error when function names are not unique.
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
  * Commandline Interface: When linking only accept exact matches for library names passed to the ``--libraries`` option. Library names not prefixed with a file name used to match any library with that name.
 
