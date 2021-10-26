@@ -43,9 +43,7 @@ function gnosis_safe_test
 
     sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080|g' package.json
 
-    # Remove the lock file (if it exists) to prevent it from overriding our changes in package.json
-    rm -f package-lock.json
-
+    neutralize_package_lock
     replace_version_pragmas
     force_truffle_solc_modules "$SOLJSON"
     force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"

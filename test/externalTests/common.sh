@@ -96,6 +96,14 @@ function replace_version_pragmas
     find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
+function neutralize_package_lock
+{
+    # Remove lock files (if they exist) to prevent them from overriding our changes in package.json
+    printLog "Removing package lock files..."
+    rm --force --verbose yarn.lock
+    rm --force --verbose package-lock.json
+}
+
 function force_truffle_solc_modules
 {
     local soljson="$1"
