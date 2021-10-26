@@ -92,7 +92,7 @@ echo "Using solc binary at ${SOLC}"
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
 then
-    INTERACTIVE=""
+    INTERACTIVE=false
 fi
 
 # extend stack size in case we run via ASAN
@@ -123,7 +123,7 @@ function update_expectation {
 
 function ask_expectation_update
 {
-    if [[ $INTERACTIVE != "" ]]
+    if [[ $INTERACTIVE == true ]]
     then
         local newExpectation="${1}"
         local expectationFile="${2}"
@@ -142,12 +142,13 @@ function ask_expectation_update
                     e*) "$editor" "$expectationFile"; break;;
                     u*) update_expectation "$newExpectation" "$expectationFile"; break;;
                     s*) return;;
-                    q*) exit 1;;
+                    q*) fail;;
                 esac
             done
         fi
     else
-        exit 1
+        [[ $INTERACTIVE == false ]] || assertFail
+        fail
     fi
 }
 
@@ -252,7 +253,7 @@ EOF
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
 
         [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exitCode" "$exit_code_expectation_file"
-        [[ $exit_code_expectation_file == "" ]] && exit 1
+        [[ $exit_code_expectation_file == "" ]] && fail
     fi
 
     if [[ "$(cat "$stdout_path")" != "${stdout_expected}" ]]
@@ -266,7 +267,7 @@ EOF
         printError "When running $solc_command"
 
         [[ $stdout_expectation_file != "" ]] && ask_expectation_update "$(cat "$stdout_path")" "$stdout_expectation_file"
-        [[ $stdout_expectation_file == "" ]] && exit 1
+        [[ $stdout_expectation_file == "" ]] && fail
     fi
 
     if [[ "$(cat "$stderr_path")" != "${stderr_expected}" ]]
@@ -280,7 +281,7 @@ EOF
         printError "When running $solc_command"
 
         [[ $stderr_expectation_file != "" ]] && ask_expectation_update "$(cat "$stderr_path")" "$stderr_expectation_file"
-        [[ $stderr_expectation_file == "" ]] && exit 1
+        [[ $stderr_expectation_file == "" ]] && fail
     fi
 
     rm "$stdout_path" "$stderr_path"
@@ -300,10 +301,10 @@ function test_solc_assembly_output()
     if [ -z "$empty" ]
     then
         printError "Incorrect assembly output. Expected: "
-        echo -e "${expected}"
+        >&2 echo -e "${expected}"
         printError "with arguments ${solc_args[*]}, but got:"
-        echo "${output}"
-        exit 1
+        >&2 echo "${output}"
+        fail
     fi
 }
 
@@ -373,7 +374,7 @@ printTask "Running general commandline tests..."
         then
             printError "Ambiguous input. Found input files in multiple formats:"
             echo -e "${inputFiles}"
-            exit 1
+            fail
         fi
 
         # Use printf to get rid of the trailing newline
@@ -475,7 +476,8 @@ echo "Done."
 
 printTask "Testing library checksum..."
 echo '' | msg_on_error --no-stdout "$SOLC" - --link --libraries a=0x90f20564390eAe531E810af625A22f51385Cd222
-echo '' | "$SOLC" - --link --libraries a=0x80f20564390eAe531E810af625A22f51385Cd222 &>/dev/null && exit 1
+echo '' | "$SOLC" - --link --libraries a=0x80f20564390eAe531E810af625A22f51385Cd222 &>/dev/null && \
+    fail "solc --link did not reject a library address with an invalid checksum."
 
 printTask "Testing long library names..."
 echo '' | msg_on_error --no-stdout "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname=0x90f20564390eAe531E810af625A22f51385Cd222
@@ -503,7 +505,8 @@ SOLTMPDIR=$(mktemp -d)
     # First time it works
     echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create"
     # Second time it fails
-    echo 'contract C {}' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null && exit 1
+    echo 'contract C {}' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null && \
+        fail "solc did not refuse to overwrite $SOLTMPDIR/non-existing-stuff-to-create."
     # Unless we force
     echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create"
 )
@@ -517,8 +520,8 @@ printTask "Testing assemble, yul, strict-assembly and optimize..."
 
     # Test options above in conjunction with --optimize.
     # Using both, --assemble and --optimize should fail.
-    echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null && exit 1
-    echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && exit 1
+    echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null && fail "solc --assemble --optimize did not fail as expected."
+    echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && fail "solc --yul --optimize did not fail as expected."
 
     # Test yul and strict assembly output
     # Non-empty code results in non-empty binary representation with optimizations turned off,
@@ -563,8 +566,8 @@ SOLTMPDIR=$(mktemp -d)
     cd "$SOLTMPDIR"
     if ! "$REPO_ROOT/scripts/ASTImportTest.sh"
     then
-        rm -rf "$SOLTMPDIR"
-        exit 1
+        rm -r "$SOLTMPDIR"
+        fail
     fi
 )
 rm -r "$SOLTMPDIR"
