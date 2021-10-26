@@ -31,24 +31,26 @@ BINARY_TYPE="$1"
 BINARY_PATH="$2"
 SELECTED_PRESETS="$3"
 
-function compile_fn { npx truffle compile; }
+function compile_fn { npm run build; }
 function test_fn { npm test; }
 
 function gnosis_safe_test
 {
-    local repo="https://github.com/solidity-external-tests/safe-contracts.git"
+    local repo="https://github.com/gnosis/safe-contracts.git"
     local ref_type=branch
-    local ref="development_080"
-    local config_file="truffle-config.js"
+    local ref=main
+    local config_file="hardhat.config.ts"
+    local config_var=userConfig
 
-    local compile_only_presets=()
+    local compile_only_presets=(
+        ir-optimize-evm+yul        # Compiles but tests fail. See https://github.com/nomiclabs/hardhat/issues/2115
+    )
     local settings_presets=(
         "${compile_only_presets[@]}"
         #ir-no-optimize            # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
         #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        ir-optimize-evm+yul
-        #legacy-no-optimize        # Compilation fails with "Stack too deep" error
-        #legacy-optimize-evm-only  # Compilation fails with "Stack too deep" error
+        legacy-no-optimize
+        legacy-optimize-evm-only
         legacy-optimize-evm+yul
     )
 
@@ -59,20 +61,28 @@ function gnosis_safe_test
     download_project "$repo" "$ref_type" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
-    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080|g' package.json
+    # NOTE: The patterns below intentionally have hard-coded versions.
+    # When the upstream updates them, there's a chance we can just remove the regex.
+    sed -i 's|"@gnosis\.pm/mock-contract": "\^4\.0\.0"|"@gnosis.pm/mock-contract": "github:solidity-external-tests/mock-contract#master_080"|g' package.json
+    sed -i 's|"@openzeppelin/contracts": "\^3\.4\.0"|"@openzeppelin/contracts": "^4.0.0"|g' package.json
+
+    # Disable two tests failing due to Hardhat's heuristics not yet updated to handle solc 0.8.10.
+    # TODO: Remove this when Hardhat implements them (https://github.com/nomiclabs/hardhat/issues/2051).
+    sed -i "s|\(it\)\(('should revert if called directly', async () => {\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
 
     neutralize_package_lock
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$(first_word "$SELECTED_PRESETS")"
-    npm install --package-lock
-    npm install eth-gas-reporter
+    force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
+    force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
+    npm install
+    npm install hardhat-gas-reporter
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
 
     for preset in $SELECTED_PRESETS; do
-        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
-        store_benchmark_report truffle gnosis "$repo" "$preset"
+        hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
+        store_benchmark_report hardhat gnosis "$repo" "$preset"
     done
 }
 

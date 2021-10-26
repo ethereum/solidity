@@ -513,19 +513,12 @@ defaults:
       nodejs_version: '14'
 
   - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
-      <<: *workflow_emscripten
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_gnosis
       project: gnosis
       binary_type: native
-      # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
-      nodejs_version: '12'
-  - job_native_test_ext_gnosis_v2: &job_native_test_ext_gnosis_v2
-      <<: *workflow_ubuntu2004_static
-      name: t_native_test_ext_gnosis_v2
-      project: gnosis-v2
-      binary_type: native
-      # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
-      nodejs_version: '12'
+      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
+      nodejs_version: '16'
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_zeppelin
@@ -1468,10 +1461,7 @@ workflows:
       - t_ems_ext: *job_ems_compile_ext_colony
       - t_ems_ext: *job_native_compile_ext_gnosis
 
-      # FIXME: Gnosis tests are pretty flaky right now. They often fail on CircleCI due to random ProviderError
-      # and there are also other less frequent problems. See https://github.com/gnosis/safe-contracts/issues/216.
-      #-t_ems_ext: *job_native_test_ext_gnosis
-      - t_ems_ext: *job_native_test_ext_gnosis_v2
+      - t_ems_ext: *job_native_test_ext_gnosis
       - t_ems_ext: *job_native_test_ext_zeppelin
       - t_ems_ext: *job_native_test_ext_ens
       - t_ems_ext: *job_native_test_ext_trident
@@ -1489,7 +1479,7 @@ workflows:
           requires:
             - t_ems_compile_ext_colony
             - t_native_compile_ext_gnosis
-            - t_native_test_ext_gnosis_v2
+            - t_native_test_ext_gnosis
             - t_native_test_ext_zeppelin
             - t_native_test_ext_ens
             - t_native_test_ext_trident
