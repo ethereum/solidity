@@ -41,8 +41,7 @@ function colony_test
     setup_solcjs "$DIR" "$SOLJSON"
     download_project "$repo" "$branch" "$DIR"
 
-    replace_version_pragmas
-    force_truffle_solc_modules "$SOLJSON"
+    neutralize_package_json_hooks
     force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
     yarn
     git submodule update --init

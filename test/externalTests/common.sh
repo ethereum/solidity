@@ -103,6 +103,13 @@ function neutralize_package_lock
     rm --force --verbose package-lock.json
 }
 
+function neutralize_package_json_hooks
+{
+    [[ -f package.json ]] || fail "package.json not found"
+    sed -i 's|"prepublish": *".*"|"prepublish": ""|g' package.json
+    sed -i 's|"prepare": *".*"|"prepare": ""|g' package.json
+}
+
 function force_truffle_solc_modules
 {
     local soljson="$1"

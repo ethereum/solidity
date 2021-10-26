@@ -44,8 +44,7 @@ function gnosis_safe_test
     sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080|g' package.json
 
     neutralize_package_lock
-    replace_version_pragmas
-    force_truffle_solc_modules "$SOLJSON"
+    neutralize_package_json_hooks
     force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
     npm install --package-lock
 
