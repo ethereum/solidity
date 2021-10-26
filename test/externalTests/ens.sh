@@ -44,9 +44,7 @@ function ens_test
     # Use latest Truffle. Older versions crash on the output from 0.8.0.
     force_truffle_version ^5.1.55
 
-    # Remove the lock file (if it exists) to prevent it from overriding our changes in package.json
-    rm -f package-lock.json
-
+    neutralize_package_lock
     replace_version_pragmas
     force_truffle_solc_modules "$SOLJSON"
     force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
