@@ -1124,6 +1124,8 @@ public:
 	bool containsNestedMapping() const override
 	{
 		solAssert(nameable(), "Called for a non nameable type.");
+		// DeclarationTypeChecker::endVisit(VariableDeclaration const&)
+		// assumes that this will never be true.
 		solAssert(!underlyingType().containsNestedMapping(), "");
 		return false;
 	}

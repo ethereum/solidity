@@ -437,14 +437,16 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		type = TypeProvider::withLocation(ref, typeLoc, isPointer);
 	}
 
-	if (_variable.isConstant() && !type->isValueType())
-	{
-		bool allowed = false;
-		if (auto arrayType = dynamic_cast<ArrayType const*>(type))
-			allowed = arrayType->isByteArray();
-		if (!allowed)
-			m_errorReporter.fatalDeclarationError(9259_error, _variable.location(), "Constants of non-value type not yet implemented.");
-	}
+	if (
+		_variable.isConstant() &&
+		!dynamic_cast<UserDefinedValueType const*>(type) &&
+		type->containsNestedMapping()
+	)
+		m_errorReporter.fatalDeclarationError(
+			3530_error,
+			_variable.location(),
+			"The type contains a (nested) mapping and therefore cannot be a constant."
+		);
 
 	_variable.annotation().type = type;
 }
