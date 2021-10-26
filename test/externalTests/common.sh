@@ -251,7 +251,7 @@ function external_test
 
     printTask "Testing $name..."
     echo "==========================="
-    DIR=$(mktemp -d)
+    DIR=$(mktemp -d -t "ext-test-${name}-XXXXXX")
     (
         if [ -z "$main_fn" ]; then
             printError "Test main function not defined."
