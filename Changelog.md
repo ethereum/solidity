@@ -16,15 +16,15 @@ Compiler Features:
 
 Bugfixes:
  * Code Generator: Fix constructor source mappings for immutables.
+ * Commandline Interface: Disallow ``--error-recovery`` option outside of the compiler mode.
+ * Commandline Interface: Don't return zero exit code when writing linked files to disk fails.
  * Commandline Interface: Fix extra newline character being appended to sources passed through standard input, affecting their hashes.
  * Commandline Interface: Report output selection options unsupported by the selected input mode instead of ignoring them.
- * Commandline Interface: Don't return zero exit code when writing linked files to disk fails.
- * Commandline Interface: Disallow ``--error-recovery`` option outside of the compiler mode.
+ * Commandline Interface: When linking only accept exact matches for library names passed to the ``--libraries`` option. Library names not prefixed with a file name used to match any library with that name.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
  * TypeChecker: Fix internal error when using user defined value types in public library functions.
  * Yul Assembler: Fix internal error when function names are not unique.
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
- * Commandline Interface: When linking only accept exact matches for library names passed to the ``--libraries`` option. Library names not prefixed with a file name used to match any library with that name.
 
 
 
