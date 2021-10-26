@@ -1223,7 +1223,6 @@ workflows:
           name: t_ems_compile_ext_zeppelin
           project: zeppelin
           compile_only: 1
-          nodejs_version: '14'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_ens
@@ -1250,7 +1249,8 @@ workflows:
           <<: *workflow_emscripten
           name: t_ems_test_ext_zeppelin
           project: zeppelin
-          nodejs_version: '14'
+          # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
+          nodejs_version: '16'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_ens
