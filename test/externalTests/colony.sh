@@ -33,7 +33,7 @@ function colony_test
     OPTIMIZER_LEVEL=3
     CONFIG="truffle.js"
 
-    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/colonyNetwork.git develop_080
+    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/colonyNetwork.git develop_080_update
     run_install "$SOLJSON" install_fn
 
     cd lib
