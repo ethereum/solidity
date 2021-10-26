@@ -42,6 +42,7 @@ commands:
     steps:
       - run:
           name: "Gitter notification"
+          when: << parameters.condition >>
           command: |
             [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ Nightly job **${CIRCLE_JOB}** failed on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
             [[ "<< parameters.event >>" == "success" ]] && message=" ✅ Nightly job **${CIRCLE_JOB}** succeeded on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
