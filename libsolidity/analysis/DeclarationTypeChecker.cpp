@@ -100,7 +100,6 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 		m_recursiveStructSeen = false;
 		member->accept(*this);
 		solAssert(member->annotation().type, "");
-		solAssert(member->annotation().type->canBeStored(), "Type cannot be used in struct.");
 		if (m_recursiveStructSeen)
 			hasRecursiveChild = true;
 	}

@@ -621,6 +621,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	return false;
 }
 
+void TypeChecker::endVisit(StructDefinition const& _struct)
+{
+	for (auto const& member: _struct.members())
+		solAssert(
+			member->annotation().type &&
+			member->annotation().type->canBeStored(),
+			"Type cannot be used in struct."
+		);
+}
+
 void TypeChecker::visitManually(
 	ModifierInvocation const& _modifier,
 	vector<ContractDefinition const*> const& _bases

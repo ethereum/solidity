@@ -121,6 +121,7 @@ private:
 	bool visit(FunctionDefinition const& _function) override;
 	void endVisit(ArrayTypeName const& _typeName) override;
 	bool visit(VariableDeclaration const& _variable) override;
+	void endVisit(StructDefinition const& _struct) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
