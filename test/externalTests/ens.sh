@@ -45,8 +45,7 @@ function ens_test
     force_truffle_version ^5.1.55
 
     neutralize_package_lock
-    replace_version_pragmas
-    force_truffle_solc_modules "$SOLJSON"
+    neutralize_package_json_hooks
     force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
     npm install
 
