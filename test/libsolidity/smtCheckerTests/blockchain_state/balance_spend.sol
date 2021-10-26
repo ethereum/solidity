@@ -19,4 +19,5 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (280-314): CHC: Assertion violation happens here.
+// Info 1180: Contract invariant(s) for :C:\n((!(c <= 1) || !((:var 1).balances[address(this)] <= 91)) && !((:var 1).balances[address(this)] <= 82) && (!(c <= 0) || !((:var 1).balances[address(this)] <= 100)))\n
 // Warning 1236: (175-190): BMC: Insufficient funds happens here.

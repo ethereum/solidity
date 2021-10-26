@@ -20,3 +20,4 @@ contract C
 // ----
 // Warning 2072: (191-207): Unused local variable.
 // Warning 6328: (233-248): CHC: Assertion violation happens here.
+// Info 1180: Reentrancy property(ies) for :C:\n!(<errorCode> >= 2)\n!(<errorCode> >= 3)\n!(<errorCode> >= 4)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(success)\n<errorCode> = 2 -> Assertion failed at assert(x == 0)\n<errorCode> = 3 -> Assertion failed at assert(map[0] == 0)\n<errorCode> = 4 -> Assertion failed at assert(localMap[0] == 0)\n

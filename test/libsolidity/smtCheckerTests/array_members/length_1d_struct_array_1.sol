@@ -11,3 +11,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :C:\n(((s1.arr.length + ((- 1) * s2.arr.length)) >= 0) && ((s1.arr.length + ((- 1) * s2.arr.length)) <= 0))\n

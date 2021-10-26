@@ -28,4 +28,5 @@ contract C {
 // Warning 1218: (178-192): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (178-192): CHC: Assertion violation might happen here.
 // Warning 6328: (318-332): CHC: Assertion violation happens here.
+// Info 1180: Reentrancy property(ies) for :C:\n!(<errorCode> = 2)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(x == 0)\n<errorCode> = 2 -> Assertion failed at assert(x == 0)\n<errorCode> = 3 -> Assertion failed at assert(x == 1)\n
 // Warning 4661: (178-192): BMC: Assertion violation happens here.

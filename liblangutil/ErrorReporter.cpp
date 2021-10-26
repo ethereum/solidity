@@ -261,3 +261,8 @@ void ErrorReporter::info(
 {
 	error(_error, Error::Type::Info, _location, _description);
 }
+
+void ErrorReporter::info(ErrorId _error, string const& _description)
+{
+	error(_error, Error::Type::Info, SourceLocation(), _description);
+}

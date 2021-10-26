@@ -13,6 +13,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
-// Warning 6328: (139-161): CHC: Assertion violation happens here.
+// Warning 6328: (139-161): CHC: Assertion violation happens here.\nCounterexample:\ndata = [0x62]\n\nTransaction trace:\nC.constructor()\nState: data = []\nC.g()
 // Warning 6328: (263-290): CHC: Assertion violation happens here.\nCounterexample:\ndata = [0x01]\n\nTransaction trace:\nC.constructor()\nState: data = []\nC.g()

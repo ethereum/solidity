@@ -16,3 +16,4 @@ contract C {
 // ----
 // Warning 6328: (132-188): CHC: Assertion violation happens here.
 // Warning 6328: (269-324): CHC: Assertion violation happens here.
+// Info 1180: Contract invariant(s) for :C:\n((prevBalance + ((- 1) * (:var 1).balances[address(this)])) <= 0)\n

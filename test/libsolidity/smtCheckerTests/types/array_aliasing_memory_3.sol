@@ -28,3 +28,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :C:\n!(array.length <= 0)\n

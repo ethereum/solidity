@@ -26,10 +26,13 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include <range/v3/view.hpp>
 #include <utility>
 
 using namespace std;
+using boost::algorithm::starts_with;
 using namespace solidity;
 using namespace solidity::smtutil;
 using namespace solidity::frontend;
@@ -196,6 +199,11 @@ bool Predicate::isConstructorSummary() const
 bool Predicate::isInterface() const
 {
 	return m_type == PredicateType::Interface;
+}
+
+bool Predicate::isNondetInterface() const
+{
+	return m_type == PredicateType::NondetInterface;
 }
 
 string Predicate::formatSummaryCall(
@@ -416,6 +424,50 @@ pair<vector<optional<string>>, vector<VariableDeclaration const*>> Predicate::lo
 
 	auto outTypes = applyMap(localVarsInScope, [](auto _var) { return _var->type(); });
 	return {formatExpressions(outValuesInScope, outTypes), localVarsInScope};
+}
+
+map<string, string> Predicate::expressionSubstitution(smtutil::Expression const& _predExpr) const
+{
+	map<string, string> subst;
+	string predName = functor().name;
+
+	solAssert(contextContract(), "");
+	auto const& stateVars = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*contextContract());
+
+	auto nArgs = _predExpr.arguments.size();
+
+	// The signature of an interface predicate is
+	// interface(this, abiFunctions, cryptoFunctions, blockchainState, stateVariables).
+	// An invariant for an interface predicate is a contract
+	// invariant over its state, for example `x <= 0`.
+	if (isInterface())
+	{
+		solAssert(starts_with(predName, "interface"), "");
+		subst[_predExpr.arguments.at(0).name] = "address(this)";
+		solAssert(nArgs == stateVars.size() + 4, "");
+		for (size_t i = nArgs - stateVars.size(); i < nArgs; ++i)
+			subst[_predExpr.arguments.at(i).name] = stateVars.at(i - 4)->name();
+	}
+	// The signature of a nondet interface predicate is
+	// nondet_interface(error, this, abiFunctions, cryptoFunctions, blockchainState, stateVariables, blockchainState', stateVariables').
+	// An invariant for a nondet interface predicate is a reentrancy property
+	// over the pre and post state variables of a contract, where pre state vars
+	// are represented by the variable's name and post state vars are represented
+	// by the primed variable's name, for example
+	// `(x <= 0) => (x' <= 100)`.
+	else if (isNondetInterface())
+	{
+		solAssert(starts_with(predName, "nondet_interface"), "");
+		subst[_predExpr.arguments.at(0).name] = "<errorCode>";
+		subst[_predExpr.arguments.at(1).name] = "address(this)";
+		solAssert(nArgs == stateVars.size() * 2 + 6, "");
+		for (size_t i = nArgs - stateVars.size(), s = 0; i < nArgs; ++i, ++s)
+			subst[_predExpr.arguments.at(i).name] = stateVars.at(s)->name() + "'";
+		for (size_t i = nArgs - (stateVars.size() * 2 + 1), s = 0; i < nArgs - (stateVars.size() + 1); ++i, ++s)
+			subst[_predExpr.arguments.at(i).name] = stateVars.at(s)->name();
+	}
+
+	return subst;
 }
 
 vector<optional<string>> Predicate::formatExpressions(vector<smtutil::Expression> const& _exprs, vector<Type const*> const& _types) const

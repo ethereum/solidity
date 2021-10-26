@@ -32,3 +32,4 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
+// Info 1180: Contract invariant(s) for :C:\n!(x >= 7)\n

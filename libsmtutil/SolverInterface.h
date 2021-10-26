@@ -23,7 +23,9 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
+#include <libsolutil/CommonData.h>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view.hpp>
 
 #include <cstdio>
@@ -303,6 +305,64 @@ public:
 			std::vector<Expression>{std::move(_bv)},
 			SortProvider::intSort(_signed)
 		);
+	}
+
+	static bool sameSort(std::vector<Expression> const& _args)
+	{
+		if (_args.empty())
+			return true;
+
+		auto sort = _args.front().sort;
+		return ranges::all_of(
+			_args,
+			[&](auto const& _expr){ return _expr.sort->kind == sort->kind; }
+		);
+	}
+
+	static Expression mkAnd(std::vector<Expression> _args)
+	{
+		smtAssert(!_args.empty(), "");
+		smtAssert(sameSort(_args), "");
+
+		auto sort = _args.front().sort;
+		if (sort->kind == Kind::BitVector)
+			return Expression("bvand", std::move(_args), sort);
+
+		smtAssert(sort->kind == Kind::Bool, "");
+		return Expression("and", std::move(_args), Kind::Bool);
+	}
+
+	static Expression mkOr(std::vector<Expression> _args)
+	{
+		smtAssert(!_args.empty(), "");
+		smtAssert(sameSort(_args), "");
+
+		auto sort = _args.front().sort;
+		if (sort->kind == Kind::BitVector)
+			return Expression("bvor", std::move(_args), sort);
+
+		smtAssert(sort->kind == Kind::Bool, "");
+		return Expression("or", std::move(_args), Kind::Bool);
+	}
+
+	static Expression mkPlus(std::vector<Expression> _args)
+	{
+		smtAssert(!_args.empty(), "");
+		smtAssert(sameSort(_args), "");
+
+		auto sort = _args.front().sort;
+		smtAssert(sort->kind == Kind::BitVector || sort->kind == Kind::Int, "");
+		return Expression("+", std::move(_args), sort);
+	}
+
+	static Expression mkMul(std::vector<Expression> _args)
+	{
+		smtAssert(!_args.empty(), "");
+		smtAssert(sameSort(_args), "");
+
+		auto sort = _args.front().sort;
+		smtAssert(sort->kind == Kind::BitVector || sort->kind == Kind::Int, "");
+		return Expression("*", std::move(_args), sort);
 	}
 
 	friend Expression operator!(Expression _a)

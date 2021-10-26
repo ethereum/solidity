@@ -12,3 +12,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 6328: (122-158): CHC: Assertion violation happens here.\nCounterexample:\nsum = 0\n\nTransaction trace:\nC.constructor()\nState: sum = 0\nC.inv()
+// Info 1180: Contract invariant(s) for :C:\n((sum + ((- 1) * (:var 1).balances[address(this)])) <= 0)\n

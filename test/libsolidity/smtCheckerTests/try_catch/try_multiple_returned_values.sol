@@ -25,3 +25,4 @@ contract C {
 // Warning 6328: (185-199): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0\nx = 1\nc = false\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()\n    d.d() -- untrusted external call
 // Warning 6328: (273-283): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0\nx = 1\nc = true\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()\n    d.d() -- untrusted external call
 // Warning 6328: (393-407): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()
+// Info 1180: Reentrancy property(ies) for :C:\n!(<errorCode> = 3)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(x == 0)\n<errorCode> = 2 -> Assertion failed at assert(!c)\n<errorCode> = 3 -> Assertion failed at assert(x == 0)\n<errorCode> = 4 -> Assertion failed at assert(x == 1)\n
