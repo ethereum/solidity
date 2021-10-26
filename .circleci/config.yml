@@ -1213,6 +1213,10 @@ workflows:
           project: ens
           # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
           nodejs_version: 10
+      - t_ems_ext:
+          <<: *workflow_emscripten
+          name: t_ems_test_ext_colony
+          project: colony
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
