@@ -77,6 +77,8 @@ void SyntaxTest::setupCompiler()
 		OptimiserSettings::full() :
 		OptimiserSettings::minimal()
 	);
+	compiler().setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
+	compiler().setMetadataHash(CompilerStack::MetadataHash::None);
 }
 
 void SyntaxTest::parseAndAnalyze()
