@@ -49,6 +49,7 @@ struct YulArity
 
 struct IRNames
 {
+	static std::string externalFunctionABIWrapper(Declaration const& _functionOrVardecl);
 	static std::string function(FunctionDefinition const& _function);
 	static std::string function(VariableDeclaration const& _varDecl);
 	static std::string modifierInvocation(ModifierInvocation const& _modifierInvocation);
