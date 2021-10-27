@@ -7,3 +7,4 @@ contract c {
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :c:\n!(data2.length <= 5)\n

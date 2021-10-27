@@ -30,6 +30,45 @@ parameters:
 orbs:
   win: circleci/windows@2.2.0
 
+commands:
+  gitter_notify:
+    description: "Posts a notification to the main room on Gitter (if not running on a PR)."
+    parameters:
+      event:
+        type: enum
+        enum: ["failure", "success"]
+      condition:
+        type: string
+    steps:
+      - run:
+          name: "Gitter notification"
+          when: << parameters.condition >>
+          command: |
+            [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ Nightly job **${CIRCLE_JOB}** failed on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
+            [[ "<< parameters.event >>" == "success" ]] && message=" ✅ Nightly job **${CIRCLE_JOB}** succeeded on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
+
+            curl "https://api.gitter.im/v1/rooms/${GITTER_NOTIFY_ROOM_ID}/chatMessages" \
+              --request POST \
+              --include \
+              --header "Content-Type: application/json" \
+              --header "Accept: application/json" \
+              --header "Authorization: Bearer ${GITTER_API_TOKEN}" \
+              --data "{\"text\":\"${message}\"}"
+
+  gitter_notify_failure:
+    description: "Posts a failure notification to the main room on Gitter (if not running on a PR)."
+    steps:
+      - gitter_notify:
+          event: failure
+          condition: on_fail
+
+  gitter_notify_success:
+    description: "Posts a success notification to the main room on Gitter (if not running on a PR)."
+    steps:
+      - gitter_notify:
+          event: success
+          condition: on_success
+
 defaults:
 
   # --------------------------------------------------------------------------
@@ -91,9 +130,13 @@ defaults:
       path: upload/
 
   # compiled tool executable target
-  - artifacts_tools: &artifacts_tools
+  - artifact_solidity_upgrade: &artifact_solidity_upgrade
       path: build/tools/solidity-upgrade
       destination: solidity-upgrade
+
+  - artifact_yul_phaser: &artifact_yul_phaser
+      path: build/tools/yul-phaser
+      destination: yul-phaser
 
   # compiled executable targets
   - artifacts_executables: &artifacts_executables
@@ -263,28 +306,6 @@ defaults:
       requires:
         - b_win_release
 
-  # --------------------------------------------------------------------------
-  # Notification Templates
-  - gitter_notify_failure: &gitter_notify_failure
-      name: Gitter notify failure
-      command: >-
-        curl -X POST -i
-        -i -H "Content-Type: application/json"
-        -H "Accept: application/json"
-        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
-      when: on_fail
-
-  - gitter_notify_success: &gitter_notify_success
-      name: Gitter notify success
-      command: >-
-        curl -X POST -i
-        -i -H "Content-Type: application/json"
-        -H "Accept: application/json"
-        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
-      when: on_success
-
 # -----------------------------------------------------------------------------------------------
 jobs:
 
@@ -447,7 +468,8 @@ jobs:
       - checkout
       - run: *run_build
       - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifacts_tools
+      - store_artifacts: *artifact_solidity_upgrade
+      - store_artifacts: *artifact_yul_phaser
       - persist_to_workspace: *artifacts_executables
 
   # x64 ASAN build, for testing for memory related bugs
@@ -502,7 +524,7 @@ jobs:
     steps:
       - checkout
       - run: *run_build
-      - run: *gitter_notify_failure
+      - gitter_notify_failure
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
 
@@ -595,8 +617,8 @@ jobs:
             git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
             scripts/regressions.py -o test_results
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
+      - gitter_notify_failure
+      - gitter_notify_success
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -644,7 +666,8 @@ jobs:
             - /usr/local/Homebrew
       - run: *run_build
       - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifacts_tools
+      - store_artifacts: *artifact_solidity_upgrade
+      - store_artifacts: *artifact_yul_phaser
       - persist_to_workspace:
           root: .
           paths:
@@ -807,7 +830,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_soltest
-      - run: *gitter_notify_failure
+      - gitter_notify_failure
 
   t_ubu_ubsan_clang_cli:
     docker:
@@ -816,7 +839,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_cmdline_tests
-      - run: *gitter_notify_failure
+      - gitter_notify_failure
 
   t_ems_solcjs:
     docker:
@@ -839,6 +862,32 @@ jobs:
             node --version
             npm --version
             test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+
+  t_ems_ext_hardhat:
+    docker:
+      - image: circleci/node
+    environment:
+      TERM: xterm
+      HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git
+      - run:
+          name: Install dependencies
+          command: |
+            cd hardhat
+            yarn
+      - run:
+          name: Run hardhat-core test suite
+          command: |
+            HARDHAT_TESTS_SOLC_VERSION=$(scripts/get_version.sh)
+            export HARDHAT_TESTS_SOLC_VERSION
+
+            # NOTE: This is expected to work without running `yarn build` first.
+            cd hardhat/packages/hardhat-core
+            yarn test
 
   t_ems_ext:
     parameters:
@@ -874,8 +923,8 @@ jobs:
       - when:
           condition: <<parameters.gitter_notify>>
           steps:
-            - run: *gitter_notify_failure
-            - run: *gitter_notify_success
+            - gitter_notify_failure
+            - gitter_notify_success
 
   b_win: &b_win
     executor:
@@ -1110,6 +1159,7 @@ workflows:
       # Emscripten build and tests that take 15 minutes or less
       - b_ems: *workflow_trigger_on_tags
       - t_ems_solcjs: *workflow_emscripten
+      - t_ems_ext_hardhat: *workflow_emscripten
 
       - t_ems_ext:
           <<: *workflow_emscripten

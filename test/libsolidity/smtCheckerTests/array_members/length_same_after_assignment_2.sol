@@ -23,3 +23,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :C:\n!(arr.length <= 2)\n!(arr.length <= 3)\n!(arr[2].length <= 3)\n

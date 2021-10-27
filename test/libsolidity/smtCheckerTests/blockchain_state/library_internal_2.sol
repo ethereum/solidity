@@ -23,4 +23,5 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (315-331): CHC: Assertion violation happens here.
+// Info 1180: Contract invariant(s) for :C:\n(x <= 0)\n
 // Warning 1236: (87-100): BMC: Insufficient funds happens here.

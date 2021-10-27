@@ -28,3 +28,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :C:\n!(arr.length <= 7)\n!(arr.length <= 8)\n((arr[5].length <= 0) && (arr[8].length <= 0))\n

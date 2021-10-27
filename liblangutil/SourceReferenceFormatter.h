@@ -87,7 +87,7 @@ public:
 private:
 	util::AnsiColorized normalColored() const;
 	util::AnsiColorized frameColored() const;
-	util::AnsiColorized errorColored() const;
+	util::AnsiColorized errorColored(std::optional<langutil::Error::Severity> _severity) const;
 	util::AnsiColorized messageColored() const;
 	util::AnsiColorized secondaryColored() const;
 	util::AnsiColorized highlightColored() const;

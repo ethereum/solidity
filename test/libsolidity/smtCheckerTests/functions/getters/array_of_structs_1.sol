@@ -15,3 +15,4 @@ contract D {
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :D:\n(items[1][2][3].y <= 0)\n

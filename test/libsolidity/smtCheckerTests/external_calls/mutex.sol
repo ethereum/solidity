@@ -26,4 +26,5 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreInv: yes
 // ----

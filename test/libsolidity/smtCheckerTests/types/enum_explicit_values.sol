@@ -11,3 +11,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :C:\n((d = 0) || (d = 1))\n

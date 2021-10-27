@@ -23,6 +23,8 @@ contract C is A {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 6328: (199-214): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nA.constructor()\nState: x = 2\nA.i()
 // Warning 6328: (387-401): CHC: Assertion violation happens here.\nCounterexample:\nx = 10\n\nTransaction trace:\nC.constructor()\nState: x = 10\nC.i()
+// Info 1180: Contract invariant(s) for :A:\n(!(x <= 1) && !(x >= 3))\nContract invariant(s) for :C:\n(!(x >= 11) && !(x <= 9))\n

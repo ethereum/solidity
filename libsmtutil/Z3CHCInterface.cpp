@@ -77,7 +77,7 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 	}
 }
 
-pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
+tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
 {
 	CheckResult result;
 	try
@@ -93,15 +93,15 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 			if (m_version >= tuple(4, 8, 8, 0))
 			{
 				auto proof = m_solver.get_answer();
-				return {result, cexGraph(proof)};
+				return {result, Expression(true), cexGraph(proof)};
 			}
 			break;
 		}
 		case z3::check_result::unsat:
 		{
 			result = CheckResult::UNSATISFIABLE;
-			// TODO retrieve invariants.
-			break;
+			auto invariants = m_z3Interface->fromZ3Expr(m_solver.get_answer());
+			return {result, move(invariants), {}};
 		}
 		case z3::check_result::unknown:
 		{
@@ -125,7 +125,7 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 			result = CheckResult::ERROR;
 	}
 
-	return {result, {}};
+	return {result, Expression(true), {}};
 }
 
 void Z3CHCInterface::setSpacerOptions(bool _preProcessing)

@@ -20,3 +20,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (242-256): CHC: Assertion violation happens here.
+// Info 1180: Contract invariant(s) for :C:\n!(a.length <= 2)\n!(a[2].length <= 3)\n

@@ -37,3 +37,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Info 1180: Contract invariant(s) for :C:\n(((erc + ((- 1) * ecrecover(tuple_constructor(h, v, r, s)))) <= 0) && ((erc + ((- 1) * ecrecover(tuple_constructor(h, v, r, s)))) >= 0))\n(((kec + ((- 1) * keccak256(data))) >= 0) && ((kec + ((- 1) * keccak256(data))) <= 0))\n(((rip + ((- 1) * ripemd160(data))) <= 0) && ((rip + ((- 1) * ripemd160(data))) >= 0))\n(((sha + ((- 1) * sha256(data))) <= 0) && ((sha + ((- 1) * sha256(data))) >= 0))\n

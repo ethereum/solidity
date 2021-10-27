@@ -26,3 +26,4 @@ contract C{
 // Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor(0)\nState: x = 1\nC.f()\n    C.g() -- internal call
 // Warning 6328: (187-201): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nC.constructor(0)\nState: x = 1\nC.f()\n    C.g() -- internal call
 // Warning 6328: (212-226): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor(0)\nState: x = 1\nC.f()\n    C.g() -- internal call
+// Info 1180: Contract invariant(s) for :C:\n!(x >= 2)\n

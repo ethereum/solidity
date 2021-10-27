@@ -65,9 +65,21 @@ AnsiColorized SourceReferenceFormatter::frameColored() const
 	return AnsiColorized(m_stream, m_colored, {BOLD, BLUE});
 }
 
-AnsiColorized SourceReferenceFormatter::errorColored() const
+AnsiColorized SourceReferenceFormatter::errorColored(optional<Error::Severity> _severity) const
 {
-	return AnsiColorized(m_stream, m_colored, {BOLD, RED});
+	// We used to color messages of any severity as errors so this seems like a good default
+	// for cases where severity cannot be determined.
+	char const* textColor = RED;
+
+	if (_severity.has_value())
+		switch (_severity.value())
+		{
+		case Error::Severity::Error: textColor = RED; break;
+		case Error::Severity::Warning: textColor = YELLOW; break;
+		case Error::Severity::Info: textColor = WHITE; break;
+		}
+
+	return AnsiColorized(m_stream, m_colored, {BOLD, textColor});
 }
 
 AnsiColorized SourceReferenceFormatter::messageColored() const
@@ -164,9 +176,10 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
 {
 	// exception header line
-	errorColored() << _msg.severity;
+	optional<Error::Severity> severity = Error::severityFromString(_msg.severity);
+	errorColored(severity) << _msg.severity;
 	if (m_withErrorIds && _msg.errorId.has_value())
-		errorColored() << " (" << _msg.errorId.value().error << ")";
+		errorColored(severity) << " (" << _msg.errorId.value().error << ")";
 	messageColored() << ": " << _msg.primary.message << '\n';
 
 	printSourceLocation(_msg.primary);

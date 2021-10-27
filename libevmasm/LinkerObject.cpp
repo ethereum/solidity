@@ -75,13 +75,5 @@ LinkerObject::matchLibrary(
 	auto it = _libraryAddresses.find(_linkRefName);
 	if (it != _libraryAddresses.end())
 		return &it->second;
-	// If the user did not supply a fully qualified library name,
-	// try to match only the simple library name
-	size_t colon = _linkRefName.find(':');
-	if (colon == string::npos)
-		return nullptr;
-	it = _libraryAddresses.find(_linkRefName.substr(colon + 1));
-	if (it != _libraryAddresses.end())
-		return &it->second;
 	return nullptr;
 }

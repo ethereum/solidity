@@ -100,8 +100,26 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						if (accept(Token::Library, true))
 						{
 							expect(Token::Colon);
-							call.signature = m_scanner.currentLiteral();
-							expect(Token::Identifier);
+							string libraryName;
+							if (accept(Token::String))
+							{
+								libraryName = m_scanner.currentLiteral();
+								expect(Token::String);
+								expect(Token::Colon);
+								libraryName += ':' + m_scanner.currentLiteral();
+								expect(Token::Identifier);
+							}
+							else if (accept(Token::Colon, true))
+							{
+								libraryName = ':' + m_scanner.currentLiteral();
+								expect(Token::Identifier);
+							}
+							else
+							{
+								libraryName = m_scanner.currentLiteral();
+								expect(Token::Identifier);
+							}
+							call.signature = libraryName;
 							call.kind = FunctionCall::Kind::Library;
 							call.expectations.failure = false;
 						}
