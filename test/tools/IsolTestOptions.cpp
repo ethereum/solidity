@@ -83,7 +83,7 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		return false;
 	}
 
-	enforceGasTest = enforceGasTest || (evmVersion() == langutil::EVMVersion{});
+	enforceGasTest = enforceGasTest || (evmVersion() == langutil::EVMVersion{} && !useABIEncoderV1);
 
 	return res;
 }
