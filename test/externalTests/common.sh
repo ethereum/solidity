@@ -117,6 +117,19 @@ function neutralize_package_json_hooks
     sed -i 's|"prepare": *".*"|"prepare": ""|g' package.json
 }
 
+function neutralize_packaged_contracts
+{
+    # Frameworks will build contracts from any package that contains a configuration file.
+    # This is both unnecessary (any files imported from these packages will get compiled again as a
+    # part of the main project anyway) and trips up our version check because it won't use our
+    # custom compiler binary.
+    printLog "Removing framework config and artifacts from npm packages..."
+    find node_modules/ -type f '(' -name 'hardhat.config.*' -o -name 'truffle-config.*' ')' -delete
+
+    # Some npm packages also come packaged with pre-built artifacts.
+    find node_modules/ -path '*artifacts/build-info/*.json' -delete
+}
+
 function force_solc_modules
 {
     local custom_solcjs_path="${1:-solc/}"
@@ -216,8 +229,12 @@ function hardhat_verify_compiler_version
     local full_solc_version="$2"
 
     printLog "Verify that the correct version (${solc_version}/${full_solc_version}) of the compiler was used to compile the contracts..."
-    grep '"solcVersion": "'"${solc_version}"'"' --with-filename artifacts/build-info/*.json || fail "Wrong compiler version detected."
-    grep '"solcLongVersion": "'"${full_solc_version}"'"' --with-filename artifacts/build-info/*.json || fail "Wrong compiler version detected."
+    local build_info_files
+    build_info_files=$(find . -path '*artifacts/build-info/*.json')
+    for build_info_file in $build_info_files; do
+        grep '"solcVersion": "'"${solc_version}"'"' --with-filename "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
+        grep '"solcLongVersion": "'"${full_solc_version}"'"' --with-filename "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
+    done
 }
 
 function truffle_clean
