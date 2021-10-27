@@ -212,7 +212,7 @@ editing of failing contracts using your preferred text editor. Let's try to brea
     // ----
     // DeclarationError: (36-52): Identifier already declared.
 
-Running ``./build/test/isoltest`` again results in a test failure:
+Running ``./build/test/tools/isoltest`` again results in a test failure:
 
 .. code-block:: text
 
