@@ -27,5 +27,5 @@ contract D {
 // stateDecimal() -> right(42)
 // stateBytes() -> left(0x4200ef)
 // internalStateDecimal() -> 0x20
-// gas legacy: 101807
+// gas legacy: 101679
 // update(bool,uint256,bytes32): false, -23, left(0x2300ef) -> false, -23, left(0x2300ef)

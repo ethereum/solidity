@@ -27,5 +27,5 @@ contract C {
 // compileViaYul: also
 // ----
 // test() -> 9, 7
-// gas legacy: 130016
+// gas legacy: 129760
 // t2() -> 9

@@ -526,7 +526,6 @@ object \"C_54\" {
                 let expr_46_address := convert_t_contract$_C_$54_to_t_address(expr_45_address)
                 let expr_46_functionSelector := 0x26121ff0
                 /// @src 0:410:418  \"this.f()\"
-                if iszero(extcodesize(expr_46_address)) { revert_error_0cc013b6b3b6beabea4e3a74a6d380f0df81852ca99887912475e1f66b2a2c20() }
 
                 // storage for arguments and returned data
                 let _10 := allocate_unbounded()
@@ -640,7 +639,7 @@ object \"C_54\" {
                     case 0x26121ff0 {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
-                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_566(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
+                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_556(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
                         /// @src 0:79:435  \"contract C...\"
                         let memPos := mload(64)
                         return(memPos, sub(abi_encode_int256(memPos, ret), memPos))
@@ -664,7 +663,7 @@ object \"C_54\" {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
                         let memPos_3 := mload(64)
-                        return(memPos_3, sub(abi_encode_int256_565(memPos_3), memPos_3))
+                        return(memPos_3, sub(abi_encode_int256_555(memPos_3), memPos_3))
                     }
                 }
                 revert(0, 0)
@@ -673,7 +672,7 @@ object \"C_54\" {
             {
                 if slt(add(dataEnd, not(3)), 0) { revert(0, 0) }
             }
-            function abi_encode_int256_565(headStart) -> tail
+            function abi_encode_int256_555(headStart) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, /** @src 0:124:126  \"41\" */ 0x29)
@@ -690,7 +689,7 @@ object \"C_54\" {
                 mstore(4, 0x11)
                 revert(0, 0x24)
             }
-            function checked_add_int256_566(y) -> sum
+            function checked_add_int256_556(y) -> sum
             {
                 if and(1, sgt(y, sub(shl(255, 1), 42))) { panic_error_0x11() }
                 sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ y)
@@ -711,13 +710,6 @@ object \"C_54\" {
                 if eq(_3, sub(shl(255, 1), 1)) { panic_error_0x11() }
                 let ret := add(_3, 1)
                 sstore(_2, ret)
-                /// @src 0:410:418  \"this.f()\"
-                if iszero(extcodesize(/** @src 0:410:414  \"this\" */ address()))
-                /// @src 0:410:418  \"this.f()\"
-                {
-                    /// @src 0:79:435  \"contract C...\"
-                    revert(_2, _2)
-                }
                 /// @src 0:410:418  \"this.f()\"
                 let _4 := /** @src 0:79:435  \"contract C...\" */ mload(64)
                 /// @src 0:410:418  \"this.f()\"
@@ -1359,7 +1351,6 @@ object \"D_72\" {
                 let expr_46_address := convert_t_contract$_C_$54_to_t_address(expr_45_address)
                 let expr_46_functionSelector := 0x26121ff0
                 /// @src 0:410:418  \"this.f()\"
-                if iszero(extcodesize(expr_46_address)) { revert_error_0cc013b6b3b6beabea4e3a74a6d380f0df81852ca99887912475e1f66b2a2c20() }
 
                 // storage for arguments and returned data
                 let _10 := allocate_unbounded()
@@ -1481,7 +1472,7 @@ object \"D_72\" {
                     case 0x26121ff0 {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
-                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_566(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
+                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_556(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
                         /// @src 1:91:166  \"contract D is C(3)...\"
                         let memPos := mload(64)
                         return(memPos, sub(abi_encode_int256(memPos, ret), memPos))
@@ -1505,7 +1496,7 @@ object \"D_72\" {
                         if callvalue() { revert(_1, _1) }
                         abi_decode(calldatasize())
                         let memPos_3 := mload(64)
-                        return(memPos_3, sub(abi_encode_int256_565(memPos_3), memPos_3))
+                        return(memPos_3, sub(abi_encode_int256_555(memPos_3), memPos_3))
                     }
                 }
                 revert(0, 0)
@@ -1514,7 +1505,7 @@ object \"D_72\" {
             {
                 if slt(add(dataEnd, not(3)), 0) { revert(0, 0) }
             }
-            function abi_encode_int256_565(headStart) -> tail
+            function abi_encode_int256_555(headStart) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, /** @src 0:124:126  \"41\" */ 0x29)
@@ -1531,7 +1522,7 @@ object \"D_72\" {
                 mstore(4, 0x11)
                 revert(0, 0x24)
             }
-            function checked_add_int256_566(y) -> sum
+            function checked_add_int256_556(y) -> sum
             {
                 if and(1, sgt(y, sub(shl(255, 1), 42))) { panic_error_0x11() }
                 sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ y)
@@ -1552,13 +1543,6 @@ object \"D_72\" {
                 if eq(_3, sub(shl(255, 1), 1)) { panic_error_0x11() }
                 let ret := add(_3, 1)
                 sstore(_2, ret)
-                /// @src 0:410:418  \"this.f()\"
-                if iszero(extcodesize(/** @src 0:410:414  \"this\" */ address()))
-                /// @src 0:410:418  \"this.f()\"
-                {
-                    /// @src 1:91:166  \"contract D is C(3)...\"
-                    revert(_2, _2)
-                }
                 /// @src 0:410:418  \"this.f()\"
                 let _4 := /** @src 1:91:166  \"contract D is C(3)...\" */ mload(64)
                 /// @src 0:410:418  \"this.f()\"

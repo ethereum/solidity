@@ -2630,9 +2630,21 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Check the target contract exists (has code) for non-low-level calls.
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall)
 	{
-		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
-		m_context.appendConditionalRevert(false, "Target contract does not contain code");
-		existenceChecked = true;
+		size_t encodedHeadSize = 0;
+		for (auto const& t: returnTypes)
+			encodedHeadSize += t->decodingType()->calldataHeadSize();
+		// We do not need to check extcodesize if we expect return data, since if there is no
+		// code, the call will return empty data and the ABI decoder will revert.
+		if (
+			encodedHeadSize == 0 ||
+			!haveReturndatacopy ||
+			m_context.revertStrings() >= RevertStrings::Debug
+		)
+		{
+			m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
+			m_context.appendConditionalRevert(false, "Target contract does not contain code");
+			existenceChecked = true;
+		}
 	}
 
 	if (_functionType.gasSet())

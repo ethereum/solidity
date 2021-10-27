@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Skip existence check for external contract if return data is expected. In this case, the ABI decoder will revert if the contract does not exist.
  * Commandline Interface: Accept nested brackets in step sequences passed to ``--yul-optimizations``.
  * Commandline Interface: Add ``--debug-info`` option for selecting how much extra debug information should be included in the produced EVM assembly and Yul code.
  * Commandline Interface: Use different colors when printing errors, warnings and infos.
