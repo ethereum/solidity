@@ -60,7 +60,6 @@ IsolTestOptions::IsolTestOptions():
 	CommonOptions(description)
 {
 	enforceViaYul = true;
-	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
 }
 
 void IsolTestOptions::addOptions()
@@ -83,6 +82,8 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		std::cout << options << std::endl;
 		return false;
 	}
+
+	enforceGasTest = enforceGasTest || (evmVersion() == langutil::EVMVersion{});
 
 	return res;
 }
