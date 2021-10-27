@@ -735,6 +735,44 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	});
 }
 
+string IRGenerator::generateExternalFunction(ContractDefinition const& _contract, FunctionType const& _functionType)
+{
+	string functionName = IRNames::externalFunctionABIWrapper(_functionType.declaration());
+	return m_context.functionCollector().createFunction(functionName, [&](vector<string>&, vector<string>&) -> string {
+		Whiskers t(R"X(
+			<callValueCheck>
+			<?+params>let <params> := </+params> <abiDecode>(4, calldatasize())
+			<?+retParams>let <retParams> := </+retParams> <function>(<params>)
+			let memPos := <allocateUnbounded>()
+			let memEnd := <abiEncode>(memPos <?+retParams>,</+retParams> <retParams>)
+			return(memPos, sub(memEnd, memPos))
+		)X");
+		t("callValueCheck", (_functionType.isPayable() || _contract.isLibrary()) ? "" : callValueCheck());
+
+		unsigned paramVars = make_shared<TupleType>(_functionType.parameterTypes())->sizeOnStack();
+		unsigned retVars = make_shared<TupleType>(_functionType.returnParameterTypes())->sizeOnStack();
+
+		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
+		t("abiDecode", abiFunctions.tupleDecoder(_functionType.parameterTypes()));
+		t("params",  suffixedVariableNameList("param_", 0, paramVars));
+		t("retParams",  suffixedVariableNameList("ret_", 0, retVars));
+
+		if (FunctionDefinition const* funDef = dynamic_cast<FunctionDefinition const*>(&_functionType.declaration()))
+		{
+			solAssert(!funDef->isConstructor());
+			t("function", m_context.enqueueFunctionForCodeGeneration(*funDef));
+		}
+		else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(&_functionType.declaration()))
+			t("function", generateGetter(*varDecl));
+		else
+			solAssert(false, "Unexpected declaration for function!");
+
+		t("allocateUnbounded", m_utils.allocateUnboundedFunction());
+		t("abiEncode", abiFunctions.tupleEncoder(_functionType.returnParameterTypes(), _functionType.returnParameterTypes(), _contract.isLibrary()));
+		return t.render();
+	});
+}
+
 string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDecl)
 {
 	IRGeneratorForStatements generator(m_context, m_utils);
@@ -976,12 +1014,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 			{
 				// <functionName>
 				<delegatecallCheck>
-				<callValueCheck>
-				<?+params>let <params> := </+params> <abiDecode>(4, calldatasize())
-				<?+retParams>let <retParams> := </+retParams> <function>(<params>)
-				let memPos := <allocateUnbounded>()
-				let memEnd := <abiEncode>(memPos <?+retParams>,</+retParams> <retParams>)
-				return(memPos, sub(memEnd, memPos))
+				<externalFunction>()
 			}
 			</cases>
 			default {}
@@ -1011,25 +1044,8 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 					"() }";
 		}
 		templ["delegatecallCheck"] = delegatecallCheck;
-		templ["callValueCheck"] = (type->isPayable() || _contract.isLibrary()) ? "" : callValueCheck();
 
-		unsigned paramVars = make_shared<TupleType>(type->parameterTypes())->sizeOnStack();
-		unsigned retVars = make_shared<TupleType>(type->returnParameterTypes())->sizeOnStack();
-
-		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
-		templ["abiDecode"] = abiFunctions.tupleDecoder(type->parameterTypes());
-		templ["params"] = suffixedVariableNameList("param_", 0, paramVars);
-		templ["retParams"] = suffixedVariableNameList("ret_", 0, retVars);
-
-		if (FunctionDefinition const* funDef = dynamic_cast<FunctionDefinition const*>(&type->declaration()))
-			templ["function"] = m_context.enqueueFunctionForCodeGeneration(*funDef);
-		else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(&type->declaration()))
-			templ["function"] = generateGetter(*varDecl);
-		else
-			solAssert(false, "Unexpected declaration for function!");
-
-		templ["allocateUnbounded"] = m_utils.allocateUnboundedFunction();
-		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), _contract.isLibrary());
+		templ["externalFunction"] = generateExternalFunction(_contract, *type);
 	}
 	t("cases", functions);
 	FunctionDefinition const* etherReceiver = _contract.receiveFunction();
