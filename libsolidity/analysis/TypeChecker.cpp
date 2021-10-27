@@ -530,6 +530,15 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	}
 	if (_variable.isConstant())
 	{
+		if (!varType->isValueType())
+		{
+			bool allowed = false;
+			if (auto arrayType = dynamic_cast<ArrayType const*>(varType))
+				allowed = arrayType->isByteArray();
+			if (!allowed)
+				m_errorReporter.fatalTypeError(9259_error, _variable.location(), "Constants of non-value type not yet implemented.");
+		}
+
 		if (!_variable.value())
 			m_errorReporter.typeError(4266_error, _variable.location(), "Uninitialized \"constant\" variable.");
 		else if (!*_variable.value()->annotation().isPure)
@@ -619,6 +628,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	}
 
 	return false;
+}
+
+void TypeChecker::endVisit(StructDefinition const& _struct)
+{
+	for (auto const& member: _struct.members())
+		solAssert(
+			member->annotation().type &&
+			member->annotation().type->canBeStored(),
+			"Type cannot be used in struct."
+		);
 }
 
 void TypeChecker::visitManually(
@@ -1220,6 +1239,14 @@ void TypeChecker::endVisit(RevertStatement const& _revert)
 		m_errorReporter.typeError(1885_error, errorCall.expression().location(), "Expression has to be an error.");
 }
 
+void TypeChecker::endVisit(ArrayTypeName const& _typeName)
+{
+	solAssert(
+		_typeName.baseType().annotation().type &&
+		_typeName.baseType().annotation().type->storageBytes() != 0,
+		"Illegal base type of storage size zero for array."
+	);
+}
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
