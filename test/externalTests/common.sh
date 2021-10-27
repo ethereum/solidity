@@ -112,25 +112,22 @@ function neutralize_package_json_hooks
     sed -i 's|"prepare": *".*"|"prepare": ""|g' package.json
 }
 
-function force_truffle_solc_modules
+function force_solc_modules
 {
-    local soljson="$1"
+    local custom_solcjs_path="${1:-solc/}"
 
-    # Replace solc package by v0.5.0 and then overwrite with current version.
-    printLog "Forcing solc version for all Truffle modules..."
-    for d in node_modules node_modules/truffle/node_modules
+    [[ -d node_modules/ ]] || assertFail
+
+    printLog "Replacing all installed solc-js with a link to the latest version..."
+    soljson_binaries=$(find node_modules -type f -path "*/solc/soljson.js")
+    for soljson_binary in $soljson_binaries
     do
-    (
-        if [ -d "$d" ]; then
-            cd $d
-            rm -rf solc
-            git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
-            cp "$soljson" solc/soljson.js
+        local solc_module_path
+        solc_module_path=$(dirname "$soljson_binary")
 
-            cd solc
-            npm install
-        fi
-    )
+        printLog "Found and replaced solc-js in $solc_module_path"
+        rm -r "$solc_module_path"
+        ln -s "$custom_solcjs_path" "$solc_module_path"
     done
 }
 

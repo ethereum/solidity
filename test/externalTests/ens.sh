@@ -50,7 +50,7 @@ function ens_test
     npm install
 
     replace_version_pragmas
-    force_truffle_solc_modules "$SOLJSON"
+    force_solc_modules "${DIR}/solc"
 
     for level in $(seq "$min_optimizer_level" "$max_optimizer_level"); do
         truffle_run_test "$config_file" "${DIR}/solc" "$level" compile_fn test_fn
