@@ -320,6 +320,12 @@ defaults:
         shell: powershell.exe
         size: large
 
+  - base_win_powershell_xlarge: &base_win_powershell_xlarge
+      executor:
+        name: win/default
+        shell: powershell.exe
+        size: xlarge
+
   - base_win_cmd: &base_win_cmd
       executor:
         name: win/default
@@ -775,6 +781,7 @@ jobs:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       TERM: xterm
+    resource_class: large
     steps:
       - checkout
       - restore_cache:
@@ -832,11 +839,13 @@ jobs:
 
   t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2004
+    resource_class: xlarge
     parallelism: 6
     <<: *steps_soltest_all
 
   t_archlinux_soltest: &t_archlinux_soltest
     <<: *base_archlinux
+    resource_class: xlarge
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
@@ -855,6 +864,7 @@ jobs:
 
   t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
     <<: *base_ubuntu2004
+    resource_class: xlarge
     environment:
       EVM: << pipeline.parameters.evm-version >>
       SOLTEST_FLAGS: --enforce-via-yul
@@ -864,6 +874,7 @@ jobs:
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
     <<: *base_ubuntu2004_clang
+    resource_class: xlarge
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
@@ -873,6 +884,7 @@ jobs:
     # NOTE: This definition is identical to t_ubu_soltest_all but in the workflow we make it depend on
     # a different job (b_ubu_release) so the workspace it attaches contains a different executable.
     <<: *t_ubu_soltest_all
+    resource_class: xlarge
 
   t_ubu_cli: &t_ubu_cli
     <<: *base_ubuntu2004_small
@@ -891,6 +903,7 @@ jobs:
 
   t_ubu_asan_soltest:
     <<: *base_ubuntu2004
+    resource_class: xlarge
     parallelism: 6
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -901,6 +914,7 @@ jobs:
 
   t_ubu_asan_clang_soltest:
     <<: *base_ubuntu2004_clang
+    resource_class: xlarge
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
@@ -910,6 +924,7 @@ jobs:
 
   t_ubu_ubsan_clang_soltest:
     <<: *base_ubuntu2004_clang
+    resource_class: xlarge
     environment:
       EVM: << pipeline.parameters.evm-version >>
     steps:
@@ -1050,7 +1065,7 @@ jobs:
       FORCE_RELEASE: ON
 
   t_win_soltest: &t_win_soltest
-    <<: *base_win_powershell
+    <<: *base_win_powershell_xlarge
     steps:
       # NOTE: Git's default core.autocrlf is fine for running soltest. We get additional coverage
       # for files using CRLF that way.

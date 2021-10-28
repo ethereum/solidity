@@ -66,7 +66,7 @@ test "${ABI_ENCODER_V1}" = "1" && SOLTEST_ARGS+=(--abiencoderv1)
 
 all_test_cases=$("${REPODIR}/build/test/soltest" --list_content 2>&1)
 
-batch_count=17
+batch_count=9
 pids=()
 for batch in $(seq "$batch_count")
 do
