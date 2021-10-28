@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-function error() {
+function error {
   echo >&2 "ERROR: ${1} Aborting." && false
 }
 
-function warning() {
+function warning {
   echo >&2 "WARNING: ${1}"
 }
 

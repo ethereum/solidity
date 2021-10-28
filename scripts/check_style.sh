@@ -35,7 +35,7 @@ then
     exit 1
 fi
 
-function preparedGrep()
+function preparedGrep
 {
     git grep -nIE "$1" -- '*.h' '*.cpp' | grep -v "${EXCLUDE_FILES_JOINED}"
     return $?
