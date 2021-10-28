@@ -206,7 +206,7 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_ubuntu2004_clang: &base_ubuntu2004_clang
       docker:
@@ -216,7 +216,7 @@ defaults:
         TERM: xterm
         CC: clang
         CXX: clang++
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_ubuntu2004_clang_xlarge: &base_ubuntu2004_clang_xlarge
       <<: *base_ubuntu2004_clang
@@ -224,7 +224,7 @@ defaults:
         TERM: xterm
         CC: clang
         CXX: clang++
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_ubuntu2004: &base_ubuntu2004
       docker:
@@ -232,13 +232,13 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_ubuntu2004_xlarge: &base_ubuntu2004_xlarge
       <<: *base_ubuntu2004
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_buildpack_focal: &base_buildpack_focal
       docker:
@@ -246,7 +246,7 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_buildpack_latest: &base_buildpack_latest
       docker:
@@ -254,7 +254,7 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_archlinux: &base_archlinux
       docker:
@@ -262,7 +262,7 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_win_powershell: &base_win_powershell
       executor:
@@ -290,7 +290,7 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_python: &base_python
       docker:
@@ -298,7 +298,7 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   - base_node_latest: &base_node_latest
       docker:
@@ -306,7 +306,7 @@ defaults:
       resource_class: medium
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -533,7 +533,7 @@ jobs:
     resource_class: large
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
       CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
@@ -556,7 +556,7 @@ jobs:
       CC: clang
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - run: *run_build
@@ -570,7 +570,7 @@ jobs:
       CC: clang
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=undefined
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - run: *run_build
@@ -583,13 +583,13 @@ jobs:
     resource_class: large
     environment:
       FORCE_RELEASE: ON
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
 
   b_ubu_static:
     <<: *base_ubuntu2004_xlarge
     resource_class: large
     environment:
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
@@ -605,7 +605,7 @@ jobs:
     environment:
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - run: *run_build
@@ -617,7 +617,7 @@ jobs:
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - attach_workspace:
@@ -642,7 +642,7 @@ jobs:
     environment:
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - run: *run_build
@@ -677,7 +677,7 @@ jobs:
     resource_class: large
     environment:
       TERM: xterm
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - run:
           name: Install build dependencies
@@ -693,7 +693,7 @@ jobs:
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Release
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - restore_cache:
@@ -730,7 +730,7 @@ jobs:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       TERM: xterm
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - restore_cache:
@@ -801,7 +801,7 @@ jobs:
       # For Archlinux we do not have prebuilt docker images and we would need to build evmone from source,
       # thus we forgo semantics tests to speed things up.
       SOLTEST_FLAGS: --no-semantic-tests
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - run:
           name: Install runtime dependencies
@@ -818,7 +818,7 @@ jobs:
       SOLTEST_FLAGS: --enforce-via-yul
       OPTIMIZE: 0
       TERM: xterm
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     <<: *steps_soltest
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
@@ -826,7 +826,7 @@ jobs:
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     <<: *steps_soltest
 
   t_ubu_release_soltest_all: &t_ubu_release_soltest_all
@@ -847,7 +847,7 @@ jobs:
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     <<: *steps_cmdline_tests
 
   t_ubu_asan_soltest:
@@ -858,7 +858,7 @@ jobs:
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     <<: *steps_soltest
 
   t_ubu_asan_clang_soltest:
@@ -868,14 +868,14 @@ jobs:
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     <<: *steps_soltest
 
   t_ubu_ubsan_clang_soltest:
     <<: *base_ubuntu2004_clang
     environment:
       EVM: << pipeline.parameters.evm-version >>
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - when:
           condition: true
@@ -914,7 +914,7 @@ jobs:
     environment:
       TERM: xterm
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - attach_workspace:
@@ -956,7 +956,7 @@ jobs:
     environment:
       TERM: xterm
       COMPILE_ONLY: <<parameters.compile_only>>
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - attach_workspace:
@@ -1098,7 +1098,7 @@ jobs:
     <<: *base_node_latest
     environment:
       SOLC_EMSCRIPTEN: "On"
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - attach_workspace:
@@ -1122,7 +1122,7 @@ jobs:
         bytecode-report-osx-cli.txt
         bytecode-report-windows-json.txt
         bytecode-report-windows-cli.txt
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - attach_workspace:
           at: .
