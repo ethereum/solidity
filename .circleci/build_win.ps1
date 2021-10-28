@@ -20,7 +20,7 @@ cd build
 $boost_dir=(Resolve-Path $PSScriptRoot\..\deps\boost\lib\cmake\Boost-*)
 ..\deps\cmake\bin\cmake -G "Visual Studio 16 2019" -DBoost_DIR="$boost_dir\" -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_INSTALL_PREFIX="$PSScriptRoot\..\upload" -DUSE_Z3=OFF ..
 if ( -not $? ) { throw "CMake configure failed." }
-msbuild solidity.sln /p:Configuration=Release /m:5 /v:minimal
+msbuild solidity.sln /preprocess:Configuration=Release /maxCpuCount:5 /verbosity:minimal
 if ( -not $? ) { throw "Build failed." }
-..\deps\cmake\bin\cmake --build . -j 5 --target install --config Release
+..\deps\cmake\bin\cmake --build . --parallel 5 --target install --config Release
 if ( -not $? ) { throw "Install target failed." }
