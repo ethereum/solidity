@@ -57,12 +57,27 @@ get_logfile_basename() {
     echo -ne "${filename}"
 }
 
-BOOST_TEST_ARGS=("--color_output=no" "--show_progress=yes" "--logger=JUNIT,error,test_results/$(get_logfile_basename).xml" "${BOOST_TEST_ARGS[@]}")
+# FIXME: Test results from each run must be joined into a single file
+BOOST_TEST_ARGS=("--color_output=no" "--show_progress=no" "--logger=JUNIT,error,test_results/$(get_logfile_basename).xml" "${BOOST_TEST_ARGS[@]}")
 SOLTEST_ARGS=("--evm-version=$EVM" "${SOLTEST_FLAGS[@]}")
 
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS+=(--optimize)
 test "${ABI_ENCODER_V1}" = "1" && SOLTEST_ARGS+=(--abiencoderv1)
 
-echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS[*]} -- ${SOLTEST_ARGS[*]}"
+all_test_cases=$("${REPODIR}/build/test/soltest" --list_content 2>&1)
 
-"${REPODIR}/build/test/soltest" "${BOOST_TEST_ARGS[@]}" -- "${SOLTEST_ARGS[@]}"
+batch_count=17
+pids=()
+for batch in $(seq "$batch_count")
+do
+    selected_test_cases=$(echo "$all_test_cases" | python3 "${REPODIR}/scripts/isoltest_test_case_names_from_list_content.py" "$batch" "$batch_count")
+    # TODO: Capture output and print it when the process ends
+    "${REPODIR}/build/test/soltest" "${BOOST_TEST_ARGS[@]}" --run_test="$selected_test_cases" -- "${SOLTEST_ARGS[@]}" & pids+=($!)
+    echo "Running soltest ${BOOST_TEST_ARGS[*]} --run_test=<batch #${batch}> -- ${SOLTEST_ARGS[*]} (PID=${pids[-1]})"
+done
+
+for pid in "${pids[@]}"
+do
+    wait "$pid"
+    echo "Process ${pid} finished.";
+done
