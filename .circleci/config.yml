@@ -215,7 +215,7 @@ defaults:
         TERM: xterm
         CC: clang
         CXX: clang++
-        MAKEFLAGS: -j 3
+        MAKEFLAGS: -j 2
 
   - base_ubuntu2004_clang_xlarge: &base_ubuntu2004_clang_xlarge
       <<: *base_ubuntu2004_clang
@@ -223,7 +223,7 @@ defaults:
         TERM: xterm
         CC: clang
         CXX: clang++
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 2
 
   - base_ubuntu2004: &base_ubuntu2004
       docker:
@@ -236,7 +236,7 @@ defaults:
       <<: *base_ubuntu2004
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 2
 
   - base_buildpack_focal: &base_buildpack_focal
       docker:
@@ -284,7 +284,7 @@ defaults:
       resource_class: small
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 2
 
   - base_python: &base_python
       docker:
@@ -510,7 +510,7 @@ jobs:
 
   b_ubu: &b_ubu
     <<: *base_ubuntu2004_xlarge
-    resource_class: large
+    resource_class: small
     steps:
       - checkout
       - run: *run_build
@@ -522,10 +522,10 @@ jobs:
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
     <<: *base_ubuntu2004_xlarge
-    resource_class: large
+    resource_class: small
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 2
       CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
@@ -535,7 +535,7 @@ jobs:
 
   b_ubu_clang: &b_ubu_clang
     <<: *base_ubuntu2004_clang_xlarge
-    resource_class: medium
+    resource_class: small
     steps:
       - checkout
       - run: *run_build
@@ -544,12 +544,12 @@ jobs:
 
   b_ubu_asan_clang: &b_ubu_asan_clang
     <<: *base_ubuntu2004_clang
-    resource_class: large
+    resource_class: small
     environment:
       CC: clang
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 3
+      MAKEFLAGS: -j 2
     steps:
       - checkout
       - run: *run_build
@@ -558,12 +558,12 @@ jobs:
 
   b_ubu_ubsan_clang: &b_ubu_ubsan_clang
     <<: *base_ubuntu2004_clang
-    resource_class: large
+    resource_class: small
     environment:
       CC: clang
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=undefined
-      MAKEFLAGS: -j 3
+      MAKEFLAGS: -j 2
     steps:
       - checkout
       - run: *run_build
@@ -573,16 +573,16 @@ jobs:
 
   b_ubu_release: &b_ubu_release
     <<: *b_ubu
-    resource_class: large
+    resource_class: small
     environment:
       FORCE_RELEASE: ON
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 2
 
   b_ubu_static:
     <<: *base_ubuntu2004_xlarge
-    resource_class: large
+    resource_class: small
     environment:
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 2
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
@@ -594,11 +594,11 @@ jobs:
 
   b_ubu_codecov:
     <<: *base_ubuntu2004_xlarge
-    resource_class: large
+    resource_class: small
     environment:
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 2
     steps:
       - checkout
       - run: *run_build
@@ -630,18 +630,18 @@ jobs:
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
     <<: *base_ubuntu2004_xlarge
-    resource_class: large
+    resource_class: small
     environment:
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 2
     steps:
       - checkout
       - run: *run_build
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
     <<: *base_ubuntu1604_clang
-    resource_class: medium
+    resource_class: small
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -667,10 +667,10 @@ jobs:
 
   b_archlinux:
     <<: *base_archlinux
-    resource_class: large
+    resource_class: small
     environment:
       TERM: xterm
-      MAKEFLAGS: -j 3
+      MAKEFLAGS: -j 2
     steps:
       - run:
           name: Install build dependencies
@@ -686,7 +686,7 @@ jobs:
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Release
-      MAKEFLAGS: -j 5
+      MAKEFLAGS: -j 2
     steps:
       - checkout
       - restore_cache:
@@ -748,7 +748,7 @@ jobs:
 
   b_ems:
     <<: *base_ems_xlarge
-    resource_class: large
+    resource_class: small
     steps:
       - checkout
       - run:
@@ -858,7 +858,7 @@ jobs:
 
   t_ubu_ubsan_clang_soltest:
     <<: *base_ubuntu2004_clang
-    resource_class: medium
+    resource_class: small
     environment:
       EVM: << pipeline.parameters.evm-version >>
     steps:
