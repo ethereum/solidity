@@ -38,6 +38,10 @@ function gnosis_safe_test
     local min_optimizer_level=2
     local max_optimizer_level=3
 
+    local selected_optimizer_levels
+    selected_optimizer_levels=$(circleci_select_steps "$(seq "$min_optimizer_level" "$max_optimizer_level")")
+    print_optimizer_levels_or_exit "$selected_optimizer_levels"
+
     setup_solcjs "$DIR" "$SOLJSON"
     download_project "$repo" "$branch" "$DIR"
 
@@ -51,7 +55,7 @@ function gnosis_safe_test
     replace_version_pragmas
     force_solc_modules "${DIR}/solc"
 
-    for level in $(seq "$min_optimizer_level" "$max_optimizer_level"); do
+    for level in $selected_optimizer_levels; do
         truffle_run_test "$config_file" "${DIR}/solc" "$level" compile_fn test_fn
     done
 }

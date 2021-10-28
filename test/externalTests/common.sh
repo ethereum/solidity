@@ -24,6 +24,15 @@ set -e
 
 CURRENT_EVM_VERSION=london
 
+function print_optimizer_levels_or_exit
+{
+    local selected_levels="$1"
+
+    [[ $selected_levels != "" ]] || { printWarning "No steps to run. Exiting."; exit 0; }
+
+    printLog "Selected optimizer levels: ${selected_levels}"
+}
+
 function verify_input
 {
     if [ ! -f "$1" ]; then

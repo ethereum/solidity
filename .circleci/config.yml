@@ -943,6 +943,8 @@ jobs:
         default: 14
     docker:
       - image: circleci/node:<<parameters.nodejs_version>>
+    # NOTE: Each external test does 3 separate compile&test runs
+    parallelism: 3
     environment:
       TERM: xterm
       COMPILE_ONLY: <<parameters.compile_only>>
