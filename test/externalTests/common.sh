@@ -187,7 +187,8 @@ function run_test
     $test_fn
 }
 
-function optimizer_settings_for_level {
+function optimizer_settings_for_level
+{
     local level="$1"
 
     case "$level" in
@@ -201,7 +202,8 @@ function optimizer_settings_for_level {
     esac
 }
 
-function truffle_compiler_settings {
+function truffle_compiler_settings
+{
     local solc_path="$1"
     local level="$2"
     local evm_version="$3"
