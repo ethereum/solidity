@@ -29,6 +29,9 @@ Bugfixes:
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
 
 
+Important Bugfixes in Experimental Features:
+ * Yul IR Generator: Changes to function return variables referenced in modifier invocation arguments were not properly forwarded if there was more than one return variable.
+
 
 ### 0.8.9 (2021-09-29)
 
