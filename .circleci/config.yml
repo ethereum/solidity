@@ -203,12 +203,14 @@ defaults:
   - base_ubuntu1604_clang: &base_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
+      resource_class: small
       environment:
         TERM: xterm
 
   - base_ubuntu2004_clang: &base_ubuntu2004_clang
       docker:
         - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
+      resource_class: small
       environment:
         TERM: xterm
         CC: clang
@@ -217,7 +219,6 @@ defaults:
 
   - base_ubuntu2004_clang_xlarge: &base_ubuntu2004_clang_xlarge
       <<: *base_ubuntu2004_clang
-      resource_class: xlarge
       environment:
         TERM: xterm
         CC: clang
@@ -227,12 +228,12 @@ defaults:
   - base_ubuntu2004: &base_ubuntu2004
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+      resource_class: small
       environment:
         TERM: xterm
 
   - base_ubuntu2004_xlarge: &base_ubuntu2004_xlarge
       <<: *base_ubuntu2004
-      resource_class: xlarge
       environment:
         TERM: xterm
         MAKEFLAGS: -j 10
@@ -240,18 +241,21 @@ defaults:
   - base_buildpack_focal: &base_buildpack_focal
       docker:
         - image: buildpack-deps:focal
+      resource_class: small
       environment:
         TERM: xterm
 
   - base_buildpack_latest: &base_buildpack_latest
       docker:
         - image: buildpack-deps:latest
+      resource_class: small
       environment:
         TERM: xterm
 
   - base_archlinux: &base_archlinux
       docker:
         - image: archlinux:base
+      resource_class: small
       environment:
         TERM: xterm
 
@@ -259,22 +263,25 @@ defaults:
       executor:
         name: win/default
         shell: powershell.exe
+        size: medium
 
   - base_win_cmd: &base_win_cmd
       executor:
         name: win/default
         shell: cmd.exe
+        size: medium
 
   - base_osx: &base_osx
       macos:
         xcode: "11.0.0"
+      resource_class: medium
       environment:
         TERM: xterm
 
   - base_ems_xlarge: &base_ems_xlarge
       docker:
         - image: << pipeline.parameters.emscripten-docker-image >>
-      resource_class: xlarge
+      resource_class: small
       environment:
         TERM: xterm
         MAKEFLAGS: -j 10
@@ -282,12 +289,14 @@ defaults:
   - base_python: &base_python
       docker:
         - image: circleci/python:3.6
+      resource_class: small
       environment:
         TERM: xterm
 
   - base_node_latest: &base_node_latest
       docker:
         - image: circleci/node
+      resource_class: small
       environment:
         TERM: xterm
 
@@ -912,6 +921,7 @@ jobs:
         default: no
     docker:
       - image: circleci/node:<<parameters.nodejs_version>>
+    resource_class: small
     # NOTE: Each external test does 3 separate compile&test runs
     parallelism: 3
     environment:
