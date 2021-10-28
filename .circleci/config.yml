@@ -510,7 +510,7 @@ jobs:
 
   b_ubu: &b_ubu
     <<: *base_ubuntu2004_xlarge
-    resource_class: medium
+    resource_class: large
     steps:
       - checkout
       - run: *run_build
@@ -522,7 +522,7 @@ jobs:
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
     <<: *base_ubuntu2004_xlarge
-    resource_class: medium
+    resource_class: large
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
       MAKEFLAGS: -j 10
@@ -544,7 +544,7 @@ jobs:
 
   b_ubu_asan_clang: &b_ubu_asan_clang
     <<: *base_ubuntu2004_clang
-    resource_class: medium
+    resource_class: large
     environment:
       CC: clang
       CXX: clang++
@@ -558,6 +558,7 @@ jobs:
 
   b_ubu_ubsan_clang: &b_ubu_ubsan_clang
     <<: *base_ubuntu2004_clang
+    resource_class: large
     environment:
       CC: clang
       CXX: clang++
@@ -572,14 +573,14 @@ jobs:
 
   b_ubu_release: &b_ubu_release
     <<: *b_ubu
-    resource_class: medium
+    resource_class: large
     environment:
       FORCE_RELEASE: ON
       MAKEFLAGS: -j 10
 
   b_ubu_static:
     <<: *base_ubuntu2004_xlarge
-    resource_class: medium
+    resource_class: large
     environment:
       MAKEFLAGS: -j 10
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
@@ -593,7 +594,7 @@ jobs:
 
   b_ubu_codecov:
     <<: *base_ubuntu2004_xlarge
-    resource_class: medium
+    resource_class: large
     environment:
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
@@ -629,7 +630,7 @@ jobs:
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
     <<: *base_ubuntu2004_xlarge
-    resource_class: medium
+    resource_class: large
     environment:
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
@@ -666,7 +667,7 @@ jobs:
 
   b_archlinux:
     <<: *base_archlinux
-    resource_class: medium
+    resource_class: large
     environment:
       TERM: xterm
       MAKEFLAGS: -j 3
@@ -747,7 +748,7 @@ jobs:
 
   b_ems:
     <<: *base_ems_xlarge
-    resource_class: medium
+    resource_class: large
     steps:
       - checkout
       - run:
