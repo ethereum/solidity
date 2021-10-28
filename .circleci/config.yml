@@ -44,16 +44,7 @@ commands:
           name: "Gitter notification"
           when: << parameters.condition >>
           command: |
-            [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ Nightly job **${CIRCLE_JOB}** failed on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
-            [[ "<< parameters.event >>" == "success" ]] && message=" ✅ Nightly job **${CIRCLE_JOB}** succeeded on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
-
-            curl "https://api.gitter.im/v1/rooms/${GITTER_NOTIFY_ROOM_ID}/chatMessages" \
-              --request POST \
-              --include \
-              --header "Content-Type: application/json" \
-              --header "Accept: application/json" \
-              --header "Authorization: Bearer ${GITTER_API_TOKEN}" \
-              --data "{\"text\":\"${message}\"}"
+            true
 
   gitter_notify_failure:
     description: "Posts a failure notification to the main room on Gitter (if not running on a PR)."
