@@ -214,6 +214,14 @@ defaults:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 3
+
+  - base_ubuntu1604_clang_small: &base_ubuntu1604_clang_small
+      <<: *base_ubuntu1604_clang
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
 
   - base_ubuntu2004_clang: &base_ubuntu2004_clang
       docker:
@@ -224,20 +232,44 @@ defaults:
         CXX: clang++
         MAKEFLAGS: -j 3
 
-  - base_ubuntu2004_clang_xlarge: &base_ubuntu2004_clang_xlarge
+  - base_ubuntu2004_clang_small: &base_ubuntu2004_clang_small
       <<: *base_ubuntu2004_clang
-      resource_class: xlarge
+      resource_class: small
       environment:
         TERM: xterm
         CC: clang
         CXX: clang++
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 2
+
+  - base_ubuntu2004_clang_large: &base_ubuntu2004_clang_large
+      <<: *base_ubuntu2004_clang
+      resource_class: large
+      environment:
+        TERM: xterm
+        CC: clang
+        CXX: clang++
+        MAKEFLAGS: -j 5
 
   - base_ubuntu2004: &base_ubuntu2004
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 3
+
+  - base_ubuntu2004_small: &base_ubuntu2004_small
+      <<: *base_ubuntu2004
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
+
+  - base_ubuntu2004_large: &base_ubuntu2004_large
+      <<: *base_ubuntu2004
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 5
 
   - base_ubuntu2004_xlarge: &base_ubuntu2004_xlarge
       <<: *base_ubuntu2004
@@ -246,28 +278,47 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 10
 
-  - base_buildpack_focal: &base_buildpack_focal
+  - base_buildpack_focal_small: &base_buildpack_focal_small
       docker:
         - image: buildpack-deps:focal
+      resource_class: small
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 2
 
-  - base_buildpack_latest: &base_buildpack_latest
+  - base_buildpack_latest_small: &base_buildpack_latest_small
       docker:
         - image: buildpack-deps:latest
+      resource_class: small
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 2
 
   - base_archlinux: &base_archlinux
       docker:
         - image: archlinux:base
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 3
+
+  - base_archlinux_large: &base_archlinux_large
+      docker:
+        - image: archlinux:base
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 5
 
   - base_win_powershell: &base_win_powershell
       executor:
         name: win/default
         shell: powershell.exe
+
+  - base_win_powershell_large: &base_win_powershell_large
+      executor:
+        name: win/default
+        shell: powershell.exe
+        size: large
 
   - base_win_cmd: &base_win_cmd
       executor:
@@ -279,26 +330,31 @@ defaults:
         xcode: "11.0.0"
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 5
 
-  - base_ems_xlarge: &base_ems_xlarge
+  - base_ems_large: &base_ems_large
       docker:
         - image: << pipeline.parameters.emscripten-docker-image >>
-      resource_class: xlarge
+      resource_class: large
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 10
+        MAKEFLAGS: -j 5
 
-  - base_python: &base_python
+  - base_python_small: &base_python_small
       docker:
         - image: circleci/python:3.6
+      resource_class: small
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 2
 
-  - base_node_latest: &base_node_latest
+  - base_node_latest_small: &base_node_latest_small
       docker:
         - image: circleci/node
+      resource_class: small
       environment:
         TERM: xterm
+        MAKEFLAGS: -j 2
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -382,7 +438,7 @@ defaults:
 jobs:
 
   chk_spelling:
-    <<: *base_python
+    <<: *base_python_small
     steps:
       - checkout
       - attach_workspace:
@@ -396,7 +452,7 @@ jobs:
           command: ~/.local/bin/codespell -S "*.enc,.git,Dockerfile*" -I ./scripts/codespell_whitelist.txt
 
   chk_docs_examples:
-    <<: *base_node_latest
+    <<: *base_node_latest_small
     steps:
       - checkout
       - attach_workspace:
@@ -409,7 +465,7 @@ jobs:
           command: ./test/docsCodeStyle.sh
 
   chk_coding_style:
-    <<: *base_buildpack_focal
+    <<: *base_buildpack_focal_small
     steps:
       - checkout
       - run:
@@ -426,7 +482,7 @@ jobs:
           command: ./scripts/check_symlinks.sh
 
   chk_errorcodes:
-    <<: *base_python
+    <<: *base_python_small
     steps:
       - checkout
       - run:
@@ -434,7 +490,7 @@ jobs:
           command: ./scripts/error_codes.py --check
 
   chk_pylint:
-    <<: *base_buildpack_focal
+    <<: *base_buildpack_focal_small
     steps:
       - checkout
       - run:
@@ -449,7 +505,7 @@ jobs:
           command: ./scripts/pylint_all.py
 
   chk_antlr_grammar:
-    <<: *base_buildpack_focal
+    <<: *base_buildpack_focal_small
     steps:
       - checkout
       - run:
@@ -460,7 +516,7 @@ jobs:
           command: ./scripts/test_antlr_grammar.sh
 
   chk_buglist:
-    <<: *base_node_latest
+    <<: *base_node_latest_small
     steps:
       - checkout
       - run:
@@ -474,7 +530,7 @@ jobs:
           command: ./test/buglistTests.js
 
   chk_proofs:
-    <<: *base_buildpack_latest
+    <<: *base_buildpack_latest_small
     steps:
       - checkout
       - run:
@@ -486,13 +542,13 @@ jobs:
       - run: *run_proofs
 
   chk_docs_pragma_min_version:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_small
     steps:
       - checkout
       - run: *run_docs_pragma_min_version
 
   t_ubu_pyscripts:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_small
     steps:
       - checkout
       - run:
@@ -509,6 +565,8 @@ jobs:
           command: python.exe test/pyscriptTests.py
 
   b_ubu: &b_ubu
+    # this runs 2x faster on xlarge but takes 4x more resources (compared to medium).
+    # Enough other jobs depend on it that it's worth it though.
     <<: *base_ubuntu2004_xlarge
     steps:
       - checkout
@@ -520,10 +578,11 @@ jobs:
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
-    <<: *base_ubuntu2004_xlarge
+    # Runs slightly faster on large and xlarge but we only run it nightly so efficiency matters more.
+    <<: *base_ubuntu2004
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 3
       CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
@@ -532,7 +591,7 @@ jobs:
       - persist_to_workspace: *artifacts_executables
 
   b_ubu_clang: &b_ubu_clang
-    <<: *base_ubuntu2004_clang_xlarge
+    <<: *base_ubuntu2004_clang_large
     steps:
       - checkout
       - run: *run_build
@@ -540,6 +599,7 @@ jobs:
       - persist_to_workspace: *artifacts_executables
 
   b_ubu_asan_clang: &b_ubu_asan_clang
+    # This runs a bit faster on large and xlarge but on nightly efficiency matters more.
     <<: *base_ubuntu2004_clang
     environment:
       CC: clang
@@ -553,6 +613,7 @@ jobs:
       - persist_to_workspace: *artifacts_executables
 
   b_ubu_ubsan_clang: &b_ubu_ubsan_clang
+    # This runs a bit faster on large and xlarge but on nightly efficiency matters more.
     <<: *base_ubuntu2004_clang
     environment:
       CC: clang
@@ -573,9 +634,10 @@ jobs:
       MAKEFLAGS: -j 10
 
   b_ubu_static:
-    <<: *base_ubuntu2004_xlarge
+    # Runs 2x faster on large and 3x on xlarge but no other jobs depend on it we can live with medium.
+    <<: *base_ubuntu2004
     environment:
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 3
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
@@ -586,11 +648,12 @@ jobs:
       - store_artifacts: *artifacts_solc
 
   b_ubu_codecov:
-    <<: *base_ubuntu2004_xlarge
+    # Runs ~30% faster on large but we only run it nightly so efficiency matters more.
+    <<: *base_ubuntu2004
     environment:
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 3
     steps:
       - checkout
       - run: *run_build
@@ -621,11 +684,11 @@ jobs:
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
-    <<: *base_ubuntu2004_xlarge
+    <<: *base_ubuntu2004_large
     environment:
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
-      MAKEFLAGS: -j 10
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - run: *run_build
@@ -639,7 +702,7 @@ jobs:
       - persist_to_workspace: *artifacts_executables_ossfuzz
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *base_ubuntu1604_clang
+    <<: *base_ubuntu1604_clang_small
     steps:
       - checkout
       - attach_workspace:
@@ -656,10 +719,10 @@ jobs:
       - store_artifacts: *artifacts_test_results
 
   b_archlinux:
-    <<: *base_archlinux
+    <<: *base_archlinux_large
     environment:
       TERM: xterm
-      MAKEFLAGS: -j 3
+      MAKEFLAGS: -j 5
     steps:
       - run:
           name: Install build dependencies
@@ -736,7 +799,7 @@ jobs:
       - store_artifacts: *artifacts_test_results
 
   b_ems:
-    <<: *base_ems_xlarge
+    <<: *base_ems_large
     steps:
       - checkout
       - run:
@@ -756,7 +819,7 @@ jobs:
             - version.txt
 
   b_docs:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_small
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -812,14 +875,15 @@ jobs:
     <<: *t_ubu_soltest_all
 
   t_ubu_cli: &t_ubu_cli
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_small
     <<: *steps_cmdline_tests
 
   t_ubu_release_cli: &t_ubu_release_cli
     <<: *t_ubu_cli
 
   t_ubu_asan_cli:
-    <<: *base_ubuntu2004
+    # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
+    <<: *base_ubuntu2004_small
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
@@ -855,7 +919,7 @@ jobs:
       - gitter_notify_failure
 
   t_ubu_ubsan_clang_cli:
-    <<: *base_ubuntu2004_clang
+    <<: *base_ubuntu2004_clang_small
     steps:
       - when:
           condition: true
@@ -863,6 +927,7 @@ jobs:
       - gitter_notify_failure
 
   t_ems_solcjs:
+    # Unlike other t_ems jobs this one actually runs 2x faster on medium (compared to small).
     <<: *base_ubuntu2004
     steps:
       - checkout
@@ -882,7 +947,7 @@ jobs:
             test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
   t_ems_ext_hardhat:
-    <<: *base_node_latest
+    <<: *base_node_latest_small
     environment:
       TERM: xterm
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
@@ -916,11 +981,15 @@ jobs:
       nodejs_version:
         type: integer
         default: 14
+      resource_class:
+        type: string
+        default: small
       gitter_notify:
         type: boolean
         default: no
     docker:
       - image: circleci/node:<<parameters.nodejs_version>>
+    resource_class: <<parameters.resource_class>>
     # NOTE: Each external test does 3 separate compile&test runs
     parallelism: 3
     environment:
@@ -946,7 +1015,7 @@ jobs:
             - gitter_notify_success
 
   b_win: &b_win
-    <<: *base_win_powershell
+    <<: *base_win_powershell_large
     steps:
       # NOTE: Not disabling git's core.autocrlf here because we want to build using the typical Windows config.
       - checkout
@@ -1001,7 +1070,7 @@ jobs:
     <<: *t_win_soltest
 
   b_bytecode_ubu:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_small
     steps:
       - checkout
       - attach_workspace:
@@ -1064,7 +1133,7 @@ jobs:
             - bytecode-report-windows-cli.txt
 
   b_bytecode_ems:
-    <<: *base_node_latest
+    <<: *base_node_latest_small
     environment:
       SOLC_EMSCRIPTEN: "On"
     steps:
@@ -1080,7 +1149,7 @@ jobs:
             - bytecode-report-emscripten.txt
 
   t_bytecode_compare:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_small
     environment:
       REPORT_FILES: |
         bytecode-report-emscripten.txt
@@ -1284,4 +1353,5 @@ workflows:
           <<: *workflow_emscripten
           name: t_ems_test_ext_colony
           project: colony
+          resource_class: medium
           gitter_notify: yes
