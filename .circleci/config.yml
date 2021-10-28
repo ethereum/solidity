@@ -1168,6 +1168,7 @@ workflows:
       - t_ems_solcjs: *workflow_emscripten
       - t_ems_ext_hardhat: *workflow_emscripten
 
+      # Separate compile-only runs of those external tests where a full run takes much longer.
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_colony
@@ -1180,22 +1181,11 @@ workflows:
           compile_only: 1
       - t_ems_ext:
           <<: *workflow_emscripten
-          name: t_ems_compile_ext_gnosis_v2
-          project: gnosis-v2
-          compile_only: 1
-      - t_ems_ext:
-          <<: *workflow_emscripten
           name: t_ems_compile_ext_zeppelin
           project: zeppelin
           compile_only: 1
-      - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_compile_ext_ens
-          project: ens
-          compile_only: 1
-          # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
-          nodejs_version: 10
 
+      # Compile&test runs of external tests
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_colony
