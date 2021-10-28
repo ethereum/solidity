@@ -1269,6 +1269,7 @@ workflows:
       - t_ems_solcjs: *workflow_emscripten
       - t_ems_ext_hardhat: *workflow_emscripten
 
+      # Separate compile-only runs of those external tests where a full run takes much longer.
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_colony
@@ -1281,24 +1282,6 @@ workflows:
           project: gnosis
           compile_only: 1
           nodejs_version: '14'
-      - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_compile_ext_gnosis_v2
-          project: gnosis-v2
-          compile_only: 1
-          nodejs_version: '14'
-      - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_compile_ext_zeppelin
-          project: zeppelin
-          compile_only: 1
-      - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_compile_ext_ens
-          project: ens
-          compile_only: 1
-          # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
-          nodejs_version: '10'
 
       # FIXME: Gnosis tests are pretty flaky right now. They often fail on CircleCI due to random ProviderError
       # and there are also other less frequent problems. See https://github.com/gnosis/safe-contracts/issues/216.
