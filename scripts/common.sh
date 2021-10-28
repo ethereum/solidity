@@ -29,15 +29,15 @@ _initial_work_dir=$(pwd)
 if [ "$CIRCLECI" ]
 then
     export TERM="${TERM:-xterm}"
-    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
-    function printError() { >&2 echo "$(tput setaf 1)$1$(tput setaf 7)"; }
-    function printWarning() { >&2 echo "$(tput setaf 11)$1$(tput setaf 7)"; }
-    function printLog() { echo "$(tput setaf 3)$1$(tput setaf 7)"; }
+    function printTask { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
+    function printError { >&2 echo "$(tput setaf 1)$1$(tput setaf 7)"; }
+    function printWarning { >&2 echo "$(tput setaf 11)$1$(tput setaf 7)"; }
+    function printLog { echo "$(tput setaf 3)$1$(tput setaf 7)"; }
 else
-    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
-    function printError() { >&2 echo "$(tput setaf 1)$1$(tput sgr0)"; }
-    function printWarning() { >&2 echo "$(tput setaf 11)$1$(tput sgr0)"; }
-    function printLog() { echo "$(tput setaf 3)$1$(tput sgr0)"; }
+    function printTask { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+    function printError { >&2 echo "$(tput setaf 1)$1$(tput sgr0)"; }
+    function printWarning { >&2 echo "$(tput setaf 11)$1$(tput sgr0)"; }
+    function printLog { echo "$(tput setaf 3)$1$(tput sgr0)"; }
 fi
 
 function printStackTrace
@@ -78,7 +78,7 @@ function printStackTrace
     done
 }
 
-function fail()
+function fail
 {
     printError "$@"
 
@@ -86,7 +86,7 @@ function fail()
     return 1
 }
 
-function assertFail()
+function assertFail
 {
     printError ""
     (( $# == 0 )) && printError "Assertion failed."
@@ -97,7 +97,7 @@ function assertFail()
     exit 2
 }
 
-function msg_on_error()
+function msg_on_error
 {
     local error_message
     local no_stdout=false
@@ -171,7 +171,7 @@ function msg_on_error()
     fi
 }
 
-safe_kill()
+function safe_kill
 {
     local PID=${1}
     local NAME=${2:-${1}}

@@ -28,7 +28,7 @@ else
     date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
 fi
 
-tag_and_push()
+function tag_and_push
 {
     docker tag "$image:$1" "$image:$2"
     docker push "$image:$2"
