@@ -43,13 +43,12 @@ printTask "Running steps $RUN_STEPS..."
 STEP=1
 
 
-# Run for ABI encoder v1, without SMTChecker tests.
+# Run for ABI encoder v1
 if circleci_step_selected "$RUN_STEPS" "$STEP"
 then
     EVM="${DEFAULT_EVM}" \
     OPTIMIZE=1 \
     ABI_ENCODER_V1=1 \
-    BOOST_TEST_ARGS="-t !smtCheckerTests" \
     "${REPODIR}/.circleci/soltest.sh"
 fi
 ((++STEP))
@@ -63,16 +62,12 @@ do
         [ "${EVM}" = "byzantium" ] && [ "${OPTIMIZE}" = "0" ] && EWASM_ARGS="--ewasm"
         ENFORCE_GAS_ARGS=""
         [ "${EVM}" = "${DEFAULT_EVM}" ] && ENFORCE_GAS_ARGS="--enforce-gas-cost"
-        # Run SMTChecker tests only when OPTIMIZE == 0
-        DISABLE_SMTCHECKER=""
-        [ "${OPTIMIZE}" != "0" ] && DISABLE_SMTCHECKER="-t !smtCheckerTests"
 
         if circleci_step_selected "$RUN_STEPS" "$STEP"
         then
             EVM="$EVM" \
             OPTIMIZE="$OPTIMIZE" \
             SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS $EWASM_ARGS" \
-            BOOST_TEST_ARGS="-t !@nooptions $DISABLE_SMTCHECKER" \
             "${REPODIR}/.circleci/soltest.sh"
         fi
         ((++STEP))
