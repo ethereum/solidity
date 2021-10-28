@@ -1196,6 +1196,10 @@ workflows:
           # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
           nodejs_version: 10
 
+      - t_ems_ext:
+          <<: *workflow_emscripten
+          name: t_ems_test_ext_colony
+          project: colony
       # FIXME: Gnosis tests are pretty flaky right now. They often fail on CircleCI due to random ProviderError
       # and there are also other less frequent problems. See https://github.com/gnosis/safe-contracts/issues/216.
       #- t_ems_ext:
@@ -1247,19 +1251,7 @@ workflows:
             - b_bytecode_osx
             - b_bytecode_ems
 
-  nightly:
-
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - develop
-
-    jobs:
       # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *workflow_trigger_on_tags
       - t_ubu_ossfuzz: *workflow_ubuntu1604_ossfuzz
 
       # Code Coverage enabled build and tests
@@ -1278,10 +1270,5 @@ workflows:
       - t_ubu_ubsan_clang_soltest: *workflow_ubuntu2004_ubsan_clang
       - t_ubu_ubsan_clang_cli: *workflow_ubuntu2004_ubsan_clang
 
-      # Emscripten build and tests that take more than 15 minutes to execute
-      - b_ems: *workflow_trigger_on_tags
-      - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_test_ext_colony
-          project: colony
-          gitter_notify: yes
+      # Emscripten build and tests that take more than 15 minutes to execute:
+      # Currently none.
