@@ -46,7 +46,7 @@ source "${REPODIR}/scripts/common.sh"
 # Test result output directory (CircleCI is reading test results from here)
 mkdir -p test_results
 
-# in case we run with ASAN enabled, we must increase stck size.
+# in case we run with ASAN enabled, we must increase stack size.
 ulimit -s 16384
 
 get_logfile_basename() {
