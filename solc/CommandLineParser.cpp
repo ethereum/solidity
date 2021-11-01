@@ -911,7 +911,12 @@ void CommandLineParser::processArgs()
 		// TODO: This should eventually contain all options.
 		{g_strErrorRecovery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strExperimentalViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
+		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
 	};
 	vector<string> invalidOptionsForCurrentInputMode;
 	for (auto const& [optionName, inputModes]: validOptionInputModeCombinations)
