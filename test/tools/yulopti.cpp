@@ -162,6 +162,36 @@ public:
 		}
 	}
 
+	int runSteps(string source, string steps)
+	{
+		if (!parse(source))
+			return 1;
+
+		set<YulString> reservedIdentifiers;
+		*m_ast = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
+		m_analysisInfo.reset();
+		m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
+
+		OptimiserStepContext context{
+			m_dialect,
+			*m_nameDispenser,
+			reservedIdentifiers,
+			solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+		};
+
+		map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
+		for (char stepAbbreviation: steps)
+			if (auto abbreviationAndName = util::valueOrNullptr(abbreviationMap, stepAbbreviation))
+				OptimiserSuite::allSteps().at(*abbreviationAndName)->run(context, *m_ast);
+			else
+			{
+				cerr << "Unknown optimizer step." << endl;
+				return 1;
+			}
+		cout << AsmPrinter{m_dialect}(*m_ast) << endl;
+		return 0;
+	}
+
 	void runInteractive(string source)
 	{
 		bool disambiguated = false;
@@ -256,6 +286,11 @@ Allowed options)",
 			po::value<string>(),
 			"input file"
 		)
+		(
+			"steps",
+			po::value<string>(),
+			"steps to execute non-interactively"
+		)
 		("help", "Show this help screen.");
 
 	// All positional options should be interpreted as input files
@@ -292,7 +327,12 @@ Allowed options)",
 	}
 
 	if (arguments.count("input-file"))
-		YulOpti{}.runInteractive(input);
+	{
+		if (arguments.count("steps"))
+			return YulOpti{}.runSteps(input, arguments["steps"].as<string>());
+		else
+			YulOpti{}.runInteractive(input);
+	}
 	else
 		cout << options;
 
