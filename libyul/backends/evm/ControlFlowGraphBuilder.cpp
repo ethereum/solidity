@@ -176,9 +176,9 @@ StackSlot ControlFlowGraphBuilder::operator()(Expression const& _expression)
 
 StackSlot ControlFlowGraphBuilder::operator()(FunctionCall const& _call)
 {
-	CFG::Operation const& operation = visitFunctionCall(_call);
-	yulAssert(operation.output.size() == 1, "");
-	return operation.output.front();
+	Stack const& output = visitFunctionCall(_call);
+	yulAssert(output.size() == 1, "");
+	return output.front();
 }
 
 void ControlFlowGraphBuilder::operator()(VariableDeclaration const& _varDecl)
@@ -219,8 +219,8 @@ void ControlFlowGraphBuilder::operator()(ExpressionStatement const& _exprStmt)
 	yulAssert(m_currentBlock, "");
 	std::visit(util::GenericVisitor{
 		[&](FunctionCall const& _call) {
-			CFG::Operation const& operation = visitFunctionCall(_call);
-			yulAssert(operation.output.empty(), "");
+			Stack const& output = visitFunctionCall(_call);
+			yulAssert(output.empty(), "");
 		},
 		[&](auto const&) { yulAssert(false, ""); }
 	}, _exprStmt.expression);
@@ -418,7 +418,7 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 }
 
 
-CFG::Operation const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _call)
+Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _call)
 {
 	yulAssert(m_scope, "");
 	yulAssert(m_currentBlock, "");
@@ -439,7 +439,7 @@ CFG::Operation const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall co
 			}) | ranges::to<Stack>,
 			// operation
 			move(builtinCall)
-		});
+		}).output;
 	}
 	else
 	{
@@ -456,7 +456,7 @@ CFG::Operation const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall co
 			}) | ranges::to<Stack>,
 			// operation
 			CFG::FunctionCall{_call.debugData, function, _call}
-		});
+		}).output;
 	}
 }
 
@@ -464,9 +464,9 @@ Stack ControlFlowGraphBuilder::visitAssignmentRightHandSide(Expression const& _e
 {
 	return std::visit(util::GenericVisitor{
 		[&](FunctionCall const& _call) -> Stack {
-			CFG::Operation const& operation = visitFunctionCall(_call);
-			yulAssert(_expectedSlotCount == operation.output.size(), "");
-			return operation.output;
+			Stack const& output = visitFunctionCall(_call);
+			yulAssert(_expectedSlotCount == output.size(), "");
+			return output;
 		},
 		[&](auto const& _identifierOrLiteral) -> Stack {
 			yulAssert(_expectedSlotCount == 1, "");

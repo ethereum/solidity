@@ -57,7 +57,7 @@ private:
 		AsmAnalysisInfo const& _analysisInfo,
 		Dialect const& _dialect
 	);
-	CFG::Operation const& visitFunctionCall(FunctionCall const&);
+	Stack const& visitFunctionCall(FunctionCall const&);
 	Stack visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount);
 
 	Scope::Function const& lookupFunction(YulString _name) const;
