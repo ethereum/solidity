@@ -114,9 +114,18 @@ otherwise, the ``value`` option would not be available.
 Due to the fact that the EVM considers a call to a non-existing contract to
 always succeed, Solidity uses the ``extcodesize`` opcode to check that
 the contract that is about to be called actually exists (it contains code)
-and causes an exception if it does not.
+and causes an exception if it does not. This check is skipped if the return
+data will be decoded after the call and thus the ABI decoder will catch the
+case of a non-existing contract.
+
 Note that this check is not performed in case of :ref:`low-level calls <address_related>` which
 operate on addresses rather than contract instances.
+
+.. note::
+    Be careful when using high-level calls to
+    :ref:`precompiled contracts <precompiledContracts>`,
+    since the compiler considers them non-existing according to the
+    above logic even though they execute code and can return data.
 
 Function calls also cause exceptions if the called contract itself
 throws an exception or goes out of gas.
