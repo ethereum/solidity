@@ -22,6 +22,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 
 #include <libevmasm/SemanticInformation.h>
@@ -36,7 +37,11 @@ using namespace solidity::yul;
 
 void DeadCodeEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	DeadCodeEliminator{_context.dialect}(_ast);
+	ControlFlowSideEffectsCollector sideEffects(_context.dialect, _ast);
+	DeadCodeEliminator{
+		_context.dialect,
+		sideEffects.functionSideEffects()
+	}(_ast);
 }
 
 void DeadCodeEliminator::operator()(ForLoop& _for)
@@ -49,7 +54,7 @@ void DeadCodeEliminator::operator()(Block& _block)
 {
 	TerminationFinder::ControlFlow controlFlowChange;
 	size_t index;
-	tie(controlFlowChange, index) = TerminationFinder{m_dialect}.firstUnconditionalControlFlowChange(_block.statements);
+	tie(controlFlowChange, index) = TerminationFinder{m_dialect, &m_functionSideEffects}.firstUnconditionalControlFlowChange(_block.statements);
 
 	// Erase everything after the terminating statement that is not a function definition.
 	if (controlFlowChange != TerminationFinder::ControlFlow::FlowOut && index != std::numeric_limits<size_t>::max())

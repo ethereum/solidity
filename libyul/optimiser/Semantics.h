@@ -205,22 +205,31 @@ private:
 	std::set<YulString> m_variableReferences;
 };
 
+struct ControlFlowSideEffects;
 
 /**
  * Helper class to find "irregular" control flow.
- * This includes termination, break and continue.
+ * This includes termination, break, continue and leave.
+ * In general, it is applied only to "simple" statements. The control-flow
+ * of loops, switches and if statements is always "FlowOut" with the assumption
+ * that the caller will descend into them.
  */
 class TerminationFinder
 {
 public:
-	// TODO check all uses of TerminationFinder!
+	/// "Terminate" here means that there is no continuing control-flow.
+	/// If this is applied to a function that can revert or stop, but can also
+	/// exit regularly, the property is set to "FlowOut".
 	enum class ControlFlow { FlowOut, Break, Continue, Terminate, Leave };
 
-	TerminationFinder(Dialect const& _dialect): m_dialect(_dialect) {}
+	TerminationFinder(
+		Dialect const& _dialect,
+		std::map<YulString, ControlFlowSideEffects> const* _functionSideEffects = nullptr
+	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
 
 	/// @returns the index of the first statement in the provided sequence
 	/// that is an unconditional ``break``, ``continue``, ``leave`` or a
-	/// call to a terminating builtin function.
+	/// call to a terminating function.
 	/// If control flow can continue at the end of the list,
 	/// returns `FlowOut` and ``size_t(-1)``.
 	/// The function might return ``FlowOut`` even though control
@@ -233,13 +242,14 @@ public:
 	/// This function could return FlowOut even if control flow never continues.
 	ControlFlow controlFlowKind(Statement const& _statement);
 
-	/// @returns true if the expression statement is a direct
-	/// call to a builtin terminating function like
-	/// ``stop``, ``revert`` or ``return``.
-	bool isTerminatingBuiltin(ExpressionStatement const& _exprStmnt);
+	/// @returns true if the expression contains a
+	/// call to a terminating function, i.e. a function that does not have
+	/// a regular "flow out" control-flow (it might also be recursive).
+	bool containsNonContinuingFunctionCall(Expression const& _expr);
 
 private:
 	Dialect const& m_dialect;
+	std::map<YulString, ControlFlowSideEffects> const* m_functionSideEffects;
 };
 
 }
