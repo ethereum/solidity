@@ -267,17 +267,22 @@ template<
 	typename MapType,
 	typename KeyType,
 	typename ValueType = std::decay_t<decltype(std::declval<MapType>().find(std::declval<KeyType>())->second)> const&,
-	typename AllowCopyType = void*
+	typename AllowCopyType = std::conditional_t<std::is_pod_v<ValueType> || std::is_pointer_v<ValueType>, detail::allow_copy, void*>
 >
-decltype(auto) valueOrDefault(MapType&& _map, KeyType const& _key, ValueType&& _defaultValue = {}, AllowCopyType = nullptr)
+decltype(auto) valueOrDefault(
+	MapType&& _map,
+	KeyType const& _key,
+	ValueType&& _defaultValue = {},
+	AllowCopyType = {}
+)
 {
 	auto it = _map.find(_key);
 	static_assert(
 		std::is_same_v<AllowCopyType, detail::allow_copy> ||
-		std::is_reference_v<decltype((it == _map.end()) ? _defaultValue : it->second)>,
+		std::is_reference_v<decltype((it == _map.end()) ? std::forward<ValueType>(_defaultValue) : it->second)>,
 		"valueOrDefault does not allow copies by default. Pass allow_copy as additional argument, if you want to allow copies."
 	);
-	return (it == _map.end()) ? _defaultValue : it->second;
+	return (it == _map.end()) ? std::forward<ValueType>(_defaultValue) : it->second;
 }
 
 namespace detail
