@@ -1,14 +1,15 @@
 tasks:
-# Based off of https://docs.soliditylang.org/en/latest/installing-solidity.html#building-from-source
-# Note the Gitpod container image already includes:
-#   - cmake
-#   - gcc version 9.3
-#   - Ubuntu clang version 13
-#   - Installation of z3 is required as the one that ships in the container image is out of date
+  # Based off of https://docs.soliditylang.org/en/latest/installing-solidity.html#building-from-source
+  # Note the Gitpod container image already includes:
+  #   - cmake
+  #   - gcc version 9.3
+  #   - Ubuntu clang version 13
+  #   - Installation of z3 is required as the one that ships in the container image is out of date
   - name: Open contributing guide
     command: gp preview https://docs.soliditylang.org/en/latest/contributing.html
 
   - name: Install deps and build Solidity
     init: |
+      sudo add-apt-repository -y ppa:ethereum/ethereum
       sudo apt-get -y update
       sudo apt-get -y install build-essential libboost-all-dev libz3-dev
