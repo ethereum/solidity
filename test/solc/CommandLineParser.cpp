@@ -198,7 +198,9 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			true, true, true, true, true,
 			true, true, true, true, true,
 			true, true, true, true, true,
+			true,
 		};
+		expectedOptions.compiler.outputs.ewasmIR = false;
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
 			true, true, true, true, true,
@@ -301,6 +303,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--bin",
 			"--ir-optimized",
 			"--ewasm",
+			"--ewasm-ir",
 		};
 		commandLine += assemblyOptions;
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
@@ -341,6 +344,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.binary = true;
 		expectedOptions.compiler.outputs.irOptimized = true;
 		expectedOptions.compiler.outputs.ewasm = true;
+		expectedOptions.compiler.outputs.ewasmIR = true;
 		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
 		{
 			expectedOptions.optimizer.enabled = true;

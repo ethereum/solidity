@@ -1055,9 +1055,7 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 			stack.translate(yul::AssemblyStack::Language::Ewasm);
 			stack.optimize();
 
-			// TODO: This isn't ewasm but it's only present when we're doing Yul->EWASM translation.
-			// It should get its own output flag in the future.
-			if (m_options.compiler.outputs.ewasm)
+			if (m_options.compiler.outputs.ewasmIR)
 			{
 				sout() << endl << "==========================" << endl;
 				sout() << endl << "Translated source:" << endl;
