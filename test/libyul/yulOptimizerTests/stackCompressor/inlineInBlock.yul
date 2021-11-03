@@ -3,6 +3,8 @@
   let y := calldataload(calldataload(9))
   mstore(y, add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(y, 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1))
 }
+// ====
+// EVMVersion: =homestead
 // ----
 // step: stackCompressor
 //

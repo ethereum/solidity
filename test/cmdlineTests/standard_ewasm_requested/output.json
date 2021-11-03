@@ -17,7 +17,7 @@
     (local $z3 i64)
     (local $_1 i64)
     (block $label_
-        (local.set $p (call $u256_to_i32_726))
+        (local.set $p (call $u256_to_i32_716))
         (local.set $r (i32.add (local.get $p) (i32.const 64)))
         (if (i32.lt_u (local.get $r) (local.get $p)) (then
             (unreachable)))
@@ -30,14 +30,14 @@
         (call $eth.getCallValue (i32.const 0))
         (local.set $z3 (i64.load (i32.const 8)))
         (if (i32.eqz (i64.eqz (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.or (local.get $z3) (i64.load (i32.const 0)))))) (then
-            (call $eth.revert (call $to_internal_i32ptr) (call $u256_to_i32_344))))
+            (call $eth.revert (call $to_internal_i32ptr_334) (call $u256_to_i32_333))))
         (local.set $_1 (datasize \"C_3_deployed\"))
-        (call $eth.codeCopy (call $to_internal_i32ptr_348) (call $u256_to_i32 (dataoffset \"C_3_deployed\")) (call $u256_to_i32 (local.get $_1)))
-        (call $eth.finish (call $to_internal_i32ptr_348) (call $u256_to_i32 (local.get $_1)))
+        (call $eth.codeCopy (call $to_internal_i32ptr) (call $u256_to_i32 (dataoffset \"C_3_deployed\")) (call $u256_to_i32 (local.get $_1)))
+        (call $eth.finish (call $to_internal_i32ptr) (call $u256_to_i32 (local.get $_1)))
     )
 )
 
-(func $u256_to_i32_344
+(func $u256_to_i32_333
     (result i32)
     (local $v i32)
     (local $_1 i64)
@@ -68,7 +68,7 @@
     (local.get $v)
 )
 
-(func $u256_to_i32_726
+(func $u256_to_i32_716
     (result i32)
     (local $v i32)
     (block $label__3
@@ -82,12 +82,12 @@
     (local.get $v)
 )
 
-(func $to_internal_i32ptr
+(func $to_internal_i32ptr_334
     (result i32)
     (local $r i32)
     (local $p i32)
     (block $label__4
-        (local.set $p (call $u256_to_i32_344))
+        (local.set $p (call $u256_to_i32_333))
         (local.set $r (i32.add (local.get $p) (i32.const 64)))
         (if (i32.lt_u (local.get $r) (local.get $p)) (then
             (unreachable)))
@@ -96,7 +96,7 @@
     (local.get $r)
 )
 
-(func $to_internal_i32ptr_348
+(func $to_internal_i32ptr
     (result i32)
     (local $r i32)
     (local $v i32)

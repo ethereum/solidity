@@ -10,7 +10,7 @@
 object \"C_54\" {
     code {
         /// @src 0:79:435  \"contract C...\"
-        mstore(64, 160)
+        mstore(64, memoryguard(160))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         let _1 := copy_arguments_for_constructor_20_object_C_54()
@@ -161,7 +161,7 @@ object \"C_54\" {
     object \"C_54_deployed\" {
         code {
             /// @src 0:79:435  \"contract C...\"
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {
@@ -592,30 +592,31 @@ object \"C_54\" {
     code {
         {
             /// @src 0:79:435  \"contract C...\"
-            mstore(64, 160)
+            let _1 := memoryguard(0xa0)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let programSize := datasize(\"C_54\")
             let argSize := sub(codesize(), programSize)
-            let newFreePtr := add(160, and(add(argSize, 31), not(31)))
-            if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, 160))
+            let newFreePtr := add(_1, and(add(argSize, 31), not(31)))
+            if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, _1))
             {
                 mstore(/** @src -1:-1:-1 */ 0, /** @src 0:79:435  \"contract C...\" */ shl(224, 0x4e487b71))
                 mstore(4, 0x41)
                 revert(/** @src -1:-1:-1 */ 0, /** @src 0:79:435  \"contract C...\" */ 0x24)
             }
             mstore(64, newFreePtr)
-            codecopy(160, programSize, argSize)
-            if slt(argSize, 32)
+            codecopy(_1, programSize, argSize)
+            if slt(sub(add(_1, argSize), _1), 32)
             {
                 revert(/** @src -1:-1:-1 */ 0, 0)
             }
             /// @src 0:79:435  \"contract C...\"
-            constructor_C(mload(160))
-            let _1 := mload(64)
-            let _2 := datasize(\"C_54_deployed\")
-            codecopy(_1, dataoffset(\"C_54_deployed\"), _2)
-            setimmutable(_1, \"8\", mload(128))
-            return(_1, _2)
+            constructor_C(mload(_1))
+            let _2 := mload(64)
+            let _3 := datasize(\"C_54_deployed\")
+            codecopy(_2, dataoffset(\"C_54_deployed\"), _3)
+            setimmutable(_2, \"8\", mload(128))
+            return(_2, _3)
         }
         /// @ast-id 20 @src 0:182:230  \"constructor(int _init)...\"
         function constructor_C(var_init)
@@ -631,7 +632,7 @@ object \"C_54\" {
         code {
             {
                 /// @src 0:79:435  \"contract C...\"
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0
@@ -774,7 +775,7 @@ object \"C_54\" {
 object \"D_72\" {
     code {
         /// @src 1:91:166  \"contract D is C(3)...\"
-        mstore(64, 160)
+        mstore(64, memoryguard(160))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         let _1 := copy_arguments_for_constructor_71_object_D_72()
@@ -993,7 +994,7 @@ object \"D_72\" {
     object \"D_72_deployed\" {
         code {
             /// @src 1:91:166  \"contract D is C(3)...\"
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {
@@ -1424,30 +1425,31 @@ object \"D_72\" {
     code {
         {
             /// @src 1:91:166  \"contract D is C(3)...\"
-            mstore(64, 160)
+            let _1 := memoryguard(0xa0)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let programSize := datasize(\"D_72\")
             let argSize := sub(codesize(), programSize)
-            let newFreePtr := add(160, and(add(argSize, 31), not(31)))
-            if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, 160))
+            let newFreePtr := add(_1, and(add(argSize, 31), not(31)))
+            if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, _1))
             {
                 mstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
                 mstore(4, 0x41)
                 revert(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
             }
             mstore(64, newFreePtr)
-            codecopy(160, programSize, argSize)
-            if slt(argSize, 32)
+            codecopy(_1, programSize, argSize)
+            if slt(sub(add(_1, argSize), _1), 32)
             {
                 revert(/** @src -1:-1:-1 */ 0, 0)
             }
             /// @src 1:91:166  \"contract D is C(3)...\"
-            constructor_D(mload(160))
-            let _1 := mload(64)
-            let _2 := datasize(\"D_72_deployed\")
-            codecopy(_1, dataoffset(\"D_72_deployed\"), _2)
-            setimmutable(_1, \"8\", mload(128))
-            return(_1, _2)
+            constructor_D(mload(_1))
+            let _2 := mload(64)
+            let _3 := datasize(\"D_72_deployed\")
+            codecopy(_2, dataoffset(\"D_72_deployed\"), _3)
+            setimmutable(_2, \"8\", mload(128))
+            return(_2, _3)
         }
         /// @ast-id 71 @src 1:113:164  \"constructor(int _init2)...\"
         function constructor_D(var_init2)
@@ -1471,7 +1473,7 @@ object \"D_72\" {
         code {
             {
                 /// @src 1:91:166  \"contract D is C(3)...\"
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0

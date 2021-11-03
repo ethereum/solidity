@@ -44,7 +44,7 @@ vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 	Block const& _block,
 	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
-	bool _useNamedLabelsForFunctions
+	UseNamedLabels _useNamedLabelsForFunctions
 )
 {
 	std::unique_ptr<CFG> dfg = ControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
@@ -170,15 +170,35 @@ void OptimizedEVMCodeTransform::operator()(CFG::Assignment const& _assignment)
 OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 	AbstractAssembly& _assembly,
 	BuiltinContext& _builtinContext,
-	bool _useNamedLabelsForFunctions,
+	UseNamedLabels _useNamedLabelsForFunctions,
 	CFG const& _dfg,
 	StackLayout const& _stackLayout
 ):
 	m_assembly(_assembly),
 	m_builtinContext(_builtinContext),
-	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
 	m_dfg(_dfg),
-	m_stackLayout(_stackLayout)
+	m_stackLayout(_stackLayout),
+	m_functionLabels([&](){
+		map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> functionLabels;
+		set<YulString> assignedFunctionNames;
+		for (Scope::Function const* function: m_dfg.functions)
+		{
+			CFG::FunctionInfo const& functionInfo = m_dfg.functionInfo.at(function);
+			bool nameAlreadySeen = !assignedFunctionNames.insert(function->name).second;
+			if (_useNamedLabelsForFunctions == UseNamedLabels::YesAndForceUnique)
+				yulAssert(!nameAlreadySeen);
+			bool useNamedLabel = _useNamedLabelsForFunctions != UseNamedLabels::Never && !nameAlreadySeen;
+			functionLabels[&functionInfo] = useNamedLabel ?
+				m_assembly.namedLabel(
+					function->name.str(),
+					function->arguments.size(),
+					function->returns.size(),
+					functionInfo.debugData ? functionInfo.debugData->astID : nullopt
+				) :
+				m_assembly.newLabelId();
+		}
+		return functionLabels;
+	}())
 {
 }
 
@@ -191,15 +211,7 @@ void OptimizedEVMCodeTransform::assertLayoutCompatibility(Stack const& _currentS
 
 AbstractAssembly::LabelID OptimizedEVMCodeTransform::getFunctionLabel(Scope::Function const& _function)
 {
-	CFG::FunctionInfo const& functionInfo = m_dfg.functionInfo.at(&_function);
-	if (!m_functionLabels.count(&functionInfo))
-		m_functionLabels[&functionInfo] = m_useNamedLabelsForFunctions ? m_assembly.namedLabel(
-			functionInfo.function.name.str(),
-			functionInfo.function.arguments.size(),
-			functionInfo.function.returns.size(),
-			{}
-		) : m_assembly.newLabelId();
-	return m_functionLabels[&functionInfo];
+	return m_functionLabels.at(&m_dfg.functionInfo.at(&_function));
 }
 
 void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression const& _expression)
