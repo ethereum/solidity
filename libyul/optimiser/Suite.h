@@ -59,6 +59,8 @@ public:
 		PrintStep,
 		PrintChanges
 	};
+	OptimiserSuite(OptimiserStepContext& _context, Debug _debug = Debug::None): m_context(_context), m_debug(_debug) {}
+
 	/// The value nullopt for `_expectedExecutionsPerDeployment` represents creation code.
 	static void run(
 		Dialect const& _dialect,
@@ -82,20 +84,7 @@ public:
 	static std::map<char, std::string> const& stepAbbreviationToNameMap();
 
 private:
-	OptimiserSuite(
-		Dialect const& _dialect,
-		std::set<YulString> const& _externallyUsedIdentifiers,
-		Debug _debug,
-		Block& _ast,
-		std::optional<size_t> expectedExecutionsPerDeployment
-	):
-		m_dispenser{_dialect, _ast, _externallyUsedIdentifiers},
-		m_context{_dialect, m_dispenser, _externallyUsedIdentifiers, expectedExecutionsPerDeployment},
-		m_debug(_debug)
-	{}
-
-	NameDispenser m_dispenser;
-	OptimiserStepContext m_context;
+	OptimiserStepContext& m_context;
 	Debug m_debug;
 };
 
