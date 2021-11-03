@@ -111,7 +111,10 @@ void OptimiserSuite::run(
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast, _expectedExecutionsPerDeployment);
+	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
+	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
+
+	OptimiserSuite suite(context, Debug::None);
 
 	// Some steps depend on properties ensured by FunctionHoister, BlockFlattener, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
@@ -162,7 +165,7 @@ void OptimiserSuite::run(
 			ast.statements.erase(ast.statements.begin());
 	}
 
-	suite.m_dispenser.reset(ast);
+	dispenser.reset(ast);
 	NameSimplifier::run(suite.m_context, ast);
 	VarNameCleaner::run(suite.m_context, ast);
 
