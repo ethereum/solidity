@@ -34,8 +34,8 @@ struct Dialect;
 struct ControlFlowNode
 {
 	std::vector<ControlFlowNode const*> successors;
-	/// Name of the called function if the node calls a function.
-	std::optional<YulString> functionCall;
+	/// Function call AST node, if present.
+	FunctionCall const* functionCall = nullptr;
 };
 
 /**
@@ -56,7 +56,7 @@ public:
 	/// Computes the control-flows of all function defined in the block.
 	/// Assumes the functions are hoisted to the topmost block.
 	explicit ControlFlowBuilder(Block const& _ast);
-	std::map<YulString, FunctionFlow> const& functionFlows() const { return m_functionFlows; }
+	std::map<FunctionDefinition const*, FunctionFlow> const& functionFlows() const { return m_functionFlows; }
 
 private:
 	using ASTWalker::operator();
@@ -79,12 +79,14 @@ private:
 	ControlFlowNode const* m_break = nullptr;
 	ControlFlowNode const* m_continue = nullptr;
 
-	std::map<YulString, FunctionFlow> m_functionFlows;
+	std::map<FunctionDefinition const*, FunctionFlow> m_functionFlows;
 };
 
 
 /**
- * Requires: Disambiguator, Function Hoister.
+ * Computes control-flow side-effects for user-defined functions.
+ * Source does not have to be disambiguated, unless you want the side-effects
+ * based on function names.
  */
 class ControlFlowSideEffectsCollector
 {
@@ -94,36 +96,43 @@ public:
 		Block const& _ast
 	);
 
-	std::map<YulString, ControlFlowSideEffects> const& functionSideEffects() const
+	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& functionSideEffects() const
 	{
 		return m_functionSideEffects;
 	}
+	/// Returns the side effects by function name, requires unique function names.
+	std::map<YulString, ControlFlowSideEffects> functionSideEffectsNamed() const;
 private:
 
 	/// @returns false if nothing could be processed.
-	bool processFunction(YulString _name);
+	bool processFunction(FunctionDefinition const& _function);
 
 	/// @returns the next pending node of the function that is not
 	/// a function call to a function that might not continue.
 	/// De-queues the node or returns nullptr if no such node is found.
-	ControlFlowNode const* nextProcessableNode(YulString _functionName);
+	ControlFlowNode const* nextProcessableNode(FunctionDefinition const& _function);
 
 	/// @returns the side-effects of either a builtin call or a user defined function
 	/// call (as far as already computed).
-	ControlFlowSideEffects const& sideEffects(YulString _functionName) const;
+	ControlFlowSideEffects const& sideEffects(FunctionCall const& _call) const;
 
 	/// Queues the given node to be processed (if not already visited)
 	/// and if it is a function call, records that `_functionName` calls
 	/// `*_node->functionCall`.
-	void recordReachabilityAndQueue(YulString _functionName, ControlFlowNode const* _node);
+	void recordReachabilityAndQueue(FunctionDefinition const& _function, ControlFlowNode const* _node);
 
 	Dialect const& m_dialect;
 	ControlFlowBuilder m_cfgBuilder;
-	std::map<YulString, ControlFlowSideEffects> m_functionSideEffects;
-	std::map<YulString, std::list<ControlFlowNode const*>> m_pendingNodes;
-	std::map<YulString, std::set<ControlFlowNode const*>> m_processedNodes;
-	/// `x` is in `m_functionCalls[y]` if a direct call to `x` is reachable inside `y`
-	std::map<YulString, std::set<YulString>> m_functionCalls;
+	/// Function references, but only for calls to user-defined functions.
+	std::map<FunctionCall const*, FunctionDefinition const*> m_functionReferences;
+	/// Side effects of user-defined functions, is being constructod.
+	std::map<FunctionDefinition const*, ControlFlowSideEffects> m_functionSideEffects;
+	/// Control flow nodes still to process, per function.
+	std::map<FunctionDefinition const*, std::list<ControlFlowNode const*>> m_pendingNodes;
+	/// Control flow nodes already processed, per function.
+	std::map<FunctionDefinition const*, std::set<ControlFlowNode const*>> m_processedNodes;
+	/// Set of reachable function calls nodes in each function (including calls to builtins).
+	std::map<FunctionDefinition const*, std::set<FunctionCall const*>> m_functionCalls;
 };
 
 

@@ -29,8 +29,10 @@ using namespace solidity::util;
 
 void ConditionalSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ControlFlowSideEffectsCollector sideEffects(_context.dialect, _ast);
-	ConditionalSimplifier{_context.dialect, sideEffects.functionSideEffects()}(_ast);
+	ConditionalSimplifier{
+		_context.dialect,
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+	}(_ast);
 }
 
 void ConditionalSimplifier::operator()(Switch& _switch)

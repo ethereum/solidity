@@ -40,7 +40,7 @@ void DeadCodeEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	ControlFlowSideEffectsCollector sideEffects(_context.dialect, _ast);
 	DeadCodeEliminator{
 		_context.dialect,
-		sideEffects.functionSideEffects()
+		sideEffects.functionSideEffectsNamed()
 	}(_ast);
 }
 
