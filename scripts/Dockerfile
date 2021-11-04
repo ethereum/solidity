@@ -6,8 +6,7 @@ MAINTAINER chriseth <chris@ethereum.org>
 WORKDIR /solidity
 
 # Build dependencies
-ADD /scripts/install_deps.sh /solidity/scripts/install_deps.sh
-RUN ./scripts/install_deps.sh
+RUN apk update && apk add boost-dev boost-static build-base cmake git
 
 #Copy working directory on travis to the image
 COPY / $WORKDIR

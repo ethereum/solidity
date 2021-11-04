@@ -411,24 +411,13 @@ in Visual Studio 2019 Build Tools or Visual Studio 2019:
 .. _Visual Studio 2019: https://www.visualstudio.com/vs/
 .. _Visual Studio 2019 Build Tools: https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2019
 
-Dependencies Helper Script
---------------------------
-
-We have a helper script which you can use to install all required external dependencies
-on macOS, Windows and on numerous Linux distros.
-
-.. code-block:: bash
-
-    ./scripts/install_deps.sh
-
-Or, on Windows:
+We have a helper script which you can use to install all required external dependencies:
 
 .. code-block:: bat
 
     scripts\install_deps.ps1
 
-Note that the latter command will install ``boost`` and ``cmake`` to the ``deps`` subdirectory, while the former command
-will attempt to install the dependencies globally.
+This will install ``boost`` and ``cmake`` to the ``deps`` subdirectory.
 
 Clone the Repository
 --------------------
