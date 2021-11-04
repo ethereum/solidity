@@ -32,6 +32,7 @@ Bugfixes:
 
 
 Build System:
+ * Pass linker-only emscripten options only when linking.
  * Remove obsolete compatibility workaround for emscripten builds.
 
 
