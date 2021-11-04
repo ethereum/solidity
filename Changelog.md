@@ -34,6 +34,7 @@ Bugfixes:
 Build System:
  * Pass linker-only emscripten options only when linking.
  * Remove obsolete compatibility workaround for emscripten builds.
+ * Update emscripten to version 2.0.33.
 
 
 Important Bugfixes in Experimental Features:
