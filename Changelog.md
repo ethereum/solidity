@@ -31,6 +31,10 @@ Bugfixes:
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
 
 
+Build System:
+ * Remove obsolete compatibility workaround for emscripten builds.
+
+
 Important Bugfixes in Experimental Features:
  * Yul IR Generator: Changes to function return variables referenced in modifier invocation arguments were not properly forwarded if there was more than one return variable.
 
