@@ -241,7 +241,7 @@ and to send Ether (in units of wei) to a payable address using the ``transfer`` 
 .. code-block:: solidity
     :force:
 
-    address payable x = address(0x123);
+    address payable x = payable(0x123);
     address myAddress = address(this);
     if (x.balance < 10 && myAddress.balance >= 10) x.transfer(10);
 
