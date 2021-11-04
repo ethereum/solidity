@@ -1,5 +1,3 @@
-pragma solidity >= 0.6.0;
-
 // This tests skipping the extcodesize check.
 
 interface I {

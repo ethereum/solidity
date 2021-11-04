@@ -26,9 +26,9 @@ contract C {
 
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=constantinople
+// compileViaYul: also
 // ----
-// testHighLevel() -> FAILURE
+// testHighLevel() -> true
 // testLowLevel() -> 0xc76596d400000000000000000000000000000000000000000000000000000000
 // testHighLevel2() -> FAILURE
