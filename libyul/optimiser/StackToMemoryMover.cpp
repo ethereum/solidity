@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <libyul/optimiser/StackToMemoryMover.h>
-#include <libyul/optimiser/FunctionDefinitionCollector.h>
+#include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -87,7 +87,7 @@ void StackToMemoryMover::run(
 		_context,
 		memoryOffsetTracker,
 		util::applyMap(
-			FunctionDefinitionCollector::run(_block),
+			allFunctionDefinitions(_block),
 			util::mapTuple([](YulString _name, FunctionDefinition const* _funDef) {
 				return make_pair(_name, _funDef->returnVariables);
 			}),

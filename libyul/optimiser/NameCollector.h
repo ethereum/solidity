@@ -92,20 +92,6 @@ private:
 };
 
 /**
- * Specific AST walker that finds all variables that are assigned to.
- */
-class Assignments: public ASTWalker
-{
-public:
-	using ASTWalker::operator ();
-	void operator()(Assignment const& _assignment) override;
-
-	std::set<YulString> const& names() const { return m_names; }
-private:
-	std::set<YulString> m_names;
-};
-
-/**
  * Collects all names from a given continue statement on onwards.
  *
  * It makes only sense to be invoked from within a body of an outer for loop, that is,
@@ -129,5 +115,13 @@ private:
 	bool m_continueFound = false;
 	std::set<YulString> m_names;
 };
+
+/// @returns the names of all variables that are assigned to inside @a _code.
+/// (ignores variable declarations)
+std::set<YulString> assignedVariableNames(Block const& _code);
+
+/// @returns all function definitions anywhere in the AST.
+/// Requires disambiguated source.
+std::map<YulString, FunctionDefinition const*> allFunctionDefinitions(Block const& _block);
 
 }

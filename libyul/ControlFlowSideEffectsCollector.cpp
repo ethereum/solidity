@@ -18,8 +18,6 @@
 
 #include <libyul/ControlFlowSideEffectsCollector.h>
 
-#include <libyul/optimiser/FunctionDefinitionCollector.h>
-
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 

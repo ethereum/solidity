@@ -18,8 +18,8 @@
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
-#include <libyul/optimiser/FunctionDefinitionCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
+#include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -193,7 +193,7 @@ void StackLimitEvader::run(
 		if (_unreachableVariables.count(function))
 			return;
 
-	map<YulString, FunctionDefinition const*> functionDefinitions = FunctionDefinitionCollector::run(*_object.code);
+	map<YulString, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(*_object.code);
 
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
