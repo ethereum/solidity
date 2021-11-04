@@ -45,9 +45,9 @@ DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
 	map<YulString, SideEffects> _functionSideEffects
 ):
-m_dialect(_dialect),
-m_functionSideEffects(std::move(_functionSideEffects)),
-m_knowledgeBase(_dialect, m_value)
+	m_dialect(_dialect),
+	m_functionSideEffects(std::move(_functionSideEffects)),
+	m_knowledgeBase(_dialect, m_value)
 {
 	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
 		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
@@ -123,9 +123,7 @@ void DataFlowAnalyzer::operator()(If& _if)
 
 	joinKnowledge(storage, memory);
 
-	Assignments assignments;
-	assignments(_if.body);
-	clearValues(assignments.names());
+	clearValues(assignedVariableNames(_if.body));
 }
 
 void DataFlowAnalyzer::operator()(Switch& _switch)
@@ -140,11 +138,10 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 		(*this)(_case.body);
 		joinKnowledge(storage, memory);
 
-		Assignments assignments;
-		assignments(_case.body);
-		assignedVariables += assignments.names();
+		set<YulString> variables = assignedVariableNames(_case.body);
+		assignedVariables += variables;
 		// This is a little too destructive, we could retain the old values.
-		clearValues(assignments.names());
+		clearValues(variables);
 		clearKnowledgeIfInvalidated(_case.body);
 	}
 	for (auto& _case: _switch.cases)
@@ -190,10 +187,9 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	AssignmentsSinceContinue assignmentsSinceCont;
 	assignmentsSinceCont(_for.body);
 
-	Assignments assignments;
-	assignments(_for.body);
-	assignments(_for.post);
-	clearValues(assignments.names());
+	set<YulString> assignedVariables =
+		assignedVariableNames(_for.body) + assignedVariableNames(_for.post);
+	clearValues(assignedVariables);
 
 	// break/continue are tricky for storage and thus we almost always clear here.
 	clearKnowledgeIfInvalidated(*_for.condition);
@@ -205,7 +201,7 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	clearValues(assignmentsSinceCont.names());
 	clearKnowledgeIfInvalidated(_for.body);
 	(*this)(_for.post);
-	clearValues(assignments.names());
+	clearValues(assignedVariables);
 	clearKnowledgeIfInvalidated(*_for.condition);
 	clearKnowledgeIfInvalidated(_for.post);
 	clearKnowledgeIfInvalidated(_for.body);

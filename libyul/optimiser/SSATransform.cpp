@@ -196,12 +196,7 @@ void IntroduceControlFlowSSA::operator()(ForLoop& _for)
 {
 	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
-	Assignments assignments;
-	assignments(_for.body);
-	assignments(_for.post);
-
-
-	for (auto const& var: assignments.names())
+	for (auto const& var: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
 		if (m_variablesInScope.count(var))
 			m_variablesToReassign.insert(var);
 
@@ -359,11 +354,7 @@ void PropagateValues::operator()(ForLoop& _for)
 {
 	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
-	Assignments assignments;
-	assignments(_for.body);
-	assignments(_for.post);
-
-	for (auto const& var: assignments.names())
+	for (auto const& var: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
 		m_currentVariableValues.erase(var);
 
 	visit(*_for.condition);
@@ -389,11 +380,10 @@ void PropagateValues::operator()(Block& _block)
 void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
 	TypeInfo typeInfo(_context.dialect, _ast);
-	Assignments assignments;
-	assignments(_ast);
-	IntroduceSSA{_context.dispenser, assignments.names(), typeInfo}(_ast);
-	IntroduceControlFlowSSA{_context.dispenser, assignments.names(), typeInfo}(_ast);
-	PropagateValues{assignments.names()}(_ast);
+	set<YulString> assignedVariables = assignedVariableNames(_ast);
+	IntroduceSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
+	IntroduceControlFlowSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
+	PropagateValues{assignedVariables}(_ast);
 }
 
 
