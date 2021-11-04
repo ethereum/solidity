@@ -20,6 +20,7 @@
 
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/FunctionReferenceResolver.h>
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
@@ -35,16 +36,15 @@ using namespace solidity::yul;
 
 ControlFlowBuilder::ControlFlowBuilder(Block const& _ast)
 {
-	for (auto const& statement: _ast.statements)
-		if (auto const* function = get_if<FunctionDefinition>(&statement))
-			(*this)(*function);
+	m_currentNode = newNode();
+	(*this)(_ast);
 }
 
 void ControlFlowBuilder::operator()(FunctionCall const& _functionCall)
 {
 	walkVector(_functionCall.arguments | ranges::views::reverse);
 	newConnectedNode();
-	m_currentNode->functionCall = _functionCall.functionName.name;
+	m_currentNode->functionCall = &_functionCall;
 }
 
 void ControlFlowBuilder::operator()(If const& _if)
@@ -78,7 +78,9 @@ void ControlFlowBuilder::operator()(Switch const& _switch)
 void ControlFlowBuilder::operator()(FunctionDefinition const& _function)
 {
 	ScopedSaveAndRestore currentNode(m_currentNode, nullptr);
-	yulAssert(!m_leave && !m_break && !m_continue, "Function hoister has not been used.");
+	ScopedSaveAndRestore leave(m_leave, nullptr);
+	ScopedSaveAndRestore _break(m_break, nullptr);
+	ScopedSaveAndRestore _continue(m_continue, nullptr);
 
 	FunctionFlow flow;
 	flow.exit = newNode();
@@ -90,7 +92,7 @@ void ControlFlowBuilder::operator()(FunctionDefinition const& _function)
 
 	m_currentNode->successors.emplace_back(flow.exit);
 
-	m_functionFlows[_function.name] = move(flow);
+	m_functionFlows[&_function] = move(flow);
 
 	m_leave = nullptr;
 }
@@ -164,14 +166,17 @@ ControlFlowSideEffectsCollector::ControlFlowSideEffectsCollector(
 	Block const& _ast
 ):
 	m_dialect(_dialect),
-	m_cfgBuilder(_ast)
+	m_cfgBuilder(_ast),
+	m_functionReferences(FunctionReferenceResolver{_ast}.references())
 {
-	for (auto&& [name, flow]: m_cfgBuilder.functionFlows())
+	for (auto&& [function, flow]: m_cfgBuilder.functionFlows())
 	{
 		yulAssert(!flow.entry->functionCall);
-		m_processedNodes[name] = {};
-		m_pendingNodes[name].push_front(flow.entry);
-		m_functionSideEffects[name] = {false, false, false};
+		yulAssert(function);
+		m_processedNodes[function] = {};
+		m_pendingNodes[function].push_front(flow.entry);
+		m_functionSideEffects[function] = {false, false, false};
+		m_functionCalls[function] = {};
 	}
 
 	// Process functions while we have progress. For now, we are only interested
@@ -180,8 +185,8 @@ ControlFlowSideEffectsCollector::ControlFlowSideEffectsCollector(
 	while (progress)
 	{
 		progress = false;
-		for (auto const& functionName: m_pendingNodes | ranges::views::keys)
-			if (processFunction(functionName))
+		for (FunctionDefinition const* function: m_pendingNodes | ranges::views::keys)
+			if (processFunction(*function))
 				progress = true;
 	}
 
@@ -190,57 +195,64 @@ ControlFlowSideEffectsCollector::ControlFlowSideEffectsCollector(
 	// If we have not set `canContinue` by now, the function's exit
 	// is not reachable.
 
-	for (auto&& [functionName, calls]: m_functionCalls)
+	// Now it is sufficient to handle the reachable function calls (`m_functionCalls`),
+	// we do not have to consider the control-flow graph anymore.
+	for (auto&& [function, calls]: m_functionCalls)
 	{
-		ControlFlowSideEffects& sideEffects = m_functionSideEffects[functionName];
-		auto _visit = [&, visited = std::set<YulString>{}](YulString _function, auto&& _recurse) mutable {
-			if (sideEffects.canTerminate && sideEffects.canRevert)
+		yulAssert(function);
+		ControlFlowSideEffects& functionSideEffects = m_functionSideEffects[function];
+		auto _visit = [&, visited = std::set<FunctionDefinition const*>{}](FunctionDefinition const& _function, auto&& _recurse) mutable {
+			// Worst side-effects already, stop searching.
+			if (functionSideEffects.canTerminate && functionSideEffects.canRevert)
 				return;
-			if (!visited.insert(_function).second)
+			if (!visited.insert(&_function).second)
 				return;
 
-			ControlFlowSideEffects const* calledSideEffects = nullptr;
-			if (BuiltinFunction const* f = _dialect.builtin(_function))
-				calledSideEffects = &f->controlFlowSideEffects;
-			else
-				calledSideEffects = &m_functionSideEffects.at(_function);
+			for (FunctionCall const* call: m_functionCalls.at(&_function))
+			{
+				ControlFlowSideEffects const& calledSideEffects = sideEffects(*call);
+				if (calledSideEffects.canTerminate)
+					functionSideEffects.canTerminate = true;
+				if (calledSideEffects.canRevert)
+					functionSideEffects.canRevert = true;
 
-			if (calledSideEffects->canTerminate)
-				sideEffects.canTerminate = true;
-			if (calledSideEffects->canRevert)
-				sideEffects.canRevert = true;
-
-			set<YulString> emptySet;
-			for (YulString callee: util::valueOrDefault(m_functionCalls, _function, emptySet))
-				_recurse(callee, _recurse);
+				if (m_functionReferences.count(call))
+					_recurse(*m_functionReferences.at(call), _recurse);
+			}
 		};
-		for (auto const& call: calls)
-			_visit(call, _visit);
+		_visit(*function, _visit);
 	}
-
 }
 
-bool ControlFlowSideEffectsCollector::processFunction(YulString _name)
+map<YulString, ControlFlowSideEffects> ControlFlowSideEffectsCollector::functionSideEffectsNamed() const
+{
+	map<YulString, ControlFlowSideEffects> result;
+	for (auto&& [function, sideEffects]: m_functionSideEffects)
+		yulAssert(result.insert({function->name, sideEffects}).second);
+	return result;
+}
+
+bool ControlFlowSideEffectsCollector::processFunction(FunctionDefinition const& _function)
 {
 	bool progress = false;
-	while (ControlFlowNode const* node = nextProcessableNode(_name))
+	while (ControlFlowNode const* node = nextProcessableNode(_function))
 	{
-		if (node == m_cfgBuilder.functionFlows().at(_name).exit)
+		if (node == m_cfgBuilder.functionFlows().at(&_function).exit)
 		{
-			m_functionSideEffects[_name].canContinue = true;
+			m_functionSideEffects[&_function].canContinue = true;
 			return true;
 		}
 		for (ControlFlowNode const* s: node->successors)
-			recordReachabilityAndQueue(_name, s);
+			recordReachabilityAndQueue(_function, s);
 
 		progress = true;
 	}
 	return progress;
 }
 
-ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(YulString _functionName)
+ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(FunctionDefinition const& _function)
 {
-	std::list<ControlFlowNode const*>& nodes = m_pendingNodes[_functionName];
+	std::list<ControlFlowNode const*>& nodes = m_pendingNodes[&_function];
 	auto it = ranges::find_if(nodes, [this](ControlFlowNode const* _node) {
 		return !_node->functionCall || sideEffects(*_node->functionCall).canContinue;
 	});
@@ -252,22 +264,22 @@ ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(YulS
 	return node;
 }
 
-ControlFlowSideEffects const& ControlFlowSideEffectsCollector::sideEffects(YulString _functionName) const
+ControlFlowSideEffects const& ControlFlowSideEffectsCollector::sideEffects(FunctionCall const& _call) const
 {
-	if (auto const* builtin = m_dialect.builtin(_functionName))
+	if (auto const* builtin = m_dialect.builtin(_call.functionName.name))
 		return builtin->controlFlowSideEffects;
 	else
-		return m_functionSideEffects.at(_functionName);
+		return m_functionSideEffects.at(m_functionReferences.at(&_call));
 }
 
 void ControlFlowSideEffectsCollector::recordReachabilityAndQueue(
-	YulString _functionName,
+	FunctionDefinition const& _function,
 	ControlFlowNode const* _node
 )
 {
 	if (_node->functionCall)
-		m_functionCalls[_functionName].insert(*_node->functionCall);
-	if (m_processedNodes[_functionName].insert(_node).second)
-		m_pendingNodes.at(_functionName).push_front(_node);
+		m_functionCalls[&_function].insert(_node->functionCall);
+	if (m_processedNodes[&_function].insert(_node).second)
+		m_pendingNodes.at(&_function).push_front(_node);
 }
 

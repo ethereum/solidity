@@ -40,6 +40,8 @@ add_library(yul
 	Dialect.cpp
 	Dialect.h
 	Exceptions.h
+	FunctionReferenceResolver.cpp
+	FunctionReferenceResolver.h
 	Object.cpp
 	Object.h
 	ObjectParser.cpp
