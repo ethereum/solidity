@@ -634,6 +634,7 @@ bool CommandLineInterface::processInput()
 		break;
 	case InputMode::Compiler:
 	case InputMode::CompilerWithASTImport:
+	case InputMode::CompilerWithEvmAssemblyJsonImport:
 		if (!compile())
 			return false;
 		outputCompilationResults();
@@ -657,105 +658,112 @@ void CommandLineInterface::printLicense()
 
 bool CommandLineInterface::compile()
 {
-	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
+	solAssert(
+		m_options.input.mode == InputMode::Compiler ||
+		m_options.input.mode == InputMode::CompilerWithASTImport ||
+		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport, ""
+	);
 
 	m_compiler = make_unique<CompilerStack>(m_fileReader.reader());
 
-	SourceReferenceFormatter formatter(serr(false), *m_compiler, coloredOutput(m_options), m_options.formatting.withErrorIds);
-
-	try
+	if (m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport)
 	{
-		if (m_options.metadata.literalSources)
-			m_compiler->useMetadataLiteralSources(true);
-		m_compiler->setMetadataHash(m_options.metadata.hash);
-		if (m_options.modelChecker.initialize)
-			m_compiler->setModelCheckerSettings(m_options.modelChecker.settings);
-		m_compiler->setRemappings(m_options.input.remappings);
-		m_compiler->setLibraries(m_options.linker.libraries);
-		m_compiler->setViaIR(m_options.output.experimentalViaIR);
-		m_compiler->setEVMVersion(m_options.output.evmVersion);
-		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
-		if (m_options.output.debugInfoSelection.has_value())
-			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
-		// TODO: Perhaps we should not compile unless requested
 
-		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
-		m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm);
-		m_compiler->enableEvmBytecodeGeneration(
-			m_options.compiler.estimateGas ||
-			m_options.compiler.outputs.asm_ ||
-			m_options.compiler.outputs.asmJson ||
-			m_options.compiler.outputs.opcodes ||
-			m_options.compiler.outputs.binary ||
-			m_options.compiler.outputs.binaryRuntime ||
-			(m_options.compiler.combinedJsonRequests && (
-				m_options.compiler.combinedJsonRequests->binary ||
-				m_options.compiler.combinedJsonRequests->binaryRuntime ||
-				m_options.compiler.combinedJsonRequests->opcodes ||
-				m_options.compiler.combinedJsonRequests->asm_ ||
-				m_options.compiler.combinedJsonRequests->generatedSources ||
-				m_options.compiler.combinedJsonRequests->generatedSourcesRuntime ||
-				m_options.compiler.combinedJsonRequests->srcMap ||
-				m_options.compiler.combinedJsonRequests->srcMapRuntime ||
-				m_options.compiler.combinedJsonRequests->funDebug ||
-				m_options.compiler.combinedJsonRequests->funDebugRuntime
-			))
-		);
+	}
+	else
+	{
+		SourceReferenceFormatter
+			formatter(serr(false), *m_compiler, coloredOutput(m_options), m_options.formatting.withErrorIds);
 
-		m_compiler->setOptimiserSettings(m_options.optimiserSettings());
-
-		if (m_options.input.mode == InputMode::CompilerWithASTImport)
+		try
 		{
-			try
-			{
-				m_compiler->importASTs(parseAstFromInput());
+			if (m_options.metadata.literalSources)
+				m_compiler->useMetadataLiteralSources(true);
+			m_compiler->setMetadataHash(m_options.metadata.hash);
+			if (m_options.modelChecker.initialize)
+				m_compiler->setModelCheckerSettings(m_options.modelChecker.settings);
+			m_compiler->setRemappings(m_options.input.remappings);
+			m_compiler->setLibraries(m_options.linker.libraries);
+			m_compiler->setViaIR(m_options.output.experimentalViaIR);
+			m_compiler->setEVMVersion(m_options.output.evmVersion);
+			m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
+			if (m_options.output.debugInfoSelection.has_value())
+				m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
+			// TODO: Perhaps we should not compile unless requested
 
-				if (!m_compiler->analyze())
+			m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
+			m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm);
+			m_compiler->enableEvmBytecodeGeneration(
+				m_options.compiler.estimateGas || m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson
+				|| m_options.compiler.outputs.opcodes || m_options.compiler.outputs.binary
+				|| m_options.compiler.outputs.binaryRuntime
+				|| (m_options.compiler.combinedJsonRequests
+					&& (m_options.compiler.combinedJsonRequests->binary
+						|| m_options.compiler.combinedJsonRequests->binaryRuntime
+						|| m_options.compiler.combinedJsonRequests->opcodes
+						|| m_options.compiler.combinedJsonRequests->asm_
+						|| m_options.compiler.combinedJsonRequests->generatedSources
+						|| m_options.compiler.combinedJsonRequests->generatedSourcesRuntime
+						|| m_options.compiler.combinedJsonRequests->srcMap
+						|| m_options.compiler.combinedJsonRequests->srcMapRuntime
+						|| m_options.compiler.combinedJsonRequests->funDebug
+						|| m_options.compiler.combinedJsonRequests->funDebugRuntime)));
+
+			m_compiler->setOptimiserSettings(m_options.optimiserSettings());
+
+			if (m_options.input.mode == InputMode::CompilerWithASTImport)
+			{
+				try
 				{
-					formatter.printErrorInformation(m_compiler->errors());
-					astAssert(false, "Analysis of the AST failed");
+					m_compiler->importASTs(parseAstFromInput());
+
+					if (!m_compiler->analyze())
+					{
+						formatter.printErrorInformation(m_compiler->errors());
+						astAssert(false, "Analysis of the AST failed");
+					}
+				}
+				catch (Exception const& _exc)
+				{
+					serr() << string("Failed to import AST: ") << _exc.what() << endl;
+					return false;
 				}
 			}
-			catch (Exception const& _exc)
+			else
 			{
-				serr() << string("Failed to import AST: ") << _exc.what() << endl;
-				return false;
+				m_compiler->setSources(m_fileReader.sourceCodes());
+				m_compiler->setParserErrorRecovery(m_options.input.errorRecovery);
 			}
-		}
-		else
-		{
-			m_compiler->setSources(m_fileReader.sourceCodes());
-			m_compiler->setParserErrorRecovery(m_options.input.errorRecovery);
-		}
 
-		bool successful = m_compiler->compile(m_options.output.stopAfter);
+			bool successful = m_compiler->compile(m_options.output.stopAfter);
 
-		for (auto const& error: m_compiler->errors())
-		{
-			m_hasOutput = true;
-			formatter.printErrorInformation(*error);
+			for (auto const& error: m_compiler->errors())
+			{
+				m_hasOutput = true;
+				formatter.printErrorInformation(*error);
+			}
+
+			if (!successful)
+				return m_options.input.errorRecovery;
 		}
-
-		if (!successful)
-			return m_options.input.errorRecovery;
-	}
-	catch (CompilerError const& _exception)
-	{
-		m_hasOutput = true;
-		formatter.printExceptionInformation(_exception, "Compiler error");
-		return false;
-	}
-	catch (Error const& _error)
-	{
-		if (_error.type() == Error::Type::DocstringParsingError)
-			serr() << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
-		else
+		catch (CompilerError const& _exception)
 		{
 			m_hasOutput = true;
-			formatter.printExceptionInformation(_error, _error.typeName());
+			formatter.printExceptionInformation(_exception, "Compiler error");
+			return false;
 		}
+		catch (Error const& _error)
+		{
+			if (_error.type() == Error::Type::DocstringParsingError)
+				serr() << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
+			else
+			{
+				m_hasOutput = true;
+				formatter.printExceptionInformation(_error, _error.typeName());
+			}
 
-		return false;
+			return false;
+		}
 	}
 
 	return true;
@@ -763,7 +771,11 @@ bool CommandLineInterface::compile()
 
 void CommandLineInterface::handleCombinedJSON()
 {
-	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
+	solAssert(
+		m_options.input.mode == InputMode::Compiler ||
+		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport ||
+		m_options.input.mode == InputMode::CompilerWithASTImport, ""
+	);
 
 	if (!m_options.compiler.combinedJsonRequests.has_value())
 		return;
@@ -1095,68 +1107,77 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 void CommandLineInterface::outputCompilationResults()
 {
-	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
+	solAssert(
+		m_options.input.mode == InputMode::Compiler ||
+		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport ||
+		m_options.input.mode == InputMode::CompilerWithASTImport, ""
+	);
 
 	handleCombinedJSON();
 
-	// do we need AST output?
-	handleAst();
-
-	if (
-		!m_compiler->compilationSuccessful() &&
-		m_options.output.stopAfter == CompilerStack::State::CompilationSuccessful
-	)
+	if (m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport)
 	{
-		serr() << endl << "Compilation halted after AST generation due to errors." << endl;
-		return;
+		handleBytecode("");
 	}
-
-	vector<string> contracts = m_compiler->contractNames();
-	for (string const& contract: contracts)
+	else
 	{
-		if (needsHumanTargetedStdout(m_options))
-			sout() << endl << "======= " << contract << " =======" << endl;
+		// do we need AST output?
+		handleAst();
 
-		// do we need EVM assembly?
-		if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
+		if (!m_compiler->compilationSuccessful()
+			&& m_options.output.stopAfter == CompilerStack::State::CompilationSuccessful)
 		{
-			string ret;
-			if (m_options.compiler.outputs.asmJson)
-				ret = jsonPrettyPrint(removeNullMembers(m_compiler->assemblyJSON(contract)));
-			else
-				ret = m_compiler->assemblyString(contract, m_fileReader.sourceCodes());
-
-			if (!m_options.output.dir.empty())
-			{
-				createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
-			}
-			else
-			{
-				sout() << "EVM assembly:" << endl << ret << endl;
-			}
+			serr() << endl << "Compilation halted after AST generation due to errors." << endl;
+			return;
 		}
 
-		if (m_options.compiler.estimateGas)
-			handleGasEstimation(contract);
+		vector<string> contracts = m_compiler->contractNames();
+		for (string const& contract: contracts)
+		{
+			if (needsHumanTargetedStdout(m_options))
+				sout() << endl << "======= " << contract << " =======" << endl;
 
-		handleBytecode(contract);
-		handleIR(contract);
-		handleIROptimized(contract);
-		handleEwasm(contract);
-		handleSignatureHashes(contract);
-		handleMetadata(contract);
-		handleABI(contract);
-		handleStorageLayout(contract);
-		handleNatspec(true, contract);
-		handleNatspec(false, contract);
-	} // end of contracts iteration
+			// do we need EVM assembly?
+			if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
+			{
+				string ret;
+				if (m_options.compiler.outputs.asmJson)
+					ret = jsonPrettyPrint(removeNullMembers(m_compiler->assemblyJSON(contract)));
+				else
+					ret = m_compiler->assemblyString(contract, m_fileReader.sourceCodes());
 
-	if (!m_hasOutput)
-	{
-		if (!m_options.output.dir.empty())
-			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
-		else
-			serr() << "Compiler run successful, no output requested." << endl;
+				if (!m_options.output.dir.empty())
+				{
+					createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
+				}
+				else
+				{
+					sout() << "EVM assembly:" << endl << ret << endl;
+				}
+			}
+
+			if (m_options.compiler.estimateGas)
+				handleGasEstimation(contract);
+
+			handleBytecode(contract);
+			handleIR(contract);
+			handleIROptimized(contract);
+			handleEwasm(contract);
+			handleSignatureHashes(contract);
+			handleMetadata(contract);
+			handleABI(contract);
+			handleStorageLayout(contract);
+			handleNatspec(true, contract);
+			handleNatspec(false, contract);
+		} // end of contracts iteration
+
+		if (!m_hasOutput)
+		{
+			if (!m_options.output.dir.empty())
+				sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
+			else
+				serr() << "Compiler run successful, no output requested." << endl;
+		}
 	}
 }
 

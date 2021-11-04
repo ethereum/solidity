@@ -46,6 +46,7 @@ static string const g_strAllowPaths = "allow-paths";
 static string const g_strBasePath = "base-path";
 static string const g_strIncludePath = "include-path";
 static string const g_strAssemble = "assemble";
+static string const g_strImportEvmAssemblerJson = "import-asm-json";
 static string const g_strCombinedJson = "combined-json";
 static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
@@ -134,6 +135,7 @@ static map<InputMode, string> const g_inputModeName = {
 	{InputMode::Compiler, "compiler"},
 	{InputMode::CompilerWithASTImport, "compiler (AST import)"},
 	{InputMode::Assembler, "assembler"},
+	{InputMode::CompilerWithEvmAssemblyJsonImport, "assembler (EVM ASM JSON import)"},
 	{InputMode::StandardJson, "standard JSON"},
 	{InputMode::Linker, "linker"},
 };
@@ -321,7 +323,20 @@ bool CommandLineParser::parseInputPathsAndRemappings()
 				m_options.input.paths.insert(positionalArg);
 		}
 
-	if (m_options.input.mode == InputMode::StandardJson)
+	if (m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport)
+	{
+		if (m_options.input.paths.size() > 1 || (m_options.input.paths.size() == 1 && m_options.input.addStdin))
+		{
+			serr() << "Too many input files for --" << g_strImportEvmAssemblerJson << "." << endl;
+			serr() << "Please either specify a single file name or provide its content on standard input." << endl;
+			return false;
+		}
+		else if (m_options.input.paths.size() == 0)
+			// Standard JSON mode input used to be handled separately and zero files meant "read from stdin".
+			// Keep it working that way for backwards-compatibility.
+			m_options.input.addStdin = true;
+	}
+	else if (m_options.input.mode == InputMode::StandardJson)
 	{
 		if (m_options.input.paths.size() > 1 || (m_options.input.paths.size() == 1 && m_options.input.addStdin))
 		{
@@ -466,6 +481,7 @@ bool CommandLineParser::parseOutputSelection()
 		case InputMode::Version:
 			solAssert(false);
 		case InputMode::Compiler:
+		case InputMode::CompilerWithEvmAssemblyJsonImport:
 		case InputMode::CompilerWithASTImport:
 			return contains(compilerModeOutputs, _outputName);
 		case InputMode::Assembler:
@@ -641,8 +657,12 @@ General Information)").c_str(),
 		(
 			g_strImportAst.c_str(),
 			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
-			"Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
-			"--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
+			 "Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
+																			  "--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
+		)
+		(
+			g_strImportEvmAssemblerJson.c_str(),
+			"Import evm assembler json to be compiled, assumes input holds the evm assembly in JSON format."
 		)
 	;
 	desc.add(alternativeInputModes);
@@ -879,6 +899,7 @@ bool CommandLineParser::processArgs()
 		g_strStrictAssembly,
 		g_strYul,
 		g_strImportAst,
+		g_strImportEvmAssemblerJson,
 	}))
 		return false;
 
@@ -892,6 +913,8 @@ bool CommandLineParser::processArgs()
 		m_options.input.mode = InputMode::StandardJson;
 	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
 		m_options.input.mode = InputMode::Assembler;
+	else if (m_args.count(g_strImportEvmAssemblerJson) > 0)
+		m_options.input.mode = InputMode::CompilerWithEvmAssemblyJsonImport;
 	else if (m_args.count(g_strLink) > 0)
 		m_options.input.mode = InputMode::Linker;
 	else if (m_args.count(g_strImportAst) > 0)
@@ -946,8 +969,8 @@ bool CommandLineParser::processArgs()
 	if (
 		m_options.input.mode != InputMode::Compiler &&
 		m_options.input.mode != InputMode::CompilerWithASTImport &&
-		m_options.input.mode != InputMode::Assembler
-	)
+		m_options.input.mode != InputMode::Assembler &&
+		m_options.input.mode != InputMode::CompilerWithEvmAssemblyJsonImport)
 	{
 		if (!m_args[g_strOptimizeRuns].defaulted())
 		{
@@ -1127,16 +1150,18 @@ bool CommandLineParser::processArgs()
 		m_options.optimizer.yulSteps = m_args[g_strYulOptimizations].as<string>();
 	}
 
-	if (m_options.input.mode == InputMode::Assembler)
+	if (m_options.input.mode == InputMode::Assembler ||
+		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport)
 	{
-		vector<string> const nonAssemblyModeOptions = {
+		vector<string> nonAssemblyModeOptions = {
 			// TODO: The list is not complete. Add more.
 			g_strOutputDir,
 			g_strGas,
-			g_strCombinedJson,
 			g_strOptimizeYul,
 			g_strNoOptimizeYul,
 		};
+		if (m_options.input.mode == InputMode::Assembler)
+			nonAssemblyModeOptions.emplace_back(g_strCombinedJson);
 		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
 		{
 			auto optionEnabled = [&](string const& name){ return m_args.count(name) > 0; };
@@ -1206,9 +1231,10 @@ bool CommandLineParser::processArgs()
 			serr() << "and automatic translation is not available." << endl;
 			return false;
 		}
-		serr() <<
-			"Warning: Yul is still experimental. Please use the output with care." <<
-			endl;
+		if (m_options.input.mode == InputMode::Assembler)
+			serr() <<
+				"Warning: Yul is still experimental. Please use the output with care." <<
+				endl;
 
 		return true;
 	}
