@@ -240,6 +240,9 @@ void ControlFlowGraphBuilder::operator()(Block const& _block)
 {
 	ScopedSaveAndRestore saveScope(m_scope, m_info.scopes.at(&_block).get());
 	for (auto const& statement: _block.statements)
+		if (auto const* function = get_if<FunctionDefinition>(&statement))
+			registerFunction(*function);
+	for (auto const& statement: _block.statements)
 		std::visit(*this, statement);
 }
 
@@ -386,11 +389,26 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 	Scope::Function& function = std::get<Scope::Function>(m_scope->identifiers.at(_function.name));
 	m_graph.functions.emplace_back(&function);
 
+	CFG::FunctionInfo& functionInfo = m_graph.functionInfo.at(&function);
+
+	ControlFlowGraphBuilder builder{m_graph, m_info, m_dialect};
+	builder.m_currentFunction = &functionInfo;
+	builder.m_currentBlock = functionInfo.entry;
+	builder(_function.body);
+	builder.m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{debugDataOf(_function), &functionInfo};
+}
+
+void ControlFlowGraphBuilder::registerFunction(FunctionDefinition const& _function)
+{
+	yulAssert(m_scope, "");
+	yulAssert(m_scope->identifiers.count(_function.name), "");
+	Scope::Function& function = std::get<Scope::Function>(m_scope->identifiers.at(_function.name));
+
 	yulAssert(m_info.scopes.at(&_function.body), "");
 	Scope* virtualFunctionScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
 	yulAssert(virtualFunctionScope, "");
 
-	auto&& [it, inserted] = m_graph.functionInfo.emplace(std::make_pair(&function, CFG::FunctionInfo{
+	bool inserted = m_graph.functionInfo.emplace(std::make_pair(&function, CFG::FunctionInfo{
 		_function.debugData,
 		function,
 		&m_graph.makeBlock(debugDataOf(_function.body)),
@@ -406,17 +424,9 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 				_retVar.debugData
 			};
 		}) | ranges::to<vector>
-	}));
-	yulAssert(inserted, "");
-	CFG::FunctionInfo& functionInfo = it->second;
-
-	ControlFlowGraphBuilder builder{m_graph, m_info, m_dialect};
-	builder.m_currentFunction = &functionInfo;
-	builder.m_currentBlock = functionInfo.entry;
-	builder(_function.body);
-	builder.m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{debugDataOf(_function), &functionInfo};
+	})).second;
+	yulAssert(inserted);
 }
-
 
 Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _call)
 {

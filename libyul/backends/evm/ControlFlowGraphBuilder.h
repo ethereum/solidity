@@ -57,6 +57,7 @@ private:
 		AsmAnalysisInfo const& _analysisInfo,
 		Dialect const& _dialect
 	);
+	void registerFunction(FunctionDefinition const& _function);
 	Stack const& visitFunctionCall(FunctionCall const&);
 	Stack visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount);
 
