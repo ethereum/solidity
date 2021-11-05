@@ -376,12 +376,17 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 			if (_variable.isConstructorParameter())
 				errorString += " for constructor parameter";
 			else if (_variable.isCallableOrCatchParameter())
+			{
+				string visibility;
+				if (auto const* callable = dynamic_cast<CallableDeclaration const*>(_variable.scope()))
+					visibility = Declaration::visibilityToString(callable->visibility());
 				errorString +=
-					" for " +
-					string(_variable.isReturnParameter() ? "return " : "") +
-					"parameter in" +
-					string(_variable.isExternalCallableParameter() ? " external" : "") +
-					" function";
+				" for " +
+				(_variable.isReturnParameter() ? "return "s : ""s) +
+				"parameter in" +
+				(visibility.empty() ? visibility : " "s + visibility) +
+				" function";
+			}
 			else
 				errorString += " for variable";
 		}
