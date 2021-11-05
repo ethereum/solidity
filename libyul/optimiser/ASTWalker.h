@@ -111,8 +111,7 @@ template <
 >
 struct ForEach: Base
 {
-	template<typename Callable>
-	ForEach(Callable&& _visitor): visitor(std::forward<Callable>(_visitor)) {}
+	ForEach(Visitor& _visitor): visitor(_visitor) {}
 
 	using Base::operator();
 	void operator()(Node& _node) override
@@ -121,7 +120,7 @@ struct ForEach: Base
 		Base::operator()(_node);
 	}
 
-	Visitor visitor;
+	Visitor& visitor;
 };
 }
 
@@ -130,7 +129,7 @@ struct ForEach: Base
 template<typename Node, typename Entry, typename Visitor>
 void forEach(Entry&& _entry, Visitor&& _visitor)
 {
-	detail::ForEach<Node, std::decay_t<Visitor>>{std::forward<Visitor>(_visitor)}(std::forward<Entry>(_entry));
+	detail::ForEach<Node, Visitor&>{_visitor}(_entry);
 }
 
 }
