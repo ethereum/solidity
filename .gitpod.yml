@@ -8,8 +8,8 @@ tasks:
   - name: Open contributing guide
     command: gp preview https://docs.soliditylang.org/en/latest/contributing.html
 
-  - name: Install deps and build Solidity
+  - name: Install dependencies for Solidity
     init: |
-      sudo add-apt-repository -y ppa:ethereum/ethereum
-      sudo apt-get -y update
-      sudo apt-get -y install build-essential libboost-all-dev libz3-dev
+      sudo add-apt-repository -y ppa:ethereum/cpp-build-deps
+      sudo apt-get update
+      sudo apt-get -y install build-essential libboost-all-dev libz3-static-dev
