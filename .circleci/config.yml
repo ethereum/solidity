@@ -946,8 +946,8 @@ jobs:
         type: integer
         default: 0
       nodejs_version:
-        type: integer
-        default: 14
+        type: string
+        default: latest
     docker:
       - image: circleci/node:<<parameters.nodejs_version>>
     # NOTE: Each external test does 3 separate compile&test runs
@@ -1205,28 +1205,32 @@ workflows:
           name: t_ems_compile_ext_colony
           project: colony
           compile_only: 1
+          nodejs_version: '14'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_gnosis
           project: gnosis
           compile_only: 1
+          nodejs_version: '14'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_gnosis_v2
           project: gnosis-v2
           compile_only: 1
+          nodejs_version: '14'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_zeppelin
           project: zeppelin
           compile_only: 1
+          nodejs_version: '14'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_ens
           project: ens
           compile_only: 1
           # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
-          nodejs_version: 10
+          nodejs_version: '10'
 
       # FIXME: Gnosis tests are pretty flaky right now. They often fail on CircleCI due to random ProviderError
       # and there are also other less frequent problems. See https://github.com/gnosis/safe-contracts/issues/216.
@@ -1235,23 +1239,24 @@ workflows:
       #    name: t_ems_test_ext_gnosis
       #    project: gnosis
       #    # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
-      #    nodejs_version: 12
+      #    nodejs_version: '12'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_gnosis_v2
           project: gnosis-v2
           # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
-          nodejs_version: 12
+          nodejs_version: '12'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_zeppelin
           project: zeppelin
+          nodejs_version: '14'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_ens
           project: ens
           # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
-          nodejs_version: 10
+          nodejs_version: '10'
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
