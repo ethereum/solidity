@@ -21,8 +21,8 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:c26a7ffc9fc243a4ec3105b9dc1edcdd964ad0e9665c83172b7ebda74bbf3021"
   emscripten-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:emscripten-6
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:092da5817bc032c91a806b4f73db2a1a31e5cc4c066d94d43eedd9f365df7154"
+    # solbuildpackpusher/solidity-buildpack-deps:emscripten-7
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:9ffcd0944433fe100e9433f2aa9ba5c21e096e758ad8a05a4a76feaed3d1f463"
   evm-version:
     type: string
     default: london
