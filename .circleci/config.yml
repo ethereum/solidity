@@ -617,6 +617,11 @@ jobs:
 
   b_ubu_clang: &b_ubu_clang
     <<: *base_ubuntu2004_clang_large
+    environment:
+      TERM: xterm
+      CC: clang
+      CXX: clang++
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run: *run_build
@@ -664,7 +669,7 @@ jobs:
     # Runs 2x faster on large and 3x on xlarge but no other jobs depend on it we can live with medium.
     <<: *base_ubuntu2004
     environment:
-      MAKEFLAGS: -j 3
+      MAKEFLAGS: -j 5
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
@@ -718,7 +723,7 @@ jobs:
     environment:
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
-      MAKEFLAGS: -j 5
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run: *run_build
@@ -836,6 +841,9 @@ jobs:
 
   b_ems:
     <<: *base_ems_large
+    environment:
+      TERM: xterm
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run:
@@ -1303,7 +1311,7 @@ workflows:
           project: zeppelin
           # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
           nodejs_version: '16'
-          resource_class: medium
+          resource_class: large
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_ens
