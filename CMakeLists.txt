@@ -44,7 +44,6 @@ include(EthCcache)
 # Let's find our dependencies
 include(EthDependencies)
 include(fmtlib)
-include(nlohmann-json)
 include(range-v3)
 
 find_package(Threads)

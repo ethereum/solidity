@@ -8,6 +8,7 @@ EXCLUDE_FILES=(
     # The line below is left unquoted to allow the shell globbing path expansion
     test/cmdlineTests/*/{err,output}
     "libsolutil/picosha2.h"
+    "libsolutil/nlohmannjson.hpp"
     "test/cmdlineTests/strict_asm_only_cr/input.yul"
     "test/libsolutil/UTF8.cpp"
     "test/libsolidity/syntaxTests/license/license_cr_endings.sol"
