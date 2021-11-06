@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <json/json.hpp>
+#include <libsolutil/nlohmannjson.hpp>
 
 #include <string>
 

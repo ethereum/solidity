@@ -6,6 +6,7 @@ ERROR_LOG="$(mktemp -t check_style_XXXXXX.log)"
 
 EXCLUDE_FILES=(
     "libsolutil/picosha2.h"
+    "libsolutil/nlohmannjson.hpp"
     "test/cmdlineTests/strict_asm_only_cr/input.yul"
     "test/cmdlineTests/strict_asm_only_cr/err"
     "test/libsolutil/UTF8.cpp"
