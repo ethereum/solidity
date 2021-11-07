@@ -21,7 +21,7 @@ version of Solidity. Apart from exceptional cases, only the latest version recei
 `security fixes <https://github.com/ethereum/solidity/security/policy#supported-versions>`_.
 Furthermore, breaking changes as well as
 new features are introduced regularly. We currently use
-a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
+a 0.y.z version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
 
 .. warning::
 
