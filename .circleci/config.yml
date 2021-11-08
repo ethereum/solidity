@@ -544,7 +544,7 @@ jobs:
     environment:
       CC: clang
       CXX: clang++
-      CMAKE_OPTIONS: -DSANITIZE=address
+      CMAKE_OPTIONS: -DSANITIZE=address  -DCMAKE_CXX_CLANG_TIDY=clang-tidy
       MAKEFLAGS: -j 3
     steps:
       - checkout
