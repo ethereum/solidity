@@ -446,10 +446,18 @@ bool CommandLineParser::parseOutputSelection()
 {
 	static auto outputSupported = [](InputMode _mode, string_view _outputName)
 	{
-		static set<string> const compilerModeOutputs =
+		static set<string> const compilerModeOutputs = (
 			CompilerOutputs::componentMap() |
 			ranges::views::keys |
-			ranges::to<set>();
+			ranges::to<set>()
+		) - set<string>{CompilerOutputs::componentName(&CompilerOutputs::ewasmIR)};
+		static set<string> const assemblerModeOutputs = {
+			CompilerOutputs::componentName(&CompilerOutputs::asm_),
+			CompilerOutputs::componentName(&CompilerOutputs::binary),
+			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+			CompilerOutputs::componentName(&CompilerOutputs::ewasm),
+			CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
+		};
 
 		switch (_mode)
 		{
@@ -461,6 +469,7 @@ bool CommandLineParser::parseOutputSelection()
 		case InputMode::CompilerWithASTImport:
 			return contains(compilerModeOutputs, _outputName);
 		case InputMode::Assembler:
+			return contains(assemblerModeOutputs, _outputName);
 		case InputMode::StandardJson:
 		case InputMode::Linker:
 			return false;
@@ -471,6 +480,17 @@ bool CommandLineParser::parseOutputSelection()
 
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
+
+	if (m_options.input.mode == InputMode::Assembler && m_options.compiler.outputs == CompilerOutputs{})
+	{
+		// In assembly mode keep the default outputs enabled for backwards-compatibility.
+		// TODO: Remove this (must be done in a breaking release).
+		m_options.compiler.outputs.asm_ = true;
+		m_options.compiler.outputs.binary = true;
+		m_options.compiler.outputs.irOptimized = true;
+		m_options.compiler.outputs.ewasm = true;
+		m_options.compiler.outputs.ewasmIR = true;
+	}
 
 	vector<string> unsupportedOutputs;
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
@@ -692,6 +712,7 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::ewasm).c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::ewasmIR).c_str(), "Intermediate representation (IR) converted to a form that can be translated directly into Ewasm text representation (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
@@ -906,11 +927,12 @@ bool CommandLineParser::processArgs()
 	if (!checkMutuallyExclusive({g_strColor, g_strNoColor}))
 		return false;
 
-	array<string, 8> const conflictingWithStopAfter{
+	array<string, 9> const conflictingWithStopAfter{
 		CompilerOutputs::componentName(&CompilerOutputs::binary),
 		CompilerOutputs::componentName(&CompilerOutputs::ir),
 		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
 		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
 		g_strGas,
 		CompilerOutputs::componentName(&CompilerOutputs::asm_),
 		CompilerOutputs::componentName(&CompilerOutputs::asmJson),

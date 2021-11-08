@@ -78,6 +78,7 @@ struct CompilerOutputs
 			{"ir", &CompilerOutputs::ir},
 			{"ir-optimized", &CompilerOutputs::irOptimized},
 			{"ewasm", &CompilerOutputs::ewasm},
+			{"ewasm-ir", &CompilerOutputs::ewasmIR},
 			{"hashes", &CompilerOutputs::signatureHashes},
 			{"userdoc", &CompilerOutputs::natspecUser},
 			{"devdoc", &CompilerOutputs::natspecDev},
@@ -97,6 +98,7 @@ struct CompilerOutputs
 	bool ir = false;
 	bool irOptimized = false;
 	bool ewasm = false;
+	bool ewasmIR = false;
 	bool signatureHashes = false;
 	bool natspecUser = false;
 	bool natspecDev = false;
