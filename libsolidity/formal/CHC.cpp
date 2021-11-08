@@ -791,8 +791,8 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 				valueIndex = i;
 				break;
 			}
-		solAssert(valueIndex, "");
-		state().addBalance(state().thisAddress(), 0 - expr(*callOptions->options().at(*valueIndex)));
+		if (valueIndex)
+			state().addBalance(state().thisAddress(), 0 - expr(*callOptions->options().at(*valueIndex)));
 	}
 
 	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
