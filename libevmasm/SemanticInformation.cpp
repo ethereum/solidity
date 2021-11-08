@@ -351,6 +351,8 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::ORIGIN:
 	case Instruction::CALLER:
 	case Instruction::CALLVALUE:
+	case Instruction::CODESIZE:
+	case Instruction::CODECOPY:
 	case Instruction::CHAINID:
 	case Instruction::BASEFEE:
 	case Instruction::GAS:
