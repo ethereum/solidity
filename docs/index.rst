@@ -136,6 +136,7 @@ Contents
 
    using-the-compiler.rst
    analysing-compilation-output.rst
+   ir-breaking-changes.rst
 
 .. toctree::
    :maxdepth: 2
