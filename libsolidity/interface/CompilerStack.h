@@ -222,6 +222,8 @@ public:
 	/// Will throw errors if the import fails
 	void importASTs(std::map<std::string, Json::Value> const& _sources);
 
+	void importEvmAssemblyJson(std::map<std::string, Json::Value> const& _sources);
+
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
 	///  typechecking, staticAnalysis) on previously parsed sources.
 	/// @returns false on error.
@@ -499,6 +501,7 @@ private:
 	std::map<std::string const, Source> m_sources;
 	// if imported, store AST-JSONS for each filename
 	std::map<std::string, Json::Value> m_sourceJsons;
+	std::unique_ptr<Json::Value> m_evmAssemblyJson;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;

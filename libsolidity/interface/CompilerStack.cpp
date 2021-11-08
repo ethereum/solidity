@@ -388,6 +388,17 @@ bool CompilerStack::parse()
 	return !m_hasError;
 }
 
+void CompilerStack::importEvmAssemblyJson(map<string, Json::Value> const& _sources)
+{
+	solAssert(_sources.size() == 1, "");
+	if (m_stackState != Empty)
+		solThrow(CompilerError, "Must call importEvmAssemblyJson only before the SourcesSet state.");
+
+	m_evmAssemblyJson = std::make_unique<Json::Value>(_sources.begin()->second);
+	m_importedSources = true;
+	m_stackState = SourcesSet;
+}
+
 void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 {
 	if (m_stackState != Empty)
