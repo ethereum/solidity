@@ -38,7 +38,8 @@ source "${REPO_ROOT}/scripts/common.sh"
 WORKDIR=$(mktemp -d)
 CMDLINE_PID=
 
-cleanup() {
+function cleanup
+{
     # ensure failing commands don't cause termination during cleanup (especially within safe_kill)
     set +e
 

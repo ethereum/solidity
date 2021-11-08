@@ -8,7 +8,8 @@ BOOST_OPTIONS=()
 SOLTEST_OPTIONS=()
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 
-usage() {
+function usage
+{
 	echo 2>&1 "
 Usage: $0 [options] [soltest-options]
 Runs BOOST C++ unit test program, soltest.

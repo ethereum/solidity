@@ -36,7 +36,7 @@ source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
 developmentVersion=$("$REPO_ROOT/scripts/get_version.sh")
 
-function versionGreater()
+function versionGreater
 {
     v1=$1
     v2=$2
@@ -58,7 +58,7 @@ function versionGreater()
     return 1
 }
 
-function versionEqual()
+function versionEqual
 {
     if [[ "$1" == "$2" ]]
     then
@@ -67,7 +67,7 @@ function versionEqual()
     return 1
 }
 
-function getAllAvailableVersions()
+function getAllAvailableVersions
 {
     allVersions=()
     local allListedVersions
@@ -85,7 +85,7 @@ function getAllAvailableVersions()
     done
 }
 
-function findMinimalVersion()
+function findMinimalVersion
 {
     local f=$1
     local greater=false
