@@ -429,11 +429,9 @@ is transformed to
 
 .. code-block:: text
 
-    {
-        Init...
-        for {} C { Post... } {
-            Body...
-        }
+    Init...
+    for {} C { Post... } {
+        Body...
     }
 
 This eases the rest of the optimization process because we can ignore
