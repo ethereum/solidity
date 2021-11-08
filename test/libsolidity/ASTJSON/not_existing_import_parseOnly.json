@@ -5,6 +5,7 @@
   "nodes":
   [
     {
+      "absolutePath": "notexisting.sol",
       "file": "notexisting.sol",
       "id": 1,
       "nameLocation": "28:11:1",
