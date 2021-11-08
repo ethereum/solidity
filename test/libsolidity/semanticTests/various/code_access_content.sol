@@ -42,4 +42,4 @@ contract C {
 // testRuntime() -> true
 // gas legacy: 101579
 // testCreation() -> true
-// gas legacy: 102137
+// gas legacy: 102009

@@ -2451,8 +2451,10 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 			appendCode() << "mstore(add(" << m_utils.allocateUnboundedFunction() << "() , " << to_string(returnInfo.estimatedReturnSize) << "), 0)\n";
 	}
 
-	Whiskers templ(R"(if iszero(extcodesize(<address>)) { <revertNoCode>() }
-
+	Whiskers templ(R"(
+		<?checkExtcodesize>
+			if iszero(extcodesize(<address>)) { <revertNoCode>() }
+		</checkExtcodesize>
 		// storage for arguments and returned data
 		let <pos> := <allocateUnbounded>()
 		mstore(<pos>, <shl28>(<funSel>))
@@ -2477,6 +2479,18 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		}
 	)");
 	templ("revertNoCode", m_utils.revertReasonIfDebugFunction("Target contract does not contain code"));
+
+	// We do not need to check extcodesize if we expect return data: If there is no
+	// code, the call will return empty data and the ABI decoder will revert.
+	size_t encodedHeadSize = 0;
+	for (auto const& t: returnInfo.returnTypes)
+		encodedHeadSize += t->decodingType()->calldataHeadSize();
+	bool const checkExtcodesize =
+		encodedHeadSize == 0 ||
+		!m_context.evmVersion().supportsReturndata() ||
+		m_context.revertStrings() >= RevertStrings::Debug;
+	templ("checkExtcodesize", checkExtcodesize);
+
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
 	if (_functionCall.annotation().tryCall)
@@ -2532,6 +2546,8 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
 		if (funType.valueSet())
 			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
+		if (!checkExtcodesize)
+			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
 		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
 	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
