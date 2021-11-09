@@ -39,6 +39,7 @@
 #include <sstream>
 #include <memory>
 #include <map>
+#include <utility>
 
 namespace solidity::evmasm
 {
@@ -159,7 +160,7 @@ public:
 		bool _includeSourceList = true
 	) const;
 
-	bool loadFromAssemblyJSON(Json::Value const& _json);
+	bool loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources = true);
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }
@@ -168,7 +169,7 @@ public:
 	size_t encodeSubPath(std::vector<size_t> const& _subPath);
 
 	void setSources(std::vector<std::shared_ptr<std::string const>> _sources) {
-		m_sources = _sources;
+		m_sources = std::move(_sources);
 	}
 
 	void setSources(std::vector<std::string> const& _sources) {

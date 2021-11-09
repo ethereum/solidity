@@ -518,11 +518,21 @@ bool Assembly::addAssemblyItemsFromJSON(Json::Value const& _code)
 	return true;
 }
 
-bool Assembly::loadFromAssemblyJSON(Json::Value const& _json)
+bool Assembly::loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources /* = true */)
 {
 	if (!_json[".code"].isArray())
 		return false;
 	bool result{true};
+
+	if (_loadSources)
+	{
+		vector<string> sourceList;
+		if (_json.isMember("sourceList"))
+			for (auto const& it: _json["sourceList"])
+				sourceList.emplace_back(it.asString());
+		setSources(sourceList);
+	}
+
 	addAssemblyItemsFromJSON(_json[".code"]);
 	if (_json[".auxdata"].isString())
 		this->m_auxiliaryData = fromHex(_json[".auxdata"].asString());
@@ -538,7 +548,7 @@ bool Assembly::loadFromAssemblyJSON(Json::Value const& _json)
 		{
 			shared_ptr<Assembly> subassembly = make_shared<Assembly>();
 			subassembly->setSources(this->sources());
-			result &= subassembly->loadFromAssemblyJSON(code);
+			result &= subassembly->loadFromAssemblyJSON(code, false);
 			this->m_subs.emplace_back(subassembly);
 		}
 	}
