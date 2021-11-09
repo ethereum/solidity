@@ -1,4 +1,4 @@
-### 0.8.10 (unreleased)
+### 0.8.10 (2021-11-09)
 
 Language Features:
  * Inline Assembly: Support ``.address`` and ``.selector`` on external function pointers to access their address and function selector.
@@ -28,21 +28,21 @@ Bugfixes:
  * Commandline Interface: When linking only accept exact matches for library names passed to the ``--libraries`` option. Library names not prefixed with a file name used to match any library with that name.
  * SMTChecker: Fix internal error in magic type access (``block``, ``msg``, ``tx``).
  * SMTChecker: Fix internal error in the CHC engine when passing gas in the function options.
- * TypeChecker: Fix internal error when using user defined value types in public library functions.
  * TypeChecker: Fix internal error when using arrays and structs with user defined value types before declaration.
+ * TypeChecker: Fix internal error when using user defined value types in public library functions.
  * TypeChecker: Improved error message for constant variables with (nested) mapping types.
  * Yul Assembler: Fix internal error when function names are not unique.
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
+
+
+Important Bugfixes in Experimental Features:
+ * Yul IR Generator: Changes to function return variables referenced in modifier invocation arguments were not properly forwarded if there was more than one return variable.
 
 
 Build System:
  * Pass linker-only emscripten options only when linking.
  * Remove obsolete compatibility workaround for emscripten builds.
  * Update emscripten to version 2.0.33.
-
-
-Important Bugfixes in Experimental Features:
- * Yul IR Generator: Changes to function return variables referenced in modifier invocation arguments were not properly forwarded if there was more than one return variable.
 
 
 ### 0.8.9 (2021-09-29)
