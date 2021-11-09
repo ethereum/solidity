@@ -34,7 +34,7 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
 
-#include <json/json.h>
+#include <libsolutil/JSON.h>
 
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/enumerate.hpp>
@@ -243,12 +243,223 @@ string Assembly::toStringInHex(u256 _value)
 	return hexStr.str();
 }
 
-Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) const
+AssemblyItem Assembly::loadItemFromJSON(Json::Value const& _json)
+{
+	std::string name = _json["name"].isString() ? _json["name"].asString() : "";
+	int begin = _json["begin"].isInt() ? _json["begin"].asInt() : -1;
+	int end = _json["end"].isInt() ?  _json["end"].asInt() : -1;
+	int srcIndex = _json["source"].isInt() ?  _json["source"].asInt() : -1;
+	std::string value = _json["value"].isString() ? _json["value"].asString() : "";
+	std::string jumpType = _json["jumpType"].isString() ? _json["jumpType"].asString() : "";
+	solAssert(!name.empty(), "");
+
+	auto updateUsedTags = [&](u256 const& data) {
+		auto tag = static_cast<unsigned>(data);
+		if (this->m_usedTags <= tag)
+			this->m_usedTags = tag + 1;
+	};
+
+	auto updateImmutables = [&](string const& _immutableName) -> h256 {
+		h256 hash(util::keccak256(value));
+		this->m_immutables[hash] = _immutableName;
+		return hash;
+	};
+
+	auto updateLibraries = [&](string const& _libraryName) -> h256 {
+		h256 hash(util::keccak256(_libraryName));
+		this->m_libraries[hash] = _libraryName;
+		return hash;
+	};
+
+	SourceLocation location;
+	location.start = begin;
+	location.end = end;
+	if (srcIndex > -1 && srcIndex < (int)sources().size())
+		location.sourceName = sources()[static_cast<size_t>(srcIndex)];
+
+	if (c_instructions.find(name) != c_instructions.end())
+	{
+		AssemblyItem item{c_instructions.at(name), location};
+		if (!value.empty())
+			item.setJumpType(value);
+		return item;
+	}
+	else
+	{
+		u256 data;
+		if (name == "PUSH")
+		{
+			if (!value.empty())
+				data = u256("0x" + value);
+			AssemblyItem item{AssemblyItemType::Push, data, location};
+			if (!jumpType.empty())
+				item.setJumpType(jumpType);
+			return item;
+		}
+		else if (name == "PUSH [ErrorTag]")
+			return {AssemblyItemType::PushTag, data, location};
+		else if (name == "PUSH [tag]")
+		{
+			if (!value.empty())
+				data = u256(value);
+			updateUsedTags(data);
+			return {AssemblyItemType::PushTag, data, location};
+		}
+		else if (name == "PUSH [$]")
+		{
+			if (!value.empty())
+				data = u256("0x" + value);
+			return {AssemblyItemType::PushSub, data, location};
+		}
+		else if (name == "PUSH #[$]")
+		{
+			if (!value.empty())
+				data = u256("0x" + value);
+			return {AssemblyItemType::PushSubSize, data, location};
+		}
+		else if (name == "PUSHSIZE")
+			return {AssemblyItemType::PushProgramSize, data, location};
+		else if (name == "PUSHLIB")
+		{
+			h256 hash = updateLibraries(value);
+			return {AssemblyItemType::PushLibraryAddress, hash, location};
+		}
+		else if (name == "PUSHDEPLOYADDRESS")
+			return {AssemblyItemType::PushDeployTimeAddress, data, location};
+		else if (name == "PUSHIMMUTABLE")
+		{
+			h256 hash = updateImmutables(value);
+			return {AssemblyItemType::PushImmutable, hash, location};
+		}
+		else if (name == "ASSIGNIMMUTABLE")
+		{
+			h256 hash = updateImmutables(value);
+			return {AssemblyItemType::AssignImmutable, hash, location};
+		}
+		else if (name == "tag")
+		{
+			if (!value.empty())
+				data = u256(value);
+			return {AssemblyItemType::Tag, data, location};
+		}
+		else if (name == "PUSH data")
+		{
+			if (!value.empty())
+				data = u256("0x" + value);
+			return {AssemblyItemType::PushData, data, location};
+		}
+		else if (name == "VERBATIM")
+		{
+			AssemblyItem item(fromHex(value), 0, 0);
+			item.setLocation(location);
+			return item;
+		}
+		else
+			assertThrow(false, InvalidOpcode, "");
+	}
+}
+
+vector<Json::Value> Assembly::assemblyItemAsJSON(AssemblyItem const& _item, int _sourceIndex) const
+{
+	vector<Json::Value> result;
+
+	switch (_item.type())
+	{
+	case Operation:
+		result.emplace_back(createJsonValue(
+			instructionInfo(_item.instruction()).name,
+			_sourceIndex,
+			_item.location().start,
+			_item.location().end,
+			_item.getJumpTypeAsString()));
+		break;
+	case Push:
+		result.emplace_back(createJsonValue(
+			"PUSH",
+			_sourceIndex,
+			_item.location().start,
+			_item.location().end,
+			toStringInHex(_item.data()),
+			_item.getJumpTypeAsString()));
+		break;
+	case PushTag:
+		if (_item.data() == 0)
+			result.emplace_back(
+				createJsonValue("PUSH [ErrorTag]", _sourceIndex, _item.location().start, _item.location().end, ""));
+		else
+			result.emplace_back(createJsonValue(
+				"PUSH [tag]", _sourceIndex, _item.location().start, _item.location().end, toString(_item.data())));
+		break;
+	case PushSub:
+		result.emplace_back(createJsonValue(
+			"PUSH [$]", _sourceIndex, _item.location().start, _item.location().end, toString(h256(_item.data()))));
+		break;
+	case PushSubSize:
+		result.emplace_back(createJsonValue(
+			"PUSH #[$]", _sourceIndex, _item.location().start, _item.location().end, toString(h256(_item.data()))));
+		break;
+	case PushProgramSize:
+		result.emplace_back(createJsonValue("PUSHSIZE", _sourceIndex, _item.location().start, _item.location().end));
+		break;
+	case PushLibraryAddress:
+		result.emplace_back(createJsonValue(
+			"PUSHLIB", _sourceIndex, _item.location().start, _item.location().end, m_libraries.at(h256(_item.data()))));
+		break;
+	case PushDeployTimeAddress:
+		result.emplace_back(
+			createJsonValue("PUSHDEPLOYADDRESS", _sourceIndex, _item.location().start, _item.location().end));
+		break;
+	case PushImmutable:
+		result.emplace_back(createJsonValue(
+			"PUSHIMMUTABLE",
+			_sourceIndex,
+			_item.location().start,
+			_item.location().end,
+			m_immutables.at(h256(_item.data()))));
+		break;
+	case AssignImmutable:
+		result.emplace_back(createJsonValue(
+			"ASSIGNIMMUTABLE",
+			_sourceIndex,
+			_item.location().start,
+			_item.location().end,
+			m_immutables.at(h256(_item.data()))));
+		break;
+	case Tag:
+		result.emplace_back(
+			createJsonValue("tag", _sourceIndex, _item.location().start, _item.location().end, toString(_item.data())));
+		result.emplace_back(createJsonValue("JUMPDEST", _sourceIndex, _item.location().start, _item.location().end));
+		break;
+	case PushData:
+		result.emplace_back(createJsonValue(
+			"PUSH data", _sourceIndex, _item.location().start, _item.location().end, toStringInHex(_item.data())));
+		break;
+	case VerbatimBytecode:
+		result.emplace_back(createJsonValue(
+			"VERBATIM", _sourceIndex, _item.location().start, _item.location().end, util::toHex(_item.verbatimData())));
+		break;
+	default:
+		assertThrow(false, InvalidOpcode, "");
+	}
+	return result;
+}
+
+Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, bool _includeSourceList) const
 {
 	Json::Value root;
-	root[".code"] = Json::arrayValue;
+	if (_includeSourceList)
+	{
+		root["sourceList"] = Json::arrayValue;
+		Json::Value& sourceList = root["sourceList"];
+		std::vector<string> sources(_sourceIndices.size());
+		for (auto const& item: _sourceIndices)
+			sources[item.second] = item.first;
+		for (auto const& item: sources)
+			sourceList.append(item);
+	}
 
-	Json::Value& collection = root[".code"];
+	root[".code"] = Json::arrayValue;
+	Json::Value& code = root[".code"];
 	for (AssemblyItem const& i: m_items)
 	{
 		int sourceIndex = -1;
@@ -259,85 +470,8 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 				sourceIndex = static_cast<int>(iter->second);
 		}
 
-		switch (i.type())
-		{
-		case Operation:
-			collection.append(
-				createJsonValue(
-					instructionInfo(i.instruction()).name,
-					sourceIndex,
-					i.location().start,
-					i.location().end,
-					i.getJumpTypeAsString())
-				);
-			break;
-		case Push:
-			collection.append(
-				createJsonValue("PUSH", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
-			break;
-		case PushTag:
-			if (i.data() == 0)
-				collection.append(
-					createJsonValue("PUSH [ErrorTag]", sourceIndex, i.location().start, i.location().end, ""));
-			else
-				collection.append(
-					createJsonValue("PUSH [tag]", sourceIndex, i.location().start, i.location().end, toString(i.data())));
-			break;
-		case PushSub:
-			collection.append(
-				createJsonValue("PUSH [$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
-			break;
-		case PushSubSize:
-			collection.append(
-				createJsonValue("PUSH #[$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
-			break;
-		case PushProgramSize:
-			collection.append(
-				createJsonValue("PUSHSIZE", sourceIndex, i.location().start, i.location().end));
-			break;
-		case PushLibraryAddress:
-			collection.append(
-				createJsonValue("PUSHLIB", sourceIndex, i.location().start, i.location().end, m_libraries.at(h256(i.data())))
-			);
-			break;
-		case PushDeployTimeAddress:
-			collection.append(
-				createJsonValue("PUSHDEPLOYADDRESS", sourceIndex, i.location().start, i.location().end)
-			);
-			break;
-		case PushImmutable:
-			collection.append(createJsonValue(
-				"PUSHIMMUTABLE",
-				sourceIndex,
-				i.location().start,
-				i.location().end,
-				m_immutables.at(h256(i.data()))
-			));
-			break;
-		case AssignImmutable:
-			collection.append(createJsonValue(
-				"ASSIGNIMMUTABLE",
-				sourceIndex,
-				i.location().start,
-				i.location().end,
-				m_immutables.at(h256(i.data()))
-			));
-			break;
-		case Tag:
-			collection.append(
-				createJsonValue("tag", sourceIndex, i.location().start, i.location().end, toString(i.data())));
-			collection.append(
-				createJsonValue("JUMPDEST", sourceIndex, i.location().start, i.location().end));
-			break;
-		case PushData:
-			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
-			break;
-		case VerbatimBytecode:
-			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, util::toHex(i.verbatimData())));
-			break;
-		default:
-			assertThrow(false, InvalidOpcode, "");
-		}
+		for (Json::Value const& item: assemblyItemAsJSON(i, sourceIndex))
+			code.append(item);
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -352,14 +486,71 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices, false);
 		}
 	}
 
-	if (m_auxiliaryData.size() > 0)
+	if (!m_auxiliaryData.empty())
 		root[".auxdata"] = util::toHex(m_auxiliaryData);
 
 	return root;
+}
+
+bool Assembly::addAssemblyItemsFromJSON(Json::Value const& _code)
+{
+	solAssert(_code.isArray(), "");
+	for (auto const& it: _code)
+		this->m_items.emplace_back(loadItemFromJSON(it));
+
+	for (auto current = this->m_items.begin(); current != this->m_items.end(); ++current)
+	{
+		// During the assembly json export a `JUMPDEST` is always generated after a `tag`.
+		// So we just ignore exactly these `JUMPDEST`'s.
+		auto const next = std::next(current);
+		if (
+			current->type() == AssemblyItemType::Tag &&
+			next->type() == AssemblyItemType::Operation &&
+			next->instruction() == Instruction::JUMPDEST
+		)
+			this->m_items.erase(next);
+	}
+
+	return true;
+}
+
+bool Assembly::loadFromAssemblyJSON(Json::Value const& _json)
+{
+	if (!_json[".code"].isArray())
+		return false;
+	bool result{true};
+	if (_json.isMember("sourceList"))
+	{
+		vector<string> sourceList;
+		for (auto const& it: _json["sourceList"])
+			sourceList.emplace_back(it.asString());
+		this->setSources(sourceList);
+	}
+
+	addAssemblyItemsFromJSON(_json[".code"]);
+	if (_json[".auxdata"].isString())
+		this->m_auxiliaryData = fromHex(_json[".auxdata"].asString());
+	Json::Value const& data = _json[".data"];
+	for (Json::ValueConstIterator itr = data.begin(); itr != data.end(); itr++)
+	{
+		solAssert(itr.key().isString(), "");
+		std::string key = itr.key().asString();
+		Json::Value const& code = data[key];
+		if (code.isString())
+			this->m_data[h256(fromHex(key))] = fromHex(code.asString());
+		else
+		{
+			shared_ptr<Assembly> subassembly = make_shared<Assembly>();
+			subassembly->setSources(this->sources());
+			result &= subassembly->loadFromAssemblyJSON(code);
+			this->m_subs.emplace_back(subassembly);
+		}
+	}
+	return result;
 }
 
 AssemblyItem Assembly::namedTag(string const& _name, size_t _params, size_t _returns, optional<uint64_t> _sourceID)
@@ -415,7 +606,6 @@ Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreat
 	optimise(settings);
 	return *this;
 }
-
 
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
