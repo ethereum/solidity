@@ -978,14 +978,14 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 
 vector<string> CompilerStack::sourceNames() const
 {
-	map<string, unsigned> indices = sourceIndices();
+	map<string, unsigned> indices = sourceIndices(false);
 	vector<string> names(indices.size());
 	for (auto const& s: indices)
 		names[s.second] = s.first;
 	return names;
 }
 
-map<string, unsigned> CompilerStack::sourceIndices() const
+map<string, unsigned> CompilerStack::sourceIndices(bool _includeInternalSources /* = true */) const
 {
 	map<string, unsigned> indices;
 	unsigned index = 0;
@@ -994,7 +994,8 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 		for (auto const& s: m_sources)
 			indices[s.first] = index++;
 		solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
-		indices[CompilerContext::yulUtilityFileName()] = index++;
+		if (_includeInternalSources)
+			indices[CompilerContext::yulUtilityFileName()] = index++;
 	}
 	else
 		for (auto const& s: m_sourceOrder)
