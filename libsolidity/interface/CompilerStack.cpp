@@ -661,12 +661,24 @@ bool CompilerStack::compile(State _stopAfter)
 
 		string const evmAssemblyJsonSource = m_evmAssemblyJson.begin()->first;
 
+		evmasm::Assembly::OptimiserSettings optimiserSettings;
+		optimiserSettings.evmVersion = m_evmVersion;
+		optimiserSettings.expectedExecutionsPerDeployment = m_optimiserSettings.expectedExecutionsPerDeployment;
+		optimiserSettings.runCSE = m_optimiserSettings.runCSE;
+		optimiserSettings.runConstantOptimiser = m_optimiserSettings.runConstantOptimiser;
+		optimiserSettings.runDeduplicate = m_optimiserSettings.runDeduplicate;
+		optimiserSettings.runInliner = m_optimiserSettings.runInliner;
+		optimiserSettings.runJumpdestRemover = m_optimiserSettings.runJumpdestRemover;
+		optimiserSettings.runPeephole = m_optimiserSettings.runPeephole;
+
 		m_contracts[evmAssemblyJsonSource].evmAssembly = make_shared<evmasm::Assembly>(evmAssemblyJsonSource);
 		m_contracts[evmAssemblyJsonSource].evmAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmAssemblyJsonSource]);
+		m_contracts[evmAssemblyJsonSource].evmAssembly->optimise(optimiserSettings);
 		m_contracts[evmAssemblyJsonSource].object = m_contracts[evmAssemblyJsonSource].evmAssembly->assemble();
 
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly = make_shared<evmasm::Assembly>(evmAssemblyJsonSource);
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmAssemblyJsonSource][".data"]["0"]);
+		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->optimise(optimiserSettings);
 		m_contracts[evmAssemblyJsonSource].runtimeObject = m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->assemble();
 	}
 	else

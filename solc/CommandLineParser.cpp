@@ -1218,12 +1218,15 @@ bool CommandLineParser::processArgs()
 		}
 		if (m_options.optimizer.enabled && (m_options.assembly.inputLanguage != Input::StrictAssembly && m_options.assembly.inputLanguage != Input::Ewasm))
 		{
-			serr() <<
-				"Optimizer can only be used for strict assembly. Use --" <<
-				g_strStrictAssembly <<
-				"." <<
-				endl;
-			return false;
+			if (m_options.input.mode != InputMode::CompilerWithEvmAssemblyJsonImport)
+			{
+				serr() <<
+					"Optimizer can only be used for strict assembly or with assembly import. Use --" <<
+					g_strStrictAssembly <<
+					" or --" << g_strImportEvmAssemblerJson << "." <<
+					endl;
+				return false;
+			}
 		}
 		if (m_options.assembly.targetMachine == Machine::Ewasm && m_options.assembly.inputLanguage != Input::StrictAssembly && m_options.assembly.inputLanguage != Input::Ewasm)
 		{
