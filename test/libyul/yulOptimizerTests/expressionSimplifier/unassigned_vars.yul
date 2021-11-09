@@ -8,4 +8,4 @@
 // ----
 // step: expressionSimplifier
 //
-// { sstore(8, 7) }
+// { { sstore(8, 7) } }

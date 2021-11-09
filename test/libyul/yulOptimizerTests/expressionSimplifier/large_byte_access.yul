@@ -13,14 +13,16 @@
 // step: expressionSimplifier
 //
 // {
-//     let _1 := 0
-//     let a := calldataload(_1)
-//     let b := 0
-//     let c := byte(20, a)
-//     pop(create(_1, _1, 0x20))
-//     let d := 0
-//     sstore(7, a)
-//     sstore(8, b)
-//     sstore(9, c)
-//     sstore(10, d)
+//     {
+//         let _1 := 0
+//         let a := calldataload(_1)
+//         let b := 0
+//         let c := byte(20, a)
+//         pop(create(_1, _1, 0x20))
+//         let d := 0
+//         sstore(7, a)
+//         sstore(8, b)
+//         sstore(9, c)
+//         sstore(10, d)
+//     }
 // }

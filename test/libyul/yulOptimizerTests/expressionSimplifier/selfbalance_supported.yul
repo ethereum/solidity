@@ -6,4 +6,4 @@
 // ----
 // step: expressionSimplifier
 //
-// { sstore(0, selfbalance()) }
+// { { sstore(0, selfbalance()) } }

@@ -24,8 +24,10 @@
 // step: ssaAndBack
 //
 // {
-//     let a, b := abi_decode_t_bytes_calldata_ptr(mload(0), mload(1))
-//     mstore(a, b)
+//     {
+//         let a, b := abi_decode_t_bytes_calldata_ptr(mload(0), mload(1))
+//         mstore(a, b)
+//     }
 //     function abi_decode_t_bytes_calldata_ptr(offset_12, end_13) -> arrayPos_14, length_15
 //     {
 //         if iszero(slt(add(offset_12, 0x1f), end_13)) { revert(0, 0) }

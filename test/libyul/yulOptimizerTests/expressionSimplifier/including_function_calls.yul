@@ -7,7 +7,7 @@
 // step: expressionSimplifier
 //
 // {
-//     sstore(0, f())
+//     { sstore(0, f()) }
 //     function f() -> a
 //     { }
 // }

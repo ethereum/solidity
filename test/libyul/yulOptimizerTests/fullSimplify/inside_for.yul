@@ -7,7 +7,9 @@
 // step: fullSimplify
 //
 // {
-//     let a := 10
-//     for { } iszero(iszero(a)) { a := add(a, 1) }
-//     { }
+//     {
+//         let a := 10
+//         for { } iszero(iszero(a)) { a := add(a, 1) }
+//         { }
+//     }
 // }

@@ -14,17 +14,19 @@
 // step: loadResolver
 //
 // {
-//     let _1 := 0
-//     let x := calldataload(_1)
-//     let len := sload(x)
-//     let sum
-//     let i := _1
-//     for { } lt(i, len) { i := add(i, 1) }
 //     {
-//         let p := add(add(x, i), 1)
-//         if gt(p, len) { revert(_1, _1) }
-//         sum := add(sum, sload(p))
+//         let _1 := 0
+//         let x := calldataload(_1)
+//         let len := sload(x)
+//         let sum
+//         let i := _1
+//         for { } lt(i, len) { i := add(i, 1) }
+//         {
+//             let p := add(add(x, i), 1)
+//             if gt(p, len) { revert(_1, _1) }
+//             sum := add(sum, sload(p))
+//         }
+//         mstore(_1, sum)
+//         return(_1, 0x20)
 //     }
-//     mstore(_1, sum)
-//     return(_1, 0x20)
 // }

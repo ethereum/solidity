@@ -8,9 +8,11 @@
 // step: unusedPruner
 //
 // {
-//     let a
-//     let b
+//     {
+//         let a
+//         let b
+//         a, b := f()
+//     }
 //     function f() -> x, y
 //     { }
-//     a, b := f()
 // }

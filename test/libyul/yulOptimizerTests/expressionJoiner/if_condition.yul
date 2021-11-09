@@ -14,6 +14,8 @@
 // step: expressionJoiner
 //
 // {
-//     if add(mload(7), sload(mload(3))) { let y := add(mload(3), 3) }
-//     let t := add(3, 9)
+//     {
+//         if add(mload(7), sload(mload(3))) { let y := add(mload(3), 3) }
+//         let t := add(3, 9)
+//     }
 // }
