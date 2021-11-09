@@ -391,10 +391,23 @@ bool CompilerStack::parse()
 void CompilerStack::importEvmAssemblyJson(map<string, Json::Value> const& _sources)
 {
 	solAssert(_sources.size() == 1, "");
+	solAssert(m_sources.empty(), "");
+	solAssert(m_sourceOrder.empty(), "");
 	if (m_stackState != Empty)
 		solThrow(CompilerError, "Must call importEvmAssemblyJson only before the SourcesSet state.");
 
-	m_evmAssemblyJson[_sources.begin()->first] = _sources.begin()->second;
+	Json::Value jsonValue = _sources.begin()->second;
+	if (jsonValue.isMember("sourceList"))
+	{
+		for (auto const& item: jsonValue["sourceList"])
+		{
+			Source source;
+			source.charStream = std::make_shared<CharStream>(item.asString(), "");
+			m_sources.emplace(std::make_pair(item.asString(), source));
+			m_sourceOrder.push_back(&m_sources[item.asString()]);
+		}
+	}
+	m_evmAssemblyJson[_sources.begin()->first] = jsonValue;
 	m_importedSources = true;
 	m_stackState = SourcesSet;
 }
@@ -607,6 +620,9 @@ bool CompilerStack::analyze()
 bool CompilerStack::parseAndAnalyze(State _stopAfter)
 {
 	m_stopAfter = _stopAfter;
+
+	if (!m_evmAssemblyJson.empty())
+		return true;
 
 	bool success = parse();
 	if (m_stackState >= m_stopAfter)
@@ -962,9 +978,10 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 
 vector<string> CompilerStack::sourceNames() const
 {
-	vector<string> names;
-	for (auto const& s: m_sources)
-		names.push_back(s.first);
+	map<string, unsigned> indices = sourceIndices();
+	vector<string> names(indices.size());
+	for (auto const& s: indices)
+		names[s.second] = s.first;
 	return names;
 }
 
@@ -972,10 +989,16 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 {
 	map<string, unsigned> indices;
 	unsigned index = 0;
-	for (auto const& s: m_sources)
-		indices[s.first] = index++;
-	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
-	indices[CompilerContext::yulUtilityFileName()] = index++;
+	if (m_evmAssemblyJson.empty())
+	{
+		for (auto const& s: m_sources)
+			indices[s.first] = index++;
+		solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
+		indices[CompilerContext::yulUtilityFileName()] = index++;
+	}
+	else
+		for (auto const& s: m_sourceOrder)
+			indices[s->charStream->source()] = index++;
 	return indices;
 }
 
