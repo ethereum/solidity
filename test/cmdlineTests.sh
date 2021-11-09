@@ -154,7 +154,7 @@ function ask_expectation_update
 
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
 # An failure is expected.
-function test_solc_behaviour()
+function test_solc_behaviour
 {
     local filename="${1}"
     local solc_args
@@ -288,7 +288,7 @@ EOF
 }
 
 
-function test_solc_assembly_output()
+function test_solc_assembly_output
 {
     local input="${1}"
     local expected="${2}"

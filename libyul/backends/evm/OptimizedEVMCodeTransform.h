@@ -43,13 +43,17 @@ struct StackLayout;
 class OptimizedEVMCodeTransform
 {
 public:
+	/// Use named labels for functions 1) Yes and check that the names are unique
+	/// 2) For none of the functions 3) for the first function of each name.
+	enum class UseNamedLabels { YesAndForceUnique, Never, ForFirstFunctionOfEachName };
+
 	[[nodiscard]] static std::vector<StackTooDeepError> run(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
-		bool _useNamedLabelsForFunctions = false
+		UseNamedLabels _useNamedLabelsForFunctions
 	);
 
 	/// Generate code for the function call @a _call. Only public for using with std::visit.
@@ -62,7 +66,7 @@ private:
 	OptimizedEVMCodeTransform(
 		AbstractAssembly& _assembly,
 		BuiltinContext& _builtinContext,
-		bool _useNamedLabelsForFunctions,
+		UseNamedLabels _useNamedLabelsForFunctions,
 		CFG const& _dfg,
 		StackLayout const& _stackLayout
 	);
@@ -70,6 +74,7 @@ private:
 	/// Assert that it is valid to transition from @a _currentStack to @a _desiredStack.
 	/// That is @a _currentStack matches each slot in @a _desiredStack that is not a JunkSlot exactly.
 	static void assertLayoutCompatibility(Stack const& _currentStack, Stack const& _desiredStack);
+
 	/// @returns The label of the entry point of the given @a _function.
 	/// Creates and stores a new label, if none exists already.
 	AbstractAssembly::LabelID getFunctionLabel(Scope::Function const& _function);
@@ -94,13 +99,12 @@ private:
 
 	AbstractAssembly& m_assembly;
 	BuiltinContext& m_builtinContext;
-	bool m_useNamedLabelsForFunctions = true;
 	CFG const& m_dfg;
 	StackLayout const& m_stackLayout;
 	Stack m_stack;
 	std::map<yul::FunctionCall const*, AbstractAssembly::LabelID> m_returnLabels;
 	std::map<CFG::BasicBlock const*, AbstractAssembly::LabelID> m_blockLabels;
-	std::map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> m_functionLabels;
+	std::map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> const m_functionLabels;
 	/// Set of blocks already generated. If any of the contained blocks is ever jumped to, m_blockLabels should
 	/// contain a jump label for it.
 	std::set<CFG::BasicBlock const*> m_generated;

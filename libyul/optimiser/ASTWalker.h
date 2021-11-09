@@ -102,4 +102,34 @@ protected:
 	}
 };
 
+namespace detail
+{
+template <
+	typename Node,
+	typename Visitor,
+	typename Base = std::conditional_t<std::is_const_v<Node>, ASTWalker, ASTModifier>
+>
+struct ForEach: Base
+{
+	ForEach(Visitor& _visitor): visitor(_visitor) {}
+
+	using Base::operator();
+	void operator()(Node& _node) override
+	{
+		visitor(_node);
+		Base::operator()(_node);
+	}
+
+	Visitor& visitor;
+};
+}
+
+/// Helper function that traverses the AST and calls the visitor for each
+/// node of a specific type.
+template<typename Node, typename Entry, typename Visitor>
+void forEach(Entry&& _entry, Visitor&& _visitor)
+{
+	detail::ForEach<Node, Visitor&>{_visitor}(_entry);
+}
+
 }

@@ -38,7 +38,8 @@ ORANGE='\033[0;33m'
 CYAN='\033[0;36m'
 RESET='\033[0m'
 
-function generate_bytecode_report() {
+function generate_bytecode_report
+{
   rm -rf /tmp/report.txt
 
   local EXIT_STATUS
@@ -74,7 +75,8 @@ function generate_bytecode_report() {
     echo -e "${RED}FAILURE${RESET}"
   fi
 }
-function clean_git_checkout() {
+function clean_git_checkout
+{
   git submodule deinit --all -q
   git reset --hard HEAD --quiet
   git clean -f -d -x --quiet
@@ -82,7 +84,8 @@ function clean_git_checkout() {
   git submodule init -q
   git submodule update -q
 }
-function process_tag() {
+function process_tag
+{
   local TAG=$1
   cd /src
   # Checkout the historic commit instead of the tag directly.

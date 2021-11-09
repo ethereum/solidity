@@ -438,7 +438,7 @@ string IRGenerator::generateModifier(
 		for (size_t i = 0; i < retParamsIn.size(); ++i)
 		{
 			retParams.emplace_back(m_context.newYulVariable());
-			assignRetParams += retParams.back() + " := " + retParamsIn[i] + "\n";
+			assignRetParams += retParams.at(i) + " := " + retParamsIn.at(i) + "\n";
 		}
 		t("retParams", joinHumanReadable(retParams));
 		t("assignRetParams", assignRetParams);
@@ -529,7 +529,7 @@ string IRGenerator::generateFunctionWithModifierInner(FunctionDefinition const& 
 		for (size_t i = 0; i < retParams.size(); ++i)
 		{
 			retParamsIn.emplace_back(m_context.newYulVariable());
-			assignRetParams += retParams.back() + " := " + retParamsIn[i] + "\n";
+			assignRetParams += retParams.at(i) + " := " + retParamsIn.at(i) + "\n";
 		}
 		vector<string> params = retParamsIn;
 		for (auto const& varDecl: _function.parameters())
@@ -1069,9 +1069,6 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 
 string IRGenerator::memoryInit(bool _useMemoryGuard)
 {
-	// TODO: Remove once we have made sure it is safe, i.e. after "Yul memory objects lite".
-	//       Also restore the tests removed in the commit that adds this comment.
-	_useMemoryGuard = false;
 	// This function should be called at the beginning of the EVM call frame
 	// and thus can assume all memory to be zero, including the contents of
 	// the "zero memory area" (the position CompilerUtils::zeroPointer points to).

@@ -134,7 +134,7 @@ def extract_and_write(path, language):
 if __name__ == '__main__':
     script_description = (
         "Reads Solidity, C++ or RST source files and extracts compilable solidity and yul code blocks from them. "
-        "Can be used to generate test cases to validade code examples. "
+        "Can be used to generate test cases to validate code examples. "
     )
 
     parser = ArgumentParser(description=script_description)

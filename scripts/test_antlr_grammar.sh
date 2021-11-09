@@ -20,7 +20,7 @@ SGR_BLUE="\033[34m"
 vt_cursor_up() { echo -ne "\033[A"; }
 vt_cursor_begin_of_line() { echo -ne "\r"; }
 
-download_antlr4()
+function download_antlr4
 {
   if [[ ! -e "$ANTLR_JAR" ]]
   then
@@ -28,7 +28,7 @@ download_antlr4()
   fi
 }
 
-prepare_workdir()
+function prepare_workdir
 {
   mkdir -p "${ROOT_DIR}/build/deps"
   mkdir -p "${WORKDIR}"
@@ -51,7 +51,7 @@ javac -classpath "${ANTLR_JAR}" "${WORKDIR}/src/"*.java -d "${WORKDIR}/target/"
 
 # Run tests
 failed_count=0
-test_file()
+function test_file
 {
   local SOL_FILE
   SOL_FILE="$(${READLINK}  -m "${1}")"

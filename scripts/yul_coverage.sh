@@ -83,7 +83,8 @@ for arg in "$@"; do
   esac
 done
 
-show_output_if() {
+function show_output_if
+{
   local VAR=${1}
   if [ -n "${VAR}" ]; then
     echo "${SOL_FILE}"
@@ -102,7 +103,8 @@ if [ ! -f "${SOLC}" ]; then
   exit 1
 fi
 
-test_file() {
+function test_file
+{
   local SOL_FILE
   local OUTPUT
   SOL_FILE=${1}

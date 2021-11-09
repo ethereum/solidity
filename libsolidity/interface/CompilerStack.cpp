@@ -83,6 +83,7 @@
 #include <utility>
 #include <map>
 #include <limits>
+#include <string>
 
 using namespace std;
 using namespace solidity;
@@ -350,8 +351,22 @@ bool CompilerStack::parse()
 		else
 		{
 			source.ast->annotation().path = path;
+
+			for (auto const& import: ASTNode::filteredNodes<ImportDirective>(source.ast->nodes()))
+			{
+				solAssert(!import->path().empty(), "Import path cannot be empty.");
+
+				// The current value of `path` is the absolute path as seen from this source file.
+				// We first have to apply remappings before we can store the actual absolute path
+				// as seen globally.
+				import->annotation().absolutePath = applyRemapping(util::absolutePath(
+					import->path(),
+					path
+				), path);
+			}
+
 			if (m_stopAfter >= ParsedAndImported)
-				for (auto const& newSource: loadMissingSources(*source.ast, path))
+				for (auto const& newSource: loadMissingSources(*source.ast))
 				{
 					string const& newPath = newSource.first;
 					string const& newContents = newSource.second;
@@ -1091,7 +1106,7 @@ string const& CompilerStack::Source::ipfsUrl() const
 	return ipfsUrlCached;
 }
 
-StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
+StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast)
 {
 	solAssert(m_stackState < ParsedAndImported, "");
 	StringMap newSources;
@@ -1100,14 +1115,8 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 		for (auto const& node: _ast.nodes())
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				solAssert(!import->path().empty(), "Import path cannot be empty.");
+				string const& importPath = *import->annotation().absolutePath;
 
-				string importPath = util::absolutePath(import->path(), _sourcePath);
-				// The current value of `path` is the absolute path as seen from this source file.
-				// We first have to apply remappings before we can store the actual absolute path
-				// as seen globally.
-				importPath = applyRemapping(importPath, _sourcePath);
-				import->annotation().absolutePath = importPath;
 				if (m_sources.count(importPath) || newSources.count(importPath))
 					continue;
 
@@ -1248,7 +1257,9 @@ void CompilerStack::assemble(
 		m_errorReporter.warning(
 			5574_error,
 			_contract.location(),
-			"Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
+			"Contract code size is "s +
+			to_string(compiledContract.runtimeObject.bytecode.size()) +
+			" bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
 			"This contract may not be deployable on mainnet. "
 			"Consider enabling the optimizer (with a low \"runs\" value!), "
 			"turning off revert strings, or using libraries."

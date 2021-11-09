@@ -11,7 +11,7 @@ IR:
 object "C_2" {
     code {
         /// @src 0:265:278  "contract C {}"
-        mstore(64, 128)
+        mstore(64, memoryguard(128))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_C_2()
@@ -42,7 +42,7 @@ object "C_2" {
     object "C_2_deployed" {
         code {
             /// @src 0:265:278  "contract C {}"
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
@@ -82,11 +82,12 @@ object "C_2" {
     code {
         {
             /// @src 0:265:278  "contract C {}"
-            mstore(64, 128)
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_2_deployed")
-            codecopy(128, dataoffset("C_2_deployed"), _1)
-            return(128, _1)
+            let _2 := datasize("C_2_deployed")
+            codecopy(_1, dataoffset("C_2_deployed"), _2)
+            return(_1, _2)
         }
     }
     /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
@@ -94,7 +95,7 @@ object "C_2" {
         code {
             {
                 /// @src 0:265:278  "contract C {}"
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
@@ -115,7 +116,7 @@ IR:
 object "D_27" {
     code {
         /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
-        mstore(64, 128)
+        mstore(64, memoryguard(128))
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_D_27()
@@ -146,7 +147,7 @@ object "D_27" {
     object "D_27_deployed" {
         code {
             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {
@@ -372,7 +373,7 @@ object "D_27" {
         object "C_2" {
             code {
                 /// @src 0:265:278  "contract C {}"
-                mstore(64, 128)
+                mstore(64, memoryguard(128))
                 if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
                 constructor_C_2()
@@ -403,7 +404,7 @@ object "D_27" {
             object "C_2_deployed" {
                 code {
                     /// @src 0:265:278  "contract C {}"
-                    mstore(64, 128)
+                    mstore(64, memoryguard(128))
 
                     revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
@@ -448,11 +449,12 @@ object "D_27" {
     code {
         {
             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
-            mstore(64, 128)
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_27_deployed")
-            codecopy(128, dataoffset("D_27_deployed"), _1)
-            return(128, _1)
+            let _2 := datasize("D_27_deployed")
+            codecopy(_1, dataoffset("D_27_deployed"), _2)
+            return(_1, _2)
         }
     }
     /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
@@ -460,26 +462,25 @@ object "D_27" {
         code {
             {
                 /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
-                mstore(64, 128)
+                let _1 := memoryguard(0x80)
+                mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_1)))
+                    let _2 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_2)))
                     {
-                        if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        if callvalue() { revert(_2, _2) }
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
                         /// @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..."
-                        let _2 := datasize("C_2")
-                        let _3 := add(/** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ 128, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _2)
-                        if or(gt(_3, 0xffffffffffffffff), lt(_3, /** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ 128))
-                        /// @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..."
-                        { panic_error_0x41() }
-                        datacopy(/** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ 128, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ dataoffset("C_2"), _2)
-                        if iszero(create(/** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ _1, 128, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _2))
+                        let _3 := datasize("C_2")
+                        let _4 := add(_1, _3)
+                        if or(gt(_4, 0xffffffffffffffff), lt(_4, _1)) { panic_error_0x41() }
+                        datacopy(_1, dataoffset("C_2"), _3)
+                        if iszero(create(/** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ _2, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _1, sub(_4, _1)))
                         {
                             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
                             let pos := mload(64)
-                            returndatacopy(pos, _1, returndatasize())
+                            returndatacopy(pos, _2, returndatasize())
                             revert(pos, returndatasize())
                         }
                         mstore(add(allocate_memory_array_string(), 32), "/*")
@@ -539,11 +540,12 @@ object "D_27" {
             code {
                 {
                     /// @src 0:265:278  "contract C {}"
-                    mstore(64, 128)
+                    let _1 := memoryguard(0x80)
+                    mstore(64, _1)
                     if callvalue() { revert(0, 0) }
-                    let _1 := datasize("C_2_deployed")
-                    codecopy(128, dataoffset("C_2_deployed"), _1)
-                    return(128, _1)
+                    let _2 := datasize("C_2_deployed")
+                    codecopy(_1, dataoffset("C_2_deployed"), _2)
+                    return(_1, _2)
                 }
             }
             /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
@@ -551,7 +553,7 @@ object "D_27" {
                 code {
                     {
                         /// @src 0:265:278  "contract C {}"
-                        mstore(64, 128)
+                        mstore(64, memoryguard(0x80))
                         revert(0, 0)
                     }
                 }

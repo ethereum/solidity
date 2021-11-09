@@ -4,13 +4,14 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0xC
-// JUMP
-// JUMPDEST
-// PUSH1 0x0
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// SWAP2
-// JUMP
-// JUMPDEST
+//     /* "":0:32   */
+//   stop
+//     /* "":6:30   */
+// tag_1:
+//     /* "":25:26   */
+//   0x00
+//     /* "":22:23   */
+//   0x00
+//     /* "":6:30   */
+//   swap2
+//   jump	// out

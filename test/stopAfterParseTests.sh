@@ -15,7 +15,7 @@ FILETMP=$(mktemp -d)
 cd "$FILETMP" || exit 1
 
 
-function testFile()
+function testFile
 {
 	set +e
 	ALLOUTPUT=$($SOLC --combined-json ast --pretty-json "$@" --stop-after parsing 2>&1)

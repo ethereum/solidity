@@ -26,10 +26,14 @@
 # contains a Makefile in the docker/ subdirectory that can be used to create the
 # required base image using:
 #
-#   make version=2.0.12 build
+#   make version=2.0.33 build
 #
-FROM emscripten/emsdk:2.0.12 AS base
-LABEL version="6"
+# Note that emscripten is supposed to automatically install to $(em-config CACHE)/sysroot, but
+# apparently this currently breaks due to conflicting compatibility headers.
+# Using $(em-config CACHE)/sysroot/usr seems to work, though, and still has cmake find the
+# dependencies automatically.
+FROM emscripten/emsdk:2.0.33 AS base
+LABEL version="7"
 
 ADD emscripten.jam /usr/src
 RUN set -ex; \
@@ -39,8 +43,8 @@ RUN set -ex; \
 	mkdir build; \
 	cd build; \
 	emcmake cmake \
+		-DCMAKE_INSTALL_PREFIX=$(em-config CACHE)/sysroot/usr \
 		-DCMAKE_BUILD_TYPE=MinSizeRel \
-		-DCMAKE_INSTALL_PREFIX=/emsdk/upstream/emscripten/system \
 		-DZ3_BUILD_LIBZ3_SHARED=OFF \
 		-DZ3_ENABLE_EXAMPLE_TARGETS=OFF \
 		-DZ3_BUILD_TEST_EXECUTABLES=OFF \
@@ -63,5 +67,5 @@ RUN set -ex; \
 	./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
 		--with-system --with-filesystem --with-test --with-program_options \
 		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
-	       --prefix=/emsdk/upstream/emscripten/system install; \
+	       --prefix=$(em-config CACHE)/sysroot/usr install; \
 	rm -r /usr/src/boost_1_75_0

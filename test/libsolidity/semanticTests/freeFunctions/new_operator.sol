@@ -15,4 +15,4 @@ contract D {
 // compileViaYul: also
 // ----
 // f() -> 2
-// gas legacy: 101754
+// gas legacy: 101626

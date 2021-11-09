@@ -392,9 +392,9 @@ private:
 	void findAndReportCyclicContractDependencies();
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
-	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
+	/// @a m_readFile
 	/// @returns the newly loaded sources.
-	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
+	StringMap loadMissingSources(SourceUnit const& _ast);
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
 

@@ -5,7 +5,9 @@
     sstore(1, l)
     function f(a, b, c) -> x, y, z
     {
-        x, y, z := f(1, 2, 3)
+        if calldataload(0) {
+            x, y, z := f(1, 2, 3)
+        }
         x := add(x, 1)
     }
 }
@@ -21,9 +23,13 @@
 //     }
 //     function f() -> x, y, z
 //     {
-//         let x_1, y_1, z_1 := f()
-//         y := y_1
-//         z := z_1
-//         x := add(x_1, 1)
+//         if calldataload(0)
+//         {
+//             let x_1, y_1, z_1 := f()
+//             x := x_1
+//             y := y_1
+//             z := z_1
+//         }
+//         x := add(x, 1)
 //     }
 // }

@@ -5,8 +5,26 @@
 Solidity IR-based Codegen Changes
 *********************************
 
-This section highlights the main differences between the old and the IR-based codegen,
-along with the reasoning behind the changes and how to update affected code.
+Solidity can generate EVM bytecode in two different ways:
+Either directly from Solidity to EVM opcodes ("old codegen") or through
+an intermediate representation ("IR") in Yul ("new codegen" or "IR-based codegen").
+
+The IR-based code generator was introduced with an aim to not only allow
+code generation to be more transparent and auditable but also
+to enable more powerful optimization passes that span across functions.
+
+Currently, the IR-based code generator is still marked experimental,
+but it supports all language features and has received a lot of testing,
+so we consider it almost ready for production use.
+
+You can enable it on the command line using ``--experimental-via-ir``
+or with the option ``{"viaIR": true}`` in standard-json and we
+encourage everyone to try it out!
+
+For several reasons, there are tiny semantic differences between the old
+and the IR-based code generator, mostly in areas where we would not
+expect people to rely on this behaviour anyway.
+This section highlights the main differences between the old and the IR-based codegen.
 
 Semantic Only Changes
 =====================
@@ -14,8 +32,13 @@ Semantic Only Changes
 This section lists the changes that are semantic-only, thus potentially
 hiding new and different behavior in existing code.
 
-- When storage structs are deleted, every storage slot that contains a member of the struct is set to zero entirely. Formally, padding space was left untouched.
-  Consequently, if the padding space within a struct is used to store data (e.g. in the context of a contract upgrade), you have to be aware that ``delete`` will now also clear the added member (while it wouldn't have been cleared in the past).
+- When storage structs are deleted, every storage slot that contains
+  a member of the struct is set to zero entirely. Formerly, padding space
+  was left untouched.
+  Consequently, if the padding space within a struct is used to store data
+  (e.g. in the context of a contract upgrade), you have to be aware that
+  ``delete`` will now also clear the added member (while it wouldn't
+  have been cleared in the past).
 
   .. code-block:: solidity
 
@@ -132,7 +155,10 @@ This causes differences in some contracts, for example:
   Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
   With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
 
-- Copying ``bytes`` arrays from memory to storage is implemented in a different way. The old code generator always copies full words, while the new one cuts the byte array after its end. The old behaviour can lead to dirty data being copied after the end of the array (but still in the same storage slot).
+- Copying ``bytes`` arrays from memory to storage is implemented in a different way.
+  The old code generator always copies full words, while the new one cuts the byte
+  array after its end. The old behaviour can lead to dirty data being copied after
+  the end of the array (but still in the same storage slot).
   This causes differences in some contracts, for example:
 
   .. code-block:: solidity
@@ -155,8 +181,10 @@ This causes differences in some contracts, for example:
           }
       }
 
-  Previously ``f()`` would return ``0x6465616462656566313564656164000000000000000000000000000000000010`` (it has correct length, and correct first 8 elements, but then it contains dirty data which was set via assembly).
-  Now it is returning ``0x6465616462656566000000000000000000000000000000000000000000000010`` (it has correct length, and correct elements, but does not contain superfluous data).
+  Previously ``f()`` would return ``0x6465616462656566313564656164000000000000000000000000000000000010``
+  (it has correct length, and correct first 8 elements, but then it contains dirty data which was set via assembly).
+  Now it is returning ``0x6465616462656566000000000000000000000000000000000000000000000010`` (it has
+  correct length, and correct elements, but does not contain superfluous data).
 
   .. index:: ! evaluation order; expression
 
@@ -183,7 +211,8 @@ This causes differences in some contracts, for example:
 
   .. index:: ! evaluation order; function arguments
 
-  On the other hand, function argument expressions are evaluated in the same order by both code generators with the exception of the global functions ``addmod`` and ``mulmod``.
+  On the other hand, function argument expressions are evaluated in the same order
+  by both code generators with the exception of the global functions ``addmod`` and ``mulmod``.
   For example:
 
   .. code-block:: solidity
@@ -227,11 +256,15 @@ This causes differences in some contracts, for example:
   - Old code generator: ``aMod = 0`` and ``mMod = 2``
   - New code generator: ``aMod = 4`` and ``mMod = 0``
 
-- The new code generator imposes a hard limit of ``type(uint64).max`` (``0xffffffffffffffff``) for the free memory pointer. Allocations that would increase its value beyond this limit revert. The old code generator does not have this limit.
+- The new code generator imposes a hard limit of ``type(uint64).max``
+  (``0xffffffffffffffff``) for the free memory pointer. Allocations that would
+  increase its value beyond this limit revert. The old code generator does not
+  have this limit.
 
   For example:
 
   .. code-block:: solidity
+      :force:
 
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >0.8.0;
@@ -264,7 +297,7 @@ The old code generator uses code offsets or tags for values of internal function
 these offsets are different at construction time and after deployment and the values can cross this border via storage.
 Because of that, both offsets are encoded at construction time into the same value (into different bytes).
 
-In the new code generator, function pointers use the AST IDs of the functions as values. Since calls via jumps are not possible,
+In the new code generator, function pointers use internal IDs that are allocated in sequence. Since calls via jumps are not possible,
 calls through function pointers always have to use an internal dispatch function that uses the ``switch`` statement to select
 the right function.
 
@@ -280,6 +313,7 @@ Cleanup
 
 The old code generator only performs cleanup before an operation whose result could be affected by the values of the dirty bits.
 The new code generator performs cleanup after any operation that can result in dirty bits.
+The hope is that the optimizer will be powerful enough to eliminate redundant cleanup operations.
 
 For example:
 

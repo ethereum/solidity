@@ -19,12 +19,21 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
 #include <libyul/optimiser/NameCollector.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libsolutil/CommonData.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
+
+void ConditionalSimplifier::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ConditionalSimplifier{
+		_context.dialect,
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+	}(_ast);
+}
 
 void ConditionalSimplifier::operator()(Switch& _switch)
 {
@@ -65,7 +74,7 @@ void ConditionalSimplifier::operator()(Block& _block)
 				if (
 					holds_alternative<Identifier>(*_if.condition) &&
 					!_if.body.statements.empty() &&
-					TerminationFinder(m_dialect).controlFlowKind(_if.body.statements.back()) !=
+					TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
 						TerminationFinder::ControlFlow::FlowOut
 				)
 				{

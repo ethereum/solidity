@@ -31,7 +31,7 @@
 // b: can revert
 // c:
 // d:
-// reg: can continue
 // x:
 // y:
 // z:
+// reg: can continue

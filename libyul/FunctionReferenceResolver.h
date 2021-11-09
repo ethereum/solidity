@@ -14,31 +14,35 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * AST walker that finds all function definitions and stores them into a map indexed by the function names.
- */
+// SPDX-License-Identifier: GPL-3.0
+
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-
-#include <map>
 
 namespace solidity::yul
 {
 
 /**
- * AST walker that finds all function definitions and stores them into a map indexed by the function names.
+ * Resolves references to user-defined functions in function calls.
+ * Assumes the code is correct, i.e. does not check for references to be valid or unique.
  *
- * Prerequisite: Disambiguator
+ * Be careful not to iterate over the result - it is not deterministic.
  */
-class FunctionDefinitionCollector: ASTWalker
+class FunctionReferenceResolver: private ASTWalker
 {
 public:
-	static std::map<YulString, FunctionDefinition const*> run(Block const& _block);
+	explicit FunctionReferenceResolver(Block const& _ast);
+	std::map<FunctionCall const*, FunctionDefinition const*> const& references() const { return m_functionReferences; }
+
 private:
 	using ASTWalker::operator();
-	void operator()(FunctionDefinition const& _functionDefinition) override;
-	std::map<YulString, FunctionDefinition const*> m_functionDefinitions;
+	void operator()(FunctionCall const& _functionCall) override;
+	void operator()(Block const& _block) override;
+
+	std::map<FunctionCall const*, FunctionDefinition const*> m_functionReferences;
+	std::vector<std::map<YulString, FunctionDefinition const*>> m_scopes;
 };
+
 
 }
