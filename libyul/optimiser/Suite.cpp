@@ -118,7 +118,7 @@ void OptimiserSuite::run(
 
 	// Some steps depend on properties ensured by FunctionHoister, BlockFlattener, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
-	suite.runSequence("hfgo", ast);
+	suite.runSequence("hgfo", ast);
 
 	NameSimplifier::run(suite.m_context, ast);
 	// Now the user-supplied part

@@ -50,9 +50,7 @@ class UnusedPruner: public ASTModifier
 {
 public:
 	static constexpr char const* name{"UnusedPruner"};
-	static void run(OptimiserStepContext& _context, Block& _ast) {
-		UnusedPruner::runUntilStabilisedOnFullAST(_context.dialect, _ast, _context.reservedIdentifiers);
-	}
+	static void run(OptimiserStepContext& _context, Block& _ast);
 
 
 	using ASTModifier::operator();

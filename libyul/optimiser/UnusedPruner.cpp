@@ -21,6 +21,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
@@ -32,6 +33,12 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
+
+void UnusedPruner::run(OptimiserStepContext& _context, Block& _ast)
+{
+	UnusedPruner::runUntilStabilisedOnFullAST(_context.dialect, _ast, _context.reservedIdentifiers);
+	FunctionGrouper::run(_context, _ast);
+}
 
 UnusedPruner::UnusedPruner(
 	Dialect const& _dialect,

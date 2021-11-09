@@ -34,7 +34,7 @@ struct OptimiserStepContext;
  * all function definitions.
  *
  * After this step, a block is of the form
- * { { I...} F... }
+ * { { I... } F... }
  * Where I are (non-function-definition) instructions and F are function definitions.
  */
 class FunctionGrouper

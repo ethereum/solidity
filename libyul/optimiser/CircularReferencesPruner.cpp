@@ -18,6 +18,7 @@
 #include <libyul/optimiser/CircularReferencesPruner.h>
 
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
 
@@ -29,6 +30,7 @@ using namespace solidity::yul;
 void CircularReferencesPruner::run(OptimiserStepContext& _context, Block& _ast)
 {
 	CircularReferencesPruner{_context.reservedIdentifiers}(_ast);
+	FunctionGrouper::run(_context, _ast);
 }
 
 void CircularReferencesPruner::operator()(Block& _block)
