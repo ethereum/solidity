@@ -1,6 +1,7 @@
 function uncompress(source, uncompressedSize) {
 /*
 based off https://github.com/emscripten-core/emscripten/blob/main/third_party/mini-lz4.js
+The license only applies to the body of this function (``uncompress``).
 ====
 MiniLZ4: Minimal LZ4 block decoding and encoding.
 
