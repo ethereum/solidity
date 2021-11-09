@@ -398,7 +398,6 @@ void CompilerStack::importEvmAssemblyJson(map<string, Json::Value> const& _sourc
 
 	Json::Value jsonValue = _sources.begin()->second;
 	if (jsonValue.isMember("sourceList"))
-	{
 		for (auto const& item: jsonValue["sourceList"])
 		{
 			Source source;
@@ -406,7 +405,6 @@ void CompilerStack::importEvmAssemblyJson(map<string, Json::Value> const& _sourc
 			m_sources.emplace(std::make_pair(item.asString(), source));
 			m_sourceOrder.push_back(&m_sources[item.asString()]);
 		}
-	}
 	m_evmAssemblyJson[_sources.begin()->first] = jsonValue;
 	m_importedSources = true;
 	m_stackState = SourcesSet;
@@ -687,12 +685,19 @@ bool CompilerStack::compile(State _stopAfter)
 		optimiserSettings.runJumpdestRemover = m_optimiserSettings.runJumpdestRemover;
 		optimiserSettings.runPeephole = m_optimiserSettings.runPeephole;
 
+		vector<string> sourceList;
+		if (m_evmAssemblyJson[evmAssemblyJsonSource].isMember("sourceList"))
+			for (auto const& it: m_evmAssemblyJson[evmAssemblyJsonSource]["sourceList"])
+				sourceList.emplace_back(it.asString());
+
 		m_contracts[evmAssemblyJsonSource].evmAssembly = make_shared<evmasm::Assembly>(evmAssemblyJsonSource);
+		m_contracts[evmAssemblyJsonSource].evmAssembly->setSources(sourceList);
 		m_contracts[evmAssemblyJsonSource].evmAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmAssemblyJsonSource]);
 		m_contracts[evmAssemblyJsonSource].evmAssembly->optimise(optimiserSettings);
 		m_contracts[evmAssemblyJsonSource].object = m_contracts[evmAssemblyJsonSource].evmAssembly->assemble();
 
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly = make_shared<evmasm::Assembly>(evmAssemblyJsonSource);
+		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->setSources(sourceList);
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmAssemblyJsonSource][".data"]["0"]);
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->optimise(optimiserSettings);
 		m_contracts[evmAssemblyJsonSource].runtimeObject = m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->assemble();

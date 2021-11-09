@@ -523,14 +523,6 @@ bool Assembly::loadFromAssemblyJSON(Json::Value const& _json)
 	if (!_json[".code"].isArray())
 		return false;
 	bool result{true};
-	if (_json.isMember("sourceList"))
-	{
-		vector<string> sourceList;
-		for (auto const& it: _json["sourceList"])
-			sourceList.emplace_back(it.asString());
-		this->setSources(sourceList);
-	}
-
 	addAssemblyItemsFromJSON(_json[".code"]);
 	if (_json[".auxdata"].isString())
 		this->m_auxiliaryData = fromHex(_json[".auxdata"].asString());
