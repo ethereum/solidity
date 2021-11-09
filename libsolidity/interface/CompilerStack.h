@@ -501,7 +501,7 @@ private:
 	std::map<std::string const, Source> m_sources;
 	// if imported, store AST-JSONS for each filename
 	std::map<std::string, Json::Value> m_sourceJsons;
-	std::unique_ptr<Json::Value> m_evmAssemblyJson;
+	std::map<std::string, Json::Value> m_evmAssemblyJson;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;
