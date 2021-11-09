@@ -22,6 +22,8 @@ set -e
 
 # Requires "${REPO_ROOT}/scripts/common.sh" to be included before.
 
+CURRENT_EVM_VERSION=london
+
 function verify_input
 {
     if [ ! -f "$1" ]; then
@@ -51,8 +53,8 @@ function setup_solcjs
 {
     local dir="$1"
     local soljson="$2"
-    local branch="$3"
-    local path="$4"
+    local branch="${3:-master}"
+    local path="${4:-solc/}"
 
     cd "$dir"
     printLog "Setting up solc-js..."
@@ -86,16 +88,6 @@ function force_truffle_version
     sed -i 's/"truffle":\s*".*"/"truffle": "'"$version"'"/g' package.json
 }
 
-function truffle_setup
-{
-    local soljson="$1"
-    local repo="$2"
-    local branch="$3"
-
-    setup_solcjs "$DIR" "$soljson" "master" "solc"
-    download_project "$repo" "$branch" "$DIR"
-}
-
 function replace_version_pragmas
 {
     # Replace fixed-version pragmas (part of Consensys best practice).
@@ -104,25 +96,38 @@ function replace_version_pragmas
     find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
-function force_truffle_solc_modules
+function neutralize_package_lock
 {
-    local soljson="$1"
+    # Remove lock files (if they exist) to prevent them from overriding our changes in package.json
+    printLog "Removing package lock files..."
+    rm --force --verbose yarn.lock
+    rm --force --verbose package-lock.json
+}
 
-    # Replace solc package by v0.5.0 and then overwrite with current version.
-    printLog "Forcing solc version for all Truffle modules..."
-    for d in node_modules node_modules/truffle/node_modules
+function neutralize_package_json_hooks
+{
+    printLog "Disabling package.json hooks..."
+    [[ -f package.json ]] || fail "package.json not found"
+    sed -i 's|"prepublish": *".*"|"prepublish": ""|g' package.json
+    sed -i 's|"prepare": *".*"|"prepare": ""|g' package.json
+}
+
+function force_solc_modules
+{
+    local custom_solcjs_path="${1:-solc/}"
+
+    [[ -d node_modules/ ]] || assertFail
+
+    printLog "Replacing all installed solc-js with a link to the latest version..."
+    soljson_binaries=$(find node_modules -type f -path "*/solc/soljson.js")
+    for soljson_binary in $soljson_binaries
     do
-    (
-        if [ -d "$d" ]; then
-            cd $d
-            rm -rf solc
-            git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
-            cp "$soljson" solc/soljson.js
+        local solc_module_path
+        solc_module_path=$(dirname "$soljson_binary")
 
-            cd solc
-            npm install
-        fi
-    )
+        printLog "Found and replaced solc-js in $solc_module_path"
+        rm -r "$solc_module_path"
+        ln -s "$custom_solcjs_path" "$solc_module_path"
     done
 }
 
@@ -131,7 +136,7 @@ function force_truffle_compiler_settings
     local config_file="$1"
     local solc_path="$2"
     local level="$3"
-    local evm_version="$4"
+    local evm_version="${4:-"$CURRENT_EVM_VERSION"}"
 
     printLog "Forcing Truffle compiler settings..."
     echo "-------------------------------------"
@@ -147,30 +152,18 @@ function force_truffle_compiler_settings
     echo "module.exports['compilers'] = $(truffle_compiler_settings "$solc_path" "$level" "$evm_version");" >> "$config_file"
 }
 
-function verify_compiler_version
+function truffle_verify_compiler_version
 {
     local solc_version="$1"
+    local full_solc_version="$2"
 
-    printLog "Verify that the correct version ($solc_version) of the compiler was used to compile the contracts..."
-    grep -e "$solc_version" -r build/contracts > /dev/null
+    printLog "Verify that the correct version (${solc_version}/${full_solc_version}) of the compiler was used to compile the contracts..."
+    grep "$full_solc_version" --with-filename --recursive build/contracts || fail "Wrong compiler version detected."
 }
 
-function clean
+function truffle_clean
 {
-    rm -rf build || true
-}
-
-function run_install
-{
-    local soljson="$1"
-    local init_fn="$2"
-    printLog "Running install function..."
-
-    replace_version_pragmas
-    force_truffle_solc_modules "$soljson"
-    force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$OPTIMIZER_LEVEL" london
-
-    $init_fn
+    rm -rf build/
 }
 
 function run_test
@@ -219,31 +212,35 @@ function truffle_compiler_settings
     echo "}"
 }
 
+function compile_and_run_test
+{
+    local compile_fn="$1"
+    local test_fn="$2"
+    local verify_fn="$3"
+
+    printLog "Running compile function..."
+    $compile_fn
+    $verify_fn "$SOLCVERSION_SHORT" "$SOLCVERSION"
+
+    if [[ "$COMPILE_ONLY" == 1 ]]; then
+        printLog "Skipping test function..."
+    else
+        printLog "Running test function..."
+        $test_fn
+    fi
+}
+
 function truffle_run_test
 {
-    local soljson="$1"
-    local compile_fn="$2"
-    local test_fn="$3"
+    local config_file="$1"
+    local solc_path="$2"
+    local optimizer_level="$3"
+    local compile_fn="$4"
+    local test_fn="$5"
 
-    replace_version_pragmas
-    force_truffle_solc_modules "$soljson"
-
-    for level in $(seq "$OPTIMIZER_LEVEL" 3)
-    do
-        clean
-        force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$level" london
-
-        printLog "Running compile function..."
-        $compile_fn
-        verify_compiler_version "$SOLCVERSION"
-
-        if [[ "$COMPILE_ONLY" == 1 ]]; then
-            printLog "Skipping test function..."
-        else
-            printLog "Running test function..."
-            $test_fn
-        fi
-    done
+    truffle_clean
+    force_truffle_compiler_settings "$config_file" "$solc_path" "$optimizer_level"
+    compile_and_run_test compile_fn test_fn truffle_verify_compiler_version
 }
 
 function external_test

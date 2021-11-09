@@ -27,19 +27,30 @@ source test/externalTests/common.sh
 verify_input "$1"
 SOLJSON="$1"
 
-function install_fn { npm install; }
 function compile_fn { npx truffle compile; }
 function test_fn { npm run test; }
 
 function zeppelin_test
 {
-    OPTIMIZER_LEVEL=1
-    CONFIG="truffle-config.js"
+    local repo="https://github.com/OpenZeppelin/openzeppelin-contracts.git"
+    local branch=master
+    local config_file="truffle-config.js"
+    local min_optimizer_level=1
+    local max_optimizer_level=3
 
-    truffle_setup "$SOLJSON" https://github.com/OpenZeppelin/openzeppelin-contracts.git master
-    run_install "$SOLJSON" install_fn
+    setup_solcjs "$DIR" "$SOLJSON"
+    download_project "$repo" "$branch" "$DIR"
 
-    truffle_run_test "$SOLJSON" compile_fn test_fn
+    neutralize_package_json_hooks
+    force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
+    npm install
+
+    replace_version_pragmas
+    force_solc_modules "${DIR}/solc"
+
+    for level in $(seq "$min_optimizer_level" "$max_optimizer_level"); do
+        truffle_run_test "$config_file" "${DIR}/solc" "$level" compile_fn test_fn
+    done
 }
 
 external_test Zeppelin zeppelin_test
