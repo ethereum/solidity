@@ -29,6 +29,7 @@ Bugfixes:
  * TypeChecker: Improved error message for constant variables with (nested) mapping types.
  * Yul Assembler: Fix internal error when function names are not unique.
  * Yul IR Generator: Do not output empty switches/if-bodies for empty contracts.
+ * ICE in StructType::isDynamicallyEncoded() when a function has a calldata struct argument with an internal type inside
 
 
 Build System:
