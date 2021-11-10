@@ -687,13 +687,13 @@ bool CompilerStack::compile(State _stopAfter)
 
 		m_contracts[evmAssemblyJsonSource].evmAssembly = make_shared<evmasm::Assembly>(evmAssemblyJsonSource);
 		m_contracts[evmAssemblyJsonSource].evmAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmAssemblyJsonSource]);
-		m_contracts[evmAssemblyJsonSource].evmAssembly->optimise(optimiserSettings);
+//		m_contracts[evmAssemblyJsonSource].evmAssembly->optimise(optimiserSettings);
 		m_contracts[evmAssemblyJsonSource].object = m_contracts[evmAssemblyJsonSource].evmAssembly->assemble();
 
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly = make_shared<evmasm::Assembly>(evmAssemblyJsonSource);
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->setSources(m_contracts[evmAssemblyJsonSource].evmAssembly->sources());
 		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmAssemblyJsonSource][".data"]["0"], false);
-		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->optimise(optimiserSettings);
+//		m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->optimise(optimiserSettings);
 		m_contracts[evmAssemblyJsonSource].runtimeObject = m_contracts[evmAssemblyJsonSource].evmRuntimeAssembly->assemble();
 	}
 	else
