@@ -44,7 +44,9 @@ commands:
           name: "Gitter notification"
           when: << parameters.condition >>
           command: |
-            [[ $CI_PULL_REQUEST == "" ]] || { echo "Running on a PR - notification skipped."; exit 0; }
+            # FIXME: Checking $CIRCLE_PULL_REQUEST would be better than hard-coding branch names
+            # but it's broken. CircleCI associates runs on develop/breaking with random old PRs.
+            [[ $CIRCLE_BRANCH == develop || $CIRCLE_BRANCH == breaking ]] || { echo "Running on a PR or a feature branch - notification skipped."; exit 0; }
 
             [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ Nightly job **${CIRCLE_JOB}** failed on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
             [[ "<< parameters.event >>" == "success" ]] && message=" ✅ Nightly job **${CIRCLE_JOB}** succeeded on **${CIRCLE_BRANCH}**. Please see [build #${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
