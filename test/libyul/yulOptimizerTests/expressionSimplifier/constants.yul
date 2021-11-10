@@ -5,4 +5,4 @@
 // ----
 // step: expressionSimplifier
 //
-// { sstore(7, 13) }
+// { { sstore(7, 13) } }

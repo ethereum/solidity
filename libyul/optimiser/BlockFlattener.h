@@ -27,7 +27,7 @@ class BlockFlattener: public ASTModifier
 {
 public:
 	static constexpr char const* name{"BlockFlattener"};
-	static void run(OptimiserStepContext&, Block& _ast) { BlockFlattener{}(_ast); }
+	static void run(OptimiserStepContext&, Block& _ast);
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;

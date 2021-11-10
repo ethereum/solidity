@@ -10,6 +10,8 @@
 // step: ssaAndBack
 //
 // {
-//     let a_5 := mload(4)
-//     mstore(a_5, 0)
+//     {
+//         let a_5 := mload(4)
+//         mstore(a_5, 0)
+//     }
 // }

@@ -972,15 +972,19 @@ BlockFlattener
 ^^^^^^^^^^^^^^
 
 This stage eliminates nested blocks by inserting the statement in the
-inner block at the appropriate place in the outer block:
+inner block at the appropriate place in the outer block. It depends on the
+FunctionGrouper and does not flatten the outermost block to keep the form
+produced by the FunctionGrouper.
 
 .. code-block:: yul
 
     {
-        let x := 2
         {
-            let y := 3
-            mstore(x, y)
+            let x := 2
+            {
+                let y := 3
+                mstore(x, y)
+            }
         }
     }
 
@@ -989,9 +993,11 @@ is transformed to
 .. code-block:: yul
 
     {
-        let x := 2
-        let y := 3
-        mstore(x, y)
+        {
+            let x := 2
+            let y := 3
+            mstore(x, y)
+        }
     }
 
 As long as the code is disambiguated, this does not cause a problem because

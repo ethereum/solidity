@@ -11,9 +11,11 @@
 // step: loadResolver
 //
 // {
-//     let _1 := msize()
-//     let _2 := 0
-//     sstore(_2, _1)
-//     mstore(_2, 10)
-//     sstore(1, keccak256(_2, 32))
+//     {
+//         let _1 := msize()
+//         let _2 := 0
+//         sstore(_2, _1)
+//         mstore(_2, 10)
+//         sstore(1, keccak256(_2, 32))
+//     }
 // }

@@ -9,9 +9,11 @@
 // step: expressionSimplifier
 //
 // {
-//     let _1 := msize()
-//     let _2 := 0
-//     sstore(_2, _1)
-//     pop(keccak256(_2, _2))
-//     sstore(20, 0)
+//     {
+//         let _1 := msize()
+//         let _2 := 0
+//         sstore(_2, _1)
+//         pop(keccak256(_2, _2))
+//         sstore(20, 0)
+//     }
 // }

@@ -5,4 +5,4 @@
 // ----
 // step: unusedPruner
 //
-// { }
+// { { } }

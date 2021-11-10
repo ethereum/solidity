@@ -6,4 +6,4 @@
 // ----
 // step: unusedPruner
 //
-// { sstore(0, 5) }
+// { { sstore(0, 5) } }

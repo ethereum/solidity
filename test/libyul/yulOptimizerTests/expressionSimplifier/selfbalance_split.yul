@@ -9,6 +9,8 @@
 // step: expressionSimplifier
 //
 // {
-//     let a := address()
-//     sstore(a, selfbalance())
+//     {
+//         let a := address()
+//         sstore(a, selfbalance())
+//     }
 // }

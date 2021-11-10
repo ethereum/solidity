@@ -37,6 +37,8 @@ namespace solidity::yul
 {
 
 /// Removes statements that are just empty blocks (non-recursive).
+/// If this is run on the outermost block, the FunctionGrouper should be run afterwards to keep
+/// the canonical form.
 void removeEmptyBlocks(Block& _block);
 
 /// Returns true if a given literal can not be used as an identifier.

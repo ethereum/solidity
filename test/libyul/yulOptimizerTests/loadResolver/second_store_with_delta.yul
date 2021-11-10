@@ -13,12 +13,14 @@
 // step: loadResolver
 //
 // {
-//     let x := calldataload(1)
-//     let a := add(x, 10)
-//     let b := add(x, 20)
-//     let _4 := 7
-//     sstore(a, _4)
-//     let _5 := 8
-//     sstore(b, _5)
-//     mstore(_4, _5)
+//     {
+//         let x := calldataload(1)
+//         let a := add(x, 10)
+//         let b := add(x, 20)
+//         let _4 := 7
+//         sstore(a, _4)
+//         let _5 := 8
+//         sstore(b, _5)
+//         mstore(_4, _5)
+//     }
 // }

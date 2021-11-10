@@ -6,4 +6,4 @@
 // ----
 // step: expressionSimplifier
 //
-// { sstore(0, 0) }
+// { { sstore(0, 0) } }

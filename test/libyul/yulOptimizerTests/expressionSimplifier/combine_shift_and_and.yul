@@ -13,7 +13,9 @@
 // step: expressionSimplifier
 //
 // {
-//     let x := calldataload(0)
-//     let a := and(0xff, and(shr(248, x), 255))
-//     sstore(a, shr(12, and(shl(8, x), 15790080)))
+//     {
+//         let x := calldataload(0)
+//         let a := and(0xff, and(shr(248, x), 255))
+//         sstore(a, shr(12, and(shl(8, x), 15790080)))
+//     }
 // }

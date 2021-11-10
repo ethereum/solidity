@@ -7,5 +7,7 @@
 // step: expressionJoiner
 //
 // {
-//     sstore(calldataload(mload(2)), 3)
+//     {
+//         sstore(calldataload(mload(2)), 3)
+//     }
 // }

@@ -24,25 +24,27 @@
 // step: expressionSimplifier
 //
 // {
-//     let x := calldataload(0)
-//     let _2 := 0xf
-//     let _5 := and(shr(248, x), 0)
-//     let _10 := 0xff
-//     let a := and(_5, 255)
-//     let _14 := and(shr(4, x), 3855)
-//     let _15 := 12
-//     let b := shl(_15, _14)
-//     let _19 := and(shr(4, x), 3855)
-//     let c := shl(_15, _19)
-//     let d := shl(_15, and(shr(255, x), 0))
-//     let e := shl(_10, _19)
-//     let f := 0
-//     let g := 0
-//     sstore(10, a)
-//     sstore(11, b)
-//     sstore(_15, c)
-//     sstore(13, d)
-//     sstore(14, e)
-//     sstore(_2, f)
-//     sstore(16, g)
+//     {
+//         let x := calldataload(0)
+//         let _2 := 0xf
+//         let _5 := and(shr(248, x), 0)
+//         let _10 := 0xff
+//         let a := and(_5, 255)
+//         let _14 := and(shr(4, x), 3855)
+//         let _15 := 12
+//         let b := shl(_15, _14)
+//         let _19 := and(shr(4, x), 3855)
+//         let c := shl(_15, _19)
+//         let d := shl(_15, and(shr(255, x), 0))
+//         let e := shl(_10, _19)
+//         let f := 0
+//         let g := 0
+//         sstore(10, a)
+//         sstore(11, b)
+//         sstore(_15, c)
+//         sstore(13, d)
+//         sstore(14, e)
+//         sstore(_2, f)
+//         sstore(16, g)
+//     }
 // }
