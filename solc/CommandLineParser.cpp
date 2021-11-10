@@ -657,8 +657,8 @@ General Information)").c_str(),
 		(
 			g_strImportAst.c_str(),
 			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
-			 "Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
-																			  "--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
+			"Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
+			"--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
 		)
 		(
 			g_strImportEvmAssemblerJson.c_str(),
