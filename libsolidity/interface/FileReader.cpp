@@ -116,7 +116,6 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 		for (auto const& prefix: prefixes)
 		{
 			boost::filesystem::path canonicalPath = normalizeCLIPathForVFS(prefix / strippedSourceUnitName, SymlinkResolution::Enabled);
-
 			if (boost::filesystem::exists(canonicalPath))
 				candidates.push_back(std::move(canonicalPath));
 		}
@@ -124,7 +123,12 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 		auto pathToQuotedString = [](boost::filesystem::path const& _path){ return "\"" + _path.string() + "\""; };
 
 		if (candidates.empty())
-			return ReadCallback::Result{false, "File not found."};
+			return ReadCallback::Result{
+				false,
+				"File not found. Searched the following locations: " +
+				joinHumanReadable(prefixes | ranges::views::transform(pathToQuotedString), ", ") +
+				"."
+			};
 
 		if (candidates.size() >= 2)
 			return ReadCallback::Result{
@@ -135,11 +139,13 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 				"."
 			};
 
-		FileSystemPathSet extraAllowedPaths = {m_basePath.empty() ? "." : m_basePath};
-		extraAllowedPaths += m_includePaths;
+		FileSystemPathSet allowedPaths =
+			m_allowedDirectories +
+			decltype(allowedPaths){m_basePath.empty() ? "." : m_basePath} +
+			m_includePaths;
 
 		bool isAllowed = false;
-		for (boost::filesystem::path const& allowedDir: m_allowedDirectories + extraAllowedPaths)
+		for (boost::filesystem::path const& allowedDir: allowedPaths)
 			if (isPathPrefix(normalizeCLIPathForVFS(allowedDir, SymlinkResolution::Enabled), candidates[0]))
 			{
 				isAllowed = true;
@@ -147,7 +153,12 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 			}
 
 		if (!isAllowed)
-			return ReadCallback::Result{false, "File outside of allowed directories."};
+			return ReadCallback::Result{
+				false,
+				"File outside of allowed directories. The following are allowed: " +
+				joinHumanReadable(allowedPaths | ranges::views::transform(pathToQuotedString), ", ") +
+				"."
+			};
 
 		if (!boost::filesystem::is_regular_file(candidates[0]))
 			return ReadCallback::Result{false, "Not a valid file."};
