@@ -154,7 +154,7 @@ function ask_expectation_update
 
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
 # An failure is expected.
-function test_solc_behaviour
+function test_solc_behaviour()
 {
     local filename="${1}"
     local solc_args
@@ -288,7 +288,7 @@ EOF
 }
 
 
-function test_solc_assembly_output
+function test_solc_assembly_output()
 {
     local input="${1}"
     local expected="${2}"
@@ -571,6 +571,18 @@ SOLTMPDIR=$(mktemp -d)
     fi
 )
 rm -r "$SOLTMPDIR"
+
+printTask "Testing ASM-JSON import..."
+SOLTMPDIR=$(mktemp -d)
+(
+    cd "$SOLTMPDIR"
+    if ! "$REPO_ROOT/scripts/AsmJsonImportTest.sh"
+    then
+        rm -rf "$SOLTMPDIR"
+        exit 1
+    fi
+)
+rm -rf "$SOLTMPDIR"
 
 printTask "Testing AST export with stop-after=parsing..."
 "$REPO_ROOT/test/stopAfterParseTests.sh"

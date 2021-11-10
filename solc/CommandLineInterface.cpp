@@ -790,7 +790,7 @@ bool CommandLineInterface::compile()
 				return false;
 			}
 		}
-		if (m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport)
+		else if (m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport)
 		{
 			solAssert(m_fileReader.sourceCodes().size() == 1, "");
 			try
