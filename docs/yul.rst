@@ -714,13 +714,15 @@ We will use a destructuring notation for the AST nodes.
         L'[$parami] = vi and L'[$reti] = 0 for all i.
         Let G'', L'', mode = E(Gn, L', block)
         G'', Ln, L''[$ret1], ..., L''[$retm]
-    E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
-        where utf8EncodeLeftAligned performs a UTF-8 encoding of l
-        and aligns it left into 32 bytes
+    E(G, L, l: StringLiteral) = G, L, str(l),
+        where str is the string evaluation function,
+        which for the EVM dialect is defined in the section 'Literals' above
     E(G, L, n: HexNumber) = G, L, hex(n)
-        where hex is the hexadecimal decoding function
+        where hex is the hexadecimal evaluation function,
+        which turns a sequence of hexadecimal digits into their big endian value
     E(G, L, n: DecimalNumber) = G, L, dec(n),
-        where dec is the decimal decoding function
+        where dec is the decimal evaluation function,
+        which turns a sequence of decimal digits into their big endian value
 
 .. _opcodes:
 
