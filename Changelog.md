@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Yul Optimizer: Remove ``mstore`` and ``sstore`` operations if the slot already contains the same value.
 
 
 

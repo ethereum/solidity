@@ -32,6 +32,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
+#include <libyul/optimiser/EqualStoreEliminator.h>
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
@@ -204,6 +205,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			ConditionalUnsimplifier,
 			ControlFlowSimplifier,
 			DeadCodeEliminator,
+			EqualStoreEliminator,
 			EquivalentFunctionCombiner,
 			ExpressionInliner,
 			ExpressionJoiner,
@@ -244,6 +246,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{ConditionalUnsimplifier::name,       'U'},
 		{ControlFlowSimplifier::name,         'n'},
 		{DeadCodeEliminator::name,            'D'},
+		{EqualStoreEliminator::name,          'E'},
 		{EquivalentFunctionCombiner::name,    'v'},
 		{ExpressionInliner::name,             'e'},
 		{ExpressionJoiner::name,              'j'},

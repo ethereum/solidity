@@ -28,6 +28,7 @@
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
+#include <libyul/optimiser/EqualStoreEliminator.h>
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
 #include <libyul/optimiser/FunctionGrouper.h>
@@ -235,6 +236,11 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			disambiguate();
 			ForLoopInitRewriter::run(*m_context, *m_ast);
 			UnusedAssignEliminator::run(*m_context, *m_ast);
+		}},
+		{"equalStoreEliminator", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			EqualStoreEliminator::run(*m_context, *m_ast);
 		}},
 		{"ssaPlusCleanup", [&]() {
 			disambiguate();
