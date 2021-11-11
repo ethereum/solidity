@@ -637,6 +637,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::ABIEncode:
 	case FunctionType::Kind::ABIEncodePacked:
 	case FunctionType::Kind::ABIEncodeWithSelector:
+	case FunctionType::Kind::ABIEncodeCall:
 	case FunctionType::Kind::ABIEncodeWithSignature:
 		visitABIFunction(_funCall);
 		break;
@@ -3041,6 +3042,7 @@ set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
 				case FunctionType::Kind::ABIEncode:
 				case FunctionType::Kind::ABIEncodePacked:
 				case FunctionType::Kind::ABIEncodeWithSelector:
+				case FunctionType::Kind::ABIEncodeCall:
 				case FunctionType::Kind::ABIEncodeWithSignature:
 				case FunctionType::Kind::ABIDecode:
 					abiCalls.insert(&_funCall);

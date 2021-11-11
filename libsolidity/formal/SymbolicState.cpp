@@ -236,6 +236,15 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 			else
 				solAssert(false, "Unexpected argument of abi.decode");
 		}
+		else if (t->kind() == FunctionType::Kind::ABIEncodeCall)
+		{
+			// abi.encodeCall : (functionPointer, tuple_of_args_or_one_non_tuple_arg(arguments)) -> bytes
+			solAssert(args.size() == 2, "Unexpected number of arguments for abi.encodeCall");
+
+			outTypes.emplace_back(TypeProvider::bytesMemory());
+			inTypes.emplace_back(args.at(0)->annotation().type);
+			inTypes.emplace_back(args.at(1)->annotation().type);
+		}
 		else
 		{
 			outTypes = returnTypes;

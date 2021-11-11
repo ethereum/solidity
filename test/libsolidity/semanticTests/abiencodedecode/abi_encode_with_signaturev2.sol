@@ -26,7 +26,6 @@ contract C {
     }
     struct S { uint a; string b; uint16 c; }
     function f4() public pure returns (bytes memory) {
-        bytes4 x = 0x12345678;
         S memory s;
         s.a = 0x1234567;
         s.b = "Lorem ipsum dolor sit ethereum........";
