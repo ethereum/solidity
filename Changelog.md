@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Fix a crash when using ``@use-src`` and compiling from Yul to ewasm.
 
 
 ### 0.8.10 (2021-11-09)
