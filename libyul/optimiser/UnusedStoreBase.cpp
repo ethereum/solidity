@@ -23,6 +23,7 @@
 
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
@@ -155,19 +156,4 @@ void UnusedStoreBase::merge(TrackedStores& _target, vector<TrackedStores>&& _sou
 	for (TrackedStores& ts: _source)
 		merge(_target, move(ts));
 	_source.clear();
-}
-
-void StatementRemover::operator()(Block& _block)
-{
-	util::iterateReplacing(
-		_block.statements,
-		[&](Statement& _statement) -> std::optional<vector<Statement>>
-		{
-			if (m_toRemove.count(&_statement))
-				return {vector<Statement>{}};
-			else
-				return nullopt;
-		}
-	);
-	ASTModifier::operator()(_block);
 }

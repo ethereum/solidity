@@ -57,3 +57,18 @@ optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, Yul
 			return builtin->instruction;
 	return nullopt;
 }
+
+void StatementRemover::operator()(Block& _block)
+{
+	util::iterateReplacing(
+		_block.statements,
+		[&](Statement& _statement) -> std::optional<vector<Statement>>
+		{
+			if (m_toRemove.count(&_statement))
+				return {vector<Statement>{}};
+			else
+				return nullopt;
+		}
+	);
+	ASTModifier::operator()(_block);
+}
