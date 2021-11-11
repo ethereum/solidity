@@ -20,9 +20,7 @@
 //         f()
 //         sstore(0, 1)
 //         f()
-//         sstore(0, 1)
 //         f()
-//         sstore(0, 1)
 //     }
 //     function f()
 //     {
