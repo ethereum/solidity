@@ -31,6 +31,12 @@ a 0.y.z version number `to indicate this fast pace of change <https://semver.org
 Ideas for improving Solidity or this documentation are always welcome,
 read our :doc:`contributors guide <contributing>` for more details.
 
+.. Hint::
+
+   You can download this documentation as PDF, HTML or Epub by clicking on the versions 
+   flyout menu in the left bottom corner and selecting the preferred download format.
+
+
 Getting Started
 ---------------
 
