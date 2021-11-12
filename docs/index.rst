@@ -33,8 +33,8 @@ read our :doc:`contributors guide <contributing>` for more details.
 
 .. Hint::
 
-   You can download this documentation as PDF, HTML or Epub by clicking on the versions 
-   flyout menu in the left bottom corner and selecting the preferred download format.
+  You can download this documentation as PDF, HTML or Epub by clicking on the versions
+  flyout menu in the bottom-left corner and selecting the preferred download format.
 
 
 Getting Started
