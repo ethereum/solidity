@@ -193,7 +193,8 @@ private:
 	bool addAssemblyItemsFromJSON(Json::Value const& _code);
 	static Json::Value createJsonValue(
 		std::string _name,
-		int _source,
+		int _sourceIndex,
+		size_t _modifierDepth,
 		int _begin,
 		int _end,
 		std::string _value = std::string(),
