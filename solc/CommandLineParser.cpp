@@ -267,6 +267,8 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 	if (optimizer.yulSteps.has_value())
 		settings.yulOptimiserSteps = optimizer.yulSteps.value();
 
+	settings.enabled = optimizer.enabled;
+
 	return settings;
 }
 
