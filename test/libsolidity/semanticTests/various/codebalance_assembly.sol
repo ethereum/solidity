@@ -23,6 +23,7 @@ contract C {
 // compileViaYul: also
 // ----
 // constructor(), 23 wei ->
+// gas legacy: 100517
 // f() -> 0
 // g() -> 1
 // h() -> 23

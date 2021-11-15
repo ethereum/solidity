@@ -17,6 +17,8 @@ contract C {
 // compileViaYul: also
 // ----
 // constructor() ->
-// gas legacy: 249112
+// gas irOptimized: 177344
+// gas legacy: 250376
+// gas legacyOptimized: 174522
 // deposit(bytes32), 18 wei: 0x1234 ->
 // ~ emit Deposit(address,bytes32,uint256) from 0xf01f7809444bd9a93a854361c6fae3f23d9e23db: #0x0fdd67305928fcac8d213d1e47bfa6165cd0b87b, #0x1234, 0x00
