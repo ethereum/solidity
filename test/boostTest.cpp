@@ -204,15 +204,18 @@ int registerTests(
 	return numTestsAdded;
 }
 
-void initializeOptions()
+bool initializeOptions()
 {
 	auto const& suite = boost::unit_test::framework::master_test_suite();
 
 	auto options = std::make_unique<solidity::test::CommonOptions>();
-	solAssert(options->parse(suite.argc, suite.argv), "Failed to parse options!");
+	bool shouldContinue = options->parse(suite.argc, suite.argv);
+	if (!shouldContinue)
+		return false;
 	options->validate();
 
 	solidity::test::CommonOptions::setSingleton(std::move(options));
+	return true;
 }
 
 }
@@ -228,7 +231,9 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
 
-	initializeOptions();
+	bool shouldContinue = initializeOptions();
+	if (!shouldContinue)
+		exit(0);
 
 	if (!solidity::test::loadVMs(solidity::test::CommonOptions::get()))
 		exit(1);
