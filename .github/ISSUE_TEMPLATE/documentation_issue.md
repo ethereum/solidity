@@ -1,6 +1,10 @@
 ---
 name: Documentation Issue
 about: Solidity documentation.
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 ## Page

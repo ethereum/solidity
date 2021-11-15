@@ -1,6 +1,10 @@
 ---
 name: Bug Report
 about: Bug reports about the Solidity Compiler.
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 <!--## Prerequisites
