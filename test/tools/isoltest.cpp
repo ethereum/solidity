@@ -433,8 +433,9 @@ int main(int argc, char const *argv[])
 		{
 			auto options = std::make_unique<IsolTestOptions>();
 
-			if (!options->parse(argc, argv))
-				return -1;
+			bool shouldContinue = options->parse(argc, argv);
+			if (!shouldContinue)
+				return 0;
 
 			options->validate();
 			CommonOptions::setSingleton(std::move(options));

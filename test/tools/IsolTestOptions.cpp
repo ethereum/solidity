@@ -75,9 +75,9 @@ void IsolTestOptions::addOptions()
 
 bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 {
-	bool const res = CommonOptions::parse(_argc, _argv);
+	bool const shouldContinue = CommonOptions::parse(_argc, _argv);
 
-	if (showHelp || !res)
+	if (showHelp || !shouldContinue)
 	{
 		std::cout << options << std::endl;
 		return false;
@@ -85,7 +85,7 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 
 	enforceGasTest = enforceGasTest || (evmVersion() == langutil::EVMVersion{} && !useABIEncoderV1);
 
-	return res;
+	return shouldContinue;
 }
 
 void IsolTestOptions::validate() const
