@@ -222,75 +222,88 @@ bool initializeOptions()
 
 // TODO: Prototype -- why isn't this declared in the boost headers?
 // TODO: replace this with a (global) fixture.
-test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] );
+test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/[]);
 
-test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
+test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/[])
 {
 	using namespace solidity::test;
 
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
 
-	bool shouldContinue = initializeOptions();
-	if (!shouldContinue)
-		exit(0);
-
-	if (!solidity::test::loadVMs(solidity::test::CommonOptions::get()))
-		exit(1);
-
-	if (solidity::test::CommonOptions::get().disableSemanticTests)
-		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
-
-	if (!solidity::test::CommonOptions::get().enforceGasTest)
-		cout << endl << "WARNING :: Gas Cost Expectations are not being enforced" << endl << endl;
-
-	Batcher batcher(CommonOptions::get().selectedBatch, CommonOptions::get().batches);
-	if (CommonOptions::get().batches > 1)
-		cout << "Batch " << CommonOptions::get().selectedBatch << " out of " << CommonOptions::get().batches << endl;
-
-	// Batch the boost tests
-	BoostBatcher boostBatcher(batcher);
-	traverse_test_tree(master, boostBatcher, true);
-
-	// Include the interactive tests in the automatic tests as well
-	for (auto const& ts: g_interactiveTestsuites)
+	try
 	{
-		auto const& options = solidity::test::CommonOptions::get();
+		bool shouldContinue = initializeOptions();
+		if (!shouldContinue)
+			exit(0);
 
-		if (ts.smt && options.disableSMT)
-			continue;
+		if (!solidity::test::loadVMs(solidity::test::CommonOptions::get()))
+			exit(1);
 
-		if (ts.needsVM && solidity::test::CommonOptions::get().disableSemanticTests)
-			continue;
+		if (solidity::test::CommonOptions::get().disableSemanticTests)
+			cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 
-		//TODO
-		//solAssert(
-		registerTests(
-			master,
-			options.testPath / ts.path,
-			ts.subpath,
-			options.enforceViaYul,
-			options.enforceCompileToEwasm,
-			ts.labels,
-			ts.testCaseCreator,
-			batcher
-		);
-		// > 0, std::string("no ") + ts.title + " tests found");
+		if (!solidity::test::CommonOptions::get().enforceGasTest)
+			cout << endl << "WARNING :: Gas Cost Expectations are not being enforced" << endl << endl;
+
+		Batcher batcher(CommonOptions::get().selectedBatch, CommonOptions::get().batches);
+		if (CommonOptions::get().batches > 1)
+			cout << "Batch " << CommonOptions::get().selectedBatch << " out of " << CommonOptions::get().batches << endl;
+
+		// Batch the boost tests
+		BoostBatcher boostBatcher(batcher);
+		traverse_test_tree(master, boostBatcher, true);
+
+		// Include the interactive tests in the automatic tests as well
+		for (auto const& ts: g_interactiveTestsuites)
+		{
+			auto const& options = solidity::test::CommonOptions::get();
+
+			if (ts.smt && options.disableSMT)
+				continue;
+
+			if (ts.needsVM && solidity::test::CommonOptions::get().disableSemanticTests)
+				continue;
+
+			//TODO
+			//solAssert(
+			registerTests(
+				master,
+				options.testPath / ts.path,
+				ts.subpath,
+				options.enforceViaYul,
+				options.enforceCompileToEwasm,
+				ts.labels,
+				ts.testCaseCreator,
+				batcher
+			);
+			// > 0, std::string("no ") + ts.title + " tests found");
+		 }
+
+		if (solidity::test::CommonOptions::get().disableSemanticTests)
+		{
+			for (auto suite: {
+				"ABIDecoderTest",
+				"ABIEncoderTest",
+				"SolidityAuctionRegistrar",
+				"SolidityWallet",
+				"GasMeterTests",
+				"GasCostTests",
+				"SolidityEndToEndTest",
+				"SolidityOptimizer"
+			})
+				removeTestSuite(suite);
+		}
 	}
-
-	if (solidity::test::CommonOptions::get().disableSemanticTests)
+	catch (solidity::test::ConfigException const& exception)
 	{
-		for (auto suite: {
-			"ABIDecoderTest",
-			"ABIEncoderTest",
-			"SolidityAuctionRegistrar",
-			"SolidityWallet",
-			"GasMeterTests",
-			"GasCostTests",
-			"SolidityEndToEndTest",
-			"SolidityOptimizer"
-		})
-			removeTestSuite(suite);
+		cerr << exception.what() << endl;
+		exit(1);
+	}
+	catch (std::runtime_error const& exception)
+	{
+		cerr << exception.what() << endl;
+		exit(1);
 	}
 
 	return nullptr;
