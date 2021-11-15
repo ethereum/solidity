@@ -499,9 +499,20 @@ int main(int argc, char const *argv[])
 
 		return global_stats ? 0 : 1;
 	}
-	catch (std::exception const& _exception)
+	catch (boost::program_options::error const& exception)
 	{
-		cerr << _exception.what() << endl;
+		cerr << exception.what() << endl;
+		return 1;
+	}
+	catch (std::runtime_error const& exception)
+	{
+		cerr << exception.what() << endl;
+		return 1;
+	}
+	catch (...)
+	{
+		cerr << "Unhandled exception caught." << endl;
+		cerr << boost::current_exception_diagnostic_information() << endl;
 		return 1;
 	}
 }
