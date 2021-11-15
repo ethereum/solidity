@@ -407,7 +407,10 @@ TestCase::TestResult SemanticTest::runTest(
 			if (m_transactionSuccessful == test.call().expectations.failure)
 				success = false;
 			if (success && !checkGasCostExpectation(test, _isYulRun))
+			{
+				success = false;
 				m_gasCostFailure = true;
+			}
 
 			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(bytes());
