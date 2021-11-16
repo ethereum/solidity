@@ -475,6 +475,12 @@ bool CommandLineParser::parseOutputSelection()
 			CompilerOutputs::componentName(&CompilerOutputs::ewasm),
 			CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
 		};
+		static set<string> const assemblyJsonImportModeOutputs = {
+			CompilerOutputs::componentName(&CompilerOutputs::asm_),
+			CompilerOutputs::componentName(&CompilerOutputs::binary),
+			CompilerOutputs::componentName(&CompilerOutputs::binaryRuntime),
+			CompilerOutputs::componentName(&CompilerOutputs::opcodes),
+		};
 
 		switch (_mode)
 		{
@@ -483,9 +489,10 @@ bool CommandLineParser::parseOutputSelection()
 		case InputMode::Version:
 			solAssert(false);
 		case InputMode::Compiler:
-		case InputMode::CompilerWithEvmAssemblyJsonImport:
 		case InputMode::CompilerWithASTImport:
 			return contains(compilerModeOutputs, _outputName);
+		case InputMode::CompilerWithEvmAssemblyJsonImport:
+			return contains(assemblyJsonImportModeOutputs, _outputName);
 		case InputMode::Assembler:
 			return contains(assemblerModeOutputs, _outputName);
 		case InputMode::StandardJson:
@@ -1360,7 +1367,13 @@ bool CommandLineParser::parseCombinedJsonOption()
 
 	set<string> requests;
 	for (string const& item: boost::split(requests, m_args[g_strCombinedJson].as<string>(), boost::is_any_of(",")))
-		if (CombinedJsonRequests::componentMap().count(item) == 0)
+		if (m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport &&
+			CombinedJsonRequests::componentMapAssemblyJsonImport().count(item) == 0)
+		{
+			serr() << "Invalid option to --" << g_strCombinedJson << ": " << item << ", for --" << g_strImportEvmAssemblerJson << endl;
+			return false;
+		}
+		else if (CombinedJsonRequests::componentMap().count(item) == 0)
 		{
 			serr() << "Invalid option to --" << g_strCombinedJson << ": " << item << endl;
 			return false;

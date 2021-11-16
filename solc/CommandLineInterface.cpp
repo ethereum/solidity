@@ -205,8 +205,7 @@ void CommandLineInterface::handleIR(string const& _contractName)
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport , ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	if (!m_options.compiler.outputs.ir)
@@ -225,8 +224,7 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport , ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	if (!m_options.compiler.outputs.irOptimized)
@@ -245,8 +243,7 @@ void CommandLineInterface::handleEwasm(string const& _contractName)
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport , ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	if (!m_options.compiler.outputs.ewasm)
@@ -286,8 +283,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport , ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	if (!m_options.compiler.outputs.signatureHashes)
@@ -326,8 +322,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport , ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	if (!m_options.compiler.outputs.abi)
@@ -344,8 +339,7 @@ void CommandLineInterface::handleStorageLayout(string const& _contract)
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport , ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	if (!m_options.compiler.outputs.storageLayout)
@@ -362,8 +356,7 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport , ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	bool enabled = false;
@@ -942,8 +935,7 @@ void CommandLineInterface::handleAst()
 {
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport, ""
+		m_options.input.mode == InputMode::CompilerWithASTImport
 	);
 
 	if (!m_options.compiler.outputs.astCompactJson)
@@ -1193,7 +1185,8 @@ void CommandLineInterface::outputCompilationResults()
 	handleCombinedJSON();
 
 	// do we need AST output?
-	handleAst();
+	if (m_options.input.mode != InputMode::CompilerWithEvmAssemblyJsonImport)
+		handleAst();
 
 	if (
 		!m_compiler->compilationSuccessful() &&
@@ -1233,15 +1226,19 @@ void CommandLineInterface::outputCompilationResults()
 			handleGasEstimation(contract);
 
 		handleBytecode(contract);
-		handleIR(contract);
-		handleIROptimized(contract);
-		handleEwasm(contract);
-		handleSignatureHashes(contract);
-		handleMetadata(contract);
-		handleABI(contract);
-		handleStorageLayout(contract);
-		handleNatspec(true, contract);
-		handleNatspec(false, contract);
+
+		if (m_options.input.mode != InputMode::CompilerWithEvmAssemblyJsonImport)
+		{
+			handleIR(contract);
+			handleIROptimized(contract);
+			handleEwasm(contract);
+			handleSignatureHashes(contract);
+			handleMetadata(contract);
+			handleABI(contract);
+			handleStorageLayout(contract);
+			handleNatspec(true, contract);
+			handleNatspec(false, contract);
+		}
 	} // end of contracts iteration
 
 	if (!m_hasOutput)

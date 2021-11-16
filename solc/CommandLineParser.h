@@ -114,6 +114,18 @@ struct CombinedJsonRequests
 	friend std::ostream& operator<<(std::ostream& _out, CombinedJsonRequests const& _requests);
 
 	static std::string const& componentName(bool CombinedJsonRequests::* _component);
+	static auto const& componentMapAssemblyJsonImport()
+	{
+		static std::map<std::string, bool CombinedJsonRequests::*> const components = {
+			{"bin", &CombinedJsonRequests::binary},
+			{"bin-runtime", &CombinedJsonRequests::binaryRuntime},
+			{"opcodes", &CombinedJsonRequests::opcodes},
+			{"asm", &CombinedJsonRequests::asm_},
+			{"srcmap", &CombinedJsonRequests::srcMap},
+			{"srcmap-runtime", &CombinedJsonRequests::srcMapRuntime},
+		};
+		return components;
+	}
 	static auto const& componentMap()
 	{
 		static std::map<std::string, bool CombinedJsonRequests::*> const components = {
