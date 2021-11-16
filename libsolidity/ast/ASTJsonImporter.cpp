@@ -359,7 +359,8 @@ ASTPointer<UsingForDirective> ASTJsonImporter::createUsingForDirective(Json::Val
 		_node,
 		move(functions),
 		!_node.isMember("libraryName"),
-		_node["typeName"].isNull() ? nullptr  : convertJsonToASTNode<TypeName>(_node["typeName"])
+		_node["typeName"].isNull() ? nullptr  : convertJsonToASTNode<TypeName>(_node["typeName"]),
+		memberAsBool(_node, "global")
 	);
 }
 

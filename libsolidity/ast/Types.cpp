@@ -342,6 +342,13 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 		solAssert(sourceUnit, "");
 	usingForDirectives += ASTNode::filteredNodes<UsingForDirective>(sourceUnit->nodes());
 
+	if (Declaration const* typeDefinition = _type.typeDefinition())
+		if (auto const* sourceUnit = dynamic_cast<SourceUnit const*>(typeDefinition->scope()))
+			for (auto usingFor: ASTNode::filteredNodes<UsingForDirective>(sourceUnit->nodes()))
+				// We do not yet compare the type name because of normalization.
+				if (usingFor->global() && usingFor->typeName())
+					usingForDirectives.emplace_back(usingFor);
+
 	// Normalise data location of type.
 	DataLocation typeLocation = DataLocation::Storage;
 	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
