@@ -328,6 +328,7 @@ bool ASTJsonConverter::visit(UsingForDirective const& _node)
 	}
 	else
 		attributes.emplace_back("libraryName", toJson(*_node.functionsOrLibrary().front()));
+	attributes.emplace_back("global", _node.global());
 
 	setJsonNode(_node, "UsingForDirective", move(attributes));
 
