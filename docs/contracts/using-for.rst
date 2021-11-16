@@ -42,6 +42,13 @@ scope (either the contract or the current module/source unit),
 including within all of its functions, and has no effect
 outside of the contract or module in which it is used.
 
+When the directive is used at file level and applied to a
+user-defined type which was defined at file level in the same file,
+the word ``global`` can be added at the end. This will have the
+effect that the functions are attached to the type everywhere
+the type is available (including other files), not only in the
+scope of the using statement.
+
 Let us rewrite the set example from the
 :ref:`libraries` section in this way, using file-level functions
 instead of library functions.

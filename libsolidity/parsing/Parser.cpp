@@ -987,9 +987,15 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 		advance();
 	else
 		typeName = parseTypeName();
+	bool global = false;
+	if (m_scanner->currentToken() == Token::Identifier && currentLiteral() == "global")
+	{
+		global = true;
+		advance();
+	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<UsingForDirective>(move(functions), usesBraces, typeName);
+	return nodeFactory.createNode<UsingForDirective>(move(functions), usesBraces, typeName, global);
 }
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()

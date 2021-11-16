@@ -417,6 +417,18 @@ bool SyntaxChecker::visit(UsingForDirective const& _usingFor)
 			_usingFor.location(),
 			"The type has to be specified explicitly when attaching specific functions."
 		);
+	if (_usingFor.global() && !_usingFor.typeName())
+		m_errorReporter.syntaxError(
+			2854_error,
+			_usingFor.location(),
+			"Can only globally bind functions to specific types."
+		);
+	if (_usingFor.global() && m_currentContractKind)
+		m_errorReporter.syntaxError(
+			3367_error,
+			_usingFor.location(),
+			"\"global\" can only be used at file level."
+		);
 	if (m_currentContractKind == ContractKind::Interface)
 		m_errorReporter.syntaxError(
 			9088_error,
