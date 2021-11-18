@@ -171,6 +171,18 @@ function msg_on_error
     fi
 }
 
+function diff_values
+{
+    (( $# >= 2 )) || fail "diff_values requires at least 2 arguments."
+
+    local value1="$1"
+    local value2="$2"
+    shift
+    shift
+
+    diff --color=auto --unified=0 <(echo "$value1") <(echo "$value2") "$@"
+}
+
 function safe_kill
 {
     local PID=${1}

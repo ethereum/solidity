@@ -308,6 +308,61 @@ function test_solc_assembly_output
     fi
 }
 
+function test_via_ir_equivalence()
+{
+    (( $# <= 2 )) || fail "This function accepts at most two arguments."
+
+    if [[ $2 != --optimize ]] && [[ $2 != "" ]]
+    then
+        fail "The second argument must be --optimize if present."
+    fi
+
+    local solidity_code="$1"
+    local optimize_flag="$2"
+
+    local optimizer_flags=()
+    [[ $optimize_flag == "" ]] || optimizer_flags+=("$optimize_flag")
+
+    local ir_output
+    ir_output=$(
+        echo "$solidity_code" |
+        msg_on_error --no-stderr "$SOLC" - --ir-optimized --debug-info location "${optimizer_flags[@]}" |
+        sed '/^Optimized IR:$/d'
+    )
+
+    local asm_output_two_stage asm_output_via_ir
+    asm_output_two_stage=$(
+        echo "$ir_output" |
+        msg_on_error --no-stderr "$SOLC" - --strict-assembly --asm "${optimizer_flags[@]}" |
+        sed '/^======= <stdin>/d' |
+        sed '/^Text representation:$/d'
+    )
+    asm_output_via_ir=$(
+        echo "$solidity_code" |
+        msg_on_error --no-stderr "$SOLC" - --experimental-via-ir --asm --debug-info location "${optimizer_flags[@]}" |
+        sed '/^======= <stdin>/d' |
+        sed '/^EVM assembly:$/d'
+    )
+
+    diff_values "$asm_output_two_stage" "$asm_output_via_ir" --ignore-space-change --ignore-blank-lines
+
+    local bin_output_two_stage bin_output_via_ir
+    bin_output_two_stage=$(
+        echo "$ir_output" |
+        msg_on_error --no-stderr "$SOLC" - --strict-assembly --bin "${optimizer_flags[@]}" |
+        sed '/^======= <stdin>/d' |
+        sed '/^Binary representation:$/d'
+    )
+    bin_output_via_ir=$(
+        echo "$solidity_code" |
+        msg_on_error --no-stderr "$SOLC" - --experimental-via-ir --bin "${optimizer_flags[@]}" |
+        sed '/^======= <stdin>/d' |
+        sed '/^Binary:$/d'
+    )
+
+    diff_values "$bin_output_two_stage" "$bin_output_via_ir" --ignore-space-change --ignore-blank-lines
+}
+
 ## RUN
 
 echo "Checking that the bug list is up to date..."
@@ -533,6 +588,36 @@ printTask "Testing assemble, yul, strict-assembly and optimize..."
     test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
 )
 
+printTask "Testing the eqivalence of --experimental-via-ir and a two-stage compilation..."
+(
+    printTask " - Smoke test"
+    test_via_ir_equivalence "contract C {}"
+
+    printTask " - Smoke test (optimized)"
+    test_via_ir_equivalence "contract C {}" --optimize
+
+    externalContracts=(
+        deposit_contract.sol
+        FixedFeeRegistrar.sol
+        _stringutils/stringutils.sol
+    )
+    requiresOptimizer=(
+        deposit_contract.sol
+        FixedFeeRegistrar.sol
+    )
+
+    for contractFile in "${externalContracts[@]}"
+    do
+        if ! [[ "${requiresOptimizer[*]}" =~ $contractFile ]]
+        then
+            printTask " - ${contractFile}"
+            test_via_ir_equivalence "$(cat "${REPO_ROOT}/test/libsolidity/semanticTests/externalContracts/${contractFile}")"
+        fi
+
+        printTask " - ${contractFile} (optimized)"
+        test_via_ir_equivalence "$(cat "${REPO_ROOT}/test/libsolidity/semanticTests/externalContracts/${contractFile}")" --optimize
+    done
+)
 
 printTask "Testing standard input..."
 SOLTMPDIR=$(mktemp -d)
