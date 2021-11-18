@@ -208,3 +208,25 @@ function safe_kill
         kill -9 "$PID"
     fi
 }
+
+function circleci_select_steps
+{
+    local all_steps="$1"
+    (( $# == 1 )) || assertFail
+
+    if (( CIRCLE_NODE_TOTAL )) && (( CIRCLE_NODE_TOTAL > 1 ))
+    then
+        echo "$all_steps" | circleci tests split | xargs
+    else
+        echo "$all_steps" | xargs
+    fi
+}
+
+function circleci_step_selected
+{
+    local selected_steps="$1"
+    local step="$2"
+    [[ $step != *" "* ]] || assertFail "Step names must not contain spaces."
+
+    [[ " $selected_steps " == *" $step "* ]] || return 1
+}
