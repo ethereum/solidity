@@ -54,7 +54,7 @@ do
             shift
             ;;
         *)
-            matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut -c 3- | sort)
+            matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut -c 3- | LC_COLLATE=C sort)
 
             if [[ $matching_tests == "" ]]
             then
@@ -72,7 +72,11 @@ done
 
 if (( ${#selected_tests[@]} == 0 && ${#patterns_with_no_matches[@]} == 0 ))
 then
-    selected_tests=(*)
+    # NOTE: We want leading symbols in names to affect the sort order but without
+    # LC_COLLATE=C sort seems to ignore them.
+    all_tests=$(echo * | tr '[:space:]' '\n' | LC_COLLATE=C sort)
+    # shellcheck disable=SC2206 # We do not support test names containing spaces.
+    selected_tests=($all_tests)
 fi
 popd > /dev/null
 
