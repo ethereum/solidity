@@ -32,6 +32,8 @@ set -eo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
+export REPO_ROOT SOLIDITY_BUILD_DIR
+
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
@@ -92,6 +94,7 @@ case "$OSTYPE" in
         ;;
 esac
 echo "Using solc binary at ${SOLC}"
+export SOLC
 
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
@@ -441,13 +444,23 @@ printTask "Running general commandline tests..."
             fi
         fi
 
+        scriptFiles="$(ls -1 "${tdir}/test."* 2> /dev/null || true)"
+        scriptCount="$(echo "${scriptFiles}" | wc -w)"
+
         inputFiles="$(ls -1 "${tdir}/input."* 2> /dev/null || true)"
         inputCount="$(echo "${inputFiles}" | wc -w)"
-        if (( inputCount > 1 ))
+        (( inputCount <= 1 )) || fail "Ambiguous input. Found input files in multiple formats:"$'\n'"${inputFiles}"
+        (( scriptCount <= 1 )) || fail "Ambiguous input. Found script files in multiple formats:"$'\n'"${scriptFiles}"
+        (( inputCount == 0 || scriptCount == 0 )) || fail "Ambiguous input. Found both input and script files:"$'\n'"${inputFiles}"$'\n'"${scriptFiles}"
+
+        if (( scriptCount == 1 ))
         then
-            printError "Ambiguous input. Found input files in multiple formats:"
-            echo -e "${inputFiles}"
-            fail
+            if ! "$scriptFiles"
+            then
+                fail "Test script ${scriptFiles} failed."
+            fi
+
+            continue
         fi
 
         # Use printf to get rid of the trailing newline
