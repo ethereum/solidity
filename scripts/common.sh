@@ -171,6 +171,18 @@ function msg_on_error
     fi
 }
 
+function diff_values
+{
+    (( $# >= 2 )) || fail "diff_values requires at least 2 arguments."
+
+    local value1="$1"
+    local value2="$2"
+    shift
+    shift
+
+    diff --color=auto --unified=0 <(echo "$value1") <(echo "$value2") "$@"
+}
+
 function safe_kill
 {
     local PID=${1}
@@ -195,4 +207,26 @@ function safe_kill
         echo "Sending SIGKILL to ${NAME} (${PID}) ..."
         kill -9 "$PID"
     fi
+}
+
+function circleci_select_steps
+{
+    local all_steps="$1"
+    (( $# == 1 )) || assertFail
+
+    if (( CIRCLE_NODE_TOTAL )) && (( CIRCLE_NODE_TOTAL > 1 ))
+    then
+        echo "$all_steps" | circleci tests split | xargs
+    else
+        echo "$all_steps" | xargs
+    fi
+}
+
+function circleci_step_selected
+{
+    local selected_steps="$1"
+    local step="$2"
+    [[ $step != *" "* ]] || assertFail "Step names must not contain spaces."
+
+    [[ " $selected_steps " == *" $step "* ]] || return 1
 }
