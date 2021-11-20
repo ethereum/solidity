@@ -1607,30 +1607,6 @@ BOOST_AUTO_TEST_CASE(library_call_protection)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(library_staticcall_delegatecall)
-{
-	char const* sourceCode = R"(
-		 library Lib {
-			 function x() public view returns (uint) {
-				 return 1;
-			 }
-		 }
-		 contract Test {
-			 uint t;
-			 function f() public returns (uint) {
-				 t = 2;
-				 return this.g();
-			 }
-			 function g() public view returns (uint) {
-				 return Lib.x();
-			 }
-		 }
-	)";
-	compileAndRun(sourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, h160>{{":Lib", m_contractAddress}});
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
-}
-
 BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 {
 	char const* sourceCode = R"(
@@ -1784,49 +1760,6 @@ BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
 		BOOST_CHECK(m_output.empty());
 		BOOST_CHECK(storageEmpty(m_contractAddress));
 	);
-}
-
-BOOST_AUTO_TEST_CASE(storing_invalid_boolean)
-{
-	char const* sourceCode = R"(
-		contract C {
-			event Ev(bool);
-			bool public perm;
-			function set() public returns(uint) {
-				bool tmp;
-				assembly {
-					tmp := 5
-				}
-				perm = tmp;
-				return 1;
-			}
-			function ret() public returns(bool) {
-				bool tmp;
-				assembly {
-					tmp := 5
-				}
-				return tmp;
-			}
-			function ev() public returns(uint) {
-				bool tmp;
-				assembly {
-					tmp := 5
-				}
-				emit Ev(tmp);
-				return 1;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("set()"), encodeArgs(1));
-	ABI_CHECK(callContractFunction("perm()"), encodeArgs(1));
-	ABI_CHECK(callContractFunction("ret()"), encodeArgs(1));
-	ABI_CHECK(callContractFunction("ev()"), encodeArgs(1));
-	BOOST_REQUIRE_EQUAL(numLogs(), 1);
-	BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-	BOOST_CHECK(logData(0) == encodeArgs(1));
-	BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
-	BOOST_CHECK_EQUAL(logTopic(0, 0), util::keccak256(string("Ev(bool)")));
 }
 
 BOOST_AUTO_TEST_CASE(struct_referencing)
@@ -2059,70 +1992,6 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_abi)
 //	ABI_CHECK(callContractFunction("f()"), encodeArgs(5));
 //}
 
-BOOST_AUTO_TEST_CASE(packed_storage_structs_delete)
-{
-	char const* sourceCode = R"(
-		contract C {
-			struct str { uint8 a; uint16 b; uint8 c; }
-			uint8 x;
-			uint16 y;
-			str data;
-			function test() public returns (uint) {
-				x = 1;
-				y = 2;
-				data.a = 2;
-				data.b = 0xabcd;
-				data.c = 0xfa;
-				if (x != 1 || y != 2 || data.a != 2 || data.b != 0xabcd || data.c != 0xfa)
-					return 2;
-				delete y;
-				delete data.b;
-				if (x != 1 || y != 0 || data.a != 2 || data.b != 0 || data.c != 0xfa)
-					return 3;
-				delete x;
-				delete data;
-				return 1;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("test()"), encodeArgs(1));
-	BOOST_CHECK(storageEmpty(m_contractAddress));
-}
-
-BOOST_AUTO_TEST_CASE(invalid_enum_logged)
-{
-	char const* sourceCode = R"(
-		contract C {
-			enum X { A, B }
-			event Log(X);
-
-			function test_log() public returns (uint) {
-				X garbled = X.A;
-				assembly {
-					garbled := 5
-				}
-				emit Log(garbled);
-				return 1;
-			}
-			function test_log_ok() public returns (uint) {
-				X x = X.A;
-				emit Log(x);
-				return 1;
-			}
-		}
-		)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("test_log_ok()"), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(numLogs(), 1);
-	BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-	BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
-	BOOST_REQUIRE_EQUAL(logTopic(0, 0), util::keccak256(string("Log(uint8)")));
-	BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(0)));
-
-	ABI_CHECK(callContractFunction("test_log()"), panicData(PanicCode::EnumConversionError));
-}
-
 BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 {
 	char const* sourceCode = R"(
@@ -2162,31 +2031,6 @@ BOOST_AUTO_TEST_CASE(failing_send)
 	h160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 20, "Main");
 	BOOST_REQUIRE(callContractFunction("callHelper(address)", c_helperAddress) == encodeArgs(true, 20));
-}
-
-BOOST_AUTO_TEST_CASE(return_string)
-{
-	char const* sourceCode = R"(
-		contract Main {
-			string public s;
-			function set(string calldata _s) external {
-				s = _s;
-			}
-			function get1() public returns (string memory r) {
-				return s;
-			}
-			function get2() public returns (string memory r) {
-				r = s;
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "Main");
-	string s("Julia");
-	bytes args = encodeArgs(u256(0x20), u256(s.length()), s);
-	BOOST_REQUIRE(callContractFunction("set(string)", asString(args)) == encodeArgs());
-	ABI_CHECK(callContractFunction("get1()"), args);
-	ABI_CHECK(callContractFunction("get2()"), args);
-	ABI_CHECK(callContractFunction("s()"), args);
 }
 
 BOOST_AUTO_TEST_CASE(return_multiple_strings_of_various_sizes)
@@ -2341,28 +2185,6 @@ BOOST_AUTO_TEST_CASE(return_bytes_internal)
 			encodeArgs(u256(l1), u256(0x40)) + dyn1
 		);
 	}
-}
-
-BOOST_AUTO_TEST_CASE(memory_types_initialisation)
-{
-	char const* sourceCode = R"(
-		contract Test {
-			mapping(uint=>uint) data;
-			function stat() public returns (uint[5] memory)
-			{
-				data[2] = 3; // make sure to use some memory
-			}
-			function dyn() public returns (uint[] memory) { stat(); }
-			function nested() public returns (uint[3][] memory) { stat(); }
-			function nestedStat() public returns (uint[3][7] memory) { stat(); }
-		}
-	)";
-	compileAndRun(sourceCode, 0, "Test");
-
-	ABI_CHECK(callContractFunction("stat()"), encodeArgs(vector<u256>(5)));
-	ABI_CHECK(callContractFunction("dyn()"), encodeArgs(u256(0x20), u256(0)));
-	ABI_CHECK(callContractFunction("nested()"), encodeArgs(u256(0x20), u256(0)));
-	ABI_CHECK(callContractFunction("nestedStat()"), encodeArgs(vector<u256>(3 * 7)));
 }
 
 BOOST_AUTO_TEST_CASE(calldata_struct_short)
@@ -2716,38 +2538,6 @@ BOOST_AUTO_TEST_CASE(nested_mixed_string_as_public_mapping_key)
 			u256(data[i].s4.size()),
 			data[i].s4
 		), encodeArgs(u256(i - 3)));
-}
-
-BOOST_AUTO_TEST_CASE(constant_string_literal)
-{
-	char const* sourceCode = R"(
-		contract Test {
-			bytes32 constant public b = "abcdefghijklmnopq";
-			string constant public x = "abefghijklmnopqabcdefghijklmnopqabcdefghijklmnopqabca";
-
-			constructor() {
-				string memory xx = x;
-				bytes32 bb = b;
-			}
-			function getB() public returns (bytes32) { return b; }
-			function getX() public returns (string memory) { return x; }
-			function getX2() public returns (string memory r) { r = x; }
-			function unused() public returns (uint) {
-				"unusedunusedunusedunusedunusedunusedunusedunusedunusedunusedunusedunused";
-				return 2;
-			}
-		}
-	)";
-
-	compileAndRun(sourceCode);
-	string longStr = "abefghijklmnopqabcdefghijklmnopqabcdefghijklmnopqabca";
-	string shortStr = "abcdefghijklmnopq";
-	ABI_CHECK(callContractFunction("b()"), encodeArgs(shortStr));
-	ABI_CHECK(callContractFunction("x()"), encodeDyn(longStr));
-	ABI_CHECK(callContractFunction("getB()"), encodeArgs(shortStr));
-	ABI_CHECK(callContractFunction("getX()"), encodeDyn(longStr));
-	ABI_CHECK(callContractFunction("getX2()"), encodeDyn(longStr));
-	ABI_CHECK(callContractFunction("unused()"), encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_CASE(library_call)
