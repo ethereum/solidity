@@ -507,7 +507,7 @@ String literals are written with either double or single-quotes (``"foo"`` or ``
 
 For example, with ``bytes32 samevar = "stringliteral"`` the string literal is interpreted in its raw byte form when assigned to a ``bytes32`` type.
 
-String literals can only contain printable ASCII characters, which means the characters between and including 0x1F .. 0x7E.
+String literals can only contain printable ASCII characters, which means the characters between and including 0x20 .. 0x7E.
 
 Additionally, string literals also support the following escape characters:
 
