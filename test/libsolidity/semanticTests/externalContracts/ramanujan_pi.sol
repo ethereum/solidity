@@ -36,7 +36,7 @@ contract test {
 // ----
 // constructor()
 // gas irOptimized: 465357
-// gas legacy: 733634
+// gas legacy: 672749
 // gas legacyOptimized: 479606
 // prb_pi() -> 3141592656369545286
 // gas irOptimized: 57478

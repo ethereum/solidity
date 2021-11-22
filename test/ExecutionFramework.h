@@ -273,6 +273,9 @@ private:
 	}
 
 protected:
+	u256 const GasPrice = 10 * gwei;
+	u256 const InitialGas = 100000000;
+
 	void selectVM(evmc_capabilities _cap = evmc_capabilities::EVMC_CAPABILITY_EVM1);
 	void reset();
 
@@ -302,8 +305,6 @@ protected:
 	bool m_transactionSuccessful = true;
 	util::h160 m_sender = account(0);
 	util::h160 m_contractAddress;
-	u256 const m_gasPrice = 10 * gwei;
-	u256 const m_gas = 100000000;
 	bytes m_output;
 	u256 m_gasUsed;
 };

@@ -182,7 +182,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		message.kind = EVMC_CALL;
 		message.destination = EVMHost::convertToEVMC(m_contractAddress);
 	}
-	message.gas = m_gas.convert_to<int64_t>();
+	message.gas = InitialGas.convert_to<int64_t>();
 
 	evmc::result result = m_evmcHost->call(message);
 
@@ -190,7 +190,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	if (_isCreation)
 		m_contractAddress = EVMHost::convertFromEVMC(result.create_address);
 
-	m_gasUsed = m_gas - result.gas_left;
+	m_gasUsed = InitialGas - result.gas_left;
 	m_transactionSuccessful = (result.status_code == EVMC_SUCCESS);
 
 	if (m_showMessages)
@@ -216,7 +216,7 @@ void ExecutionFramework::sendEther(h160 const& _addr, u256 const& _amount)
 	message.value = EVMHost::convertToEVMC(_amount);
 	message.kind = EVMC_CALL;
 	message.destination = EVMHost::convertToEVMC(_addr);
-	message.gas = m_gas.convert_to<int64_t>();
+	message.gas = InitialGas.convert_to<int64_t>();
 
 	m_evmcHost->call(message);
 }

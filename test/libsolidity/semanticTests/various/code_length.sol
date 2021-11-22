@@ -58,8 +58,9 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // constructor()
+// gas legacy: 126455
 // f(): true, true -> true, true
