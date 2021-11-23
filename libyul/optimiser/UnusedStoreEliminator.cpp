@@ -344,8 +344,6 @@ bool UnusedStoreEliminator::knownUnrelated(
 	}
 	else
 	{
-		u256 largestPositive = (u256(1) << 128) - 1;
-
 		yulAssert(_op1.location == Location::Memory, "");
 		if (_op1.length && knowledge.knownToBeZero(*_op1.length))
 			return true;
