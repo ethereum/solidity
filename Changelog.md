@@ -1,4 +1,4 @@
- * Yul Optimizer: Remove redundant calls to ``mstore`` and ``sstore``.
+ * Yul Optimizer: Remove calls to ``mstore`` and ``sstore`` where the stored value is never read again.
 
 ### 0.8.12 (unreleased)
 
