@@ -25,4 +25,4 @@ contract C {
 // SMTIgnoreOS: macos
 // ----
 // Warning 2072: (255-261): Unused local variable.
-// Info 1180: Reentrancy property(ies) for :C:\n((!(x' <= 0) || ((x' + ((- 1) * x)) = 0)) && (<errorCode> <= 0) && (!(x' >= 3) || ((x' + ((- 1) * x)) = 0)))\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(x == 2 || x == 1)\n
+// Info 1180: Reentrancy property(ies) for :C:\n((!(x' >= 3) || (a' = a)) && (!(x' <= 0) || !(x >= 2)) && (<errorCode> <= 0) && (!(x <= 2) || !(x' >= 3)))\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(x == 2 || x == 1)\n

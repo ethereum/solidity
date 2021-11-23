@@ -37,4 +37,15 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Info 1180: Contract invariant(s) for :C:\n(((erc + ((- 1) * ecrecover(tuple_constructor(h, v, r, s)))) <= 0) && ((erc + ((- 1) * ecrecover(tuple_constructor(h, v, r, s)))) >= 0))\n(((kec + ((- 1) * keccak256(data))) >= 0) && ((kec + ((- 1) * keccak256(data))) <= 0))\n(((rip + ((- 1) * ripemd160(data))) <= 0) && ((rip + ((- 1) * ripemd160(data))) >= 0))\n(((sha + ((- 1) * sha256(data))) <= 0) && ((sha + ((- 1) * sha256(data))) >= 0))\n
+// Warning 1218: (544-563): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (567-586): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (590-609): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (613-632): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (544-563): CHC: Assertion violation might happen here.
+// Warning 6328: (567-586): CHC: Assertion violation might happen here.
+// Warning 6328: (590-609): CHC: Assertion violation might happen here.
+// Warning 6328: (613-632): CHC: Assertion violation might happen here.
+// Warning 4661: (544-563): BMC: Assertion violation happens here.
+// Warning 4661: (567-586): BMC: Assertion violation happens here.
+// Warning 4661: (590-609): BMC: Assertion violation happens here.
+// Warning 4661: (613-632): BMC: Assertion violation happens here.
