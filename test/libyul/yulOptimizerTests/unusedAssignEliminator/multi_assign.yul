@@ -9,7 +9,7 @@
     y := 4
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     function f() -> a, b

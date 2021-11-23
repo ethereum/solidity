@@ -4,6 +4,6 @@
     a := 2
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // { let a }

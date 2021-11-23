@@ -21,7 +21,7 @@
     }
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     function f(a, b) -> x

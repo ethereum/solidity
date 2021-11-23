@@ -11,7 +11,7 @@
     mstore(0, d)
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     let c
