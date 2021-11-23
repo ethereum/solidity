@@ -25,7 +25,7 @@
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/RedundantStoreBase.h>
+#include <libyul/optimiser/UnusedStoreBase.h>
 
 #include <map>
 #include <vector>
@@ -107,13 +107,13 @@ struct Dialect;
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
-class RedundantAssignEliminator: public RedundantStoreBase
+class UnusedAssignEliminator: public UnusedStoreBase
 {
 public:
-	static constexpr char const* name{"RedundantAssignEliminator"};
+	static constexpr char const* name{"UnusedAssignEliminator"};
 	static void run(OptimiserStepContext&, Block& _ast);
 
-	explicit RedundantAssignEliminator(Dialect const& _dialect): RedundantStoreBase(_dialect) {}
+	explicit UnusedAssignEliminator(Dialect const& _dialect): UnusedStoreBase(_dialect) {}
 
 	void operator()(Identifier const& _identifier) override;
 	void operator()(VariableDeclaration const& _variableDeclaration) override;
@@ -122,7 +122,7 @@ public:
 	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
-	using RedundantStoreBase::visit;
+	using UnusedStoreBase::visit;
 	void visit(Statement const& _statement) override;
 
 private:

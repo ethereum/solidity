@@ -20,7 +20,7 @@
  * until they go out of scope or are re-assigned.
  */
 
-#include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/UnusedAssignEliminator.h>
 
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
@@ -33,36 +33,36 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void RedundantAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
+void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	RedundantAssignEliminator rae{_context.dialect};
+	UnusedAssignEliminator rae{_context.dialect};
 	rae(_ast);
 
 	StatementRemover remover{rae.m_pendingRemovals};
 	remover(_ast);
 }
 
-void RedundantAssignEliminator::operator()(Identifier const& _identifier)
+void UnusedAssignEliminator::operator()(Identifier const& _identifier)
 {
 	changeUndecidedTo(_identifier.name, State::Used);
 }
 
-void RedundantAssignEliminator::operator()(VariableDeclaration const& _variableDeclaration)
+void UnusedAssignEliminator::operator()(VariableDeclaration const& _variableDeclaration)
 {
-	RedundantStoreBase::operator()(_variableDeclaration);
+	UnusedStoreBase::operator()(_variableDeclaration);
 
 	for (auto const& var: _variableDeclaration.variables)
 		m_declaredVariables.emplace(var.name);
 }
 
-void RedundantAssignEliminator::operator()(Assignment const& _assignment)
+void UnusedAssignEliminator::operator()(Assignment const& _assignment)
 {
 	visit(*_assignment.value);
 	for (auto const& var: _assignment.variableNames)
 		changeUndecidedTo(var.name, State::Unused);
 }
 
-void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
+void UnusedAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
 {
 	ScopedSaveAndRestore outerDeclaredVariables(m_declaredVariables, {});
 	ScopedSaveAndRestore outerReturnVariables(m_returnVariables, {});
@@ -70,28 +70,28 @@ void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDe
 	for (auto const& retParam: _functionDefinition.returnVariables)
 		m_returnVariables.insert(retParam.name);
 
-	RedundantStoreBase::operator()(_functionDefinition);
+	UnusedStoreBase::operator()(_functionDefinition);
 }
 
-void RedundantAssignEliminator::operator()(Leave const&)
+void UnusedAssignEliminator::operator()(Leave const&)
 {
 	for (YulString name: m_returnVariables)
 		changeUndecidedTo(name, State::Used);
 }
 
-void RedundantAssignEliminator::operator()(Block const& _block)
+void UnusedAssignEliminator::operator()(Block const& _block)
 {
 	ScopedSaveAndRestore outerDeclaredVariables(m_declaredVariables, {});
 
-	RedundantStoreBase::operator()(_block);
+	UnusedStoreBase::operator()(_block);
 
 	for (auto const& var: m_declaredVariables)
 		finalize(var, State::Unused);
 }
 
-void RedundantAssignEliminator::visit(Statement const& _statement)
+void UnusedAssignEliminator::visit(Statement const& _statement)
 {
-	RedundantStoreBase::visit(_statement);
+	UnusedStoreBase::visit(_statement);
 
 	if (auto const* assignment = get_if<Assignment>(&_statement))
 		if (assignment->variableNames.size() == 1)
@@ -99,7 +99,7 @@ void RedundantAssignEliminator::visit(Statement const& _statement)
 			m_stores[assignment->variableNames.front().name][&_statement];
 }
 
-void RedundantAssignEliminator::shortcutNestedLoop(TrackedStores const& _zeroRuns)
+void UnusedAssignEliminator::shortcutNestedLoop(TrackedStores const& _zeroRuns)
 {
 	// Shortcut to avoid horrible runtime:
 	// Change all assignments that were newly introduced in the for loop to "used".
@@ -116,7 +116,7 @@ void RedundantAssignEliminator::shortcutNestedLoop(TrackedStores const& _zeroRun
 		}
 }
 
-void RedundantAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const& _functionDefinition)
+void UnusedAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const& _functionDefinition)
 {
 	for (auto const& param: _functionDefinition.parameters)
 		finalize(param.name, State::Unused);
@@ -124,14 +124,14 @@ void RedundantAssignEliminator::finalizeFunctionDefinition(FunctionDefinition co
 		finalize(retParam.name, State::Used);
 }
 
-void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, RedundantAssignEliminator::State _newState)
+void UnusedAssignEliminator::changeUndecidedTo(YulString _variable, UnusedAssignEliminator::State _newState)
 {
 	for (auto& assignment: m_stores[_variable])
 		if (assignment.second == State::Undecided)
 			assignment.second = _newState;
 }
 
-void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEliminator::State _finalState)
+void UnusedAssignEliminator::finalize(YulString _variable, UnusedAssignEliminator::State _finalState)
 {
 	std::map<Statement const*, State> stores = std::move(m_stores[_variable]);
 	m_stores.erase(_variable);

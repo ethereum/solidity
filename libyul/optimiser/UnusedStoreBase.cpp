@@ -16,10 +16,10 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Base class for both RedundantAssignEliminator and RedundantStoreEliminator.
+ * Base class for both UnusedAssignEliminator and UnusedStoreEliminator.
  */
 
-#include <libyul/optimiser/RedundantStoreBase.h>
+#include <libyul/optimiser/UnusedStoreBase.h>
 
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
@@ -33,7 +33,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void RedundantStoreBase::operator()(If const& _if)
+void UnusedStoreBase::operator()(If const& _if)
 {
 	visit(*_if.condition);
 
@@ -43,7 +43,7 @@ void RedundantStoreBase::operator()(If const& _if)
 	merge(m_stores, move(skipBranch));
 }
 
-void RedundantStoreBase::operator()(Switch const& _switch)
+void UnusedStoreBase::operator()(Switch const& _switch)
 {
 	visit(*_switch.expression);
 
@@ -69,7 +69,7 @@ void RedundantStoreBase::operator()(Switch const& _switch)
 		merge(m_stores, move(branch));
 }
 
-void RedundantStoreBase::operator()(FunctionDefinition const& _functionDefinition)
+void UnusedStoreBase::operator()(FunctionDefinition const& _functionDefinition)
 {
 	ScopedSaveAndRestore outerAssignments(m_stores, {});
 	ScopedSaveAndRestore forLoopInfo(m_forLoopInfo, {});
@@ -79,7 +79,7 @@ void RedundantStoreBase::operator()(FunctionDefinition const& _functionDefinitio
 	finalizeFunctionDefinition(_functionDefinition);
 }
 
-void RedundantStoreBase::operator()(ForLoop const& _forLoop)
+void UnusedStoreBase::operator()(ForLoop const& _forLoop)
 {
 	ScopedSaveAndRestore outerForLoopInfo(m_forLoopInfo, {});
 	ScopedSaveAndRestore forLoopNestingDepth(m_forLoopNestingDepth, m_forLoopNestingDepth + 1);
@@ -127,19 +127,19 @@ void RedundantStoreBase::operator()(ForLoop const& _forLoop)
 	m_forLoopInfo.pendingBreakStmts.clear();
 }
 
-void RedundantStoreBase::operator()(Break const&)
+void UnusedStoreBase::operator()(Break const&)
 {
 	m_forLoopInfo.pendingBreakStmts.emplace_back(move(m_stores));
 	m_stores.clear();
 }
 
-void RedundantStoreBase::operator()(Continue const&)
+void UnusedStoreBase::operator()(Continue const&)
 {
 	m_forLoopInfo.pendingContinueStmts.emplace_back(move(m_stores));
 	m_stores.clear();
 }
 
-void RedundantStoreBase::merge(TrackedStores& _target, TrackedStores&& _other)
+void UnusedStoreBase::merge(TrackedStores& _target, TrackedStores&& _other)
 {
 	util::joinMap(_target, move(_other), [](
 		map<Statement const*, State>& _assignmentHere,
@@ -150,7 +150,7 @@ void RedundantStoreBase::merge(TrackedStores& _target, TrackedStores&& _other)
 	});
 }
 
-void RedundantStoreBase::merge(TrackedStores& _target, vector<TrackedStores>&& _source)
+void UnusedStoreBase::merge(TrackedStores& _target, vector<TrackedStores>&& _source)
 {
 	for (TrackedStores& ts: _source)
 		merge(_target, move(ts));

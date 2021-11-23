@@ -30,7 +30,7 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
-#include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/UnusedAssignEliminator.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
@@ -50,7 +50,7 @@ namespace solidity::phaser::test
 vector<string> const ChrOmOsoMeSteps{
 	ConditionalSimplifier::name,
 	FunctionHoister::name,
-	RedundantAssignEliminator::name,
+	UnusedAssignEliminator::name,
 	ForLoopConditionOutOfBody::name,
 	Rematerialiser::name,
 	ForLoopConditionOutOfBody::name,

@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Base class for both RedundantAssignEliminator and RedundantStoreEliminator.
+ * Base class for both UnusedAssignEliminator and UnusedStoreEliminator.
  */
 
 #pragma once
@@ -34,14 +34,14 @@ namespace solidity::yul
 struct Dialect;
 
 /**
- * Base class for both RedundantAssignEliminator and RedundantStoreEliminator.
+ * Base class for both UnusedAssignEliminator and UnusedStoreEliminator.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
-class RedundantStoreBase: public ASTWalker
+class UnusedStoreBase: public ASTWalker
 {
 public:
-	explicit RedundantStoreBase(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit UnusedStoreBase(Dialect const& _dialect): m_dialect(_dialect) {}
 
 	using ASTWalker::operator();
 	void operator()(If const& _if) override;

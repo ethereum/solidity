@@ -70,7 +70,7 @@ class NameDispenser;
  * variable references can use the SSA variable. The only exception to this rule are
  * for loop conditions, as we cannot insert a variable declaration there.
  *
- * After this stage, redundantAssignmentRemover is recommended to remove the unnecessary
+ * After this stage, UnusedAssignmentEliminator is recommended to remove the unnecessary
  * intermediate assignments.
  *
  * This stage provides best results if CSE is run right before it, because
