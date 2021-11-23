@@ -1065,12 +1065,15 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	return { std::move(ret) };
 }
 
-Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inputsAndSettings)
+unique_ptr<CompilerStack> StandardCompiler::createCompilerStack(
+	ReadCallback::Callback _readFile,
+	StandardCompiler::InputsAndSettings const& _inputsAndSettings
+)
 {
-	CompilerStack compilerStack(m_readFile);
+	auto compilerStackPtr = make_unique<CompilerStack>(_readFile);
+	CompilerStack& compilerStack = *compilerStackPtr;
 
-	StringMap sourceList = std::move(_inputsAndSettings.sources);
-	compilerStack.setSources(sourceList);
+	compilerStack.setSources(_inputsAndSettings.sources);
 	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
 		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
 	compilerStack.setViaIR(_inputsAndSettings.viaIR);
@@ -1090,6 +1093,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
 	compilerStack.enableEwasmGeneration(isEwasmRequested(_inputsAndSettings.outputSelection));
+
+	return compilerStackPtr;
+}
+
+Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inputsAndSettings)
+{
+	auto compilerStackPtr = createCompilerStack(m_readFile, _inputsAndSettings);
+	auto& compilerStack = *compilerStackPtr;
 
 	Json::Value errors = std::move(_inputsAndSettings.errors);
 
@@ -1294,7 +1305,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		// EVM
 		Json::Value evmData(Json::objectValue);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly", wildcardMatchesExperimental))
-			evmData["assembly"] = compilerStack.assemblyString(contractName, sourceList);
+			evmData["assembly"] = compilerStack.assemblyString(contractName, _inputsAndSettings.sources);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly", wildcardMatchesExperimental))
 			evmData["legacyAssembly"] = compilerStack.assemblyJSON(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers", wildcardMatchesExperimental))
