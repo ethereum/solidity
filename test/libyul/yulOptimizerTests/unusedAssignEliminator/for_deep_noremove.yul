@@ -26,7 +26,7 @@
     x := 13
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     let x := 1

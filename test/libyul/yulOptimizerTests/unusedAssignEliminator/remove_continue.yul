@@ -13,7 +13,7 @@
 }
 
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     let i := 0

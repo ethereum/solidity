@@ -4,7 +4,7 @@
     a := mload(0)
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     let a

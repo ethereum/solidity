@@ -32,7 +32,7 @@
     mstore(x, 0x42)
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     let x := 1

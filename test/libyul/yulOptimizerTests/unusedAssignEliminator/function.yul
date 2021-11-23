@@ -12,7 +12,7 @@
     r := 2
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     let r

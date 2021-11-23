@@ -6,7 +6,7 @@
     case 0 { mstore(0, 1) }
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     let x

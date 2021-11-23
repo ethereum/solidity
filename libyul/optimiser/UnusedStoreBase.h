@@ -36,6 +36,11 @@ struct Dialect;
 /**
  * Base class for both UnusedAssignEliminator and UnusedStoreEliminator.
  *
+ * The class tracks the state of abstract "stores" (assignments or mstore/sstore
+ * statements) across the control-flow. It is the job of the derived class to create
+ * the stores and track references, but the base class adjusts their "used state" at
+ * control-flow splits and joins.
+ *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class UnusedStoreBase: public ASTWalker

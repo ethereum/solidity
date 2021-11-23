@@ -19,7 +19,7 @@
     }
 }
 // ----
-// step: redundantAssignEliminator
+// step: unusedAssignEliminator
 //
 // {
 //     for { } 1 { }
