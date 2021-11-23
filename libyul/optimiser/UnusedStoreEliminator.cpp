@@ -352,30 +352,19 @@ bool UnusedStoreEliminator::knownUnrelated(
 		if (_op2.length && knowledge.knownToBeZero(*_op2.length))
 			return true;
 
-		// 1.start + 1.length <= 2.start
-		if (_op1.length && _op2.start && _op1.start)
-		{
-			optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
-			optional<u256> diff = knowledge.differenceIfKnownConstant(*_op2.start, *_op1.start);
-			// diff = 2.start - 1.start
-			if (length1 && diff)
-				if (
-					*length1 <= *diff &&
-					*length1 <= largestPositive &&
-					*diff <= largestPositive
-				)
-					return true;
-		}
-		// 2.start + 2.length <= 1.start
-		if (_op2.length && _op1.start && _op2.start)
-		{
-			optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
-			optional<u256> diff = knowledge.differenceIfKnownConstant(*_op1.start, *_op2.start);
-			// diff = 1.start - 2.start
-			if (length2 && diff)
-				if (*length2 <= *diff && *length2 <= largestPositive && *diff <= largestPositive)
-					return true;
-		}
+		// We use diff >= _op1.length && diff <= 2**256 - _op2.length
+		// This requires us to know both lengths as constants, but
+		// does not have any problems with overflows.
+		// See test/formal/redundant_store_unrelated.py for a proof.
+
+		if (!(_op1.length && _op1.start && _op2.start && _op2.length))
+			return false;
+		optional<u256> diff = knowledge.differenceIfKnownConstant(*_op2.start, *_op1.start);
+		optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
+		optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
+		if (diff && length1 && length2)
+			if (*diff >= *length1 && *diff <= u256(0) - *length2)
+				return true;
 	}
 
 	return false;

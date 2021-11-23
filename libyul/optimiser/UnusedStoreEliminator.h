@@ -43,7 +43,7 @@ struct AssignedValue;
  * The m_store member of UnusedStoreBase is only used with the empty yul string
  * as key in the first dimension.
  *
- * Best run in SSA form.
+ * Best run in SSA form without inlined literals.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
