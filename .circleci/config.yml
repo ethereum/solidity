@@ -51,7 +51,7 @@ commands:
             # Workflow name is not exposed as an env variable. Has to be queried from the API.
             # The name is not critical so if anything fails, use the raw workflow ID as a fallback.
             workflow_info=$(curl --silent "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}") || true
-            workflow_name=$(echo "$workflow_info" | jq --raw-output .name || echo "$CIRCLE_WORKFLOW_ID")
+            workflow_name=$(echo "$workflow_info" | grep -E '"\s*name"\s*:\s*".*"' | cut -d \" -f 4 || echo "$CIRCLE_WORKFLOW_ID")
 
             [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ [${workflow_name}] Job **${CIRCLE_JOB}** failed on **${CIRCLE_BRANCH}**. Please see [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
             [[ "<< parameters.event >>" == "success" ]] && message=" ✅ [${workflow_name}] Job **${CIRCLE_JOB}** succeeded on **${CIRCLE_BRANCH}**. Please see [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
