@@ -705,7 +705,7 @@ void CompilerStack::link()
 	solAssert(m_stackState >= CompilationSuccessful, "");
 	for (auto& contract: m_contracts)
 	{
-		contract.second.object.link(m_libraries);
+		contract.second.object.link(m_libraries, true, contract.first);
 		contract.second.runtimeObject.link(m_libraries);
 	}
 }

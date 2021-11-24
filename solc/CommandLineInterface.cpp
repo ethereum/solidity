@@ -893,6 +893,7 @@ bool CommandLineInterface::link()
 
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
+
 	int const placeholderSize = 40; // 20 bytes or 40 hex characters
 	for (auto const& library: m_options.linker.libraries)
 	{
@@ -912,6 +913,7 @@ bool CommandLineInterface::link()
 	}
 
 	FileReader::StringMap sourceCodes = m_fileReader.sourceCodes();
+
 	for (auto& src: sourceCodes)
 	{
 		auto end = src.second.end();
@@ -1065,7 +1067,7 @@ bool CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 		yul::MachineAssemblyObject object;
 		object = stack.assemble(_targetMachine);
-		object.bytecode->link(m_options.linker.libraries);
+		object.bytecode->link(m_options.linker.libraries, true);
 
 		if (m_options.compiler.outputs.binary)
 		{
