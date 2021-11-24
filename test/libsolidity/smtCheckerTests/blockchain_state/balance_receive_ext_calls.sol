@@ -12,6 +12,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 1218: (131-165): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (131-165): CHC: Assertion violation might happen here.

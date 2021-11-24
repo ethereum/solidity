@@ -42,6 +42,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 6328: (255-269): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.test()\n    C.reset_if_overflow() -- internal call
 // Warning 6328: (502-519): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\noldx = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.set(1)\nState: x = 1\nC.test()\n    C.reset_if_overflow() -- internal call

@@ -27,6 +27,7 @@ contract A {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 6328: (AASource:159-178): CHC: Assertion violation happens here.\nCounterexample:\nx = (- 1), y = (- 2)\n\nTransaction trace:\nA.constructor()\nState: x = 0, y = 0\nA.a()\nState: x = (- 2), y = (- 2)\nA.a()
 // Warning 6328: (AASource:370-386): CHC: Assertion violation happens here.\nCounterexample:\nx = 8, y = (- 2)\n\nTransaction trace:\nA.constructor()\nState: x = 0, y = 0\nA.a()

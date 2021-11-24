@@ -11,6 +11,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 4984: (82-85): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 4984: (154-160): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
