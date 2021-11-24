@@ -109,7 +109,7 @@ RUN set -ex; \
 	cd hera; \
 	mkdir build; \
 	cd build; \
-	cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_FLAGS="-Wno-bitwise-instead-of-logical" -DCMAKE_INSTALL_PREFIX="/usr" ..; \
 	ninja; \
 	ninja install/strip; \
 	rm -rf /usr/src/hera
