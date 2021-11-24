@@ -102,18 +102,6 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/evmone
 
-# HERA
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.5.0" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
-	cd hera; \
-	mkdir build; \
-	cd build; \
-	cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_FLAGS="-Wno-bitwise-instead-of-logical" -DCMAKE_INSTALL_PREFIX="/usr" ..; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/hera
-
 # gmp
 RUN set -ex; \
     # Replace system installed libgmp static library
