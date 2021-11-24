@@ -708,7 +708,7 @@ void CompilerStack::link()
 	solAssert(m_stackState >= CompilationSuccessful, "");
 	for (auto& contract: m_contracts)
 	{
-		contract.second.object.link(m_libraries);
+		contract.second.object.link(m_libraries, true, contract.first);
 		contract.second.runtimeObject.link(m_libraries);
 	}
 }
@@ -1469,7 +1469,7 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 {
 	auto it = m_sources.find(_sourceName);
 	if (it == m_sources.end())
-		solThrow(CompilerError, "Given source file not found: " + _sourceName);
+		solThrow(CompilerError, "Given source file not found.");
 
 	return it->second;
 }

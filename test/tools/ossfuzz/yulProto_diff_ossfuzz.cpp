@@ -88,15 +88,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	ostringstream os1;
 	ostringstream os2;
-	// Disable memory tracing to avoid false positive reports
-	// such as unused write to memory e.g.,
-	// { mstore(0, 1) }
-	// that would be removed by the redundant store eliminator.
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(version),
-		/*disableMemoryTracing=*/true
+		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
@@ -112,18 +107,12 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	termReason = yulFuzzerUtil::interpret(
 		os2,
 		astBlock,
-		EVMDialect::strictAssemblyForEVMObjects(version),
-		true
+		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
 	bool isTraceEq = (os1.str() == os2.str());
-	if (!isTraceEq)
-	{
-		cout << os1.str() << endl;
-		cout << os2.str() << endl;
-		yulAssert(false, "Interpreted traces for optimized and unoptimized code differ.");
-	}
+	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");
 	return;
 }

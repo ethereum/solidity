@@ -1348,9 +1348,7 @@ void ProtoConverter::visit(Statement const& _x)
 			m_output << "continue\n";
 		break;
 	case Statement::kLogFunc:
-		// Log is a stateful statement since it writes to storage.
-		if (!m_filterStatefulInstructions)
-			visit(_x.log_func());
+		visit(_x.log_func());
 		break;
 	case Statement::kCopyFunc:
 		visit(_x.copy_func());

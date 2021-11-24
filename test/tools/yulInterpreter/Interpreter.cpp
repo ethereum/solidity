@@ -55,34 +55,26 @@ void InterpreterState::dumpStorage(ostream& _out) const
 			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
 }
 
-void InterpreterState::dumpTraceAndState(ostream& _out, bool _disableMemoryTrace) const
+void InterpreterState::dumpTraceAndState(ostream& _out) const
 {
 	_out << "Trace:" << endl;
 	for (auto const& line: trace)
 		_out << "  " << line << endl;
-	if (!_disableMemoryTrace)
-	{
-		_out << "Memory dump:\n";
-		map<u256, u256> words;
-		for (auto const& [offset, value]: memory)
-			words[(offset / 0x20) * 0x20] |= u256(uint32_t(value)) << (256 - 8 - 8 * static_cast<size_t>(offset % 0x20));
-		for (auto const& [offset, value]: words)
-			if (value != 0)
-				_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
-	}
+	_out << "Memory dump:\n";
+	map<u256, u256> words;
+	for (auto const& [offset, value]: memory)
+		words[(offset / 0x20) * 0x20] |= u256(uint32_t(value)) << (256 - 8 - 8 * static_cast<size_t>(offset % 0x20));
+	for (auto const& [offset, value]: words)
+		if (value != 0)
+			_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
 	_out << "Storage dump:" << endl;
 	dumpStorage(_out);
 }
 
-void Interpreter::run(
-	InterpreterState& _state,
-	Dialect const& _dialect,
-	Block const& _ast,
-	bool _disableMemoryTrace
-)
+void Interpreter::run(InterpreterState& _state, Dialect const& _dialect, Block const& _ast)
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope, _disableMemoryTrace}(_ast);
+	Interpreter{_state, _dialect, scope}(_ast);
 }
 
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
@@ -217,14 +209,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -287,7 +279,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
-			EVMInstructionInterpreter interpreter(m_state, m_disableMemoryTrace);
+			EVMInstructionInterpreter interpreter(m_state);
 			setValue(interpreter.evalBuiltin(*fun, _funCall.arguments, values()));
 			return;
 		}
@@ -316,7 +308,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 		variables[fun->returnVariables.at(i).name] = 0;
 
 	m_state.controlFlowState = ControlFlowState::Default;
-	Interpreter interpreter(m_state, m_dialect, *scope, m_disableMemoryTrace, std::move(variables));
+	Interpreter interpreter(m_state, m_dialect, *scope, std::move(variables));
 	interpreter(fun->body);
 	m_state.controlFlowState = ControlFlowState::Default;
 
