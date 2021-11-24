@@ -45,7 +45,7 @@ namespace solidity::frontend
 
 FileReader::FileReader(
 	boost::filesystem::path _basePath,
-	vector<boost::filesystem::path> const& _includePaths,
+	vector<boost::filesystem::path> _includePaths,
 	FileSystemPathSet _allowedDirectories
 ):
 	m_allowedDirectories(std::move(_allowedDirectories)),

@@ -48,7 +48,7 @@ public:
 	/// that will be used when requesting files from this file reader instance.
 	explicit FileReader(
 		boost::filesystem::path _basePath = {},
-		std::vector<boost::filesystem::path> const& _includePaths = {},
+		std::vector<boost::filesystem::path> _includePaths = {},
 		FileSystemPathSet _allowedDirectories = {}
 	);
 
