@@ -913,6 +913,7 @@ void CommandLineInterface::link()
 
 	for (auto& src: sourceCodes)
 	{
+		bool used = false;
 		auto end = src.second.end();
 		for (auto it = src.second.begin(); it != end;)
 		{
@@ -935,6 +936,7 @@ void CommandLineInterface::link()
 			{
 				string hexStr(toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
 				copy(hexStr.begin(), hexStr.end(), it);
+				used = true;
 			}
 			else
 				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << endl;
@@ -942,7 +944,14 @@ void CommandLineInterface::link()
 		}
 		// Remove hints for resolved libraries.
 		for (auto const& library: m_options.linker.libraries)
+		{
+			if (used != true)
+			{
+				sout() << "Unused link reference: '" << library.first << "'. Library not found." << endl;
+			}
 			boost::algorithm::erase_all(src.second, "\n" + libraryPlaceholderHint(library.first));
+			used = false;
+		}
 		while (!src.second.empty() && *prev(src.second.end()) == '\n')
 			src.second.resize(src.second.size() - 1);
 	}
