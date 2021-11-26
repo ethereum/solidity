@@ -36,7 +36,7 @@ void LinkerObject::append(LinkerObject const& _other)
 	bytecode += _other.bytecode;
 }
 
-void LinkerObject::link(map<string, h160> const& _libraryAddresses, bool printUnusedLinks, std::string contractName)
+void LinkerObject::link(map<string, h160> const& _libraryAddresses, bool printUnusedLinks)
 {
 	std::map<size_t, std::string> remainingRefs;
 	std::list<std::string> libNames;
@@ -56,16 +56,11 @@ void LinkerObject::link(map<string, h160> const& _libraryAddresses, bool printUn
 		for (auto i = _libraryAddresses.begin(); i != _libraryAddresses.end(); i++)
 			if (std::find(libNames.begin(), libNames.end(), i->first) == libNames.end())
 			{
-				if (printed == false && contractName != "")
-					std::cout << "Found unused link references in: '" << contractName << "'!\n" << std::endl;
 				printed = true;
 				std::cout << "Unused link reference: '" << i->first << "'. Library not found." << std::endl;
-				
 			}
 		if (printed == true)
-		{
 			std::cout << std::endl;
-		}
 	}	
 	linkReferences.swap(remainingRefs);
 }
