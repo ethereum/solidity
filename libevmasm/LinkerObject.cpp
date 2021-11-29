@@ -61,7 +61,7 @@ void LinkerObject::link(map<string, h160> const& _libraryAddresses, bool printUn
 			}
 		if (printed == true)
 			std::cout << std::endl;
-	}	
+	}
 	linkReferences.swap(remainingRefs);
 }
 
