@@ -708,12 +708,18 @@ void CompilerStack::link()
 	{
 		for (auto& library: m_libraries)
 			for (auto& con: m_contracts)
-				if (library.first == con.first.substr(con.first.find_last_of('/') + 1))
-				{
-					contract.second.object.bytecode.push_back(static_cast<uint8_t>(solidity::evmasm::Instruction::PUSH20));
-					contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
-					contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
-				}
+			{
+				if (con.second.contract->contractKind() != solidity::frontend::ContractKind::Library)
+					solThrow(CompilerError, "Invalid link reference: '" + library.first + "'. Not a library.");
+				else
+					if (library.first == con.first.substr(con.first.find_last_of('/') + 1))
+					{
+						contract.second.object.bytecode.push_back(
+							static_cast<uint8_t>(solidity::evmasm::Instruction::PUSH20));
+						contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
+						contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
+					}
+			}
 		if (contract.second.contract->contractKind() != solidity::frontend::ContractKind::Library)
 			contract.second.object.link(m_libraries, true);
 		else
