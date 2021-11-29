@@ -1,7 +1,11 @@
 {# Add rst-badge after rst-versions for small badge style. #}
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
-    <span class="fa fa-book fa-element"> RTD </span>
+    {% for type, url in downloads %}
+        {% if type == 'PDF' %}
+            <a href="{{ url }}">{{ type }}</a>
+        {% endif %}
+    {% endfor %}
 
     <span class="fa fa-element">
     <input class="container_toggle" type="checkbox" id="switch" name="mode">
@@ -13,13 +17,13 @@
     </span>
     <div class="rst-other-versions">
         <dl>
-            <dt>{{ _('Versions') }}</dt> {% for slug, url in versions %}
-            <dd><a href="{{ url }}">{{ slug }}</a></dd>
+            <dt>{{ _('Downloads') }}</dt> {% for type, url in downloads %}
+            <dd><a href="{{ url }}">{{ type }}</a></dd>
             {% endfor %}
         </dl>
         <dl>
-            <dt>{{ _('Downloads') }}</dt> {% for type, url in downloads %}
-            <dd><a href="{{ url }}">{{ type }}</a></dd>
+            <dt>{{ _('Versions') }}</dt> {% for slug, url in versions %}
+            <dd><a href="{{ url }}">{{ slug }}</a></dd>
             {% endfor %}
         </dl>
         <dl>
