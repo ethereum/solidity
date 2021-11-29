@@ -378,20 +378,20 @@ function test_via_ir_equivalence()
 echo "Checking that the bug list is up to date..."
 "$REPO_ROOT"/scripts/update_bugs_by_version.py
 
-#printTask "Testing unknown options..."
-#(
-#    set +e
-#    output=$("$SOLC" --allow=test 2>&1)
-#    failed=$?
-#    set -e
-#
-#    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ]
-#    then
-#        echo "Passed"
-#    else
-#        fail "Incorrect response to unknown options: $output"
-#    fi
-#)
+printTask "Testing unknown options..."
+(
+    set +e
+    output=$("$SOLC" --allow=test 2>&1)
+    failed=$?
+    set -e
+
+    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ]
+    then
+        echo "Passed"
+    else
+        fail "Incorrect response to unknown options: $output"
+    fi
+)
 
 
 printTask "Testing passing files that are not found..."
