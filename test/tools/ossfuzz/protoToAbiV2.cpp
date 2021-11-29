@@ -39,13 +39,13 @@ BOOST_PP_REPEAT(32, USINGDECL, 0)
 				BOOST_PP_CAT(                                                  \
 					BOOST_PP_IF(sign, s, u),                                   \
 					INTWIDTH(z, n,)                                            \
-                )>(_counter) / 2,                                              \
+				)>(_counter) / 2,                                              \
 			integerValue<                                                      \
 				BOOST_PP_CAT(                                                  \
 					BOOST_PP_IF(sign, s, u),                                   \
 					INTWIDTH(z, n,)                                            \
-                )>(_counter)                                                   \
-        );                                                                     \
+				)>(_counter)                                                   \
+		);                                                                     \
 		break;
 /// Switch implementation that instantiates case statements for (un)signed
 /// Solidity integer types.
@@ -411,9 +411,9 @@ void ProtoConverter::appendTypedReturn(
 // Adds the qualifier "calldata" to non-value parameter of an external function.
 void ProtoConverter::appendTypedParamsExternal(
 	bool _isValueType,
-    std::string const& _typeString,
-    std::string const& _varName,
-    Delimiter _delimiter
+	std::string const& _typeString,
+	std::string const& _varName,
+	Delimiter _delimiter
 )
 {
 	std::string qualifiedTypeString = (
@@ -727,8 +727,8 @@ pragma experimental ABIEncoderV2;)";
 	 */
 	ostringstream contractBody;
 	contractBody << storageVarDecls
-	             << testFunction
-	             << commonHelperFunctions();
+				 << testFunction
+				 << commonHelperFunctions();
 	m_output << Whiskers(R"(<pragmas>
 <contractStart>
 <contractBody>
@@ -814,10 +814,10 @@ string TypeVisitor::visit(ArrayType const& _type)
 	string baseType = visit(_type.t());
 	solAssert(!baseType.empty(), "");
 	string arrayBracket = _type.is_static() ?
-	                     string("[") +
-	                     to_string(getStaticArrayLengthFromFuzz(_type.length())) +
-	                     string("]") :
-	                     string("[]");
+						 string("[") +
+						 to_string(getStaticArrayLengthFromFuzz(_type.length())) +
+						 string("]") :
+						 string("[]");
 	m_baseType += arrayBracket;
 	m_structTupleString.addArrayBracketToType(arrayBracket);
 
@@ -1221,7 +1221,7 @@ std::string ValueGetterVisitor::hexValueAsString(
 )
 {
 	solAssert(_numBytes > 0 && _numBytes <= 32,
-	          "Proto ABIv2 fuzzer: Invalid hex length"
+			  "Proto ABIv2 fuzzer: Invalid hex length"
 	);
 
 	// If _decorate is set, then we return a hex"" or a "" string.
@@ -1310,8 +1310,8 @@ std::string ValueGetterVisitor::variableLengthValueAsString(
 		// (expensive) calls to keccak256.
 		string cachedString = hexValueAsString(
 			/*numBytes=*/32,
-			             _counter,
-			             _isHexLiteral,
+						 _counter,
+						 _isHexLiteral,
 			/*decorate=*/false
 		);
 		output = cachedString;

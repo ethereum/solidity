@@ -28,10 +28,10 @@ message MultiVarDecl {
 
 message LowLevelCall {
   enum Type {
-    CALL = 0;
-    CALLCODE = 1;
-    DELEGATECALL = 2;
-    STATICCALL = 3;
+	CALL = 0;
+	CALLCODE = 1;
+	DELEGATECALL = 2;
+	STATICCALL = 3;
   }
   required Type callty = 1;
   required Expression gas = 2;
@@ -46,8 +46,8 @@ message LowLevelCall {
 
 message Create {
   enum Type {
-    CREATE = 0;
-    CREATE2 = 1;
+	CREATE = 0;
+	CREATE2 = 1;
   }
   required Type createty = 1;
   required Expression wei = 2;
@@ -66,17 +66,17 @@ message FunctionCall {
 
 message TypedVarDecl {
   enum TypeName {
-    BOOL = 1;
-    U8 = 2;
-    U32 = 3;
-    U64 = 4;
-    U128 = 5;
-    U256 = 6;
-    S8 = 7;
-    S32 = 8;
-    S64 = 9;
-    S128 = 10;
-    S256 = 11;
+	BOOL = 1;
+	U8 = 2;
+	U32 = 3;
+	U64 = 4;
+	U128 = 5;
+	U256 = 6;
+	S8 = 7;
+	S32 = 8;
+	S64 = 9;
+	S128 = 10;
+	S256 = 11;
   };
   required int32 id = 1;
   required TypeName type = 2;
@@ -89,26 +89,26 @@ message VarRef {
 
 message Literal {
   oneof literal_oneof {
-    uint64 intval = 1;
-    string hexval = 2;
-    string strval = 3;
-    bool boolval = 4;
+	uint64 intval = 1;
+	string hexval = 2;
+	string strval = 3;
+	bool boolval = 4;
   }
 }
 
 message TypedLiteral {
   enum TypeName {
-    BOOL = 1;
-    U8 = 2;
-    U32 = 3;
-    U64 = 4;
-    U128 = 5;
-    U256 = 6;
-    S8 = 7;
-    S32 = 8;
-    S64 = 9;
-    S128 = 10;
-    S256 = 11;
+	BOOL = 1;
+	U8 = 2;
+	U32 = 3;
+	U64 = 4;
+	U128 = 5;
+	U256 = 6;
+	S8 = 7;
+	S32 = 8;
+	S64 = 9;
+	S128 = 10;
+	S256 = 11;
   };
   required int32 val = 1;
   required TypeName type = 2;
@@ -116,28 +116,28 @@ message TypedLiteral {
 
 message BinaryOp {
   enum BOp {
-    ADD = 0;
-    SUB = 1;
-    MUL = 2;
-    DIV = 3;
-    MOD = 4;
-    XOR = 5;
-    AND = 6;
-    OR = 7;
-    EQ = 8;
-    LT = 9;
-    GT = 10;
-    SHR = 11;
-    SHL = 12;
-    SAR = 13;
-    SDIV = 14;
-    SMOD = 15;
-    EXP = 16;
-    SLT = 17;
-    SGT = 18;
-    BYTE = 19;
-    SI = 20;
-    KECCAK = 21;
+	ADD = 0;
+	SUB = 1;
+	MUL = 2;
+	DIV = 3;
+	MOD = 4;
+	XOR = 5;
+	AND = 6;
+	OR = 7;
+	EQ = 8;
+	LT = 9;
+	GT = 10;
+	SHR = 11;
+	SHL = 12;
+	SAR = 13;
+	SDIV = 14;
+	SMOD = 15;
+	EXP = 16;
+	SLT = 17;
+	SGT = 18;
+	BYTE = 19;
+	SI = 20;
+	KECCAK = 21;
   };
   required BOp op = 1;
   required Expression left = 2;
@@ -146,15 +146,15 @@ message BinaryOp {
 
 message UnaryOp {
   enum UOp {
-    NOT = 0;
-    MLOAD = 1;
-    SLOAD = 2;
-    ISZERO = 3;
-    CALLDATALOAD = 4;
-    EXTCODESIZE = 5;
-    EXTCODEHASH = 6;
-    BALANCE = 7;
-    BLOCKHASH = 8;
+	NOT = 0;
+	MLOAD = 1;
+	SLOAD = 2;
+	ISZERO = 3;
+	CALLDATALOAD = 4;
+	EXTCODESIZE = 5;
+	EXTCODEHASH = 6;
+	BALANCE = 7;
+	BLOCKHASH = 8;
   }
   required UOp op = 1;
   required Expression operand = 2;
@@ -162,8 +162,8 @@ message UnaryOp {
 
 message UnaryOpData {
   enum UOpData {
-    SIZE = 1;
-    OFFSET = 2;
+	SIZE = 1;
+	OFFSET = 2;
   }
   required UOpData op = 1;
   required uint64 identifier = 2;
@@ -171,8 +171,8 @@ message UnaryOpData {
 
 message TernaryOp {
   enum TOp {
-    ADDM = 0;
-    MULM = 1;
+	ADDM = 0;
+	MULM = 1;
   }
   required TOp op = 1;
   required Expression arg1 = 2;
@@ -182,10 +182,10 @@ message TernaryOp {
 
 message CopyFunc {
   enum CopyType {
-    CALLDATA = 0;
-    CODE = 1;
-    RETURNDATA = 2;
-    DATA = 3;
+	CALLDATA = 0;
+	CODE = 1;
+	RETURNDATA = 2;
+	DATA = 3;
   }
   required CopyType ct = 1;
   required Expression target = 2;
@@ -202,32 +202,32 @@ message ExtCodeCopy {
 
 message NullaryOp {
   enum NOp {
-    MSIZE = 1;
-    GAS = 2;
-    CALLDATASIZE = 3;
-    CODESIZE = 4;
-    RETURNDATASIZE = 5;
-    ADDRESS = 6;
-    ORIGIN = 7;
-    CALLER = 8;
-    CALLVALUE = 9;
-    GASPRICE = 10;
-    COINBASE = 11;
-    TIMESTAMP = 12;
-    NUMBER = 13;
-    DIFFICULTY = 14;
-    GASLIMIT = 15;
-    SELFBALANCE = 16;
-    CHAINID = 17;
+	MSIZE = 1;
+	GAS = 2;
+	CALLDATASIZE = 3;
+	CODESIZE = 4;
+	RETURNDATASIZE = 5;
+	ADDRESS = 6;
+	ORIGIN = 7;
+	CALLER = 8;
+	CALLVALUE = 9;
+	GASPRICE = 10;
+	COINBASE = 11;
+	TIMESTAMP = 12;
+	NUMBER = 13;
+	DIFFICULTY = 14;
+	GASLIMIT = 15;
+	SELFBALANCE = 16;
+	CHAINID = 17;
   }
   required NOp op = 1;
 }
 
 message StoreFunc {
   enum Storage {
-    MSTORE = 0;
-    SSTORE = 1;
-    MSTORE8 = 2;
+	MSTORE = 0;
+	SSTORE = 1;
+	MSTORE8 = 2;
   }
   required Expression loc = 1;
   required Expression val = 2;
@@ -236,11 +236,11 @@ message StoreFunc {
 
 message LogFunc {
   enum NumTopics {
-    ZERO = 0;
-    ONE = 1;
-    TWO = 2;
-    THREE = 3;
-    FOUR = 4;
+	ZERO = 0;
+	ONE = 1;
+	TWO = 2;
+	THREE = 3;
+	FOUR = 4;
   }
   required Expression pos = 1;
   required Expression size = 2;
@@ -253,16 +253,16 @@ message LogFunc {
 
 message Expression {
   oneof expr_oneof {
-    VarRef varref = 1;
-    Literal cons = 2;
-    BinaryOp binop = 3;
-    UnaryOp unop = 4;
-    TernaryOp top = 5;
-    NullaryOp nop = 6;
-    FunctionCall func_expr = 7;
-    LowLevelCall lowcall = 8;
-    Create create = 9;
-    UnaryOpData unopdata = 10;
+	VarRef varref = 1;
+	Literal cons = 2;
+	BinaryOp binop = 3;
+	UnaryOp unop = 4;
+	TernaryOp top = 5;
+	NullaryOp nop = 6;
+	FunctionCall func_expr = 7;
+	LowLevelCall lowcall = 8;
+	Create create = 9;
+	UnaryOpData unopdata = 10;
   }
 }
 
@@ -303,16 +303,16 @@ message ContinueStmt {}
 
 message StopInvalidStmt {
   enum Type {
-    STOP = 0;
-    INVALID = 1;
+	STOP = 0;
+	INVALID = 1;
   }
   required Type stmt = 1;
 }
 
 message RetRevStmt {
   enum Type {
-    RETURN = 0;
-    REVERT = 1;
+	RETURN = 0;
+	REVERT = 1;
   }
   required Type stmt = 1;
   required Expression pos = 2;
@@ -325,9 +325,9 @@ message SelfDestructStmt {
 
 message TerminatingStmt {
   oneof term_oneof {
-    StopInvalidStmt   stop_invalid = 1;
-    RetRevStmt        ret_rev = 2;
-    SelfDestructStmt  self_des = 3;
+	StopInvalidStmt   stop_invalid = 1;
+	RetRevStmt        ret_rev = 2;
+	SelfDestructStmt  self_des = 3;
   }
 }
 
@@ -346,25 +346,25 @@ message LeaveStmt {}
 
 message Statement {
   oneof stmt_oneof {
-    VarDecl             decl            = 1;
-    AssignmentStatement assignment      = 2;
-    IfStmt              ifstmt          = 3;
-    StoreFunc           storage_func    = 4;
-    Block               blockstmt       = 5;
-    ForStmt             forstmt         = 6;
-    SwitchStmt          switchstmt      = 7;
-    BreakStmt           breakstmt       = 8;
-    ContinueStmt        contstmt        = 9;
-    LogFunc             log_func        = 10;
-    CopyFunc            copy_func       = 11;
-    ExtCodeCopy         extcode_copy    = 12;
-    TerminatingStmt     terminatestmt   = 13;
-    FunctionCall        functioncall    = 14;
-    BoundedForStmt      boundedforstmt  = 15;
-    FunctionDef         funcdef         = 16;
-    PopStmt             pop             = 17;
-    LeaveStmt           leave           = 18;
-    MultiVarDecl        multidecl       = 19;
+	VarDecl             decl            = 1;
+	AssignmentStatement assignment      = 2;
+	IfStmt              ifstmt          = 3;
+	StoreFunc           storage_func    = 4;
+	Block               blockstmt       = 5;
+	ForStmt             forstmt         = 6;
+	SwitchStmt          switchstmt      = 7;
+	BreakStmt           breakstmt       = 8;
+	ContinueStmt        contstmt        = 9;
+	LogFunc             log_func        = 10;
+	CopyFunc            copy_func       = 11;
+	ExtCodeCopy         extcode_copy    = 12;
+	TerminatingStmt     terminatestmt   = 13;
+	FunctionCall        functioncall    = 14;
+	BoundedForStmt      boundedforstmt  = 15;
+	FunctionDef         funcdef         = 16;
+	PopStmt             pop             = 17;
+	LeaveStmt           leave           = 18;
+	MultiVarDecl        multidecl       = 19;
   }
 }
 
@@ -388,18 +388,18 @@ message Data {
 
 message Program {
   enum Version {
-    HOMESTEAD = 0;
-    TANGERINE = 1;
-    SPURIOUS = 2;
-    BYZANTIUM = 3;
-    CONSTANTINOPLE = 4;
-    PETERSBURG = 5;
-    ISTANBUL = 6;
-    BERLIN = 7;
+	HOMESTEAD = 0;
+	TANGERINE = 1;
+	SPURIOUS = 2;
+	BYZANTIUM = 3;
+	CONSTANTINOPLE = 4;
+	PETERSBURG = 5;
+	ISTANBUL = 6;
+	BERLIN = 7;
   }
   oneof program_oneof {
-    Block block = 1;
-    Object obj = 2;
+	Block block = 1;
+	Object obj = 2;
   }
   required Version ver = 3;
   required uint32 step = 4;
