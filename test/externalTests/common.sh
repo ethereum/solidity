@@ -236,7 +236,7 @@ function run_test
     replace_version_pragmas
 
     printLog "Running compile function..."
-    $compile_fn
+    time $compile_fn
 
     printLog "Running test function..."
     $test_fn
@@ -329,7 +329,7 @@ function compile_and_run_test
     local verify_fn="$3"
 
     printLog "Running compile function..."
-    $compile_fn
+    time $compile_fn
     $verify_fn "$SOLCVERSION_SHORT" "$SOLCVERSION"
 
     if [[ "$COMPILE_ONLY" == 1 ]]; then
