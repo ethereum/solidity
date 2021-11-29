@@ -84,7 +84,7 @@ case "$OSTYPE" in
         export MSYS2_ARG_CONV_EXCL="="
         ;;
     *)
-        SOLC="${SOLIDITY_BUILD_DIR}/solc/Release/solc.exe"
+        SOLC="${SOLIDITY_BUILD_DIR}/solc/solc"
         ;;
 esac
 echo "Using solc binary at ${SOLC}"
