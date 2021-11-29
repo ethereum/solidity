@@ -632,7 +632,6 @@ bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) con
 
 bool CompilerStack::compile(State _stopAfter)
 {
-	m_contracts;
 	m_stopAfter = _stopAfter;
 	if (m_stackState < AnalysisPerformed)
 		if (!parseAndAnalyze(_stopAfter))
