@@ -54,7 +54,13 @@ do
             shift
             ;;
         *)
-            matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut --characters 3- | sort)
+            if [[ "$OSTYPE" == "darwin"* ]]
+            then
+                matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut -c 3- | sort)
+            else
+                matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut --characters 3- | sort)
+            fi
+            
 
             if [[ $matching_tests == "" ]]
             then
