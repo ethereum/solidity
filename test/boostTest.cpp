@@ -235,10 +235,10 @@ test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/[])
 	{
 		bool shouldContinue = initializeOptions();
 		if (!shouldContinue)
-			exit(0);
+			exit(EXIT_SUCCESS);
 
 		if (!solidity::test::loadVMs(solidity::test::CommonOptions::get()))
-			exit(1);
+			exit(EXIT_FAILURE);
 
 		if (solidity::test::CommonOptions::get().disableSemanticTests)
 			cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
@@ -298,12 +298,12 @@ test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/[])
 	catch (solidity::test::ConfigException const& exception)
 	{
 		cerr << exception.what() << endl;
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	catch (std::runtime_error const& exception)
 	{
 		cerr << exception.what() << endl;
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	return nullptr;
