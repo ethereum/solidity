@@ -100,7 +100,7 @@ string CharStream::lineAtPosition(int _position) const
 	return line;
 }
 
-tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
+LineColumn CharStream::translatePositionToLineColumn(int _position) const
 {
 	using size_type = string::size_type;
 	using diff_type = string::difference_type;
@@ -114,7 +114,7 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 		lineStart = m_source.rfind('\n', searchPosition - 1);
 		lineStart = lineStart == string::npos ? 0 : lineStart + 1;
 	}
-	return tuple<int, int>(lineNumber, searchPosition - lineStart);
+	return LineColumn{lineNumber, static_cast<int>(searchPosition - lineStart)};
 }
 
 string_view CharStream::text(SourceLocation const& _location) const
