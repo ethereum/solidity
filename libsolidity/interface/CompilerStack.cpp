@@ -701,13 +701,6 @@ bool CompilerStack::compile(State _stopAfter, bool performLinking)
 	m_stackState = CompilationSuccessful;
 	if (performLinking == true)
 		this->link();
-
-	/*
-	for (auto lib: m_libraries)
-		if (std::find(usedLibs.begin(), usedLibs.end(), lib.first) == usedLibs.end() || usedLibs.size() == 0)
-			std::cout << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
-	*/
-
 	return true;
 }
 
