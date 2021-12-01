@@ -742,11 +742,13 @@ void CommandLineInterface::compile()
 		}
 
 		bool successful = m_compiler->compile(m_options.output.stopAfter, false);
-		std::list<std::string> usedLibs = m_compiler->link();
-
-		for (auto lib: m_options.linker.libraries)
-			if (std::find(usedLibs.begin(), usedLibs.end(), lib.first) == usedLibs.end() || usedLibs.size() == 0)
-				sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
+		if (successful)
+		{
+			std::list<std::string> usedLibs = m_compiler->link();
+			for (auto lib: m_options.linker.libraries)
+				if (std::find(usedLibs.begin(), usedLibs.end(), lib.first) == usedLibs.end() || usedLibs.size() == 0)
+					sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
+		}
 
 		for (auto const& error: m_compiler->errors())
 		{
