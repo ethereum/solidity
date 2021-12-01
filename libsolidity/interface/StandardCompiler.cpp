@@ -129,7 +129,7 @@ Json::Value formatErrorWithException(
 		_charStreamProvider
 	);
 
-	if (string const* description = boost::get_error_info<util::errinfo_comment>(_exception))
+	if (string const* description = _exception.comment())
 		message = ((_message.length() > 0) ? (_message + ":") : "") + *description;
 	else
 		message = _message;

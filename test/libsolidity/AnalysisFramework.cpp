@@ -100,7 +100,7 @@ ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _inc
 		for (auto const& messagePrefix: m_messagesToCut)
 			if (currentError->comment()->find(messagePrefix) == 0)
 			{
-				SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(*currentError);
+				SourceLocation const* location = currentError->sourceLocation();
 				// sufficient for now, but in future we might clone the error completely, including the secondary location
 				newError = make_shared<Error>(
 					currentError->errorId(),
