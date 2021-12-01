@@ -741,7 +741,12 @@ void CommandLineInterface::compile()
 			m_compiler->setParserErrorRecovery(m_options.input.errorRecovery);
 		}
 
-		bool successful = m_compiler->compile(m_options.output.stopAfter);
+		bool successful = m_compiler->compile(m_options.output.stopAfter, false);
+		std::list<std::string> usedLibs = m_compiler->link();
+
+		for (auto lib: m_options.linker.libraries)
+			if (std::find(usedLibs.begin(), usedLibs.end(), lib.first) == usedLibs.end() || usedLibs.size() == 0)
+				sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
 
 		for (auto const& error: m_compiler->errors())
 		{
@@ -1086,7 +1091,11 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 		yul::MachineAssemblyObject object;
 		object = stack.assemble(_targetMachine);
-		object.bytecode->link(m_options.linker.libraries, true);
+		std::list<std::string> usedLibs = object.bytecode->link(m_options.linker.libraries);
+
+		for (auto lib : m_options.linker.libraries)
+			if (std::find(usedLibs.begin(), usedLibs.end(), lib.first) == usedLibs.end() || usedLibs.size() == 0)
+				sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
 
 		if (m_options.compiler.outputs.binary)
 		{
