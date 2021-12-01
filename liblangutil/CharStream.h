@@ -51,6 +51,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -100,6 +101,12 @@ public:
 	std::string lineAtPosition(int _position) const;
 	LineColumn translatePositionToLineColumn(int _position) const;
 	///@}
+
+	/// Translates a line:column to the absolute position.
+	std::optional<int> translateLineColumnToPosition(LineColumn const& _lineColumn) const;
+
+	/// Translates a line:column to the absolute position for the given input text.
+	static std::optional<int> translateLineColumnToPosition(std::string const& _text, LineColumn const& _input);
 
 	/// Tests whether or not given octet sequence is present at the current position in stream.
 	/// @returns true if the sequence could be found, false otherwise.
