@@ -55,7 +55,6 @@ do
             ;;
         *)
             matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut -c 3- | sort)
-            
 
             if [[ $matching_tests == "" ]]
             then
