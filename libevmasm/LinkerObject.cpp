@@ -36,7 +36,7 @@ void LinkerObject::append(LinkerObject const& _other)
 	bytecode += _other.bytecode;
 }
 
-void LinkerObject::link(map<string, h160> const& _libraryAddresses, bool printUnusedLinks)
+std::list<std::string> LinkerObject::link(map<string, h160> const& _libraryAddresses)
 {
 	std::map<size_t, std::string> remainingRefs;
 	std::list<std::string> libNames;
@@ -50,19 +50,9 @@ void LinkerObject::link(map<string, h160> const& _libraryAddresses, bool printUn
 		else
 			remainingRefs.insert(linkRef);
 
-	if (printUnusedLinks != false)
-	{
-		bool printed = false;
-		for (auto i = _libraryAddresses.begin(); i != _libraryAddresses.end(); i++)
-			if (std::find(libNames.begin(), libNames.end(), i->first) == libNames.end())
-			{
-				printed = true;
-				std::cout << "Unused link reference: '" << i->first << "'. Library not found." << std::endl;
-			}
-		if (printed == true)
-			std::cout << std::endl;
-	}
 	linkReferences.swap(remainingRefs);
+
+	return libNames;
 }
 
 string LinkerObject::toHex() const
