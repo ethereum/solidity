@@ -1093,7 +1093,7 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		object = stack.assemble(_targetMachine);
 		std::list<std::string> usedLibs = object.bytecode->link(m_options.linker.libraries);
 
-		for (auto lib : m_options.linker.libraries)
+		for (auto lib: m_options.linker.libraries)
 			if (std::find(usedLibs.begin(), usedLibs.end(), lib.first) == usedLibs.end() || usedLibs.size() == 0)
 				sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
 
