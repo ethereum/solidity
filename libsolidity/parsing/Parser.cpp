@@ -968,6 +968,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	expectToken(Token::Using);
 
 	vector<ASTPointer<IdentifierPath>> functions;
+	vector<optional<Token>> operators;
 	bool const usesBraces = m_scanner->currentToken() == Token::LBrace;
 	if (usesBraces)
 	{
@@ -975,12 +976,38 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 		{
 			advance();
 			functions.emplace_back(parseIdentifierPath());
+			if (m_scanner->currentToken() == Token::As)
+			{
+				advance();
+				Token operator_ = m_scanner->currentToken();
+				vector<Token> overridable = {
+					// Potential future additions: <<, >>, **, !
+					Token::BitOr, Token::BitAnd, Token::BitXor,
+					Token::Add, Token::Sub, Token::Mul, Token::Div, Token::Mod,
+					Token::Equal, Token::NotEqual,
+					Token::LessThan, Token::GreaterThan, Token::LessThanOrEqual, Token::GreaterThanOrEqual,
+					Token::BitNot
+				};
+				if (!util::contains(overridable, operator_))
+					parserError(
+						1885_error,
+						("The operator " + string{TokenTraits::toString(operator_)} + " cannot be user-implemented. This is only possible for the folloing operators: ") +
+						util::joinHumanReadable(overridable | ranges::views::transform([](Token _t) { return string{TokenTraits::toString(_t)}; }))
+					);
+				operators.emplace_back(operator_);
+				advance();
+			}
+			else
+				operators.emplace_back();
 		}
 		while (m_scanner->currentToken() == Token::Comma);
 		expectToken(Token::RBrace);
 	}
 	else
+	{
 		functions.emplace_back(parseIdentifierPath());
+		operators.emplace_back();
+	}
 
 	ASTPointer<TypeName> typeName;
 	expectToken(Token::For);
@@ -996,7 +1023,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<UsingForDirective>(std::move(functions), usesBraces, typeName, global);
+	return nodeFactory.createNode<UsingForDirective>(std::move(functions), std::move(operators), usesBraces, typeName, global);
 }
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()

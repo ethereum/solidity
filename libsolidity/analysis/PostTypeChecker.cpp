@@ -178,6 +178,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 
 	bool visit(Identifier const& _identifier) override
 	{
+		// TODO add user defined operators?
 		if (m_currentConstVariable)
 			if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 				if (var->isConstant())

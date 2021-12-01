@@ -1728,10 +1728,40 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	else
 		_operation.subExpression().accept(*this);
 	Type const* subExprType = type(_operation.subExpression());
-	TypeResult result = type(_operation.subExpression())->unaryOperatorResult(op);
-	if (!result)
+
+
+	// Check if the operator is built-in or user-defined.
+	FunctionDefinition const* userDefinedOperator = subExprType->userDefinedOperator(
+		_operation.getOperator(),
+		*currentDefinitionScope()
+	);
+	_operation.annotation().userDefinedFunction = userDefinedOperator;
+	FunctionType const* userDefinedFunctionType = nullptr;
+	if (userDefinedOperator)
+		userDefinedFunctionType = &dynamic_cast<FunctionType const&>(
+			userDefinedOperator->libraryFunction() ?
+			*userDefinedOperator->typeViaContractName() :
+			*userDefinedOperator->type()
+		);
+
+	TypeResult builtinResult = subExprType->unaryOperatorResult(op);
+
+	solAssert(!builtinResult || !userDefinedOperator);
+	if (userDefinedOperator)
 	{
-		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." + (!result.message().empty() ? " " + result.message() : "");
+		solAssert(userDefinedFunctionType->parameterTypes().size() == 1);
+		solAssert(userDefinedFunctionType->returnParameterTypes().size() == 1);
+		solAssert(
+			*userDefinedFunctionType->parameterTypes().at(0) ==
+			*userDefinedFunctionType->returnParameterTypes().at(0)
+		);
+		_operation.annotation().type = userDefinedFunctionType->returnParameterTypes().at(0);
+	}
+	else if (builtinResult)
+		_operation.annotation().type = builtinResult;
+	else
+	{
+		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." + (!builtinResult.message().empty() ? " " + builtinResult.message() : "");
 		if (modifying)
 			// Cannot just report the error, ignore the unary operator, and continue,
 			// because the sub-expression was already processed with requireLValue()
@@ -1740,10 +1770,12 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 			m_errorReporter.typeError(4907_error, _operation.location(), description);
 		_operation.annotation().type = subExprType;
 	}
-	else
-		_operation.annotation().type = result.get();
+
 	_operation.annotation().isConstant = false;
-	_operation.annotation().isPure = !modifying && *_operation.subExpression().annotation().isPure;
+	_operation.annotation().isPure =
+		!modifying &&
+		*_operation.subExpression().annotation().isPure &&
+		(!userDefinedFunctionType || userDefinedFunctionType->isPure());
 	_operation.annotation().isLValue = false;
 
 	return false;
@@ -1753,10 +1785,35 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 {
 	Type const* leftType = type(_operation.leftExpression());
 	Type const* rightType = type(_operation.rightExpression());
-	TypeResult result = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
-	Type const* commonType = result.get();
-	if (!commonType)
-	{
+	_operation.annotation().isLValue = false;
+	_operation.annotation().isConstant = false;
+
+	// Check if the operator is built-in or user-defined.
+	FunctionDefinition const* userDefinedOperator = leftType->userDefinedOperator(
+		_operation.getOperator(),
+		*currentDefinitionScope()
+	);
+	_operation.annotation().userDefinedFunction = userDefinedOperator;
+	FunctionType const* userDefinedFunctionType = nullptr;
+	if (userDefinedOperator)
+		userDefinedFunctionType = &dynamic_cast<FunctionType const&>(
+			userDefinedOperator->libraryFunction() ?
+			*userDefinedOperator->typeViaContractName() :
+			*userDefinedOperator->type()
+		);
+	_operation.annotation().isPure =
+		*_operation.leftExpression().annotation().isPure &&
+		*_operation.rightExpression().annotation().isPure &&
+		(!userDefinedFunctionType || userDefinedFunctionType->isPure());
+
+	TypeResult builtinResult = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
+	Type const* commonType = leftType;
+
+	// Either the operator is user-defined or built-in.
+	// TODO For enums, we have compare operators. Should we disallow overriding them?
+	solAssert(!userDefinedOperator || !builtinResult);
+
+	if (!builtinResult && !userDefinedOperator)
 		m_errorReporter.typeError(
 			2271_error,
 			_operation.location(),
@@ -1766,22 +1823,33 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			leftType->humanReadableName() +
 			" and " +
 			rightType->humanReadableName() + "." +
-			(!result.message().empty() ? " " + result.message() : "")
+			(!builtinResult.message().empty() ? " " + builtinResult.message() : "")
 		);
-		commonType = leftType;
+
+	if (builtinResult)
+		commonType = builtinResult.get();
+	else if (userDefinedOperator)
+	{
+		solAssert(
+			userDefinedFunctionType->parameterTypes().size() == 2 &&
+			*userDefinedFunctionType->parameterTypes().at(0) ==
+			*userDefinedFunctionType->parameterTypes().at(1)
+		);
+		commonType = userDefinedFunctionType->parameterTypes().at(0);
 	}
+
 	_operation.annotation().commonType = commonType;
 	_operation.annotation().type =
 		TokenTraits::isCompareOp(_operation.getOperator()) ?
 		TypeProvider::boolean() :
 		commonType;
-	_operation.annotation().isPure =
-		*_operation.leftExpression().annotation().isPure &&
-		*_operation.rightExpression().annotation().isPure;
-	_operation.annotation().isLValue = false;
-	_operation.annotation().isConstant = false;
 
-	if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
+	if (userDefinedOperator)
+		solAssert(
+			userDefinedFunctionType->returnParameterTypes().size() == 1 &&
+			*userDefinedFunctionType->returnParameterTypes().front() == *_operation.annotation().type
+		);
+	else if (builtinResult && (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL))
 	{
 		string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
 		if (
@@ -3784,7 +3852,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 	);
 	solAssert(normalizedType);
 
-	for (ASTPointer<IdentifierPath> const& path: _usingFor.functionsOrLibrary())
+	for (auto const& [path, operator_]: _usingFor.functionsAndOperators())
 	{
 		solAssert(path->annotation().referencedDeclaration);
 		FunctionDefinition const& functionDefinition =
@@ -3820,6 +3888,73 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					": " +  result.message()
 				)
 			);
+		else if (operator_)
+		{
+			if (!_usingFor.typeName()->annotation().type->typeDefinition())
+			{
+				m_errorReporter.typeError(
+					5332_error,
+					path->location(),
+					"Operators can only be implemented for user-defined types and not for contracts."
+				);
+				continue;
+			}
+			// "-" can be used as unary and binary operator.
+			bool isUnaryNegation = (
+				operator_ == Token::Sub &&
+				functionType->parameterTypesIncludingSelf().size() == 1
+			);
+			if (
+				(
+					(TokenTraits::isBinaryOp(*operator_) && !isUnaryNegation) ||
+					TokenTraits::isCompareOp(*operator_)
+				) &&
+				(
+					functionType->parameterTypesIncludingSelf().size() != 2 ||
+					*functionType->parameterTypesIncludingSelf().at(0) !=
+					*functionType->parameterTypesIncludingSelf().at(1)
+				)
+			)
+				m_errorReporter.typeError(
+					1884_error,
+					path->location(),
+					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+					"needs to have two parameters of equal type to be used for the operator " +
+					TokenTraits::friendlyName(*operator_) +
+					"."
+				);
+			if (
+				(isUnaryNegation || (TokenTraits::isUnaryOp(*operator_) && *operator_ != Token::Add)) &&
+				functionType->parameterTypesIncludingSelf().size() != 1
+			)
+				m_errorReporter.typeError(
+					8112_error,
+					path->location(),
+					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+					"needs to have exactly one parameter to be used for the operator " +
+					TokenTraits::friendlyName(*operator_) +
+					"."
+				);
+			Type const* expectedType =
+				TokenTraits::isCompareOp(*operator_) ?
+				dynamic_cast<Type const*>(TypeProvider::boolean()) :
+				functionType->parameterTypesIncludingSelf().at(0);
+
+			if (
+				functionType->returnParameterTypes().size() != 1 ||
+				*functionType->returnParameterTypes().front() != *expectedType
+			)
+				m_errorReporter.typeError(
+					7743_error,
+					path->location(),
+					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+					"needs to return exactly one value of type " +
+					expectedType->toString(true) +
+					" to be used for the operator " +
+					TokenTraits::friendlyName(*operator_) +
+					"."
+				);
+		}
 	}
 }
 

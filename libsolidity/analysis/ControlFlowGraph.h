@@ -29,6 +29,7 @@
 #include <stack>
 #include <utility>
 #include <vector>
+#include <variant>
 
 namespace solidity::frontend
 {
@@ -98,8 +99,13 @@ struct CFGNode
 	std::vector<CFGNode*> entries;
 	/// Exit nodes. All CFG nodes to which control flow may continue after this node.
 	std::vector<CFGNode*> exits;
-	/// Function call done by this node
-	FunctionCall const* functionCall = nullptr;
+	/// Function call done by this node, either a proper function call (allows virtual lookup)
+	/// or a direct function definition reference (in case of an operator),
+	/// or nullptr.
+	std::variant<FunctionCall const*, FunctionDefinition const*> functionCall = static_cast<FunctionCall const*>(nullptr);
+	/// @returns the actual function called given a most derived contract. If no function is called
+	/// in this node, returns nullptr.
+	FunctionDefinition const* resolveFunctionCall(ContractDefinition const* _mostDerivedContract) const;
 
 	/// Variable occurrences in the node.
 	std::vector<VariableOccurrence> variableOccurrences;

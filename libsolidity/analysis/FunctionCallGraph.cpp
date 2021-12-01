@@ -204,6 +204,20 @@ bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 	return true;
 }
 
+bool FunctionCallGraphBuilder::visit(BinaryOperation const& _binaryOperation)
+{
+	if (FunctionDefinition const* function = _binaryOperation.annotation().userDefinedFunction)
+		functionReferenced(*function, true /* called directly */);
+	return true;
+}
+
+bool FunctionCallGraphBuilder::visit(UnaryOperation const& _unaryOperation)
+{
+	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
+		functionReferenced(*function, true /* called directly */);
+	return true;
+}
+
 bool FunctionCallGraphBuilder::visit(ModifierInvocation const& _modifierInvocation)
 {
 	if (auto const* modifier = dynamic_cast<ModifierDefinition const*>(_modifierInvocation.name().annotation().referencedDeclaration))

@@ -48,6 +48,7 @@
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/tail.hpp>
 #include <range/v3/view/transform.hpp>
+#include <range/v3/view/filter.hpp>
 
 #include <limits>
 #include <unordered_set>
@@ -337,7 +338,10 @@ Type const* Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 	return encodingType;
 }
 
-MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _scope)
+namespace
+{
+
+vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, ASTNode const& _scope)
 {
 	vector<UsingForDirective const*> usingForDirectives;
 	SourceUnit const* sourceUnit = dynamic_cast<SourceUnit const*>(&_scope);
@@ -362,6 +366,57 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
 		typeLocation = refType->location();
 
+	return usingForDirectives | ranges::views::filter([&](UsingForDirective const* _directive) -> bool {
+		// Convert both types to pointers for comparison to see if the `using for`
+		// directive applies.
+		// Further down, we check more detailed for each function if `_type` is
+		// convertible to the function parameter type.
+		return
+			!_directive->typeName() ||
+			*TypeProvider::withLocationIfReference(typeLocation, &_type, true) ==
+			*TypeProvider::withLocationIfReference(
+				typeLocation,
+				_directive->typeName()->annotation().type,
+				true
+			);
+	}) | ranges::to<vector<UsingForDirective const*>>;
+}
+
+}
+
+FunctionDefinition const* Type::userDefinedOperator(Token _token, ASTNode const& _scope) const
+{
+	// Check if it is a user-defined type.
+	if (!typeDefinition())
+		return nullptr;
+
+	set<FunctionDefinition const*> seenFunctions;
+	for (UsingForDirective const* ufd: usingForDirectivesForType(*this, _scope))
+		for (auto const& [pathPointer, operator_]: ufd->functionsAndOperators())
+		{
+			if (operator_ != _token)
+				continue;
+			FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(
+				*pathPointer->annotation().referencedDeclaration
+			);
+			FunctionType const* functionType = dynamic_cast<FunctionType const*>(
+				function.libraryFunction() ? function.typeViaContractName() : function.type()
+			);
+			solAssert(functionType && !functionType->parameterTypes().empty());
+			// TODO does this work (data location)?
+			solAssert(isImplicitlyConvertibleTo(*functionType->parameterTypes().front()));
+			seenFunctions.insert(&function);
+		}
+	// TODO proper error handling.
+	if (seenFunctions.size() == 1)
+		return *seenFunctions.begin();
+	else
+		return nullptr;
+}
+
+
+MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _scope)
+{
 	MemberList::MemberMap members;
 
 	set<pair<string, Declaration const*>> seenFunctions;
@@ -381,25 +436,12 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 				members.emplace_back(&_function, asBoundFunction, *_name);
 	};
 
-	for (UsingForDirective const* ufd: usingForDirectives)
-	{
-		// Convert both types to pointers for comparison to see if the `using for`
-		// directive applies.
-		// Further down, we check more detailed for each function if `_type` is
-		// convertible to the function parameter type.
-		if (
-			ufd->typeName() &&
-			*TypeProvider::withLocationIfReference(typeLocation, &_type, true) !=
-			*TypeProvider::withLocationIfReference(
-				typeLocation,
-				ufd->typeName()->annotation().type,
-				true
-			)
-		)
-			continue;
-
-		for (auto const& pathPointer: ufd->functionsOrLibrary())
+	for (UsingForDirective const* ufd: usingForDirectivesForType(_type, _scope))
+		for (auto const& [pathPointer, operator_]: ufd->functionsAndOperators())
 		{
+			if (operator_)
+				continue;
+
 			solAssert(pathPointer);
 			Declaration const* declaration = pathPointer->annotation().referencedDeclaration;
 			solAssert(declaration);
@@ -420,7 +462,6 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 					pathPointer->path().back()
 				);
 		}
-	}
 
 	return members;
 }

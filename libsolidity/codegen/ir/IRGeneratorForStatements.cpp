@@ -775,9 +775,41 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	setLocation(_binOp);
 
-	solAssert(!!_binOp.annotation().commonType);
+	// TOOD make this nicer
+	if (_binOp.annotation().userDefinedFunction)
+	{
+		_binOp.leftExpression().accept(*this);
+		_binOp.rightExpression().accept(*this);
+		setLocation(_binOp);
+
+		// TODO extract from function call
+		FunctionDefinition const& function = *_binOp.annotation().userDefinedFunction;
+		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
+			function.libraryFunction() ? function.typeViaContractName() : function.type()
+		);
+		solAssert(functionType);
+		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
+		solAssert(functionType);
+
+		// TODO virtual?
+
+		string left = expressionAsType(_binOp.leftExpression(), *functionType->selfType());
+		string right = expressionAsType(_binOp.rightExpression(), *functionType->parameterTypes().at(0));
+		solAssert(!left.empty() && !right.empty());
+
+		solAssert(function.isImplemented(), "");
+
+		define(_binOp) <<
+			m_context.enqueueFunctionForCodeGeneration(function) <<
+			("(" + left + ", " + right + ")\n");
+
+		return false;
+	}
+
+	solAssert(!!_binOp.annotation().commonType, "");
 	Type const* commonType = _binOp.annotation().commonType;
 	langutil::Token op = _binOp.getOperator();
+
 
 	if (op == Token::And || op == Token::Or)
 	{

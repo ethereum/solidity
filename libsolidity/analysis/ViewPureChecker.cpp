@@ -323,6 +323,8 @@ ViewPureChecker::MutabilityAndLocation const& ViewPureChecker::modifierMutabilit
 	return m_inferredMutability.at(&_modifier);
 }
 
+// TODO needs to visit binaryoperation as well
+
 void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 {
 	if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)

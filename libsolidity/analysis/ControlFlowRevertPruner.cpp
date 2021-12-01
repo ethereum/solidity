@@ -81,27 +81,23 @@ void ControlFlowRevertPruner::findRevertStates()
 				if (_node == functionFlow.exit)
 					foundExit = true;
 
-				if (auto const* functionCall = _node->functionCall)
+				auto const* resolvedFunction = _node->resolveFunctionCall(item.contract);
+				if (resolvedFunction && resolvedFunction->isImplemented())
 				{
-					auto const* resolvedFunction = ASTNode::resolveFunctionCall(*functionCall, item.contract);
-
-					if (resolvedFunction && resolvedFunction->isImplemented())
+					CFG::FunctionContractTuple calledFunctionTuple{
+						findScopeContract(*resolvedFunction, item.contract),
+						resolvedFunction
+					};
+					switch (m_functions.at(calledFunctionTuple))
 					{
-						CFG::FunctionContractTuple calledFunctionTuple{
-							findScopeContract(*resolvedFunction, item.contract),
-							resolvedFunction
-						};
-						switch (m_functions.at(calledFunctionTuple))
-						{
-							case RevertState::Unknown:
-								wakeUp[calledFunctionTuple].insert(item);
-								foundUnknown = true;
-								return;
-							case RevertState::AllPathsRevert:
-								return;
-							case RevertState::HasNonRevertingPath:
-								break;
-						}
+						case RevertState::Unknown:
+							wakeUp[calledFunctionTuple].insert(item);
+							foundUnknown = true;
+							return;
+						case RevertState::AllPathsRevert:
+							return;
+						case RevertState::HasNonRevertingPath:
+							break;
 					}
 				}
 
@@ -135,30 +131,26 @@ void ControlFlowRevertPruner::modifyFunctionFlows()
 		FunctionFlow const& functionFlow = m_cfg.functionFlow(*item.first.function, item.first.contract);
 		solidity::util::BreadthFirstSearch<CFGNode*>{{functionFlow.entry}}.run(
 			[&](CFGNode* _node, auto&& _addChild) {
-				if (auto const* functionCall = _node->functionCall)
-				{
-					auto const* resolvedFunction = ASTNode::resolveFunctionCall(*functionCall, item.first.contract);
+				auto const* resolvedFunction = _node->resolveFunctionCall(item.first.contract);
+				if (resolvedFunction && resolvedFunction->isImplemented())
+					switch (m_functions.at({findScopeContract(*resolvedFunction, item.first.contract), resolvedFunction}))
+					{
+						case RevertState::Unknown:
+							[[fallthrough]];
+						case RevertState::AllPathsRevert:
+							// If the revert states of the functions do not
+							// change anymore, we treat all "unknown" states as
+							// "reverting", since they can only be caused by
+							// recursion.
+							for (CFGNode * node: _node->exits)
+								ranges::remove(node->entries, _node);
 
-					if (resolvedFunction && resolvedFunction->isImplemented())
-						switch (m_functions.at({findScopeContract(*resolvedFunction, item.first.contract), resolvedFunction}))
-						{
-							case RevertState::Unknown:
-								[[fallthrough]];
-							case RevertState::AllPathsRevert:
-								// If the revert states of the functions do not
-								// change anymore, we treat all "unknown" states as
-								// "reverting", since they can only be caused by
-								// recursion.
-								for (CFGNode * node: _node->exits)
-									ranges::remove(node->entries, _node);
-
-								_node->exits = {functionFlow.revert};
-								functionFlow.revert->entries.push_back(_node);
-								return;
-							default:
-								break;
-						}
-				}
+							_node->exits = {functionFlow.revert};
+							functionFlow.revert->entries.push_back(_node);
+							return;
+						default:
+							break;
+					}
 
 				for (CFGNode* exit: _node->exits)
 					_addChild(exit);

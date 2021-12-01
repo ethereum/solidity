@@ -502,6 +502,46 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.leftExpression();
 	Expression const& rightExpression = _binaryOperation.rightExpression();
+	if (_binaryOperation.annotation().userDefinedFunction)
+	{
+		// TODO extract from function call
+		FunctionDefinition const& function = *_binaryOperation.annotation().userDefinedFunction;
+		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
+			function.libraryFunction() ? function.typeViaContractName() : function.type()
+		);
+		solAssert(functionType);
+		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
+		solAssert(functionType);
+
+		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+		acceptAndConvert(leftExpression, *functionType->selfType());
+		acceptAndConvert(rightExpression, *functionType->parameterTypes().at(0));
+
+		utils().pushCombinedFunctionEntryLabel(
+			function.resolveVirtual(m_context.mostDerivedContract()),
+			false
+		);
+
+		unsigned parameterSize =
+			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
+			functionType->selfType()->sizeOnStack();
+
+		if (m_context.runtimeContext())
+			// We have a runtime context, so we need the creation part.
+			utils().rightShiftNumberOnStack(32);
+		else
+			// Extract the runtime part.
+			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+
+		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+		m_context << returnLabel;
+
+		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
+		// callee adds return parameters, but removes arguments and return label
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+		return false;
+	}
+
 	solAssert(!!_binaryOperation.annotation().commonType, "");
 	Type const* commonType = _binaryOperation.annotation().commonType;
 	Token const c_op = _binaryOperation.getOperator();

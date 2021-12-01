@@ -72,6 +72,8 @@ private:
 	bool visit(EmitStatement const& _emitStatement) override;
 	bool visit(Identifier const& _identifier) override;
 	bool visit(MemberAccess const& _memberAccess) override;
+	bool visit(BinaryOperation const& _binaryOperation) override;
+	bool visit(UnaryOperation const& _unaryOperation) override;
 	bool visit(ModifierInvocation const& _modifierInvocation) override;
 	bool visit(NewExpression const& _newExpression) override;
 

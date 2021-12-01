@@ -19,10 +19,20 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
+#include <libsolutil/Visitor.h>
 
 using namespace std;
+using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
+
+FunctionDefinition const* CFGNode::resolveFunctionCall(ContractDefinition const* _mostDerivedContract) const
+{
+	return std::visit(GenericVisitor{
+		[=](FunctionCall const* _funCall) { return _funCall ? ASTNode::resolveFunctionCall(*_funCall, _mostDerivedContract) : nullptr; },
+		[](FunctionDefinition const* _funDef) { return _funDef; }
+	}, functionCall);
+}
 
 bool CFG::constructFlow(ASTNode const& _astRoot)
 {

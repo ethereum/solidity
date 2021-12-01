@@ -312,7 +312,13 @@ struct MemberAccessAnnotation: ExpressionAnnotation
 	util::SetOnce<VirtualLookup> requiredLookup;
 };
 
-struct BinaryOperationAnnotation: ExpressionAnnotation
+struct OperationAnnotation: ExpressionAnnotation
+{
+	// TODO should this be more like "referencedDeclaration"?
+	FunctionDefinition const* userDefinedFunction = nullptr;
+};
+
+struct BinaryOperationAnnotation: OperationAnnotation
 {
 	/// The common type that is used for the operation, not necessarily the result type (which
 	/// e.g. for comparisons is bool).

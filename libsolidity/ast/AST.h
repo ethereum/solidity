@@ -38,6 +38,7 @@
 #include <json/json.h>
 
 #include <range/v3/view/subrange.hpp>
+#include <range/v3/view/zip.hpp>
 #include <range/v3/view/map.hpp>
 
 #include <memory>
@@ -664,16 +665,19 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<ASTPointer<IdentifierPath>> _functions,
+		std::vector<std::optional<Token>> _operators,
 		bool _usesBraces,
 		ASTPointer<TypeName> _typeName,
 		bool _global
 	):
 		ASTNode(_id, _location),
-		m_functions(_functions),
+		m_functions(std::move(_functions)),
+		m_operators(std::move(_operators)),
 		m_usesBraces(_usesBraces),
 		m_typeName(std::move(_typeName)),
 		m_global{_global}
 	{
+		solAssert(m_functions.size() == m_operators.size());
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -684,12 +688,15 @@ public:
 
 	/// @returns a list of functions or the single library.
 	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functions; }
+	auto functionsAndOperators() const { return ranges::zip_view(m_functions, m_operators); }
 	bool usesBraces() const { return m_usesBraces; }
 	bool global() const { return m_global; }
 
 private:
 	/// Either the single library or a list of functions.
 	std::vector<ASTPointer<IdentifierPath>> m_functions;
+	/// Operators, the functions are applied to.
+	std::vector<std::optional<Token>> m_operators;
 	bool m_usesBraces;
 	ASTPointer<TypeName> m_typeName;
 	bool m_global = false;
@@ -2054,6 +2061,8 @@ public:
 	Token getOperator() const { return m_operator; }
 	bool isPrefixOperation() const { return m_isPrefix; }
 	Expression const& subExpression() const { return *m_subExpression; }
+
+	OperationAnnotation& annotation() const override;
 
 private:
 	Token m_operator;
