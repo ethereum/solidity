@@ -118,9 +118,10 @@ void SyntaxTest::filterObtainedErrors()
 {
 	for (auto const& currentError: filterErrors(compiler().errors(), true))
 	{
-		int locationStart = -1, locationEnd = -1;
+		int locationStart = -1;
+		int locationEnd = -1;
 		string sourceName;
-		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
+		if (SourceLocation const* location = currentError->sourceLocation())
 		{
 			solAssert(location->sourceName, "");
 			sourceName = *location->sourceName;

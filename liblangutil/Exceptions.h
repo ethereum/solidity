@@ -197,6 +197,9 @@ public:
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
 
+	SourceLocation const* sourceLocation() const noexcept;
+	SecondarySourceLocation const* secondarySourceLocation() const noexcept;
+
 	/// helper functions
 	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
 	{
@@ -206,7 +209,7 @@ public:
 		return nullptr;
 	}
 
-	static Severity errorSeverity(Type _type)
+	static constexpr Severity errorSeverity(Type _type)
 	{
 		if (_type == Type::Info)
 			return Severity::Info;

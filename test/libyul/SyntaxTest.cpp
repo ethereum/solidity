@@ -54,7 +54,7 @@ void SyntaxTest::parseAndAnalyze()
 		int locationStart = -1;
 		int locationEnd = -1;
 
-		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*error))
+		if (SourceLocation const* location = error->sourceLocation())
 		{
 			locationStart = location->start;
 			locationEnd = location->end;

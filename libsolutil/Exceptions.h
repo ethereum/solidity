@@ -39,8 +39,6 @@ struct Exception: virtual std::exception, virtual boost::exception
 
 	/// @returns the errinfo_comment of this exception.
 	std::string const* comment() const noexcept;
-
-private:
 };
 
 /// Throws an exception with a given description and extra information about the location the

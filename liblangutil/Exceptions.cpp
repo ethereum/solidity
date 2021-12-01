@@ -75,6 +75,16 @@ Error::Error(
 		*this << util::errinfo_comment(_description);
 }
 
+SourceLocation const* Error::sourceLocation() const noexcept
+{
+	return boost::get_error_info<errinfo_sourceLocation>(*this);
+}
+
+SecondarySourceLocation const* Error::secondarySourceLocation() const noexcept
+{
+	return boost::get_error_info<errinfo_secondarySourceLocation>(*this);
+}
+
 optional<Error::Severity> Error::severityFromString(string _input)
 {
 	boost::algorithm::to_lower(_input);
