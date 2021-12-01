@@ -710,12 +710,11 @@ set<string> CompilerStack::link()
 	for (auto& contract: m_contracts)
 	{
 		for (auto& library: m_libraries)
-			for (auto& con: m_contracts)
-				if (library.first == con.first.substr(con.first.find_last_of('/') + 1))
-				{
-					contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
-					contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
-				}
+			if (library.first == contract.first.substr(contract.first.find_last_of('/') + 1))
+			{
+				contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
+				contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
+			}
 		libNames = contract.second.object.link(m_libraries);
 		contract.second.runtimeObject.link(m_libraries);
 	}
