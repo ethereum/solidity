@@ -61,7 +61,7 @@ struct LinkerObject
 	void append(LinkerObject const& _other);
 
 	/// Links the given libraries by replacing their uses in the code and removes them from the references.
-	std::list<std::string> link(std::map<std::string, util::h160> const& _libraryAddresses);
+	std::set<std::string> link(std::map<std::string, util::h160> const& _libraryAddresses);
 
 	/// @returns a hex representation of the bytecode of the given object, replacing unlinked
 	/// addresses by placeholders. This output is lowercase.

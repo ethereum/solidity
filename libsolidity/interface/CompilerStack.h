@@ -237,7 +237,7 @@ public:
 
 	/// Links all the known library addresses in the available objects. Any unknown
 	/// library will still be kept as an unlinked placeholder in the objects.
-	std::list<std::string> link();
+	std::set<std::string> link();
 
 	/// @returns the list of sources (paths) used
 	std::vector<std::string> sourceNames() const;
