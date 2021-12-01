@@ -630,7 +630,7 @@ bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) con
 	return false;
 }
 
-bool CompilerStack::compile(State _stopAfter)
+bool CompilerStack::compile(State _stopAfter, bool performLinking)
 {
 	m_stopAfter = _stopAfter;
 	if (m_stackState < AnalysisPerformed)
@@ -696,41 +696,32 @@ bool CompilerStack::compile(State _stopAfter)
 					}
 				}
 	m_stackState = CompilationSuccessful;
-	this->link();
+	if (performLinking == true)
+		this->link();
 	return true;
 }
 
-void CompilerStack::link()
+list<string> CompilerStack::link()
 {
 	solAssert(m_stackState >= CompilationSuccessful, "");
+
+	std::list<std::string> libNames;
 
 	for (auto& contract: m_contracts)
 	{
 		for (auto& library: m_libraries)
 			for (auto& con: m_contracts)
-			{
 				if (library.first == con.first.substr(con.first.find_last_of('/') + 1))
-					if (con.second.contract->contractKind() != solidity::frontend::ContractKind::Library)
-						solThrow(CompilerError, "Invalid link reference: '" + library.first + "'. Not a library.");
-					else
-					{
-						contract.second.object.bytecode.push_back(static_cast<uint8_t>(solidity::evmasm::Instruction::PUSH20));
-						contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
-						contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
-					}
-				else
-					if (
-						con.second.contract->contractKind() != solidity::frontend::ContractKind::Library &&
-						library.first.substr(library.first.find_last_of(':') + 1) == con.first.substr(con.first.find_last_of(':') + 1)
-					)
-						solThrow(CompilerError, "Invalid link reference: '" + library.first + "'. Not a library.");
-			}
-		if (contract.second.contract->contractKind() != solidity::frontend::ContractKind::Library)
-			contract.second.object.link(m_libraries, true);
-		else
-			contract.second.object.link(m_libraries);
+				{
+					contract.second.object.bytecode.push_back(static_cast<uint8_t>(solidity::evmasm::Instruction::PUSH20));
+					contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
+					contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
+				}
+		libNames = contract.second.object.link(m_libraries);
 		contract.second.runtimeObject.link(m_libraries);
 	}
+
+	return libNames;
 }
 
 vector<string> CompilerStack::contractNames() const
