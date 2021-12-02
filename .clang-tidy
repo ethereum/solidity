@@ -1,0 +1,42 @@
+Checks: >-
+  bugprone-*,
+  cppcoreguidelines-*,
+  google-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -bugprone-lambda-function-name,
+  -bugprone-reserved-identifier,
+  -cppcoreguidelines-avoid-goto,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-type-vararg,
+  -google-build-using-namespace,
+  -google-readability-braces-around-statements,
+  -google-readability-function-size,
+  -google-readability-namespace-comments,
+  -misc-no-recursion,
+  -modernize-return-braced-init-list,
+  -modernize-use-nodiscard,
+  -modernize-use-trailing-return-type,
+  -performance-unnecessary-value-param,
+  -readability-braces-around-statements,
+  -readability-magic-numbers,
+
+CheckOptions:
+  - key: readability-function-cognitive-complexity.Threshold
+    value: 100
+  - key: readability-function-cognitive-complexity.IgnoreMacros
+    value: true
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.NamespaceCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: m_
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase

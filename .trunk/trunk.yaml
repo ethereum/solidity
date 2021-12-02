@@ -1,0 +1,20 @@
+version: 0.1
+cli:
+  version: 0.3.1-beta
+lint:
+  compile_commands: json
+  enabled:
+    - actionlint@1.6.8
+    - black-py@21.11b1
+    - clang-format@13.0.0
+    - clang-tidy@13.0.0
+    - flake8@4.0.1:
+        packages:
+          - flake8-bugbear@21.11.29
+    - gitleaks@7.6.1
+    - hadolint@2.8.0
+    - isort@5.10.1
+    - markdownlint@0.30.0
+    - prettier@2.5.0
+    - shellcheck@0.8.0
+    - shfmt@3.4.0
