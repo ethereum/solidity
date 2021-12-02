@@ -712,7 +712,7 @@ set<string> CompilerStack::link()
 
 	for (auto& contract: m_contracts)
 	{
-		for (auto& library: m_libraries)
+		for (const auto& library: m_libraries)
 			if (library.first == contract.first.substr(contract.first.find_last_of('/') + 1))
 			{
 				contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
