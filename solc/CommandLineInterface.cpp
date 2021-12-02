@@ -745,7 +745,7 @@ void CommandLineInterface::compile()
 		if (successful)
 		{
 			std::set<std::string> usedLibs = m_compiler->link();
-			for (const auto& lib: m_options.linker.libraries)
+			for (auto const& lib: m_options.linker.libraries)
 				if (usedLibs.find(lib.first) == usedLibs.end() || usedLibs.empty())
 					sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
 		}
@@ -1095,7 +1095,7 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		object = stack.assemble(_targetMachine);
 		std::set<std::string> usedLibs = object.bytecode->link(m_options.linker.libraries);
 
-		for (const auto& lib: m_options.linker.libraries)
+		for (auto const& lib: m_options.linker.libraries)
 			if (usedLibs.find(lib.first) == usedLibs.end() || usedLibs.empty())
 				sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
 
