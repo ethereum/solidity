@@ -1097,6 +1097,10 @@ void CommandLineInterface::outputCompilationResults()
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
+	if (m_compiler->contractNames().empty())
+		sout() << "Input did not contain any contracts." << endl;
+
+
 	handleCombinedJSON();
 
 	// do we need AST output?
