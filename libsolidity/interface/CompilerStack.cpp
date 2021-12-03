@@ -701,22 +701,20 @@ bool CompilerStack::compile(State _stopAfter, bool performLinking)
 	return true;
 }
 
-list<string> CompilerStack::link()
+set<string> CompilerStack::link()
 {
 	solAssert(m_stackState >= CompilationSuccessful, "");
 
-	std::list<std::string> libNames;
+	std::set<std::string> libNames;
 
 	for (auto& contract: m_contracts)
 	{
-		for (auto& library: m_libraries)
-			for (auto& con: m_contracts)
-				if (library.first == con.first.substr(con.first.find_last_of('/') + 1))
-				{
-					contract.second.object.bytecode.push_back(static_cast<uint8_t>(solidity::evmasm::Instruction::PUSH20));
-					contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
-					contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
-				}
+		for (auto const& library: m_libraries)
+			if (library.first == contract.first.substr(contract.first.find_last_of('/') + 1))
+			{
+				contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
+				contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
+			}
 		libNames = contract.second.object.link(m_libraries);
 		contract.second.runtimeObject.link(m_libraries);
 	}
