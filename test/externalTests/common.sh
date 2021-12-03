@@ -74,6 +74,7 @@ function setup_solcjs
     npm install
     cp "$soljson" soljson.js
     SOLCVERSION=$(./solcjs --version)
+    SOLCVERSION_SHORT=$(echo "$SOLCVERSION" | sed -En 's/^([0-9.]+).*\+commit\.[0-9a-f]+.*$/\1/p')
     printLog "Using solcjs version $SOLCVERSION"
     cd ..
 }
@@ -161,6 +162,40 @@ function force_truffle_compiler_settings
     echo "module.exports['compilers'] = $(truffle_compiler_settings "$solc_path" "$level" "$evm_version");" >> "$config_file"
 }
 
+function force_hardhat_compiler_binary
+{
+    local config_file="$1"
+    local solc_path="$2"
+
+    printLog "Configuring Hardhat..."
+    echo "-------------------------------------"
+    echo "Config file: ${config_file}"
+    echo "Compiler path: ${solc_path}"
+    hardhat_solc_build_subtask "$SOLCVERSION_SHORT" "$SOLCVERSION" "$solc_path" >> "$config_file"
+}
+
+function force_hardhat_compiler_settings
+{
+    local config_file="$1"
+    local level="$2"
+    local evm_version="${3:-"$CURRENT_EVM_VERSION"}"
+
+    printLog "Configuring Hardhat..."
+    echo "-------------------------------------"
+    echo "Config file: ${config_file}"
+    echo "Optimization level: ${level}"
+    echo "Optimizer settings: $(optimizer_settings_for_level "$level")"
+    echo "EVM version: ${evm_version}"
+    echo "Compiler version: ${SOLCVERSION_SHORT}"
+    echo "Compiler version (full): ${SOLCVERSION}"
+    echo "-------------------------------------"
+
+    {
+        echo -n 'module.exports["solidity"] = '
+        hardhat_compiler_settings "$SOLCVERSION_SHORT" "$level" "$evm_version"
+    } >> "$config_file"
+}
+
 function truffle_verify_compiler_version
 {
     local solc_version="$1"
@@ -170,9 +205,24 @@ function truffle_verify_compiler_version
     grep "$full_solc_version" --with-filename --recursive build/contracts || fail "Wrong compiler version detected."
 }
 
+function hardhat_verify_compiler_version
+{
+    local solc_version="$1"
+    local full_solc_version="$2"
+
+    printLog "Verify that the correct version (${solc_version}/${full_solc_version}) of the compiler was used to compile the contracts..."
+    grep '"solcVersion": "'"${solc_version}"'"' --with-filename artifacts/build-info/*.json || fail "Wrong compiler version detected."
+    grep '"solcLongVersion": "'"${full_solc_version}"'"' --with-filename artifacts/build-info/*.json || fail "Wrong compiler version detected."
+}
+
 function truffle_clean
 {
     rm -rf build/
+}
+
+function hardhat_clean
+{
+    rm -rf artifacts/ cache/
 }
 
 function run_test
@@ -221,6 +271,39 @@ function truffle_compiler_settings
     echo "}"
 }
 
+function hardhat_solc_build_subtask {
+    local solc_version="$1"
+    local full_solc_version="$2"
+    local solc_path="$3"
+
+    echo "const {TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD} = require('hardhat/builtin-tasks/task-names');"
+    echo "const assert = require('assert');"
+    echo
+    echo "subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {"
+    echo "    assert(args.solcVersion == '${solc_version}', 'Unexpected solc version: ' + args.solcVersion)"
+    echo "    return {"
+    echo "        compilerPath: '$(realpath "$solc_path")',"
+    echo "        isSolcJs: true,"
+    echo "        version: args.solcVersion,"
+    echo "        longVersion: '${full_solc_version}'"
+    echo "    }"
+    echo "})"
+}
+
+function hardhat_compiler_settings {
+    local solc_version="$1"
+    local level="$2"
+    local evm_version="$3"
+
+    echo "{"
+    echo "    version: '${solc_version}',"
+    echo "    settings: {"
+    echo "        optimizer: $(optimizer_settings_for_level "$level"),"
+    echo "        evmVersion: '${evm_version}'"
+    echo "    }"
+    echo "}"
+}
+
 function compile_and_run_test
 {
     local compile_fn="$1"
@@ -250,6 +333,18 @@ function truffle_run_test
     truffle_clean
     force_truffle_compiler_settings "$config_file" "$solc_path" "$optimizer_level"
     compile_and_run_test compile_fn test_fn truffle_verify_compiler_version
+}
+
+function hardhat_run_test
+{
+    local config_file="$1"
+    local optimizer_level="$2"
+    local compile_fn="$3"
+    local test_fn="$4"
+
+    hardhat_clean
+    force_hardhat_compiler_settings "$config_file" "$optimizer_level"
+    compile_and_run_test compile_fn test_fn hardhat_verify_compiler_version
 }
 
 function external_test

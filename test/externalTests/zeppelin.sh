@@ -27,14 +27,14 @@ source test/externalTests/common.sh
 verify_input "$1"
 SOLJSON="$1"
 
-function compile_fn { npx truffle compile; }
-function test_fn { npm run test; }
+function compile_fn { npm run compile; }
+function test_fn { npm test; }
 
 function zeppelin_test
 {
     local repo="https://github.com/OpenZeppelin/openzeppelin-contracts.git"
     local branch=master
-    local config_file="truffle-config.js"
+    local config_file="hardhat.config.js"
     local min_optimizer_level=1
     local max_optimizer_level=3
 
@@ -46,14 +46,14 @@ function zeppelin_test
     download_project "$repo" "$branch" "$DIR"
 
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
+    force_hardhat_compiler_binary "$config_file" "$SOLJSON"
+    force_hardhat_compiler_settings "$config_file" "$min_optimizer_level"
     npm install
 
     replace_version_pragmas
-    force_solc_modules "${DIR}/solc"
 
     for level in $selected_optimizer_levels; do
-        truffle_run_test "$config_file" "${DIR}/solc" "$level" compile_fn test_fn
+        hardhat_run_test "$config_file" "$level" compile_fn test_fn
     done
 }
 

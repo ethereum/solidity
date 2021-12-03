@@ -100,7 +100,7 @@ string CharStream::lineAtPosition(int _position) const
 	return line;
 }
 
-tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
+LineColumn CharStream::translatePositionToLineColumn(int _position) const
 {
 	using size_type = string::size_type;
 	using diff_type = string::difference_type;
@@ -114,7 +114,7 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 		lineStart = m_source.rfind('\n', searchPosition - 1);
 		lineStart = lineStart == string::npos ? 0 : lineStart + 1;
 	}
-	return tuple<int, int>(lineNumber, searchPosition - lineStart);
+	return LineColumn{lineNumber, static_cast<int>(searchPosition - lineStart)};
 }
 
 string_view CharStream::text(SourceLocation const& _location) const
@@ -144,3 +144,32 @@ string CharStream::singleLineSnippet(string const& _sourceCode, SourceLocation c
 
 	return cut;
 }
+
+optional<int> CharStream::translateLineColumnToPosition(LineColumn const& _lineColumn) const
+{
+	return translateLineColumnToPosition(m_source, _lineColumn);
+}
+
+optional<int> CharStream::translateLineColumnToPosition(std::string const& _text, LineColumn const& _input)
+{
+	if (_input.line < 0)
+		return nullopt;
+
+	size_t offset = 0;
+	for (int i = 0; i < _input.line; i++)
+	{
+		offset = _text.find('\n', offset);
+		if (offset == _text.npos)
+			return nullopt;
+		offset++; // Skip linefeed.
+	}
+
+	size_t endOfLine = _text.find('\n', offset);
+	if (endOfLine == string::npos)
+		endOfLine = _text.size();
+
+	if (offset + static_cast<size_t>(_input.column) > endOfLine)
+		return nullopt;
+	return offset + static_cast<size_t>(_input.column);
+}
+

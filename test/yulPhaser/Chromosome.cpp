@@ -30,7 +30,7 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
-#include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/UnusedAssignEliminator.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
@@ -50,7 +50,7 @@ namespace solidity::phaser::test
 vector<string> const ChrOmOsoMeSteps{
 	ConditionalSimplifier::name,
 	FunctionHoister::name,
-	RedundantAssignEliminator::name,
+	UnusedAssignEliminator::name,
 	ForLoopConditionOutOfBody::name,
 	Rematerialiser::name,
 	ForLoopConditionOutOfBody::name,
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_strin
 
 	BOOST_TEST(chromosome.length() == allSteps.size());
 	BOOST_TEST(chromosome.optimisationSteps() == allSteps);
-	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighFTLMRrmVatpud");
+	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighFTLMRmVatrpud");
 }
 
 BOOST_AUTO_TEST_CASE(optimisationSteps_should_translate_chromosomes_genes_to_optimisation_step_names)

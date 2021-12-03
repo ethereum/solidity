@@ -30,15 +30,6 @@ namespace solidity::langutil
 
 class CharStreamProvider;
 
-struct LineColumn
-{
-	int line = {-1};
-	int column = {-1};
-
-	LineColumn() = default;
-	LineColumn(std::tuple<int, int> const& _t): line{std::get<0>(_t)}, column{std::get<1>(_t)} {}
-};
-
 struct SourceReference
 {
 	std::string message;      ///< A message that relates to this source reference (such as a warning, info or an error message).

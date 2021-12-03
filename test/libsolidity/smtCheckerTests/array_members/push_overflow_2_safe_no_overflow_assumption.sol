@@ -13,4 +13,3 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Info 1180: Contract invariant(s) for :C:\n(x.length >= 0)\n

@@ -584,5 +584,5 @@ but instead is implemented in the EVM execution environment itself.
 Different EVM-compatible chains might use a different set of
 precompiled contracts. It might also be possible that new
 precompiled contracts are added to the Ethereum main chain in the future,
-but you can reasonabyly expect them to always be in the range between
+but you can reasonably expect them to always be in the range between
 ``1`` and ``0xffff`` (inclusive).
