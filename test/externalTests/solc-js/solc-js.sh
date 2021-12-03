@@ -38,7 +38,7 @@ function solcjs_test
     SOLCJS_INPUT_DIR="$TEST_DIR"/test/externalTests/solc-js
 
     # set up solc-js on the branch specified
-    setup_solcjs "$DIR" "$SOLJSON" master solc/
+    setup_solc "$DIR" solcjs "$SOLJSON" master solc/
     cd solc/
 
     printLog "Updating index.js file..."

@@ -35,31 +35,43 @@ function print_optimizer_levels_or_exit
 
 function verify_input
 {
-    local binary_path="$1"
+    local binary_type="$1"
+    local binary_path="$2"
 
-    (( $# == 1 )) || fail "Usage: $0 <path to soljson.js>"
+    (( $# == 2 )) || fail "Usage: $0 native|solcjs <path to solc or soljson.js>"
+    [[ $binary_type == native || $binary_type == solcjs ]] || fail "Invalid binary type: '${binary_type}'. Must be either 'native' or 'solcjs'."
     [[ -f "$binary_path" ]] || fail "The compiler binary does not exist at '${binary_path}'"
 }
 
-
-function setup_solcjs
+function setup_solc
 {
     local test_dir="$1"
-    local binary_path="$2"
-    local solcjs_branch="${3:-master}"
-    local install_dir="${4:-solc/}"
+    local binary_type="$2"
+    local binary_path="$3"
+    local solcjs_branch="${4:-master}"
+    local install_dir="${5:-solc/}"
+
+    [[ $binary_type == native || $binary_type == solcjs ]] || assertFail
 
     cd "$test_dir"
-    printLog "Setting up solc-js..."
-    git clone --depth 1 -b "$solcjs_branch" https://github.com/ethereum/solc-js.git "$install_dir"
 
-    pushd "$install_dir"
-    npm install
-    cp "$binary_path" soljson.js
-    SOLCVERSION=$(./solcjs --version)
+    if [[ $binary_type == solcjs ]]
+    then
+        printLog "Setting up solc-js..."
+        git clone --depth 1 -b "$solcjs_branch" https://github.com/ethereum/solc-js.git "$install_dir"
+
+        pushd "$install_dir"
+        npm install
+        cp "$binary_path" soljson.js
+        SOLCVERSION=$(./solcjs --version)
+        popd
+    else
+        printLog "Setting up solc..."
+        SOLCVERSION=$("$binary_path" --version | tail -n 1 | sed -n -E 's/^Version: (.*)$/\1/p')
+    fi
+
     SOLCVERSION_SHORT=$(echo "$SOLCVERSION" | sed -En 's/^([0-9.]+).*\+commit\.[0-9a-f]+.*$/\1/p')
     printLog "Using compiler version $SOLCVERSION"
-    popd
 }
 
 function download_project
@@ -127,13 +139,19 @@ function force_solc_modules
 function force_truffle_compiler_settings
 {
     local config_file="$1"
-    local solc_path="$2"
-    local level="$3"
-    local evm_version="${4:-"$CURRENT_EVM_VERSION"}"
+    local binary_type="$2"
+    local solc_path="$3"
+    local level="$4"
+    local evm_version="${5:-"$CURRENT_EVM_VERSION"}"
+
+    [[ $binary_type == native || $binary_type == solcjs ]] || assertFail
+
+    [[ $binary_type == native ]] && local solc_path="native"
 
     printLog "Forcing Truffle compiler settings..."
     echo "-------------------------------------"
     echo "Config file: $config_file"
+    echo "Binary type: $binary_type"
     echo "Compiler path: $solc_path"
     echo "Optimization level: $level"
     echo "Optimizer settings: $(optimizer_settings_for_level "$level")"
@@ -148,13 +166,15 @@ function force_truffle_compiler_settings
 function force_hardhat_compiler_binary
 {
     local config_file="$1"
-    local solc_path="$2"
+    local binary_type="$2"
+    local solc_path="$3"
 
     printLog "Configuring Hardhat..."
     echo "-------------------------------------"
     echo "Config file: ${config_file}"
+    echo "Binary type: ${binary_type}"
     echo "Compiler path: ${solc_path}"
-    hardhat_solc_build_subtask "$SOLCVERSION_SHORT" "$SOLCVERSION" "$solc_path" >> "$config_file"
+    hardhat_solc_build_subtask "$SOLCVERSION_SHORT" "$SOLCVERSION" "$binary_type" "$solc_path" >> "$config_file"
 }
 
 function force_hardhat_compiler_settings
@@ -236,6 +256,16 @@ function optimizer_settings_for_level
     esac
 }
 
+function replace_global_solc
+{
+    local solc_path="$1"
+
+    [[ ! -e solc ]] || fail "A file named 'solc' already exists in '${PWD}'."
+
+    ln -s "$solc_path" solc
+    export PATH="$PWD:$PATH"
+}
+
 function truffle_compiler_settings
 {
     local solc_path="$1"
@@ -256,7 +286,13 @@ function truffle_compiler_settings
 function hardhat_solc_build_subtask {
     local solc_version="$1"
     local full_solc_version="$2"
-    local solc_path="$3"
+    local binary_type="$3"
+    local solc_path="$4"
+
+    [[ $binary_type == native || $binary_type == solcjs ]] || assertFail
+
+    [[ $binary_type == native ]] && local is_solcjs=false
+    [[ $binary_type == solcjs ]] && local is_solcjs=true
 
     echo "const {TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD} = require('hardhat/builtin-tasks/task-names');"
     echo "const assert = require('assert');"
@@ -265,7 +301,7 @@ function hardhat_solc_build_subtask {
     echo "    assert(args.solcVersion == '${solc_version}', 'Unexpected solc version: ' + args.solcVersion)"
     echo "    return {"
     echo "        compilerPath: '$(realpath "$solc_path")',"
-    echo "        isSolcJs: true,"
+    echo "        isSolcJs: ${is_solcjs},"
     echo "        version: args.solcVersion,"
     echo "        longVersion: '${full_solc_version}'"
     echo "    }"
@@ -307,13 +343,14 @@ function compile_and_run_test
 function truffle_run_test
 {
     local config_file="$1"
-    local solc_path="$2"
-    local optimizer_level="$3"
-    local compile_fn="$4"
-    local test_fn="$5"
+    local binary_type="$2"
+    local solc_path="$3"
+    local optimizer_level="$4"
+    local compile_fn="$5"
+    local test_fn="$6"
 
     truffle_clean
-    force_truffle_compiler_settings "$config_file" "$solc_path" "$optimizer_level"
+    force_truffle_compiler_settings "$config_file" "$binary_type" "$solc_path" "$optimizer_level"
     compile_and_run_test compile_fn test_fn truffle_verify_compiler_version
 }
 

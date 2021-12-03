@@ -1044,7 +1044,7 @@ jobs:
       - run:
           name: External <<parameters.project>> tests
           command: |
-            test/externalTests/<<parameters.project>>.sh /tmp/workspace/soljson.js
+            test/externalTests/<<parameters.project>>.sh solcjs /tmp/workspace/soljson.js
       - gitter_notify_failure_unless_pr
 
   b_win: &b_win
