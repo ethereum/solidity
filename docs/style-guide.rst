@@ -747,7 +747,7 @@ Yes:
     function thisFunctionNameIsReallyLong(
         address x,
         address y,
-        address z,
+        address z
     )
         public
         onlyOwner
