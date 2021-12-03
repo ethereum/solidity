@@ -35,18 +35,12 @@ function print_optimizer_levels_or_exit
 
 function verify_input
 {
-    if [ ! -f "$1" ]; then
-        printError "Usage: $0 <path to soljson.js>"
-        exit 1
-    fi
+    [[ -f "$1" ]] || fail "Usage: $0 <path to soljson.js>"
 }
 
 function verify_version_input
 {
-    if [ -z "$1" ] || [ ! -f "$1" ] || [ -z "$2" ]; then
-        printError "Usage: $0 <path to soljson.js> <version>"
-        exit 1
-    fi
+    [[ $1 != "" && -f "$1" && $2 != "" ]] || fail "Usage: $0 <path to soljson.js> <version>"
 }
 
 function setup
@@ -248,8 +242,7 @@ function optimizer_settings_for_level
         2) echo "{enabled: true}" ;;
         3) echo "{enabled: true, details: {yul: true}}" ;;
         *)
-            printError "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
-            exit 1
+            fail "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
             ;;
     esac
 }
@@ -356,10 +349,7 @@ function external_test
     echo "==========================="
     DIR=$(mktemp -d -t "ext-test-${name}-XXXXXX")
     (
-        if [ -z "$main_fn" ]; then
-            printError "Test main function not defined."
-            exit 1
-        fi
+        [[ "$main_fn" != "" ]] || fail "Test main function not defined."
         $main_fn
     )
     rm -rf "$DIR"
