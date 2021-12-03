@@ -711,10 +711,18 @@ set<string> CompilerStack::link()
 	{
 		for (auto const& library: m_libraries)
 			if (library.first == contract.first.substr(contract.first.find_last_of('/') + 1))
-			{
-				contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
-				contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
-			}
+				if (contract.second.contract->contractKind() != solidity::frontend::ContractKind::Library)
+					solThrow(CompilerError, "Invalid link reference: '" + library.first + "'. Not a library.");
+				else
+				{
+					contract.second.object.linkReferences[contract.second.object.bytecode.size()] = library.first;
+					contract.second.object.bytecode.resize(contract.second.object.bytecode.size() + 20);
+				}
+			else
+				if (contract.second.contract->contractKind() != solidity::frontend::ContractKind::Library &&
+					library.first.substr(library.first.find_last_of(':') + 1) == contract.first.substr(contract.first.find_last_of(':') + 1)
+				)
+				solThrow(CompilerError, "Invalid link reference: '" + library.first + "'. Not a library.");
 		libNames = contract.second.object.link(m_libraries);
 		contract.second.runtimeObject.link(m_libraries);
 	}
