@@ -35,52 +35,41 @@ function print_optimizer_levels_or_exit
 
 function verify_input
 {
-    [[ -f "$1" ]] || fail "Usage: $0 <path to soljson.js>"
+    local binary_path="$1"
+
+    (( $# == 1 )) || fail "Usage: $0 <path to soljson.js>"
+    [[ -f "$binary_path" ]] || fail "The compiler binary does not exist at '${binary_path}'"
 }
 
-function verify_version_input
-{
-    [[ $1 != "" && -f "$1" && $2 != "" ]] || fail "Usage: $0 <path to soljson.js> <version>"
-}
-
-function setup
-{
-    local soljson="$1"
-    local branch="$2"
-
-    setup_solcjs "$DIR" "$soljson" "$branch" "solc"
-    cd solc
-}
 
 function setup_solcjs
 {
-    local dir="$1"
-    local soljson="$2"
-    local branch="${3:-master}"
-    local path="${4:-solc/}"
+    local test_dir="$1"
+    local binary_path="$2"
+    local solcjs_branch="${3:-master}"
+    local install_dir="${4:-solc/}"
 
-    cd "$dir"
+    cd "$test_dir"
     printLog "Setting up solc-js..."
-    git clone --depth 1 -b "$branch" https://github.com/ethereum/solc-js.git "$path"
+    git clone --depth 1 -b "$solcjs_branch" https://github.com/ethereum/solc-js.git "$install_dir"
 
-    cd "$path"
-
+    pushd "$install_dir"
     npm install
-    cp "$soljson" soljson.js
+    cp "$binary_path" soljson.js
     SOLCVERSION=$(./solcjs --version)
     SOLCVERSION_SHORT=$(echo "$SOLCVERSION" | sed -En 's/^([0-9.]+).*\+commit\.[0-9a-f]+.*$/\1/p')
-    printLog "Using solcjs version $SOLCVERSION"
-    cd ..
+    printLog "Using compiler version $SOLCVERSION"
+    popd
 }
 
 function download_project
 {
     local repo="$1"
-    local branch="$2"
-    local dir="$3"
+    local solcjs_branch="$2"
+    local test_dir="$3"
 
-    printLog "Cloning $branch of $repo..."
-    git clone --depth 1 "$repo" -b "$branch" "$dir/ext"
+    printLog "Cloning $solcjs_branch of $repo..."
+    git clone --depth 1 "$repo" -b "$solcjs_branch" "$test_dir/ext"
     cd ext
     echo "Current commit hash: $(git rev-parse HEAD)"
 }

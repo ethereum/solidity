@@ -24,8 +24,8 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
-verify_input "$1"
-SOLJSON="$1"
+verify_input "$@"
+BINARY_PATH="$1"
 
 function compile_fn { npm run compile; }
 function test_fn { npm test; }
@@ -42,11 +42,11 @@ function zeppelin_test
     selected_optimizer_levels=$(circleci_select_steps "$(seq "$min_optimizer_level" "$max_optimizer_level")")
     print_optimizer_levels_or_exit "$selected_optimizer_levels"
 
-    setup_solcjs "$DIR" "$SOLJSON"
+    setup_solcjs "$DIR" "$BINARY_PATH"
     download_project "$repo" "$branch" "$DIR"
 
     neutralize_package_json_hooks
-    force_hardhat_compiler_binary "$config_file" "$SOLJSON"
+    force_hardhat_compiler_binary "$config_file" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$min_optimizer_level"
     npm install
 
