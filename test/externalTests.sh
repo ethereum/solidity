@@ -42,6 +42,3 @@ printTask "Running external tests..."
 "$REPO_ROOT/externalTests/gnosis-v2.sh" "$@"
 "$REPO_ROOT/externalTests/colony.sh" "$@"
 "$REPO_ROOT/externalTests/ens.sh" "$@"
-
-# Disabled temporarily as it needs to be updated to latest Truffle first.
-#test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
