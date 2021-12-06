@@ -166,7 +166,7 @@ Inside a code block, the following elements can be used
 - if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
 - switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
 - for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
-- function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }```
+- function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }``
 
 Multiple syntactical elements can follow each other simply separated by
 whitespace, i.e. there is no terminating ``;`` or newline required.
