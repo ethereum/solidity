@@ -54,6 +54,10 @@ struct Exception: virtual std::exception, virtual boost::exception
 		::boost::throw_line(__LINE__) \
 	)
 
+/// Defines an exception type that's meant to signal a specific condition and be caught rather than
+/// unwind the stack all the way to the top-level exception handler and interrupt the program.
+/// As such it does not carry a message - the code catching it is expected to handle it without
+/// letting it escape.
 #define DEV_SIMPLE_EXCEPTION(X) struct X: virtual ::solidity::util::Exception { const char* what() const noexcept override { return #X; } }
 
 DEV_SIMPLE_EXCEPTION(InvalidAddress);

@@ -62,12 +62,7 @@ int main(int argc, char** argv)
 	{
 		setDefaultOrCLocale();
 		solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
-		bool success =
-			cli.parseArguments(argc, argv) &&
-			cli.readInputFiles() &&
-			cli.processInput();
-
-		return success ? 0 : 1;
+		return cli.run(argc, argv) ? 0 : 1;
 	}
 	catch (smtutil::SMTLogicError const& _exception)
 	{

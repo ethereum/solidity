@@ -95,11 +95,7 @@ ImportCheck checkImport(
 		"pragma solidity >=0.0;\n" +
 		_import + ";";
 
-	test::OptionsReaderAndMessages cliResult = test::parseCommandLineAndReadInputFiles(
-		commandLine,
-		standardInputContent,
-		true /* processInput */
-	);
+	test::OptionsReaderAndMessages cliResult = test::runCLI(commandLine, standardInputContent);
 	if (cliResult.success)
 		return ImportCheck::OK();
 

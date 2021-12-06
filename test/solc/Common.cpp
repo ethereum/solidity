@@ -41,18 +41,34 @@ vector<char const*> test::makeArgv(vector<string> const& _commandLine)
 
 test::OptionsReaderAndMessages test::parseCommandLineAndReadInputFiles(
 	vector<string> const& _commandLine,
-	string const& _standardInputContent,
-	bool _processInput
+	string const& _standardInputContent
 )
 {
 	vector<char const*> argv = makeArgv(_commandLine);
 	stringstream sin(_standardInputContent), sout, serr;
 	CommandLineInterface cli(sin, sout, serr);
 	bool success = cli.parseArguments(static_cast<int>(_commandLine.size()), argv.data());
-	if (success)
-		success = cli.readInputFiles();
-	if (success && _processInput)
-		success = cli.processInput();
+	cli.readInputFiles();
+
+	return {
+		success,
+		cli.options(),
+		cli.fileReader(),
+		cli.standardJsonInput(),
+		sout.str(),
+		stripPreReleaseWarning(serr.str()),
+	};
+}
+
+test::OptionsReaderAndMessages test::runCLI(
+	vector<string> const& _commandLine,
+	string const& _standardInputContent
+)
+{
+	vector<char const*> argv = makeArgv(_commandLine);
+	stringstream sin(_standardInputContent), sout, serr;
+	CommandLineInterface cli(sin, sout, serr);
+	bool success = cli.run(static_cast<int>(_commandLine.size()), argv.data());
 
 	return {
 		success,
