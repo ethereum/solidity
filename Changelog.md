@@ -11,7 +11,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when an unsafe target is solved more than once and the counterexample messages are different.
  * SMTChecker: Fix soundness of assigned storage/memory local pointers that were not erasing enough knowledge.
  * Fix internal error when a function has a calldata struct argument with an internal type inside.
-
+ * IR Generator: Fix IR syntax error when copying storage arrays of functions.
 
 
 ### 0.8.10 (2021-11-09)
