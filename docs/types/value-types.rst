@@ -437,14 +437,16 @@ an error. You can prepend (for integer types) or append (for bytesNN types) zero
 Rational and Integer Literals
 -----------------------------
 
-Integer literals are formed from a sequence of numbers in the range 0-9.
+Integer literals are formed from a sequence of digits in the range 0-9.
 They are interpreted as decimals. For example, ``69`` means sixty nine.
 Octal literals do not exist in Solidity and leading zeros are invalid.
 
-Decimal fraction literals are formed by a ``.`` with at least one number on
+Decimal fractional literals are formed by a ``.`` with at least one number on
 one side.  Examples include ``1.``, ``.1`` and ``1.3``.
 
-Scientific notation is also supported, where the base can have fractions and the exponent cannot.
+Scientific notation in the form of ``2e10`` is also supported, where the
+mantissa can be fractional but the exponent has to be an integer.
+The literal ``MeE`` is equivalent to ``M * 10**E``.
 Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
 
 Underscores can be used to separate the digits of a numeric literal to aid readability.
