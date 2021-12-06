@@ -1085,6 +1085,9 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 				serr() << "No text representation found." << endl;
 		}
 	}
+
+	if (m_options.compiler.outputs == CompilerOutputs{})
+		serr() << "Assembler run successful, no output requested." << endl;
 }
 
 void CommandLineInterface::outputCompilationResults()

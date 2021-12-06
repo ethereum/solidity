@@ -1,1 +1,1 @@
---strict-assembly --optimize --yul-optimizations dhfoDgvulfnTUtnIf
+--strict-assembly --optimize --ir-optimized --yul-optimizations dhfoDgvulfnTUtnIf

@@ -460,17 +460,6 @@ void CommandLineParser::parseOutputSelection()
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
 
-	if (m_options.input.mode == InputMode::Assembler && m_options.compiler.outputs == CompilerOutputs{})
-	{
-		// In assembly mode keep the default outputs enabled for backwards-compatibility.
-		// TODO: Remove this (must be done in a breaking release).
-		m_options.compiler.outputs.asm_ = true;
-		m_options.compiler.outputs.binary = true;
-		m_options.compiler.outputs.irOptimized = true;
-		m_options.compiler.outputs.ewasm = true;
-		m_options.compiler.outputs.ewasmIR = true;
-	}
-
 	vector<string> unsupportedOutputs;
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
 		if (m_options.compiler.outputs.*outputComponent && !outputSupported(m_options.input.mode, optionName))

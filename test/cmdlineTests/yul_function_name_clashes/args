@@ -1,1 +1,1 @@
---strict-assembly --debug-info none
+--strict-assembly --debug-info none --bin --asm --ir-optimized
