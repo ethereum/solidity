@@ -104,7 +104,7 @@ Bugfixes:
  * SMTChecker: Fix false positive in external calls from constructors.
  * SMTChecker: Fix internal error on some multi-source uses of ``abi.*``, cryptographic functions and constants.
  * Standard JSON: Fix non-fatal errors in Yul mode being discarded if followed by a fatal error.
- * Type Checker: Correct wrong error message in inline assembly complaining about ``.slot`` or ``.offset` not valid when actually ``.length`` was used.
+ * Type Checker: Correct wrong error message in inline assembly complaining about ``.slot`` or ``.offset`` not valid when actually ``.length`` was used.
  * Type Checker: Disallow modifier declarations and definitions in interfaces.
  * Yul Optimizer: Fix a crash in LoadResolver, when ``keccak256`` has particular non-identifier arguments.
 
