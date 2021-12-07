@@ -1015,6 +1015,11 @@ jobs:
     parameters:
       project:
         type: string
+      binary_type:
+        type: enum
+        enum:
+          - solcjs
+          - native
       compile_only:
         type: integer
         default: 0
@@ -1037,14 +1042,26 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: Install dependencies
+          name: Install lsof
           command: |
             # lsof is used by Colony in its stop-blockchain-client.sh script
-            sudo apt-get -qy install lsof
-      - run:
-          name: External <<parameters.project>> tests
-          command: |
-            test/externalTests/<<parameters.project>>.sh solcjs /tmp/workspace/soljson.js
+            sudo apt-get --quiet --assume-yes --no-install-recommends install lsof
+      - when:
+          condition:
+            equal: [<< parameters.binary_type >>, "solcjs"]
+          steps:
+            - run:
+                name: External <<parameters.project>> tests (solcjs)
+                command: |
+                  test/externalTests/<<parameters.project>>.sh solcjs /tmp/workspace/soljson.js
+      - when:
+          condition:
+            equal: [<< parameters.binary_type >>, "native"]
+          steps:
+            - run:
+                name: External <<parameters.project>> tests (native)
+                command: |
+                  test/externalTests/<<parameters.project>>.sh native /tmp/workspace/solc/solc
       - gitter_notify_failure_unless_pr
 
   b_win: &b_win
@@ -1282,12 +1299,14 @@ workflows:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_colony
           project: colony
+          binary_type: solcjs
           compile_only: 1
           nodejs_version: '14'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_gnosis
           project: gnosis
+          binary_type: solcjs
           compile_only: 1
           nodejs_version: '14'
 
@@ -1297,18 +1316,21 @@ workflows:
       #    <<: *workflow_emscripten
       #    name: t_ems_test_ext_gnosis
       #    project: gnosis
+      #    binary_type: solcjs
       #    # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
       #    nodejs_version: '12'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_gnosis_v2
           project: gnosis-v2
+          binary_type: solcjs
           # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
           nodejs_version: '12'
       - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_zeppelin
           project: zeppelin
+          binary_type: solcjs
           # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
           nodejs_version: '16'
           resource_class: large
@@ -1316,6 +1338,7 @@ workflows:
           <<: *workflow_emscripten
           name: t_ems_test_ext_ens
           project: ens
+          binary_type: solcjs
           # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
           nodejs_version: '10'
 
@@ -1382,4 +1405,5 @@ workflows:
           <<: *workflow_emscripten
           name: t_ems_test_ext_colony
           project: colony
+          binary_type: solcjs
           resource_class: medium
