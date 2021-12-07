@@ -396,6 +396,11 @@ defaults:
       requires:
         - b_ubu_release
 
+  - workflow_ubuntu2004_static: &workflow_ubuntu2004_static
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_static
+
   - workflow_archlinux: &workflow_archlinux
       <<: *workflow_trigger_on_tags
       requires:
@@ -666,10 +671,11 @@ jobs:
       MAKEFLAGS: -j 10
 
   b_ubu_static:
-    # Runs 2x faster on large and 3x on xlarge but no other jobs depend on it we can live with medium.
-    <<: *base_ubuntu2004
+    # On large runs 2x faster than on medium. 3x on xlarge.
+    <<: *base_ubuntu2004_xlarge
     environment:
-      MAKEFLAGS: -j 5
+      TERM: xterm
+      MAKEFLAGS: -j 10
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
@@ -678,6 +684,7 @@ jobs:
           name: strip binary
           command: strip build/solc/solc
       - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
       - gitter_notify_failure_unless_pr
 
   b_ubu_codecov:
@@ -1303,10 +1310,10 @@ workflows:
           compile_only: 1
           nodejs_version: '14'
       - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_compile_ext_gnosis
+          <<: *workflow_ubuntu2004_static
+          name: t_native_compile_ext_gnosis
           project: gnosis
-          binary_type: solcjs
+          binary_type: native
           compile_only: 1
           nodejs_version: '14'
 
@@ -1314,31 +1321,31 @@ workflows:
       # and there are also other less frequent problems. See https://github.com/gnosis/safe-contracts/issues/216.
       #- t_ems_ext:
       #    <<: *workflow_emscripten
-      #    name: t_ems_test_ext_gnosis
+      #    name: t_native_test_ext_gnosis
       #    project: gnosis
-      #    binary_type: solcjs
+      #    binary_type: native
       #    # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
       #    nodejs_version: '12'
       - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_test_ext_gnosis_v2
+          <<: *workflow_ubuntu2004_static
+          name: t_native_test_ext_gnosis_v2
           project: gnosis-v2
-          binary_type: solcjs
+          binary_type: native
           # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
           nodejs_version: '12'
       - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_test_ext_zeppelin
+          <<: *workflow_ubuntu2004_static
+          name: t_native_test_ext_zeppelin
           project: zeppelin
-          binary_type: solcjs
+          binary_type: native
           # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
           nodejs_version: '16'
           resource_class: large
       - t_ems_ext:
-          <<: *workflow_emscripten
-          name: t_ems_test_ext_ens
+          <<: *workflow_ubuntu2004_static
+          name: t_native_test_ext_ens
           project: ens
-          binary_type: solcjs
+          binary_type: native
           # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
           nodejs_version: '10'
 
