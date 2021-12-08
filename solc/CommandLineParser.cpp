@@ -478,7 +478,7 @@ void CommandLineParser::parseOutputSelection()
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
 		if (m_args.count(optionName) > 0)
 			numberOfSelectedOutputs++;
-		if (numberOfSelectedOutputs > 1 && (m_args.count(g_strMachineReadable) > 0))
+		if (numberOfSelectedOutputs > 1 && m_args.count(g_strMachineReadable) > 0)
 			solThrow(
 				CommandLineValidationError,
 				"Option --" + g_strMachineReadable + " can't be used with more than one output selected."
