@@ -31,6 +31,7 @@ REPODIR="$(realpath "$(dirname "$0")"/..)"
 # shellcheck source=scripts/common.sh
 source "${REPODIR}/scripts/common.sh"
 
+# NOTE: If you add/remove values, remember to update `parallelism` setting in CircleCI config.
 EVM_VALUES=(homestead byzantium constantinople petersburg istanbul berlin london)
 DEFAULT_EVM=london
 [[ " ${EVM_VALUES[*]} " =~ $DEFAULT_EVM ]]
