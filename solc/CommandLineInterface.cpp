@@ -1115,7 +1115,7 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 				sout() << endl << "Binary representation:" << endl;
 			if (object.bytecode)
 				sout() << object.bytecode->toHex() << endl;
-			else 
+			else
 				serr() << "No binary representation found." << endl;
 		}
 

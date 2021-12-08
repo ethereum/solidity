@@ -189,9 +189,11 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			true, true, true, true, true,
 			true, true, true, true, true,
 			true, true, true, true, true,
-			true,
+			true, true, true
 		};
 		expectedOptions.compiler.outputs.ewasmIR = false;
+		expectedOptions.compiler.outputs.ewasmWasm = false;
+		expectedOptions.compiler.outputs.ewasmWast = false;
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
 			true, true, true, true, true,
