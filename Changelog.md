@@ -4,7 +4,7 @@ Language Features:
 
 
 Compiler Features:
-
+ * Commandline Interface: Added three new options, ``--machine-readable`` for displaying machine-readable output, ``--ewasm-wast`` for .wast output and ``--ewasm-wasm`` for .wasm output.
 
 Bugfixes:
  * Code Generator: Fix a crash when using ``@use-src`` and compiling from Yul to ewasm.

@@ -47,6 +47,8 @@ static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
+static string const g_strEwasmWasm = "ewasm-wasm";
+static string const g_strEwasmWast = "ewasm-wast";
 static string const g_strExperimentalViaIR = "experimental-via-ir";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
@@ -103,6 +105,7 @@ static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
 static string const g_strErrorIds = "error-codes";
+static string const g_strMachineReadable = "machine-readable";
 
 /// Possible arguments to for --machine
 static set<string> const g_machineArgs
@@ -469,11 +472,26 @@ void CommandLineParser::parseOutputSelection()
 		solAssert(false, "");
 	};
 
+	int numberOfSelectedOutputs = (m_args.count(g_strGas) > 0) ? 1 : 0;
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+	{
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
+		if (m_args.count(optionName) > 0)
+			numberOfSelectedOutputs++;
+		if (numberOfSelectedOutputs > 1 && (m_args.count(g_strMachineReadable) > 0))
+			solThrow(
+				CommandLineValidationError,
+				"Option --" + g_strMachineReadable + " can't be used with more than one output selected."
+			);
+	}
 
 	if (m_options.input.mode == InputMode::Assembler && m_options.compiler.outputs == CompilerOutputs{})
 	{
+		if(m_options.formatting.machineReadable)
+			solThrow(
+				CommandLineValidationError,
+				"Please select only one output option when using  --" + g_strMachineReadable + "."
+			);
 		// In assembly mode keep the default outputs enabled for backwards-compatibility.
 		// TODO: Remove this (must be done in a breaking release).
 		m_options.compiler.outputs.asm_ = true;
@@ -686,6 +704,10 @@ General Information)").c_str(),
 			g_strErrorIds.c_str(),
 			"Output error codes."
 		)
+		(
+			g_strMachineReadable.c_str(),
+			"Output without headings."
+		)
 	;
 	desc.add(outputFormatting);
 
@@ -700,8 +722,10 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::abi).c_str(), "ABI specification of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
-		(CompilerOutputs::componentName(&CompilerOutputs::ewasm).c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::ewasm).c_str(), "Ewasm text and binary representation of all contracts (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::ewasmIR).c_str(), "Intermediate representation (IR) converted to a form that can be translated directly into Ewasm text representation (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::ewasmWast).c_str(), "Ewasm text only representation of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::ewasmWasm).c_str(), "Ewasm binary only representation of all contracts (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
@@ -912,12 +936,24 @@ void CommandLineParser::processArgs()
 
 	checkMutuallyExclusive({g_strColor, g_strNoColor});
 
-	array<string, 9> const conflictingWithStopAfter{
+	checkMutuallyExclusive({g_strEwasmWasm, g_strEwasmWast});
+
+	array<string, 2> const conflictingWithEwasm{
+		g_strEwasmWasm,
+		g_strEwasmWast
+	};
+
+	for (auto& option: conflictingWithEwasm)
+		checkMutuallyExclusive({g_strEwasm, option});
+
+	array<string, 11> const conflictingWithStopAfter{
 		CompilerOutputs::componentName(&CompilerOutputs::binary),
 		CompilerOutputs::componentName(&CompilerOutputs::ir),
 		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
 		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
 		CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasmWasm),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasmWast),
 		g_strGas,
 		CompilerOutputs::componentName(&CompilerOutputs::asm_),
 		CompilerOutputs::componentName(&CompilerOutputs::asmJson),
@@ -959,6 +995,17 @@ void CommandLineParser::processArgs()
 		m_options.formatting.coloredOutput = false;
 
 	m_options.formatting.withErrorIds = m_args.count(g_strErrorIds);
+
+	if (m_args.count(g_strMachineReadable) > 0)
+	{
+		for (string const& option: {g_strLink, g_strOutputDir, g_strStandardJSON})
+			if (m_args.count(option))
+				solThrow(
+					CommandLineValidationError,
+					"Option --" + g_strMachineReadable + " can't be used with --" + option +"."
+				);
+		m_options.formatting.machineReadable = true;
+	}
 
 	if (m_args.count(g_strRevertStrings))
 	{

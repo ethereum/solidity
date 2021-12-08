@@ -165,7 +165,8 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", objectWithLinkRefsHex(m_compiler->object(_contract)));
 		else
 		{
-			sout() << "Binary:" << endl;
+			if (!m_options.formatting.machineReadable)
+				sout() << "Binary:" << endl;
 			sout() << objectWithLinkRefsHex(m_compiler->object(_contract)) << endl;
 		}
 	}
@@ -175,7 +176,8 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)));
 		else
 		{
-			sout() << "Binary of the runtime part:" << endl;
+			if (!m_options.formatting.machineReadable)
+				sout() << "Binary of the runtime part:" << endl;
 			sout() << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << endl;
 		}
 	}
@@ -189,7 +191,8 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
-		sout() << "Opcodes:" << endl;
+		if (!m_options.formatting.machineReadable)
+			sout() << "Opcodes:" << endl;
 		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
 	}
@@ -206,7 +209,8 @@ void CommandLineInterface::handleIR(string const& _contractName)
 		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
 	else
 	{
-		sout() << "IR:" << endl;
+		if (!m_options.formatting.machineReadable)
+			sout() << "IR:" << endl;
 		sout() << m_compiler->yulIR(_contractName) << endl;
 	}
 }
@@ -222,7 +226,8 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 		createFile(m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul", m_compiler->yulIROptimized(_contractName));
 	else
 	{
-		sout() << "Optimized IR:" << endl;
+		if (!m_options.formatting.machineReadable)
+			sout() << "Optimized IR:" << endl;
 		sout() << m_compiler->yulIROptimized(_contractName) << endl;
 	}
 }
@@ -231,22 +236,33 @@ void CommandLineInterface::handleEwasm(string const& _contractName)
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
-	if (!m_options.compiler.outputs.ewasm)
+	if (!m_options.compiler.outputs.ewasm && !m_options.compiler.outputs.ewasmWasm && !m_options.compiler.outputs.ewasmWast)
 		return;
 
 	if (!m_options.output.dir.empty())
 	{
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
-		createFile(
-			m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
-			asString(m_compiler->ewasmObject(_contractName).bytecode)
-		);
+		if (!m_options.compiler.outputs.ewasmWasm)
+			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
+		if (!m_options.compiler.outputs.ewasmWast)
+			createFile(
+				m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
+				asString(m_compiler->ewasmObject(_contractName).bytecode)
+			);
 	}
 	else
 	{
-		sout() << "Ewasm text:" << endl;
-		sout() << m_compiler->ewasm(_contractName) << endl;
-		sout() << "Ewasm binary (hex): " << m_compiler->ewasmObject(_contractName).toHex() << endl;
+		if (!m_options.compiler.outputs.ewasmWasm)
+		{
+			if (!m_options.formatting.machineReadable)
+				sout() << "Ewasm text:" << endl;
+			sout() << m_compiler->ewasm(_contractName) << endl;
+		}
+		if (!m_options.compiler.outputs.ewasmWast)
+		{
+			if (!m_options.formatting.machineReadable && !m_options.compiler.outputs.ewasmWast)
+				sout() << "Ewasm binary (hex): ";
+			sout() << m_compiler->ewasmObject(_contractName).toHex() << endl;
+		}
 	}
 }
 
@@ -275,7 +291,11 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
-		sout() << "Function signatures:" << endl << out;
+	{
+		if (!m_options.formatting.machineReadable)
+			sout() << "Function signatures:" << endl;
+		sout() << out;
+	}
 }
 
 void CommandLineInterface::handleMetadata(string const& _contract)
@@ -289,7 +309,11 @@ void CommandLineInterface::handleMetadata(string const& _contract)
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
-		sout() << "Metadata:" << endl << data << endl;
+	{
+		if (!m_options.formatting.machineReadable)
+			sout() << "Metadata:" << endl;
+		sout() << data << endl;
+	}
 }
 
 void CommandLineInterface::handleABI(string const& _contract)
@@ -303,7 +327,11 @@ void CommandLineInterface::handleABI(string const& _contract)
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
-		sout() << "Contract JSON ABI" << endl << data << endl;
+	{
+		if (!m_options.formatting.machineReadable)
+			sout() << "Contract JSON ABI" << endl;
+		sout() << data << endl;
+	}
 }
 
 void CommandLineInterface::handleStorageLayout(string const& _contract)
@@ -317,7 +345,11 @@ void CommandLineInterface::handleStorageLayout(string const& _contract)
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
 	else
-		sout() << "Contract Storage Layout:" << endl << data << endl;
+	{
+		if (!m_options.formatting.machineReadable)
+			sout() << "Contract Storage Layout:" << endl;
+		sout() << data << endl;
+	}
 }
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
@@ -355,7 +387,8 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
 		else
 		{
-			sout() << title << endl;
+			if (!m_options.formatting.machineReadable)
+				sout() << title << endl;
 			sout() << output << endl;
 		}
 
@@ -367,13 +400,15 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
 	Json::Value estimates = m_compiler->gasEstimates(_contract);
-	sout() << "Gas estimation:" << endl;
+	if (!m_options.formatting.machineReadable)
+		sout() << "Gas estimation:" << endl;
 
 	if (estimates["creation"].isObject())
 	{
 		Json::Value creation = estimates["creation"];
-		sout() << "construction:" << endl;
-		sout() << "   " << creation["executionCost"].asString();
+		if (!m_options.formatting.machineReadable)
+			sout() << "construction:" << endl << "   ";
+		sout() << creation["executionCost"].asString();
 		sout() << " + " << creation["codeDepositCost"].asString();
 		sout() << " = " << creation["totalCost"].asString() << endl;
 	}
@@ -381,13 +416,14 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	if (estimates["external"].isObject())
 	{
 		Json::Value externalFunctions = estimates["external"];
-		sout() << "external:" << endl;
+		if (!m_options.formatting.machineReadable)
+			sout() << "external:" << endl << "   ";
 		for (auto const& name: externalFunctions.getMemberNames())
 		{
 			if (name.empty())
-				sout() << "   fallback:\t";
+				sout() << "fallback:\t";
 			else
-				sout() << "   " << name << ":\t";
+				sout() << name << ":\t";
 			sout() << externalFunctions[name].asString() << endl;
 		}
 	}
@@ -395,10 +431,11 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	if (estimates["internal"].isObject())
 	{
 		Json::Value internalFunctions = estimates["internal"];
-		sout() << "internal:" << endl;
+		if (!m_options.formatting.machineReadable)
+			sout() << "internal:" << endl << "   ";
 		for (auto const& name: internalFunctions.getMemberNames())
 		{
-			sout() << "   " << name << ":\t";
+			sout() << name << ":\t";
 			sout() << internalFunctions[name].asString() << endl;
 		}
 	}
@@ -676,7 +713,7 @@ void CommandLineInterface::compile()
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
-		m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm);
+		m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm || m_options.compiler.outputs.ewasmWasm || m_options.compiler.outputs.ewasmWast);
 		m_compiler->enableEvmBytecodeGeneration(
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||
@@ -726,6 +763,9 @@ void CommandLineInterface::compile()
 		}
 
 		bool successful = m_compiler->compile(m_options.output.stopAfter);
+
+		if (m_options.formatting.machineReadable)
+			solAssert(m_compiler->contractNames().size() <= 1, "Can't use option --machine-readable with more than one contract.");
 
 		for (auto const& error: m_compiler->errors())
 		{
@@ -985,7 +1025,8 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 {
 	solAssert(m_options.input.mode == InputMode::Assembler, "");
 
-	serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
+	if (!m_options.formatting.machineReadable)
+		serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
 
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;
@@ -1031,10 +1072,11 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 	for (auto const& src: m_fileReader.sourceCodes())
 	{
-		string machine =
-			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
-			"Ewasm";
-		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
+		if (!m_options.formatting.machineReadable)
+		{
+			string machine = _targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" : "Ewasm";
+			sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
+		}
 
 		yul::AssemblyStack& stack = assemblyStacks[src.first];
 
@@ -1042,7 +1084,8 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		{
 			// NOTE: This actually outputs unoptimized code when the optimizer is disabled but
 			// 'ir' output in StandardCompiler works the same way.
-			sout() << endl << "Pretty printed source:" << endl;
+			if (!m_options.formatting.machineReadable)
+				sout() << endl << "Pretty printed source:" << endl;
 			sout() << stack.print() << endl;
 		}
 
@@ -1053,8 +1096,11 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 			if (m_options.compiler.outputs.ewasmIR)
 			{
-				sout() << endl << "==========================" << endl;
-				sout() << endl << "Translated source:" << endl;
+				if (!m_options.formatting.machineReadable)
+				{
+					sout() << endl << "==========================" << endl;
+					sout() << endl << "Translated source:" << endl;
+				}
 				sout() << stack.print() << endl;
 			}
 		}
@@ -1065,20 +1111,22 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 		if (m_options.compiler.outputs.binary)
 		{
-			sout() << endl << "Binary representation:" << endl;
+			if (!m_options.formatting.machineReadable)
+				sout() << endl << "Binary representation:" << endl;
 			if (object.bytecode)
 				sout() << object.bytecode->toHex() << endl;
-			else
+			else 
 				serr() << "No binary representation found." << endl;
 		}
 
 		solAssert(_targetMachine == yul::AssemblyStack::Machine::Ewasm || _targetMachine == yul::AssemblyStack::Machine::EVM, "");
 		if (
 			(_targetMachine == yul::AssemblyStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
-			(_targetMachine == yul::AssemblyStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
+			(_targetMachine == yul::AssemblyStack::Machine::Ewasm && (m_options.compiler.outputs.ewasm || m_options.compiler.outputs.ewasmWasm || m_options.compiler.outputs.ewasmWast))
 		)
 		{
-			sout() << endl << "Text representation:" << endl;
+			if (!m_options.formatting.machineReadable)
+				sout() << endl << "Text representation:" << endl;
 			if (!object.assembly.empty())
 				sout() << object.assembly << endl;
 			else
@@ -1108,7 +1156,7 @@ void CommandLineInterface::outputCompilationResults()
 	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)
 	{
-		if (needsHumanTargetedStdout(m_options))
+		if (needsHumanTargetedStdout(m_options) && !m_options.formatting.machineReadable)
 			sout() << endl << "======= " << contract << " =======" << endl;
 
 		// do we need EVM assembly?
@@ -1123,7 +1171,11 @@ void CommandLineInterface::outputCompilationResults()
 			if (!m_options.output.dir.empty())
 				createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
 			else
-				sout() << "EVM assembly:" << endl << ret << endl;
+			{
+				if (!m_options.formatting.machineReadable)
+					sout() << "EVM assembly:" << endl;
+				sout() << ret << endl;
+			}
 		}
 
 		if (m_options.compiler.estimateGas)

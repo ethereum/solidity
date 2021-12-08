@@ -79,6 +79,8 @@ struct CompilerOutputs
 			{"ir-optimized", &CompilerOutputs::irOptimized},
 			{"ewasm", &CompilerOutputs::ewasm},
 			{"ewasm-ir", &CompilerOutputs::ewasmIR},
+			{"ewasm-wasm", &CompilerOutputs::ewasmWasm},
+			{"ewasm-wast", &CompilerOutputs::ewasmWast},
 			{"hashes", &CompilerOutputs::signatureHashes},
 			{"userdoc", &CompilerOutputs::natspecUser},
 			{"devdoc", &CompilerOutputs::natspecDev},
@@ -99,6 +101,8 @@ struct CompilerOutputs
 	bool irOptimized = false;
 	bool ewasm = false;
 	bool ewasmIR = false;
+	bool ewasmWasm = false;
+	bool ewasmWast = false;
 	bool signatureHashes = false;
 	bool natspecUser = false;
 	bool natspecDev = false;
@@ -203,6 +207,7 @@ struct CommandLineOptions
 		util::JsonFormat json;
 		std::optional<bool> coloredOutput;
 		bool withErrorIds = false;
+		bool machineReadable = false;
 	} formatting;
 
 	struct
