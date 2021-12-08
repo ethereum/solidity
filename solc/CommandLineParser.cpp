@@ -487,7 +487,7 @@ void CommandLineParser::parseOutputSelection()
 
 	if (m_options.input.mode == InputMode::Assembler && m_options.compiler.outputs == CompilerOutputs{})
 	{
-		if(m_options.formatting.machineReadable)
+		if (m_options.formatting.machineReadable)
 			solThrow(
 				CommandLineValidationError,
 				"Please select only one output option when using  --" + g_strMachineReadable + "."
