@@ -942,7 +942,7 @@ void CommandLineParser::processArgs()
 		g_strEwasmWast
 	};
 
-	for (auto& option: conflictingWithEwasm)
+	for (string const& option: conflictingWithEwasm)
 		checkMutuallyExclusive({g_strEwasm, option});
 
 	array<string, 11> const conflictingWithStopAfter{
