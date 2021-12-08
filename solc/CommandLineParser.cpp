@@ -472,7 +472,7 @@ void CommandLineParser::parseOutputSelection()
 		solAssert(false, "");
 	};
 
-	int numberOfSelectedOutputs = (m_args.count(g_strGas) > 0) ? 1 : 0;
+	int numberOfSelectedOutputs = m_args.count(g_strGas);
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
 	{
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
