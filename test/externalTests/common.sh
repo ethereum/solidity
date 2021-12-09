@@ -24,13 +24,13 @@ set -e
 
 CURRENT_EVM_VERSION=london
 
-function print_optimizer_levels_or_exit
+function print_optimizer_presets_or_exit
 {
-    local selected_levels="$1"
+    local selected_presets="$1"
 
-    [[ $selected_levels != "" ]] || { printWarning "No steps to run. Exiting."; exit 0; }
+    [[ $selected_presets != "" ]] || { printWarning "No presets to run. Exiting."; exit 0; }
 
-    printLog "Selected optimizer levels: ${selected_levels}"
+    printLog "Selected settings presets: ${selected_presets}"
 }
 
 function verify_input
@@ -141,7 +141,7 @@ function force_truffle_compiler_settings
     local config_file="$1"
     local binary_type="$2"
     local solc_path="$3"
-    local level="$4"
+    local preset="$4"
     local evm_version="${5:-"$CURRENT_EVM_VERSION"}"
 
     [[ $binary_type == native || $binary_type == solcjs ]] || assertFail
@@ -153,14 +153,16 @@ function force_truffle_compiler_settings
     echo "Config file: $config_file"
     echo "Binary type: $binary_type"
     echo "Compiler path: $solc_path"
-    echo "Optimization level: $level"
-    echo "Optimizer settings: $(optimizer_settings_for_level "$level")"
+    echo "Settings preset: ${preset}"
+    echo "Settings: $(settings_from_preset "$preset" "$evm_version")"
     echo "EVM version: $evm_version"
+    echo "Compiler version: ${SOLCVERSION_SHORT}"
+    echo "Compiler version (full): ${SOLCVERSION}"
     echo "-------------------------------------"
 
     # Forcing the settings should always work by just overwriting the solc object. Forcing them by using a
     # dedicated settings objects should only be the fallback.
-    echo "module.exports['compilers'] = $(truffle_compiler_settings "$solc_path" "$level" "$evm_version");" >> "$config_file"
+    echo "module.exports['compilers'] = $(truffle_compiler_settings "$solc_path" "$preset" "$evm_version");" >> "$config_file"
 }
 
 function force_hardhat_compiler_binary
@@ -180,14 +182,14 @@ function force_hardhat_compiler_binary
 function force_hardhat_compiler_settings
 {
     local config_file="$1"
-    local level="$2"
+    local preset="$2"
     local evm_version="${3:-"$CURRENT_EVM_VERSION"}"
 
     printLog "Configuring Hardhat..."
     echo "-------------------------------------"
     echo "Config file: ${config_file}"
-    echo "Optimization level: ${level}"
-    echo "Optimizer settings: $(optimizer_settings_for_level "$level")"
+    echo "Settings preset: ${preset}"
+    echo "Settings: $(settings_from_preset "$preset" "$evm_version")"
     echo "EVM version: ${evm_version}"
     echo "Compiler version: ${SOLCVERSION_SHORT}"
     echo "Compiler version (full): ${SOLCVERSION}"
@@ -195,7 +197,7 @@ function force_hardhat_compiler_settings
 
     {
         echo -n 'module.exports["solidity"] = '
-        hardhat_compiler_settings "$SOLCVERSION_SHORT" "$level" "$evm_version"
+        hardhat_compiler_settings "$SOLCVERSION_SHORT" "$preset" "$evm_version"
     } >> "$config_file"
 }
 
@@ -242,16 +244,17 @@ function run_test
     $test_fn
 }
 
-function optimizer_settings_for_level
+function settings_from_preset
 {
-    local level="$1"
+    local preset="$1"
+    local evm_version="$2"
 
-    case "$level" in
-        1) echo "{enabled: false}" ;;
-        2) echo "{enabled: true, details: {yul: false}}" ;;
-        3) echo "{enabled: true, details: {yul: true}}" ;;
+    case "$preset" in
+        legacy-no-optimize)       echo "{evmVersion: '${evm_version}', optimizer: {enabled: false}}" ;;
+        legacy-optimize-evm-only) echo "{evmVersion: '${evm_version}', optimizer: {enabled: true, details: {yul: false}}}" ;;
+        legacy-optimize-evm+yul)  echo "{evmVersion: '${evm_version}', optimizer: {enabled: true, details: {yul: true}}}" ;;
         *)
-            fail "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
+            fail "Unknown settings preset: '${preset}'."
             ;;
     esac
 }
@@ -269,16 +272,13 @@ function replace_global_solc
 function truffle_compiler_settings
 {
     local solc_path="$1"
-    local level="$2"
+    local preset="$2"
     local evm_version="$3"
 
     echo "{"
     echo "    solc: {"
     echo "        version: \"${solc_path}\","
-    echo "        settings: {"
-    echo "            optimizer: $(optimizer_settings_for_level "$level"),"
-    echo "            evmVersion: \"${evm_version}\""
-    echo "        }"
+    echo "        settings: $(settings_from_preset "$preset" "$evm_version")"
     echo "    }"
     echo "}"
 }
@@ -310,15 +310,12 @@ function hardhat_solc_build_subtask {
 
 function hardhat_compiler_settings {
     local solc_version="$1"
-    local level="$2"
+    local preset="$2"
     local evm_version="$3"
 
     echo "{"
     echo "    version: '${solc_version}',"
-    echo "    settings: {"
-    echo "        optimizer: $(optimizer_settings_for_level "$level"),"
-    echo "        evmVersion: '${evm_version}'"
-    echo "    }"
+    echo "    settings: $(settings_from_preset "$preset" "$evm_version")"
     echo "}"
 }
 
@@ -345,24 +342,24 @@ function truffle_run_test
     local config_file="$1"
     local binary_type="$2"
     local solc_path="$3"
-    local optimizer_level="$4"
+    local preset="$4"
     local compile_fn="$5"
     local test_fn="$6"
 
     truffle_clean
-    force_truffle_compiler_settings "$config_file" "$binary_type" "$solc_path" "$optimizer_level"
+    force_truffle_compiler_settings "$config_file" "$binary_type" "$solc_path" "$preset"
     compile_and_run_test compile_fn test_fn truffle_verify_compiler_version
 }
 
 function hardhat_run_test
 {
     local config_file="$1"
-    local optimizer_level="$2"
+    local preset="$2"
     local compile_fn="$3"
     local test_fn="$4"
 
     hardhat_clean
-    force_hardhat_compiler_settings "$config_file" "$optimizer_level"
+    force_hardhat_compiler_settings "$config_file" "$preset"
     compile_and_run_test compile_fn test_fn hardhat_verify_compiler_version
 }
 

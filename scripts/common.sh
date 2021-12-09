@@ -211,6 +211,7 @@ function safe_kill
 
 function circleci_select_steps
 {
+    # We expect multiple lines in $all_steps, one step per line
     local all_steps="$1"
     (( $# == 1 )) || assertFail
 
@@ -220,6 +221,12 @@ function circleci_select_steps
     else
         echo "$all_steps" | xargs
     fi
+}
+
+function circleci_select_steps_multiarg
+{
+    # We expect multiple arguments, one step per argument.
+    circleci_select_steps "$(printf '%s\n' "$@")"
 }
 
 function circleci_step_selected

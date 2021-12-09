@@ -36,13 +36,15 @@ function gnosis_safe_test
     local repo="https://github.com/solidity-external-tests/safe-contracts.git"
     local branch=v2_080
     local config_file="truffle-config.js"
-    # level 1: "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
-    local min_optimizer_level=2
-    local max_optimizer_level=3
+    local settings_presets=(
+        #legacy-no-optimize       # "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
+        legacy-optimize-evm-only
+        legacy-optimize-evm+yul
+    )
 
-    local selected_optimizer_levels
-    selected_optimizer_levels=$(circleci_select_steps "$(seq "$min_optimizer_level" "$max_optimizer_level")")
-    print_optimizer_levels_or_exit "$selected_optimizer_levels"
+    local selected_optimizer_presets
+    selected_optimizer_presets=$(circleci_select_steps_multiarg "${settings_presets[@]}")
+    print_optimizer_presets_or_exit "$selected_optimizer_presets"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$branch" "$DIR"
@@ -53,14 +55,14 @@ function gnosis_safe_test
 
     neutralize_package_lock
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$min_optimizer_level"
+    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$(first_word "$selected_optimizer_presets")"
     npm install --package-lock
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
 
-    for level in $selected_optimizer_levels; do
-        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$level" compile_fn test_fn
+    for preset in $selected_optimizer_presets; do
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" compile_fn test_fn
     done
 }
 

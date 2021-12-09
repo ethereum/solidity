@@ -36,25 +36,28 @@ function zeppelin_test
     local repo="https://github.com/OpenZeppelin/openzeppelin-contracts.git"
     local branch=master
     local config_file="hardhat.config.js"
-    local min_optimizer_level=1
-    local max_optimizer_level=3
+    local settings_presets=(
+        legacy-no-optimize
+        legacy-optimize-evm-only
+        legacy-optimize-evm+yul
+    )
 
-    local selected_optimizer_levels
-    selected_optimizer_levels=$(circleci_select_steps "$(seq "$min_optimizer_level" "$max_optimizer_level")")
-    print_optimizer_levels_or_exit "$selected_optimizer_levels"
+    local selected_optimizer_presets
+    selected_optimizer_presets=$(circleci_select_steps_multiarg "${settings_presets[@]}")
+    print_optimizer_presets_or_exit "$selected_optimizer_presets"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$branch" "$DIR"
 
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
-    force_hardhat_compiler_settings "$config_file" "$min_optimizer_level"
+    force_hardhat_compiler_settings "$config_file" "$(first_word "$selected_optimizer_presets")"
     npm install
 
     replace_version_pragmas
 
-    for level in $selected_optimizer_levels; do
-        hardhat_run_test "$config_file" "$level" compile_fn test_fn
+    for preset in $selected_optimizer_presets; do
+        hardhat_run_test "$config_file" "$preset" compile_fn test_fn
     done
 }
 
