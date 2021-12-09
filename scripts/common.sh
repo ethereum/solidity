@@ -226,7 +226,16 @@ function circleci_step_selected
 {
     local selected_steps="$1"
     local step="$2"
+    (( $# == 2 )) || assertFail
     [[ $step != *" "* ]] || assertFail "Step names must not contain spaces."
 
     [[ " $selected_steps " == *" $step "* ]] || return 1
+}
+
+function first_word
+{
+    local words="$1"
+    (( $# == 1 )) || assertFail
+
+    echo "$words" | cut -d " " -f 1
 }
