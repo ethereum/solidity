@@ -1098,14 +1098,14 @@ void CommandLineInterface::outputCompilationResults()
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
 	set<string> uncompiledContracts;
-	for (auto const& contract: m_compiler->contractNames())
+	for (string const& contract: m_compiler->contractNames())
 		if (objectWithLinkRefsHex(m_compiler->object(contract)).empty())
 			uncompiledContracts.insert(contract.substr(contract.find_last_of('/') + 1));
 
 	if (uncompiledContracts.size() == m_compiler->contractNames().size())
 		sout() << "Input did not contain any contracts to compile." << endl;
 	else
-		for (auto const& uncompiledContract: uncompiledContracts)
+		for (string const& uncompiledContract: uncompiledContracts)
 		{
 			sout() << "'" << uncompiledContract << "' ";
 			sout() << "was not compiled because it is an empty interface or empty abstract contract." << endl;
