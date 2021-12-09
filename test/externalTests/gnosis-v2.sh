@@ -63,4 +63,4 @@ function gnosis_safe_test
     done
 }
 
-external_test Gnosis-Safe gnosis_safe_test
+external_test Gnosis-Safe-V2 gnosis_safe_test
