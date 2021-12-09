@@ -1099,7 +1099,7 @@ void CommandLineInterface::outputCompilationResults()
 
 	set<string> uncompiledContracts;
 	for (string const& contract: m_compiler->contractNames())
-		if (objectWithLinkRefsHex(m_compiler->object(contract)).empty())
+		if (m_compiler->object(contract).bytecode.empty())
 			uncompiledContracts.insert(contract.substr(contract.find_last_of('/') + 1));
 
 	if (uncompiledContracts.size() == m_compiler->contractNames().size())
