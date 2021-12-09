@@ -37,6 +37,9 @@ function colony_test
     local branch=develop_080
     local config_file="truffle.js"
     local settings_presets=(
+        #ir-no-optimize            # Compiles but tests run out of gas
+        #ir-optimize-evm-only      # Compiles but tests run out of gas
+        ir-optimize-evm+yul
         #legacy-no-optimize        # Compiles but tests run out of gas
         #legacy-optimize-evm-only  # Compiles but tests run out of gas
         legacy-optimize-evm+yul

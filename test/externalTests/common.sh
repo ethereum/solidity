@@ -250,9 +250,13 @@ function settings_from_preset
     local evm_version="$2"
 
     case "$preset" in
-        legacy-no-optimize)       echo "{evmVersion: '${evm_version}', optimizer: {enabled: false}}" ;;
-        legacy-optimize-evm-only) echo "{evmVersion: '${evm_version}', optimizer: {enabled: true, details: {yul: false}}}" ;;
-        legacy-optimize-evm+yul)  echo "{evmVersion: '${evm_version}', optimizer: {enabled: true, details: {yul: true}}}" ;;
+        # NOTE: Remember to update `parallelism` of `t_ems_ext` job in CI config if you add/remove presets
+        legacy-no-optimize)       echo "{evmVersion: '${evm_version}', viaIR: false, optimizer: {enabled: false}}" ;;
+        ir-no-optimize)           echo "{evmVersion: '${evm_version}', viaIR: true,  optimizer: {enabled: false}}" ;;
+        legacy-optimize-evm-only) echo "{evmVersion: '${evm_version}', viaIR: false, optimizer: {enabled: true, details: {yul: false}}}" ;;
+        ir-optimize-evm-only)     echo "{evmVersion: '${evm_version}', viaIR: true,  optimizer: {enabled: true, details: {yul: false}}}" ;;
+        legacy-optimize-evm+yul)  echo "{evmVersion: '${evm_version}', viaIR: false, optimizer: {enabled: true, details: {yul: true}}}" ;;
+        ir-optimize-evm+yul)      echo "{evmVersion: '${evm_version}', viaIR: true,  optimizer: {enabled: true, details: {yul: true}}}" ;;
         *)
             fail "Unknown settings preset: '${preset}'."
             ;;

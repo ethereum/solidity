@@ -1037,8 +1037,9 @@ jobs:
     docker:
       - image: circleci/node:<<parameters.nodejs_version>>
     resource_class: <<parameters.resource_class>>
-    # NOTE: Each external test does 3 separate compile&test runs
-    parallelism: 3
+    # NOTE: Each external test runs up to 6 independent settings presets. If parallelism is higher than
+    # actual preset count, some runs will exit immediately. If it's lower, some runs will get more than one preset.
+    parallelism: 6
     environment:
       TERM: xterm
       COMPILE_ONLY: <<parameters.compile_only>>

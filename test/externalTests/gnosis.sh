@@ -37,6 +37,9 @@ function gnosis_safe_test
     local branch=development_080
     local config_file="truffle-config.js"
     local settings_presets=(
+        #ir-no-optimize            # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only      # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        ir-optimize-evm+yul
         #legacy-no-optimize        # "Stack too deep" error
         #legacy-optimize-evm-only  # "Stack too deep" error
         legacy-optimize-evm+yul

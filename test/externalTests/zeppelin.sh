@@ -37,6 +37,9 @@ function zeppelin_test
     local branch=master
     local config_file="hardhat.config.js"
     local settings_presets=(
+        #ir-no-optimize           # "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
+        #ir-optimize-evm+yul      # Compiles but tests fail. See https://github.com/nomiclabs/hardhat/issues/2115
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul

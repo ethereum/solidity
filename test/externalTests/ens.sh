@@ -37,6 +37,9 @@ function ens_test
     local branch=master
     local config_file="truffle.js"
     local settings_presets=(
+        #ir-no-optimize           # "YulException: Variable var_ttl_236 is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # "YulException: Variable var_ttl_236 is 1 slot(s) too deep inside the stack."
+        ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
