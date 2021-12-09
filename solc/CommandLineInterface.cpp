@@ -1097,7 +1097,7 @@ void CommandLineInterface::outputCompilationResults()
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
-	std::set<std::string> uncompiledContracts;
+	set<string> uncompiledContracts;
 	for (auto const& contract: m_compiler->contractNames())
 		if (objectWithLinkRefsHex(m_compiler->object(contract)).empty())
 			uncompiledContracts.insert(contract.substr(contract.find_last_of('/') + 1));
