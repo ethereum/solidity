@@ -49,7 +49,7 @@ function colony_test
 
     neutralize_package_json_hooks
     force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$min_optimizer_level"
-    yarn
+    yarn install
     git submodule update --init
 
     cd lib
