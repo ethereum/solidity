@@ -1004,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 	);
 
 	BOOST_TEST(result.stderrContent == "");
-	BOOST_TEST(result.stdoutContent == "");
+	BOOST_TEST(result.stdoutContent == "Input does not contain any deployable contracts. Note that interface and abstract contract definitions do not produce bytecode.");
 	BOOST_REQUIRE(result.success);
 	BOOST_TEST(result.options == expectedOptions);
 	BOOST_TEST(result.reader.sourceCodes() == expectedSources);

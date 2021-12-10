@@ -1097,20 +1097,19 @@ void CommandLineInterface::outputCompilationResults()
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
-	set<string> uncompiledContracts;
-	for (string const& contract: m_compiler->contractNames())
-		if (m_compiler->object(contract).bytecode.empty())
-			uncompiledContracts.insert(contract.substr(contract.find_last_of('/') + 1));
+	if (!m_options.compiler.outputs.signatureHashes && !m_options.compiler.outputs.irOptimized)
+	{
+		size_t contractsWithEmptyBytecode = 0;
+		for (string const& contract: m_compiler->contractNames())
+			if (m_compiler->object(contract).bytecode.empty())
+				contractsWithEmptyBytecode++;
 
-	if (uncompiledContracts.size() == m_compiler->contractNames().size())
-		sout() << "Input did not contain any contracts to compile." << endl;
-	else
-		for (string const& uncompiledContract: uncompiledContracts)
+		if (contractsWithEmptyBytecode == m_compiler->contractNames().size())
 		{
-			sout() << "'" << uncompiledContract << "' ";
-			sout() << "was not compiled because it is an empty interface or empty abstract contract." << endl;
+			sout() << "Input does not contain any deployable contracts. ";
+			sout() << "Note that interface and abstract contract definitions do not produce bytecode." << endl;
 		}
-
+	}
 
 	handleCombinedJSON();
 
