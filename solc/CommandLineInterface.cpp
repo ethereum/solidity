@@ -1101,6 +1101,7 @@ void CommandLineInterface::outputCompilationResults()
 		!m_options.compiler.outputs.ir &&
 		!m_options.compiler.outputs.irOptimized &&
 		!m_options.compiler.outputs.astCompactJson &&
+		!m_options.modelChecker.initialize &&
 		!m_options.compiler.combinedJsonRequests.has_value()
 	)
 	{
