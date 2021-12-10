@@ -245,7 +245,7 @@ function optimizer_settings_for_level
 
     case "$level" in
         1) echo "{enabled: false}" ;;
-        2) echo "{enabled: true}" ;;
+        2) echo "{enabled: true, details: {yul: false}}" ;;
         3) echo "{enabled: true, details: {yul: true}}" ;;
         *)
             printError "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"

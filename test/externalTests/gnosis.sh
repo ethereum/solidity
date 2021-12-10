@@ -35,7 +35,8 @@ function gnosis_safe_test
     local repo="https://github.com/solidity-external-tests/safe-contracts.git"
     local branch=development_080
     local config_file="truffle-config.js"
-    local min_optimizer_level=2
+    # levels 1 and 2: "Stack too deep" error
+    local min_optimizer_level=3
     local max_optimizer_level=3
 
     local selected_optimizer_levels
