@@ -1097,7 +1097,10 @@ void CommandLineInterface::outputCompilationResults()
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
-	if (!m_options.compiler.outputs.signatureHashes && !m_options.compiler.outputs.irOptimized)
+	if (!m_options.compiler.outputs.signatureHashes &&
+		!m_options.compiler.outputs.astCompactJson &&
+		!m_options.compiler.combinedJsonRequests.has_value()
+	)
 	{
 		size_t contractsWithEmptyBytecode = 0;
 		for (string const& contract: m_compiler->contractNames())
