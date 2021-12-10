@@ -36,7 +36,10 @@ function ens_test
     local repo="https://github.com/ensdomains/ens.git"
     local branch=master
     local config_file="truffle.js"
+
+    local compile_only_presets=()
     local settings_presets=(
+        "${compile_only_presets[@]}"
         #ir-no-optimize           # "YulException: Variable var_ttl_236 is 1 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # "YulException: Variable var_ttl_236 is 1 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
@@ -65,7 +68,7 @@ function ens_test
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
 
     for preset in $selected_optimizer_presets; do
-        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" compile_fn test_fn
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
     done
 }
 

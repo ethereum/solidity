@@ -36,11 +36,15 @@ function gnosis_safe_test
     local repo="https://github.com/solidity-external-tests/safe-contracts.git"
     local branch=v2_080
     local config_file="truffle-config.js"
+
+    local compile_only_presets=(
+        legacy-no-optimize        # "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
+    )
     local settings_presets=(
+        "${compile_only_presets[@]}"
         #ir-no-optimize           # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
-        #legacy-no-optimize       # "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
     )
@@ -65,7 +69,7 @@ function gnosis_safe_test
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
 
     for preset in $selected_optimizer_presets; do
-        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" compile_fn test_fn
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
     done
 }
 
