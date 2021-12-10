@@ -1413,4 +1413,5 @@ workflows:
           name: t_ems_test_ext_colony
           project: colony
           binary_type: solcjs
+          nodejs_version: '14'
           resource_class: medium
