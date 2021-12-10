@@ -313,7 +313,7 @@ likely it will be.
     since it is not up to the submitter of a transaction, but up to the miners to determine in which block the transaction is included.
 
     If you want to schedule future calls of your contract, you can use
-    the `alarm clock <https://www.ethereum-alarm-clock.com/>`_ or a similar oracle service.
+    a smart contract automation tool or an oracle service.
 
 .. _the-ethereum-virtual-machine:
 
