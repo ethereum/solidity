@@ -1098,6 +1098,8 @@ void CommandLineInterface::outputCompilationResults()
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
 	if (!m_options.compiler.outputs.signatureHashes &&
+		!m_options.compiler.outputs.ir &&
+		!m_options.compiler.outputs.irOptimized &&
 		!m_options.compiler.outputs.astCompactJson &&
 		!m_options.compiler.combinedJsonRequests.has_value()
 	)
