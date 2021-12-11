@@ -28,6 +28,9 @@ it does include the supplied string in the :ref:`bytecode metadata <metadata>`.
 If you do not want to specify a license or if the source code is
 not open-source, please use the special value ``UNLICENSED``.
 
+.. note::
+    There might be a confusion between ``UNLICENSED`` (no usage allowed, not present in SPDX license list) and ``UNLICENSE`` (grants all rights to everyone). Check out `this discussion<https://github.com/ethereum/solidity/issues/12251>`_.
+
 Supplying this comment of course does not free you from other
 obligations related to licensing like having to mention
 a specific license header in each source file or the
