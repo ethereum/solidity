@@ -32,6 +32,8 @@
 
 #include <liblangutil/CharStreamProvider.h>
 
+#include <libsolutil/Algorithms.h>
+
 #include <range/v3/view.hpp>
 
 #include <limits>
@@ -2371,28 +2373,25 @@ void SMTEncoder::resetReferences(Type const* _type)
 
 bool SMTEncoder::sameTypeOrSubtype(Type const* _a, Type const* _b)
 {
-	Type const* prefix = _a;
-	while (
-		prefix->category() == Type::Category::Mapping ||
-		prefix->category() == Type::Category::Array
-	)
-	{
-		if (*typeWithoutPointer(_b) == *typeWithoutPointer(prefix))
-			return true;
-		if (prefix->category() == Type::Category::Mapping)
+	bool foundSame = false;
+
+	solidity::util::BreadthFirstSearch<Type const*> bfs{{_a}};
+	bfs.run([&](auto _type, auto&& _addChild) {
+		if (*typeWithoutPointer(_b) == *typeWithoutPointer(_type))
 		{
-			auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
-			solAssert(mapPrefix, "");
-			prefix = mapPrefix->valueType();
+			foundSame = true;
+			bfs.abort();
 		}
-		else
-		{
-			auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
-			solAssert(arrayPrefix, "");
-			prefix = arrayPrefix->baseType();
-		}
-	}
-	return false;
+		if (auto const* mapType = dynamic_cast<MappingType const*>(_type))
+			_addChild(mapType->valueType());
+		else if (auto const* arrayType = dynamic_cast<ArrayType const*>(_type))
+			_addChild(arrayType->baseType());
+		else if (auto const* structType = dynamic_cast<StructType const*>(_type))
+			for (auto const& member: structType->nativeMembers(nullptr))
+				_addChild(member.type);
+	});
+
+	return foundSame;
 }
 
 bool SMTEncoder::isSupportedType(Type const& _type) const
