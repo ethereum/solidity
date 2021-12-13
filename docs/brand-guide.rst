@@ -59,7 +59,7 @@ Under the following terms:
 
 - **Attribution** — You must give appropriate credit, provide a link to
   the license, and indicate if changes were made. You may do so in any
-  reasonable manner, but not in any way that suggests the the Solidity
+  reasonable manner, but not in any way that suggests that the Solidity
   core team endorses you or your use.
 
 When using the Solidity logo, please respect the Solidity logo guidelines.
