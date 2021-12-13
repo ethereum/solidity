@@ -82,6 +82,7 @@ private:
 	void printVersion();
 	void printLicense();
 	void compile();
+	void serveLSP();
 	void link();
 	void writeLinkedFiles();
 	/// @returns the ``// <identifier> -> name`` hint for library placeholders.

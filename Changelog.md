@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Commandline Interface: Add ``--lsp`` option to get ``solc`` to act as a Language Server (LSP) communicating over stdio.
 
 
 Bugfixes:
