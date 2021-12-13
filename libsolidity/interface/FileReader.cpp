@@ -172,7 +172,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 }
 
-string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath)
+string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath) const
 {
 	vector<boost::filesystem::path> prefixes = {m_basePath.empty() ? normalizeCLIPathForVFS(".") : m_basePath};
 	prefixes += m_includePaths;
@@ -189,7 +189,7 @@ string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPa
 	return normalizedPath.generic_string();
 }
 
-map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths)
+map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths) const
 {
 	map<string, FileReader::FileSystemPathSet> nameToPaths;
 	for (boost::filesystem::path const& cliPath: _cliPaths)
