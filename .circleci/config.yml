@@ -702,7 +702,6 @@ jobs:
 
   t_ubu_codecov:
     <<: *base_ubuntu2004
-    parallelism: 6
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
@@ -885,7 +884,7 @@ jobs:
 
   t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2004
-    parallelism: 6
+    parallelism: 15 # 7 EVM versions, each with/without optimization + 1 ABIv1/@nooptions run
     <<: *steps_soltest_all
 
   t_archlinux_soltest: &t_archlinux_soltest
@@ -944,7 +943,6 @@ jobs:
 
   t_ubu_asan_soltest:
     <<: *base_ubuntu2004
-    parallelism: 6
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
