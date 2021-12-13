@@ -35,7 +35,7 @@ function ens_test
 {
     local repo="https://github.com/ensdomains/ens.git"
     local branch=master
-    local config_file="truffle-config.js"
+    local config_file="truffle.js"
     local min_optimizer_level=1
     local max_optimizer_level=3
 

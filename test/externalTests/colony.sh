@@ -36,6 +36,7 @@ function colony_test
     local repo="https://github.com/solidity-external-tests/colonyNetwork.git"
     local branch=develop_080
     local config_file="truffle.js"
+    # On levels 1 and 2 it compiles but tests run out of gas
     local min_optimizer_level=3
     local max_optimizer_level=3
 
