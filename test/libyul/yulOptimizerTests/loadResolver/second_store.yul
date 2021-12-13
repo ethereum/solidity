@@ -10,10 +10,12 @@
 // step: loadResolver
 //
 // {
-//     let x := calldataload(1)
-//     sstore(x, 7)
-//     let _3 := 6
-//     let _4 := 0
-//     sstore(calldataload(_4), _3)
-//     mstore(_4, sload(x))
+//     {
+//         let x := calldataload(1)
+//         sstore(x, 7)
+//         let _3 := 6
+//         let _4 := 0
+//         sstore(calldataload(_4), _3)
+//         mstore(_4, sload(x))
+//     }
 // }

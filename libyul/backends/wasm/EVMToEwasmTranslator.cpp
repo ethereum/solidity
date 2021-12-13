@@ -137,7 +137,11 @@ void EVMToEwasmTranslator::parsePolyfill()
 			string(solidity::yul::wasm::polyfill::Logical) +
 			string(solidity::yul::wasm::polyfill::Memory) +
 		"}", "");
-	m_polyfill = Parser(errorReporter, WasmDialect::instance()).parse(charStream);
+
+	// Passing an empty SourceLocation() here is a workaround to prevent a crash
+	// when compiling from yul->ewasm. We're stripping nativeLocation and
+	// originLocation from the AST (but we only really need to strip nativeLocation)
+	m_polyfill = Parser(errorReporter, WasmDialect::instance(), langutil::SourceLocation()).parse(charStream);
 	if (!errors.empty())
 	{
 		string message;

@@ -7,7 +7,9 @@
 // step: expressionSimplifier
 //
 // {
-//     let _1 := 0
-//     pop(call(_1, _1, _1, _1, _1, _1, _1))
-//     sstore(_1, 0)
+//     {
+//         let _1 := 0
+//         pop(call(_1, _1, _1, _1, _1, _1, _1))
+//         sstore(_1, 0)
+//     }
 // }

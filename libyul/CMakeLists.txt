@@ -173,10 +173,10 @@ add_library(yul
 	optimiser/OptimizerUtilities.h
 	optimiser/ReasoningBasedSimplifier.cpp
 	optimiser/ReasoningBasedSimplifier.h
-	optimiser/RedundantAssignEliminator.cpp
-	optimiser/RedundantAssignEliminator.h
-	optimiser/RedundantStoreBase.cpp
-	optimiser/RedundantStoreBase.h
+	optimiser/UnusedAssignEliminator.cpp
+	optimiser/UnusedAssignEliminator.h
+	optimiser/UnusedStoreBase.cpp
+	optimiser/UnusedStoreBase.h
 	optimiser/Rematerialiser.cpp
 	optimiser/Rematerialiser.h
 	optimiser/SMTSolver.cpp

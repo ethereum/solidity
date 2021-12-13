@@ -6,6 +6,8 @@
 // step: expressionSimplifier
 //
 // {
-//     let _1 := 0
-//     sstore(_1, mload(_1))
+//     {
+//         let _1 := 0
+//         sstore(_1, mload(_1))
+//     }
 // }

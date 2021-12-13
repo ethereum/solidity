@@ -7,6 +7,8 @@
 // step: unusedPruner
 //
 // {
-//     pop(mload(10))
-//     sstore(0, msize())
+//     {
+//         pop(mload(10))
+//         sstore(0, msize())
+//     }
 // }

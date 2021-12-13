@@ -9,6 +9,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 6368: (76-81): CHC: Out of bounds access might happen here.
 // Warning 6368: (76-84): CHC: Out of bounds access might happen here.

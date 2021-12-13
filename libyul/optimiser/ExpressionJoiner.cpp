@@ -22,6 +22,7 @@
 
 #include <libyul/optimiser/ExpressionJoiner.h>
 
+#include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
@@ -37,9 +38,10 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void ExpressionJoiner::run(OptimiserStepContext&, Block& _ast)
+void ExpressionJoiner::run(OptimiserStepContext& _context, Block& _ast)
 {
 	ExpressionJoiner{_ast}(_ast);
+	FunctionGrouper::run(_context, _ast);
 }
 
 

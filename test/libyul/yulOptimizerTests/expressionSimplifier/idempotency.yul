@@ -9,8 +9,10 @@
 // step: expressionSimplifier
 //
 // {
-//     let x := calldataload(0)
-//     let z := calldataload(1)
-//     let t := and(x, z)
-//     sstore(t, or(x, z))
+//     {
+//         let x := calldataload(0)
+//         let z := calldataload(1)
+//         let t := and(x, z)
+//         sstore(t, or(x, z))
+//     }
 // }

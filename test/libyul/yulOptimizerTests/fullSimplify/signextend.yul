@@ -8,6 +8,8 @@
 // step: fullSimplify
 //
 // {
-//     mstore(0, 7)
-//     mstore(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+//     {
+//         mstore(0, 7)
+//         mstore(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+//     }
 // }

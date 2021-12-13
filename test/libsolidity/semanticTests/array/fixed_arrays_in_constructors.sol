@@ -11,5 +11,8 @@ contract Creator {
 // compileViaYul: also
 // ----
 // constructor(): 1, 2, 3, 4 ->
+// gas irOptimized: 132278
+// gas legacy: 176789
+// gas legacyOptimized: 129585
 // r() -> 4
 // ch() -> 3

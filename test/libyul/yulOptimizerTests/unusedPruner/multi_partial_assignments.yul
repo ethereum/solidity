@@ -6,6 +6,8 @@
 // step: unusedPruner
 //
 // {
-//     let x, y
-//     x := 1
+//     {
+//         let x, y
+//         x := 1
+//     }
 // }

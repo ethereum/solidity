@@ -51,6 +51,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -59,6 +60,7 @@ namespace solidity::langutil
 {
 
 struct SourceLocation;
+struct LineColumn;
 
 /**
  * Bidirectional stream of characters.
@@ -97,8 +99,14 @@ public:
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
 	std::string lineAtPosition(int _position) const;
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
+	LineColumn translatePositionToLineColumn(int _position) const;
 	///@}
+
+	/// Translates a line:column to the absolute position.
+	std::optional<int> translateLineColumnToPosition(LineColumn const& _lineColumn) const;
+
+	/// Translates a line:column to the absolute position for the given input text.
+	static std::optional<int> translateLineColumnToPosition(std::string const& _text, LineColumn const& _input);
 
 	/// Tests whether or not given octet sequence is present at the current position in stream.
 	/// @returns true if the sequence could be found, false otherwise.

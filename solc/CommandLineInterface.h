@@ -51,12 +51,28 @@ public:
 		m_options(_options)
 	{}
 
-	/// Parse command line arguments and return false if we should not continue
+	/// Parses command-line arguments, executes the requested operation and handles validation and
+	/// execution errors.
+	/// @returns false if it catches a @p CommandLineValidationError or if the application is
+	/// expected to exit with a non-zero exit code despite there being no error.
+	bool run(int _argc, char const* const* _argv);
+
+	/// Parses command line arguments and stores the result in @p m_options.
+	/// @throws CommandLineValidationError if command-line arguments are invalid.
+	/// @returns false if the application is expected to exit with a non-zero exit code despite
+	/// there being no error.
 	bool parseArguments(int _argc, char const* const* _argv);
-	/// Read the content of all input files and initialize the file reader.
-	bool readInputFiles();
-	/// Parse the files, create source code objects, print the output.
-	bool processInput();
+
+	/// Reads the content of all input files and initializes the file reader.
+	/// @throws CommandLineValidationError if it fails to read the input files (invalid paths,
+	/// non-existent files, not enough or too many input files, etc.).
+	void readInputFiles();
+
+	/// Executes the requested operation (compilation, assembling, standard JSON, etc.) and prints
+	/// results to the terminal.
+	/// @throws CommandLineExecutionError if execution fails due to errors in the input files.
+	/// @throws CommandLineOutputError if creating output files or writing to them fails.
+	void processInput();
 
 	CommandLineOptions const& options() const { return m_options; }
 	FileReader const& fileReader() const { return m_fileReader; }
@@ -65,15 +81,15 @@ public:
 private:
 	void printVersion();
 	void printLicense();
-	bool compile();
-	bool link();
+	void compile();
+	void link();
 	void writeLinkedFiles();
 	/// @returns the ``// <identifier> -> name`` hint for library placeholders.
 	static std::string libraryPlaceholderHint(std::string const& _libraryName);
 	/// @returns the full object with library placeholder hints in hex.
 	static std::string objectWithLinkRefsHex(evmasm::LinkerObject const& _obj);
 
-	bool assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine);
+	void assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine);
 
 	void outputCompilationResults();
 
@@ -120,7 +136,6 @@ private:
 	std::ostream& m_sout;
 	std::ostream& m_serr;
 	bool m_hasOutput = false;
-	bool m_outputFailed = false; ///< If true, creation or write to some of the output files failed.
 	FileReader m_fileReader;
 	std::optional<std::string> m_standardJsonInput;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;

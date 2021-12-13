@@ -28,6 +28,33 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace std;
+using namespace solidity::test;
+
+namespace boost::test_tools::tt_detail
+{
+
+template<>
+struct print_log_value<std::optional<int>>
+{
+	void operator()(std::ostream& _out, std::optional<int> const& _value) const
+	{
+		_out << (_value ? to_string(*_value) : "[nullopt]");
+	}
+};
+
+template<>
+struct print_log_value<nullopt_t>
+{
+	void operator()(std::ostream& _out, nullopt_t const&) const
+	{
+		_out << "[nullopt]";
+	}
+};
+
+} // namespace boost::test_tools::tt_detail
+
+
 namespace solidity::langutil::test
 {
 
@@ -48,6 +75,62 @@ BOOST_AUTO_TEST_CASE(test_fail)
 	);
 }
 
+namespace
+{
+std::optional<int> toPosition(int _line, int _column, string const& _text)
+{
+	return CharStream{_text, "source"}.translateLineColumnToPosition(
+		LineColumn{_line, _column}
+	);
+}
+
+}
+
+BOOST_AUTO_TEST_CASE(translateLineColumnToPosition)
+{
+	BOOST_CHECK_EQUAL(toPosition(-1, 0, "ABC"), nullopt);
+	BOOST_CHECK_EQUAL(toPosition(0, -1, "ABC"), nullopt);
+
+	BOOST_CHECK_EQUAL(toPosition(0, 0, ""), 0);
+	BOOST_CHECK_EQUAL(toPosition(1, 0, ""), nullopt);
+	BOOST_CHECK_EQUAL(toPosition(0, 1, ""), nullopt);
+
+	// With last line containing no LF
+	BOOST_CHECK_EQUAL(toPosition(0, 0, "ABC"), 0);
+	BOOST_CHECK_EQUAL(toPosition(0, 1, "ABC"), 1);
+	BOOST_CHECK_EQUAL(toPosition(0, 2, "ABC"), 2);
+	BOOST_CHECK_EQUAL(toPosition(0, 3, "ABC"), 3);
+	BOOST_CHECK_EQUAL(toPosition(0, 4, "ABC"), nullopt);
+	BOOST_CHECK_EQUAL(toPosition(1, 0, "ABC"), nullopt);
+
+	BOOST_CHECK_EQUAL(toPosition(0, 3, "ABC\nDEF"), 3);
+	BOOST_CHECK_EQUAL(toPosition(0, 4, "ABC\nDEF"), nullopt);
+	BOOST_CHECK_EQUAL(toPosition(1, 0, "ABC\nDEF"), 4);
+	BOOST_CHECK_EQUAL(toPosition(1, 1, "ABC\nDEF"), 5);
+	BOOST_CHECK_EQUAL(toPosition(1, 2, "ABC\nDEF"), 6);
+	BOOST_CHECK_EQUAL(toPosition(1, 3, "ABC\nDEF"), 7);
+	BOOST_CHECK_EQUAL(toPosition(1, 4, "ABC\nDEF"), nullopt);
+	BOOST_CHECK_EQUAL(toPosition(2, 0, "ABC\nDEF"), nullopt);
+	BOOST_CHECK_EQUAL(toPosition(2, 1, "ABC\nDEF"), nullopt);
+
+	// With last line containing LF
+	BOOST_CHECK_EQUAL(toPosition(0, 0, "ABC\nDEF\n"), 0);
+	BOOST_CHECK_EQUAL(toPosition(0, 1, "ABC\nDEF\n"), 1);
+	BOOST_CHECK_EQUAL(toPosition(0, 2, "ABC\nDEF\n"), 2);
+
+	BOOST_CHECK_EQUAL(toPosition(1, 0, "ABC\nDEF\n"), 4);
+	BOOST_CHECK_EQUAL(toPosition(1, 1, "ABC\nDEF\n"), 5);
+	BOOST_CHECK_EQUAL(toPosition(1, 2, "ABC\nDEF\n"), 6);
+	BOOST_CHECK_EQUAL(toPosition(1, 3, "ABC\nDEF\n"), 7);
+	BOOST_CHECK_EQUAL(toPosition(1, 4, "ABC\nDEF\n"), nullopt);
+	BOOST_CHECK_EQUAL(toPosition(2, 0, "ABC\nDEF\n"), 8);
+	BOOST_CHECK_EQUAL(toPosition(2, 1, "ABC\nDEF\n"), nullopt);
+
+	BOOST_CHECK_EQUAL(toPosition(2, 0, "ABC\nDEF\nGHI\n"), 8);
+	BOOST_CHECK_EQUAL(toPosition(2, 1, "ABC\nDEF\nGHI\n"), 9);
+	BOOST_CHECK_EQUAL(toPosition(2, 2, "ABC\nDEF\nGHI\n"), 10);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}

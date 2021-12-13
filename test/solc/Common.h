@@ -44,10 +44,26 @@ struct OptionsReaderAndMessages
 
 std::vector<char const*> makeArgv(std::vector<std::string> const& _commandLine);
 
+/// Runs only command-line parsing, without compilation, assembling or any other input processing.
+/// Lets through any @a CommandLineErrors throw by the CLI.
+/// Note: This uses the @a CommandLineInterface class and does not actually spawn a new process.
+/// @param _commandLine Arguments in the form of strings that would be specified on the command-line.
+///                     You must specify the program name as the first item.
+/// @param _standardInputContent Content that the CLI will be able to read from its standard input.
 OptionsReaderAndMessages parseCommandLineAndReadInputFiles(
 	std::vector<std::string> const& _commandLine,
-	std::string const& _standardInputContent = "",
-	bool _processInput = false
+	std::string const& _standardInputContent = ""
+);
+
+/// Runs all stages of command-line interface processing, including error handling.
+/// Never throws @a CommandLineError - validation errors are included in the returned stderr content.
+/// Note: This uses the @a CommandLineInterface class and does not actually spawn a new process.
+/// @param _commandLine Arguments in the form of strings that would be specified on the command-line.
+///                     You must specify the program name as the first item.
+/// @param _standardInputContent Content that the CLI will be able to read from its standard input.
+OptionsReaderAndMessages runCLI(
+	std::vector<std::string> const& _commandLine,
+	std::string const& _standardInputContent = ""
 );
 
 std::string stripPreReleaseWarning(std::string const& _stderrContent);

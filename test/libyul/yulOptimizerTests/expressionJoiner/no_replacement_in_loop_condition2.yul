@@ -6,7 +6,9 @@
 // step: expressionJoiner
 //
 // {
-//     let a := mload(0)
-//     for { } a { }
-//     { }
+//     {
+//         let a := mload(0)
+//         for { } a { }
+//         { }
+//     }
 // }

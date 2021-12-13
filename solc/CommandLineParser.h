@@ -234,26 +234,16 @@ struct CommandLineOptions
 };
 
 /// Parses the command-line arguments and produces a filled-out CommandLineOptions structure.
-/// Validates provided values and prints error messages in case of errors.
+/// Validates provided values and reports errors by throwing @p CommandLineValidationErrors.
 class CommandLineParser
 {
 public:
-	explicit CommandLineParser(std::ostream& _serr):
-		m_serr(_serr)
-	{}
-
 	/// Parses the command-line arguments and fills out the internal CommandLineOptions structure.
-	/// Performs validation and prints error messages.
-	/// @return true if there were no validation errors when parsing options and the
-	/// CommandLineOptions structure has been fully initialized. false if there were errors - in
-	/// this case CommandLineOptions may be only partially filled out. May also return false if
-	/// there is not further processing necessary and the program should just exit.
-	bool parse(int _argc, char const* const* _argv);
+	/// @throws CommandLineValidationError if the arguments cannot be properly parsed or are invalid.
+	/// When an exception is thrown, the @p CommandLineOptions may be only partially filled out.
+	void parse(int _argc, char const* const* _argv);
 
 	CommandLineOptions const& options() const { return m_options; }
-
-	/// Returns true if the parser has written anything to any of its output streams.
-	bool hasOutput() const { return m_hasOutput; }
 
 	static void printHelp(std::ostream& _out) { _out << optionsDescription(); }
 
@@ -269,39 +259,31 @@ private:
 	/// Uses boost::program_options to parse the command-line arguments and leaves the result in @a m_args.
 	/// Also handles the arguments that result in information being printed followed by immediate exit.
 	/// @returns false if parsing fails due to syntactical errors or the arguments not matching the description.
-	bool parseArgs(int _argc, char const* const* _argv);
+	void parseArgs(int _argc, char const* const* _argv);
 
 	/// Validates parsed arguments stored in @a m_args and fills out the internal CommandLineOptions
 	/// structure.
-	/// @return false if there are any validation errors, true otherwise.
-	bool processArgs();
+	/// @throws CommandLineValidationError in case of validation errors.
+	void processArgs();
 
 	/// Parses the value supplied to --combined-json.
-	/// @return false if there are any validation errors, true otherwise.
-	bool parseCombinedJsonOption();
+	/// @throws CommandLineValidationError in case of validation errors.
+	void parseCombinedJsonOption();
 
-	/// Parses the names of the input files, remappings for all modes except for Standard JSON.
-	/// Does not check if files actually exist.
-	/// @return false if there are any validation errors, true otherwise.
-	bool parseInputPathsAndRemappings();
+	/// Parses the names of the input files, remappings. Does not check if the files actually exist.
+	/// @throws CommandLineValidationError in case of validation errors.
+	void parseInputPathsAndRemappings();
 
 	/// Tries to read from the file @a _input or interprets @a _input literally if that fails.
-	/// It then tries to parse the contents and appends to m_options.libraries.
-	/// @return false if there are any validation errors, true otherwise.
-	bool parseLibraryOption(std::string const& _input);
+	/// It then tries to parse the contents and appends to @a m_options.libraries.
+	/// @throws CommandLineValidationError in case of validation errors.
+	void parseLibraryOption(std::string const& _input);
 
-	bool parseOutputSelection();
+	void parseOutputSelection();
 
-	bool checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
+	void checkMutuallyExclusive(std::vector<std::string> const& _optionNames);
 	size_t countEnabledOptions(std::vector<std::string> const& _optionNames) const;
 	static std::string joinOptionNames(std::vector<std::string> const& _optionNames, std::string _separator = ", ");
-
-	/// Returns the stream that should receive error output. Sets m_hasOutput to true if the
-	/// stream has ever been used.
-	std::ostream& serr();
-
-	std::ostream& m_serr;
-	bool m_hasOutput = false;
 
 	CommandLineOptions m_options;
 

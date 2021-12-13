@@ -9,8 +9,10 @@
 // step: loadResolver
 //
 // {
-//     let x := calldataload(0)
-//     let a := mload(x)
-//     x := 7
-//     sstore(a, mload(x))
+//     {
+//         let x := calldataload(0)
+//         let a := mload(x)
+//         x := 7
+//         sstore(a, mload(x))
+//     }
 // }

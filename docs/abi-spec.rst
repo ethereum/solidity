@@ -749,7 +749,7 @@ Non-standard Packed Mode
 
 Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode where:
 
-- types shorter than 32 bytes are neither zero padded nor sign extended and
+- types shorter than 32 bytes are concatenated directly, without padding or sign extension
 - dynamic types are encoded in-place and without the length.
 - array elements are padded, but still encoded in-place
 

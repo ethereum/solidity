@@ -57,6 +57,10 @@ std::string readFileAsString(boost::filesystem::path const& _file);
 /// Retrieves and returns the whole content of the specified input stream (until EOF).
 std::string readUntilEnd(std::istream& _stdin);
 
+/// Tries to read exactly @a _length bytes from @a _input.
+/// Returns a string containing as much data as has been read.
+std::string readBytes(std::istream& _input, size_t _length);
+
 /// Retrieves and returns a character from standard input (without waiting for EOL).
 int readStandardInputChar();
 

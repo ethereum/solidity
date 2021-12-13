@@ -166,7 +166,7 @@ Inside a code block, the following elements can be used
 - if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
 - switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
 - for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
-- function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }```
+- function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }``
 
 Multiple syntactical elements can follow each other simply separated by
 whitespace, i.e. there is no terminating ``;`` or newline required.
@@ -714,13 +714,15 @@ We will use a destructuring notation for the AST nodes.
         L'[$parami] = vi and L'[$reti] = 0 for all i.
         Let G'', L'', mode = E(Gn, L', block)
         G'', Ln, L''[$ret1], ..., L''[$retm]
-    E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
-        where utf8EncodeLeftAligned performs a UTF-8 encoding of l
-        and aligns it left into 32 bytes
+    E(G, L, l: StringLiteral) = G, L, str(l),
+        where str is the string evaluation function,
+        which for the EVM dialect is defined in the section 'Literals' above
     E(G, L, n: HexNumber) = G, L, hex(n)
-        where hex is the hexadecimal decoding function
+        where hex is the hexadecimal evaluation function,
+        which turns a sequence of hexadecimal digits into their big endian value
     E(G, L, n: DecimalNumber) = G, L, dec(n),
-        where dec is the decimal decoding function
+        where dec is the decimal evaluation function,
+        which turns a sequence of decimal digits into their big endian value
 
 .. _opcodes:
 

@@ -1,6 +1,7 @@
 set(libsolcli_sources
 	CommandLineInterface.cpp CommandLineInterface.h
 	CommandLineParser.cpp CommandLineParser.h
+	Exceptions.h
 )
 
 add_library(solcli ${libsolcli_sources})

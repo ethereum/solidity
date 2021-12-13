@@ -972,8 +972,6 @@ void CHC::resetSourceAnalysis()
 {
 	SMTEncoder::resetSourceAnalysis();
 
-	m_safeTargets.clear();
-	m_unsafeTargets.clear();
 	m_unprovedTargets.clear();
 	m_invariants.clear();
 	m_functionTargetIds.clear();

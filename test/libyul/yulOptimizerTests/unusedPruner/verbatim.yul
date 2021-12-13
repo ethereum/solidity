@@ -11,7 +11,9 @@
 // step: unusedPruner
 //
 // {
-//     pop(mload(10))
-//     pop(keccak256(10, 32))
-//     verbatim_0i_0o("test")
+//     {
+//         pop(mload(10))
+//         pop(keccak256(10, 32))
+//         verbatim_0i_0o("test")
+//     }
 // }

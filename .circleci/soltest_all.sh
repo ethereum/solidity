@@ -28,27 +28,32 @@ set -e
 
 REPODIR="$(realpath "$(dirname "$0")"/..)"
 
+# shellcheck source=scripts/common.sh
+source "${REPODIR}/scripts/common.sh"
+
+# NOTE: If you add/remove values, remember to update `parallelism` setting in CircleCI config.
 EVM_VALUES=(homestead byzantium constantinople petersburg istanbul berlin london)
 DEFAULT_EVM=london
 [[ " ${EVM_VALUES[*]} " =~ $DEFAULT_EVM ]]
 OPTIMIZE_VALUES=(0 1)
 STEPS=$(( 1 + ${#EVM_VALUES[@]} * ${#OPTIMIZE_VALUES[@]} ))
 
-if (( CIRCLE_NODE_TOTAL )) && (( CIRCLE_NODE_TOTAL > 1 ))
-then
-    RUN_STEPS=$(seq "$STEPS" | circleci tests split | xargs)
-else
-    RUN_STEPS=$(seq "$STEPS" | xargs)
-fi
-
-echo "Running steps $RUN_STEPS..."
+RUN_STEPS=$(circleci_select_steps "$(seq "$STEPS")")
+printTask "Running steps $RUN_STEPS..."
 
 STEP=1
 
 
 # Run for ABI encoder v1, without SMTChecker tests.
-[[ " $RUN_STEPS " == *" $STEP "* ]] && EVM="${DEFAULT_EVM}" OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
-STEP=$((STEP + 1))
+if circleci_step_selected "$RUN_STEPS" "$STEP"
+then
+    EVM="${DEFAULT_EVM}" \
+    OPTIMIZE=1 \
+    ABI_ENCODER_V1=1 \
+    BOOST_TEST_ARGS="-t !smtCheckerTests" \
+    "${REPODIR}/.circleci/soltest.sh"
+fi
+((++STEP))
 
 for OPTIMIZE in "${OPTIMIZE_VALUES[@]}"
 do
@@ -63,13 +68,16 @@ do
         DISABLE_SMTCHECKER=""
         [ "${OPTIMIZE}" != "0" ] && DISABLE_SMTCHECKER="-t !smtCheckerTests"
 
-        [[ " $RUN_STEPS " == *" $STEP "* ]] && EVM="$EVM" OPTIMIZE="$OPTIMIZE" SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS $EWASM_ARGS" BOOST_TEST_ARGS="-t !@nooptions $DISABLE_SMTCHECKER" "${REPODIR}/.circleci/soltest.sh"
-        STEP=$((STEP + 1))
+        if circleci_step_selected "$RUN_STEPS" "$STEP"
+        then
+            EVM="$EVM" \
+            OPTIMIZE="$OPTIMIZE" \
+            SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS $EWASM_ARGS" \
+            BOOST_TEST_ARGS="-t !@nooptions $DISABLE_SMTCHECKER" \
+            "${REPODIR}/.circleci/soltest.sh"
+        fi
+        ((++STEP))
     done
 done
 
-if ((STEP != STEPS + 1))
-then
-    echo "Step counter not properly adjusted!" >&2
-    exit 1
-fi
+((STEP == STEPS + 1)) || assertFail "Step counter not properly adjusted!"

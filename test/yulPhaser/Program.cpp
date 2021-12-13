@@ -337,7 +337,10 @@ BOOST_AUTO_TEST_CASE(optimise)
 
 	Block const& parentBlockAfter = program.ast();
 	BOOST_TEST(parentBlockAfter.statements.size() == 1);
-	BOOST_TEST(holds_alternative<VariableDeclaration>(parentBlockAfter.statements[0]));
+	BOOST_TEST(holds_alternative<Block>(parentBlockAfter.statements[0]));
+	Block const& innerBlock = get<Block>(parentBlockAfter.statements[0]);
+	BOOST_TEST(innerBlock.statements.size() == 1);
+	BOOST_TEST(holds_alternative<VariableDeclaration>(innerBlock.statements[0]));
 }
 
 BOOST_AUTO_TEST_CASE(output_operator)

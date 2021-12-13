@@ -5,4 +5,4 @@
 // ----
 // step: expressionSimplifier
 //
-// { mstore(20, mload(0)) }
+// { { mstore(20, mload(0)) } }

@@ -90,6 +90,15 @@ BOOST_AUTO_TEST_CASE(readUntilEnd_empty)
 	BOOST_TEST(readUntilEnd(inputStream) == "");
 }
 
+BOOST_AUTO_TEST_CASE(readBytes_past_end)
+{
+	istringstream inputStream("abc");
+	BOOST_CHECK_EQUAL(readBytes(inputStream, 0), "");
+	BOOST_CHECK_EQUAL(readBytes(inputStream, 1), "a");
+	BOOST_CHECK_EQUAL(readBytes(inputStream, 20), "bc");
+	BOOST_CHECK_EQUAL(readBytes(inputStream, 20), "");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::util::test

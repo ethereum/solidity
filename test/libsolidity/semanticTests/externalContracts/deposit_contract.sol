@@ -178,9 +178,9 @@ contract DepositContract is IDepositContract, ERC165 {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 1558013
-// gas legacy: 2580394
-// gas legacyOptimized: 1775403
+// gas irOptimized: 1558001
+// gas legacy: 2436584
+// gas legacyOptimized: 1776483
 // supportsInterface(bytes4): 0x0 -> 0
 // supportsInterface(bytes4): 0xffffffff00000000000000000000000000000000000000000000000000000000 -> false # defined to be false by ERC-165 #
 // supportsInterface(bytes4): 0x01ffc9a700000000000000000000000000000000000000000000000000000000 -> true # ERC-165 id #

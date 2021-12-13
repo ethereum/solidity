@@ -8,9 +8,11 @@
 // step: loadResolver
 //
 // {
-//     let _1 := 20
-//     let _2 := 10
-//     mstore(_2, _1)
-//     sstore(0, mload(_2))
-//     verbatim_0i_0o("test")
+//     {
+//         let _1 := 20
+//         let _2 := 10
+//         mstore(_2, _1)
+//         sstore(0, mload(_2))
+//         verbatim_0i_0o("test")
+//     }
 // }

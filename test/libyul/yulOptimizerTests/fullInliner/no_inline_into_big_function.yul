@@ -13,6 +13,7 @@
 // step: fullInliner
 //
 // {
+//     { }
 //     function f(a) -> b
 //     { b := sload(mload(a)) }
 //     function g() -> x_1

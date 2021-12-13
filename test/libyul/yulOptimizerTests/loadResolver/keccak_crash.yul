@@ -6,8 +6,10 @@
 // step: loadResolver
 //
 // {
-//     for { }
-//     addmod(keccak256(0x0, create(0x0, 0x0, 0x0)), 0x0, 0x0)
-//     { }
-//     { }
+//     {
+//         for { }
+//         addmod(keccak256(0x0, create(0x0, 0x0, 0x0)), 0x0, 0x0)
+//         { }
+//         { }
+//     }
 // }

@@ -24,8 +24,9 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
-verify_input "$1"
-SOLJSON="$1"
+verify_input "$@"
+BINARY_TYPE="$1"
+BINARY_PATH="$2"
 
 function compile_fn { yarn run provision:token:contracts; }
 function test_fn { yarn run test:contracts; }
@@ -38,11 +39,16 @@ function colony_test
     local min_optimizer_level=3
     local max_optimizer_level=3
 
-    setup_solcjs "$DIR" "$SOLJSON"
+    local selected_optimizer_levels
+    selected_optimizer_levels=$(circleci_select_steps "$(seq "$min_optimizer_level" "$max_optimizer_level")")
+    print_optimizer_levels_or_exit "$selected_optimizer_levels"
+
+    setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$branch" "$DIR"
+    [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
+    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$min_optimizer_level"
     yarn
     git submodule update --init
 
@@ -52,10 +58,10 @@ function colony_test
     cd ..
 
     replace_version_pragmas
-    force_solc_modules "${DIR}/solc"
+    [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
 
-    for level in $(seq "$min_optimizer_level" "$max_optimizer_level"); do
-        truffle_run_test "$config_file" "${DIR}/solc" "$level" compile_fn test_fn
+    for level in $selected_optimizer_levels; do
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$level" compile_fn test_fn
     done
 }
 

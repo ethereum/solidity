@@ -407,7 +407,10 @@ TestCase::TestResult SemanticTest::runTest(
 			if (m_transactionSuccessful == test.call().expectations.failure)
 				success = false;
 			if (success && !checkGasCostExpectation(test, _isYulRun))
+			{
+				success = false;
 				m_gasCostFailure = true;
+			}
 
 			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(bytes());
@@ -562,14 +565,14 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 	// We don't check gas if enforce gas cost is not active
 	// or test is run with abi encoder v1 only
 	// or gas used less than threshold for enforcing feature
+	// or the test has used up all available gas (test will fail anyway)
 	// or setting is "ir" and it's not included in expectations
 	// or if the called function is an isoltest builtin e.g. `smokeTest` or `storageEmpty`
 	if (
 		!m_enforceGasCost ||
-		(
-			(setting == "ir" || m_gasUsed < m_enforceGasCostMinValue || m_gasUsed >= m_gas) &&
-			io_test.call().expectations.gasUsed.count(setting) == 0
-		) ||
+		m_gasUsed < m_enforceGasCostMinValue ||
+		m_gasUsed >= InitialGas ||
+		(setting == "ir" && io_test.call().expectations.gasUsed.count(setting) == 0) ||
 		io_test.call().kind == FunctionCall::Kind::Builtin
 	)
 		return true;

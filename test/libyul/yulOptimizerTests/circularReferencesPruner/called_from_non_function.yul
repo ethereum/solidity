@@ -9,8 +9,10 @@
 // step: circularReferencesPruner
 //
 // {
-//     let a
-//     a := h()
+//     {
+//         let a
+//         a := h()
+//     }
 //     function f() -> x
 //     { x := g() }
 //     function g() -> y

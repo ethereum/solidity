@@ -387,7 +387,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			_var.referenceLocation() == VariableDeclaration::Location::Storage &&
 			!m_currentContract->abstract()
 		)
-			m_errorReporter.typeError(
+			m_errorReporter.fatalTypeError(
 				3644_error,
 				_var.location(),
 				"This parameter has a type that can only be used internally. "
@@ -403,7 +403,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 				solAssert(!message.empty(), "Expected detailed error message!");
 				if (_function.isConstructor())
 					message += " You can make the contract abstract to avoid this problem.";
-				m_errorReporter.typeError(4103_error, _var.location(), message);
+				m_errorReporter.fatalTypeError(4103_error, _var.location(), message);
 			}
 			else if (
 				!useABICoderV2() &&
