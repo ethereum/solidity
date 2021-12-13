@@ -24,8 +24,9 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
-verify_input "$1"
-export SOLJSON="$1"
+verify_input "$@"
+BINARY_TYPE="$1"
+BINARY_PATH="$2"
 
 function compile_fn { npx truffle compile; }
 function test_fn { npm run test; }
@@ -42,22 +43,23 @@ function ens_test
     selected_optimizer_levels=$(circleci_select_steps "$(seq "$min_optimizer_level" "$max_optimizer_level")")
     print_optimizer_levels_or_exit "$selected_optimizer_levels"
 
-    setup_solcjs "$DIR" "$SOLJSON"
+    setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$branch" "$DIR"
+    [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     # Use latest Truffle. Older versions crash on the output from 0.8.0.
     force_truffle_version ^5.1.55
 
     neutralize_package_lock
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "${DIR}/solc" "$min_optimizer_level"
+    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$min_optimizer_level"
     npm install
 
     replace_version_pragmas
-    force_solc_modules "${DIR}/solc"
+    [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
 
     for level in $selected_optimizer_levels; do
-        truffle_run_test "$config_file" "${DIR}/solc" "$level" compile_fn test_fn
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$level" compile_fn test_fn
     done
 }
 

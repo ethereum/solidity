@@ -28,25 +28,17 @@
 
 set -e
 
-if [ ! -f "$1" ]
-then
-  echo "Usage: $0 <path to soljson.js>"
-  exit 1
-fi
-
-SOLJSON="$1"
 REPO_ROOT="$(dirname "$0")"
 
 source scripts/common.sh
 source test/externalTests/common.sh
 
+verify_input "$@"
+
 printTask "Running external tests..."
 
-"$REPO_ROOT/externalTests/zeppelin.sh" "$SOLJSON"
-"$REPO_ROOT/externalTests/gnosis.sh" "$SOLJSON"
-"$REPO_ROOT/externalTests/gnosis-v2.sh" "$SOLJSON"
-"$REPO_ROOT/externalTests/colony.sh" "$SOLJSON"
-"$REPO_ROOT/externalTests/ens.sh" "$SOLJSON"
-
-# Disabled temporarily as it needs to be updated to latest Truffle first.
-#test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
+"$REPO_ROOT/externalTests/zeppelin.sh" "$@"
+"$REPO_ROOT/externalTests/gnosis.sh" "$@"
+"$REPO_ROOT/externalTests/gnosis-v2.sh" "$@"
+"$REPO_ROOT/externalTests/colony.sh" "$@"
+"$REPO_ROOT/externalTests/ens.sh" "$@"
