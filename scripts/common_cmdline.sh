@@ -68,8 +68,9 @@ function compileFull
     "$SOLC" "${args[@]}" "${files[@]}" >/dev/null 2>"$stderr_path"
     local exit_code=$?
     local errors; errors=$(grep -v -E \
-        -e 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\| ' \
-        -e 'Warning: Yul is still experimental. Please use the output with care.' \
+        -e '^Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\| $' \
+        -e '^Warning: Yul is still experimental. Please use the output with care.$' \
+        -e '^Assembler run successful, no output requested.$' \
         -e '^No text representation found.$' < "$stderr_path"
     )
 

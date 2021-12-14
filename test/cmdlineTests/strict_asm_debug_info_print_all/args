@@ -1,1 +1,1 @@
---strict-assembly --debug-info all
+--strict-assembly --debug-info all --bin --asm --ewasm --ewasm-ir --ir-optimized
