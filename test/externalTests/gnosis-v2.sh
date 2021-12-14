@@ -36,6 +36,7 @@ function gnosis_safe_test
     local repo="https://github.com/solidity-external-tests/safe-contracts.git"
     local branch=v2_080
     local config_file="truffle-config.js"
+    # level 1: "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
     local min_optimizer_level=2
     local max_optimizer_level=3
 
@@ -63,4 +64,4 @@ function gnosis_safe_test
     done
 }
 
-external_test Gnosis-Safe gnosis_safe_test
+external_test Gnosis-Safe-V2 gnosis_safe_test

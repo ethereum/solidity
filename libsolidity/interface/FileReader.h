@@ -61,18 +61,17 @@ public:
 	void allowDirectory(boost::filesystem::path _path);
 	FileSystemPathSet const& allowedDirectories() const noexcept { return m_allowedDirectories; }
 
-	StringMap const& sourceCodes() const noexcept { return m_sourceCodes; }
-
-	/// Retrieves the source code for a given source unit name.
-	SourceCode const& sourceCode(SourceUnitName const& _sourceUnitName) const { return m_sourceCodes.at(_sourceUnitName); }
+	/// @returns all sources by their internal source unit names.
+	StringMap const& sourceUnits() const noexcept { return m_sourceCodes; }
 
 	/// Resets all sources to the given map of source unit name to source codes.
 	/// Does not enforce @a allowedDirectories().
-	void setSources(StringMap _sources);
+	void setSourceUnits(StringMap _sources);
 
-	/// Adds the source code under a source unit name created by normalizing the file path.
+	/// Adds the source code under a source unit name created by normalizing the file path
+	/// or changes an existing source.
 	/// Does not enforce @a allowedDirectories().
-	void setSource(boost::filesystem::path const& _path, SourceCode _source);
+	void addOrUpdateFile(boost::filesystem::path const& _path, SourceCode _source);
 
 	/// Adds the source code under the source unit name of @a <stdin>.
 	/// Does not enforce @a allowedDirectories().
@@ -83,7 +82,7 @@ public:
 	/// The read will only succeed if the canonical path of the file is within one of the @a allowedDirectories().
 	/// @param _kind must be equal to "source". Other values are not supported.
 	/// @return Content of the loaded file or an error message. If the operation succeeds, a copy of
-	/// the content is retained in @a sourceCodes() under the key of @a _sourceUnitName. If the key
+	/// the content is retained in @a sourceUnits() under the key of @a _sourceUnitName. If the key
 	/// already exists, previous content is discarded.
 	frontend::ReadCallback::Result readFile(std::string const& _kind, std::string const& _sourceUnitName);
 
@@ -94,14 +93,14 @@ public:
 
 	/// Creates a source unit name by normalizing a path given on the command line and, if possible,
 	/// making it relative to base path or one of the include directories.
-	std::string cliPathToSourceUnitName(boost::filesystem::path const& _cliPath);
+	std::string cliPathToSourceUnitName(boost::filesystem::path const& _cliPath) const;
 
 	/// Checks if a set contains any paths that lead to different files but would receive identical
 	/// source unit names. Files are considered the same if their paths are exactly the same after
 	/// normalization (without following symlinks).
 	/// @returns a map containing all the conflicting source unit names and the paths that would
 	/// receive them. The returned paths are normalized.
-	std::map<std::string, FileSystemPathSet> detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths);
+	std::map<std::string, FileSystemPathSet> detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths) const;
 
 	/// Normalizes a filesystem path to make it include all components up to the filesystem root,
 	/// remove small, inconsequential differences that do not affect the meaning and make it look

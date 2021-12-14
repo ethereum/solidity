@@ -84,7 +84,7 @@ void FileReader::allowDirectory(boost::filesystem::path _path)
 	m_allowedDirectories.insert(std::move(_path));
 }
 
-void FileReader::setSource(boost::filesystem::path const& _path, SourceCode _source)
+void FileReader::addOrUpdateFile(boost::filesystem::path const& _path, SourceCode _source)
 {
 	m_sourceCodes[cliPathToSourceUnitName(_path)] = std::move(_source);
 }
@@ -94,7 +94,7 @@ void FileReader::setStdin(SourceCode _source)
 	m_sourceCodes["<stdin>"] = std::move(_source);
 }
 
-void FileReader::setSources(StringMap _sources)
+void FileReader::setSourceUnits(StringMap _sources)
 {
 	m_sourceCodes = std::move(_sources);
 }
@@ -172,7 +172,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 }
 
-string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath)
+string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath) const
 {
 	vector<boost::filesystem::path> prefixes = {m_basePath.empty() ? normalizeCLIPathForVFS(".") : m_basePath};
 	prefixes += m_includePaths;
@@ -189,7 +189,7 @@ string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPa
 	return normalizedPath.generic_string();
 }
 
-map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths)
+map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths) const
 {
 	map<string, FileReader::FileSystemPathSet> nameToPaths;
 	for (boost::filesystem::path const& cliPath: _cliPaths)
