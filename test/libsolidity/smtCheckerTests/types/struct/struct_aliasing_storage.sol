@@ -25,5 +25,6 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (369-405): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 0, a: []}, s2 = {x: 0, a: []}\nb = false\ns3 = {x: 42, a: []}\n\nTransaction trace:\nC.constructor()\nState: s1 = {x: 0, a: []}, s2 = {x: 0, a: []}\nC.f(false)
+// Warning 6328: (369-405): CHC: Assertion violation happens here.

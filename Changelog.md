@@ -9,6 +9,7 @@ Compiler Features:
 Bugfixes:
  * Code Generator: Fix a crash when using ``@use-src`` and compiling from Yul to ewasm.
  * SMTChecker: Fix internal error when an unsafe target is solved more than once and the counterexample messages are different.
+ * SMTChecker: Fix soundness of assigned storage/memory local pointers that were not erasing enough knowledge.
  * Fix internal error when a function has a calldata struct argument with an internal type inside.
 
 
