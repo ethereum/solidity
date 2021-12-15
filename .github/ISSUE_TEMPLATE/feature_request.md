@@ -1,6 +1,7 @@
 ---
 name: Feature Request
 about: Solidity language or infrastructure feature requests.
+labels: ["feature"]
 ---
 
 <!--## Prerequisites
