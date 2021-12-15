@@ -2057,7 +2057,7 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 			solAssert(!_fromType.isValueType(), "");
 		templ("functionName", functionName);
 		templ("resizeArray", resizeArrayFunction(_toType));
-		templ("arrayLength",arrayLengthFunction(_fromType));
+		templ("arrayLength", arrayLengthFunction(_fromType));
 		templ("panic", panicFunction(PanicCode::ResourceError));
 		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
@@ -2065,7 +2065,14 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 		unsigned itemsPerSlot = 32 / _toType.storageStride();
 		templ("itemsPerSlot", to_string(itemsPerSlot));
 		templ("multipleItemsPerSlotDst", itemsPerSlot > 1);
-		bool sameType = _fromType.baseType() == _toType.baseType();
+		bool sameType = *_fromType.baseType() == *_toType.baseType();
+		if (auto functionType = dynamic_cast<FunctionType const*>(_fromType.baseType()))
+		{
+			solAssert(functionType->equalExcludingStateMutability(
+				dynamic_cast<FunctionType const&>(*_toType.baseType())
+			));
+			sameType = true;
+		}
 		templ("sameType", sameType);
 		if (sameType)
 		{
