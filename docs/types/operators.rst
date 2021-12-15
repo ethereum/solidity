@@ -1,7 +1,35 @@
-.. index:: assignment, ! delete, lvalue
+.. index:: ! operator
 
-Operators Involving LValues
-===========================
+Operators
+=========
+
+Arithmetic and bit operators can be applied even if the two operands do not have the same type.
+For example, you can compute ``y = x + z``, where ``x`` is a ``uint8`` and ``z`` has
+the type ``int32``. In these cases, the following mechanism will be used to determine
+the type in which the operation is computed (this is important in case of overflow)
+and the type of the operator's result:
+
+1. If the type of the right operand can be implicitly converted to the type of the left
+   operand, use the type of the left operand,
+2. if the type of the left operand can be implicitly converted to the type of the right
+   operand, use the type of the right operand,
+3. otherwise, the operation is not allowed.
+
+In case one of the operands is a :ref:`literal number <rational_literals>` it is first converted to its
+"mobile type", which is the smallest type that can hold the value
+(unsigned types of the same bit-width are considered "smaller" than the signed types).
+If both are literal numbers, the operation is computed with arbitrary precision.
+
+The operator's result type is the same as the type the operation is performed in,
+except for comparison operators where the result is always ``bool``.
+
+The operators ``**`` (exponentiation), ``<<``  and ``>>`` use the type of the
+left operand for the operation and the result.
+
+.. index:: assignment, lvalue, ! compound operators
+
+Compound and Increment/Decrement Operators
+------------------------------------------
 
 If ``a`` is an LValue (i.e. a variable or something that can be assigned to), the
 following operators are available as shorthands:
@@ -11,6 +39,8 @@ following operators are available as shorthands:
 to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value
 of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but
 return the value after the change.
+
+.. index:: !delete
 
 .. _delete:
 
