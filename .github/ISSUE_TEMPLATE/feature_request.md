@@ -1,6 +1,5 @@
 ---
 name: Feature Request
-labels: ["feature"]
 ---
 
 <!--## Prerequisites

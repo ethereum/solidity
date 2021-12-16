@@ -1,6 +1,5 @@
 ---
 name: Bug Report
-labels: ["bug :bug:"]
 ---
 
 <!--## Prerequisites
