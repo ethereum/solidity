@@ -59,6 +59,7 @@ static string const g_strIPFS = "ipfs";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
+static string const g_strLSP = "lsp";
 static string const g_strMachine = "machine";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
@@ -135,6 +136,7 @@ static map<InputMode, string> const g_inputModeName = {
 	{InputMode::Assembler, "assembler"},
 	{InputMode::StandardJson, "standard JSON"},
 	{InputMode::Linker, "linker"},
+	{InputMode::LanguageServer, "language server (LSP)"},
 };
 
 void CommandLineParser::checkMutuallyExclusive(vector<string> const& _optionNames)
@@ -455,6 +457,7 @@ void CommandLineParser::parseOutputSelection()
 		case InputMode::Help:
 		case InputMode::License:
 		case InputMode::Version:
+		case InputMode::LanguageServer:
 			solAssert(false);
 		case InputMode::Compiler:
 		case InputMode::CompilerWithASTImport:
@@ -632,6 +635,11 @@ General Information)").c_str(),
 			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
 			"Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
 			"--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
+		)
+		(
+			g_strLSP.c_str(),
+			"Switch to language server mode (\"LSP\"). Allows the compiler to be used as an analysis backend "
+			"for your favourite IDE."
 		)
 	;
 	desc.add(alternativeInputModes);
@@ -865,6 +873,7 @@ void CommandLineParser::processArgs()
 		g_strStrictAssembly,
 		g_strYul,
 		g_strImportAst,
+		g_strLSP
 	});
 
 	if (m_args.count(g_strHelp) > 0)
@@ -875,6 +884,8 @@ void CommandLineParser::processArgs()
 		m_options.input.mode = InputMode::Version;
 	else if (m_args.count(g_strStandardJSON) > 0)
 		m_options.input.mode = InputMode::StandardJson;
+	else if (m_args.count(g_strLSP))
+		m_options.input.mode = InputMode::LanguageServer;
 	else if (m_args.count(g_strAssemble) > 0 || m_args.count(g_strStrictAssembly) > 0 || m_args.count(g_strYul) > 0)
 		m_options.input.mode = InputMode::Assembler;
 	else if (m_args.count(g_strLink) > 0)
@@ -909,6 +920,9 @@ void CommandLineParser::processArgs()
 			"The following options are not supported in the current input mode: " +
 			joinOptionNames(invalidOptionsForCurrentInputMode)
 		);
+
+	if (m_options.input.mode == InputMode::LanguageServer)
+		return;
 
 	checkMutuallyExclusive({g_strColor, g_strNoColor});
 

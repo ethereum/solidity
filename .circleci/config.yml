@@ -198,6 +198,19 @@ defaults:
         - store_artifacts: *artifacts_test_results
         - gitter_notify_failure_unless_pr
 
+  - steps_test_lsp: &steps_test_lsp
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run:
+            name: Install dependencies
+            command: pip install --user deepdiff colorama
+        - run:
+            name: Executing solc LSP test suite
+            command: ./test/lsp.py ./build/solc/solc
+        - gitter_notify_failure_unless_pr
+
   - steps_soltest_all: &steps_soltest_all
       steps:
         - checkout
@@ -519,7 +532,7 @@ jobs:
           command: apt -q update && apt install -y python3-pip
       - run:
           name: Install pylint
-          command: python3 -m pip install pylint z3-solver pygments-lexer-solidity parsec tabulate
+          command: python3 -m pip install pylint z3-solver pygments-lexer-solidity parsec tabulate deepdiff colorama
           # also z3-solver, parsec and tabulate to make sure pylint knows about this module, pygments-lexer-solidity for docs
       - run:
           name: Linting Python Scripts
@@ -886,6 +899,10 @@ jobs:
     <<: *base_ubuntu2004
     parallelism: 15 # 7 EVM versions, each with/without optimization + 1 ABIv1/@nooptions run
     <<: *steps_soltest_all
+
+  t_ubu_lsp: &t_ubu_lsp
+    <<: *base_ubuntu2004_small
+    <<: *steps_test_lsp
 
   t_archlinux_soltest: &t_archlinux_soltest
     <<: *base_archlinux
@@ -1288,6 +1305,7 @@ workflows:
       - t_ubu_soltest_enforce_yul: *workflow_ubuntu2004
       - b_ubu_clang: *workflow_trigger_on_tags
       - t_ubu_clang_soltest: *workflow_ubuntu2004_clang
+      - t_ubu_lsp: *workflow_ubuntu2004
 
       # Ubuntu fake release build and tests
       - b_ubu_release: *workflow_trigger_on_tags
