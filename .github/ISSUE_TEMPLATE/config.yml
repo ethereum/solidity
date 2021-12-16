@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Bug Report
+    url: https://github.com/ethereum/solidity/issues/new?template=bug_report.md&projects=ethereum/solidity/43
+  - name: Documentation Issue
+    url: https://github.com/ethereum/solidity/issues/new?template=documentation_issue.md&projects=ethereum/solidity/43
+  - name: Feature Request
+    url: https://github.com/ethereum/solidity/issues/new?template=feature_request.md&projects=ethereum/solidity/43
