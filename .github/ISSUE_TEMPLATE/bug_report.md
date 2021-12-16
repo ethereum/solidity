@@ -1,6 +1,5 @@
 ---
 name: Bug Report
-about: Bug reports about the Solidity Compiler.
 labels: ["bug :bug:"]
 ---
 
