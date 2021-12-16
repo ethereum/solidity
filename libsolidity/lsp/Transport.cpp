@@ -30,6 +30,72 @@
 using namespace std;
 using namespace solidity::lsp;
 
+namespace
+{
+template <typename T>
+optional<T> popFromFront(std::list<T>& _queue)
+{
+	if (_queue.empty())
+		return nullopt;
+	Json::Value message = _queue.front();
+	_queue.pop_front();
+	return message;
+}
+}
+
+bool MockTransport::closed() const noexcept
+{
+	return m_closed;
+}
+
+void MockTransport::appendInput(Json::Value _message)
+{
+	solAssert(!m_closed, "");
+	m_input.emplace_back(move(_message));
+}
+
+optional<Json::Value> MockTransport::receive()
+{
+	return popFromFront(m_input);
+}
+
+optional<Json::Value> MockTransport::popOutput()
+{
+	return popFromFront(m_output);
+}
+
+void MockTransport::notify(string _method, Json::Value _message)
+{
+	Json::Value json;
+	json["method"] = move(_method);
+	json["params"] = move(_message);
+	send(move(json));
+}
+
+void MockTransport::reply(MessageID _id, Json::Value _message)
+{
+	Json::Value json;
+	json["result"] = move(_message);
+	send(move(json), _id);
+}
+
+void MockTransport::error(MessageID _id, ErrorCode _code, string _message)
+{
+	Json::Value json;
+	json["error"]["code"] = static_cast<int>(_code);
+	json["error"]["message"] = move(_message);
+	send(move(json), _id);
+}
+
+void MockTransport::send(Json::Value _json, MessageID _id)
+{
+	_json["jsonrpc"] = "2.0";
+	if (_id != Json::nullValue)
+		_json["id"] = _id;
+
+	m_output.push_back(_json);
+}
+
 IOStreamTransport::IOStreamTransport(istream& _in, ostream& _out):
 	m_input{_in},
 	m_output{_out}

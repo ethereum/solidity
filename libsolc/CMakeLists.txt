@@ -7,6 +7,9 @@ if (EMSCRIPTEN)
 		solidity_alloc
 		solidity_free
 		solidity_reset
+		solidity_lsp_start
+		solidity_lsp_send
+		solidity_lsp_send_receive
 	)
 	# Specify which functions to export in soljson.js.
 	# Note that additional Emscripten-generated methods needed by solc-js are

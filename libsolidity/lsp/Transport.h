@@ -17,12 +17,14 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+#include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
 
 #include <json/value.h>
 
 #include <functional>
 #include <iosfwd>
+#include <list>
 #include <map>
 #include <optional>
 #include <string>
@@ -91,6 +93,26 @@ public:
 	virtual void error(MessageID _id, ErrorCode _code, std::string _message) = 0;
 };
 
+class MockTransport: public Transport
+{
+public:
+	void close() { m_closed = true; }
+	bool closed() const noexcept override;
+	std::optional<Json::Value> receive() override;
+	void notify(std::string _method, Json::Value _params) override;
+	void reply(MessageID _id, Json::Value _result) override;
+	void error(MessageID _id, ErrorCode _code, std::string _message) override;
+
+	void send(Json::Value _message, MessageID _id = Json::nullValue);
+	std::optional<Json::Value> popOutput();
+	void appendInput(Json::Value _message);
+
+private:
+	bool m_closed = false;
+	std::list<Json::Value> m_input {};
+	std::list<Json::Value> m_output {};
+};
+
 /**
  * LSP Transport using JSON-RPC over iostreams.
  */
@@ -124,6 +146,23 @@ protected:
 private:
 	std::istream& m_input;
 	std::ostream& m_output;
+};
+
+/**
+ * LSP Transport using pure string buffers.
+ * Used by solcjs.
+ */
+class BufferedTransport: public IOStreamTransport
+{
+public:
+	BufferedTransport(): IOStreamTransport(m_input, m_output) {}
+
+	void appendInput(char const* _input) { m_input.write(_input, static_cast<std::streamsize>(strlen(_input))); }
+	std::string popOutput() { return util::readUntilEnd(m_output); }
+
+private:
+	std::stringstream m_input;
+	std::stringstream m_output;
 };
 
 }

@@ -24,6 +24,8 @@
 #include <libsolc/libsolc.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
+#include <libsolidity/lsp/LanguageServer.h>
+#include <libsolidity/lsp/Transport.h>
 #include <libyul/YulString.h>
 
 #include <cstdlib>
@@ -112,6 +114,9 @@ string compile(string _input, CStyleReadFileCallback _readCallback, void* _readC
 	return compiler.compile(move(_input));
 }
 
+unique_ptr<lsp::MockTransport> languageServerTransport;
+unique_ptr<lsp::LanguageServer> languageServer;
+
 }
 
 extern "C"
@@ -130,6 +135,56 @@ extern char const* solidity_version() noexcept
 extern char* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept
 {
 	return solidityAllocations.emplace_back(compile(_input, _readCallback, _readContext)).data();
+}
+
+extern int solidity_lsp_start(CStyleReadFileCallback /*TODO(pr) _readCallback*/, void* /*_readContext*/) noexcept
+{
+	if (languageServer || languageServerTransport)
+		return -1;
+
+	languageServerTransport = make_unique<lsp::MockTransport>();
+	languageServer = make_unique<lsp::LanguageServer>(*languageServerTransport);
+	return 0;
+}
+
+extern int solidity_lsp_send(char const* _input) noexcept
+{
+	if (!languageServer)
+		return -1;
+
+	if (languageServer->isRunning())
+		return -2;
+
+	solAssert(languageServerTransport, "");
+
+	std::string errors{};
+	Json::Value jsonMessage{};
+	if (!jsonParseStrict(_input, jsonMessage, &errors))
+		return -3;
+
+	languageServerTransport->appendInput(jsonMessage);
+	languageServer->runIteration();
+	return 0;
+}
+
+extern char const* solidity_try_receive() noexcept
+{
+	if (!languageServerTransport)
+		return "";
+
+	optional<Json::Value> messageJson = languageServerTransport->popOutput();
+	if (!messageJson)
+		return "";
+
+	return solidityAllocations.emplace_back(jsonPrettyPrint(messageJson.value())).data();
+}
+
+extern char const* solidity_lsp_send_receive(char const* _input) noexcept
+{
+	if (solidity_lsp_send(_input) < 0)
+		return "";
+
+	return solidity_try_receive();
 }
 
 extern char* solidity_alloc(size_t _size) noexcept
@@ -156,5 +211,7 @@ extern void solidity_reset() noexcept
 	// can be freed here.
 	yul::YulStringRepository::reset();
 	solidityAllocations.clear();
+	languageServer.reset();
+	languageServerTransport.reset();
 }
 }
