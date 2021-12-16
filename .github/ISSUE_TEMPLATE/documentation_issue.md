@@ -1,22 +1,17 @@
 ---
 name: Documentation Issue
 about: Solidity documentation.
+labels: ["documentation :book:"]
 ---
 
 ## Page
 
-<!--
-Please link directly to the page which you think has a problem
--->
+<!--Please link directly to the page which you think has a problem.-->
 
 ## Abstract
 
-<!--
-Please describe in detail what is wrong.
--->
+<!--Please describe in detail what is wrong.-->
 
 ## Pull request
 
-<!--
-Please link to your pull request which resolves this issue
--->
+<!--Please link to your pull request which resolves this issue.-->
