@@ -1,6 +1,5 @@
 ---
 name: Documentation Issue
-about: Solidity documentation.
 labels: ["documentation :book:"]
 ---
 
