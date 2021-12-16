@@ -1104,29 +1104,57 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::ABIEncode:
 	case FunctionType::Kind::ABIEncodePacked:
 	case FunctionType::Kind::ABIEncodeWithSelector:
+	case FunctionType::Kind::ABIEncodeCall:
 	case FunctionType::Kind::ABIEncodeWithSignature:
 	{
 		bool const isPacked = functionType->kind() == FunctionType::Kind::ABIEncodePacked;
 		solAssert(functionType->padArguments() != isPacked, "");
 		bool const hasSelectorOrSignature =
 			functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+			functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
 			functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature;
 
 		TypePointers argumentTypes;
 		TypePointers targetTypes;
 		vector<string> argumentVars;
-		for (size_t i = 0; i < arguments.size(); ++i)
+		string selector;
+		vector<ASTPointer<Expression const>> argumentsOfEncodeFunction;
+
+		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
 		{
-			// ignore selector
-			if (hasSelectorOrSignature && i == 0)
-				continue;
-			argumentTypes.emplace_back(&type(*arguments[i]));
-			targetTypes.emplace_back(type(*arguments[i]).fullEncodingType(false, true, isPacked));
-			argumentVars += IRVariable(*arguments[i]).stackSlots();
+			solAssert(arguments.size() == 2, "");
+			// Account for tuples with one component which become that component
+			if (type(*arguments[1]).category() == Type::Category::Tuple)
+			{
+				auto const& tupleExpression = dynamic_cast<TupleExpression const&>(*arguments[1]);
+				for (auto component: tupleExpression.components())
+					argumentsOfEncodeFunction.push_back(component);
+			}
+			else
+				argumentsOfEncodeFunction.push_back(arguments[1]);
+		}
+		else
+			for (size_t i = 0; i < arguments.size(); ++i)
+			{
+				// ignore selector
+				if (hasSelectorOrSignature && i == 0)
+					continue;
+				argumentsOfEncodeFunction.push_back(arguments[i]);
+			}
+
+		for (auto const& argument: argumentsOfEncodeFunction)
+		{
+			argumentTypes.emplace_back(&type(*argument));
+			targetTypes.emplace_back(type(*argument).fullEncodingType(false, true, isPacked));
+			argumentVars += IRVariable(*argument).stackSlots();
 		}
 
-		string selector;
-		if (functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature)
+		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
+			selector = convert(
+				IRVariable(*arguments[0]).part("functionSelector"),
+				*TypeProvider::fixedBytes(4)
+			).name();
+		else if (functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature)
 		{
 			// hash the signature
 			Type const& selectorType = type(*arguments.front());
@@ -1833,7 +1861,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 			define(_memberAccess) << requestedValue << "\n";
 		}
-		else if (set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}.count(member))
+		else if (set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeCall", "encodeWithSignature", "decode"}.count(member))
 		{
 			// no-op
 		}

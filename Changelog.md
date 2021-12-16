@@ -1,6 +1,7 @@
 ### 0.8.11 (unreleased)
 
 Language Features:
+ * General: New builtin function ``abi.encodeCall(functionPointer, (arg1, arg2, ...))`` that type-checks the arguments and returns the ABI-encoded function call data.
 
 
 Compiler Features:

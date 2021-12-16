@@ -1996,6 +1996,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 		_functionType->kind() == FunctionType::Kind::ABIEncode ||
 		_functionType->kind() == FunctionType::Kind::ABIEncodePacked ||
 		_functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+		_functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
 		_functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature,
 		"ABI function has unexpected FunctionType::Kind."
 	);
@@ -2019,6 +2020,13 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 
 	// Perform standard function call type checking
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+
+	// No further generic checks needed as we do a precise check for ABIEncodeCall
+	if (_functionType->kind() == FunctionType::Kind::ABIEncodeCall)
+	{
+		typeCheckABIEncodeCallFunction(_functionCall);
+		return;
+	}
 
 	// Check additional arguments for variadic functions
 	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
@@ -2074,6 +2082,110 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 				2056_error,
 				arguments[i]->location(),
 				"This type cannot be encoded."
+			);
+	}
+}
+
+void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCall)
+{
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
+
+	// Expecting first argument to be the function pointer and second to be a tuple.
+	if (arguments.size() != 2)
+	{
+		m_errorReporter.typeError(
+			6219_error,
+			_functionCall.location(),
+			"Expected two arguments: a function pointer followed by a tuple."
+		);
+		return;
+	}
+
+	auto const functionPointerType = dynamic_cast<FunctionTypePointer>(type(*arguments.front()));
+
+	if (!functionPointerType)
+	{
+		m_errorReporter.typeError(
+			5511_error,
+			arguments.front()->location(),
+			"Expected first argument to be a function pointer, not \"" +
+			type(*arguments.front())->canonicalName() +
+			"\"."
+		);
+		return;
+	}
+
+	if (functionPointerType->kind() != FunctionType::Kind::External)
+	{
+		string msg = "Function must be \"public\" or \"external\".";
+		SecondarySourceLocation ssl{};
+
+		if (functionPointerType->hasDeclaration())
+		{
+			ssl.append("Function is declared here:", functionPointerType->declaration().location());
+			if (functionPointerType->declaration().scope() == m_currentContract)
+				msg += " Did you forget to prefix \"this.\"?";
+		}
+
+		m_errorReporter.typeError(3509_error, arguments[0]->location(), ssl, msg);
+		return;
+	}
+
+	solAssert(!functionPointerType->takesArbitraryParameters(), "Function must have fixed parameters.");
+
+	// Tuples with only one component become that component
+	vector<ASTPointer<Expression const>> callArguments;
+
+	auto const* tupleType = dynamic_cast<TupleType const*>(type(*arguments[1]));
+	if (tupleType)
+	{
+		auto const& argumentTuple = dynamic_cast<TupleExpression const&>(*arguments[1].get());
+		callArguments = decltype(callArguments){argumentTuple.components().begin(), argumentTuple.components().end()};
+	}
+	else
+		callArguments.push_back(arguments[1]);
+
+	if (functionPointerType->parameterTypes().size() != callArguments.size())
+	{
+		if (tupleType)
+			m_errorReporter.typeError(
+				7788_error,
+				_functionCall.location(),
+				"Expected " +
+				to_string(functionPointerType->parameterTypes().size()) +
+				" instead of " +
+				to_string(callArguments.size()) +
+				" components for the tuple parameter."
+			);
+		else
+			m_errorReporter.typeError(
+				7515_error,
+				_functionCall.location(),
+				"Expected a tuple with " +
+				to_string(functionPointerType->parameterTypes().size()) +
+				" components instead of a single non-tuple parameter."
+			);
+	}
+
+	// Use min() to check as much as we can before failing fatally
+	size_t const numParameters = min(callArguments.size(), functionPointerType->parameterTypes().size());
+
+	for (size_t i = 0; i < numParameters; i++)
+	{
+		Type const& argType = *type(*callArguments[i]);
+		BoolResult result = argType.isImplicitlyConvertibleTo(*functionPointerType->parameterTypes()[i]);
+		if (!result)
+			m_errorReporter.typeError(
+				5407_error,
+				callArguments[i]->location(),
+				"Cannot implicitly convert component at position " +
+				to_string(i) +
+				" from \"" +
+				argType.canonicalName() +
+				"\" to \"" +
+				functionPointerType->parameterTypes()[i]->canonicalName() +
+				"\"" +
+				(result.message().empty() ?  "." : ": " + result.message())
 			);
 	}
 }
@@ -2507,6 +2619,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ABIEncodePacked:
 		case FunctionType::Kind::ABIEncodeWithSelector:
 		case FunctionType::Kind::ABIEncodeWithSignature:
+		case FunctionType::Kind::ABIEncodeCall:
 		{
 			typeCheckABIEncodeFunctions(_functionCall, functionType);
 			returnTypes = functionType->returnParameterTypes();
