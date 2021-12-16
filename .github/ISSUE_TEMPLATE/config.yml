@@ -9,3 +9,6 @@ contact_links:
   - name: Feature Request
     url: https://github.com/ethereum/solidity/issues/new?template=feature_request.md&projects=ethereum/solidity/43
     about: Solidity language or infrastructure feature requests.
+  - name: Report a security vulnerability
+    url: https://github.com/ethereum/solidity/security/policy
+    about: Please review our security policy for more details.
