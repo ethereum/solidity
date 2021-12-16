@@ -1,6 +1,5 @@
 ---
 name: Documentation Issue
-labels: ["documentation :book:"]
 ---
 
 ## Page
