@@ -247,7 +247,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 	// before the operation, i.e. if PreviousSlot{2} is at a position at which _post contains VariableSlot{"tmp"},
 	// then we want the variable tmp in the slot at offset 2 in the layout before the operation.
 	vector<optional<StackSlot>> idealLayout(_post.size(), nullopt);
-	for (auto const& [slot, idealPosition]: ranges::zip_view(_post, layout))
+	for (auto&& [slot, idealPosition]: ranges::zip_view(_post, layout))
 		if (PreviousSlot* previousSlot = std::get_if<PreviousSlot>(&idealPosition))
 			idealLayout.at(previousSlot->slot) = slot;
 
