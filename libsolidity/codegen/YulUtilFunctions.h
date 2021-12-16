@@ -522,6 +522,9 @@ public:
 	/// Signature: (address) -> mpos
 	std::string externalCodeFunction();
 
+	/// @return the name of a function that that checks if two external functions pointers are equal or not
+	std::string externalFunctionPointersEqualFunction();
+
 private:
 /// @returns the name of a function that copies a struct from calldata or memory to storage
 	/// signature: (slot, value) ->
