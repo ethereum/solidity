@@ -2,6 +2,7 @@
 
 Language Features:
  * General: Support ``ContractName.functionName`` for ``abi.encodeCall``, in addition to external function pointers.
+ * General: Add equality-comparison operators for external function types.
 
 
 Compiler Features:

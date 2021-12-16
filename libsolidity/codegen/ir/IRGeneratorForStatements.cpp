@@ -799,13 +799,8 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 
 	if (TokenTraits::isCompareOp(op))
 	{
-		if (auto type = dynamic_cast<FunctionType const*>(commonType))
-		{
-			solAssert(op == Token::Equal || op == Token::NotEqual, "Invalid function pointer comparison!");
-			solAssert(type->kind() != FunctionType::Kind::External, "External function comparison not allowed!");
-		}
-
 		solAssert(commonType->isValueType(), "");
+
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(commonType))
 			isSigned = type->isSigned();
@@ -813,8 +808,25 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		string args = expressionAsType(_binOp.leftExpression(), *commonType, true);
 		args += ", " + expressionAsType(_binOp.rightExpression(), *commonType, true);
 
+		auto functionType = dynamic_cast<FunctionType const*>(commonType);
+		solAssert(functionType ? (op == Token::Equal || op == Token::NotEqual) : true, "Invalid function pointer comparison!");
+
 		string expr;
-		if (op == Token::Equal)
+
+		if (functionType && functionType->kind() ==  FunctionType::Kind::External)
+		{
+			solUnimplementedAssert(functionType->sizeOnStack() == 2, "");
+			expr = m_utils.externalFunctionPointersEqualFunction() +
+				"(" +
+				IRVariable{_binOp.leftExpression()}.part("address").name() + "," +
+				IRVariable{_binOp.leftExpression()}.part("functionSelector").name() + "," +
+				IRVariable{_binOp.rightExpression()}.part("address").name() + "," +
+				IRVariable{_binOp.rightExpression()}.part("functionSelector").name() +
+				")";
+			if (op == Token::NotEqual)
+				expr = "iszero(" + expr + ")";
+		}
+		else if (op == Token::Equal)
 			expr = "eq(" + move(args) + ")";
 		else if (op == Token::NotEqual)
 			expr = "iszero(eq(" + move(args) + "))";
