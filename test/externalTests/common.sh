@@ -306,7 +306,7 @@ function truffle_clean
 
 function hardhat_clean
 {
-    rm -rf artifacts/ cache/
+    rm -rf build/ artifacts/ cache/
 }
 
 function run_test
