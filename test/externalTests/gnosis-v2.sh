@@ -24,6 +24,8 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
+
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
@@ -65,12 +67,14 @@ function gnosis_safe_test
     neutralize_package_json_hooks
     force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$(first_word "$SELECTED_PRESETS")"
     npm install --package-lock
+    npm install eth-gas-reporter
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
 
     for preset in $SELECTED_PRESETS; do
         truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        store_benchmark_report truffle gnosis2 "$repo" "$preset"
     done
 }
 
