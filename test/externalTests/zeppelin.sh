@@ -27,6 +27,7 @@ source test/externalTests/common.sh
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
+SELECTED_PRESETS="$3"
 
 function compile_fn { npm run compile; }
 function test_fn { npm test; }
@@ -49,21 +50,20 @@ function zeppelin_test
         legacy-optimize-evm+yul
     )
 
-    local selected_optimizer_presets
-    selected_optimizer_presets=$(circleci_select_steps_multiarg "${settings_presets[@]}")
-    print_optimizer_presets_or_exit "$selected_optimizer_presets"
+    [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")
+    print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$branch" "$DIR"
 
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
-    force_hardhat_compiler_settings "$config_file" "$(first_word "$selected_optimizer_presets")"
+    force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     npm install
 
     replace_version_pragmas
 
-    for preset in $selected_optimizer_presets; do
+    for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
     done
 }

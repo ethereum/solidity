@@ -27,6 +27,7 @@ source test/externalTests/common.sh
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
+SELECTED_PRESETS="$3"
 
 function compile_fn { yarn run provision:token:contracts; }
 function test_fn { yarn run test:contracts; }
@@ -49,16 +50,15 @@ function colony_test
         legacy-optimize-evm+yul
     )
 
-    local selected_optimizer_presets
-    selected_optimizer_presets=$(circleci_select_steps_multiarg "${settings_presets[@]}")
-    print_optimizer_presets_or_exit "$selected_optimizer_presets"
+    [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")
+    print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$branch" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$(first_word "$selected_optimizer_presets")"
+    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$(first_word "$SELECTED_PRESETS")"
     yarn install
     git submodule update --init
 
@@ -70,7 +70,7 @@ function colony_test
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
 
-    for preset in $selected_optimizer_presets; do
+    for preset in $SELECTED_PRESETS; do
         truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
     done
 }
