@@ -24,13 +24,16 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
+
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
 SELECTED_PRESETS="$3"
 
 function compile_fn { npm run compile; }
-function test_fn { npm run test; }
+# NOTE: `npm run test` runs `mocha` which seems to disable the gas reporter.
+function test_fn { HARDHAT_DEPLOY_FIXTURE=true npx --no hardhat --no-compile test; }
 
 function bleeps_test
 {
@@ -87,6 +90,7 @@ function bleeps_test
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
+        store_benchmark_report hardhat bleeps "$repo" "$preset"
     done
 
     popd

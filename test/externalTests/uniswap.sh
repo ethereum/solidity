@@ -24,6 +24,8 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
+
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
@@ -73,11 +75,13 @@ function uniswap_test
     yarn add @ethereumjs/tx@3.1.3
 
     yarn install
+    yarn add hardhat-gas-reporter
 
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
+        store_benchmark_report hardhat uniswap "$repo" "$preset"
     done
 }
 
