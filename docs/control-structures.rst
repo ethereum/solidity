@@ -648,7 +648,7 @@ in the following situations:
 #. If your contract receives Ether via a public getter function.
 
 For the following cases, the error data from the external call
-(if provided) is forwarded. This mean that it can either cause
+(if provided) is forwarded. This means that it can either cause
 an `Error` or a `Panic` (or whatever else was given):
 
 #. If a ``.transfer()`` fails.
@@ -718,7 +718,7 @@ The ``revert`` statement takes a custom error as direct argument without parenth
 
     revert CustomError(arg1, arg2);
 
-For backards-compatibility reasons, there is also the ``revert()`` function, which uses parentheses
+For backwards-compatibility reasons, there is also the ``revert()`` function, which uses parentheses
 and accepts a string:
 
     revert();
@@ -863,7 +863,7 @@ type of error:
 
 
 It is planned to support other types of error data in the future.
-The strings ``Error`` and ``Panic`` are currently parsed as is and are not treated as an identifiers.
+The strings ``Error`` and ``Panic`` are currently parsed as is and are not treated as identifiers.
 
 In order to catch all error cases, you have to have at least the clause
 ``catch { ...}`` or the clause ``catch (bytes memory lowLevelData) { ... }``.
