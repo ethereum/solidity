@@ -1,16 +1,13 @@
 /*
 	This file is part of solidity.
-
 	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-
 	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -30,7 +27,7 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
-#include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/UnusedAssignEliminator.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
@@ -50,7 +47,7 @@ namespace solidity::phaser::test
 vector<string> const ChrOmOsoMeSteps{
 	ConditionalSimplifier::name,
 	FunctionHoister::name,
-	RedundantAssignEliminator::name,
+	UnusedAssignEliminator::name,
 	ForLoopConditionOutOfBody::name,
 	Rematerialiser::name,
 	ForLoopConditionOutOfBody::name,
@@ -138,7 +135,7 @@ BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_strin
 
 	BOOST_TEST(chromosome.length() == allSteps.size());
 	BOOST_TEST(chromosome.optimisationSteps() == allSteps);
-	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighFTLMRrmVatpud");
+	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighFTLMRmVatrpud");
 }
 
 BOOST_AUTO_TEST_CASE(optimisationSteps_should_translate_chromosomes_genes_to_optimisation_step_names)
