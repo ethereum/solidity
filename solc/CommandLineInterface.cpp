@@ -1,16 +1,13 @@
 /*
 	This file is part of solidity.
-
 	solidity is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-
 	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -38,6 +35,8 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/StorageLayout.h>
+#include <libsolidity/lsp/LanguageServer.h>
+#include <libsolidity/lsp/Transport.h>
 
 #include <libyul/AssemblyStack.h>
 
@@ -56,6 +55,7 @@
 #include <libsolutil/JSON.h>
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
 
 #include <range/v3/view/map.hpp>
@@ -483,7 +483,7 @@ void CommandLineInterface::readInputFiles()
 		}
 		else
 		{
-			m_fileReader.setSource(infile, move(fileContent));
+			m_fileReader.addOrUpdateFile(infile, move(fileContent));
 			m_fileReader.allowDirectory(boost::filesystem::canonical(infile).remove_filename());
 		}
 	}
@@ -499,7 +499,11 @@ void CommandLineInterface::readInputFiles()
 			m_fileReader.setStdin(readUntilEnd(m_sin));
 	}
 
-	if (m_fileReader.sourceCodes().empty() && !m_standardJsonInput.has_value())
+	if (
+		m_options.input.mode != InputMode::LanguageServer &&
+		m_fileReader.sourceUnits().empty() &&
+		!m_standardJsonInput.has_value()
+	)
 		solThrow(CommandLineValidationError, "All specified input files either do not exist or are not regular files.");
 }
 
@@ -510,7 +514,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 	map<string, Json::Value> sourceJsons;
 	map<string, string> tmpSources;
 
-	for (SourceCode const& sourceCode: m_fileReader.sourceCodes() | ranges::views::values)
+	for (SourceCode const& sourceCode: m_fileReader.sourceUnits() | ranges::views::values)
 	{
 		Json::Value ast;
 		astAssert(jsonParseStrict(sourceCode, ast), "Input file could not be parsed to JSON");
@@ -528,7 +532,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 		}
 	}
 
-	m_fileReader.setSources(tmpSources);
+	m_fileReader.setSourceUnits(tmpSources);
 
 	return sourceJsons;
 }
@@ -624,6 +628,9 @@ void CommandLineInterface::processInput()
 		m_standardJsonInput.reset();
 		break;
 	}
+	case InputMode::LanguageServer:
+		serveLSP();
+		break;
 	case InputMode::Assembler:
 		assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine);
 		break;
@@ -721,18 +728,11 @@ void CommandLineInterface::compile()
 		}
 		else
 		{
-			m_compiler->setSources(m_fileReader.sourceCodes());
+			m_compiler->setSources(m_fileReader.sourceUnits());
 			m_compiler->setParserErrorRecovery(m_options.input.errorRecovery);
 		}
 
-		bool successful = m_compiler->compile(m_options.output.stopAfter, false);
-		if (successful)
-		{
-			std::set<std::string> usedLibs = m_compiler->link();
-			for (auto const& lib: m_options.linker.libraries)
-				if (usedLibs.find(lib.first) == usedLibs.end() || usedLibs.empty())
-					sout() << "Unused link reference: '" << lib.first << "'. Library not found." << std::endl;
-		}
+		bool successful = m_compiler->compile(m_options.output.stopAfter);
 
 		for (auto const& error: m_compiler->errors())
 		{
@@ -842,7 +842,7 @@ void CommandLineInterface::handleCombinedJSON()
 	if (m_options.compiler.combinedJsonRequests->ast)
 	{
 		output[g_strSources] = Json::Value(Json::objectValue);
-		for (auto const& sourceCode: m_fileReader.sourceCodes())
+		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
 			ASTJsonConverter converter(m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
@@ -865,12 +865,12 @@ void CommandLineInterface::handleAst()
 		return;
 
 	vector<ASTNode const*> asts;
-	for (auto const& sourceCode: m_fileReader.sourceCodes())
+	for (auto const& sourceCode: m_fileReader.sourceUnits())
 		asts.push_back(&m_compiler->ast(sourceCode.first));
 
 	if (!m_options.output.dir.empty())
 	{
-		for (auto const& sourceCode: m_fileReader.sourceCodes())
+		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
 			stringstream data;
 			string postfix = "";
@@ -883,12 +883,19 @@ void CommandLineInterface::handleAst()
 	else
 	{
 		sout() << "JSON AST (compact format):" << endl << endl;
-		for (auto const& sourceCode: m_fileReader.sourceCodes())
+		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
 			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
 			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 		}
 	}
+}
+
+void CommandLineInterface::serveLSP()
+{
+	lsp::IOStreamTransport transport;
+	if (!lsp::LanguageServer{transport}.run())
+		solThrow(CommandLineExecutionError, "LSP terminated abnormally.");
 }
 
 void CommandLineInterface::link()
@@ -897,7 +904,6 @@ void CommandLineInterface::link()
 
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
-
 	int const placeholderSize = 40; // 20 bytes or 40 hex characters
 	for (auto const& library: m_options.linker.libraries)
 	{
@@ -916,8 +922,7 @@ void CommandLineInterface::link()
 		librariesReplacements[replacement] = library.second;
 	}
 
-	FileReader::StringMap sourceCodes = m_fileReader.sourceCodes();
-
+	FileReader::StringMap sourceCodes = m_fileReader.sourceUnits();
 	for (auto& src: sourceCodes)
 	{
 		bool used = false;
@@ -962,14 +967,14 @@ void CommandLineInterface::link()
 		while (!src.second.empty() && *prev(src.second.end()) == '\n')
 			src.second.resize(src.second.size() - 1);
 	}
-	m_fileReader.setSources(move(sourceCodes));
+	m_fileReader.setSourceUnits(move(sourceCodes));
 }
 
 void CommandLineInterface::writeLinkedFiles()
 {
 	solAssert(m_options.input.mode == InputMode::Linker, "");
 
-	for (auto const& src: m_fileReader.sourceCodes())
+	for (auto const& src: m_fileReader.sourceUnits())
 		if (src.first == g_stdinFileName)
 			sout() << src.second << endl;
 		else
@@ -1007,7 +1012,7 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;
-	for (auto const& src: m_fileReader.sourceCodes())
+	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		// --no-optimize-yul option is not accepted in assembly mode.
 		solAssert(!m_options.optimizer.noOptimizeYul, "");
@@ -1047,7 +1052,7 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 		solThrow(CommandLineExecutionError, "");
 	}
 
-	for (auto const& src: m_fileReader.sourceCodes())
+	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		string machine =
 			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
@@ -1140,7 +1145,7 @@ void CommandLineInterface::outputCompilationResults()
 			if (m_options.compiler.outputs.asmJson)
 				ret = jsonPrettyPrint(removeNullMembers(m_compiler->assemblyJSON(contract)));
 			else
-				ret = m_compiler->assemblyString(contract, m_fileReader.sourceCodes());
+				ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
 
 			if (!m_options.output.dir.empty())
 				createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
