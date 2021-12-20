@@ -1295,18 +1295,21 @@ public:
 		strings const& _parameterTypes,
 		strings const& _returnParameterTypes,
 		Kind _kind,
-		bool _arbitraryParameters = false,
-		StateMutability _stateMutability = StateMutability::NonPayable
+		StateMutability _stateMutability = StateMutability::NonPayable,
+		Options _options = Options{false, false, false, false, false}
 	): FunctionType(
 		parseElementaryTypeVector(_parameterTypes),
 		parseElementaryTypeVector(_returnParameterTypes),
 		strings(_parameterTypes.size(), ""),
 		strings(_returnParameterTypes.size(), ""),
 		_kind,
-		_arbitraryParameters,
-		_stateMutability
+		_stateMutability,
+		nullptr,
+		std::move(_options)
 	)
 	{
+		// In this constructor, only the "arbitrary Parameters" option should be used.
+		solAssert(!bound() && !gasSet() && !valueSet() && !saltSet());
 	}
 
 	/// Detailed constructor, use with care.
@@ -1316,13 +1319,9 @@ public:
 		strings _parameterNames = strings(),
 		strings _returnParameterNames = strings(),
 		Kind _kind = Kind::Internal,
-		bool _arbitraryParameters = false,
 		StateMutability _stateMutability = StateMutability::NonPayable,
 		Declaration const* _declaration = nullptr,
-		bool _gasSet = false,
-		bool _valueSet = false,
-		bool _saltSet = false,
-		bool _bound = false
+		Options _options = Options{false, false, false, false, false}
 	):
 		m_parameterTypes(std::move(_parameterTypes)),
 		m_returnParameterTypes(std::move(_returnParameterTypes)),
@@ -1330,12 +1329,8 @@ public:
 		m_returnParameterNames(std::move(_returnParameterNames)),
 		m_kind(_kind),
 		m_stateMutability(_stateMutability),
-		m_arbitraryParameters(_arbitraryParameters),
-		m_gasSet(_gasSet),
-		m_valueSet(_valueSet),
-		m_bound(_bound),
 		m_declaration(_declaration),
-		m_saltSet(_saltSet)
+		m_options(std::move(_options))
 	{
 		solAssert(
 			m_parameterNames.size() == m_parameterTypes.size(),
@@ -1440,7 +1435,7 @@ public:
 	/// The only functions that do not pad are hash functions, the low-level call functions
 	/// and abi.encodePacked.
 	bool padArguments() const;
-	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
+	bool takesArbitraryParameters() const { return m_options.arbitraryParameters; }
 	/// true iff the function takes a single bytes parameter and it is passed on without padding.
 	bool takesSinglePackedBytesParameter() const
 	{
@@ -1459,10 +1454,10 @@ public:
 		}
 	}
 
-	bool gasSet() const { return m_gasSet; }
-	bool valueSet() const { return m_valueSet; }
-	bool saltSet() const { return m_saltSet; }
-	bool bound() const { return m_bound; }
+	bool gasSet() const { return m_options.gasSet; }
+	bool valueSet() const { return m_options.valueSet; }
+	bool saltSet() const { return m_options.saltSet; }
+	bool bound() const { return m_options.bound; }
 
 	/// @returns a copy of this type, where gas or value are set manually. This will never set one
 	/// of the parameters to false.
@@ -1490,15 +1485,8 @@ private:
 	std::vector<std::string> m_returnParameterNames;
 	Kind const m_kind;
 	StateMutability m_stateMutability = StateMutability::NonPayable;
-	/// true if the function takes an arbitrary number of arguments of arbitrary types
-	bool const m_arbitraryParameters = false;
-	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
-	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
-	/// true iff the function is called as arg1.fun(arg2, ..., argn).
-	/// This is achieved through the "using for" directive.
-	bool const m_bound = false;
 	Declaration const* m_declaration = nullptr;
-	bool m_saltSet = false; ///< true iff the salt value to be used is on the stack
+	Options const m_options;
 };
 
 /**
