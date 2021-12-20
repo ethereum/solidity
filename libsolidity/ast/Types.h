@@ -1314,7 +1314,7 @@ public:
 			"Return parameter names list must match return parameter types list!"
 		);
 		solAssert(
-			!m_bound || !m_parameterTypes.empty(),
+			!bound() || !m_parameterTypes.empty(),
 			"Attempted construction of bound function without self type"
 		);
 	}
