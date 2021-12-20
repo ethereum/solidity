@@ -897,7 +897,7 @@ jobs:
 
   t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2004
-    parallelism: 15 # 7 EVM versions, each with/without optimization + 1 ABIv1/@nooptions run
+    parallelism: 50
     <<: *steps_soltest_all
 
   t_ubu_lsp: &t_ubu_lsp
@@ -906,6 +906,7 @@ jobs:
 
   t_archlinux_soltest: &t_archlinux_soltest
     <<: *base_archlinux
+    parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
@@ -924,6 +925,7 @@ jobs:
 
   t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
     <<: *base_ubuntu2004
+    parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
       SOLTEST_FLAGS: --enforce-via-yul
@@ -933,6 +935,7 @@ jobs:
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
     <<: *base_ubuntu2004_clang
+    parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
@@ -960,6 +963,7 @@ jobs:
 
   t_ubu_asan_soltest:
     <<: *base_ubuntu2004
+    parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
@@ -969,6 +973,7 @@ jobs:
 
   t_ubu_asan_clang_soltest:
     <<: *base_ubuntu2004_clang
+    parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
@@ -978,6 +983,7 @@ jobs:
 
   t_ubu_ubsan_clang_soltest:
     <<: *base_ubuntu2004_clang
+    parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
     <<: *steps_soltest

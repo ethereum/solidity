@@ -30,6 +30,7 @@
 #pragma warning(disable:4535) // calling _set_se_translator requires /EHa
 #endif
 #include <boost/test/unit_test.hpp>
+#include <boost/test/tree/traverse.hpp>
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
@@ -59,6 +60,41 @@ void removeTestSuite(std::string const& _name)
 	assert(id != INV_TEST_UNIT_ID);
 	master.remove(id);
 }
+
+/**
+ * Class that traverses the boost test tree and removes unit tests that are
+ * not in the current batch.
+ */
+class BoostBatcher: public test_tree_visitor
+{
+public:
+	BoostBatcher(solidity::test::Batcher& _batcher):
+		m_batcher(_batcher)
+	{}
+
+	void visit(test_case const& _testCase) override
+	{
+		if (!m_batcher.checkAndAdvance())
+			// disabling them would be nicer, but it does not work like this:
+			// const_cast<test_case&>(_testCase).p_run_status.value = test_unit::RS_DISABLED;
+			m_path.back()->remove(_testCase.p_id);
+	}
+	bool test_suite_start(test_suite const& _testSuite) override
+	{
+		m_path.push_back(&const_cast<test_suite&>(_testSuite));
+		return test_tree_visitor::test_suite_start(_testSuite);
+	}
+	void test_suite_finish(test_suite const& _testSuite) override
+	{
+		m_path.pop_back();
+		test_tree_visitor::test_suite_finish(_testSuite);
+	}
+
+private:
+	solidity::test::Batcher& m_batcher;
+	std::vector<test_suite*> m_path;
+};
+
 
 void runTestCase(TestCase::Config const& _config, TestCase::TestCaseCreator const& _testCaseCreator)
 {
@@ -100,7 +136,8 @@ int registerTests(
 	bool _enforceViaYul,
 	bool _enforceCompileToEwasm,
 	vector<string> const& _labels,
-	TestCase::TestCaseCreator _testCaseCreator
+	TestCase::TestCaseCreator _testCaseCreator,
+	solidity::test::Batcher& _batcher
 )
 {
 	int numTestsAdded = 0;
@@ -131,33 +168,38 @@ int registerTests(
 					_enforceViaYul,
 					_enforceCompileToEwasm,
 					_labels,
-					_testCaseCreator
+					_testCaseCreator,
+					_batcher
 				);
 		_suite.add(sub_suite);
 	}
 	else
 	{
-		// This must be a vector of unique_ptrs because Boost.Test keeps the equivalent of a string_view to the filename
-		// that is passed in. If the strings were stored directly in the vector, pointers/references to them would be
-		// invalidated on reallocation.
-		static vector<unique_ptr<string const>> filenames;
+		// TODO would be better to set the test to disabled.
+		if (_batcher.checkAndAdvance())
+		{
+			// This must be a vector of unique_ptrs because Boost.Test keeps the equivalent of a string_view to the filename
+			// that is passed in. If the strings were stored directly in the vector, pointers/references to them would be
+			// invalidated on reallocation.
+			static vector<unique_ptr<string const>> filenames;
 
-		filenames.emplace_back(make_unique<string>(_path.string()));
-		auto test_case = make_test_case(
-			[config, _testCaseCreator]
-			{
-				BOOST_REQUIRE_NO_THROW({
-					runTestCase(config, _testCaseCreator);
-				});
-			},
-			_path.stem().string(),
-			*filenames.back(),
-			0
-		);
-		for (auto const& _label: _labels)
-			test_case->add_label(_label);
-		_suite.add(test_case);
-		numTestsAdded = 1;
+			filenames.emplace_back(make_unique<string>(_path.string()));
+			auto test_case = make_test_case(
+				[config, _testCaseCreator]
+				{
+					BOOST_REQUIRE_NO_THROW({
+						runTestCase(config, _testCaseCreator);
+					});
+				},
+				_path.stem().string(),
+				*filenames.back(),
+				0
+			);
+			for (auto const& _label: _labels)
+				test_case->add_label(_label);
+			_suite.add(test_case);
+			numTestsAdded = 1;
+		}
 	}
 	return numTestsAdded;
 }
@@ -172,6 +214,7 @@ void initializeOptions()
 
 	solidity::test::CommonOptions::setSingleton(std::move(options));
 }
+
 }
 
 // TODO: Prototype -- why isn't this declared in the boost headers?
@@ -180,6 +223,8 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] );
 
 test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
+	using namespace solidity::test;
+
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
 
@@ -194,6 +239,14 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	if (!solidity::test::CommonOptions::get().enforceGasTest)
 		cout << endl << "WARNING :: Gas Cost Expectations are not being enforced" << endl << endl;
 
+	Batcher batcher(CommonOptions::get().selectedBatch, CommonOptions::get().batches);
+	if (CommonOptions::get().batches > 1)
+		cout << "Batch " << CommonOptions::get().selectedBatch << " out of " << CommonOptions::get().batches << endl;
+
+	// Batch the boost tests
+	BoostBatcher boostBatcher(batcher);
+	traverse_test_tree(master, boostBatcher, true);
+
 	// Include the interactive tests in the automatic tests as well
 	for (auto const& ts: g_interactiveTestsuites)
 	{
@@ -205,15 +258,19 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		if (ts.needsVM && solidity::test::CommonOptions::get().disableSemanticTests)
 			continue;
 
-		solAssert(registerTests(
+		//TODO
+		//solAssert(
+		registerTests(
 			master,
 			options.testPath / ts.path,
 			ts.subpath,
 			options.enforceViaYul,
 			options.enforceCompileToEwasm,
 			ts.labels,
-			ts.testCaseCreator
-		) > 0, std::string("no ") + ts.title + " tests found");
+			ts.testCaseCreator,
+			batcher
+		);
+		// > 0, std::string("no ") + ts.title + " tests found");
 	}
 
 	if (solidity::test::CommonOptions::get().disableSemanticTests)
