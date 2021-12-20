@@ -24,6 +24,8 @@
 #include <libsolidity/lsp/HandlerBase.h>
 #include <libsolidity/lsp/Utils.h>
 
+// LSP feature implementations
+#include <libsolidity/lsp/GotoDefinition.h>
 
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/CharStream.h>
@@ -75,19 +77,16 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"initialize", bind(&LanguageServer::handleInitialize, this, _1, _2)},
 		{"initialized", [](auto, auto) {}},
 		{"shutdown", [this](auto, auto) { m_state = State::ShutdownRequested; }},
+		{"textDocument/definition", GotoDefinition(*this) },
 		{"textDocument/didOpen", bind(&LanguageServer::handleTextDocumentDidOpen, this, _2)},
 		{"textDocument/didChange", bind(&LanguageServer::handleTextDocumentDidChange, this, _2)},
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _2)},
+		{"textDocument/implementation", GotoDefinition(*this) },
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2)},
 	},
 	m_fileRepository("/" /* basePath */),
 	m_compilerStack{m_fileRepository.reader()}
 {
-}
-
-optional<SourceLocation> LanguageServer::parseRange(string const& _sourceUnitName, Json::Value const& _range)
-{
-	return HandlerBase{*this}.parseRange(_sourceUnitName, _range);
 }
 
 Json::Value LanguageServer::toRange(SourceLocation const& _location)
@@ -258,8 +257,10 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	Json::Value replyArgs;
 	replyArgs["serverInfo"]["name"] = "solc";
 	replyArgs["serverInfo"]["version"] = string(VersionNumber);
-	replyArgs["capabilities"]["textDocumentSync"]["openClose"] = true;
+	replyArgs["capabilities"]["definitionProvider"] = true;
+	replyArgs["capabilities"]["implementationProvider"] = true;
 	replyArgs["capabilities"]["textDocumentSync"]["change"] = 2; // 0=none, 1=full, 2=incremental
+	replyArgs["capabilities"]["textDocumentSync"]["openClose"] = true;
 
 	m_client.reply(_id, move(replyArgs));
 }
@@ -313,7 +314,7 @@ void LanguageServer::handleTextDocumentDidChange(Json::Value const& _args)
 		string text = jsonContentChange["text"].asString();
 		if (jsonContentChange["range"].isObject()) // otherwise full content update
 		{
-			optional<SourceLocation> change = parseRange(sourceUnitName, jsonContentChange["range"]);
+			optional<SourceLocation> change = parseRange(m_fileRepository, sourceUnitName, jsonContentChange["range"]);
 			lspAssert(
 				change && change->hasText(),
 				ErrorCode::RequestFailed,
@@ -346,7 +347,7 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 	compileAndUpdateDiagnostics();
 }
 
-ASTNode const* LanguageServer::requestASTNode(std::string const& _sourceUnitName, LineColumn const& _filePos)
+ASTNode const* LanguageServer::astNodeAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
 {
 	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
 		return nullptr;
@@ -354,11 +355,10 @@ ASTNode const* LanguageServer::requestASTNode(std::string const& _sourceUnitName
 	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
 		return nullptr;
 
-	optional<int> sourcePos = m_compilerStack.charStream(_sourceUnitName)
-		.translateLineColumnToPosition(_filePos);
-	if (!sourcePos.has_value())
+	if (optional<int> sourcePos =
+		m_compilerStack.charStream(_sourceUnitName).translateLineColumnToPosition(_filePos))
+		return locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName));
+	else
 		return nullptr;
-
-	return locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName));
 }
 
