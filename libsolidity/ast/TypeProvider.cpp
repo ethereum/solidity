@@ -455,8 +455,8 @@ FunctionType const* TypeProvider::function(
 		_parameterTypes,
 		_returnParameterTypes,
 		_kind,
-		_options.arbitraryParameters,
-		_stateMutability
+		_stateMutability,
+		std::move(_options)
 	);
 }
 
@@ -477,13 +477,9 @@ FunctionType const* TypeProvider::function(
 		_parameterNames,
 		_returnParameterNames,
 		_kind,
-		_options.arbitraryParameters,
 		_stateMutability,
 		_declaration,
-		_options.gasSet,
-		_options.valueSet,
-		_options.saltSet,
-		_options.bound
+		std::move(_options)
 	);
 }
 
