@@ -2942,11 +2942,11 @@ string FunctionType::richIdentifier() const
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
-	if (m_gasSet)
+	if (gasSet())
 		id += "gas";
-	if (m_valueSet)
+	if (valueSet())
 		id += "value";
-	if (m_saltSet)
+	if (saltSet())
 		id += "salt";
 	if (bound())
 		id += "bound_to" + identifierList(selfType());
@@ -3094,11 +3094,11 @@ bool FunctionType::nameable() const
 {
 	return
 		(m_kind == Kind::Internal || m_kind == Kind::External) &&
-		!m_bound &&
-		!m_arbitraryParameters &&
-		!m_gasSet &&
-		!m_valueSet &&
-		!m_saltSet;
+		!bound() &&
+		!takesArbitraryParameters() &&
+		!gasSet() &&
+		!valueSet() &&
+		!saltSet();
 }
 
 vector<tuple<string, Type const*>> FunctionType::makeStackItems() const
@@ -3140,11 +3140,11 @@ vector<tuple<string, Type const*>> FunctionType::makeStackItems() const
 		break;
 	}
 
-	if (m_gasSet)
+	if (gasSet())
 		slots.emplace_back("gas", TypeProvider::uint256());
-	if (m_valueSet)
+	if (valueSet())
 		slots.emplace_back("value", TypeProvider::uint256());
-	if (m_saltSet)
+	if (saltSet())
 		slots.emplace_back("salt", TypeProvider::fixedBytes(32));
 	if (bound())
 		slots.emplace_back("self", m_parameterTypes.front());
@@ -3182,7 +3182,7 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		m_parameterNames,
 		m_returnParameterNames,
 		m_kind,
-		m_arbitraryParameters,
+		takesArbitraryParameters(),
 		m_stateMutability,
 		m_declaration
 	);
@@ -3240,9 +3240,9 @@ MemberList::MemberMap FunctionType::nativeMembers(ASTNode const* _scope) const
 						false,
 						StateMutability::Pure,
 						nullptr,
-						m_gasSet,
-						m_valueSet,
-						m_saltSet
+						gasSet(),
+						valueSet(),
+						saltSet()
 					)
 				);
 		}
@@ -3258,9 +3258,9 @@ MemberList::MemberMap FunctionType::nativeMembers(ASTNode const* _scope) const
 					false,
 					StateMutability::Pure,
 					nullptr,
-					m_gasSet,
-					m_valueSet,
-					m_saltSet
+					gasSet(),
+					valueSet(),
+					saltSet()
 				)
 			);
 		return members;
@@ -3288,7 +3288,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ASTNode const* _scope) const
 
 Type const* FunctionType::encodingType() const
 {
-	if (m_gasSet || m_valueSet)
+	if (gasSet() || valueSet())
 		return nullptr;
 	// Only external functions can be encoded, internal functions cannot leave code boundaries.
 	if (m_kind == Kind::External)
@@ -3307,7 +3307,7 @@ TypeResult FunctionType::interfaceType(bool /*_inLibrary*/) const
 
 Type const* FunctionType::mobileType() const
 {
-	if (m_valueSet || m_gasSet || m_saltSet || m_bound)
+	if (valueSet() || gasSet() || saltSet() || bound())
 		return nullptr;
 
 	// return function without parameter names
@@ -3317,13 +3317,13 @@ Type const* FunctionType::mobileType() const
 		strings(m_parameterTypes.size()),
 		strings(m_returnParameterNames.size()),
 		m_kind,
-		m_arbitraryParameters,
+		takesArbitraryParameters(),
 		m_stateMutability,
 		m_declaration,
-		m_gasSet,
-		m_valueSet,
-		m_bound,
-		m_saltSet
+		gasSet(),
+		valueSet(),
+		bound(),
+		saltSet()
 	);
 }
 
@@ -3409,7 +3409,7 @@ bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) con
 		return false;
 
 	//@todo this is ugly, but cannot be prevented right now
-	if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet || m_saltSet != _other.m_saltSet)
+	if (gasSet() != _other.gasSet() || valueSet() != _other.valueSet() || saltSet() != _other.saltSet())
 		return false;
 
 	if (bound() != _other.bound())
@@ -3526,34 +3526,34 @@ Type const* FunctionType::copyAndSetCallOptions(bool _setGas, bool _setValue, bo
 		m_parameterNames,
 		m_returnParameterNames,
 		m_kind,
-		m_arbitraryParameters,
+		takesArbitraryParameters(),
 		m_stateMutability,
 		m_declaration,
-		m_gasSet || _setGas,
-		m_valueSet || _setValue,
-		m_saltSet || _setSalt,
-		m_bound
+		gasSet() || _setGas,
+		valueSet() || _setValue,
+		saltSet() || _setSalt,
+		bound()
 	);
 }
 
 FunctionTypePointer FunctionType::asBoundFunction() const
 {
 	solAssert(!m_parameterTypes.empty(), "");
-	solAssert(!m_gasSet, "");
-	solAssert(!m_valueSet, "");
-	solAssert(!m_saltSet, "");
+	solAssert(!gasSet(), "");
+	solAssert(!valueSet(), "");
+	solAssert(!saltSet(), "");
 	return TypeProvider::function(
 		m_parameterTypes,
 		m_returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
 		m_kind,
-		m_arbitraryParameters,
+		takesArbitraryParameters(),
 		m_stateMutability,
 		m_declaration,
-		m_gasSet,
-		m_valueSet,
-		m_saltSet,
+		gasSet(),
+		valueSet(),
+		saltSet(),
 		true
 	);
 }
@@ -3592,13 +3592,13 @@ FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary) 
 		m_parameterNames,
 		m_returnParameterNames,
 		kind,
-		m_arbitraryParameters,
+		takesArbitraryParameters(),
 		m_stateMutability,
 		m_declaration,
-		m_gasSet,
-		m_valueSet,
-		m_saltSet,
-		m_bound
+		gasSet(),
+		valueSet(),
+		saltSet(),
+		bound()
 	);
 }
 
