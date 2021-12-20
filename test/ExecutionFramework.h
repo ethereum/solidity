@@ -35,6 +35,8 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/ErrorCodes.h>
 
+#include <boost/rational.hpp>
+
 #include <functional>
 
 #include <boost/test/unit_test.hpp>
