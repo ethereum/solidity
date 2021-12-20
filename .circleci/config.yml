@@ -352,7 +352,7 @@ defaults:
 
   - base_osx: &base_osx
       macos:
-        xcode: "11.0.0"
+        xcode: "13.2.0"
       environment:
         TERM: xterm
         MAKEFLAGS: -j 5
