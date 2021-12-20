@@ -3,4 +3,4 @@ contract test {
     Data public data;
 }
 // ----
-// TypeError 6744: (58-74): Internal or recursive type is not allowed for public state variables.
+// TypeError 5359: (58-74): The struct has all its members omitted, therefore the getter cannot return any values.
