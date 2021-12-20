@@ -1150,10 +1150,21 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 
 		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
-			selector = convert(
-				IRVariable(*arguments[0]).part("functionSelector"),
-				*TypeProvider::fixedBytes(4)
-			).name();
+		{
+			auto const& selectorType = dynamic_cast<FunctionType const&>(type(*arguments.front()));
+			if (selectorType.kind() == FunctionType::Kind::Declaration)
+			{
+				solAssert(selectorType.hasDeclaration());
+				selector = formatNumber(selectorType.externalIdentifier() << (256 - 32));
+			}
+			else
+			{
+				selector = convert(
+					IRVariable(*arguments[0]).part("functionSelector"),
+					*TypeProvider::fixedBytes(4)
+				).name();
+			}
+		}
 		else if (functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature)
 		{
 			// hash the signature
