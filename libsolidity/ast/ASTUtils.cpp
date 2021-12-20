@@ -18,11 +18,34 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
+#include <libsolidity/ast/ASTVisitor.h>
 
 #include <libsolutil/Algorithms.h>
 
 namespace solidity::frontend
 {
+
+ASTNode const* locateInnermostASTNode(int _offsetInFile, SourceUnit const& _sourceUnit)
+{
+	ASTNode const* innermostMatch = nullptr;
+	auto locator = SimpleASTVisitor(
+		[&](ASTNode const& _node) -> bool
+		{
+			// In the AST parent location always covers the whole child location.
+			// The parent is visited first so to get the innermost node we simply
+			// take the last one that still contains the offset.
+
+			if (!_node.location().containsOffset(_offsetInFile))
+				return false;
+
+			innermostMatch = &_node;
+			return true;
+		},
+		[](ASTNode const&) {}
+	);
+	_sourceUnit.accept(locator);
+	return innermostMatch;
+}
 
 bool isConstantVariableRecursive(VariableDeclaration const& _varDecl)
 {

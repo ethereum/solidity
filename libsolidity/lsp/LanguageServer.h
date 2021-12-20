@@ -59,7 +59,7 @@ public:
 
 	FileRepository& fileRepository() noexcept { return m_fileRepository; }
 	Transport& client() noexcept { return m_client; }
-	frontend::ASTNode const* requestASTNode(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos);
+	frontend::ASTNode const* astNodeAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos);
 	langutil::CharStreamProvider const& charStreamProvider() const noexcept { return m_compilerStack; }
 
 private:
@@ -71,6 +71,7 @@ private:
 	void handleTextDocumentDidOpen(Json::Value const& _args);
 	void handleTextDocumentDidChange(Json::Value const& _args);
 	void handleTextDocumentDidClose(Json::Value const& _args);
+	void handleGotoDefinition(MessageID _id, Json::Value const& _args);
 
 	/// Invoked when the server user-supplied configuration changes (initiated by the client).
 	void changeConfiguration(Json::Value const&);
@@ -79,12 +80,6 @@ private:
 	void compile();
 	using MessageHandler = std::function<void(MessageID, Json::Value const&)>;
 
-	/// @returns the source location given a source unit name and an LSP Range object,
-	/// or nullopt on failure.
-	std::optional<langutil::SourceLocation> parseRange(
-		std::string const& _sourceUnitName,
-		Json::Value const& _range
-	);
 	Json::Value toRange(langutil::SourceLocation const& _location);
 	Json::Value toJson(langutil::SourceLocation const& _location);
 

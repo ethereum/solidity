@@ -155,10 +155,10 @@ set(sources
 	interface/StorageLayout.h
 	interface/Version.cpp
 	interface/Version.h
-	lsp/LanguageServer.cpp
-	lsp/LanguageServer.h
 	lsp/FileRepository.cpp
 	lsp/FileRepository.h
+	lsp/GotoDefinition.cpp
+	lsp/GotoDefinition.h
 	lsp/HandlerBase.cpp
 	lsp/HandlerBase.h
 	lsp/LanguageServer.cpp
