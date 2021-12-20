@@ -1255,7 +1255,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 				auto const functionPtr = dynamic_cast<FunctionTypePointer>(arguments[0]->annotation().type);
 				solAssert(functionPtr);
-				solAssert(functionPtr->sizeOnStack() == 2);
 
 				// Account for tuples with one component which become that component
 				if (auto const tupleType = dynamic_cast<TupleType const*>(arguments[1]->annotation().type))
@@ -1330,9 +1329,20 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				}
 				else if (function.kind() == FunctionType::Kind::ABIEncodeCall)
 				{
-					// stack: <memory pointer> <functionPointer>
-					// Extract selector from the stack
-					m_context << Instruction::SWAP1 << Instruction::POP;
+					auto const& funType = dynamic_cast<FunctionType const&>(*selectorType);
+					if (funType.kind() == FunctionType::Kind::Declaration)
+					{
+						solAssert(funType.hasDeclaration());
+						solAssert(selectorType->sizeOnStack() == 0);
+						m_context << funType.externalIdentifier();
+					}
+					else
+					{
+						solAssert(selectorType->sizeOnStack() == 2);
+						// stack: <memory pointer> <functionPointer>
+						// Extract selector from the stack
+						m_context << Instruction::SWAP1 << Instruction::POP;
+					}
 					// Conversion will be done below
 					dataOnStack = TypeProvider::uint(32);
 				}
