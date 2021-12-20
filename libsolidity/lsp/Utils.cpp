@@ -1,8 +1,29 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+// SPDX-License-Identifier: GPL-3.0
+
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/lsp/Utils.h>
+
+#include <fmt/format.h>
+#include <fstream>
 
 namespace solidity::lsp
 {
@@ -19,7 +40,7 @@ optional<LineColumn> parseLineColumn(Json::Value const& _lineColumn)
 		return nullopt;
 }
 
-Json::Value toJson(LineColumn _pos)
+Json::Value toJson(LineColumn const& _pos)
 {
 	Json::Value json = Json::objectValue;
 	json["line"] = max(_pos.line, 0);
@@ -36,24 +57,20 @@ Json::Value toJsonRange(LineColumn const& _start, LineColumn const& _end)
 	return json;
 }
 
-vector<Declaration const*> allAnnotatedDeclarations(Expression const* _expression)
+Declaration const* referencedDeclaration(Expression const* _expression)
 {
-	vector<Declaration const*> output;
-
 	if (auto const* identifier = dynamic_cast<Identifier const*>(_expression))
-	{
-		output.push_back(identifier->annotation().referencedDeclaration);
-		output += identifier->annotation().candidateDeclarations;
-	}
-	else if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(_expression))
-	{
-		output.push_back(memberAccess->annotation().referencedDeclaration);
-	}
+		if (Declaration const* referencedDeclaration = identifier->annotation().referencedDeclaration)
+			return referencedDeclaration;
 
-	return output;
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(_expression))
+		if (memberAccess->annotation().referencedDeclaration)
+			return memberAccess->annotation().referencedDeclaration;
+
+	return nullptr;
 }
 
-optional<SourceLocation> declarationPosition(Declaration const* _declaration)
+optional<SourceLocation> declarationLocation(Declaration const* _declaration)
 {
 	if (!_declaration)
 		return nullopt;
@@ -65,6 +82,37 @@ optional<SourceLocation> declarationPosition(Declaration const* _declaration)
 		return _declaration->location();
 
 	return nullopt;
+}
+
+optional<SourceLocation> parsePosition(
+	FileRepository const& _fileRepository,
+	string const& _sourceUnitName,
+	Json::Value const& _position
+)
+{
+	if (!_fileRepository.sourceUnits().count(_sourceUnitName))
+		return nullopt;
+
+	if (optional<LineColumn> lineColumn = parseLineColumn(_position))
+		if (optional<int> const offset = CharStream::translateLineColumnToPosition(
+			_fileRepository.sourceUnits().at(_sourceUnitName),
+			*lineColumn
+		))
+			return SourceLocation{*offset, *offset, make_shared<string>(_sourceUnitName)};
+	return nullopt;
+}
+
+optional<SourceLocation> parseRange(FileRepository const& _fileRepository, string const& _sourceUnitName, Json::Value const& _range)
+{
+	if (!_range.isObject())
+		return nullopt;
+	optional<SourceLocation> start = parsePosition(_fileRepository, _sourceUnitName, _range["start"]);
+	optional<SourceLocation> end = parsePosition(_fileRepository, _sourceUnitName, _range["end"]);
+	if (!start || !end)
+		return nullopt;
+	solAssert(*start->sourceName == *end->sourceName);
+	start->end = end->end;
+	return start;
 }
 
 }
