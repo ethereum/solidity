@@ -56,6 +56,7 @@ enum class InputMode
 	StandardJson,
 	Linker,
 	Assembler,
+	LanguageServer
 };
 
 struct CompilerOutputs
