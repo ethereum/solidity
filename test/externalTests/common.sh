@@ -328,12 +328,16 @@ function compile_and_run_test
     local compile_fn="$1"
     local test_fn="$2"
     local verify_fn="$3"
+    local preset="$4"
+    local compile_only_presets="$5"
+
+    [[ $preset != *" "* ]] || assertFail "Preset names must not contain spaces."
 
     printLog "Running compile function..."
     time $compile_fn
     $verify_fn "$SOLCVERSION_SHORT" "$SOLCVERSION"
 
-    if [[ "$COMPILE_ONLY" == 1 ]]; then
+    if [[ "$COMPILE_ONLY" == 1 || " $compile_only_presets " == *" $preset "* ]]; then
         printLog "Skipping test function..."
     else
         printLog "Running test function..."
@@ -347,24 +351,26 @@ function truffle_run_test
     local binary_type="$2"
     local solc_path="$3"
     local preset="$4"
-    local compile_fn="$5"
-    local test_fn="$6"
+    local compile_only_presets="$5"
+    local compile_fn="$6"
+    local test_fn="$7"
 
     truffle_clean
     force_truffle_compiler_settings "$config_file" "$binary_type" "$solc_path" "$preset"
-    compile_and_run_test compile_fn test_fn truffle_verify_compiler_version
+    compile_and_run_test compile_fn test_fn truffle_verify_compiler_version "$preset" "$compile_only_presets"
 }
 
 function hardhat_run_test
 {
     local config_file="$1"
     local preset="$2"
-    local compile_fn="$3"
-    local test_fn="$4"
+    local compile_only_presets="$3"
+    local compile_fn="$4"
+    local test_fn="$5"
 
     hardhat_clean
     force_hardhat_compiler_settings "$config_file" "$preset"
-    compile_and_run_test compile_fn test_fn hardhat_verify_compiler_version
+    compile_and_run_test compile_fn test_fn hardhat_verify_compiler_version "$preset" "$compile_only_presets"
 }
 
 function external_test
