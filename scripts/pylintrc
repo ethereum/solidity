@@ -1,4 +1,10 @@
 # vim:et:ts=4
+[MASTER]
+
+# Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
+# number of processors available to use.
+jobs=0
+
 [MESSAGES CONTROL]
 
 # Disable the message, report, category or checker with the given id(s). You
