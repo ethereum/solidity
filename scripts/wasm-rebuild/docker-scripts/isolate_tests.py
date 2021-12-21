@@ -47,8 +47,8 @@ def write_cases(f, tests):
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
         remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
-        hash = hashlib.sha256(test).hexdigest()
-        with open(f'test_{hash}_{cleaned_filename}.sol', 'w', encoding='utf8') as _f:
+        source_code_hash = hashlib.sha256(test).hexdigest()
+        with open(f'test_{source_code_hash}_{cleaned_filename}.sol', 'w', encoding='utf8') as _f:
             _f.write(remainder)
 
 
