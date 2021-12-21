@@ -24,7 +24,6 @@ disable=
     invalid-name,
     missing-docstring,
     no-else-return,
-    no-self-use,
     pointless-string-statement,
     redefined-builtin,
     redefined-outer-name,

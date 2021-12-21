@@ -41,7 +41,8 @@ class regressor:
                                          "build/test/tools/ossfuzz")
         self._logpath = os.path.join(self._repo_root, "test_results")
 
-    def parseCmdLine(self, description, args):
+    @classmethod
+    def parseCmdLine(cls, description, args):
         argParser = ArgumentParser(description)
         argParser.add_argument('-o', '--out-dir', required=True, type=str,
                                help="""Directory where test results will be written""")

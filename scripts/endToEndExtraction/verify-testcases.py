@@ -154,7 +154,8 @@ class TraceAnalyser:
 
         print(len(intersection), "test-cases - ", len(mismatches), " mismatche(s)")
 
-    def check_traces(self, test_name, left, right, mismatches):
+    @classmethod
+    def check_traces(cls, test_name, left, right, mismatches):
         for trace_id, trace in enumerate(left.traces):
             left_trace = trace
             right_trace = right.traces[trace_id]
