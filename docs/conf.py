@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Solidity'
-copyright = '2016-2021, Ethereum'
+project_copyright = '2016-2021, Ethereum'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

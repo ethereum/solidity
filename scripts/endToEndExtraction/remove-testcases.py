@@ -33,12 +33,12 @@ def parse_call(call):
     return function.strip(), arguments.strip(), results.strip()
 
 
-def colorize(left, right, id):
+def colorize(left, right, index):
     red = "\x1b[31m"
     yellow = "\x1b[33m"
     reset = "\x1b[0m"
     colors = [red, yellow]
-    color = colors[id % len(colors)]
+    color = colors[index % len(colors)]
     function, _arguments, _results = parse_call(right)
     left = left.replace("compileAndRun", color + "compileAndRun" + reset)
     right = right.replace("constructor", color + "constructor" + reset)
