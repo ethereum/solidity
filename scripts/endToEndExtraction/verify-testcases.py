@@ -9,8 +9,6 @@
 #
 # verify-testcases.py will compare both traces. If these traces are identical, the extracted tests were
 # identical with the tests specified in SolidityEndToEndTest.cpp.
-#
-# pylint: disable=too-many-instance-attributes
 
 import re
 import os

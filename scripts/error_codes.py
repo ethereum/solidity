@@ -254,8 +254,6 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
 
 
 def main(argv):
-    # pylint: disable=too-many-branches, too-many-locals, too-many-statements
-
     check = False
     fix = False
     no_confirm = False
