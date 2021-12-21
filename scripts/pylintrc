@@ -20,7 +20,6 @@ disable=
     bad-continuation,
     bad-indentation,
     bad-whitespace,
-    consider-using-sys-exit,
     duplicate-code,
     invalid-name,
     missing-docstring,

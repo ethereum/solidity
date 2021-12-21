@@ -277,7 +277,7 @@ def main(argv):
 
     if [check, fix, examine_coverage, next_id].count(True) != 1:
         print("usage: python error_codes.py --check | --fix [--no-confirm] | --examine-coverage | --next")
-        exit(1)
+        sys.exit(1)
 
     cwd = os.getcwd()
 
@@ -303,9 +303,9 @@ def main(argv):
     if examine_coverage:
         if not ok:
             print("Incorrect IDs have to be fixed before applying --examine-coverage")
-            exit(1)
+            sys.exit(1)
         res = 0 if examine_id_coverage(cwd, source_id_to_file_names) else 1
-        exit(res)
+        sys.exit(res)
 
     ok &= examine_id_coverage(cwd, source_id_to_file_names, new_ids_only=True)
 
@@ -314,18 +314,18 @@ def main(argv):
     if next_id:
         if not ok:
             print("Incorrect IDs have to be fixed before applying --next")
-            exit(1)
+            sys.exit(1)
         available_ids = {str(id) for id in range(1000, 10000)} - source_id_to_file_names.keys()
         next_id = get_next_id(available_ids)
         print(f"Next ID: {next_id}")
-        exit(0)
+        sys.exit(0)
 
     if ok:
         print("No incorrect IDs found")
-        exit(0)
+        sys.exit(0)
 
     if check:
-        exit(1)
+        sys.exit(1)
 
     assert fix, "Unexpected state, should not come here without --fix"
 
@@ -338,14 +338,14 @@ def main(argv):
         while len(answer) == 0 or answer not in "YNyn":
             answer = input("[Y/N]? ")
         if answer not in "yY":
-            exit(1)
+            sys.exit(1)
 
     # number of appearances for every id
     source_id_to_count = { id: len(file_names) for id, file_names in source_id_to_file_names.items() }
 
     fix_ids_in_source_files(source_file_names, source_id_to_count)
     print("Fixing completed")
-    exit(2)
+    sys.exit(2)
 
 
 if __name__ == "__main__":

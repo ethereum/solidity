@@ -5,6 +5,7 @@ import fnmatch
 import json
 import os
 import subprocess
+import sys
 import traceback
 
 from typing import Any, List, Optional, Tuple, Union
@@ -871,4 +872,4 @@ class SolidityLSPTestSuite: # {{{
 if __name__ == "__main__":
     suite = SolidityLSPTestSuite()
     exit_code = suite.main()
-    exit(exit_code)
+    sys.exit(exit_code)
