@@ -18,7 +18,7 @@ def read_file(file_name):
         with open(file_name, "r", encoding="latin-1" if is_latin else ENCODING) as f:
             content = f.read()
     finally:
-        if content == None:
+        if content is None:
             print(f"Error reading: {file_name}")
     return content
 

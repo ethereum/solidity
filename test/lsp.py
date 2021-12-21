@@ -50,7 +50,7 @@ class JsonRpcProcess:
         # Note, we should make use of timeout to avoid infinite blocking if nothing is received.
         CONTENT_LENGTH_HEADER = "Content-Length: "
         CONTENT_TYPE_HEADER = "Content-Type: "
-        if self.process.stdout == None:
+        if self.process.stdout is None:
             return None
         message_size = None
         while True:
@@ -84,7 +84,7 @@ class JsonRpcProcess:
         return json_object
 
     def send_message(self, method_name: str, params: Optional[dict]) -> None:
-        if self.process.stdin == None:
+        if self.process.stdin is None:
             return
         message = {
             'jsonrpc': '2.0',
@@ -246,7 +246,7 @@ class SolidityLSPTestSuite: # {{{
                 }
             }
         }
-        if expose_project_root == False:
+        if not expose_project_root:
             params['rootUri'] = None
         lsp.call_method('initialize', params)
         lsp.send_notification('initialized')

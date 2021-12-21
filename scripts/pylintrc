@@ -27,7 +27,6 @@ disable=
     pointless-string-statement,
     redefined-builtin,
     redefined-outer-name,
-    singleton-comparison,
     too-few-public-methods,
     too-many-public-methods,
     ungrouped-imports
