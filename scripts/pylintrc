@@ -14,10 +14,8 @@
 # ATTENTION: This list should be extended with care, consider using NOLINT comments inside your
 # python files instead, as the goal is actually to reduce the list of globally disabled checks.
 #
-# TODO: What could be eliminated in future PRs: bad-continuation, invalid-name,
-# undefined-variable, unused-*, useless-object-inheritance.
+# TODO: What could be eliminated in future PRs: invalid-name, pointless-string-statement, redefined-outer-name.
 disable=
-    bad-continuation,
     bad-indentation,
     bad-whitespace,
     duplicate-code,
@@ -27,8 +25,7 @@ disable=
     pointless-string-statement,
     redefined-outer-name,
     too-few-public-methods,
-    too-many-public-methods,
-    ungrouped-imports
+    too-many-public-methods
 
 [BASIC]
 
