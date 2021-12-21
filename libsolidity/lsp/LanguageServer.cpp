@@ -72,7 +72,7 @@ optional<LineColumn> parseLineColumn(Json::Value const& _lineColumn)
 		return nullopt;
 }
 
-constexpr int toDiagnosticSeverity(Error::Type _errorType)
+int toDiagnosticSeverity(Error::Type _errorType)
 {
 	// 1=Error, 2=Warning, 3=Info, 4=Hint
 	switch (Error::errorSeverity(_errorType))

@@ -8,7 +8,19 @@ Breaking changes:
  * Commandline Interface: Assembler mode no longer enables all outputs by default.
 
 
-### 0.8.11 (unreleased)
+### 0.8.12 (unreleased)
+
+Compiler Features:
+
+
+Bugfixes:
+
+
+Solc-Js:
+ * The wrapper now requires at least nodejs v10.
+
+
+### 0.8.11 (2021-12-20)
 
 Language Features:
  * General: New builtin function ``abi.encodeCall(functionPointer, (arg1, arg2, ...))`` that type-checks the arguments and returns the ABI-encoded function call data.

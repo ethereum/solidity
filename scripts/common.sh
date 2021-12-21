@@ -211,6 +211,7 @@ function safe_kill
 
 function circleci_select_steps
 {
+    # We expect multiple lines in $all_steps, one step per line
     local all_steps="$1"
     (( $# == 1 )) || assertFail
 
@@ -222,11 +223,26 @@ function circleci_select_steps
     fi
 }
 
+function circleci_select_steps_multiarg
+{
+    # We expect multiple arguments, one step per argument.
+    circleci_select_steps "$(printf '%s\n' "$@")"
+}
+
 function circleci_step_selected
 {
     local selected_steps="$1"
     local step="$2"
+    (( $# == 2 )) || assertFail
     [[ $step != *" "* ]] || assertFail "Step names must not contain spaces."
 
     [[ " $selected_steps " == *" $step "* ]] || return 1
+}
+
+function first_word
+{
+    local words="$1"
+    (( $# == 1 )) || assertFail
+
+    echo "$words" | cut -d " " -f 1
 }
