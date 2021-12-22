@@ -24,10 +24,10 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
-SOLJSON="$1"
-VERSION="$2"
+[[ $1 != "" && -f "$1" && $2 != "" ]] || fail "Usage: $0 <path to soljson.js> <version>"
 
-[[ $SOLJSON != "" && -f "$SOLJSON" && $VERSION != "" ]] || fail "Usage: $0 <path to soljson.js> <version>"
+SOLJSON=$(realpath "$1")
+VERSION="$2"
 
 function compile_fn { echo "Nothing to compile."; }
 function test_fn { npm test; }
