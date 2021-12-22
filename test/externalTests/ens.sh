@@ -28,22 +28,23 @@ verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
 
-function compile_fn { npx truffle compile; }
-function test_fn { npm run test; }
+function compile_fn { yarn build; }
+function test_fn { yarn test; }
 
 function ens_test
 {
-    local repo="https://github.com/ensdomains/ens.git"
-    local branch=master
-    local config_file="truffle.js"
+    local repo="https://github.com/ensdomains/ens-contracts.git"
+    local branch="v0.0.8"  # The project is in flux right now and master might be too unstable for us
+    local config_file="hardhat.config.js"
 
-    local compile_only_presets=()
+    local compile_only_presets=(
+        legacy-no-optimize        # Compiles but tests fail to deploy GovernorCompatibilityBravo (code too large).
+    )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # "YulException: Variable var_ttl_236 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # "YulException: Variable var_ttl_236 is 1 slot(s) too deep inside the stack."
-        ir-optimize-evm+yul
-        legacy-no-optimize
+        #ir-no-optimize           # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm+yul      # Compilation fails with "YulException: Variable _5 is 1 too deep in the stack [ _5 usr$i usr$h _7 usr$scratch usr$k usr$f _4 usr$len usr$j_2 RET _2 _1 var_data_mpos usr$totallen usr$x _12 ]"
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
     )
@@ -56,20 +57,18 @@ function ens_test
     download_project "$repo" "$branch" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
-    # Use latest Truffle. Older versions crash on the output from 0.8.0.
-    force_truffle_version ^5.1.55
-
     neutralize_package_lock
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$(first_word "$selected_optimizer_presets")"
-    npm install
+    force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
+    force_hardhat_compiler_settings "$config_file" "$(first_word "$selected_optimizer_presets")"
+    yarn install
 
     replace_version_pragmas
-    [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
+    neutralize_packaged_contracts
 
     for preset in $selected_optimizer_presets; do
-        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
     done
 }
 
-external_test Ens ens_test
+external_test ENS ens_test

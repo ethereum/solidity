@@ -1363,8 +1363,8 @@ workflows:
           name: t_native_test_ext_ens
           project: ens
           binary_type: native
-          # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
-          nodejs_version: '10'
+          # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
+          nodejs_version: '16'
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
