@@ -42,11 +42,11 @@ function gnosis_safe_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize            # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only      # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-no-optimize            # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
-        #legacy-no-optimize        # "Stack too deep" error
-        #legacy-optimize-evm-only  # "Stack too deep" error
+        #legacy-no-optimize        # Compilation fails with "Stack too deep" error
+        #legacy-optimize-evm-only  # Compilation fails with "Stack too deep" error
         legacy-optimize-evm+yul
     )
 

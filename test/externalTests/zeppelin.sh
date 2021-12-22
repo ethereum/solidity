@@ -44,8 +44,8 @@ function zeppelin_test
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
+        #ir-no-optimize           # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul

@@ -40,12 +40,12 @@ function gnosis_safe_test
     local config_file="truffle-config.js"
 
     local compile_only_presets=(
-        legacy-no-optimize        # "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
+        legacy-no-optimize        # Compiles but migrations run out of gas: "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-no-optimize           # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
