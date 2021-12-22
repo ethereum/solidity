@@ -1442,18 +1442,23 @@ workflows:
 
       # Bytecode comparison:
       - b_bytecode_ubu:
+          <<: *workflow_trigger_on_tags
           requires:
             - b_ubu
       - b_bytecode_win:
+          <<: *workflow_trigger_on_tags
           requires:
             - b_win
       - b_bytecode_osx:
+          <<: *workflow_trigger_on_tags
           requires:
             - b_osx
       - b_bytecode_ems:
+          <<: *workflow_trigger_on_tags
           requires:
             - b_ems
       - t_bytecode_compare:
+          <<: *workflow_trigger_on_tags
           requires:
             - b_bytecode_ubu
             - b_bytecode_win
