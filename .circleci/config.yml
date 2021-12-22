@@ -156,6 +156,8 @@ defaults:
         - build/solc/solc
         - build/test/soltest
         - build/test/tools/solfuzzer
+        - build/tools/solidity-upgrade
+        - build/tools/yul-phaser
 
   # compiled OSSFUZZ targets
   - workspace_linux_executables_ossfuzz: &workspace_linux_executables_ossfuzz
@@ -180,6 +182,9 @@ defaults:
       paths:
         - build/solc/*/solc.exe
         - build/test/*/soltest.exe
+        - build/test/tools/*/solfuzzer.exe
+        - build/tools/*/solidity-upgrade.exe
+        - build/tools/*/yul-phaser.exe
 
   - workspace_emscripten_executables: &workspace_emscripten_executables
       root: .
