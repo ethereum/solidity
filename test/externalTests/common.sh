@@ -328,10 +328,10 @@ function replace_global_solc
 {
     local solc_path="$1"
 
-    [[ ! -e solc ]] || fail "A file named 'solc' already exists in '${PWD}'."
+    [[ ! -e ../solc ]] || fail "A file named 'solc' already exists in '${PWD}/..'."
 
-    ln -s "$solc_path" solc
-    export PATH="$PWD:$PATH"
+    ln -s "$solc_path" ../solc
+    export PATH="$PWD/..:$PATH"
 }
 
 function truffle_compiler_settings
