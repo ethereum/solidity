@@ -1035,6 +1035,12 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 	}
 }
 
+bool SMTEncoder::shouldAnalyze(SourceUnit const& _source) const
+{
+	return m_settings.contracts.isDefault() ||
+		m_settings.contracts.has(*_source.annotation().path);
+}
+
 bool SMTEncoder::shouldAnalyze(ContractDefinition const& _contract) const
 {
 	if (!_contract.canBeDeployed())
