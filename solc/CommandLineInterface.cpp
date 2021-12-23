@@ -925,7 +925,7 @@ void CommandLineInterface::link()
 		librariesReplacements[replacement] = library.second;
 	}
 
-	FileReader::StringMap sourceCodes = m_fileReader.sourceUnits();
+	FileReaderWithRepository::StringMap sourceCodes = m_fileReader.sourceUnits();
 	for (auto& src: sourceCodes)
 	{
 		auto end = src.second.end();

@@ -48,8 +48,7 @@ FileReader::FileReader(
 	vector<boost::filesystem::path> const& _includePaths,
 	FileSystemPathSet _allowedDirectories
 ):
-	m_allowedDirectories(std::move(_allowedDirectories)),
-	m_sourceCodes()
+	m_allowedDirectories(std::move(_allowedDirectories))
 {
 	setBasePath(_basePath);
 	for (boost::filesystem::path const& includePath: _includePaths)
@@ -82,21 +81,6 @@ void FileReader::allowDirectory(boost::filesystem::path _path)
 {
 	solAssert(!_path.empty(), "");
 	m_allowedDirectories.insert(std::move(_path));
-}
-
-void FileReader::addOrUpdateFile(boost::filesystem::path const& _path, SourceCode _source)
-{
-	m_sourceCodes[cliPathToSourceUnitName(_path)] = std::move(_source);
-}
-
-void FileReader::setStdin(SourceCode _source)
-{
-	m_sourceCodes["<stdin>"] = std::move(_source);
-}
-
-void FileReader::setSourceUnits(StringMap _sources)
-{
-	m_sourceCodes = std::move(_sources);
 }
 
 ReadCallback::Result FileReader::readFile(string const& _kind, string const& _sourceUnitName)
@@ -154,8 +138,6 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
 		auto contents = readFileAsString(candidates[0]);
-		solAssert(m_sourceCodes.count(_sourceUnitName) == 0, "");
-		m_sourceCodes[_sourceUnitName] = contents;
 		return ReadCallback::Result{true, contents};
 	}
 	catch (util::Exception const& _exception)
@@ -361,6 +343,36 @@ bool FileReader::isUNCPath(boost::filesystem::path const& _path)
 		|| (rootName[0] == '\\' && rootName[1] == '\\')
 #endif
 	);
+}
+
+
+frontend::ReadCallback::Callback FileReaderWithRepository::reader()
+{
+	return [this](std::string const& _kind, std::string const& _path) {
+		ReadCallback::Result result = FileReader::readFile(_kind, _path);
+		if (result.success)
+		{
+			solAssert(_kind == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
+			solAssert(m_sourceCodes.count(_path) == 0, "");
+			m_sourceCodes[_path] = result.responseOrErrorMessage;
+		}
+		return result;
+	};
+}
+
+void FileReaderWithRepository::addOrUpdateFile(boost::filesystem::path const& _path, SourceCode _source)
+{
+	m_sourceCodes[cliPathToSourceUnitName(_path)] = std::move(_source);
+}
+
+void FileReaderWithRepository::setStdin(SourceCode _source)
+{
+	m_sourceCodes["<stdin>"] = std::move(_source);
+}
+
+void FileReaderWithRepository::setSourceUnits(StringMap _sources)
+{
+	m_sourceCodes = std::move(_sources);
 }
 
 }

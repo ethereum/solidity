@@ -36,7 +36,7 @@ struct OptionsReaderAndMessages
 {
 	bool success;
 	CommandLineOptions options;
-	FileReader reader;
+	FileReaderWithRepository reader;
 	std::optional<std::string> standardJsonInput;
 	std::string stdoutContent;
 	std::string stderrContent;

@@ -35,7 +35,6 @@ namespace solidity::frontend
 class FileReader
 {
 public:
-	using StringMap = std::map<SourceUnitName, SourceCode>;
 	using PathMap = std::map<SourceUnitName, boost::filesystem::path>;
 	using FileSystemPathSet = std::set<boost::filesystem::path>;
 
@@ -61,22 +60,6 @@ public:
 	void allowDirectory(boost::filesystem::path _path);
 	FileSystemPathSet const& allowedDirectories() const noexcept { return m_allowedDirectories; }
 
-	/// @returns all sources by their internal source unit names.
-	StringMap const& sourceUnits() const noexcept { return m_sourceCodes; }
-
-	/// Resets all sources to the given map of source unit name to source codes.
-	/// Does not enforce @a allowedDirectories().
-	void setSourceUnits(StringMap _sources);
-
-	/// Adds the source code under a source unit name created by normalizing the file path
-	/// or changes an existing source.
-	/// Does not enforce @a allowedDirectories().
-	void addOrUpdateFile(boost::filesystem::path const& _path, SourceCode _source);
-
-	/// Adds the source code under the source unit name of @a <stdin>.
-	/// Does not enforce @a allowedDirectories().
-	void setStdin(SourceCode _source);
-
 	/// Receives a @p _sourceUnitName that refers to a source unit in compiler's virtual filesystem
 	/// and attempts to interpret it as a path and read the corresponding file from disk.
 	/// The read will only succeed if the canonical path of the file is within one of the @a allowedDirectories().
@@ -86,7 +69,7 @@ public:
 	/// already exists, previous content is discarded.
 	frontend::ReadCallback::Result readFile(std::string const& _kind, std::string const& _sourceUnitName);
 
-	frontend::ReadCallback::Callback reader()
+	virtual frontend::ReadCallback::Callback reader()
 	{
 		return [this](std::string const& _kind, std::string const& _path) { return readFile(_kind, _path); };
 	}
@@ -152,7 +135,41 @@ private:
 
 	/// list of allowed directories to read files from
 	FileSystemPathSet m_allowedDirectories;
+};
 
+/**
+ * FileReader with the feature to store the contents of files.
+ */
+class FileReaderWithRepository: public FileReader
+{
+public:
+	using StringMap = std::map<SourceUnitName, SourceCode>;
+
+	explicit FileReaderWithRepository(
+		boost::filesystem::path _basePath = {},
+		std::vector<boost::filesystem::path> const& _includePaths = {},
+		FileSystemPathSet _allowedDirectories = {}
+	): FileReader(_basePath, _includePaths, std::move(_allowedDirectories)) {}
+
+	frontend::ReadCallback::Callback reader() override;
+
+	/// @returns all sources by their internal source unit names.
+	StringMap const& sourceUnits() const noexcept { return m_sourceCodes; }
+
+	/// Resets all sources to the given map of source unit name to source codes.
+	/// Does not enforce @a allowedDirectories().
+	void setSourceUnits(StringMap _sources);
+
+	/// Adds the source code under a source unit name created by normalizing the file path
+	/// or changes an existing source.
+	/// Does not enforce @a allowedDirectories().
+	void addOrUpdateFile(boost::filesystem::path const& _path, SourceCode _source);
+
+	/// Adds the source code under the source unit name of @a <stdin>.
+	/// Does not enforce @a allowedDirectories().
+	void setStdin(SourceCode _source);
+
+private:
 	/// map of input files to source code strings
 	StringMap m_sourceCodes;
 };

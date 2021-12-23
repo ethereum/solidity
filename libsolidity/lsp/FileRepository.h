@@ -47,7 +47,7 @@ public:
 
 private:
 	std::map<std::string, std::string> m_sourceUnitNamesToClientPaths;
-	frontend::FileReader m_fileReader;
+	frontend::FileReaderWithRepository m_fileReader;
 };
 
 }
