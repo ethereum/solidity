@@ -191,6 +191,9 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	if (solidity::test::CommonOptions::get().disableSemanticTests)
 		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 
+	if (!solidity::test::CommonOptions::get().enforceGasTest)
+		cout << endl << "WARNING :: Gas Cost Expectations are not being enforced" << endl << endl;
+
 	// Include the interactive tests in the automatic tests as well
 	for (auto const& ts: g_interactiveTestsuites)
 	{
