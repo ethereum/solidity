@@ -192,6 +192,9 @@ struct ErrorDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDoc
 
 struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
+	/// If true, indicates that the modifier does not contain a "return" statement and only
+	/// a single `_` (placeholder) as the last statament. This means it can be called as a function.
+	bool simpleModifier = false;
 };
 
 struct VariableDeclarationAnnotation: DeclarationAnnotation, StructurallyDocumentedAnnotation

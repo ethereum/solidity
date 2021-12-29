@@ -705,6 +705,62 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	return false;
 }
 
+bool ContractCompiler::visit(ModifierDefinition const& _modifier)
+{
+	solAssert(_modifier.isImplemented(), "");
+	solAssert(_modifier.annotation().simpleModifier, "Direct visit to non-simple modifier.");
+
+	CompilerContext::LocationSetter locationSetter(m_context, _modifier);
+
+	m_context.startFunction(_modifier);
+
+	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
+
+	unsigned parametersSize = CompilerUtils::sizeOnStack(_modifier.parameters());
+	// adding 1 for return address.
+	m_context.setStackOffset(static_cast<int>(parametersSize) + 1);
+
+	for (ASTPointer<VariableDeclaration> const& variable: _modifier.parameters())
+	{
+		m_context.addVariable(*variable, parametersSize);
+		parametersSize -= variable->annotation().type->sizeOnStack();
+	}
+
+	solAssert(m_returnTags.empty(), "");
+	m_breakTags.clear();
+	m_continueTags.clear();
+	m_currentFunction = nullptr;
+	m_scopeStackHeight.clear();
+	m_modifierDepth = 0;
+	m_context.setModifierDepth(0);
+	m_context.setArithmetic(Arithmetic::Checked);
+
+	m_context.setUseABICoderV2(*_modifier.sourceUnit().annotation().useABICoderV2);
+
+	// This should not be used because we should not have a return statement.
+	solAssert(m_returnTags.empty(), "");
+
+	solAssert(m_ignoredPlaceholders == 0);
+	_modifier.body().accept(*this);
+	solAssert(m_ignoredPlaceholders == 1);
+	m_ignoredPlaceholders = 0;
+
+	m_context.setModifierDepth(0);
+
+	CompilerUtils(m_context).popStackSlots(CompilerUtils::sizeOnStack(_modifier.parameters()));
+
+	for (ASTPointer<VariableDeclaration> const& variable: _modifier.parameters())
+		m_context.removeVariable(*variable);
+
+	solAssert(m_context.numberOfLocalVariables() == 0, "");
+
+	m_context.appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
+	solAssert(m_context.stackHeight() == 0);
+
+	return false;
+}
+
+
 bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 {
 	unsigned startStackHeight = m_context.stackHeight();
@@ -1280,6 +1336,8 @@ bool ContractCompiler::visit(Break const& _breakStatement)
 
 bool ContractCompiler::visit(Return const& _return)
 {
+	solAssert(m_currentFunction, "Used return inside simple modifier.");
+
 	CompilerContext::LocationSetter locationSetter(m_context, _return);
 	if (Expression const* expression = _return.expression())
 	{
@@ -1381,12 +1439,20 @@ bool ContractCompiler::visit(ExpressionStatement const& _expressionStatement)
 
 bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 {
-	StackHeightChecker checker(m_context);
-	CompilerContext::LocationSetter locationSetter(m_context, _placeholderStatement);
-	solAssert(m_context.arithmetic() == Arithmetic::Checked, "Placeholder cannot be used inside checked block.");
-	appendModifierOrFunctionCode();
-	solAssert(m_context.arithmetic() == Arithmetic::Checked, "Arithmetic not reset to 'checked'.");
-	checker.check();
+	if (m_currentFunction)
+	{
+		StackHeightChecker checker(m_context);
+		CompilerContext::LocationSetter locationSetter(m_context, _placeholderStatement);
+		solAssert(m_context.arithmetic() == Arithmetic::Checked, "Placeholder cannot be used inside checked block.");
+		appendModifierOrFunctionCode();
+		solAssert(m_context.arithmetic() == Arithmetic::Checked, "Arithmetic not reset to 'checked'.");
+		checker.check();
+	}
+	else
+		// We are generating code for a simple modifier, so we just register the placeholder but
+		// do not generate any code.
+		m_ignoredPlaceholders++;
+
 	return true;
 }
 
@@ -1416,6 +1482,8 @@ void ContractCompiler::endVisit(Block const& _block)
 
 void ContractCompiler::appendMissingFunctions()
 {
+	// Note that `function` can also be a modifier, but if it is a modifier,
+	// it is a "simple" modifier, i.e. no `return` and only a single `_` at the very end.
 	while (Declaration const* function = m_context.nextFunctionToCompile())
 	{
 		m_context.setStackOffset(0);
@@ -1465,18 +1533,37 @@ void ContractCompiler::appendModifierOrFunctionCode()
 				modifierInvocation->arguments() ? *modifierInvocation->arguments() : std::vector<ASTPointer<Expression>>();
 
 			solAssert(modifier.parameters().size() == modifierArguments.size(), "");
-			for (unsigned i = 0; i < modifier.parameters().size(); ++i)
-			{
-				m_context.addVariable(*modifier.parameters()[i]);
-				addedVariables.push_back(modifier.parameters()[i].get());
-				compileExpression(
-					*modifierArguments[i],
-					modifier.parameters()[i]->annotation().type
-				);
-			}
 
-			stackSurplus = CompilerUtils::sizeOnStack(modifier.parameters());
-			codeBlock = &modifier.body();
+			if (modifier.annotation().simpleModifier)
+			{
+				AssemblyItem returnLabel = m_context.pushNewTag();
+				for (unsigned i = 0; i < modifier.parameters().size(); ++i)
+					compileExpression(
+						*modifierArguments[i],
+						modifier.parameters()[i]->annotation().type
+					);
+				m_context.appendJumpTo(
+					m_context.functionEntryLabel(modifier),
+					evmasm::AssemblyItem::JumpType::IntoFunction
+				);
+				m_context << returnLabel.tag();
+				m_context.adjustStackOffset(-static_cast<int>(CompilerUtils::sizeOnStack(modifier.parameters())) - 1);
+				appendModifierOrFunctionCode();
+			}
+			else
+			{
+				for (unsigned i = 0; i < modifier.parameters().size(); ++i)
+				{
+					m_context.addVariable(*modifier.parameters()[i]);
+					addedVariables.push_back(modifier.parameters()[i].get());
+					compileExpression(
+						*modifierArguments[i],
+						modifier.parameters()[i]->annotation().type
+					);
+				}
+				stackSurplus = CompilerUtils::sizeOnStack(modifier.parameters());
+				codeBlock = &modifier.body();
+			}
 		}
 	}
 

@@ -105,6 +105,7 @@ private:
 
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 	bool visit(FunctionDefinition const& _function) override;
+	bool visit(ModifierDefinition const& _modifier) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(TryStatement const& _tryStatement) override;
 	void handleCatch(std::vector<ASTPointer<TryCatchClause>> const& _catchClauses);
@@ -155,6 +156,8 @@ private:
 	/// Tag to jump to for a "return" statement and the stack height after freeing the local function or modifier variables.
 	/// Needs to be stacked because of modifiers.
 	std::vector<std::pair<evmasm::AssemblyItem, unsigned>> m_returnTags;
+	/// Number of placeholder statements that were ignored since we generated code for a simple modifier.
+	size_t m_ignoredPlaceholders = 0;
 	unsigned m_modifierDepth = 0;
 	FunctionDefinition const* m_currentFunction = nullptr;
 

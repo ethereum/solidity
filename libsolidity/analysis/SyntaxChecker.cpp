@@ -179,6 +179,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 bool SyntaxChecker::visit(ModifierDefinition const&)
 {
 	m_placeholderFound = false;
+	m_modifierIsSimple = true;
 	return true;
 }
 
@@ -186,6 +187,17 @@ void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
 {
 	if (_modifier.isImplemented() && !m_placeholderFound)
 		m_errorReporter.syntaxError(2883_error, _modifier.body().location(), "Modifier body does not contain '_'.");
+
+	if (!m_placeholderFound)
+		m_modifierIsSimple = false;
+	if (_modifier.isImplemented() && (
+		_modifier.body().statements().empty() ||
+		!dynamic_cast<PlaceholderStatement const*>(_modifier.body().statements().back().get())
+	))
+		m_modifierIsSimple = false;
+	if (m_modifierIsSimple)
+		_modifier.annotation().simpleModifier = true;
+
 	m_placeholderFound = false;
 }
 
@@ -263,6 +275,12 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 	if (m_inLoopDepth <= 0)
 		// we're not in a for/while loop, report syntax error
 		m_errorReporter.syntaxError(6102_error, _breakStatement.location(), "\"break\" has to be in a \"for\" or \"while\" loop.");
+	return true;
+}
+
+bool SyntaxChecker::visit(Return const&)
+{
+	m_modifierIsSimple = false;
 	return true;
 }
 
@@ -356,6 +374,10 @@ bool SyntaxChecker::visit(PlaceholderStatement const& _placeholder)
 			_placeholder.location(),
 			"The placeholder statement \"_\" cannot be used inside an \"unchecked\" block."
 		);
+
+	// Two placeholders make it non-simple.
+	if (m_placeholderFound)
+		m_modifierIsSimple = false;
 
 	m_placeholderFound = true;
 	return true;

@@ -77,6 +77,7 @@ private:
 
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;
+	bool visit(Return const& _returnStatement) override;
 
 	bool visit(Throw const& _throwStatement) override;
 
@@ -100,6 +101,9 @@ private:
 
 	/// Flag that indicates whether a function modifier actually contains '_'.
 	bool m_placeholderFound = false;
+	/// Indicates that the current modifier is "simple" which means it does not contain
+	/// a "return" statement and the only placeholder is the last statement.
+	bool m_modifierIsSimple = false;
 
 	/// Flag that indicates whether some version pragma was present.
 	bool m_versionPragmaFound = false;

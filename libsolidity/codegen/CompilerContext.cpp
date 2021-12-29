@@ -601,6 +601,12 @@ evmasm::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
 			params = CompilerUtils::sizeOnStack(functionType.parameterTypes());
 			returns = CompilerUtils::sizeOnStack(functionType.returnParameterTypes());
 		}
+		else if (auto const* modifier = dynamic_cast<ModifierDefinition const*>(&_declaration))
+		{
+			solAssert(modifier->annotation().simpleModifier, "Can only call simple modifiers as functions.");
+			params = CompilerUtils::sizeOnStack(modifier->parameters());
+		}
+		/// TODO What else can be there apart from function and modifiers?
 
 		// some name that cannot clash with yul function names.
 		string labelName = "@" + _declaration.name() + "_" + to_string(_declaration.id());
