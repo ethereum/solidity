@@ -78,6 +78,9 @@ CHC::CHC(
 
 void CHC::analyze(SourceUnit const& _source)
 {
+	if (!shouldAnalyze(_source))
+		return;
+
 	if (!m_settings.solvers.z3 && !m_settings.solvers.smtlib2)
 	{
 		if (!m_noSolverWarning)
@@ -137,6 +140,9 @@ vector<string> CHC::unhandledQueries() const
 
 bool CHC::visit(ContractDefinition const& _contract)
 {
+	if (!shouldAnalyze(_contract))
+		return false;
+
 	resetContractAnalysis();
 	initContract(_contract);
 	clearIndices(&_contract);
@@ -152,6 +158,9 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 void CHC::endVisit(ContractDefinition const& _contract)
 {
+	if (!shouldAnalyze(_contract))
+		return;
+
 	for (auto base: _contract.annotation().linearizedBaseContracts)
 	{
 		if (auto constructor = base->constructor())
