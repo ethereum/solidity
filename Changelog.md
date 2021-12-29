@@ -1,7 +1,7 @@
 ### 0.8.12 (unreleased)
 
 Compiler Features:
-
+ * Modifiers: Use internal function calls and thus prevent code duplication for modifiers that have a single `_;` at the end.
 
 
 Bugfixes:
