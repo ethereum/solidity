@@ -25,17 +25,27 @@
 
 #include <liblangutil/Token.h>
 #include <libsolutil/Assertions.h>
+#include <liblangutil/Exceptions.h>
 
 #include <string>
 #include <optional>
 #include <utility>
 #include <vector>
+#include <variant>
 
 namespace solidity::langutil
 {
 
-class SemVerError: public util::Exception
+struct SemVerError: public Error
 {
+public:
+	explicit SemVerError(
+		ErrorId _errorId,
+		Type _type,
+		std::string const& _description,
+		SourceLocation const& _location = SourceLocation(),
+		SecondarySourceLocation const& _secondaryLocation = SecondarySourceLocation()
+	) : Error(_errorId, _type, _description, _location, _secondaryLocation) {}
 };
 
 #undef major
@@ -88,7 +98,7 @@ public:
 	SemVerMatchExpressionParser(std::vector<Token> _tokens, std::vector<std::string> _literals);
 
 	/// Returns an expression if it was parseable, or nothing otherwise.
-	std::optional<SemVerMatchExpression> parse();
+	std::variant<SemVerError, std::optional<SemVerMatchExpression>> parse();
 
 private:
 	void reset();

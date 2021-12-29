@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(SemVerMatcher)
 namespace
 {
 
-SemVerMatchExpression parseExpression(string const& _input)
+SemVerMatchExpressionParser createSemVerMatchExpressionParser(string const& _input)
 {
 	CharStream stream(_input, "");
 	Scanner scanner{stream};
@@ -58,15 +58,42 @@ SemVerMatchExpression parseExpression(string const& _input)
 		scanner.next();
 	}
 
-	auto expression = SemVerMatchExpressionParser(tokens, literals).parse();
-	BOOST_REQUIRE(expression.has_value());
-	BOOST_CHECK_MESSAGE(
-		expression->isValid(),
-		"Expression \"" + _input + "\" did not parse properly."
-	);
-	return *expression;
+	return SemVerMatchExpressionParser(tokens, literals);
 }
 
+std::variant<SemVerError, std::optional<SemVerMatchExpression>> parseExpression(string const& _input)
+{
+	SemVerMatchExpressionParser expressionParser = createSemVerMatchExpressionParser(_input);
+
+	auto expressionOrError = expressionParser.parse();
+	if (std::holds_alternative<std::optional<SemVerMatchExpression>>(expressionOrError))
+	{
+		auto expression = std::get<std::optional<SemVerMatchExpression>>(expressionOrError);
+		BOOST_REQUIRE(expression.has_value());
+		BOOST_CHECK_MESSAGE(
+			expression->isValid(),
+			"Expression \"" + _input + "\" did not parse properly."
+		);
+		return expressionOrError;
+	}
+	return expressionOrError;
+}
+
+}
+
+BOOST_AUTO_TEST_CASE(check_exceptions)
+{
+	BOOST_CHECK_EXCEPTION(
+		SemVerVersion version("1.2"),
+		SemVerError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == "Invalid versionString: 1.2"); return true; }
+	);
+
+	BOOST_CHECK_EXCEPTION(
+		SemVerVersion version("-1.2.0"),
+		SemVerError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == "Invalid versionString: -1.2.0"); return true; }
+	);
 }
 
 BOOST_AUTO_TEST_CASE(positive_range)
@@ -159,11 +186,16 @@ BOOST_AUTO_TEST_CASE(positive_range)
 	for (auto const& t: tests)
 	{
 		SemVerVersion version(t.second);
-		SemVerMatchExpression expression = parseExpression(t.first);
-		BOOST_CHECK_MESSAGE(
-			expression.matches(version),
-			"Version \"" + t.second + "\" did not satisfy expression \"" + t.first + "\""
-		);
+		auto expressionOrError = parseExpression(t.first);
+		if (std::holds_alternative<std::optional<SemVerMatchExpression>>(expressionOrError))
+		{
+			auto expressionPointer = std::get<std::optional<SemVerMatchExpression>>(expressionOrError);
+			auto expression = *expressionPointer;
+			BOOST_CHECK_MESSAGE(
+				expression.matches(version),
+				"Version \"" + t.second + "\" did not satisfy expression \"" + t.first + "\""
+			);
+		}
 	}
 }
 
@@ -235,12 +267,17 @@ BOOST_AUTO_TEST_CASE(negative_range)
 	for (auto const& t: tests)
 	{
 		SemVerVersion version(t.second);
-		SemVerMatchExpression expression = parseExpression(t.first);
-		BOOST_CHECK_MESSAGE(
-			!expression.matches(version),
-			"Version \"" + t.second + "\" did satisfy expression \"" + t.first + "\" " +
-			"(although it should not)"
-		);
+		auto expressionOrError = parseExpression(t.first);
+		if (std::holds_alternative<std::optional<SemVerMatchExpression>>(expressionOrError))
+		{
+			auto expressionPointer = std::get<std::optional<SemVerMatchExpression>>(expressionOrError);
+			auto expression = *expressionPointer;
+			BOOST_CHECK_MESSAGE(
+				!expression.matches(version),
+				"Version \"" + t.second + "\" did satisfy expression \"" + t.first + "\" " +
+				"(although it should not)"
+			);
+		}
 	}
 }
 

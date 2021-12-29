@@ -156,7 +156,13 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> const& _tokens, vector<string> const& _literals)
 {
 	SemVerMatchExpressionParser parser(_tokens, _literals);
-	auto matchExpression = parser.parse();
+	auto matchExpressionOrError = parser.parse();
+	if (std::holds_alternative<SemVerError>(matchExpressionOrError))
+	{
+		auto matchExpressionError = std::get<SemVerError>(matchExpressionOrError);
+		BOOST_THROW_EXCEPTION(matchExpressionError);
+	}
+	auto matchExpression = std::get<std::optional<SemVerMatchExpression>>(matchExpressionOrError);
 	if (!matchExpression.has_value())
 		m_errorReporter.fatalParserError(
 			1684_error,
