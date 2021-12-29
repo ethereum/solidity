@@ -1,5 +1,9 @@
 ### 0.8.12 (unreleased)
 
+Language Features:
+ * General: Support ``ContractName.functionName`` for ``abi.encodeCall``, in addition to external function pointers.
+
+
 Compiler Features:
 
 

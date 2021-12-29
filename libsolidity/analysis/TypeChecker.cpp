@@ -2122,16 +2122,35 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 		return;
 	}
 
-	if (functionPointerType->kind() != FunctionType::Kind::External)
+	if (
+		functionPointerType->kind() != FunctionType::Kind::External &&
+		functionPointerType->kind() != FunctionType::Kind::Declaration
+	)
 	{
-		string msg = "Function must be \"public\" or \"external\".";
+		string msg = "Expected regular external function type, or external view on public function.";
+		if (functionPointerType->kind() == FunctionType::Kind::Internal)
+			msg += " Provided internal function.";
+		else if (functionPointerType->kind() == FunctionType::Kind::DelegateCall)
+			msg += " Cannot use library functions for abi.encodeCall.";
+		else if (functionPointerType->kind() == FunctionType::Kind::Creation)
+			msg += " Provided creation function.";
+		else
+			msg += " Cannot use special function.";
 		SecondarySourceLocation ssl{};
 
 		if (functionPointerType->hasDeclaration())
 		{
 			ssl.append("Function is declared here:", functionPointerType->declaration().location());
-			if (functionPointerType->declaration().scope() == m_currentContract)
+			if (
+				functionPointerType->declaration().visibility() == Visibility::Public &&
+				functionPointerType->declaration().scope() == m_currentContract
+			)
 				msg += " Did you forget to prefix \"this.\"?";
+			else if (contains(
+				m_currentContract->annotation().linearizedBaseContracts,
+				functionPointerType->declaration().scope()
+			) && functionPointerType->declaration().scope() != m_currentContract)
+				msg += " Functions from base contracts have to be external.";
 		}
 
 		m_errorReporter.typeError(3509_error, arguments[0]->location(), ssl, msg);
