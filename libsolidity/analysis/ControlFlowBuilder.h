@@ -37,13 +37,15 @@ class ControlFlowBuilder: private ASTConstVisitor, private yul::ASTWalker
 public:
 	static std::unique_ptr<FunctionFlow> createFunctionFlow(
 		CFG::NodeContainer& _nodeContainer,
-		FunctionDefinition const& _function
+		FunctionDefinition const& _function,
+		ContractDefinition const* _contract = nullptr
 	);
 
 private:
 	explicit ControlFlowBuilder(
 		CFG::NodeContainer& _nodeContainer,
-		FunctionFlow const& _functionFlow
+		FunctionFlow const& _functionFlow,
+		ContractDefinition const* _contract = nullptr
 	);
 
 	// Visits for constructing the control flow.
@@ -157,6 +159,8 @@ private:
 	CFGNode* m_returnNode = nullptr;
 	CFGNode* m_revertNode = nullptr;
 	CFGNode* m_transactionReturnNode = nullptr;
+
+	ContractDefinition const* m_contract = nullptr;
 
 	/// The current jump destination of break Statements.
 	CFGNode* m_breakJump = nullptr;
