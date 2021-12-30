@@ -9,6 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Control Flow Graph: Perform proper virtual lookup for modifiers for uninitialized variable and unreachable code analysis.
 
 
 Solc-Js:
