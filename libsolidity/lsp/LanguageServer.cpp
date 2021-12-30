@@ -101,7 +101,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _1, _2)},
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _1, _2)},
 	},
-	m_fileRepository("/" /* basePath */),
+	m_fileRepository("/" /* basePath */, {} /* includePaths */),
 	m_compilerStack{m_fileRepository.reader()}
 {
 }
@@ -160,6 +160,20 @@ Json::Value LanguageServer::toJson(SourceLocation const& _location) const
 void LanguageServer::changeConfiguration(Json::Value const& _settings)
 {
 	m_settingsObject = _settings;
+
+	// TODO EVM version
+
+	// TODO in solcjs we probably have the include paths handled by the plugin
+	// - should we still allow this option?
+	// TODO how do you change the base path - do you restart the server?
+
+	std::vector<boost::filesystem::path> includePaths;
+	if (m_settingsObject.isMember("includePaths"))
+		for (auto const& path: m_settingsObject["includePaths"])
+			// TODO these might have `file://` prefixes we have to remove.
+			includePaths.emplace_back(path.asString());
+	m_fileRepository = FileRepository(m_fileRepository.basePath(), includePaths);
+
 }
 
 void LanguageServer::compile()
@@ -167,7 +181,7 @@ void LanguageServer::compile()
 	// For files that are not open, we have to take changes on disk into account,
 	// so we just remove all non-open files.
 
-	FileRepository oldRepository(m_fileRepository.basePath());
+	FileRepository oldRepository(m_fileRepository.basePath(), m_fileRepository.includePaths());
 	swap(oldRepository, m_fileRepository);
 
 	for (string const& fileName: m_openFiles)
@@ -304,7 +318,7 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	else if (Json::Value rootPath = _args["rootPath"])
 		rootPath = rootPath.asString();
 
-	m_fileRepository = FileRepository(boost::filesystem::path(rootPath));
+	m_fileRepository = FileRepository(boost::filesystem::path(rootPath), {});
 	if (_args["initializationOptions"].isObject())
 		changeConfiguration(_args["initializationOptions"]);
 

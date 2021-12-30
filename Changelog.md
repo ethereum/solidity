@@ -5,7 +5,7 @@ Language Features:
 
 
 Compiler Features:
-
+ * Language Server: Option to set include paths.
 
 
 Bugfixes:
