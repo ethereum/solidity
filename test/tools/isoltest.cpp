@@ -437,6 +437,9 @@ int main(int argc, char const *argv[])
 		if (options.disableSemanticTests)
 			cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 
+		if (!options.enforceGasTest)
+			cout << "WARNING :: Gas Cost Expectations are not being enforced" << endl << endl;
+
 		TestStats global_stats{0, 0};
 		cout << "Running tests..." << endl << endl;
 
