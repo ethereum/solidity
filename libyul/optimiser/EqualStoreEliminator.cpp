@@ -25,15 +25,8 @@
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
-#include <libyul/SideEffects.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
-
-#include <libevmasm/GasMeter.h>
-#include <libsolutil/Keccak256.h>
-
-#include <limits>
 
 using namespace std;
 using namespace solidity;
