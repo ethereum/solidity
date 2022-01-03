@@ -54,7 +54,8 @@
  - [ ] Run ``./scripts/docker_deploy_manual.sh v$VERSION``).
 
 ### PPA
- - [ ] Change ``scripts/release_ppa.sh`` to match your key's email and key id.
+ - [ ] Make sure the ``ethereum/cpp-build-deps`` PPA repository contains libz3-static-dev builds for all current versions of ubuntu. If not run ``scripts/deps-ppa/static-z3.sh`` (after changing email address and key id and adding the missing ubuntu version) and wait for the builds to succeed before continuing.
+ - [ ] Change ``scripts/release_ppa.sh`` to match your key's email and key id; double-check that ``DISTRIBUTIONS`` contains the most recent versions.
  - [ ] Run ``scripts/release_ppa.sh v$VERSION`` to create the PPA release (you need the relevant openssl key).
  - [ ] Wait for the ``~ethereum/ubuntu/ethereum-static`` PPA build to be finished and published for *all platforms*. SERIOUSLY: DO NOT PROCEED EARLIER!!! *After* the static builds are *published*, copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty``, ``Xenial`` and ``Bionic`` while selecting ``Copy existing binaries``.
 
