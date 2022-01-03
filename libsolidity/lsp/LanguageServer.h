@@ -60,12 +60,12 @@ public:
 private:
 	/// Checks if the server is initialized (to be used by messages that need it to be initialized).
 	/// Reports an error and returns false if not.
-	bool checkServerInitialized(MessageID _id);
+	void requireServerInitialized();
 	void handleInitialize(MessageID _id, Json::Value const& _args);
-	void handleWorkspaceDidChangeConfiguration(MessageID _id, Json::Value const& _args);
-	void handleTextDocumentDidOpen(MessageID _id, Json::Value const& _args);
-	void handleTextDocumentDidChange(MessageID _id, Json::Value const& _args);
-	void handleTextDocumentDidClose(MessageID _id, Json::Value const& _args);
+	void handleWorkspaceDidChangeConfiguration(Json::Value const& _args);
+	void handleTextDocumentDidOpen(Json::Value const& _args);
+	void handleTextDocumentDidChange(Json::Value const& _args);
+	void handleTextDocumentDidClose(Json::Value const& _args);
 
 	/// Invoked when the server user-supplied configuration changes (initiated by the client).
 	void changeConfiguration(Json::Value const&);

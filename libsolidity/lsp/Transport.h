@@ -17,6 +17,8 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+#include <libsolutil/Exceptions.h>
+
 #include <json/value.h>
 
 #include <functional>
@@ -43,6 +45,23 @@ enum class ErrorCode
 	// Defined by the protocol.
 	ServerNotInitialized = -32002,
 	RequestFailed = -32803
+};
+
+/**
+ * Error exception used to bail out on errors in the LSP function-call handlers.
+ */
+class RequestError: public util::Exception
+{
+public:
+	explicit RequestError(ErrorCode _code):
+		m_code{_code}
+	{
+	}
+
+	ErrorCode code() const noexcept { return m_code; }
+
+private:
+	ErrorCode m_code;
 };
 
 /**
