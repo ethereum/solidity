@@ -895,6 +895,6 @@ in scope in the block that follows.
     The error might have happened deeper down in the call chain and the
     called contract just forwarded it. Also, it could be due to an
     out-of-gas situation and not a deliberate error condition:
-    The caller always retains 63/64th of the gas in a call and thus
+    The caller always retains at least 1/64th of the gas in a call and thus
     even if the called contract goes out of gas, the caller still
     has some gas left.
