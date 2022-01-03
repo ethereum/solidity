@@ -23,7 +23,6 @@
 
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
