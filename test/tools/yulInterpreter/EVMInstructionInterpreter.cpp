@@ -476,7 +476,9 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 	{
 		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
 		m_state.msize = max(m_state.msize, newSize);
-		return _size <= 0xffff;
+		// We only record accesses to contiguous memory chunks that are at most 0xffff bytes
+		// in size and at an offset of at most numeric_limits<size_t>::max() - 0xffff
+		return _size <= 0xffff && _offset <= u256(numeric_limits<size_t>::max() - 0xffff);
 	}
 	else
 		m_state.msize = u256(-1);
