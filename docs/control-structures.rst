@@ -699,7 +699,7 @@ safest action is to revert all changes and make the whole transaction
 (or at least call) without effect.
 
 In both cases, the caller can react on such failures using ``try``/``catch``, but
-the changes in the caller will always be reverted.
+the changes in the callee will always be reverted.
 
 .. note::
 
