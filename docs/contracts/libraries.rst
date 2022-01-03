@@ -34,7 +34,8 @@ contracts (using qualified access like ``L.f()``).
 Of course, calls to internal functions
 use the internal calling convention, which means that all internal types
 can be passed and types :ref:`stored in memory <data-location>` will be passed by reference and not copied.
-To realize this in the EVM, code of internal library functions
+To realize this in the EVM, the code of internal library functions
+that are called from a contract
 and all functions called from therein will at compile time be included in the calling
 contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
 
