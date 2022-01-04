@@ -31,30 +31,21 @@ REPODIR="$(realpath "$(dirname "$0")"/..)"
 # shellcheck source=scripts/common.sh
 source "${REPODIR}/scripts/common.sh"
 
-# NOTE: If you add/remove values, remember to update `parallelism` setting in CircleCI config.
 EVM_VALUES=(homestead byzantium constantinople petersburg istanbul berlin london)
 DEFAULT_EVM=london
 [[ " ${EVM_VALUES[*]} " =~ $DEFAULT_EVM ]]
 OPTIMIZE_VALUES=(0 1)
-STEPS=$(( 1 + ${#EVM_VALUES[@]} * ${#OPTIMIZE_VALUES[@]} ))
-
-RUN_STEPS=$(circleci_select_steps "$(seq "$STEPS")")
-printTask "Running steps $RUN_STEPS..."
-
-STEP=1
-
 
 # Run for ABI encoder v1, without SMTChecker tests.
-if circleci_step_selected "$RUN_STEPS" "$STEP"
-then
-    EVM="${DEFAULT_EVM}" \
-    OPTIMIZE=1 \
-    ABI_ENCODER_V1=1 \
-    BOOST_TEST_ARGS="-t !smtCheckerTests" \
-    "${REPODIR}/.circleci/soltest.sh"
-fi
-((++STEP))
+EVM="${DEFAULT_EVM}" \
+OPTIMIZE=1 \
+ABI_ENCODER_V1=1 \
+BOOST_TEST_ARGS="-t !smtCheckerTests" \
+"${REPODIR}/.circleci/soltest.sh"
 
+# We shift the batch index so that long-running tests
+# do not always run in the same executor for all EVM versions
+INDEX_SHIFT=0
 for OPTIMIZE in "${OPTIMIZE_VALUES[@]}"
 do
     for EVM in "${EVM_VALUES[@]}"
@@ -68,16 +59,13 @@ do
         DISABLE_SMTCHECKER=""
         [ "${OPTIMIZE}" != "0" ] && DISABLE_SMTCHECKER="-t !smtCheckerTests"
 
-        if circleci_step_selected "$RUN_STEPS" "$STEP"
-        then
-            EVM="$EVM" \
-            OPTIMIZE="$OPTIMIZE" \
-            SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS $EWASM_ARGS" \
-            BOOST_TEST_ARGS="-t !@nooptions $DISABLE_SMTCHECKER" \
-            "${REPODIR}/.circleci/soltest.sh"
-        fi
-        ((++STEP))
+        EVM="$EVM" \
+        OPTIMIZE="$OPTIMIZE" \
+        SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS $EWASM_ARGS" \
+        BOOST_TEST_ARGS="-t !@nooptions $DISABLE_SMTCHECKER" \
+        INDEX_SHIFT="$INDEX_SHIFT" \
+        "${REPODIR}/.circleci/soltest.sh"
+
+        INDEX_SHIFT=$((INDEX_SHIFT + 1))
     done
 done
-
-((STEP == STEPS + 1)) || assertFail "Step counter not properly adjusted!"
