@@ -2156,7 +2156,7 @@ Features:
  * Internal: Inline assembly usable by the code generator.
  * Commandline interface: Using ``-`` as filename allows reading from stdin.
  * Interface JSON: Fallback function is now part of the ABI.
- * Interface: Version string now *semver* compatible.
+ * Interface: Version string now *SemVer* compatible.
  * Code generator: Do not provide "new account gas" if we know the called account exists.
 
 Bugfixes:
