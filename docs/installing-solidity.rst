@@ -537,8 +537,8 @@ The Solidity version string contains four parts:
 
 If there are local modifications, the commit will be postfixed with ``.mod``.
 
-These parts are combined as required by Semver, where the Solidity pre-release tag equals to the Semver pre-release
-and the Solidity commit and platform combined make up the Semver build metadata.
+These parts are combined as required by SemVer, where the Solidity pre-release tag equals to the SemVer pre-release
+and the Solidity commit and platform combined make up the SemVer build metadata.
 
 A release example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
 
@@ -549,7 +549,7 @@ Important Information About Versioning
 
 After a release is made, the patch version level is bumped, because we assume that only
 patch level changes follow. When changes are merged, the version should be bumped according
-to semver and the severity of the change. Finally, a release is always made with the version
+to SemVer and the severity of the change. Finally, a release is always made with the version
 of the current nightly build, but without the ``prerelease`` specifier.
 
 Example:
