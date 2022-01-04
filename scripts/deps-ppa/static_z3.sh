@@ -27,7 +27,7 @@ email=builds@ethereum.org
 packagename=z3-static
 version=4.8.13
 
-DISTRIBUTIONS="focal groovy hirsute"
+DISTRIBUTIONS="focal groovy hirsute impish"
 
 for distribution in $DISTRIBUTIONS
 do
