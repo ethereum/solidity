@@ -275,20 +275,20 @@ bool LanguageServer::run()
 
 void LanguageServer::requireServerInitialized()
 {
-	if (m_state != State::Initialized)
-		BOOST_THROW_EXCEPTION(
-			RequestError(ErrorCode::ServerNotInitialized) <<
-			errinfo_comment("Server is not properly initialized.")
-		);
+	lspAssert(
+		m_state == State::Initialized,
+		ErrorCode::ServerNotInitialized,
+		"Server is not properly initialized."
+	);
 }
 
 void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 {
-	if (m_state != State::Started)
-		BOOST_THROW_EXCEPTION(
-			RequestError(ErrorCode::RequestFailed) <<
-			errinfo_comment("Initialize called at the wrong time.")
-		);
+	lspAssert(
+		m_state == State::Started,
+		ErrorCode::RequestFailed,
+		"Initialize called at the wrong time."
+	);
 
 	m_state = State::Initialized;
 
@@ -298,11 +298,11 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	if (Json::Value uri = _args["rootUri"])
 	{
 		rootPath = uri.asString();
-		if (!boost::starts_with(rootPath, "file://"))
-			BOOST_THROW_EXCEPTION(
-				RequestError(ErrorCode::InvalidParams) <<
-				errinfo_comment("rootUri only supports file URI scheme.")
-			);
+		lspAssert(
+			boost::starts_with(rootPath, "file://"),
+			ErrorCode::InvalidParams,
+			"rootUri only supports file URI scheme."
+		);
 
 		rootPath = rootPath.substr(7);
 	}
@@ -334,11 +334,11 @@ void LanguageServer::handleTextDocumentDidOpen(Json::Value const& _args)
 {
 	requireServerInitialized();
 
-	if (!_args["textDocument"])
-		BOOST_THROW_EXCEPTION(
-			RequestError(ErrorCode::RequestFailed) <<
-			errinfo_comment("Text document parameter missing.")
-		);
+	lspAssert(
+		_args["textDocument"],
+		ErrorCode::RequestFailed,
+		"Text document parameter missing."
+	);
 
 	string text = _args["textDocument"]["text"].asString();
 	string uri = _args["textDocument"]["uri"].asString();
@@ -355,28 +355,28 @@ void LanguageServer::handleTextDocumentDidChange(Json::Value const& _args)
 
 	for (Json::Value jsonContentChange: _args["contentChanges"])
 	{
-		if (!jsonContentChange.isObject())
-			BOOST_THROW_EXCEPTION(
-				RequestError(ErrorCode::RequestFailed) <<
-				errinfo_comment("Invalid content reference.")
-			);
+		lspAssert(
+			jsonContentChange.isObject(),
+			ErrorCode::RequestFailed,
+			"Invalid content reference."
+		);
 
 		string const sourceUnitName = m_fileRepository.clientPathToSourceUnitName(uri);
-		if (!m_fileRepository.sourceUnits().count(sourceUnitName))
-			BOOST_THROW_EXCEPTION(
-				RequestError(ErrorCode::RequestFailed) <<
-				errinfo_comment("Unknown file: " + uri)
-			);
+		lspAssert(
+			m_fileRepository.sourceUnits().count(sourceUnitName),
+			ErrorCode::RequestFailed,
+			"Unknown file: " + uri
+		);
 
 		string text = jsonContentChange["text"].asString();
 		if (jsonContentChange["range"].isObject()) // otherwise full content update
 		{
 			optional<SourceLocation> change = parseRange(sourceUnitName, jsonContentChange["range"]);
-			if (!change || !change->hasText())
-				BOOST_THROW_EXCEPTION(
-					RequestError(ErrorCode::RequestFailed) <<
-					errinfo_comment("Invalid source range: " + jsonCompactPrint(jsonContentChange["range"]))
-				);
+			lspAssert(
+				change && change->hasText(),
+				ErrorCode::RequestFailed,
+				"Invalid source range: " + jsonCompactPrint(jsonContentChange["range"])
+			);
 
 			string buffer = m_fileRepository.sourceUnits().at(sourceUnitName);
 			buffer.replace(static_cast<size_t>(change->start), static_cast<size_t>(change->end - change->start), move(text));
@@ -392,11 +392,11 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 {
 	requireServerInitialized();
 
-	if (!_args["textDocument"])
-		BOOST_THROW_EXCEPTION(
-			RequestError(ErrorCode::RequestFailed) <<
-			errinfo_comment("Text document parameter missing.")
-		);
+	lspAssert(
+		_args["textDocument"],
+		ErrorCode::RequestFailed,
+		"Text document parameter missing."
+	);
 
 	string uri = _args["textDocument"]["uri"].asString();
 	m_openFiles.erase(uri);
