@@ -27,6 +27,7 @@
 #include <libyul/AST.h>
 
 #include <libevmasm/Instruction.h>
+#include <libevmasm/SemanticInformation.h>
 
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Numeric.h>
@@ -35,6 +36,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::evmasm;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 
@@ -99,6 +101,7 @@ u256 EVMInstructionInterpreter::eval(
 	switch (_instruction)
 	{
 	case Instruction::STOP:
+		logTrace(_instruction);
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	// --------------- arithmetic ---------------
 	case Instruction::ADD:
@@ -204,6 +207,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CALLDATASIZE:
 		return m_state.calldata.size();
 	case Instruction::CALLDATACOPY:
+		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.calldata,
@@ -213,6 +217,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CODESIZE:
 		return m_state.code.size();
 	case Instruction::CODECOPY:
+		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.code,
@@ -339,12 +344,18 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::REVERT:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
+		m_state.storage.clear();
+		m_state.trace.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::INVALID:
 		logTrace(_instruction);
+		m_state.storage.clear();
+		m_state.trace.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
+		m_state.storage.clear();
+		m_state.trace.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::POP:
 		break;
@@ -507,23 +518,40 @@ void EVMInstructionInterpreter::writeMemoryWord(u256 const& _offset, u256 const&
 }
 
 
-void EVMInstructionInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(
+	evmasm::Instruction _instruction,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
-	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
+	logTrace(
+		evmasm::instructionInfo(_instruction).name,
+		SemanticInformation::memory(_instruction) == SemanticInformation::Effect::Write,
+		_arguments,
+		_data
+	);
 }
 
-void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(
+	std::string const& _pseudoInstruction,
+	bool _writesToMemory,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
-	string message = _pseudoInstruction + "(";
-	for (size_t i = 0; i < _arguments.size(); ++i)
-		message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
-	message += ")";
-	if (!_data.empty())
-		message += " [" + util::toHex(_data) + "]";
-	m_state.trace.emplace_back(std::move(message));
-	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
+	if (!(_writesToMemory && memWriteTracingDisabled()))
 	{
-		m_state.trace.emplace_back("Trace size limit reached.");
-		BOOST_THROW_EXCEPTION(TraceLimitReached());
+		string message = _pseudoInstruction + "(";
+		for (size_t i = 0; i < _arguments.size(); ++i)
+			message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+		message += ")";
+		if (!_data.empty())
+			message += " [" + util::toHex(_data) + "]";
+		m_state.trace.emplace_back(std::move(message));
+		if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
+		{
+			m_state.trace.emplace_back("Trace size limit reached.");
+			BOOST_THROW_EXCEPTION(TraceLimitReached());
+		}
 	}
 }

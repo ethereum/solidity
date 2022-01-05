@@ -94,13 +94,18 @@ string YulInterpreterTest::interpret()
 	state.maxExprNesting = 64;
 	try
 	{
-		Interpreter::run(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}), *m_ast);
+		Interpreter::run(
+			state,
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}),
+			*m_ast,
+			/*disableMemoryTracing=*/false
+		);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{
 	}
 
 	stringstream result;
-	state.dumpTraceAndState(result);
+	state.dumpTraceAndState(result, false);
 	return result.str();
 }
