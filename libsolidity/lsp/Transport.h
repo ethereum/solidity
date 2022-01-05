@@ -64,6 +64,15 @@ private:
 	ErrorCode m_code;
 };
 
+#define lspAssert(condition, errorCode, errorMessage) \
+	if (!(condition)) \
+	{ \
+		BOOST_THROW_EXCEPTION( \
+			RequestError(errorCode) << \
+			errinfo_comment(errorMessage) \
+		); \
+	}
+
 /**
  * Transport layer API
  *
