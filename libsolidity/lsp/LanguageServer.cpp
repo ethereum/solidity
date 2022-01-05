@@ -21,6 +21,9 @@
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/lsp/LanguageServer.h>
+#include <libsolidity/lsp/HandlerBase.h>
+#include <libsolidity/lsp/Utils.h>
+
 
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/CharStream.h>
@@ -47,31 +50,6 @@ using namespace solidity::frontend;
 
 namespace
 {
-
-Json::Value toJson(LineColumn _pos)
-{
-	Json::Value json = Json::objectValue;
-	json["line"] = max(_pos.line, 0);
-	json["character"] = max(_pos.column, 0);
-
-	return json;
-}
-
-Json::Value toJsonRange(LineColumn const& _start, LineColumn const& _end)
-{
-	Json::Value json;
-	json["start"] = toJson(_start);
-	json["end"] = toJson(_end);
-	return json;
-}
-
-optional<LineColumn> parseLineColumn(Json::Value const& _lineColumn)
-{
-	if (_lineColumn.isObject() && _lineColumn["line"].isInt() && _lineColumn["character"].isInt())
-		return LineColumn{_lineColumn["line"].asInt(), _lineColumn["character"].asInt()};
-	else
-		return nullopt;
-}
 
 int toDiagnosticSeverity(Error::Type _errorType)
 {
@@ -107,55 +85,19 @@ LanguageServer::LanguageServer(Transport& _transport):
 {
 }
 
-optional<SourceLocation> LanguageServer::parsePosition(
-	string const& _sourceUnitName,
-	Json::Value const& _position
-) const
+optional<SourceLocation> LanguageServer::parseRange(string const& _sourceUnitName, Json::Value const& _range)
 {
-	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
-		return nullopt;
-
-	if (optional<LineColumn> lineColumn = parseLineColumn(_position))
-		if (optional<int> const offset = CharStream::translateLineColumnToPosition(
-			m_fileRepository.sourceUnits().at(_sourceUnitName),
-			*lineColumn
-		))
-			return SourceLocation{*offset, *offset, make_shared<string>(_sourceUnitName)};
-	return nullopt;
+	return HandlerBase{*this}.parseRange(_sourceUnitName, _range);
 }
 
-optional<SourceLocation> LanguageServer::parseRange(string const& _sourceUnitName, Json::Value const& _range) const
+Json::Value LanguageServer::toRange(SourceLocation const& _location)
 {
-	if (!_range.isObject())
-		return nullopt;
-	optional<SourceLocation> start = parsePosition(_sourceUnitName, _range["start"]);
-	optional<SourceLocation> end = parsePosition(_sourceUnitName, _range["end"]);
-	if (!start || !end)
-		return nullopt;
-	solAssert(*start->sourceName == *end->sourceName);
-	start->end = end->end;
-	return start;
+	return HandlerBase(*this).toRange(_location);
 }
 
-Json::Value LanguageServer::toRange(SourceLocation const& _location) const
+Json::Value LanguageServer::toJson(SourceLocation const& _location)
 {
-	if (!_location.hasText())
-		return toJsonRange({}, {});
-
-	solAssert(_location.sourceName, "");
-	CharStream const& stream = m_compilerStack.charStream(*_location.sourceName);
-	LineColumn start = stream.translatePositionToLineColumn(_location.start);
-	LineColumn end = stream.translatePositionToLineColumn(_location.end);
-	return toJsonRange(start, end);
-}
-
-Json::Value LanguageServer::toJson(SourceLocation const& _location) const
-{
-	solAssert(_location.sourceName);
-	Json::Value item = Json::objectValue;
-	item["uri"] = m_fileRepository.sourceUnitNameToClientPath(*_location.sourceName);
-	item["range"] = toRange(_location);
-	return item;
+	return HandlerBase(*this).toJson(_location);
 }
 
 void LanguageServer::changeConfiguration(Json::Value const& _settings)
@@ -403,3 +345,20 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 
 	compileAndUpdateDiagnostics();
 }
+
+ASTNode const* LanguageServer::requestASTNode(std::string const& _sourceUnitName, LineColumn const& _filePos)
+{
+	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
+		return nullptr;
+
+	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
+		return nullptr;
+
+	optional<int> sourcePos = m_compilerStack.charStream(_sourceUnitName)
+		.translateLineColumnToPosition(_filePos);
+	if (!sourcePos.has_value())
+		return nullptr;
+
+	return locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName));
+}
+
