@@ -350,19 +350,29 @@ bool UnusedStoreEliminator::knownUnrelated(
 		if (_op2.length && knowledge.knownToBeZero(*_op2.length))
 			return true;
 
-		// We use diff >= _op1.length && diff <= 2**256 - _op2.length
-		// This requires us to know both lengths as constants, but
-		// does not have any problems with overflows.
-		// See test/formal/redundant_store_unrelated.py for a proof.
-
-		if (!(_op1.length && _op1.start && _op2.start && _op2.length))
-			return false;
-		optional<u256> diff = knowledge.differenceIfKnownConstant(*_op2.start, *_op1.start);
-		optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
-		optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
-		if (diff && length1 && length2)
-			if (*diff >= *length1 && *diff <= u256(0) - *length2)
-				return true;
+		u256 largestPositive = (u256(1) << 128) - 1;
+		// 1.start + 1.length <= 2.start
+		if (_op1.length && _op2.start && _op1.start)
+		{
+			optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
+			optional<u256> diff = knowledge.differenceIfKnownConstant(*_op2.start, *_op1.start);
+			// diff = 2.start - 1.start
+			// We assume both 2.start and 1.start to be "small", so
+			// if diff <= largestPositive, 2.start >= 1.start
+			if (length1 && diff)
+				if (*length1 <= *diff && *diff <= largestPositive)
+					return true;
+		}
+		// 2.start + 2.length <= 1.start
+		if (_op2.length && _op1.start && _op2.start)
+		{
+			optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
+			optional<u256> diff = knowledge.differenceIfKnownConstant(*_op1.start, *_op2.start);
+			// diff = 1.start - 2.start
+			if (length2 && diff)
+				if (*length2 <= *diff && *diff <= largestPositive)
+					return true;
+		}
 	}
 
 	return false;
@@ -393,18 +403,18 @@ bool UnusedStoreEliminator::knownCovered(
 		if (!_covered.start || !_covering.start || !_covered.length || !_covering.length)
 			return false;
 		optional<u256> startDiff = knowledge.differenceIfKnownConstant(*_covered.start, *_covering.start);
-		optional<u256> coveredLength = knowledge.valueIfKnownConstant(*_covered.length);
+		//optional<u256> coveredLength = knowledge.valueIfKnownConstant(*_covered.length);
 		optional<u256> lengthDiff = knowledge.differenceIfKnownConstant(*_covering.length, *_covered.length);
 		if (
-			(startDiff && coveredLength && lengthDiff) &&
+			(startDiff && /*coveredLength &&*/ lengthDiff) &&
 			// i.start <= e.start
 			*startDiff <= largestPositive &&
 			// e.length <= i.length
 			*lengthDiff <= largestPositive &&
 			// e.start - i.start <= i.length - e.length  <=> e.start + e.length <= i.start + i.length
-			*startDiff <= *lengthDiff &&
+			*startDiff <= *lengthDiff //&&
 			// Just a safety measure against overflow.
-			*coveredLength <= largestPositive
+			//*coveredLength <= largestPositive
 		)
 			return true;
 	}
