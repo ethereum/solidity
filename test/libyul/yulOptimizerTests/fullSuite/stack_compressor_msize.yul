@@ -54,6 +54,7 @@
 //         sstore(not(gcd(_3, _2)), _1)
 //         sstore(2, _1)
 //         extcodecopy(_1, msize(), _1, _1)
+//         sstore(0, 0)
 //         sstore(3, _1)
 //     }
 //     function gcd(_a, _b) -> out

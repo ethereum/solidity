@@ -32,9 +32,6 @@
 //         let _2 := not(31)
 //         let newFreePtr := add(memPtr, and(add(and(add(length, 31), _2), 63), _2))
 //         if or(gt(newFreePtr, _1), lt(newFreePtr, memPtr)) { revert(0, 0) }
-//         mstore(64, newFreePtr)
-//         mstore(memPtr, length)
-//         extcodecopy(value, add(memPtr, 32), 0, length)
-//         sstore(0, mload(memPtr))
+//         sstore(0, length)
 //     }
 // }

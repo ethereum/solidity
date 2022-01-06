@@ -25,7 +25,9 @@
 //             a := calldataload(10)
 //             let a_11 := a
 //         }
-//         calldatacopy(0x20, 0, a)
+//         let a_13 := a
+//         let _5 := 0
+//         let _6 := 0x20
 //         sstore(0, mload(0))
 //     }
 // }
