@@ -1,5 +1,5 @@
 contract C {
-    modifier revertIfNoReturn() {
+    modifier alwaysRevert() {
         _;
         revert();
     }
@@ -9,10 +9,10 @@ contract C {
     }
     struct S { uint a; }
     S s;
-    function f(bool flag) revertIfNoReturn() internal view {
+    function f(bool flag) alwaysRevert() internal view {
         if (flag) s;
     }
-    function g(bool flag) revertIfNoReturn() ifFlag(flag) internal view {
+    function g(bool flag) alwaysRevert() ifFlag(flag) internal view {
         s;
     }
 

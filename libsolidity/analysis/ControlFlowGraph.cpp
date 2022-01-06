@@ -44,7 +44,7 @@ bool CFG::visit(ContractDefinition const& _contract)
 		for (FunctionDefinition const* function: contract->definedFunctions())
 			if (function->isImplemented())
 				m_functionControlFlow[{&_contract, function}] =
-					ControlFlowBuilder::createFunctionFlow(m_nodeContainer, *function);
+					ControlFlowBuilder::createFunctionFlow(m_nodeContainer, *function, &_contract);
 
 	return true;
 }

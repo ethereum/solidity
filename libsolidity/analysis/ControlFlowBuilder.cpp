@@ -25,19 +25,21 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace std;
 
-ControlFlowBuilder::ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow):
+ControlFlowBuilder::ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow, ContractDefinition const* _contract):
 	m_nodeContainer(_nodeContainer),
 	m_currentNode(_functionFlow.entry),
 	m_returnNode(_functionFlow.exit),
 	m_revertNode(_functionFlow.revert),
-	m_transactionReturnNode(_functionFlow.transactionReturn)
+	m_transactionReturnNode(_functionFlow.transactionReturn),
+	m_contract(_contract)
 {
 }
 
 
 unique_ptr<FunctionFlow> ControlFlowBuilder::createFunctionFlow(
 	CFG::NodeContainer& _nodeContainer,
-	FunctionDefinition const& _function
+	FunctionDefinition const& _function,
+	ContractDefinition const* _contract
 )
 {
 	auto functionFlow = make_unique<FunctionFlow>();
@@ -45,7 +47,7 @@ unique_ptr<FunctionFlow> ControlFlowBuilder::createFunctionFlow(
 	functionFlow->exit = _nodeContainer.newNode();
 	functionFlow->revert = _nodeContainer.newNode();
 	functionFlow->transactionReturn = _nodeContainer.newNode();
-	ControlFlowBuilder builder(_nodeContainer, *functionFlow);
+	ControlFlowBuilder builder(_nodeContainer, *functionFlow, _contract);
 	builder.appendControlFlow(_function);
 
 	return functionFlow;
@@ -297,7 +299,8 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 				_functionCall.expression().accept(*this);
 				ASTNode::listAccept(_functionCall.arguments(), *this);
 
-				m_currentNode->functionCalls.emplace_back(&_functionCall);
+				solAssert(!m_currentNode->functionCall);
+				m_currentNode->functionCall = &_functionCall;
 
 				auto nextNode = newLabel();
 
@@ -321,8 +324,20 @@ bool ControlFlowBuilder::visit(ModifierInvocation const& _modifierInvocation)
 	auto modifierDefinition = dynamic_cast<ModifierDefinition const*>(
 		_modifierInvocation.name().annotation().referencedDeclaration
 	);
-	if (!modifierDefinition) return false;
-	if (!modifierDefinition->isImplemented()) return false;
+
+	if (!modifierDefinition)
+		return false;
+
+	VirtualLookup const& requiredLookup = *_modifierInvocation.name().annotation().requiredLookup;
+
+	if (requiredLookup == VirtualLookup::Virtual)
+		modifierDefinition = &modifierDefinition->resolveVirtual(*m_contract);
+	else
+		solAssert(requiredLookup == VirtualLookup::Static);
+
+	if (!modifierDefinition->isImplemented())
+		return false;
+
 	solAssert(!!m_returnNode, "");
 
 	m_placeholderEntry = newLabel();
@@ -355,8 +370,8 @@ bool ControlFlowBuilder::visit(FunctionDefinition const& _functionDefinition)
 
 	}
 
-	for (auto const& modifier: _functionDefinition.modifiers())
-		appendControlFlow(*modifier);
+	for (auto const& modifierInvocation: _functionDefinition.modifiers())
+		appendControlFlow(*modifierInvocation);
 
 	appendControlFlow(_functionDefinition.body());
 

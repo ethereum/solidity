@@ -1,5 +1,5 @@
 contract C {
-    modifier revertIfNoReturn() {
+    modifier callAndRevert() {
         _;
         revert();
     }
@@ -13,10 +13,10 @@ contract C {
         return s;
     }
 
-    function g(bool flag) ifFlag(flag) revertIfNoReturn() internal view returns(S storage) {
+    function g(bool flag) ifFlag(flag) callAndRevert() internal view returns(S storage) {
         return s;
     }
 }
 // ----
-// TypeError 3464: (249-258): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (367-376): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (246-255): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (361-370): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
