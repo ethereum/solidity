@@ -239,6 +239,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"equalStoreEliminator", [&]() {
 			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
 			ForLoopInitRewriter::run(*m_context, *m_ast);
 			EqualStoreEliminator::run(*m_context, *m_ast);
 		}},
