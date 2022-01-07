@@ -187,7 +187,7 @@ explicitly in the final override, but this function will bypass
         function destroy() public override(Base1, Base2) { super.destroy(); }
     }
 
-If ``Base2`` calls a function of ``super``, it does not simply
+If ``Final`` calls a function of ``super``, it does not simply
 call this function on one of its base contracts.  Rather, it
 calls this function on the next base contract in the final
 inheritance graph, so it will call ``Base1.destroy()`` (note that
