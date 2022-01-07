@@ -121,6 +121,9 @@ to receive their money - contracts cannot activate themselves.
                 // before `send` returns.
                 pendingReturns[msg.sender] = 0;
 
+                // msg.sender is not of type `address payable` and must be
+                // explicitly converted using `payable(msg.sender)` in order
+                // use the member function `send()`.
                 if (!payable(msg.sender).send(amount)) {
                     // No need to call throw here, just reset the amount owing
                     pendingReturns[msg.sender] = amount;
