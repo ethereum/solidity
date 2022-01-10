@@ -34,7 +34,8 @@ function test_fn { npm test; }
 function zeppelin_test
 {
     local repo="https://github.com/OpenZeppelin/openzeppelin-contracts.git"
-    local branch=master
+    local ref_type=branch
+    local ref="master"
     local config_file="hardhat.config.js"
 
     local compile_only_presets=(
@@ -54,7 +55,7 @@ function zeppelin_test
     print_optimizer_presets_or_exit "$selected_optimizer_presets"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$branch" "$DIR"
+    download_project "$repo" "$ref_type" "$ref" "$DIR"
 
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"

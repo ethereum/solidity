@@ -42,7 +42,8 @@ function test_fn {
 function trident_test
 {
     local repo="https://github.com/sushiswap/trident"
-    local branch=master
+    local ref_type=branch
+    local ref="master"
     local config_file="hardhat.config.ts"
     local config_var=config
 
@@ -62,7 +63,7 @@ function trident_test
     print_optimizer_presets_or_exit "$selected_optimizer_presets"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$branch" "$DIR"
+    download_project "$repo" "$ref_type" "$ref" "$DIR"
 
     # TODO: Currently tests work only with the exact versions from yarn.lock.
     # Re-enable this when https://github.com/sushiswap/trident/issues/284 is fixed.

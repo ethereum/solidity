@@ -34,7 +34,8 @@ function test_fn { yarn test; }
 function ens_test
 {
     local repo="https://github.com/ensdomains/ens-contracts.git"
-    local branch="v0.0.8"  # The project is in flux right now and master might be too unstable for us
+    local ref_type=tag
+    local ref="v0.0.8"     # The project is in flux right now and master might be too unstable for us
     local config_file="hardhat.config.js"
 
     local compile_only_presets=(
@@ -54,7 +55,7 @@ function ens_test
     print_optimizer_presets_or_exit "$selected_optimizer_presets"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$branch" "$DIR"
+    download_project "$repo" "$ref_type" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     neutralize_package_lock
