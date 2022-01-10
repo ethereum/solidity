@@ -77,12 +77,24 @@ function setup_solc
 function download_project
 {
     local repo="$1"
-    local solcjs_branch="$2"
-    local test_dir="$3"
+    local ref_type="$2"
+    local solcjs_ref="$3"
+    local test_dir="$4"
 
-    printLog "Cloning $solcjs_branch of $repo..."
-    git clone --depth 1 "$repo" -b "$solcjs_branch" "$test_dir/ext"
-    cd ext
+    [[ $ref_type == commit || $ref_type == branch || $ref_type == tag ]] || assertFail
+
+    printLog "Cloning ${ref_type} ${solcjs_ref} of ${repo}..."
+    if [[ $ref_type == commit ]]; then
+        mkdir ext
+        cd ext
+        git init
+        git remote add origin "$repo"
+        git fetch --depth 1 origin "$solcjs_ref"
+        git reset --hard FETCH_HEAD
+    else
+        git clone --depth 1 "$repo" -b "$solcjs_ref" "$test_dir/ext"
+        cd ext
+    fi
     echo "Current commit hash: $(git rev-parse HEAD)"
 }
 
