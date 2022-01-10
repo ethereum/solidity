@@ -17,41 +17,41 @@ que les types complexes définis par l'utilisateur parmi d'autres caractéristiq
 Avec Solidity, vous pouvez créer des contrats pour des usages tels que le vote, le crowdfunding, les enchères à l'aveugle,
 et portefeuilles multi-signature.
 
-When deploying contracts, you should use the latest released
-version of Solidity. This is because breaking changes as well as
-new features and bug fixes are introduced regularly. We currently use
-a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
+Quand vous déployez des contrats, vous devriez utiliser la dernière
+version stable de Solidity. Ceci est dû au fait des changements brisés
+comme des nouvelles fonctionnalités et la fixation de bugs, qui sont régulièrement introduits.
+Nous utilisons actuellement une version de numéro 0.x `pour indiquer ce rapide rythme de changements <https://semver.org/#spec-item-4>`_.
 
 .. warning::
 
-  Solidity recently released the 0.6.x version that introduced a lot of breaking
-  changes. Make sure you read :doc:`the full list <060-breaking-changes>`.
+  Solidity a récemment publié la version 0.6.x qui introduit beaucoup de changements
+  de rupture. Soyez sûr que vous lisez :doc:`la liste entière <060-breaking-changes>`.
 
 Documentation du langage
 ------------------------
 
-If you are new to the concept of smart contracts we recommend you start with
-:ref:`an example smart contract <simple-smart-contract>` written
-in Solidity. When you are ready for more detail, we recommend you read the
-:doc:`"Solidity by Example" <solidity-by-example>` and
-"Language Description" sections to learn the core concepts of the language.
+Si vous êtes nouveau dans le concept des smart contracts, nous vous recommandons de commencer avec
+:ref:`un exemple de smart contract <simple-smart-contract>` écrit
+sous Solidity. Quand vous êtes prêt pour plus de détails, nous vous recommandons de lire
+:doc:`"Solidity par Exemple" <solidity-by-example>` et
+"Langage Description" sections pour apprendre les concepts de base du langage.
 
-For further reading, try :ref:`the basics of blockchains <blockchain-basics>`
-and details of the :ref:`Ethereum Virtual Machine <the-ethereum-virtual-machine>`.
+Pour aller plus loin dans la lecture, essayez :ref:`les bases des blockchains <blockchain-basics>`
+et les détails de la :ref:`Ethereum Virtual Machine <the-ethereum-virtual-machine>`.
 
 .. hint::
-  Rappelez-vous que vous pouvez toujours essayer les contrats `dans votre navigateur <https://remix.ethereum.org>`_ ! Remix is a web browser based IDE
-  that allows you to write Solidity smart contracts, then deploy and run the
-  smart contracts. It can take a while to load, so please be patient.
+  Rappelez-vous que vous pouvez toujours essayer les contrats `dans votre navigateur <https://remix.ethereum.org>`_ ! Remix est un navigateur Web basé comme un IDE
+  qui vous autorise d'écrire des smart contracts en Solidity, pour ensuite déployer et exécuter les
+  smart contracts. Cela peu prendre du temps à charger, soyez patient.
 
 .. warning::
-    As humans write software, it can have bugs. You should follow established
-    software development best-practices when writing your smart contracts, this
-    includes code review, testing, audits, and correctness proofs. Smart contract
-    users are sometimes more confident with code than their authors, and
-    blockchains and smart contracts have their own unique issues to
-    watch out for, so before working on production code, make sure you read the
-    :ref:`security_considerations` section.
+    Comme ce sont des humains qui écrivent les logiciels, il peut y avoir des bugs. Vous devriez suivre les
+    meilleures pratiques de développement logiciel quand vous écrivez vos smart contracts, cela
+    inclut la relecture du code, les tests, les vérifications, et les preuves d'exactitude. Les utilisateurs
+    de smart contracts sont parfois plus confiants avec le code que leurs auteurs, puis les
+    blockchains et les smart contracts ont leurs propres problèmes uniques à
+    surveiller. Donc, avant de travailler avec un code en production, soyez sûr d'avoir lu la section
+    :ref:`security_considerations`.
 
 .. _translations:
 
