@@ -571,7 +571,8 @@ bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
 	if (!m_scopes[importee])
 		m_scopes[importee] = make_shared<DeclarationContainer>(nullptr, m_scopes[nullptr].get());
 	m_scopes[&_import] = m_scopes[importee];
-	return ASTVisitor::visit(_import);
+	ASTVisitor::visit(_import);
+	return false; // Do not recurse into child nodes (Identifier for symbolAliases)
 }
 
 bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
