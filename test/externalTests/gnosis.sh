@@ -34,7 +34,8 @@ function test_fn { npm test; }
 function gnosis_safe_test
 {
     local repo="https://github.com/solidity-external-tests/safe-contracts.git"
-    local branch=development_080
+    local ref_type=branch
+    local ref="development_080"
     local config_file="truffle-config.js"
 
     local compile_only_presets=()
@@ -53,7 +54,7 @@ function gnosis_safe_test
     print_optimizer_presets_or_exit "$selected_optimizer_presets"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$branch" "$DIR"
+    download_project "$repo" "$ref_type" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080|g' package.json

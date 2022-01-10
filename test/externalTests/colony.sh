@@ -34,7 +34,8 @@ function test_fn { yarn run test:contracts; }
 function colony_test
 {
     local repo="https://github.com/solidity-external-tests/colonyNetwork.git"
-    local branch=develop_080
+    local ref_type=branch
+    local ref="develop_080"
     local config_file="truffle.js"
 
     local compile_only_presets=(
@@ -54,7 +55,7 @@ function colony_test
     print_optimizer_presets_or_exit "$selected_optimizer_presets"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$branch" "$DIR"
+    download_project "$repo" "$ref_type" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     neutralize_package_json_hooks
