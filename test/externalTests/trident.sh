@@ -43,6 +43,7 @@ function trident_test
 {
     local repo="https://github.com/sushiswap/trident"
     local ref_type=commit
+    # FIXME: Switch back to master branch when https://github.com/sushiswap/trident/issues/303 gets fixed.
     local ref="0cab5ae884cc9a41223d52791be775c3a053cb26" # master as of 2021-12-16
     local config_file="hardhat.config.ts"
     local config_var=config
