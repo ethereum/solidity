@@ -24,7 +24,16 @@ set -e
 
 CURRENT_EVM_VERSION=london
 
-function print_optimizer_presets_or_exit
+AVAILABLE_PRESETS=(
+    legacy-no-optimize
+    ir-no-optimize
+    legacy-optimize-evm-only
+    ir-optimize-evm-only
+    legacy-optimize-evm+yul
+    ir-optimize-evm+yul
+)
+
+function print_presets_or_exit
 {
     local selected_presets="$1"
 
@@ -37,10 +46,22 @@ function verify_input
 {
     local binary_type="$1"
     local binary_path="$2"
+    local selected_presets="$3"
 
-    (( $# == 2 )) || fail "Usage: $0 native|solcjs <path to solc or soljson.js>"
+    (( $# >= 2 && $# <= 3 )) || fail "Usage: $0 native|solcjs <path to solc or soljson.js> [preset]"
     [[ $binary_type == native || $binary_type == solcjs ]] || fail "Invalid binary type: '${binary_type}'. Must be either 'native' or 'solcjs'."
     [[ -f "$binary_path" ]] || fail "The compiler binary does not exist at '${binary_path}'"
+
+    if [[ $selected_presets != "" ]]
+    then
+        for preset in $selected_presets
+        do
+            if [[ " ${AVAILABLE_PRESETS[*]} " != *" $preset "* ]]
+            then
+                fail "Preset '${preset}' does not exist. Available presets: ${AVAILABLE_PRESETS[*]}."
+            fi
+        done
+    fi
 }
 
 function setup_solc
@@ -286,6 +307,8 @@ function settings_from_preset
 {
     local preset="$1"
     local evm_version="$2"
+
+    [[ " ${AVAILABLE_PRESETS[*]} " == *" $preset "* ]] || assertFail
 
     case "$preset" in
         # NOTE: Remember to update `parallelism` of `t_ems_ext` job in CI config if you add/remove presets
