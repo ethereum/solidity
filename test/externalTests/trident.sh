@@ -35,7 +35,7 @@ function test_fn {
     TS_NODE_TRANSPILE_ONLY=1 npx hardhat test --no-compile $(
         # TODO: We need to skip Migration.test.ts because it fails and makes other tests fail too.
         # Replace this with `yarn test` once https://github.com/sushiswap/trident/issues/283 is fixed.
-        find test/ -name "*.test.ts" ! -path "test/Migration.test.ts"
+        find test/ -name "*.test.ts" ! -path "test/Migration.test.ts" | LC_ALL=C sort
     )
 }
 
