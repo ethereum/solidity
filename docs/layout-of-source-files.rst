@@ -13,7 +13,7 @@ and :ref:`constant variable<constants>` definitions.
 SPDX License Identifier
 =======================
 
-Trust in smart contract can be better established if their source code
+Trust in smart contracts can be better established if their source code
 is available. Since making source code available always touches on legal problems
 with regards to copyright, the Solidity compiler encourages the use
 of machine-readable `SPDX license identifiers <https://spdx.org>`_.
