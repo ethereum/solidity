@@ -9,4 +9,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 6328: (102-122): CHC: Assertion violation happens here.\nCounterexample:\n\na = [0x09, 0x09]\n\nTransaction trace:\nC.constructor()\nC.f([0x09, 0x09])
-// Warning 6328: (141-161): CHC: Assertion violation happens here.\nCounterexample:\n\na = [0x09, 0x09]\n\nTransaction trace:\nC.constructor()\nC.f([0x09, 0x09])
+// Warning 6328: (141-161): CHC: Assertion violation happens here.\nCounterexample:\n\na = [0x0a, 0x0a]\n\nTransaction trace:\nC.constructor()\nC.f([0x0a, 0x0a])
