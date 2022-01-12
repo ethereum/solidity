@@ -21,6 +21,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (B:238-252): CHC: Assertion violation happens here.\nCounterexample:\ndata = {x: 21238}\nx = 8\ny = 21238\n\nTransaction trace:\nC.constructor()\nState: data = {x: 0}\nC.g()\n    C.f(7) -- internal call\n        A:set({x: 0}, 7) -- internal call\n        A:set({x: 8}, 8) -- internal call
-// Warning 6328: (B:308-322): CHC: Assertion violation happens here.\nCounterexample:\ndata = {x: 6}\nx = 0\ny = 6\n\nTransaction trace:\nC.constructor()\nState: data = {x: 0}\nC.g()\n    C.f(7) -- internal call\n        A:set({x: 0}, 7) -- internal call\n        A:set({x: 0}, 8) -- internal call
+// Warning 6328: (B:238-252): CHC: Assertion violation happens here.
+// Warning 6328: (B:308-322): CHC: Assertion violation happens here.
