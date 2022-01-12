@@ -42,7 +42,7 @@ class ImmutableValidator: private ASTConstVisitor
 
 public:
 	ImmutableValidator(langutil::ErrorReporter& _errorReporter, ContractDefinition const& _contractDefinition):
-		m_currentContract(_contractDefinition),
+		m_mostDerivedContract(_contractDefinition),
 		m_errorReporter(_errorReporter)
 	{ }
 
@@ -66,7 +66,7 @@ private:
 
 	void visitCallableIfNew(Declaration const& _declaration);
 
-	ContractDefinition const& m_currentContract;
+	ContractDefinition const& m_mostDerivedContract;
 
 	CallableDeclarationSet m_visitedCallables;
 
@@ -74,6 +74,7 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentConstructor = nullptr;
+	ContractDefinition const* m_currentConstructorContract = nullptr;
 	bool m_inLoop = false;
 	bool m_inBranch = false;
 	bool m_inCreationContext = true;
