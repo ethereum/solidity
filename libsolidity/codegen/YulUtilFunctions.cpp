@@ -100,16 +100,7 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 		{
 			return Whiskers(R"(
 				function <functionName>(src, dst, length) {
-					let i := 0
-					for { } lt(i, length) { i := add(i, 32) }
-					{
-						mstore(add(dst, i), mload(add(src, i)))
-					}
-					if gt(i, length)
-					{
-						// clear end
-						mstore(add(dst, length), 0)
-					}
+					pop(staticcall(gas(), 4, src, length, dst, length))
 				}
 			)")
 			("functionName", functionName)

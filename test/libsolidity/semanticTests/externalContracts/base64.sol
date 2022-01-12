@@ -34,9 +34,9 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 443542
-// gas legacy: 765640
-// gas legacyOptimized: 541810
+// gas irOptimized: 433840
+// gas legacy: 757665
+// gas legacyOptimized: 534052
 // encode_inline_asm(bytes): 0x20, 0 -> 0x20, 0
 // encode_inline_asm(bytes): 0x20, 1, "f" -> 0x20, 4, "Zg=="
 // encode_inline_asm(bytes): 0x20, 2, "fo" -> 0x20, 4, "Zm8="
