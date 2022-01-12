@@ -65,7 +65,7 @@ then
   z3_dir="z3-${z3_version}-x64-osx-10.16"
   z3_package="${z3_dir}.zip"
   wget "https://github.com/Z3Prover/z3/releases/download/z3-${z3_version}/${z3_package}"
-  validate_checksum "$z3_package" 191b26be2b617b2dffffce139d77abcd7e584859efbc10a58d01a1d7830697a4
+  validate_checksum "$z3_package" 1341671670e0c4e72da80815128a68975ee90816d50ceaf6bd820f06babe2cfd
   unzip "$z3_package"
   rm "$z3_package"
   cp "${z3_dir}/bin/libz3.a" /usr/local/lib
