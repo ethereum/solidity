@@ -12,6 +12,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (150-186): CHC: Assertion violation might happen here.
 // Warning 6328: (205-240): CHC: Assertion violation happens here.

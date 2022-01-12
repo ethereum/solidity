@@ -10,7 +10,8 @@ contract C
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (180-204): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0x52f6\nb = 0x52f6\n\nTransaction trace:\nC.constructor()\nC.f(0x52f6, 0x52f6)
+// Warning 6328: (180-204): CHC: Assertion violation happens here.
 // Warning 1236: (101-116): BMC: Insufficient funds happens here.
 // Warning 1236: (120-136): BMC: Insufficient funds happens here.
