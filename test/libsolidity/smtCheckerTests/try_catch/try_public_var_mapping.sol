@@ -21,5 +21,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Warning 6328: (280-300): CHC: Assertion violation happens here.
+// Warning 6328: (280-300): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Info 1180: Contract invariant(s) for :C:\n!(m[0].length <= 1)\n(!(m[0][1] >= 43) && !(m[0][1] <= 41))\n
