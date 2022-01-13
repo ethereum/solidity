@@ -329,6 +329,10 @@ on ``call``.
     regardless of whether state is read from or written to, as this can have many pitfalls.
     Also, access to gas might change in the future.
 
+* ``code`` and ``codehash``
+
+You can query the deployed code for any smart contract. Use ``code`` to get the EVM bytecode as a string, which might be empty. Use ``codehash`` get the Keccak-256 hash of that code.
+
 .. note::
     All contracts can be converted to ``address`` type, so it is possible to query the balance of the
     current contract using ``address(this).balance``.
