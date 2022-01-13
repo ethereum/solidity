@@ -227,6 +227,26 @@ function force_hardhat_compiler_binary
     hardhat_solc_build_subtask "$SOLCVERSION_SHORT" "$SOLCVERSION" "$binary_type" "$solc_path" "$language" >> "$config_file"
 }
 
+function force_hardhat_unlimited_contract_size
+{
+    local config_file="$1"
+    local config_var_name="$2"
+
+    printLog "Configuring Hardhat..."
+    echo "-------------------------------------"
+    echo "Allow unlimited contract size: true"
+    echo "-------------------------------------"
+
+    if [[ $config_file == *\.js ]]; then
+        [[ $config_var_name == "" ]] || assertFail
+        echo "module.exports.networks.hardhat.allowUnlimitedContractSize = true" >> "$config_file"
+    else
+        [[ $config_file == *\.ts ]] || assertFail
+        [[ $config_var_name != "" ]] || assertFail
+        echo "${config_var_name}.networks!.hardhat!.allowUnlimitedContractSize = true" >> "$config_file"
+    fi
+}
+
 function force_hardhat_compiler_settings
 {
     local config_file="$1"
