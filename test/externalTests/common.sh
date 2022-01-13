@@ -211,6 +211,17 @@ function force_truffle_compiler_settings
     echo "module.exports['compilers'] = $(truffle_compiler_settings "$solc_path" "$preset" "$evm_version");" >> "$config_file"
 }
 
+function name_hardhat_default_export
+{
+    local config_file="$1"
+    local config_var_name="$2"
+
+    local import="import {HardhatUserConfig} from 'hardhat/types';"
+    local config="const config: HardhatUserConfig = {"
+    sed -i "s|^\s*export\s*default\s*{|${import}\n${config}|g" "$config_file"
+    echo "export default config;" >> "$config_file"
+}
+
 function force_hardhat_compiler_binary
 {
     local config_file="$1"
