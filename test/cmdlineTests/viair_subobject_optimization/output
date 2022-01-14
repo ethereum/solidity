@@ -57,15 +57,10 @@ tag_8:
   codecopy
   return
 tag_6:
-  pop
   0x00
   dup1
   revert
 tag_4:
-  pop
-  pop
-  pop
-  pop
   mstore(0x00, shl(0xe0, 0x4e487b71))
   mstore(0x04, 0x41)
   revert(0x00, 0x24)
@@ -107,7 +102,6 @@ EVM assembly:
   codecopy
   return
 tag_1:
-  pop
   0x00
   dup1
   revert
@@ -117,8 +111,6 @@ sub_0: assembly {
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
       0x80
       jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
-    tag_3:
-      pop
       0x00
       dup1
       revert
@@ -134,7 +126,9 @@ sub_0: assembly {
       tag_4
       jumpi
       pop
-      jump(tag_3)
+      0x00
+      dup1
+      revert
     tag_4:
       jumpi(tag_8, callvalue)
       dup2
@@ -188,15 +182,12 @@ sub_0: assembly {
       swap1
       return
     tag_10:
-      pop
-      pop
       shl(0xe0, 0x4e487b71)
-      dup3
+      dup5
       mstore
-      pop
       mstore(0x04, 0x41)
       0x24
-      swap1
+      dup5
       revert
     tag_8:
       pop
@@ -330,15 +321,10 @@ sub_0: assembly {
           codecopy
           return
         tag_6:
-          pop
           0x00
           dup1
           revert
         tag_4:
-          pop
-          pop
-          pop
-          pop
           mstore(0x00, shl(0xe0, 0x4e487b71))
           mstore(0x04, 0x41)
           revert(0x00, 0x24)
