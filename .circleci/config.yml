@@ -358,7 +358,15 @@ defaults:
         xcode: "13.2.0"
       environment:
         TERM: xterm
-        MAKEFLAGS: -j 5
+        MAKEFLAGS: -j5
+
+  - base_osx_large: &base_osx_large
+      macos:
+        xcode: "13.2.0"
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j10
 
   - base_ems_large: &base_ems_large
       docker:
@@ -794,11 +802,11 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   b_osx:
-    <<: *base_osx
+    <<: *base_osx_large
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Release
-      MAKEFLAGS: -j 5
+      MAKEFLAGS: -j10
     steps:
       - checkout
       - restore_cache:
