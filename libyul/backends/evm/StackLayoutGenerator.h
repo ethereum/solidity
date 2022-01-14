@@ -111,6 +111,9 @@ private:
 	/// stack @a _stack.
 	static Stack compressStack(Stack _stack);
 
+	//// Fills in junk when entering branches that do not need a clean stack in case the result is cheaper.
+	void fillInJunk(CFG::BasicBlock const& _block);
+
 	StackLayout& m_layout;
 };
 

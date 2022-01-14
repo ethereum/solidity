@@ -25,7 +25,7 @@ contract C {
 // compileViaYul: also
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 314681
+// gas irOptimized: 304151
 // gas legacy: 464030
 // gas legacyOptimized: 304049
 // f(uint256): 0 -> FAILURE

@@ -37,12 +37,12 @@ contract c {
 // compileViaYul: also
 // ----
 // test() -> 0x02000202
-// gas irOptimized: 4652050
+// gas irOptimized: 4652048
 // gas legacy: 4578320
 // gas legacyOptimized: 4548312
 // storageEmpty -> 1
 // clear() -> 0, 0
-// gas irOptimized: 4483175
+// gas irOptimized: 4483170
 // gas legacy: 4410748
 // gas legacyOptimized: 4382489
 // storageEmpty -> 1
