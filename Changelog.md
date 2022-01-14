@@ -16,6 +16,7 @@ Compiler Features:
  * JSON-AST: Added selector field for errors and events.
  * LSP: Implements goto-definition.
  * Peephole Optimizer: Optimize comparisons in front of conditional jumps and conditional jumps across a single unconditional jump.
+ * Yul EVM Code Transform: Avoid unnecessary ``pop``s on terminating control flow.
  * Yul Optimizer: Remove ``sstore`` and ``mstore`` operations that are never read from.
 
 
