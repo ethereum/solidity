@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2019 solidity contributors.
+# (c) 2022 solidity contributors.
 #------------------------------------------------------------------------------
 
 set -e
@@ -29,26 +29,25 @@ BINARY_TYPE="$1"
 BINARY_PATH="$2"
 SELECTED_PRESETS="$3"
 
-function compile_fn { yarn build; }
-function test_fn { yarn test; }
+function compile_fn { npm run compile; }
+function test_fn { npx --no hardhat --no-compile test; }
 
-function ens_test
+function euler_test
 {
-    local repo="https://github.com/ensdomains/ens-contracts.git"
-    local ref_type=tag
-    local ref="v0.0.8"     # The project is in flux right now and master might be too unstable for us
+    local repo="https://github.com/euler-xyz/euler-contracts"
+    local ref_type=branch
+    local ref="master"
     local config_file="hardhat.config.js"
 
-    local compile_only_presets=(
-        legacy-no-optimize        # Compiles but tests fail to deploy GovernorCompatibilityBravo (code too large).
-    )
+    local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul      # Compilation fails with "YulException: Variable _5 is 1 too deep in the stack [ _5 usr$i usr$h _7 usr$scratch usr$k usr$f _4 usr$len usr$j_2 RET _2 _1 var_data_mpos usr$totallen usr$x _12 ]"
+        #ir-no-optimize           # Compilation fails with "YulException: Variable var_utilisation_307 is 6 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_utilisation_307 is 6 slot(s) too deep inside the stack."
+        #ir-optimize-evm+yul      # Compilation fails with "YulException: Variable var_status_mpos is 3 too deep in the stack"
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
+        legacy-no-optimize
     )
 
     [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")
@@ -61,7 +60,8 @@ function ens_test
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
-    yarn install
+    force_hardhat_unlimited_contract_size "$config_file"
+    npm install
 
     replace_version_pragmas
     neutralize_packaged_contracts
@@ -71,4 +71,4 @@ function ens_test
     done
 }
 
-external_test ENS ens_test
+external_test Euler euler_test

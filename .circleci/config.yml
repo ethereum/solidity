@@ -1381,6 +1381,13 @@ workflows:
           binary_type: native
           # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
           nodejs_version: '16'
+      - t_ems_ext:
+          <<: *workflow_ubuntu2004_static
+          name: t_native_test_ext_euler
+          project: euler
+          binary_type: native
+          # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
+          nodejs_version: '16'
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
