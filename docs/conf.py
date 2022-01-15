@@ -297,3 +297,11 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# -- Options for gettext builder ------------------------------------------
+
+# Set document text domain to markup/code. Recommended by sphinx-intl.
+gettext_compact = False
+
+# Generates uuid information for version tracking in message catalogs.
+gettext_uuid = True

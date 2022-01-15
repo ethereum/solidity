@@ -26,8 +26,16 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
+# List of supported languages
+LANGUAGES=("en_US" "es_EM")
+
 set -e
 cd docs
 pip3 install -r requirements.txt --upgrade --upgrade-strategy eager
-sphinx-build -nW -b html -d _build/doctrees . _build/html
+sphinx-build -b gettext . _build/gettext
+
+for i in "${LANGUAGES[@]}"; do
+	sphinx-intl update -p _build/gettext -l "${i}"
+	sphinx-build -nW -b html -d _build/doctrees -D language="${i}" . "_build/html/${i}"
+done
 cd ..
