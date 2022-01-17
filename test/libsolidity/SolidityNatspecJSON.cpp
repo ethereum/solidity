@@ -2482,7 +2482,7 @@ BOOST_AUTO_TEST_CASE(custom_inheritance)
 	checkNatspec(sourceCode, "B", natspecB, false);
 }
 
-BOOST_AUTO_TEST_CASE(dev_different_amount_return_parameters)
+BOOST_AUTO_TEST_CASE(dev_struct_getter_override)
 {
 	char const *sourceCode = R"(
 		interface IThing {
@@ -2525,6 +2525,58 @@ BOOST_AUTO_TEST_CASE(dev_different_amount_return_parameters)
 				{
 					"x": "a number",
 					"y": "another number"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "IThing", natspec, false);
+	checkNatspec(sourceCode, "Thing", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_struct_getter_override_different_return_parameter_names)
+{
+	char const *sourceCode = R"(
+		interface IThing {
+			/// @return x a number
+			/// @return y another number
+			function value() external view returns (uint128 x, uint128 y);
+		}
+
+		contract Thing is IThing {
+			struct Value {
+				uint128 a;
+				uint128 b;
+			}
+
+			Value public override value;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"value()":
+			{
+			  "returns":
+			  {
+				"x": "a number",
+				"y": "another number"
+			  }
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods": {},
+		"stateVariables":
+		{
+			"value":
+			{
+				"returns":
+				{
+					"a": "a number",
+					"b": "another number"
 				}
 			}
 		}
