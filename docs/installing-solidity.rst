@@ -118,8 +118,17 @@ The nightly version can be installed using these commands:
     sudo apt-get update
     sudo apt-get install solc
 
-We are also releasing a `snap package <https://snapcraft.io/>`_, which is
-installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
+Furthermore, some Linux distributions provide their own packages. These packages are not directly
+maintained by us, but usually kept up-to-date by the respective package maintainers.
+
+For example, Arch Linux has packages for the latest development version:
+
+.. code-block:: bash
+
+    pacman -S solidity
+
+There is also a `snap package <https://snapcraft.io/solc>`_, however, it is **currently unmaintained**.
+It is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
 install the latest stable version of solc:
 
 .. code-block:: bash
@@ -139,18 +148,6 @@ with the most recent changes, please use the following:
     but it comes with limitations, like accessing only the files in your ``/home`` and ``/media`` directories.
     For more information, go to `Demystifying Snap Confinement <https://snapcraft.io/blog/demystifying-snap-confinement>`_.
 
-Arch Linux also has packages, albeit limited to the latest development version:
-
-.. code-block:: bash
-
-    pacman -S solidity
-
-Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a Solidity package.
-After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
-
-.. code-block:: bash
-
-    emerge dev-lang/solidity
 
 macOS Packages
 ==============
