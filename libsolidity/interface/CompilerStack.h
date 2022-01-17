@@ -330,6 +330,12 @@ public:
 	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
 	Json::Value methodIdentifiers(std::string const& _contractName) const;
 
+	/// @returns a JSON representing a map of error identifiers (hashes) to error names.
+	Json::Value errorIdentifiers(std::string const& _contractName) const;
+
+	/// @returns a JSON representing a map of event identifiers (hashes) to event names.
+	Json::Value eventIdentifiers(std::string const& _contractName) const;
+
 	/// @returns the Contract Metadata matching the pipeline selected using the viaIR setting.
 	std::string const& metadata(std::string const& _contractName) const { return metadata(contract(_contractName)); }
 
