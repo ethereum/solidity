@@ -5,4 +5,4 @@ contract C {
     S public constant c;
 }
 // ----
-// DeclarationError 3530: (71-90): The type contains a (nested) mapping and therefore cannot be a constant.
+// TypeError 9259: (71-90): Only constants of value type and byte array type are implemented.
