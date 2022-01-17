@@ -271,14 +271,30 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		return;
 
 	Json::Value methodIdentifiers = m_compiler->methodIdentifiers(_contract);
-	string out;
+	string out = "Function signatures:\n";
 	for (auto const& name: methodIdentifiers.getMemberNames())
 		out += methodIdentifiers[name].asString() + ": " + name + "\n";
+
+	Json::Value errorIdentifiers = m_compiler->errorIdentifiers(_contract);
+	if (!errorIdentifiers.empty())
+	{
+		out += "\nError signatures:\n";
+		for (auto const& name: errorIdentifiers.getMemberNames())
+			out += errorIdentifiers[name].asString() + ": " + name + "\n";
+	}
+
+	Json::Value eventIdentifiers = m_compiler->eventIdentifiers(_contract);
+	if (!eventIdentifiers.empty())
+	{
+		out += "\nEvent signatures:\n";
+		for (auto const& name: eventIdentifiers.getMemberNames())
+			out += eventIdentifiers[name].asString() + ": " + name + "\n";
+	}
 
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
-		sout() << "Function signatures:" << endl << out;
+		sout() << out;
 }
 
 void CommandLineInterface::handleMetadata(string const& _contract)
