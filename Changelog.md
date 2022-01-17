@@ -10,6 +10,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Antlr Grammar: Allow builtin names in ``yulPath`` to support ``.address`` in function pointers.
  * Control Flow Graph: Perform proper virtual lookup for modifiers for uninitialized variable and unreachable code analysis.
  * Immutables: Fix wrong error when the constructor of a base contract uses ``return`` and the parent contract contains immutable variables.
 
