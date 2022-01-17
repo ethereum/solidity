@@ -564,7 +564,7 @@ yulFunctionDefinition:
  * While only identifiers without dots can be declared within inline assembly,
  * paths containing dots can refer to declarations outside the inline assembly block.
  */
-yulPath: YulIdentifier (YulPeriod YulIdentifier)*;
+yulPath: YulIdentifier (YulPeriod (YulIdentifier | YulEVMBuiltin))*;
 /**
  * A call to a function with return values can only occur as right-hand side of an assignment or
  * a variable declaration.
