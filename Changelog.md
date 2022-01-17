@@ -13,6 +13,7 @@ Bugfixes:
  * Antlr Grammar: Allow builtin names in ``yulPath`` to support ``.address`` in function pointers.
  * Control Flow Graph: Perform proper virtual lookup for modifiers for uninitialized variable and unreachable code analysis.
  * Immutables: Fix wrong error when the constructor of a base contract uses ``return`` and the parent contract contains immutable variables.
+ * Natspec: Fix ICE when overriding a struct getter with a Natspec-documented return value and the name in the struct is different.
  * TypeChecker: Fix ICE when a constant variable declaration forward references a struct.
 
 
