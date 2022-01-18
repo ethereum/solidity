@@ -2534,6 +2534,55 @@ BOOST_AUTO_TEST_CASE(dev_struct_getter_override)
 	checkNatspec(sourceCode, "Thing", natspec2, false);
 }
 
+BOOST_AUTO_TEST_CASE(dev_struct_getter_override_no_return_name)
+{
+	char const *sourceCode = R"(
+		interface IThing {
+			///@return
+			function value(uint) external returns (uint128,uint128);
+		}
+
+		contract Thing is IThing {
+			struct Value {
+				uint128 x;
+				uint128 A;
+			}
+			mapping(uint=>Value) public override value;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"value(uint256)":
+			{
+				"returns":
+				{
+					"_0": ""
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods": {},
+		"stateVariables":
+		{
+			"value":
+			{
+				"return": "x ",
+				"returns":
+				{
+					"x": ""
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "IThing", natspec, false);
+	checkNatspec(sourceCode, "Thing", natspec2, false);
+}
+
 BOOST_AUTO_TEST_CASE(dev_struct_getter_override_different_return_parameter_names)
 {
 	char const *sourceCode = R"(
