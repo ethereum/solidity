@@ -3609,7 +3609,7 @@ string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, St
 				auto const& [srcSlotOffset, srcOffset] = _from.storageOffsetsOfMember(structMembers[i].name);
 				t("memberOffset", formatNumber(srcSlotOffset));
 				if (memberType.isValueType())
-					t("read", readFromStorageValueType(memberType, srcOffset, false));
+					t("read", readFromStorageValueType(memberType, srcOffset, true));
 				else
 					solAssert(srcOffset == 0, "");
 
