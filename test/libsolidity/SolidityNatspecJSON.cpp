@@ -56,7 +56,8 @@ public:
 		else
 			generatedDocumentation = m_compilerStack.natspecDev(_contractName);
 		Json::Value expectedDocumentation;
-		util::jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
+		std::string parseError;
+		BOOST_REQUIRE_MESSAGE(util::jsonParseStrict(_expectedDocumentationString, expectedDocumentation, &parseError), parseError);
 
 		expectedDocumentation["version"] = Json::Value(Natspec::c_natspecVersion);
 		expectedDocumentation["kind"] = Json::Value(_userDocumentation ? "user" : "dev");
@@ -185,18 +186,27 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 		}
 	)";
 
-	char const* devNatspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256)\":{ \n"
-	"        \"details\": \"Multiplies a number by 7\"\n"
-	"        }\n"
-	"    }\n"
-	"}}";
+	char const* devNatspec = R"R(
+	{
+		"methods" :
+		{
+			"mul(uint256)":
+			{
+				"details": "Multiplies a number by 7"
+			}
+		}
+	})R";
 
-	char const* userNatspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
-	"}}";
+	char const* userNatspec = R"R(
+	{
+		"methods" :
+		{
+			"mul(uint256)":
+			{
+				"notice": "Multiplies `a` by 7"
+			}
+		}
+	})R";
 
 	checkNatspec(sourceCode, "test", devNatspec, false);
 	checkNatspec(sourceCode, "test", userNatspec, true);
@@ -636,7 +646,7 @@ BOOST_AUTO_TEST_CASE(dev_return_no_params)
 	{
 		"methods": {
 			"mul(uint256,uint256)": {
-				"returns": { "d": "The result of the multiplication"
+				"returns": { "d": "The result of the multiplication" }
 			}
 		}
 	})ABCDEF";
@@ -866,19 +876,23 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 		}
 	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256,uint256)\":{ \n"
-	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
-	"        \"params\": {\n"
-	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
-	"            \"second\": \"Documentation for the second parameter\"\n"
-	"        },\n"
-	"        \"returns\": {\n"
-	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
-	"        }\n"
-	"    }\n"
-	"}}";
+	char const* natspec = R"R({
+		"methods":
+		{
+			"mul(uint256,uint256)": {
+				"details": "Multiplies a number by 7 and adds second parameter",
+				"params":
+				{
+					"a": "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
+					"second": "Documentation for the second parameter"
+				},
+				"returns":
+				{
+					"d": "The result of the multiplication and cookies with nutella"
+				}
+			}
+		}
+	})R";
 
 	checkNatspec(sourceCode, "test", natspec, false);
 }
@@ -901,19 +915,25 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 		}
 	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256,uint256)\":{ \n"
-	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
-	"        \"params\": {\n"
-	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
-	"            \"second\": \"Documentation for the second parameter\"\n"
-	"        },\n"
-	"        \"returns\": {\n"
-	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
-	"        }\n"
-	"    }\n"
-	"}}";
+	char const* natspec = R"R(
+	{
+		"methods":
+		{
+			"mul(uint256,uint256)":
+			{
+				"details": "Multiplies a number by 7 and adds second parameter",
+				"params":
+				{
+					"a": "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
+					"second": "Documentation for the second parameter"
+				},
+				"returns":
+				{
+					"d": "The result of the multiplication and cookies with nutella"
+				}
+			}
+		}
+	})R";
 
 	checkNatspec(sourceCode, "test", natspec, false);
 }
@@ -2295,7 +2315,7 @@ BOOST_AUTO_TEST_CASE(dev_return_name_no_description)
 			{
 				"returns":
 				{
-					"a": "a",
+					"a": "a"
 				}
 			}
 		}
@@ -2308,7 +2328,7 @@ BOOST_AUTO_TEST_CASE(dev_return_name_no_description)
 			{
 				"returns":
 				{
-					"b": "a",
+					"b": "a"
 				}
 			}
 		}
@@ -2465,7 +2485,8 @@ BOOST_AUTO_TEST_CASE(custom_inheritance)
 		}
 	)";
 
-	char const* natspecA = R"ABCDEF({
+	char const* natspecA = R"ABCDEF(
+	{
 		"methods":
 		{
 			"g(uint256)":
@@ -2473,8 +2494,9 @@ BOOST_AUTO_TEST_CASE(custom_inheritance)
 				"custom:since": "2014"
 			}
 		}
-	)ABCDEF";
-	char const* natspecB = R"ABCDEF({
+	})ABCDEF";
+	char const* natspecB = R"ABCDEF(
+	{
 		"methods": {}
 	})ABCDEF";
 
