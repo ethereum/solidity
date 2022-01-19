@@ -1760,6 +1760,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	case Type::Category::Function:
 		if (member == "selector")
 		{
+			auto const& functionType = dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type);
+			if (functionType.kind() == FunctionType::Kind::External)
+				CompilerUtils(m_context).popStackSlots(functionType.sizeOnStack() - 2);
 			m_context << Instruction::SWAP1 << Instruction::POP;
 			/// need to store it as bytes4
 			utils().leftShiftNumberOnStack(224);
@@ -1768,8 +1771,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			auto const& functionType = dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type);
 			solAssert(functionType.kind() == FunctionType::Kind::External, "");
-			// stack: <address> <function_id>
-			m_context << Instruction::POP;
+			CompilerUtils(m_context).popStackSlots(functionType.sizeOnStack() - 1);
 		}
 		else
 			solAssert(

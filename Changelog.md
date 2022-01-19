@@ -17,6 +17,7 @@ Bugfixes:
  * IR Generator: Fix IR syntax error when copying storage arrays of structs containing functions.
  * Natspec: Fix ICE when overriding a struct getter with a Natspec-documented return value and the name in the struct is different.
  * TypeChecker: Fix ICE when a constant variable declaration forward references a struct.
+ * Code Generator: Fix ICE when accessing the members of external functions occupying more than two stack slots.
 
 
 Solc-Js:
