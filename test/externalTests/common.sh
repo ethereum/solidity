@@ -280,13 +280,13 @@ function force_hardhat_compiler_settings
     if [[ $config_file == *\.js ]]; then
         [[ $config_var_name == "" ]] || assertFail
         echo "require('hardhat-gas-reporter');"
-        echo "module.exports['gasReporter'] = ${gas_reporter_settings}"
-        echo "module.exports['solidity'] = ${compiler_settings}"
+        echo "module.exports.gasReporter = ${gas_reporter_settings};"
+        echo "module.exports.solidity = ${compiler_settings};"
     else
         [[ $config_file == *\.ts ]] || assertFail
         [[ $config_var_name != "" ]] || assertFail
-        echo "${config_var_name}.gasReporter = {compilers: [${gas_reporter_settings}]}"
-        echo "${config_var_name}.solidity = {compilers: [${compiler_settings}]}"
+        echo "${config_var_name}.gasReporter = ${gas_reporter_settings};"
+        echo "${config_var_name}.solidity = {compilers: [${compiler_settings}]};"
     fi >> "$config_file"
 }
 
