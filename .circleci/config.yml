@@ -559,6 +559,13 @@ defaults:
       binary_type: native
       # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
+  - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
+      <<: *workflow_ubuntu2004_static
+      name: t_native_test_ext_perpetual_pools
+      project: perpetual-pools
+      binary_type: native
+      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
+      nodejs_version: '16'
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
       <<: *workflow_emscripten
       name: t_ems_test_ext_colony
@@ -1441,6 +1448,7 @@ workflows:
       - t_ems_ext: *job_native_test_ext_yield_liquidator
       - t_ems_ext: *job_native_test_ext_bleeps
       - t_ems_ext: *job_native_test_ext_pool_together
+      - t_ems_ext: *job_native_test_ext_perpetual_pools
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
