@@ -3018,8 +3018,18 @@ TypeResult FunctionType::binaryOperatorResult(Token _operator, Type const* _othe
 	if (_other->category() != category() || !(_operator == Token::Equal || _operator == Token::NotEqual))
 		return nullptr;
 	FunctionType const& other = dynamic_cast<FunctionType const&>(*_other);
-	if (kind() == Kind::Internal && other.kind() == Kind::Internal && sizeOnStack() == 1 && other.sizeOnStack() == 1)
+	if (kind() == Kind::Internal && sizeOnStack() == 1 && other.kind() == Kind::Internal && other.sizeOnStack() == 1)
 		return commonType(this, _other);
+	else if (
+		kind() == Kind::External &&
+		sizeOnStack() == 2 &&
+		!bound() &&
+		other.kind() == Kind::External &&
+		other.sizeOnStack() == 2 &&
+		!other.bound()
+	)
+		return commonType(this, _other);
+
 	return nullptr;
 }
 

@@ -29,6 +29,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
 using namespace solidity;
@@ -4545,6 +4546,34 @@ string YulUtilFunctions::externalCodeFunction()
 		)")
 		("functionName", functionName)
 		("allocateArray", allocateMemoryArrayFunction(*TypeProvider::bytesMemory()))
+		.render();
+	});
+}
+
+std::string YulUtilFunctions::externalFunctionPointersEqualFunction()
+{
+	std::string const functionName = "externalFunctionPointersEqualFunction";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>(
+				leftAddress,
+				leftSelector,
+				rightAddress,
+				rightSelector
+			) -> result {
+				result := and(
+					eq(
+						<addressCleanUpFunction>(leftAddress), <addressCleanUpFunction>(rightAddress)
+					),
+					eq(
+						<selectorCleanUpFunction>(leftSelector), <selectorCleanUpFunction>(rightSelector)
+					)
+				)
+			}
+		)")
+		("functionName", functionName)
+		("addressCleanUpFunction", cleanupFunction(*TypeProvider::address()))
+		("selectorCleanUpFunction", cleanupFunction(*TypeProvider::uint(32)))
 		.render();
 	});
 }

@@ -2278,12 +2278,29 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 
 void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& _type)
 {
-	solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
 	if (_operator == Token::Equal || _operator == Token::NotEqual)
 	{
-		if (FunctionType const* funType = dynamic_cast<decltype(funType)>(&_type))
+		FunctionType const* functionType = dynamic_cast<decltype(functionType)>(&_type);
+		if (functionType && functionType->kind() == FunctionType::Kind::External)
 		{
-			if (funType->kind() == FunctionType::Kind::Internal)
+			solUnimplementedAssert(functionType->sizeOnStack() == 2, "");
+			m_context << Instruction::SWAP3;
+
+			m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+			m_context << Instruction::SWAP1;
+			m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+			m_context << Instruction::EQ;
+			m_context << Instruction::SWAP2;
+			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+			m_context << Instruction::SWAP1;
+			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+			m_context << Instruction::EQ;
+			m_context << Instruction::AND;
+		}
+		else
+		{
+			solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
+			if (functionType && functionType->kind() == FunctionType::Kind::Internal)
 			{
 				// We have to remove the upper bits (construction time value) because they might
 				// be "unknown" in one of the operands and not in the other.
@@ -2291,13 +2308,14 @@ void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& 
 				m_context << Instruction::SWAP1;
 				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
 			}
+			m_context << Instruction::EQ;
 		}
-		m_context << Instruction::EQ;
 		if (_operator == Token::NotEqual)
 			m_context << Instruction::ISZERO;
 	}
 	else
 	{
+		solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(&_type))
 			isSigned = type->isSigned();
