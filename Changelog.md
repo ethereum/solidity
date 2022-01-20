@@ -2,8 +2,9 @@
 
 Breaking changes:
  * Disallow ``.pop()`` on arrays containing nested mappings.
- * Disallow ``delete`` on types that contain nested mappings.
  * Disallow ``codecopy`` and ``codesize`` in ``pure`` functions.
+ * Disallow ``delete`` on types that contain nested mappings.
+ * Disallow all comparison operators on contract types.
  * Inline Assembly: Consider functions, function parameters and return variables for shadowing checks.
  * Commandline Interface: Remapping targets are not automatically added to allowed paths.
  * Commandline Interface: Assembler mode no longer enables all outputs by default.

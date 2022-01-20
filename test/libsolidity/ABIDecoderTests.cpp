@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 				if (d != 4) return 4;
 				if (x != "abc") return 5;
 				if (e != true) return 6;
-				if (g != this) return 7;
+				if (address(g) != address(this)) return 7;
 				return 20;
 			}
 		}

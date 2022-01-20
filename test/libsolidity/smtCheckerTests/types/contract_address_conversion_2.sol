@@ -3,7 +3,7 @@ contract C
 	function f(C c, C d) public pure {
 		assert(address(c) == address(c));
 		address a = address(c);
-		require(c == d);
+		require(address(c) == address(d));
 		assert(a == address(d));
 	}
 }

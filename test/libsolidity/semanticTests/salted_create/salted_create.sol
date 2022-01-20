@@ -6,7 +6,7 @@ contract A {
     function different_salt() public returns (bool) {
         B x = new B{salt: "abc"}();
         B y = new B{salt: "abcef"}();
-        return x != y;
+        return address(x) != address(y);
     }
     function same_salt() public returns (bool) {
         B x = new B{salt: "xyz"}();

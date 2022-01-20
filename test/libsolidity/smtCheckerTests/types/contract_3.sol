@@ -1,9 +1,9 @@
 contract C
 {
 	function f(C c, C d, C e) public pure {
-		require(c == d);
-		require(d == e);
-		assert(c == e);
+		require(address(c) == address(d));
+		require(address(d) == address(e));
+		assert(address(c) == address(e));
 	}
 }
 // ====

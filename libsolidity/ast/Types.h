@@ -927,6 +927,11 @@ public:
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	/// Contracts can only be explicitly converted to address types and base contracts.
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	/// Contracts do not support any comparison operators
+	TypeResult binaryOperatorResult(Token, Type const*) const override
+	{
+		return TypeResult::err("No arithmetic or comparison operations are allowed on contract types. Consider converting to \"address\".");
+	}
 	TypeResult unaryOperatorResult(Token _operator) const override;
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;

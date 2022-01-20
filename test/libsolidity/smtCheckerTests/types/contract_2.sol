@@ -6,11 +6,11 @@ contract D
 contract C
 {
 	function f(D c, D d) public pure {
-		assert(c == d);
+		assert(address(c) == address(d));
 	}
 }
 // ====
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (76-90): CHC: Assertion violation happens here.
+// Warning 6328: (76-108): CHC: Assertion violation happens here.
