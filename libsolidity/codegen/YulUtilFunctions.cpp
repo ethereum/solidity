@@ -3219,15 +3219,17 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			solAssert(fromType.arrayType().isByteArray(), "Array types other than bytes not convertible to bytesNN.");
 			return bytesToFixedBytesConversionFunction(fromType.arrayType(), dynamic_cast<FixedBytesType const &>(_to));
 		}
-		solAssert(_to.category() == Type::Category::Array, "");
+		solAssert(_to.category() == Type::Category::Array);
 		auto const& targetType = dynamic_cast<ArrayType const&>(_to);
 
-		solAssert(fromType.arrayType().isImplicitlyConvertibleTo(targetType), "");
+		solAssert(
+			fromType.arrayType().isImplicitlyConvertibleTo(targetType) ||
+			(fromType.arrayType().isByteArray() && targetType.isByteArray())
+		);
 		solAssert(
 			fromType.arrayType().dataStoredIn(DataLocation::CallData) &&
 			fromType.arrayType().isDynamicallySized() &&
-			!fromType.arrayType().baseType()->isDynamicallyEncoded(),
-			""
+			!fromType.arrayType().baseType()->isDynamicallyEncoded()
 		);
 
 		if (!targetType.dataStoredIn(DataLocation::CallData))
