@@ -3222,7 +3222,10 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		solAssert(_to.category() == Type::Category::Array, "");
 		auto const& targetType = dynamic_cast<ArrayType const&>(_to);
 
-		solAssert(fromType.arrayType().isImplicitlyConvertibleTo(targetType), "");
+		solAssert(
+			fromType.arrayType().isImplicitlyConvertibleTo(targetType) ||
+			(fromType.arrayType().isByteArray() && targetType.isByteArray())
+		);
 		solAssert(
 			fromType.arrayType().dataStoredIn(DataLocation::CallData) &&
 			fromType.arrayType().isDynamicallySized() &&

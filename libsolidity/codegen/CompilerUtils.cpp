@@ -1140,7 +1140,10 @@ void CompilerUtils::convertType(
 
 		solAssert(_targetType.category() == Type::Category::Array, "");
 		auto const& targetArrayType = dynamic_cast<ArrayType const&>(_targetType);
-		solAssert(typeOnStack.arrayType().isImplicitlyConvertibleTo(targetArrayType), "");
+		solAssert(
+			typeOnStack.arrayType().isImplicitlyConvertibleTo(targetArrayType) ||
+			(typeOnStack.arrayType().isByteArray() && targetArrayType.isByteArray())
+		);
 		solAssert(
 			typeOnStack.arrayType().dataStoredIn(DataLocation::CallData) &&
 			typeOnStack.arrayType().isDynamicallySized() &&
