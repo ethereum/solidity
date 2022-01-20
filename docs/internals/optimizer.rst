@@ -290,6 +290,7 @@ on the individual steps and their sequence below.
 - :ref:`conditional-unsimplifier`.
 - :ref:`control-flow-simplifier`.
 - :ref:`dead-code-eliminator`.
+- :ref:`equal-store-eliminator`.
 - :ref:`equivalent-function-combiner`.
 - :ref:`expression-joiner`.
 - :ref:`expression-simplifier`.
@@ -937,6 +938,22 @@ Because variables declared in a for loop's init block have their scope extended 
 we require ForLoopInitRewriter to run before this step.
 
 Prerequisite: ForLoopInitRewriter, Function Hoister, Function Grouper
+
+.. _equal-store-eliminator:
+
+EqualStoreEliminator
+^^^^^^^^^^^^^^^^^^^^
+
+This steps removes ``mstore(k, v)`` and ``sstore(k, v)`` calls if
+there was a previous call to ``mstore(k, v)`` / ``sstore(k, v)``,
+no other store in between and the values of ``k`` and ``v`` did not change.
+
+This simple step is effective if run after the SSA transform and the
+Common Subexpression Eliminator, because SSA will make sure that the variables
+will not change and the Common Subexpression Eliminator re-uses exactly the same
+variable if the value is known to be the same.
+
+Prerequisites: Disambiguator, ForLoopInitRewriter
 
 .. _unused-pruner:
 

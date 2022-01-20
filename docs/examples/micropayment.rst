@@ -37,7 +37,7 @@ Alice does not need to interact with the Ethereum network
 to sign the transaction, the process is completely offline.
 In this tutorial, we will sign messages in the browser
 using `web3.js <https://github.com/ethereum/web3.js>`_ and
-`MetaMask <https://metamask.io>`_, using the method described in `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
+`MetaMask <https://metamask.io>`_, using the method described in `EIP-712 <https://github.com/ethereum/EIPs/pull/712>`_,
 as it provides a number of other security benefits.
 
 .. code-block:: javascript

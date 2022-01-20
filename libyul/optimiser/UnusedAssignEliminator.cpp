@@ -23,6 +23,7 @@
 #include <libyul/optimiser/UnusedAssignEliminator.h>
 
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>

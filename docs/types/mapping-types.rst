@@ -84,23 +84,24 @@ The example below uses ``_allowances`` to record the amount someone else is allo
         }
 
         function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+            require(_allowances[sender][msg.sender] >= amount, "ERC20: Allowance not high enough.");
+            _allowances[sender][msg.sender] -= amount;
             _transfer(sender, recipient, amount);
-            approve(sender, msg.sender, amount);
             return true;
         }
 
-        function approve(address owner, address spender, uint256 amount) public returns (bool) {
-            require(owner != address(0), "ERC20: approve from the zero address");
+        function approve(address spender, uint256 amount) public returns (bool) {
             require(spender != address(0), "ERC20: approve to the zero address");
 
-            _allowances[owner][spender] = amount;
-            emit Approval(owner, spender, amount);
+            _allowances[msg.sender][spender] = amount;
+            emit Approval(msg.sender, spender, amount);
             return true;
         }
 
         function _transfer(address sender, address recipient, uint256 amount) internal {
             require(sender != address(0), "ERC20: transfer from the zero address");
             require(recipient != address(0), "ERC20: transfer to the zero address");
+            require(_balances[sender] >= amount, "ERC20: Not enough funds.");
 
             _balances[sender] -= amount;
             _balances[recipient] += amount;

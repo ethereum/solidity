@@ -33,7 +33,7 @@ the team and contributors are working on, you can join our public team calls:
 - Mondays at 3pm CET/CEST.
 - Wednesdays at 2pm CET/CEST.
 
-Both calls take place on `Jitsi <https://meet.komputing.org/solidity>`_.
+Both calls take place on `Jitsi <https://meet.ethereum.org/solidity>`_.
 
 How to Report Issues
 ====================

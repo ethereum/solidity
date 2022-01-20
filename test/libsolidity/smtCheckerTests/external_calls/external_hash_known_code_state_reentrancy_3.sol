@@ -40,5 +40,4 @@ contract C {
 }
 // ====
 // SMTEngine: all
-// ----
-// Info 1180: Contract invariant(s) for :C:\n((insidef || (z <= 0)) && (y <= 0))\nReentrancy property(ies) for :C:\n((!insidef || !(<errorCode> >= 2)) && (insidef' || !insidef) && (!(y <= 0) || (y' <= 0)))\n((!insidef || !(<errorCode> >= 3)) && (insidef' || !insidef))\n<errorCode> = 0 -> no errors\n<errorCode> = 2 -> Assertion failed at assert(z == y)\n<errorCode> = 3 -> Assertion failed at assert(prevOwner == owner)\n
+// SMTIgnoreInv: yes

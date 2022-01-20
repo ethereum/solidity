@@ -644,6 +644,8 @@ BOOST_AUTO_TEST_CASE(uniformCrossover_should_swap_tail_with_uniform_probability)
 	Chromosome chromosome1("aaaaa");
 	Chromosome chromosome2("cccccccccc");
 
+	SimulationRNG::reset(1);
+
 	vector<size_t> bernoulliTrials;
 	for (size_t i = 0; i < operationCount; ++i)
 	{

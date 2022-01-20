@@ -6,9 +6,9 @@ Runs pylint on all Python files in project directories known to contain Python s
 
 from argparse import ArgumentParser
 from os import path, walk
-from sys import exit
 from textwrap import dedent
 import subprocess
+import sys
 
 PROJECT_ROOT = path.dirname(path.dirname(path.realpath(__file__)))
 PYLINT_RCFILE = f"{PROJECT_ROOT}/scripts/pylintrc"
@@ -89,7 +89,7 @@ def main():
     success = pylint_all_filenames(options.dev_mode, rootdirs)
 
     if not success:
-        exit(1)
+        sys.exit(1)
     else:
         print("No problems found.")
 
@@ -98,4 +98,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        exit("Interrupted by user. Exiting.")
+        sys.exit("Interrupted by user. Exiting.")

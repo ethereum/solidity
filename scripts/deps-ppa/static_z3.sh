@@ -25,9 +25,9 @@ set -ev
 keyid=70D110489D66E2F6
 email=builds@ethereum.org
 packagename=z3-static
-version=4.8.13
+version=4.8.14
 
-DISTRIBUTIONS="focal groovy hirsute"
+DISTRIBUTIONS="focal hirsute impish jammy"
 
 for distribution in $DISTRIBUTIONS
 do

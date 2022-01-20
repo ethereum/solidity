@@ -24,7 +24,16 @@ set -e
 
 CURRENT_EVM_VERSION=london
 
-function print_optimizer_presets_or_exit
+AVAILABLE_PRESETS=(
+    legacy-no-optimize
+    ir-no-optimize
+    legacy-optimize-evm-only
+    ir-optimize-evm-only
+    legacy-optimize-evm+yul
+    ir-optimize-evm+yul
+)
+
+function print_presets_or_exit
 {
     local selected_presets="$1"
 
@@ -37,10 +46,22 @@ function verify_input
 {
     local binary_type="$1"
     local binary_path="$2"
+    local selected_presets="$3"
 
-    (( $# == 2 )) || fail "Usage: $0 native|solcjs <path to solc or soljson.js>"
+    (( $# >= 2 && $# <= 3 )) || fail "Usage: $0 native|solcjs <path to solc or soljson.js> [preset]"
     [[ $binary_type == native || $binary_type == solcjs ]] || fail "Invalid binary type: '${binary_type}'. Must be either 'native' or 'solcjs'."
     [[ -f "$binary_path" ]] || fail "The compiler binary does not exist at '${binary_path}'"
+
+    if [[ $selected_presets != "" ]]
+    then
+        for preset in $selected_presets
+        do
+            if [[ " ${AVAILABLE_PRESETS[*]} " != *" $preset "* ]]
+            then
+                fail "Preset '${preset}' does not exist. Available presets: ${AVAILABLE_PRESETS[*]}."
+            fi
+        done
+    fi
 }
 
 function setup_solc
@@ -77,12 +98,24 @@ function setup_solc
 function download_project
 {
     local repo="$1"
-    local solcjs_branch="$2"
-    local test_dir="$3"
+    local ref_type="$2"
+    local solcjs_ref="$3"
+    local test_dir="$4"
 
-    printLog "Cloning $solcjs_branch of $repo..."
-    git clone --depth 1 "$repo" -b "$solcjs_branch" "$test_dir/ext"
-    cd ext
+    [[ $ref_type == commit || $ref_type == branch || $ref_type == tag ]] || assertFail
+
+    printLog "Cloning ${ref_type} ${solcjs_ref} of ${repo}..."
+    if [[ $ref_type == commit ]]; then
+        mkdir ext
+        cd ext
+        git init
+        git remote add origin "$repo"
+        git fetch --depth 1 origin "$solcjs_ref"
+        git reset --hard FETCH_HEAD
+    else
+        git clone --depth 1 "$repo" -b "$solcjs_ref" "$test_dir/ext"
+        cd ext
+    fi
     echo "Current commit hash: $(git rev-parse HEAD)"
 }
 
@@ -115,6 +148,19 @@ function neutralize_package_json_hooks
     [[ -f package.json ]] || fail "package.json not found"
     sed -i 's|"prepublish": *".*"|"prepublish": ""|g' package.json
     sed -i 's|"prepare": *".*"|"prepare": ""|g' package.json
+}
+
+function neutralize_packaged_contracts
+{
+    # Frameworks will build contracts from any package that contains a configuration file.
+    # This is both unnecessary (any files imported from these packages will get compiled again as a
+    # part of the main project anyway) and trips up our version check because it won't use our
+    # custom compiler binary.
+    printLog "Removing framework config and artifacts from npm packages..."
+    find node_modules/ -type f '(' -name 'hardhat.config.*' -o -name 'truffle-config.*' ')' -delete
+
+    # Some npm packages also come packaged with pre-built artifacts.
+    find node_modules/ -path '*artifacts/build-info/*.json' -delete
 }
 
 function force_solc_modules
@@ -176,14 +222,37 @@ function force_hardhat_compiler_binary
     echo "Config file: ${config_file}"
     echo "Binary type: ${binary_type}"
     echo "Compiler path: ${solc_path}"
-    hardhat_solc_build_subtask "$SOLCVERSION_SHORT" "$SOLCVERSION" "$binary_type" "$solc_path" >> "$config_file"
+
+    local language="${config_file##*.}"
+    hardhat_solc_build_subtask "$SOLCVERSION_SHORT" "$SOLCVERSION" "$binary_type" "$solc_path" "$language" >> "$config_file"
+}
+
+function force_hardhat_unlimited_contract_size
+{
+    local config_file="$1"
+    local config_var_name="$2"
+
+    printLog "Configuring Hardhat..."
+    echo "-------------------------------------"
+    echo "Allow unlimited contract size: true"
+    echo "-------------------------------------"
+
+    if [[ $config_file == *\.js ]]; then
+        [[ $config_var_name == "" ]] || assertFail
+        echo "module.exports.networks.hardhat.allowUnlimitedContractSize = true" >> "$config_file"
+    else
+        [[ $config_file == *\.ts ]] || assertFail
+        [[ $config_var_name != "" ]] || assertFail
+        echo "${config_var_name}.networks!.hardhat!.allowUnlimitedContractSize = true" >> "$config_file"
+    fi
 }
 
 function force_hardhat_compiler_settings
 {
     local config_file="$1"
     local preset="$2"
-    local evm_version="${3:-"$CURRENT_EVM_VERSION"}"
+    local config_var_name="$3"
+    local evm_version="${4:-"$CURRENT_EVM_VERSION"}"
 
     printLog "Configuring Hardhat..."
     echo "-------------------------------------"
@@ -195,10 +264,16 @@ function force_hardhat_compiler_settings
     echo "Compiler version (full): ${SOLCVERSION}"
     echo "-------------------------------------"
 
-    {
-        echo -n 'module.exports["solidity"] = '
-        hardhat_compiler_settings "$SOLCVERSION_SHORT" "$preset" "$evm_version"
-    } >> "$config_file"
+    local settings
+    settings=$(hardhat_compiler_settings "$SOLCVERSION_SHORT" "$preset" "$evm_version")
+    if [[ $config_file == *\.js ]]; then
+        [[ $config_var_name == "" ]] || assertFail
+        echo "module.exports['solidity'] = ${settings}" >> "$config_file"
+    else
+        [[ $config_file == *\.ts ]] || assertFail
+        [[ $config_var_name != "" ]] || assertFail
+        echo "${config_var_name}.solidity = {compilers: [${settings}]}"  >> "$config_file"
+    fi
 }
 
 function truffle_verify_compiler_version
@@ -216,8 +291,12 @@ function hardhat_verify_compiler_version
     local full_solc_version="$2"
 
     printLog "Verify that the correct version (${solc_version}/${full_solc_version}) of the compiler was used to compile the contracts..."
-    grep '"solcVersion": "'"${solc_version}"'"' --with-filename artifacts/build-info/*.json || fail "Wrong compiler version detected."
-    grep '"solcLongVersion": "'"${full_solc_version}"'"' --with-filename artifacts/build-info/*.json || fail "Wrong compiler version detected."
+    local build_info_files
+    build_info_files=$(find . -path '*artifacts/build-info/*.json')
+    for build_info_file in $build_info_files; do
+        grep '"solcVersion": "'"${solc_version}"'"' --with-filename "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
+        grep '"solcLongVersion": "'"${full_solc_version}"'"' --with-filename "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
+    done
 }
 
 function truffle_clean
@@ -248,6 +327,8 @@ function settings_from_preset
 {
     local preset="$1"
     local evm_version="$2"
+
+    [[ " ${AVAILABLE_PRESETS[*]} " == *" $preset "* ]] || assertFail
 
     case "$preset" in
         # NOTE: Remember to update `parallelism` of `t_ems_ext` job in CI config if you add/remove presets
@@ -292,16 +373,27 @@ function hardhat_solc_build_subtask {
     local full_solc_version="$2"
     local binary_type="$3"
     local solc_path="$4"
+    local language="$5"
 
     [[ $binary_type == native || $binary_type == solcjs ]] || assertFail
 
     [[ $binary_type == native ]] && local is_solcjs=false
     [[ $binary_type == solcjs ]] && local is_solcjs=true
 
-    echo "const {TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD} = require('hardhat/builtin-tasks/task-names');"
-    echo "const assert = require('assert');"
-    echo
-    echo "subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {"
+    if [[ $language == js ]]; then
+        echo "const {TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD} = require('hardhat/builtin-tasks/task-names');"
+        echo "const assert = require('assert');"
+        echo
+        echo "subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {"
+    else
+        [[ $language == ts ]] || assertFail
+        echo "import {TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD} from 'hardhat/builtin-tasks/task-names';"
+        echo "import assert = require('assert');"
+        echo "import {subtask} from 'hardhat/config';"
+        echo
+        echo "subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args: any, _hre: any, _runSuper: any) => {"
+    fi
+
     echo "    assert(args.solcVersion == '${solc_version}', 'Unexpected solc version: ' + args.solcVersion)"
     echo "    return {"
     echo "        compilerPath: '$(realpath "$solc_path")',"
@@ -367,9 +459,10 @@ function hardhat_run_test
     local compile_only_presets="$3"
     local compile_fn="$4"
     local test_fn="$5"
+    local config_var_name="$6"
 
     hardhat_clean
-    force_hardhat_compiler_settings "$config_file" "$preset"
+    force_hardhat_compiler_settings "$config_file" "$preset" "$config_var_name"
     compile_and_run_test compile_fn test_fn hardhat_verify_compiler_version "$preset" "$compile_only_presets"
 }
 

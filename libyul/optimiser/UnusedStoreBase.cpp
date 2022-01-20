@@ -156,18 +156,3 @@ void UnusedStoreBase::merge(TrackedStores& _target, vector<TrackedStores>&& _sou
 		merge(_target, move(ts));
 	_source.clear();
 }
-
-void StatementRemover::operator()(Block& _block)
-{
-	util::iterateReplacing(
-		_block.statements,
-		[&](Statement& _statement) -> std::optional<vector<Statement>>
-		{
-			if (m_toRemove.count(&_statement))
-				return {vector<Statement>{}};
-			else
-				return nullopt;
-		}
-	);
-	ASTModifier::operator()(_block);
-}

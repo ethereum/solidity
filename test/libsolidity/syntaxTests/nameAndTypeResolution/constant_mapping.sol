@@ -2,4 +2,4 @@ contract C {
     mapping(uint => uint) constant x;
 }
 // ----
-// DeclarationError 3530: (17-49): The type contains a (nested) mapping and therefore cannot be a constant.
+// TypeError 9259: (17-49): Only constants of value type and byte array type are implemented.

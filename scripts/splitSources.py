@@ -40,7 +40,7 @@ def writeSourceToFile(lines):
     filePath, srcName = extractSourceName(lines[0])
     # print("sourceName is ", srcName)
     # print("filePath is", filePath)
-    if filePath != False:
+    if filePath:
         os.system("mkdir -p " + filePath)
     with open(srcName, mode='a+', encoding='utf8', newline='') as f:
         createdSources.append(srcName)

@@ -87,13 +87,13 @@ void interpret(string const& _source)
 	try
 	{
 		Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
-		Interpreter::run(state, dialect, *ast);
+		Interpreter::run(state, dialect, *ast, /*disableMemoryTracing=*/false);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{
 	}
 
-	state.dumpTraceAndState(cout);
+	state.dumpTraceAndState(cout, /*disableMemoryTracing=*/false);
 }
 
 }

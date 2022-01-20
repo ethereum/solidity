@@ -105,14 +105,4 @@ protected:
 	size_t m_forLoopNestingDepth = 0;
 };
 
-class StatementRemover: public ASTModifier
-{
-public:
-	explicit StatementRemover(std::set<Statement const*> const& _toRemove): m_toRemove(_toRemove) {}
-
-	void operator()(Block& _block) override;
-private:
-	std::set<Statement const*> const& m_toRemove;
-};
-
 }

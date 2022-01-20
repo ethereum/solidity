@@ -118,8 +118,17 @@ The nightly version can be installed using these commands:
     sudo apt-get update
     sudo apt-get install solc
 
-We are also releasing a `snap package <https://snapcraft.io/>`_, which is
-installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
+Furthermore, some Linux distributions provide their own packages. These packages are not directly
+maintained by us, but usually kept up-to-date by the respective package maintainers.
+
+For example, Arch Linux has packages for the latest development version:
+
+.. code-block:: bash
+
+    pacman -S solidity
+
+There is also a `snap package <https://snapcraft.io/solc>`_, however, it is **currently unmaintained**.
+It is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
 install the latest stable version of solc:
 
 .. code-block:: bash
@@ -139,18 +148,6 @@ with the most recent changes, please use the following:
     but it comes with limitations, like accessing only the files in your ``/home`` and ``/media`` directories.
     For more information, go to `Demystifying Snap Confinement <https://snapcraft.io/blog/demystifying-snap-confinement>`_.
 
-Arch Linux also has packages, albeit limited to the latest development version:
-
-.. code-block:: bash
-
-    pacman -S solidity
-
-Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a Solidity package.
-After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
-
-.. code-block:: bash
-
-    emerge dev-lang/solidity
 
 macOS Packages
 ==============
@@ -537,8 +534,8 @@ The Solidity version string contains four parts:
 
 If there are local modifications, the commit will be postfixed with ``.mod``.
 
-These parts are combined as required by Semver, where the Solidity pre-release tag equals to the Semver pre-release
-and the Solidity commit and platform combined make up the Semver build metadata.
+These parts are combined as required by SemVer, where the Solidity pre-release tag equals to the SemVer pre-release
+and the Solidity commit and platform combined make up the SemVer build metadata.
 
 A release example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
 
@@ -549,7 +546,7 @@ Important Information About Versioning
 
 After a release is made, the patch version level is bumped, because we assume that only
 patch level changes follow. When changes are merged, the version should be bumped according
-to semver and the severity of the change. Finally, a release is always made with the version
+to SemVer and the severity of the change. Finally, a release is always made with the version
 of the current nightly build, but without the ``prerelease`` specifier.
 
 Example:

@@ -29,6 +29,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
 using namespace solidity;
@@ -3218,15 +3219,17 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			solAssert(fromType.arrayType().isByteArray(), "Array types other than bytes not convertible to bytesNN.");
 			return bytesToFixedBytesConversionFunction(fromType.arrayType(), dynamic_cast<FixedBytesType const &>(_to));
 		}
-		solAssert(_to.category() == Type::Category::Array, "");
+		solAssert(_to.category() == Type::Category::Array);
 		auto const& targetType = dynamic_cast<ArrayType const&>(_to);
 
-		solAssert(fromType.arrayType().isImplicitlyConvertibleTo(targetType), "");
+		solAssert(
+			fromType.arrayType().isImplicitlyConvertibleTo(targetType) ||
+			(fromType.arrayType().isByteArray() && targetType.isByteArray())
+		);
 		solAssert(
 			fromType.arrayType().dataStoredIn(DataLocation::CallData) &&
 			fromType.arrayType().isDynamicallySized() &&
-			!fromType.arrayType().baseType()->isDynamicallyEncoded(),
-			""
+			!fromType.arrayType().baseType()->isDynamicallyEncoded()
 		);
 
 		if (!targetType.dataStoredIn(DataLocation::CallData))
@@ -3608,7 +3611,7 @@ string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, St
 				auto const& [srcSlotOffset, srcOffset] = _from.storageOffsetsOfMember(structMembers[i].name);
 				t("memberOffset", formatNumber(srcSlotOffset));
 				if (memberType.isValueType())
-					t("read", readFromStorageValueType(memberType, srcOffset, false));
+					t("read", readFromStorageValueType(memberType, srcOffset, true));
 				else
 					solAssert(srcOffset == 0, "");
 
@@ -4545,6 +4548,34 @@ string YulUtilFunctions::externalCodeFunction()
 		)")
 		("functionName", functionName)
 		("allocateArray", allocateMemoryArrayFunction(*TypeProvider::bytesMemory()))
+		.render();
+	});
+}
+
+std::string YulUtilFunctions::externalFunctionPointersEqualFunction()
+{
+	std::string const functionName = "externalFunctionPointersEqualFunction";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>(
+				leftAddress,
+				leftSelector,
+				rightAddress,
+				rightSelector
+			) -> result {
+				result := and(
+					eq(
+						<addressCleanUpFunction>(leftAddress), <addressCleanUpFunction>(rightAddress)
+					),
+					eq(
+						<selectorCleanUpFunction>(leftSelector), <selectorCleanUpFunction>(rightSelector)
+					)
+				)
+			}
+		)")
+		("functionName", functionName)
+		("addressCleanUpFunction", cleanupFunction(*TypeProvider::address()))
+		("selectorCleanUpFunction", cleanupFunction(*TypeProvider::uint(32)))
 		.render();
 	});
 }

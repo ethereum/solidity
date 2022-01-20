@@ -57,7 +57,7 @@ packagename=solc
 
 static_build_distribution=hirsute
 
-DISTRIBUTIONS="focal hirsute impish"
+DISTRIBUTIONS="focal hirsute impish jammy"
 
 if is_release
 then
