@@ -262,6 +262,11 @@ private:
 							if (ops.sourceMultiplicity(ops.sourceSize() - 1 - swapDepth) < 0)
 							{
 								ops.swap(swapDepth);
+								if (ops.targetIsArbitrary(sourceTop))
+									// Usually we keep a slot that is to-be-removed, if the current top is arbitrary.
+									// However, since we are in a stack-too-deep situation, pop it immediately
+									// to compress the stack (we can always push back junk in the end).
+									ops.pop();
 								return true;
 							}
 						// Otherwise we rely on stack compression or stack-to-memory.
@@ -321,14 +326,44 @@ private:
 			yulAssert(ops.sourceMultiplicity(i) == 0 && (ops.targetIsArbitrary(i) || ops.targetMultiplicity(i) == 0), "");
 		yulAssert(ops.isCompatible(sourceTop, sourceTop), "");
 
+		auto swappableOffsets = ranges::views::iota(size > 17 ? size - 17 : 0u, size);
+
 		// If we find a lower slot that is out of position, but also compatible with the top, swap that up.
+		for (size_t offset: swappableOffsets)
+			if (!ops.isCompatible(offset, offset) && ops.isCompatible(sourceTop, offset))
+			{
+				ops.swap(size - offset - 1);
+				return true;
+			}
+		// Swap up any reachable slot that is still out of position.
+		for (size_t offset: swappableOffsets)
+			if (!ops.isCompatible(offset, offset) && !ops.sourceIsSame(offset, sourceTop))
+			{
+				ops.swap(size - offset - 1);
+				return true;
+			}
+		// We are in a stack-too-deep situation and try to reduce the stack size.
+		// If the current top is merely kept since the target slot is arbitrary, pop it.
+		if (ops.targetIsArbitrary(sourceTop) && ops.sourceMultiplicity(sourceTop) <= 0)
+		{
+			ops.pop();
+			return true;
+		}
+		// If any reachable slot is merely kept, since the target slot is arbitrary, swap it up and pop it.
+		for (size_t offset: swappableOffsets)
+			if (ops.targetIsArbitrary(offset) && ops.sourceMultiplicity(offset) <= 0)
+			{
+				ops.swap(size - offset - 1);
+				ops.pop();
+				return true;
+			}
+		// We cannot avoid a stack-too-deep error. Repeat the above without restricting to reachable slots.
 		for (size_t offset: ranges::views::iota(0u, size))
 			if (!ops.isCompatible(offset, offset) && ops.isCompatible(sourceTop, offset))
 			{
 				ops.swap(size - offset - 1);
 				return true;
 			}
-		// Swap up any slot that is still out of position.
 		for (size_t offset: ranges::views::iota(0u, size))
 			if (!ops.isCompatible(offset, offset) && !ops.sourceIsSame(offset, sourceTop))
 			{
