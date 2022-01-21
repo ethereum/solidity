@@ -255,7 +255,7 @@ function force_hardhat_unlimited_contract_size
     else
         [[ $config_file == *\.ts ]] || assertFail
         [[ $config_var_name != "" ]] || assertFail
-        echo "${config_var_name}.networks!.hardhat ??= {allowUnlimitedContractSize: undefined};"
+        echo "${config_var_name}.networks!.hardhat = ${config_var_name}.networks!.hardhat ?? {allowUnlimitedContractSize: undefined};"
         echo "${config_var_name}.networks!.hardhat!.allowUnlimitedContractSize = true"
     fi >> "$config_file"
 }
