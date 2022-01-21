@@ -46,7 +46,7 @@ function ens_test
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul      # Compilation fails with "YulException: Variable _5 is 1 too deep in the stack [ _5 usr$i usr$h _7 usr$scratch usr$k usr$f _4 usr$len usr$j_2 RET _2 _1 var_data_mpos usr$totallen usr$x _12 ]"
+        ir-optimize-evm+yul      # Compilation fails with "YulException: Variable _5 is 1 too deep in the stack [ _5 usr$i usr$h _7 usr$scratch usr$k usr$f _4 usr$len usr$j_2 RET _2 _1 var_data_mpos usr$totallen usr$x _12 ]"
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
     )

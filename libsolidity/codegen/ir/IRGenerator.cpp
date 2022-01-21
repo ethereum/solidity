@@ -1069,6 +1069,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 
 string IRGenerator::memoryInit(bool _useMemoryGuard)
 {
+	_useMemoryGuard = true;
 	// This function should be called at the beginning of the EVM call frame
 	// and thus can assume all memory to be zero, including the contents of
 	// the "zero memory area" (the position CompilerUtils::zeroPointer points to).

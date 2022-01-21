@@ -53,7 +53,7 @@ function trident_test
         "${compile_only_presets[@]}"
         #ir-no-optimize            # Compilation fails with: "YulException: Variable var_amount_165 is 9 slot(s) too deep inside the stack."
         #ir-optimize-evm-only      # Compilation fails with: "YulException: Variable var_amount_165 is 9 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul       # Compilation fails with: "YulException: Cannot swap Variable var_nearestTick with Variable _4: too deep in the stack by 4 slots"
+        ir-optimize-evm+yul       # Compilation fails with: "YulException: Cannot swap Variable var_nearestTick with Variable _4: too deep in the stack by 4 slots"
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul

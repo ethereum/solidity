@@ -45,7 +45,7 @@ function perpetual_pools_test
         "${compile_only_presets[@]}"
         #ir-no-optimize            # Compilation fails with "YulException: Variable var_amount_527 is 9 slot(s) too deep inside the stack."
         #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_amount_527 is 9 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul       # Compilation fails with "YulException: Variable expr_mpos is 1 too deep in the stack"
+        ir-optimize-evm+yul       # Compilation fails with "YulException: Variable expr_mpos is 1 too deep in the stack"
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
