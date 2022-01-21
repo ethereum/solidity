@@ -239,12 +239,14 @@ function force_hardhat_unlimited_contract_size
 
     if [[ $config_file == *\.js ]]; then
         [[ $config_var_name == "" ]] || assertFail
-        echo "module.exports.networks.hardhat.allowUnlimitedContractSize = true" >> "$config_file"
+        echo "module.exports.networks.hardhat = module.exports.networks.hardhat || {allowUnlimitedContractSize: undefined}"
+        echo "module.exports.networks.hardhat.allowUnlimitedContractSize = true"
     else
         [[ $config_file == *\.ts ]] || assertFail
         [[ $config_var_name != "" ]] || assertFail
-        echo "${config_var_name}.networks!.hardhat!.allowUnlimitedContractSize = true" >> "$config_file"
-    fi
+        echo "${config_var_name}.networks!.hardhat ??= {allowUnlimitedContractSize: undefined};"
+        echo "${config_var_name}.networks!.hardhat!.allowUnlimitedContractSize = true"
+    fi >> "$config_file"
 }
 
 function force_hardhat_compiler_settings
