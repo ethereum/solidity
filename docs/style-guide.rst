@@ -1053,7 +1053,8 @@ Inside each contract, library or interface, use the following order:
 1. Type declarations
 2. State variables
 3. Events
-4. Functions
+4. Modifiers
+5. Functions
 
 .. note::
 
