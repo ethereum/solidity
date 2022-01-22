@@ -21,8 +21,10 @@ memory is never freed (this might change in the future).
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this
 is even true for ``bytes1[]``, but not for ``bytes`` and ``string``).
 Multi-dimensional memory arrays are pointers to memory arrays. The length of a
-dynamic array is stored at the first slot of the array and followed by the array
-elements.
+dynamic array is stored at the first 32 bytes of the array and followed by the
+array elements. ``bytes`` and ``string`` values do not need to be aligned to
+slot boundaries, and bytes in the last slot but after the end of the data do
+not need to be zero.
 
 .. warning::
   There are some operations in Solidity that need a temporary memory area
