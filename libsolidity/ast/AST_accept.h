@@ -58,13 +58,19 @@ void PragmaDirective::accept(ASTConstVisitor& _visitor) const
 
 void ImportDirective::accept(ASTVisitor& _visitor)
 {
-	_visitor.visit(*this);
+	if (_visitor.visit(*this))
+		for (SymbolAlias const& symbolAlias: symbolAliases())
+			if (symbolAlias.symbol)
+				symbolAlias.symbol->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 
 void ImportDirective::accept(ASTConstVisitor& _visitor) const
 {
-	_visitor.visit(*this);
+	if (_visitor.visit(*this))
+		for (SymbolAlias const& symbolAlias: symbolAliases())
+			if (symbolAlias.symbol)
+				symbolAlias.symbol->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 
