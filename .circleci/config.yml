@@ -583,7 +583,7 @@ defaults:
       project: uniswap
       binary_type: native
       nodejs_version: '16'
-  - job_native_test_prb_math: &job_native_test_prb_math
+  - job_native_test_ext_prb_math: &job_native_test_ext_prb_math
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_prb_math
       project: prb-math
@@ -1454,7 +1454,7 @@ workflows:
       - t_ems_ext: *job_native_test_ext_pool_together
       - t_ems_ext: *job_native_test_ext_perpetual_pools
       - t_ems_ext: *job_native_test_ext_uniswap
-      - t_ems_ext: *job_native_test_prb_math
+      - t_ems_ext: *job_native_test_ext_prb_math
       - t_ems_ext: *job_native_test_ext_elementfi
 
       # Windows build and tests
