@@ -84,7 +84,8 @@ function setup_solc
         pushd "$install_dir"
         npm install
         cp "$binary_path" soljson.js
-        SOLCVERSION=$(./solc.js --version)
+        npm run build
+        SOLCVERSION=$(dist/solc.js --version)
         popd
     else
         printLog "Setting up solc..."

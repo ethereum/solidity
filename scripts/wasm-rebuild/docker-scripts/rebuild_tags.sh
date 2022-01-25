@@ -228,6 +228,7 @@ mkdir -p "${OUTPUTDIR}"/bin
 echo "Prepare solc-js."
 cd /root/solc-js
 npm install >/dev/null 2>&1
+npm run build >/dev/null 2>&1
 
 echo "Install semver helper."
 npm install -g semver >/dev/null 2>&1
