@@ -86,7 +86,11 @@ public:
 	IRVariable evaluateExpression(Expression const& _expression, Type const& _to);
 
 	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
-	void define(IRVariable const& _var, IRVariable const& _value) { declareAssign(_var, _value, true); }
+	/// If @a _forceCleanup is set to true, it also cleans the value of the variable after the conversion.
+	void define(IRVariable const& _var, IRVariable const& _value, bool _forceCleanup = false)
+	{
+		declareAssign(_var, _value, true, _forceCleanup);
+	}
 
 	/// @returns the name of a function that computes the value of the given constant
 	/// and also generates the function.
@@ -162,8 +166,8 @@ private:
 	);
 
 	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
-	/// converted to type @a _to.
-	IRVariable convert(IRVariable const& _variable, Type const& _to);
+	/// If @a _forceCleanup is set to true, it also cleans the value of the variable after the conversion.
+	IRVariable convert(IRVariable const& _variable, Type const& _to, bool _forceCleanup = false);
 
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
@@ -179,7 +183,7 @@ private:
 	/// Declares variable @a _var.
 	void declare(IRVariable const& _var);
 
-	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define);
+	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define, bool _forceCleanup = false);
 
 	/// @returns an IRVariable with the zero
 	/// value of @a _type.

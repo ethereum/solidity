@@ -1035,7 +1035,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 						")\n";
 				}
 				else
-					indexedArgs.emplace_back(convert(arg, *paramTypes[i]));
+				{
+					solAssert(parameterTypes[i]->sizeOnStack() == 1, "");
+					indexedArgs.emplace_back(convert(arg, *paramTypes[i], true));
+				}
 			}
 			else
 			{
@@ -2724,14 +2727,14 @@ void IRGeneratorForStatements::assignInternalFunctionIDIfNotCalledDirectly(
 	m_context.addToInternalDispatch(_referencedFunction);
 }
 
-IRVariable IRGeneratorForStatements::convert(IRVariable const& _from, Type const& _to)
+IRVariable IRGeneratorForStatements::convert(IRVariable const& _from, Type const& _to, bool _forceCleanup)
 {
-	if (_from.type() == _to)
+	if (_from.type() == _to && !_forceCleanup)
 		return _from;
 	else
 	{
 		IRVariable converted(m_context.newYulVariable(), _to);
-		define(converted, _from);
+		define(converted, _from, _forceCleanup);
 		return converted;
 	}
 }
@@ -2763,10 +2766,10 @@ void IRGeneratorForStatements::declare(IRVariable const& _var)
 		appendCode() << "let " << _var.commaSeparatedList() << "\n";
 }
 
-void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable const& _rhs, bool _declare)
+void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable const& _rhs, bool _declare, bool _forceCleanup)
 {
 	string output;
-	if (_lhs.type() == _rhs.type())
+	if (_lhs.type() == _rhs.type() && !_forceCleanup)
 		for (auto const& [stackItemName, stackItemType]: _lhs.type().stackItems())
 			if (stackItemType)
 				declareAssign(_lhs.part(stackItemName), _rhs.part(stackItemName), _declare);
