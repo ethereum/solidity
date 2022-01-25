@@ -109,6 +109,7 @@ cd "$tmp_dir"
 git clone https://github.com/ethereum/solc-js.git "$solcjs_dir"
 cd "$solcjs_dir"
 npm install
+npm run build
 
 cd "${solc_bin_dir}/${platform}/"
 echo "Commit range: ${base_ref}..${top_ref}"
@@ -147,11 +148,12 @@ for binary_name in $platform_binaries; do
 
         if [[ $platform == emscripten-wasm32 ]] || [[ $platform == emscripten-asmjs ]]; then
             ln -sf "${solc_bin_dir}/${platform}/${binary_name}" "${solcjs_dir}/soljson.js"
+            ln -sf "${solc_bin_dir}/${platform}/${binary_name}" "${solcjs_dir}/dist/soljson.js"
             ln -s "${solcjs_dir}" solc-js
             cp "${script_dir}/bytecodecompare/prepare_report.js" prepare_report.js
 
             validate_reported_version \
-                "$(solc-js/solc.js --version)" \
+                "$(solc-js/dist/solc.js --version)" \
                 "$solidity_version_and_commit"
 
             # shellcheck disable=SC2035
