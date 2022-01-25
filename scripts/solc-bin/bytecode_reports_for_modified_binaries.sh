@@ -151,7 +151,7 @@ for binary_name in $platform_binaries; do
             cp "${script_dir}/bytecodecompare/prepare_report.js" prepare_report.js
 
             validate_reported_version \
-                "$(solc-js/solcjs --version)" \
+                "$(solc-js/solc.js --version)" \
                 "$solidity_version_and_commit"
 
             # shellcheck disable=SC2035
