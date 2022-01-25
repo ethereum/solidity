@@ -23,6 +23,7 @@ Bugfixes:
 
 Solc-Js:
  * The wrapper now requires at least nodejs v10.
+ * The code has been ported to TypeScript.
 
 
 ### 0.8.11 (2021-12-20)
