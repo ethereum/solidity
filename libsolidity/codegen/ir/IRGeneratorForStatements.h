@@ -86,10 +86,19 @@ public:
 	IRVariable evaluateExpression(Expression const& _expression, Type const& _to);
 
 	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
-	/// If @a _forceCleanup is set to true, it also cleans the value of the variable after the conversion.
-	void define(IRVariable const& _var, IRVariable const& _value, bool _forceCleanup = false)
+	void define(IRVariable const& _var, IRVariable const& _value)
 	{
-		declareAssign(_var, _value, true, _forceCleanup);
+		bool _declare = true;
+		declareAssign(_var, _value, _declare);
+	}
+
+	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
+	/// It also cleans the value of the variable.
+	void defineAndCleanup(IRVariable const& _var, IRVariable const& _value)
+	{
+		bool _forceCleanup = true;
+		bool _declare = true;
+		declareAssign(_var, _value, _declare, _forceCleanup);
 	}
 
 	/// @returns the name of a function that computes the value of the given constant
@@ -166,13 +175,20 @@ private:
 	);
 
 	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
-	/// If @a _forceCleanup is set to true, it also cleans the value of the variable after the conversion.
-	IRVariable convert(IRVariable const& _variable, Type const& _to, bool _forceCleanup = false);
+	IRVariable convert(IRVariable const& _variable, Type const& _to);
+
+	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
+	/// It also cleans the value of the variable.
+	IRVariable convertAndCleanup(IRVariable const& _from, Type const& _to);
 
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
-	/// If @a _forceCleanup is set to true, it also cleans the value, in case it already has type @a _to.
-	std::string expressionAsType(Expression const& _expression, Type const& _to, bool _forceCleanup = false);
+	std::string expressionAsType(Expression const& _expression, Type const& _to);
+
+	/// @returns a Yul expression representing the current value of @a _expression,
+	/// converted to type @a _to if it does not yet have that type.
+	/// It also cleans the value, in case it already has type @a _to.
+	std::string expressionAsCleanedType(Expression const& _expression, Type const& _to);
 
 	/// @returns an output stream that can be used to define @a _var using a function call or
 	/// single stack slot expression.
