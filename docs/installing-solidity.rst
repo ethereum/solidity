@@ -9,11 +9,22 @@ Installing the Solidity Compiler
 Versioning
 ==========
 
-Solidity versions follow `semantic versioning <https://semver.org>`_ and in addition to
-releases, **nightly development builds** are also made available.  The nightly builds
-are not guaranteed to be working and despite best efforts they might contain undocumented
-and/or broken changes. We recommend using the latest release. Package installers below
-will use the latest release.
+Solidity versions follow `Semantic Versioning <https://semver.org>`_. In
+addition, patch level releases with major release 0 (i.e. 0.x.y) will not
+contain breaking changes. That means code that compiles with version 0.x.y
+can be expected to compile with 0.x.z where z > y.
+
+In addition to releases, we provide **nightly development builds** with the
+intention of making it easy for developers to try out upcoming features and
+provide early feedback. Note, however, that while the nightly builds are usually
+very stable, they contain bleeding-edge code from the development branch and are
+not guaranteed to be always working. Despite our best efforts, they might
+contain undocumented and/or broken changes that will not become a part of an
+actual release. They are not meant for production use.
+
+When deploying contracts, you should use the latest released version of Solidity. This
+is because breaking changes, as well as new features and bug fixes are introduced regularly.
+We currently use a 0.x version number [to indicate this fast pace of change](https://semver.org/#spec-item-4).
 
 Remix
 =====
@@ -551,10 +562,10 @@ of the current nightly build, but without the ``prerelease`` specifier.
 
 Example:
 
-0. The 0.4.0 release is made.
-1. The nightly build has a version of 0.4.1 from now on.
-2. Non-breaking changes are introduced --> no change in version.
-3. A breaking change is introduced --> version is bumped to 0.5.0.
-4. The 0.5.0 release is made.
+1. The 0.4.0 release is made.
+2. The nightly build has a version of 0.4.1 from now on.
+3. Non-breaking changes are introduced --> no change in version.
+4. A breaking change is introduced --> version is bumped to 0.5.0.
+5. The 0.5.0 release is made.
 
 This behaviour works well with the  :ref:`version pragma <version_pragma>`.
