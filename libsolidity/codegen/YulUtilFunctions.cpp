@@ -3400,11 +3400,11 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 						.render();
 			else
 			{
-				// clear for conversion to longer bytes
 				solAssert(toCategory == Type::Category::FixedBytes, "Invalid type conversion requested.");
+				FixedBytesType const& to = dynamic_cast<FixedBytesType const&>(_to);
 				body =
 					Whiskers("converted := <clean>(value)")
-					("clean", cleanupFunction(from))
+					("clean", cleanupFunction((to.numBytes() <= from.numBytes()) ? to : from))
 					.render();
 			}
 			break;
