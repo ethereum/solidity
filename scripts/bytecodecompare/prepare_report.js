@@ -2,7 +2,7 @@
 const process = require('process')
 const fs = require('fs')
 
-const compiler = require('./solc-js/wrapper.js')(require('./solc-js/soljson.js'))
+const compiler = require('solc')
 
 
 function loadSource(sourceFileName, stripSMTPragmas)
