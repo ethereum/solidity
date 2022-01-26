@@ -79,7 +79,7 @@ function setup_solc
     if [[ $binary_type == solcjs ]]
     then
         printLog "Setting up solc-js..."
-        git clone --depth 1 -b "$solcjs_branch" https://github.com/ethereum/solc-js.git "$install_dir"
+        git clone --depth 1 -b "fix/root-export-wrapped-solcjson" https://github.com/stephensli/solc-js.git "$install_dir"
 
         pushd "$install_dir"
         npm install

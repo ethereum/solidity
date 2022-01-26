@@ -44,7 +44,7 @@ TMPDIR=$(mktemp -d)
     then
         echo "Installing solc-js..."
         # npm install solc
-        git clone --depth 1 https://github.com/ethereum/solc-js.git solc-js
+        git clone --depth 1 -b "fix/root-export-wrapped-solcjson" https://github.com/stephensli/solc-js.git solc-js
         cp "$REPO_ROOT/emscripten_build/libsolc/soljson.js" solc-js/
         pushd solc-js/
         npm install

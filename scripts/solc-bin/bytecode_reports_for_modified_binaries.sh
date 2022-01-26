@@ -106,7 +106,7 @@ script_dir="$solidity_dir/scripts"
 
 cd "$tmp_dir"
 
-git clone https://github.com/ethereum/solc-js.git "$solcjs_dir"
+git clone -b "fix/root-export-wrapped-solcjson" https://github.com/stephensli/solc-js.git "$solcjs_dir"
 cd "$solcjs_dir"
 npm install
 npm run build
