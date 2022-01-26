@@ -165,7 +165,8 @@ the ``sum`` function iterates over to sum all the values.
         function contains(itmap storage self, uint key) internal view returns (bool) {
             return self.data[key].keyIndex > 0;
         }
-
+        
+        // won't work with compiler 0.8 overflow checks
         function iterate_start(itmap storage self) internal view returns (uint keyIndex) {
             return iterate_next(self, type(uint).max);
         }
