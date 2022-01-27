@@ -60,8 +60,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		filterUnboundedLoops
 	);
 	string yul_source = converter.programToString(_input);
-	// Fuzzer also fuzzes the EVM version field.
-	langutil::EVMVersion version = converter.version();
+	// Do not fuzz the EVM Version field.
+	// See https://github.com/ethereum/solidity/issues/12590
+	langutil::EVMVersion version;
 	EVMHost hostContext(version, evmone);
 	hostContext.reset();
 
