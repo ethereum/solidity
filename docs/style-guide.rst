@@ -281,6 +281,7 @@ Yes:
         // ...
     }
 
+
     contract B is Owned {
         // ...
     }
@@ -846,14 +847,19 @@ Yes:
         constructor(uint) {
         }
     }
+
+
     contract C {
         constructor(uint, uint) {
         }
     }
+
+
     contract D {
         constructor(uint) {
         }
     }
+
 
     contract A is B, C, D {
         uint x;
