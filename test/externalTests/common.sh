@@ -323,20 +323,6 @@ function hardhat_clean
     rm -rf artifacts/ cache/
 }
 
-function run_test
-{
-    local compile_fn="$1"
-    local test_fn="$2"
-
-    replace_version_pragmas
-
-    printLog "Running compile function..."
-    time $compile_fn
-
-    printLog "Running test function..."
-    $test_fn
-}
-
 function settings_from_preset
 {
     local preset="$1"
