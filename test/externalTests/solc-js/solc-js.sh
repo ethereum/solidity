@@ -29,9 +29,6 @@ VERSION="$2"
 
 [[ $SOLJSON != "" && -f "$SOLJSON" && $VERSION != "" ]] || fail "Usage: $0 <path to soljson.js> <version>"
 
-function compile_fn { echo "Nothing to compile."; }
-function test_fn { npm test; }
-
 function solcjs_test
 {
     TEST_DIR=$(pwd)
@@ -60,7 +57,10 @@ function solcjs_test
     echo "Updating package.json to version $VERSION"
     npm version --allow-same-version --no-git-tag-version "$VERSION"
 
-    run_test compile_fn test_fn
+    replace_version_pragmas
+
+    printLog "Running test function..."
+    npm test
 }
 
 external_test solc-js solcjs_test
