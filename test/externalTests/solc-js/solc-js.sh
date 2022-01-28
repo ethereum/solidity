@@ -26,8 +26,9 @@ source test/externalTests/common.sh
 
 SOLJSON="$1"
 VERSION="$2"
+SOLCJS_CHECKOUT="$3" # optional
 
-[[ $SOLJSON != "" && -f "$SOLJSON" && $VERSION != "" ]] || fail "Usage: $0 <path to soljson.js> <version>"
+[[ $SOLJSON != "" && -f "$SOLJSON" && $VERSION != "" ]] || fail "Usage: $0 <path to soljson.js> <version> [<path to solc-js>]"
 
 function solcjs_test
 {
@@ -35,7 +36,7 @@ function solcjs_test
     SOLCJS_INPUT_DIR="$TEST_DIR"/test/externalTests/solc-js
 
     # set up solc-js on the branch specified
-    setup_solc "$DIR" solcjs "$SOLJSON" master solc/
+    setup_solc "$DIR" solcjs "$SOLJSON" master solc/ "$SOLCJS_CHECKOUT"
     cd solc/
 
     printLog "Updating index.js file..."
