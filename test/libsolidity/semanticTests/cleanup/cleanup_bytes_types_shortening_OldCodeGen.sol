@@ -11,7 +11,6 @@ contract C {
     }
 }
 // ====
-// compileToEwasm: also
-// compileViaYul: also
+// compileViaYul: false
 // ----
-// f() -> "\xff\xff\xff\xff"
+// f() -> 0xffffffff00000000000000000000000000000000000000000000000000000000
