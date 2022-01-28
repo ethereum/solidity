@@ -153,7 +153,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			if (paramTypes[i]->isDynamicallySized())
 			{
 				solAssert(
-					dynamic_cast<ArrayType const&>(*paramTypes[i]).isByteArray(),
+					dynamic_cast<ArrayType const&>(*paramTypes[i]).isByteArrayOrString(),
 					"Expected string or byte array for mapping key type"
 				);
 
@@ -239,7 +239,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			if (returnTypes[i]->category() == Type::Category::Mapping)
 				continue;
 			if (auto arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]))
-				if (!arrayType->isByteArray())
+				if (!arrayType->isByteArrayOrString())
 					continue;
 			pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
 			m_context << Instruction::DUP1 << u256(offsets.first) << Instruction::ADD << u256(offsets.second);
@@ -1047,7 +1047,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// stack: ArrayReference (newLength-1)
 				ArrayUtils(m_context).accessIndex(*arrayType, false);
 
-				if (arrayType->isByteArray())
+				if (arrayType->isByteArrayOrString())
 					setLValue<StorageByteArrayElement>(_functionCall);
 				else
 					setLValueToStorageItem(_functionCall);
@@ -1084,7 +1084,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				// stack: argValue storageSlot slotOffset
-				if (!arrayType->isByteArray())
+				if (!arrayType->isByteArrayOrString())
 					StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
 				else
 					StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
@@ -1165,7 +1165,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// update free memory pointer
 			m_context << Instruction::DUP1;
 			// Stack: memptr requested_length requested_length
-			if (arrayType.isByteArray())
+			if (arrayType.isByteArrayOrString())
 				// Round up to multiple of 32
 				m_context << u256(31) << Instruction::ADD << u256(31) << Instruction::NOT << Instruction::AND;
 			else
@@ -2086,7 +2086,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			{
 				case DataLocation::Storage:
 					ArrayUtils(m_context).accessIndex(arrayType);
-					if (arrayType.isByteArray())
+					if (arrayType.isByteArrayOrString())
 					{
 						solAssert(!arrayType.isString(), "Index access to string is not allowed.");
 						setLValue<StorageByteArrayElement>(_indexAccess);
@@ -2096,7 +2096,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					break;
 				case DataLocation::Memory:
 					ArrayUtils(m_context).accessIndex(arrayType);
-					setLValue<MemoryItem>(_indexAccess, *_indexAccess.annotation().type, !arrayType.isByteArray());
+					setLValue<MemoryItem>(_indexAccess, *_indexAccess.annotation().type, !arrayType.isByteArrayOrString());
 					break;
 				case DataLocation::CallData:
 					ArrayUtils(m_context).accessCallDataArrayElement(arrayType);

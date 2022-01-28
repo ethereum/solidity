@@ -2088,7 +2088,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (dynamic_cast<UserDefinedValueType const*>(&actualType))
 			solAssert(member == "wrap" || member == "unwrap");
 		else if (auto const* arrayType = dynamic_cast<ArrayType const*>(&actualType))
-			solAssert(arrayType->isByteArray() && member == "concat");
+			solAssert(arrayType->isByteArrayOrString() && member == "concat");
 		else
 			// The old code generator had a generic "else" case here
 			// without any specific code being generated,
@@ -2226,7 +2226,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 
 				setLValue(_indexAccess, IRLValue{
 					*arrayType.baseType(),
-					IRLValue::Memory{memAddress, arrayType.isByteArray()}
+					IRLValue::Memory{memAddress, arrayType.isByteArrayOrString()}
 				});
 				break;
 			}
@@ -2240,7 +2240,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 					", " +
 					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) +
 					")";
-				if (arrayType.isByteArray())
+				if (arrayType.isByteArrayOrString())
 					define(_indexAccess) <<
 						m_utils.cleanupFunction(*arrayType.baseType()) <<
 						"(calldataload(" <<
