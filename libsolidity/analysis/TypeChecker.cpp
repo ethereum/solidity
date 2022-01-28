@@ -1783,7 +1783,7 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 						(
 							(
 								resultArrayType->isPointer() ||
-								(argArrayType->isByteArray() && resultArrayType->isByteArray())
+								(argArrayType->isByteArrayOrString() && resultArrayType->isByteArrayOrString())
 							) &&
 							resultArrayType->location() == DataLocation::Storage
 						),
@@ -1791,7 +1791,7 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					);
 				else
 					solAssert(
-						argArrayType->isByteArray() && !argArrayType->isString() && resultType->category() == Type::Category::FixedBytes,
+						argArrayType->isByteArrayOrString() && !argArrayType->isString() && resultType->category() == Type::Category::FixedBytes,
 						""
 					);
 			}

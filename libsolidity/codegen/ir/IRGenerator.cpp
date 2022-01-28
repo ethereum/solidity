@@ -677,7 +677,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 					continue;
 				if (
 					auto const* arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]);
-					arrayType && !arrayType->isByteArray()
+					arrayType && !arrayType->isByteArrayOrString()
 				)
 					continue;
 
@@ -698,7 +698,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 			solAssert(returnTypes.size() == 1, "");
 			auto const* arrayType = dynamic_cast<ArrayType const*>(returnTypes.front());
 			if (arrayType)
-				solAssert(arrayType->isByteArray(), "");
+				solAssert(arrayType->isByteArrayOrString(), "");
 			vector<string> retVars = IRVariable("ret", *returnTypes.front()).stackSlots();
 			returnVariables += retVars;
 			code += Whiskers(R"(

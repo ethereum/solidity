@@ -441,7 +441,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	{
 		bool allowed = false;
 		if (auto arrayType = dynamic_cast<ArrayType const*>(type))
-			allowed = arrayType->isByteArray();
+			allowed = arrayType->isByteArrayOrString();
 		if (!allowed)
 			m_errorReporter.fatalTypeError(9259_error, _variable.location(), "Only constants of value type and byte array type are implemented.");
 	}

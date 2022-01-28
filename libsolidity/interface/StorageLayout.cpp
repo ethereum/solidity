@@ -94,7 +94,7 @@ void StorageLayout::generate(Type const* _type)
 	}
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(_type))
 	{
-		if (arrayType->isByteArray())
+		if (arrayType->isByteArrayOrString())
 			typeInfo["encoding"] = "bytes";
 		else
 		{
