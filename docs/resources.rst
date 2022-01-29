@@ -24,6 +24,9 @@ Integrated (Ethereum) Development Environments
 
     * `Dapp <https://dapp.tools/>`_
         Tool for building, testing and deploying smart contracts from the command line.
+    
+    * `Foundry <https://github.com/gakonst/foundry>`_
+        Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust that lets you write tests in Solidity.
 
     * `Embark <https://framework.embarklabs.io/>`_
         Developer platform for building and deploying decentralized applications.
@@ -81,6 +84,9 @@ Editor Integrations
 
     * `Visual Studio Code extension <https://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
         Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
+        
+    * `Solidity Visual Auditor extension <https://marketplace.visualstudio.com/items?itemName=tintinweb.solidity-visual-auditor>`_
+        Ethereum Solidity Language customized for developers and auditors using Visual Studio Code
 
 Solidity Tools
 ==============
