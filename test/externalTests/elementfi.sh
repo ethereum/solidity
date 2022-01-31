@@ -80,6 +80,7 @@ function elementfi_test
     sed -i 's|address(uint256(_data))|address(uint160(uint256(_data)))|g' lib/openzeppelin/Create2.sol
     sed -i 's|address(uint256(poolId) >> (12 \* 8))|address(uint160(uint256(poolId) >> (12 * 8)))|g' vault/PoolRegistry.sol
     sed -i 's|bytes32(uint256(pool))|bytes32(uint256(uint160(pool)))|g' vault/PoolRegistry.sol
+    sed -i 's|delete _twoTokenPoolTokens\[poolId\];|delete _twoTokenPoolTokens[poolId].tokenA;delete _twoTokenPoolTokens[poolId].tokenB;|g' vault/balances/TwoTokenPoolsBalance.sol
     popd
 
     # Several tests fail unless we use the exact versions hard-coded in package-lock.json
