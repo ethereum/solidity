@@ -1014,46 +1014,31 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
 }
 
-Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
+Json::Value CompilerStack::contractIdentifiers(string const& _contractName) const
 {
 	if (m_stackState < AnalysisPerformed)
 		solThrow(CompilerError, "Analysis was not successful.");
 
-	Json::Value methodIdentifiers(Json::objectValue);
+	Json::Value contractIdentifiers(Json::objectValue);
+	// Always have a methods object
+	contractIdentifiers["methods"] = Json::objectValue;
+
 	for (auto const& it: contractDefinition(_contractName).interfaceFunctions())
-		methodIdentifiers[it.second->externalSignature()] = it.first.hex();
-	return methodIdentifiers;
-}
-
-Json::Value CompilerStack::errorIdentifiers(string const& _contractName) const
-{
-	if (m_stackState < AnalysisPerformed)
-		solThrow(CompilerError, "Analysis was not successful.");
-
-	Json::Value errorIdentifiers(Json::objectValue);
+		contractIdentifiers["methods"][it.second->externalSignature()] = it.first.hex();
 	for (ErrorDefinition const* error: contractDefinition(_contractName).interfaceErrors())
 	{
 		string signature = error->functionType(true)->externalSignature();
-		errorIdentifiers[signature] = toHex(toCompactBigEndian(selectorFromSignature32(signature), 4));
+		contractIdentifiers["errors"][signature] = toHex(toCompactBigEndian(selectorFromSignature32(signature), 4));
 	}
 
-	return errorIdentifiers;
-}
-
-Json::Value CompilerStack::eventIdentifiers(string const& _contractName) const
-{
-	if (m_stackState < AnalysisPerformed)
-		solThrow(CompilerError, "Analysis was not successful.");
-
-	Json::Value eventIdentifiers(Json::objectValue);
 	for (EventDefinition const* event: contractDefinition(_contractName).interfaceEvents())
 		if (!event->isAnonymous())
 		{
 			string signature = event->functionType(true)->externalSignature();
-			eventIdentifiers[signature] = toHex(u256(h256::Arith(keccak256(signature))));
+			contractIdentifiers["events"][signature] = toHex(u256(h256::Arith(keccak256(signature))));
 		}
 
-	return eventIdentifiers;
+	return contractIdentifiers;
 }
 
 bytes CompilerStack::cborMetadata(string const& _contractName, bool _forIR) const

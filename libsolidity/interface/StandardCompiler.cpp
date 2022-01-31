@@ -1298,7 +1298,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly", wildcardMatchesExperimental))
 			evmData["legacyAssembly"] = compilerStack.assemblyJSON(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers", wildcardMatchesExperimental))
-			evmData["methodIdentifiers"] = compilerStack.methodIdentifiers(contractName);
+			evmData["methodIdentifiers"] = compilerStack.contractIdentifiers(contractName)["methods"];
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.gasEstimates", wildcardMatchesExperimental))
 			evmData["gasEstimates"] = compilerStack.gasEstimates(contractName);
 
