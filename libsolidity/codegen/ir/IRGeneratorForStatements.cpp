@@ -2985,8 +2985,11 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 				{
 					solAssert(_lvalue.type.sizeOnStack() == 1);
 					auto const* valueReferenceType = dynamic_cast<ReferenceType const*>(&_value.type());
-					solAssert(valueReferenceType && valueReferenceType->dataStoredIn(DataLocation::Memory));
-					appendCode() << "mstore(" + _memory.address + ", " + _value.part("mpos").name() + ")\n";
+					solAssert(valueReferenceType);
+					if (valueReferenceType->dataStoredIn(DataLocation::Memory))
+						appendCode() << "mstore(" + _memory.address + ", " + _value.part("mpos").name() + ")\n";
+					else
+						appendCode() << "mstore(" + _memory.address + ", " + m_utils.conversionFunction(_value.type(), _lvalue.type) + "(" + _value.commaSeparatedList() + "))\n";
 				}
 			},
 			[&](IRLValue::Stack const& _stack) { assign(_stack.variable, _value); },
