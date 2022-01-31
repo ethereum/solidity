@@ -26,5 +26,11 @@ contract C {
     function l() public view {
         assembly { pop(extcodesize(0)) }
     }
+    function m() public view {
+        assembly { codecopy(0,0,0) }
+    }
+    function n() public view {
+        assembly { pop(codesize()) }
+    }
 }
 // ----
