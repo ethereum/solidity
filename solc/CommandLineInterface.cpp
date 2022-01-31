@@ -270,25 +270,23 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	if (!m_options.compiler.outputs.signatureHashes)
 		return;
 
-	Json::Value methodIdentifiers = m_compiler->methodIdentifiers(_contract);
+	Json::Value contractIdentifiers = m_compiler->contractIdentifiers(_contract);
 	string out = "Function signatures:\n";
-	for (auto const& name: methodIdentifiers.getMemberNames())
-		out += methodIdentifiers[name].asString() + ": " + name + "\n";
+	for (auto const& name: contractIdentifiers["methods"].getMemberNames())
+		out += contractIdentifiers["methods"][name].asString() + ": " + name + "\n";
 
-	Json::Value errorIdentifiers = m_compiler->errorIdentifiers(_contract);
-	if (!errorIdentifiers.empty())
+	if (contractIdentifiers.isMember("errors"))
 	{
 		out += "\nError signatures:\n";
-		for (auto const& name: errorIdentifiers.getMemberNames())
-			out += errorIdentifiers[name].asString() + ": " + name + "\n";
+		for (auto const& name: contractIdentifiers["errors"].getMemberNames())
+			out += contractIdentifiers["errors"][name].asString() + ": " + name + "\n";
 	}
 
-	Json::Value eventIdentifiers = m_compiler->eventIdentifiers(_contract);
-	if (!eventIdentifiers.empty())
+	if (contractIdentifiers.isMember("events"))
 	{
 		out += "\nEvent signatures:\n";
-		for (auto const& name: eventIdentifiers.getMemberNames())
-			out += eventIdentifiers[name].asString() + ": " + name + "\n";
+		for (auto const& name: contractIdentifiers["events"].getMemberNames())
+			out += contractIdentifiers["events"][name].asString() + ": " + name + "\n";
 	}
 
 	if (!m_options.output.dir.empty())
@@ -838,7 +836,7 @@ void CommandLineInterface::handleCombinedJSON()
 				m_compiler->runtimeObject(contractName).functionDebugData
 			);
 		if (m_options.compiler.combinedJsonRequests->signatureHashes)
-			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
+			contractData[g_strSignatureHashes] = m_compiler->contractIdentifiers(contractName)["methods"];
 		if (m_options.compiler.combinedJsonRequests->natspecDev)
 			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
 		if (m_options.compiler.combinedJsonRequests->natspecUser)
