@@ -102,6 +102,8 @@ void CommonOptions::addOptions()
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("vm", po::value<std::vector<fs::path>>(&vmPaths), "path to evmc library, can be supplied multiple times.")
 		("ewasm", po::bool_switch(&ewasm)->default_value(ewasm), "tries to automatically find an ewasm vm and enable ewasm test-execution.")
+		("batches", po::value<size_t>(&this->batches)->default_value(1), "set number of batches to split the tests into")
+		("selected-batch", po::value<size_t>(&this->selectedBatch)->default_value(0), "zero-based number of batch to execute")
 		("no-semantic-tests", po::bool_switch(&disableSemanticTests)->default_value(disableSemanticTests), "disable semantic tests")
 		("no-smt", po::bool_switch(&disableSMT)->default_value(disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize)->default_value(optimize), "enables optimization")
@@ -126,6 +128,17 @@ void CommonOptions::validate() const
 		ConfigException,
 		"Invalid test path specified."
 	);
+	assertThrow(
+		batches > 0,
+		ConfigException,
+		"Batches needs to be at least 1."
+	);
+	assertThrow(
+		selectedBatch < batches,
+		ConfigException,
+		"Selected batch has to be less than number of batches."
+	);
+
 	if (enforceGasTest)
 	{
 		assertThrow(

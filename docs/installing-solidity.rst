@@ -9,11 +9,22 @@ Installing the Solidity Compiler
 Versioning
 ==========
 
-Solidity versions follow `semantic versioning <https://semver.org>`_ and in addition to
-releases, **nightly development builds** are also made available.  The nightly builds
-are not guaranteed to be working and despite best efforts they might contain undocumented
-and/or broken changes. We recommend using the latest release. Package installers below
-will use the latest release.
+Solidity versions follow `Semantic Versioning <https://semver.org>`_. In
+addition, patch level releases with major release 0 (i.e. 0.x.y) will not
+contain breaking changes. That means code that compiles with version 0.x.y
+can be expected to compile with 0.x.z where z > y.
+
+In addition to releases, we provide **nightly development builds** with the
+intention of making it easy for developers to try out upcoming features and
+provide early feedback. Note, however, that while the nightly builds are usually
+very stable, they contain bleeding-edge code from the development branch and are
+not guaranteed to be always working. Despite our best efforts, they might
+contain undocumented and/or broken changes that will not become a part of an
+actual release. They are not meant for production use.
+
+When deploying contracts, you should use the latest released version of Solidity. This
+is because breaking changes, as well as new features and bug fixes are introduced regularly.
+We currently use a 0.x version number [to indicate this fast pace of change](https://semver.org/#spec-item-4).
 
 Remix
 =====
@@ -118,8 +129,17 @@ The nightly version can be installed using these commands:
     sudo apt-get update
     sudo apt-get install solc
 
-We are also releasing a `snap package <https://snapcraft.io/>`_, which is
-installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
+Furthermore, some Linux distributions provide their own packages. These packages are not directly
+maintained by us, but usually kept up-to-date by the respective package maintainers.
+
+For example, Arch Linux has packages for the latest development version:
+
+.. code-block:: bash
+
+    pacman -S solidity
+
+There is also a `snap package <https://snapcraft.io/solc>`_, however, it is **currently unmaintained**.
+It is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
 install the latest stable version of solc:
 
 .. code-block:: bash
@@ -139,18 +159,6 @@ with the most recent changes, please use the following:
     but it comes with limitations, like accessing only the files in your ``/home`` and ``/media`` directories.
     For more information, go to `Demystifying Snap Confinement <https://snapcraft.io/blog/demystifying-snap-confinement>`_.
 
-Arch Linux also has packages, albeit limited to the latest development version:
-
-.. code-block:: bash
-
-    pacman -S solidity
-
-Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a Solidity package.
-After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
-
-.. code-block:: bash
-
-    emerge dev-lang/solidity
 
 macOS Packages
 ==============
@@ -537,8 +545,8 @@ The Solidity version string contains four parts:
 
 If there are local modifications, the commit will be postfixed with ``.mod``.
 
-These parts are combined as required by Semver, where the Solidity pre-release tag equals to the Semver pre-release
-and the Solidity commit and platform combined make up the Semver build metadata.
+These parts are combined as required by SemVer, where the Solidity pre-release tag equals to the SemVer pre-release
+and the Solidity commit and platform combined make up the SemVer build metadata.
 
 A release example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
 
@@ -549,15 +557,15 @@ Important Information About Versioning
 
 After a release is made, the patch version level is bumped, because we assume that only
 patch level changes follow. When changes are merged, the version should be bumped according
-to semver and the severity of the change. Finally, a release is always made with the version
+to SemVer and the severity of the change. Finally, a release is always made with the version
 of the current nightly build, but without the ``prerelease`` specifier.
 
 Example:
 
-0. The 0.4.0 release is made.
-1. The nightly build has a version of 0.4.1 from now on.
-2. Non-breaking changes are introduced --> no change in version.
-3. A breaking change is introduced --> version is bumped to 0.5.0.
-4. The 0.5.0 release is made.
+1. The 0.4.0 release is made.
+2. The nightly build has a version of 0.4.1 from now on.
+3. Non-breaking changes are introduced --> no change in version.
+4. A breaking change is introduced --> version is bumped to 0.5.0.
+5. The 0.5.0 release is made.
 
 This behaviour works well with the  :ref:`version pragma <version_pragma>`.

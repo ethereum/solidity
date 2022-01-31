@@ -281,6 +281,7 @@ Yes:
         // ...
     }
 
+
     contract B is Owned {
         // ...
     }
@@ -846,14 +847,19 @@ Yes:
         constructor(uint) {
         }
     }
+
+
     contract C {
         constructor(uint, uint) {
         }
     }
+
+
     contract D {
         constructor(uint) {
         }
     }
+
 
     contract A is B, C, D {
         uint x;
@@ -1053,7 +1059,8 @@ Inside each contract, library or interface, use the following order:
 1. Type declarations
 2. State variables
 3. Events
-4. Functions
+4. Modifiers
+5. Functions
 
 .. note::
 

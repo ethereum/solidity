@@ -187,7 +187,7 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
     return file_report
 
 
-def prepare_compiler_input(  # pylint: disable=too-many-arguments
+def prepare_compiler_input(
     compiler_path: Path,
     source_file_name: Path,
     optimize: bool,
@@ -256,7 +256,7 @@ def detect_metadata_cli_option_support(compiler_path: Path):
     return process.returncode == 0
 
 
-def run_compiler(  # pylint: disable=too-many-arguments
+def run_compiler(
     compiler_path: Path,
     source_file_name: Path,
     optimize: bool,
@@ -320,7 +320,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(  # pylint: disable=too-many-arguments,too-many-locals
+def generate_report(
     source_file_names: List[str],
     compiler_path: Path,
     interface: CompilerInterface,

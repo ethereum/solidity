@@ -223,6 +223,8 @@ protected:
 	/// @returns true if @param _contract is set for analysis in the settings
 	/// and it is not abstract.
 	bool shouldAnalyze(ContractDefinition const& _contract) const;
+	/// @returns true if @param _source is set for analysis in the settings.
+	bool shouldAnalyze(SourceUnit const& _source) const;
 
 	bool isPublicGetter(Expression const& _expr);
 

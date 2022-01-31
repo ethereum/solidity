@@ -27,6 +27,6 @@ contract A {
 // ====
 // SMTEngine: all
 // SMTIgnoreCex: yes
+// SMTIgnoreInv: yes
 // ----
 // Warning 6328: (392-408): CHC: Assertion violation happens here.
-// Info 1180: Contract invariant(s) for :A:\n(((x = (- 2)) && (y = (- 2))) || ((x = 0) && (y = 0)))\n(((x = 0) && (y = 0)) || ((x = (- 2)) && (y = (- 2))))\n

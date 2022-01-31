@@ -780,6 +780,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Send:
 		case FunctionType::Kind::Transfer:
+		{
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
@@ -788,6 +789,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// gas <- gas * !value
 			m_context << Instruction::SWAP1 << Instruction::DUP2;
 			m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
+			FunctionType::Options callOptions;
+			callOptions.valueSet = true;
+			callOptions.gasSet = true;
 			appendExternalFunctionCall(
 				FunctionType(
 					TypePointers{},
@@ -795,11 +799,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					strings(),
 					strings(),
 					FunctionType::Kind::BareCall,
-					false,
 					StateMutability::NonPayable,
 					nullptr,
-					true,
-					true
+					callOptions
 				),
 				{},
 				false
@@ -812,6 +814,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendConditionalRevert(true);
 			}
 			break;
+		}
 		case FunctionType::Kind::Selfdestruct:
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
 			m_context << Instruction::SELFDESTRUCT;
@@ -1255,7 +1258,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 				auto const functionPtr = dynamic_cast<FunctionTypePointer>(arguments[0]->annotation().type);
 				solAssert(functionPtr);
-				solAssert(functionPtr->sizeOnStack() == 2);
 
 				// Account for tuples with one component which become that component
 				if (auto const tupleType = dynamic_cast<TupleType const*>(arguments[1]->annotation().type))
@@ -1330,9 +1332,20 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				}
 				else if (function.kind() == FunctionType::Kind::ABIEncodeCall)
 				{
-					// stack: <memory pointer> <functionPointer>
-					// Extract selector from the stack
-					m_context << Instruction::SWAP1 << Instruction::POP;
+					auto const& funType = dynamic_cast<FunctionType const&>(*selectorType);
+					if (funType.kind() == FunctionType::Kind::Declaration)
+					{
+						solAssert(funType.hasDeclaration());
+						solAssert(selectorType->sizeOnStack() == 0);
+						m_context << funType.externalIdentifier();
+					}
+					else
+					{
+						solAssert(selectorType->sizeOnStack() == 2);
+						// stack: <memory pointer> <functionPointer>
+						// Extract selector from the stack
+						m_context << Instruction::SWAP1 << Instruction::POP;
+					}
 					// Conversion will be done below
 					dataOnStack = TypeProvider::uint(32);
 				}
@@ -1747,6 +1760,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	case Type::Category::Function:
 		if (member == "selector")
 		{
+			auto const& functionType = dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type);
+			if (functionType.kind() == FunctionType::Kind::External)
+				CompilerUtils(m_context).popStackSlots(functionType.sizeOnStack() - 2);
 			m_context << Instruction::SWAP1 << Instruction::POP;
 			/// need to store it as bytes4
 			utils().leftShiftNumberOnStack(224);
@@ -1755,8 +1771,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			auto const& functionType = dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type);
 			solAssert(functionType.kind() == FunctionType::Kind::External, "");
-			// stack: <address> <function_id>
-			m_context << Instruction::POP;
+			CompilerUtils(m_context).popStackSlots(functionType.sizeOnStack() - 1);
 		}
 		else
 			solAssert(
@@ -2265,12 +2280,29 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 
 void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& _type)
 {
-	solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
 	if (_operator == Token::Equal || _operator == Token::NotEqual)
 	{
-		if (FunctionType const* funType = dynamic_cast<decltype(funType)>(&_type))
+		FunctionType const* functionType = dynamic_cast<decltype(functionType)>(&_type);
+		if (functionType && functionType->kind() == FunctionType::Kind::External)
 		{
-			if (funType->kind() == FunctionType::Kind::Internal)
+			solUnimplementedAssert(functionType->sizeOnStack() == 2, "");
+			m_context << Instruction::SWAP3;
+
+			m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+			m_context << Instruction::SWAP1;
+			m_context << ((u256(1) << 160) - 1) << Instruction::AND;
+			m_context << Instruction::EQ;
+			m_context << Instruction::SWAP2;
+			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+			m_context << Instruction::SWAP1;
+			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+			m_context << Instruction::EQ;
+			m_context << Instruction::AND;
+		}
+		else
+		{
+			solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
+			if (functionType && functionType->kind() == FunctionType::Kind::Internal)
 			{
 				// We have to remove the upper bits (construction time value) because they might
 				// be "unknown" in one of the operands and not in the other.
@@ -2278,13 +2310,14 @@ void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& 
 				m_context << Instruction::SWAP1;
 				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
 			}
+			m_context << Instruction::EQ;
 		}
-		m_context << Instruction::EQ;
 		if (_operator == Token::NotEqual)
 			m_context << Instruction::ISZERO;
 	}
 	else
 	{
+		solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(&_type))
 			isSigned = type->isSigned();

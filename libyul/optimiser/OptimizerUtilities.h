@@ -25,6 +25,7 @@
 #include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 #include <libyul/YulString.h>
+#include <libyul/optimiser/ASTWalker.h>
 
 #include <optional>
 
@@ -47,5 +48,15 @@ bool isRestrictedIdentifier(Dialect const& _dialect, YulString const& _identifie
 
 /// Helper function that returns the instruction, if the `_name` is a BuiltinFunction
 std::optional<evmasm::Instruction> toEVMInstruction(Dialect const& _dialect, YulString const& _name);
+
+class StatementRemover: public ASTModifier
+{
+public:
+	explicit StatementRemover(std::set<Statement const*> const& _toRemove): m_toRemove(_toRemove) {}
+
+	void operator()(Block& _block) override;
+private:
+	std::set<Statement const*> const& m_toRemove;
+};
 
 }

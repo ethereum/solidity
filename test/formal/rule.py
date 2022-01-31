@@ -39,6 +39,7 @@ class Rule:
 			self.error('Rule is incorrect.\nModel: ' + str(m))
 		self.solver.pop()
 
-	def error(self, msg):
+	@classmethod
+	def error(cls, msg):
 		print(msg)
 		sys.exit(1)

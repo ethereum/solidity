@@ -153,7 +153,8 @@ third-party string libraries. You can also compare two strings by their keccak25
 concatenate two strings using ``bytes.concat(bytes(s1), bytes(s2))``.
 
 You should use ``bytes`` over ``bytes1[]`` because it is cheaper,
-since ``bytes1[]`` adds 31 padding bytes between the elements. As a general rule,
+since using ``bytes1[]`` in ``memory`` adds 31 padding bytes between the elements. Note that in ``storage``, the
+padding is absent due to tight packing, see :ref:`bytes and string <bytes-and-string>`. As a general rule,
 use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
 string (UTF-8) data. If you can limit the length to a certain number of bytes,
 always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.

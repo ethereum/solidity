@@ -32,10 +32,17 @@ struct yulFuzzerUtil
 		None
 	};
 
+	/// Interprets the Yul AST pointed to by @param _ast. Flag @param _outputStorageOnly
+	/// (unset by default) outputs an execution trace of both memory and storage;
+	/// if set, only storage contents are output as part of the execution trace. The
+	/// latter avoids false positives that will be produced by the fuzzer when certain
+	/// optimizer steps are activated e.g., Redundant store eliminator, Equal store
+	/// eliminator.
 	static TerminationReason interpret(
 		std::ostream& _os,
 		std::shared_ptr<yul::Block> _ast,
 		Dialect const& _dialect,
+		bool _disableMemoryTracing = false,
 		bool _outputStorageOnly = false,
 		size_t _maxSteps = maxSteps,
 		size_t _maxTraceSize = maxTraceSize,

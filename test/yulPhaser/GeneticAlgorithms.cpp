@@ -217,6 +217,9 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_
 {
 	constexpr double relativeTolerance = 0.1;
 	constexpr size_t populationSize = 1000;
+
+	SimulationRNG::reset(1);
+
 	assert(populationSize % 4 == 0 && "Choose a number divisible by 4 for this test");
 
 	auto population =

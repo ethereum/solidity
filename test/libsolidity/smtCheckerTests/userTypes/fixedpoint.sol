@@ -67,8 +67,9 @@ contract TestFixedMath {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (1886-1970): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nTestFixedMath.constructor()\nTestFixedMath.f()\n    TestFixedMath.add(0, 0) -- internal call\n        FixedMath.add(0, 0) -- internal call\n    TestFixedMath.add(25, 45) -- internal call\n        FixedMath.add(25, 45) -- internal call\n    TestFixedMath.add(25, 45) -- internal call\n        FixedMath.add(25, 45) -- internal call
+// Warning 6328: (1886-1970): CHC: Assertion violation happens here.
 // Warning 6328: (2165-2266): CHC: Assertion violation happens here.
-// Warning 6328: (2675-2791): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nTestFixedMath.constructor()\nTestFixedMath.h()\n    TestFixedMath.floor(11579208923731619542357098500868790785326998665640564039457584007913129639930) -- internal call\n        FixedMath.floor(11579208923731619542357098500868790785326998665640564039457584007913129639930) -- internal call\n    TestFixedMath.floor(115792089237316195423570985008687907853269984665640564039457584007913129639935) -- internal call\n        FixedMath.floor(115792089237316195423570985008687907853269984665640564039457584007913129639935) -- internal call\n    TestFixedMath.floor(11579208923731619542357098500868790785326998665640564039457584007913129639930) -- internal call\n        FixedMath.floor(11579208923731619542357098500868790785326998665640564039457584007913129639930) -- internal call
-// Warning 6328: (3161-3212): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nTestFixedMath.constructor()\nTestFixedMath.i()\n    TestFixedMath.toUFixed256x18(0) -- internal call\n        FixedMath.toUFixed256x18(0) -- internal call\n    TestFixedMath.toUFixed256x18(5) -- internal call\n        FixedMath.toUFixed256x18(5) -- internal call\n    TestFixedMath.toUFixed256x18(115792089237316195423570985008687907853269984665640564039457) -- internal call\n        FixedMath.toUFixed256x18(115792089237316195423570985008687907853269984665640564039457) -- internal call\n    TestFixedMath.toUFixed256x18(5) -- internal call\n        FixedMath.toUFixed256x18(5) -- internal call
+// Warning 6328: (2675-2791): CHC: Assertion violation happens here.
+// Warning 6328: (3161-3212): CHC: Assertion violation happens here.

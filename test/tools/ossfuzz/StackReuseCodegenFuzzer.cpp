@@ -60,8 +60,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		filterUnboundedLoops
 	);
 	string yul_source = converter.programToString(_input);
-	// Fuzzer also fuzzes the EVM version field.
-	langutil::EVMVersion version = converter.version();
+	// Do not fuzz the EVM Version field.
+	// See https://github.com/ethereum/solidity/issues/12590
+	langutil::EVMVersion version;
 	EVMHost hostContext(version, evmone);
 	hostContext.reset();
 
@@ -70,11 +71,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		ofstream of(dump_path);
 		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
 	}
-
-	// Do not proceed with tests that are too large. 1200 is an arbitrary
-	// threshold.
-	if (yul_source.size() > 1200)
-		return;
 
 	YulStringRepository::reset();
 
@@ -161,18 +157,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	);
 	ostringstream optimizedState;
 	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
-
-	int64_t constexpr tolerance = 1000;
-	if (callResult.gas_left > callResultOpt.gas_left)
-		if (callResult.gas_left - callResultOpt.gas_left > tolerance)
-		{
-			cout << "Gas differential " << callResult.gas_left - callResultOpt.gas_left << endl;
-			cout << "Unoptimised bytecode" << endl;
-			cout << util::toHex(unoptimisedByteCode) << endl;
-			cout << "Optimised bytecode" << endl;
-			cout << util::toHex(optimisedByteCode) << endl;
-			solAssert(false, "Optimised code consumed more than +1000 gas.");
-		}
 
 	solAssert(
 		unoptimizedState.str() == optimizedState.str(),

@@ -10,14 +10,31 @@ Breaking changes:
 
 ### 0.8.12 (unreleased)
 
+Language Features:
+ * General: Support ``ContractName.functionName`` for ``abi.encodeCall``, in addition to external function pointers.
+ * General: Add equality-comparison operators for external function types.
+
+
 Compiler Features:
+ * Yul Optimizer: Remove ``mstore`` and ``sstore`` operations if the slot already contains the same value.
 
 
 Bugfixes:
+ * Antlr Grammar: Allow builtin names in ``yulPath`` to support ``.address`` in function pointers.
+ * Code Generator: Fix ICE when accessing the members of external functions occupying more than two stack slots.
+ * Code Generator: Fix ICE when doing an explicit conversion from ``string calldata`` to ``bytes``.
+ * Control Flow Graph: Perform proper virtual lookup for modifiers for uninitialized variable and unreachable code analysis.
+ * Immutables: Fix wrong error when the constructor of a base contract uses ``return`` and the parent contract contains immutable variables.
+ * IR Generator: Add missing cleanup during the conversion of fixed bytes types to smaller fixed bytes types.
+ * IR Generator: Add missing cleanup for indexed event arguments of value type.
+ * IR Generator: Fix IR syntax error when copying storage arrays of structs containing functions.
+ * Natspec: Fix ICE when overriding a struct getter with a Natspec-documented return value and the name in the struct is different.
+ * TypeChecker: Fix ICE when a constant variable declaration forward references a struct.
 
 
 Solc-Js:
  * The wrapper now requires at least nodejs v10.
+ * The code has been ported to TypeScript.
 
 
 ### 0.8.11 (2021-12-20)
@@ -2161,7 +2178,7 @@ Features:
  * Internal: Inline assembly usable by the code generator.
  * Commandline interface: Using ``-`` as filename allows reading from stdin.
  * Interface JSON: Fallback function is now part of the ABI.
- * Interface: Version string now *semver* compatible.
+ * Interface: Version string now *SemVer* compatible.
  * Code generator: Do not provide "new account gas" if we know the called account exists.
 
 Bugfixes:

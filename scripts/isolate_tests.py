@@ -106,8 +106,8 @@ def write_cases(f, solidityTests, yulTests):
         # When code examples are extracted they are indented by 8 spaces, which violates the style guide,
         # so before checking remove 4 spaces from each line.
         remainder = dedent(test)
-        hash = hashlib.sha256(test.encode("utf-8")).hexdigest()
-        sol_filename = f'test_{hash}_{cleaned_filename}.{language}'
+        source_code_hash = hashlib.sha256(test.encode("utf-8")).hexdigest()
+        sol_filename = f'test_{source_code_hash}_{cleaned_filename}.{language}'
         with open(sol_filename, mode='w', encoding='utf8', newline='') as fi:
             fi.write(remainder)
 
