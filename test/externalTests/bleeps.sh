@@ -35,8 +35,8 @@ function test_fn { npm run test; }
 function bleeps_test
 {
     local repo="https://github.com/wighawag/bleeps"
-    local ref_type=tag
-    local ref=bleeps_migrations # TODO: There's a 0.4.19 contract in 'main' that would need patching for the latest compiler.
+    local ref_type=branch
+    local ref=main
     local config_file="hardhat.config.ts"
     local config_var=config
 
