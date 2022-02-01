@@ -10,6 +10,7 @@ Error signatures:
 
 Event signatures:
 2d4dd5fe18ada5a020a9f5591539a8dc3010a5c074ba6a70e1c956659f02786a: ev(uint256)
+81f3fb02f88d32d3bb08c80c9a622ca3b3223292f131c6ad049811f9a8a606dc: libraryEvent(uint256)
 
 ======= hashes/input.sol:L =======
 Function signatures:

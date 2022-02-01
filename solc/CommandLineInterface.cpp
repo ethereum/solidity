@@ -270,23 +270,23 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	if (!m_options.compiler.outputs.signatureHashes)
 		return;
 
-	Json::Value contractIdentifiers = m_compiler->contractIdentifiers(_contract);
+	Json::Value interfaceSymbols = m_compiler->interfaceSymbols(_contract);
 	string out = "Function signatures:\n";
-	for (auto const& name: contractIdentifiers["methods"].getMemberNames())
-		out += contractIdentifiers["methods"][name].asString() + ": " + name + "\n";
+	for (auto const& name: interfaceSymbols["methods"].getMemberNames())
+		out += interfaceSymbols["methods"][name].asString() + ": " + name + "\n";
 
-	if (contractIdentifiers.isMember("errors"))
+	if (interfaceSymbols.isMember("errors"))
 	{
 		out += "\nError signatures:\n";
-		for (auto const& name: contractIdentifiers["errors"].getMemberNames())
-			out += contractIdentifiers["errors"][name].asString() + ": " + name + "\n";
+		for (auto const& name: interfaceSymbols["errors"].getMemberNames())
+			out += interfaceSymbols["errors"][name].asString() + ": " + name + "\n";
 	}
 
-	if (contractIdentifiers.isMember("events"))
+	if (interfaceSymbols.isMember("events"))
 	{
 		out += "\nEvent signatures:\n";
-		for (auto const& name: contractIdentifiers["events"].getMemberNames())
-			out += contractIdentifiers["events"][name].asString() + ": " + name + "\n";
+		for (auto const& name: interfaceSymbols["events"].getMemberNames())
+			out += interfaceSymbols["events"][name].asString() + ": " + name + "\n";
 	}
 
 	if (!m_options.output.dir.empty())
@@ -836,7 +836,7 @@ void CommandLineInterface::handleCombinedJSON()
 				m_compiler->runtimeObject(contractName).functionDebugData
 			);
 		if (m_options.compiler.combinedJsonRequests->signatureHashes)
-			contractData[g_strSignatureHashes] = m_compiler->contractIdentifiers(contractName)["methods"];
+			contractData[g_strSignatureHashes] = m_compiler->interfaceSymbols(contractName)["methods"];
 		if (m_options.compiler.combinedJsonRequests->natspecDev)
 			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
 		if (m_options.compiler.combinedJsonRequests->natspecUser)
