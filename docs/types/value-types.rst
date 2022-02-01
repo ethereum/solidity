@@ -188,7 +188,8 @@ The address type comes in two flavours, which are largely identical:
 - ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
 
 The idea behind this distinction is that ``address payable`` is an address you can send Ether to,
-while a plain ``address`` cannot be sent Ether.
+while you are not supposed to send Ether to a plain ``address``, for example because it might be a smart contract
+that was not built to accept Ether.
 
 Type conversions:
 
