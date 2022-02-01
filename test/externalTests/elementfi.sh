@@ -27,6 +27,7 @@ source test/externalTests/common.sh
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
+SELECTED_PRESETS="$3"
 
 function compile_fn { npm run build; }
 function test_fn { npm run test; }
