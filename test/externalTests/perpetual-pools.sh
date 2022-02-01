@@ -34,7 +34,7 @@ function test_fn { yarn test; }
 
 function perpetual_pools_test
 {
-    local repo="https://github.com/tracer-protocol/perpetual-pools-contracts"
+    local repo="https://github.com/solidity-external-tests/perpetual-pools-contracts"
     local ref_type=branch
     local ref=pools-v2
     local config_file="hardhat.config.ts"
