@@ -27,6 +27,7 @@ source test/externalTests/common.sh
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
+SELECTED_PRESETS="$3"
 
 function compile_fn { npm run compile; }
 function test_fn { npm run test; }
@@ -34,8 +35,8 @@ function test_fn { npm run test; }
 function bleeps_test
 {
     local repo="https://github.com/wighawag/bleeps"
-    local ref_type=tag
-    local ref=bleeps_migrations # TODO: There's a 0.4.19 contract in 'main' that would need patching for the latest compiler.
+    local ref_type=branch
+    local ref=main
     local config_file="hardhat.config.ts"
     local config_var=config
 
@@ -64,6 +65,12 @@ function bleeps_test
 
     pushd "contracts/"
     sed -i 's|"bleeps-common": "workspace:\*",|"bleeps-common": "file:../common-lib/",|g' package.json
+
+    sed -i 's/function() public/fallback() external/g' src/externals/WETH9.sol
+    sed -i 's/this\.balance/address(this).balance/g' src/externals/WETH9.sol
+    sed -i 's/uint(-1)/type(uint).max/g' src/externals/WETH9.sol
+    sed -i 's/msg\.sender\.transfer(/payable(msg.sender).transfer(/g' src/externals/WETH9.sol
+    sed -i 's/^\s*\(Deposit\|Withdrawal\|Approval\|Transfer\)(/emit \1(/g' src/externals/WETH9.sol
 
     neutralize_package_lock
     neutralize_package_json_hooks
