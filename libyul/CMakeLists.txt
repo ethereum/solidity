@@ -71,6 +71,8 @@ add_library(yul
 	backends/evm/EVMObjectCompiler.h
 	backends/evm/EVMMetrics.cpp
 	backends/evm/EVMMetrics.h
+	backends/evm/DirectEVMCodeTransform.cpp
+	backends/evm/DirectEVMCodeTransform.h
 	backends/evm/DirectStackLayoutGenerator.cpp
 	backends/evm/DirectStackLayoutGenerator.h
 	backends/evm/NoOutputAssembly.h
