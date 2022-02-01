@@ -805,8 +805,8 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		if (auto type = dynamic_cast<IntegerType const*>(commonType))
 			isSigned = type->isSigned();
 
-		string args = expressionAsType(_binOp.leftExpression(), *commonType, true);
-		args += ", " + expressionAsType(_binOp.rightExpression(), *commonType, true);
+		string args = expressionAsCleanedType(_binOp.leftExpression(), *commonType);
+		args += ", " + expressionAsCleanedType(_binOp.rightExpression(), *commonType);
 
 		auto functionType = dynamic_cast<FunctionType const*>(commonType);
 		solAssert(functionType ? (op == Token::Equal || op == Token::NotEqual) : true, "Invalid function pointer comparison!");
@@ -1037,7 +1037,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				else
 				{
 					solAssert(parameterTypes[i]->sizeOnStack() == 1, "");
-					indexedArgs.emplace_back(convert(arg, *paramTypes[i], true));
+					indexedArgs.emplace_back(convertAndCleanup(arg, *parameterTypes[i]));
 				}
 			}
 			else
@@ -2727,30 +2727,41 @@ void IRGeneratorForStatements::assignInternalFunctionIDIfNotCalledDirectly(
 	m_context.addToInternalDispatch(_referencedFunction);
 }
 
-IRVariable IRGeneratorForStatements::convert(IRVariable const& _from, Type const& _to, bool _forceCleanup)
+IRVariable IRGeneratorForStatements::convert(IRVariable const& _from, Type const& _to)
 {
-	if (_from.type() == _to && !_forceCleanup)
+	if (_from.type() == _to)
 		return _from;
 	else
 	{
 		IRVariable converted(m_context.newYulVariable(), _to);
-		define(converted, _from, _forceCleanup);
+		define(converted, _from);
 		return converted;
 	}
 }
 
-std::string IRGeneratorForStatements::expressionAsType(Expression const& _expression, Type const& _to, bool _forceCleanup)
+IRVariable IRGeneratorForStatements::convertAndCleanup(IRVariable const& _from, Type const& _to)
+{
+	IRVariable converted(m_context.newYulVariable(), _to);
+	defineAndCleanup(converted, _from);
+	return converted;
+}
+
+std::string IRGeneratorForStatements::expressionAsType(Expression const& _expression, Type const& _to)
 {
 	IRVariable from(_expression);
 	if (from.type() == _to)
-	{
-		if (_forceCleanup)
-			return m_utils.cleanupFunction(_to) + "(" + from.commaSeparatedList() + ")";
-		else
-			return from.commaSeparatedList();
-	}
+		return from.commaSeparatedList();
 	else
 		return m_utils.conversionFunction(from.type(), _to) + "(" + from.commaSeparatedList() + ")";
+}
+
+std::string IRGeneratorForStatements::expressionAsCleanedType(Expression const& _expression, Type const& _to)
+{
+	IRVariable from(_expression);
+	if (from.type() == _to)
+		return m_utils.cleanupFunction(_to) + "(" + expressionAsType(_expression, _to) + ")";
+	else
+		return expressionAsType(_expression, _to) ;
 }
 
 std::ostream& IRGeneratorForStatements::define(IRVariable const& _var)
