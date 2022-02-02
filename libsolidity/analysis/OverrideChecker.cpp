@@ -897,10 +897,11 @@ OverrideChecker::OverrideProxyBySignatureMultiSet const& OverrideChecker::inheri
 				if (var->isPublic())
 					functionsInBase.emplace(OverrideProxy{var});
 
-			for (OverrideProxy const& func: inheritedFunctions(*base))
-				functionsInBase.insert(func);
-
 			result += functionsInBase;
+
+			for (OverrideProxy const& func: inheritedFunctions(*base))
+				if (!functionsInBase.count(func))
+					result.insert(func);
 		}
 
 		m_inheritedFunctions[&_contract] = result;
