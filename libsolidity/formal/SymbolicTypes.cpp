@@ -96,7 +96,7 @@ SortPointer smtSort(frontend::Type const& _type)
 		auto sliceArrayType = dynamic_cast<ArraySliceType const*>(&_type);
 		ArrayType const* arrayType = sliceArrayType ? &sliceArrayType->arrayType() : dynamic_cast<ArrayType const*>(&_type);
 		if (
-			(arrayType && (arrayType->isString() || arrayType->isByteArrayOrString())) ||
+			(arrayType && arrayType->isByteArrayOrString()) ||
 			_type.category() == frontend::Type::Category::StringLiteral
 		)
 			tupleName = "bytes";

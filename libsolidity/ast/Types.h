@@ -837,6 +837,8 @@ public:
 
 	BoolResult validForLocation(DataLocation _loc) const override;
 
+	/// @returns true if this is a byte array.
+	bool isByteArray() const { return m_arrayKind == ArrayKind::Bytes; }
 	/// @returns true if this is a byte array or a string
 	bool isByteArrayOrString() const { return m_arrayKind != ArrayKind::Ordinary; }
 	/// @returns true if this is a string

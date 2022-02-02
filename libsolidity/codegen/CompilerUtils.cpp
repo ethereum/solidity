@@ -992,7 +992,7 @@ void CompilerUtils::convertType(
 		if (_targetType.category() == Type::Category::FixedBytes)
 		{
 			solAssert(
-				typeOnStack.isByteArrayOrString() && !typeOnStack.isString(),
+				typeOnStack.isByteArray(),
 				"Array types other than bytes not convertible to bytesNN."
 			);
 			solAssert(typeOnStack.isDynamicallySized());
@@ -1119,7 +1119,7 @@ void CompilerUtils::convertType(
 		if (_targetType.category() == Type::Category::FixedBytes)
 		{
 			solAssert(
-				typeOnStack.arrayType().isByteArrayOrString() && !typeOnStack.arrayType().isString(),
+				typeOnStack.arrayType().isByteArray(),
 				"Array types other than bytes not convertible to bytesNN."
 			);
 			solAssert(typeOnStack.isDynamicallySized());
