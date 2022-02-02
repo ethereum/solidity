@@ -77,7 +77,7 @@ public:
 		size_t index = variableIndex(_variable);
 		if (index >= m_solvingState.bounds.size())
 			m_solvingState.bounds.resize(index + 1);
-		m_solvingState.bounds.at(index)[0] = _value;
+		m_solvingState.bounds.at(index).lower = _value;
 	}
 
 	void addUpperBound(string _variable, rational _value)
@@ -85,7 +85,7 @@ public:
 		size_t index = variableIndex(_variable);
 		if (index >= m_solvingState.bounds.size())
 			m_solvingState.bounds.resize(index + 1);
-		m_solvingState.bounds.at(index)[1] = _value;
+		m_solvingState.bounds.at(index).upper = _value;
 	}
 
 	void feasible(vector<pair<string, rational>> const& _solution)
