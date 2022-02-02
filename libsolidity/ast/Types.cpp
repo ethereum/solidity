@@ -1530,7 +1530,7 @@ BoolResult ArrayType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.category() != category())
 		return false;
 	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
-	if (convertTo.isByteArrayOrString() != isByteArrayOrString() || convertTo.isString() != isString())
+	if (convertTo.isByteArray() != isByteArray() || convertTo.isString() != isString())
 		return false;
 	// memory/calldata to storage can be converted, but only to a direct storage reference
 	if (convertTo.location() == DataLocation::Storage && location() != DataLocation::Storage && convertTo.isPointer())
@@ -1571,7 +1571,7 @@ BoolResult ArrayType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		return true;
 	// allow conversion bytes <-> string and bytes -> bytesNN
 	if (_convertTo.category() != category())
-		return isByteArrayOrString() && !isString() && _convertTo.category() == Type::Category::FixedBytes;
+		return isByteArray() && _convertTo.category() == Type::Category::FixedBytes;
 	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
 	if (convertTo.location() != location())
 		return false;
@@ -1608,7 +1608,7 @@ bool ArrayType::operator==(Type const& _other) const
 	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
 	if (
 		!ReferenceType::operator==(other) ||
-		other.isByteArrayOrString() != isByteArrayOrString() ||
+		other.isByteArray() != isByteArray() ||
 		other.isString() != isString() ||
 		other.isDynamicallySized() != isDynamicallySized()
 	)

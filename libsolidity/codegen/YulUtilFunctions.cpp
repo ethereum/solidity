@@ -3216,7 +3216,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		auto const& fromType = dynamic_cast<ArraySliceType const&>(_from);
 		if (_to.category() == Type::Category::FixedBytes)
 		{
-			solAssert(fromType.arrayType().isByteArrayOrString(), "Array types other than bytes not convertible to bytesNN.");
+			solAssert(fromType.arrayType().isByteArray(), "Array types other than bytes not convertible to bytesNN.");
 			return bytesToFixedBytesConversionFunction(fromType.arrayType(), dynamic_cast<FixedBytesType const &>(_to));
 		}
 		solAssert(_to.category() == Type::Category::Array);
@@ -3256,7 +3256,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		auto const& fromArrayType =  dynamic_cast<ArrayType const&>(_from);
 		if (_to.category() == Type::Category::FixedBytes)
 		{
-			solAssert(fromArrayType.isByteArrayOrString(), "Array types other than bytes not convertible to bytesNN.");
+			solAssert(fromArrayType.isByteArray(), "Array types other than bytes not convertible to bytesNN.");
 			return bytesToFixedBytesConversionFunction(fromArrayType, dynamic_cast<FixedBytesType const &>(_to));
 		}
 		solAssert(_to.category() == Type::Category::Array, "");
@@ -3460,7 +3460,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 string YulUtilFunctions::bytesToFixedBytesConversionFunction(ArrayType const& _from, FixedBytesType const& _to)
 {
-	solAssert(_from.isByteArrayOrString() && !_from.isString(), "");
+	solAssert(_from.isByteArray(), "");
 	solAssert(_from.isDynamicallySized(), "");
 	string functionName = "convert_bytes_to_fixedbytes_from_" + _from.identifier() + "_to_" + _to.identifier();
 	return m_functionCollector.createFunction(functionName, [&](auto& _args, auto& _returnParams) {
