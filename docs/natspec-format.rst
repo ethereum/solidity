@@ -36,7 +36,7 @@ tools.
 Documentation Example
 =====================
 
-Documentation is inserted above each ``contract``, ``interface``,
+Documentation is inserted above each ``contract``, ``interface``, ``library``,
 ``function``, and ``event`` using the Doxygen notation format.
 A ``public`` state variable is equivalent to a ``function``
 for the purposes of NatSpec.
