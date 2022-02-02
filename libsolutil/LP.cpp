@@ -318,7 +318,8 @@ bool boundsToConstraints(SolvingState& _state)
 				return false;
 			if (*bounds.lower == *bounds.upper)
 			{
-				vector<rational> c(columns);
+				LinearExpression c;
+				c.resize(columns);
 				c[0] = *bounds.lower;
 				c[index] = bigint(1);
 				_state.constraints.emplace_back(Constraint{move(c), true});
@@ -327,14 +328,16 @@ bool boundsToConstraints(SolvingState& _state)
 		}
 		if (bounds.lower && *bounds.lower > 0)
 		{
-			vector<rational> c(columns);
+			LinearExpression c;
+			c.resize(columns);
 			c[0] = -*bounds.lower;
 			c[index] = bigint(-1);
 			_state.constraints.emplace_back(Constraint{move(c), false});
 		}
 		if (bounds.upper)
 		{
-			vector<rational> c(columns);
+			LinearExpression c;
+			c.resize(columns);
 			c[0] = *bounds.upper;
 			c[index] = bigint(1);
 			_state.constraints.emplace_back(Constraint{move(c), false});
