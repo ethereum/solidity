@@ -48,11 +48,18 @@ struct Constraint
  */
 struct SolvingState
 {
-	/// Names of variables, the index zero should be left empty.
-	/// TODO can we change that?
+	/// Names of variables, the index zero should be left empty
+	/// (because zero corresponds to constants).
 	std::vector<std::string> variableNames;
+	struct Bounds
+	{
+		std::optional<rational> lower;
+		std::optional<rational> upper;
+		bool operator<(Bounds const& _other) const { return make_pair(lower, upper) < make_pair(_other.lower, _other.upper); }
+		bool operator==(Bounds const& _other) const { return make_pair(lower, upper) == make_pair(_other.lower, _other.upper); }
+	};
 	/// Lower and upper bounds for variables (in the sense of >= / <=).
-	std::vector<std::array<std::optional<boost::rational<bigint>>, 2>> bounds;
+	std::vector<Bounds> bounds;
 	std::vector<Constraint> constraints;
 
 	bool operator<(SolvingState const& _other) const;

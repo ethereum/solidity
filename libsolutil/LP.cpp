@@ -309,32 +309,33 @@ bool boundsToConstraints(SolvingState& _state)
 	size_t columns = _state.variableNames.size();
 
 	// Turn bounds into constraints.
+	// Bound zero should not exist because the variable zero does not exist.
 	for (auto const& [index, bounds]: _state.bounds | ranges::views::enumerate | ranges::views::tail)
 	{
-		if (bounds[0] && bounds[1])
+		if (bounds.lower && bounds.upper)
 		{
-			if (*bounds[0] > *bounds[1])
+			if (*bounds.lower > *bounds.upper)
 				return false;
-			if (*bounds[0] == *bounds[1])
+			if (*bounds.lower == *bounds.upper)
 			{
 				vector<rational> c(columns);
-				c[0] = *bounds[0];
+				c[0] = *bounds.lower;
 				c[index] = bigint(1);
 				_state.constraints.emplace_back(Constraint{move(c), true});
 				continue;
 			}
 		}
-		if (bounds[0] && *bounds[0] > 0)
+		if (bounds.lower && *bounds.lower > 0)
 		{
 			vector<rational> c(columns);
-			c[0] = -*bounds[0];
+			c[0] = -*bounds.lower;
 			c[index] = bigint(-1);
 			_state.constraints.emplace_back(Constraint{move(c), false});
 		}
-		if (bounds[1])
+		if (bounds.upper)
 		{
 			vector<rational> c(columns);
-			c[0] = *bounds[1];
+			c[0] = *bounds.upper;
 			c[index] = bigint(1);
 			_state.constraints.emplace_back(Constraint{move(c), false});
 		}
@@ -395,15 +396,15 @@ bool extractDirectConstraints(SolvingState& _state, bool& _changed)
 			rational bound = constraint.data[0] / factor;
 			if (
 				(factor >= 0 || constraint.equality) &&
-				(!_state.bounds[varIndex][1] || bound < _state.bounds[varIndex][1])
+				(!_state.bounds[varIndex].upper || bound < _state.bounds[varIndex].upper)
 			)
-				_state.bounds[varIndex][1] = bound;
+				_state.bounds[varIndex].upper = bound;
 			if (
 				(factor <= 0 || constraint.equality) &&
-				(!_state.bounds[varIndex][0] || bound > _state.bounds[varIndex][0])
+				(!_state.bounds[varIndex].lower || bound > _state.bounds[varIndex].lower)
 			)
 				// Lower bound must be at least zero.
-				_state.bounds[varIndex][0] = max(rational{}, bound);
+				_state.bounds[varIndex].lower = max(rational{}, bound);
 		}
 	}
 	if (needsRemoval)
@@ -419,11 +420,11 @@ bool removeFixedVariables(SolvingState& _state, map<string, rational>& _model, b
 	// Remove variables that have equal lower and upper bound.
 	for (auto const& [index, bounds]: _state.bounds | ranges::views::enumerate)
 	{
-		if (!bounds[1] || (!bounds[0] && bounds[1]->numerator() > 0))
+		if (!bounds.upper || (!bounds.lower && bounds.upper->numerator() > 0))
 			continue;
 		// Lower bound must be at least zero.
-		rational lower = max(rational{}, bounds[0] ? *bounds[0] : rational{});
-		rational upper = *bounds[1];
+		rational lower = max(rational{}, bounds.lower ? *bounds.lower : rational{});
+		rational upper = *bounds.upper;
 		if (upper < lower)
 			return false; // Infeasible.
 		if (upper != lower)
@@ -464,12 +465,12 @@ bool removeEmptyColumns(SolvingState& _state, map<string, rational>& _model, boo
 		{
 			variablesToRemove[i] = true;
 			needsRemoval = true;
-			// TODO actually it is unbounded if _state.bounds.at(i)[1] is nullopt.
-			if (_state.bounds.at(i)[0] || _state.bounds.at(i)[1])
+			// TODO actually it is unbounded if _state.bounds.at(i).upper is nullopt.
+			if (_state.bounds.at(i).lower || _state.bounds.at(i).upper)
 				_model[_state.variableNames.at(i)] =
-					_state.bounds.at(i)[1] ?
-					*_state.bounds.at(i)[1] :
-					*_state.bounds.at(i)[0];
+					_state.bounds.at(i).upper ?
+					*_state.bounds.at(i).upper :
+					*_state.bounds.at(i).lower;
 		}
 	if (needsRemoval)
 	{
@@ -702,13 +703,13 @@ string SolvingState::toString() const
 	result += "Bounds:\n";
 	for (auto&& [index, bounds]: bounds | ranges::views::enumerate)
 	{
-		if (!bounds[0] && !bounds[1])
+		if (!bounds.lower && !bounds.upper)
 			continue;
-		if (bounds[0])
-			result += ::toString(*bounds[0]) + " <= ";
+		if (bounds.lower)
+			result += ::toString(*bounds.lower) + " <= ";
 		result += variableNames.at(index);
-		if (bounds[1])
-			result += " <= " + ::toString(*bounds[1]);
+		if (bounds.upper)
+			result += " <= " + ::toString(*bounds.upper);
 		result += "\n";
 	}
 	return result;
