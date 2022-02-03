@@ -395,6 +395,7 @@ void removeColumns(SolvingState& _state, vector<bool> const& _columnsToRemove)
 }
 
 /// Turn constraints of the form ax <= b into an upper bound on x.
+/// @returns false if the system is infeasible.
 bool extractDirectConstraints(SolvingState& _state, bool& _changed)
 {
 	vector<bool> constraintsToRemove(_state.constraints.size(), false);
@@ -446,9 +447,10 @@ bool extractDirectConstraints(SolvingState& _state, bool& _changed)
 	return true;
 }
 
+/// Remove variables that have equal lower and upper bound.
+/// @returns false if the system is infeasible.
 bool removeFixedVariables(SolvingState& _state, map<string, rational>& _model, bool& _changed)
 {
-	// Remove variables that have equal lower and upper bound.
 	for (auto const& [index, bounds]: _state.bounds | ranges::views::enumerate)
 	{
 		if (!bounds.upper || (!bounds.lower && bounds.upper->numerator() > 0))
