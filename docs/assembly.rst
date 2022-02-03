@@ -228,6 +228,11 @@ of their block is reached.
 Conventions in Solidity
 -----------------------
 
+.. _assembly-typed-variables:
+
+Values of Typed Variables
+=========================
+
 In contrast to EVM assembly, Solidity has types which are narrower than 256 bits,
 e.g. ``uint24``. For efficiency, most arithmetic operations ignore the fact that
 types can be shorter than 256
@@ -236,6 +241,11 @@ i.e., shortly before they are written to memory or before comparisons are perfor
 This means that if you access such a variable
 from within inline assembly, you might have to manually clean the higher-order bits
 first.
+
+.. _assembly-memory-management:
+
+Memory Management
+=================
 
 Solidity manages memory in the following way. There is a "free memory pointer"
 at position ``0x40`` in memory. If you want to allocate memory, use the memory
@@ -268,3 +278,89 @@ first slot of the array and followed by the array elements.
     Statically-sized memory arrays do not have a length field, but it might be added later
     to allow better convertibility between statically- and dynamically-sized arrays, so
     do not rely on this.
+
+Memory Safety
+=============
+
+Without the use of inline assembly, the compiler can rely on memory to remain in a well-defined
+state at all times. This is especially relevant for :ref:`the new code generation pipeline via Yul IR <ir-breaking-changes>`:
+this code generation path can move local variables from stack to memory to avoid stack-too-deep errors and
+perform additional memory optimizations, if it can rely on certain assumptions about memory use.
+
+While we recommend to always respect Solidity's memory model, inline assembly allows you to use memory
+in an incompatible way. Therefore, moving stack variables to memory and additional memory optimizations are,
+by default, disabled in the presence of any inline assembly block that contains a memory operation or assigns
+to solidity variables in memory.
+
+However, you can specifically annotate an assembly block to indicate that it in fact respects Solidity's memory
+model as follows:
+
+.. code-block:: solidity
+
+    /// @solidity memory-safe-assembly
+    assembly {
+        ...
+    }
+
+In particular, a memory-safe assembly block may only access the following memory ranges:
+
+- Memory allocated by yourself using a mechanism like the ``allocate`` function described above.
+- Memory allocated by Solidity, e.g. memory within the bounds of a memory array you reference.
+- The scratch space between memory offset 0 and 64 mentioned above.
+- Temporary memory that is located *after* the value of the free memory pointer at the beginning of the assembly block,
+  i.e. memory that is "allocated" at the free memory pointer without updating the free memory pointer.
+
+Furthermore, if the assembly block assigns to Solidity variables in memory, you need to assure that accesses to
+the Solidity variables only access these memory ranges.
+
+Since this is mainly about the optimizer, these restrictions still need to be followed, even if the assembly block
+reverts or terminates. As an example, the following assembly snippet is not memory safe:
+
+.. code-block:: solidity
+
+    assembly {
+      returndatacopy(0, 0, returndatasize())
+      revert(0, returndatasize())
+    }
+
+But the following is:
+
+.. code-block:: solidity
+
+    /// @solidity memory-safe-assembly
+    assembly {
+      let p := mload(0x40)
+      returndatacopy(p, 0, returndatasize())
+      revert(p, returndatasize())
+    }
+
+Note that you do not need to update the free memory pointer if there is no following allocation,
+but you can only use memory starting from the current offset given by the free memory pointer.
+
+If the memory operations use a length of zero, it is also fine to just use any offset (not only if it falls into the scratch space):
+
+.. code-block:: solidity
+
+    /// @solidity memory-safe-assembly
+    assembly {
+      revert(0, 0)
+    }
+
+Note that not only memory operations in inline assembly itself can be memory-unsafe, but also assignments to
+solidity variables of reference type in memory. For example the following is not memory-safe:
+
+.. code-block:: solidity
+
+    bytes memory x;
+    assembly {
+      x := 0x40
+    }
+    x[0x20] = 0x42;
+
+Inline assembly that neither involves any operations that access memory nor assigns to any solidity variables
+in memory is automatically considered memory-safe and does not need to be annotated.
+
+.. warning::
+    It is your responsibility to make sure that the assembly actually satisfies the memory model. If you annotate
+    an assembly block as memory-safe, but violate one of the memory assumptions, this **will** lead to incorrect and
+    undefined behaviour that cannot easily be discovered by testing.
