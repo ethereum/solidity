@@ -48,8 +48,8 @@ struct Constraint
  */
 struct SolvingState
 {
-	/// Names of variables, the index zero should be left empty
-	/// (because zero corresponds to constants).
+	/// Names of variables. The index zero should be left empty
+	/// because zero corresponds to constants.
 	std::vector<std::string> variableNames;
 	struct Bounds
 	{
