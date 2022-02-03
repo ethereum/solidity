@@ -39,7 +39,7 @@ using rational = boost::rational<bigint>;
 /**
  * A linear expression of the form
  * factors[0] + factors[1] * X1 + factors[2] * X2 + ...
- * where the variables X_i are implicit.
+ * The set and order of variables is implied.
  */
 struct LinearExpression
 {
@@ -82,6 +82,7 @@ struct LinearExpression
 		factors.resize(_size);
 	}
 
+	/// Sets the factor at @a _index to @a _factor and enlarges if needed.
 	void resizeAndSet(size_t _index, rational _factor)
 	{
 		if (factors.size() <= _index)
@@ -89,6 +90,7 @@ struct LinearExpression
 		factors[_index] = move(_factor);
 	}
 
+	/// @returns true if all factors of variables are zero.
 	bool isConstant() const
 	{
 		return ranges::all_of(factors | ranges::views::tail, [](rational const& _v) { return !_v; });
@@ -153,10 +155,9 @@ struct LinearExpression
 	}
 
 
-	/// Multiply two vectors where the first element of each vector is a constant factor.
-	/// Only works if at most one of the vector has a nonzero element after the first.
-	/// If this condition is violated, returns nullopt.
-	static std::optional<LinearExpression> vectorProduct(
+	/// Multiply two linear expression. This only works if at least one of them is a constant.
+	/// Returns nullopt otherwise.
+	friend std::optional<LinearExpression> operator*(
 		std::optional<LinearExpression> _x,
 		std::optional<LinearExpression> _y
 	)
@@ -177,17 +178,5 @@ struct LinearExpression
 
 	std::vector<rational> factors;
 };
-
-// TODO
-
-
-inline std::vector<bool>& operator|=(std::vector<bool>& _x, std::vector<bool> const& _y)
-{
-	solAssert(_x.size() == _y.size(), "");
-	for (size_t i = 0; i < _x.size(); ++i)
-		if (_y[i])
-			_x[i] = true;
-	return _x;
-}
 
 }
