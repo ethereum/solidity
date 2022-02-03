@@ -24,6 +24,8 @@
 #include <libsolutil/StringUtils.h>
 #include <liblangutil/Exceptions.h>
 
+#include <boost/rational.hpp>
+
 #include <range/v3/view/tail.hpp>
 #include <range/v3/algorithm/all_of.hpp>
 
