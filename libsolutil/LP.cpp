@@ -760,6 +760,9 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 
 		LPResult lpResult;
 		vector<rational> solution;
+		// TODO this actually compares including the variable names.
+		// If we only compare based on coefficients, we will get way more cache hits.
+		// The downside is that we need to adjust the model.
 		auto it = m_cache.find(split);
 		if (it != m_cache.end())
 			tie(lpResult, solution) = it->second;
