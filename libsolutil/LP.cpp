@@ -353,7 +353,7 @@ void eraseIndices(T& _data, vector<bool> const& _indices)
 	T result;
 	for (size_t i = 0; i < _data.size(); i++)
 		if (!_indices[i])
-			result.emplace_back(move(_data[i]));
+			result.push_back(move(_data[i]));
 	_data = move(result);
 }
 
