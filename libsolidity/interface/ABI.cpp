@@ -176,7 +176,7 @@ Json::Value ABI::formatType(
 		ret["type"] = _encodingType.canonicalName() + suffix;
 	else if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(&_encodingType))
 	{
-		if (arrayType->isByteArray())
+		if (arrayType->isByteArrayOrString())
 			ret["type"] = _encodingType.canonicalName() + suffix;
 		else
 		{

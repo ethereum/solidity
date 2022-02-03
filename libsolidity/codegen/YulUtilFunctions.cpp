@@ -1183,8 +1183,8 @@ string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 		w("calldata", _type.location() == DataLocation::CallData);
 		if (_type.location() == DataLocation::Storage)
 		{
-			w("byteArray", _type.isByteArray());
-			if (_type.isByteArray())
+			w("byteArray", _type.isByteArrayOrString());
+			if (_type.isByteArrayOrString())
 				w("extractByteArrayLength", extractByteArrayLengthFunction());
 		}
 
@@ -1220,7 +1220,7 @@ std::string YulUtilFunctions::resizeArrayFunction(ArrayType const& _type)
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32);
 
-	if (_type.isByteArray())
+	if (_type.isByteArrayOrString())
 		return resizeDynamicByteArrayFunction(_type);
 
 	string functionName = "resize_array_" + _type.identifier();
@@ -1259,7 +1259,7 @@ string YulUtilFunctions::cleanUpStorageArrayEndFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.baseType()->category() != Type::Category::Mapping, "");
-	solAssert(!_type.isByteArray(), "");
+	solAssert(!_type.isByteArrayOrString(), "");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32);
 
 	string functionName = "cleanup_storage_array_end_" + _type.identifier();
@@ -1319,7 +1319,7 @@ string YulUtilFunctions::resizeDynamicByteArrayFunction(ArrayType const& _type)
 
 string YulUtilFunctions::cleanUpDynamicByteArrayEndSlotsFunction(ArrayType const& _type)
 {
-	solAssert(_type.isByteArray(), "");
+	solAssert(_type.isByteArrayOrString(), "");
 	solAssert(_type.isDynamicallySized(), "");
 
 	string functionName = "clean_up_bytearray_end_slots_" + _type.identifier();
@@ -1479,7 +1479,7 @@ string YulUtilFunctions::storageArrayPopFunction(ArrayType const& _type)
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "Base type is not yet implemented.");
-	if (_type.isByteArray())
+	if (_type.isByteArrayOrString())
 		return storageByteArrayPopFunction(_type);
 
 	string functionName = "array_pop_" + _type.identifier();
@@ -1509,7 +1509,7 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
-	solAssert(_type.isByteArray(), "");
+	solAssert(_type.isByteArrayOrString(), "");
 
 	string functionName = "byte_array_pop_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
@@ -1566,7 +1566,7 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type, Type c
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(array <values>) {
-				<?isByteArray>
+				<?isByteArrayOrString>
 					let data := sload(array)
 					let oldLen := <extractByteArrayLength>(data)
 					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
@@ -1598,20 +1598,20 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type, Type c
 						let slot, offset := <indexAccess>(array, oldLen)
 						<storeValue>(slot, offset <values>)
 					}
-				<!isByteArray>
+				<!isByteArrayOrString>
 					let oldLen := sload(array)
 					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 					sstore(array, add(oldLen, 1))
 					let slot, offset := <indexAccess>(array, oldLen)
 					<storeValue>(slot, offset <values>)
-				</isByteArray>
+				</isByteArrayOrString>
 			})")
 			("functionName", functionName)
 			("values", _fromType->sizeOnStack() == 0 ? "" : ", " + suffixedVariableNameList("value", 0, _fromType->sizeOnStack()))
 			("panic", panicFunction(PanicCode::ResourceError))
-			("extractByteArrayLength", _type.isByteArray() ? extractByteArrayLengthFunction() : "")
+			("extractByteArrayLength", _type.isByteArrayOrString() ? extractByteArrayLengthFunction() : "")
 			("dataAreaFunction", arrayDataAreaFunction(_type))
-			("isByteArray", _type.isByteArray())
+			("isByteArrayOrString", _type.isByteArrayOrString())
 			("indexAccess", storageArrayIndexAccessFunction(_type))
 			("storeValue", updateStorageValueFunction(*_fromType, *_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
@@ -1642,9 +1642,9 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 				slot, offset := <indexAccess>(array, oldLen)
 			})")
 			("functionName", functionName)
-			("isBytes", _type.isByteArray())
-			("increaseBytesSize", _type.isByteArray() ? increaseByteArraySizeFunction(_type) : "")
-			("extractLength", _type.isByteArray() ? extractByteArrayLengthFunction() : "")
+			("isBytes", _type.isByteArrayOrString())
+			("increaseBytesSize", _type.isByteArrayOrString() ? increaseByteArraySizeFunction(_type) : "")
+			("extractLength", _type.isByteArrayOrString() ? extractByteArrayLengthFunction() : "")
 			("panic", panicFunction(PanicCode::ResourceError))
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
@@ -1795,7 +1795,7 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 	if (!_toType.isDynamicallySized())
 		solAssert(!_fromType.isDynamicallySized() && _fromType.length() <= _toType.length(), "");
 
-	if (_fromType.isByteArray())
+	if (_fromType.isByteArrayOrString())
 		return copyByteArrayToStorageFunction(_fromType, _toType);
 	if (_fromType.dataStoredIn(DataLocation::Storage) && _toType.baseType()->isValueType())
 		return copyValueArrayStorageToStorageFunction(_fromType, _toType);
@@ -1902,8 +1902,8 @@ string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromTy
 		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
 		""
 	);
-	solAssert(_fromType.isByteArray(), "");
-	solAssert(_toType.isByteArray(), "");
+	solAssert(_fromType.isByteArrayOrString(), "");
+	solAssert(_toType.isByteArrayOrString(), "");
 
 	string functionName = "copy_byte_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
 	return m_functionCollector.createFunction(functionName, [&](){
@@ -1980,8 +1980,8 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 	solAssert(_toType.baseType()->isValueType(), "");
 	solAssert(_fromType.baseType()->isImplicitlyConvertibleTo(*_toType.baseType()), "");
 
-	solAssert(!_fromType.isByteArray(), "");
-	solAssert(!_toType.isByteArray(), "");
+	solAssert(!_fromType.isByteArrayOrString(), "");
+	solAssert(!_toType.isByteArrayOrString(), "");
 	solAssert(_fromType.dataStoredIn(DataLocation::Storage), "");
 	solAssert(_toType.dataStoredIn(DataLocation::Storage), "");
 
@@ -2155,7 +2155,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 					})")
 					("functionName", functionName)
 					("stride", to_string(_type.location() == DataLocation::Memory ? _type.memoryStride() : _type.calldataStride()))
-					("byteArray", _type.isByteArray())
+					("byteArray", _type.isByteArrayOrString())
 					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
 					.render();
 			default:
@@ -2187,7 +2187,7 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 		)");
 		w("functionName", functionName);
 		w("panic", panicFunction(PanicCode::ResourceError));
-		w("byteArray", _type.isByteArray());
+		w("byteArray", _type.isByteArrayOrString());
 		w("roundUp", roundUpFunction());
 		w("dynamic", _type.isDynamicallySized());
 		return w.render();
@@ -2262,7 +2262,7 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 		("dataAreaFunc", arrayDataAreaFunction(_type))
 		("indexAccessNoChecks", longByteArrayStorageIndexAccessNoCheckFunction())
 		("multipleItemsPerSlot", _type.baseType()->storageBytes() <= 16)
-		("isBytesArray", _type.isByteArray())
+		("isBytesArray", _type.isByteArrayOrString())
 		("storageSize", _type.baseType()->storageSize().str())
 		("storageBytes", toString(_type.baseType()->storageBytes()))
 		("itemsPerSlot", to_string(32 / _type.baseType()->storageBytes()))
@@ -2376,7 +2376,7 @@ string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 
 string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 {
-	solAssert(!_type.isByteArray(), "");
+	solAssert(!_type.isByteArrayOrString(), "");
 	if (_type.dataStoredIn(DataLocation::Storage))
 		solAssert(_type.baseType()->storageBytes() > 16, "");
 	string functionName = "array_nextElement_" + _type.identifier();
@@ -2447,7 +2447,7 @@ string YulUtilFunctions::copyArrayFromStorageToMemoryFunction(ArrayType const& _
 			solAssert(_to.memoryStride() == 32, "");
 			solAssert(_to.baseType()->dataStoredIn(DataLocation::Memory), "");
 			solAssert(_from.baseType()->dataStoredIn(DataLocation::Storage), "");
-			solAssert(!_from.isByteArray(), "");
+			solAssert(!_from.isByteArrayOrString(), "");
 			solAssert(*_to.withLocation(DataLocation::Storage, _from.isPointer()) == _from, "");
 			return Whiskers(R"(
 				function <functionName>(slot) -> memPtr {
@@ -2755,7 +2755,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 			solAssert(_fromType.category() == Type::Category::StringLiteral, "");
 			solAssert(toReferenceType->category() == Type::Category::Array, "");
 			auto const& toArrayType = dynamic_cast<ArrayType const&>(*toReferenceType);
-			solAssert(toArrayType.isByteArray(), "");
+			solAssert(toArrayType.isByteArrayOrString(), "");
 
 			return Whiskers(R"(
 				function <functionName>(slot<?dynamicOffset>, offset</dynamicOffset>) {
@@ -3224,7 +3224,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 		solAssert(
 			fromType.arrayType().isImplicitlyConvertibleTo(targetType) ||
-			(fromType.arrayType().isByteArray() && targetType.isByteArray())
+			(fromType.arrayType().isByteArrayOrString() && targetType.isByteArrayOrString())
 		);
 		solAssert(
 			fromType.arrayType().dataStoredIn(DataLocation::CallData) &&
@@ -3460,7 +3460,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 string YulUtilFunctions::bytesToFixedBytesConversionFunction(ArrayType const& _from, FixedBytesType const& _to)
 {
-	solAssert(_from.isByteArray() && !_from.isString(), "");
+	solAssert(_from.isByteArray(), "");
 	solAssert(_from.isDynamicallySized(), "");
 	string functionName = "convert_bytes_to_fixedbytes_from_" + _from.identifier() + "_to_" + _to.identifier();
 	return m_functionCollector.createFunction(functionName, [&](auto& _args, auto& _returnParams) {
@@ -3633,14 +3633,14 @@ string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayTy
 {
 	if (_to.dataStoredIn(DataLocation::CallData))
 		solAssert(
-			_from.dataStoredIn(DataLocation::CallData) && _from.isByteArray() && _to.isByteArray(),
+			_from.dataStoredIn(DataLocation::CallData) && _from.isByteArrayOrString() && _to.isByteArrayOrString(),
 			""
 		);
 
 	// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
 	if (_to.location() == DataLocation::Storage)
 		solAssert(
-			(_to.isPointer() || (_from.isByteArray() && _to.isByteArray())) &&
+			(_to.isPointer() || (_from.isByteArrayOrString() && _to.isByteArrayOrString())) &&
 			_from.location() == DataLocation::Storage,
 			"Invalid conversion to storage type."
 		);
@@ -4238,7 +4238,7 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 		}
 		else if (_to.category() == Type::Category::Array)
 		{
-			solAssert(dynamic_cast<ArrayType const&>(_to).isByteArray(), "");
+			solAssert(dynamic_cast<ArrayType const&>(_to).isByteArrayOrString(), "");
 			Whiskers templ(R"(
 				function <functionName>() -> converted {
 					converted := <copyLiteralToMemory>()

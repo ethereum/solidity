@@ -837,8 +837,10 @@ public:
 
 	BoolResult validForLocation(DataLocation _loc) const override;
 
+	/// @returns true if this is a byte array.
+	bool isByteArray() const { return m_arrayKind == ArrayKind::Bytes; }
 	/// @returns true if this is a byte array or a string
-	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
+	bool isByteArrayOrString() const { return m_arrayKind != ArrayKind::Ordinary; }
 	/// @returns true if this is a string
 	bool isString() const { return m_arrayKind == ArrayKind::String; }
 	Type const* baseType() const { solAssert(!!m_baseType, ""); return m_baseType; }
@@ -849,11 +851,11 @@ public:
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	/// The offset to advance in calldata to move from one array element to the next.
-	unsigned calldataStride() const { return isByteArray() ? 1 : m_baseType->calldataHeadSize(); }
+	unsigned calldataStride() const { return isByteArrayOrString() ? 1 : m_baseType->calldataHeadSize(); }
 	/// The offset to advance in memory to move from one array element to the next.
-	unsigned memoryStride() const { return isByteArray() ? 1 : m_baseType->memoryHeadSize(); }
+	unsigned memoryStride() const { return isByteArrayOrString() ? 1 : m_baseType->memoryHeadSize(); }
 	/// The offset to advance in storage to move from one array element to the next.
-	unsigned storageStride() const { return isByteArray() ? 1 : m_baseType->storageBytes(); }
+	unsigned storageStride() const { return isByteArrayOrString() ? 1 : m_baseType->storageBytes(); }
 
 	void clearCache() const override;
 
