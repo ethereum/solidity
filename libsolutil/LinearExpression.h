@@ -51,7 +51,7 @@ public:
 	{
 		LinearExpression result;
 		result.resize(_index + 1);
-		result[_index] = move(_factor);
+		result[_index] = std::move(_factor);
 		return result;
 	}
 
@@ -79,7 +79,7 @@ public:
 
 	rational const& front() const { return factors.front(); }
 
-	void push_back(rational _value) { factors.push_back(move(_value)); }
+	void push_back(rational _value) { factors.push_back(std::move(_value)); }
 
 	size_t size() const { return factors.size(); }
 
