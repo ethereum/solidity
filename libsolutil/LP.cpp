@@ -394,133 +394,12 @@ void removeColumns(SolvingState& _state, vector<bool> const& _columnsToRemove)
 	eraseIndices(_state.variableNames, _columnsToRemove);
 }
 
-// TODO move this into a simplifier class
-
-/// Turn constraints of the form ax <= b into an upper bound on x.
-/// @returns false if the system is infeasible.
-bool extractDirectConstraints(SolvingState& _state, bool& _changed)
-{
-	vector<bool> constraintsToRemove(_state.constraints.size(), false);
-	bool needsRemoval = false;
-	for (auto const& [index, constraint]: _state.constraints | ranges::views::enumerate)
-	{
-		auto nonzeroCoefficients = constraint.data | ranges::views::enumerate | ranges::views::tail | ranges::views::filter(
-			[](std::pair<size_t, rational> const& _x) { return !!_x.second; }
-		);
-		// TODO we can exit early on in the loop above since we only care about zero, one or more than one nonzero entries.
-		// TODO could also use iterators and exit if we can advance it twice.
-		auto numNonzero = ranges::distance(nonzeroCoefficients);
-		if (numNonzero > 1)
-			continue;
-		constraintsToRemove[index] = true;
-		needsRemoval = true;
-		if (numNonzero == 0)
-		{
-			// 0 <= b or 0 = b
-			if (
-				constraint.data.front().numerator() < 0 ||
-				(constraint.equality && constraint.data.front())
-			)
-				return false; // Infeasible.
-		}
-		else
-		{
-			auto&& [varIndex, factor] = nonzeroCoefficients.front();
-			// a * x <= b
-			rational bound = constraint.data[0] / factor;
-			if (
-				(factor >= 0 || constraint.equality) &&
-				(!_state.bounds[varIndex].upper || bound < _state.bounds[varIndex].upper)
-			)
-				_state.bounds[varIndex].upper = bound;
-			if (
-				(factor <= 0 || constraint.equality) &&
-				(!_state.bounds[varIndex].lower || bound > _state.bounds[varIndex].lower)
-			)
-				// Lower bound must be at least zero.
-				_state.bounds[varIndex].lower = max(rational{}, bound);
-		}
-	}
-	if (needsRemoval)
-	{
-		_changed = true;
-		eraseIndices(_state.constraints, constraintsToRemove);
-	}
-	return true;
-}
-
-/// Remove variables that have equal lower and upper bound.
-/// @returns false if the system is infeasible.
-bool removeFixedVariables(SolvingState& _state, map<string, rational>& _model, bool& _changed)
-{
-	for (auto const& [index, bounds]: _state.bounds | ranges::views::enumerate)
-	{
-		if (!bounds.upper || (!bounds.lower && bounds.upper->numerator() > 0))
-			continue;
-		// Lower bound must be at least zero.
-		rational lower = max(rational{}, bounds.lower ? *bounds.lower : rational{});
-		rational upper = *bounds.upper;
-		if (upper < lower)
-			return false; // Infeasible.
-		if (upper != lower)
-			continue;
-		_model[_state.variableNames.at(index)] = lower;
-		_state.bounds[index] = {};
-		_changed = true;
-
-		// substitute variable
-		for (Constraint& constraint: _state.constraints)
-			if (constraint.data[index])
-			{
-				constraint.data[0] -= constraint.data[index] * lower;
-				constraint.data[index] = 0;
-			}
-	}
-
-	return true;
-}
-
-bool removeEmptyColumns(SolvingState& _state, map<string, rational>& _model, bool& _changed)
-{
-	vector<bool> variablesSeen(_state.bounds.size(), false);
-	for (auto const& constraint: _state.constraints)
-	{
-		for (auto&& [index, factor]: constraint.data | ranges::views::enumerate | ranges::views::tail)
-			if (factor)
-				variablesSeen[index] = true;
-	}
-
-	// TODO we could assert that any variable we remove does not have conflicting bounds.
-	// (We also remove the bounds).
-
-	vector<bool> variablesToRemove(variablesSeen.size(), false);
-	bool needsRemoval = false;
-	for (auto&& [i, seen]: variablesSeen | ranges::views::enumerate | ranges::views::tail)
-		if (!seen)
-		{
-			variablesToRemove[i] = true;
-			needsRemoval = true;
-			// TODO actually it is unbounded if _state.bounds.at(i).upper is nullopt.
-			if (_state.bounds.at(i).lower || _state.bounds.at(i).upper)
-				_model[_state.variableNames.at(i)] =
-					_state.bounds.at(i).upper ?
-					*_state.bounds.at(i).upper :
-					*_state.bounds.at(i).lower;
-		}
-	if (needsRemoval)
-	{
-		_changed = true;
-		removeColumns(_state, variablesToRemove);
-	}
-	return true;
-}
-
 auto nonZeroEntriesInColumn(SolvingState const& _state, size_t _column)
 {
 	return
 		_state.constraints |
 		ranges::views::enumerate |
-		ranges::views::filter([=](auto const& _entry) { return _entry.second.data[_column] != 0; }) |
+		ranges::views::filter([=](auto const& _entry) { return _entry.second.data[_column]; }) |
 		ranges::views::transform([](auto const& _entry) { return _entry.first; });
 }
 
@@ -614,41 +493,6 @@ struct ProblemSplitter
 	size_t column = 1;
 	vector<bool> seenColumns;
 };
-
-
-/// Simplifies the solving state according to some rules (remove rows without variables, etc).
-/// @returns false if the state is determined to be infeasible during this process.
-bool simplifySolvingState(SolvingState& _state, map<string, rational>& _model)
-{
-	// - Constraints with exactly one nonzero coefficient represent "a x <= b"
-	//   and thus are turned into bounds.
-	// - Constraints with zero nonzero coefficients are constant relations.
-	//   If such a relation is false, answer "infeasible", otherwise remove the constraint.
-	// - Empty columns can be removed.
-	// - Variables with matching bounds can be removed from the problem by substitution.
-
-	bool changed = true;
-	while (changed)
-	{
-		changed = false;
-
-		if (!removeFixedVariables(_state, _model, changed))
-			return false;
-
-		if (!extractDirectConstraints(_state, changed))
-			return false;
-
-		if (!removeFixedVariables(_state, _model, changed))
-			return false;
-
-		if (!removeEmptyColumns(_state, _model, changed))
-			return false;
-	}
-
-	// TODO return the values selected for named variables in order to
-	// be used when returning the model.
-	return true;
-}
 
 void normalizeRowLengths(SolvingState& _state)
 {
@@ -750,15 +594,160 @@ string SolvingState::toString() const
 	return result;
 }
 
+pair<LPResult, std::map<string, rational>> SolvingStateSimplifier::simplify()
+{
+
+	do
+	{
+		m_changed = false;
+		if (
+			!removeFixedVariables() ||
+			!extractDirectConstraints() ||
+			// Used twice on purpose
+			!removeFixedVariables() ||
+			!removeEmptyColumns()
+		)
+			return {LPResult::Infeasible, {}};
+	}
+	while (m_changed);
+
+	return {LPResult::Unknown, move(m_model)};
+}
+
+bool SolvingStateSimplifier::removeFixedVariables()
+{
+	for (auto const& [index, bounds]: m_state.bounds | ranges::views::enumerate)
+	{
+		if (!bounds.upper || (!bounds.lower && bounds.upper->numerator() > 0))
+			continue;
+		// Lower bound must be at least zero.
+		rational lower = max(rational{}, bounds.lower ? *bounds.lower : rational{});
+		rational upper = *bounds.upper;
+		if (upper < lower)
+			return false; // Infeasible.
+		if (upper != lower)
+			continue;
+		m_model[m_state.variableNames.at(index)] = lower;
+		m_state.bounds[index] = {};
+		m_changed = true;
+
+		// substitute variable
+		for (Constraint& constraint: m_state.constraints)
+			if (constraint.data[index])
+			{
+				constraint.data[0] -= constraint.data[index] * lower;
+				constraint.data[index] = 0;
+			}
+	}
+
+	return true;
+}
+
+bool SolvingStateSimplifier::extractDirectConstraints()
+{
+	vector<bool> constraintsToRemove(m_state.constraints.size(), false);
+	bool needsRemoval = false;
+	for (auto const& [index, constraint]: m_state.constraints | ranges::views::enumerate)
+	{
+		auto nonzeroCoefficients = constraint.data | ranges::views::enumerate | ranges::views::tail | ranges::views::filter(
+			[](std::pair<size_t, rational> const& _x) { return !!_x.second; }
+		);
+		// TODO we can exit early on in the loop above since we only care about zero, one or more than one nonzero entries.
+		// TODO could also use iterators and exit if we can advance it twice.
+		auto numNonzero = ranges::distance(nonzeroCoefficients);
+		if (numNonzero > 1)
+			continue;
+		constraintsToRemove[index] = true;
+		needsRemoval = true;
+		if (numNonzero == 0)
+		{
+			// 0 <= b or 0 = b
+			if (
+				constraint.data.front().numerator() < 0 ||
+				(constraint.equality && constraint.data.front())
+			)
+				return false; // Infeasible.
+		}
+		else
+		{
+			auto&& [varIndex, factor] = nonzeroCoefficients.front();
+			// a * x <= b
+			rational bound = constraint.data[0] / factor;
+			if (
+				(factor >= 0 || constraint.equality) &&
+				(!m_state.bounds[varIndex].upper || bound < m_state.bounds[varIndex].upper)
+			)
+				m_state.bounds[varIndex].upper = bound;
+			if (
+				(factor <= 0 || constraint.equality) &&
+				(!m_state.bounds[varIndex].lower || bound > m_state.bounds[varIndex].lower)
+			)
+				// Lower bound must be at least zero.
+				m_state.bounds[varIndex].lower = max(rational{}, bound);
+		}
+	}
+	if (needsRemoval)
+	{
+		m_changed = true;
+		eraseIndices(m_state.constraints, constraintsToRemove);
+	}
+	return true;
+}
+
+bool SolvingStateSimplifier::removeEmptyColumns()
+{
+	vector<bool> variablesSeen(m_state.bounds.size(), false);
+	for (auto const& constraint: m_state.constraints)
+	{
+		for (auto&& [index, factor]: constraint.data | ranges::views::enumerate | ranges::views::tail)
+			if (factor)
+				variablesSeen[index] = true;
+	}
+
+	vector<bool> variablesToRemove(variablesSeen.size(), false);
+	bool needsRemoval = false;
+	for (auto&& [i, seen]: variablesSeen | ranges::views::enumerate | ranges::views::tail)
+		if (!seen)
+		{
+			variablesToRemove[i] = true;
+			needsRemoval = true;
+			SolvingState::Bounds const& bounds = m_state.bounds.at(i);
+			// TODO actually it is unbounded if m_state.bounds.at(i).upper is nullopt.
+			if (bounds.lower || bounds.upper)
+			{
+				solAssert(!bounds.upper || bounds.upper >= 0);
+				if (bounds.lower && bounds.upper)
+					solAssert(*bounds.lower <= *bounds.upper);
+				m_model[m_state.variableNames.at(i)] =
+					bounds.upper ?
+					*bounds.upper :
+					*bounds.lower;
+			}
+		}
+	if (needsRemoval)
+	{
+		m_changed = true;
+		removeColumns(m_state, variablesToRemove);
+	}
+	return true;
+}
+
 
 pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 {
 	normalizeRowLengths(_state);
 
-	map<string, rational> model;
-
-	if (!simplifySolvingState(_state, model))
+	auto&& [simplificationResult, model] = SolvingStateSimplifier{_state}.simplify();
+	switch (simplificationResult)
+	{
+	case LPResult::Infeasible:
 		return {LPResult::Infeasible, {}};
+	case LPResult::Feasible:
+	case LPResult::Unbounded:
+		solAssert(false);
+	case LPResult::Unknown:
+		break;
+	}
 
 	bool canOnlyBeUnknown = false;
 	ProblemSplitter splitter(_state);
@@ -810,4 +799,5 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 
 	return {LPResult::Feasible, move(model)};
 }
+
 
