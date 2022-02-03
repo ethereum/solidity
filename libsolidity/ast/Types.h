@@ -864,7 +864,6 @@ protected:
 	std::vector<Type const*> decomposition() const override { return {m_baseType}; }
 
 private:
-	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
 
 	bigint unlimitedStaticCalldataSize(bool _padded) const;
