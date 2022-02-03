@@ -403,7 +403,7 @@ auto nonZeroEntriesInColumn(SolvingState const& _state, size_t _column)
 }
 
 /// @returns vectors of column- and row-indices that are connected to the given column,
-/// in the sense of variables occuring in a constraint and constraints for variables.
+/// in the sense of variables occurring in a constraint and constraints for variables.
 pair<vector<bool>, vector<bool>> connectedComponent(SolvingState const& _state, size_t _column)
 {
 	solAssert(_state.variableNames.size() >= 2, "");
@@ -485,6 +485,13 @@ bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState cons
 	}
 	else
 		return _a.variableNames < _b.variableNames;
+}
+
+{
+	return
+		variableNames == _other.variableNames &&
+		bounds == _other.bounds &&
+		constraints == _other.constraints;
 }
 
 namespace
