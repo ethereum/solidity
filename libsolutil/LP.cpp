@@ -72,9 +72,11 @@ struct Tableau
 };
 
 
-/// Adds slack variables to remove non-equality costraints from a set of constraints.
-/// The second return variable is true if a non-equality constraint was found and thus new variables have been added.
-pair<vector<Constraint>, bool> toEquationalForm(vector<Constraint> _constraints)
+/// Adds slack variables to remove non-equality costraints from a set of constraints
+/// and returns the data part of the tableau / constraints.
+/// The second return variable is true if a non-equality constraint was
+/// found and thus new variables have been added.
+pair<vector<LinearExpression>, bool> toEquationalForm(vector<Constraint> _constraints)
 {
 	size_t varsNeeded = static_cast<size_t>(ranges::count_if(_constraints, [](Constraint const& _c) { return !_c.equality; }));
 	if (varsNeeded > 0)
@@ -95,7 +97,11 @@ pair<vector<Constraint>, bool> toEquationalForm(vector<Constraint> _constraints)
 		solAssert(varsAdded == varsNeeded);
 	}
 
-	return make_pair(move(_constraints), varsNeeded > 0);
+	vector<LinearExpression> data;
+	for (Constraint& c: _constraints)
+		data.emplace_back(move(c.data));
+
+	return make_pair(move(data), varsNeeded > 0);
 }
 
 /// Finds the simplex pivot column: The column with the largest positive objective factor.
@@ -282,6 +288,7 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 		if (optimum[i] != 0)
 			return make_pair(LPResult::Infeasible, Tableau{});
 
+	// Restore original objective and remove slack variables.
 	_tableau.objective = move(originalObjective);
 	for (auto& row: _tableau.data)
 		row.resize(columns);
@@ -304,10 +311,7 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 	Tableau tableau;
 	tableau.objective = move(_objectives);
 	bool hasEquations = false;
-	// TODO change toEquationalForm to directly return the tableau
-	tie(_constraints, hasEquations) = toEquationalForm(_constraints);
-	for (Constraint& c: _constraints)
-		tableau.data.emplace_back(move(c.data));
+	tie(tableau.data, hasEquations) = toEquationalForm(_constraints);
 	tableau.objective.resize(tableau.data.at(0).size());
 
 	if (hasEquations || needsPhaseI(tableau))
@@ -319,7 +323,7 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 		solAssert(result == LPResult::Feasible, "");
 	}
 	// We know that the system is satisfiable and we know a solution,
-	// but it is not optimal.
+	// but it might not be optimal.
 	LPResult result;
 	tie(result, tableau) = simplexEq(move(tableau));
 	solAssert(result == LPResult::Feasible || result == LPResult::Unbounded, "");
@@ -332,9 +336,8 @@ bool boundsToConstraints(SolvingState& _state)
 {
 	size_t columns = _state.variableNames.size();
 
-	// Turn bounds into constraints.
 	// Bound zero should not exist because the variable zero does not exist.
-	for (auto const& [index, bounds]: _state.bounds | ranges::views::enumerate | ranges::views::tail)
+	for (auto const& [varIndex, bounds]: _state.bounds | ranges::views::enumerate | ranges::views::tail)
 	{
 		if (bounds.lower && bounds.upper)
 		{
@@ -345,7 +348,7 @@ bool boundsToConstraints(SolvingState& _state)
 				LinearExpression c;
 				c.resize(columns);
 				c[0] = *bounds.lower;
-				c[index] = bigint(1);
+				c[varIndex] = bigint(1);
 				_state.constraints.emplace_back(Constraint{move(c), true});
 				continue;
 			}
@@ -355,7 +358,7 @@ bool boundsToConstraints(SolvingState& _state)
 			LinearExpression c;
 			c.resize(columns);
 			c[0] = -*bounds.lower;
-			c[index] = bigint(-1);
+			c[varIndex] = bigint(-1);
 			_state.constraints.emplace_back(Constraint{move(c), false});
 		}
 		if (bounds.upper)
@@ -363,7 +366,7 @@ bool boundsToConstraints(SolvingState& _state)
 			LinearExpression c;
 			c.resize(columns);
 			c[0] = *bounds.upper;
-			c[index] = bigint(1);
+			c[varIndex] = bigint(1);
 			_state.constraints.emplace_back(Constraint{move(c), false});
 		}
 	}
@@ -371,12 +374,13 @@ bool boundsToConstraints(SolvingState& _state)
 	return true;
 }
 
+/// Removes incides set to true from a vector-like data structure.
 template <class T>
-void eraseIndices(T& _data, vector<bool> const& _indices)
+void eraseIndices(T& _data, vector<bool> const& _indicesToRemove)
 {
 	T result;
 	for (size_t i = 0; i < _data.size(); i++)
-		if (!_indices[i])
+		if (!_indicesToRemove[i])
 			result.push_back(move(_data[i]));
 	_data = move(result);
 }
@@ -390,19 +394,19 @@ void removeColumns(SolvingState& _state, vector<bool> const& _columnsToRemove)
 	eraseIndices(_state.variableNames, _columnsToRemove);
 }
 
+/// Turn constraints of the form ax <= b into an upper bound on x.
 bool extractDirectConstraints(SolvingState& _state, bool& _changed)
 {
-	// Turn constraints of the form ax <= b into an upper bound on x.
 	vector<bool> constraintsToRemove(_state.constraints.size(), false);
 	bool needsRemoval = false;
 	for (auto const& [index, constraint]: _state.constraints | ranges::views::enumerate)
 	{
-		auto nonzero = constraint.data | ranges::views::enumerate | ranges::views::tail | ranges::views::filter(
+		auto nonzeroCoefficients = constraint.data | ranges::views::enumerate | ranges::views::tail | ranges::views::filter(
 			[](std::pair<size_t, rational> const& _x) { return !!_x.second; }
 		);
 		// TODO we can exit early on in the loop above since we only care about zero, one or more than one nonzero entries.
 		// TODO could also use iterators and exit if we can advance it twice.
-		auto numNonzero = ranges::distance(nonzero);
+		auto numNonzero = ranges::distance(nonzeroCoefficients);
 		if (numNonzero > 1)
 			continue;
 		constraintsToRemove[index] = true;
@@ -418,7 +422,7 @@ bool extractDirectConstraints(SolvingState& _state, bool& _changed)
 		}
 		else
 		{
-			auto&& [varIndex, factor] = nonzero.front();
+			auto&& [varIndex, factor] = nonzeroCoefficients.front();
 			// a * x <= b
 			rational bound = constraint.data[0] / factor;
 			if (
