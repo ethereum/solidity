@@ -90,7 +90,7 @@ The value corresponding to a mapping key ``k`` is located at ``keccak256(h(k) . 
 where ``.`` is concatenation and ``h`` is a function that is applied to the key depending on its type:
 
 - for value types, ``h`` pads the value to 32 bytes in the same way as when storing the value in memory.
-- for strings and byte arrays, ``h`` computes the ``keccak256`` hash of the unpadded data.
+- for strings and byte arrays, ``h(k)`` is just the unpadded data.
 
 If the mapping value is a
 non-value type, the computed slot marks the start of the data. If the value is of struct type,
