@@ -120,6 +120,33 @@ private:
 };
 
 /**
+ * Splits a given linear program into multiple linear programs with disjoint sets of variables.
+ * The initial program is feasible if and only if all sub-programs are feasible.
+ */
+class ProblemSplitter
+{
+public:
+	explicit ProblemSplitter(SolvingState const& _state):
+		m_state(_state),
+		m_column(1),
+		m_seenColumns(std::vector<bool>(m_state.variableNames.size(), false))
+	{}
+
+	/// @returns true if there are still sub-problems to split out.
+	operator bool() const { return m_column < m_state.variableNames.size(); }
+
+	/// @returns the next sub-problem.
+	SolvingState next();
+
+private:
+	SolvingState const& m_state;
+	/// Next column to start the search for a connected component.
+	size_t m_column = 1;
+	/// The columns we have already split out.
+	std::vector<bool> m_seenColumns;
+};
+
+/**
  * LP solver for rational problems.
  *
  * Does not solve integer problems!
