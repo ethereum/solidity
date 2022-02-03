@@ -161,6 +161,8 @@ public:
 
 private:
 	// TODO check if the model is requested in production. If not, we do not need to cache it.
+	// TODO This cache is inefficient because it compares including the variable names.
+	// See comment in LPSolver::check for details.
 	std::map<SolvingState, std::pair<LPResult, std::vector<boost::rational<bigint>>>> m_cache;
 };
 
