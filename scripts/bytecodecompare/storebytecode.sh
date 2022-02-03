@@ -52,7 +52,7 @@ TMPDIR=$(mktemp -d)
         popd
 
         cp "$REPO_ROOT/scripts/bytecodecompare/prepare_report.js" .
-        npm install solc-js/
+        npm install ./solc-js/dist
 
         echo "Running the compiler..."
         # shellcheck disable=SC2035
