@@ -50,6 +50,16 @@ using rational = boost::rational<bigint>;
 namespace
 {
 
+/// Disjunctively combined two vectors of bools.
+inline std::vector<bool>& operator|=(std::vector<bool>& _x, std::vector<bool> const& _y)
+{
+	solAssert(_x.size() == _y.size(), "");
+	for (size_t i = 0; i < _x.size(); ++i)
+		if (_y[i])
+			_x[i] = true;
+	return _x;
+}
+
 /**
  * Simplex tableau.
  */
@@ -57,36 +67,39 @@ struct Tableau
 {
 	/// The factors of the objective function (first row of the tableau)
 	LinearExpression objective;
-	/// The tableau matrix (equational forrm).
+	/// The tableau matrix (equational form).
 	std::vector<LinearExpression> data;
 };
 
 
 /// Adds slack variables to remove non-equality costraints from a set of constraints.
-/// The second return variable is true if new variables have been added.
+/// The second return variable is true if a non-equality constraint was found and thus new variables have been added.
 pair<vector<Constraint>, bool> toEquationalForm(vector<Constraint> _constraints)
 {
 	size_t varsNeeded = static_cast<size_t>(ranges::count_if(_constraints, [](Constraint const& _c) { return !_c.equality; }));
 	if (varsNeeded > 0)
 	{
 		size_t columns = _constraints.at(0).data.size();
-		size_t currentVariable = 0;
+		size_t varsAdded = 0;
 		for (Constraint& constraint: _constraints)
 		{
 			solAssert(constraint.data.size() == columns, "");
-			constraint.data.factors += vector<rational>(varsNeeded, rational{});
+			constraint.data.resize(columns + varsNeeded);
 			if (!constraint.equality)
 			{
 				constraint.equality = true;
-				constraint.data[columns + currentVariable] = bigint(1);
-				currentVariable++;
+				constraint.data[columns + varsAdded] = bigint(1);
+				varsAdded++;
 			}
 		}
+		solAssert(varsAdded == varsNeeded);
 	}
 
 	return make_pair(move(_constraints), varsNeeded > 0);
 }
 
+/// Finds the simplex pivot column: The column with the largest positive objective factor.
+/// If all objective factors are zero or negative, the optimum has been found and nullopt is returned.
 optional<size_t> findPivotColumn(Tableau const& _tableau)
 {
 	auto&& [maxColumn, maxValue] = ranges::max(
@@ -101,6 +114,10 @@ optional<size_t> findPivotColumn(Tableau const& _tableau)
 		return maxColumn;
 }
 
+/// Finds the simplex pivot row, given the column:
+/// If there is no positive factor in the column, the problem is unbounded, nullopt is returned.
+/// Otherwise, returns the row i such that c[i] / x[i] is minimal and x[i] is positive, where
+/// c[i] is the constant factor (not the objective factor!) in row i.
 optional<size_t> findPivotRow(Tableau const& _tableau, size_t _pivotColumn)
 {
 	auto positiveColumnEntries =
@@ -109,7 +126,7 @@ optional<size_t> findPivotRow(Tableau const& _tableau, size_t _pivotColumn)
 			return make_pair(i, _tableau.data[i][_pivotColumn]);
 		}) |
 		ranges::views::filter([](pair<size_t, rational> const& _entry) {
-			return _entry.second > 0;
+			return _entry.second.numerator() > 0;
 		});
 	if (positiveColumnEntries.empty())
 		return nullopt; // unbounded
@@ -124,7 +141,7 @@ optional<size_t> findPivotRow(Tableau const& _tableau, size_t _pivotColumn)
 }
 
 /// Performs equivalence transform on @a _tableau, so that
-/// the column @a _pivotColumn is all zeros except for @a _pivotRow,
+/// the column @a _pivotColumn is all zeros (including the objective row) except for @a _pivotRow,
 /// where it is 1.
 void performPivot(Tableau& _tableau, size_t _pivotRow, size_t _pivotColumn)
 {
@@ -135,23 +152,27 @@ void performPivot(Tableau& _tableau, size_t _pivotRow, size_t _pivotColumn)
 	solAssert(_tableau.data[_pivotRow][_pivotColumn] == rational(1), "");
 
 	LinearExpression const& _pivotRowData = _tableau.data[_pivotRow];
-	auto subtractPivotRow = [&](LinearExpression& _row) {
+	auto subtractMultipleOfPivotRow = [&](LinearExpression& _row) {
 		if (_row[_pivotColumn] == rational{1})
 			_row -= _pivotRowData;
-		else if (_row[_pivotColumn] != rational{})
+		else if (_row[_pivotColumn])
 			_row -= _row[_pivotColumn] * _pivotRowData;
 	};
 
-	subtractPivotRow(_tableau.objective);
+	subtractMultipleOfPivotRow(_tableau.objective);
 	for (size_t i = 0; i < _tableau.data.size(); ++i)
 		if (i != _pivotRow)
-			subtractPivotRow(_tableau.data[i]);
+			subtractMultipleOfPivotRow(_tableau.data[i]);
 }
 
+/// Transforms the tableau such that the last vectors are basis vectors
+/// and their objective coefficients are zero.
+/// Makes various assumptions and should only be used after adding
+/// a certain number of slack variables.
 void selectLastVectorsAsBasis(Tableau& _tableau)
 {
 	// We might skip the operation for a column if it is already the correct
-	// unit vector and its cost coefficient is zero.
+	// unit vector and its objective coefficient is zero.
 	size_t columns = _tableau.objective.size();
 	size_t rows = _tableau.data.size();
 	for (size_t i = 0; i < rows; ++i)
@@ -161,7 +182,7 @@ void selectLastVectorsAsBasis(Tableau& _tableau)
 /// If column @a _column inside tableau is a basis vector
 /// (i.e. one entry is 1, the others are 0), returns the index
 /// of the 1, otherwise nullopt.
-optional<size_t> basisVariable(Tableau const& _tableau, size_t _column)
+optional<size_t> basisIndex(Tableau const& _tableau, size_t _column)
 {
 	optional<size_t> row;
 	for (size_t i = 0; i < _tableau.data.size(); ++i)
@@ -186,7 +207,7 @@ vector<rational> solutionVector(Tableau const& _tableau)
 	vector<bool> rowsSeen(_tableau.data.size(), false);
 	for (size_t j = 1; j < _tableau.objective.size(); j++)
 	{
-		optional<size_t> row = basisVariable(_tableau, j);
+		optional<size_t> row = basisIndex(_tableau, j);
 		if (row && rowsSeen[*row])
 			row = nullopt;
 		result.emplace_back(row ? _tableau.data[*row][0] : rational{});
@@ -201,6 +222,7 @@ vector<rational> solutionVector(Tableau const& _tableau)
 /// Here, c is _tableau.objective and the first column of _tableau.data
 /// encodes b and the other columns encode A
 /// Assumes the tableau has a trivial basic feasible solution.
+/// Tries for a number of iterations and then gives up.
 pair<LPResult, Tableau> simplexEq(Tableau _tableau)
 {
 	size_t const iterations = min<size_t>(60, 50 + _tableau.objective.size() * 2);
@@ -237,7 +259,7 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 	{
 		if (_tableau.data[i][0] < 0)
 			_tableau.data[i] *= -1;
-		_tableau.data[i].factors += vector<bigint>(rows, bigint{});
+		_tableau.data[i].resize(columns + rows);
 		_tableau.data[i][columns + i] = 1;
 	}
 	_tableau.objective.factors =
