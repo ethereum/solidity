@@ -62,8 +62,13 @@ struct SolvingState
 	std::vector<Bounds> bounds;
 	std::vector<Constraint> constraints;
 
-	bool operator<(SolvingState const& _other) const;
-	bool operator==(SolvingState const& _other) const;
+	struct Compare
+	{
+		explicit Compare(bool _considerVariableNames = true): considerVariableNames(_considerVariableNames) {}
+		bool operator()(SolvingState const& _a, SolvingState const& _b) const;
+		bool considerVariableNames;
+	};
+
 	std::string toString() const;
 };
 
@@ -153,17 +158,22 @@ private:
  *
  * Tries to split a given problem into sub-problems and utilizes a cache to quickly solve
  * similar problems.
+ *
+ * Can be used in a mode where it does not support returning models. In that case, the
+ * cache is more efficient.
  */
 class LPSolver
 {
 public:
+	explicit LPSolver(bool _supportModels = true);
+
 	std::pair<LPResult, std::map<std::string, boost::rational<bigint>>> check(SolvingState _state);
 
 private:
-	// TODO check if the model is requested in production. If not, we do not need to cache it.
-	// TODO This cache is inefficient because it compares including the variable names.
-	// See comment in LPSolver::check for details.
-	std::map<SolvingState, std::pair<LPResult, std::vector<boost::rational<bigint>>>> m_cache;
+	using CacheValue = std::pair<LPResult, std::vector<boost::rational<bigint>>>;
+
+	bool m_supportModels = true;
+	std::map<SolvingState, CacheValue, SolvingState::Compare> m_cache;
 };
 
 }
