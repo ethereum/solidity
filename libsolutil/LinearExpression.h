@@ -41,8 +41,9 @@ using rational = boost::rational<bigint>;
  * factors[0] + factors[1] * X1 + factors[2] * X2 + ...
  * The set and order of variables is implied.
  */
-struct LinearExpression
+class LinearExpression
 {
+public:
 	/// Creates the expression "_factor * X_index"
 	static LinearExpression factorForVariable(size_t _index, rational _factor)
 	{
@@ -73,6 +74,8 @@ struct LinearExpression
 
 	auto begin() const { return factors.begin(); }
 	auto end() const { return factors.end(); }
+
+	rational const& front() const { return factors.front(); }
 
 	void push_back(rational _value) { factors.push_back(move(_value)); }
 
@@ -169,6 +172,7 @@ struct LinearExpression
 		return _x;
 	}
 
+private:
 	std::vector<rational> factors;
 };
 
