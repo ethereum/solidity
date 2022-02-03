@@ -70,9 +70,53 @@ struct SolvingState
 enum class LPResult
 {
 	Unknown,
-	Unbounded,
-	Feasible,
-	Infeasible
+	Unbounded, ///< System has a solution, but it can have an arbitrary objective value.
+	Feasible, ///< System has a solution (it might be unbounded, though).
+	Infeasible ///< System does not have any solution.
+};
+
+
+/**
+ * Applies several strategies to simplify a given solving state.
+ * During these simplifications, it can sometimes already be determined if the
+ * state is feasible or not.
+ * Since some variables can be fixed to specific values, it returns a
+ * (partial) model.
+ *
+ * - Constraints with exactly one nonzero coefficient represent "a x <= b"
+ *   and thus are turned into bounds.
+ * - Constraints with zero nonzero coefficients are constant relations.
+ *   If such a relation is false, answer "infeasible", otherwise remove the constraint.
+ * - Empty columns can be removed.
+ * - Variables with matching bounds can be removed from the problem by substitution.
+ *
+ * Holds a reference to the solving state that is modified during operation.
+ */
+class SolvingStateSimplifier
+{
+public:
+	SolvingStateSimplifier(SolvingState& _state):
+		m_state(_state) {}
+
+	std::pair<LPResult, std::map<std::string, rational>> simplify();
+
+private:
+	/// Remove variables that have equal lower and upper bound.
+	/// @returns false if the system is infeasible.
+	bool removeFixedVariables();
+
+	/// Removes constraints of the form 0 <= b or 0 == b (no variables) and
+	/// turns constraints of the form a * x <= b (one variable) into bounds.
+	bool extractDirectConstraints();
+
+	/// Removes all-zeros columns.
+	bool removeEmptyColumns();
+
+	/// Set to true by the strategies if they performed some changes.
+	bool m_changed = false;
+
+	SolvingState& m_state;
+	std::map<std::string, rational> m_model;
 };
 
 /**
