@@ -514,12 +514,9 @@ bool Constraint::operator<(Constraint const& _other) const
 		return equality < _other.equality;
 
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
-	{
-		rational const& a = data.get(i);
-		rational const& b = _other.data.get(i);
-		if (a != b)
-			return a < b;
-	}
+		if (rational diff = data.get(i) - _other.data.get(i))
+			return diff < 0;
+
 	return false;
 }
 
