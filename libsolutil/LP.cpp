@@ -394,6 +394,8 @@ void removeColumns(SolvingState& _state, vector<bool> const& _columnsToRemove)
 	eraseIndices(_state.variableNames, _columnsToRemove);
 }
 
+// TODO move this into a simplifier class
+
 /// Turn constraints of the form ax <= b into an upper bound on x.
 /// @returns false if the system is infeasible.
 bool extractDirectConstraints(SolvingState& _state, bool& _changed)
@@ -416,8 +418,8 @@ bool extractDirectConstraints(SolvingState& _state, bool& _changed)
 		{
 			// 0 <= b or 0 = b
 			if (
-				constraint.data.factors.front() < 0 ||
-				(constraint.equality && constraint.data.factors.front() != 0)
+				constraint.data.front().numerator() < 0 ||
+				(constraint.equality && constraint.data.front())
 			)
 				return false; // Infeasible.
 		}
@@ -468,7 +470,7 @@ bool removeFixedVariables(SolvingState& _state, map<string, rational>& _model, b
 
 		// substitute variable
 		for (Constraint& constraint: _state.constraints)
-			if (constraint.data.factors.at(index) != 0)
+			if (constraint.data[index])
 			{
 				constraint.data[0] -= constraint.data[index] * lower;
 				constraint.data[index] = 0;
@@ -601,7 +603,7 @@ struct ProblemSplitter
 			Constraint splitRow{{}, state.constraints[i].equality};
 			for (size_t j = 0; j < state.constraints[i].data.size(); j++)
 				if (j == 0 || includedColumns[j])
-					splitRow.data.factors.push_back(state.constraints[i].data[j]);
+					splitRow.data.push_back(state.constraints[i].data[j]);
 			splitOff.constraints.push_back(move(splitRow));
 		}
 
@@ -730,7 +732,7 @@ string SolvingState::toString() const
 		result +=
 			joinHumanReadable(line, " + ") +
 			(constraint.equality ? "  = " : " <= ") +
-			::toString(constraint.data.factors.front()) +
+			::toString(constraint.data.front()) +
 			"\n";
 	}
 	result += "Bounds:\n";
@@ -779,9 +781,8 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 			else
 			{
 				LinearExpression objectives;
-				objectives.factors =
-					vector<rational>(1, rational(bigint(0))) +
-					vector<rational>(split.constraints.front().data.size() - 1, rational(bigint(1)));
+				objectives.resize(1);
+				objectives.resize(split.constraints.front().data.size(), rational(bigint(1)));
 				tie(lpResult, solution) = simplex(split.constraints, move(objectives));
 			}
 			m_cache.emplace(move(orig), make_pair(lpResult, solution));
