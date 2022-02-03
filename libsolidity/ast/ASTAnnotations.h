@@ -220,6 +220,8 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	std::map<yul::Identifier const*, ExternalIdentifierInfo> externalReferences;
 	/// Information generated during analysis phase.
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
+	/// True, if the assembly block was annotated to be memory-safe.
+	bool memorySafe = false;
 };
 
 struct BlockAnnotation: StatementAnnotation, ScopableAnnotation

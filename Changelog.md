@@ -1,6 +1,7 @@
 ### 0.8.13 (unreleased)
 
 Language Features:
+ * General: Allow annotating inline assembly as memory-safe to allow optimizations and stack limit evasion that rely on respecting Solidity's memory model.
 
 
 Compiler Features:
