@@ -475,25 +475,17 @@ bool Constraint::operator==(Constraint const& _other) const
 	return true;
 }
 
-bool SolvingState::operator<(SolvingState const& _other) const
+bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState const& _b) const
 {
-	if (variableNames == _other.variableNames)
+	if (!considerVariableNames || _a.variableNames == _b.variableNames)
 	{
-		if (bounds == _other.bounds)
-			return constraints < _other.constraints;
+		if (_a.bounds == _b.bounds)
+			return _a.constraints < _b.constraints;
 		else
-			return bounds < _other.bounds;
+			return _a.bounds < _b.bounds;
 	}
 	else
-		return variableNames < _other.variableNames;
-}
-
-bool SolvingState::operator==(SolvingState const& _other) const
-{
-	return
-		variableNames == _other.variableNames &&
-		bounds == _other.bounds &&
-		constraints == _other.constraints;
+		return _a.variableNames < _b.variableNames;
 }
 
 namespace
@@ -734,6 +726,12 @@ SolvingState ProblemSplitter::next()
 	return splitOff;
 }
 
+LPSolver::LPSolver(bool _supportModels):
+	m_supportModels(_supportModels),
+	m_cache(SolvingState::Compare{_supportModels})
+{
+}
+
 pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 {
 	normalizeRowLengths(_state);
@@ -760,9 +758,7 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 
 		LPResult lpResult;
 		vector<rational> solution;
-		// TODO this actually compares including the variable names.
-		// If we only compare based on coefficients, we will get way more cache hits.
-		// The downside is that we need to adjust the model.
+
 		auto it = m_cache.find(split);
 		if (it != m_cache.end())
 			tie(lpResult, solution) = it->second;
@@ -778,7 +774,10 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 				objectives.resize(split.constraints.front().data.size(), rational(bigint(1)));
 				tie(lpResult, solution) = simplex(split.constraints, move(objectives));
 			}
-			m_cache.emplace(move(orig), make_pair(lpResult, solution));
+			// If we do not support models, do not store it in the cache because
+			// the variable associations will be wrong.
+			// Otherwise, it is fine to use the model.
+			m_cache.emplace(move(orig), make_pair(lpResult, m_supportModels ? solution : vector<rational>{}));
 		}
 
 		switch (lpResult)
