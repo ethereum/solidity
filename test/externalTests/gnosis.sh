@@ -61,14 +61,14 @@ function gnosis_safe_test
 
     neutralize_package_lock
     neutralize_package_json_hooks
-    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$(first_word "$SELECTED_PRESETS")"
+    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$(first_word "$SELECTED_PRESETS")"
     npm install --package-lock
 
     replace_version_pragmas
-    [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc"
+    [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
 
     for preset in $SELECTED_PRESETS; do
-        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
     done
 }
 
