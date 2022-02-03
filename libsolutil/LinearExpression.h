@@ -47,7 +47,8 @@ struct LinearExpression
 	static LinearExpression factorForVariable(size_t _index, rational _factor)
 	{
 		LinearExpression result;
-		result.resizeAndSet(_index, move(_factor));
+		result.resize(_index + 1);
+		result[_index] = move(_factor);
 		return result;
 	}
 
@@ -77,17 +78,9 @@ struct LinearExpression
 
 	size_t size() const { return factors.size(); }
 
-	void resize(size_t _size)
+	void resize(size_t _size, rational _default = {})
 	{
-		factors.resize(_size);
-	}
-
-	/// Sets the factor at @a _index to @a _factor and enlarges if needed.
-	void resizeAndSet(size_t _index, rational _factor)
-	{
-		if (factors.size() <= _index)
-			factors.resize(_index + 1);
-		factors[_index] = move(_factor);
+		factors.resize(_size, std::move(_default));
 	}
 
 	/// @returns true if all factors of variables are zero.
