@@ -262,9 +262,9 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 		_tableau.data[i].resize(columns + rows);
 		_tableau.data[i][columns + i] = 1;
 	}
-	_tableau.objective.factors =
-		vector<rational>(columns, rational{}) +
-		vector<rational>(rows, rational{-1});
+	_tableau.objective = {};
+	_tableau.objective.resize(columns);
+	_tableau.objective.resize(columns + rows, rational{-1});
 
 	// This sets the objective factors of the slack variables
 	// to zero (and thus selects a basic feasible solution).
@@ -276,11 +276,13 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 
 	vector<rational> optimum = solutionVector(_tableau);
 
+	// If the solution needs a nonzero factor for a slack variable,
+	// the original system is infeasible.
 	for (size_t i = columns - 1; i < optimum.size(); ++i)
 		if (optimum[i] != 0)
 			return make_pair(LPResult::Infeasible, Tableau{});
 
-	_tableau.objective = originalObjective;
+	_tableau.objective = move(originalObjective);
 	for (auto& row: _tableau.data)
 		row.resize(columns);
 
