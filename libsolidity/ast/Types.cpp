@@ -2928,6 +2928,7 @@ string FunctionType::richIdentifier() const
 	case Kind::ArrayPush: id += "arraypush"; break;
 	case Kind::ArrayPop: id += "arraypop"; break;
 	case Kind::BytesConcat: id += "bytesconcat"; break;
+	case Kind::StringConcat: id += "stringconcat"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
 	case Kind::Assert: id += "assert"; break;
 	case Kind::Require: id += "require"; break;
@@ -3817,15 +3818,14 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 	)
 		members.emplace_back("concat", TypeProvider::function(
 			TypePointers{},
-			TypePointers{TypeProvider::bytesMemory()},
+			TypePointers{arrayType->isString() ? TypeProvider::stringMemory() : TypeProvider::bytesMemory()},
 			strings{},
-			strings{string()},
-			FunctionType::Kind::BytesConcat,
+			strings{string{}},
+			arrayType->isString() ? FunctionType::Kind::StringConcat : FunctionType::Kind::BytesConcat,
 			StateMutability::Pure,
 			nullptr,
 			FunctionType::Options::withArbitraryParameters()
 		));
-
 	return members;
 }
 

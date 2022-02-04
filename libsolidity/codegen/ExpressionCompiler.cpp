@@ -1101,6 +1101,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			ArrayUtils(m_context).popStorageArrayElement(*arrayType);
 			break;
 		}
+		case FunctionType::Kind::StringConcat:
 		case FunctionType::Kind::BytesConcat:
 		{
 			_functionCall.expression().accept(*this);
@@ -1121,8 +1122,16 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				else
 				{
 					solAssert(!dynamic_cast<RationalNumberType const*>(argument->annotation().type), "");
-					solAssert(argument->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()), "");
-					targetTypes.emplace_back(TypeProvider::bytesMemory());
+					if (function.kind() == FunctionType::Kind::StringConcat)
+					{
+						solAssert(argument->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()), "");
+						targetTypes.emplace_back(TypeProvider::stringMemory());
+					}
+					else if (function.kind() == FunctionType::Kind::BytesConcat)
+					{
+						solAssert(argument->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()), "");
+						targetTypes.emplace_back(TypeProvider::bytesMemory());
+					}
 				}
 			}
 			utils().fetchFreeMemoryPointer();
