@@ -72,6 +72,10 @@ function bleeps_test
     sed -i 's/msg\.sender\.transfer(/payable(msg.sender).transfer(/g' src/externals/WETH9.sol
     sed -i 's/^\s*\(Deposit\|Withdrawal\|Approval\|Transfer\)(/emit \1(/g' src/externals/WETH9.sol
 
+    # This test does not currently pass due to an upstream problem.
+    # TODO: Remove this line when https://github.com/wighawag/bleeps/issues/2 is fixed
+    rm test/BleepsDAO.governor.test.ts
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
