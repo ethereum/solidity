@@ -1137,6 +1137,8 @@ jobs:
 
   t_ems_ext_hardhat:
     <<: *base_node_small
+    docker:
+      - image: circleci/node:16
     environment:
       TERM: xterm
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
