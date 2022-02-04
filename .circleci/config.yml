@@ -1468,8 +1468,7 @@ workflows:
       - t_ems_ext: *job_native_test_ext_trident
       - t_ems_ext: *job_native_test_ext_euler
       - t_ems_ext: *job_native_test_ext_yield_liquidator
-      # Disabled until we have a fix for https://github.com/wighawag/bleeps/issues/2
-      #-t_ems_ext: *job_native_test_ext_bleeps
+      - t_ems_ext: *job_native_test_ext_bleeps
       - t_ems_ext: *job_native_test_ext_pool_together
       - t_ems_ext: *job_native_test_ext_perpetual_pools
       - t_ems_ext: *job_native_test_ext_uniswap
