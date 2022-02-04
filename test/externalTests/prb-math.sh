@@ -30,7 +30,7 @@ BINARY_PATH="$2"
 SELECTED_PRESETS="$3"
 
 function compile_fn { yarn compile; }
-function test_fn { yarn test:contracts; }
+function test_fn { yarn test; }
 
 function prb_math_test
 {
