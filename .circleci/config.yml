@@ -521,35 +521,30 @@ defaults:
       name: t_native_test_ext_ens
       project: ens
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_ext_trident: &job_native_test_ext_trident
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_trident
       project: trident
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_ext_euler: &job_native_test_ext_euler
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_euler
       project: euler
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_yield_liquidator
       project: yield-liquidator
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_ext_bleeps: &job_native_test_ext_bleeps
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_bleeps
       project: bleeps
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
       resource_class: medium
   - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
@@ -557,35 +552,30 @@ defaults:
       name: t_native_test_ext_pool_together
       project: pool-together
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_perpetual_pools
       project: perpetual-pools
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_ext_uniswap: &job_native_test_ext_uniswap
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_uniswap
       project: uniswap
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_prb_math: &job_native_test_prb_math
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
       <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_elementfi
       project: elementfi
       binary_type: native
-      # NOTE: Tests crash on nodejs 17: "Error: error:0308010C:digital envelope routines::unsupported"
       nodejs_version: '16'
       resource_class: medium
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
