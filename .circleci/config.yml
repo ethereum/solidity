@@ -384,7 +384,7 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_node_latest_small: &base_node_latest_small
+  - base_node_small: &base_node_small
       docker:
         - image: circleci/node
       resource_class: small
@@ -605,7 +605,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   chk_docs_examples:
-    <<: *base_node_latest_small
+    <<: *base_node_small
     steps:
       - checkout
       - attach_workspace:
@@ -674,7 +674,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   chk_buglist:
-    <<: *base_node_latest_small
+    <<: *base_node_small
     steps:
       - checkout
       - run:
@@ -1136,7 +1136,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   t_ems_ext_hardhat:
-    <<: *base_node_latest_small
+    <<: *base_node_small
     environment:
       TERM: xterm
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
@@ -1339,7 +1339,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   b_bytecode_ems:
-    <<: *base_node_latest_small
+    <<: *base_node_small
     environment:
       SOLC_EMSCRIPTEN: "On"
     steps:
