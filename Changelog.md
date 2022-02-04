@@ -17,6 +17,7 @@ Bugfixes:
  * Code Generator: Fix ICE when accessing the members of external functions occupying more than two stack slots.
  * Code Generator: Fix ICE when doing an explicit conversion from ``string calldata`` to ``bytes``.
  * Control Flow Graph: Perform proper virtual lookup for modifiers for uninitialized variable and unreachable code analysis.
+ * General: ``string.concat`` now properly takes strings as arguments and returns ``string memory``. It was accidentally introduced as a copy of ``bytes.concat`` before.
  * Immutables: Fix wrong error when the constructor of a base contract uses ``return`` and the derived contract contains immutable variables.
  * IR Generator: Add missing cleanup during the conversion of fixed bytes types to smaller fixed bytes types.
  * IR Generator: Add missing cleanup for indexed event arguments of value type.
