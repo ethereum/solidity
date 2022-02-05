@@ -269,7 +269,8 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(
 	if (!isUNCPath(normalizedPath))
 	{
 		boost::filesystem::path workingDirRootPath = canonicalWorkDir.root_path();
-		if (normalizedRootPath == workingDirRootPath)
+		// Ignore drive letter case on Windows (C:\ <=> c:\).
+		if (boost::filesystem::equivalent(normalizedRootPath, workingDirRootPath))
 			normalizedRootPath = "/";
 	}
 
