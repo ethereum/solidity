@@ -25,6 +25,7 @@
 #include <test/TemporaryDirectory.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -192,8 +193,8 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_root_name_only)
 
 #if defined(_WIN32)
 		boost::filesystem::path driveLetter = boost::filesystem::current_path().root_name();
-		solAssert(!driveLetter.empty(), "");
-		solAssert(driveLetter.is_relative(), "");
+		soltestAssert(!driveLetter.empty(), "");
+		soltestAssert(driveLetter.is_relative(), "");
 
 		BOOST_CHECK_EQUAL(FileReader::normalizeCLIPathForVFS(driveLetter, resolveSymlinks), expectedWorkDir);
 #endif
@@ -212,13 +213,32 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_stripping_root_name)
 
 	for (SymlinkResolution resolveSymlinks: {SymlinkResolution::Enabled, SymlinkResolution::Disabled})
 	{
+		boost::filesystem::path workDir = boost::filesystem::current_path();
+
 		boost::filesystem::path normalizedPath = FileReader::normalizeCLIPathForVFS(
-			boost::filesystem::current_path(),
+			workDir,
 			resolveSymlinks
 		);
-		BOOST_CHECK_EQUAL(normalizedPath, "/" / boost::filesystem::current_path().relative_path());
+		BOOST_CHECK_EQUAL(normalizedPath, "/" / workDir.relative_path());
 		BOOST_TEST(normalizedPath.root_name().empty());
 		BOOST_CHECK_EQUAL(normalizedPath.root_directory(), "/");
+
+#if defined(_WIN32)
+		string root = workDir.root_path().string();
+		soltestAssert(root.length() == 3 && root[1] == ':' && root[2] == '\\', "");
+
+		for (auto convert: {boost::to_lower_copy<string>, boost::to_upper_copy<string>})
+		{
+			boost::filesystem::path workDirWin = convert(root, locale()) / workDir.relative_path();
+			normalizedPath = FileReader::normalizeCLIPathForVFS(
+				workDirWin,
+				resolveSymlinks
+			);
+			BOOST_CHECK_EQUAL(normalizedPath, "/" / workDir.relative_path());
+			BOOST_TEST(normalizedPath.root_name().empty());
+			BOOST_CHECK_EQUAL(normalizedPath.root_directory(), "/");
+		}
+#endif
 	}
 }
 
