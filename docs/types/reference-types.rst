@@ -337,9 +337,9 @@ Array Members
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
      called ``push(x)`` that you can use to append a given element at the end of the array.
      The function returns nothing.
-**pop**:
+**pop()**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member
-     function called ``pop`` that you can use to remove an element from the
+     function called ``pop()`` that you can use to remove an element from the
      end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
 
 .. note::
