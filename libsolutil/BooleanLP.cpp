@@ -22,7 +22,7 @@
 #include <libsolutil/StringUtils.h>
 #include <liblangutil/Exceptions.h>
 
-#include <libsolutil/RationalVectors.h>
+#include <libsolutil/LinearExpression.h>
 
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/transform.hpp>

@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/BooleanLP.h>
-#include <libsolutil/RationalVectors.h>
+#include <libsolutil/LinearExpression.h>
 #include <libsmtutil/Sorts.h>
 #include <libsolutil/StringUtils.h>
 #include <test/Common.h>

@@ -151,7 +151,7 @@ private:
 	size_t m_internalVariableCounter = 0;
 	/// Stack of state, to allow for push()/pop().
 	std::vector<State> m_state{{State{}}};
-	LPSolver m_lpSolver;
+	LPSolver m_lpSolver{false};
 };
 
 
