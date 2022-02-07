@@ -28,6 +28,7 @@ namespace solidity::test::fuzzer::lpsolver
 
 using RandomEngine = std::mt19937;
 using Distribution = std::uniform_int_distribution<int>;
+using Bernoulli = std::bernoulli_distribution;
 
 struct ConstraintGenerator
 {
@@ -54,11 +55,24 @@ struct ConstraintGenerator
 		return Distribution(std::numeric_limits<int>::min(), std::numeric_limits<int>::max())(*prng);
 	}
 
-	/// @returns a boolean integer [0, 1]
-	int randomBool()
+	/// @returns an integer in the range [-1, 1] chosen uniformly at random.
+	int randomMinusOneToOne()
+	{
+		return Distribution(-1, 1)(*prng);
+	}
+
+	/// @returns zero or one with a probability of occurance of 0.5 each.
+	int zeroOrOne()
 	{
 		return Distribution(0, 1)(*prng);
 	}
+
+	/// @returns true with a probability @param _p, false otherwise.
+	bool bernoulliDist(double _truthProbability)
+	{
+		return Bernoulli(_truthProbability)(*prng);
+	}
+
 
 	std::shared_ptr<RandomEngine> prng;
 
@@ -66,6 +80,7 @@ struct ConstraintGenerator
 	static constexpr int s_maxFactors = 10;
 	static constexpr int s_minConstraints = 1;
 	static constexpr int s_maxConstraints = 10;
+	static constexpr double s_piecewiseConstantProb = 0.25;
 };
 
 }

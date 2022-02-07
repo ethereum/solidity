@@ -30,9 +30,12 @@ string ConstraintGenerator::generate()
 	{
 		// First entry is always constraint type. If it is equal to "1", it is an equality constraint
 		// otherwise an less-than-equal constraint.
-		constraint += to_string(randomBool());
+		constraint += to_string(zeroOrOne());
 		for (int j = 0; j < numFactors(); j++)
-			constraint += "," + to_string(randomInteger());
+			if (bernoulliDist(s_piecewiseConstantProb))
+				constraint += "," + to_string(randomMinusOneToOne());
+			else
+				constraint += "," + to_string(randomInteger());
 		constraint += "\n";
 	}
 	return constraint;
