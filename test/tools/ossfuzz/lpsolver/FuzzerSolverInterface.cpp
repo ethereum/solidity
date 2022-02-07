@@ -19,7 +19,8 @@ using namespace solidity::test::fuzzer::lpsolver;
 using namespace solidity::util;
 using namespace std;
 
-FuzzerSolverInterface::FuzzerSolverInterface()
+FuzzerSolverInterface::FuzzerSolverInterface(bool _supportModels):
+	m_solver(_supportModels)
 {
 	m_solvingState.variableNames.emplace_back("");
 }
@@ -53,9 +54,72 @@ void FuzzerSolverInterface::addEQConstraint(LinearExpression _lhs)
 	m_solvingState.constraints.push_back({move(_lhs), true});
 }
 
+LinearExpression FuzzerSolverInterface::linearExpression(vector<int> _factors)
+{
+	bool first = true;
+	unsigned count = 0;
+	LinearExpression lexp;
+	for (auto f: _factors)
+	{
+		if (first)
+		{
+			first = false;
+			lexp += constant(f);
+		}
+		else
+			lexp += variable(f, "x" + to_string(count++));
+	}
+	return lexp;
+}
+
+void FuzzerSolverInterface::addEQConstraint(vector<int> _factors)
+{
+	addEQConstraint(linearExpression(_factors));
+}
+
+void FuzzerSolverInterface::addLEConstraint(vector<int> _factors)
+{
+	addLEConstraint(linearExpression(_factors));
+}
+
+void FuzzerSolverInterface::addConstraint(pair<bool, vector<int>> _constraint)
+{
+	if (_constraint.first)
+		addEQConstraint(_constraint.second);
+	else
+		addLEConstraint(_constraint.second);
+}
+
+void FuzzerSolverInterface::addConstraints(vector<pair<bool, vector<int>>> _constraints)
+{
+	for (auto c: _constraints)
+		addConstraint(c);
+}
+
 solution FuzzerSolverInterface::check()
 {
 	return m_solver.check(m_solvingState);
+}
+
+string FuzzerSolverInterface::checkResult()
+{
+	auto r = check();
+	return lpResult(r.first);
+}
+
+string FuzzerSolverInterface::lpResult(LPResult _result)
+{
+	switch (_result)
+	{
+	case LPResult::Unknown:
+		return "unknown";
+	case LPResult::Unbounded:
+		return "unbounded";
+	case LPResult::Feasible:
+		return "feasible";
+	case LPResult::Infeasible:
+		return "infeasible";
+	}
 }
 
 size_t FuzzerSolverInterface::variableIndex(string const& _name)

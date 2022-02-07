@@ -16,6 +16,8 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include <test/tools/ossfuzz/lpsolver/FuzzerSolverInterface.h>
+
 #include <cstddef>
 #include <iostream>
 #include <sstream>
@@ -23,10 +25,39 @@
 #include <string>
 #include <vector>
 
+using namespace solidity::test::fuzzer::lpsolver;
 using namespace std;
 
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
+
+namespace
+{
+#ifdef DEBUG
+void printConstraints(vector<pair<bool, vector<int>>> _constraints)
+{
+	for (auto& i: _constraints)
+	{
+		cout << (i.first ? "=" : "<=");
+		for (auto& j: i.second)
+			cout << "," << j;
+		cout << endl;
+	}
+}
+#endif
+
+bool validConstraints(vector<pair<bool, vector<int>>> _constraints)
+{
+	// Zero input constraints is an invalid input
+	if (_constraints.size() < 1)
+		return false;
+	// Incomplete constraints are invalid
+	for (auto c: _constraints)
+		if (c.second.empty())
+			return false;
+	return true;
+}
+}
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
@@ -54,16 +85,26 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		constraints.emplace_back(constraint);
 	}
 
-	// Debug
-	for (auto& i: constraints)
+	if (!validConstraints(constraints))
+		return 0;
+	else
 	{
-		cout << (i.first ? "=" : "<=");
-		for (auto& j: i.second)
-			cout << "," << j;
-		cout << endl;
-	}
+		// TODO: Z3 on constraints provided by fuzzer interface and comparing its outcome
+		// with LP solver.
+		FuzzerSolverInterface solverWithoutModels(/*supportModels=*/false);
+		FuzzerSolverInterface solverWithModels(/*supportModels=*/true);
 
-	// TODO: Invoke LP solver and Z3 on constraints provided by fuzzer interface,
-	// comparing their outcomes.
-	return 0;
+		solverWithoutModels.addConstraints(constraints);
+		string resultWithoutModels = solverWithoutModels.checkResult();
+		solverWithModels.addConstraints(constraints);
+		string resultWithModels = solverWithModels.checkResult();
+
+		if (resultWithoutModels != resultWithModels)
+		{
+			cout << resultWithoutModels << endl;
+			cout << resultWithModels << endl;
+			solAssert(false, "LP result without models did not match with result with models.");
+		}
+		return 0;
+	}
 }
