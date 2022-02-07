@@ -17,15 +17,47 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <cstddef>
+#include <iostream>
+#include <sstream>
 #include <stdint.h>
+#include <string>
+#include <vector>
 
 using namespace std;
 
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
-extern "C" int LLVMFuzzerTestOneInput(uint8_t const* , size_t )
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
+	// Parse CSV input
+	istringstream input;
+	input.str(string(reinterpret_cast<char const*>(_data), _size));
+
+	vector<vector<int>> factors;
+	for (string line; getline(input, line); )
+	{
+		istringstream lineStream;
+		lineStream.str(line);
+		vector<int> factor;
+		for (string field; getline(lineStream, field, ','); )
+			factor.emplace_back(stoi(field));
+		factors.emplace_back(factor);
+	}
+
+	// Debug
+	for (auto& i: factors)
+	{
+		string sep;
+		for (auto& j: i)
+		{
+			cout << sep << j;
+			if (sep.empty())
+				sep = ",";
+		}
+		cout << endl;
+	}
+
 	// TODO: Invoke LP solver and Z3 on constraints provided by fuzzer interface,
 	// comparing their outcomes.
 	return 0;

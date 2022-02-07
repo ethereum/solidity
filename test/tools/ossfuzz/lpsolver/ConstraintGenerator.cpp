@@ -33,7 +33,7 @@ string ConstraintGenerator::generate()
 		{
 			constraint += sep + to_string(randomInteger());
 			if (sep.empty())
-				sep = ", ";
+				sep = ",";
 		}
 		constraint += "\n";
 	}
