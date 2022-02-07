@@ -39,11 +39,17 @@ LinearExpression FuzzerSolverInterface::variable(
 
 void FuzzerSolverInterface::addLEConstraint(LinearExpression _lhs)
 {
+	// Move constant to RHS
+	if (_lhs[0])
+		_lhs[0] = -_lhs[0];
 	m_solvingState.constraints.push_back({move(_lhs), false});
 }
 
 void FuzzerSolverInterface::addEQConstraint(LinearExpression _lhs)
 {
+	// Move constant to RHS
+	if (_lhs[0])
+		_lhs[0] = -_lhs[0];
 	m_solvingState.constraints.push_back({move(_lhs), true});
 }
 

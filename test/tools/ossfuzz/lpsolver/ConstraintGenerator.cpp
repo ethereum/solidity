@@ -28,13 +28,11 @@ string ConstraintGenerator::generate()
 	string constraint;
 	for (int i = 0; i < numConstraints(); i++)
 	{
-		string sep;
+		// First entry is always constraint type. If it is equal to "1", it is an equality constraint
+		// otherwise an less-than-equal constraint.
+		constraint += to_string(randomBool());
 		for (int j = 0; j < numFactors(); j++)
-		{
-			constraint += sep + to_string(randomInteger());
-			if (sep.empty())
-				sep = ",";
-		}
+			constraint += "," + to_string(randomInteger());
 		constraint += "\n";
 	}
 	return constraint;

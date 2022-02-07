@@ -54,6 +54,12 @@ struct ConstraintGenerator
 		return Distribution(std::numeric_limits<int>::min(), std::numeric_limits<int>::max())(*prng);
 	}
 
+	/// @returns a boolean integer [0, 1]
+	int randomBool()
+	{
+		return Distribution(0, 1)(*prng);
+	}
+
 	std::shared_ptr<RandomEngine> prng;
 
 	static constexpr int s_minFactors = 2;

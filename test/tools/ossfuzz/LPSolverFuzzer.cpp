@@ -34,27 +34,32 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	istringstream input;
 	input.str(string(reinterpret_cast<char const*>(_data), _size));
 
-	vector<vector<int>> factors;
+	vector<pair<bool, vector<int>>> constraints;
 	for (string line; getline(input, line); )
 	{
 		istringstream lineStream;
 		lineStream.str(line);
-		vector<int> factor;
+		pair<bool, vector<int>> constraint;
+		bool first = true;
 		for (string field; getline(lineStream, field, ','); )
-			factor.emplace_back(stoi(field));
-		factors.emplace_back(factor);
+		{
+			if (first)
+			{
+				constraint.first = static_cast<bool>(stoi(field));
+				first = false;
+			}
+			else
+				constraint.second.emplace_back(stoi(field));
+		}
+		constraints.emplace_back(constraint);
 	}
 
 	// Debug
-	for (auto& i: factors)
+	for (auto& i: constraints)
 	{
-		string sep;
-		for (auto& j: i)
-		{
-			cout << sep << j;
-			if (sep.empty())
-				sep = ",";
-		}
+		cout << (i.first ? "=" : "<=");
+		for (auto& j: i.second)
+			cout << "," << j;
 		cout << endl;
 	}
 
