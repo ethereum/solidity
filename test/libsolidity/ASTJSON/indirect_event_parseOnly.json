@@ -54,6 +54,7 @@
                     "typeDescriptions": {}
                   },
                   "id": 6,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "96:3:1",
@@ -147,12 +148,14 @@
                       "typeDescriptions": {}
                     },
                     "id": 17,
+                    "memberLocation": "161:1:1",
                     "memberName": "f",
                     "nodeType": "MemberAccess",
                     "src": "159:3:1",
                     "typeDescriptions": {}
                   },
                   "id": 18,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "159:5:1",
@@ -177,6 +180,7 @@
                     "typeDescriptions": {}
                   },
                   "id": 21,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "171:3:1",

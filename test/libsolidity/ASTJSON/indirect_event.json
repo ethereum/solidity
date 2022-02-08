@@ -39,6 +39,7 @@
       [
         {
           "anonymous": false,
+          "eventSelector": "92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028",
           "id": 2,
           "name": "E",
           "nameLocation": "58:1:1",
@@ -85,6 +86,7 @@
                   "isPure": false,
                   "kind": "functionCall",
                   "lValueRequested": false,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "96:3:1",
@@ -157,6 +159,7 @@
       [
         {
           "anonymous": false,
+          "eventSelector": "70a5d861ef9816388422765f41d618eb3abdf490acb37354b539729e37b09f0e",
           "id": 12,
           "name": "H",
           "nameLocation": "128:1:1",
@@ -204,6 +207,7 @@
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
+                    "memberLocation": "161:1:1",
                     "memberName": "f",
                     "nodeType": "MemberAccess",
                     "referencedDeclaration": 9,
@@ -220,6 +224,7 @@
                   "isPure": false,
                   "kind": "functionCall",
                   "lValueRequested": false,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "159:5:1",
@@ -259,6 +264,7 @@
                   "isPure": false,
                   "kind": "functionCall",
                   "lValueRequested": false,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "171:3:1",

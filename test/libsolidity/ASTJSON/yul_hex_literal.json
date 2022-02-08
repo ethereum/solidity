@@ -17,6 +17,7 @@
       "canonicalName": "Sample",
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 6,
       "linearizedBaseContracts":

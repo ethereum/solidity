@@ -36,6 +36,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "interface",
+      "emittedEvents": [],
       "id": 29,
       "name": "I",
       "nameLocation": "31:1:1",

@@ -1,8 +1,59 @@
 
 ======= events_in_abi/input.sol:C =======
 Contract JSON ABI
-[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"b","type":"uint256"}],"name":"e1","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"a","type":"uint256"}],"name":"e1","type":"event"},{"inputs":[],"name":"g","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+[
+    {
+        "anonymous": false,
+        "inputs":
+        [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "b",
+                "type": "uint256"
+            }
+        ],
+        "name": "e1",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs":
+        [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "a",
+                "type": "uint256"
+            }
+        ],
+        "name": "e1",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "g",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
 
 ======= events_in_abi/input.sol:L =======
 Contract JSON ABI
-[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"b","type":"uint256"}],"name":"e1","type":"event"}]
+[
+    {
+        "anonymous": false,
+        "inputs":
+        [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "b",
+                "type": "uint256"
+            }
+        ],
+        "name": "e1",
+        "type": "event"
+    }
+]
