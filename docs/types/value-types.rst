@@ -188,7 +188,8 @@ The address type comes in two flavours, which are largely identical:
 - ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
 
 The idea behind this distinction is that ``address payable`` is an address you can send Ether to,
-while a plain ``address`` cannot be sent Ether.
+while you are not supposed to send Ether to a plain ``address``, for example because it might be a smart contract
+that was not built to accept Ether.
 
 Type conversions:
 
@@ -331,7 +332,9 @@ on ``call``.
 
 * ``code`` and ``codehash``
 
-You can query the deployed code for any smart contract. Use ``code`` to get the EVM bytecode as a string, which might be empty. Use ``codehash`` get the Keccak-256 hash of that code.
+You can query the deployed code for any smart contract. Use ``.code`` to get the EVM bytecode as a
+``bytes memory``, which might be empty. Use ``.codehash`` get the Keccak-256 hash of that code
+(as a ``bytes32``). Note that ``addr.codehash`` is cheaper than using ``keccak256(addr.code)``.
 
 .. note::
     All contracts can be converted to ``address`` type, so it is possible to query the balance of the

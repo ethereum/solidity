@@ -18,6 +18,7 @@ Language Features:
 
 Compiler Features:
  * Yul Optimizer: Remove ``mstore`` and ``sstore`` operations if the slot already contains the same value.
+ * Yul: Emit immutable references for pure yul code when requested.
 
 
 Bugfixes:
@@ -25,9 +26,10 @@ Bugfixes:
  * Code Generator: Fix ICE when accessing the members of external functions occupying more than two stack slots.
  * Code Generator: Fix ICE when doing an explicit conversion from ``string calldata`` to ``bytes``.
  * Control Flow Graph: Perform proper virtual lookup for modifiers for uninitialized variable and unreachable code analysis.
- * Immutables: Fix wrong error when the constructor of a base contract uses ``return`` and the parent contract contains immutable variables.
+ * Immutables: Fix wrong error when the constructor of a base contract uses ``return`` and the derived contract contains immutable variables.
  * IR Generator: Add missing cleanup during the conversion of fixed bytes types to smaller fixed bytes types.
  * IR Generator: Add missing cleanup for indexed event arguments of value type.
+ * IR Generator: Fix internal error when copying reference types in calldata and storage to struct or array members in memory.
  * IR Generator: Fix IR syntax error when copying storage arrays of structs containing functions.
  * Natspec: Fix ICE when overriding a struct getter with a Natspec-documented return value and the name in the struct is different.
  * TypeChecker: Fix ICE when a constant variable declaration forward references a struct.

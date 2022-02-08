@@ -14,7 +14,7 @@ General Resources
 * `Solidity Compiler Developers Chat <https://matrix.to/#/#ethereum_solidity-dev:gitter.im>`_
 * `Awesome Solidity <https://github.com/bkrem/awesome-solidity>`_
 * `Solidity by Example <https://solidity-by-example.org/>`_
-
+* `Solidity Documentation Community Translations <https://github.com/solidity-docs>`_
 
 Integrated (Ethereum) Development Environments
 ==============================================
@@ -28,14 +28,14 @@ Integrated (Ethereum) Development Environments
     * `Embark <https://framework.embarklabs.io/>`_
         Developer platform for building and deploying decentralized applications.
 
+    * `Foundry <https://github.com/gakonst/foundry>`_
+        Fast, portable and modular toolkit for Ethereum application development written in Rust.
+
     * `Hardhat <https://hardhat.org/>`_
         Ethereum development environment with local Ethereum network, debugging features and plugin ecosystem.
 
     * `Remix <https://remix.ethereum.org/>`_
         Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
-
-    * `Scaffold-ETH <https://github.com/austintgriffith/scaffold-eth>`_
-        Ethereum development stack focused on fast product iterations.
 
     * `Truffle <https://www.trufflesuite.com/truffle>`_
         Ethereum development framework.
@@ -112,6 +112,9 @@ Solidity Tools
 * `PIET <https://piet.slock.it/>`_
     A tool to develop, audit and use Solidity smart contracts through a simple graphical interface.
 
+* `Scaffold-ETH <https://github.com/scaffold-eth/scaffold-eth>`_
+    Forkable Ethereum development stack focused on fast product iterations.
+
 * `sol2uml <https://www.npmjs.com/package/sol2uml>`_
     Unified Modeling Language (UML) class diagram generator for Solidity contracts.
 
@@ -129,6 +132,9 @@ Solidity Tools
 
 * `Solhint <https://github.com/protofire/solhint>`_
     Solidity linter that provides security, style guide and best practice rules for smart contract validation.
+
+* `Sourcify <https://sourcify.dev/>`_
+    Decentralized automated contract verification service and public repository of contract metadata.
 
 * `Sūrya <https://github.com/ConsenSys/surya/>`_
     Utility tool for smart contract systems, offering a number of visual outputs and information about the contracts' structure. Also supports querying the function call graph.

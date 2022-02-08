@@ -92,7 +92,7 @@ Global Variables
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
-- ``block.timestamp`` (``uint``): current block timestamp
+- ``block.timestamp`` (``uint``): current block timestamp in seconds since Unix epoch
 - ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes``): complete calldata
 - ``msg.sender`` (``address``): sender of the message (current call)

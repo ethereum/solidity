@@ -66,7 +66,8 @@
 ### Release solc-js
  - [ ] Wait until solc-bin was properly deployed. You can test this via remix - a test run through remix is advisable anyway.
  - [ ] Increment the version number, create a pull request for that, merge it after tests succeeded.
- - [ ] Run ``npm run updateBinary && npm publish`` in the updated ``solc-js`` repository.
+ - [ ] Run ``npm run build:tarball`` in the updated ``solc-js`` repository to create ``solc-<version>.tgz``. Inspect the tarball to ensure that it contains an up to date compiler binary.
+ - [ ] Run ``npm run publish:tarball`` to publish the newly created tarball.
  - [ ] Create a tag using ``git tag --annotate v$VERSION`` and push it with ``git push --tags``.
 
 ### Post-release

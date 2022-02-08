@@ -970,7 +970,7 @@ void CompilerUtils::convertType(
 		else if (targetTypeCategory == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(_targetType);
-			solAssert(arrayType.isByteArray());
+			solAssert(arrayType.isByteArrayOrString());
 			size_t storageSize = 32 + ((data.size() + 31) / 32) * 32;
 			allocateMemory(storageSize);
 			// stack: mempos
@@ -992,7 +992,7 @@ void CompilerUtils::convertType(
 		if (_targetType.category() == Type::Category::FixedBytes)
 		{
 			solAssert(
-				typeOnStack.isByteArray() && !typeOnStack.isString(),
+				typeOnStack.isByteArray(),
 				"Array types other than bytes not convertible to bytesNN."
 			);
 			solAssert(typeOnStack.isDynamicallySized());
@@ -1019,7 +1019,7 @@ void CompilerUtils::convertType(
 		case DataLocation::Storage:
 			// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
 			solAssert(
-				(targetType.isPointer() || (typeOnStack.isByteArray() && targetType.isByteArray())) &&
+				(targetType.isPointer() || (typeOnStack.isByteArrayOrString() && targetType.isByteArrayOrString())) &&
 				typeOnStack.location() == DataLocation::Storage,
 				"Invalid conversion to storage type."
 			);
@@ -1105,7 +1105,7 @@ void CompilerUtils::convertType(
 		}
 		case DataLocation::CallData:
 			solAssert(
-				((targetType.isByteArray() && typeOnStack.isByteArray()) || _typeOnStack == _targetType) &&
+				((targetType.isByteArrayOrString() && typeOnStack.isByteArrayOrString()) || _typeOnStack == _targetType) &&
 				typeOnStack.location() == DataLocation::CallData,
 				"Invalid conversion to calldata type."
 			);
@@ -1119,7 +1119,7 @@ void CompilerUtils::convertType(
 		if (_targetType.category() == Type::Category::FixedBytes)
 		{
 			solAssert(
-				typeOnStack.arrayType().isByteArray() && !typeOnStack.arrayType().isString(),
+				typeOnStack.arrayType().isByteArray(),
 				"Array types other than bytes not convertible to bytesNN."
 			);
 			solAssert(typeOnStack.isDynamicallySized());
@@ -1142,7 +1142,7 @@ void CompilerUtils::convertType(
 		auto const& targetArrayType = dynamic_cast<ArrayType const&>(_targetType);
 		solAssert(
 			typeOnStack.arrayType().isImplicitlyConvertibleTo(targetArrayType) ||
-			(typeOnStack.arrayType().isByteArray() && targetArrayType.isByteArray())
+			(typeOnStack.arrayType().isByteArrayOrString() && targetArrayType.isByteArrayOrString())
 		);
 		solAssert(
 			typeOnStack.arrayType().dataStoredIn(DataLocation::CallData) &&

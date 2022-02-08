@@ -953,7 +953,7 @@ bool isReturnedFromStructGetter(Type const* _type)
 	if (category == Type::Category::Mapping)
 		return false;
 	if (category == Type::Category::Array)
-		return dynamic_cast<ArrayType const&>(*_type).isByteArray();
+		return dynamic_cast<ArrayType const&>(*_type).isByteArrayOrString();
 	// default
 	return true;
 }
@@ -990,7 +990,7 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 	{
 		if (
 			type->isValueType() ||
-			(type->category() == Type::Category::Array && dynamic_cast<ArrayType const&>(*type).isByteArray())
+			(type->category() == Type::Category::Array && dynamic_cast<ArrayType const&>(*type).isByteArrayOrString())
 		)
 		{
 			solAssert(symbArguments.empty(), "");
@@ -1071,7 +1071,7 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	if (auto sliceType = dynamic_cast<ArraySliceType const*>(argType))
 		arrayType = &sliceType->arrayType();
 
-	if (arrayType && arrayType->isByteArray() && smt::isFixedBytes(*funCallType))
+	if (arrayType && arrayType->isByteArrayOrString() && smt::isFixedBytes(*funCallType))
 	{
 		auto array = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*argument));
 		bytesToFixedBytesAssertions(*array, _funCall);
@@ -2695,14 +2695,14 @@ Expression const* SMTEncoder::cleanExpression(Expression const& _expr)
 			auto typeType = dynamic_cast<TypeType const*>(functionCall->expression().annotation().type);
 			solAssert(typeType, "");
 			if (auto const* arrayType = dynamic_cast<ArrayType const*>(typeType->actualType()))
-				if (arrayType->isByteArray())
+				if (arrayType->isByteArrayOrString())
 				{
 					// this is a cast to `bytes`
 					solAssert(functionCall->arguments().size() == 1, "");
 					Expression const& arg = *functionCall->arguments()[0];
 					if (
 						auto const* argArrayType = dynamic_cast<ArrayType const*>(arg.annotation().type);
-						argArrayType && argArrayType->isByteArray()
+						argArrayType && argArrayType->isByteArrayOrString()
 					)
 						return cleanExpression(arg);
 				}

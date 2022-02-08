@@ -149,11 +149,11 @@ for binary_name in $platform_binaries; do
         if [[ $platform == emscripten-wasm32 ]] || [[ $platform == emscripten-asmjs ]]; then
             ln -sf "${solc_bin_dir}/${platform}/${binary_name}" "${solcjs_dir}/soljson.js"
             ln -sf "${solc_bin_dir}/${platform}/${binary_name}" "${solcjs_dir}/dist/soljson.js"
-            ln -s "${solcjs_dir}" solc-js
+            npm install "${solcjs_dir}/dist"
             cp "${script_dir}/bytecodecompare/prepare_report.js" prepare_report.js
 
             validate_reported_version \
-                "$(solc-js/dist/solc.js --version)" \
+                "$(node_modules/solc/solc.js --version)" \
                 "$solidity_version_and_commit"
 
             # shellcheck disable=SC2035
