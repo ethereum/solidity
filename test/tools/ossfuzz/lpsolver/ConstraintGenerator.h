@@ -40,7 +40,7 @@ struct ConstraintGenerator
 	/// @returns random number of factors.
 	int numFactors()
 	{
-		return Distribution(s_minFactors, s_maxFactors)(*prng);
+		return Distribution(s_minNumFactors, s_maxNumFactors)(*prng);
 	}
 
 	/// @returns random number of constraints.
@@ -52,7 +52,7 @@ struct ConstraintGenerator
 	/// @returns an integer chosen uniformly at random.
 	int randomInteger()
 	{
-		return Distribution(std::numeric_limits<int>::min(), std::numeric_limits<int>::max())(*prng);
+		return Distribution(s_minFactor, s_maxFactor)(*prng);
 	}
 
 	/// @returns an integer in the range [-1, 1] chosen uniformly at random.
@@ -76,10 +76,20 @@ struct ConstraintGenerator
 
 	std::shared_ptr<RandomEngine> prng;
 
-	static constexpr int s_minFactors = 2;
-	static constexpr int s_maxFactors = 10;
+	/// Smallest number of factors in linear constraint of the form
+	/// a*x1 + b*x2 <= c
+	static constexpr int s_minNumFactors = 2;
+	/// Largest number of factors in linear constraint
+	static constexpr int s_maxNumFactors = 100;
+	/// Smallest number of linear constraints
 	static constexpr int s_minConstraints = 1;
-	static constexpr int s_maxConstraints = 10;
+	/// Largest number of linear constraints
+	static constexpr int s_maxConstraints = 100;
+	/// Smallest value of a factor in linear constraint
+	static constexpr int s_minFactor = -100;
+	/// Largest value of a factor in linear constraint
+	static constexpr int s_maxFactor = 100;
+	/// Probability that a factor in the range of [-1, 1] is chosen
 	static constexpr double s_piecewiseConstantProb = 0.25;
 };
 
