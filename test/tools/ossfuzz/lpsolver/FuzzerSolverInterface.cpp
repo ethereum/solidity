@@ -15,6 +15,8 @@
 
 #include <test/tools/ossfuzz/lpsolver/FuzzerSolverInterface.h>
 
+#include <range/v3/view/enumerate.hpp>
+
 using namespace solidity::test::fuzzer::lpsolver;
 using namespace solidity::util;
 using namespace std;
@@ -25,69 +27,22 @@ FuzzerSolverInterface::FuzzerSolverInterface(bool _supportModels):
 	m_solvingState.variableNames.emplace_back("");
 }
 
-LinearExpression FuzzerSolverInterface::constant(rational _value)
-{
-	return LinearExpression::factorForVariable(0, _value);
-}
-
-LinearExpression FuzzerSolverInterface::variable(
-	rational _factor,
-	string const& _variable
-)
-{
-	return LinearExpression::factorForVariable(variableIndex(_variable), _factor);
-}
-
-void FuzzerSolverInterface::addLEConstraint(LinearExpression _lhs)
-{
-	// Move constant to RHS
-	if (_lhs[0])
-		_lhs[0] = -_lhs[0];
-	m_solvingState.constraints.push_back({move(_lhs), false});
-}
-
-void FuzzerSolverInterface::addEQConstraint(LinearExpression _lhs)
-{
-	// Move constant to RHS
-	if (_lhs[0])
-		_lhs[0] = -_lhs[0];
-	m_solvingState.constraints.push_back({move(_lhs), true});
-}
-
 LinearExpression FuzzerSolverInterface::linearExpression(vector<int> _factors)
 {
-	bool first = true;
-	unsigned count = 0;
 	LinearExpression lexp;
-	for (auto f: _factors)
-	{
-		if (first)
-		{
-			first = false;
-			lexp += constant(f);
-		}
+	lexp.resize(_factors.size());
+	for (auto&& [index, value]: _factors | ranges::views::enumerate)
+		// Move constant term to RHS.
+		if (index == 0)
+			lexp[index] = -rational{value};
 		else
-			lexp += variable(f, "x" + to_string(count++));
-	}
+			lexp[index] = rational{value};
 	return lexp;
-}
-
-void FuzzerSolverInterface::addEQConstraint(vector<int> _factors)
-{
-	addEQConstraint(linearExpression(_factors));
-}
-
-void FuzzerSolverInterface::addLEConstraint(vector<int> _factors)
-{
-	addLEConstraint(linearExpression(_factors));
 }
 
 void FuzzerSolverInterface::addConstraint(pair<bool, vector<int>> _constraint)
 {
-	if (_constraint.first)
-		addEQConstraint(_constraint.second);
-	else
-		addLEConstraint(_constraint.second);
+	m_solvingState.constraints.push_back({linearExpression(move(_constraint.second)), _constraint.first});
 }
 
 void FuzzerSolverInterface::addConstraints(vector<pair<bool, vector<int>>> _constraints)
@@ -120,17 +75,4 @@ string FuzzerSolverInterface::lpResult(LPResult _result)
 	case LPResult::Infeasible:
 		return "infeasible";
 	}
-}
-
-size_t FuzzerSolverInterface::variableIndex(string const& _name)
-{
-	if (m_solvingState.variableNames.empty())
-		m_solvingState.variableNames.emplace_back("");
-	auto index = findOffset(m_solvingState.variableNames, _name);
-	if (!index)
-	{
-		index = m_solvingState.variableNames.size();
-		m_solvingState.variableNames.emplace_back(_name);
-	}
-	return *index;
 }

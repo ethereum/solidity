@@ -36,33 +36,6 @@ class FuzzerSolverInterface
 public:
 	FuzzerSolverInterface(bool _supportModels);
 
-	/// @returns constant rational.
-	solidity::util::LinearExpression constant(solidity::util::rational _rationalConstant);
-
-	/// @returns linear expression that equals zero.
-	solidity::util::LinearExpression zero()
-	{
-		return constant(0);
-	}
-
-	/// @returns product of a rational factor and variable.
-	solidity::util::LinearExpression variable(
-		solidity::util::rational _factor,
-		std::string const& _variable
-	);
-
-	/// Adds less-than-equal-zero constraint to solver.
-	void addLEConstraint(solidity::util::LinearExpression _lhs);
-
-	/// Adds equal-to-zero constraint to solver.
-	void addEQConstraint(solidity::util::LinearExpression _lhs);
-
-	/// Adds less-than-equal constraint from vector of factors.
-	void addLEConstraint(std::vector<int> _factors);
-
-	/// Adds equal-to constraint from vector of factors.
-	void addEQConstraint(std::vector<int> _factors);
-
 	/// Adds @param _constraint to LP solver.
 	void addConstraint(std::pair<bool, std::vector<int>> _constraint);
 
@@ -79,9 +52,6 @@ public:
 	std::string checkResult();
 
 private:
-	/// Adds variable if necessary to LP solver state and @returns index of variable.
-	size_t variableIndex(std::string const& _name);
-
 	/// @returns LP result as string.
 	std::string lpResult(solidity::util::LPResult _result);
 
