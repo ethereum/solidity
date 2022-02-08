@@ -219,6 +219,8 @@ defaults:
         - checkout
         - run: *run_build
         - store_artifacts: *artifacts_solc
+        - store_artifacts: *artifact_solidity_upgrade
+        - store_artifacts: *artifact_yul_phaser
         - persist_to_workspace: *artifacts_executables
         - gitter_notify_failure_unless_pr
 
@@ -747,14 +749,7 @@ jobs:
     # this runs 2x faster on xlarge but takes 4x more resources (compared to medium).
     # Enough other jobs depend on it that it's worth it though.
     <<: *base_ubuntu2004_xlarge
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifact_solidity_upgrade
-      - store_artifacts: *artifact_yul_phaser
-      - persist_to_workspace: *artifacts_executables
-      - gitter_notify_failure_unless_pr
+    <<: *steps_build
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
