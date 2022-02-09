@@ -75,10 +75,13 @@
 #include <libsolutil/IpfsHash.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/FunctionSelector.h>
 
 #include <json/json.h>
 
 #include <boost/algorithm/string/replace.hpp>
+
+#include <range/v3/view/concat.hpp>
 
 #include <utility>
 #include <map>
@@ -1013,15 +1016,34 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
 }
 
-Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
+Json::Value CompilerStack::interfaceSymbols(string const& _contractName) const
 {
 	if (m_stackState < AnalysisPerformed)
 		solThrow(CompilerError, "Analysis was not successful.");
 
-	Json::Value methodIdentifiers(Json::objectValue);
+	Json::Value interfaceSymbols(Json::objectValue);
+	// Always have a methods object
+	interfaceSymbols["methods"] = Json::objectValue;
+
 	for (auto const& it: contractDefinition(_contractName).interfaceFunctions())
-		methodIdentifiers[it.second->externalSignature()] = it.first.hex();
-	return methodIdentifiers;
+		interfaceSymbols["methods"][it.second->externalSignature()] = it.first.hex();
+	for (ErrorDefinition const* error: contractDefinition(_contractName).interfaceErrors())
+	{
+		string signature = error->functionType(true)->externalSignature();
+		interfaceSymbols["errors"][signature] = toHex(toCompactBigEndian(selectorFromSignature32(signature), 4));
+	}
+
+	for (EventDefinition const* event: ranges::concat_view(
+		contractDefinition(_contractName).definedInterfaceEvents(),
+		contractDefinition(_contractName).usedInterfaceEvents()
+	))
+		if (!event->isAnonymous())
+		{
+			string signature = event->functionType(true)->externalSignature();
+			interfaceSymbols["events"][signature] = toHex(u256(h256::Arith(keccak256(signature))));
+		}
+
+	return interfaceSymbols;
 }
 
 bytes CompilerStack::cborMetadata(string const& _contractName, bool _forIR) const

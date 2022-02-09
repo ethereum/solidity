@@ -1,0 +1,24 @@
+
+======= hashes/input.sol:C =======
+Function signatures:
+3fc03eeb: f((uint256))
+
+Error signatures:
+619a0bb7: err(uint256,uint256)
+82b5f64f: fileLevelError(uint256)
+8c41f45c: libraryError(uint256)
+
+Event signatures:
+2d4dd5fe18ada5a020a9f5591539a8dc3010a5c074ba6a70e1c956659f02786a: ev(uint256)
+81f3fb02f88d32d3bb08c80c9a622ca3b3223292f131c6ad049811f9a8a606dc: libraryEvent(uint256)
+
+======= hashes/input.sol:L =======
+Function signatures:
+
+Error signatures:
+8c41f45c: libraryError(uint256)
+c61c03f5: libraryErrorUnused(uint256)
+
+Event signatures:
+81f3fb02f88d32d3bb08c80c9a622ca3b3223292f131c6ad049811f9a8a606dc: libraryEvent(uint256)
+0a994ad3600197f16ffe1ea1101caea3174efe5ebd9ba9a75d6d5524c5de28cd: libraryEventUnused(uint256)

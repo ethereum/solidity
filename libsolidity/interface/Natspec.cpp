@@ -78,7 +78,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 				doc["methods"][it.second->externalSignature()]["notice"] = value;
 		}
 
-	for (auto const& event: _contractDef.interfaceEvents())
+	for (auto const& event: _contractDef.definedInterfaceEvents())
 	{
 		string value = extractDoc(event->annotation().docTags, "notice");
 		if (!value.empty())
