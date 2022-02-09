@@ -90,7 +90,7 @@ struct ConstraintGenerator
 	/// Largest value of a factor in linear constraint
 	static constexpr int s_maxFactor = 100;
 	/// Probability that a factor in the range of [-1, 1] is chosen
-	static constexpr double s_piecewiseConstantProb = 0.25;
+	static constexpr double s_piecewiseConstantProb = 0.75;
 };
 
 }

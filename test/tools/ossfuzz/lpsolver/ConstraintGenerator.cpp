@@ -33,7 +33,7 @@ string ConstraintGenerator::generate()
 		constraint += to_string(zeroOrOne());
 		for (int j = 0; j < numFactors(); j++)
 			if (bernoulliDist(s_piecewiseConstantProb))
-				constraint += "," + to_string(randomMinusOneToOne());
+				constraint += ",0";
 			else
 				constraint += "," + to_string(randomInteger());
 		constraint += "\n";

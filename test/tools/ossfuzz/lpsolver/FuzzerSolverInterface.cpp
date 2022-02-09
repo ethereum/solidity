@@ -32,11 +32,7 @@ LinearExpression FuzzerSolverInterface::linearExpression(vector<int> _factors)
 	LinearExpression lexp;
 	lexp.resize(_factors.size());
 	for (auto&& [index, value]: _factors | ranges::views::enumerate)
-		// Move constant term to RHS.
-		if (index == 0)
-			lexp[index] = -rational{value};
-		else
-			lexp[index] = rational{value};
+		lexp[index] = rational{value};
 	return lexp;
 }
 

@@ -18,8 +18,10 @@
 
 #include <test/tools/ossfuzz/lpsolver/FuzzerSolverInterface.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <stdint.h>
 #include <string>
@@ -28,13 +30,16 @@
 using namespace solidity::test::fuzzer::lpsolver;
 using namespace std;
 
+using Constraint = pair<bool, vector<int>>;
+using Constraints = vector<Constraint>;
+
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
 namespace
 {
 #ifdef DEBUG
-void printConstraints(vector<pair<bool, vector<int>>> _constraints)
+void printConstraints(Constraints _constraints)
 {
 	for (auto& i: _constraints)
 	{
@@ -46,65 +51,85 @@ void printConstraints(vector<pair<bool, vector<int>>> _constraints)
 }
 #endif
 
-bool validConstraints(vector<pair<bool, vector<int>>> _constraints)
+bool validInput(string const& _input)
 {
+	return all_of(
+		_input.begin(),
+		_input.end(),
+		[](unsigned char _c) { return isdigit(_c) || (_c == ',') || (_c == '-') || (_c == '\n'); }
+	);
+}
+
+optional<Constraints> parseConstraints(istringstream& _input)
+{
+	Constraints constraints;
+	for (string line; getline(_input, line); )
+	{
+		istringstream lineStream;
+		lineStream.str(line);
+		Constraint constraint;
+		bool first = true;
+		for (string field; getline(lineStream, field, ','); )
+		{
+			int val = 0;
+			try
+			{
+				val = stoi(field);
+			}
+			// Fuzzer can sometimes supply invalid input to stoi that needs to be
+			// rejected.
+			catch (invalid_argument const&)
+			{
+				return nullopt;
+			}
+			if (first)
+			{
+				constraint.first = static_cast<bool>(val);
+				first = false;
+			}
+			else
+				constraint.second.emplace_back(val);
+		}
+		constraints.emplace_back(constraint);
+	}
 	// Zero input constraints is an invalid input
-	if (_constraints.size() < 1)
-		return false;
+	if (constraints.size() < 1)
+		return nullopt;
 	// Incomplete constraints are invalid
-	for (auto c: _constraints)
+	for (auto c: constraints)
 		if (c.second.empty())
-			return false;
-	return true;
+			return nullopt;
+	return constraints;
 }
 }
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
-	// Parse CSV input
 	istringstream input;
 	input.str(string(reinterpret_cast<char const*>(_data), _size));
-
-	vector<pair<bool, vector<int>>> constraints;
-	for (string line; getline(input, line); )
+	if (validInput(input.str()))
 	{
-		istringstream lineStream;
-		lineStream.str(line);
-		pair<bool, vector<int>> constraint;
-		bool first = true;
-		for (string field; getline(lineStream, field, ','); )
+		// Parse CSV input
+		auto constraints = parseConstraints(input);
+		if (constraints.has_value())
 		{
-			if (first)
+			// TODO: Z3 on constraints provided by fuzzer interface and comparing its outcome
+			// with LP solver.
+			FuzzerSolverInterface solverWithoutModels(/*supportModels=*/false);
+			FuzzerSolverInterface solverWithModels(/*supportModels=*/true);
+
+			solverWithoutModels.addConstraints(constraints.value());
+			string resultWithoutModels = solverWithoutModels.checkResult();
+			solverWithModels.addConstraints(constraints.value());
+			string resultWithModels = solverWithModels.checkResult();
+
+			if (resultWithoutModels != resultWithModels)
 			{
-				constraint.first = static_cast<bool>(stoi(field));
-				first = false;
+				cout << resultWithoutModels << endl;
+				cout << resultWithModels << endl;
+				solAssert(false, "LP result without models did not match with result with models.");
 			}
-			else
-				constraint.second.emplace_back(stoi(field));
 		}
-		constraints.emplace_back(constraint);
 	}
-
-	if (!validConstraints(constraints))
-		return 0;
-	else
-	{
-		// TODO: Z3 on constraints provided by fuzzer interface and comparing its outcome
-		// with LP solver.
-		FuzzerSolverInterface solverWithoutModels(/*supportModels=*/false);
-		FuzzerSolverInterface solverWithModels(/*supportModels=*/true);
-
-		solverWithoutModels.addConstraints(constraints);
-		string resultWithoutModels = solverWithoutModels.checkResult();
-		solverWithModels.addConstraints(constraints);
-		string resultWithModels = solverWithModels.checkResult();
-
-		if (resultWithoutModels != resultWithModels)
-		{
-			cout << resultWithoutModels << endl;
-			cout << resultWithModels << endl;
-			solAssert(false, "LP result without models did not match with result with models.");
-		}
-		return 0;
-	}
+	return 0;
 }
