@@ -23,6 +23,7 @@ add_executable(isoltest
 	../libsolidity/util/TestFileParser.cpp
 	../libsolidity/util/TestFunctionCall.cpp
 	../libsolidity/GasTest.cpp
+	../libsolidity/MemoryGuardTest.cpp
 	../libsolidity/SyntaxTest.cpp
 	../libsolidity/SemanticTest.cpp
 	../libsolidity/AnalysisFramework.cpp

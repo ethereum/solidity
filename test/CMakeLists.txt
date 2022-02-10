@@ -83,6 +83,8 @@ set(libsolidity_sources
     libsolidity/InlineAssembly.cpp
     libsolidity/LibSolc.cpp
     libsolidity/Metadata.cpp
+    libsolidity/MemoryGuardTest.cpp
+    libsolidity/MemoryGuardTest.h
     libsolidity/SemanticTest.cpp
     libsolidity/SemanticTest.h
     libsolidity/SemVerMatcher.cpp
