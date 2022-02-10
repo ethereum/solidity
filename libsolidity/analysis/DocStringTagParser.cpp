@@ -202,7 +202,7 @@ bool DocStringTagParser::visit(InlineAssembly const& _assembly)
 				if (valuesSeen.insert(value).second)
 				{
 					if (value == "memory-safe-assembly")
-						_assembly.annotation().memorySafe = true;
+						_assembly.annotation().markedMemorySafe = true;
 					else
 						m_errorReporter.warning(
 							8787_error,
