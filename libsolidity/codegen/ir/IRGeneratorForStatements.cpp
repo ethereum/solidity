@@ -2138,7 +2138,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 {
 	setLocation(_inlineAsm);
-	if (!_inlineAsm.annotation().memorySafe)
+	if (*_inlineAsm.annotation().hasMemoryEffects && !_inlineAsm.annotation().markedMemorySafe)
 		m_context.setMemoryUnsafeInlineAssemblySeen();
 	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
 
