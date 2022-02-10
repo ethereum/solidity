@@ -4,10 +4,9 @@ Language Features:
 
 
 Compiler Features:
-
+* JSON-AST: Added selector field for errors and events.
 
 Bugfixes:
-
 
 
 ### 0.8.12 (2022-02-16)

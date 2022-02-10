@@ -32,6 +32,7 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -493,24 +494,36 @@ bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 bool ASTJsonConverter::visit(EventDefinition const& _node)
 {
 	m_inEvent = true;
-	setJsonNode(_node, "EventDefinition", {
+	std::vector<pair<string, Json::Value>> _attributes = {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
 		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("anonymous", _node.isAnonymous())
-	});
+	};
+	if (m_stackState >= CompilerStack::State::AnalysisPerformed)
+			_attributes.emplace_back(
+				make_pair(
+					"eventSelector",
+					toHex(u256(h256::Arith(util::keccak256(_node.functionType(true)->externalSignature()))))
+				));
+
+	setJsonNode(_node, "EventDefinition", std::move(_attributes));
 	return false;
 }
 
 bool ASTJsonConverter::visit(ErrorDefinition const& _node)
 {
-	setJsonNode(_node, "ErrorDefinition", {
+	std::vector<pair<string, Json::Value>> _attributes = {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
 		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("parameters", toJson(_node.parameterList()))
-	});
+	};
+	if (m_stackState >= CompilerStack::State::AnalysisPerformed)
+		_attributes.emplace_back(make_pair("errorSelector", _node.functionType(true)->externalIdentifierHex()));
+
+	setJsonNode(_node, "ErrorDefinition", std::move(_attributes));
 	return false;
 }
 

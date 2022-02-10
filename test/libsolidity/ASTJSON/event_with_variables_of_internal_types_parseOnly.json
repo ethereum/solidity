@@ -1,0 +1,78 @@
+{
+  "absolutePath": "a",
+  "id": 8,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 7,
+      "name": "C",
+      "nameLocation": "9:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "id": 6,
+          "name": "E",
+          "nameLocation": "23:1:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 5,
+            "nodeType": "ParameterList",
+            "parameters":
+            [
+              {
+                "constant": false,
+                "id": 4,
+                "indexed": false,
+                "mutability": "mutable",
+                "name": "",
+                "nameLocation": "-1:-1:-1",
+                "nodeType": "VariableDeclaration",
+                "src": "25:20:1",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {},
+                "typeName":
+                {
+                  "id": 3,
+                  "nodeType": "FunctionTypeName",
+                  "parameterTypes":
+                  {
+                    "id": 1,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "33:2:1"
+                  },
+                  "returnParameterTypes":
+                  {
+                    "id": 2,
+                    "nodeType": "ParameterList",
+                    "parameters": [],
+                    "src": "44:0:1"
+                  },
+                  "src": "25:20:1",
+                  "stateMutability": "nonpayable",
+                  "typeDescriptions": {},
+                  "visibility": "internal"
+                },
+                "visibility": "internal"
+              }
+            ],
+            "src": "24:21:1"
+          },
+          "src": "17:29:1"
+        }
+      ],
+      "src": "0:48:1",
+      "usedErrors": []
+    }
+  ],
+  "src": "0:49:1"
+}
