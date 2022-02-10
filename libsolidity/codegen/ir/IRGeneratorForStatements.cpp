@@ -997,16 +997,64 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		break;
 	case FunctionType::Kind::Internal:
 	{
-		FunctionDefinition const* functionDef = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
-
+		solAssert(functionType);
 		solAssert(!functionType->takesArbitraryParameters());
 
 		vector<string> args;
-		if (functionType->hasBoundFirstArgument())
-			args += IRVariable(_functionCall.expression()).part("self").stackSlots();
+		FunctionDefinition const* functionDef = nullptr;
 
-		for (size_t i = 0; i < arguments.size(); ++i)
-			args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
+		if (!_functionCall.isSuffixCall())
+		{
+			functionDef = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
+
+			if (functionType->hasBoundFirstArgument())
+				args += IRVariable(_functionCall.expression()).part("self").stackSlots();
+
+			for (size_t i = 0; i < arguments.size(); ++i)
+				args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
+		}
+		else
+		{
+			functionDef = dynamic_cast<FunctionDefinition const*>(&functionType->declaration());
+			solAssert(functionDef);
+			solAssert(!functionDef->virtualSemantics());
+			solAssert(!functionType->hasBoundFirstArgument());
+
+			solAssert(arguments.size() == 1);
+			solAssert(arguments[0]);
+			auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
+			Type const& literalType = *literal->annotation().type;
+			solAssert(literal);
+			solAssert(literal->annotation().type);
+
+			if (parameterTypes.size() == 2)
+			{
+				auto const* literalRationalType = dynamic_cast<RationalNumberType const*>(&literalType);
+				solAssert(literalRationalType);
+
+				auto&& [mantissa, exponent] = literalRationalType->fractionalDecomposition();
+				solAssert(mantissa && exponent);
+
+				IRVariable mantissaVar(m_context.newYulVariable(), *mantissa);
+				define(mantissaVar) << toCompactHexWithPrefix(mantissa->literalValue(literal)) << "\n";
+				args += convert(mantissaVar, *parameterTypes[0]).stackSlots();
+
+				IRVariable exponentVar(m_context.newYulVariable(), *exponent);
+				define(exponentVar) << toCompactHexWithPrefix(exponent->literalValue(literal)) << "\n";
+				args += convert(exponentVar, *parameterTypes[1]).stackSlots();
+			}
+			else
+			{
+				solAssert(parameterTypes.size() == 1);
+
+				IRVariable value(m_context.newYulVariable(), literalType);
+				if (literalType.category() != Type::Category::StringLiteral)
+					// NOTE: For string literals we do not need to define the variable. The variable
+					// value will be embedded inside the conversion function.
+					define(value) << toCompactHexWithPrefix(literalType.literalValue(literal)) << "\n";
+				args += convert(value, *parameterTypes[0]).stackSlots();
+			}
+		}
 
 		if (functionDef)
 		{
@@ -2500,10 +2548,14 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 		define(_literal) << toCompactHexWithPrefix(literalType.literalValue(&_literal)) << "\n";
 		break;
 	case Type::Category::StringLiteral:
-		break; // will be done during conversion
+		// A string literal cannot be simply assigned to a Yul variable so we don't create one here.
+		// Instead any expression that uses it has to generate custom conversion code that
+		// depends on where the string ultimately ends up (storage, memory, ABI encoded data, etc.).
+		break;
 	default:
 		solUnimplemented("Only integer, boolean and string literals implemented for now.");
 	}
+
 	return false;
 }
 

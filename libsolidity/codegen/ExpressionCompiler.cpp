@@ -697,11 +697,48 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Callee removes them and pushes return values
 
 			evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
-			for (unsigned i = 0; i < arguments.size(); ++i)
-				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
+
+			if (!_functionCall.isSuffixCall())
+			{
+				for (unsigned i = 0; i < arguments.size(); ++i)
+					acceptAndConvert(*arguments[i], *parameterTypes[i]);
+			}
+			else
+			{
+				solAssert(arguments.size() == 1);
+				solAssert(arguments[0]);
+				auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
+				Type const& literalType = *literal->annotation().type;
+				solAssert(literal);
+				solAssert(literal->annotation().type);
+
+				if (parameterTypes.size() == 1)
+				{
+					if (literalType.category() != Type::Category::StringLiteral)
+						// NOTE: For string literals we do not need to define the variable. The variable
+						// value will be embedded inside the conversion function.
+						m_context << literalType.literalValue(literal);
+					utils().convertType(literalType, *parameterTypes.at(0));
+				}
+				else
+				{
+					solAssert(parameterTypes.size() == 2);
+
+					auto const* rationalNumberType = dynamic_cast<RationalNumberType const*>(&literalType);
+					solAssert(rationalNumberType);
+
+					auto&& [mantissa, exponent] = rationalNumberType->fractionalDecomposition();
+					solAssert(mantissa && exponent);
+					m_context << mantissa->literalValue(nullptr);
+					utils().convertType(*mantissa, *parameterTypes.at(0));
+					m_context << exponent->literalValue(nullptr);
+					utils().convertType(*exponent, *parameterTypes.at(1));
+				}
+			}
+
 			_functionCall.expression().accept(*this);
 
-			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
+			unsigned parameterSize = CompilerUtils::sizeOnStack(parameterTypes);
 			if (function.hasBoundFirstArgument())
 			{
 				// stack: arg2, ..., argn, label, arg1
