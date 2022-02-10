@@ -1228,6 +1228,7 @@ public:
 		ArrayPush, ///< .push() to a dynamically sized array in storage
 		ArrayPop, ///< .pop() from a dynamically sized array in storage
 		BytesConcat, ///< .concat() on bytes (type type)
+		StringConcat, ///< .concat() on string (type type)
 		ObjectCreation, ///< array creation using new
 		Assert, ///< assert()
 		Require, ///< require()

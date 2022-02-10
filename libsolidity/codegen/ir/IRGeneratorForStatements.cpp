@@ -1389,6 +1389,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 		break;
 	}
+	case FunctionType::Kind::StringConcat:
 	case FunctionType::Kind::BytesConcat:
 	{
 		TypePointers argumentTypes;
@@ -1399,11 +1400,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			argumentVars += IRVariable(*argument).stackSlots();
 		}
 		define(IRVariable(_functionCall)) <<
-			m_utils.bytesConcatFunction(argumentTypes) <<
+			m_utils.bytesOrStringConcatFunction(argumentTypes, functionType->kind()) <<
 			"(" <<
 			joinHumanReadable(argumentVars) <<
 			")\n";
-
 		break;
 	}
 	case FunctionType::Kind::MetaType:
