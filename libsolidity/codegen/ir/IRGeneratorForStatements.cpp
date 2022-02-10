@@ -2437,19 +2437,60 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 bool IRGeneratorForStatements::visit(Literal const& _literal)
 {
 	setLocation(_literal);
-	Type const& literalType = type(_literal);
 
-	switch (literalType.category())
+	if (auto identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
 	{
-	case Type::Category::RationalNumber:
-	case Type::Category::Bool:
-	case Type::Category::Address:
-		define(_literal) << toCompactHexWithPrefix(literalType.literalValue(&_literal)) << "\n";
-		break;
-	case Type::Category::StringLiteral:
-		break; // will be done during conversion
-	default:
-		solUnimplemented("Only integer, boolean and string literals implemented for now.");
+		FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(
+			*(*identifierPath)->annotation().referencedDeclaration
+		);
+		FunctionType const& functionType = *function.functionType(true);
+
+		// TODO this is actually not always the right one.
+		auto type = TypeProvider::forLiteral(_literal);
+
+		vector<string> args;
+		if (dynamic_cast<RationalNumberType const*>(type) && dynamic_cast<RationalNumberType const*>(type)->isFractional())
+		{
+			auto&& [mantissa, exponent] = dynamic_cast<RationalNumberType const*>(type)->mantissaExponent();
+			IRVariable mantissaVar(m_context.newYulVariable(), *mantissa);
+			define(mantissaVar) << toCompactHexWithPrefix(mantissa->literalValue(&_literal)) << "\n";
+			args = convert(mantissaVar, *functionType.parameterTypes().at(0)).stackSlots();
+
+			IRVariable exponentVar(m_context.newYulVariable(), *exponent);
+			define(exponentVar) << toCompactHexWithPrefix(exponent->literalValue(&_literal)) << "\n";
+			args += convert(exponentVar, *functionType.parameterTypes().at(1)).stackSlots();
+		}
+		else
+		{
+			// TODO reuse the code below
+			if (type->category() != Type::Category::StringLiteral)
+			{
+				IRVariable value(m_context.newYulVariable(), *type);
+				define(value) << toCompactHexWithPrefix(type->literalValue(&_literal)) << "\n";
+				args = convert(value, *functionType.parameterTypes().at(0)).stackSlots();
+			}
+			// TODO what about string?
+		}
+		define(_literal) <<
+			m_context.enqueueFunctionForCodeGeneration(function) <<
+			"(" + joinHumanReadable(args) + ")\n";
+	}
+	else
+	{
+		Type const& literalType = type(_literal);
+
+		switch (literalType.category())
+		{
+		case Type::Category::RationalNumber:
+		case Type::Category::Bool:
+		case Type::Category::Address:
+			define(_literal) << toCompactHexWithPrefix(literalType.literalValue(&_literal)) << "\n";
+			break;
+		case Type::Category::StringLiteral:
+			break; // will be done during conversion
+		default:
+			solUnimplemented("Only integer, boolean and string literals implemented for now.");
+		}
 	}
 	return false;
 }

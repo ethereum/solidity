@@ -949,8 +949,10 @@ bool Literal::isHexNumber() const
 
 bool Literal::looksLikeAddress() const
 {
-	if (subDenomination() != SubDenomination::None)
-		return false;
+	// User suffixes are fine.
+	if (auto subDenomination = get_if<Literal::SubDenomination>(&suffix()))
+		if (*subDenomination != SubDenomination::None)
+			return false;
 
 	if (!isHexNumber())
 		return false;

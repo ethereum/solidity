@@ -3678,10 +3678,11 @@ void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 
 void TypeChecker::endVisit(Literal const& _literal)
 {
+	Type const* type = nullptr;
 	if (_literal.looksLikeAddress())
 	{
 		// Assign type here if it even looks like an address. This prevents double errors for invalid addresses
-		_literal.annotation().type = TypeProvider::address();
+		type = TypeProvider::address();
 
 		string msg;
 		if (_literal.valueWithoutUnderscores().length() != 42) // "0x" + 40 hex digits
@@ -3707,7 +3708,8 @@ void TypeChecker::endVisit(Literal const& _literal)
 			);
 	}
 
-	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
+	Literal::SubDenomination const* subDenomination = get_if<Literal::SubDenomination>(&_literal.suffix());
+	if (_literal.isHexNumber() && subDenomination && *subDenomination != Literal::SubDenomination::None)
 		m_errorReporter.fatalTypeError(
 			5145_error,
 			_literal.location(),
@@ -3715,20 +3717,83 @@ void TypeChecker::endVisit(Literal const& _literal)
 			"You can use an expression of the form \"0x1234 * 1 day\" instead."
 		);
 
-	if (_literal.subDenomination() == Literal::SubDenomination::Year)
+	if (subDenomination && *subDenomination == Literal::SubDenomination::Year)
 		m_errorReporter.typeError(
 			4820_error,
 			_literal.location(),
 			"Using \"years\" as a unit denomination is deprecated."
 		);
 
-	if (!_literal.annotation().type)
-		_literal.annotation().type = TypeProvider::forLiteral(_literal);
+	if (!type)
+		type = TypeProvider::forLiteral(_literal);
 
-	if (!_literal.annotation().type)
+	if (!type)
 		m_errorReporter.fatalTypeError(2826_error, _literal.location(), "Invalid literal value.");
 
-	_literal.annotation().isPure = true;
+	// TODO at this point 'type' needs to be stored for code generation.
+
+	bool isPure = true;
+	if (auto const* identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
+	{
+		Declaration const* declaration = (*identifierPath)->annotation().referencedDeclaration;
+		if (
+			!dynamic_cast<FunctionDefinition const*>(declaration) ||
+			!dynamic_cast<FunctionDefinition const*>(declaration)->isFree()
+		)
+			m_errorReporter.typeError(
+				4438_error,
+				_literal.location(),
+				"The literal suffix needs to be a pre-defined suffix or a file-level function."
+			);
+		else
+		{
+			FunctionType const& functionType = dynamic_cast<FunctionType const&>(*declaration->type());
+			if (
+				dynamic_cast<RationalNumberType const*>(type) &&
+				dynamic_cast<RationalNumberType const*>(type)->isFractional()
+			)
+			{
+				auto&& [mantissa, exponent] = dynamic_cast<RationalNumberType const*>(type)->mantissaExponent();
+				solAssert((mantissa && exponent) || (!mantissa && !exponent));
+				if (!mantissa)
+					m_errorReporter.typeError(
+						5503_error,
+						_literal.location(),
+						"This fractional number cannot be decomposed into a mantissa and decimal exponent "
+						"that fit the range of parameters of the suffix function."
+					);
+				else if (
+					functionType.parameterTypes().size() != 2 ||
+					!mantissa->isImplicitlyConvertibleTo(*functionType.parameterTypes().at(0)) ||
+					!exponent->isImplicitlyConvertibleTo(*functionType.parameterTypes().at(1))
+				)
+					m_errorReporter.typeError(
+						4778_error,
+						_literal.location(),
+						"TODO Fractional number, types to do match."
+					);
+			}
+			else
+				if (
+					functionType.parameterTypes().size() != 1 ||
+					!type->isImplicitlyConvertibleTo(*functionType.parameterTypes().front())
+				)
+					m_errorReporter.typeError(
+						8838_error,
+						_literal.location(),
+						"The type of the literal cannot be converted to the parameter of the suffix function."
+					);
+
+			isPure = functionType.isPure();
+			if (functionType.returnParameterTypes().size() == 1)
+				type = functionType.returnParameterTypes().front();
+			else
+				type = TypeProvider::tuple(functionType.returnParameterTypes());
+		}
+	}
+
+	_literal.annotation().isPure = isPure;
+	_literal.annotation().type = type;
 	_literal.annotation().isLValue = false;
 	_literal.annotation().isConstant = false;
 }

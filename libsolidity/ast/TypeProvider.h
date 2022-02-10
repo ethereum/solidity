@@ -167,6 +167,7 @@ public:
 
 	/// Auto-detect the proper type for a literal. @returns an empty pointer if the literal does
 	/// not fit any type.
+	/// Ignores user-defined suffixes.
 	static Type const* forLiteral(Literal const& _literal);
 	static RationalNumberType const* rationalNumber(Literal const& _literal);
 

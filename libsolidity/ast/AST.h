@@ -2332,6 +2332,8 @@ private:
 
 /**
  * A literal string or number. @see ExpressionCompiler::endVisit() is used to actually parse its value.
+ *
+ * It can have a suffix that can lead to a function call.
  */
 class Literal: public PrimaryExpression
 {
@@ -2349,14 +2351,15 @@ public:
 		Week = static_cast<int>(Token::SubWeek),
 		Year = static_cast<int>(Token::SubYear)
 	};
+	using Suffix = std::variant<SubDenomination, ASTPointer<IdentifierPath>>;
 	Literal(
 		int64_t _id,
 		SourceLocation const& _location,
 		Token _token,
 		ASTPointer<ASTString> _value,
-		SubDenomination _sub = SubDenomination::None
+		Suffix _suffix = SubDenomination::None
 	):
-		PrimaryExpression(_id, _location), m_token(_token), m_value(std::move(_value)), m_subDenomination(_sub) {}
+		PrimaryExpression(_id, _location), m_token(_token), m_value(std::move(_value)), m_suffix(std::move(_suffix)) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -2366,7 +2369,8 @@ public:
 
 	ASTString valueWithoutUnderscores() const;
 
-	SubDenomination subDenomination() const { return m_subDenomination; }
+	//SubDenomination subDenomination() const { return m_suffix; }
+	Suffix const& suffix() const { return m_suffix; }
 
 	/// @returns true if this is a number with a hex prefix.
 	bool isHexNumber() const;
@@ -2381,7 +2385,7 @@ public:
 private:
 	Token m_token;
 	ASTPointer<ASTString> m_value;
-	SubDenomination m_subDenomination;
+	Suffix m_suffix;
 };
 
 /// @}

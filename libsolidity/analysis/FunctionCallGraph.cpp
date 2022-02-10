@@ -141,6 +141,8 @@ bool FunctionCallGraphBuilder::visit(EmitStatement const& _emitStatement)
 	return true;
 }
 
+// TODO why don't we handle IdentifierPath here?
+
 bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 {
 	if (auto const* variable = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
@@ -226,6 +228,16 @@ bool FunctionCallGraphBuilder::visit(NewExpression const& _newExpression)
 {
 	if (ContractType const* contractType = dynamic_cast<ContractType const*>(_newExpression.typeName().annotation().type))
 		m_graph.bytecodeDependency.emplace(&contractType->contractDefinition(), &_newExpression);
+
+	return true;
+}
+
+bool FunctionCallGraphBuilder::visit(Literal const& _literal)
+{
+	if (auto const* identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
+		functionReferenced(
+			dynamic_cast<FunctionDefinition const&>(*(*identifierPath)->annotation().referencedDeclaration)
+		);
 
 	return true;
 }

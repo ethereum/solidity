@@ -1014,13 +1014,17 @@ void ElementaryTypeNameExpression::accept(ASTConstVisitor& _visitor) const
 
 void Literal::accept(ASTVisitor& _visitor)
 {
-	_visitor.visit(*this);
+	if (_visitor.visit(*this))
+		if (auto identifierPath = std::get_if<ASTPointer<IdentifierPath>>(&m_suffix))
+			(*identifierPath)->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 
 void Literal::accept(ASTConstVisitor& _visitor) const
 {
-	_visitor.visit(*this);
+	if (_visitor.visit(*this))
+		if (auto identifierPath = std::get_if<ASTPointer<IdentifierPath>>(&m_suffix))
+			(*identifierPath)->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 

@@ -962,17 +962,15 @@ bool ASTJsonExporter::visit(Literal const& _node)
 	Json::Value value{_node.value()};
 	if (!util::validateUTF8(_node.value()))
 		value = Json::nullValue;
-	Token subdenomination = Token(_node.subDenomination());
+	Json::Value subdenomination = Json::nullValue;
+//	if (auto subden = get_if<Literal::SubDenomination>(&_node.suffix()))
+//		subdenomination = Json::Value{TokenTraits::toString(*subden)};
+	// TODO suffix
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("kind", literalTokenKind(_node.token())),
 		make_pair("value", value),
 		make_pair("hexValue", util::toHex(util::asBytes(_node.value()))),
-		make_pair(
-			"subdenomination",
-			subdenomination == Token::Illegal ?
-			Json::nullValue :
-			Json::Value{TokenTraits::toString(subdenomination)}
-		)
+		make_pair("subdenomination", subdenomination)
 	};
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "Literal", std::move(attributes));

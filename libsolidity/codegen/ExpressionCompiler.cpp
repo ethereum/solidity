@@ -2270,19 +2270,62 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
-	Type const* type = _literal.annotation().type;
 
-	switch (type->category())
+	if (auto identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
 	{
-	case Type::Category::RationalNumber:
-	case Type::Category::Bool:
-	case Type::Category::Address:
-		m_context << type->literalValue(&_literal);
-		break;
-	case Type::Category::StringLiteral:
-		break; // will be done during conversion
-	default:
-		solUnimplemented("Only integer, boolean and string literals implemented for now.");
+		FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(
+			*(*identifierPath)->annotation().referencedDeclaration
+		);
+		FunctionType const& functionType = *function.functionType(true);
+
+		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+
+		// TODO this is actually not always the right one.
+		auto type = TypeProvider::forLiteral(_literal);
+
+		if (dynamic_cast<RationalNumberType const*>(type) && dynamic_cast<RationalNumberType const*>(type)->isFractional())
+		{
+			auto&& [mantissa, exponent] = dynamic_cast<RationalNumberType const*>(type)->mantissaExponent();
+			m_context << mantissa->literalValue(nullptr);
+			utils().convertType(*mantissa, *functionType.parameterTypes().at(0));
+			m_context << exponent->literalValue(nullptr);
+			utils().convertType(*exponent, *functionType.parameterTypes().at(1));
+		}
+		else
+		{
+			// TODO reuse the code below
+			if (type->category() != Type::Category::StringLiteral)
+				m_context << type->literalValue(&_literal);
+			utils().convertType(*type, *functionType.parameterTypes().at(0));
+		}
+		m_context << m_context.functionEntryLabel(function).pushTag();
+		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+		m_context << returnLabel;
+
+		// callee adds return parameters, but removes arguments and return label
+		m_context.adjustStackOffset(static_cast<int>(
+			CompilerUtils::sizeOnStack(functionType.returnParameterTypes()) -
+			CompilerUtils::sizeOnStack(functionType.parameterTypes()) -
+			1
+		));
+	}
+	else
+	{
+		Type const* type = _literal.annotation().type;
+
+
+		switch (type->category())
+		{
+		case Type::Category::RationalNumber:
+		case Type::Category::Bool:
+		case Type::Category::Address:
+			m_context << type->literalValue(&_literal);
+			break;
+		case Type::Category::StringLiteral:
+			break; // will be done during conversion
+		default:
+			solUnimplemented("Only integer, boolean and string literals implemented for now.");
+		}
 	}
 }
 
