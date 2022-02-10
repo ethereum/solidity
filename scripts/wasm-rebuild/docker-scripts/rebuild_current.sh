@@ -45,7 +45,7 @@ set +e
 if [ -e scripts/ci/build_emscripten.sh ]; then
   scripts/ci/build_emscripten.sh
 else
-  # The script used to be in scripts/ci/ in earlier versions.
+  # The script used to be in scripts/travis-emscripten/ in earlier versions.
   scripts/travis-emscripten/build_emscripten.sh
 fi
 
