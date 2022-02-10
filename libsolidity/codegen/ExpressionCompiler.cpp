@@ -697,11 +697,34 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Callee removes them and pushes return values
 
 			evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
-			for (unsigned i = 0; i < arguments.size(); ++i)
-				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
+
+			if (_functionCall.isSuffixCall() && parameterTypes.size() != 1)
+			{
+				solAssert(parameterTypes.size() == 2);
+				solAssert(arguments.size() == 1 && arguments[0]);
+				auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
+				solAssert(literal);
+				solAssert(literal->annotation().type);
+
+				auto const* rationalNumberType = dynamic_cast<RationalNumberType const*>(literal->annotation().type);
+				solAssert(rationalNumberType);
+
+				auto&& [mantissa, exponent] = rationalNumberType->fractionalDecomposition();
+				solAssert(mantissa && exponent);
+				m_context << mantissa->literalValue(nullptr);
+				utils().convertType(*mantissa, *parameterTypes.at(0));
+				m_context << exponent->literalValue(nullptr);
+				utils().convertType(*exponent, *parameterTypes.at(1));
+			}
+			else
+			{
+				for (unsigned i = 0; i < arguments.size(); ++i)
+					acceptAndConvert(*arguments[i], *parameterTypes[i]);
+			}
+
 			_functionCall.expression().accept(*this);
 
-			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
+			unsigned parameterSize = CompilerUtils::sizeOnStack(parameterTypes);
 			if (function.hasBoundFirstArgument())
 			{
 				// stack: arg2, ..., argn, label, arg1
