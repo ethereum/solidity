@@ -56,7 +56,8 @@ as individual values.
      of Solidity due to the fact that storage pointers can be passed to libraries. This means that
      any change to the rules outlined in this section is considered a breaking change
      of the language and due to its critical nature should be considered very carefully before
-     being executed.
+     being executed. In the event of such a breaking change, we would want to release a
+     compatibility mode in which the compiler would generate bytecode supporting the old layout.
 
 
 Mappings and Dynamic Arrays
