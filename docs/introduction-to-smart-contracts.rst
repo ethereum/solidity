@@ -222,7 +222,7 @@ than the maximum value of ``uint`` (``2**256 - 1``). This is also true for the s
 
 :ref:`Errors <errors>` allow you to provide more information to the caller about
 why a condition or operation failed. Errors are used together with the
-:ref:`revert statement <revert-statement>`. The revert statement unconditionally
+:ref:`revert statement <revert-statement>`. The ``revert`` statement unconditionally
 aborts and reverts all changes similar to the ``require`` function, but it also
 allows you to provide the name of an error and additional data which will be supplied to the caller
 (and eventually to the front-end application or block explorer) so that
