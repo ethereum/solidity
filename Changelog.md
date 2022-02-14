@@ -28,9 +28,14 @@ Bugfixes:
  * TypeChecker: Fix ICE when a constant variable declaration forward references a struct.
  * Yul EVM Code Transform: Improved stack shuffling in corner cases.
 
+
 Solc-Js:
  * The wrapper now requires at least nodejs v10.
  * The code has been ported to TypeScript.
+
+
+Build System:
+ * Emscripten builds store the embedded WebAssembly binary in LZ4 compressed format and transparently decompress on loading.
 
 
 ### 0.8.11 (2021-12-20)
