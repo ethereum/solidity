@@ -24,13 +24,16 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
+
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
 SELECTED_PRESETS="$3"
 
 function compile_fn { yarn compile; }
-function test_fn { yarn test; }
+# NOTE: `yarn test` runs `mocha` which seems to disable the gas reporter.
+function test_fn { npx --no hardhat --no-compile test; }
 
 function prb_math_test
 {
@@ -70,11 +73,13 @@ function prb_math_test
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     yarn install --no-lock-file
+    yarn add hardhat-gas-reporter
 
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
+        store_benchmark_report hardhat prb-math "$repo" "$preset"
     done
 }
 
