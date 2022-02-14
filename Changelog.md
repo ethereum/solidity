@@ -1,8 +1,8 @@
 ### 0.8.12 (unreleased)
 
 Language Features:
- * General: Support ``ContractName.functionName`` for ``abi.encodeCall``, in addition to external function pointers.
  * General: Add equality-comparison operators for external function types.
+ * General: Support ``ContractName.functionName`` for ``abi.encodeCall``, in addition to external function pointers.
 
 
 Compiler Features:
@@ -14,8 +14,8 @@ Compiler Features:
 
 Bugfixes:
  * Antlr Grammar: Allow builtin names in ``yulPath`` to support ``.address`` in function pointers.
- * Code Generator: Fix ICE when accessing the members of external functions occupying more than two stack slots.
- * Code Generator: Fix ICE when doing an explicit conversion from ``string calldata`` to ``bytes``.
+ * Code Generator: Fix internal error when accessing the members of external functions occupying more than two stack slots.
+ * Code Generator: Fix internal error when doing an explicit conversion from ``string calldata`` to ``bytes``.
  * Control Flow Graph: Perform proper virtual lookup for modifiers for uninitialized variable and unreachable code analysis.
  * General: ``string.concat`` now properly takes strings as arguments and returns ``string memory``. It was accidentally introduced as a copy of ``bytes.concat`` before.
  * Immutables: Fix wrong error when the constructor of a base contract uses ``return`` and the derived contract contains immutable variables.
@@ -24,8 +24,8 @@ Bugfixes:
  * IR Generator: Add missing cleanup for indexed event arguments of value type.
  * IR Generator: Fix internal error when copying reference types in calldata and storage to struct or array members in memory.
  * IR Generator: Fix IR syntax error when copying storage arrays of structs containing functions.
- * Natspec: Fix ICE when overriding a struct getter with a Natspec-documented return value and the name in the struct is different.
- * TypeChecker: Fix ICE when a constant variable declaration forward references a struct.
+ * Natspec: Fix internal error when overriding a struct getter with a Natspec-documented return value and the name in the struct is different.
+ * Type Checker: Fix internal error when a constant variable declaration forward references a struct.
  * Yul EVM Code Transform: Improved stack shuffling in corner cases.
 
 Solc-Js:
