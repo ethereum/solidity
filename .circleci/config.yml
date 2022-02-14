@@ -1098,6 +1098,7 @@ jobs:
     parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
+      SOLTEST_FLAGS: --no-smt
     <<: *steps_soltest
 
   t_ubu_ubsan_clang_cli:
