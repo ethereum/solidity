@@ -626,11 +626,24 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value con
 	astAssert(m_evmVersion == evmVersion, "Imported tree evm version differs from configured evm version!");
 
 	yul::Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(evmVersion.value());
+	ASTPointer<vector<ASTPointer<ASTString>>> flags;
+	if (_node.isMember("flags"))
+	{
+		flags = make_shared<vector<ASTPointer<ASTString>>>();
+		Json::Value const& flagsNode = _node["flags"];
+		astAssert(flagsNode.isArray(), "Assembly flags must be an array.");
+		for (Json::ArrayIndex i = 0; i < flagsNode.size(); ++i)
+		{
+			astAssert(flagsNode[i].isString(), "Assembly flag must be a string.");
+			flags->emplace_back(make_shared<ASTString>(flagsNode[i].asString()));
+		}
+	}
 	shared_ptr<yul::Block> operations = make_shared<yul::Block>(yul::AsmJsonImporter(m_sourceNames).createBlock(member(_node, "AST")));
 	return createASTNode<InlineAssembly>(
 		_node,
 		nullOrASTString(_node, "documentation"),
 		dialect,
+		move(flags),
 		operations
 	);
 }

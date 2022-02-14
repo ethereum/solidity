@@ -202,7 +202,17 @@ bool DocStringTagParser::visit(InlineAssembly const& _assembly)
 				if (valuesSeen.insert(value).second)
 				{
 					if (value == "memory-safe-assembly")
+					{
+						if (_assembly.annotation().markedMemorySafe)
+							m_errorReporter.warning(
+								8544_error,
+								_assembly.location(),
+								"Inline assembly marked as memory safe using both a NatSpec tag and an assembly flag. "
+								"If you are not concerned with backwards compatibility, only use the assembly flag, "
+								"otherwise only use the NatSpec tag."
+							);
 						_assembly.annotation().markedMemorySafe = true;
+					}
 					else
 						m_errorReporter.warning(
 							8787_error,
