@@ -24,7 +24,7 @@ actual release. They are not meant for production use.
 
 When deploying contracts, you should use the latest released version of Solidity. This
 is because breaking changes, as well as new features and bug fixes are introduced regularly.
-We currently use a 0.x version number [to indicate this fast pace of change](https://semver.org/#spec-item-4).
+We currently use a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
 
 Remix
 =====
