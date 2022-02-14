@@ -71,15 +71,23 @@ function setup_solc
     local binary_path="$3"
     local solcjs_branch="${4:-master}"
     local install_dir="${5:-solc/}"
+    local solcjs_dir="$6"
 
     [[ $binary_type == native || $binary_type == solcjs ]] || assertFail
+    [[ $binary_type == solcjs || $solcjs_dir == "" ]] || assertFail
 
     cd "$test_dir"
 
     if [[ $binary_type == solcjs ]]
     then
         printLog "Setting up solc-js..."
-        git clone --depth 1 -b "$solcjs_branch" https://github.com/ethereum/solc-js.git "$install_dir"
+        if [[ $solcjs_dir == "" ]]; then
+            printLog "Cloning branch ${solcjs_branch}..."
+            git clone --depth 1 -b "$solcjs_branch" https://github.com/ethereum/solc-js.git "$install_dir"
+        else
+            printLog "Using local solc-js from ${solcjs_dir}..."
+            cp -ra "$solcjs_dir" solc
+        fi
 
         pushd "$install_dir"
         npm install
@@ -321,20 +329,6 @@ function truffle_clean
 function hardhat_clean
 {
     rm -rf artifacts/ cache/
-}
-
-function run_test
-{
-    local compile_fn="$1"
-    local test_fn="$2"
-
-    replace_version_pragmas
-
-    printLog "Running compile function..."
-    time $compile_fn
-
-    printLog "Running test function..."
-    $test_fn
 }
 
 function settings_from_preset
