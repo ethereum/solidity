@@ -158,12 +158,7 @@ object "D_27" {
                 {
                     // f()
 
-                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
-                    abi_decode_tuple_(4, calldatasize())
-                    let ret_0 :=  fun_f_26()
-                    let memPos := allocate_unbounded()
-                    let memEnd := abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack(memPos , ret_0)
-                    return(memPos, sub(memEnd, memPos))
+                    external_fun_f_26()
                 }
 
                 default {}
@@ -235,6 +230,17 @@ object "D_27" {
 
                 mstore(add(headStart, 0), sub(tail, headStart))
                 tail := abi_encode_t_string_memory_ptr_to_t_string_memory_ptr_fromStack(value0,  tail)
+
+            }
+
+            function external_fun_f_26() {
+
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                abi_decode_tuple_(4, calldatasize())
+                let ret_0 :=  fun_f_26()
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack(memPos , ret_0)
+                return(memPos, sub(memEnd, memPos))
 
             }
 
@@ -484,7 +490,7 @@ object "D_27" {
                             revert(pos, returndatasize())
                         }
                         mstore(add(allocate_memory_array_string(), 32), "/*")
-                        let memPtr := allocate_memory_array_string_480()
+                        let memPtr := allocate_memory_array_string_546()
                         mstore(add(memPtr, 32), 0x2f2a2a204073726320303a39363a313635202022636f6e74726163742044207b)
                         mstore(add(memPtr, 64), shl(200, 0x2e2e2e22202a2f))
                         let memPos := mload(64)
@@ -525,7 +531,7 @@ object "D_27" {
                 memPtr := memPtr_1
                 mstore(memPtr_1, 2)
             }
-            function allocate_memory_array_string_480() -> memPtr
+            function allocate_memory_array_string_546() -> memPtr
             {
                 let memPtr_1 := mload(64)
                 let newFreePtr := add(memPtr_1, 96)
