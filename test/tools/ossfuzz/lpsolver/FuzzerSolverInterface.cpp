@@ -17,14 +17,21 @@
 
 #include <range/v3/view/enumerate.hpp>
 
+#include <set>
+
 using namespace solidity::test::fuzzer::lpsolver;
 using namespace solidity::util;
 using namespace std;
+using namespace z3;
 
 FuzzerSolverInterface::FuzzerSolverInterface(bool _supportModels):
-	m_solver(_supportModels)
+	m_lpSolver(_supportModels),
+	m_z3Solver(m_z3Ctx)
 {
-	m_solvingState.variableNames.emplace_back("");
+	m_lpSolvingState.variableNames.emplace_back("");
+	params z3Params(m_z3Ctx);
+	z3Params.set(":timeout", static_cast<unsigned>(10)); // in milliseconds
+	m_z3Solver.set(z3Params);
 }
 
 LinearExpression FuzzerSolverInterface::linearExpression(vector<int> _factors)
@@ -36,26 +43,75 @@ LinearExpression FuzzerSolverInterface::linearExpression(vector<int> _factors)
 	return lexp;
 }
 
-void FuzzerSolverInterface::addConstraint(pair<bool, vector<int>> _constraint)
+void FuzzerSolverInterface::addLPConstraint(pair<bool, vector<int>> _constraint)
 {
-	m_solvingState.constraints.push_back({linearExpression(move(_constraint.second)), _constraint.first});
+	m_lpSolvingState.constraints.push_back({linearExpression(move(_constraint.second)), _constraint.first});
 }
 
-void FuzzerSolverInterface::addConstraints(vector<pair<bool, vector<int>>> _constraints)
+void FuzzerSolverInterface::addZ3Constraint(pair<bool, vector<int>> _constraint)
+{
+	bool isEquality = _constraint.first;
+	expr reduce = m_z3Ctx.real_val(0);
+	for (auto&& [index, value]: _constraint.second | ranges::views::enumerate)
+	{
+		if (index != 0 && value != 0)
+		{
+			string varName = "x" + to_string(index - 1);
+			expr var = m_z3Ctx.real_const(varName.c_str());
+			expr factor = m_z3Ctx.int_val(value);
+			reduce = reduce + var * factor;
+			m_z3Solver.add(var >= 0);
+		}
+	}
+	if (isEquality)
+		m_z3Solver.add(reduce == _constraint.second[0]);
+	else
+		m_z3Solver.add(reduce <= _constraint.second[0]);
+}
+
+void FuzzerSolverInterface::addLPConstraints(vector<pair<bool, vector<int>>> _constraints)
 {
 	for (auto c: _constraints)
-		addConstraint(c);
+		addLPConstraint(c);
 }
 
-solution FuzzerSolverInterface::check()
+void FuzzerSolverInterface::addZ3Constraints(vector<pair<bool, vector<int>>> _constraints)
 {
-	return m_solver.check(m_solvingState);
+	for (auto c: _constraints)
+		addZ3Constraint(c);
 }
 
-string FuzzerSolverInterface::checkResult()
+solution FuzzerSolverInterface::checkLP()
 {
-	auto r = check();
-	return lpResult(r.first);
+	return m_lpSolver.check(m_lpSolvingState);
+}
+
+check_result FuzzerSolverInterface::checkZ3()
+{
+	return m_z3Solver.check();
+}
+
+string FuzzerSolverInterface::checkLPResult()
+{
+	m_lpResult = lpResult(checkLP().first);
+	return m_lpResult;
+}
+
+string FuzzerSolverInterface::checkZ3Result()
+{
+	m_z3Result = z3Result(checkZ3());
+	return m_z3Result;
+}
+
+bool FuzzerSolverInterface::differentialCheck(vector<pair<bool, vector<int>>> _constraints)
+{
+	addLPConstraints(_constraints);
+	addZ3Constraints(_constraints);
+	string z3Result = checkZ3Result();
+	string lpResult = checkLPResult();
+	bool checkFailed = ((z3Result == "infeasible") && (lpResult == "feasible")) ||
+		((z3Result == "feasible") && (lpResult == "infeasible"));
+	return !checkFailed;
 }
 
 string FuzzerSolverInterface::lpResult(LPResult _result)
@@ -70,5 +126,20 @@ string FuzzerSolverInterface::lpResult(LPResult _result)
 		return "feasible";
 	case LPResult::Infeasible:
 		return "infeasible";
+	}
+}
+
+string FuzzerSolverInterface::z3Result(check_result _result)
+{
+	switch (_result)
+	{
+	case check_result::unsat:
+		return "infeasible";
+	case check_result::sat:
+		return "feasible";
+	case check_result::unknown:
+		return "unknown";
+	default:
+		solAssert(false, "Invalid Z3 result");
 	}
 }

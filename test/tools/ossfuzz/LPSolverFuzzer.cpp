@@ -113,21 +113,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		auto constraints = parseConstraints(input);
 		if (constraints.has_value())
 		{
-			// TODO: Z3 on constraints provided by fuzzer interface and comparing its outcome
-			// with LP solver.
-			FuzzerSolverInterface solverWithoutModels(/*supportModels=*/false);
 			FuzzerSolverInterface solverWithModels(/*supportModels=*/true);
-
-			solverWithoutModels.addConstraints(constraints.value());
-			string resultWithoutModels = solverWithoutModels.checkResult();
-			solverWithModels.addConstraints(constraints.value());
-			string resultWithModels = solverWithModels.checkResult();
-
-			if (resultWithoutModels != resultWithModels)
+			if (!solverWithModels.differentialCheck(constraints.value()))
 			{
-				cout << resultWithoutModels << endl;
-				cout << resultWithModels << endl;
-				solAssert(false, "LP result without models did not match with result with models.");
+				cout << solverWithModels.m_lpResult << endl;
+				cout << solverWithModels.m_z3Result << endl;
+				solAssert(false, "LP result did not match with z3 result.");
 			}
 		}
 	}

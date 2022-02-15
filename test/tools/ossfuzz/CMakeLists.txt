@@ -28,7 +28,7 @@ if (OSSFUZZ)
         LPSolverFuzzer.cpp
         LPSolverCustomMutatorInterface.cpp
     )
-    target_link_libraries(lpsolver_ossfuzz PRIVATE solutil lpsolvergen)
+    target_link_libraries(lpsolver_ossfuzz PRIVATE solutil lpsolvergen z3)
     set_target_properties(lpsolver_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(solc_ossfuzz
