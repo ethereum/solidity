@@ -85,6 +85,10 @@ function elementfi_test
     sed -i 's|bytes32(uint256(pool))|bytes32(uint256(uint160(pool)))|g' vault/PoolRegistry.sol
     popd
 
+    # The test suite uses forked mainnet and an expiration period that's too short.
+    # TODO: Remove when https://github.com/element-fi/elf-contracts/issues/243 is fixed.
+    sed -i 's|^\s*require(_expiration - block\.timestamp < _unitSeconds);\s*$||g' contracts/ConvergentCurvePool.sol
+
     # Several tests fail unless we use the exact versions hard-coded in package-lock.json
     #neutralize_package_lock
 
