@@ -25,4 +25,13 @@ if [ ! -d "${OUTPUTDIR}" ]; then
 fi
 OUTPUTDIR=$(realpath "${OUTPUTDIR}")
 
-docker run --rm -v "${OUTPUTDIR}":/tmp/output -v "${SCRIPTDIR}":/tmp/scripts:ro -it trzeci/emscripten:sdk-tag-1.39.3-64bit /tmp/scripts/docker-scripts/rebuild_tags.sh "${TAGS}" /tmp/output "$@"
+# solbuildpackpusher/solidity-buildpack-deps:emscripten-9
+DOCKER_IMAGE="solbuildpackpusher/solidity-buildpack-deps@sha256:d51534dfdd05ece86f69ed7beafd68c15b88606da00a4b7fe2873ccfbd0dce24"
+docker run \
+    --rm \
+    --interactive \
+    --tty \
+    --volume "${OUTPUTDIR}":/tmp/output \
+    --volume "${SCRIPTDIR}":/tmp/scripts:ro \
+    "${DOCKER_IMAGE}" \
+    /tmp/scripts/docker-scripts/rebuild_tags.sh "${TAGS}" /tmp/output "$@"

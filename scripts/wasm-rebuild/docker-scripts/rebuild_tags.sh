@@ -207,10 +207,17 @@ else
 fi
 
 echo "Create symbolic links for backwards compatibility with older emscripten docker images."
-ln -sf /emsdk_portable/node/current/* /emsdk_portable/node/
-ln -sf /emsdk_portable/emscripten/sdk/ /emsdk_portable/
-ln -sf sdk /emsdk_portable/emscripten/bin
-ln -sf /emsdk_portable/emscripten/bin/* /usr/local/bin
+ln -s /emsdk/upstream/emscripten/ /emsdk_portable
+mkdir /emsdk_portable/node/
+ln -s /emsdk/node/* /emsdk_portable/node/current
+mkdir /emsdk_portable/emscripten/
+ln -s /emsdk/upstream/emscripten/ /emsdk_portable/emscripten/sdk
+ln -s /emsdk/upstream/bin/* /usr/local/bin/
+
+# This variable used to be defined when this script was running inside the trzeci/emscripten:sdk-tag-1.39.3-64bit
+# image but for some reason in solidity-buildpack-deps it no longer is.
+export EMSCRIPTEN=/emsdk/upstream/emscripten
+
 rm -rf /src
 ln -sf /root/project /src
 
