@@ -121,12 +121,7 @@ object \"D_16\" {
                 {
                     // f()
 
-                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
-                    abi_decode_tuple_(4, calldatasize())
-                    fun_f_15()
-                    let memPos := allocate_unbounded()
-                    let memEnd := abi_encode_tuple__to__fromStack(memPos  )
-                    return(memPos, sub(memEnd, memPos))
+                    external_fun_f_15()
                 }
 
                 default {}
@@ -160,6 +155,17 @@ object \"D_16\" {
 
             function abi_encode_tuple__to__fromStack(headStart ) -> tail {
                 tail := add(headStart, 0)
+
+            }
+
+            function external_fun_f_15() {
+
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                abi_decode_tuple_(4, calldatasize())
+                fun_f_15()
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                return(memPos, sub(memEnd, memPos))
 
             }
 

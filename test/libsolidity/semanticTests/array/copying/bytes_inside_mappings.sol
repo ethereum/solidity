@@ -7,11 +7,11 @@ contract c {
 // compileViaYul: also
 // ----
 // set(uint256): 1, 2 -> true
-// gas irOptimized: 110699
+// gas irOptimized: 110604
 // gas legacy: 111091
 // gas legacyOptimized: 110736
 // set(uint256): 2, 2, 3, 4, 5 -> true
-// gas irOptimized: 177659
+// gas irOptimized: 177564
 // gas legacy: 178021
 // gas legacyOptimized: 177666
 // storageEmpty -> 0

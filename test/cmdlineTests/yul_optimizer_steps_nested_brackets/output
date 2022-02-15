@@ -125,18 +125,7 @@ object "C_6" {
                 if iszero(lt(calldatasize(), 4))
                 {
                     let selector := shift_right_unsigned(calldataload(0))
-                    if eq(0x26121ff0, selector)
-                    {
-                        if callvalue()
-                        {
-                            revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
-                        }
-                        abi_decode(4, calldatasize())
-                        fun_f()
-                        let memPos := allocate_unbounded()
-                        let memEnd := abi_encode_tuple(memPos)
-                        return(memPos, sub(memEnd, memPos))
-                    }
+                    if eq(0x26121ff0, selector) { external_fun_f() }
                 }
                 revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
             }
@@ -420,6 +409,18 @@ object "C_6" {
                 let tail_85 := tail_1
                 let tail_86 := tail_1
                 tail := tail_1
+            }
+            function external_fun_f()
+            {
+                if callvalue()
+                {
+                    revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+                }
+                abi_decode(4, calldatasize())
+                fun_f()
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple(memPos)
+                return(memPos, sub(memEnd, memPos))
             }
             function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
             { revert(0, 0) }
