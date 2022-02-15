@@ -130,9 +130,12 @@ of votes.
 
             // Since `sender` is a reference, this
             // modifies `voters[msg.sender].voted`
+            Voter storage delegate_ = voters[to];
+
+            // Voters cannot delegate to wallets that cannot vote.
+            require(delegate_.weight >= 1);
             sender.voted = true;
             sender.delegate = to;
-            Voter storage delegate_ = voters[to];
             if (delegate_.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes
