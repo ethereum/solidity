@@ -204,7 +204,7 @@ Yes:
 
 .. code-block:: solidity
 
-    thisIsALongNestedMapping[being][set][to_some_value] = someFunction(
+    thisIsALongNestedMapping[being][set][toSomeValue] = someFunction(
         argument1,
         argument2,
         argument3,
@@ -215,7 +215,7 @@ No:
 
 .. code-block:: solidity
 
-    thisIsALongNestedMapping[being][set][to_some_value] = someFunction(argument1,
+    thisIsALongNestedMapping[being][set][toSomeValue] = someFunction(argument1,
                                                                        argument2,
                                                                        argument3,
                                                                        argument4);
@@ -439,15 +439,15 @@ Yes:
 
     x = 1;
     y = 2;
-    long_variable = 3;
+    longVariable = 3;
 
 No:
 
 .. code-block:: solidity
 
-    x             = 1;
-    y             = 2;
-    long_variable = 3;
+    x            = 1;
+    y            = 2;
+    longVariable = 3;
 
 Don't include a whitespace in the receive and fallback functions:
 
@@ -1092,12 +1092,10 @@ naming styles.
 * ``b`` (single lowercase letter)
 * ``B`` (single uppercase letter)
 * ``lowercase``
-* ``lower_case_with_underscores``
 * ``UPPERCASE``
 * ``UPPER_CASE_WITH_UNDERSCORES``
 * ``CapitalizedWords`` (or CapWords)
 * ``mixedCase`` (differs from CapitalizedWords by initial lowercase character!)
-* ``Capitalized_Words_With_Underscores``
 
 .. note:: When using initialisms in CapWords, capitalize all the letters of the initialisms. Thus HTTPServerError is better than HttpServerError. When using initialisms in mixedCase, capitalize all the letters of the initialisms, except keep the first one lower case if it is the beginning of the name. Thus xmlHTTPRequest is better than XMLHTTPRequest.
 
@@ -1256,7 +1254,7 @@ Enums, in the style of simple type declarations, should be named using the CapWo
 Avoiding Naming Collisions
 ==========================
 
-* ``single_trailing_underscore_``
+* ``singleTrailingUnderscore_``
 
 This convention is suggested when the desired name collides with that of a
 built-in or otherwise reserved name.
