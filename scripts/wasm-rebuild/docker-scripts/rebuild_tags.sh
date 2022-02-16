@@ -24,7 +24,9 @@ while (( "$#" )); do
   shift
 done
 
-SOLIDITY_REPO_URL="https://github.com/ethereum/solidity"
+# TMP:
+#SOLIDITY_REPO_URL="https://github.com/ethereum/solidity"
+SOLIDITY_REPO_URL="/tmp/solidity"
 SOLC_JS_REPO_URL="https://github.com/ethereum/solc-js"
 SOLC_JS_BRANCH=wasmRebuildTests
 RELEASE_URL="https://binaries.soliditylang.org/bin"
@@ -189,9 +191,9 @@ else
   git clone "${SOLIDITY_REPO_URL}" /root/project --quiet
 fi
 
-echo "Extract bytecode comparison scripts from v0.6.1..."
+echo "Extract bytecode comparison scripts from modernize-wasm-rebuild..."
 cd /root/project
-git checkout v0.6.1 --quiet
+git checkout modernize-wasm-rebuild --quiet
 cp -r scripts /tmp/solidity-scripts
 export SOLC_EMSCRIPTEN="On"
 

@@ -31,6 +31,7 @@ docker run \
     --rm \
     --interactive \
     --tty \
+    --volume /projects/solidity:/tmp/solidity:ro \
     --volume "${OUTPUTDIR}":/tmp/output \
     --volume "${SCRIPTDIR}":/tmp/scripts:ro \
     "${DOCKER_IMAGE}" \
