@@ -1,4 +1,4 @@
-### 0.8.12 (unreleased)
+### 0.8.12 (2022-02-16)
 
 Language Features:
  * General: Add equality-comparison operators for external function types.
