@@ -331,7 +331,7 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 
 /// Turns all bounds into constraints.
 /// @returns false if the bounds make the state infeasible.
-bool boundsToConstraints(SolvingState& _state)
+optional<ReasonSet> boundsToConstraints(SolvingState& _state)
 {
 	size_t columns = _state.variableNames.size();
 
@@ -341,14 +341,14 @@ bool boundsToConstraints(SolvingState& _state)
 		if (bounds.lower && bounds.upper)
 		{
 			if (*bounds.lower > *bounds.upper)
-				return false;
+				return bounds.lowerReasons + bounds.upperReasons;
 			if (*bounds.lower == *bounds.upper)
 			{
 				LinearExpression c;
 				c.resize(columns);
 				c[0] = *bounds.lower;
 				c[varIndex] = bigint(1);
-				_state.constraints.emplace_back(Constraint{move(c), true});
+				_state.constraints.emplace_back(Constraint{move(c), true, bounds.lowerReasons + bounds.upperReasons});
 				continue;
 			}
 		}
@@ -358,7 +358,7 @@ bool boundsToConstraints(SolvingState& _state)
 			c.resize(columns);
 			c[0] = -*bounds.lower;
 			c[varIndex] = bigint(-1);
-			_state.constraints.emplace_back(Constraint{move(c), false});
+			_state.constraints.emplace_back(Constraint{move(c), false, move(bounds.lowerReasons)});
 		}
 		if (bounds.upper)
 		{
@@ -366,11 +366,11 @@ bool boundsToConstraints(SolvingState& _state)
 			c.resize(columns);
 			c[0] = *bounds.upper;
 			c[varIndex] = bigint(1);
-			_state.constraints.emplace_back(Constraint{move(c), false});
+			_state.constraints.emplace_back(Constraint{move(c), false, move(bounds.upperReasons)});
 		}
 	}
 	_state.bounds.clear();
-	return true;
+	return nullopt;
 }
 
 /// Removes incides set to true from a vector-like data structure.
@@ -509,6 +509,7 @@ string SolvingState::toString() const
 {
 	string result;
 
+	// TODO print reasons
 	for (Constraint const& constraint: constraints)
 	{
 		vector<string> line;
@@ -544,27 +545,27 @@ string SolvingState::toString() const
 	return result;
 }
 
-pair<LPResult, std::map<string, rational>> SolvingStateSimplifier::simplify()
+pair<LPResult, variant<Model, ReasonSet>> SolvingStateSimplifier::simplify()
 {
 
 	do
 	{
 		m_changed = false;
-		if (
-			!removeFixedVariables() ||
-			!extractDirectConstraints() ||
-			// Used twice on purpose
-			!removeFixedVariables() ||
-			!removeEmptyColumns()
-		)
-			return {LPResult::Infeasible, {}};
+		if (auto conflict = removeFixedVariables())
+			return {LPResult::Infeasible, move(*conflict)};
+		if (auto conflict = extractDirectConstraints())
+			return {LPResult::Infeasible, move(*conflict)};
+		// Used twice on purpose
+		if (auto conflict = removeFixedVariables())
+			return {LPResult::Infeasible, move(*conflict)};
+		removeEmptyColumns();
 	}
 	while (m_changed);
 
 	return {LPResult::Unknown, move(m_model)};
 }
 
-bool SolvingStateSimplifier::removeFixedVariables()
+optional<ReasonSet> SolvingStateSimplifier::removeFixedVariables()
 {
 	for (auto const& [index, bounds]: m_state.bounds | ranges::views::enumerate)
 	{
@@ -574,26 +575,31 @@ bool SolvingStateSimplifier::removeFixedVariables()
 		rational lower = max(rational{}, bounds.lower ? *bounds.lower : rational{});
 		rational upper = *bounds.upper;
 		if (upper < lower)
-			return false; // Infeasible.
+			// Infeasible.
+			return bounds.lowerReasons + bounds.upperReasons;
 		if (upper != lower)
 			continue;
+		set<size_t> reasons = bounds.lowerReasons + bounds.upperReasons;
 		m_model[m_state.variableNames.at(index)] = lower;
 		m_state.bounds[index] = {};
 		m_changed = true;
 
 		// substitute variable
+		// -> add the bounds to the literals for the conflict
+		// (maybe only if one of these constraints is used)
 		for (Constraint& constraint: m_state.constraints)
 			if (constraint.data[index])
 			{
 				constraint.data[0] -= constraint.data[index] * lower;
 				constraint.data[index] = 0;
+				constraint.reasons += reasons;
 			}
 	}
 
-	return true;
+	return nullopt;
 }
 
-bool SolvingStateSimplifier::extractDirectConstraints()
+optional<ReasonSet> SolvingStateSimplifier::extractDirectConstraints()
 {
 	vector<bool> constraintsToRemove(m_state.constraints.size(), false);
 	bool needsRemoval = false;
@@ -616,7 +622,7 @@ bool SolvingStateSimplifier::extractDirectConstraints()
 				constraint.data.front().numerator() < 0 ||
 				(constraint.equality && constraint.data.front())
 			)
-				return false; // Infeasible.
+				return constraint.reasons;
 		}
 		else
 		{
@@ -627,13 +633,19 @@ bool SolvingStateSimplifier::extractDirectConstraints()
 				(factor >= 0 || constraint.equality) &&
 				(!m_state.bounds[varIndex].upper || bound < m_state.bounds[varIndex].upper)
 			)
+			{
 				m_state.bounds[varIndex].upper = bound;
+				m_state.bounds[varIndex].upperReasons = constraint.reasons;
+			}
 			if (
 				(factor <= 0 || constraint.equality) &&
+				bound >= 0 &&
 				(!m_state.bounds[varIndex].lower || bound > m_state.bounds[varIndex].lower)
 			)
-				// Lower bound must be at least zero.
-				m_state.bounds[varIndex].lower = max(rational{}, bound);
+			{
+				m_state.bounds[varIndex].lower = bound;
+				m_state.bounds[varIndex].lowerReasons = constraint.reasons;
+			}
 		}
 	}
 	if (needsRemoval)
@@ -641,10 +653,10 @@ bool SolvingStateSimplifier::extractDirectConstraints()
 		m_changed = true;
 		eraseIndices(m_state.constraints, constraintsToRemove);
 	}
-	return true;
+	return nullopt;
 }
 
-bool SolvingStateSimplifier::removeEmptyColumns()
+void SolvingStateSimplifier::removeEmptyColumns()
 {
 	vector<bool> variablesSeen(m_state.bounds.size(), false);
 	for (auto const& constraint: m_state.constraints)
@@ -679,7 +691,6 @@ bool SolvingStateSimplifier::removeEmptyColumns()
 		m_changed = true;
 		removeColumns(m_state, variablesToRemove);
 	}
-	return true;
 }
 
 SolvingState ProblemSplitter::next()
@@ -722,7 +733,7 @@ SolvingState ProblemSplitter::next()
 			// Use const& on purpose because moving from the state can lead
 			// to undefined behaviour for connectedComponent
 			Constraint const& constraint = m_state.constraints[i];
-			Constraint splitRow{{}, constraint.equality};
+			Constraint splitRow{{}, constraint.equality, constraint.reasons};
 			for (size_t j = 0; j < constraint.data.size(); j++)
 				if (j == 0 || includedColumns[j])
 					splitRow.data.push_back(constraint.data[j]);
@@ -738,21 +749,23 @@ LPSolver::LPSolver(bool _supportModels):
 {
 }
 
-pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
+pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(SolvingState _state)
 {
 	normalizeRowLengths(_state);
 
-	auto&& [simplificationResult, model] = SolvingStateSimplifier{_state}.simplify();
+	auto&& [simplificationResult, modelOrReasonSet] = SolvingStateSimplifier{_state}.simplify();
 	switch (simplificationResult)
 	{
 	case LPResult::Infeasible:
-		return {LPResult::Infeasible, {}};
+		return {LPResult::Infeasible, modelOrReasonSet};
 	case LPResult::Feasible:
 	case LPResult::Unbounded:
 		solAssert(false);
 	case LPResult::Unknown:
 		break;
 	}
+
+	Model model = get<Model>(modelOrReasonSet);
 
 	bool canOnlyBeUnknown = false;
 	ProblemSplitter splitter(move(_state));
@@ -765,25 +778,23 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 		LPResult lpResult;
 		vector<rational> solution;
 
+		if (auto conflict = boundsToConstraints(split))
+			return {LPResult::Infeasible, move(*conflict)};
+
 		auto it = m_cache.find(split);
 		if (it != m_cache.end())
 			tie(lpResult, solution) = it->second;
 		else
 		{
-			SolvingState orig = split;
-			if (!boundsToConstraints(split))
-				lpResult = LPResult::Infeasible;
-			else
-			{
-				LinearExpression objectives;
-				objectives.resize(1);
-				objectives.resize(split.constraints.front().data.size(), rational(bigint(1)));
-				tie(lpResult, solution) = simplex(split.constraints, move(objectives));
-			}
+			LinearExpression objectives;
+			objectives.resize(1);
+			objectives.resize(split.constraints.front().data.size(), rational(bigint(1)));
+			tie(lpResult, solution) = simplex(split.constraints, move(objectives));
+
 			// If we do not support models, do not store it in the cache because
 			// the variable associations will be wrong.
 			// Otherwise, it is fine to use the model.
-			m_cache.emplace(move(orig), make_pair(lpResult, m_supportModels ? solution : vector<rational>{}));
+			m_cache.emplace(split, make_pair(lpResult, m_supportModels ? solution : vector<rational>{}));
 		}
 
 		switch (lpResult)
@@ -792,7 +803,13 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 		case LPResult::Unbounded:
 			break;
 		case LPResult::Infeasible:
-			return {LPResult::Infeasible, {}};
+		{
+			solAssert(split.bounds.empty());
+			set<size_t> reasons;
+			for (auto const& constraint: split.constraints)
+				reasons += constraint.reasons;
+			return {LPResult::Infeasible, move(reasons)};
+		}
 		case LPResult::Unknown:
 			// We do not stop here, because another independent query can still be infeasible.
 			canOnlyBeUnknown = true;
@@ -804,7 +821,7 @@ pair<LPResult, map<string, rational>> LPSolver::check(SolvingState _state)
 	}
 
 	if (canOnlyBeUnknown)
-		return {LPResult::Unknown, {}};
+		return {LPResult::Unknown, Model{}};
 
 	return {LPResult::Feasible, move(model)};
 }

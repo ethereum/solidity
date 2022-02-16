@@ -52,11 +52,11 @@ public:
 	}
 
 	/// Adds the constraint "_lhs <= _rhs".
-	void addLEConstraint(LinearExpression _lhs, LinearExpression _rhs)
+	void addLEConstraint(LinearExpression _lhs, LinearExpression _rhs, set<size_t> _reason = {})
 	{
 		_lhs -= _rhs;
 		_lhs[0] = -_lhs[0];
-		m_solvingState.constraints.push_back({move(_lhs), false});
+		m_solvingState.constraints.push_back({move(_lhs), false, move(_reason)});
 	}
 
 	void addLEConstraint(LinearExpression _lhs, rational _rhs)
@@ -65,33 +65,36 @@ public:
 	}
 
 	/// Adds the constraint "_lhs = _rhs".
-	void addEQConstraint(LinearExpression _lhs, LinearExpression _rhs)
+	void addEQConstraint(LinearExpression _lhs, LinearExpression _rhs, set<size_t> _reason = {})
 	{
 		_lhs -= _rhs;
 		_lhs[0] = -_lhs[0];
-		m_solvingState.constraints.push_back({move(_lhs), true});
+		m_solvingState.constraints.push_back({move(_lhs), true, move(_reason)});
 	}
 
-	void addLowerBound(string _variable, rational _value)
+	void addLowerBound(string _variable, rational _value, set<size_t> _reason = {})
 	{
 		size_t index = variableIndex(_variable);
 		if (index >= m_solvingState.bounds.size())
 			m_solvingState.bounds.resize(index + 1);
 		m_solvingState.bounds.at(index).lower = _value;
+		m_solvingState.bounds.at(index).lowerReasons = move(_reason);
 	}
 
-	void addUpperBound(string _variable, rational _value)
+	void addUpperBound(string _variable, rational _value, set<size_t> _reason = {})
 	{
 		size_t index = variableIndex(_variable);
 		if (index >= m_solvingState.bounds.size())
 			m_solvingState.bounds.resize(index + 1);
 		m_solvingState.bounds.at(index).upper = _value;
+		m_solvingState.bounds.at(index).upperReasons = move(_reason);
 	}
 
 	void feasible(vector<pair<string, rational>> const& _solution)
 	{
-		auto [result, model] = m_solver.check(m_solvingState);
+		auto [result, modelOrReasonSet] = m_solver.check(m_solvingState);
 		BOOST_REQUIRE(result == LPResult::Feasible);
+		Model model = get<Model>(modelOrReasonSet);
 		for (auto const& [var, value]: _solution)
 			BOOST_CHECK_MESSAGE(
 				value == model.at(var),
@@ -102,6 +105,7 @@ public:
 	void infeasible()
 	{
 		auto [result, model] = m_solver.check(m_solvingState);
+		// TODO check reason set
 		BOOST_CHECK(result == LPResult::Infeasible);
 	}
 
@@ -283,7 +287,7 @@ BOOST_AUTO_TEST_CASE(equal_constant)
 	feasible({{"x", 5}, {"y", 5}});
 }
 
-BOOST_AUTO_TEST_CASE(equal_constant)
+BOOST_AUTO_TEST_CASE(all_equality)
 {
 	auto x = variable("x");
 	auto y = variable("y");
