@@ -67,6 +67,7 @@ function yield_liquidator_test
     npm install
 
     replace_version_pragmas
+    neutralize_packaged_contracts
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
