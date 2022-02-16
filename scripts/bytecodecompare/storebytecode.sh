@@ -55,6 +55,7 @@ TMPDIR=$(mktemp -d -t storebytecode_XXXXXX)
         popd
 
         cp "${SCRIPT_DIR}/prepare_report.js" .
+        npm init --yes
         npm install ./solc-js/dist
 
         echo "Running the compiler..."
