@@ -168,8 +168,8 @@ following:
 
 .. code-block:: solidity
 
-    function balances(address _account) external view returns (uint) {
-        return balances[_account];
+    function balances(address account) external view returns (uint) {
+        return balances[account];
     }
 
 You can use this function to query the balance of a single account.

@@ -146,16 +146,16 @@ custom types without the overhead of external function calls:
             r.limbs[0] = x;
         }
 
-        function add(bigint memory _a, bigint memory _b) internal pure returns (bigint memory r) {
-            r.limbs = new uint[](max(_a.limbs.length, _b.limbs.length));
+        function add(bigint memory a, bigint memory b) internal pure returns (bigint memory r) {
+            r.limbs = new uint[](max(a.limbs.length, b.limbs.length));
             uint carry = 0;
             for (uint i = 0; i < r.limbs.length; ++i) {
-                uint a = limb(_a, i);
-                uint b = limb(_b, i);
+                uint limbA = limb(a, i);
+                uint limbB = limb(b, i);
                 unchecked {
-                    r.limbs[i] = a + b + carry;
+                    r.limbs[i] = limbA + limbB + carry;
 
-                    if (a + b < a || (a + b == type(uint).max && carry > 0))
+                    if (limbA + limbB < limbA || (limbA + limbB == type(uint).max && carry > 0))
                         carry = 1;
                     else
                         carry = 0;
@@ -172,8 +172,8 @@ custom types without the overhead of external function calls:
             }
         }
 
-        function limb(bigint memory _a, uint _limb) internal pure returns (uint) {
-            return _limb < _a.limbs.length ? _a.limbs[_limb] : 0;
+        function limb(bigint memory a, uint index) internal pure returns (uint) {
+            return index < a.limbs.length ? a.limbs[index] : 0;
         }
 
         function max(uint a, uint b) private pure returns (uint) {

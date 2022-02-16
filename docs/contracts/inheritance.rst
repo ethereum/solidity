@@ -421,8 +421,8 @@ equivalent to ``constructor() {}``. For example:
     abstract contract A {
         uint public a;
 
-        constructor(uint _a) {
-            a = _a;
+        constructor(uint a_) {
+            a = a_;
         }
     }
 
@@ -459,7 +459,7 @@ derived contracts need to specify all of them. This can be done in two ways:
 
     contract Base {
         uint x;
-        constructor(uint _x) { x = _x; }
+        constructor(uint x_) { x = x_; }
     }
 
     // Either directly specify in the inheritance list...
@@ -469,12 +469,12 @@ derived contracts need to specify all of them. This can be done in two ways:
 
     // or through a "modifier" of the derived constructor.
     contract Derived2 is Base {
-        constructor(uint _y) Base(_y * _y) {}
+        constructor(uint y) Base(y * y) {}
     }
 
 One way is directly in the inheritance list (``is Base(7)``).  The other is in
 the way a modifier is invoked as part of
-the derived constructor (``Base(_y * _y)``). The first way to
+the derived constructor (``Base(y * y)``). The first way to
 do it is more convenient if the constructor argument is a
 constant and defines the behaviour of the contract or
 describes it. The second way has to be used if the

@@ -128,13 +128,13 @@ In this example, we will use a library.
             data.push(value);
         }
 
-        function replace(uint _old, uint _new) public {
+        function replace(uint from, uint to) public {
             // This performs the library function call
-            uint index = data.indexOf(_old);
+            uint index = data.indexOf(from);
             if (index == type(uint).max)
-                data.push(_new);
+                data.push(to);
             else
-                data[index] = _new;
+                data[index] = to;
         }
     }
 
