@@ -28,6 +28,9 @@
 namespace solidity::util
 {
 
+using Model = std::map<std::string, rational>;
+using ReasonSet = std::set<size_t>;
+
 /**
  * Constraint of the form
  *  - data[1] * x_1 + data[2] * x_2 + ... <= data[0]  (equality == false)
@@ -38,6 +41,8 @@ struct Constraint
 {
 	LinearExpression data;
 	bool equality = false;
+	/// Set of literals the conjunction of which implies this constraint.
+	std::set<size_t> reasons;
 
 	bool operator<(Constraint const& _other) const;
 	bool operator==(Constraint const& _other) const;
@@ -57,10 +62,17 @@ struct SolvingState
 		std::optional<rational> upper;
 		bool operator<(Bounds const& _other) const { return make_pair(lower, upper) < make_pair(_other.lower, _other.upper); }
 		bool operator==(Bounds const& _other) const { return make_pair(lower, upper) == make_pair(_other.lower, _other.upper); }
+
+		/// Set of literals the conjunction of which implies the lower bonud.
+		std::set<size_t> lowerReasons;
+		/// Set of literals the conjunction of which implies the upper bonud.
+		std::set<size_t> upperReasons;
 	};
 	/// Lower and upper bounds for variables (in the sense of >= / <=).
 	std::vector<Bounds> bounds;
 	std::vector<Constraint> constraints;
+	// For each bound and constraint, store an index of the literal
+	// that implies it.
 
 	struct Compare
 	{
@@ -103,25 +115,26 @@ public:
 	SolvingStateSimplifier(SolvingState& _state):
 		m_state(_state) {}
 
-	std::pair<LPResult, std::map<std::string, rational>> simplify();
+	std::pair<LPResult, std::variant<Model, ReasonSet>> simplify();
 
 private:
 	/// Remove variables that have equal lower and upper bound.
-	/// @returns false if the system is infeasible.
-	bool removeFixedVariables();
+	/// @returns reason / set of conflicting clauses if infeasible.
+	std::optional<ReasonSet> removeFixedVariables();
 
 	/// Removes constraints of the form 0 <= b or 0 == b (no variables) and
 	/// turns constraints of the form a * x <= b (one variable) into bounds.
-	bool extractDirectConstraints();
+	/// @returns reason / set of conflicting clauses if infeasible.
+	std::optional<ReasonSet> extractDirectConstraints();
 
 	/// Removes all-zeros columns.
-	bool removeEmptyColumns();
+	void removeEmptyColumns();
 
 	/// Set to true by the strategies if they performed some changes.
 	bool m_changed = false;
 
 	SolvingState& m_state;
-	std::map<std::string, rational> m_model;
+	Model m_model;
 };
 
 /**
@@ -167,7 +180,7 @@ class LPSolver
 public:
 	explicit LPSolver(bool _supportModels = true);
 
-	std::pair<LPResult, std::map<std::string, boost::rational<bigint>>> check(SolvingState _state);
+	std::pair<LPResult, std::variant<Model, ReasonSet>> check(SolvingState _state);
 
 private:
 	using CacheValue = std::pair<LPResult, std::vector<boost::rational<bigint>>>;
