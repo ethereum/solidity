@@ -283,6 +283,14 @@ BOOST_AUTO_TEST_CASE(equal_constant)
 	feasible({{"x", 5}, {"y", 5}});
 }
 
+BOOST_AUTO_TEST_CASE(equal_constant)
+{
+	auto x = variable("x");
+	auto y = variable("y");
+	addEQConstraint(-6 * x - 6 * y, constant(8));
+	infeasible();
+}
+
 BOOST_AUTO_TEST_CASE(linear_dependent)
 {
 	auto x = variable("x");
