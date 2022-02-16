@@ -48,7 +48,7 @@ function generate_bytecode_report
 
   if semver -r "<0.4.12" "$3" > /dev/null; then
     set +e
-    "${SCRIPTDIR}/genbytecode.sh" "$1" >/dev/null 2>&1
+    "${SCRIPTDIR}/genbytecode.sh" "$1" >/dev/null
     EXIT_STATUS=$?
     set -e
   else
@@ -65,7 +65,7 @@ function generate_bytecode_report
         ln -sf "$1" $dir/soljson.js
       done
 
-      REPO_ROOT=/src /tmp/solidity-scripts/bytecodecompare/storebytecode.sh >/dev/null 2>&1
+      REPO_ROOT=/src /tmp/solidity-scripts/bytecodecompare/storebytecode.sh >/dev/null
     )
     EXIT_STATUS=$?
   fi
@@ -156,7 +156,7 @@ function process_tag
     if [ -f "${OUTPUTDIR}/log/reports/report-${TAG}.txt" ] && [ -f "${OUTPUTDIR}/log/reports/report-historic-${TAG}.txt" ]; then
       rm -rf "${OUTPUTDIR}/log/success/bytecode-${TAG}.txt"
       rm -rf "${OUTPUTDIR}/log/fail/bytecode-${TAG}.txt"
-      if diff -q "${OUTPUTDIR}/log/reports/report-${TAG}.txt" "${OUTPUTDIR}/log/reports/report-historic-${TAG}.txt" >/dev/null 2>&1; then
+      if diff -q "${OUTPUTDIR}/log/reports/report-${TAG}.txt" "${OUTPUTDIR}/log/reports/report-historic-${TAG}.txt" >/dev/null; then
         echo -e "${GREEN}BYTECODE MATCHES FOR ${CYAN}${TAG}${RESET}"
         grep -v -c -e "ERROR" -e "NO BYTECODE" "${OUTPUTDIR}/log/reports/report-${TAG}.txt" >"${OUTPUTDIR}/log/success/bytecode-${TAG}.txt"
       else
@@ -220,9 +220,9 @@ rm -rf /src
 ln -sf /root/project /src
 
 echo "Install dependencies and upgrade system packages."
-apt-get -qq update >/dev/null 2>&1
-apt-get -qq upgrade >/dev/null 2>&1
-apt-get -qq install cmake >/dev/null 2>&1
+apt-get -qq update >/dev/null
+apt-get -qq upgrade >/dev/null
+apt-get -qq install cmake >/dev/null
 
 echo "Create output directories."
 mkdir -p "${OUTPUTDIR}"
@@ -235,10 +235,10 @@ mkdir -p "${OUTPUTDIR}"/bin
 
 echo "Prepare solc-js."
 cd /root/solc-js
-npm install >/dev/null 2>&1
+npm install >/dev/null
 
 echo "Install semver helper."
-npm install -g semver >/dev/null 2>&1
+npm install -g semver >/dev/null
 
 echo "Fetching release commit list."
 wget -q "${RELEASE_COMMIT_LIST_URL}" -O /tmp/release_commit_list.txt
