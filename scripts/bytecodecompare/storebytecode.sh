@@ -29,7 +29,8 @@
 
 set -e
 
-REPO_ROOT="$(dirname "$0")"/../..
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT="${REPO_ROOT:-${SCRIPT_DIR}/../..}"
 cd "$REPO_ROOT"
 REPO_ROOT=$(pwd) # make it absolute
 
