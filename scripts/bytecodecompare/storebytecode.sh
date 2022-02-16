@@ -37,7 +37,7 @@ REPO_ROOT=$(pwd) # make it absolute
 BUILD_DIR="${1:-${REPO_ROOT}/build}"
 
 echo "Compiling all test contracts into bytecode..."
-TMPDIR=$(mktemp -d)
+TMPDIR=$(mktemp -d -t storebytecode_XXXXXX)
 (
     cd "$TMPDIR"
 
