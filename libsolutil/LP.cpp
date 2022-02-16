@@ -74,8 +74,7 @@ struct Tableau
 
 /// Adds slack variables to remove non-equality costraints from a set of constraints
 /// and returns the data part of the tableau / constraints.
-/// The second return variable is true if a non-equality constraint was
-/// found and thus new variables have been added.
+/// The second return variable is true if a the original input had any equality constraints.
 pair<vector<LinearExpression>, bool> toEquationalForm(vector<Constraint> _constraints)
 {
 	size_t varsNeeded = static_cast<size_t>(ranges::count_if(_constraints, [](Constraint const& _c) { return !_c.equality; }));
@@ -101,7 +100,7 @@ pair<vector<LinearExpression>, bool> toEquationalForm(vector<Constraint> _constr
 	for (Constraint& c: _constraints)
 		data.emplace_back(move(c.data));
 
-	return make_pair(move(data), varsNeeded > 0);
+	return make_pair(move(data), varsNeeded < _constraints.size());
 }
 
 /// Finds the simplex pivot column: The column with the largest positive objective factor.
