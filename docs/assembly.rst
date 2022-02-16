@@ -139,7 +139,7 @@ the variable will not point beyond ``calldatasize()`` is performed.
 For external function pointers the address and the function selector can be
 accessed using ``x.address`` and ``x.selector``.
 The selector consists of four right-aligned bytes.
-Both values are can be assigned to. For example:
+Both values can be assigned to. For example:
 
 .. code-block:: solidity
     :force:
