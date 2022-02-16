@@ -1258,7 +1258,8 @@ Avoiding Naming Collisions
 
 * ``single_trailing_underscore_``
 
-This convention is suggested when the desired name collides with that of an existing state variable, function, built-in or otherwise reserved name.
+This convention is suggested when the desired name collides with that of
+an existing state variable, function, built-in or otherwise reserved name.
 
 .. _style_guide_natspec:
 
