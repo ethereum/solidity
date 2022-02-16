@@ -2505,6 +2505,8 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 			appendCode() << "mstore(add(" << m_utils.allocateUnboundedFunction() << "() , " << to_string(returnInfo.estimatedReturnSize) << "), 0)\n";
 	}
 
+	// NOTE: When the expected size of returndata is static, we pass that in to the call opcode and it gets copied automatically.
+    // When it's dynamic, we get zero from estimatedReturnSize() instead and then we need an explicit returndatacopy().
 	Whiskers templ(R"(
 		<?checkExtcodesize>
 			if iszero(extcodesize(<address>)) { <revertNoCode>() }
@@ -2514,22 +2516,29 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		mstore(<pos>, <shl28>(<funSel>))
 		let <end> := <encodeArgs>(add(<pos>, 4) <argumentString>)
 
-		let <success> := <call>(<gas>, <address>, <?hasValue> <value>, </hasValue> <pos>, sub(<end>, <pos>), <pos>, <reservedReturnSize>)
+		let <success> := <call>(<gas>, <address>, <?hasValue> <value>, </hasValue> <pos>, sub(<end>, <pos>), <pos>, <staticReturndataSize>)
 		<?noTryCall>
 			if iszero(<success>) { <forwardingRevert>() }
 		</noTryCall>
 		<?+retVars> let <retVars> </+retVars>
 		if <success> {
-			<?dynamicReturnSize>
-				// copy dynamic return data out
-				returndatacopy(<pos>, 0, returndatasize())
-			</dynamicReturnSize>
+			<?isReturndataSizeDynamic>
+				let <returnDataSizeVar> := returndatasize()
+				returndatacopy(<pos>, 0, <returnDataSizeVar>)
+			<!isReturndataSizeDynamic>
+				let <returnDataSizeVar> := <staticReturndataSize>
+				<?supportsReturnData>
+					if gt(<returnDataSizeVar>, returndatasize()) {
+						<returnDataSizeVar> := returndatasize()
+					}
+				</supportsReturnData>
+			</isReturndataSizeDynamic>
 
 			// update freeMemoryPointer according to dynamic return size
-			<finalizeAllocation>(<pos>, <returnSize>)
+			<finalizeAllocation>(<pos>, <returnDataSizeVar>)
 
 			// decode return parameters from external try-call into retVars
-			<?+retVars> <retVars> := </+retVars> <abiDecode>(<pos>, add(<pos>, <returnSize>))
+			<?+retVars> <retVars> := </+retVars> <abiDecode>(<pos>, add(<pos>, <returnDataSizeVar>))
 		}
 	)");
 	templ("revertNoCode", m_utils.revertReasonIfDebugFunction("Target contract does not contain code"));
@@ -2558,21 +2567,18 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("funSel", IRVariable(_functionCall.expression()).part("functionSelector").name());
 	templ("address", IRVariable(_functionCall.expression()).part("address").name());
 
-	// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
-	// This ensures it can catch badly formatted input from external calls.
-	if (m_context.evmVersion().supportsReturndata())
-		templ("returnSize", "returndatasize()");
-	else
-		templ("returnSize", to_string(returnInfo.estimatedReturnSize));
-
-	templ("reservedReturnSize", returnInfo.dynamicReturnSize ? "0" : to_string(returnInfo.estimatedReturnSize));
+	if (returnInfo.dynamicReturnSize)
+		solAssert(m_context.evmVersion().supportsReturndata());
+	templ("returnDataSizeVar", m_context.newYulVariable());
+	templ("staticReturndataSize", to_string(returnInfo.estimatedReturnSize));
+	templ("supportsReturnData", m_context.evmVersion().supportsReturndata());
 
 	string const retVars = IRVariable(_functionCall).commaSeparatedList();
 	templ("retVars", retVars);
 	solAssert(retVars.empty() == returnInfo.returnTypes.empty());
 
 	templ("abiDecode", m_context.abiFunctions().tupleDecoder(returnInfo.returnTypes, true));
-	templ("dynamicReturnSize", returnInfo.dynamicReturnSize);
+	templ("isReturndataSizeDynamic", returnInfo.dynamicReturnSize);
 
 	templ("noTryCall", !_functionCall.annotation().tryCall);
 
