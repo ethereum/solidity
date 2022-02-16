@@ -146,8 +146,7 @@ No:
 Maximum Line Length
 ===================
 
-Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ to a maximum of 79 (or 99)
-characters helps readers easily parse the code.
+Maximum suggested line length is 120 characters.
 
 Wrapped lines should conform to the following guidelines.
 
