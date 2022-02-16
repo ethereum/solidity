@@ -51,6 +51,11 @@ public:
 		return LinearExpression::factorForVariable(variableIndex(_name), 1);
 	}
 
+	LinearExpression variable(string const& _name, rational _value)
+	{
+		return LinearExpression::factorForVariable(variableIndex(_name), _value);
+	}
+
 	/// Adds the constraint "_lhs <= _rhs".
 	void addLEConstraint(LinearExpression _lhs, LinearExpression _rhs, set<size_t> _reason = {})
 	{
@@ -110,6 +115,14 @@ public:
 		BOOST_CHECK_MESSAGE(suppliedReason == _reason, "Reasons are different");
 	}
 
+	void sat()
+	{
+		auto [result, model] = m_solver.check(m_solvingState);
+		for (auto const& [var, value]: model)
+			cout << var << " = " << value << endl;
+		BOOST_REQUIRE(result == LPResult::Feasible);
+	}
+
 protected:
 	size_t variableIndex(string const& _name)
 	{
@@ -130,6 +143,15 @@ protected:
 
 
 BOOST_FIXTURE_TEST_SUITE(LP, LPTestFramework, *boost::unit_test::label("nooptions"))
+
+BOOST_AUTO_TEST_CASE(fuzzer)
+{
+	auto x = variable("x", -6);
+	auto y = variable("y", -6);
+	// expected result: -6x -6y = 8 is unsat since x >= 0 and y >= 0 are implied
+	addEQConstraint(x + y, constant(8));
+	sat();
+}
 
 BOOST_AUTO_TEST_CASE(basic)
 {
