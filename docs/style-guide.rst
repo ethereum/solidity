@@ -8,7 +8,7 @@ Style Guide
 Introduction
 ************
 
-This guide is intended to provide coding conventions for writing solidity code.
+This guide is intended to provide coding conventions for writing Solidity code.
 This guide should be thought of as an evolving document that will change over
 time as useful conventions are found and old conventions are rendered obsolete.
 
@@ -20,7 +20,7 @@ taken from python's
 `pep8 style guide <https://www.python.org/dev/peps/pep-0008/>`_.
 
 The goal of this guide is *not* to be the right way or the best way to write
-solidity code.  The goal of this guide is *consistency*.  A quote from python's
+Solidity code.  The goal of this guide is *consistency*.  A quote from python's
 `pep8 <https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_
 captures this concept well.
 
@@ -28,7 +28,7 @@ captures this concept well.
 
     A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
 
-    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgement. Look at other examples and decide what looks best. And don't hesitate to ask!
+    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
 
 
 ***********
@@ -51,7 +51,7 @@ Mixing tabs and spaces should be avoided.
 Blank Lines
 ===========
 
-Surround top level declarations in solidity source with two blank lines.
+Surround top level declarations in Solidity source with two blank lines.
 
 Yes:
 
@@ -680,7 +680,7 @@ No:
     }
 
 For long function declarations, it is recommended to drop each argument onto
-it's own line at the same indentation level as the function body.  The closing
+its own line at the same indentation level as the function body.  The closing
 parenthesis and opening bracket should be placed on their own line as well at
 the same indentation level as the function declaration.
 
@@ -933,7 +933,7 @@ Permissible:
     function shortFunction() public { doSomething(); }
 
 These guidelines for function declarations are intended to improve readability.
-Authors should use their best judgement as this guide does not try to cover all
+Authors should use their best judgment as this guide does not try to cover all
 possible permutations for function declarations.
 
 Mappings
@@ -1023,7 +1023,7 @@ No:
 
 * Operators with a higher priority than others can exclude surrounding
   whitespace in order to denote precedence.  This is meant to allow for
-  improved readability for complex statement. You should always use the same
+  improved readability for complex statements. You should always use the same
   amount of whitespace on either side of an operator:
 
 Yes:
