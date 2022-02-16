@@ -166,22 +166,22 @@ the ``sum`` function iterates over to sum all the values.
             return self.data[key].keyIndex > 0;
         }
 
-        function iterate_start(itmap storage self) internal view returns (uint keyIndex) {
-            return iterate_next(self, type(uint).max);
+        function iterateStart(itmap storage self) internal view returns (uint keyIndex) {
+            return iterateNext(self, type(uint).max);
         }
 
-        function iterate_valid(itmap storage self, uint keyIndex) internal view returns (bool) {
+        function iterateValid(itmap storage self, uint keyIndex) internal view returns (bool) {
             return keyIndex < self.keys.length;
         }
 
-        function iterate_next(itmap storage self, uint keyIndex) internal view returns (uint r_keyIndex) {
+        function iterateNext(itmap storage self, uint keyIndex) internal view returns (uint r_keyIndex) {
             keyIndex++;
             while (keyIndex < self.keys.length && self.keys[keyIndex].deleted)
                 keyIndex++;
             return keyIndex;
         }
 
-        function iterate_get(itmap storage self, uint keyIndex) internal view returns (uint key, uint value) {
+        function iterateGet(itmap storage self, uint keyIndex) internal view returns (uint key, uint value) {
             key = self.keys[keyIndex].key;
             value = self.data[key].value;
         }
@@ -206,11 +206,11 @@ the ``sum`` function iterates over to sum all the values.
         // Computes the sum of all stored data.
         function sum() public view returns (uint s) {
             for (
-                uint i = data.iterate_start();
-                data.iterate_valid(i);
-                i = data.iterate_next(i)
+                uint i = data.iterateStart();
+                data.iterateValid(i);
+                i = data.iterateNext(i)
             ) {
-                (, uint value) = data.iterate_get(i);
+                (, uint value) = data.iterateGet(i);
                 s += value;
             }
         }
