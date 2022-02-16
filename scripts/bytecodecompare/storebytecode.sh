@@ -41,7 +41,7 @@ TMPDIR=$(mktemp -d)
 (
     cd "$TMPDIR"
 
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
+    "${SCRIPT_DIR}/../isolate_tests.py" "${REPO_ROOT}/test/"
 
     if [[ "$SOLC_EMSCRIPTEN" = "On" ]]
     then
@@ -54,7 +54,7 @@ TMPDIR=$(mktemp -d)
         npm run build
         popd
 
-        cp "$REPO_ROOT/scripts/bytecodecompare/prepare_report.js" .
+        cp "${SCRIPT_DIR}/prepare_report.js" .
         npm install ./solc-js/dist
 
         echo "Running the compiler..."
@@ -62,7 +62,7 @@ TMPDIR=$(mktemp -d)
         ./prepare_report.js *.sol > report.txt
         echo "Finished running the compiler."
     else
-        "$REPO_ROOT/scripts/bytecodecompare/prepare_report.py" "$BUILD_DIR/solc/solc"
+        "${SCRIPT_DIR}/prepare_report.py" "$BUILD_DIR/solc/solc"
     fi
 
     cp report.txt "$REPO_ROOT"
