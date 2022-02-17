@@ -277,7 +277,7 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 
 	LPResult result;
 	tie(result, _tableau) = simplexEq(move(_tableau));
-	solAssert(result == LPResult::Feasible || result == LPResult::Unbounded, "");
+	solAssert(result != LPResult::Infeasible, "");
 
 	vector<rational> optimum = solutionVector(_tableau);
 
@@ -325,7 +325,7 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 	// but it might not be optimal.
 	LPResult result;
 	tie(result, tableau) = simplexEq(move(tableau));
-	solAssert(result == LPResult::Feasible || result == LPResult::Unbounded, "");
+	solAssert(result != LPResult::Infeasible, "");
 	return make_pair(result, solutionVector(tableau));
 }
 
