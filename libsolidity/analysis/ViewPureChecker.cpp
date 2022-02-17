@@ -256,10 +256,9 @@ void ViewPureChecker::reportMutability(
 		m_errorReporter.typeError(
 			8961_error,
 			_location,
-			"Function declared as " +
+			"Function cannot be declared as " +
 			stateMutabilityToString(m_currentFunction->stateMutability()) +
-			", but this expression (potentially) modifies the state and thus "
-			"requires non-payable (the default) or payable."
+			" because this expression (potentially) modifies the state."
 		);
 		m_errors = true;
 	}

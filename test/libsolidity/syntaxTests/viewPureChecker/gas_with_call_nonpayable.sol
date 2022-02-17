@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// TypeError 8961: (90-109): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError 8961: (180-197): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (90-109): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (180-197): Function cannot be declared as view because this expression (potentially) modifies the state.

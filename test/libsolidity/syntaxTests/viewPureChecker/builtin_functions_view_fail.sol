@@ -20,8 +20,8 @@ contract C {
     }
 }
 // ----
-// TypeError 8961: (52-77): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError 8961: (132-153): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError 8961: (201-228): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError 8961: (293-323): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError 8961: (414-436): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (52-77): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (132-153): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (201-228): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (293-323): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (414-436): Function cannot be declared as view because this expression (potentially) modifies the state.
