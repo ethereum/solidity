@@ -153,6 +153,39 @@ BOOST_AUTO_TEST_CASE(fuzzer)
 	sat();
 }
 
+BOOST_AUTO_TEST_CASE(fuzzer2)
+{
+	/*
+		1,-1,0,0,0,0,90,9
+		0,0,0,0,-76,0,0,74,
+		0,0,0,0,0,31,0,0,0,0,-71
+		0,0,5,0,-85,60
+		1,0,0,-9,0,0,63,-31,-2,0,-78,
+		0,0,50,-70,2,-76,94
+		1,1,0,-3,51,
+		1,0,0,-33,0,0,0,60
+	*/
+	// x0...x8
+	auto x0 = variable("x0");
+	auto x1 = variable("x1");
+	auto x2 = variable("x2");
+	auto x3 = variable("x3");
+	auto x4 = variable("x4");
+	auto x5 = variable("x5");
+	auto x6 = variable("x6");
+	auto x7 = variable("x7");
+	auto x8 = variable("x8");
+	addEQConstraint(90 * x4 + 9 * x5, constant(-1));
+	addLEConstraint(-76 * x2 + 74 * x5, constant(0));
+	addLEConstraint(31 * x3 - 71 * x8, constant(0));
+	addLEConstraint(5 * x0 - 85 * x2 + 60 * x3, constant(0));
+	addEQConstraint(-9 * x1 + 63 * x4 - 31 * x5 - 2 * x6 - 78 *x8, constant(0));
+	addLEConstraint(50 * x0 - 70 * x1 + 2 * x2 - 76 * x3 + 94 * x4, constant(0));
+	addEQConstraint(-3 * x1 + 51 * x2, constant(1));
+	addEQConstraint(-33 * x1 + 60 * x5, constant(0));
+	infeasible();
+}
+
 BOOST_AUTO_TEST_CASE(basic)
 {
 	auto x = variable("x");
