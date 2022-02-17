@@ -487,13 +487,6 @@ bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState cons
 		return _a.variableNames < _b.variableNames;
 }
 
-{
-	return
-		variableNames == _other.variableNames &&
-		bounds == _other.bounds &&
-		constraints == _other.constraints;
-}
-
 namespace
 {
 string toString(rational const& _x)
