@@ -3,8 +3,8 @@ contract C {
     assembly {
       function f1() {
         function f2() { }
-        x := 2
       }
+      x := 2
     }
   }
 }
