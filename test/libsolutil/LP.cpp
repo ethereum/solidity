@@ -102,11 +102,12 @@ public:
 			);
 	}
 
-	void infeasible()
+	void infeasible(set<size_t> _reason = {})
 	{
-		auto [result, model] = m_solver.check(m_solvingState);
-		// TODO check reason set
-		BOOST_CHECK(result == LPResult::Infeasible);
+		auto [result, modelOrReason] = m_solver.check(m_solvingState);
+		BOOST_REQUIRE(result == LPResult::Infeasible);
+		ReasonSet suppliedReason = get<ReasonSet>(modelOrReason);
+		BOOST_CHECK_MESSAGE(suppliedReason == _reason, "Reasons are different");
 	}
 
 protected:
@@ -318,6 +319,62 @@ BOOST_AUTO_TEST_CASE(linear_dependent)
 	addEQConstraint(constant(2), (x + y) + z);
 	feasible({{"x", 2}, {"y", 0}, {"z", 0}});
 }
+
+BOOST_AUTO_TEST_CASE(reasons_simple)
+{
+	auto x = variable("x");
+	addLEConstraint(2 * x, constant(20), {0});
+	addLowerBound("x", 12, {1});
+	infeasible({0, 1});
+}
+
+BOOST_AUTO_TEST_CASE(reasons_bounds)
+{
+	auto x = variable("x");
+	addLowerBound("x", 12, {0});
+	addUpperBound("x", 11, {1});
+	addLEConstraint(x, constant(200), {2}); // unrelated
+	infeasible({0, 1});
+}
+
+BOOST_AUTO_TEST_CASE(reasons_forwarded)
+{
+	auto x = variable("x");
+	auto y = variable("y");
+	addEQConstraint(x, constant(2), {0});
+	addEQConstraint(x, y, {1});
+	feasible({});
+	addLEConstraint(x, constant(200), {5}); // unrelated
+	addLEConstraint(y, constant(1), {2});
+	infeasible({0, 1, 2});
+}
+
+BOOST_AUTO_TEST_CASE(reasons_forwarded2)
+{
+	auto x = variable("x");
+	auto y = variable("y");
+	addEQConstraint(x, constant(2), {0});
+	addEQConstraint(x, y, {1});
+	feasible({});
+	addEQConstraint(y, constant(3), {2});
+	addLEConstraint(x, constant(200), {6}); // unrelated
+	addLEConstraint(y, constant(202), {6}); // unrelated
+	infeasible({0, 1, 2});
+}
+
+BOOST_AUTO_TEST_CASE(reasons_split)
+{
+	auto x = variable("x");
+	auto y = variable("y");
+	auto a = variable("a");
+	auto b = variable("b");
+	addLEConstraint(x + y, constant(2), {0});
+	addEQConstraint(a + b, constant(20), {1});
+	feasible({});
+	addLEConstraint(constant(20), x + y, {2});
+	infeasible({0, 2});
+}
+
 
 
 
