@@ -2475,18 +2475,26 @@ string YulUtilFunctions::copyArrayFromStorageToMemoryFunction(ArrayType const& _
 	});
 }
 
-string YulUtilFunctions::bytesConcatFunction(vector<Type const*> const& _argumentTypes)
+string YulUtilFunctions::bytesOrStringConcatFunction(
+	vector<Type const*> const& _argumentTypes,
+	FunctionType::Kind _functionTypeKind
+)
 {
-	string functionName = "bytes_concat";
+	solAssert(_functionTypeKind == FunctionType::Kind::BytesConcat || _functionTypeKind == FunctionType::Kind::StringConcat);
+	std::string functionName = (_functionTypeKind == FunctionType::Kind::StringConcat) ? "string_concat" : "bytes_concat";
 	size_t totalParams = 0;
 	vector<Type const*> targetTypes;
+
 	for (Type const* argumentType: _argumentTypes)
 	{
-		solAssert(
-			argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()) ||
-			argumentType->isImplicitlyConvertibleTo(*TypeProvider::fixedBytes(32)),
-			""
-		);
+		if (_functionTypeKind == FunctionType::Kind::StringConcat)
+			solAssert(argumentType->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()));
+		else if (_functionTypeKind == FunctionType::Kind::BytesConcat)
+			solAssert(
+				argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()) ||
+				argumentType->isImplicitlyConvertibleTo(*TypeProvider::fixedBytes(32))
+			);
+
 		if (argumentType->category() == Type::Category::FixedBytes)
 			targetTypes.emplace_back(argumentType);
 		else if (
@@ -2496,15 +2504,16 @@ string YulUtilFunctions::bytesConcatFunction(vector<Type const*> const& _argumen
 			targetTypes.emplace_back(TypeProvider::fixedBytes(static_cast<unsigned>(literalType->value().size())));
 		else
 		{
-			solAssert(!dynamic_cast<RationalNumberType const*>(argumentType), "");
-			solAssert(argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()), "");
-			targetTypes.emplace_back(TypeProvider::bytesMemory());
+			solAssert(!dynamic_cast<RationalNumberType const*>(argumentType));
+			targetTypes.emplace_back(
+				_functionTypeKind == FunctionType::Kind::StringConcat ?
+				TypeProvider::stringMemory() :
+				TypeProvider::bytesMemory()
+			);
 		}
-
 		totalParams += argumentType->sizeOnStack();
 		functionName += "_" + argumentType->identifier();
 	}
-
 	return m_functionCollector.createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(<parameters>) -> outPtr {

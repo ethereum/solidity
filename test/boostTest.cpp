@@ -57,7 +57,7 @@ void removeTestSuite(std::string const& _name)
 {
 	master_test_suite_t& master = framework::master_test_suite();
 	auto id = master.get(_name);
-	assert(id != INV_TEST_UNIT_ID);
+	soltestAssert(id != INV_TEST_UNIT_ID, "Removing non-existent test suite!");
 	master.remove(id);
 }
 
@@ -279,7 +279,6 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			"ABIDecoderTest",
 			"ABIEncoderTest",
 			"SolidityAuctionRegistrar",
-			"SolidityFixedFeeRegistrar",
 			"SolidityWallet",
 			"GasMeterTests",
 			"GasCostTests",

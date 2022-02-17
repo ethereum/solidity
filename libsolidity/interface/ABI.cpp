@@ -101,7 +101,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 			method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 			abi.emplace(std::move(method));
 		}
-	for (auto const& it: _contractDef.interfaceEvents())
+	for (auto const& it: _contractDef.definedInterfaceEvents())
 	{
 		Json::Value event{Json::objectValue};
 		event["type"] = "event";

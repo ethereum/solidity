@@ -24,6 +24,8 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
+
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
@@ -40,12 +42,12 @@ function gnosis_safe_test
     local config_file="truffle-config.js"
 
     local compile_only_presets=(
-        legacy-no-optimize        # "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
+        legacy-no-optimize        # Compiles but migrations run out of gas: "Error: while migrating GnosisSafe: Returned error: base fee exceeds gas limit"
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-no-optimize           # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -65,12 +67,14 @@ function gnosis_safe_test
     neutralize_package_json_hooks
     force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$(first_word "$SELECTED_PRESETS")"
     npm install --package-lock
+    npm install eth-gas-reporter
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
 
     for preset in $SELECTED_PRESETS; do
         truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        store_benchmark_report truffle gnosis2 "$repo" "$preset"
     done
 }
 

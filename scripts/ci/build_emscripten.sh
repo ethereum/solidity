@@ -40,6 +40,8 @@ else
 	BUILD_DIR="$1"
 fi
 
+apt-get update && apt-get install lz4
+
 WORKSPACE=/root/project
 
 cd $WORKSPACE
@@ -71,8 +73,8 @@ make soljson
 
 cd ..
 mkdir -p upload
-cp "$BUILD_DIR/libsolc/soljson.js" upload/
-cp "$BUILD_DIR/libsolc/soljson.js" ./
+scripts/ci/pack_soljson.sh "$BUILD_DIR/libsolc/soljson.js" "$BUILD_DIR/libsolc/soljson.wasm" upload/soljson.js
+cp upload/soljson.js ./
 
 OUTPUT_SIZE=$(ls -la soljson.js)
 

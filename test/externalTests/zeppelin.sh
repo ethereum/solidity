@@ -24,6 +24,8 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
+
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
@@ -44,8 +46,8 @@ function zeppelin_test
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
+        #ir-no-optimize           # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -66,6 +68,7 @@ function zeppelin_test
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        store_benchmark_report hardhat zeppelin "$repo" "$preset"
     done
 }
 

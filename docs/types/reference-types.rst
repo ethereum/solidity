@@ -150,7 +150,7 @@ length or index access.
 Solidity does not have string manipulation functions, but there are
 third-party string libraries. You can also compare two strings by their keccak256-hash using
 ``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and
-concatenate two strings using ``bytes.concat(bytes(s1), bytes(s2))``.
+concatenate two strings using ``string.concat(s1, s2)``.
 
 You should use ``bytes`` over ``bytes1[]`` because it is cheaper,
 since using ``bytes1[]`` in ``memory`` adds 31 padding bytes between the elements. Note that in ``storage``, the
@@ -165,31 +165,40 @@ always use one of the value types ``bytes1`` to ``bytes32`` because they are muc
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters.
 
-.. index:: ! bytes-concat
+.. index:: ! bytes-concat, ! string-concat
 
 .. _bytes-concat:
+.. _string-concat:
 
-``bytes.concat`` function
-^^^^^^^^^^^^^^^^^^^^^^^^^
+The functions ``bytes.concat`` and ``string.concat``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can concatenate a variable number of ``bytes`` or ``bytes1 ... bytes32`` using ``bytes.concat``.
+You can concatenate an arbitrary number of ``string`` values using ``string.concat``.
+The function returns a single ``string memory`` array that contains the contents of the arguments without padding.
+If you want to use parameters of other types that are not implicitly convertible to ``string``, you need to convert them to ``string`` first.
+
+Analogously, the ``bytes.concat`` function can concatenate an arbitrary number of ``bytes`` or ``bytes1 ... bytes32`` values.
 The function returns a single ``bytes memory`` array that contains the contents of the arguments without padding.
-If you want to use string parameters or other types, you need to convert them to ``bytes`` or ``bytes1``/.../``bytes32`` first.
+If you want to use string parameters or other types that are not implicitly convertible to ``bytes``, you need to convert them to ``bytes`` or ``bytes1``/.../``bytes32`` first.
+
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity ^0.8.12;
 
     contract C {
-        bytes s = "Storage";
-        function f(bytes calldata c, string memory m, bytes16 b) public view {
-            bytes memory a = bytes.concat(s, c, c[:2], "Literal", bytes(m), b);
-            assert((s.length + c.length + 2 + 7 + bytes(m).length + 16) == a.length);
+        string s = "Storage";
+        function f(bytes calldata bc, string memory sm, bytes16 b) public view {
+            string memory concat_string = string.concat(s, string(bc), "Literal", sm);
+            assert((bytes(s).length + bc.length + 7 + bytes(sm).length) == bytes(concat_string).length);
+
+            bytes memory concat_bytes = bytes.concat(bytes(s), bc, bc[:2], "Literal", bytes(sm), b);
+            assert((bytes(s).length + bc.length + 2 + 7 + bytes(sm).length + b.length) == concat_bytes.length);
         }
     }
 
-If you call ``bytes.concat`` without arguments it will return an empty ``bytes`` array.
+If you call ``string.concat`` or ``bytes.concat`` without arguments they return an empty array.
 
 .. index:: ! array;allocating, new
 

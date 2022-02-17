@@ -2207,14 +2207,42 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 	}
 }
 
+
+void TypeChecker::typeCheckStringConcatFunction(
+	FunctionCall const& _functionCall,
+	FunctionType const* _functionType
+)
+{
+	solAssert(_functionType);
+	solAssert(_functionType->kind() == FunctionType::Kind::StringConcat);
+	solAssert(_functionCall.names().empty());
+
+	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+
+	for (shared_ptr<Expression const> const& argument: _functionCall.arguments())
+	{
+		Type const* argumentType = type(*argument);
+		bool notConvertibleToString = !argumentType->isImplicitlyConvertibleTo(*TypeProvider::stringMemory());
+
+		if (notConvertibleToString)
+			m_errorReporter.typeError(
+				9977_error,
+				argument->location(),
+				"Invalid type for argument in the string.concat function call. "
+				"string type is required, but " +
+				argumentType->identifier() + " provided."
+			);
+	}
+}
+
 void TypeChecker::typeCheckBytesConcatFunction(
 	FunctionCall const& _functionCall,
 	FunctionType const* _functionType
 )
 {
-	solAssert(_functionType, "");
-	solAssert(_functionType->kind() == FunctionType::Kind::BytesConcat, "");
-	solAssert(_functionCall.names().empty(), "");
+	solAssert(_functionType);
+	solAssert(_functionType->kind() == FunctionType::Kind::BytesConcat);
+	solAssert(_functionCall.names().empty());
 
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
 
@@ -2648,6 +2676,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::BytesConcat:
 		{
 			typeCheckBytesConcatFunction(_functionCall, functionType);
+			returnTypes = functionType->returnParameterTypes();
+			break;
+		}
+		case FunctionType::Kind::StringConcat:
+		{
+			typeCheckStringConcatFunction(_functionCall, functionType);
 			returnTypes = functionType->returnParameterTypes();
 			break;
 		}

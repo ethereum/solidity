@@ -519,7 +519,8 @@ public:
 		return ranges::subrange<decltype(b)>(b, e) | ranges::views::values;
 	}
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
-	std::vector<EventDefinition const*> const& interfaceEvents() const;
+	std::vector<EventDefinition const*> const& definedInterfaceEvents() const;
+	std::vector<EventDefinition const*> const usedInterfaceEvents() const;
 	/// @returns all errors defined in this contract or any base contract
 	/// and all errors referenced during execution.
 	/// @param _requireCallGraph if false, do not fail if the call graph has not been computed yet.

@@ -24,6 +24,8 @@ set -e
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
+
 verify_input "$@"
 BINARY_TYPE="$1"
 BINARY_PATH="$2"
@@ -84,6 +86,10 @@ function elementfi_test
     sed -i 's|delete _twoTokenPoolTokens\[poolId\];|delete _twoTokenPoolTokens[poolId].tokenA;delete _twoTokenPoolTokens[poolId].tokenB;|g' vault/balances/TwoTokenPoolsBalance.sol
     popd
 
+    # The test suite uses forked mainnet and an expiration period that's too short.
+    # TODO: Remove when https://github.com/element-fi/elf-contracts/issues/243 is fixed.
+    sed -i 's|^\s*require(_expiration - block\.timestamp < _unitSeconds);\s*$||g' contracts/ConvergentCurvePool.sol
+
     # Several tests fail unless we use the exact versions hard-coded in package-lock.json
     #neutralize_package_lock
 
@@ -97,6 +103,7 @@ function elementfi_test
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
+        store_benchmark_report hardhat elementfi "$repo" "$preset"
     done
 }
 

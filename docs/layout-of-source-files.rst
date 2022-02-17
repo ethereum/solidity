@@ -27,6 +27,9 @@ it does include the supplied string in the :ref:`bytecode metadata <metadata>`.
 
 If you do not want to specify a license or if the source code is
 not open-source, please use the special value ``UNLICENSED``.
+Note that ``UNLICENSED`` (no usage allowed, not present in SPDX license list)
+is different from ``UNLICENSE`` (grants all rights to everyone).
+Solidity follows `the npm recommendation <https://docs.npmjs.com/cli/v7/configuring-npm/package-json#license>`_.
 
 Supplying this comment of course does not free you from other
 obligations related to licensing like having to mention

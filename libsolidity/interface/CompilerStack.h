@@ -327,8 +327,8 @@ public:
 	/// Prerequisite: Successful call to parse or compile.
 	Json::Value const& natspecDev(std::string const& _contractName) const;
 
-	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
-	Json::Value methodIdentifiers(std::string const& _contractName) const;
+	/// @returns a JSON object with the three members ``methods``, ``events``, ``errors``. Each is a map, mapping identifiers (hashes) to function names.
+	Json::Value interfaceSymbols(std::string const& _contractName) const;
 
 	/// @returns the Contract Metadata matching the pipeline selected using the viaIR setting.
 	std::string const& metadata(std::string const& _contractName) const { return metadata(contract(_contractName)); }

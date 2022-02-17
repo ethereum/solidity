@@ -192,7 +192,7 @@ FunctionDefinition const* ContractDefinition::receiveFunction() const
 	return nullptr;
 }
 
-vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
+vector<EventDefinition const*> const& ContractDefinition::definedInterfaceEvents() const
 {
 	return m_interfaceEvents.init([&]{
 		set<string> eventsSeen;
@@ -213,9 +213,18 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 					interfaceEvents.push_back(e);
 				}
 			}
-
 		return interfaceEvents;
 	});
+}
+
+vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() const
+{
+	solAssert(annotation().creationCallGraph.set(), "");
+
+	return convertContainer<std::vector<EventDefinition const*>>(
+		(*annotation().creationCallGraph)->emittedEvents +
+		(*annotation().deployedCallGraph)->emittedEvents
+	);
 }
 
 vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
@@ -227,10 +236,9 @@ vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _require
 	if (_requireCallGraph)
 		solAssert(annotation().creationCallGraph.set(), "");
 	if (annotation().creationCallGraph.set())
-	{
-		result += (*annotation().creationCallGraph)->usedErrors;
-		result += (*annotation().deployedCallGraph)->usedErrors;
-	}
+		result +=
+			(*annotation().creationCallGraph)->usedErrors +
+			(*annotation().deployedCallGraph)->usedErrors;
 	return convertContainer<vector<ErrorDefinition const*>>(move(result));
 }
 

@@ -270,15 +270,29 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	if (!m_options.compiler.outputs.signatureHashes)
 		return;
 
-	Json::Value methodIdentifiers = m_compiler->methodIdentifiers(_contract);
-	string out;
-	for (auto const& name: methodIdentifiers.getMemberNames())
-		out += methodIdentifiers[name].asString() + ": " + name + "\n";
+	Json::Value interfaceSymbols = m_compiler->interfaceSymbols(_contract);
+	string out = "Function signatures:\n";
+	for (auto const& name: interfaceSymbols["methods"].getMemberNames())
+		out += interfaceSymbols["methods"][name].asString() + ": " + name + "\n";
+
+	if (interfaceSymbols.isMember("errors"))
+	{
+		out += "\nError signatures:\n";
+		for (auto const& name: interfaceSymbols["errors"].getMemberNames())
+			out += interfaceSymbols["errors"][name].asString() + ": " + name + "\n";
+	}
+
+	if (interfaceSymbols.isMember("events"))
+	{
+		out += "\nEvent signatures:\n";
+		for (auto const& name: interfaceSymbols["events"].getMemberNames())
+			out += interfaceSymbols["events"][name].asString() + ": " + name + "\n";
+	}
 
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
-		sout() << "Function signatures:" << endl << out;
+		sout() << out;
 }
 
 void CommandLineInterface::handleMetadata(string const& _contract)
@@ -822,7 +836,7 @@ void CommandLineInterface::handleCombinedJSON()
 				m_compiler->runtimeObject(contractName).functionDebugData
 			);
 		if (m_options.compiler.combinedJsonRequests->signatureHashes)
-			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
+			contractData[g_strSignatureHashes] = m_compiler->interfaceSymbols(contractName)["methods"];
 		if (m_options.compiler.combinedJsonRequests->natspecDev)
 			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
 		if (m_options.compiler.combinedJsonRequests->natspecUser)

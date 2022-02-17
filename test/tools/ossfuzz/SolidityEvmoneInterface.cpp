@@ -58,7 +58,7 @@ optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 		else
 			contractName = m_compilerInput.contractName;
 		evmasm::LinkerObject obj = m_compiler.object(contractName);
-		Json::Value methodIdentifiers = m_compiler.methodIdentifiers(contractName);
+		Json::Value methodIdentifiers = m_compiler.interfaceSymbols(contractName)["methods"];
 		return CompilerOutput{obj.bytecode, methodIdentifiers};
 	}
 }

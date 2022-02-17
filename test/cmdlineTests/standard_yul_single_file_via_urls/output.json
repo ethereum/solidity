@@ -3,8 +3,8 @@
     [
         {
             "component": "general",
-            "formattedMessage": "Cannot import url (\"in.yul\"): File not found.",
-            "message": "Cannot import url (\"in.yul\"): File not found.",
+            "formattedMessage": "Cannot import url (\"in.yul\"): File not found. Searched the following locations: \"\".",
+            "message": "Cannot import url (\"in.yul\"): File not found. Searched the following locations: \"\".",
             "severity": "error",
             "type": "IOError"
         },

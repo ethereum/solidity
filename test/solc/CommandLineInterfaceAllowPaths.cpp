@@ -100,7 +100,7 @@ ImportCheck checkImport(
 		return ImportCheck::OK();
 
 	static regex const sourceNotFoundErrorRegex{
-		R"(^Error \(6275\): Source ".+" not found: (.*)\.\n)"
+		R"(^Error \(6275\): Source "[^"]+" not found: (.*)\.\n)"
 		R"(\s*--> .*<stdin>:\d+:\d+:\n)"
 		R"(\s*\|\n)"
 		R"(\d+\s*\| import '.+';\n)"
@@ -110,12 +110,12 @@ ImportCheck checkImport(
 	smatch submatches;
 	if (!regex_match(cliResult.stderrContent, submatches, sourceNotFoundErrorRegex))
 		return ImportCheck::Unknown("Unexpected stderr content: '" + cliResult.stderrContent + "'");
-	if (submatches[1] != "File not found" && submatches[1] != "File outside of allowed directories")
+	if (submatches[1] != "File not found" && !boost::starts_with(string(submatches[1]), "File outside of allowed directories"))
 		return ImportCheck::Unknown("Unexpected error message: '" + cliResult.stderrContent + "'");
 
 	if (submatches[1] == "File not found")
 		return ImportCheck::FileNotFound();
-	else if (submatches[1] == "File outside of allowed directories")
+	else if (boost::starts_with(string(submatches[1]), "File outside of allowed directories"))
 		return ImportCheck::PathDisallowed();
 	else
 		return ImportCheck::Unknown("Unexpected error message '" + submatches[1].str() + "'");
