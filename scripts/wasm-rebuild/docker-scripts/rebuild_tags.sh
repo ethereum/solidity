@@ -213,7 +213,9 @@ ln -sf /emsdk_portable/emscripten/bin/* /usr/local/bin
 rm -rf /src
 ln -sf /root/project /src
 
+echo "Install dependencies and upgrade system packages."
 apt-get -qq update >/dev/null 2>&1
+apt-get -qq upgrade >/dev/null 2>&1
 apt-get -qq install cmake >/dev/null 2>&1
 
 echo "Create output directories."
