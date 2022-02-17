@@ -55,9 +55,9 @@ keyid=379F4801D622CDCF
 email=builds@ethereum.org
 packagename=solc
 
-static_build_distribution=hirsute
+static_build_distribution=impish
 
-DISTRIBUTIONS="focal hirsute impish jammy"
+DISTRIBUTIONS="focal impish jammy"
 
 if is_release
 then
