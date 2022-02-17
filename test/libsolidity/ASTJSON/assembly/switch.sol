@@ -1,10 +1,10 @@
 contract C {
     function f() pure public {
         assembly {
-            let f := 0
+            let v := 0
             switch calldatasize()
-            case 0 { f := 1 }
-            default { f := 2 }
+            case 0 { v := 1 }
+            default { v := 2 }
         }
     }
 }
