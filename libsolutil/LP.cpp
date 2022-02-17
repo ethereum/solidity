@@ -494,15 +494,26 @@ string toString(rational const& _x)
 	if (_x.denominator() == 1)
 		return ::toString(_x.numerator());
 	else
-		return ::toString(_x);
+		return ::toString(_x.numerator()) + "/" + ::toString(_x.denominator());
+}
+}
+
+namespace
+{
+string reasonToString(ReasonSet const& _reasons, size_t _minSize)
+{
+	auto reasonsAsStrings = _reasons | ranges::views::transform([](size_t _r) { return to_string(_r); });
+	string result = "[" + joinHumanReadable(reasonsAsStrings) + "]";
+	if (result.size() < _minSize)
+		result.resize(_minSize, ' ');
+	return result;
 }
 }
 
 string SolvingState::toString() const
 {
+	size_t const reasonLength = 10;
 	string result;
-
-	// TODO print reasons
 	for (Constraint const& constraint: constraints)
 	{
 		vector<string> line;
@@ -518,6 +529,7 @@ string SolvingState::toString() const
 				line.emplace_back(mult + variableNames.at(index));
 			}
 		result +=
+			reasonToString(constraint.reasons, reasonLength) +
 			joinHumanReadable(line, " + ") +
 			(constraint.equality ? "  = " : " <= ") +
 			::toString(constraint.data.front()) +
@@ -529,10 +541,12 @@ string SolvingState::toString() const
 		if (!bounds.lower && !bounds.upper)
 			continue;
 		if (bounds.lower)
-			result += ::toString(*bounds.lower) + " <= ";
+			result +=
+				reasonToString(bounds.lowerReasons, reasonLength) +
+				::toString(*bounds.lower) + " <= ";
 		result += variableNames.at(index);
 		if (bounds.upper)
-			result += " <= " + ::toString(*bounds.upper);
+			result += " <= "s + ::toString(*bounds.upper) + " " + reasonToString(bounds.upperReasons, 0);
 		result += "\n";
 	}
 	return result;
