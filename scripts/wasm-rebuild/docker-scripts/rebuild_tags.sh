@@ -196,6 +196,7 @@ cp scripts/bytecodecompare/storebytecode.sh /tmp
 # shellcheck disable=SC2016
 sed -i -e 's/rm -rf "\$TMPDIR"/cp "\$TMPDIR"\/report.txt \/tmp\/report.txt ; rm -rf "\$TMPDIR"/' /tmp/storebytecode.sh
 sed -i -e 's/REPO_ROOT=.*/REPO_ROOT=\/src/' /tmp/storebytecode.sh
+sed -i -e 's/git clone/git clone --branch '"${SOLC_JS_BRANCH}"'/' /tmp/storebytecode.sh
 export SOLC_EMSCRIPTEN="On"
 
 echo "Check out solc-js repository..."
