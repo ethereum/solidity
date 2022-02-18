@@ -141,13 +141,13 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 		if (!c.parseAndAnalyze(variant.stopAfter))
 		{
-			// Ignore non-fatal analysis errors, we only want to export.
-			if (c.state() > CompilerStack::State::Parsed)
-				continue;
-
-			SourceReferenceFormatter formatter(_stream, c, _formatted, false);
-			formatter.printErrorInformation(c.errors());
-			return TestResult::FatalError;
+			// We just want to export so raise fatal analysis errors only
+			if (c.state() < CompilerStack::State::ParsedAndImported)
+			{
+				SourceReferenceFormatter formatter(_stream, c, _formatted, false);
+				formatter.printErrorInformation(c.errors());
+				return TestResult::FatalError;
+			}
 		}
 
 		resultsMatch = resultsMatch && runTest(
