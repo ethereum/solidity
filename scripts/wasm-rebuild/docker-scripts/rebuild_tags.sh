@@ -240,6 +240,7 @@ wget -q "${RELEASE_COMMIT_LIST_URL}" -O /tmp/release_commit_list.txt
 
 cd /src
 TAGS=$(git tag --list "${TAG_FILTER}" | tac)
+echo "Matching tags: ${TAGS}"
 for TAG in ${TAGS}; do
   process_tag "${TAG}"
 done
