@@ -27,7 +27,7 @@ done
 SOLIDITY_REPO_URL="https://github.com/ethereum/solidity"
 SOLC_JS_REPO_URL="https://github.com/ethereum/solc-js"
 SOLC_JS_BRANCH=wasmRebuildTests
-RELEASE_URL="https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/bin"
+RELEASE_URL="https://binaries.soliditylang.org/bin"
 RELEASE_COMMIT_LIST_URL="$RELEASE_URL/list.txt"
 
 SCRIPTDIR=$(dirname "$0")
