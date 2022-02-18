@@ -40,7 +40,7 @@ RESET='\033[0m'
 
 function generate_bytecode_report
 {
-  rm -rf /tmp/report.txt
+  rm -rf /src/report.txt
 
   local EXIT_STATUS
 
@@ -63,13 +63,13 @@ function generate_bytecode_report
         ln -sf "$1" $dir/soljson.js
       done
 
-       /tmp/storebytecode.sh >/dev/null 2>&1
+      REPO_ROOT=/src /tmp/solidity-scripts/bytecodecompare/storebytecode.sh >/dev/null 2>&1
     )
     EXIT_STATUS=$?
   fi
 
-  if [ $EXIT_STATUS -eq 0 ] && [ -f /tmp/report.txt ] && grep -q -v -c -e "ERROR" -e "NO BYTECODE" /tmp/report.txt; then
-    mv /tmp/report.txt "$2"
+  if [ $EXIT_STATUS -eq 0 ] && [ -f /src/report.txt ] && grep -q -v -c -e "ERROR" -e "NO BYTECODE" /src/report.txt; then
+    mv /src/report.txt "$2"
     echo -e "${GREEN}SUCCESS${RESET}"
   else
     echo -e "${RED}FAILURE${RESET}"
@@ -192,11 +192,7 @@ fi
 echo "Extract bytecode comparison scripts from v0.6.1..."
 cd /root/project
 git checkout v0.6.1 --quiet
-cp scripts/bytecodecompare/storebytecode.sh /tmp
-# shellcheck disable=SC2016
-sed -i -e 's/rm -rf "\$TMPDIR"/cp "\$TMPDIR"\/report.txt \/tmp\/report.txt ; rm -rf "\$TMPDIR"/' /tmp/storebytecode.sh
-sed -i -e 's/REPO_ROOT=.*/REPO_ROOT=\/src/' /tmp/storebytecode.sh
-sed -i -e 's/git clone/git clone --branch '"${SOLC_JS_BRANCH}"'/' /tmp/storebytecode.sh
+cp -r scripts /tmp/solidity-scripts
 export SOLC_EMSCRIPTEN="On"
 
 echo "Check out solc-js repository..."
