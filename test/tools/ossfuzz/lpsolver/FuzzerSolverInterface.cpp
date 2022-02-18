@@ -48,6 +48,18 @@ void FuzzerSolverInterface::addLPConstraint(pair<bool, vector<int>> _constraint)
 	m_lpSolvingState.constraints.push_back({linearExpression(move(_constraint.second)), _constraint.first});
 }
 
+void FuzzerSolverInterface::addLPVariable(string _varName)
+{
+	if (
+		find(
+			m_lpSolvingState.variableNames.begin(),
+			m_lpSolvingState.variableNames.end(),
+			_varName
+		) == m_lpSolvingState.variableNames.end()
+	)
+		m_lpSolvingState.variableNames.emplace_back(_varName);
+}
+
 void FuzzerSolverInterface::addZ3Constraint(pair<bool, vector<int>> _constraint)
 {
 	bool isEquality = _constraint.first;
@@ -57,6 +69,8 @@ void FuzzerSolverInterface::addZ3Constraint(pair<bool, vector<int>> _constraint)
 		if (index != 0 && value != 0)
 		{
 			string varName = "x" + to_string(index - 1);
+			// Add variable name to LP solving state to aid debugging
+			addLPVariable(varName);
 			expr var = m_z3Ctx.real_const(varName.c_str());
 			expr factor = m_z3Ctx.int_val(value);
 			reduce = reduce + var * factor;
@@ -105,9 +119,13 @@ string FuzzerSolverInterface::checkZ3Result()
 
 bool FuzzerSolverInterface::differentialCheck(vector<pair<bool, vector<int>>> _constraints)
 {
-	addLPConstraints(_constraints);
 	addZ3Constraints(_constraints);
 	string z3Result = checkZ3Result();
+	// There is no point in continuing if z3 (the quicker solver) returns
+	// unknown.
+	if (z3Result == "unknown")
+		return true;
+	addLPConstraints(_constraints);
 	string lpResult = checkLPResult();
 	bool checkFailed = ((z3Result == "infeasible") && (lpResult == "feasible")) ||
 		((z3Result == "feasible") && (lpResult == "infeasible"));

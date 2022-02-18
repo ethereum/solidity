@@ -75,6 +75,9 @@ private:
 	/// @returns Z3 result as string.
 	std::string z3Result(z3::check_result _result);
 
+	/// Adds variable name to LP solver solving state.
+	void addLPVariable(std::string _varName);
+
 	solidity::util::LPSolver m_lpSolver;
 	solidity::util::SolvingState m_lpSolvingState;
 	z3::context m_z3Ctx;

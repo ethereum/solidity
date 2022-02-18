@@ -23,7 +23,11 @@
 #include <libsolutil/StringUtils.h>
 #include <test/Common.h>
 
+#include <algorithm>
+
 #include <boost/test/unit_test.hpp>
+
+#include <range/v3/view/enumerate.hpp>
 
 using namespace std;
 using namespace solidity::smtutil;
@@ -39,6 +43,37 @@ public:
 	LPTestFramework()
 	{
 		m_solvingState.variableNames.emplace_back("");
+	}
+
+	LinearExpression linearExpression(vector<int> _factors)
+	{
+		LinearExpression lexp;
+		lexp.resize(_factors.size());
+		for (auto&& [index, value]: _factors | ranges::views::enumerate)
+			lexp[index] = rational{value};
+		return lexp;
+	}
+
+	void addFuzzerInput(vector<vector<int>> _constraints)
+	{
+		size_t totalNumVariables = 0;
+		for (auto c: _constraints)
+		{
+			bool equality = static_cast<bool>(c[0]);
+			vector<int> factors(c.begin() + 1, c.end());
+			m_solvingState.constraints.push_back(
+				{
+					linearExpression(factors),
+					equality
+				}
+			);
+		    auto it = find_if(factors.rbegin(), factors.rend(), [](auto const& _i) { return _i != 0; });
+            size_t numVariablesInConstraint = factors.size() - 1 - static_cast<size_t>(distance(factors.rbegin(), it));
+			if (totalNumVariables < numVariablesInConstraint)
+				totalNumVariables = numVariablesInConstraint;
+		}
+		for (size_t i = 0; i < totalNumVariables; i++)
+			m_solvingState.variableNames.emplace_back("x" + to_string(i));
 	}
 
 	LinearExpression constant(rational _value)
@@ -151,6 +186,23 @@ BOOST_AUTO_TEST_CASE(fuzzer)
 	// expected result: -6x -6y = 8 is unsat since x >= 0 and y >= 0 are implied
 	addEQConstraint(x + y, constant(8));
 	sat();
+}
+
+BOOST_AUTO_TEST_CASE(fuzzer3)
+{
+	addFuzzerInput(
+		{
+			{1,-1,0,0,0,0,90,9},
+			{0,0,0,0,-76,0,0,74},
+			{0,0,0,0,0,31,0,0,0,0,-71},
+			{0,0,5,0,-85,60},
+			{1,0,0,-9,0,0,63,-31,-2,0,-78},
+			{0,0,50,-70,2,-76,94},
+			{1,1,0,-3,51},
+			{1,0,0,-33,0,0,0,60}
+		}
+	);
+	infeasible();
 }
 
 BOOST_AUTO_TEST_CASE(fuzzer2)
