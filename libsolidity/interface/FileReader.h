@@ -115,6 +115,17 @@ public:
 		SymlinkResolution _symlinkResolution = SymlinkResolution::Disabled
 	);
 
+	/// Normalizes a root path by excluding, in some cases, its root name.
+	/// The function is used for better portability, and intended to omit root name
+	/// if the path can be used without it.
+	/// @param _path Path to normalize the root path.
+	/// @param _workDir Current working directory path, must be absolute.
+	/// @returns a normalized root path.
+	static boost::filesystem::path normalizeCLIRootPathForVFS(
+		boost::filesystem::path const& _path,
+		boost::filesystem::path const& _workDir = boost::filesystem::current_path()
+	);
+
 	/// @returns true if all the path components of @a _prefix are present at the beginning of @a _path.
 	/// Both paths must be absolute (or have slash as root) and normalized (no . or .. segments, no
 	/// multiple consecutive slashes).

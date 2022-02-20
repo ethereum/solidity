@@ -313,8 +313,9 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_should_not_resolve_symlinks_unless_r
 	if (!createSymlinkIfSupportedByFilesystem(tempDir.path() / "abc", tempDir.path() / "sym", true))
 		return;
 
-	boost::filesystem::path expectedPrefixWithSymlinks = "/" / tempDir.path().relative_path();
-	boost::filesystem::path expectedPrefixWithoutSymlinks = "/" / boost::filesystem::weakly_canonical(tempDir).relative_path();
+	boost::filesystem::path expectedRootPath = FileReader::normalizeCLIRootPathForVFS(tempDir);
+	boost::filesystem::path expectedPrefixWithSymlinks = expectedRootPath / tempDir.path().relative_path();
+	boost::filesystem::path expectedPrefixWithoutSymlinks = expectedRootPath / boost::filesystem::weakly_canonical(tempDir).relative_path();
 
 	BOOST_CHECK_EQUAL(
 		FileReader::normalizeCLIPathForVFS(tempDir.path() / "sym/contract.sol", SymlinkResolution::Disabled),

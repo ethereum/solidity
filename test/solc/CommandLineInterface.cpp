@@ -178,8 +178,9 @@ BOOST_AUTO_TEST_CASE(cli_input)
 	createFilesWithParentDirs({tempDir1.path() / "input1.sol"});
 	createFilesWithParentDirs({tempDir2.path() / "input2.sol"});
 
-	boost::filesystem::path expectedDir1 = "/" / tempDir1.path().relative_path();
-	boost::filesystem::path expectedDir2 = "/" / tempDir2.path().relative_path();
+	boost::filesystem::path expectedRootPath = FileReader::normalizeCLIRootPathForVFS(tempDir1);
+	boost::filesystem::path expectedDir1 = expectedRootPath / tempDir1.path().relative_path();
+	boost::filesystem::path expectedDir2 = expectedRootPath / tempDir2.path().relative_path();
 	soltestAssert(expectedDir1.is_absolute() || expectedDir1.root_path() == "/", "");
 	soltestAssert(expectedDir2.is_absolute() || expectedDir2.root_path() == "/", "");
 
@@ -223,7 +224,8 @@ BOOST_AUTO_TEST_CASE(cli_ignore_missing_some_files_exist)
 	TemporaryDirectory tempDir2(TEST_CASE_NAME);
 	createFilesWithParentDirs({tempDir1.path() / "input1.sol"});
 
-	boost::filesystem::path expectedDir1 = "/" / tempDir1.path().relative_path();
+	boost::filesystem::path expectedRootPath = FileReader::normalizeCLIRootPathForVFS(tempDir1);
+	boost::filesystem::path expectedDir1 = expectedRootPath / tempDir1.path().relative_path();
 	soltestAssert(expectedDir1.is_absolute() || expectedDir1.root_path() == "/", "");
 
 	// NOTE: Allowed paths should not be added for skipped files.
