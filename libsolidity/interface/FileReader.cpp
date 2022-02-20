@@ -276,14 +276,8 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(
 	// If the path is on the same drive as the working dir, for portability we prefer not to
 	// include the root name. Do this only for non-UNC paths - my experiments show that on Windows
 	// when the working dir is an UNC path, / does not not actually refer to the root of the UNC path.
-	boost::filesystem::path normalizedRootPath = normalizedPath.root_path();
-	if (!isUNCPath(normalizedPath))
-	{
-		boost::filesystem::path workingDirRootPath = canonicalWorkDir.root_path();
-		// Ignore drive letter case on Windows (C:\ <=> c:\).
-		if (boost::filesystem::equivalent(normalizedRootPath, workingDirRootPath))
-			normalizedRootPath = "/";
-	}
+
+	boost::filesystem::path normalizedRootPath = normalizeCLIRootPathForVFS(normalizedPath, canonicalWorkDir);
 
 	// lexically_normal() will not squash paths like "/../../" into "/". We have to do it manually.
 	boost::filesystem::path dotDotPrefix = absoluteDotDotPrefix(normalizedPath);
@@ -306,6 +300,27 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(
 		return "/";
 
 	return normalizedPathNoDotDot;
+}
+
+boost::filesystem::path FileReader::normalizeCLIRootPathForVFS(
+	boost::filesystem::path const& _path,
+	boost::filesystem::path const& _workDir
+)
+{
+	solAssert(_workDir.is_absolute(), "");
+
+	boost::filesystem::path absolutePath = boost::filesystem::absolute(_path, _workDir);
+	boost::filesystem::path rootPath = absolutePath.root_path();
+	boost::filesystem::path baseRootPath = _workDir.root_path();
+
+	if (isUNCPath(absolutePath))
+		return rootPath;
+
+	// Ignore drive letter case on Windows (C:\ <=> c:\).
+	if (boost::filesystem::equivalent(rootPath, baseRootPath))
+		return "/";
+
+	return rootPath;
 }
 
 bool FileReader::isPathPrefix(boost::filesystem::path const& _prefix, boost::filesystem::path const& _path)
