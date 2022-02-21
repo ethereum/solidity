@@ -115,6 +115,8 @@ private:
 	/// or standard-json output
 	std::map<std::string, Json::Value> parseAstFromInput();
 
+	std::map<std::string, Json::Value> parseEvmAssemblyJsonFromInput();
+
 	/// Create a file in the given directory
 	/// @arg _fileName the name of the file
 	/// @arg _data to be written

@@ -414,6 +414,28 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 	storeContractDefinitions();
 }
 
+void CompilerStack::importEvmAssemblyJson(std::map<std::string, Json::Value> const& _sources)
+{
+	solAssert(_sources.size() == 1, "");
+	solAssert(m_sources.empty(), "");
+	solAssert(m_sourceOrder.empty(), "");
+	if (m_stackState != Empty)
+		solThrow(CompilerError, "Must call importEvmAssemblyJson only before the SourcesSet state.");
+
+	Json::Value jsonValue = _sources.begin()->second;
+	if (jsonValue.isMember("sourceList"))
+		for (auto const& item: jsonValue["sourceList"])
+		{
+			Source source;
+			source.charStream = std::make_shared<CharStream>(item.asString(), "");
+			m_sources.emplace(std::make_pair(item.asString(), source));
+			m_sourceOrder.push_back(&m_sources[item.asString()]);
+		}
+	m_evmAssemblyJson[_sources.begin()->first] = jsonValue;
+	m_importedSources = true;
+	m_stackState = SourcesSet;
+}
+
 bool CompilerStack::analyze()
 {
 	if (m_stackState != ParsedAndImported || m_stackState >= AnalysisPerformed)
@@ -600,6 +622,9 @@ bool CompilerStack::parseAndAnalyze(State _stopAfter)
 {
 	m_stopAfter = _stopAfter;
 
+	if (!m_evmAssemblyJson.empty())
+		return true;
+
 	bool success = parse();
 	if (m_stackState >= m_stopAfter)
 		return success;
@@ -649,55 +674,58 @@ bool CompilerStack::compile(State _stopAfter)
 	// Only compile contracts individually which have been requested.
 	map<ContractDefinition const*, shared_ptr<Compiler const>> otherCompilers;
 
-	for (Source const* source: m_sourceOrder)
-		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-				if (isRequestedContract(*contract))
-				{
-					try
+	if (!m_evmAssemblyJson.empty())
+	{
+
+	}
+	else
+	{
+		for (Source const* source: m_sourceOrder)
+			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+				if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+					if (isRequestedContract(*contract))
 					{
-						if (m_viaIR || m_generateIR || m_generateEwasm)
-							generateIR(*contract);
-						if (m_generateEvmBytecode)
+						try
 						{
-							if (m_viaIR)
-								generateEVMFromIR(*contract);
-							else
-								compileContract(*contract, otherCompilers);
+							if (m_viaIR || m_generateIR || m_generateEwasm)
+								generateIR(*contract);
+							if (m_generateEvmBytecode)
+							{
+								if (m_viaIR)
+									generateEVMFromIR(*contract);
+								else
+									compileContract(*contract, otherCompilers);
+							}
+							if (m_generateEwasm)
+								generateEwasm(*contract);
 						}
-						if (m_generateEwasm)
-							generateEwasm(*contract);
-					}
-					catch (Error const& _error)
-					{
-						if (_error.type() != Error::Type::CodeGenerationError)
-							throw;
-						m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
-						return false;
-					}
-					catch (UnimplementedFeatureError const& _unimplementedError)
-					{
-						if (
-							SourceLocation const* sourceLocation =
-							boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
-						)
+						catch (Error const& _error)
 						{
-							string const* comment = _unimplementedError.comment();
-							m_errorReporter.error(
-								1834_error,
-								Error::Type::CodeGenerationError,
-								*sourceLocation,
-								"Unimplemented feature error" +
-								((comment && !comment->empty()) ? ": " + *comment : string{}) +
-								" in " +
-								_unimplementedError.lineInfo()
-							);
+							if (_error.type() != Error::Type::CodeGenerationError)
+								throw;
+							m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
 							return false;
 						}
-						else
-							throw;
+						catch (UnimplementedFeatureError const& _unimplementedError)
+						{
+							if (SourceLocation const* sourceLocation
+								= boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError))
+							{
+								string const* comment = _unimplementedError.comment();
+								m_errorReporter.error(
+									1834_error,
+									Error::Type::CodeGenerationError,
+									*sourceLocation,
+									"Unimplemented feature error"
+										+ ((comment && !comment->empty()) ? ": " + *comment : string{}) + " in "
+										+ _unimplementedError.lineInfo());
+								return false;
+							}
+							else
+								throw;
+						}
 					}
-				}
+	}
 	m_stackState = CompilationSuccessful;
 	this->link();
 	return true;
