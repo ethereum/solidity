@@ -108,7 +108,7 @@
           {
             "id": 17,
             "nodeType": "Block",
-            "src": "97:8:1",
+            "src": "92:8:1",
             "statements":
             [
               {
@@ -121,19 +121,19 @@
                     "name": "f",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "src": "99:1:1",
+                    "src": "94:1:1",
                     "typeDescriptions": {}
                   },
                   "id": 15,
                   "names": [],
                   "nodeType": "FunctionCall",
-                  "src": "99:3:1",
+                  "src": "94:3:1",
                   "tryCall": false,
                   "typeDescriptions": {}
                 },
                 "id": 16,
                 "nodeType": "ExpressionStatement",
-                "src": "99:3:1"
+                "src": "94:3:1"
               }
             ]
           },
@@ -156,17 +156,17 @@
             "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "97:0:1"
+            "src": "92:0:1"
           },
-          "src": "72:33:1",
-          "stateMutability": "pure",
+          "src": "72:28:1",
+          "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "src": "40:67:1",
+      "src": "40:62:1",
       "usedErrors": []
     }
   ],
-  "src": "0:108:1"
+  "src": "0:103:1"
 }

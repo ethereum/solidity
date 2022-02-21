@@ -162,6 +162,7 @@
             "src": "69:26:3",
             "text": "Some comment on Evt."
           },
+          "eventSelector": "a69007916fc1145953e5a7032d7c3eab4b8e2f33ec59b0f71e732904eeede3a4",
           "id": 12,
           "name": "Evt",
           "nameLocation": "102:3:3",
