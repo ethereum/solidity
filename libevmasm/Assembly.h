@@ -39,6 +39,7 @@
 #include <sstream>
 #include <memory>
 #include <map>
+#include <utility>
 
 namespace solidity::evmasm
 {
@@ -133,6 +134,13 @@ public:
 	/// is optimised according to the settings in @a _settings.
 	Assembly& optimise(OptimiserSettings const& _settings);
 
+	/// Modify (if @a _enable is set) and return the current assembly such that creation and
+	/// execution gas usage is optimised. @a _isCreation should be true for the top-level assembly.
+	/// @a _runs specifes an estimate on how often each opcode in this assembly will be executed,
+	/// i.e. use a small value to optimise for size and a large value to optimise for runtime.
+	/// If @a _enable is not set, will perform some simple peephole optimizations.
+	Assembly& optimise(bool _enable, langutil::EVMVersion _evmVersion, bool _isCreation, size_t _runs);
+
 	/// Create a text representation of the assembly.
 	std::string assemblyString(
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
@@ -147,8 +155,11 @@ public:
 
 	/// Create a JSON representation of the assembly.
 	Json::Value assemblyJSON(
-		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
+		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>(),
+		bool _includeSourceList = true
 	) const;
+
+	bool loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources = true);
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }
@@ -158,6 +169,16 @@ public:
 
 	bool isCreation() const { return m_creation; }
 
+	void setSources(std::vector<std::shared_ptr<std::string const>> _sources) {
+		m_sources = std::move(_sources);
+	}
+
+	void setSources(std::vector<std::string> const& _sources) {
+		for (auto const& item: _sources)
+			m_sources.emplace_back(std::make_shared<std::string>(item));
+	}
+	std::vector<std::shared_ptr<std::string const>> sources() const& { return m_sources; }
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -166,10 +187,15 @@ protected:
 
 	unsigned codeSize(unsigned subTagSize) const;
 
+	AssemblyItem loadItemFromJSON(Json::Value const& _json);
+	std::vector<Json::Value> assemblyItemAsJSON(AssemblyItem const& _item, int _sourceIndex) const;
+
 private:
+	bool addAssemblyItemsFromJSON(Json::Value const& _code);
 	static Json::Value createJsonValue(
 		std::string _name,
-		int _source,
+		int _sourceIndex,
+		size_t _modifierDepth,
 		int _begin,
 		int _end,
 		std::string _value = std::string(),
@@ -222,6 +248,8 @@ protected:
 	std::string m_name;
 
 	langutil::SourceLocation m_currentSourceLocation;
+	std::vector<std::shared_ptr<std::string const>> m_sources;
+
 public:
 	size_t m_currentModifierDepth = 0;
 };

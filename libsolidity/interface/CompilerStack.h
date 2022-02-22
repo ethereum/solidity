@@ -244,7 +244,7 @@ public:
 
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
-	std::map<std::string, unsigned> sourceIndices() const;
+	std::map<std::string, unsigned> sourceIndices(bool _includeInternalSources = true) const;
 
 	/// @returns the previously used character stream, useful for counting lines during error reporting.
 	langutil::CharStream const& charStream(std::string const& _sourceName) const override;

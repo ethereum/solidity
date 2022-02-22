@@ -676,7 +676,34 @@ bool CompilerStack::compile(State _stopAfter)
 
 	if (!m_evmAssemblyJson.empty())
 	{
+		solAssert(m_importedSources, "");
+		solAssert(m_evmAssemblyJson.size() == 1, "");
 
+		string const evmSourceName = m_evmAssemblyJson.begin()->first;
+		Json::Value const evmJson = m_evmAssemblyJson.begin()->second;
+
+		evmasm::Assembly::OptimiserSettings optimiserSettings;
+		optimiserSettings.evmVersion = m_evmVersion;
+		optimiserSettings.expectedExecutionsPerDeployment = m_optimiserSettings.expectedExecutionsPerDeployment;
+		optimiserSettings.runCSE = m_optimiserSettings.runCSE;
+		optimiserSettings.runConstantOptimiser = m_optimiserSettings.runConstantOptimiser;
+		optimiserSettings.runDeduplicate = m_optimiserSettings.runDeduplicate;
+		optimiserSettings.runInliner = m_optimiserSettings.runInliner;
+		optimiserSettings.runJumpdestRemover = m_optimiserSettings.runJumpdestRemover;
+		optimiserSettings.runPeephole = m_optimiserSettings.runPeephole;
+
+		m_contracts[evmSourceName].evmAssembly = make_shared<evmasm::Assembly>(evmSourceName);
+		m_contracts[evmSourceName].evmAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName]);
+		if (m_optimiserSettings.enabled)
+			m_contracts[evmSourceName].evmAssembly->optimise(optimiserSettings);
+		m_contracts[evmSourceName].object = m_contracts[evmSourceName].evmAssembly->assemble();
+
+		m_contracts[evmSourceName].evmRuntimeAssembly = make_shared<evmasm::Assembly>(evmSourceName);
+		m_contracts[evmSourceName].evmRuntimeAssembly->setSources(m_contracts[evmSourceName].evmAssembly->sources());
+		m_contracts[evmSourceName].evmRuntimeAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName][".data"]["0"], false);
+		if (m_optimiserSettings.enabled)
+			m_contracts[evmSourceName].evmRuntimeAssembly->optimise(optimiserSettings);
+		m_contracts[evmSourceName].runtimeObject = m_contracts[evmSourceName].evmRuntimeAssembly->assemble();
 	}
 	else
 	{
@@ -961,14 +988,21 @@ vector<string> CompilerStack::sourceNames() const
 	return names;
 }
 
-map<string, unsigned> CompilerStack::sourceIndices() const
+map<string, unsigned> CompilerStack::sourceIndices(bool _includeInternalSources /* = true */) const
 {
 	map<string, unsigned> indices;
 	unsigned index = 0;
-	for (auto const& s: m_sources)
-		indices[s.first] = index++;
-	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
-	indices[CompilerContext::yulUtilityFileName()] = index++;
+	if (m_evmAssemblyJson.empty())
+	{
+		for (auto const& s: m_sources)
+			indices[s.first] = index++;
+		solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
+		if (_includeInternalSources)
+			indices[CompilerContext::yulUtilityFileName()] = index++;
+	}
+	else
+		for (auto const& s: m_sourceOrder)
+			indices[s->charStream->source()] = index++;
 	return indices;
 }
 
