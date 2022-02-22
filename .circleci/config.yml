@@ -96,6 +96,10 @@ defaults:
       name: Build
       command: scripts/ci/build.sh
 
+  - run_build_ninja: &run_build_ninja
+      name: Build (Ninja)
+      command: scripts/ci/build_ninja.sh
+
   - run_build_ossfuzz: &run_build_ossfuzz
       name: Build_ossfuzz
       command: scripts/ci/build_ossfuzz.sh
@@ -213,6 +217,11 @@ defaults:
             name: Executing solc LSP test suite
             command: ./test/lsp.py ./build/solc/solc
         - gitter_notify_failure_unless_pr
+
+  - steps_build_ninja: &steps_build_ninja
+      steps:
+        - checkout
+        - run: *run_build_ninja
 
   - steps_build: &steps_build
       steps:
@@ -759,6 +768,12 @@ jobs:
     # Enough other jobs depend on it that it's worth it though.
     <<: *base_ubuntu2004_xlarge
     <<: *steps_build
+
+  b_ubu_ninja: &b_ubu_ninja
+    # this runs 2x faster on xlarge but takes 4x more resources (compared to medium).
+    # Enough other jobs depend on it that it's worth it though.
+    <<: *base_ubuntu2004
+    <<: *steps_build_ninja
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
@@ -1448,6 +1463,7 @@ workflows:
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
+      - b_ubu_ninja: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu2004
       - t_ubu_soltest_all: *workflow_ubuntu2004
       - t_ubu_soltest_enforce_yul: *workflow_ubuntu2004
