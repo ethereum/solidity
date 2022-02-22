@@ -27,6 +27,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -48,6 +49,15 @@ namespace
 {
 
 string const sourceDelimiter("==== Source: ");
+
+const map<string, CompilerStack::State> compilerStateMap = {
+	{"Empty", CompilerStack::State::Empty},
+	{"SourcesSet", CompilerStack::State::SourcesSet},
+	{"Parsed", CompilerStack::State::Parsed},
+	{"ParsedAndImported", CompilerStack::State::ParsedAndImported},
+	{"AnalysisPerformed", CompilerStack::State::AnalysisPerformed},
+	{"CompilationSuccessful", CompilerStack::State::CompilationSuccessful}
+};
 
 void replaceVersionWithTag(string& _input)
 {
@@ -92,6 +102,7 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 	string source;
 	string line;
 	string const delimiter("// ----");
+	string const failMarker("// failAfter:");
 	while (getline(file, line))
 	{
 		if (boost::algorithm::starts_with(line, sourceDelimiter))
@@ -104,6 +115,16 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 				line.size() - " ===="s.size() - sourceDelimiter.size()
 			);
 			source = string();
+		}
+		else if (boost::algorithm::starts_with(line, failMarker))
+		{
+			string state = line.substr(failMarker.size());
+			boost::algorithm::trim(state);
+			if (compilerStateMap.find(state) == compilerStateMap.end())
+				BOOST_THROW_EXCEPTION(runtime_error("Unsupported compiler state (" + state + ") in test contract file"));
+			if (m_expectedFailAfter.has_value())
+				BOOST_THROW_EXCEPTION(runtime_error("Duplicated \"failAfter\" directive"));
+			m_expectedFailAfter = compilerStateMap.at(state);
 		}
 		else if (!line.empty() && !boost::algorithm::starts_with(line, delimiter))
 			source += line + "\n";
@@ -141,8 +162,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 		if (!c.parseAndAnalyze(variant.stopAfter))
 		{
-			// We just want to export so raise fatal analysis errors only
-			if (c.state() < CompilerStack::State::ParsedAndImported)
+			if (!m_expectedFailAfter.has_value() || m_expectedFailAfter.value() + 1 != c.state())
 			{
 				SourceReferenceFormatter formatter(_stream, c, _formatted, false);
 				formatter.printErrorInformation(c.errors());
