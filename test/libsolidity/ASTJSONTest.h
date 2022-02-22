@@ -90,6 +90,7 @@ private:
 	) const;
 
 	std::vector<TestVariant> m_variants;
+	std::optional<CompilerStack::State> m_expectedFailAfter;
 
 	std::vector<std::pair<std::string, std::string>> m_sources;
 };
