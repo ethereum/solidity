@@ -86,8 +86,24 @@ optional<CDCL::Model> CDCL::solve()
 			}
 			auto&& [learntClause, backtrackLevel] = analyze(move(*conflictClause));
 			cancelUntil(backtrackLevel);
-			m_clauses.emplace_back(make_unique<Clause>(move(learntClause)));
-			setupWatches(*m_clauses.back());
+			if (learntClause.size() == 0) {
+				cout << "Returning UNSAT, empty clause learnt" << endl;
+				return {};
+			} else if (learntClause.size() == 1) {
+				cout << "Unit clause learnt, not adding clause to DB" << endl;
+				assert(backtrackLevel == 0);
+				enqueue(learntClause[0], nullptr);
+			} else {
+				m_clauses.emplace_back(make_unique<Clause>(move(learntClause)));
+				assert(m_clauses.back()->size() >= 2);
+				assert(!isAssigned(m_clauses.back()->at(0)));
+				for(size_t i = 1; i < m_clauses.back()->size(); i++) {
+					assert(isAssignedFalse(m_clauses.back()->at(i)));
+				}
+
+				enqueue(m_clauses.back()->at(0), &(*m_clauses.back()));
+				setupWatches(*m_clauses.back());
+			}
 		}
 		else
 		{
@@ -283,11 +299,24 @@ optional<size_t> CDCL::nextDecisionVariable() const
 	return nullopt;
 }
 
+bool CDCL::isAssigned(Literal const& _literal) const
+{
+	return m_assignments.count(_literal.variable);
+}
+
 bool CDCL::isAssignedTrue(Literal const& _literal) const
 {
 	return (
 		m_assignments.count(_literal.variable) &&
 		m_assignments.at(_literal.variable) == _literal.positive
+	);
+}
+
+bool CDCL::isAssignedFalse(Literal const& _literal) const
+{
+	return (
+		m_assignments.count(_literal.variable) &&
+		!m_assignments.at(_literal.variable) == _literal.positive
 	);
 }
 

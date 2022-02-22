@@ -67,6 +67,36 @@ BOOST_AUTO_TEST_CASE(basic)
 	insatisfiable({{x}, {~x}});
 }
 
+BOOST_AUTO_TEST_CASE(basic_unsat1)
+{
+	auto x = variable("x");
+	Clause c1{x};
+	Clause c2{~x};
+	insatisfiable({c1, c2});
+}
+
+BOOST_AUTO_TEST_CASE(basic_unsat2)
+{
+	auto x1 = variable("x1");
+	auto x2 = variable("x2");
+	Clause c1{x1, ~x2};
+	Clause c2{~x1, x2};
+	Clause c3{x1, x2};
+	Clause c4{~x1, ~x2};
+	insatisfiable({c1, c2, c3, c4});
+}
+
+BOOST_AUTO_TEST_CASE(basic_sat)
+{
+	auto x1 = variable("x1");
+	auto x2 = variable("x2");
+	Clause c1{x1, ~x2};
+	Clause c2{~x1, x2};
+	Clause c3{x1, x2};
+	Clause c4{~x1, ~x2};
+	insatisfiable({c1, c2, c3, c4});
+}
+
 BOOST_AUTO_TEST_CASE(learning)
 {
 	auto x1 = variable("x1");

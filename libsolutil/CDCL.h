@@ -77,7 +77,9 @@ private:
 
 	std::optional<size_t> nextDecisionVariable() const;
 
+	bool isAssigned(Literal const& _literal) const;
 	bool isAssignedTrue(Literal const& _literal) const;
+	bool isAssignedFalse(Literal const& _literal) const;
 	bool isUnknownOrAssignedTrue(Literal const& _literal) const;
 
 	std::string toString(Literal const& _literal) const;
