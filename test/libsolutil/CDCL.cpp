@@ -32,33 +32,27 @@ namespace solidity::util::test
 class CDCLTestFramework
 {
 public:
-	CDCLTestFramework()
-	{
-	}
-
 	Literal variable(string const& _name)
 	{
-		m_state.variables.emplace_back(_name);
-		return Literal{true, m_state.variables.size() - 1};
+		m_variables.emplace_back(_name);
+		return Literal{true, m_variables.size() - 1};
 	}
 
 	void satisfiable(vector<Clause> _clauses)
 	{
-		m_state.clauses = move(_clauses);
-		auto model = CDCL::solve(m_state);
+		auto model = CDCL{m_variables, move(_clauses)}.solve();
 		BOOST_REQUIRE(!!model);
 	}
 
 	void insatisfiable(vector<Clause> _clauses)
 	{
-		m_state.clauses = move(_clauses);
-		auto model = CDCL::solve(m_state);
+		auto model = CDCL{m_variables, move(_clauses)}.solve();
 		BOOST_REQUIRE(!model);
 	}
 
 protected:
 
-	State m_state;
+	vector<string> m_variables;
 };
 
 
