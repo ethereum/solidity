@@ -26,6 +26,23 @@ except for comparison operators where the result is always ``bool``.
 The operators ``**`` (exponentiation), ``<<``  and ``>>`` use the type of the
 left operand for the operation and the result.
 
+Ternary Operator
+----------------
+The ternary operator is used in expressions of the form ``<expression> ? <trueExpression> : <falseExpression>``.
+It evaluates one of the latter two given expressions depending upon the result of the evaluation of the main ``<expression>``.
+If ``<expression>`` evaluates to ``true``, then ``<trueExpression>`` will be evaluated, otherwise ``<falseExpression>`` is evaluated.
+
+The result of the ternary operator does not have a rational number type, even if all of its operands are rational number literals.
+The result type is determined from the types of the two operands in the same way as above, converting to their mobile type first if required.
+
+As a consequence, ``255 + (true ? 1 : 0)`` will revert due to arithmetic overflow.
+The reason is that ``(true ? 1 : 0)`` is of ``uint8`` type, which forces the addition to be performed in ``uint8`` as well,
+and 256 exceeds the range allowed for this type.
+
+Another consequence is that an expression like ``1.5 + 1.5`` is valid but ``1.5 + (true ? 1.5 : 2.5)`` is not.
+This is because the former is a rational expression evaluated in unlimited precision and only its final value matters.
+The latter involves a conversion of a fractional rational number to an integer, which is currently disallowed.
+
 .. index:: assignment, lvalue, ! compound operators
 
 Compound and Increment/Decrement Operators
