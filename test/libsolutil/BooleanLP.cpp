@@ -279,30 +279,31 @@ BOOST_AUTO_TEST_CASE(magic_square_3)
 	});
 }
 
-// This still takes too long.
-//
-//BOOST_AUTO_TEST_CASE(magic_square_4)
-//{
-//	vector<Expression> vars;
-//	for (size_t i = 0; i < 16; i++)
-//		vars.push_back(variable(string{static_cast<char>('a' + i)}));
-//	for (Expression const& var: vars)
-//		solver.addAssertion(1 <= var && var <= 16);
-//	for (size_t i = 0; i < 16; i++)
-//		for (size_t j = i + 1; j < 16; j++)
-//			solver.addAssertion(vars[i] != vars[j]);
-//	for (size_t i = 0; i < 4; i++)
-//		solver.addAssertion(vars[i] + vars[i + 4] + vars[i + 8] + vars[i + 12] == 34);
-//	for (size_t i = 0; i < 16; i += 4)
-//		solver.addAssertion(vars[i] + vars[i + 1] + vars[i + 2] + vars[i + 3] == 34);
-//	solver.addAssertion(vars[0] + vars[5] + vars[10] + vars[15] == 34);
-//	solver.addAssertion(vars[3] + vars[6] + vars[9] + vars[12] == 34);
-//	feasible({
-//		{vars[0], "9"}, {vars[1], "5"}, {vars[2], "1"},
-//		{vars[3], "4"}, {vars[4], "3"}, {vars[5], "8"},
-//		{vars[6], "2"}, {vars[7], "7"}, {vars[8], "6"}
-//	});
-//}
+BOOST_AUTO_TEST_CASE(magic_square_4)
+{
+	vector<Expression> vars;
+	for (size_t i = 0; i < 16; i++)
+		vars.push_back(variable(string{static_cast<char>('a' + i)}));
+	Expression sum = variable("sum");
+	for (Expression const& var: vars)
+		solver.addAssertion(1 <= var && var <= 16);
+	for (size_t i = 0; i < 16; i++)
+		for (size_t j = i + 1; j < 16; j++)
+			solver.addAssertion(vars[i] != vars[j]);
+	for (size_t i = 0; i < 4; i++)
+		solver.addAssertion(vars[i] + vars[i + 4] + vars[i + 8] + vars[i + 12] == sum);
+	for (size_t i = 0; i < 16; i += 4)
+		solver.addAssertion(vars[i] + vars[i + 1] + vars[i + 2] + vars[i + 3] == sum);
+	solver.addAssertion(vars[0] + vars[5] + vars[10] + vars[15] == sum);
+	solver.addAssertion(vars[3] + vars[6] + vars[9] + vars[12] == sum);
+	feasible({
+		{vars[0], "9"}, {vars[1], "5"}, {vars[2], "1"},
+		{vars[3], "4"}, {vars[4], "3"}, {vars[5], "8"},
+		{vars[6], "2"}, {vars[7], "7"}, {vars[8], "6"}
+	});
+}
+
+// Magic squares 5 takes almost 2 minutes.
 
 BOOST_AUTO_TEST_CASE(boolean_complex_2)
 {
