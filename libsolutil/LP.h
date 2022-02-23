@@ -63,7 +63,7 @@ struct SolvingState
 		bool operator<(Bounds const& _other) const { return make_pair(lower, upper) < make_pair(_other.lower, _other.upper); }
 		bool operator==(Bounds const& _other) const { return make_pair(lower, upper) == make_pair(_other.lower, _other.upper); }
 
-		// TOOD this is currently not used
+		// TODO this is currently not used
 
 		/// Set of literals the conjunction of which implies the lower bonud.
 		std::set<size_t> lowerReasons;
