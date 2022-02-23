@@ -79,6 +79,8 @@ optional<CDCL::Model> CDCL::solve()
 		{
 			if (auto variable = nextDecisionVariable())
 			{
+				cout << "Level " << currentDecisionLevel() << " - ";
+				cout << ((m_assignments.size() * 100) / m_variables.size()) << "% of variables assigned." << endl;
 				m_decisionPoints.emplace_back(m_assignmentTrail.size());
 //				cout << "Deciding on " << m_variables.at(*variable) << " @" << currentDecisionLevel() << endl;
 				enqueue(Literal{false, *variable}, nullptr);
