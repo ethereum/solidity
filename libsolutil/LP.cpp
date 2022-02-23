@@ -759,13 +759,13 @@ LPSolver::LPSolver(bool _supportModels):
 pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(SolvingState _state)
 {
 	normalizeRowLengths(_state);
-	cout << "Running LP on:\n" << _state.toString() << endl;
+	//cout << "Running LP on:\n" << _state.toString() << endl;
 
 	auto&& [simplificationResult, modelOrReasonSet] = SolvingStateSimplifier{_state}.simplify();
 	switch (simplificationResult)
 	{
 	case LPResult::Infeasible:
-		cout << "-> LP infeasible." << endl;
+		//cout << "-> LP infeasible." << endl;
 		return {LPResult::Infeasible, modelOrReasonSet};
 	case LPResult::Feasible:
 	case LPResult::Unbounded:
@@ -789,7 +789,7 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(SolvingState _state)
 
 		if (auto conflict = boundsToConstraints(split))
 		{
-			cout << "-> LP infeasible." << endl;
+			//cout << "-> LP infeasible." << endl;
 			return {LPResult::Infeasible, move(*conflict)};
 		}
 
@@ -820,7 +820,7 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(SolvingState _state)
 			set<size_t> reasons;
 			for (auto const& constraint: split.constraints)
 				reasons += constraint.reasons;
-			cout << "-> LP infeasible." << endl;
+			//cout << "-> LP infeasible." << endl;
 			return {LPResult::Infeasible, move(reasons)};
 		}
 		case LPResult::Unknown:
@@ -835,11 +835,11 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(SolvingState _state)
 
 	if (canOnlyBeUnknown)
 	{
-		cout << "-> LP unknown." << endl;
+		//cout << "-> LP unknown." << endl;
 		return {LPResult::Unknown, Model{}};
 	}
 
-	cout << "-> LP feasible." << endl;
+	//cout << "-> LP feasible." << endl;
 	return {LPResult::Feasible, move(model)};
 }
 

@@ -178,9 +178,9 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const&)
 {
-	cout << "Solving boolean constraint system" << endl;
-	cout << toString() << endl;
-	cout << "--------------" << endl;
+	//cout << "Solving boolean constraint system" << endl;
+	//cout << toString() << endl;
+	//cout << "--------------" << endl;
 
 	if (state().infeasible)
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});
@@ -200,8 +200,8 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		else
 			resizeAndSet(lpState.variableNames, index, name);
 
-	cout << "Boolean variables:" << joinHumanReadable(booleanVariables) << endl;
-	cout << "Running LP solver on fixed constraints." << endl;
+	//cout << "Boolean variables:" << joinHumanReadable(booleanVariables) << endl;
+	//cout << "Running LP solver on fixed constraints." << endl;
 	if (m_lpSolver.check(lpState).first == LPResult::Infeasible)
 		return {CheckResult::UNSATISFIABLE, {}};
 
@@ -239,12 +239,12 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver}.solve();
 	if (!optionalModel)
 	{
-		cout << "==============> CDCL final result: unsatisfiable." << endl;
+		//cout << "==============> CDCL final result: unsatisfiable." << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 	else
 	{
-		cout << "==============> CDCL final result: SATisfiable / UNKNON." << endl;
+		//cout << "==============> CDCL final result: SATisfiable / UNKNON." << endl;
 		// TODO should be "unknown" later on
 		return {CheckResult::SATISFIABLE, {}};
 	}
