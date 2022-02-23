@@ -89,7 +89,7 @@
                     }
                   ]
                 },
-                "evmVersion": "london",
+                "evmVersion": %EVMVERSION%,
                 "externalReferences":
                 [
                   {
