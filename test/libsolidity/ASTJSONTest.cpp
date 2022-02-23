@@ -50,14 +50,29 @@ namespace
 
 string const sourceDelimiter("==== Source: ");
 
-const map<string, CompilerStack::State> compilerStateMap = {
-	{"Empty", CompilerStack::State::Empty},
-	{"SourcesSet", CompilerStack::State::SourcesSet},
-	{"Parsed", CompilerStack::State::Parsed},
-	{"ParsedAndImported", CompilerStack::State::ParsedAndImported},
-	{"AnalysisPerformed", CompilerStack::State::AnalysisPerformed},
-	{"CompilationSuccessful", CompilerStack::State::CompilationSuccessful}
-};
+string compilerStateToString(CompilerStack::State _state)
+{
+	switch (_state)
+	{
+		case CompilerStack::State::Empty: return "Empty";
+		case CompilerStack::State::SourcesSet: return "SourcesSet";
+		case CompilerStack::State::Parsed: return "Parsed";
+		case CompilerStack::State::ParsedAndImported: return "ParsedAndImported";
+		case CompilerStack::State::AnalysisPerformed: return "AnalysisPerformed";
+		case CompilerStack::State::CompilationSuccessful: return "CompilationSuccessful";
+	}
+	soltestAssert(false, "Unexpected value of state parameter");
+}
+
+CompilerStack::State stringToCompilerState(const string& _state)
+{
+	for (unsigned int i = CompilerStack::State::Empty; i <= CompilerStack::State::CompilationSuccessful; ++i)
+	{
+		if (_state == compilerStateToString(CompilerStack::State(i)))
+			return CompilerStack::State(i);
+	}
+	BOOST_THROW_EXCEPTION(runtime_error("Unsupported compiler state (" + _state + ") in test contract file"));
+}
 
 void replaceVersionWithTag(string& _input)
 {
@@ -88,10 +103,24 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 	string_view baseName = _filename;
 	baseName.remove_suffix(4);
 
-	m_variants = {
-		TestVariant(baseName, CompilerStack::State::Parsed),
-		TestVariant(baseName, CompilerStack::State::AnalysisPerformed),
+	const std::vector<CompilerStack::State> variantCompileStates = {
+		CompilerStack::State::Parsed,
+		CompilerStack::State::AnalysisPerformed
 	};
+
+	for (const auto state: variantCompileStates)
+	{
+		auto variant = TestVariant(baseName, state);
+		if (boost::filesystem::exists(variant.astFilename()))
+		{
+			variant.expectation = readFileAsString(variant.astFilename());
+			boost::replace_all(variant.expectation, "\r\n", "\n");
+			m_variants.push_back(variant);
+		}
+	}
+
+	if (m_variants.empty())
+		BOOST_THROW_EXCEPTION(runtime_error("Missing file with expected result for: \"" + _filename + "\"."));
 
 	ifstream file(_filename);
 	if (!file)
@@ -120,11 +149,9 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 		{
 			string state = line.substr(failMarker.size());
 			boost::algorithm::trim(state);
-			if (compilerStateMap.find(state) == compilerStateMap.end())
-				BOOST_THROW_EXCEPTION(runtime_error("Unsupported compiler state (" + state + ") in test contract file"));
 			if (m_expectedFailAfter.has_value())
 				BOOST_THROW_EXCEPTION(runtime_error("Duplicated \"failAfter\" directive"));
-			m_expectedFailAfter = compilerStateMap.at(state);
+			m_expectedFailAfter = stringToCompilerState(state);
 		}
 		else if (!line.empty() && !boost::algorithm::starts_with(line, delimiter))
 			source += line + "\n";
@@ -132,12 +159,6 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 
 	m_sources.emplace_back(sourceName.empty() ? "a" : sourceName, source);
 	file.close();
-
-	for (TestVariant& variant: m_variants)
-	{
-		variant.expectation = readFileAsString(variant.astFilename());
-		boost::replace_all(variant.expectation, "\r\n", "\n");
-	}
 }
 
 TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
