@@ -1225,6 +1225,7 @@ std::string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 		if (!_type.isDynamicallySized())
 			w("length", toCompactHexWithPrefix(_type.length()));
 		w("memory", _type.location() == DataLocation::Memory);
+		w("transient", _type.location() == DataLocation::Transient);
 		w("storage", _type.location() == DataLocation::Storage);
 		w("calldata", _type.location() == DataLocation::CallData);
 		if (_type.location() == DataLocation::Storage)
@@ -2183,6 +2184,7 @@ std::string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 
 		switch (_type.location())
 		{
+			case DataLocation::Transient:
 			case DataLocation::Storage:
 			{
 				unsigned const baseStorageBytes = baseType.storageBytes();
@@ -2455,6 +2457,7 @@ std::string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 		case DataLocation::Memory:
 			templ("advance", "0x20");
 			break;
+		case DataLocation::Transient:
 		case DataLocation::Storage:
 		{
 			u256 size = _type.baseType()->storageSize();
@@ -2767,6 +2770,132 @@ std::string YulUtilFunctions::readFromStorageReferenceType(Type const& _type)
 	});
 }
 
+std::string YulUtilFunctions::readFromTransientStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+{
+	if (_type.isValueType())
+		return readFromTransientStorageValueType(_type, _offset, _splitFunctionTypes);
+	else
+	{
+		solAssert(_offset == 0, "");
+		return readFromStorageReferenceType(_type);
+	}
+}
+
+std::string YulUtilFunctions::readFromTransientStorageDynamic(Type const& _type, bool _splitFunctionTypes)
+{
+	if (_type.isValueType())
+		return readFromTransientStorageValueType(_type, {}, _splitFunctionTypes);
+	std::string functionName =
+		"read_from_transient_storage__dynamic_" +
+		std::string(_splitFunctionTypes ? "split_" : "") +
+		_type.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot, offset) -> value {
+				if gt(offset, 0) { <panic>() }
+				value := <readFromTransientStorage>(slot)
+			}
+		)")
+		("functionName", functionName)
+		("panic", panicFunction(util::PanicCode::Generic))
+		("readFromTransientStorage", readFromTransientStorageReferenceType(_type))
+		.render();
+	});
+}
+
+std::string YulUtilFunctions::readFromTransientStorageValueType(Type const& _type, std::optional<size_t> _offset, bool _splitFunctionTypes)
+{
+	solAssert(_type.isValueType(), "");
+
+	std::string functionName =
+			"read_from_transient_storage_" +
+			std::string(_splitFunctionTypes ? "split_" : "") + (
+				_offset.has_value() ?
+				"offset_" + std::to_string(*_offset) :
+				"dynamic"
+			) +
+			"_" +
+			_type.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&] {
+		Whiskers templ(R"(
+			function <functionName>(slot<?dynamic>, offset</dynamic>) -> <?split>addr, selector<!split>value</split> {
+				<?split>let</split> value := <extract>(tload(slot)<?dynamic>, offset</dynamic>)
+				<?split>
+					addr, selector := <splitFunction>(value)
+				</split>
+			}
+		)");
+		templ("functionName", functionName);
+		templ("dynamic", !_offset.has_value());
+		if (_offset.has_value())
+			templ("extract", extractFromStorageValue(_type, *_offset));
+		else
+			templ("extract", extractFromStorageValueDynamic(_type));
+		auto const* funType = dynamic_cast<FunctionType const*>(&_type);
+		bool split = _splitFunctionTypes && funType && funType->kind() == FunctionType::Kind::External;
+		templ("split", split);
+		if (split)
+			templ("splitFunction", splitExternalFunctionIdFunction());
+		return templ.render();
+	});
+}
+
+std::string YulUtilFunctions::readFromTransientStorageReferenceType(Type const& _type)
+{
+	if (auto const* arrayType = dynamic_cast<ArrayType const*>(&_type))
+	{
+		solAssert(arrayType->dataStoredIn(DataLocation::Memory), "");
+		return copyArrayFromStorageToMemoryFunction(
+			dynamic_cast<ArrayType const&>(*arrayType->copyForLocation(DataLocation::Transient, false)),
+			*arrayType
+		);
+	}
+	solAssert(_type.category() == Type::Category::Struct, "");
+
+	std::string functionName = "read_from_transient_storage_reference_type_" + _type.identifier();
+
+	auto const& structType = dynamic_cast<StructType const&>(_type);
+	solAssert(structType.location() == DataLocation::Memory, "");
+	MemberList::MemberMap structMembers = structType.nativeMembers(nullptr);
+	std::vector<std::map<std::string, std::string>> memberSetValues(structMembers.size());
+	for (size_t i = 0; i < structMembers.size(); ++i)
+	{
+		// TODO(conner): user transient offets
+		auto const& [memberSlotDiff, memberStorageOffset] = structType.storageOffsetsOfMember(structMembers[i].name);
+		solAssert(structMembers[i].type->isValueType() || memberStorageOffset == 0, "");
+
+		memberSetValues[i]["setMember"] = Whiskers(R"(
+			{
+				let <memberValues> := <readFromTransientStorage>(add(slot, <memberSlotDiff>))
+				<writeToMemory>(add(value, <memberMemoryOffset>), <memberValues>)
+			}
+		)")
+		("memberValues", suffixedVariableNameList("memberValue_", 0, structMembers[i].type->stackItems().size()))
+		("memberMemoryOffset", structType.memoryOffsetOfMember(structMembers[i].name).str())
+		("memberSlotDiff",  memberSlotDiff.str())
+		("readFromTransientStorage", readFromTransientStorage(*structMembers[i].type, memberStorageOffset, true))
+		("writeToMemory", writeToMemoryFunction(*structMembers[i].type))
+		.render();
+	}
+
+	return m_functionCollector.createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot) -> value {
+				value := <allocStruct>()
+				<#member>
+					<setMember>
+				</member>
+			}
+		)")
+		("functionName", functionName)
+		("allocStruct", allocateMemoryStructFunction(structType))
+		("member", memberSetValues)
+		.render();
+	});
+}
+
 std::string YulUtilFunctions::readFromMemory(Type const& _type)
 {
 	return readFromMemoryOrCalldata(_type, false);
@@ -2801,6 +2930,118 @@ std::string YulUtilFunctions::updateStorageValueFunction(
 				function <functionName>(slot, <offset><fromValues>) {
 					let <toValues> := <convert>(<fromValues>)
 					sstore(slot, <update>(sload(slot), <offset><prepare>(<toValues>)))
+				}
+
+			)")
+			("functionName", functionName)
+			("update",
+				_offset.has_value() ?
+					updateByteSliceFunction(_toType.storageBytes(), *_offset) :
+					updateByteSliceFunctionDynamic(_toType.storageBytes())
+			)
+			("offset", _offset.has_value() ? "" : "offset, ")
+			("convert", conversionFunction(_fromType, _toType))
+			("fromValues", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()))
+			("toValues", suffixedVariableNameList("convertedValue_", 0, _toType.sizeOnStack()))
+			("prepare", prepareStoreFunction(_toType))
+			.render();
+		}
+
+		auto const* toReferenceType = dynamic_cast<ReferenceType const*>(&_toType);
+		auto const* fromReferenceType = dynamic_cast<ReferenceType const*>(&_fromType);
+		solAssert(toReferenceType, "");
+
+		if (!fromReferenceType)
+		{
+			solAssert(_fromType.category() == Type::Category::StringLiteral, "");
+			solAssert(toReferenceType->category() == Type::Category::Array, "");
+			auto const& toArrayType = dynamic_cast<ArrayType const&>(*toReferenceType);
+			solAssert(toArrayType.isByteArrayOrString(), "");
+
+			return Whiskers(R"(
+				function <functionName>(slot<?dynamicOffset>, offset</dynamicOffset>) {
+					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
+					<copyToStorage>(slot)
+				}
+			)")
+			("functionName", functionName)
+			("dynamicOffset", !_offset.has_value())
+			("panic", panicFunction(PanicCode::Generic))
+			("copyToStorage", copyLiteralToStorageFunction(dynamic_cast<StringLiteralType const&>(_fromType).value()))
+			.render();
+		}
+
+		solAssert((*toReferenceType->copyForLocation(
+			fromReferenceType->location(),
+			fromReferenceType->isPointer()
+		).get()).equals(*fromReferenceType), "");
+
+		if (fromReferenceType->category() == Type::Category::ArraySlice)
+			solAssert(toReferenceType->category() == Type::Category::Array, "");
+		else
+			solAssert(toReferenceType->category() == fromReferenceType->category(), "");
+		solAssert(_offset.value_or(0) == 0, "");
+
+		Whiskers templ(R"(
+			function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
+				<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
+				<copyToStorage>(slot, <value>)
+			}
+		)");
+		templ("functionName", functionName);
+		templ("dynamicOffset", !_offset.has_value());
+		templ("panic", panicFunction(PanicCode::Generic));
+		templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
+		if (_fromType.category() == Type::Category::Array)
+			templ("copyToStorage", copyArrayToStorageFunction(
+				dynamic_cast<ArrayType const&>(_fromType),
+				dynamic_cast<ArrayType const&>(_toType)
+			));
+		else if (_fromType.category() == Type::Category::ArraySlice)
+		{
+			solAssert(
+				_fromType.dataStoredIn(DataLocation::CallData),
+				"Currently only calldata array slices are supported!"
+			);
+			templ("copyToStorage", copyArrayToStorageFunction(
+				dynamic_cast<ArraySliceType const&>(_fromType).arrayType(),
+				dynamic_cast<ArrayType const&>(_toType)
+			));
+		}
+		else
+			templ("copyToStorage", copyStructToStorageFunction(
+				dynamic_cast<StructType const&>(_fromType),
+				dynamic_cast<StructType const&>(_toType)
+			));
+
+		return templ.render();
+	});
+}
+
+std::string YulUtilFunctions::updateTransientStorageValueFunction(
+	Type const& _fromType,
+	Type const& _toType,
+	std::optional<unsigned> const& _offset
+)
+{
+	std::string const functionName =
+		"update_storage_value_" +
+		(_offset.has_value() ? ("offset_" + std::to_string(*_offset)) : "") +
+		_fromType.identifier() +
+		"_to_" +
+		_toType.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&] {
+		if (_toType.isValueType())
+		{
+			solAssert(_fromType.isImplicitlyConvertibleTo(_toType), "");
+			solAssert(_toType.storageBytes() <= 32, "Invalid storage bytes size.");
+			solAssert(_toType.storageBytes() > 0, "Invalid storage bytes size.");
+
+			return Whiskers(R"(
+				function <functionName>(slot, <offset><fromValues>) {
+					let <toValues> := <convert>(<fromValues>)
+					tstore(slot, <update>(tload(slot), <offset><prepare>(<toValues>)))
 				}
 
 			)")

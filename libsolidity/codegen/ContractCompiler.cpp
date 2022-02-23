@@ -21,7 +21,6 @@
  * Solidity compiler.
  */
 
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -572,6 +571,8 @@ void ContractCompiler::registerStateVariables(ContractDefinition const& _contrac
 {
 	for (auto const& var: ContractType(_contract).stateVariables())
 		m_context.addStateVariable(*std::get<0>(var), std::get<1>(var), std::get<2>(var));
+	for (auto const& var: ContractType(_contract).transientStateVariables())
+		m_context.addTransientStateVariable(*std::get<0>(var), std::get<1>(var), std::get<2>(var));
 }
 
 void ContractCompiler::registerImmutableVariables(ContractDefinition const& _contract)
@@ -778,6 +779,16 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				{
 					auto const& location = m_context.storageLocationOfVariable(*decl);
 					if (ref->second.suffix == "slot")
+						m_context << location.first;
+					else if (ref->second.suffix == "offset")
+						m_context << u256(location.second);
+					else
+						solAssert(false, "");
+				}
+				else if (m_context.isTransientStateVariable(decl))
+				{
+					auto const& location = m_context.storageLocationOfTransientVariable(*decl);
+					if (ref->second.suffix == "tslot")
 						m_context << location.first;
 					else if (ref->second.suffix == "offset")
 						m_context << u256(location.second);

@@ -92,7 +92,8 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.value()->accept(*this);
 
-	if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
+	if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage) ||
+		_varDecl.annotation().type->dataStoredIn(DataLocation::Transient))
 	{
 		// reference type, only convert value to mobile type and do final conversion in storeValue.
 		auto mt = type->mobileType();
@@ -107,8 +108,10 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	}
 	if (_varDecl.immutable())
 		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
-	else
+	else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
 		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	else
+		TransientStorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 }
 
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
@@ -1971,6 +1974,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			setLValueToStorageItem(_memberAccess);
 			break;
 		}
+		case DataLocation::Transient:
+		{
+			// TODO(conner): use transient offsets
+			pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
+			m_context << offsets.first << Instruction::ADD << u256(offsets.second);
+			setLValueToTransientStorageItem(_memberAccess);
+			break;
+		}
 		case DataLocation::Memory:
 		{
 			m_context << type.memoryOffsetOfMember(member) << Instruction::ADD;
@@ -2038,6 +2049,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					m_context << Instruction::SWAP1 << Instruction::POP;
 					break;
 				case DataLocation::Storage:
+					ArrayUtils(m_context).retrieveLength(type);
+					m_context << Instruction::SWAP1 << Instruction::POP;
+					break;
+				case DataLocation::Transient:
 					ArrayUtils(m_context).retrieveLength(type);
 					m_context << Instruction::SWAP1 << Instruction::POP;
 					break;
@@ -2186,6 +2201,16 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					}
 					else
 						setLValueToStorageItem(_indexAccess);
+					break;
+				case DataLocation::Transient:
+					ArrayUtils(m_context).accessIndex(arrayType);
+					if (arrayType.isByteArrayOrString())
+					{
+						solAssert(!arrayType.isString(), "Index access to string is not allowed.");
+						setLValue<StorageByteArrayElement>(_indexAccess);
+					}
+					else
+						setLValueToTransientStorageItem(_indexAccess);
 					break;
 				case DataLocation::Memory:
 					ArrayUtils(m_context).accessIndex(arrayType);
@@ -2945,6 +2970,8 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 		setLValue<StackVariable>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else if (m_context.isStateVariable(&_declaration))
 		setLValue<StorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
+	else if (m_context.isTransientStateVariable(&_declaration))
+		setLValue<TransientStorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError()
 			<< errinfo_sourceLocation(_expression.location())
@@ -2954,6 +2981,11 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 {
 	setLValue<StorageItem>(_expression, *_expression.annotation().type);
+}
+
+void ExpressionCompiler::setLValueToTransientStorageItem(Expression const& _expression)
+{
+	setLValue<TransientStorageItem>(_expression, *_expression.annotation().type);
 }
 
 bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token _op, Arithmetic _arithmetic)

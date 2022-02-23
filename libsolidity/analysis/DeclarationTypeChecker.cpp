@@ -406,6 +406,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 			switch (_location)
 			{
 				case Location::Memory: return "\"memory\"";
+				case Location::Transient: return "\"transient\"";
 				case Location::Storage: return "\"storage\"";
 				case Location::CallData: return "\"calldata\"";
 				case Location::Unspecified: return "none";
@@ -456,8 +457,11 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 	else if (_variable.isStateVariable())
 	{
-		solAssert(varLoc == Location::Unspecified, "");
-		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
+		solAssert(varLoc == Location::Unspecified || varLoc == Location::Transient, "");
+		if (varLoc == Location::Transient)
+			typeLoc = DataLocation::Transient;
+		else
+			typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
 	}
 	else if (
 		dynamic_cast<StructDefinition const*>(_variable.scope()) ||
@@ -470,6 +474,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		{
 			case Location::Memory:
 				typeLoc = DataLocation::Memory;
+				break;
+			case Location::Transient:
+				typeLoc = DataLocation::Transient;
 				break;
 			case Location::Storage:
 				typeLoc = DataLocation::Storage;

@@ -321,6 +321,10 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SSTORE:
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
+	case Instruction::TLOAD:
+		return 0;
+	case Instruction::TSTORE:
+		return 0;
 	case Instruction::PC:
 		return 0x77;
 	case Instruction::MSIZE:

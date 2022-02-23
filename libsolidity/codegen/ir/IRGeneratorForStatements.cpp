@@ -2298,6 +2298,28 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 
 				break;
 			}
+			case DataLocation::Transient:
+			{
+				string slot = m_context.newYulVariable();
+				string offset = m_context.newYulVariable();
+
+				appendCode() << Whiskers(R"(
+					let <slot>, <offset> := <indexFunc>(<array>, <index>)
+				)")
+				("slot", slot)
+				("offset", offset)
+				("indexFunc", m_utils.storageArrayIndexAccessFunction(arrayType))
+				("array", IRVariable(_indexAccess.baseExpression()).part("slot").name())
+				("index", IRVariable(*_indexAccess.indexExpression()).name())
+				.render();
+
+				setLValue(_indexAccess, IRLValue{
+					*_indexAccess.annotation().type,
+					IRLValue::Transient{slot, offset}
+				});
+
+				break;
+			}
 			case DataLocation::Memory:
 			{
 				std::string const indexAccessFunction = m_utils.memoryArrayIndexAccessFunction(arrayType);
@@ -3052,6 +3074,24 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 					")\n";
 
 			},
+			[&](IRLValue::Transient const& _storage) {
+				string offsetArgument;
+				optional<unsigned> offsetStatic;
+
+				std::visit(GenericVisitor{
+					[&](unsigned _offset) { offsetStatic = _offset; },
+					[&](string const& _offset) { offsetArgument = ", " + _offset; }
+				}, _storage.offset);
+
+				appendCode() <<
+					m_utils.updateTransientStorageValueFunction(_value.type(), _lvalue.type, offsetStatic) <<
+					"(" <<
+					_storage.slot <<
+					offsetArgument <<
+					_value.commaSeparatedListPrefixed() <<
+					")\n";
+
+			},
 			[&](IRLValue::Memory const& _memory) {
 				if (_lvalue.type.isValueType())
 				{
@@ -3138,6 +3178,24 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 			else
 				define(result) <<
 					m_utils.readFromStorage(_lvalue.type, std::get<unsigned>(_storage.offset), true) <<
+					"(" <<
+					_storage.slot <<
+					")\n";
+		},
+		[&](IRLValue::Transient const& _storage) {
+			if (!_lvalue.type.isValueType())
+				define(result) << _storage.slot << "\n";
+			else if (std::holds_alternative<string>(_storage.offset))
+				define(result) <<
+					m_utils.readFromTransientStorageDynamic(_lvalue.type, true) <<
+					"(" <<
+					_storage.slot <<
+					", " <<
+					std::get<string>(_storage.offset) <<
+					")\n";
+			else
+				define(result) <<
+					m_utils.readFromTransientStorage(_lvalue.type, std::get<unsigned>(_storage.offset), true) <<
 					"(" <<
 					_storage.slot <<
 					")\n";
