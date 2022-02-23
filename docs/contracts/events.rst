@@ -13,17 +13,9 @@ Les événements sont des membres héritables des contrats. Lorsque vous les app
 
 Il est possible de demander une simple vérification de paiement (SPV) pour les logs, de sorte que si une entité externe fournit un contrat avec une telle vérification, elle peut vérifier que le log existe réellement dans la blockchain. Vous devez fournir des en-têtes (headers) de bloc car le contrat ne peut voir que les 256 derniers hashs de blocs.
 
-<<<<<<< HEAD
-Vous pouvez ajouter l'attribut ``indexed`` à un maximum de trois paramètres qui les ajoute à une structure de données spéciale appelée :ref:`"topics" <abi_events>` au lieu de la partie data du log. Si vous utilisez des tableaux (y compris les ``string`` et ``bytes``)
+Vous pouvez ajouter l'attribut ``indexed`` à un maximum de trois paramètres qui les ajoute à une structure de données spéciale appelée :ref:`"topics" <abi_events>` au lieu de la partie data du log.
+Si vous utilisez des types "référence" (tableaux, y compris les ``string`` et ``bytes``)
 comme arguments indexés, leurs hashs Keccak-256 sont stockés comme topic à la place, car un topic ne peut contenir qu'un seul mot (32 octets).
-=======
-You can add the attribute ``indexed`` to up to three parameters which adds them
-to a special data structure known as :ref:`"topics" <abi_events>` instead of
-the data part of the log.
-A topic can only hold a single word (32 bytes) so if you use a :ref:`reference type
-<reference-types>` for an indexed argument, the Keccak-256 hash of the value is stored
-as a topic instead.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 Tous les paramètres sans l'attribut ``indexed`` sont :ref:`ABI-encoded <ABI>` dans la partie données du log.
 
@@ -50,16 +42,11 @@ Par exemple, le code ci-dessous utilise web3.js ``subscribe("logs")``
     });
 
 
-<<<<<<< HEAD
-Le hash de la signature de l'event est l'un des topics, sauf si vous avez déclaré l'événement avec le spécificateur "anonymous". Cela signifie qu'il n'est pas possible de filtrer des événements anonymes spécifiques par leur nom.
-=======
-The hash of the signature of the event is one of the topics, except if you
-declared the event with the ``anonymous`` specifier. This means that it is
-not possible to filter for specific anonymous events by name, you can
+Le hash de la signature de l'event est l'un des topics, sauf si vous avez déclaré l'événement avec le spécificateur ``anonymous``.
+Cela signifie qu'il n'est pas possible de filtrer des événements anonymes spécifiques par leur nom, you can
 only filter by the contract address. The advantage of anonymous events
 is that they are cheaper to deploy and call. It also allows you to declare
 four indexed arguments rather than three.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 .. note::
     Since the transaction log only stores the event data and not the type,
@@ -101,29 +88,17 @@ L'utilisation dans l'API JavaScript est la suivante :
 
     var depositEvent = clientReceipt.Deposit();
 
-<<<<<<< HEAD
     // inspecter les eventuels changements
-    event.watch(function(error, result){
+    depositEvent.watch(function(error, result){
         // le résultat contient des arguments et topics non indexés
         // passées à l'appel de `Deposit`.
-=======
-    // watch for changes
-    depositEvent.watch(function(error, result){
-        // result contains non-indexed arguments and topics
-        // given to the `Deposit` call.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
         if (!error)
             console.log(result);
     });
 
 
-<<<<<<< HEAD
     // Ou passez une fonction pour ecouter dès maintenant
-    var event = clientReceipt.Deposit(function(error, result) {
-=======
-    // Or pass a callback to start watching immediately
     var depositEvent = clientReceipt.Deposit(function(error, result) {
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
         if (!error)
             console.log(result);
     });
@@ -132,48 +107,6 @@ La sortie du code ci-dessus ressemble à (trimmée):
 
 .. code-block:: json
 
-<<<<<<< HEAD
-  {
-     "returnValues": {
-         "_from": "0x1111…FFFFCCCC",
-         "_id": "0x50…sd5adb20",
-         "_value": "0x420042"
-     },
-     "raw": {
-         "data": "0x7f…91385",
-         "topics": ["0xfd4…b4ead7", "0x7f…1a91385"]
-     }
-  }
-
-.. index:: ! log
-
-Interface bas-niveau des Logs
-===========================
-
-Il est également possible d'accéder à l'interface bas niveau du mécanisme de logs via les fonctions ``log0``, ``log1``, ``log2``, ``log3`` et ``log4``.
-``logi`` prend le paramètre ``i + 1`` paramètre de type ``bytes32``, où le premier argument sera utilisé pour la partie données du journal et les autres comme sujets. L'appel d'événement ci-dessus peut être effectué de la même manière que
-
-::
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.10 <0.7.0;
-
-    contract C {
-        function f() public payable {
-            uint256 _id = 0x420042;
-            log3(
-                bytes32(msg.value),
-                bytes32(0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20),
-                bytes32(uint256(msg.sender)),
-                bytes32(_id)
-            );
-        }
-    }
-
-où le nombre hexadécimal long est égal à ``keccak256("Deposit(address,bytes32,uint256)")``, la signature de l'événement.
-
-Ressources complémentaires pour comprendre les Events
-=======
     {
        "returnValues": {
            "_from": "0x1111…FFFFCCCC",
@@ -187,7 +120,6 @@ Ressources complémentaires pour comprendre les Events
     }
 
 Additional Resources for Understanding Events
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 ==============================================
 
 - `Javascript documentation <https://github.com/ethereum/web3.js/blob/1.x/docs/web3-eth-contract.rst#events>`_

@@ -7,12 +7,9 @@ Dans cette section, nous allons apprendre comment construire une implémentation
 Création et vérification des signatures
 =======================================
 
-<<<<<<< HEAD
-Imaginez qu'Alice veuille envoyer une quantité d'Ether à Bob, c'est-à-dire qu'Alice est l'expéditeur et Bob est le destinataire. Alice n'a qu'à envoyer des messages cryptographiquement signés hors chaîne (par exemple par e-mail) à Bob et cela sera très similaire à la rédaction de chèques.
-=======
-Imagine Alice wants to send some Ether to Bob, i.e.
-Alice is the sender and Bob is the recipient.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+Imaginez qu'Alice veuille envoyer une quantité d'Ether à Bob, c'est-à-dire qu'Alice est l'expéditeur et Bob est le destinataire.
+
+Alice n'a qu'à envoyer des messages cryptographiquement signés hors chaîne (par exemple par e-mail) à Bob et cela sera très similaire à la rédaction de chèques.
 
 Les signatures sont utilisées pour autoriser les transactions et sont un outil généraliste à la disposition des contrats intelligents. Alice construira un simple contrat intelligent qui lui permettra de transmettre des Ether, mais d'une manière inhabituelle, au lieu d'appeler une fonction elle-même pour initier un paiement, elle laissera Bob le faire, et donc payer les frais de transaction.
 
@@ -418,19 +415,11 @@ Voici le code javascript modifié pour signer cryptographiquement un message du 
 Fermeture du canal de paiement
 ------------------------------
 
-<<<<<<< HEAD
 Lorsque Bob est prêt à recevoir leurs ses, il est temps de
 fermer le canal de paiement en appelant une fonction ``close`` sur le smart contract.
 La fermeture du canal paie au destinataire l'Ether qui lui est dû et détruit le contrat,
 en renvoyant tout Ether restant à Alice.
 Pour fermer le canal, Bob doit fournir un message signé par Alice.
-=======
-When Bob is ready to receive his funds, it is time to
-close the payment channel by calling a ``close`` function on the smart contract.
-Closing the channel pays the recipient the Ether they are owed and
-destroys the contract, sending any remaining Ether back to Alice. To
-close the channel, Bob needs to provide a message signed by Alice.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 Le contrat doit vérifier que le message contient une signature valide de l'expéditeur.
 Le processus de vérification est le même que celui utilisé par le destinataire.
@@ -451,21 +440,14 @@ Vous pouvez voir la fonction ``close`` dans le contrat complet.
 Expiration du canal
 -------------------
 
-<<<<<<< HEAD
 Bob peut fermer le canal de paiement à tout moment, mais s'il ne le fait pas,
 Alice a besoin d'un moyen de récupérer les fonds bloqués. Une durée d'*expiration* a été définie
 au moment du déploiement du contrat. Une fois cette heure atteinte, Alice peut appeler
 pour récupérer leurs fonds. Vous pouvez voir la fonction ``claimTimeout`` dans le
-contrat complet.
+contrat déployé.
 
 Après l'appel de cette fonction, Bob ne peut plus recevoir d'Ether.
 Il est donc important que Bob ferme le canal avant que l'expiration ne soit atteinte.
-=======
-Bob can close the payment channel at any time, but if they fail to do so,
-Alice needs a way to recover her escrowed funds. An *expiration* time was set
-at the time of contract deployment. Once that time is reached, Alice can call
-``claimTimeout`` to recover her funds. You can see the ``claimTimeout`` function in the full contract.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 
 Le contrat complet
@@ -490,17 +472,10 @@ Le contrat complet
             expiration = block.timestamp + duration;
         }
 
-<<<<<<< HEAD
         /// Le destinataire peut clore le canal à tout moment en présentant le dernier montant
         /// signé par l'expéditeur des fonds. Le destinataire se verra verser ce montant,
         /// et le reste sera rendu à l'emetteur des fonds.
-        function close(uint256 amount, bytes memory signature) public {
-=======
-        /// the recipient can close the channel at any time by presenting a
-        /// signed amount from the sender. the recipient will be sent that amount,
-        /// and the remainder will go back to the sender
         function close(uint256 amount, bytes memory signature) external {
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             require(msg.sender == recipient);
             require(isValidSignature(amount, signature));
 
@@ -508,30 +483,18 @@ Le contrat complet
             selfdestruct(sender);
         }
 
-<<<<<<< HEAD
         /// L'emetteur peut modifier la date d'expiration à tout moment
-        function extend(uint256 newExpiration) public {
-=======
-        /// the sender can extend the expiration at any time
         function extend(uint256 newExpiration) external {
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             require(msg.sender == sender);
             require(newExpiration > expiration);
 
             expiration = newExpiration;
         }
 
-<<<<<<< HEAD
         /// Si l'expiration est atteinte avant cloture par le destinataire,
         /// l'Ether est renvoyé à l'emetteur
-        function claimTimeout() public {
-            require(now >= expiration);
-=======
-        /// if the timeout is reached without the recipient closing the channel,
-        /// then the Ether is released back to the sender.
         function claimTimeout() external {
-            require(block.timestamp >= expiration);
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+            require(now >= expiration);
             selfdestruct(sender);
         }
 
@@ -586,14 +549,8 @@ Le contrat complet
 
 
 .. note::
-<<<<<<< HEAD
     La fonction ``splitSignature`` est très simple et n'utilise pas tous les contrôles de sécurité.
-    Une implémentation réelle devrait utiliser une bibliothèque plus rigoureusement testée de ce code, tel que le fait openzepplin avec `version  <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/cryptography/ECDSA.sol>`_ of this code.
-=======
-  The function ``splitSignature`` does not use all security
-  checks. A real implementation should use a more rigorously tested library,
-  such as openzepplin's `version  <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/ECDSA.sol>`_ of this code.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+    Une implémentation réelle devrait utiliser une bibliothèque plus rigoureusement testée de ce code, tel que le fait openzepplin avec `version  <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/ECDSA.sol>`_ of this code.
 
 Vérification des paiements
 --------------------------
@@ -606,27 +563,16 @@ Sinon, il n'y a aucune garantie que le destinataire sera en mesure d'être payé
 
 Le destinataire doit vérifier chaque message à l'aide du processus suivant :
 
-<<<<<<< HEAD
      1. Vérifiez que l'adresse du contact dans le message correspond au canal de paiement.
      2. Vérifiez que le nouveau total est le montant prévu.
      3. Vérifier que le nouveau total ne dépasse pas la quantité d'éther déposée.
      4. Vérifiez que la signature est valide et provient de l'expéditeur du canal de paiement.
 
-Nous utiliserons la librairie `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_https://github.com/ethereumjs/ethereumjs-util
+Nous utiliserons la librairie `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
 pour écrire ces vérifications. L'étape finale peut se faire de plusieurs façons,
 ici en JavaScript,
-Le code suivant emprunte la fonction `constructMessage` du **code JavaScript** de signature
-ci-dessus :
-=======
-    1. Verify that the contract address in the message matches the payment channel.
-    2. Verify that the new total is the expected amount.
-    3. Verify that the new total does not exceed the amount of Ether escrowed.
-    4. Verify that the signature is valid and comes from the payment channel sender.
-
-We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
-library to write this verification. The final step can be done a number of ways,
-and we use JavaScript. The following code borrows the ``constructPaymentMessage`` function from the signing **JavaScript code** above:
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+Le code suivant emprunte la fonction `constructPaymentMessage` du **code JavaScript** de signature
+ci-dessous :
 
 .. code-block:: javascript
 

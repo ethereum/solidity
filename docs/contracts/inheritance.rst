@@ -93,13 +93,7 @@ Les détails sont donnés dans l'exemple suivant.
     }
 
 
-<<<<<<< HEAD
     // Si un constructeur prend un argument, il doit être fourni dans l'en-tête (ou dans le constructeur du contrat dérivé (voir ci-dessous)).
-=======
-    // If a constructor takes an argument, it needs to be
-    // provided in the header or modifier-invocation-style at
-    // the constructor of the derived contract (see below).
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
     contract PriceFeed is Owned, Destructible, Named("GoldFeed") {
         function updateInfo(uint newInfo) public {
             if (msg.sender == owner) info = newInfo;
@@ -114,15 +108,9 @@ Les détails sont donnés dans l'exemple suivant.
         uint info;
     }
 
-<<<<<<< HEAD
-Notez que ci-dessus, nous appelons ``Destructible.destroy()`` pour "transmettre" la demande de destruction. La façon dont cela est fait est problématique, comme vu dans l'exemple suivant::
-=======
-Note that above, we call ``Destructible.destroy()`` to "forward" the
-destruction request. The way this is done is problematic, as
-seen in the following example:
+Notez que ci-dessus, nous appelons ``Destructible.destroy()`` pour "transmettre" la demande de destruction. La façon dont cela est fait est problématique, comme vu dans l'exemple suivant:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
@@ -150,16 +138,10 @@ seen in the following example:
         function destroy() public override(Base1, Base2) { Base2.destroy(); }
     }
 
-<<<<<<< HEAD
 Un appel à ``Final.destroy()`` appellera ``Base2.destroy`` puisque nous le demandons explicitement dans l'override, mais cet appel évitera
-``Base1.destroy``. La solution à ce problème est d'utiliser ``super``::
-=======
-A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
-explicitly in the final override, but this function will bypass
-``Base1.destroy``. The way around this is to use ``super``:
+``Base1.destroy``. La solution à ce problème est d'utiliser ``super``:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
@@ -389,24 +371,13 @@ Constructeurs
 
 Un constructeur est une fonction optionnelle déclarée avec le mot-clé ``constructeur`` qui est exécuté lors de la création du contrat, et où vous pouvez exécuter le code d'initialisation du contrat.
 
-<<<<<<< HEAD
-Avant l'exécution du code constructeur, les variables d'état sont initialisées à leur valeur spécifiée si vous les initialisez en ligne, ou à zéro si vous ne le faites pas.
-=======
-Before the constructor code is executed, state variables are initialised to
-their specified value if you initialise them inline, or their :ref:`default value<default-value>` if you do not.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+Avant l'exécution du code constructeur, les variables d'état sont initialisées à leur valeur spécifiée si vous les initialisez en ligne, ou leur :ref:`default value<default-value>` si vous ne le faites pas.
 
 Après l'exécution du constructeur, le code final du contrat est déployé dans la chaîne de blocs. Le déploiement du code coûte du gas supplémentaire linéairement à la longueur du code.
 Ce code inclut toutes les fonctions qui font partie de l'interface publique et toutes les fonctions qui sont accessibles à partir de là par des appels de fonctions.
 Il n'inclut pas le code constructeur ni les fonctions internes qui ne sont appelées que par le constructeur.
 
-<<<<<<< HEAD
-Les fonctions du constructeur peuvent être ``public`` ou ``internal``. S'il n'y a pas de constructeur, le contrat assumera le constructeur par défaut, ce qui est équivalent à ``constructor() public {}``. Par exemple :
-=======
-If there is no
-constructor, the contract will assume the default constructor, which is
-equivalent to ``constructor() {}``. For example:
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+S'il n'y a pas de constructeur, le contrat assumera le constructeur par défaut, ce qui est équivalent à ``constructor() {}``. Par exemple :
 
 .. code-block:: solidity
 
@@ -425,13 +396,9 @@ equivalent to ``constructor() {}``. For example:
         constructor() {}
     }
 
-<<<<<<< HEAD
-Un constructeur déclaré ``internal`` rend le contrat :ref:`abstract <abstract-contract>`.
-=======
 You can use internal parameters in a constructor (for example storage pointers). In this case,
 the contract has to be marked :ref:`abstract <abstract-contract>`, because these parameters
 cannot be assigned valid values from outside but only through the constructors of derived contracts.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 .. attention ::
     Avant 0.4.22, ont été définis comme des fonctions portant le même nom que le contrat.
@@ -447,15 +414,10 @@ cannot be assigned valid values from outside but only through the constructors o
 Arguments des Constructeurs de Base
 ===============================
 
-<<<<<<< HEAD
-Les constructeurs de tous les contrats de base seront appelés selon les règles de linéarisation expliquées ci-dessous. Si les constructeurs de base ont des arguments, les contrats dérivés doivent les spécifier tous. Cela peut se faire de deux façons::
-=======
-The constructors of all the base contracts will be called following the
-linearization rules explained below. If the base constructors have arguments,
-derived contracts need to specify all of them. This can be done in two ways:
+Les constructeurs de tous les contrats de base seront appelés selon les règles de linéarisation expliquées ci-dessous.
+Si les constructeurs de base ont des arguments, les contrats dérivés doivent les spécifier tous. Cela peut se faire de deux façons:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;

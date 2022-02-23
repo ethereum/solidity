@@ -164,13 +164,8 @@ State Mutability
 
 .. _view-functions:
 
-<<<<<<< HEAD
 Fonctions View
 ==============
-=======
-View Functions
---------------
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 Les fonctions peuvent être déclarées ``view``, auquel cas elles promettent de ne pas modifier l'état.
 
@@ -218,20 +213,13 @@ Les déclarations suivantes sont considérées comme une modification de l'état
 
 .. _pure-functions:
 
-<<<<<<< HEAD
 Fonctions Pure
 ==============
 
 Les fonctions peuvent être déclarées ``pures``, auquel cas elles promettent de ne pas lire ou modifier l'état.
-=======
-Pure Functions
---------------
-
-Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
 In particular, it should be possible to evaluate a ``pure`` function at compile-time given
 only its inputs and ``msg.data``, but without any knowledge of the current blockchain state.
 This means that reading from ``immutable`` variables can be a non-pure operation.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 .. note::
   Si la cible EVM du compilateur est Byzantium ou plus récente (par défaut), on utilise l'opcode ``STATICCALL``, ce qui ne garantit pas que l'état ne soit pas lu, mais au moins qu'il ne soit pas modifié.
@@ -347,20 +335,10 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 
 .. _fallback-function:
 
-<<<<<<< HEAD
 Fonction de repli
 =================
 
-Un contrat peut avoir exactement une fonction sans nom. Cette fonction ne peut pas avoir d'arguments, ne peut rien retourner et doit avoir une visibilité ``external``.
-Elle est exécutée lors d'un appel au contrat si aucune des autres fonctions ne correspond à l'identificateur de fonction donné (ou si aucune donnée n'a été fournie).
-
-En outre, cette fonction est exécutée chaque fois que le contrat reçoit des Ethers bruts (sans données). De plus, pour recevoir des Ethers, la fonction de fallback doit être marquée ``payable``. En l'absence d'une telle fonction, le contrat ne peut recevoir
-d'Ether par des transactions traditionnelles.
-=======
-Fallback Function
------------------
-
-A contract can have at most one ``fallback`` function, declared using either ``fallback () external [payable]``
+Un contrat peut avoir exactement une fonction dwe repli ``fallback``, declared using either ``fallback () external [payable]``
 or ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
 (both without the ``function`` keyword).
 This function must have ``external`` visibility. A fallback function can be virtual, can override
@@ -380,36 +358,10 @@ In the worst case, if a payable fallback function is also used in
 place of a receive function, it can only rely on 2300 gas being
 available (see :ref:`receive Ether function <receive-ether-function>`
 for a brief description of the implications of this).
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
-
-Dans le pire des cas, la fonction de fallback ne peut compter que sur la disponibilité de 2 300 gas (par exemple lorsque l'on utilise `send` ou `transfer`), ce qui laisse peu de place pour effectuer d'autres opérations que du log basique. Les opérations suivantes
-consommeront plus de gaz que le forfait de 2 300 gas alloué :
-
-- Ecrire dans le stockage
-- Création d'un contrat
-- Appel d'une fonction externe qui consomme une grande quantité de gas
-- Envoi d'Ether
 
 Comme toute fonction, la fonction de fallback peut exécuter des opérations complexes tant que suffisamment de gas lui est transmis.
 
 .. note::
-<<<<<<< HEAD
-    Même si la fonction de fallback ne peut pas avoir d'arguments, on peut toujours utiliser ``msg.data`` pour récupérer toute charge utile fournie avec l'appel.
-
-.. avertissement::
-    La fonction de fallback est également exécutée si l'appelant a l'intention d'appeler une fonction qui n'est pas disponible. Si vous voulez implémenter la fonction de fallback uniquement pour recevoir de l'Ether, vous devez ajouter une vérification comme ``require(msg.data.length == 0)`` pour éviter les appels invalides.
-
-.. avertissement::
-    Les contrats qui reçoivent directement l'Ether (sans appel de fonction, c'est-à-dire en utilisant ``send`` ou `` transfer``) mais ne définissent pas de fonction de fallback lèvent une exception, renvoyant l'Ether (c'était différent avant Solidity v0.4.0). Donc si vous voulez que votre contrat reçoive de l'Ether, vous devez implémenter une fonction de fallback ``payable``.
-
-.. avertissement::
-    Un contrat sans fonction de fallback payable peut recevoir de l'Ether en tant que destinataire d'une `coinbase transaction` (alias `récompense de mineur de bloc`) ou en tant que destination d'un ``selfdestruct``.
-
-    Un contrat ne peut pas réagir à de tels transferts d'Ether et ne peut donc pas non plus les rejeter. C'est un choix de conception de l'EVM et Solidity ne peut le contourner.
-
-    Cela signifie également que ``address(this).balance`` peut être plus élevé que la somme de certaines comptabilités manuelles implémentées dans un contrat (i.e. avoir un compteur mis à jour dans la fonction fallback).
-
-=======
     If you want to decode the input data, you can check the first four bytes
     for the function selector and then
     you can use ``abi.decode`` together with the array slice syntax to
@@ -417,7 +369,6 @@ Comme toute fonction, la fonction de fallback peut exécuter des opérations com
     ``(c, d) = abi.decode(_input[4:], (uint256, uint256));``
     Note that this should only be used as a last resort and
     proper functions should be used instead.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 
 .. code-block:: solidity

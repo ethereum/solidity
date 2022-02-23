@@ -21,13 +21,10 @@ Après que le constructeur ai été exécuté, le code final du contrat est dép
 
 En interne, les arguments du constructeur sont passés :ref:`ABI encodés <ABI>>` après le code du contrat lui-même, mais vous n'avez pas à vous en soucier si vous utilisez ``web3.js``.
 
-<<<<<<< HEAD
 Si un contrat veut créer un autre contrat, le code source (et le binaire) du contrat créé doit être connu du créateur.
 Cela signifie que les dépendances cycliques de création sont impossibles.
-::
-=======
+
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.9.0;
@@ -41,16 +38,6 @@ Cela signifie que les dépendances cycliques de création sont impossibles.
         address owner;
         bytes32 name;
 
-<<<<<<< HEAD
-        // Ceci est le constructeur qui enregistre le
-        // le créateur et le nom attribué.
-        constructor(bytes32 _name) public {
-            // Les variables d'état sont accessibles par leur nom
-            // et non par l'intermédiaire de this.owner par exemple. Ceci s'applique également
-            // aux fonctions et en particulier dans les constructeurs,
-            // vous ne pouvez les appeler que comme ça ("en interne"),
-            // parce que le contrat lui-même n'existe pas encore.
-=======
         // This is the constructor which registers the
         // creator and the assigned name.
         constructor(bytes32 _name) {
@@ -62,7 +49,6 @@ Cela signifie que les dépendances cycliques de création sont impossibles.
             // you should not access functions externally,
             // because the function does not exist yet.
             // See the next section for details.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             owner = msg.sender;
             // Nous effectuons une conversion de type explicite de `address`.
             // vers `TokenCreator` et supposons que le type du

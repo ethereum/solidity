@@ -8,31 +8,7 @@
 Visibilité et Getters
 **********************
 
-<<<<<<< HEAD
 
-Puisque Solidity connaît deux types d'appels de fonction (internes qui ne créent pas d'appel EVM réel (également appelés
-a "message call") et externes qui le font), il existe quatre types de visibilités pour les fonctions et les variables d'état.
-
-Les fonctions doivent être spécifiées comme étant ``external``, ``public``, ``internal`` ou ``private``.
-Pour les variables d'état, ``external`` n'est pas possible.
-
-``external``:
-    Les fonctions externes font partie de l'interface du contrat, ce qui signifie qu'elles peuvent être appelées à partir d'autres contrats et via des transactions. Une fonction externe ``f`` ne peut pas être appelée en interne (c'est-à-dire ``f()``ne fonctionne pas, mais ``this.f()`` fonctionne).
-    Les fonctions externes sont parfois plus efficaces lorsqu'elles reçoivent de grandes quantités de données.
-
-``public``:
-    Les fonctions publiques font partie de l'interface du contrat et peuvent être appelées en interne ou via des messages. Pour les variables d'état publiques, une fonction getter automatique (voir ci-dessous) est générée.
-
-``internal``:
-    Ces fonctions et variables d'état ne sont accessibles qu'en interne (c'est-à-dire à partir du contrat en cours ou des contrats qui en découlent), sans utiliser ``this``.
-
-``private``:
-    Les fonctions privées et les variables d'état ne sont visibles que pour le contrat dans lequel elles sont définies et non dans les contrats dérivés.
-
-.. note::
-     Tout ce qui se trouve à l'intérieur d'un contrat est visible pour tous les observateurs extérieurs à la blockchain. Passer quelque chose en ``private``
-    ne fait qu'empêcher les autres contrats d'accéder à l'information et de la modifier, mais elle sera toujours visible pour le monde entier à l'extérieur de la blockchain.
-=======
 State Variable Visibility
 =========================
 
@@ -58,32 +34,28 @@ State Variable Visibility
 Function Visibility
 ===================
 
-Solidity knows two kinds of function calls: external ones that do create an actual EVM message call and internal ones that do not.
-Furthermore, internal functions can be made inaccessible to derived contracts.
-This gives rise to four types of visibility for functions.
+Puisque Solidity connaît deux types d'appels de fonction (internes qui ne créent pas d'appel EVM réel (également appelés
+a "message call") et externes qui le font), il existe quatre types de visibilités pour les fonctions et les variables d'état.
 
-``external``
-    External functions are part of the contract interface,
-    which means they can be called from other contracts and
-    via transactions. An external function ``f`` cannot be called
-    internally (i.e. ``f()`` does not work, but ``this.f()`` works).
+Les fonctions doivent être spécifiées comme étant ``external``, ``public``, ``internal`` ou ``private``.
+Pour les variables d'état, ``external`` n'est pas possible.
 
-``public``
-    Public functions are part of the contract interface
-    and can be either called internally or via message calls.
+``external``:
+    Les fonctions externes font partie de l'interface du contrat, ce qui signifie qu'elles peuvent être appelées à partir d'autres contrats et via des transactions. Une fonction externe ``f`` ne peut pas être appelée en interne (c'est-à-dire ``f()``ne fonctionne pas, mais ``this.f()`` fonctionne).
+    Les fonctions externes sont parfois plus efficaces lorsqu'elles reçoivent de grandes quantités de données.
 
-``internal``
-    Internal functions can only be accessed from within the current contract
-    or contracts deriving from it.
-    They cannot be accessed externally.
-    Since they are not exposed to the outside through the contract's ABI, they can take parameters of internal types like mappings or storage references.
+``public``:
+    Les fonctions publiques font partie de l'interface du contrat et peuvent être appelées en interne ou via des messages. Pour les variables d'état publiques, une fonction getter automatique (voir ci-dessous) est générée.
 
-``private``
-    Private functions are like internal ones but they are not visible in derived contracts.
+``internal``:
+    Ces fonctions et variables d'état ne sont accessibles qu'en interne (c'est-à-dire à partir du contrat en cours ou des contrats qui en découlent), sans utiliser ``this``.
 
-.. warning::
-    |visibility-caveat|
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+``private``:
+    Les fonctions privées et les variables d'état ne sont visibles que pour le contrat dans lequel elles sont définies et non dans les contrats dérivés.
+
+.. note::
+     Tout ce qui se trouve à l'intérieur d'un contrat est visible pour tous les observateurs extérieurs à la blockchain. Passer quelque chose en ``private``
+    ne fait qu'empêcher les autres contrats d'accéder à l'information et de la modifier, mais elle sera toujours visible pour le monde entier à l'extérieur de la blockchain.
 
 Le spécificateur de visibilité est donné après le type pour les variables d'état et entre la liste des paramètres et la liste des paramètres de retour pour les fonctions.
 
@@ -161,11 +133,7 @@ Les fonctions getter ont une visibilité externe. Si le symbole est accédé en 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-<<<<<<< HEAD
     pragma solidity >=0.4.16 <0.7.0;
-=======
-    pragma solidity >=0.4.0 <0.9.0;
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     contract C {
         uint public data;
@@ -175,16 +143,9 @@ Les fonctions getter ont une visibilité externe. Si le symbole est accédé en 
         }
     }
 
-<<<<<<< HEAD
-Si vous avez une variable d'état ``public`` de type array, alors vous ne pouvez récupérer que des éléments simples de l'array via la fonction getter générée. Ce mécanisme permet d'éviter des coûts de gas élevés lors du retour d'un tableau complet. Vous pouvez utiliser des arguments pour spécifier quel élément individuel retourner, par exemple ``data(0)``. Si vous voulez retourner un tableau entier en un appel, alors vous devez écrire une fonction, par exemple :
-=======
-If you have a ``public`` state variable of array type, then you can only retrieve
-single elements of the array via the generated getter function. This mechanism
-exists to avoid high gas costs when returning an entire array. You can use
-arguments to specify which individual element to return, for example
-``myArray(0)``. If you want to return an entire array in one call, then you need
-to write a function, for example:
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+Si vous avez une variable d'état ``public`` de type array, alors vous ne pouvez récupérer que des éléments simples de l'array via la fonction getter générée.
+Ce mécanisme permet d'éviter des coûts de gas élevés lors du retour d'un tableau complet.
+Vous pouvez utiliser des arguments pour spécifier quel élément individuel retourner, par exemple ``data(0)``. Si vous voulez retourner un tableau entier en un appel, alors vous devez écrire une fonction, par exemple :
 
 .. code-block:: solidity
 
@@ -215,11 +176,7 @@ L'exemple suivant est plus complexe:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-<<<<<<< HEAD
-    pragma solidity >=0.4.16 <0.7.0;
-=======
     pragma solidity >=0.4.0 <0.9.0;
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     contract Complex {
         struct Data {
@@ -233,13 +190,9 @@ L'exemple suivant est plus complexe:
         mapping (uint => mapping(bool => Data[])) public data;
     }
 
-<<<<<<< HEAD
-Il génère une fonction de la forme suivante. Le mappage dans la structure est omis parce qu'il n'y a pas de bonne façon de fournir la clé pour le mappage :
-=======
 It generates a function of the following form. The mapping and arrays (with the
 exception of byte arrays) in the struct are omitted because there is no good way
 to select individual struct members or provide a key for the mapping:
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 .. code-block:: solidity
 

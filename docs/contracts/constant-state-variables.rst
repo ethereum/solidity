@@ -1,32 +1,19 @@
 .. index:: ! constant
 
-<<<<<<< HEAD
-************************
-Variables d'état constantes
-************************
-=======
 .. _constants:
 
-**************************************
-Constant and Immutable State Variables
-**************************************
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+*****************************************
+Variables d'état constantes et immutables
+*****************************************
 
 Les variables d'état peuvent être déclarées comme ``constantes`` ou ``immutable``. Dans les deux cas, ces variables ne peuvent être modifiées après la construction du contrat.
 Dans ce cas, elles doivent être assignées à partir d'une expression constante au moment de la compilation.
 Pour les variables ``constant``, la valeur doit être connue à la compilation.
 Pour les variables ``immutable``, les variables peuvent être assognées jusqu'à la construction.
 
-<<<<<<< HEAD
-Le compilateur ne réserve pas d'emplacement de stockage pour ces variables, et chaque occurrence est remplacée par l'expression constante correspondante.
-
-Tous les types de constantes ne sont pas implémentés pour le moment. Les seuls types pris en charge sont
-`chaines de caractères <strings>`_ (uniquement pour les constantes) et `types valeur <value-types>`_.
-=======
 It is also possible to define ``constant`` variables at the file level.
 
-The compiler does not reserve a storage slot for these variables, and every occurrence is
-replaced by the respective value.
+Le compilateur ne réserve pas d'emplacement de stockage pour ces variables, et chaque occurrence est remplacée par l'expression constante correspondante.
 
 Compared to regular state variables, the gas costs of constant and immutable variables
 are much lower. For a constant variable, the expression assigned to it is copied to
@@ -36,9 +23,8 @@ is copied to all the places in the code where they are accessed. For these value
 32 bytes are reserved, even if they would fit in fewer bytes. Due to this, constant values
 can sometimes be cheaper than immutable values.
 
-Not all types for constants and immutables are implemented at this time. The only supported types are
-:ref:`strings <strings>` (only for constants) and :ref:`value types <value-types>`.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+Tous les types de constantes ne sont pas implémentés pour le moment. Les seuls types pris en charge sont
+`chaines de caractères <strings>`_ (uniquement pour les constantes) et `types valeur <value-types>`_.
 
 .. code-block:: solidity
 
@@ -69,27 +55,16 @@ Not all types for constants and immutables are implemented at this time. The onl
 Constant
 ========
 
-<<<<<<< HEAD
-Pour les variables ``constant``, doivent être assignées à partir d'une expression constante au moment de la compilation et doit 6etre assignée à la déclaration. Toute expression qui accède au stockage, aux données de la blockchain (par exemple ``now``, ``address(this).balance`` ou ``block.number``) ou
-les données d'exécution (``msg.value`` ou ``gasleft()``) ou les appels vers des contrats externes sont interdits. Les expressions qui peuvent avoir un effet secondaire sur l'allocation de mémoire sont autorisées, mais celles qui peuvent avoir un effet secondaire sur d'autres objets mémoire ne le sont pas. Les fonctions intégrées ``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` et ``mulmod`` sont autorisées (même si des contrats externes sont appelés).
+Pour les variables ``constantes``, les valeurs doivent être assignées à partir d'une expression constante au moment de la
+compilation et doit être assignée à la déclaration. Toute expression qui accède au stockage, aux données de la blockchain
+(par exemple ``address(this).balance`` ou ``block.number``) ou
+les données d'exécution (``msg.value`` ou ``gasleft()``) ou les appels vers des contrats externes sont interdits.
+Les expressions qui peuvent avoir un effet secondaire sur l'allocation de mémoire sont autorisées,
+mais celles qui peuvent avoir un effet secondaire sur d'autres objets mémoire ne le sont pas.
+Les fonctions intégrées ``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` et ``mulmod`` sont autorisées (même si des contrats externes sont appelés).
 
 La raison pour laquelle on autorise les effets secondaires sur l'allocateur de mémoire est qu'il devrait être possible de construire des objets complexes comme par exemple des tables de consultation.
 Cette fonctionnalité n'est pas encore entièrement utilisable.
-=======
-For ``constant`` variables, the value has to be a constant at compile time and it has to be
-assigned where the variable is declared. Any expression
-that accesses storage, blockchain data (e.g. ``block.timestamp``, ``address(this).balance`` or
-``block.number``) or
-execution data (``msg.value`` or ``gasleft()``) or makes calls to external contracts is disallowed. Expressions
-that might have a side-effect on memory allocation are allowed, but those that
-might have a side-effect on other memory objects are not. The built-in functions
-``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` and ``mulmod``
-are allowed (even though, with the exception of ``keccak256``, they do call external contracts).
-
-The reason behind allowing side-effects on the memory allocator is that it
-should be possible to construct complex objects like e.g. lookup-tables.
-This feature is not yet fully usable.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 Immutable
 =========
