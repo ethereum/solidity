@@ -49,72 +49,42 @@ Prenons l'exemple suivant où l'on convertit un ``int8`` négatif en un ``uint``
 
 A la fin de cet extrait de code, ``x`` aura la valeur ``0xfffffff...fd`` (64 caractères hexadécimaux), qui est -3 dans la représentation en 256 bits du complément à deux.
 
-<<<<<<< HEAD
-Si un entier est explicitement converti en un type plus petit, les bits d'ordre supérieur sont coupés::
-=======
-If an integer is explicitly converted to a smaller type, higher-order bits are
-cut off:
+Si un entier est explicitement converti en un type plus petit, les bits d'ordre supérieur sont coupés:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     uint32 a = 0x12345678;
     uint16 b = uint16(a); // b sera désormais 0x5678
 
-<<<<<<< HEAD
 Si un entier est explicitement converti en un type plus grand, il est rembourré par la gauche (c'est-à-dire à l'extrémité supérieure de l'ordre).
-Le résultat de la conversion sera comparé à l'entier original::
-=======
-If an integer is explicitly converted to a larger type, it is padded on the left (i.e., at the higher order end).
-The result of the conversion will compare equal to the original integer:
+Le résultat de la conversion sera comparé à l'entier original:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     uint16 a = 0x1234;
     uint32 b = uint32(a); // b will be 0x00001234 now
     assert(a == b);
 
-<<<<<<< HEAD
-Les types à taille fixe se comportent différemment lors des conversions. Ils peuvent être considérés comme des séquences d'octets individuels et la conversion à un type plus petit coupera la séquence::
-=======
-Fixed-size bytes types behave differently during conversions. They can be thought of as
-sequences of individual bytes and converting to a smaller type will cut off the
-sequence:
+Les types à taille fixe se comportent différemment lors des conversions. Ils peuvent être considérés comme des séquences d'octets individuels et la conversion à un type plus petit coupera la séquence:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     bytes2 a = 0x1234;
     bytes1 b = bytes1(a); // b sera désormais 0x12
 
-<<<<<<< HEAD
-Si un type à taille fixe est explicitement converti en un type plus grand, il est rembourré à droite. L'accès à l'octet par un index fixe donnera la même valeur avant et après la conversion (si l'index est toujours dans la plage)::
-=======
-If a fixed-size bytes type is explicitly converted to a larger type, it is padded on
-the right. Accessing the byte at a fixed index will result in the same value before and
-after the conversion (if the index is still in range):
+Si un type à taille fixe est explicitement converti en un type plus grand, il est rembourré à droite. L'accès à l'octet par un index fixe donnera la même valeur avant et après la conversion (si l'index est toujours dans la plage):
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     bytes2 a = 0x1234;
     bytes4 b = bytes4(a); // b sera désormais 0x12340000
     assert(a[0] == b[0]);
     assert(a[1] == b[1]);
 
-<<<<<<< HEAD
 Puisque les entiers et les tableaux d'octets de taille fixe se comportent différemment lorsqu'ils sont tronqués ou rembourrés, les conversions explicites entre entiers et tableaux d'octets de taille fixe ne sont autorisées que si les deux ont la même taille. Si vous voulez convertir entre des entiers et des tableaux d'octets de taille fixe de tailles différentes, vous devez utiliser des conversions intermédiaires qui font la troncature et le remplissage désirés.
-règles explicites::
-=======
-Since integers and fixed-size byte arrays behave differently when truncating or
-padding, explicit conversions between integers and fixed-size byte arrays are only allowed,
-if both have the same size. If you want to convert between integers and fixed-size byte arrays of
-different size, you have to use intermediate conversions that make the desired truncation and padding
-rules explicit:
+règles explicites:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
     bytes2 a = 0x1234;
     uint32 b = uint16(a); // b sera désormais 0x00001234
@@ -151,44 +121,24 @@ Conversions entre les types littéraux et élémentaires
 Types nombres entiers
 ---------------------
 
-<<<<<<< HEAD
 Les nombres décimaux et hexadécimaux peuvent être implicitement convertis en n'importe quel type entier suffisamment grand pour le représenter sans troncature::
 
     uint8 a = 12; // Bon
     uint32 b = 1234; // Bon
     uint16 c = 0x123456; // échoue, car devrait tronquer en 0x3456
 
-Tableaux d'octets de taille fixe
---------------------------------
-=======
-Decimal and hexadecimal number literals can be implicitly converted to any integer type
-that is large enough to represent it without truncation:
-
-.. code-block:: solidity
-
-    uint8 a = 12; // fine
-    uint32 b = 1234; // fine
-    uint16 c = 0x123456; // fails, since it would have to truncate to 0x3456
-
 .. note::
     Prior to version 0.8.0, any decimal or hexadecimal number literals could be explicitly
     converted to an integer type. From 0.8.0, such explicit conversions are as strict as implicit
     conversions, i.e., they are only allowed if the literal fits in the resulting range.
 
-Fixed-Size Byte Arrays
-----------------------
+Tableaux d'octets de taille fixe
+--------------------------------
 
-Decimal number literals cannot be implicitly converted to fixed-size byte arrays. Hexadecimal
-number literals can be, but only if the number of hex digits exactly fits the size of the bytes
-type. As an exception both decimal and hexadecimal literals which have a value of zero can be
-converted to any fixed-size bytes type:
+Les nombres décimaux ne peuvent pas être implicitement convertis en tableaux d'octets de taille fixe. Les nombres hexadécimaux peuvent être littéraux, mais seulement si le nombre de chiffres hexadécimaux correspond exactement à la taille du type de ``bytes``. Par exception, les nombres décimaux et hexadécimaux ayant une valeur de zéro peuvent être convertis en n'importe quel type à taille fixe:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
-Les nombres décimaux ne peuvent pas être implicitement convertis en tableaux d'octets de taille fixe. Les nombres hexadécimaux peuvent être littéraux, mais seulement si le nombre de chiffres hexadécimaux correspond exactement à la taille du type de ``bytes``. Par exception, les nombres décimaux et hexadécimaux ayant une valeur de zéro peuvent être convertis en n'importe quel type à taille fixe::
-
-<<<<<<< HEAD
     bytes2 a = 54321; // pas autorisé
     bytes2 b = 0x12; // pas autorisé
     bytes2 c = 0x123; // pas autorisé
@@ -196,14 +146,10 @@ Les nombres décimaux ne peuvent pas être implicitement convertis en tableaux d
     bytes2 e = 0x0012; // bon
     bytes4 f = 0; // bon
     bytes4 g = 0x0; // bon
-=======
-String literals and hex string literals can be implicitly converted to fixed-size byte arrays,
-if their number of characters matches the size of the bytes type:
+
+Les littéraux de chaînes de caractères et les littéraux de chaînes hexadécimales peuvent être implicitement convertis en tableaux d'octets de taille fixe, si leur nombre de caractères correspond à la taille du type ``bytes``:
 
 .. code-block:: solidity
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
-
-Les littéraux de chaînes de caractères et les littéraux de chaînes hexadécimales peuvent être implicitement convertis en tableaux d'octets de taille fixe, si leur nombre de caractères correspond à la taille du type ``bytes``::
 
     bytes2 a = hex"1234"; // bon
     bytes2 b = "xy"; // bon

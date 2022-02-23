@@ -5,20 +5,12 @@
 Types Référence
 ===============
 
-<<<<<<< HEAD
 Les valeurs du type référence peuvent être modifiées par plusieurs noms différents.
-Comparez ceci avec les catégories de valeurs où vous obtenez une copie indépendante chaque fois qu'une variable de valeur est utilisée. Pour cette raison, les types référence doivent être traités avec plus d'attention que les types de valeur. Actuellement, les types référence comprennent les structures, les tableaux et les mappages. Si vous utilisez un type référence, vous devez toujours indiquer explicitement la zone de données où le type est enregistré : (dont la durée de vie est limitée à un appel de fonction), ``storage`` (l'emplacement où les variables d'état sont stockées) ou ``calldata`` (emplacement de données spécial qui contient les arguments de fonction, disponible uniquement pour les paramètres d'appel de fonction externe).
-=======
-Values of reference type can be modified through multiple different names.
-Contrast this with value types where you get an independent copy whenever
-a variable of value type is used. Because of that, reference types have to be handled
-more carefully than value types. Currently, reference types comprise structs,
-arrays and mappings. If you use a reference type, you always have to explicitly
-provide the data area where the type is stored: ``memory`` (whose lifetime is limited
-to an external function call), ``storage`` (the location where the state variables
-are stored, where the lifetime is limited to the lifetime of a contract)
-or ``calldata`` (special data location that contains the function arguments).
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+Comparez ceci avec les catégories de valeurs où vous obtenez une copie indépendante chaque fois qu'une variable de valeur est utilisée.
+Pour cette raison, les types référence doivent être traités avec plus d'attention que les types valeur.
+Actuellement, les types référence comprennent les structures, les tableaux et les mappages.
+Si vous utilisez un type référence, vous devez toujours indiquer explicitement la zone de données où le type est enregistré :
+``memory`` (dont la durée de vie est limitée à un appel de fonction), ``storage`` (l'emplacement où les variables d'état sont stockées) ou ``calldata`` (emplacement de données spécial qui contient les arguments de fonction, disponible uniquement pour les paramètres d'appel de fonction externe).
 
 Une affectation ou une conversion de type qui modifie l'emplacement des données entraîne toujours une opération de copie automatique, alors que les affectations à l'intérieur du même emplacement de données ne copient que dans certains cas selon le type de stockage.
 
@@ -27,15 +19,8 @@ Une affectation ou une conversion de type qui modifie l'emplacement des données
 Emplacement des données
 -----------------------
 
-<<<<<<< HEAD
 Chaque type référence, c'est-à-dire *arrays* (tableaux) et *structs*, comporte une annotation supplémentaire, la ``localisation des données``, indiquant où elles sont stockées. Il y a trois emplacements de données :
-``Memory``, ``Storage`` et ``Calldata``. Calldata n'est valable que pour les paramètres des fonctions de contrat externes et n'est nécessaire que pour ce type de paramètre. Calldata est une zone non modifiable, non persistante où les arguments de fonction sont stockés, et se comporte principalement comme memory.
-=======
-Every reference type has an additional
-annotation, the "data location", about where it is stored. There are three data locations:
-``memory``, ``storage`` and ``calldata``. Calldata is a non-modifiable,
-non-persistent area where function arguments are stored, and behaves mostly like memory.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+``Memory``, ``Storage`` et ``Calldata``. Calldata est une zone non modifiable, non persistante où les arguments de fonction sont stockés, et se comporte principalement comme memory.
 
 .. note::
     If you can, try to use ``calldata`` as data location because it will avoid copies and
@@ -116,26 +101,18 @@ l'accès fonctionne dans le sens inverse de la déclaration, c'est-à-dire que `
 Indices are zero-based, and access is in the opposite direction of the
 declaration.
 
-<<<<<<< HEAD
 Il y a peu de restrictions concernant l'élément contenu, il peut aussi être un autre tableau, un mappage ou une structure. Les restrictions générales
 s'appliquent, cependant, en ce sens que les mappages ne peuvent être utilisés que dans le ``storage`` et que les fonctions visibles au public nécessitent des paramètres qui sont des types reconnus par l':ref:`ABI types <ABI>`.
 
 Il est possible de marquer les tableaux ``public`` et de demander à Solidity de créer un :ref:`getter <visibility-and-getters>`.
 L'index numérique deviendra un paramètre obligatoire pour le getter.
 
-.. old start
-=======
 For example, if you have a variable ``uint[][5] memory x``, you access the
 seventh ``uint`` in the third dynamic array using ``x[2][6]``, and to access the
 third dynamic array, use ``x[2]``. Again,
 if you have an array ``T[5] a`` for a type ``T`` that can also be an array,
 then ``a[2]`` always has type ``T``.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
-
-L'accès à un tableau après sa fin provoque un ``revert``. Si vous voulez ajouter de nouveaux éléments, vous devez utiliser ``.push()`` ou augmenter le membre ``.length`` (voir ci-dessous).
-
-.. old end
 
 Accessing an array past its end causes a failing assertion. Methods ``.push()`` and ``.push(value)`` can be used
 to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
@@ -150,30 +127,18 @@ a reference to it.
 ``bytes`` and ``string`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-<<<<<<< HEAD
 Les variables de type ``bytes`` et ``string`` sont des tableaux spéciaux. Un ``byte`` est semblable à un ``byte[]``, mais il est condensé en calldata et en mémoire. ``string`` est égal à ``bytes``, mais ne permet pas l'accès à la longueur ou à l'index.
-=======
-Variables of type ``bytes`` and ``string`` are special arrays. The ``bytes`` type is similar to ``bytes1[]``,
-but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
-length or index access.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 Solidity does not have string manipulation functions, but there are
 third-party string libraries. You can also compare two strings by their keccak256-hash using
 ``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and
 concatenate two strings using ``string.concat(s1, s2)``.
 
-<<<<<<< HEAD
-Il faut donc généralement préférer les ``bytes`` aux ``bytes[]`` car c'est moins cher à l'usage.
-En règle générale, utilisez ``bytes`` pour les données en octets bruts de longueur arbitraire et ``string`` pour les données de chaîne de caractères de longueur arbitraire (UTF-8). Si vous pouvez limiter la longueur à un certain nombre d'octets, utilisez toujours un des ``bytes1`` à ``bytes32``, car ils sont beaucoup moins chers également.
-=======
-You should use ``bytes`` over ``bytes1[]`` because it is cheaper,
+Il faut donc généralement préférer les ``bytes`` aux ``bytes[]`` car c'est moins cher à l'usage,
 since using ``bytes1[]`` in ``memory`` adds 31 padding bytes between the elements. Note that in ``storage``, the
-padding is absent due to tight packing, see :ref:`bytes and string <bytes-and-string>`. As a general rule,
-use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
-string (UTF-8) data. If you can limit the length to a certain number of bytes,
-always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+padding is absent due to tight packing, see :ref:`bytes and string <bytes-and-string>`. 
+En règle générale, utilisez ``bytes`` pour les données en octets bruts de longueur arbitraire et ``string`` pour les données de chaîne de caractères de longueur arbitraire (UTF-8).
+Si vous pouvez limiter la longueur à un certain nombre d'octets, utilisez toujours un des ``bytes1`` à ``bytes32``, car ils sont beaucoup moins chers également.
 
 .. note::
     Si vous voulez accéder à la représentation en octets d'une chaîne de caractères ``s``, utilisez ``bytes(s).length`` / ``bytes(s)[7] ='x';``. Gardez à l'esprit que vous accédez aux octets de bas niveau de la représentation UTF-8, et non aux caractères individuels !
@@ -258,15 +223,8 @@ if this is not possible.
 It is not enough that there is a type all the elements can be converted to. One of the elements
 has to be of that type.
 
-<<<<<<< HEAD
 Le type d'un tableau littéral est un tableau mémoire de taille fixe dont le type de base est le type commun des éléments donnés. Le type de ``[1, 2, 3]`` est ``uint8[3] memory```, car le type de chacune de ces constantes est ``uint8``.
 Pour cette raison, il est nécessaire de convertir le premier élément de l'exemple ci-dessus en ``uint``. 
-=======
-In the example below, the type of ``[1, 2, 3]`` is
-``uint8[3] memory``, because the type of each of these constants is ``uint8``. If
-you want the result to be a ``uint[3] memory`` type, you need to convert
-the first element to ``uint``.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 .. code-block:: solidity
 
@@ -282,9 +240,6 @@ the first element to ``uint``.
         }
     }
 
-<<<<<<< HEAD
-Les tableaux de taille fixe ne peuvent pas être assignées à des tableaux de taille dynamique, c'est-à-dire que ce qui suit n'est pas possible :
-=======
 The array literal ``[1, -1]`` is invalid because the type of the first expression
 is ``uint8`` while the type of the second is ``int8`` and they cannot be implicitly
 converted to each other. To make it work, you can use ``[int8(1), -1]``, for example.
@@ -309,7 +264,6 @@ if you want to use two-dimensional array literals:
 
 Fixed size memory arrays cannot be assigned to dynamically-sized
 memory arrays, i.e. the following is not possible:
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 .. code-block:: solidity
 
@@ -360,15 +314,8 @@ Array Members
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
      called ``push(x)`` that you can use to append a given element at the end of the array.
      The function returns nothing.
-<<<<<<< HEAD
-**pop**:
-     Les tableaux de stockage dynamique et les ``bytes`` (et non ``string``) ont une fonction membre appelée ``pop`` que vous pouvez utiliser pour supprimer un élément à la fin du tableau. Ceci appelle aussi implicitement :ref:``delete`` sur l'élément supprimé.
-=======
 **pop()**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member
-     function called ``pop()`` that you can use to remove an element from the
-     end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
+     Les tableaux de stockage dynamique et les ``bytes`` (et non ``string``) ont une fonction membre appelée ``pop()`` que vous pouvez utiliser pour supprimer un élément à la fin du tableau. Ceci appelle aussi implicitement :ref:``delete`` sur l'élément supprimé.
 
 .. note::
     L'augmentation de la longueur d'un tableau en storage a des coûts en gas constants parce qu'on suppose que le stockage est nul, alors que la diminution de la longueur a au moins un coût linéaire (mais dans la plupart des cas pire que linéaire), parce qu'elle inclut explicitement l'élimination des éléments supprimés comme si on appelait :ref:``delete``.
@@ -621,15 +568,9 @@ Cette restriction est nécessaire, car la taille de la structure doit être fini
 Notez que dans toutes les fonctions, un type structure est affecté à une variable locale avec l'emplacement de données ``storage``.
 Ceci ne copie pas la structure mais stocke seulement une référence pour que les affectations aux membres de la variable locale écrivent réellement dans l'état.
 
-<<<<<<< HEAD
 Bien sûr, vous pouvez aussi accéder directement aux membres de la structure sans l'affecter à une variable locale, comme dans ``campaigns[campaignID].amount = 0``.
-=======
-Of course, you can also directly access the members of the struct without
-assigning it to a local variable, as in
-``campaigns[campaignID].amount = 0``.
 
 .. note::
     Until Solidity 0.7.0, memory-structs containing members of storage-only types (e.g. mappings)
     were allowed and assignments like ``campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0)``
     in the example above would work and just silently skip those members.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04

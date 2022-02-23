@@ -1,24 +1,6 @@
 .. index:: !mapping
 .. _mapping-types:
 
-<<<<<<< HEAD
-Mappages
---------
-
-Vous déclarez le objets de type ``mapping`` avec la syntaxe ``mapping(_KeyType => _ValueType)``.
-``_KeyType`` peut être n'importe quel type élémentaire. Cela signifie qu'il peut s'agir de n'importe lequel des types de valeurs intégrés plus les octets et les chaînes de caractères. Les types définis par l'utilisateur ou les types complexes tels que les types de contrat, les énuménations, les mappages, les structs et tout type de tableau, à l'exception des ``bytes`` et des ``string`` qui ne sont pas autorisés.
-``_ValueType`` peut être n'importe quel type, y compris les mappages.
-
-Vous pouvez considérer les mappings comme des `tables de hashage <https://fr.wikipedia.org/wiki/Table_de_hachage>`_, qui sont virtuellement initialisées de telle sorte que chaque clé possible existe et est mappée à une valeur dont la représentation binaire est constituée de zéros, de type :ref:`valeur par défaut <default-value>`. La similitude s'arrête là, les données "clés" ne sont pas stockées dans un mappage, seul son hachage ``keccak256`` est utilisé pour rechercher la valeur.
-
-Pour cette raison, les mappages n'ont pas de longueur ou de concept de clé ou de valeur définie.
-
-Les mappages ne peuvent avoir qu'un emplacement de données en ``storage`` et sont donc autorisés pour les variables d'état, comme types référence en storage dans les fonctions ou comme paramètres pour les fonctions de librairies.
-Ils ne peuvent pas être utilisés comme paramètres ou paramètres de retour de fonctions de contrat publiques.
-
-Vous pouvez marquer les variables de type mapping comme ``public`` et Solidity crée un :ref:`getter <visibility-and-getters>` pour vous. Le ```_KeyType`` devient un paramètre pour le getter. Si ``_ValueType`` est un type de valeur ou une structure, le getter retourne ``_ValueType``.
-Si ``_ValueType`` est un tableau ou un mappage, le getter a un paramètre pour chaque ``_KeyType``, de manière récursive.
-=======
 Mapping Types
 =============
 
@@ -51,7 +33,6 @@ You can mark state variables of mapping type as ``public`` and Solidity creates 
 If ``_ValueType`` is a value type or a struct, the getter returns ``_ValueType``.
 If ``_ValueType`` is an array or a mapping, the getter has one parameter for
 each ``_KeyType``, recursively.
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 In the example below, the ``MappingExample`` contract defines a public ``balances``
 mapping, with the key type an ``address``, and a value type a ``uint``, mapping

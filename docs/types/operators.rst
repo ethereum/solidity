@@ -1,13 +1,5 @@
 .. index:: ! operator
 
-<<<<<<< HEAD
-Opérateurs impliquant des LValues
-=================================
-
-Si ``a`` est une LValue (c.-à-d. une variable ou quelque chose qui peut être assigné à), les opérateurs suivants sont disponibles en version raccourcie::
-
-``a += e`` équivaut à ``a = a + e``. Les opérateurs ``-=``, ``*=``, ``/=``, ``%=``, ``|=``, ``&=`` et ``^=`` sont définis de la même manière. ``a++`` et ``a--`` sont équivalents à ``a += 1`` / ``a -= 1`` mais l'expression elle-même a toujours la valeur précédente ``a``. Par contraste, ``--a`` et ``++a`` changent également ``a`` de ``1`` , mais retournent la valeur après le changement.
-=======
 Operators
 =========
 
@@ -50,7 +42,6 @@ return the value after the change.
 
 .. index:: !delete
 
->>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 .. _delete:
 
 delete
