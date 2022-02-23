@@ -492,9 +492,9 @@ namespace
 string toString(rational const& _x)
 {
 	if (_x.denominator() == 1)
-		return ::toString(_x.numerator());
+		return _x.numerator().str();
 	else
-		return ::toString(_x.numerator()) + "/" + ::toString(_x.denominator());
+		return _x.numerator().str() + "/" + _x.denominator().str();
 }
 }
 
