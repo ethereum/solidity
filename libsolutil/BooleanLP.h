@@ -27,7 +27,6 @@
 #include <vector>
 #include <variant>
 #include <stack>
-#include <compare>
 
 namespace solidity::util
 {
