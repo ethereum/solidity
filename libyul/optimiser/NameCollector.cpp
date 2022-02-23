@@ -14,13 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Specific AST walker that collects all defined names.
  */
 
 #include <libyul/optimiser/NameCollector.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;
@@ -35,7 +36,8 @@ void NameCollector::operator()(VariableDeclaration const& _varDecl)
 
 void NameCollector::operator ()(FunctionDefinition const& _funDef)
 {
-	m_names.emplace(_funDef.name);
+	if (m_collectWhat == VariablesAndFunctions)
+		m_names.emplace(_funDef.name);
 	for (auto const& arg: _funDef.parameters)
 		m_names.emplace(arg.name);
 	for (auto const& ret: _funDef.returnVariables)
@@ -76,13 +78,6 @@ map<YulString, size_t> ReferencesCounter::countReferences(Expression const& _exp
 	return counter.references();
 }
 
-void Assignments::operator()(Assignment const& _assignment)
-{
-	for (auto const& var: _assignment.variableNames)
-		m_names.emplace(var.name);
-}
-
-
 void AssignmentsSinceContinue::operator()(ForLoop const& _forLoop)
 {
 	m_forLoopDepth++;
@@ -106,4 +101,23 @@ void AssignmentsSinceContinue::operator()(Assignment const& _assignment)
 void AssignmentsSinceContinue::operator()(FunctionDefinition const&)
 {
 	yulAssert(false, "");
+}
+
+std::set<YulString> solidity::yul::assignedVariableNames(Block const& _code)
+{
+	std::set<YulString> names;
+	forEach<Assignment const>(_code, [&](Assignment const& _assignment) {
+		for (auto const& var: _assignment.variableNames)
+			names.emplace(var.name);
+	});
+	return names;
+}
+
+map<YulString, FunctionDefinition const*> solidity::yul::allFunctionDefinitions(Block const& _block)
+{
+	std::map<YulString, FunctionDefinition const*> result;
+	forEach<FunctionDefinition const>(_block, [&](FunctionDefinition const& _function) {
+		result[_function.name] = &_function;
+	});
+	return result;
 }

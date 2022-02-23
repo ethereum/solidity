@@ -26,30 +26,19 @@
 // step: fullInliner
 //
 // {
-//     {
-//         let x_8 := 100
-//         mstore(0, x_8)
-//         mstore(7, h())
-//         g(10)
-//         mstore(1, x_8)
-//     }
+//     { f(100) }
 //     function f(x)
 //     {
 //         mstore(0, x)
-//         let t_20 := 0
-//         t_20 := 2
-//         mstore(7, t_20)
-//         g(10)
+//         let t_8 := 0
+//         t_8 := 2
+//         mstore(7, t_8)
+//         let x_1_9 := 10
+//         f(1)
 //         mstore(1, x)
 //     }
 //     function g(x_1)
-//     {
-//         let x_14 := 1
-//         mstore(0, x_14)
-//         mstore(7, h())
-//         g(10)
-//         mstore(1, x_14)
-//     }
+//     { f(1) }
 //     function h() -> t
 //     { t := 2 }
 // }

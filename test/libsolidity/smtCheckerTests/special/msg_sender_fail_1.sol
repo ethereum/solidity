@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(address c) public view {
@@ -9,5 +7,8 @@ contract C
 		assert(c == msg.sender);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (155-178): Assertion violation happens here
+// Warning 6328: (122-145): CHC: Assertion violation happens here.

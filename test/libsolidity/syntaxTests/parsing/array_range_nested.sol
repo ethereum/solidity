@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
     function f(uint256[][] calldata x) external pure {
         x[0][1:2];

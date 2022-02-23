@@ -10,7 +10,7 @@ contract C {
     }
     S s;
 
-    constructor() public {
+    constructor() {
         uint256[3] memory s2;
         s2[1] = 9;
         s = S(1, s2, X(4, 5));
@@ -26,5 +26,7 @@ contract C {
         x2 = s.s3.x2;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // get() -> 0x01, 0x00, 0x09, 0x00, 0x04, 0x05

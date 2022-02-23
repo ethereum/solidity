@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (181-221): Invalid literal value.
+// TypeError 2826: (181-221): Invalid literal value.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul interpreter module that evaluates EVM instructions.
  */
@@ -23,17 +24,23 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libevmasm/Instruction.h>
+#include <libevmasm/SemanticInformation.h>
 
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/Numeric.h>
+
+#include <limits>
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::evmasm;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 
+using solidity::util::h160;
 using solidity::util::h256;
 using solidity::util::keccak256;
 
@@ -48,10 +55,10 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 	if (_offset >= _data.size())
 		return 0;
 	else if (_offset + 32 <= _data.size())
-		return *reinterpret_cast<h256 const*>(_data.data() + size_t(_offset));
+		return *reinterpret_cast<h256 const*>(_data.data() + static_cast<size_t>(_offset));
 	else
 	{
-		size_t off = size_t(_offset);
+		size_t off = static_cast<size_t>(_offset);
 		u256 val;
 		for (size_t i = 0; i < 32; ++i)
 		{
@@ -88,13 +95,14 @@ u256 EVMInstructionInterpreter::eval(
 	using evmasm::Instruction;
 
 	auto info = instructionInfo(_instruction);
-	yulAssert(size_t(info.args) == _arguments.size(), "");
+	yulAssert(static_cast<size_t>(info.args) == _arguments.size(), "");
 
 	auto const& arg = _arguments;
 	switch (_instruction)
 	{
 	case Instruction::STOP:
-		throw ExplicitlyTerminated();
+		logTrace(_instruction);
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	// --------------- arithmetic ---------------
 	case Instruction::ADD:
 		return arg[0] + arg[1];
@@ -180,15 +188,18 @@ u256 EVMInstructionInterpreter::eval(
 		return u256(keccak256(readMemory(offset, size)));
 	}
 	case Instruction::ADDRESS:
-		return m_state.address;
+		return h256(m_state.address, h256::AlignRight);
 	case Instruction::BALANCE:
-		return m_state.balance;
+		if (arg[0] == h256(m_state.address, h256::AlignRight))
+			return m_state.selfbalance;
+		else
+			return m_state.balance;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
 	case Instruction::ORIGIN:
-		return m_state.origin;
+		return h256(m_state.origin, h256::AlignRight);
 	case Instruction::CALLER:
-		return m_state.caller;
+		return h256(m_state.caller, h256::AlignRight);
 	case Instruction::CALLVALUE:
 		return m_state.callvalue;
 	case Instruction::CALLDATALOAD:
@@ -196,6 +207,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CALLDATASIZE:
 		return m_state.calldata.size();
 	case Instruction::CALLDATACOPY:
+		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.calldata,
@@ -205,6 +217,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CODESIZE:
 		return m_state.code.size();
 	case Instruction::CODECOPY:
+		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.code,
@@ -215,6 +228,8 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.gasprice;
 	case Instruction::CHAINID:
 		return m_state.chainid;
+	case Instruction::BASEFEE:
+		return m_state.basefee;
 	case Instruction::EXTCODESIZE:
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODEHASH:
@@ -244,7 +259,7 @@ u256 EVMInstructionInterpreter::eval(
 		else
 			return 0xaaaaaaaa + (arg[0] - m_state.blockNumber - 256);
 	case Instruction::COINBASE:
-		return m_state.coinbase;
+		return h256(m_state.coinbase, h256::AlignRight);
 	case Instruction::TIMESTAMP:
 		return m_state.timestamp;
 	case Instruction::NUMBER:
@@ -300,11 +315,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CREATE:
 		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
-		return 0xcccccc + arg[1];
+		return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CREATE2:
 		accessMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
-		return 0xdddddd + arg[1];
+		return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata
@@ -324,18 +339,24 @@ u256 EVMInstructionInterpreter::eval(
 		if (accessMemory(arg[0], arg[1]))
 			data = readMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg, data);
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	case Instruction::REVERT:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
-		throw ExplicitlyTerminated();
+		m_state.storage.clear();
+		m_state.trace.clear();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::INVALID:
 		logTrace(_instruction);
-		throw ExplicitlyTerminated();
+		m_state.storage.clear();
+		m_state.trace.clear();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
-		throw ExplicitlyTerminated();
+		m_state.storage.clear();
+		m_state.trace.clear();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::POP:
 		break;
 	// --------------- invalid in strict assembly ---------------
@@ -406,17 +427,6 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SWAP14:
 	case Instruction::SWAP15:
 	case Instruction::SWAP16:
-	// --------------- EVM 2.0 ---------------
-	case Instruction::JUMPTO:
-	case Instruction::JUMPIF:
-	case Instruction::JUMPV:
-	case Instruction::JUMPSUB:
-	case Instruction::JUMPSUBV:
-	case Instruction::BEGINSUB:
-	case Instruction::BEGINDATA:
-	case Instruction::RETURNSUB:
-	case Instruction::PUTLOCAL:
-	case Instruction::GETLOCAL:
 	{
 		yulAssert(false, "");
 		return 0;
@@ -426,28 +436,47 @@ u256 EVMInstructionInterpreter::eval(
 	return 0;
 }
 
-u256 EVMInstructionInterpreter::evalBuiltin(BuiltinFunctionForEVM const& _fun, const std::vector<u256>& _arguments)
+u256 EVMInstructionInterpreter::evalBuiltin(
+	BuiltinFunctionForEVM const& _fun,
+	vector<Expression> const& _arguments,
+	vector<u256> const& _evaluatedArguments
+)
 {
 	if (_fun.instruction)
-		return eval(*_fun.instruction, _arguments);
-	else if (_fun.name == "datasize"_yulstring)
-		return u256(keccak256(h256(_arguments.at(0)))) & 0xfff;
-	else if (_fun.name == "dataoffset"_yulstring)
-		return u256(keccak256(h256(_arguments.at(0) + 2))) & 0xfff;
-	else if (_fun.name == "datacopy"_yulstring)
+		return eval(*_fun.instruction, _evaluatedArguments);
+
+	string fun = _fun.name.str();
+	// Evaluate datasize/offset/copy instructions
+	if (fun == "datasize" || fun == "dataoffset")
+	{
+		string arg = std::get<Literal>(_arguments.at(0)).value.str();
+		if (arg.length() < 32)
+			arg.resize(32, 0);
+		if (fun == "datasize")
+			return u256(keccak256(arg)) & 0xfff;
+		else
+		{
+			// Force different value than for datasize
+			arg[31]++;
+			arg[31]++;
+			return u256(keccak256(arg)) & 0xfff;
+		}
+	}
+	else if (fun == "datacopy")
 	{
 		// This is identical to codecopy.
-		if (accessMemory(_arguments.at(0), _arguments.at(2)))
+		if (accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2)))
 			copyZeroExtended(
 				m_state.memory,
 				m_state.code,
-				size_t(_arguments.at(0)),
-				size_t(_arguments.at(1) & size_t(-1)),
-				size_t(_arguments.at(2))
+				size_t(_evaluatedArguments.at(0)),
+				size_t(_evaluatedArguments.at(1) & numeric_limits<size_t>::max()),
+				size_t(_evaluatedArguments.at(2))
 			);
+		return 0;
 	}
 	else
-		yulAssert(false, "Unknown builtin: " + _fun.name.str());
+		yulAssert(false, "Unknown builtin: " + fun);
 	return 0;
 }
 
@@ -458,7 +487,9 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 	{
 		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
 		m_state.msize = max(m_state.msize, newSize);
-		return _size <= 0xffff;
+		// We only record accesses to contiguous memory chunks that are at most 0xffff bytes
+		// in size and at an offset of at most numeric_limits<size_t>::max() - 0xffff
+		return _size <= 0xffff && _offset <= u256(numeric_limits<size_t>::max() - 0xffff);
 	}
 	else
 		m_state.msize = u256(-1);
@@ -487,23 +518,40 @@ void EVMInstructionInterpreter::writeMemoryWord(u256 const& _offset, u256 const&
 }
 
 
-void EVMInstructionInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(
+	evmasm::Instruction _instruction,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
-	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
+	logTrace(
+		evmasm::instructionInfo(_instruction).name,
+		SemanticInformation::memory(_instruction) == SemanticInformation::Effect::Write,
+		_arguments,
+		_data
+	);
 }
 
-void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(
+	std::string const& _pseudoInstruction,
+	bool _writesToMemory,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
-	string message = _pseudoInstruction + "(";
-	for (size_t i = 0; i < _arguments.size(); ++i)
-		message += (i > 0 ? ", " : "") + util::formatNumber(_arguments[i]);
-	message += ")";
-	if (!_data.empty())
-		message += " [" + util::toHex(_data) + "]";
-	m_state.trace.emplace_back(std::move(message));
-	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
+	if (!(_writesToMemory && memWriteTracingDisabled()))
 	{
-		m_state.trace.emplace_back("Trace size limit reached.");
-		throw TraceLimitReached();
+		string message = _pseudoInstruction + "(";
+		for (size_t i = 0; i < _arguments.size(); ++i)
+			message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+		message += ")";
+		if (!_data.empty())
+			message += " [" + util::toHex(_data) + "]";
+		m_state.trace.emplace_back(std::move(message));
+		if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
+		{
+			m_state.trace.emplace_back("Trace size limit reached.");
+			BOOST_THROW_EXCEPTION(TraceLimitReached());
+		}
 	}
 }

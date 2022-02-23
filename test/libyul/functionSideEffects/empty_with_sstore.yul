@@ -2,4 +2,4 @@
     sstore(0, 1)
 }
 // ----
-// : invalidatesStorage
+// : writes storage

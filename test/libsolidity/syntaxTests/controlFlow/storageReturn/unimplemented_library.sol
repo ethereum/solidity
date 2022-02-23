@@ -8,8 +8,8 @@ abstract library T {
     function g() public returns(uint[] storage s);
 }
 // ----
-// TypeError: (146-268): Libraries cannot be abstract.
-// TypeError: (48-92): Library functions must be implemented if declared.
-// TypeError: (97-143): Library functions must be implemented if declared.
-// TypeError: (171-215): Library functions must be implemented if declared.
-// TypeError: (220-266): Library functions must be implemented if declared.
+// TypeError 9571: (146-268): Libraries cannot be abstract.
+// TypeError 9231: (48-92): Library functions must be implemented if declared.
+// TypeError 9231: (97-143): Library functions must be implemented if declared.
+// TypeError 9231: (171-215): Library functions must be implemented if declared.
+// TypeError 9231: (220-266): Library functions must be implemented if declared.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Population.h>
 
@@ -53,7 +54,7 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 	return (
 		(a.fitness < b.fitness) ||
 		(a.fitness == b.fitness && a.chromosome.length() < b.chromosome.length()) ||
-		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
+		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() && a.chromosome.genes() < b.chromosome.genes())
 	);
 }
 

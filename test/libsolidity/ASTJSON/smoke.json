@@ -8,16 +8,15 @@
     ]
   },
   "id": 2,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 1,
       "linearizedBaseContracts":
@@ -25,10 +24,12 @@
         1
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 2,
-      "src": "0:13:1"
+      "src": "0:13:1",
+      "usedErrors": []
     }
   ],
   "src": "0:14:1"

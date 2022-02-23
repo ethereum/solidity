@@ -26,6 +26,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/Exceptions.h>
+#include <libsolidity/interface/Natspec.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -55,11 +56,16 @@ public:
 		else
 			generatedDocumentation = m_compilerStack.natspecDev(_contractName);
 		Json::Value expectedDocumentation;
-		util::jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
+		std::string parseError;
+		BOOST_REQUIRE_MESSAGE(util::jsonParseStrict(_expectedDocumentationString, expectedDocumentation, &parseError), parseError);
+
+		expectedDocumentation["version"] = Json::Value(Natspec::c_natspecVersion);
+		expectedDocumentation["kind"] = Json::Value(_userDocumentation ? "user" : "dev");
+
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
-			"Expected:\n" << expectedDocumentation.toStyledString() <<
-			"\n but got:\n" << generatedDocumentation.toStyledString()
+			"Expected:\n" << util::jsonPrettyPrint(expectedDocumentation) <<
+			"\n but got:\n" << util::jsonPrettyPrint(generatedDocumentation)
 		);
 	}
 
@@ -72,11 +78,89 @@ public:
 		BOOST_REQUIRE(Error::containsErrorOfType(m_compilerStack.errors(), Error::Type::DocstringParsingError));
 	}
 
-private:
+protected:
 	CompilerStack m_compilerStack;
 };
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNatspecJSON, DocumentationChecker)
+
+BOOST_AUTO_TEST_CASE(user_empty_natspec_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			///
+			///
+			function f() public {
+			}
+		}
+	)";
+
+	char const* natspec = R"(
+	{
+		"methods": {}
+	}
+	)";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_newline_break)
+{
+	char const* sourceCode = R"(
+		contract test {
+			///
+			/// @notice hello
+
+			/// @notice world
+			function f() public {
+			}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF(
+	{
+		"methods":
+		{
+			"f()":
+			{
+			"notice": "world"
+			}
+		}
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_multiline_empty_lines)
+{
+	char const* sourceCode = R"(
+	contract test {
+		/**
+		 *
+		 *
+		 * @notice hello world
+		 */
+		function f() public {
+		}
+	}
+	)";
+
+	char const* natspec = R"ABCDEF(
+	{
+		"methods":
+		{
+			"f()":
+			{
+				"notice": "hello world"
+			}
+		}
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
 
 BOOST_AUTO_TEST_CASE(user_basic_test)
 {
@@ -105,18 +189,27 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 		}
 	)";
 
-	char const* devNatspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256)\":{ \n"
-	"        \"details\": \"Multiplies a number by 7\"\n"
-	"        }\n"
-	"    }\n"
-	"}}";
+	char const* devNatspec = R"R(
+	{
+		"methods":
+		{
+			"mul(uint256)":
+			{
+				"details": "Multiplies a number by 7"
+			}
+		}
+	})R";
 
-	char const* userNatspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
-	"}}";
+	char const* userNatspec = R"R(
+	{
+		"methods":
+		{
+			"mul(uint256)":
+			{
+				"notice": "Multiplies `a` by 7"
+			}
+		}
+	})R";
 
 	checkNatspec(sourceCode, "test", devNatspec, false);
 	checkNatspec(sourceCode, "test", userNatspec, true);
@@ -202,6 +295,194 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 
 	checkNatspec(sourceCode, "test", devNatspec, false);
 	checkNatspec(sourceCode, "test", userNatspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(public_state_variable)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @notice example of notice
+			/// @dev example of dev
+			/// @return returns state
+			uint public state;
+		}
+	)";
+
+	char const* devDoc = R"R(
+	{
+		"methods": {},
+		"stateVariables":
+		{
+			"state":
+			{
+				"details": "example of dev",
+				"return": "returns state",
+				"returns":
+				{
+					"_0": "returns state"
+				}
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "test", devDoc, false);
+
+	char const* userDoc = R"R(
+	{
+		"methods":
+		{
+			"state()":
+			{
+				"notice": "example of notice"
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "test", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(public_state_variable_struct)
+{
+	char const* sourceCode = R"(
+		contract Bank {
+			struct Coin {
+				string observeGraphicURL;
+				string reverseGraphicURL;
+			}
+
+			/// @notice Get the n-th coin I own
+			/// @return observeGraphicURL Front pic
+			/// @return reverseGraphicURL Back pic
+			Coin[] public coinStack;
+		}
+	)";
+
+	char const* devDoc = R"R(
+	{
+		"methods": {},
+		"stateVariables":
+		{
+			"coinStack":
+			{
+				"returns":
+				{
+					"observeGraphicURL": "Front pic",
+					"reverseGraphicURL": "Back pic"
+				}
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "Bank", devDoc, false);
+
+	char const* userDoc = R"R(
+	{
+		"methods":
+		{
+			"coinStack(uint256)":
+			{
+				"notice": "Get the n-th coin I own"
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "Bank", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(public_state_variable_struct_repeated)
+{
+	char const* sourceCode = R"(
+		contract Bank {
+			struct Coin {
+				string obverseGraphicURL;
+				string reverseGraphicURL;
+			}
+
+			/// @notice Get the n-th coin I own
+			/// @return obverseGraphicURL Front pic
+			/// @return obverseGraphicURL Front pic
+			Coin[] public coinStack;
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(private_state_variable)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev example of dev
+			uint private state;
+		}
+	)";
+
+	char const* devDoc = R"(
+	{
+		"methods": {},
+		"stateVariables":
+		{
+			"state":
+			{
+				"details": "example of dev"
+			}
+		}
+	}
+	)";
+	checkNatspec(sourceCode, "test", devDoc, false);
+
+	char const* userDoc = R"(
+	{
+		"methods":{}
+	}
+	)";
+	checkNatspec(sourceCode, "test", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(event)
+{
+	char const* sourceCode = R"(
+		contract ERC20 {
+			/// @notice This event is emitted when a transfer occurs.
+			/// @param from The source account.
+			/// @param to The destination account.
+			/// @param amount The amount.
+			/// @dev A test case!
+			event Transfer(address indexed from, address indexed to, uint amount);
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"details": "A test case!",
+				"params":
+				{
+					"amount": "The amount.", "from": "The source account.", "to": "The destination account."
+				}
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"notice": "This event is emitted when a transfer occurs."
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", userDoc, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
@@ -366,9 +647,11 @@ BOOST_AUTO_TEST_CASE(dev_return_no_params)
 
 	char const* natspec = R"ABCDEF(
 	{
-		"methods": {
-			"mul(uint256,uint256)": {
-				"returns": { "d": "The result of the multiplication"
+		"methods":
+		{
+			"mul(uint256,uint256)":
+			{
+				"returns": { "d": "The result of the multiplication" }
 			}
 		}
 	})ABCDEF";
@@ -598,19 +881,24 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 		}
 	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256,uint256)\":{ \n"
-	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
-	"        \"params\": {\n"
-	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
-	"            \"second\": \"Documentation for the second parameter\"\n"
-	"        },\n"
-	"        \"returns\": {\n"
-	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
-	"        }\n"
-	"    }\n"
-	"}}";
+	char const* natspec = R"R({
+		"methods":
+		{
+			"mul(uint256,uint256)":
+			{
+				"details": "Multiplies a number by 7 and adds second parameter",
+				"params":
+				{
+					"a": "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
+					"second": "Documentation for the second parameter"
+				},
+				"returns":
+				{
+					"d": "The result of the multiplication and cookies with nutella"
+				}
+			}
+		}
+	})R";
 
 	checkNatspec(sourceCode, "test", natspec, false);
 }
@@ -633,19 +921,25 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 		}
 	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256,uint256)\":{ \n"
-	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
-	"        \"params\": {\n"
-	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
-	"            \"second\": \"Documentation for the second parameter\"\n"
-	"        },\n"
-	"        \"returns\": {\n"
-	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
-	"        }\n"
-	"    }\n"
-	"}}";
+	char const* natspec = R"R(
+	{
+		"methods":
+		{
+			"mul(uint256,uint256)":
+			{
+				"details": "Multiplies a number by 7 and adds second parameter",
+				"params":
+				{
+					"a": "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
+					"second": "Documentation for the second parameter"
+				},
+				"returns":
+				{
+					"d": "The result of the multiplication and cookies with nutella"
+				}
+			}
+		}
+	})R";
 
 	checkNatspec(sourceCode, "test", natspec, false);
 }
@@ -721,18 +1015,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 		}
 	)";
 
-	char const* natspec = "{"
-	"    \"author\": \"Lefteris\","
-	"    \"title\": \"Just a test contract\","
-	"    \"methods\":{"
-	"        \"mul(uint256,uint256)\":{ \n"
-	"            \"details\": \"Mul function\",\n"
-	"            \"author\": \"John Doe\",\n"
-	"        }\n"
-	"    }\n"
-	"}";
-
-	checkNatspec(sourceCode, "test", natspec, false);
+	expectNatspecError(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
@@ -747,13 +1030,14 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 
 	char const* natspec = R"ABCDEF(
 	{
-	   "methods" : {
-		  "mul(uint256)" : {
-			 "notice" : "I do something awesome"
-		  }
-	   }
-	}
-	)ABCDEF";
+		"methods":
+		{
+			"mul(uint256)":
+			{
+				"notice": "I do something awesome"
+			}
+		}
+	})ABCDEF";
 
 	checkNatspec(sourceCode, "test", natspec, true);
 }
@@ -770,11 +1054,13 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 
 	char const* natspec = R"ABCDEF(
 	{
-	   "methods" : {
-		  "mul(uint256)" : {
-			 "notice" : "I do something awesome which requires two lines to explain"
-		  }
-	   }
+		"methods":
+		{
+			"mul(uint256)":
+			{
+			"notice": "I do something awesome which requires two lines to explain"
+		}
+	}
 	}
 	)ABCDEF";
 
@@ -790,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	)";
 	char const* natspec = R"ABCDEF(
 	{
-	   "methods" : {}
+		"methods": {}
 	}
 	)ABCDEF";
 
@@ -870,16 +1156,20 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
 
 BOOST_AUTO_TEST_CASE(user_constructor)
 {
-	char const *sourceCode = R"(
+	char const* sourceCode = R"(
 		contract test {
 			/// @notice this is a really nice constructor
-			constructor(uint a, uint second) public { }
+			constructor(uint a, uint second) { }
 		}
 	)";
 
-	char const *natspec = R"ABCDEF({
-	"methods" : {
-		"constructor" : "this is a really nice constructor"
+	char const* natspec = R"ABCDEF({
+	"methods":
+	{
+		"constructor":
+		{
+			"notice": "this is a really nice constructor"
+		}
 	}
 	})ABCDEF";
 
@@ -888,21 +1178,26 @@ BOOST_AUTO_TEST_CASE(user_constructor)
 
 BOOST_AUTO_TEST_CASE(user_constructor_and_function)
 {
-	char const *sourceCode = R"(
+	char const* sourceCode = R"(
 		contract test {
 			/// @notice this is a really nice constructor
-			constructor(uint a, uint second) public { }
+			constructor(uint a, uint second) { }
 			/// another multiplier
 			function mul(uint a, uint second) public returns(uint d) { return a * 7 + second; }
 		}
 	)";
 
-	char const *natspec = R"ABCDEF({
-	"methods" : {
-		"mul(uint256,uint256)" : {
-			"notice" : "another multiplier"
+	char const* natspec = R"ABCDEF({
+	"methods":
+	{
+		"mul(uint256,uint256)":
+		{
+			"notice": "another multiplier"
 		},
-		"constructor" : "this is a really nice constructor"
+		"constructor":
+		{
+			"notice": "this is a really nice constructor"
+		}
 	}
 	})ABCDEF";
 
@@ -913,20 +1208,21 @@ BOOST_AUTO_TEST_CASE(dev_constructor)
 {
 	char const *sourceCode = R"(
 		contract test {
-			/// @author Alex
 			/// @param a the parameter a is really nice and very useful
 			/// @param second the second parameter is not very useful, it just provides additional confusion
-			constructor(uint a, uint second) public { }
+			constructor(uint a, uint second) { }
 		}
 	)";
 
 	char const *natspec = R"ABCDEF({
-	"methods" : {
-		"constructor" : {
-			"author" : "Alex",
-			"params" : {
-				"a" : "the parameter a is really nice and very useful",
-				"second" : "the second parameter is not very useful, it just provides additional confusion"
+	"methods":
+	{
+		"constructor":
+		{
+			"params":
+			{
+				"a": "the parameter a is really nice and very useful",
+				"second": "the second parameter is not very useful, it just provides additional confusion"
 			}
 		}
 	}
@@ -939,11 +1235,10 @@ BOOST_AUTO_TEST_CASE(dev_constructor_return)
 {
 	char const* sourceCode = R"(
 		contract test {
-			/// @author Alex
 			/// @param a the parameter a is really nice and very useful
 			/// @param second the second parameter is not very useful, it just provides additional confusion
 			/// @return return should not work within constructors
-			constructor(uint a, uint second) public { }
+			constructor(uint a, uint second) { }
 		}
 	)";
 
@@ -954,10 +1249,9 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 {
 	char const *sourceCode = R"(
 		contract test {
-			/// @author Alex
 			/// @param a the parameter a is really nice and very useful
 			/// @param second the second parameter is not very useful, it just provides additional confusion
-			constructor(uint a, uint second) public { }
+			constructor(uint a, uint second) { }
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
@@ -971,22 +1265,27 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 	)";
 
 	char const *natspec = R"ABCDEF({
-	"methods" : {
-		"mul(uint256,uint256)" : {
-			"details" : "Multiplies a number by 7 and adds second parameter",
-			"params" : {
-				"a" : "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
-				"second" : "Documentation for the second parameter"
+	"methods":
+	{
+		"mul(uint256,uint256)":
+		{
+			"details": "Multiplies a number by 7 and adds second parameter",
+			"params":
+			{
+				"a": "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
+				"second": "Documentation for the second parameter"
 			},
-			"returns" : {
+			"returns":
+			{
 				"d": "The result of the multiplication and cookies with nutella"
 			}
 		},
-		"constructor" : {
-			"author" : "Alex",
-			"params" : {
-				"a" : "the parameter a is really nice and very useful",
-				"second" : "the second parameter is not very useful, it just provides additional confusion"
+		"constructor":
+		{
+			"params":
+			{
+				"a": "the parameter a is really nice and very useful",
+				"second": "the second parameter is not very useful, it just provides additional confusion"
 			}
 		}
 	}
@@ -995,6 +1294,1395 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 	checkNatspec(sourceCode, "test", natspec, false);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(slash4)
+{
+	char const* sourceCode = R"(
+		contract test {
+			//// @notice lorem ipsum
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"( { "methods": {} } )";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(star3)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/***
+			 * @notice lorem ipsum
+			 */
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"( { "methods": {} } )";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(slash3_slash3)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @notice lorem
+			/// ipsum
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+		"methods":
+		{
+			"f()": { "notice": "lorem ipsum" }
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(slash3_slash4)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @notice lorem
+			//// ipsum
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+		"methods":
+		{
+			"f()": { "notice": "lorem" }
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_default_inherit_variable)
+{
+	char const *sourceCode = R"(
+		contract C {
+			/// @notice Hello world
+			/// @dev test
+			function x() virtual external returns (uint) {
+				return 1;
+			}
+		}
+
+		contract D is C {
+			uint public override x;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods": { "x()": { "details": "test" } }
+	})ABCDEF";
+
+	char const *natspec1 = R"ABCDEF({
+		"methods": {},
+		"stateVariables":
+		{
+			"x":
+			{
+				"details": "test"
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", natspec, false);
+	checkNatspec(sourceCode, "D", natspec1, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_default_inherit_variable)
+{
+	char const *sourceCode = R"(
+		contract C {
+			/// @notice Hello world
+			/// @dev test
+			function x() virtual external returns (uint) {
+				return 1;
+			}
+		}
+
+		contract D is C {
+			uint public override x;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods": { "x()": { "notice": "Hello world" } }
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", natspec, true);
+	checkNatspec(sourceCode, "D", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_explicit_inherit_variable)
+{
+	char const *sourceCode = R"(
+		contract B {
+			function x() virtual external returns (uint) {
+				return 1;
+			}
+		}
+
+		contract C {
+			/// @notice Hello world
+			/// @dev test
+			function x() virtual external returns (uint) {
+				return 1;
+			}
+		}
+
+		contract D is C, B {
+			/// @inheritdoc C
+			uint public override(C, B) x;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods": { "x()": { "details": "test" } }
+	})ABCDEF";
+
+	char const *natspec1 = R"ABCDEF({
+		"methods": {},
+		"stateVariables":
+		{
+			"x":
+			{
+				"details": "test"
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", natspec, false);
+	checkNatspec(sourceCode, "D", natspec1, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_explicit_inherit_variable)
+{
+	char const *sourceCode = R"(
+		contract B {
+			function x() virtual external returns (uint) {
+				return 1;
+			}
+		}
+
+		contract C {
+			/// @notice Hello world
+			/// @dev test
+			function x() virtual external returns (uint) {
+				return 1;
+			}
+		}
+
+		contract D is C, B {
+			/// @inheritdoc C
+			uint public override(C, B) x;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods": { "x()": { "notice": "Hello world" } }
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", natspec, true);
+	checkNatspec(sourceCode, "D", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_default_inherit)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// Second line.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract Middle is ERC20 {
+			function transfer(address to, uint amount) virtual override external returns (bool)
+			{
+			return false;
+			}
+		}
+
+		contract Token is Middle {
+			function transfer(address to, uint amount) override external returns (bool)
+			{
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "test",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, false);
+	checkNatspec(sourceCode, "Middle", natspec, false);
+	checkNatspec(sourceCode, "Token", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_default_inherit)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// Second line.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract Middle is ERC20 {
+			function transfer(address to, uint amount) virtual override external returns (bool)
+			{
+				return false;
+			}
+		}
+
+		contract Token is Middle {
+			function transfer(address to, uint amount) override external returns (bool)
+			{
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "Transfer ``amount`` from ``msg.sender`` to ``to``. Second line."
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, true);
+	checkNatspec(sourceCode, "Middle", natspec, true);
+	checkNatspec(sourceCode, "Token", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_explicit_inherit)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 {
+			function transfer(address to, uint amount) virtual external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC21, ERC20 {
+			/// @inheritdoc ERC20
+			function transfer(address to, uint amount) override(ERC21, ERC20) external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "test",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, false);
+	checkNatspec(sourceCode, "Token", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_explicit_inherit)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 {
+			function transfer(address to, uint amount) virtual external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC21, ERC20 {
+			/// @inheritdoc ERC20
+			function transfer(address to, uint amount) override(ERC21, ERC20) external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, true);
+	checkNatspec(sourceCode, "Token", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_explicit_inherit2)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 is ERC20 {
+			function transfer(address to, uint amount) virtual override external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC20 {
+			/// @inheritdoc ERC20
+			function transfer(address to, uint amount) override external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "test",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, false);
+	checkNatspec(sourceCode, "ERC21", natspec, false);
+	checkNatspec(sourceCode, "Token", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_explicit_inherit2)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 is ERC20 {
+			function transfer(address to, uint amount) virtual override external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC20 {
+			/// @inheritdoc ERC20
+			function transfer(address to, uint amount) override external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, true);
+	checkNatspec(sourceCode, "ERC21", natspec, true);
+	checkNatspec(sourceCode, "Token", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial2)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 is ERC20 {
+			/// @inheritdoc ERC20
+			/// @dev override dev comment
+			/// @notice override notice
+			function transfer(address to, uint amount) virtual override external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC21 {
+			function transfer(address to, uint amount) override external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "test",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "override dev comment",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, false);
+	checkNatspec(sourceCode, "Token", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_explicit_inherit_partial2)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 is ERC20 {
+			/// @inheritdoc ERC20
+			/// @dev override dev comment
+			/// @notice override notice
+			function transfer(address to, uint amount) virtual override external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC21 {
+			function transfer(address to, uint amount) override external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "override notice"
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, true);
+	checkNatspec(sourceCode, "Token", natspec2, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 {
+			function transfer(address to, uint amount) virtual external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC21, ERC20 {
+			/// @inheritdoc ERC20
+			/// @dev override dev comment
+			/// @notice override notice
+			function transfer(address to, uint amount) override(ERC21, ERC20) external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "test",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "override dev comment",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, false);
+	checkNatspec(sourceCode, "Token", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_explicit_inherit_partial)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract ERC21 {
+			function transfer(address to, uint amount) virtual external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is ERC21, ERC20 {
+			/// @inheritdoc ERC20
+			/// @dev override dev comment
+			/// @notice override notice
+			function transfer(address to, uint amount) override(ERC21, ERC20) external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "override notice"
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, true);
+	checkNatspec(sourceCode, "Token", natspec2, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_inherit_parameter_mismatch)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract Middle is ERC20 {
+			function transfer(address to, uint amount) override virtual external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is Middle {
+			function transfer(address too, uint amount) override external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "test",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods": { }
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, false);
+	checkNatspec(sourceCode, "Middle", natspec, false);
+	checkNatspec(sourceCode, "Token", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_inherit_parameter_mismatch)
+{
+	char const *sourceCode = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		contract Middle is ERC20 {
+			function transfer(address to, uint amount) override virtual external returns (bool) {
+				return false;
+			}
+		}
+
+		contract Token is Middle {
+			function transfer(address too, uint amount) override external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods": { }
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "ERC20", natspec, true);
+	checkNatspec(sourceCode, "Middle", natspec, true);
+	checkNatspec(sourceCode, "Token", natspec2, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_explicit_inehrit_complex)
+{
+	char const *sourceCode1 = R"(
+		interface ERC20 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+
+		interface ERC21 {
+			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
+			/// @dev test2
+			/// @param to address to transfer to
+			/// @param amount amount to transfer
+			function transfer(address to, uint amount) external returns (bool);
+		}
+	)";
+
+	char const *sourceCode2 = R"(
+		import "Interfaces.sol" as myInterfaces;
+
+		contract Token is myInterfaces.ERC20, myInterfaces.ERC21 {
+			/// @inheritdoc myInterfaces.ERC20
+			function transfer(address too, uint amount)
+				override(myInterfaces.ERC20, myInterfaces.ERC21) external returns (bool) {
+				return false;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"transfer(address,uint256)":
+			{
+				"details": "test",
+				"params":
+				{
+					"amount": "amount to transfer",
+					"to": "address to transfer to"
+				}
+			}
+		}
+	})ABCDEF";
+
+	m_compilerStack.reset();
+	m_compilerStack.setSources({
+		{"Interfaces.sol", "pragma solidity >=0.0;\n" + std::string(sourceCode1)},
+		{"Testfile.sol", "pragma solidity >=0.0;\n" + std::string(sourceCode2)}
+	});
+
+	m_compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+
+	BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
+
+	Json::Value generatedDocumentation = m_compilerStack.natspecDev("Token");
+	Json::Value expectedDocumentation;
+	util::jsonParseStrict(natspec, expectedDocumentation);
+
+	expectedDocumentation["version"] = Json::Value(Natspec::c_natspecVersion);
+	expectedDocumentation["kind"] = Json::Value("dev");
+
+	BOOST_CHECK_MESSAGE(
+		expectedDocumentation == generatedDocumentation,
+		"Expected:\n" << util::jsonPrettyPrint(expectedDocumentation) <<
+		"\n but got:\n" << util::jsonPrettyPrint(generatedDocumentation)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(dev_different_return_name)
+{
+	char const *sourceCode = R"(
+		contract A {
+			/// @return y value
+			function g(int x) public pure virtual returns (int y) { return x; }
+		}
+
+		contract B is A {
+			function g(int x) public pure override returns (int z) { return x; }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"y": "value"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"z": "value"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspec, false);
+	checkNatspec(sourceCode, "B", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_different_return_name_multiple)
+{
+	char const *sourceCode = R"(
+		contract A {
+			/// @return a value A
+			/// @return b value B
+			function g(int x) public pure virtual returns (int a, int b) { return (1, 2); }
+		}
+
+		contract B is A {
+			function g(int x) public pure override returns (int z, int y) { return (1, 2); }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"a": "value A",
+					"b": "value B"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"z": "value A",
+					"y": "value B"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspec, false);
+	checkNatspec(sourceCode, "B", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_different_return_name_multiple_partly_unnamed)
+{
+	char const *sourceCode = R"(
+		contract A {
+			/// @return value A
+			/// @return b value B
+			function g(int x) public pure virtual returns (int, int b) { return (1, 2); }
+		}
+
+		contract B is A {
+			function g(int x) public pure override returns (int z, int) { return (1, 2); }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"_0": "value A",
+					"b": "value B"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"z": "value A",
+					"_1": "value B"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspec, false);
+	checkNatspec(sourceCode, "B", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_different_return_name_multiple_unnamed)
+{
+	char const *sourceCode = R"(
+		contract A {
+			/// @return value A
+			/// @return value B
+			function g(int x) public pure virtual returns (int, int) { return (1, 2); }
+		}
+
+		contract B is A {
+			function g(int x) public pure override returns (int z, int y) { return (1, 2); }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"_0": "value A",
+					"_1": "value B"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"z": "value A",
+					"y": "value B"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspec, false);
+	checkNatspec(sourceCode, "B", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_return_name_no_description)
+{
+	char const *sourceCode = R"(
+		contract A {
+			/// @return a
+			function g(int x) public pure virtual returns (int a) { return 2; }
+		}
+
+		contract B is A {
+			function g(int x) public pure override returns (int b) { return 2; }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"a": "a"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods":
+		{
+			"g(int256)":
+			{
+				"returns":
+				{
+					"b": "a"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspec, false);
+	checkNatspec(sourceCode, "B", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(error)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// Something failed.
+			/// @dev an error.
+			/// @param a first parameter
+			/// @param b second parameter
+			error E(uint a, uint b);
+		}
+	)";
+
+	char const* devdoc = R"X({
+		"errors":{
+			"E(uint256,uint256)": [{
+				"details": "an error.",
+				"params":
+				{
+					"a": "first parameter",
+					"b": "second parameter"
+				}
+			}]
+		},
+		"methods": {}
+	})X";
+
+	checkNatspec(sourceCode, "test", devdoc, false);
+
+	char const* userdoc = R"X({
+		"errors":{
+			"E(uint256,uint256)": [{
+				"notice": "Something failed."
+			}]
+		},
+		"methods": {}
+	})X";
+	checkNatspec(sourceCode, "test", userdoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(error_multiple)
+{
+	char const* sourceCode = R"(
+		contract A {
+			/// Something failed.
+			/// @dev an error.
+			/// @param x first parameter
+			/// @param y second parameter
+			error E(uint x, uint y);
+		}
+		contract test {
+			/// X Something failed.
+			/// @dev X an error.
+			/// @param a X first parameter
+			/// @param b X second parameter
+			error E(uint a, uint b);
+			function f(bool a) public pure {
+				if (a)
+					revert E(1, 2);
+				else
+					revert A.E(5, 6);
+			}
+		}
+	)";
+
+	char const* devdoc = R"X({
+		"methods": {},
+		"errors":
+		{
+			"E(uint256,uint256)": [
+				{
+					"details": "an error.",
+					"params":
+					{
+						"x": "first parameter",
+						"y": "second parameter"
+					}
+				},
+				{
+					"details": "X an error.",
+					"params":
+					{
+						"a": "X first parameter",
+						"b": "X second parameter"
+					}
+				}
+			]
+		}
+	})X";
+
+	checkNatspec(sourceCode, "test", devdoc, false);
+
+	char const* userdoc = R"X({
+		"errors":{
+			"E(uint256,uint256)": [
+				{ "notice": "Something failed." },
+				{ "notice": "X Something failed." }
+			]
+		},
+		"methods": {}
+	})X";
+	checkNatspec(sourceCode, "test", userdoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(custom)
+{
+	char const* sourceCode = R"(
+		/// @custom:x one two three
+		/// @custom:y line
+		/// break
+		/// @custom:t one
+		/// @custom:t two
+		contract A {
+			/// @custom:note statevar
+			uint x;
+			/// @custom:since 2014
+			function g(int x) public pure virtual returns (int, int) { return (1, 2); }
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+		"custom:t": "onetwo",
+		"custom:x": "one two three",
+		"custom:y": "line break",
+		"methods":
+		{
+			"g(int256)":
+			{
+				"custom:since": "2014"
+			}
+		},
+		"stateVariables": { "x": { "custom:note": "statevar" } }
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(custom_inheritance)
+{
+	char const *sourceCode = R"(
+		contract A {
+			/// @custom:since 2014
+			function g(uint x) public pure virtual {}
+		}
+		contract B is A {
+			function g(uint x) public pure override {}
+		}
+	)";
+
+	char const* natspecA = R"ABCDEF(
+	{
+		"methods":
+		{
+			"g(uint256)":
+			{
+				"custom:since": "2014"
+			}
+		}
+	})ABCDEF";
+	char const* natspecB = R"ABCDEF(
+	{
+		"methods": {}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspecA, false);
+	checkNatspec(sourceCode, "B", natspecB, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_struct_getter_override)
+{
+	char const *sourceCode = R"(
+		interface IThing {
+			/// @return x a number
+			/// @return y another number
+			function value() external view returns (uint128 x, uint128 y);
+		}
+
+		contract Thing is IThing {
+			struct Value {
+				uint128 x;
+				uint128 y;
+			}
+
+			Value public override value;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"value()":
+			{
+				"returns":
+				{
+					"x": "a number",
+					"y": "another number"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods": {},
+		"stateVariables":
+		{
+			"value":
+			{
+				"returns":
+				{
+					"x": "a number",
+					"y": "another number"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "IThing", natspec, false);
+	checkNatspec(sourceCode, "Thing", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_struct_getter_override_no_return_name)
+{
+	char const *sourceCode = R"(
+		interface IThing {
+			///@return
+			function value(uint) external returns (uint128,uint128);
+		}
+
+		contract Thing is IThing {
+			struct Value {
+				uint128 x;
+				uint128 A;
+			}
+			mapping(uint=>Value) public override value;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"value(uint256)":
+			{
+				"returns":
+				{
+					"_0": ""
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods": {},
+		"stateVariables":
+		{
+			"value":
+			{
+				"return": "x ",
+				"returns":
+				{
+					"x": ""
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "IThing", natspec, false);
+	checkNatspec(sourceCode, "Thing", natspec2, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_struct_getter_override_different_return_parameter_names)
+{
+	char const *sourceCode = R"(
+		interface IThing {
+			/// @return x a number
+			/// @return y another number
+			function value() external view returns (uint128 x, uint128 y);
+		}
+
+		contract Thing is IThing {
+			struct Value {
+				uint128 a;
+				uint128 b;
+			}
+
+			Value public override value;
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+		"methods":
+		{
+			"value()":
+			{
+				"returns":
+				{
+					"x": "a number",
+					"y": "another number"
+				}
+			}
+		}
+	})ABCDEF";
+
+	char const *natspec2 = R"ABCDEF({
+		"methods": {},
+		"stateVariables":
+		{
+			"value":
+			{
+				"returns":
+				{
+					"a": "a number",
+					"b": "another number"
+				}
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "IThing", natspec, false);
+	checkNatspec(sourceCode, "Thing", natspec2, false);
+}
 
 }
+
+BOOST_AUTO_TEST_SUITE_END()

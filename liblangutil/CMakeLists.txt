@@ -3,6 +3,8 @@ set(sources
 	Common.h
 	CharStream.cpp
 	CharStream.h
+	DebugInfoSelection.cpp
+	DebugInfoSelection.h
 	ErrorReporter.cpp
 	ErrorReporter.h
 	EVMVersion.h
@@ -13,6 +15,7 @@ set(sources
 	ParserBase.h
 	Scanner.cpp
 	Scanner.h
+	CharStreamProvider.h
 	SemVerHandler.cpp
 	SemVerHandler.h
 	SourceLocation.h
@@ -21,12 +24,11 @@ set(sources
 	SourceReferenceExtractor.h
 	SourceReferenceFormatter.cpp
 	SourceReferenceFormatter.h
-	SourceReferenceFormatterHuman.cpp
-	SourceReferenceFormatterHuman.h
 	Token.cpp
 	Token.h
 	UndefMacros.h
+	UniqueErrorReporter.h
 )
 
 add_library(langutil ${sources})
-target_link_libraries(langutil PUBLIC solutil)
+target_link_libraries(langutil PUBLIC solutil fmt::fmt-header-only)

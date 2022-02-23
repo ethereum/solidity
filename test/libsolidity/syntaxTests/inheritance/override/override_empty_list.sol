@@ -7,4 +7,4 @@ contract X is A {
 	function test() internal override() returns (uint256);
 }
 // ----
-// ParserError: (164-165): Expected identifier but got ')'
+// ParserError 2314: (164-165): Expected identifier but got ')'

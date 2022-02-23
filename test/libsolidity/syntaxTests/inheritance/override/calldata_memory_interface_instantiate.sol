@@ -2,7 +2,7 @@ interface I {
     function f(uint[] calldata) external pure;
 }
 contract A is I {
-    function f(uint[] memory) public override pure {}
+    function f(uint[] memory) public pure {}
 }
 contract C {
     function f() public {
@@ -10,3 +10,4 @@ contract C {
         i.f(new uint[](1));
     }
 }
+// ----

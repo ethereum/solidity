@@ -14,11 +14,15 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <tools/yulPhaser/Program.h>
 
+#include <libyul/optimiser/Metrics.h>
+
+#include <cstddef>
 #include <map>
 #include <string>
 
@@ -44,6 +48,29 @@ struct CacheEntry
  */
 struct CacheStats
 {
+	/// Weights used to compute totalCodeSize.
+	/// The goal here is to get a result proportional to the amount of memory taken by the AST.
+	/// Each statement/expression gets 1 just for existing. We add more if it contains any extra
+	/// data that won't be visited separately by ASTWalker.
+	static yul::CodeWeights constexpr StorageWeights = {
+		/* expressionStatementCost = */ 1,
+		/* assignmentCost = */ 1,
+		/* variableDeclarationCost = */ 1,
+		/* functionDefinitionCost = */ 1,
+		/* ifCost = */ 1,
+		/* switchCost = */ 1,
+		/* caseCost = */ 1,
+		/* forLoopCost = */ 1,
+		/* breakCost = */ 1,
+		/* continueCost = */ 1,
+		/* leaveCost = */ 1,
+		/* blockCost = */ 1,
+
+		/* functionCallCost = */ 1,
+		/* identifierCost = */ 1,
+		/* literalCost = */ 1,
+	};
+
 	size_t hits;
 	size_t misses;
 	size_t totalCodeSize;
@@ -95,7 +122,7 @@ public:
 
 	CacheStats gatherStats() const;
 
-	std::map<std::string, CacheEntry> const& entries() const { return m_entries; };
+	std::map<std::string, CacheEntry> const& entries() const { return m_entries; }
 	Program const& program() const { return m_program; }
 	size_t currentRound() const { return m_currentRound; }
 

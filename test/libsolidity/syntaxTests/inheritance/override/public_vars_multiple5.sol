@@ -7,4 +7,4 @@ contract C is ERC20 {
   mapping(address => uint) public override balanceOf;
 }
 // ----
-// TypeError: (281-289): Public state variable has override specified but does not override anything.
+// TypeError 7792: (281-289): Public state variable has override specified but does not override anything.

@@ -13,13 +13,13 @@
     </span>
     <div class="rst-other-versions">
         <dl>
-            <dt>{{ _('Versions') }}</dt> {% for slug, url in versions %}
-            <dd><a href="{{ url }}">{{ slug }}</a></dd>
+            <dt>{{ _('Downloads') }}</dt> {% for type, url in downloads %}
+            <dd><a href="{{ url }}">{{ type }}</a></dd>
             {% endfor %}
         </dl>
         <dl>
-            <dt>{{ _('Downloads') }}</dt> {% for type, url in downloads %}
-            <dd><a href="{{ url }}">{{ type }}</a></dd>
+            <dt>{{ _('Versions') }}</dt> {% for slug, url in versions %}
+            <dd><a href="{{ url }}">{{ slug }}</a></dd>
             {% endfor %}
         </dl>
         <dl>

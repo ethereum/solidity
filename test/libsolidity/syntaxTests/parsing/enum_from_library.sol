@@ -7,3 +7,4 @@ contract D {
       return L.Direction.Left;
     }
 }
+// ----

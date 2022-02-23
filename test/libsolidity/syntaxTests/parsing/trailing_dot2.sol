@@ -4,4 +4,4 @@ contract test {
 	uint256 c = 2 + 2.;
 }
 // ----
-// ParserError: (76-77): Expected identifier but got ';'
+// ParserError 2314: (76-77): Expected identifier but got ';'

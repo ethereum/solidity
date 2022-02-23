@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// SyntaxError: (69-74): "break" has to be in a "for" or "while" loop.
+// SyntaxError 6102: (69-74): "break" has to be in a "for" or "while" loop.

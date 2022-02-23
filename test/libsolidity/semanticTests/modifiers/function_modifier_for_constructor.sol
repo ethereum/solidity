@@ -1,7 +1,7 @@
 contract A {
     uint256 data;
 
-    constructor() public mod1 {
+    constructor() mod1 {
         data |= 2;
     }
 
@@ -22,6 +22,8 @@ contract C is A {
         _;
     }
 }
-
+// ====
+// compileViaYul: also
+// compileToEwasm: also
 // ----
 // getData() -> 6

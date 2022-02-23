@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (89-90): Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.
+// TypeError 1408: (89-90): Only local variables are supported. To access storage variables, use the ".slot" and ".offset" suffixes.

@@ -14,7 +14,7 @@ object "C_6" {
                     let selector := shift_right_224_unsigned(calldataload(0))
                     pop(selector)
                 }
-                pop(iszero(calldatasize()))
+                sstore(0, iszero(calldatasize()))
                 revert(0, 0)
             }
 

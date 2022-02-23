@@ -14,13 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Some useful snippets for the optimiser.
  */
 
 #include <libyul/Utilities.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
@@ -29,7 +30,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <algorithm>
-#include <iterator>
 #include <sstream>
 #include <vector>
 
@@ -42,13 +42,13 @@ string solidity::yul::reindent(string const& _code)
 {
 	int constexpr indentationWidth = 4;
 
-	auto const static countBraces = [](string const& _s) noexcept -> int
+	auto constexpr static countBraces = [](string const& _s) noexcept -> int
 	{
 		auto const i = _s.find("//");
-		auto const e = i == _s.npos ? end(_s) : next(begin(_s), i);
+		auto const e = i == _s.npos ? end(_s) : next(begin(_s), static_cast<ptrdiff_t>(i));
 		auto const opening = count_if(begin(_s), e, [](auto ch) { return ch == '{' || ch == '('; });
 		auto const closing = count_if(begin(_s), e, [](auto ch) { return ch == '}' || ch == ')'; });
-		return opening - closing;
+		return int(opening - closing);
 	};
 
 	vector<string> lines;

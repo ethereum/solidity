@@ -1,11 +1,56 @@
-.. index:: assignment, ! delete, lvalue
+.. index:: ! operator
 
+<<<<<<< HEAD
 Opérateurs impliquant des LValues
 =================================
 
 Si ``a`` est une LValue (c.-à-d. une variable ou quelque chose qui peut être assigné à), les opérateurs suivants sont disponibles en version raccourcie::
 
 ``a += e`` équivaut à ``a = a + e``. Les opérateurs ``-=``, ``*=``, ``/=``, ``%=``, ``|=``, ``&=`` et ``^=`` sont définis de la même manière. ``a++`` et ``a--`` sont équivalents à ``a += 1`` / ``a -= 1`` mais l'expression elle-même a toujours la valeur précédente ``a``. Par contraste, ``--a`` et ``++a`` changent également ``a`` de ``1`` , mais retournent la valeur après le changement.
+=======
+Operators
+=========
+
+Arithmetic and bit operators can be applied even if the two operands do not have the same type.
+For example, you can compute ``y = x + z``, where ``x`` is a ``uint8`` and ``z`` has
+the type ``int32``. In these cases, the following mechanism will be used to determine
+the type in which the operation is computed (this is important in case of overflow)
+and the type of the operator's result:
+
+1. If the type of the right operand can be implicitly converted to the type of the left
+   operand, use the type of the left operand,
+2. if the type of the left operand can be implicitly converted to the type of the right
+   operand, use the type of the right operand,
+3. otherwise, the operation is not allowed.
+
+In case one of the operands is a :ref:`literal number <rational_literals>` it is first converted to its
+"mobile type", which is the smallest type that can hold the value
+(unsigned types of the same bit-width are considered "smaller" than the signed types).
+If both are literal numbers, the operation is computed with arbitrary precision.
+
+The operator's result type is the same as the type the operation is performed in,
+except for comparison operators where the result is always ``bool``.
+
+The operators ``**`` (exponentiation), ``<<``  and ``>>`` use the type of the
+left operand for the operation and the result.
+
+.. index:: assignment, lvalue, ! compound operators
+
+Compound and Increment/Decrement Operators
+------------------------------------------
+
+If ``a`` is an LValue (i.e. a variable or something that can be assigned to), the
+following operators are available as shorthands:
+
+``a += e`` is equivalent to ``a = a + e``. The operators ``-=``, ``*=``, ``/=``, ``%=``,
+``|=``, ``&=``, ``^=``, ``<<=`` and ``>>=`` are defined accordingly. ``a++`` and ``a--`` are equivalent
+to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value
+of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but
+return the value after the change.
+
+.. index:: !delete
+
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 .. _delete:
 
 delete
@@ -22,10 +67,10 @@ Pour les structs, il assigne une structure avec tous les membres réinitialisés
 Il est important de noter que ``delete a`` se comporte vraiment comme une affectation à ``a``, c'est-à-dire qu'il stocke un nouvel objet dans ``a``.
 Cette distinction est visible lorsque ``a`` est une variable par référence : Il ne réinitialisera que ``a`` lui-même, et non la valeur à laquelle il se référait précédemment.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract DeleteExample {
         uint data;

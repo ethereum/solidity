@@ -1,5 +1,5 @@
 contract test {
-    constructor() public {
+    constructor() {
         m_b = 6;
         m_c = 8;
     }
@@ -15,6 +15,7 @@ contract test {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // get() -> 5, 6, 8

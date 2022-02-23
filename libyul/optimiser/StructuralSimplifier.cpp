@@ -14,14 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/StructuralSimplifier.h>
-#include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
-
-#include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -29,7 +27,8 @@ using namespace solidity::yul;
 
 using OptionalStatements = std::optional<vector<Statement>>;
 
-namespace {
+namespace
+{
 
 OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _constExprVal)
 {

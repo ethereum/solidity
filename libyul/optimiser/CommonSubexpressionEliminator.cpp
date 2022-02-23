@@ -21,14 +21,14 @@
 
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 
-#include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/SideEffects.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 
 using namespace std;
 using namespace solidity;
@@ -52,6 +52,16 @@ CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 {
 }
 
+void CommonSubexpressionEliminator::operator()(FunctionDefinition& _fun)
+{
+	ScopedSaveAndRestore returnVariables(m_returnVariables, {});
+
+	for (auto const& v: _fun.returnVariables)
+		m_returnVariables.insert(v.name);
+
+	DataFlowAnalyzer::operator()(_fun);
+}
+
 void CommonSubexpressionEliminator::visit(Expression& _e)
 {
 	bool descend = true;
@@ -67,7 +77,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 				// We should not modify function arguments that have to be literals
 				// Note that replacing the function call entirely is fine,
 				// if the function call is movable.
-				if (!builtin->literalArguments || !builtin->literalArguments.value()[i - 1])
+				if (!builtin->literalArgument(i - 1))
 					visit(funCall.arguments[i - 1]);
 
 			descend = false;
@@ -82,19 +92,15 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	if (descend)
 		DataFlowAnalyzer::visit(_e);
 
-	if (holds_alternative<Identifier>(_e))
+	if (Identifier const* identifier = get_if<Identifier>(&_e))
 	{
-		Identifier& identifier = std::get<Identifier>(_e);
-		YulString name = identifier.name;
-		if (m_value.count(name))
+		YulString identifierName = identifier->name;
+		if (m_value.count(identifierName))
 		{
-			assertThrow(m_value.at(name).value, OptimizerException, "");
-			if (holds_alternative<Identifier>(*m_value.at(name).value))
-			{
-				YulString value = std::get<Identifier>(*m_value.at(name).value).name;
-				assertThrow(inScope(value), OptimizerException, "");
-				_e = Identifier{locationOf(_e), value};
-			}
+			assertThrow(m_value.at(identifierName).value, OptimizerException, "");
+			if (Identifier const* value = get_if<Identifier>(m_value.at(identifierName).value))
+				if (inScope(value->name))
+					_e = Identifier{debugDataOf(_e), value->name};
 		}
 	}
 	else
@@ -103,10 +109,17 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		for (auto const& [variable, value]: m_value)
 		{
 			assertThrow(value.value, OptimizerException, "");
-			assertThrow(inScope(variable), OptimizerException, "");
-			if (SyntacticallyEqual{}(_e, *value.value))
+			// Prevent using the default value of return variables
+			// instead of literal zeros.
+			if (
+				m_returnVariables.count(variable) &&
+				holds_alternative<Literal>(*value.value) &&
+				valueOfLiteral(get<Literal>(*value.value)) == 0
+			)
+				continue;
+			if (SyntacticallyEqual{}(_e, *value.value) && inScope(variable))
 			{
-				_e = Identifier{locationOf(_e), variable};
+				_e = Identifier{debugDataOf(_e), variable};
 				break;
 			}
 		}

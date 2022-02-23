@@ -26,6 +26,6 @@ contract E is A {
   modifier mod() override { _;}
 }
 // ----
-// TypeError: (137-254): Contract "B" should be marked as abstract.
-// TypeError: (256-344): Contract "C" should be marked as abstract.
-// TypeError: (346-466): Contract "D" should be marked as abstract.
+// TypeError 3656: (137-254): Contract "B" should be marked as abstract.
+// TypeError 3656: (256-344): Contract "C" should be marked as abstract.
+// TypeError 3656: (346-466): Contract "D" should be marked as abstract.

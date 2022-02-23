@@ -1,8 +1,8 @@
 contract Reverts {
-    constructor(uint) public { revert("test message."); }
+    constructor(uint) { revert("test message."); }
 }
 contract Succeeds {
-    constructor(uint) public { }
+    constructor(uint) { }
 }
 
 contract C {
@@ -27,6 +27,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // ----
 // f() -> 0, 0, 96, 13, "test message."
 // g() -> 0xf01f7809444bd9a93a854361c6fae3f23d9e23db, 0, 96, 7, "success"

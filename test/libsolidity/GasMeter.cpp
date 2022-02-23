@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -26,7 +27,6 @@
 #include <libevmasm/PathGasMeter.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -48,14 +48,6 @@ public:
 		m_compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 		m_compiler.setEVMVersion(m_evmVersion);
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
-
-		AssemblyItems const* items = m_compiler.runtimeAssemblyItems(m_compiler.lastContractName());
-		ASTNode const& sourceUnit = m_compiler.ast("");
-		BOOST_REQUIRE(items != nullptr);
-		m_gasCosts = GasEstimator::breakToStatementLevel(
-			GasEstimator(solidity::test::CommonOptions::get().evmVersion()).structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
-			{&sourceUnit}
-		);
 	}
 
 	void testCreationTimeGas(string const& _sourceCode, u256 const& _tolerance = u256(0))
@@ -70,9 +62,9 @@ public:
 		// costs for transaction
 		gas += gasForTransaction(m_compiler.object(m_compiler.lastContractName()).bytecode, true);
 
-		// Skip the tests when we force ABIEncoderV2.
+		// Skip the tests when we use ABIEncoderV2.
 		// TODO: We should enable this again once the yul optimizer is activated.
-		if (!solidity::test::CommonOptions::get().useABIEncoderV2)
+		if (solidity::test::CommonOptions::get().useABIEncoderV1)
 		{
 			BOOST_REQUIRE(!gas.isInfinite);
 			BOOST_CHECK_LE(m_gasUsed, gas.value);
@@ -99,9 +91,9 @@ public:
 			*m_compiler.runtimeAssemblyItems(m_compiler.lastContractName()),
 			_sig
 		);
-		// Skip the tests when we force ABIEncoderV2.
+		// Skip the tests when we use ABIEncoderV2.
 		// TODO: We should enable this again once the yul optimizer is activated.
-		if (!solidity::test::CommonOptions::get().useABIEncoderV2)
+		if (solidity::test::CommonOptions::get().useABIEncoderV1)
 		{
 			BOOST_REQUIRE(!gas.isInfinite);
 			BOOST_CHECK_LE(m_gasUsed, gas.value);
@@ -117,42 +109,9 @@ public:
 			gas += i != 0 ? GasCosts::txDataNonZeroGas(evmVersion) : GasCosts::txDataZeroGas;
 		return gas;
 	}
-
-protected:
-	map<ASTNode const*, evmasm::GasMeter::GasConsumption> m_gasCosts;
 };
 
 BOOST_FIXTURE_TEST_SUITE(GasMeterTests, GasMeterTestFramework)
-
-BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
-{
-	char const* sourceCode = R"(
-		contract test {
-			bytes x;
-			function f(uint a) public returns (uint b) {
-				for (; a < 200; ++a) {
-					x.push(0x09);
-					b = a * a;
-				}
-				return f(a - 1);
-			}
-		}
-	)";
-	compile(sourceCode);
-	for (auto first = m_gasCosts.cbegin(); first != m_gasCosts.cend(); ++first)
-	{
-		auto second = first;
-		for (++second; second != m_gasCosts.cend(); ++second)
-			if (first->first->location().intersects(second->first->location()))
-			{
-				BOOST_CHECK_MESSAGE(false, "Source locations should not overlap!");
-				langutil::SourceReferenceFormatter formatter(cout);
-
-				formatter.printSourceLocation(&first->first->location());
-				formatter.printSourceLocation(&second->first->location());
-			}
-	}
-}
 
 BOOST_AUTO_TEST_CASE(simple_contract)
 {
@@ -173,7 +132,7 @@ BOOST_AUTO_TEST_CASE(store_keccak256)
 	char const* sourceCode = R"(
 		contract test {
 			bytes32 public shaValue;
-			constructor() public {
+			constructor() {
 				shaValue = keccak256(abi.encodePacked(this));
 			}
 		}
@@ -187,7 +146,7 @@ BOOST_AUTO_TEST_CASE(updating_store)
 		contract test {
 			uint data;
 			uint data2;
-			constructor() public {
+			constructor() {
 				data = 1;
 				data = 2;
 				data2 = 0;
@@ -211,8 +170,8 @@ BOOST_AUTO_TEST_CASE(branches)
 			}
 		}
 	)";
-	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+	testCreationTimeGas(sourceCode, 1);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)}, 1);
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
@@ -223,7 +182,7 @@ BOOST_AUTO_TEST_CASE(function_calls)
 			uint data2;
 			function f(uint x) public {
 				if (x > 7)
-					data2 = g(x**8) + 1;
+					{ unchecked { data2 = g(x**8) + 1; } }
 				else
 					data = 1;
 			}
@@ -233,7 +192,15 @@ BOOST_AUTO_TEST_CASE(function_calls)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+	// In f, data2 is accessed twice, so there is a reduction of 2200 to 100 in actual costs.
+	// However, GasMeter always assumes cold costs.
+	testRunTimeGas(
+		"f(uint256)",
+		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		m_evmVersion < EVMVersion::berlin() ?
+		u256(0) :
+		u256(2100)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_external_functions)
@@ -244,7 +211,7 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 			uint data2;
 			function f(uint x) public {
 				if (x > 7)
-					data2 = g(x**8) + 1;
+					{ unchecked { data2 = g(x**8) + 1; } }
 				else
 					data = 1;
 			}
@@ -254,7 +221,16 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+	// In f, data2 is accessed twice, so there is a reduction of 2200 to 100 in actual costs.
+	// However, GasMeter always assumes cold costs.
+	testRunTimeGas(
+		"f(uint256)",
+		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		m_evmVersion < EVMVersion::berlin() ?
+		u256(0) :
+		u256(2100)
+	);
+
 	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
 }
 
@@ -263,13 +239,13 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 	char const* sourceCode = R"(
 		contract A {
 			function f(uint x) public returns (uint) {
-				return x ** 0;
+				unchecked { return x ** 0; }
 			}
 			function g(uint x) public returns (uint) {
-				return x ** 0x100;
+				unchecked { return x ** 0x100; }
 			}
 			function h(uint x) public returns (uint) {
-				return x ** 0x10000;
+				unchecked { return x ** 0x10000; }
 			}
 		}
 	)";
@@ -329,29 +305,31 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	char const* sourceCode = R"(
 		contract log {
 			function ln(int128 x) public pure returns (int128 result) {
-				int128 t = x / 256;
-				int128 y = 5545177;
-				x = t;
-				t = x * 16; if (t <= 1000000) { x = t; y = y - 2772588; }
-				t = x * 4; if (t <= 1000000) { x = t; y = y - 1386294; }
-				t = x * 2; if (t <= 1000000) { x = t; y = y - 693147; }
-				t = x + x / 2; if (t <= 1000000) { x = t; y = y - 405465; }
-				t = x + x / 4; if (t <= 1000000) { x = t; y = y - 223144; }
-				t = x + x / 8; if (t <= 1000000) { x = t; y = y - 117783; }
-				t = x + x / 16; if (t <= 1000000) { x = t; y = y - 60624; }
-				t = x + x / 32; if (t <= 1000000) { x = t; y = y - 30771; }
-				t = x + x / 64; if (t <= 1000000) { x = t; y = y - 15504; }
-				t = x + x / 128; if (t <= 1000000) { x = t; y = y - 7782; }
-				t = x + x / 256; if (t <= 1000000) { x = t; y = y - 3898; }
-				t = x + x / 512; if (t <= 1000000) { x = t; y = y - 1951; }
-				t = x + x / 1024; if (t <= 1000000) { x = t; y = y - 976; }
-				t = x + x / 2048; if (t <= 1000000) { x = t; y = y - 488; }
-				t = x + x / 4096; if (t <= 1000000) { x = t; y = y - 244; }
-				t = x + x / 8192; if (t <= 1000000) { x = t; y = y - 122; }
-				t = x + x / 16384; if (t <= 1000000) { x = t; y = y - 61; }
-				t = x + x / 32768; if (t <= 1000000) { x = t; y = y - 31; }
-				t = x + x / 65536; if (t <= 1000000) { y = y - 15; }
-				return y;
+				unchecked {
+					int128 t = x / 256;
+					int128 y = 5545177;
+					x = t;
+					t = x * 16; if (t <= 1000000) { x = t; y = y - 2772588; }
+					t = x * 4; if (t <= 1000000) { x = t; y = y - 1386294; }
+					t = x * 2; if (t <= 1000000) { x = t; y = y - 693147; }
+					t = x + x / 2; if (t <= 1000000) { x = t; y = y - 405465; }
+					t = x + x / 4; if (t <= 1000000) { x = t; y = y - 223144; }
+					t = x + x / 8; if (t <= 1000000) { x = t; y = y - 117783; }
+					t = x + x / 16; if (t <= 1000000) { x = t; y = y - 60624; }
+					t = x + x / 32; if (t <= 1000000) { x = t; y = y - 30771; }
+					t = x + x / 64; if (t <= 1000000) { x = t; y = y - 15504; }
+					t = x + x / 128; if (t <= 1000000) { x = t; y = y - 7782; }
+					t = x + x / 256; if (t <= 1000000) { x = t; y = y - 3898; }
+					t = x + x / 512; if (t <= 1000000) { x = t; y = y - 1951; }
+					t = x + x / 1024; if (t <= 1000000) { x = t; y = y - 976; }
+					t = x + x / 2048; if (t <= 1000000) { x = t; y = y - 488; }
+					t = x + x / 4096; if (t <= 1000000) { x = t; y = y - 244; }
+					t = x + x / 8192; if (t <= 1000000) { x = t; y = y - 122; }
+					t = x + x / 16384; if (t <= 1000000) { x = t; y = y - 61; }
+					t = x + x / 32768; if (t <= 1000000) { x = t; y = y - 31; }
+					t = x + x / 65536; if (t <= 1000000) { y = y - 15; }
+					return y;
+				}
 			}
 		}
 	)";

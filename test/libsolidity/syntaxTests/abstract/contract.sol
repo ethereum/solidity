@@ -1,1 +1,2 @@
-abstract contract A { constructor() public {} }
+abstract contract A { constructor() {} }
+// ----

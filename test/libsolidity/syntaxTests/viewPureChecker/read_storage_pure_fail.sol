@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (86-87): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (86-87): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".

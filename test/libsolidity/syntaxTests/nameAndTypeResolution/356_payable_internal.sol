@@ -2,4 +2,4 @@ contract test {
     function f() payable internal {}
 }
 // ----
-// TypeError: (20-52): Internal functions cannot be payable.
+// TypeError 5587: (20-52): "internal" and "private" functions cannot be payable.

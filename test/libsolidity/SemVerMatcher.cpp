@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <chris@ethereum.org>
  * @date 2016
@@ -37,9 +38,13 @@ namespace solidity::frontend::test
 
 BOOST_AUTO_TEST_SUITE(SemVerMatcher)
 
+namespace
+{
+
 SemVerMatchExpression parseExpression(string const& _input)
 {
-	Scanner scanner{CharStream(_input, "")};
+	CharStream stream(_input, "");
+	Scanner scanner{stream};
 	vector<string> literals;
 	vector<Token> tokens;
 	while (scanner.currentToken() != Token::EOS)
@@ -54,11 +59,14 @@ SemVerMatchExpression parseExpression(string const& _input)
 	}
 
 	auto expression = SemVerMatchExpressionParser(tokens, literals).parse();
+	BOOST_REQUIRE(expression.has_value());
 	BOOST_CHECK_MESSAGE(
-		expression.isValid(),
+		expression->isValid(),
 		"Expression \"" + _input + "\" did not parse properly."
 	);
-	return expression;
+	return *expression;
+}
+
 }
 
 BOOST_AUTO_TEST_CASE(positive_range)
@@ -163,6 +171,8 @@ BOOST_AUTO_TEST_CASE(negative_range)
 {
 	// Negative range tests
 	vector<pair<string, string>> tests = {
+		{"^0^1", "0.0.0"},
+		{"^0^1", "1.0.0"},
 		{"1.0.0 - 2.0.0", "2.2.3"},
 		{"1.0", "1.0.0-pre"},
 		{"1", "1.0.0-pre"},

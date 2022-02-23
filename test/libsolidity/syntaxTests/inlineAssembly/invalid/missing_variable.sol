@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError: (63-64): Variable not found or variable not lvalue.
+// DeclarationError 4634: (63-64): Variable not found or variable not lvalue.

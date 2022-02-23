@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Module for applying replacement rules against Expressions.
  */
@@ -22,12 +23,13 @@
 
 #include <libevmasm/SimplificationRule.h>
 
-#include <libyul/AsmDataForward.h>
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
+#include <libyul/YulString.h>
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/noncopyable.hpp>
+#include <liblangutil/EVMVersion.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <functional>
 #include <optional>
@@ -42,15 +44,21 @@ class Pattern;
 /**
  * Container for all simplification rules.
  */
-class SimplificationRules: public boost::noncopyable
+class SimplificationRules
 {
 public:
-	SimplificationRules();
+	/// Noncopiable.
+	SimplificationRules(SimplificationRules const&) = delete;
+	SimplificationRules& operator=(SimplificationRules const&) = delete;
+
+	using Rule = evmasm::SimplificationRule<Pattern>;
+
+	explicit SimplificationRules(std::optional<langutil::EVMVersion> _evmVersion = std::nullopt);
 
 	/// @returns a pointer to the first matching pattern and sets the match
 	/// groups accordingly.
 	/// @param _ssaValues values of variables that are assigned exactly once.
-	static evmasm::SimplificationRule<Pattern> const* findFirstMatch(
+	static Rule const* findFirstMatch(
 		Expression const& _expr,
 		Dialect const& _dialect,
 		std::map<YulString, AssignedValue> const& _ssaValues
@@ -64,8 +72,8 @@ public:
 	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
 
 private:
-	void addRules(std::vector<evmasm::SimplificationRule<Pattern>> const& _rules);
-	void addRule(evmasm::SimplificationRule<Pattern> const& _rule);
+	void addRules(std::vector<Rule> const& _rules);
+	void addRule(Rule const& _rule);
 
 	void resetMatchGroups() { m_matchGroups.clear(); }
 
@@ -122,7 +130,7 @@ public:
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
-	Expression toExpression(langutil::SourceLocation const& _location) const;
+	Expression toExpression(std::shared_ptr<DebugData const> const& _debugData) const;
 
 private:
 	Expression const& matchGroupValue() const;

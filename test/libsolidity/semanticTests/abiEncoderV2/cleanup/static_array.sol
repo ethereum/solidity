@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
     function gggggggg(uint8[2] calldata s) external pure returns (bytes memory) {
@@ -16,6 +16,7 @@ contract C {
 }
 // ====
 // EVMVersion: >homestead
+// compileViaYul: also
 // ----
 // f(uint256,uint256): 1, 1 -> 0x20, 0x44, hex"78b86ac6", 1, 1, hex"00000000000000000000000000000000000000000000000000000000"
 // gggggggg(uint8[2]): 1, 1 -> 0x20, 0x44, hex"78b86ac6", 1, 1, hex"00000000000000000000000000000000000000000000000000000000"

@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract Simple{
 
     address destination;
@@ -46,7 +45,7 @@ contract SolidityVar{
     address addr_1;
     address addr_2;
 
-    constructor() public{
+    constructor(){
         addr_1 = msg.sender;
     }
 
@@ -116,24 +115,7 @@ contract PropagateThroughReturnValue {
     return (var_state);
   }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (1886-1954): Function state mutability can be restricted to view
-// Warning: (318-332): Assertion checker does not yet support the type of this variable.
-// Warning: (338-347): Assertion checker does not yet support the type of this variable.
-// Warning: (353-378): Assertion checker does not yet support the type of this variable.
-// Warning: (384-409): Assertion checker does not yet support the type of this variable.
-// Warning: (464-479): Assertion checker does not yet support this expression.
-// Warning: (464-475): Assertion checker does not yet implement type struct Reference.St storage ref
-// Warning: (464-494): Assertion checker does not yet implement such assignments.
-// Warning: (539-554): Assertion checker does not yet support this expression.
-// Warning: (539-550): Assertion checker does not yet implement type struct Reference.St storage ref
-// Warning: (557-567): Assertion checker does not yet support this expression.
-// Warning: (557-563): Assertion checker does not yet implement type struct Reference.St storage ref
-// Warning: (539-567): Assertion checker does not yet implement such assignments.
-// Warning: (629-643): Assertion checker does not yet support the type of this variable.
-// Warning: (646-668): Assertion checker does not yet implement type struct Reference.St storage ref
-// Warning: (706-728): Assertion checker does not yet implement type struct Reference.St storage ref
-// Warning: (700-728): Assertion checker does not yet implement type struct Reference.St storage pointer
-// Warning: (748-755): Assertion checker does not yet support this expression.
-// Warning: (748-751): Assertion checker does not yet implement type struct Reference.St storage pointer
-// Warning: (748-770): Assertion checker does not yet implement such assignments.
+// Warning 2018: (1847-1915): Function state mutability can be restricted to view

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract c {
 	uint x;
 	function f() internal returns (uint) {
@@ -23,6 +21,7 @@ contract c {
 		return b;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (101-106): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (360-370): Assertion violation happens here
+// Warning 6328: (327-337): CHC: Assertion violation happens here.\nCounterexample:\nx = 102\na = false\n = false\nb = true\n\nTransaction trace:\nc.constructor()\nState: x = 0\nc.g(false)\n    c.f() -- internal call\n    c.f() -- internal call

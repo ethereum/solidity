@@ -1,6 +1,6 @@
 contract C {
     uint immutable x;
-    constructor() public {
+    constructor() {
         x = 3;
         C.selector.selector;
         C.selector;
@@ -9,5 +9,5 @@ contract C {
     function selector() external view returns(uint) { return x; }
 }
 // ----
-// Warning: (85-104): Statement has no effect.
-// Warning: (114-124): Statement has no effect.
+// Warning 6133: (78-97): Statement has no effect.
+// Warning 6133: (107-117): Statement has no effect.

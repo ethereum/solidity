@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	uint x = 2;
 }
@@ -11,10 +9,12 @@ contract C is A {
 }
 
 contract D is B, C {
-	constructor() public {
+	constructor() {
 		assert(x == 2);
 		assert(x == 3);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (169-183): Assertion violation happens here
+// Warning 6328: (129-143): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nD.constructor()

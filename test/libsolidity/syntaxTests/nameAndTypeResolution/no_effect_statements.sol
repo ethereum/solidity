@@ -1,6 +1,6 @@
 contract test {
  struct s { uint a; uint b;}
-    function f() pure public returns (byte) {
+    function f() pure public returns (bytes1) {
 		s;
 		s(1,2);
 		s[7];
@@ -9,8 +9,9 @@ contract test {
     }
 }
 // ----
-// Warning: (93-94): Statement has no effect.
-// Warning: (98-104): Statement has no effect.
-// Warning: (108-112): Statement has no effect.
-// Warning: (116-120): Statement has no effect.
-// Warning: (124-131): Statement has no effect.
+// Warning 6321: (83-89): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6133: (95-96): Statement has no effect.
+// Warning 6133: (100-106): Statement has no effect.
+// Warning 6133: (110-114): Statement has no effect.
+// Warning 6133: (118-122): Statement has no effect.
+// Warning 6133: (126-133): Statement has no effect.

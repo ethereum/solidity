@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (90-102): Out of bounds array access.
+// TypeError 3383: (90-102): Out of bounds array access.

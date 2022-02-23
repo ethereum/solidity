@@ -10,20 +10,22 @@
 // step: loadResolver
 //
 // {
+//     {
+//         let _1 := 1337
+//         let _2 := 0
+//         mstore(_2, _1)
+//         foo(42)
+//         sstore(_2, mload(_2))
+//     }
 //     function foo(x)
 //     {
 //         for { }
 //         x
 //         {
-//             let _1 := 0
-//             x := mload(_1)
-//             mstore(_1, _1)
+//             let _7 := 0
+//             x := mload(_7)
+//             mstore(_7, _7)
 //         }
 //         { }
 //     }
-//     let _4 := 1337
-//     let _5 := 0
-//     mstore(_5, _4)
-//     foo(42)
-//     sstore(_5, mload(_5))
 // }

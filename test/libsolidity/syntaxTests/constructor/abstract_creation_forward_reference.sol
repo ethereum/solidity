@@ -6,10 +6,10 @@ contract Test {
 }
 
 contract Parent {
-    constructor(address _address) public {}
+    constructor(address _address) {}
 }
 
 contract Child is Parent {
 }
 // ----
-// TypeError: (233-261): Contract "Child" should be marked as abstract.
+// TypeError 3656: (226-254): Contract "Child" should be marked as abstract.

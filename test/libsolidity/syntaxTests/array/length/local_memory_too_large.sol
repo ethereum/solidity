@@ -8,7 +8,7 @@ contract C {
   }
 }
 // ----
-// TypeError: (48-90): Type too large for memory.
-// TypeError: (96-118): Type too large for memory.
-// TypeError: (124-153): Type too large for memory.
-// TypeError: (159-188): Type too large for memory.
+// TypeError 1534: (48-90): Type too large for memory.
+// TypeError 1534: (96-118): Type too large for memory.
+// TypeError 1534: (124-153): Type too large for memory.
+// TypeError 1534: (159-188): Type too large for memory.

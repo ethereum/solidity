@@ -9,7 +9,7 @@ Yul
 Yul (previously also called JULIA or IULIA) is an intermediate language that can be
 compiled to bytecode for different backends.
 
-Support for EVM 1.0, EVM 1.5 and eWASM is planned, and it is designed to
+Support for EVM 1.0, EVM 1.5 and Ewasm is planned, and it is designed to
 be a usable common denominator of all three
 platforms. It can already be used in stand-alone mode and
 for "inline assembly" inside Solidity
@@ -30,7 +30,7 @@ The design of Yul tries to achieve several goals:
 In order to achieve the first and second goal, Yul provides high-level constructs
 like ``for`` loops, ``if`` and ``switch`` statements and function calls. These should
 be sufficient for adequately representing the control flow for assembly programs.
-Therefore, no explicit statements for ``SWAP``, ``DUP``, ``JUMP`` and ``JUMPI``
+Therefore, no explicit statements for ``SWAP``, ``DUP``, ``JUMPDEST``, ``JUMP`` and ``JUMPI``
 are provided, because the first two obfuscate the data flow
 and the last two obfuscate control flow. Furthermore, functional statements of
 the form ``mul(add(x, y), 7)`` are preferred over pure opcode statements like
@@ -54,7 +54,7 @@ be omitted to help readability.
 To keep the language simple and flexible, Yul does not have
 any built-in operations, functions or types in its pure form.
 These are added together with their semantics when specifying a dialect of Yul,
-which allows to specialize Yul to the requirements of different
+which allows specializing Yul to the requirements of different
 target platforms and feature sets.
 
 Currently, there is only one specified dialect of Yul. This dialect uses
@@ -157,16 +157,16 @@ where an object is expected.
 Inside a code block, the following elements can be used
 (see the later sections for more details):
 
- - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
- - calls to builtin functions, e.g. ``add(1, mload(0))``
- - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of 0 is assigned)
- - identifiers (variables), e.g. ``add(3, x)``
- - assignments, e.g. ``x := add(y, 3)``
- - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
- - if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
- - switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
- - for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
- - function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }```
+- literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
+- calls to builtin functions, e.g. ``add(1, mload(0))``
+- variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of 0 is assigned)
+- identifiers (variables), e.g. ``add(3, x)``
+- assignments, e.g. ``x := add(y, 3)``
+- blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
+- if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
+- switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
+- for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
+- function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }``
 
 Multiple syntactical elements can follow each other simply separated by
 whitespace, i.e. there is no terminating ``;`` or newline required.
@@ -174,13 +174,42 @@ whitespace, i.e. there is no terminating ``;`` or newline required.
 Literals
 --------
 
-You can use integer constants in decimal or hexadecimal notation.
+As literals, you can use:
+
+- Integer constants in decimal or hexadecimal notation.
+
+- ASCII strings (e.g. ``"abc"``), which may contain hex escapes ``\xNN`` and Unicode escapes ``\uNNNN`` where ``N`` are hexadecimal digits.
+
+- Hex strings (e.g. ``hex"616263"``).
+
+In the EVM dialect of Yul, literals represent 256-bit words as follows:
+
+- Decimal or hexadecimal constants must be less than ``2**256``.
+  They represent the 256-bit word with that value as an unsigned integer in big endian encoding.
+
+- An ASCII string is first viewed as a byte sequence, by viewing
+  a non-escape ASCII character as a single byte whose value is the ASCII code,
+  an escape ``\xNN`` as single byte with that value, and
+  an escape ``\uNNNN`` as the UTF-8 sequence of bytes for that code point.
+  The byte sequence must not exceed 32 bytes.
+  The byte sequence is padded with zeros on the right to reach 32 bytes in length;
+  in other words, the string is stored left-aligned.
+  The padded byte sequence represents a 256-bit word whose most significant 8 bits are the ones from the first byte,
+  i.e. the bytes are interpreted in big endian form.
+
+- A hex string is first viewed as a byte sequence, by viewing
+  each pair of contiguous hex digits as a byte.
+  The byte sequence must not exceed 32 bytes (i.e. 64 hex digits), and is treated as above.
+
 When compiling for the EVM, this will be translated into an
 appropriate ``PUSHi`` instruction. In the following example,
 ``3`` and ``2`` are added resulting in 5 and then the
 bitwise ``and`` with the string "abc" is computed.
 The final value is assigned to a local variable called ``x``.
-Strings are stored left-aligned and cannot be longer than 32 bytes.
+
+The 32-byte limit above does not apply to string literals passed to builtin functions that require
+literal arguments (e.g. ``setimmutable`` or ``loadimmutable``). Those strings never end up in the
+generated bytecode.
 
 .. code-block:: yul
 
@@ -191,7 +220,8 @@ has to be specified after a colon:
 
 .. code-block:: yul
 
-    let x := and("abc":uint32, add(3:uint256, 2:uint256))
+    // This will not compile (u32 and u256 type not implemented yet)
+    let x := and("abc":u32, add(3:u256, 2:u256))
 
 
 Function Calls
@@ -205,10 +235,9 @@ they have to be assigned to local variables.
 
 .. code-block:: yul
 
+    function f(x, y) -> a, b { /* ... */ }
     mstore(0x80, add(mload(0x80), 3))
-    // Here, the user-defined function `f` returns
-    // two values. The definition of the function
-    // is missing from the example.
+    // Here, the user-defined function `f` returns two values.
     let x, y := f(1, mload(0))
 
 For built-in functions of the EVM, functional expressions
@@ -239,7 +268,7 @@ Since variables are stored on the stack, they do not directly
 influence memory or storage, but they can be used as pointers
 to memory or storage locations in the built-in functions
 ``mstore``, ``mload``, ``sstore`` and ``sload``.
-Future dialects migh introduce specific types for such pointers.
+Future dialects might introduce specific types for such pointers.
 
 When a variable is referenced, its current value is copied.
 For the EVM, this translates to a ``DUP`` instruction.
@@ -264,9 +293,10 @@ that returns multiple values.
 
 .. code-block:: yul
 
+    // This will not compile (u32 and u256 type not implemented yet)
     {
-        let zero:uint32 := 0:uint32
-        let v:uint256, t:uint32 := f()
+        let zero:u32 := 0:u32
+        let v:u256, t:u32 := f()
         let x, y := g()
     }
 
@@ -284,6 +314,8 @@ variables at the same time. For this, the number and types of the
 values have to match.
 If you want to assign the values returned from a function that has
 multiple return parameters, you have to provide multiple variables.
+The same variable may not occur multiple times on the left-hand side of
+an assignment, e.g. ``x, x := f()`` is invalid.
 
 .. code-block:: yul
 
@@ -305,7 +337,7 @@ you need multiple alternatives.
 
 .. code-block:: yul
 
-    if eq(value, 0) { revert(0, 0) }
+    if lt(calldatasize(), 4) { revert(0, 0) }
 
 The curly braces for the body are required.
 
@@ -470,9 +502,8 @@ which are explained in their own chapter.
     TypeName = Identifier
     TypedIdentifierList = Identifier ( ':' TypeName )? ( ',' Identifier ( ':' TypeName )? )*
     Literal =
-        (NumberLiteral | StringLiteral | HexLiteral | TrueLiteral | FalseLiteral) ( ':' TypeName )?
+        (NumberLiteral | StringLiteral | TrueLiteral | FalseLiteral) ( ':' TypeName )?
     NumberLiteral = HexNumber | DecimalNumber
-    HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
     TrueLiteral = 'true'
     FalseLiteral = 'false'
@@ -502,16 +533,32 @@ In variable declarations and assignments, the right-hand-side expression
 variables on the left-hand-side.
 This is the only situation where an expression evaluating
 to more than one value is allowed.
+The same variable name cannot occur more than once in the left-hand-side of
+an assignment or variable declaration.
 
 Expressions that are also statements (i.e. at the block level) have to
 evaluate to zero values.
 
 In all other situations, expressions have to evaluate to exactly one value.
 
-The ``continue`` and ``break`` statements can only be used inside loop bodies
-and have to be in the same function as the loop (or both have to be at the
-top level). The ``continue`` and ``break`` statements cannot be used
-in other parts of a loop, not even when it is scoped inside a second loop's body.
+A ``continue`` or ``break`` statement can only be used inside the body of a for-loop, as follows.
+Consider the innermost loop that contains the statement.
+The loop and the statement must be in the same function, or both must be at the top level.
+The statement must be in the loop's body block;
+it cannot be in the loop's initialization block or update block.
+It is worth emphasizing that this restriction applies just
+to the innermost loop that contains the ``continue`` or ``break`` statement:
+this innermost loop, and therefore the ``continue`` or ``break`` statement,
+may appear anywhere in an outer loop, possibly in an outer loop's initialization block or update block.
+For example, the following is legal,
+because the ``break`` occurs in the body block of the inner loop,
+despite also occurring in the update block of the outer loop:
+
+.. code-block:: yul
+
+    for {} true { for {} true {} { break } }
+    {
+    }
 
 The condition part of the for-loop has to evaluate to exactly one value.
 
@@ -519,7 +566,7 @@ The ``leave`` statement can only be used inside a function.
 
 Functions cannot be defined anywhere inside for loop init blocks.
 
-Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
+Literals cannot be larger than their type. The largest type defined is 256-bit wide.
 
 During assignments and function calls, the types of the respective values have to match.
 There is no implicit type conversion. Type conversion in general can only be achieved
@@ -535,11 +582,18 @@ as explained below) and all declarations
 introduce new identifiers into these scopes.
 
 Identifiers are visible in
-the block they are defined in (including all sub-nodes and sub-blocks).
+the block they are defined in (including all sub-nodes and sub-blocks):
+Functions are visible in the whole block (even before their definitions) while
+variables are only visible starting from the statement after the ``VariableDeclaration``.
 
-As an exception, the scope of the "init" part of the or-loop
+In particular,
+variables cannot be referenced in the right hand side of their own variable
+declaration.
+Functions can be referenced already before their declaration (if they are visible).
+
+As an exception to the general scoping rule, the scope of the "init" part of the for-loop
 (the first block) extends across all other parts of the for loop.
-This means that variables declared in the init part (but not inside a
+This means that variables (and functions) declared in the init part (but not inside a
 block inside the init part) are visible in all other parts of the for-loop.
 
 Identifiers declared in the other parts of the for loop respect the regular
@@ -548,21 +602,15 @@ syntactical scoping rules.
 This means a for-loop of the form ``for { I... } C { P... } { B... }`` is equivalent
 to ``{ I... for {} C { P... } { B... } }``.
 
-
 The parameters and return parameters of functions are visible in the
 function body and their names have to be distinct.
 
-Variables can only be referenced after their declaration. In particular,
-variables cannot be referenced in the right hand side of their own variable
-declaration.
-Functions can be referenced already before their declaration (if they are visible).
+Inside functions, it is not possible to reference a variable that was declared
+outside of that function.
 
 Shadowing is disallowed, i.e. you cannot declare an identifier at a point
 where another identifier with the same name is also visible, even if it is
-not accessible.
-
-Inside functions, it is not possible to access a variable that was declared
-outside of that function.
+not possible to reference it because it was declared outside the current function.
 
 Formal Specification
 --------------------
@@ -680,15 +728,15 @@ We will use a destructuring notation for the AST nodes.
         L'[$parami] = vi and L'[$reti] = 0 for all i.
         Let G'', L'', mode = E(Gn, L', block)
         G'', Ln, L''[$ret1], ..., L''[$retm]
-    E(G, L, l: HexLiteral) = G, L, hexString(l),
-        where hexString decodes l from hex and left-aligns it into 32 bytes
-    E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
-        where utf8EncodeLeftAligned performs a utf8 encoding of l
-        and aligns it left into 32 bytes
+    E(G, L, l: StringLiteral) = G, L, str(l),
+        where str is the string evaluation function,
+        which for the EVM dialect is defined in the section 'Literals' above
     E(G, L, n: HexNumber) = G, L, hex(n)
-        where hex is the hexadecimal decoding function
+        where hex is the hexadecimal evaluation function,
+        which turns a sequence of hexadecimal digits into their big endian value
     E(G, L, n: DecimalNumber) = G, L, dec(n),
-        where dec is the decimal decoding function
+        where dec is the decimal evaluation function,
+        which turns a sequence of decimal digits into their big endian value
 
 .. _opcodes:
 
@@ -707,8 +755,8 @@ This document does not want to be a full description of the Ethereum virtual mac
 Please refer to a different document if you are interested in the precise semantics.
 
 Opcodes marked with ``-`` do not return a result and all others return exactly one value.
-Opcodes marked with ``F``, ``H``, ``B``, ``C`` or ``I`` are present since Frontier, Homestead,
-Byzantium, Constantinople or Istanbul, respectively.
+Opcodes marked with ``F``, ``H``, ``B``, ``C``, ``I`` and ``L`` are present since Frontier, Homestead,
+Byzantium, Constantinople, Istanbul or London respectively.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
 but not including position ``b`` and ``storage[p]`` signifies the storage contents at slot ``p``.
@@ -720,7 +768,7 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | Instruction             |     |   | Explanation                                                     |
 +=========================+=====+===+=================================================================+
-| stop()                  + `-` | F | stop execution, identical to return(0, 0)                       |
+| stop()                  | `-` | F | stop execution, identical to return(0, 0)                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | add(x, y)               |     | F | x + y                                                           |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -823,13 +871,14 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | extcodehash(a)          |     | C | code hash of address a                                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create(v, p, n)         |     | F | create new contract with code mem[p...(p+n)) and send v wei     |
-|                         |     |   | and return the new address                                      |
+|                         |     |   | and return the new address; returns 0 on error                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create2(v, p, n, s)     |     | C | create new contract with code mem[p...(p+n)) at address         |
 |                         |     |   | keccak256(0xff . this . s . keccak256(mem[p...(p+n)))           |
 |                         |     |   | and send v wei and return the new address, where ``0xff`` is a  |
 |                         |     |   | 1 byte value, ``this`` is the current contract's address        |
-|                         |     |   | as a 20 byte value and ``s`` is a big-endian 256-bit value      |
+|                         |     |   | as a 20 byte value and ``s`` is a big-endian 256-bit value;     |
+|                         |     |   | returns 0 on error                                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | call(g, a, v, in,       |     | F | call contract at address a with input mem[in...(in+insize))     |
 | insize, out, outsize)   |     |   | providing g gas and v wei and output area                       |
@@ -868,7 +917,9 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p...(p+s))          |
 | t4)                     |     |   |                                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| chainid()               |     | I | ID of the executing chain (EIP 1344)                            |
+| chainid()               |     | I | ID of the executing chain (EIP-1344)                            |
++-------------------------+-----+---+-----------------------------------------------------------------+
+| basefee()               |     | L | current block's base fee (EIP-3198 and EIP-1559)                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | origin()                |     | F | transaction sender                                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -891,12 +942,11 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 
 .. note::
   The ``call*`` instructions use the ``out`` and ``outsize`` parameters to define an area in memory where
-  the return data is placed. This area is written to depending on how many bytes the called contract returns.
+  the return or failure data is placed. This area is written to depending on how many bytes the called contract returns.
   If it returns more data, only the first ``outsize`` bytes are written. You can access the rest of the data
   using the ``returndatacopy`` opcode. If it returns less data, then the remaining bytes are not touched at all.
   You need to use the ``returndatasize`` opcode to check which part of this memory area contains the return data.
-  The remaining bytes will retain their values as of before the call. If the call fails (it returns ``0``),
-  nothing is written to that area, but you can still retrieve the failure data using ``returndatacopy``.
+  The remaining bytes will retain their values as of before the call.
 
 
 In some internal dialects, there are additional functions:
@@ -904,7 +954,7 @@ In some internal dialects, there are additional functions:
 datasize, dataoffset, datacopy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The functions ``datasize(x)``, ``dataoffset(x)`` and ``datacopy(t, f, l)``,
+The functions ``datasize(x)``, ``dataoffset(x)`` and ``datacopy(t, f, l)``
 are used to access other parts of a Yul object.
 
 ``datasize`` and ``dataoffset`` can only take string literals (the names of other objects)
@@ -915,14 +965,142 @@ For the EVM, the ``datacopy`` function is equivalent to ``codecopy``.
 setimmutable, loadimmutable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The functions ``setimmutable("name", value)`` and ``loadimmutable("name")`` are
-used for the immutable mechanism in Solidity and do not nicely map to pur Yul.
-The function ``setimmutable`` assumes that the runtime code of a contract
-is currently copied to memory at offsot zero. The call to ``setimmutable("name", value)``
-will store ``value`` at all points in memory that contain a call to
-``loadimmutable("name")``.
+The functions ``setimmutable(offset, "name", value)`` and ``loadimmutable("name")`` are
+used for the immutable mechanism in Solidity and do not nicely map to pure Yul.
+The call to ``setimmutable(offset, "name", value)`` assumes that the runtime code of the contract
+containing the given named immutable was copied to memory at offset ``offset`` and will write ``value`` to all
+positions in memory (relative to ``offset``) that contain the placeholder that was generated for calls
+to ``loadimmutable("name")`` in the runtime code.
 
 
+linkersymbol
+^^^^^^^^^^^^
+The function ``linkersymbol("library_id")`` is a placeholder for an address literal to be substituted
+by the linker.
+Its first and only argument must be a string literal and uniquely represents the address to be inserted.
+Identifiers can be arbitrary but when the compiler produces Yul code from Solidity sources,
+it uses a library name qualified with the name of the source unit that defines that library.
+To link the code with a particular library address, the same identifier must be provided to the
+``--libraries`` option on the command line.
+
+For example this code
+
+.. code-block:: yul
+
+    let a := linkersymbol("file.sol:Math")
+
+is equivalent to
+
+.. code-block:: yul
+
+    let a := 0x1234567890123456789012345678901234567890
+
+when the linker is invoked with ``--libraries "file.sol:Math=0x1234567890123456789012345678901234567890``
+option.
+
+See :ref:`Using the Commandline Compiler <commandline-compiler>` for details about the Solidity linker.
+
+memoryguard
+^^^^^^^^^^^
+
+This function is available in the EVM dialect with objects. The caller of
+``let ptr := memoryguard(size)`` (where ``size`` has to be a literal number)
+promises that they only use memory in either the range ``[0, size)`` or the
+unbounded range starting at ``ptr``.
+
+Since the presence of a ``memoryguard`` call indicates that all memory access
+adheres to this restriction, it allows the optimizer to perform additional
+optimization steps, for example the stack limit evader, which attempts to move
+stack variables that would otherwise be unreachable to memory.
+
+The Yul optimizer promises to only use the memory range ``[size, ptr)`` for its purposes.
+If the optimizer does not need to reserve any memory, it holds that ``ptr == size``.
+
+``memoryguard`` can be called multiple times, but needs to have the same literal as argument
+within one Yul subobject. If at least one ``memoryguard`` call is found in a subobject,
+the additional optimiser steps will be run on it.
+
+
+.. _yul-verbatim:
+
+verbatim
+^^^^^^^^
+
+The set of ``verbatim...`` builtin functions lets you create bytecode for opcodes
+that are not known to the Yul compiler. It also allows you to create
+bytecode sequences that will not be modified by the optimizer.
+
+The functions are ``verbatim_<n>i_<m>o("<data>", ...)``, where
+
+- ``n`` is a decimal between 0 and 99 that specifies the number of input stack slots / variables
+- ``m`` is a decimal between 0 and 99 that specifies the number of output stack slots / variables
+- ``data`` is a string literal that contains the sequence of bytes
+
+If you for example want to define a function that multiplies the input
+by two, without the optimizer touching the constant two, you can use
+
+.. code-block:: yul
+
+    let x := calldataload(0)
+    let double := verbatim_1i_1o(hex"600202", x)
+
+This code will result in a ``dup1`` opcode to retrieve ``x``
+(the optimizer might directly re-use result of the
+``calldataload`` opcode, though)
+directly followed by ``600202``. The code is assumed to
+consume the copied value of ``x`` and produce the result
+on the top of the stack. The compiler then generates code
+to allocate a stack slot for ``double`` and store the result there.
+
+As with all opcodes, the arguments are arranged on the stack
+with the leftmost argument on the top, while the return values
+are assumed to be laid out such that the rightmost variable is
+at the top of the stack.
+
+Since ``verbatim`` can be used to generate arbitrary opcodes
+or even opcodes unknown to the Solidity compiler, care has to be taken
+when using ``verbatim`` together with the optimizer. Even when the
+optimizer is switched off, the code generator has to determine
+the stack layout, which means that e.g. using ``verbatim`` to modify
+the stack height can lead to undefined behaviour.
+
+The following is a non-exhaustive list of restrictions on
+verbatim bytecode that are not checked by
+the compiler. Violations of these restrictions can result in
+undefined behaviour.
+
+- Control-flow should not jump into or out of verbatim blocks,
+  but it can jump within the same verbatim block.
+- Stack contents apart from the input and output parameters
+  should not be accessed.
+- The stack height difference should be exactly ``m - n``
+  (output slots minus input slots).
+- Verbatim bytecode cannot make any assumptions about the
+  surrounding bytecode. All required parameters have to be
+  passed in as stack variables.
+
+The optimizer does not analyze verbatim bytecode and always
+assumes that it modifies all aspects of state and thus can only
+do very few optimizations across ``verbatim`` function calls.
+
+The optimizer treats verbatim bytecode as an opaque block of code.
+It will not split it but might move, duplicate
+or combine it with identical verbatim bytecode blocks.
+If a verbatim bytecode block is unreachable by the control-flow,
+it can be removed.
+
+
+.. warning::
+
+    During discussions about whether or not EVM improvements
+    might break existing smart contracts, features inside ``verbatim``
+    cannot receive the same consideration as those used by the Solidity
+    compiler itself.
+
+.. note::
+
+    To avoid confusion, all identifiers starting with the string ``verbatim`` are reserved
+    and cannot be used for user-defined identifiers.
 
 .. _yul-object:
 
@@ -945,6 +1123,23 @@ regular strings in native encoding. For code,
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 
 Above, ``Block`` refers to ``Block`` in the Yul code grammar explained in the previous chapter.
+
+.. note::
+
+    Data objects or sub-objects whose names contain a ``.`` can be defined
+    but it is not possible to access them through ``datasize``,
+    ``dataoffset`` or ``datacopy`` because ``.`` is used as a separator
+    to access objects inside another object.
+
+.. note::
+
+    The data object called ``".metadata"`` has a special meaning:
+    It cannot be accessed from code and is always appended to the very end of the
+    bytecode, regardless of its position in the object.
+
+    Other data objects with special significance might be added in the
+    future, but their names will always start with a ``.``.
+
 
 An example Yul Object is shown below:
 
@@ -979,7 +1174,7 @@ An example Yul Object is shown below:
             // executing code is the constructor code)
             size := datasize("runtime")
             offset := allocate(size)
-            // This will turn into a memory->memory copy for eWASM and
+            // This will turn into a memory->memory copy for Ewasm and
             // a codecopy for EVM
             datacopy(offset, dataoffset("runtime"), size)
             return(offset, size)
@@ -1025,19 +1220,20 @@ Yul Optimizer
 The Yul optimizer operates on Yul code and uses the same language for input, output and
 intermediate states. This allows for easy debugging and verification of the optimizer.
 
-Please see the
-`documentation in the source code <https://github.com/ethereum/solidity/blob/develop/libyul/optimiser/README.md>`_
-for more details about its internals.
+Please refer to the general :ref:`optimizer documentation <optimizer>`
+for more details about the different optimization stages and how to use the optimizer.
 
-If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``:
+If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``
+and optionally specify the :ref:`expected number of contract executions <optimizer-parameter-runs>` with
+``--optimize-runs``:
 
 .. code-block:: sh
 
-    solc --strict-assembly --optimize
+    solc --strict-assembly --optimize --optimize-runs 200
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
 
-Optimization step sequence
+Optimization Step Sequence
 --------------------------
 
 By default the Yul optimizer applies its predefined sequence of optimization steps to the generated assembly.
@@ -1077,21 +1273,28 @@ Abbreviation Full name
 ``i``        ``FullInliner``
 ``g``        ``FunctionGrouper``
 ``h``        ``FunctionHoister``
+``F``        ``FunctionSpecializer``
 ``T``        ``LiteralRematerialiser``
 ``L``        ``LoadResolver``
 ``M``        ``LoopInvariantCodeMotion``
 ``r``        ``RedundantAssignEliminator``
+``R``        ``ReasoningBasedSimplifier`` - highly experimental
 ``m``        ``Rematerialiser``
 ``V``        ``SSAReverser``
 ``a``        ``SSATransform``
 ``t``        ``StructuralSimplifier``
 ``u``        ``UnusedPruner``
+``p``        ``UnusedFunctionParameterPruner``
 ``d``        ``VarDeclInitializer``
 ============ ===============================
 
 Some steps depend on properties ensured by ``BlockFlattener``, ``FunctionGrouper``, ``ForLoopInitRewriter``.
 For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
 
+The ReasoningBasedSimplifier is an optimizer step that is currently not enabled
+in the default set of steps. It uses an SMT solver to simplify arithmetic expressions
+and boolean conditions. It has not received thorough testing or validation yet and can produce
+non-reproducible results, so please use with care!
 
 .. _erc20yul:
 

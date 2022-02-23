@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Compiler that transforms Yul Objects to Wasm text and binary representation (Ewasm flavoured).
  */
@@ -50,8 +51,10 @@ wasm::Module WasmObjectCompiler::run(Object& _object)
 	for (auto& subNode: _object.subObjects)
 		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))
 			module.subModules[subObject->name.str()] = run(*subObject);
+		else if (Data* subObject = dynamic_cast<Data*>(subNode.get()))
+			module.customSections[subObject->name.str()] = subObject->data;
 		else
-			yulAssert(false, "Data is not yet supported for Wasm.");
+			yulAssert(false, "");
 
 	return module;
 }

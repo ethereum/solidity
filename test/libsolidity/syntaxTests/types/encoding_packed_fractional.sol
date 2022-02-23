@@ -4,5 +4,5 @@ contract C {
    }
 }
 // ----
-// TypeError: (98-101): Fractional numbers cannot yet be encoded.
-// TypeError: (103-104): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.
+// TypeError 6090: (98-101): Fractional numbers cannot yet be encoded.
+// TypeError 7279: (103-104): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.

@@ -5,4 +5,4 @@ contract c {
     }
 }
 // ----
-// Warning: (17-105): Function state mutability can be restricted to pure
+// DeclarationError 3726: (66-72): The name "_" is reserved.

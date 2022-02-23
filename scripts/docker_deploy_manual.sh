@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -e
 
@@ -20,15 +20,15 @@ git clone --depth 2 https://github.com/ethereum/solidity.git -b "$branch"
 cd solidity
 commithash=$(git rev-parse --short=8 HEAD)
 echo -n "$commithash" > commit_hash.txt
-version=$($(dirname "$0")/get_version.sh)
-if [ "$branch" = "release" -o "$branch" = v"$version" ]
+version=$("$(dirname "$0")/get_version.sh")
+if [ "$branch" = "release" ] || [ "$branch" = v"$version" ]
 then
     echo -n > prerelease.txt
 else
     date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
 fi
 
-tag_and_push()
+function tag_and_push
 {
     docker tag "$image:$1" "$image:$2"
     docker push "$image:$2"
@@ -40,7 +40,7 @@ tmp_container=$(docker create "$image":build sh)
 
 # Alpine image
 mkdir -p upload
-docker cp ${tmp_container}:/usr/bin/solc upload/solc-static-linux
+docker cp "${tmp_container}":/usr/bin/solc upload/solc-static-linux
 docker build -t "$image":build-alpine -f scripts/Dockerfile_alpine .
 
 if [ "$branch" = "develop" ]

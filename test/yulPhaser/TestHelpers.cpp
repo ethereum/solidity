@@ -14,23 +14,19 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
 #include <libyul/optimiser/Suite.h>
 
-#include <boost/filesystem.hpp>
-
 #include <regex>
-#include <iostream>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::phaser;
 using namespace solidity::phaser::test;
-
-namespace fs = boost::filesystem;
 
 function<Mutation> phaser::test::wholeChromosomeReplacement(Chromosome _newChromosome)
 {
@@ -72,43 +68,13 @@ size_t phaser::test::countDifferences(Chromosome const& _chromosome1, Chromosome
 {
 	size_t count = 0;
 	for (size_t i = 0; i < min(_chromosome1.length(), _chromosome2.length()); ++i)
-		count += static_cast<int>(_chromosome1.optimisationSteps()[i] != _chromosome2.optimisationSteps()[i]);
+		if (_chromosome1.optimisationSteps()[i] != _chromosome2.optimisationSteps()[i])
+			++count;
 
-	return count + abs(static_cast<int>(_chromosome1.length() - _chromosome2.length()));
-}
-
-TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
-	m_path((fs::temp_directory_path() / fs::unique_path(_prefix + "%%%%-%%%%-%%%%-%%%%")).string())
-{
-	// Prefix should just be a file name and not contain anything that would make us step out of /tmp.
-	assert(fs::path(_prefix) == fs::path(_prefix).stem());
-
-	fs::create_directory(m_path);
-}
-
-TemporaryDirectory::~TemporaryDirectory()
-{
-	// A few paranoid sanity checks just to be extra sure we're not deleting someone's homework.
-	assert(m_path.find(fs::temp_directory_path().string()) == 0);
-	assert(fs::path(m_path) != fs::temp_directory_path());
-	assert(fs::path(m_path) != fs::path(m_path).root_path());
-	assert(!fs::path(m_path).empty());
-
-	boost::system::error_code errorCode;
-	uintmax_t numRemoved = fs::remove_all(m_path, errorCode);
-	if (errorCode.value() != boost::system::errc::success)
-	{
-		cerr << "Failed to completely remove temporary directory '" << m_path << "'. ";
-		cerr << "Only " << numRemoved << " files were actually removed." << endl;
-		cerr << "Reason: " << errorCode.message() << endl;
-	}
-}
-
-string TemporaryDirectory::memberPath(string const& _relativePath) const
-{
-	assert(fs::path(_relativePath).is_relative());
-
-	return (fs::path(m_path) / _relativePath).string();
+	return count + static_cast<size_t>(abs(
+		static_cast<long>(_chromosome1.length()) -
+		static_cast<long>(_chromosome2.length())
+	));
 }
 
 string phaser::test::stripWhitespace(string const& input)

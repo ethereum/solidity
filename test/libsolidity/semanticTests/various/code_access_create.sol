@@ -1,7 +1,7 @@
 contract D {
     uint256 x;
 
-    constructor() public {
+    constructor() {
         x = 7;
     }
 
@@ -26,3 +26,4 @@ contract C {
 // compileViaYul: also
 // ----
 // test() -> 7
+// gas legacy: 102264

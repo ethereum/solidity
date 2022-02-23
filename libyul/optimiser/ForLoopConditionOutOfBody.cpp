@@ -14,11 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
+
 #include <libsolutil/CommonData.h>
 
 using namespace std;
@@ -53,7 +55,7 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 		return;
 
 	YulString iszero = m_dialect.booleanNegationFunction()->name;
-	langutil::SourceLocation location = locationOf(*firstStatement.condition);
+	shared_ptr<DebugData const> debugData = debugDataOf(*firstStatement.condition);
 
 	if (
 		holds_alternative<FunctionCall>(*firstStatement.condition) &&
@@ -62,8 +64,8 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 		_forLoop.condition = make_unique<Expression>(std::move(std::get<FunctionCall>(*firstStatement.condition).arguments.front()));
 	else
 		_forLoop.condition = make_unique<Expression>(FunctionCall{
-			location,
-			Identifier{location, iszero},
+			debugData,
+			Identifier{debugData, iszero},
 			util::make_vector<Expression>(
 				std::move(*firstStatement.condition)
 			)

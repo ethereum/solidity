@@ -2,7 +2,7 @@ contract Test {
     bytes3 name;
     bool flag;
 
-    constructor() public {
+    constructor() {
         setName("abc");
     }
 
@@ -16,6 +16,7 @@ contract Test {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // getName() -> "abc"

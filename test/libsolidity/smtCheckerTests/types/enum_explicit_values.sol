@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	enum D { Left, Right }
@@ -10,3 +8,7 @@ contract C
 		assert(d != _a);
 	}
 }
+// ====
+// SMTEngine: all
+// ----
+// Info 1180: Contract invariant(s) for :C:\n((d = 0) || (d = 1))\n

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -49,9 +50,12 @@ public:
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
 protected:
+	/// Returns @param _sourceCode prefixed with the version pragma and the SPDX license identifier.
+	static std::string addPreamble(std::string const& _sourceCode);
+
 	void setupCompiler();
 	void parseAndAnalyze() override;
-	void filterObtainedErrors();
+	virtual void filterObtainedErrors();
 
 	bool m_optimiseYul = true;
 	bool m_parserErrorRecovery = false;

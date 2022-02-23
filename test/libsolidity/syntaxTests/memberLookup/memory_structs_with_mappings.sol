@@ -3,8 +3,7 @@ contract Test {
 	S s;
 	function f() public {
 		S memory x;
-		x.b[1];
 	}
 }
 // ----
-// TypeError: (118-121): Member "b" is not available in struct Test.S memory outside of storage.
+// TypeError 4061: (104-114): Type struct Test.S is only valid in storage because it contains a (nested) mapping.

@@ -8,4 +8,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (81-82): Attempt to call variable instead of function.
+// TypeError 4202: (81-82): Attempt to call variable instead of function.

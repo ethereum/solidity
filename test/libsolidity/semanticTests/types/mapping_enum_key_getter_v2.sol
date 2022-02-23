@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract test {
     enum E { A, B, C }
     mapping(E => uint8) public table;

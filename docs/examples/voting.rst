@@ -15,12 +15,17 @@ Les personnes derrière les adresses peuvent alors choisir de voter elles-mêmes
 
 A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retournera la proposition avec le plus grand nombre de votes.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
+<<<<<<< HEAD
     pragma solidity >=0.4.22 <0.7.0;
 
     /// @title Vote par délegation.
+=======
+    pragma solidity >=0.7.0 <0.9.0;
+    /// @title Voting with delegation.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
     contract Ballot {
         // Ceci déclare un type complexe, représentant
         // un votant, qui sera utilisé
@@ -47,8 +52,13 @@ A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retou
         // Un tableau dynamique de structs `Proposal`.
         Proposal[] public proposals;
 
+<<<<<<< HEAD
         /// Créé un nouveau bulletin pour choisir l'un des `proposalNames`.
         constructor(bytes32[] memory proposalNames) public {
+=======
+        /// Create a new ballot to choose one of `proposalNames`.
+        constructor(bytes32[] memory proposalNames) {
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             chairperson = msg.sender;
             voters[chairperson].weight = 1;
 
@@ -66,6 +76,7 @@ A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retou
             }
         }
 
+<<<<<<< HEAD
         // Donne à un `voter` un droit de vote pour ce scrutin.
         // Peut seulement être appelé par `chairperson`.
         function giveRightToVote(address voter) public {
@@ -79,6 +90,21 @@ A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retou
             // s'effectuent correctement.
             // Comme second argument, vous pouvez fournir une
             // phrase explicative de ce qui est allé de travers.
+=======
+        // Give `voter` the right to vote on this ballot.
+        // May only be called by `chairperson`.
+        function giveRightToVote(address voter) external {
+            // If the first argument of `require` evaluates
+            // to `false`, execution terminates and all
+            // changes to the state and to Ether balances
+            // are reverted.
+            // This used to consume all gas in old EVM versions, but
+            // not anymore.
+            // It is often a good idea to use `require` to check if
+            // functions are called correctly.
+            // As a second argument, you can also provide an
+            // explanation about what went wrong.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             require(
                 msg.sender == chairperson,
                 "Only chairperson can give right to vote."
@@ -91,9 +117,15 @@ A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retou
             voters[voter].weight = 1;
         }
 
+<<<<<<< HEAD
         /// Delegue son vote au votant `to`.
         function delegate(address to) public {
             // assigne les références
+=======
+        /// Delegate your vote to the voter `to`.
+        function delegate(address to) external {
+            // assigns reference
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "You already voted.");
 
@@ -116,11 +148,19 @@ A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retou
                 require(to != msg.sender, "Found loop in delegation.");
             }
 
+<<<<<<< HEAD
             // Comme `sender` est une référence, ceci
             // modifie `voters[msg.sender].voted`
+=======
+            // Since `sender` is a reference, this
+            // modifies `voters[msg.sender].voted`
+            Voter storage delegate_ = voters[to];
+
+            // Voters cannot delegate to wallets that cannot vote.
+            require(delegate_.weight >= 1);
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             sender.voted = true;
             sender.delegate = to;
-            Voter storage delegate_ = voters[to];
             if (delegate_.voted) {
                 // Si le délégué a déjà voté,
                 // on ajoute directement le vote aux autres
@@ -131,9 +171,15 @@ A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retou
             }
         }
 
+<<<<<<< HEAD
         /// Voter (incluant les procurations par délégation)
         /// pour la proposition `proposals[proposal].name`.
         function vote(uint proposal) public {
+=======
+        /// Give your vote (including votes delegated to you)
+        /// to proposal `proposals[proposal].name`.
+        function vote(uint proposal) external {
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "Already voted.");
             sender.voted = true;
@@ -158,10 +204,17 @@ A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retou
             }
         }
 
+<<<<<<< HEAD
         // Appelle la fonction winningProposal() pour avoir
         // l'index du gagnant dans le tableau de propositions
         // et retourne le nom de la proposition gagnante.
         function winnerName() public view
+=======
+        // Calls winningProposal() function to get the index
+        // of the winner contained in the proposals array and then
+        // returns the name of the winner
+        function winnerName() external view
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
                 returns (bytes32 winnerName_)
         {
             winnerName_ = proposals[winningProposal()].name;

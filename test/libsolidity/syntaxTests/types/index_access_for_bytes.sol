@@ -4,3 +4,4 @@ contract C {
         b[uint8(x[2])];
     }
 }
+// ----

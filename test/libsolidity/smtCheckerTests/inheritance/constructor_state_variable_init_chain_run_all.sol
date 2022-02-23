@@ -1,33 +1,28 @@
-pragma experimental SMTChecker;
 contract C {
 	uint a;
-	constructor(uint x) public {
+	constructor(uint x) {
 		a = x;
 	}
 }
 
 abstract contract B is C {
 	uint b;
-	constructor(uint x) public {
+	constructor(uint x) {
 		b = a + x;
 	}
 }
 
 contract A is B {
-	constructor(uint x) B(x) C(x + 2) public {
+	constructor(uint x) B(x) C(x + 2) {
 		assert(a == x + 2);
 		assert(b == x + x + 2);
 		assert(a == x + 5);
 	}
 }
-
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (171-176): Underflow (resulting value less than 0) happens here
-// Warning: (171-176): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (230-235): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (171-176): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (260-265): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (282-287): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (282-291): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (308-313): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (296-314): Assertion violation happens here
+// Warning 4984: (125-130): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (184-189): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (243-261): CHC: Assertion violation happens here.

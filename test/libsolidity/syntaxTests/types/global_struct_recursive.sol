@@ -5,4 +5,4 @@ contract C {
     // whatever
 }
 // ----
-// TypeError: (0-19): Recursive struct definition.
+// TypeError 2046: (0-19): Recursive struct definition.

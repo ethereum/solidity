@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract c {
 	mapping(uint => uint) x;
 	function f(mapping(uint => uint) storage map, uint index, uint value) internal {
@@ -11,5 +9,8 @@ contract c {
 		assert(x[a] == b);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (289-306): Assertion violation happens here
+// Warning 6328: (256-273): CHC: Assertion violation happens here.

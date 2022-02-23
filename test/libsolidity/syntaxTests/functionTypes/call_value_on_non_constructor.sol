@@ -4,4 +4,4 @@ contract C {
   function g() public { this.f.value(); }
 }
 // ----
-// TypeError: (155-167): Member "value" is only available for payable functions.
+// TypeError 8820: (155-167): Member "value" is only available for payable functions.

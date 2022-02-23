@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file CommonData.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -64,15 +65,15 @@ string solidity::util::toHex(bytes const& _data, HexPrefix _prefix, HexCase _cas
 
 	// Mixed case will be handled inside the loop.
 	char const* chars = _case == HexCase::Upper ? upperHexChars : lowerHexChars;
-	int rix = _data.size() - 1;
+	size_t rix = _data.size() - 1;
 	for (uint8_t c: _data)
 	{
 		// switch hex case every four hexchars
 		if (_case == HexCase::Mixed)
 			chars = (rix-- & 2) == 0 ? lowerHexChars : upperHexChars;
 
-		ret[i++] = chars[(unsigned(c) / 16) & 0xf];
-		ret[i++] = chars[unsigned(c) & 0xf];
+		ret[i++] = chars[(static_cast<size_t>(c) >> 4ul) & 0xfu];
+		ret[i++] = chars[c & 0xfu];
 	}
 	assertThrow(i == ret.size(), Exception, "");
 
@@ -95,6 +96,9 @@ int solidity::util::fromHex(char _i, WhenError _throw)
 
 bytes solidity::util::fromHex(std::string const& _s, WhenError _throw)
 {
+	if (_s.empty())
+		return {};
+
 	unsigned s = (_s.size() >= 2 && _s[0] == '0' && _s[1] == 'x') ? 2 : 0;
 	std::vector<uint8_t> ret;
 	ret.reserve((_s.size() - s + 1) / 2);
@@ -103,7 +107,7 @@ bytes solidity::util::fromHex(std::string const& _s, WhenError _throw)
 	{
 		int h = fromHex(_s[s++], _throw);
 		if (h != -1)
-			ret.push_back(h);
+			ret.push_back(static_cast<uint8_t>(h));
 		else
 			return bytes();
 	}
@@ -112,7 +116,7 @@ bytes solidity::util::fromHex(std::string const& _s, WhenError _throw)
 		int h = fromHex(_s[i], _throw);
 		int l = fromHex(_s[i + 1], _throw);
 		if (h != -1 && l != -1)
-			ret.push_back((uint8_t)(h * 16 + l));
+			ret.push_back(static_cast<uint8_t>(h * 16 + l));
 		else
 			return bytes();
 	}
@@ -145,14 +149,14 @@ string solidity::util::getChecksummedAddress(string const& _addr)
 	h256 hash = keccak256(boost::algorithm::to_lower_copy(s, std::locale::classic()));
 
 	string ret = "0x";
-	for (size_t i = 0; i < 40; ++i)
+	for (unsigned i = 0; i < 40; ++i)
 	{
 		char addressCharacter = s[i];
-		unsigned nibble = (unsigned(hash[i / 2]) >> (4 * (1 - (i % 2)))) & 0xf;
+		uint8_t nibble = hash[i / 2u] >> (4u * (1u - (i % 2u))) & 0xf;
 		if (nibble >= 8)
-			ret += toupper(addressCharacter);
+			ret += static_cast<char>(toupper(addressCharacter));
 		else
-			ret += tolower(addressCharacter);
+			ret += static_cast<char>(tolower(addressCharacter));
 	}
 	return ret;
 }
@@ -201,18 +205,12 @@ string solidity::util::escapeAndQuoteString(string const& _input)
 			out += "\\\\";
 		else if (c == '"')
 			out += "\\\"";
-		else if (c == '\b')
-			out += "\\b";
-		else if (c == '\f')
-			out += "\\f";
 		else if (c == '\n')
 			out += "\\n";
 		else if (c == '\r')
 			out += "\\r";
 		else if (c == '\t')
 			out += "\\t";
-		else if (c == '\v')
-			out += "\\v";
 		else if (!isprint(c, locale::classic()))
 		{
 			ostringstream o;

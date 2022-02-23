@@ -11,3 +11,4 @@ contract C {
         d = L.h.selector;
     }
 }
+// ----

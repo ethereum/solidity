@@ -2,7 +2,7 @@
 pragma solidity >=0.0.0;
 
 contract Error1 {
-  constructor() public {
+  constructor() {
     balances[tx.origin] = ; // missing RHS.
   }
 

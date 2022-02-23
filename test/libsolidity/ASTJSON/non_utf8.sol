@@ -1,3 +1,3 @@
-contract C { function f() public { var x = hex"ff"; } }
+contract C { function f() public { string memory x = hex"ff"; } }
 
 // ----

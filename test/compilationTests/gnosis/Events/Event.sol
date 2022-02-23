@@ -34,7 +34,6 @@ abstract contract Event {
     /// @param _oracle Oracle contract used to resolve the event
     /// @param outcomeCount Number of event outcomes
     constructor(Token _collateralToken, Oracle _oracle, uint8 outcomeCount)
-        public
     {
         // Validate input
         require(address(_collateralToken) != address(0) && address(_oracle) != address(0) && outcomeCount >= 2);

@@ -14,16 +14,16 @@ contract Medium {
 // optimize-runs: 2
 // ----
 // creation:
-//   codeDepositCost: 141000
-//   executionCost: 190
-//   totalCost: 141190
+//   codeDepositCost: 131600
+//   executionCost: 177
+//   totalCost: 131777
 // external:
-//   a(): 998
-//   b(uint256): 2063
-//   f1(uint256): 41254
-//   f2(uint256): 21298
-//   f3(uint256): 21342
-//   g0(uint256): 332
-//   g7(uint256): 21208
-//   g8(uint256): 21186
-//   g9(uint256): 21142
+//   a(): 2283
+//   b(uint256): 4695
+//   f1(uint256): 46786
+//   f2(uint256): 24730
+//   f3(uint256): 24774
+//   g0(uint256): 364
+//   g7(uint256): 24640
+//   g8(uint256): 24618
+//   g9(uint256): 24574

@@ -6,10 +6,10 @@
 	function foo() -> x_9
 	{
 		x_9 := sub(1,sub(x_9,1))
-		mstore(sub(1,div(sub(x_9,1),sub(1,sub(x_9,1)))), 1)
+		sstore(sub(1,div(sub(x_9,1),sub(1,sub(x_9,1)))), 1)
 	}
 }
 // ----
 // step: fullSuite
 //
-// { { mstore(1, 1) } }
+// { { sstore(1, 1) } }

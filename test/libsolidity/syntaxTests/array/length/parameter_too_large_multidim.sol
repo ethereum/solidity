@@ -5,7 +5,7 @@ contract C {
   function f(uint[2**16][2**16][] memory) public pure {}
 }
 // ----
-// TypeError: (26-66): Type too large for memory.
-// TypeError: (96-116): Type too large for memory.
-// TypeError: (146-173): Type too large for memory.
-// TypeError: (203-230): Type too large for memory.
+// TypeError 1534: (26-66): Type too large for memory.
+// TypeError 1534: (96-116): Type too large for memory.
+// TypeError 1534: (146-173): Type too large for memory.
+// TypeError 1534: (203-230): Type too large for memory.

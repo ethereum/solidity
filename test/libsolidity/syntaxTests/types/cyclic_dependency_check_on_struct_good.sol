@@ -132,3 +132,4 @@ contract Main {
     struct FB { FC m; }
     struct FC { int i; }
 }
+// ----

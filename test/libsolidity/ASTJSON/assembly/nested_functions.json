@@ -8,23 +8,22 @@
     ]
   },
   "id": 9,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
-      "fullyImplemented": true,
       "id": 8,
       "linearizedBaseContracts":
       [
         8
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -97,15 +96,13 @@
               }
             ]
           },
-          "documentation": null,
-          "functionSelector": "26121ff0",
           "id": 7,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "24:1:1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -124,30 +121,21 @@
                 "id": 3,
                 "mutability": "mutable",
                 "name": "x",
+                "nameLocation": "54:1:1",
                 "nodeType": "VariableDeclaration",
-                "overrides": null,
                 "scope": 7,
                 "src": "49:6:1",
                 "stateVariable": false,
                 "storageLocation": "default",
-                "typeDescriptions":
-                {
-                  "typeIdentifier": null,
-                  "typeString": null
-                },
+                "typeDescriptions": {},
                 "typeName":
                 {
                   "id": 2,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
                   "src": "49:4:1",
-                  "typeDescriptions":
-                  {
-                    "typeIdentifier": null,
-                    "typeString": null
-                  }
+                  "typeDescriptions": {}
                 },
-                "value": null,
                 "visibility": "internal"
               }
             ],
@@ -161,7 +149,8 @@
         }
       ],
       "scope": 9,
-      "src": "0:156:1"
+      "src": "0:156:1",
+      "usedErrors": []
     }
   ],
   "src": "0:157:1"

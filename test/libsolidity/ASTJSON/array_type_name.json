@@ -8,16 +8,15 @@
     ]
   },
   "id": 5,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 4,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         4
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -33,8 +33,8 @@
           "id": 3,
           "mutability": "mutable",
           "name": "i",
+          "nameLocation": "20:1:1",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 4,
           "src": "13:8:1",
           "stateVariable": true,
@@ -59,7 +59,6 @@
               }
             },
             "id": 2,
-            "length": null,
             "nodeType": "ArrayTypeName",
             "src": "13:6:1",
             "typeDescriptions":
@@ -68,12 +67,12 @@
               "typeString": "uint256[]"
             }
           },
-          "value": null,
           "visibility": "internal"
         }
       ],
       "scope": 5,
-      "src": "0:24:1"
+      "src": "0:24:1",
+      "usedErrors": []
     }
   ],
   "src": "0:25:1"

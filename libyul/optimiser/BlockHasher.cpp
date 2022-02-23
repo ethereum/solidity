@@ -14,14 +14,15 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that calculates hash values for block prefixes.
  */
 
 #include <libyul/optimiser/BlockHasher.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
-#include <libsolutil/CommonData.h>
 
 using namespace std;
 using namespace solidity;

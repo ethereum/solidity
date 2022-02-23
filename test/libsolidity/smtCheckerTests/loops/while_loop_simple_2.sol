@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 // Check that condition is assumed.
 contract C {
     function f(uint x) public pure {
@@ -8,4 +7,6 @@ contract C {
     }
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
+// ----

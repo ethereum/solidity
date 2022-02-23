@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract c { function f() public pure {22237625-86535-0+1;
     555565-3*51;
 }
@@ -22,6 +20,8 @@ a;
 		(,,,,,,,a,b,,,,) = g();
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (72-90): Statement has no effect.
-// Warning: (96-107): Statement has no effect.
+// Warning 6133: (39-57): Statement has no effect.
+// Warning 6133: (63-74): Statement has no effect.

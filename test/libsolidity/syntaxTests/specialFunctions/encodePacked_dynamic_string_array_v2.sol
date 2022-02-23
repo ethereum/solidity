@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (112-113): Type not supported in packed mode.
-// TypeError: (178-179): Type not supported in packed mode.
+// TypeError 9578: (112-113): Type not supported in packed mode.
+// TypeError 9578: (178-179): Type not supported in packed mode.

@@ -1,8 +1,6 @@
-pragma experimental SMTChecker;
-
 contract C{
     uint x;
-	constructor(uint y) public {
+	constructor(uint y) {
 		assert(x == 1);
 		x = 1;
 	}
@@ -19,14 +17,13 @@ contract C{
 		assert(x == 2);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (70-76): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (145-159): Assertion violation happens here
-// Warning: (163-166): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (227-241): Assertion violation happens here
-// Warning: (252-266): Assertion violation happens here
-// Warning: (177-191): Assertion violation happens here
-// Warning: (227-241): Assertion violation happens here
-// Warning: (245-248): Underflow (resulting value less than 0) happens here
-// Warning: (252-266): Assertion violation happens here
-// Warning: (89-103): Assertion violation happens here
+// Warning 5667: (37-43): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (49-63): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (105-119): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor(0)\nState: x = 1\nC.f()
+// Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor(0)\nState: x = 1\nC.f()\n    C.g() -- internal call
+// Warning 6328: (187-201): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nC.constructor(0)\nState: x = 1\nC.f()\n    C.g() -- internal call
+// Warning 6328: (212-226): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor(0)\nState: x = 1\nC.f()\n    C.g() -- internal call
+// Info 1180: Contract invariant(s) for :C:\n!(x >= 2)\n

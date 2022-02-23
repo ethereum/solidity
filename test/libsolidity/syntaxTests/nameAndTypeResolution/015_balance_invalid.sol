@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (52-70): Expression has to be an lvalue.
+// TypeError 4247: (52-70): Expression has to be an lvalue.

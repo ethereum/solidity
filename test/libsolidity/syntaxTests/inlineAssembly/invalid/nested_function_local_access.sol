@@ -9,4 +9,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError: (130-131): Cannot access local Solidity variables from inside an inline assembly function.
+// DeclarationError 6578: (130-131): Cannot access local Solidity variables from inside an inline assembly function.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file FixedHash.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -24,6 +25,7 @@
 #pragma once
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 #include <boost/functional/hash.hpp>
 #include <boost/io/ios_state.hpp>
@@ -47,6 +49,7 @@ public:
 
 	/// The size of the container.
 	enum { size = N };
+	static_assert(N != 0);
 
 	/// Method to convert from a string.
 	enum ConstructFromStringType { FromHex, FromBinary };
@@ -58,19 +61,61 @@ public:
 	explicit FixedHash() { m_data.fill(0); }
 
 	/// Construct from another hash, filling with zeroes or cropping as necessary.
-	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) { m_data.fill(0); unsigned c = std::min(M, N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; }
+	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft)
+	{
+		m_data.fill(0);
+		unsigned c = std::min(M, N);
+		for (unsigned i = 0; i < c; ++i)
+			m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i];
+	}
 
 	/// Convert from the corresponding arithmetic type.
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+	explicit FixedHash(bytes const& _array, ConstructFromHashType _sizeMismatchBehavior = FailIfDifferent)
+	{
+		if (_array.size() == N)
+			memcpy(m_data.data(), _array.data(), _array.size());
+		else
+		{
+			m_data.fill(0);
+			if (_sizeMismatchBehavior != FailIfDifferent)
+			{
+				auto bytesToCopy = std::min<size_t>(_array.size(), N);
+				for (size_t i = 0; i < bytesToCopy; ++i)
+					if (_sizeMismatchBehavior == AlignRight)
+						m_data[N - 1 - i] = _array[_array.size() - 1 - i];
+					else
+						m_data[i] = _array[i];
+			}
+		}
+	}
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent)
+	{
+		if (_b.size() == N)
+			memcpy(m_data.data(), _b.data(), std::min<size_t>(_b.size(), N));
+		else
+		{
+			m_data.fill(0);
+			if (_t != FailIfDifferent)
+			{
+				auto c = std::min<size_t>(_b.size(), N);
+				for (size_t i = 0; i < c; ++i)
+					if (_t == AlignRight)
+						m_data[N - 1 - i] = _b[_b.size() - 1 - i];
+					else
+						m_data[i] = _b[i];
+			}
+		}
+	}
 
-	/// Explicitly construct, copying from a  string.
-	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent): FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht) {}
+	/// Explicitly construct, copying from a string.
+	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent):
+		FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht)
+	{}
 
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
@@ -79,7 +124,16 @@ public:
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
 	bool operator!=(FixedHash const& _c) const { return m_data != _c.m_data; }
 	/// Required to sort objects of this type or use them as map keys.
-	bool operator<(FixedHash const& _c) const { for (unsigned i = 0; i < N; ++i) if (m_data[i] < _c.m_data[i]) return true; else if (m_data[i] > _c.m_data[i]) return false; return false; }
+	bool operator<(FixedHash const& _c) const {
+		for (unsigned i = 0; i < N; ++i)
+		{
+			if (m_data[i] < _c.m_data[i])
+				return true;
+			else if (m_data[i] > _c.m_data[i])
+				return false;
+		}
+		return false;
+	}
 
 	/// @returns a particular byte from the hash.
 	uint8_t& operator[](unsigned _i) { return m_data[_i]; }

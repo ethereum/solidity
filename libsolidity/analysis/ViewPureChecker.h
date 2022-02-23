@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -69,6 +70,9 @@ private:
 		langutil::SourceLocation const& _location,
 		std::optional<langutil::SourceLocation> const& _nestedLocation = {}
 	);
+
+	/// Determines the mutability of modifier if not already cached.
+	MutabilityAndLocation const& modifierMutability(ModifierDefinition const& _modifier);
 
 	std::vector<std::shared_ptr<ASTNode>> const& m_ast;
 	langutil::ErrorReporter& m_errorReporter;

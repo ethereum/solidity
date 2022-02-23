@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for the iterateReplacing function
  */
@@ -29,7 +30,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(IterateReplacing)
+BOOST_AUTO_TEST_SUITE(IterateReplacing, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(no_replacement)
 {

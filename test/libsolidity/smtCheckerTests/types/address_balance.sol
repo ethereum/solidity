@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(address a, address b) public view {
@@ -7,7 +5,10 @@ contract C
 		assert(a.balance > b.balance);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (96-102): Unused local variable.
-// Warning: (105-127): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (131-160): Assertion violation happens here
+// Warning 2072: (63-69): Unused local variable.
+// Warning 4984: (72-94): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (98-127): CHC: Assertion violation happens here.

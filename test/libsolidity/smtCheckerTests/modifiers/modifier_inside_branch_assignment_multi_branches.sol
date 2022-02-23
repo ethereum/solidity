@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint x;
 	address owner;
@@ -25,11 +23,16 @@ contract C {
 		x = y;
 		if (y > 1) {
 			f();
+			// This now fails as a false positive because
+			// CHC does not propagate msg.sender throughout predicates.
 			assert(x == y + 1);
 		}
 		// Fails for {y = 0, x = 0}.
 		assert(x == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (461-475): Assertion violation happens here
+// Warning 6328: (540-554): CHC: Assertion violation happens here.\nCounterexample:\nx = 1, owner = 0x0\ny = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0, owner = 0x0\nC.g(1){ msg.sender: 0x0 }
+// Info 1180: Contract invariant(s) for :C:\n(owner <= 0)\n

@@ -3,4 +3,4 @@ contract c {
     function f() public { a = 2; }
 }
 // ----
-// TypeError: (64-65): Cannot assign to a constant variable.
+// TypeError 6520: (64-65): Cannot assign to a constant variable.

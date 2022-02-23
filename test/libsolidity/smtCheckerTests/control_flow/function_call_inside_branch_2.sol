@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public pure {
@@ -19,9 +17,6 @@ contract C
 		return a;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (271-281): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (123-133): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (271-281): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (186-196): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (271-281): Type conversion is not yet fully supported and might yield false positives.

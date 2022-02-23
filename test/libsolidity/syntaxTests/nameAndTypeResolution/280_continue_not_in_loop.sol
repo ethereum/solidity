@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// SyntaxError: (69-77): "continue" has to be in a "for" or "while" loop.
+// SyntaxError 4123: (69-77): "continue" has to be in a "for" or "while" loop.

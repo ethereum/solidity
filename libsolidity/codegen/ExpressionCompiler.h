@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @author Gav Wood <g@ethdev.com>
@@ -30,7 +31,6 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
 
-#include <boost/noncopyable.hpp>
 #include <functional>
 #include <memory>
 
@@ -39,7 +39,8 @@ namespace solidity::evmasm
 class AssemblyItem; // forward
 }
 
-namespace solidity::frontend {
+namespace solidity::frontend
+{
 
 // forward declarations
 class CompilerContext;
@@ -100,6 +101,7 @@ private:
 	void appendArithmeticOperatorCode(Token _operator, Type const& _type);
 	void appendBitOperatorCode(Token _operator);
 	void appendShiftOperatorCode(Token _operator, Type const& _valueType, Type const& _shiftAmountType);
+	void appendExpOperatorCode(Type const& _valueType, Type const& _exponentType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
@@ -130,7 +132,7 @@ private:
 
 	/// @returns true if the operator applied to the given type requires a cleanup prior to the
 	/// operation.
-	static bool cleanupNeededForOp(Type::Category _type, Token _op);
+	static bool cleanupNeededForOp(Type::Category _type, Token _op, Arithmetic _arithmetic);
 
 	void acceptAndConvert(Expression const& _expression, Type const& _type, bool _cleanupNeeded = false);
 

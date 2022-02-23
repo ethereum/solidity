@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file UTF8.cpp
  * @author Alex Beregszaszi
  * @date 2016
@@ -75,8 +76,6 @@ bool isWellFormed(unsigned char byte1, unsigned char byte2)
 	return false;
 }
 
-}
-
 bool validateUTF8(unsigned char const* _input, size_t _length, size_t& _invalidPosition)
 {
 	bool valid = true;
@@ -131,6 +130,8 @@ bool validateUTF8(unsigned char const* _input, size_t _length, size_t& _invalidP
 
 	_invalidPosition = i;
 	return false;
+}
+
 }
 
 bool validateUTF8(std::string const& _input, size_t& _invalidPosition)

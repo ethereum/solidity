@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
@@ -26,7 +27,7 @@ class BlockFlattener: public ASTModifier
 {
 public:
 	static constexpr char const* name{"BlockFlattener"};
-	static void run(OptimiserStepContext&, Block& _ast) { BlockFlattener{}(_ast); }
+	static void run(OptimiserStepContext&, Block& _ast);
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;

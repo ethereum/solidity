@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (100-112): Expected string end-quote.
+// ParserError 8936: (100-112): Expected string end-quote.

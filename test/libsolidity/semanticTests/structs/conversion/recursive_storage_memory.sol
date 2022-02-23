@@ -6,7 +6,7 @@ contract CopyTest {
     Tree storageTree;
     Tree[] children;
 
-    constructor() public {
+    constructor() {
         for (uint i = 0; i < 2; i++)
             storageTree.children.push();
         for (uint i = 0; i < 23; i++)
@@ -21,5 +21,10 @@ contract CopyTest {
         return (memoryTree.children.length, memoryTree.children[0].children.length, memoryTree.children[1].children.length);
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // run() -> 2, 23, 42
+// gas irOptimized: 193980
+// gas legacy: 186016
+// gas legacyOptimized: 184668

@@ -2,6 +2,7 @@ contract C {
 }
 // ====
 // allowNonExistingFunctions: true
-// compileViaYul: true
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> FAILURE

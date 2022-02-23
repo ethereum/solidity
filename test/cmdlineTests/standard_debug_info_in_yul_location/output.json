@@ -1,0 +1,1591 @@
+{"contracts":{"C":{"C":{"ir":"/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+
+/// @use-src 0:\"C\"
+object \"C_54\" {
+    code {
+        /// @src 0:79:435  \"contract C...\"
+        mstore(64, memoryguard(160))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        let _1 := copy_arguments_for_constructor_20_object_C_54()
+        constructor_C_54(_1)
+
+        let _2 := allocate_unbounded()
+        codecopy(_2, dataoffset(\"C_54_deployed\"), datasize(\"C_54_deployed\"))
+
+        setimmutable(_2, \"8\", mload(128))
+
+        return(_2, datasize(\"C_54_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        function round_up_to_mul_of_32(value) -> result {
+            result := and(add(value, 31), not(31))
+        }
+
+        function panic_error_0x41() {
+            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+            mstore(4, 0x41)
+            revert(0, 0x24)
+        }
+
+        function finalize_allocation(memPtr, size) {
+            let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
+            // protect against overflow
+            if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+            mstore(64, newFreePtr)
+        }
+
+        function allocate_memory(size) -> memPtr {
+            memPtr := allocate_unbounded()
+            finalize_allocation(memPtr, size)
+        }
+
+        function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+            revert(0, 0)
+        }
+
+        function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+            revert(0, 0)
+        }
+
+        function cleanup_t_int256(value) -> cleaned {
+            cleaned := value
+        }
+
+        function validator_revert_t_int256(value) {
+            if iszero(eq(value, cleanup_t_int256(value))) { revert(0, 0) }
+        }
+
+        function abi_decode_t_int256_fromMemory(offset, end) -> value {
+            value := mload(offset)
+            validator_revert_t_int256(value)
+        }
+
+        function abi_decode_tuple_t_int256_fromMemory(headStart, dataEnd) -> value0 {
+            if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+            {
+
+                let offset := 0
+
+                value0 := abi_decode_t_int256_fromMemory(add(headStart, offset), dataEnd)
+            }
+
+        }
+
+        function copy_arguments_for_constructor_20_object_C_54() -> ret_param_0 {
+            let programSize := datasize(\"C_54\")
+            let argSize := sub(codesize(), programSize)
+
+            let memoryDataOffset := allocate_memory(argSize)
+            codecopy(memoryDataOffset, programSize, argSize)
+
+            ret_param_0 := abi_decode_tuple_t_int256_fromMemory(memoryDataOffset, add(memoryDataOffset, argSize))
+        }
+
+        function cleanup_t_rational_42_by_1(value) -> cleaned {
+            cleaned := value
+        }
+
+        function identity(value) -> ret {
+            ret := value
+        }
+
+        function convert_t_rational_42_by_1_to_t_int256(value) -> converted {
+            converted := cleanup_t_int256(identity(cleanup_t_rational_42_by_1(value)))
+        }
+
+        function shift_left_0(value) -> newValue {
+            newValue :=
+
+            shl(0, value)
+
+        }
+
+        function update_byte_slice_32_shift_0(value, toInsert) -> result {
+            let mask := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+            toInsert := shift_left_0(toInsert)
+            value := and(value, not(mask))
+            result := or(value, and(toInsert, mask))
+        }
+
+        function convert_t_int256_to_t_int256(value) -> converted {
+            converted := cleanup_t_int256(identity(cleanup_t_int256(value)))
+        }
+
+        function prepare_store_t_int256(value) -> ret {
+            ret := value
+        }
+
+        function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+            let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
+            sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
+        }
+
+        /// @ast-id 20
+        /// @src 0:182:230  \"constructor(int _init)...\"
+        function constructor_C_54(var__init_12) {
+
+            /// @src 0:182:230  \"constructor(int _init)...\"
+
+            /// @src 0:154:156  \"42\"
+            let expr_7 := 0x2a
+            let _3 := convert_t_rational_42_by_1_to_t_int256(expr_7)
+            mstore(128, _3)
+
+            /// @src 0:221:226  \"_init\"
+            let _4 := var__init_12
+            let expr_16 := _4
+            /// @src 0:210:226  \"stateVar = _init\"
+            update_storage_value_offset_0t_int256_to_t_int256(0x00, expr_16)
+            let expr_17 := expr_16
+
+        }
+        /// @src 0:79:435  \"contract C...\"
+
+    }
+    /// @use-src 0:\"C\"
+    object \"C_54_deployed\" {
+        code {
+            /// @src 0:79:435  \"contract C...\"
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x26121ff0
+                {
+                    // f()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  fun_f_30()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                case 0x793816ec
+                {
+                    // stateVar()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  getter_fun_stateVar_10()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                case 0x9942ec6f
+                {
+                    // f2()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  fun_f2_53()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                case 0xa00b982b
+                {
+                    // constVar()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  getter_fun_constVar_5()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function abi_decode_tuple_(headStart, dataEnd)   {
+                if slt(sub(dataEnd, headStart), 0) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+            }
+
+            function cleanup_t_int256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function abi_encode_t_int256_to_t_int256_fromStack(value, pos) {
+                mstore(pos, cleanup_t_int256(value))
+            }
+
+            function abi_encode_tuple_t_int256__to_t_int256__fromStack(headStart , value0) -> tail {
+                tail := add(headStart, 32)
+
+                abi_encode_t_int256_to_t_int256_fromStack(value0,  add(headStart, 0))
+
+            }
+
+            function shift_right_unsigned_dynamic(bits, value) -> newValue {
+                newValue :=
+
+                shr(bits, value)
+
+            }
+
+            function cleanup_from_storage_t_int256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function extract_from_storage_value_dynamict_int256(slot_value, offset) -> value {
+                value := cleanup_from_storage_t_int256(shift_right_unsigned_dynamic(mul(offset, 8), slot_value))
+            }
+
+            function read_from_storage_split_dynamic_t_int256(slot, offset) -> value {
+                value := extract_from_storage_value_dynamict_int256(sload(slot), offset)
+
+            }
+
+            /// @ast-id 10
+            /// @src 0:159:178  \"int public stateVar\"
+            function getter_fun_stateVar_10() -> ret {
+
+                let slot := 0
+                let offset := 0
+
+                ret := read_from_storage_split_dynamic_t_int256(slot, offset)
+
+            }
+            /// @src 0:79:435  \"contract C...\"
+
+            function cleanup_t_rational_41_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function identity(value) -> ret {
+                ret := value
+            }
+
+            function convert_t_rational_41_by_1_to_t_int256(value) -> converted {
+                converted := cleanup_t_int256(identity(cleanup_t_rational_41_by_1(value)))
+            }
+
+            /// @src 0:93:126  \"int public constant constVar = 41\"
+            function constant_constVar_5() -> ret {
+                /// @src 0:124:126  \"41\"
+                let expr_4 := 0x29
+                let _1 := convert_t_rational_41_by_1_to_t_int256(expr_4)
+
+                ret := _1
+            }
+
+            /// @ast-id 5
+            /// @src 0:93:126  \"int public constant constVar = 41\"
+            function getter_fun_constVar_5() -> ret_0 {
+                ret_0 := constant_constVar_5()
+            }
+            /// @src 0:79:435  \"contract C...\"
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function zero_value_for_split_t_int256() -> ret {
+                ret := 0
+            }
+
+            function panic_error_0x11() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x11)
+                revert(0, 0x24)
+            }
+
+            function checked_add_t_int256(x, y) -> sum {
+                x := cleanup_t_int256(x)
+                y := cleanup_t_int256(y)
+
+                // overflow, if x >= 0 and y > (maxValue - x)
+                if and(iszero(slt(x, 0)), sgt(y, sub(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, x))) { panic_error_0x11() }
+                // underflow, if x < 0 and y < (minValue - x)
+                if and(slt(x, 0), slt(y, sub(0x8000000000000000000000000000000000000000000000000000000000000000, x))) { panic_error_0x11() }
+
+                sum := add(x, y)
+            }
+
+            /// @ast-id 30
+            /// @src 0:233:309  \"function f() external pure returns (int)...\"
+            function fun_f_30() -> var__23 {
+                /// @src 0:269:272  \"int\"
+                let zero_t_int256_2 := zero_value_for_split_t_int256()
+                var__23 := zero_t_int256_2
+
+                /// @src 0:286:294  \"constVar\"
+                let expr_25 := constant_constVar_5()
+                /// @src 0:297:305  \"immutVar\"
+                let _3 := loadimmutable(\"8\")
+                let expr_26 := _3
+                /// @src 0:286:305  \"constVar + immutVar\"
+                let expr_27 := checked_add_t_int256(expr_25, expr_26)
+
+                /// @src 0:279:305  \"return constVar + immutVar\"
+                var__23 := expr_27
+                leave
+
+            }
+            /// @src 0:79:435  \"contract C...\"
+
+            function shift_right_0_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(0, value)
+
+            }
+
+            function extract_from_storage_value_offset_0t_int256(slot_value) -> value {
+                value := cleanup_from_storage_t_int256(shift_right_0_unsigned(slot_value))
+            }
+
+            function read_from_storage_split_offset_0_t_int256(slot) -> value {
+                value := extract_from_storage_value_offset_0t_int256(sload(slot))
+
+            }
+
+            function increment_t_int256(value) -> ret {
+                value := cleanup_t_int256(value)
+                if eq(value, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) { panic_error_0x11() }
+                ret := add(value, 1)
+            }
+
+            function shift_left_0(value) -> newValue {
+                newValue :=
+
+                shl(0, value)
+
+            }
+
+            function update_byte_slice_32_shift_0(value, toInsert) -> result {
+                let mask := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                toInsert := shift_left_0(toInsert)
+                value := and(value, not(mask))
+                result := or(value, and(toInsert, mask))
+            }
+
+            function convert_t_int256_to_t_int256(value) -> converted {
+                converted := cleanup_t_int256(identity(cleanup_t_int256(value)))
+            }
+
+            function prepare_store_t_int256(value) -> ret {
+                ret := value
+            }
+
+            function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+                let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
+                sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
+            }
+
+            /// @ast-id 37
+            /// @src 0:311:348  \"modifier m()...\"
+            function modifier_m_40(var__42) -> _5 {
+                _5 := var__42
+
+                /// @src 0:329:339  \"stateVar++\"
+                let _7 := read_from_storage_split_offset_0_t_int256(0x00)
+                let _6 := increment_t_int256(_7)
+                update_storage_value_offset_0t_int256_to_t_int256(0x00, _6)
+                let expr_33 := _7
+                /// @src 0:343:344  \"_\"
+                _5 := fun_f2_53_inner(var__42)
+
+            }
+            /// @src 0:79:435  \"contract C...\"
+
+            function cleanup_t_uint160(value) -> cleaned {
+                cleaned := and(value, 0xffffffffffffffffffffffffffffffffffffffff)
+            }
+
+            function convert_t_uint160_to_t_uint160(value) -> converted {
+                converted := cleanup_t_uint160(identity(cleanup_t_uint160(value)))
+            }
+
+            function convert_t_uint160_to_t_address(value) -> converted {
+                converted := convert_t_uint160_to_t_uint160(value)
+            }
+
+            function convert_t_contract$_C_$54_to_t_address(value) -> converted {
+                converted := convert_t_uint160_to_t_address(value)
+            }
+
+            function revert_error_0cc013b6b3b6beabea4e3a74a6d380f0df81852ca99887912475e1f66b2a2c20() {
+                revert(0, 0)
+            }
+
+            function round_up_to_mul_of_32(value) -> result {
+                result := and(add(value, 31), not(31))
+            }
+
+            function panic_error_0x41() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+
+            function finalize_allocation(memPtr, size) {
+                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
+
+            function shift_left_224(value) -> newValue {
+                newValue :=
+
+                shl(224, value)
+
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function validator_revert_t_int256(value) {
+                if iszero(eq(value, cleanup_t_int256(value))) { revert(0, 0) }
+            }
+
+            function abi_decode_t_int256_fromMemory(offset, end) -> value {
+                value := mload(offset)
+                validator_revert_t_int256(value)
+            }
+
+            function abi_decode_tuple_t_int256_fromMemory(headStart, dataEnd) -> value0 {
+                if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := 0
+
+                    value0 := abi_decode_t_int256_fromMemory(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function revert_forward_1() {
+                let pos := allocate_unbounded()
+                returndatacopy(pos, 0, returndatasize())
+                revert(pos, returndatasize())
+            }
+
+            /// @src 0:350:433  \"function f2() m public returns (int)...\"
+            function fun_f2_53_inner(_8) -> var__42 {
+                var__42 := _8
+
+                /// @src 0:399:407  \"stateVar\"
+                let _9 := read_from_storage_split_offset_0_t_int256(0x00)
+                let expr_44 := _9
+                /// @src 0:410:414  \"this\"
+                let expr_45_address := address()
+                /// @src 0:410:416  \"this.f\"
+                let expr_46_address := convert_t_contract$_C_$54_to_t_address(expr_45_address)
+                let expr_46_functionSelector := 0x26121ff0
+                /// @src 0:410:418  \"this.f()\"
+
+                // storage for arguments and returned data
+                let _10 := allocate_unbounded()
+                mstore(_10, shift_left_224(expr_46_functionSelector))
+                let _11 := abi_encode_tuple__to__fromStack(add(_10, 4) )
+
+                let _12 := staticcall(gas(), expr_46_address,  _10, sub(_11, _10), _10, 32)
+
+                if iszero(_12) { revert_forward_1() }
+
+                let expr_47
+                if _12 {
+
+                    // update freeMemoryPointer according to dynamic return size
+                    finalize_allocation(_10, returndatasize())
+
+                    // decode return parameters from external try-call into retVars
+                    expr_47 :=  abi_decode_tuple_t_int256_fromMemory(_10, add(_10, returndatasize()))
+                }
+                /// @src 0:399:418  \"stateVar + this.f()\"
+                let expr_48 := checked_add_t_int256(expr_44, expr_47)
+
+                /// @src 0:421:429  \"immutVar\"
+                let _13 := loadimmutable(\"8\")
+                let expr_49 := _13
+                /// @src 0:399:429  \"stateVar + this.f() + immutVar\"
+                let expr_50 := checked_add_t_int256(expr_48, expr_49)
+
+                /// @src 0:392:429  \"return stateVar + this.f() + immutVar\"
+                var__42 := expr_50
+                leave
+
+            }
+            /// @src 0:79:435  \"contract C...\"
+
+            /// @ast-id 53
+            /// @src 0:350:433  \"function f2() m public returns (int)...\"
+            function fun_f2_53() -> var__42 {
+                /// @src 0:382:385  \"int\"
+                let zero_t_int256_4 := zero_value_for_split_t_int256()
+                var__42 := zero_t_int256_4
+
+                var__42 := modifier_m_40(var__42)
+            }
+            /// @src 0:79:435  \"contract C...\"
+
+        }
+
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+
+}
+
+","irOptimized":"/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+/// @use-src 0:\"C\"
+object \"C_54\" {
+    code {
+        {
+            /// @src 0:79:435  \"contract C...\"
+            let _1 := memoryguard(0xa0)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let programSize := datasize(\"C_54\")
+            let argSize := sub(codesize(), programSize)
+            let newFreePtr := add(_1, and(add(argSize, 31), not(31)))
+            if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, _1))
+            {
+                mstore(/** @src -1:-1:-1 */ 0, /** @src 0:79:435  \"contract C...\" */ shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(/** @src -1:-1:-1 */ 0, /** @src 0:79:435  \"contract C...\" */ 0x24)
+            }
+            mstore(64, newFreePtr)
+            codecopy(_1, programSize, argSize)
+            if slt(sub(add(_1, argSize), _1), 32)
+            {
+                revert(/** @src -1:-1:-1 */ 0, 0)
+            }
+            /// @src 0:79:435  \"contract C...\"
+            constructor_C(mload(_1))
+            let _2 := mload(64)
+            let _3 := datasize(\"C_54_deployed\")
+            codecopy(_2, dataoffset(\"C_54_deployed\"), _3)
+            setimmutable(_2, \"8\", mload(128))
+            return(_2, _3)
+        }
+        /// @ast-id 20 @src 0:182:230  \"constructor(int _init)...\"
+        function constructor_C(var_init)
+        {
+            /// @src 0:154:156  \"42\"
+            mstore(128, 0x2a)
+            /// @src 0:79:435  \"contract C...\"
+            sstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 0:79:435  \"contract C...\" */ var_init)
+        }
+    }
+    /// @use-src 0:\"C\"
+    object \"C_54_deployed\" {
+        code {
+            {
+                /// @src 0:79:435  \"contract C...\"
+                mstore(64, memoryguard(0x80))
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    switch shr(224, calldataload(_1))
+                    case 0x26121ff0 {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_556(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
+                        /// @src 0:79:435  \"contract C...\"
+                        let memPos := mload(64)
+                        return(memPos, sub(abi_encode_int256(memPos, ret), memPos))
+                    }
+                    case 0x793816ec {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let ret_1 := sload(_1)
+                        let memPos_1 := mload(64)
+                        return(memPos_1, sub(abi_encode_int256(memPos_1, ret_1), memPos_1))
+                    }
+                    case 0x9942ec6f {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let ret_2 := /** @src 0:382:385  \"int\" */ modifier_m()
+                        /// @src 0:79:435  \"contract C...\"
+                        let memPos_2 := mload(64)
+                        return(memPos_2, sub(abi_encode_int256(memPos_2, ret_2), memPos_2))
+                    }
+                    case 0xa00b982b {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let memPos_3 := mload(64)
+                        return(memPos_3, sub(abi_encode_int256_555(memPos_3), memPos_3))
+                    }
+                }
+                revert(0, 0)
+            }
+            function abi_decode(dataEnd)
+            {
+                if slt(add(dataEnd, not(3)), 0) { revert(0, 0) }
+            }
+            function abi_encode_int256_555(headStart) -> tail
+            {
+                tail := add(headStart, 32)
+                mstore(headStart, /** @src 0:124:126  \"41\" */ 0x29)
+            }
+            /// @src 0:79:435  \"contract C...\"
+            function abi_encode_int256(headStart, value0) -> tail
+            {
+                tail := add(headStart, 32)
+                mstore(headStart, value0)
+            }
+            function panic_error_0x11()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x11)
+                revert(0, 0x24)
+            }
+            function checked_add_int256_556(y) -> sum
+            {
+                if and(1, sgt(y, sub(shl(255, 1), 42))) { panic_error_0x11() }
+                sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ y)
+            }
+            function checked_add_int256(x, y) -> sum
+            {
+                let _1 := slt(x, 0)
+                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x))) { panic_error_0x11() }
+                if and(_1, slt(y, sub(shl(255, 1), x))) { panic_error_0x11() }
+                sum := add(x, y)
+            }
+            /// @ast-id 37 @src 0:311:348  \"modifier m()...\"
+            function modifier_m() -> _1
+            {
+                /// @src 0:79:435  \"contract C...\"
+                let _2 := 0
+                let _3 := sload(_2)
+                if eq(_3, sub(shl(255, 1), 1)) { panic_error_0x11() }
+                let ret := add(_3, 1)
+                sstore(_2, ret)
+                /// @src 0:410:418  \"this.f()\"
+                let _4 := /** @src 0:79:435  \"contract C...\" */ mload(64)
+                /// @src 0:410:418  \"this.f()\"
+                mstore(_4, /** @src 0:79:435  \"contract C...\" */ shl(228, 0x026121ff))
+                /// @src 0:410:418  \"this.f()\"
+                let _5 := staticcall(gas(), /** @src 0:410:414  \"this\" */ address(), /** @src 0:410:418  \"this.f()\" */ _4, 4, _4, 32)
+                if iszero(_5)
+                {
+                    /// @src 0:79:435  \"contract C...\"
+                    let pos := mload(64)
+                    returndatacopy(pos, _2, returndatasize())
+                    revert(pos, returndatasize())
+                }
+                /// @src 0:410:418  \"this.f()\"
+                let expr := /** @src 0:79:435  \"contract C...\" */ _2
+                /// @src 0:410:418  \"this.f()\"
+                if _5
+                {
+                    /// @src 0:79:435  \"contract C...\"
+                    let newFreePtr := add(_4, and(add(/** @src 0:410:418  \"this.f()\" */ returndatasize(), /** @src 0:79:435  \"contract C...\" */ 31), not(31)))
+                    if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _4))
+                    {
+                        mstore(_2, shl(224, 0x4e487b71))
+                        mstore(/** @src 0:410:418  \"this.f()\" */ 4, /** @src 0:79:435  \"contract C...\" */ 0x41)
+                        revert(_2, 0x24)
+                    }
+                    mstore(64, newFreePtr)
+                    /// @src 0:410:418  \"this.f()\"
+                    expr := abi_decode_int256_fromMemory(_4, add(_4, returndatasize()))
+                }
+                /// @src 0:399:418  \"stateVar + this.f()\"
+                let expr_1 := checked_add_int256(ret, expr)
+                /// @src 0:343:344  \"_\"
+                _1 := /** @src 0:399:429  \"stateVar + this.f() + immutVar\" */ checked_add_int256(expr_1, /** @src 0:421:429  \"immutVar\" */ loadimmutable(\"8\"))
+            }
+            /// @src 0:79:435  \"contract C...\"
+            function abi_decode_int256_fromMemory(headStart, dataEnd) -> value0
+            {
+                if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }
+                value0 := mload(headStart)
+            }
+        }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"}},"D":{"D":{"ir":"/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+
+/// @use-src 0:\"C\", 1:\"D\"
+object \"D_72\" {
+    code {
+        /// @src 1:91:166  \"contract D is C(3)...\"
+        mstore(64, memoryguard(160))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        let _1 := copy_arguments_for_constructor_71_object_D_72()
+        constructor_D_72(_1)
+
+        let _2 := allocate_unbounded()
+        codecopy(_2, dataoffset(\"D_72_deployed\"), datasize(\"D_72_deployed\"))
+
+        setimmutable(_2, \"8\", mload(128))
+
+        return(_2, datasize(\"D_72_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        function round_up_to_mul_of_32(value) -> result {
+            result := and(add(value, 31), not(31))
+        }
+
+        function panic_error_0x41() {
+            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+            mstore(4, 0x41)
+            revert(0, 0x24)
+        }
+
+        function finalize_allocation(memPtr, size) {
+            let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
+            // protect against overflow
+            if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+            mstore(64, newFreePtr)
+        }
+
+        function allocate_memory(size) -> memPtr {
+            memPtr := allocate_unbounded()
+            finalize_allocation(memPtr, size)
+        }
+
+        function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+            revert(0, 0)
+        }
+
+        function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+            revert(0, 0)
+        }
+
+        function cleanup_t_int256(value) -> cleaned {
+            cleaned := value
+        }
+
+        function validator_revert_t_int256(value) {
+            if iszero(eq(value, cleanup_t_int256(value))) { revert(0, 0) }
+        }
+
+        function abi_decode_t_int256_fromMemory(offset, end) -> value {
+            value := mload(offset)
+            validator_revert_t_int256(value)
+        }
+
+        function abi_decode_tuple_t_int256_fromMemory(headStart, dataEnd) -> value0 {
+            if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+            {
+
+                let offset := 0
+
+                value0 := abi_decode_t_int256_fromMemory(add(headStart, offset), dataEnd)
+            }
+
+        }
+
+        function copy_arguments_for_constructor_71_object_D_72() -> ret_param_0 {
+            let programSize := datasize(\"D_72\")
+            let argSize := sub(codesize(), programSize)
+
+            let memoryDataOffset := allocate_memory(argSize)
+            codecopy(memoryDataOffset, programSize, argSize)
+
+            ret_param_0 := abi_decode_tuple_t_int256_fromMemory(memoryDataOffset, add(memoryDataOffset, argSize))
+        }
+
+        function cleanup_t_rational_3_by_1(value) -> cleaned {
+            cleaned := value
+        }
+
+        function identity(value) -> ret {
+            ret := value
+        }
+
+        function convert_t_rational_3_by_1_to_t_int256(value) -> converted {
+            converted := cleanup_t_int256(identity(cleanup_t_rational_3_by_1(value)))
+        }
+
+        function shift_right_0_unsigned(value) -> newValue {
+            newValue :=
+
+            shr(0, value)
+
+        }
+
+        function cleanup_from_storage_t_int256(value) -> cleaned {
+            cleaned := value
+        }
+
+        function extract_from_storage_value_offset_0t_int256(slot_value) -> value {
+            value := cleanup_from_storage_t_int256(shift_right_0_unsigned(slot_value))
+        }
+
+        function read_from_storage_split_offset_0_t_int256(slot) -> value {
+            value := extract_from_storage_value_offset_0t_int256(sload(slot))
+
+        }
+
+        function panic_error_0x11() {
+            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+            mstore(4, 0x11)
+            revert(0, 0x24)
+        }
+
+        function checked_add_t_int256(x, y) -> sum {
+            x := cleanup_t_int256(x)
+            y := cleanup_t_int256(y)
+
+            // overflow, if x >= 0 and y > (maxValue - x)
+            if and(iszero(slt(x, 0)), sgt(y, sub(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, x))) { panic_error_0x11() }
+            // underflow, if x < 0 and y < (minValue - x)
+            if and(slt(x, 0), slt(y, sub(0x8000000000000000000000000000000000000000000000000000000000000000, x))) { panic_error_0x11() }
+
+            sum := add(x, y)
+        }
+
+        function shift_left_0(value) -> newValue {
+            newValue :=
+
+            shl(0, value)
+
+        }
+
+        function update_byte_slice_32_shift_0(value, toInsert) -> result {
+            let mask := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+            toInsert := shift_left_0(toInsert)
+            value := and(value, not(mask))
+            result := or(value, and(toInsert, mask))
+        }
+
+        function convert_t_int256_to_t_int256(value) -> converted {
+            converted := cleanup_t_int256(identity(cleanup_t_int256(value)))
+        }
+
+        function prepare_store_t_int256(value) -> ret {
+            ret := value
+        }
+
+        function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+            let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
+            sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
+        }
+
+        /// @ast-id 71
+        /// @src 1:113:164  \"constructor(int _init2)...\"
+        function constructor_D_72(var__init2_63) {
+            /// @src 1:107:108  \"3\"
+            let expr_60 := 0x03
+            let _3 := convert_t_rational_3_by_1_to_t_int256(expr_60)
+
+            /// @src 1:113:164  \"constructor(int _init2)...\"
+            constructor_C_54(_3)
+
+            /// @src 1:154:160  \"_init2\"
+            let _4 := var__init2_63
+            let expr_67 := _4
+            /// @src 1:142:160  \"stateVar += _init2\"
+            let _5 := read_from_storage_split_offset_0_t_int256(0x00)
+            let expr_68 := checked_add_t_int256(_5, expr_67)
+
+            update_storage_value_offset_0t_int256_to_t_int256(0x00, expr_68)
+
+        }
+        /// @src 1:91:166  \"contract D is C(3)...\"
+
+        function cleanup_t_rational_42_by_1(value) -> cleaned {
+            cleaned := value
+        }
+
+        function convert_t_rational_42_by_1_to_t_int256(value) -> converted {
+            converted := cleanup_t_int256(identity(cleanup_t_rational_42_by_1(value)))
+        }
+
+        /// @ast-id 20
+        /// @src 0:182:230  \"constructor(int _init)...\"
+        function constructor_C_54(var__init_12) {
+
+            /// @src 0:182:230  \"constructor(int _init)...\"
+
+            /// @src 0:154:156  \"42\"
+            let expr_7 := 0x2a
+            let _6 := convert_t_rational_42_by_1_to_t_int256(expr_7)
+            mstore(128, _6)
+
+            /// @src 0:221:226  \"_init\"
+            let _7 := var__init_12
+            let expr_16 := _7
+            /// @src 0:210:226  \"stateVar = _init\"
+            update_storage_value_offset_0t_int256_to_t_int256(0x00, expr_16)
+            let expr_17 := expr_16
+
+        }
+        /// @src 1:91:166  \"contract D is C(3)...\"
+
+    }
+    /// @use-src 0:\"C\", 1:\"D\"
+    object \"D_72_deployed\" {
+        code {
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x26121ff0
+                {
+                    // f()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  fun_f_30()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                case 0x793816ec
+                {
+                    // stateVar()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  getter_fun_stateVar_10()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                case 0x9942ec6f
+                {
+                    // f2()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  fun_f2_53()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                case 0xa00b982b
+                {
+                    // constVar()
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  getter_fun_constVar_5()
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_int256__to_t_int256__fromStack(memPos , ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function abi_decode_tuple_(headStart, dataEnd)   {
+                if slt(sub(dataEnd, headStart), 0) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+            }
+
+            function cleanup_t_int256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function abi_encode_t_int256_to_t_int256_fromStack(value, pos) {
+                mstore(pos, cleanup_t_int256(value))
+            }
+
+            function abi_encode_tuple_t_int256__to_t_int256__fromStack(headStart , value0) -> tail {
+                tail := add(headStart, 32)
+
+                abi_encode_t_int256_to_t_int256_fromStack(value0,  add(headStart, 0))
+
+            }
+
+            function shift_right_unsigned_dynamic(bits, value) -> newValue {
+                newValue :=
+
+                shr(bits, value)
+
+            }
+
+            function cleanup_from_storage_t_int256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function extract_from_storage_value_dynamict_int256(slot_value, offset) -> value {
+                value := cleanup_from_storage_t_int256(shift_right_unsigned_dynamic(mul(offset, 8), slot_value))
+            }
+
+            function read_from_storage_split_dynamic_t_int256(slot, offset) -> value {
+                value := extract_from_storage_value_dynamict_int256(sload(slot), offset)
+
+            }
+
+            /// @ast-id 10
+            /// @src 0:159:178  \"int public stateVar\"
+            function getter_fun_stateVar_10() -> ret {
+
+                let slot := 0
+                let offset := 0
+
+                ret := read_from_storage_split_dynamic_t_int256(slot, offset)
+
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+
+            function cleanup_t_rational_41_by_1(value) -> cleaned {
+                cleaned := value
+            }
+
+            function identity(value) -> ret {
+                ret := value
+            }
+
+            function convert_t_rational_41_by_1_to_t_int256(value) -> converted {
+                converted := cleanup_t_int256(identity(cleanup_t_rational_41_by_1(value)))
+            }
+
+            /// @src 0:93:126  \"int public constant constVar = 41\"
+            function constant_constVar_5() -> ret {
+                /// @src 0:124:126  \"41\"
+                let expr_4 := 0x29
+                let _1 := convert_t_rational_41_by_1_to_t_int256(expr_4)
+
+                ret := _1
+            }
+
+            /// @ast-id 5
+            /// @src 0:93:126  \"int public constant constVar = 41\"
+            function getter_fun_constVar_5() -> ret_0 {
+                ret_0 := constant_constVar_5()
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function zero_value_for_split_t_int256() -> ret {
+                ret := 0
+            }
+
+            function panic_error_0x11() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x11)
+                revert(0, 0x24)
+            }
+
+            function checked_add_t_int256(x, y) -> sum {
+                x := cleanup_t_int256(x)
+                y := cleanup_t_int256(y)
+
+                // overflow, if x >= 0 and y > (maxValue - x)
+                if and(iszero(slt(x, 0)), sgt(y, sub(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, x))) { panic_error_0x11() }
+                // underflow, if x < 0 and y < (minValue - x)
+                if and(slt(x, 0), slt(y, sub(0x8000000000000000000000000000000000000000000000000000000000000000, x))) { panic_error_0x11() }
+
+                sum := add(x, y)
+            }
+
+            /// @ast-id 30
+            /// @src 0:233:309  \"function f() external pure returns (int)...\"
+            function fun_f_30() -> var__23 {
+                /// @src 0:269:272  \"int\"
+                let zero_t_int256_2 := zero_value_for_split_t_int256()
+                var__23 := zero_t_int256_2
+
+                /// @src 0:286:294  \"constVar\"
+                let expr_25 := constant_constVar_5()
+                /// @src 0:297:305  \"immutVar\"
+                let _3 := loadimmutable(\"8\")
+                let expr_26 := _3
+                /// @src 0:286:305  \"constVar + immutVar\"
+                let expr_27 := checked_add_t_int256(expr_25, expr_26)
+
+                /// @src 0:279:305  \"return constVar + immutVar\"
+                var__23 := expr_27
+                leave
+
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+
+            function shift_right_0_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(0, value)
+
+            }
+
+            function extract_from_storage_value_offset_0t_int256(slot_value) -> value {
+                value := cleanup_from_storage_t_int256(shift_right_0_unsigned(slot_value))
+            }
+
+            function read_from_storage_split_offset_0_t_int256(slot) -> value {
+                value := extract_from_storage_value_offset_0t_int256(sload(slot))
+
+            }
+
+            function increment_t_int256(value) -> ret {
+                value := cleanup_t_int256(value)
+                if eq(value, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) { panic_error_0x11() }
+                ret := add(value, 1)
+            }
+
+            function shift_left_0(value) -> newValue {
+                newValue :=
+
+                shl(0, value)
+
+            }
+
+            function update_byte_slice_32_shift_0(value, toInsert) -> result {
+                let mask := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                toInsert := shift_left_0(toInsert)
+                value := and(value, not(mask))
+                result := or(value, and(toInsert, mask))
+            }
+
+            function convert_t_int256_to_t_int256(value) -> converted {
+                converted := cleanup_t_int256(identity(cleanup_t_int256(value)))
+            }
+
+            function prepare_store_t_int256(value) -> ret {
+                ret := value
+            }
+
+            function update_storage_value_offset_0t_int256_to_t_int256(slot, value_0) {
+                let convertedValue_0 := convert_t_int256_to_t_int256(value_0)
+                sstore(slot, update_byte_slice_32_shift_0(sload(slot), prepare_store_t_int256(convertedValue_0)))
+            }
+
+            /// @ast-id 37
+            /// @src 0:311:348  \"modifier m()...\"
+            function modifier_m_40(var__42) -> _5 {
+                _5 := var__42
+
+                /// @src 0:329:339  \"stateVar++\"
+                let _7 := read_from_storage_split_offset_0_t_int256(0x00)
+                let _6 := increment_t_int256(_7)
+                update_storage_value_offset_0t_int256_to_t_int256(0x00, _6)
+                let expr_33 := _7
+                /// @src 0:343:344  \"_\"
+                _5 := fun_f2_53_inner(var__42)
+
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+
+            function cleanup_t_uint160(value) -> cleaned {
+                cleaned := and(value, 0xffffffffffffffffffffffffffffffffffffffff)
+            }
+
+            function convert_t_uint160_to_t_uint160(value) -> converted {
+                converted := cleanup_t_uint160(identity(cleanup_t_uint160(value)))
+            }
+
+            function convert_t_uint160_to_t_address(value) -> converted {
+                converted := convert_t_uint160_to_t_uint160(value)
+            }
+
+            function convert_t_contract$_C_$54_to_t_address(value) -> converted {
+                converted := convert_t_uint160_to_t_address(value)
+            }
+
+            function revert_error_0cc013b6b3b6beabea4e3a74a6d380f0df81852ca99887912475e1f66b2a2c20() {
+                revert(0, 0)
+            }
+
+            function round_up_to_mul_of_32(value) -> result {
+                result := and(add(value, 31), not(31))
+            }
+
+            function panic_error_0x41() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+
+            function finalize_allocation(memPtr, size) {
+                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
+
+            function shift_left_224(value) -> newValue {
+                newValue :=
+
+                shl(224, value)
+
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function validator_revert_t_int256(value) {
+                if iszero(eq(value, cleanup_t_int256(value))) { revert(0, 0) }
+            }
+
+            function abi_decode_t_int256_fromMemory(offset, end) -> value {
+                value := mload(offset)
+                validator_revert_t_int256(value)
+            }
+
+            function abi_decode_tuple_t_int256_fromMemory(headStart, dataEnd) -> value0 {
+                if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := 0
+
+                    value0 := abi_decode_t_int256_fromMemory(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function revert_forward_1() {
+                let pos := allocate_unbounded()
+                returndatacopy(pos, 0, returndatasize())
+                revert(pos, returndatasize())
+            }
+
+            /// @src 0:350:433  \"function f2() m public returns (int)...\"
+            function fun_f2_53_inner(_8) -> var__42 {
+                var__42 := _8
+
+                /// @src 0:399:407  \"stateVar\"
+                let _9 := read_from_storage_split_offset_0_t_int256(0x00)
+                let expr_44 := _9
+                /// @src 0:410:414  \"this\"
+                let expr_45_address := address()
+                /// @src 0:410:416  \"this.f\"
+                let expr_46_address := convert_t_contract$_C_$54_to_t_address(expr_45_address)
+                let expr_46_functionSelector := 0x26121ff0
+                /// @src 0:410:418  \"this.f()\"
+
+                // storage for arguments and returned data
+                let _10 := allocate_unbounded()
+                mstore(_10, shift_left_224(expr_46_functionSelector))
+                let _11 := abi_encode_tuple__to__fromStack(add(_10, 4) )
+
+                let _12 := staticcall(gas(), expr_46_address,  _10, sub(_11, _10), _10, 32)
+
+                if iszero(_12) { revert_forward_1() }
+
+                let expr_47
+                if _12 {
+
+                    // update freeMemoryPointer according to dynamic return size
+                    finalize_allocation(_10, returndatasize())
+
+                    // decode return parameters from external try-call into retVars
+                    expr_47 :=  abi_decode_tuple_t_int256_fromMemory(_10, add(_10, returndatasize()))
+                }
+                /// @src 0:399:418  \"stateVar + this.f()\"
+                let expr_48 := checked_add_t_int256(expr_44, expr_47)
+
+                /// @src 0:421:429  \"immutVar\"
+                let _13 := loadimmutable(\"8\")
+                let expr_49 := _13
+                /// @src 0:399:429  \"stateVar + this.f() + immutVar\"
+                let expr_50 := checked_add_t_int256(expr_48, expr_49)
+
+                /// @src 0:392:429  \"return stateVar + this.f() + immutVar\"
+                var__42 := expr_50
+                leave
+
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+
+            /// @ast-id 53
+            /// @src 0:350:433  \"function f2() m public returns (int)...\"
+            function fun_f2_53() -> var__42 {
+                /// @src 0:382:385  \"int\"
+                let zero_t_int256_4 := zero_value_for_split_t_int256()
+                var__42 := zero_t_int256_4
+
+                var__42 := modifier_m_40(var__42)
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+
+        }
+
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+
+}
+
+","irOptimized":"/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+/// @use-src 0:\"C\", 1:\"D\"
+object \"D_72\" {
+    code {
+        {
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            let _1 := memoryguard(0xa0)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let programSize := datasize(\"D_72\")
+            let argSize := sub(codesize(), programSize)
+            let newFreePtr := add(_1, and(add(argSize, 31), not(31)))
+            if or(gt(newFreePtr, sub(shl(64, 1), 1)), lt(newFreePtr, _1))
+            {
+                mstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
+            }
+            mstore(64, newFreePtr)
+            codecopy(_1, programSize, argSize)
+            if slt(sub(add(_1, argSize), _1), 32)
+            {
+                revert(/** @src -1:-1:-1 */ 0, 0)
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            constructor_D(mload(_1))
+            let _2 := mload(64)
+            let _3 := datasize(\"D_72_deployed\")
+            codecopy(_2, dataoffset(\"D_72_deployed\"), _3)
+            setimmutable(_2, \"8\", mload(128))
+            return(_2, _3)
+        }
+        /// @ast-id 71 @src 1:113:164  \"constructor(int _init2)...\"
+        function constructor_D(var_init2)
+        {
+            /// @src 0:154:156  \"42\"
+            mstore(128, 0x2a)
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            sstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:107:108  \"3\" */ 0x03)
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            if and(1, sgt(var_init2, sub(shl(255, 1), 4)))
+            {
+                mstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
+                mstore(4, 0x11)
+                revert(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
+            }
+            sstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:91:166  \"contract D is C(3)...\" */ add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ var_init2))
+        }
+    }
+    /// @use-src 0:\"C\", 1:\"D\"
+    object \"D_72_deployed\" {
+        code {
+            {
+                /// @src 1:91:166  \"contract D is C(3)...\"
+                mstore(64, memoryguard(0x80))
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    switch shr(224, calldataload(_1))
+                    case 0x26121ff0 {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let ret := /** @src 0:286:305  \"constVar + immutVar\" */ checked_add_int256_556(/** @src 0:297:305  \"immutVar\" */ loadimmutable(\"8\"))
+                        /// @src 1:91:166  \"contract D is C(3)...\"
+                        let memPos := mload(64)
+                        return(memPos, sub(abi_encode_int256(memPos, ret), memPos))
+                    }
+                    case 0x793816ec {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let ret_1 := sload(_1)
+                        let memPos_1 := mload(64)
+                        return(memPos_1, sub(abi_encode_int256(memPos_1, ret_1), memPos_1))
+                    }
+                    case 0x9942ec6f {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let ret_2 := /** @src 0:382:385  \"int\" */ modifier_m()
+                        /// @src 1:91:166  \"contract D is C(3)...\"
+                        let memPos_2 := mload(64)
+                        return(memPos_2, sub(abi_encode_int256(memPos_2, ret_2), memPos_2))
+                    }
+                    case 0xa00b982b {
+                        if callvalue() { revert(_1, _1) }
+                        abi_decode(calldatasize())
+                        let memPos_3 := mload(64)
+                        return(memPos_3, sub(abi_encode_int256_555(memPos_3), memPos_3))
+                    }
+                }
+                revert(0, 0)
+            }
+            function abi_decode(dataEnd)
+            {
+                if slt(add(dataEnd, not(3)), 0) { revert(0, 0) }
+            }
+            function abi_encode_int256_555(headStart) -> tail
+            {
+                tail := add(headStart, 32)
+                mstore(headStart, /** @src 0:124:126  \"41\" */ 0x29)
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            function abi_encode_int256(headStart, value0) -> tail
+            {
+                tail := add(headStart, 32)
+                mstore(headStart, value0)
+            }
+            function panic_error_0x11()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x11)
+                revert(0, 0x24)
+            }
+            function checked_add_int256_556(y) -> sum
+            {
+                if and(1, sgt(y, sub(shl(255, 1), 42))) { panic_error_0x11() }
+                sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ y)
+            }
+            function checked_add_int256(x, y) -> sum
+            {
+                let _1 := slt(x, 0)
+                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x))) { panic_error_0x11() }
+                if and(_1, slt(y, sub(shl(255, 1), x))) { panic_error_0x11() }
+                sum := add(x, y)
+            }
+            /// @ast-id 37 @src 0:311:348  \"modifier m()...\"
+            function modifier_m() -> _1
+            {
+                /// @src 1:91:166  \"contract D is C(3)...\"
+                let _2 := 0
+                let _3 := sload(_2)
+                if eq(_3, sub(shl(255, 1), 1)) { panic_error_0x11() }
+                let ret := add(_3, 1)
+                sstore(_2, ret)
+                /// @src 0:410:418  \"this.f()\"
+                let _4 := /** @src 1:91:166  \"contract D is C(3)...\" */ mload(64)
+                /// @src 0:410:418  \"this.f()\"
+                mstore(_4, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(228, 0x026121ff))
+                /// @src 0:410:418  \"this.f()\"
+                let _5 := staticcall(gas(), /** @src 0:410:414  \"this\" */ address(), /** @src 0:410:418  \"this.f()\" */ _4, 4, _4, 32)
+                if iszero(_5)
+                {
+                    /// @src 1:91:166  \"contract D is C(3)...\"
+                    let pos := mload(64)
+                    returndatacopy(pos, _2, returndatasize())
+                    revert(pos, returndatasize())
+                }
+                /// @src 0:410:418  \"this.f()\"
+                let expr := /** @src 1:91:166  \"contract D is C(3)...\" */ _2
+                /// @src 0:410:418  \"this.f()\"
+                if _5
+                {
+                    /// @src 1:91:166  \"contract D is C(3)...\"
+                    let newFreePtr := add(_4, and(add(/** @src 0:410:418  \"this.f()\" */ returndatasize(), /** @src 1:91:166  \"contract D is C(3)...\" */ 31), not(31)))
+                    if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _4))
+                    {
+                        mstore(_2, shl(224, 0x4e487b71))
+                        mstore(/** @src 0:410:418  \"this.f()\" */ 4, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x41)
+                        revert(_2, 0x24)
+                    }
+                    mstore(64, newFreePtr)
+                    /// @src 0:410:418  \"this.f()\"
+                    expr := abi_decode_int256_fromMemory(_4, add(_4, returndatasize()))
+                }
+                /// @src 0:399:418  \"stateVar + this.f()\"
+                let expr_1 := checked_add_int256(ret, expr)
+                /// @src 0:343:344  \"_\"
+                _1 := /** @src 0:399:429  \"stateVar + this.f() + immutVar\" */ checked_add_int256(expr_1, /** @src 0:421:429  \"immutVar\" */ loadimmutable(\"8\"))
+            }
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            function abi_decode_int256_fromMemory(headStart, dataEnd) -> value0
+            {
+                if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }
+                value0 := mload(headStart)
+            }
+        }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
+    }
+}
+"}}},"sources":{"C":{"id":0},"D":{"id":1}}}

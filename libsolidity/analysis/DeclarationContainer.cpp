@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -23,8 +24,10 @@
 #include <libsolidity/analysis/DeclarationContainer.h>
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/Types.h>
 #include <libsolutil/StringUtils.h>
+
+#include <range/v3/view/filter.hpp>
+#include <range/v3/range/conversion.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -99,6 +102,7 @@ bool DeclarationContainer::isInvisible(ASTString const& _name) const
 bool DeclarationContainer::registerDeclaration(
 	Declaration const& _declaration,
 	ASTString const* _name,
+	langutil::SourceLocation const* _location,
 	bool _invisible,
 	bool _update
 )
@@ -114,8 +118,14 @@ bool DeclarationContainer::registerDeclaration(
 		m_declarations.erase(*_name);
 		m_invisibleDeclarations.erase(*_name);
 	}
-	else if (conflictingDeclaration(_declaration, _name))
-		return false;
+	else
+	{
+		if (conflictingDeclaration(_declaration, _name))
+			return false;
+
+		if (m_enclosingContainer && _declaration.isVisibleAsUnqualifiedName())
+			m_homonymCandidates.emplace_back(*_name, _location ? _location : &_declaration.location());
+	}
 
 	vector<Declaration const*>& decls = _invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];
 	if (!util::contains(decls, &_declaration))
@@ -123,16 +133,44 @@ bool DeclarationContainer::registerDeclaration(
 	return true;
 }
 
-vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive, bool _alsoInvisible) const
+bool DeclarationContainer::registerDeclaration(
+	Declaration const& _declaration,
+	bool _invisible,
+	bool _update
+)
+{
+	return registerDeclaration(_declaration, nullptr, nullptr, _invisible, _update);
+}
+
+vector<Declaration const*> DeclarationContainer::resolveName(
+	ASTString const& _name,
+	bool _recursive,
+	bool _alsoInvisible,
+	bool _onlyVisibleAsUnqualifiedNames
+) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	vector<Declaration const*> result;
+
 	if (m_declarations.count(_name))
-		result = m_declarations.at(_name);
+	{
+		if (_onlyVisibleAsUnqualifiedNames)
+			result += m_declarations.at(_name) | ranges::views::filter(&Declaration::isVisibleAsUnqualifiedName) | ranges::to_vector;
+		else
+			result += m_declarations.at(_name);
+	}
+
 	if (_alsoInvisible && m_invisibleDeclarations.count(_name))
-		result += m_invisibleDeclarations.at(_name);
+	{
+		if (_onlyVisibleAsUnqualifiedNames)
+			result += m_invisibleDeclarations.at(_name) | ranges::views::filter(&Declaration::isVisibleAsUnqualifiedName) | ranges::to_vector;
+		else
+			result += m_invisibleDeclarations.at(_name);
+	}
+
 	if (result.empty() && _recursive && m_enclosingContainer)
-		result = m_enclosingContainer->resolveName(_name, true, _alsoInvisible);
+		result = m_enclosingContainer->resolveName(_name, true, _alsoInvisible, _onlyVisibleAsUnqualifiedNames);
+
 	return result;
 }
 
@@ -162,4 +200,17 @@ vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) con
 		similar += m_enclosingContainer->similarNames(_name);
 
 	return similar;
+}
+
+void DeclarationContainer::populateHomonyms(back_insert_iterator<Homonyms> _it) const
+{
+	for (DeclarationContainer const* innerContainer: m_innerContainers)
+		innerContainer->populateHomonyms(_it);
+
+	for (auto [name, location]: m_homonymCandidates)
+	{
+		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, true, true);
+		if (!declarations.empty())
+			_it = make_pair(location, declarations);
+	}
 }

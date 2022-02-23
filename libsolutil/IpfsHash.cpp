@@ -14,13 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/IpfsHash.h>
 
-#include <libsolutil/Assertions.h>
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/picosha2.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 using namespace std;
 using namespace solidity;
@@ -62,7 +63,7 @@ string base58Encode(bytes const& _data)
 	string output;
 	while (data)
 	{
-		output += alphabet[size_t(data % alphabet.size())];
+		output += alphabet[static_cast<size_t>(data % alphabet.size())];
 		data /= alphabet.size();
 	}
 	reverse(output.begin(), output.end());

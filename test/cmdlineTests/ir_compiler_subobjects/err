@@ -1,5 +1,5 @@
 Warning: Unused local variable.
- --> ir_compiler_subobjects/input.sol:7:9:
+ --> ir_compiler_subobjects/input.sol:8:9:
   |
-7 |         C c = new C();
+8 |         C c = new C();
   |         ^^^

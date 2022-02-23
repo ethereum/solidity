@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file LinkerObject.cpp
  * @author Christian R <c@ethdev.com>
  * @date 2015
@@ -40,7 +41,7 @@ void LinkerObject::link(map<string, h160> const& _libraryAddresses)
 	std::map<size_t, std::string> remainingRefs;
 	for (auto const& linkRef: linkReferences)
 		if (h160 const* address = matchLibrary(linkRef.second, _libraryAddresses))
-			copy(address->data(), address->data() + 20, bytecode.begin() + linkRef.first);
+			copy(address->data(), address->data() + 20, bytecode.begin() + vector<uint8_t>::difference_type(linkRef.first));
 		else
 			remainingRefs.insert(linkRef);
 	linkReferences.swap(remainingRefs);
@@ -72,14 +73,6 @@ LinkerObject::matchLibrary(
 )
 {
 	auto it = _libraryAddresses.find(_linkRefName);
-	if (it != _libraryAddresses.end())
-		return &it->second;
-	// If the user did not supply a fully qualified library name,
-	// try to match only the simple library name
-	size_t colon = _linkRefName.find(':');
-	if (colon == string::npos)
-		return nullptr;
-	it = _libraryAddresses.find(_linkRefName.substr(colon + 1));
 	if (it != _libraryAddresses.end())
 		return &it->second;
 	return nullptr;

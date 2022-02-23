@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 syntax = "proto2";
 
@@ -57,23 +58,10 @@ message Create {
 }
 
 message FunctionCall {
-  enum Returns {
-    ZERO = 1;
-    SINGLE = 2;
-    MULTIDECL = 3;
-    MULTIASSIGN = 4;
-  }
-  required Returns ret = 1;
-  // Indexes an existing function
-  required uint32 func_index = 2;
-  required Expression in_param1 = 3;
-  required Expression in_param2 = 4;
-  required Expression in_param3 = 5;
-  required Expression in_param4 = 6;
-  required VarRef out_param1 = 7;
-  required VarRef out_param2 = 8;
-  required VarRef out_param3 = 9;
-  required VarRef out_param4 = 10;
+  required Expression in_param1 = 1;
+  required Expression in_param2 = 2;
+  required Expression in_param3 = 3;
+  required Expression in_param4 = 4;
 }
 
 message TypedVarDecl {
@@ -214,24 +202,23 @@ message ExtCodeCopy {
 
 message NullaryOp {
   enum NOp {
-    PC = 1;
-    MSIZE = 2;
-    GAS = 3;
-    CALLDATASIZE = 4;
-    CODESIZE = 5;
-    RETURNDATASIZE = 6;
-    ADDRESS = 7;
-    ORIGIN = 8;
-    CALLER = 9;
-    CALLVALUE = 10;
-    GASPRICE = 11;
-    COINBASE = 12;
-    TIMESTAMP = 13;
-    NUMBER = 14;
-    DIFFICULTY = 15;
-    GASLIMIT = 16;
-    SELFBALANCE = 17;
-    CHAINID = 18;
+    MSIZE = 1;
+    GAS = 2;
+    CALLDATASIZE = 3;
+    CODESIZE = 4;
+    RETURNDATASIZE = 5;
+    ADDRESS = 6;
+    ORIGIN = 7;
+    CALLER = 8;
+    CALLVALUE = 9;
+    GASPRICE = 10;
+    COINBASE = 11;
+    TIMESTAMP = 12;
+    NUMBER = 13;
+    DIFFICULTY = 14;
+    GASLIMIT = 15;
+    SELFBALANCE = 16;
+    CHAINID = 17;
   }
   required NOp op = 1;
 }
@@ -388,7 +375,7 @@ message Block {
 message Object {
   required Code code = 1;
   optional Data data = 2;
-  optional Object sub_obj = 3;
+  repeated Object sub_obj = 3;
 }
 
 message Code {
@@ -415,6 +402,7 @@ message Program {
     Object obj = 2;
   }
   required Version ver = 3;
+  required uint32 step = 4;
 }
 
 package solidity.yul.test.yul_fuzzer;

@@ -21,17 +21,24 @@
 #include <libyul/optimiser/UnusedPruner.h>
 
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/SideEffects.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
+
+void UnusedPruner::run(OptimiserStepContext& _context, Block& _ast)
+{
+	UnusedPruner::runUntilStabilisedOnFullAST(_context.dialect, _ast, _context.reservedIdentifiers);
+	FunctionGrouper::run(_context, _ast);
+}
 
 UnusedPruner::UnusedPruner(
 	Dialect const& _dialect,
@@ -72,7 +79,7 @@ void UnusedPruner::operator()(Block& _block)
 			if (!used(funDef.name))
 			{
 				subtractReferences(ReferencesCounter::countReferences(funDef.body));
-				statement = Block{std::move(funDef.location), {}};
+				statement = Block{std::move(funDef.debugData), {}};
 			}
 		}
 		else if (holds_alternative<VariableDeclaration>(statement))
@@ -90,19 +97,19 @@ void UnusedPruner::operator()(Block& _block)
 			))
 			{
 				if (!varDecl.value)
-					statement = Block{std::move(varDecl.location), {}};
+					statement = Block{std::move(varDecl.debugData), {}};
 				else if (
 					SideEffectsCollector(m_dialect, *varDecl.value, m_functionSideEffects).
-					sideEffectFree(m_allowMSizeOptimization)
+					canBeRemoved(m_allowMSizeOptimization)
 				)
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
-					statement = Block{std::move(varDecl.location), {}};
+					statement = Block{std::move(varDecl.debugData), {}};
 				}
 				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction(varDecl.variables.front().type))
-					statement = ExpressionStatement{varDecl.location, FunctionCall{
-						varDecl.location,
-						{varDecl.location, m_dialect.discardFunction(varDecl.variables.front().type)->name},
+					statement = ExpressionStatement{varDecl.debugData, FunctionCall{
+						varDecl.debugData,
+						{varDecl.debugData, m_dialect.discardFunction(varDecl.variables.front().type)->name},
 						{*std::move(varDecl.value)}
 					}};
 			}
@@ -112,11 +119,11 @@ void UnusedPruner::operator()(Block& _block)
 			ExpressionStatement& exprStmt = std::get<ExpressionStatement>(statement);
 			if (
 				SideEffectsCollector(m_dialect, exprStmt.expression, m_functionSideEffects).
-				sideEffectFree(m_allowMSizeOptimization)
+				canBeRemoved(m_allowMSizeOptimization)
 			)
 			{
 				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));
-				statement = Block{std::move(exprStmt.location), {}};
+				statement = Block{std::move(exprStmt.debugData), {}};
 			}
 		}
 

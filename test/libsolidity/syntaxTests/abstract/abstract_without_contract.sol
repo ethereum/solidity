@@ -1,3 +1,3 @@
 abstract A { }
 // ----
-// ParserError: (9-10): Expected keyword "contract", "interface" or "library".
+// ParserError 3515: (9-10): Expected keyword "contract", "interface" or "library".

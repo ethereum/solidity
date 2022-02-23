@@ -1,0 +1,432 @@
+Optimized IR:
+/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+/// @use-src 0:"yul_optimizer_steps_nested_brackets/input.sol"
+object "C_6" {
+    code {
+        {
+            /// @src 0:60:103  "contract C..."
+            mstore(64, memoryguard(0x80))
+            if callvalue()
+            {
+                revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+            }
+            constructor_C()
+            let _1 := allocate_unbounded()
+            codecopy(_1, dataoffset("C_6_deployed"), datasize("C_6_deployed"))
+            return(_1, datasize("C_6_deployed"))
+        }
+        function allocate_unbounded() -> memPtr
+        {
+            let memPtr_1 := mload(64)
+            let memPtr_2 := memPtr_1
+            let memPtr_3 := memPtr_1
+            let memPtr_4 := memPtr_1
+            let memPtr_5 := memPtr_1
+            let memPtr_6 := memPtr_1
+            let memPtr_7 := memPtr_1
+            let memPtr_8 := memPtr_1
+            let memPtr_9 := memPtr_1
+            let memPtr_10 := memPtr_1
+            let memPtr_11 := memPtr_1
+            let memPtr_12 := memPtr_1
+            let memPtr_13 := memPtr_1
+            let memPtr_14 := memPtr_1
+            let memPtr_15 := memPtr_1
+            let memPtr_16 := memPtr_1
+            let memPtr_17 := memPtr_1
+            let memPtr_18 := memPtr_1
+            let memPtr_19 := memPtr_1
+            let memPtr_20 := memPtr_1
+            let memPtr_21 := memPtr_1
+            let memPtr_22 := memPtr_1
+            let memPtr_23 := memPtr_1
+            let memPtr_24 := memPtr_1
+            let memPtr_25 := memPtr_1
+            let memPtr_26 := memPtr_1
+            let memPtr_27 := memPtr_1
+            let memPtr_28 := memPtr_1
+            let memPtr_29 := memPtr_1
+            let memPtr_30 := memPtr_1
+            let memPtr_31 := memPtr_1
+            let memPtr_32 := memPtr_1
+            let memPtr_33 := memPtr_1
+            let memPtr_34 := memPtr_1
+            let memPtr_35 := memPtr_1
+            let memPtr_36 := memPtr_1
+            let memPtr_37 := memPtr_1
+            let memPtr_38 := memPtr_1
+            let memPtr_39 := memPtr_1
+            let memPtr_40 := memPtr_1
+            let memPtr_41 := memPtr_1
+            let memPtr_42 := memPtr_1
+            let memPtr_43 := memPtr_1
+            let memPtr_44 := memPtr_1
+            let memPtr_45 := memPtr_1
+            let memPtr_46 := memPtr_1
+            let memPtr_47 := memPtr_1
+            let memPtr_48 := memPtr_1
+            let memPtr_49 := memPtr_1
+            let memPtr_50 := memPtr_1
+            let memPtr_51 := memPtr_1
+            let memPtr_52 := memPtr_1
+            let memPtr_53 := memPtr_1
+            let memPtr_54 := memPtr_1
+            let memPtr_55 := memPtr_1
+            let memPtr_56 := memPtr_1
+            let memPtr_57 := memPtr_1
+            let memPtr_58 := memPtr_1
+            let memPtr_59 := memPtr_1
+            let memPtr_60 := memPtr_1
+            let memPtr_61 := memPtr_1
+            let memPtr_62 := memPtr_1
+            let memPtr_63 := memPtr_1
+            let memPtr_64 := memPtr_1
+            let memPtr_65 := memPtr_1
+            let memPtr_66 := memPtr_1
+            let memPtr_67 := memPtr_1
+            let memPtr_68 := memPtr_1
+            let memPtr_69 := memPtr_1
+            let memPtr_70 := memPtr_1
+            let memPtr_71 := memPtr_1
+            let memPtr_72 := memPtr_1
+            let memPtr_73 := memPtr_1
+            let memPtr_74 := memPtr_1
+            let memPtr_75 := memPtr_1
+            let memPtr_76 := memPtr_1
+            let memPtr_77 := memPtr_1
+            let memPtr_78 := memPtr_1
+            let memPtr_79 := memPtr_1
+            let memPtr_80 := memPtr_1
+            let memPtr_81 := memPtr_1
+            let memPtr_82 := memPtr_1
+            let memPtr_83 := memPtr_1
+            let memPtr_84 := memPtr_1
+            let memPtr_85 := memPtr_1
+            let memPtr_86 := memPtr_1
+            memPtr := memPtr_1
+        }
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+        { revert(0, 0) }
+        function constructor_C()
+        { }
+    }
+    /// @use-src 0:"yul_optimizer_steps_nested_brackets/input.sol"
+    object "C_6_deployed" {
+        code {
+            {
+                /// @src 0:60:103  "contract C..."
+                mstore(64, memoryguard(0x80))
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let selector := shift_right_unsigned(calldataload(0))
+                    if eq(0x26121ff0, selector)
+                    {
+                        if callvalue()
+                        {
+                            revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+                        }
+                        abi_decode(4, calldatasize())
+                        fun_f()
+                        let memPos := allocate_unbounded()
+                        let memEnd := abi_encode_tuple(memPos)
+                        return(memPos, sub(memEnd, memPos))
+                    }
+                }
+                revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            }
+            function shift_right_unsigned(value) -> newValue
+            {
+                let newValue_1 := shr(224, value)
+                let newValue_2 := newValue_1
+                let newValue_3 := newValue_1
+                let newValue_4 := newValue_1
+                let newValue_5 := newValue_1
+                let newValue_6 := newValue_1
+                let newValue_7 := newValue_1
+                let newValue_8 := newValue_1
+                let newValue_9 := newValue_1
+                let newValue_10 := newValue_1
+                let newValue_11 := newValue_1
+                let newValue_12 := newValue_1
+                let newValue_13 := newValue_1
+                let newValue_14 := newValue_1
+                let newValue_15 := newValue_1
+                let newValue_16 := newValue_1
+                let newValue_17 := newValue_1
+                let newValue_18 := newValue_1
+                let newValue_19 := newValue_1
+                let newValue_20 := newValue_1
+                let newValue_21 := newValue_1
+                let newValue_22 := newValue_1
+                let newValue_23 := newValue_1
+                let newValue_24 := newValue_1
+                let newValue_25 := newValue_1
+                let newValue_26 := newValue_1
+                let newValue_27 := newValue_1
+                let newValue_28 := newValue_1
+                let newValue_29 := newValue_1
+                let newValue_30 := newValue_1
+                let newValue_31 := newValue_1
+                let newValue_32 := newValue_1
+                let newValue_33 := newValue_1
+                let newValue_34 := newValue_1
+                let newValue_35 := newValue_1
+                let newValue_36 := newValue_1
+                let newValue_37 := newValue_1
+                let newValue_38 := newValue_1
+                let newValue_39 := newValue_1
+                let newValue_40 := newValue_1
+                let newValue_41 := newValue_1
+                let newValue_42 := newValue_1
+                let newValue_43 := newValue_1
+                let newValue_44 := newValue_1
+                let newValue_45 := newValue_1
+                let newValue_46 := newValue_1
+                let newValue_47 := newValue_1
+                let newValue_48 := newValue_1
+                let newValue_49 := newValue_1
+                let newValue_50 := newValue_1
+                let newValue_51 := newValue_1
+                let newValue_52 := newValue_1
+                let newValue_53 := newValue_1
+                let newValue_54 := newValue_1
+                let newValue_55 := newValue_1
+                let newValue_56 := newValue_1
+                let newValue_57 := newValue_1
+                let newValue_58 := newValue_1
+                let newValue_59 := newValue_1
+                let newValue_60 := newValue_1
+                let newValue_61 := newValue_1
+                let newValue_62 := newValue_1
+                let newValue_63 := newValue_1
+                let newValue_64 := newValue_1
+                let newValue_65 := newValue_1
+                let newValue_66 := newValue_1
+                let newValue_67 := newValue_1
+                let newValue_68 := newValue_1
+                let newValue_69 := newValue_1
+                let newValue_70 := newValue_1
+                let newValue_71 := newValue_1
+                let newValue_72 := newValue_1
+                let newValue_73 := newValue_1
+                let newValue_74 := newValue_1
+                let newValue_75 := newValue_1
+                let newValue_76 := newValue_1
+                let newValue_77 := newValue_1
+                let newValue_78 := newValue_1
+                let newValue_79 := newValue_1
+                let newValue_80 := newValue_1
+                let newValue_81 := newValue_1
+                let newValue_82 := newValue_1
+                let newValue_83 := newValue_1
+                let newValue_84 := newValue_1
+                let newValue_85 := newValue_1
+                let newValue_86 := newValue_1
+                newValue := newValue_1
+            }
+            function allocate_unbounded() -> memPtr
+            {
+                let memPtr_1 := mload(64)
+                let memPtr_2 := memPtr_1
+                let memPtr_3 := memPtr_1
+                let memPtr_4 := memPtr_1
+                let memPtr_5 := memPtr_1
+                let memPtr_6 := memPtr_1
+                let memPtr_7 := memPtr_1
+                let memPtr_8 := memPtr_1
+                let memPtr_9 := memPtr_1
+                let memPtr_10 := memPtr_1
+                let memPtr_11 := memPtr_1
+                let memPtr_12 := memPtr_1
+                let memPtr_13 := memPtr_1
+                let memPtr_14 := memPtr_1
+                let memPtr_15 := memPtr_1
+                let memPtr_16 := memPtr_1
+                let memPtr_17 := memPtr_1
+                let memPtr_18 := memPtr_1
+                let memPtr_19 := memPtr_1
+                let memPtr_20 := memPtr_1
+                let memPtr_21 := memPtr_1
+                let memPtr_22 := memPtr_1
+                let memPtr_23 := memPtr_1
+                let memPtr_24 := memPtr_1
+                let memPtr_25 := memPtr_1
+                let memPtr_26 := memPtr_1
+                let memPtr_27 := memPtr_1
+                let memPtr_28 := memPtr_1
+                let memPtr_29 := memPtr_1
+                let memPtr_30 := memPtr_1
+                let memPtr_31 := memPtr_1
+                let memPtr_32 := memPtr_1
+                let memPtr_33 := memPtr_1
+                let memPtr_34 := memPtr_1
+                let memPtr_35 := memPtr_1
+                let memPtr_36 := memPtr_1
+                let memPtr_37 := memPtr_1
+                let memPtr_38 := memPtr_1
+                let memPtr_39 := memPtr_1
+                let memPtr_40 := memPtr_1
+                let memPtr_41 := memPtr_1
+                let memPtr_42 := memPtr_1
+                let memPtr_43 := memPtr_1
+                let memPtr_44 := memPtr_1
+                let memPtr_45 := memPtr_1
+                let memPtr_46 := memPtr_1
+                let memPtr_47 := memPtr_1
+                let memPtr_48 := memPtr_1
+                let memPtr_49 := memPtr_1
+                let memPtr_50 := memPtr_1
+                let memPtr_51 := memPtr_1
+                let memPtr_52 := memPtr_1
+                let memPtr_53 := memPtr_1
+                let memPtr_54 := memPtr_1
+                let memPtr_55 := memPtr_1
+                let memPtr_56 := memPtr_1
+                let memPtr_57 := memPtr_1
+                let memPtr_58 := memPtr_1
+                let memPtr_59 := memPtr_1
+                let memPtr_60 := memPtr_1
+                let memPtr_61 := memPtr_1
+                let memPtr_62 := memPtr_1
+                let memPtr_63 := memPtr_1
+                let memPtr_64 := memPtr_1
+                let memPtr_65 := memPtr_1
+                let memPtr_66 := memPtr_1
+                let memPtr_67 := memPtr_1
+                let memPtr_68 := memPtr_1
+                let memPtr_69 := memPtr_1
+                let memPtr_70 := memPtr_1
+                let memPtr_71 := memPtr_1
+                let memPtr_72 := memPtr_1
+                let memPtr_73 := memPtr_1
+                let memPtr_74 := memPtr_1
+                let memPtr_75 := memPtr_1
+                let memPtr_76 := memPtr_1
+                let memPtr_77 := memPtr_1
+                let memPtr_78 := memPtr_1
+                let memPtr_79 := memPtr_1
+                let memPtr_80 := memPtr_1
+                let memPtr_81 := memPtr_1
+                let memPtr_82 := memPtr_1
+                let memPtr_83 := memPtr_1
+                let memPtr_84 := memPtr_1
+                let memPtr_85 := memPtr_1
+                let memPtr_86 := memPtr_1
+                memPtr := memPtr_1
+            }
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+            { revert(0, 0) }
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b()
+            { revert(0, 0) }
+            function abi_decode(headStart, dataEnd)
+            {
+                if slt(sub(dataEnd, headStart), 0)
+                {
+                    revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b()
+                }
+            }
+            function abi_encode_tuple(headStart) -> tail
+            {
+                let tail_1 := add(headStart, 0)
+                let tail_2 := tail_1
+                let tail_3 := tail_1
+                let tail_4 := tail_1
+                let tail_5 := tail_1
+                let tail_6 := tail_1
+                let tail_7 := tail_1
+                let tail_8 := tail_1
+                let tail_9 := tail_1
+                let tail_10 := tail_1
+                let tail_11 := tail_1
+                let tail_12 := tail_1
+                let tail_13 := tail_1
+                let tail_14 := tail_1
+                let tail_15 := tail_1
+                let tail_16 := tail_1
+                let tail_17 := tail_1
+                let tail_18 := tail_1
+                let tail_19 := tail_1
+                let tail_20 := tail_1
+                let tail_21 := tail_1
+                let tail_22 := tail_1
+                let tail_23 := tail_1
+                let tail_24 := tail_1
+                let tail_25 := tail_1
+                let tail_26 := tail_1
+                let tail_27 := tail_1
+                let tail_28 := tail_1
+                let tail_29 := tail_1
+                let tail_30 := tail_1
+                let tail_31 := tail_1
+                let tail_32 := tail_1
+                let tail_33 := tail_1
+                let tail_34 := tail_1
+                let tail_35 := tail_1
+                let tail_36 := tail_1
+                let tail_37 := tail_1
+                let tail_38 := tail_1
+                let tail_39 := tail_1
+                let tail_40 := tail_1
+                let tail_41 := tail_1
+                let tail_42 := tail_1
+                let tail_43 := tail_1
+                let tail_44 := tail_1
+                let tail_45 := tail_1
+                let tail_46 := tail_1
+                let tail_47 := tail_1
+                let tail_48 := tail_1
+                let tail_49 := tail_1
+                let tail_50 := tail_1
+                let tail_51 := tail_1
+                let tail_52 := tail_1
+                let tail_53 := tail_1
+                let tail_54 := tail_1
+                let tail_55 := tail_1
+                let tail_56 := tail_1
+                let tail_57 := tail_1
+                let tail_58 := tail_1
+                let tail_59 := tail_1
+                let tail_60 := tail_1
+                let tail_61 := tail_1
+                let tail_62 := tail_1
+                let tail_63 := tail_1
+                let tail_64 := tail_1
+                let tail_65 := tail_1
+                let tail_66 := tail_1
+                let tail_67 := tail_1
+                let tail_68 := tail_1
+                let tail_69 := tail_1
+                let tail_70 := tail_1
+                let tail_71 := tail_1
+                let tail_72 := tail_1
+                let tail_73 := tail_1
+                let tail_74 := tail_1
+                let tail_75 := tail_1
+                let tail_76 := tail_1
+                let tail_77 := tail_1
+                let tail_78 := tail_1
+                let tail_79 := tail_1
+                let tail_80 := tail_1
+                let tail_81 := tail_1
+                let tail_82 := tail_1
+                let tail_83 := tail_1
+                let tail_84 := tail_1
+                let tail_85 := tail_1
+                let tail_86 := tail_1
+                tail := tail_1
+            }
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            { revert(0, 0) }
+            /// @ast-id 5 @src 0:74:101  "function f() public pure {}"
+            function fun_f()
+            { }
+        }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}

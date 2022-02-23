@@ -7,5 +7,5 @@ contract C {
 	}
 }
 // ----
-// TypeError: (80-81): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-// TypeError: (85-86): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (80-81): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (85-86): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

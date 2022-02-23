@@ -4,4 +4,5 @@ contract Test {
     }
 }
 // ----
-// Warning: (78-88): Statement has no effect.
+// Warning 6321: (54-66): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6133: (78-88): Statement has no effect.

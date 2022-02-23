@@ -1,9 +1,7 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint x;
 
-	constructor() public {
+	constructor() {
 		assert(x == 0);
 		x = 10;
 	}
@@ -12,5 +10,8 @@ contract C {
 		assert(y == x);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (148-162): Assertion violation happens here
+// Warning 6328: (108-122): CHC: Assertion violation happens here.

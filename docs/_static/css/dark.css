@@ -1,10 +1,8 @@
 /* links */
 
-a,
-a:visited {
-    color: #aaddff;
+.rst-content a:not(:visited) {
+    color: #aaddff !important;
 }
-
 
 /* code directives */
 
@@ -46,6 +44,9 @@ em.property {
     background-color: #5a5a5a;
 }
 
+.rst-content pre {
+    background: none;
+}
 
 /* inlined code highlights */
 
@@ -70,6 +71,12 @@ code.docutils.literal.notranslate {
     color: #ddd;
 }
 
+/* highlight color search text */
+
+.rst-content .highlighted {
+    background: #ff5722;
+    box-shadow: 0 0 0 2px #f0978b;
+}
 
 /* notes, warnings, hints */
 
@@ -620,3 +627,9 @@ code.docutils.literal.notranslate {
 
 
 /* Literal.Number.Integer.Long */
+
+
+/* Link to Remix IDE shown over code snippets */
+a.remix-link {
+    filter: invert(1); /* The icon is black. In dark mode we want it white. */
+}

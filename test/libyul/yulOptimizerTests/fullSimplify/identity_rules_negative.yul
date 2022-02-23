@@ -6,6 +6,8 @@
 // step: fullSimplify
 //
 // {
-//     let _1 := 0
-//     mstore(_1, sub(calldataload(1), calldataload(_1)))
+//     {
+//         let _1 := 0
+//         mstore(_1, sub(calldataload(1), calldataload(_1)))
+//     }
 // }

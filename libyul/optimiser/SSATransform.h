@@ -14,13 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that turns subsequent assignments to variable declarations
  * and assignments.
  */
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
@@ -69,7 +70,7 @@ class NameDispenser;
  * variable references can use the SSA variable. The only exception to this rule are
  * for loop conditions, as we cannot insert a variable declaration there.
  *
- * After this stage, redundantAssignmentRemover is recommended to remove the unnecessary
+ * After this stage, UnusedAssignmentEliminator is recommended to remove the unnecessary
  * intermediate assignments.
  *
  * This stage provides best results if CSE is run right before it, because
@@ -85,7 +86,7 @@ class NameDispenser;
  *
  * TODO Which transforms are required to keep this idempotent?
  *
- * Prerequisite: Disambiguator.
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class SSATransform: public ASTModifier
 {

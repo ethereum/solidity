@@ -23,17 +23,27 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
+#include <liblangutil/DebugInfoSelection.h>
+#include <liblangutil/Scanner.h>
+
 #include <libyul/AssemblyStack.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <range/v3/view/iota.hpp>
 
 #include <memory>
 #include <optional>
 #include <string>
+#include <sstream>
 
+using namespace ranges;
 using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
@@ -44,14 +54,15 @@ namespace solidity::yul::test
 namespace
 {
 
-std::pair<bool, ErrorList> parse(string const& _source)
+pair<bool, ErrorList> parse(string const& _source)
 {
 	try
 	{
 		AssemblyStack asmStack(
 			solidity::test::CommonOptions::get().evmVersion(),
 			AssemblyStack::Language::StrictAssembly,
-			solidity::frontend::OptimiserSettings::none()
+			solidity::frontend::OptimiserSettings::none(),
+			DebugInfoSelection::All()
 		);
 		bool success = asmStack.parseAndAnalyze("source", _source);
 		return {success, asmStack.errors()};
@@ -63,7 +74,7 @@ std::pair<bool, ErrorList> parse(string const& _source)
 	return {false, {}};
 }
 
-std::optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarnings = true)
+optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarningsAndInfos = true)
 {
 	bool success;
 	ErrorList errors;
@@ -76,11 +87,11 @@ std::optional<Error> parseAndReturnFirstError(string const& _source, bool _allow
 	else
 	{
 		// If success is true, there might still be an error in the assembly stage.
-		if (_allowWarnings && Error::containsOnlyWarnings(errors))
+		if (_allowWarningsAndInfos && !Error::containsErrors(errors))
 			return {};
 		else if (!errors.empty())
 		{
-			if (!_allowWarnings)
+			if (!_allowWarningsAndInfos)
 				BOOST_CHECK_EQUAL(errors.size(), 1);
 			return *errors.front();
 		}
@@ -88,17 +99,33 @@ std::optional<Error> parseAndReturnFirstError(string const& _source, bool _allow
 	return {};
 }
 
-bool successParse(std::string const& _source, bool _allowWarnings = true)
+bool successParse(string const& _source, bool _allowWarningsAndInfos = true)
 {
-	return !parseAndReturnFirstError(_source, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _allowWarningsAndInfos);
 }
 
-Error expectError(std::string const& _source, bool _allowWarnings = false)
+Error expectError(string const& _source, bool _allowWarningsAndInfos = false)
 {
 
-	auto error = parseAndReturnFirstError(_source, _allowWarnings);
+	auto error = parseAndReturnFirstError(_source, _allowWarningsAndInfos);
 	BOOST_REQUIRE(error);
 	return *error;
+}
+
+tuple<optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _source)
+{
+	vector<string> lines;
+	boost::split(lines, _source, boost::is_any_of("\n"));
+	string source = util::joinHumanReadablePrefixed(lines, "\n///") + "\n{}\n";
+
+	ErrorList errors;
+	ErrorReporter reporter(errors);
+	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion::berlin());
+	ObjectParser objectParser{reporter, dialect};
+	CharStream stream(move(source), "");
+	auto object = objectParser.parse(make_shared<Scanner>(stream), false);
+	BOOST_REQUIRE(object && object->debugData);
+	return {object->debugData->sourceNames, std::move(errors)};
 }
 
 }
@@ -118,21 +145,6 @@ BOOST_AUTO_TEST_CASE(empty_code)
 	BOOST_CHECK(successParse("{ }"));
 }
 
-BOOST_AUTO_TEST_CASE(object_with_empty_code)
-{
-	BOOST_CHECK(successParse("object \"a\" { code { } }"));
-}
-
-BOOST_AUTO_TEST_CASE(non_object)
-{
-	CHECK_ERROR("code {}", ParserError, "Expected keyword \"object\"");
-}
-
-BOOST_AUTO_TEST_CASE(empty_name)
-{
-	CHECK_ERROR("object \"\" { code {} }", ParserError, "Object name cannot be empty");
-}
-
 BOOST_AUTO_TEST_CASE(recursion_depth)
 {
 	string input;
@@ -142,77 +154,6 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 		input += "}";
 
 	CHECK_ERROR(input, ParserError, "recursion");
-}
-
-BOOST_AUTO_TEST_CASE(object_with_code)
-{
-	BOOST_CHECK(successParse("object \"a\" { code { let x := mload(0) sstore(0, x) } }"));
-}
-
-BOOST_AUTO_TEST_CASE(object_with_code_and_data)
-{
-	BOOST_CHECK(successParse("object \"a\" { code { let x := mload(0) sstore(0, x) } data \"b\" hex\"01010202\" }"));
-}
-
-BOOST_AUTO_TEST_CASE(object_with_non_code_at_start)
-{
-	CHECK_ERROR("object \"a\" { data \"d\" hex\"0102\" code {  } }", ParserError, "Expected keyword \"code\"");
-}
-
-BOOST_AUTO_TEST_CASE(nested_object)
-{
-	string code = R"(
-		object "outer" {
-			code { let x := mload(0) }
-			data "x" "stringdata"
-			object "inner" {
-				code { mstore(0, 1) }
-				object "inner inner" { code {} }
-				data "innerx" "abc"
-				data "innery" "def"
-			}
-		}
-	)";
-	BOOST_CHECK(successParse(code));
-}
-
-BOOST_AUTO_TEST_CASE(incomplete)
-{
-	CHECK_ERROR("object \"abc\" { code {} } object", ParserError, "Expected end of source");
-}
-
-BOOST_AUTO_TEST_CASE(reuse_object_name)
-{
-	string code = R"(
-		object "outer" {
-			code { }
-			data "outer" "stringdata"
-		}
-	)";
-	CHECK_ERROR(code, ParserError, "Object name cannot be the same as the name of the containing object");
-}
-
-BOOST_AUTO_TEST_CASE(reuse_object_in_subobject)
-{
-	string code = R"(
-		object "outer" {
-			code { }
-			object "outer" { code {} }
-		}
-	)";
-	CHECK_ERROR(code, ParserError, "Object name cannot be the same as the name of the containing object");
-}
-
-BOOST_AUTO_TEST_CASE(reuse_object_of_sibling)
-{
-	string code = R"(
-		object "O" {
-			code { }
-			object "i" { code {} }
-			data "i" "abc"
-		}
-	)";
-	CHECK_ERROR(code, ParserError, "already exists inside the");
 }
 
 BOOST_AUTO_TEST_CASE(to_string)
@@ -242,53 +183,103 @@ BOOST_AUTO_TEST_CASE(to_string)
 	AssemblyStack asmStack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
 	);
 	BOOST_REQUIRE(asmStack.parseAndAnalyze("source", code));
 	BOOST_CHECK_EQUAL(asmStack.print(), expectation);
 }
 
-BOOST_AUTO_TEST_CASE(arg_to_dataoffset_must_be_literal)
+BOOST_AUTO_TEST_CASE(use_src_empty)
 {
-	string code = R"(
-		object "outer" {
-			code { let x := "outer" let y := dataoffset(x) }
-		}
-	)";
-	CHECK_ERROR(code, TypeError, "Function expects direct literals as arguments.");
+	auto const [mapping, _] = tryGetSourceLocationMapping("");
+	BOOST_REQUIRE(!mapping);
 }
 
-BOOST_AUTO_TEST_CASE(arg_to_datasize_must_be_literal)
+BOOST_AUTO_TEST_CASE(use_src_simple)
 {
-	string code = R"(
-		object "outer" {
-			code { let x := "outer" let y := datasize(x) }
-		}
-	)";
-	CHECK_ERROR(code, TypeError, "Function expects direct literals as arguments.");
+	auto const [mapping, _] = tryGetSourceLocationMapping(R"(@use-src 0:"contract.sol")");
+	BOOST_REQUIRE(mapping.has_value());
+	BOOST_REQUIRE_EQUAL(mapping->size(), 1);
+	BOOST_REQUIRE_EQUAL(*mapping->at(0), "contract.sol");
 }
 
-BOOST_AUTO_TEST_CASE(args_to_datacopy_are_arbitrary)
+BOOST_AUTO_TEST_CASE(use_src_multiple)
 {
-	string code = R"(
-		object "outer" {
-			code { let x := 0 let y := 2 let s := 3 datacopy(x, y, s) }
-		}
-	)";
-	BOOST_CHECK(successParse(code));
+	auto const [mapping, _] = tryGetSourceLocationMapping(R"(@use-src 0:"contract.sol", 1:"misc.yul")");
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 2);
+	BOOST_REQUIRE_EQUAL(*mapping->at(0), "contract.sol");
+	BOOST_REQUIRE_EQUAL(*mapping->at(1), "misc.yul");
 }
 
-
-BOOST_AUTO_TEST_CASE(non_existing_objects)
+BOOST_AUTO_TEST_CASE(use_src_escaped_filenames)
 {
-	BOOST_CHECK(successParse(
-		"object \"main\" { code { pop(datasize(\"main\")) } }"
-	));
-	CHECK_ERROR(
-		"object \"main\" { code { pop(datasize(\"abc\")) } }",
-		TypeError,
-		"Unknown data object"
+	auto const [mapping, _] = tryGetSourceLocationMapping(
+		R"(@use-src 42:"con\"tract@\".sol")"
 	);
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 1);
+	BOOST_REQUIRE(mapping->count(42));
+	BOOST_REQUIRE_EQUAL(*mapping->at(42), "con\"tract@\".sol");
+}
+
+BOOST_AUTO_TEST_CASE(use_src_invalid_syntax_malformed_param_1)
+{
+	// open quote arg, missing closing quote
+	auto const [mapping, errors] = tryGetSourceLocationMapping(R"(@use-src 42_"con")");
+
+	BOOST_REQUIRE_EQUAL(errors.size(), 1);
+	BOOST_CHECK_EQUAL(errors.front()->errorId().error, 9804);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_invalid_syntax_malformed_param_2)
+{
+	// open quote arg, missing closing quote
+	auto const [mapping, errors] = tryGetSourceLocationMapping(R"(@use-src 42:"con)");
+
+	BOOST_REQUIRE_EQUAL(errors.size(), 1);
+	BOOST_CHECK_EQUAL(errors.front()->errorId().error, 9804);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_error_unexpected_trailing_tokens)
+{
+	auto const [mapping, errors] = tryGetSourceLocationMapping(
+		R"(@use-src 1:"file.sol" @use-src 2:"foo.sol")"
+	);
+
+	BOOST_REQUIRE_EQUAL(errors.size(), 1);
+	BOOST_CHECK_EQUAL(errors.front()->errorId().error, 9804);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_multiline)
+{
+	auto const [mapping, _] = tryGetSourceLocationMapping(
+		" @use-src \n  0:\"contract.sol\" \n , \n 1:\"misc.yul\""
+	);
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 2);
+	BOOST_REQUIRE_EQUAL(*mapping->at(0), "contract.sol");
+	BOOST_REQUIRE_EQUAL(*mapping->at(1), "misc.yul");
+}
+
+BOOST_AUTO_TEST_CASE(use_src_empty_body)
+{
+	auto const [mapping, _] = tryGetSourceLocationMapping("@use-src");
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_leading_text)
+{
+	auto const [mapping, _] = tryGetSourceLocationMapping(
+		"@something else @use-src 0:\"contract.sol\", 1:\"misc.sol\""s
+	);
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 2);
+	BOOST_REQUIRE(mapping->find(0) != mapping->end());
+	BOOST_REQUIRE_EQUAL(*mapping->at(0), "contract.sol");
+	BOOST_REQUIRE_EQUAL(*mapping->at(1), "misc.sol");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

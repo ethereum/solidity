@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that renames identifiers to free up certain names.
  */
@@ -58,6 +59,8 @@ public:
 	void operator()(FunctionDefinition& _function) override;
 	void operator()(FunctionCall& _funCall) override;
 	void operator()(Block& _block) override;
+
+	std::map<YulString, YulString> const& translations() const { return m_translations; }
 
 protected:
 	/// Check if the newly introduced identifier @a _name has to be replaced.

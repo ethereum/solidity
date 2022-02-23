@@ -3,3 +3,4 @@ contract C {
     return abi.decode("abc", (uint, bytes32, C));
   }
 }
+// ----

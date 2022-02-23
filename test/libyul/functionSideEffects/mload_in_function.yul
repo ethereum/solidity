@@ -7,5 +7,5 @@
         sstore(0, mload(0))
 }
 // ----
-// : invalidatesStorage, invalidatesMemory
-// foo: invalidatesMemory
+// : can loop, writes storage, writes memory
+// foo: can loop, writes memory

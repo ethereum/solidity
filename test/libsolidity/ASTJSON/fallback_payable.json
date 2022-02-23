@@ -8,16 +8,15 @@
     ]
   },
   "id": 6,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         5
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -36,14 +36,13 @@
             "src": "34:2:1",
             "statements": []
           },
-          "documentation": null,
           "id": 4,
           "implemented": true,
           "kind": "fallback",
           "modifiers": [],
           "name": "",
+          "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -66,7 +65,8 @@
         }
       ],
       "scope": 6,
-      "src": "0:38:1"
+      "src": "0:38:1",
+      "usedErrors": []
     }
   ],
   "src": "0:39:1"

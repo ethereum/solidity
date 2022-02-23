@@ -6,3 +6,4 @@ contract D is C {
 contract E is D {
 	receive() override external payable {}
 }
+// ----

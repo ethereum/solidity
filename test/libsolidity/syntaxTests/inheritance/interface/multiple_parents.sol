@@ -12,4 +12,4 @@ interface Sub is SuperA, SuperB {
 }
 
 // ----
-// TypeError: (236-271): Derived contract must override function "test". Two or more base classes define function with same name and parameter types.
+// TypeError 6480: (236-271): Derived contract must override function "test". Two or more base classes define function with same name and parameter types.

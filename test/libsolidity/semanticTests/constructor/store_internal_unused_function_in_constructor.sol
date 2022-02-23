@@ -1,7 +1,7 @@
 contract C {
     function() returns (uint256) internal x;
 
-    constructor() public {
+    constructor() {
         x = unused;
     }
 
@@ -14,5 +14,8 @@ contract C {
     }
 }
 
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // t() -> 7

@@ -14,18 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
- * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
+ * Code generator for translating Yul / inline assembly to EVM.
  */
 
 #pragma once
 
-#include <libyul/backends/evm/EVMAssembly.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/VariableReferenceCounter.h>
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/AsmDataForward.h>
-#include <libyul/AsmScope.h>
+#include <libyul/AST.h>
+#include <libyul/Scope.h>
 
 #include <optional>
 #include <stack>
@@ -37,24 +37,13 @@ class ErrorReporter;
 
 namespace solidity::yul
 {
-struct AsmAnalysisInfo;
-class EVMAssembly;
 
-struct StackTooDeepError: virtual YulException
-{
-	StackTooDeepError(YulString _variable, int _depth): variable(_variable), depth(_depth) {}
-	StackTooDeepError(YulString _functionName, YulString _variable, int _depth):
-		functionName(_functionName), variable(_variable), depth(_depth)
-	{}
-	YulString functionName;
-	YulString variable;
-	int depth;
-};
+struct AsmAnalysisInfo;
 
 struct CodeTransformContext
 {
 	std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
-	std::map<Scope::Variable const*, int> variableStackHeights;
+	std::map<Scope::Variable const*, size_t> variableStackHeights;
 	std::map<Scope::Variable const*, unsigned> variableReferences;
 
 	struct JumpInfo
@@ -70,46 +59,17 @@ struct CodeTransformContext
 	};
 
 	std::stack<ForLoopLabels> forLoopStack;
-	std::stack<JumpInfo> functionExitPoints;
-};
-
-/**
- * Counts the number of references to a variable. This includes actual (read) references
- * but also assignments to the variable. It does not include the declaration itself or
- * function parameters, but it does include function return parameters.
- *
- * This component can handle multiple variables of the same name.
- *
- * Can only be applied to strict assembly.
- */
-class VariableReferenceCounter: public yul::ASTWalker
-{
-public:
-	explicit VariableReferenceCounter(
-		CodeTransformContext& _context,
-		AsmAnalysisInfo const& _assemblyInfo
-	): m_context(_context), m_info(_assemblyInfo)
-	{}
-
-public:
-	void operator()(Identifier const& _identifier) override;
-	void operator()(FunctionDefinition const&) override;
-	void operator()(ForLoop const&) override;
-	void operator()(Block const& _block) override;
-
-private:
-	void increaseRefIfFound(YulString _variableName);
-
-	CodeTransformContext& m_context;
-	AsmAnalysisInfo const& m_info;
-	Scope* m_scope = nullptr;
 };
 
 class CodeTransform
 {
 public:
+	/// Use named labels for functions 1) Yes and check that the names are unique
+	/// 2) For none of the functions 3) for the first function of each name.
+	enum class UseNamedLabels { YesAndForceUnique, Never, ForFirstFunctionOfEachName };
+
 	/// Create the code transformer.
-	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
+	/// @param _identifierAccessCodeGen used to generate code for identifiers external to the inline assembly
 	/// As a side-effect of its construction, translates the Yul code and appends it to the
 	/// given assembly.
 	/// Throws StackTooDeepError if a variable is not accessible or if a function has too
@@ -121,9 +81,8 @@ public:
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		bool _allowStackOpt = false,
-		bool _evm15 = false,
-		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
+		ExternalIdentifierAccess::CodeGenerator const& _identifierAccessCodeGen = {},
+		UseNamedLabels _useNamedLabelsForFunctions = UseNamedLabels::Never
 	): CodeTransform(
 		_assembly,
 		_analysisInfo,
@@ -131,10 +90,11 @@ public:
 		_allowStackOpt,
 		_dialect,
 		_builtinContext,
-		_evm15,
-		_identifierAccess,
+		_identifierAccessCodeGen,
 		_useNamedLabelsForFunctions,
-		nullptr
+		nullptr,
+		{},
+		std::nullopt
 	)
 	{
 	}
@@ -151,18 +111,20 @@ protected:
 		bool _allowStackOpt,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
-		bool _evm15,
-		ExternalIdentifierAccess _identifierAccess,
-		bool _useNamedLabelsForFunctions,
-		std::shared_ptr<Context> _context
+		ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
+		UseNamedLabels _useNamedLabelsForFunctions,
+		std::shared_ptr<Context> _context,
+		std::vector<TypedName> _delayedReturnVariables,
+		std::optional<AbstractAssembly::LabelID> _functionExitLabel
 	);
 
 	void decreaseReference(YulString _name, Scope::Variable const& _var);
 	bool unreferenced(Scope::Variable const& _var) const;
 	/// Marks slots of variables that are not used anymore
 	/// and were defined in the current scope for reuse.
-	/// Also POPs unused topmost stack slots.
-	void freeUnusedVariables();
+	/// Also POPs unused topmost stack slots,
+	/// unless @a _popUnusedSlotsAtStackTop is set to false.
+	void freeUnusedVariables(bool _popUnusedSlotsAtStackTop = true);
 	/// Marks the stack slot of @a _var to be reused.
 	void deleteVariable(Scope::Variable const& _var);
 
@@ -184,15 +146,16 @@ public:
 
 private:
 	AbstractAssembly::LabelID labelFromIdentifier(Identifier const& _identifier);
-	AbstractAssembly::LabelID functionEntryID(YulString _name, Scope::Function const& _function);
+	void createFunctionEntryID(FunctionDefinition const& _function);
+	AbstractAssembly::LabelID functionEntryID(Scope::Function const& _scopeFunction) const;
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(Expression const& _expression);
 
 	void visitStatements(std::vector<Statement> const& _statements);
 
 	/// Pops all variables declared in the block and checks that the stack height is equal
-	/// to @a _blackStartStackHeight.
-	void finalizeBlock(Block const& _block, int _blockStartStackHeight);
+	/// to @a _blockStartStackHeight.
+	void finalizeBlock(Block const& _block, std::optional<int> _blockStartStackHeight);
 
 	void generateMultiAssignment(std::vector<Identifier> const& _variableNames);
 	void generateAssignment(Identifier const& _variableName);
@@ -200,7 +163,12 @@ private:
 	/// Determines the stack height difference to the given variables. Throws
 	/// if it is not yet in scope or the height difference is too large. Returns
 	/// the (positive) stack height difference otherwise.
-	int variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
+	/// @param _forSwap if true, produces stack error if the difference is invalid for a swap
+	///                 opcode, otherwise checks for validity for a dup opcode.
+	size_t variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
+
+	/// Determines the stack height of the given variable. Throws if the variable is not in scope.
+	int variableStackHeight(YulString _name) const;
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
@@ -212,15 +180,26 @@ private:
 	/// Returns the number of POP statements that have been appended.
 	int appendPopUntil(int _targetDepth);
 
+	/// Allocates stack slots for remaining delayed return values and sets the function exit stack height.
+	void setupReturnVariablesAndFunctionExit();
+	bool returnVariablesAndFunctionExitAreSetup() const
+	{
+		return m_functionExitStackHeight.has_value();
+	}
+	bool isInsideFunction() const
+	{
+		return m_functionExitLabel.has_value();
+	}
+
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
 	EVMDialect const& m_dialect;
 	BuiltinContext& m_builtinContext;
 	bool const m_allowStackOpt = true;
-	bool const m_evm15 = false;
-	bool const m_useNamedLabelsForFunctions = false;
-	ExternalIdentifierAccess m_identifierAccess;
+	UseNamedLabels const m_useNamedLabelsForFunctions = UseNamedLabels::Never;
+	std::set<YulString> m_assignedNamedLabels;
+	ExternalIdentifierAccess::CodeGenerator m_identifierAccessCodeGen;
 	std::shared_ptr<Context> m_context;
 
 	/// Set of variables whose reference counter has reached zero,
@@ -228,6 +207,16 @@ private:
 	/// statement level in the scope where the variable was defined.
 	std::set<Scope::Variable const*> m_variablesScheduledForDeletion;
 	std::set<int> m_unusedStackSlots;
+
+	/// A list of return variables for which no stack slots have been assigned yet.
+	std::vector<TypedName> m_delayedReturnVariables;
+
+	/// Function exit label. Used as jump target for ``leave``.
+	std::optional<AbstractAssembly::LabelID> m_functionExitLabel;
+	/// The required stack height at the function exit label.
+	/// This is the minimal stack height covering all return variables. Only set after all
+	/// return variables were assigned slots.
+	std::optional<int> m_functionExitStackHeight;
 
 	std::vector<StackTooDeepError> m_stackErrors;
 };

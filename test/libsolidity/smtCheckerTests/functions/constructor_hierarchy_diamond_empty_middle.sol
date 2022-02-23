@@ -1,7 +1,6 @@
-pragma experimental SMTChecker;
 contract C {
 	uint a;
-	constructor() public {
+	constructor() {
 		a = 2;
 	}
 }
@@ -13,11 +12,13 @@ contract B2 is C {
 }
 
 contract A is B, B2 {
-	constructor(uint x) public {
+	constructor(uint x) {
 		assert(a == 2);
 		assert(a == 3);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (171-177): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (208-222): Assertion violation happens here
+// Warning 5667: (132-138): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (162-176): CHC: Assertion violation happens here.\nCounterexample:\na = 2\nx = 0\n\nTransaction trace:\nA.constructor(0)

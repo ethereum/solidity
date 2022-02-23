@@ -14,8 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
- * Utilities to handle the Contract ABI (https://solidity.readthedocs.io/en/develop/abi-spec.html)
+ * Utilities to handle the Contract ABI (https://docs.soliditylang.org/en/develop/abi-spec.html)
  */
 
 #pragma once
@@ -30,7 +31,6 @@ namespace solidity::frontend
 // Forward declarations
 class ContractDefinition;
 class Type;
-using TypePointer = Type const*;
 
 class ABI
 {
@@ -47,8 +47,8 @@ private:
 	/// ABI types used for the actual encoding.
 	static Json::Value formatTypeList(
 		std::vector<std::string> const& _names,
-		std::vector<TypePointer> const& _encodingTypes,
-		std::vector<TypePointer> const& _solidityTypes,
+		std::vector<Type const*> const& _encodingTypes,
+		std::vector<Type const*> const& _solidityTypes,
 		bool _forLibrary
 	);
 	/// @returns a Json object with "name", "type", "internalType" and potentially

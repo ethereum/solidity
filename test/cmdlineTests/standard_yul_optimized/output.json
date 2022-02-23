@@ -1,11 +1,13 @@
 {"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":17:18   */
   0x00
-  0x00
     /* \"A\":11:19   */
+  dup1
   mload
     /* \"A\":20:40   */
   sstore
-","bytecode":{"linkReferences":{},"object":"bytecode removed","opcodes":"opcodes removed","sourceMap":"sourceMap removed"}},"ir":"object \"object\" {
+    /* \"A\":0:42   */
+  stop
+","bytecode":{"functionDebugData":{},"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"object\" {
     code {
         let x := mload(0)
         sstore(add(x, 0), 0)

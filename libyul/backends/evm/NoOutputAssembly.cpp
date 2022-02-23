@@ -14,18 +14,19 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Assembly interface that ignores everything. Can be used as a backend for a compilation dry-run.
  */
 
 #include <libyul/backends/evm/NoOutputAssembly.h>
 
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
 #include <libevmasm/Instruction.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-
+#include <range/v3/view/iota.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -51,7 +52,6 @@ void NoOutputAssembly::appendLabel(LabelID)
 
 void NoOutputAssembly::appendLabelReference(LabelID)
 {
-	yulAssert(!m_evm15, "Cannot use plain label references in EMV1.5 mode.");
 	appendInstruction(evmasm::pushInstruction(1));
 }
 
@@ -60,7 +60,7 @@ NoOutputAssembly::LabelID NoOutputAssembly::newLabelId()
 	return 1;
 }
 
-AbstractAssembly::LabelID NoOutputAssembly::namedLabel(string const&)
+AbstractAssembly::LabelID NoOutputAssembly::namedLabel(string const&, size_t, size_t, optional<size_t>)
 {
 	return 1;
 }
@@ -70,54 +70,27 @@ void NoOutputAssembly::appendLinkerSymbol(string const&)
 	yulAssert(false, "Linker symbols not yet implemented.");
 }
 
-void NoOutputAssembly::appendJump(int _stackDiffAfter)
+void NoOutputAssembly::appendVerbatim(bytes, size_t _arguments, size_t _returnVariables)
 {
-	yulAssert(!m_evm15, "Plain JUMP used for EVM 1.5");
+	m_stackHeight += static_cast<int>(_returnVariables - _arguments);
+}
+
+void NoOutputAssembly::appendJump(int _stackDiffAfter, JumpType)
+{
 	appendInstruction(evmasm::Instruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
-void NoOutputAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
+void NoOutputAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType)
 {
-	if (m_evm15)
-		m_stackHeight += _stackDiffAfter;
-	else
-	{
-		appendLabelReference(_labelId);
-		appendJump(_stackDiffAfter);
-	}
+	appendLabelReference(_labelId);
+	appendJump(_stackDiffAfter, _jumpType);
 }
 
-void NoOutputAssembly::appendJumpToIf(LabelID _labelId)
+void NoOutputAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 {
-	if (m_evm15)
-		m_stackHeight--;
-	else
-	{
-		appendLabelReference(_labelId);
-		appendInstruction(evmasm::Instruction::JUMPI);
-	}
-}
-
-void NoOutputAssembly::appendBeginsub(LabelID, int _arguments)
-{
-	yulAssert(m_evm15, "BEGINSUB used for EVM 1.0");
-	yulAssert(_arguments >= 0, "");
-	m_stackHeight += _arguments;
-}
-
-void NoOutputAssembly::appendJumpsub(LabelID, int _arguments, int _returns)
-{
-	yulAssert(m_evm15, "JUMPSUB used for EVM 1.0");
-	yulAssert(_arguments >= 0 && _returns >= 0, "");
-	m_stackHeight += _returns - _arguments;
-}
-
-void NoOutputAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
-{
-	yulAssert(m_evm15, "RETURNSUB used for EVM 1.0");
-	yulAssert(_returns >= 0, "");
-	m_stackHeight += _stackDiffAfter - _returns;
+	appendLabelReference(_labelId);
+	appendInstruction(evmasm::Instruction::JUMPI);
 }
 
 void NoOutputAssembly::appendAssemblySize()
@@ -125,18 +98,18 @@ void NoOutputAssembly::appendAssemblySize()
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly()
+pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(std::string)
 {
 	yulAssert(false, "Sub assemblies not implemented.");
 	return {};
 }
 
-void NoOutputAssembly::appendDataOffset(AbstractAssembly::SubID)
+void NoOutputAssembly::appendDataOffset(std::vector<AbstractAssembly::SubID> const&)
 {
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-void NoOutputAssembly::appendDataSize(AbstractAssembly::SubID)
+void NoOutputAssembly::appendDataSize(std::vector<AbstractAssembly::SubID> const&)
 {
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
@@ -162,15 +135,12 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 {
 	for (auto& fun: m_functions)
 	{
-		size_t parameters = fun.second.parameters.size();
 		size_t returns = fun.second.returns.size();
-		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&, std::function<void(Expression const&)> _visitExpression)
+		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&)
 		{
-			for (auto const& arg: _call.arguments | boost::adaptors::reversed)
-				_visitExpression(arg);
-
-			for (size_t i = 0; i < parameters; i++)
-				_assembly.appendInstruction(evmasm::Instruction::POP);
+			for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
+				if (!fun.second.literalArgument(i))
+					_assembly.appendInstruction(evmasm::Instruction::POP);
 
 			for (size_t i = 0; i < returns; i++)
 				_assembly.appendConstant(u256(0));

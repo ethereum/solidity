@@ -5,3 +5,4 @@ contract C {
 		y = x;
 	}
 }
+// ----

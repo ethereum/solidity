@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -24,9 +25,12 @@
 #include <test/contracts/ContractInterface.h>
 #include <test/EVMHost.h>
 
+#include <libsolutil/LazyInit.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <optional>
 
 using namespace std;
 using namespace solidity;
@@ -38,9 +42,8 @@ namespace solidity::frontend::test
 
 namespace
 {
-
 static char const* registrarCode = R"DELIMITER(
-pragma solidity >=0.4.0 <0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 
 abstract contract NameRegister {
 	function addr(string memory _name) public virtual view returns (address o_owner);
@@ -68,7 +71,7 @@ abstract contract AuctionSystem {
 
 	function bid(string memory _name, address payable _bidder, uint _value) internal {
 		Auction storage auction = m_auctions[_name];
-		if (auction.endDate > 0 && now > auction.endDate)
+		if (auction.endDate > 0 && block.timestamp > auction.endDate)
 		{
 			emit AuctionEnded(_name, auction.highestBidder);
 			onAuctionEnd(_name);
@@ -82,7 +85,7 @@ abstract contract AuctionSystem {
 			auction.sumOfBids += _value;
 			auction.highestBid = _value;
 			auction.highestBidder = _bidder;
-			auction.endDate = now + c_biddingTime;
+			auction.endDate = block.timestamp + c_biddingTime;
 
 			emit NewBid(_name, _bidder, _value);
 		}
@@ -112,7 +115,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 	uint constant c_renewalInterval = 365 days;
 	uint constant c_freeBytes = 12;
 
-	constructor() public {
+	constructor() {
 		// TODO: Populate with hall-of-fame.
 	}
 
@@ -120,7 +123,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		Auction storage auction = m_auctions[_name];
 		Record storage record = m_toRecord[_name];
 		address previousOwner = record.owner;
-		record.renewalDate = now + c_renewalInterval;
+		record.renewalDate = block.timestamp + c_renewalInterval;
 		record.owner = auction.highestBidder;
 		emit Changed(_name);
 		if (previousOwner != 0x0000000000000000000000000000000000000000) {
@@ -138,14 +141,14 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		bool needAuction = requiresAuction(_name);
 		if (needAuction)
 		{
-			if (now < m_toRecord[_name].renewalDate)
+			if (block.timestamp < m_toRecord[_name].renewalDate)
 				revert();
-			bid(_name, msg.sender, msg.value);
+			bid(_name, payable(msg.sender), msg.value);
 		} else {
 			Record storage record = m_toRecord[_name];
 			if (record.owner != 0x0000000000000000000000000000000000000000)
 				revert();
-			m_toRecord[_name].owner = msg.sender;
+			m_toRecord[_name].owner = payable(msg.sender);
 			emit Changed(_name);
 		}
 	}
@@ -212,17 +215,18 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 }
 )DELIMITER";
 
-static unique_ptr<bytes> s_compiledRegistrar;
+static LazyInit<bytes> s_compiledRegistrar;
 
 class AuctionRegistrarTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployRegistrar()
 	{
-		if (!s_compiledRegistrar)
-			s_compiledRegistrar = make_unique<bytes>(compileContract(registrarCode, "GlobalRegistrar"));
+		bytes const& compiled = s_compiledRegistrar.init([&]{
+			return compileContract(registrarCode, "GlobalRegistrar");
+		});
 
-		sendMessage(*s_compiledRegistrar, true);
+		sendMessage(compiled, true);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}
@@ -235,27 +239,27 @@ protected:
 		{
 			callString("reserve", _name);
 		}
-		u160 owner(string const& _name)
+		h160 owner(string const& _name)
 		{
 			return callStringReturnsAddress("owner", _name);
 		}
-		void setAddress(string const& _name, u160 const& _address, bool _primary)
+		void setAddress(string const& _name, h160 const& _address, bool _primary)
 		{
 			callStringAddressBool("setAddress", _name, _address, _primary);
 		}
-		u160 addr(string const& _name)
+		h160 addr(string const& _name)
 		{
 			return callStringReturnsAddress("addr", _name);
 		}
-		string name(u160 const& _addr)
+		string name(h160 const& _addr)
 		{
 			return callAddressReturnsString("name", _addr);
 		}
-		void setSubRegistrar(string const& _name, u160 const& _address)
+		void setSubRegistrar(string const& _name, h160 const& _address)
 		{
 			callStringAddress("setSubRegistrar", _name, _address);
 		}
-		u160 subRegistrar(string const& _name)
+		h160 subRegistrar(string const& _name)
 		{
 			return callStringReturnsAddress("subRegistrar", _name);
 		}
@@ -267,7 +271,7 @@ protected:
 		{
 			return callStringReturnsBytes32("content", _name);
 		}
-		void transfer(string const& _name, u160 const& _target)
+		void transfer(string const& _name, h160 const& _target)
 		{
 			return callStringAddress("transfer", _name, _target);
 		}
@@ -300,12 +304,12 @@ BOOST_AUTO_TEST_CASE(reserve)
 
 	// should not work
 	registrar.reserve("");
-	BOOST_CHECK_EQUAL(registrar.owner(""), u160(0));
+	BOOST_CHECK_EQUAL(registrar.owner(""), h160{});
 
 	for (auto const& name: names)
 	{
 		registrar.reserve(name);
-		BOOST_CHECK_EQUAL(registrar.owner(name), u160(m_sender));
+		BOOST_CHECK_EQUAL(registrar.owner(name), m_sender);
 	}
 }
 
@@ -342,20 +346,20 @@ BOOST_AUTO_TEST_CASE(properties)
 		// setting by sender works
 		registrar.reserve(name);
 		BOOST_CHECK_EQUAL(registrar.owner(name), sender);
-		registrar.setAddress(name, addr, true);
-		BOOST_CHECK_EQUAL(registrar.addr(name), u160(addr));
-		registrar.setSubRegistrar(name, addr + 20);
-		BOOST_CHECK_EQUAL(registrar.subRegistrar(name), u160(addr + 20));
+		registrar.setAddress(name, h160(addr), true);
+		BOOST_CHECK_EQUAL(registrar.addr(name), h160(addr));
+		registrar.setSubRegistrar(name, h160(addr + 20));
+		BOOST_CHECK_EQUAL(registrar.subRegistrar(name), h160(addr + 20));
 		registrar.setContent(name, h256(u256(addr + 90)));
 		BOOST_CHECK_EQUAL(registrar.content(name), h256(u256(addr + 90)));
 
 		// but not by someone else
 		m_sender = account(count - 1);
 		BOOST_CHECK_EQUAL(registrar.owner(name), sender);
-		registrar.setAddress(name, addr + 1, true);
-		BOOST_CHECK_EQUAL(registrar.addr(name), u160(addr));
-		registrar.setSubRegistrar(name, addr + 20 + 1);
-		BOOST_CHECK_EQUAL(registrar.subRegistrar(name), u160(addr + 20));
+		registrar.setAddress(name, h160(addr + 1), true);
+		BOOST_CHECK_EQUAL(registrar.addr(name), h160(addr));
+		registrar.setSubRegistrar(name, h160(addr + 20 + 1));
+		BOOST_CHECK_EQUAL(registrar.subRegistrar(name), h160(addr + 20));
 		registrar.setContent(name, h256(u256(addr + 90 + 1)));
 		BOOST_CHECK_EQUAL(registrar.content(name), h256(u256(addr + 90)));
 		count++;
@@ -369,8 +373,8 @@ BOOST_AUTO_TEST_CASE(transfer)
 	RegistrarInterface registrar(*this);
 	registrar.reserve(name);
 	registrar.setContent(name, h256(u256(123)));
-	registrar.transfer(name, u160(555));
-	BOOST_CHECK_EQUAL(registrar.owner(name), u160(555));
+	registrar.transfer(name, h160(555));
+	BOOST_CHECK_EQUAL(registrar.owner(name), h160(555));
 	BOOST_CHECK_EQUAL(registrar.content(name), h256(u256(123)));
 }
 
@@ -382,9 +386,9 @@ BOOST_AUTO_TEST_CASE(disown)
 	RegistrarInterface registrar(*this);
 	registrar.reserve(name);
 	registrar.setContent(name, h256(u256(123)));
-	registrar.setAddress(name, u160(124), true);
-	registrar.setSubRegistrar(name, u160(125));
-	BOOST_CHECK_EQUAL(registrar.name(u160(124)), name);
+	registrar.setAddress(name, h160(124), true);
+	registrar.setSubRegistrar(name, h160(125));
+	BOOST_CHECK_EQUAL(registrar.name(h160(124)), name);
 
 	// someone else tries disowning
 	sendEther(account(1), u256(10) * ether);
@@ -394,11 +398,11 @@ BOOST_AUTO_TEST_CASE(disown)
 
 	m_sender = account(0);
 	registrar.disown(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
-	BOOST_CHECK_EQUAL(registrar.addr(name), 0);
-	BOOST_CHECK_EQUAL(registrar.subRegistrar(name), 0);
+	BOOST_CHECK_EQUAL(registrar.owner(name), h160());
+	BOOST_CHECK_EQUAL(registrar.addr(name), h160());
+	BOOST_CHECK_EQUAL(registrar.subRegistrar(name), h160());
 	BOOST_CHECK_EQUAL(registrar.content(name), h256());
-	BOOST_CHECK_EQUAL(registrar.name(u160(124)), "");
+	BOOST_CHECK_EQUAL(registrar.name(h160(124)), "");
 }
 
 BOOST_AUTO_TEST_CASE(auction_simple)
@@ -410,10 +414,10 @@ BOOST_AUTO_TEST_CASE(auction_simple)
 	// initiate auction
 	registrar.setNextValue(8);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
+	BOOST_CHECK_EQUAL(registrar.owner(name), h160());
 	// "wait" until auction end
 
-	m_evmHost->tx_context.block_timestamp += m_biddingTime + 10;
+	m_evmcHost->tx_context.block_timestamp += m_biddingTime + 10;
 	// trigger auction again
 	registrar.reserve(name);
 	BOOST_CHECK_EQUAL(registrar.owner(name), m_sender);
@@ -425,27 +429,27 @@ BOOST_AUTO_TEST_CASE(auction_bidding)
 	string name = "x";
 
 	unsigned startTime = 0x776347e2;
-	m_evmHost->tx_context.block_timestamp = startTime;
+	m_evmcHost->tx_context.block_timestamp = startTime;
 
 	RegistrarInterface registrar(*this);
 	// initiate auction
 	registrar.setNextValue(8);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
+	BOOST_CHECK_EQUAL(registrar.owner(name), h160());
 	// overbid self
-	m_evmHost->tx_context.block_timestamp = startTime + m_biddingTime - 10;
+	m_evmcHost->tx_context.block_timestamp = startTime + m_biddingTime - 10;
 	registrar.setNextValue(12);
 	registrar.reserve(name);
 	// another bid by someone else
 	sendEther(account(1), 10 * ether);
 	m_sender = account(1);
-	m_evmHost->tx_context.block_timestamp = startTime + 2 * m_biddingTime - 50;
+	m_evmcHost->tx_context.block_timestamp = startTime + 2 * m_biddingTime - 50;
 	registrar.setNextValue(13);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
+	BOOST_CHECK_EQUAL(registrar.owner(name), h160());
 	// end auction by first bidder (which is not highest) trying to overbid again (too late)
 	m_sender = account(0);
-	m_evmHost->tx_context.block_timestamp = startTime + 4 * m_biddingTime;
+	m_evmcHost->tx_context.block_timestamp = startTime + 4 * m_biddingTime;
 	registrar.setNextValue(20);
 	registrar.reserve(name);
 	BOOST_CHECK_EQUAL(registrar.owner(name), account(1));

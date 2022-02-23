@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (28-56): Type too large for calldata.
+// TypeError 1534: (28-56): Type too large for calldata.

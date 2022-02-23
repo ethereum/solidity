@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file ConstantOptimiser.cpp
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -26,8 +27,6 @@
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/Assertions.h>
-#include <libsolutil/CommonData.h>
-#include <libsolutil/CommonIO.h>
 
 #include <vector>
 

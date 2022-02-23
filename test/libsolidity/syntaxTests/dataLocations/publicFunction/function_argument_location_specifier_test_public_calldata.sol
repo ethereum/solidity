@@ -2,4 +2,5 @@ contract test {
     function f(bytes calldata) public;
 }
 // ----
-// TypeError: (31-45): Data location must be "memory" for parameter in function, but "calldata" was given.
+// TypeError 3656: (0-56): Contract "test" should be marked as abstract.
+// TypeError 5424: (20-54): Functions without implementation must be marked virtual.

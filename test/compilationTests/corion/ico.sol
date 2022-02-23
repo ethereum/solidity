@@ -50,7 +50,7 @@ contract ico is safeMath {
     uint256 public totalMint;
     uint256 public totalPremiumMint;
 
-    constructor(address payable foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] memory genesisAddr, uint256[] memory genesisValue) public {
+    constructor(address payable foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] memory genesisAddr, uint256[] memory genesisValue) {
         /*
             Installation function.
 
@@ -65,7 +65,7 @@ contract ico is safeMath {
         icoExchangeRate = exchangeRate;
         icoExchangeRateSetBlock = block.number + exchangeRateDelay;
         icoEtcPriceAddr = priceSet;
-        owner = msg.sender;
+        owner = payable(msg.sender);
         if ( startBlockNum > 0 ) {
             require( startBlockNum >= block.number );
             startBlock = startBlockNum;
@@ -193,7 +193,7 @@ contract ico is safeMath {
 
     function setICOEthPrice(uint256 value) external {
         /*
-            Setting of the ICO ETC USD rates which can only be calle by a pre-defined address.
+            Setting of the ICO ETC USD rates which can only be called by a pre-defined address.
             After this function is completed till the call of the next function (which is at least an exchangeRateDelay array) this rate counts.
             With this process avoiding the sudden rate changes.
 
@@ -221,8 +221,8 @@ contract ico is safeMath {
         /*
             Closing the ICO.
             It is only possible when the ICO period passed and only by the owner.
-            The 96% of the whole amount of the token is generated to the address of the fundation.
-            Ethers which are situated in this contract will be sent to the address of the fundation.
+            The 96% of the whole amount of the token is generated to the address of the foundation.
+            Ethers which are situated in this contract will be sent to the address of the foundation.
         */
         require( msg.sender == owner );
         require( block.number > icoDelay );
@@ -272,7 +272,7 @@ contract ico is safeMath {
         require( brought[msg.sender].eth > 0 );
         uint256 _val = brought[msg.sender].eth * 90 / 100;
         delete brought[msg.sender];
-        require( msg.sender.send(_val) );
+        require( payable(msg.sender).send(_val) );
     }
 
     receive () external payable {
@@ -281,7 +281,7 @@ contract ico is safeMath {
             If they call the contract without any function then this process will be taken place.
         */
         require( isICO() );
-        require( buy(msg.sender, address(0x00)) );
+        require( buy(payable(msg.sender), address(0x00)) );
     }
 
     function buy(address payable beneficiaryAddress, address affilateAddress) public payable returns (bool success) {
@@ -300,7 +300,7 @@ contract ico is safeMath {
             @affilateAddress        The address of the person who offered who will get the referral reward. It can not be equal with the beneficiaryAddress.
         */
         require( isICO() );
-        if ( beneficiaryAddress == address(0x00)) { beneficiaryAddress = msg.sender; }
+        if ( beneficiaryAddress == address(0x00)) { beneficiaryAddress = payable(msg.sender); }
         if ( beneficiaryAddress == affilateAddress ) {
             affilateAddress = address(0x00);
         }

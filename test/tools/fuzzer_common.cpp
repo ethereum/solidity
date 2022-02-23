@@ -14,10 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/fuzzer_common.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/formal/ModelCheckerSettings.h>
 
 #include <libsolutil/JSON.h>
 
@@ -32,9 +35,10 @@
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::util;
 using namespace solidity::evmasm;
+using namespace solidity::frontend;
 using namespace solidity::langutil;
+using namespace solidity::util;
 
 static vector<EVMVersion> s_evmVersions = {
 	EVMVersion::homestead(),
@@ -60,7 +64,7 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 	config["settings"] = Json::objectValue;
 	config["settings"]["optimizer"] = Json::objectValue;
 	config["settings"]["optimizer"]["enabled"] = _optimize;
-	config["settings"]["optimizer"]["runs"] = 200;
+	config["settings"]["optimizer"]["runs"] = static_cast<int>(OptimiserSettings{}.expectedExecutionsPerDeployment);
 	config["settings"]["evmVersion"] = "berlin";
 
 	// Enable all SourceUnit-level outputs.
@@ -71,18 +75,48 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 	runCompiler(jsonCompactPrint(config), _quiet);
 }
 
-void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
+void FuzzerUtil::forceSMT(StringMap& _input)
+{
+	// Add SMT checker pragma if not already present in source
+	static auto constexpr smtPragma = "pragma experimental SMTChecker;";
+	for (auto &sourceUnit: _input)
+		if (sourceUnit.second.find(smtPragma) == string::npos)
+			sourceUnit.second += smtPragma;
+}
+
+void FuzzerUtil::testCompiler(
+	StringMap& _input,
+	bool _optimize,
+	unsigned _rand,
+	bool _forceSMT,
+	bool _compileViaYul
+)
 {
 	frontend::CompilerStack compiler;
-	EVMVersion evmVersion = s_evmVersions[_input.size() % s_evmVersions.size()];
+	EVMVersion evmVersion = s_evmVersions[_rand % s_evmVersions.size()];
 	frontend::OptimiserSettings optimiserSettings;
 	if (_optimize)
 		optimiserSettings = frontend::OptimiserSettings::standard();
 	else
 		optimiserSettings = frontend::OptimiserSettings::minimal();
-	compiler.setSources({{"", _input}});
+	if (_forceSMT)
+	{
+		forceSMT(_input);
+		compiler.setModelCheckerSettings({
+			frontend::ModelCheckerContracts::Default(),
+			/*divModWithSlacks*/true,
+			frontend::ModelCheckerEngine::All(),
+			frontend::ModelCheckerInvariants::All(),
+			/*showUnproved=*/false,
+			smtutil::SMTSolverChoice::All(),
+			frontend::ModelCheckerTargets::Default(),
+			/*timeout=*/1
+		});
+	}
+	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
+	compiler.enableIRGeneration(_compileViaYul);
 	try
 	{
 		compiler.compile();
@@ -94,6 +128,9 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
 	{
 	}
 	catch (UnimplementedFeatureError const&)
+	{
+	}
+	catch (StackTooDeepError const&)
 	{
 	}
 }
@@ -114,7 +151,7 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 	{
 		string msg{"Compiler produced invalid JSON output."};
 		cout << msg << endl;
-		throw std::runtime_error(std::move(msg));
+		BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 	}
 	if (output.isMember("errors"))
 		for (auto const& error: output["errors"])
@@ -127,7 +164,7 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 			{
 				string msg = "Invalid error: \"" + error["type"].asString() + "\"";
 				cout << msg << endl;
-				throw std::runtime_error(std::move(msg));
+				BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 			}
 		}
 }
@@ -156,7 +193,7 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 		assembly.append(n);
 	}
 	for (bool isCreation: {false, true})
-		for (unsigned runs: {1, 2, 3, 20, 40, 100, 200, 400, 1000})
+		for (unsigned runs: {1u, 2u, 3u, 20u, 40u, 100u, 200u, 400u, 1000u})
 		{
 			// Make a copy here so that each time we start with the original state.
 			Assembly tmp = assembly;

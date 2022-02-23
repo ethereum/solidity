@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Component that translates Solidity code into Yul at statement level and below.
  */
@@ -33,18 +34,48 @@ class IRGenerationContext;
 class YulUtilFunctions;
 
 /**
+ * Base class for the statement generator.
+ * Encapsulates access to the yul code stream and handles source code locations.
+ */
+class IRGeneratorForStatementsBase: public ASTConstVisitor
+{
+public:
+	IRGeneratorForStatementsBase(IRGenerationContext& _context):
+		m_context(_context)
+	{}
+
+	virtual std::string code() const;
+	std::ostringstream& appendCode(bool _addLocationComment = true);
+protected:
+	void setLocation(ASTNode const& _node);
+	langutil::SourceLocation m_currentLocation = {};
+	langutil::SourceLocation m_lastLocation = {};
+	IRGenerationContext& m_context;
+private:
+	std::ostringstream m_code;
+};
+
+/**
  * Component that translates Solidity's AST into Yul at statement level and below.
  * It is an AST visitor that appends to an internal string buffer.
  */
-class IRGeneratorForStatements: public ASTConstVisitor
+class IRGeneratorForStatements: public IRGeneratorForStatementsBase
 {
 public:
-	IRGeneratorForStatements(IRGenerationContext& _context, YulUtilFunctions& _utils):
-		m_context(_context),
+	IRGeneratorForStatements(
+		IRGenerationContext& _context,
+		YulUtilFunctions& _utils,
+		std::function<std::string()> _placeholderCallback = {}
+	):
+		IRGeneratorForStatementsBase(_context),
+		m_placeholderCallback(std::move(_placeholderCallback)),
 		m_utils(_utils)
 	{}
 
-	std::string code() const;
+	std::string code() const override;
+
+	/// Generate the code for the statements in the block;
+	void generate(Block const& _block);
 
 	/// Generates code to initialize the given state variable.
 	void initializeStateVar(VariableDeclaration const& _varDecl);
@@ -54,6 +85,22 @@ public:
 	/// Calculates expression's value and returns variable where it was stored
 	IRVariable evaluateExpression(Expression const& _expression, Type const& _to);
 
+	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
+	void define(IRVariable const& _var, IRVariable const& _value)
+	{
+		bool _declare = true;
+		declareAssign(_var, _value, _declare);
+	}
+
+	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
+	/// It also cleans the value of the variable.
+	void defineAndCleanup(IRVariable const& _var, IRVariable const& _value)
+	{
+		bool _forceCleanup = true;
+		bool _declare = true;
+		declareAssign(_var, _value, _declare, _forceCleanup);
+	}
+
 	/// @returns the name of a function that computes the value of the given constant
 	/// and also generates the function.
 	std::string constantValueFunction(VariableDeclaration const& _constant);
@@ -62,16 +109,20 @@ public:
 	bool visit(Conditional const& _conditional) override;
 	bool visit(Assignment const& _assignment) override;
 	bool visit(TupleExpression const& _tuple) override;
+	void endVisit(PlaceholderStatement const& _placeholder) override;
+	bool visit(Block const& _block) override;
+	void endVisit(Block const& _block) override;
 	bool visit(IfStatement const& _ifStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
 	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;
 	void endVisit(Return const& _return) override;
-	void endVisit(UnaryOperation const& _unaryOperation) override;
+	bool visit(UnaryOperation const& _unaryOperation) override;
 	bool visit(BinaryOperation const& _binOp) override;
 	void endVisit(FunctionCall const& _funCall) override;
 	void endVisit(FunctionCallOptions const& _funCallOptions) override;
+	bool visit(MemberAccess const& _memberAccess) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
 	void endVisit(IndexAccess const& _indexAccess) override;
@@ -85,14 +136,16 @@ public:
 private:
 	/// Handles all catch cases of a try statement, except the success-case.
 	void handleCatch(TryStatement const& _tryStatement);
-	void handleCatchStructuredAndFallback(
-		TryCatchClause const& _structured,
-		TryCatchClause const* _fallback
-	);
 	void handleCatchFallback(TryCatchClause const& _fallback);
 
-	/// Generates code to rethrow an exception.
-	void rethrow();
+	/// Generates code to revert with an error. The error arguments are assumed to
+	/// be already evaluated and available in local IRVariables, but not yet
+	/// converted.
+	void revertWithError(
+		std::string const& _signature,
+		std::vector<Type const*> const& _parameterTypes,
+		std::vector<ASTPointer<Expression const>> const& _errorArguments
+	);
 
 	void handleVariableReference(
 		VariableDeclaration const& _variable,
@@ -113,30 +166,40 @@ private:
 		std::vector<ASTPointer<Expression const>> const& _arguments
 	);
 
-	/// @returns code that evaluates to the first unused memory slot (which does not have to
-	/// be empty).
-	static std::string freeMemory();
+	/// Requests and assigns the internal ID of the referenced function to the referencing
+	/// expression and adds the function to the internal dispatch.
+	/// If the function is called right away, it does nothing.
+	void assignInternalFunctionIDIfNotCalledDirectly(
+		Expression const& _expression,
+		FunctionDefinition const& _referencedFunction
+	);
 
 	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
-	/// converted to type @a _to.
 	IRVariable convert(IRVariable const& _variable, Type const& _to);
+
+	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
+	/// It also cleans the value of the variable.
+	IRVariable convertAndCleanup(IRVariable const& _from, Type const& _to);
 
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
-	/// If @a _forceCleanup is set to true, it also cleans the value, in case it already has type @a _to.
-	std::string expressionAsType(Expression const& _expression, Type const& _to, bool _forceCleanup = false);
+	std::string expressionAsType(Expression const& _expression, Type const& _to);
+
+	/// @returns a Yul expression representing the current value of @a _expression,
+	/// converted to type @a _to if it does not yet have that type.
+	/// It also cleans the value, in case it already has type @a _to.
+	std::string expressionAsCleanedType(Expression const& _expression, Type const& _to);
 
 	/// @returns an output stream that can be used to define @a _var using a function call or
 	/// single stack slot expression.
 	std::ostream& define(IRVariable const& _var);
-	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
-	void define(IRVariable const& _var, IRVariable const& _value) { declareAssign(_var, _value, true); }
+
 	/// Assigns @a _var to the value of @a _value while performing type conversions, if required.
 	void assign(IRVariable const& _var, IRVariable const& _value) { declareAssign(_var, _value, false); }
 	/// Declares variable @a _var.
 	void declare(IRVariable const& _var);
 
-	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define);
+	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define, bool _forceCleanup = false);
 
 	/// @returns an IRVariable with the zero
 	/// value of @a _type.
@@ -177,8 +240,9 @@ private:
 
 	static Type const& type(Expression const& _expression);
 
-	std::ostringstream m_code;
-	IRGenerationContext& m_context;
+	std::string linkerSymbol(ContractDefinition const& _library) const;
+
+	std::function<std::string()> m_placeholderCallback;
 	YulUtilFunctions& m_utils;
 	std::optional<IRLValue> m_currentLValue;
 };

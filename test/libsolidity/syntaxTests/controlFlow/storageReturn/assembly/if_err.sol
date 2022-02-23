@@ -3,9 +3,9 @@ contract C {
     S s;
     function f(bool flag) internal pure returns (S storage c) {
         assembly {
-            if flag { c_slot := s_slot }
+            if flag { c.slot := s.slot }
         }
     }
 }
 // ----
-// TypeError: (96-107): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (96-107): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.

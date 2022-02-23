@@ -14,22 +14,32 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <fstream>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
-#include <test/tools/fuzzer_common.h>
 #include <test/tools/ossfuzz/protoToYul.h>
-#include <src/libfuzzer/libfuzzer_macro.h>
+
+#include <test/tools/fuzzer_common.h>
+
+#include <test/libyul/YulOptimizerTestCommon.h>
 
 #include <libyul/AssemblyStack.h>
-#include <liblangutil/EVMVersion.h>
 #include <libyul/Exceptions.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
+#include <liblangutil/DebugInfoSelection.h>
+#include <liblangutil/EVMVersion.h>
+
+#include <src/libfuzzer/libfuzzer_macro.h>
+
 using namespace solidity;
-using namespace solidity::yul;
-using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::yul::test::yul_fuzzer;
 using namespace std;
 
 DEFINE_PROTO_FUZZER(Program const& _input)
@@ -43,7 +53,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_DUMP_PATH=x.yul ./a.out proto-input
 		ofstream of(dump_path);
-		of.write(yul_source.data(), yul_source.size());
+		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
 	}
 
 	if (yul_source.size() > 1200)
@@ -55,18 +65,25 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	AssemblyStack stack(
 		version,
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		DebugInfoSelection::All()
 	);
 
 	// Parse protobuf mutated YUL code
-	if (!stack.parseAndAnalyze("source", yul_source))
-		return;
-
-	yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
-
-	if (!stack.parserResult()->code || !stack.parserResult()->analysisInfo)
-		return;
+	if (
+		!stack.parseAndAnalyze("source", yul_source) ||
+		!stack.parserResult()->code ||
+		!stack.parserResult()->analysisInfo ||
+		Error::containsErrors(stack.errors())
+	)
+		yulAssert(false, "Proto fuzzer generated malformed program");
 
 	// Optimize
-	stack.optimize();
+	YulOptimizerTestCommon optimizerTest(
+		stack.parserResult(),
+		EVMDialect::strictAssemblyForEVMObjects(version)
+	);
+	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
+	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	yulAssert(astBlock != nullptr, "Optimiser error.");
 }

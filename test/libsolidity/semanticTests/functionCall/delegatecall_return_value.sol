@@ -22,17 +22,17 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // ----
 // get() -> 0x00
 // assert0_delegated() -> 0x01, 0x40, 0x0
 // get_delegated() -> 0x01, 0x40, 0x20, 0x0
 // set(uint256): 0x01 ->
 // get() -> 0x01
-// assert0_delegated() -> 0x00, 0x40, 0x0
+// assert0_delegated() -> 0x00, 0x40, 0x24, 0x4e487b7100000000000000000000000000000000000000000000000000000000, 0x0100000000000000000000000000000000000000000000000000000000
 // get_delegated() -> 0x01, 0x40, 0x20, 0x1
 // set(uint256): 0x2a ->
 // get() -> 0x2a
-// assert0_delegated() -> 0x00, 0x40, 0x0
+// assert0_delegated() -> 0x00, 0x40, 0x24, 0x4e487b7100000000000000000000000000000000000000000000000000000000, 0x0100000000000000000000000000000000000000000000000000000000
 // get_delegated() -> 0x01, 0x40, 0x20, 0x2a

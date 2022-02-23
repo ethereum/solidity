@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: (50-55): Identifier not found or not unique.
+// DeclarationError 7920: (50-55): Identifier not found or not unique.

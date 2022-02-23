@@ -31,13 +31,18 @@ add_executable(isoltest
 	../libsolidity/ABIJsonTest.cpp
 	../libsolidity/ASTJSONTest.cpp
 	../libsolidity/SMTCheckerTest.cpp
-	../libsolidity/SMTCheckerJSONTest.cpp
 	../libyul/Common.cpp
+	../libyul/ControlFlowGraphTest.cpp
+	../libyul/ControlFlowSideEffectsTest.cpp
+	../libyul/EVMCodeTransformTest.cpp
 	../libyul/EwasmTranslationTest.cpp
 	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/SyntaxTest.cpp
+	../libyul/StackLayoutGeneratorTest.cpp
 	../libyul/YulOptimizerTest.cpp
+	../libyul/YulOptimizerTestCommon.cpp
 	../libyul/YulInterpreterTest.cpp
 )
-target_link_libraries(isoltest PRIVATE evmc libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework)
+target_compile_definitions(isoltest PRIVATE ISOLTEST)
+target_link_libraries(isoltest PRIVATE evmc libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework Threads::Threads)

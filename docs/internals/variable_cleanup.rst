@@ -14,7 +14,12 @@ hashes or sent as the data of a message call.  Similarly, before
 storing a value in the storage, the remaining bits need to be cleaned
 because otherwise the garbled value can be observed.
 
-On the other hand, we do not clean the bits if the immediately
+Note that access via inline assembly is not considered such an operation:
+If you use inline assembly to access Solidity variables
+shorter than 256 bits, the compiler does not guarantee that
+the value is properly cleaned up.
+
+Moreover, we do not clean the bits if the immediately
 following operation is not affected.  For instance, since any non-zero
 value is considered ``true`` by ``JUMPI`` instruction, we do not clean
 the boolean values before they are used as the condition for

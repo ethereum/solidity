@@ -16,6 +16,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // test1() -> left(0x26121ff0), left(0xe420264a), left(0x26121ff0), left(0xe420264a)

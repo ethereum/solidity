@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -37,7 +38,7 @@ void Compiler::compileContract(
 {
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimiserSettings);
 	runtimeCompiler.compileContract(_contract, _otherCompilers);
-	m_runtimeContext.appendAuxiliaryData(_metadata);
+	m_runtimeContext.appendToAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
@@ -50,17 +51,12 @@ void Compiler::compileContract(
 
 	m_context.optimise(m_optimiserSettings);
 
-	solAssert(m_context.requestedYulFunctionsRan(), "requestedYulFunctions() was not called.");
-	solAssert(m_runtimeContext.requestedYulFunctionsRan(), "requestedYulFunctions() was not called.");
+	solAssert(m_context.appendYulUtilityFunctionsRan(), "appendYulUtilityFunctions() was not called.");
+	solAssert(m_runtimeContext.appendYulUtilityFunctionsRan(), "appendYulUtilityFunctions() was not called.");
 }
 
 std::shared_ptr<evmasm::Assembly> Compiler::runtimeAssemblyPtr() const
 {
 	solAssert(m_context.runtimeContext(), "");
 	return m_context.runtimeContext()->assemblyPtr();
-}
-
-evmasm::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const
-{
-	return m_runtimeContext.functionEntryLabelIfExists(_function);
 }

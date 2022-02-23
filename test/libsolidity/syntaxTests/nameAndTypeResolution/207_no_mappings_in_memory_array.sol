@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (47-77): Data location must be "storage" for variable, but "memory" was given.
+// TypeError 4061: (47-77): Type mapping(uint256 => uint256)[] is only valid in storage because it contains a (nested) mapping.

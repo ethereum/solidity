@@ -8,16 +8,15 @@
     ]
   },
   "id": 11,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 10,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         10
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -34,8 +34,8 @@
           "id": 3,
           "mutability": "immutable",
           "name": "a",
+          "nameLocation": "39:1:1",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 10,
           "src": "17:27:1",
           "stateVariable": true,
@@ -59,7 +59,6 @@
           },
           "value":
           {
-            "argumentTypes": null,
             "hexValue": "34",
             "id": 2,
             "isConstant": false,
@@ -69,7 +68,6 @@
             "lValueRequested": false,
             "nodeType": "Literal",
             "src": "43:1:1",
-            "subdenomination": null,
             "typeDescriptions":
             {
               "typeIdentifier": "t_rational_4_by_1",
@@ -85,8 +83,8 @@
           "id": 6,
           "mutability": "constant",
           "name": "b",
+          "nameLocation": "71:1:1",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 10,
           "src": "50:26:1",
           "stateVariable": true,
@@ -110,7 +108,6 @@
           },
           "value":
           {
-            "argumentTypes": null,
             "hexValue": "32",
             "id": 5,
             "isConstant": false,
@@ -120,7 +117,6 @@
             "lValueRequested": false,
             "nodeType": "Literal",
             "src": "75:1:1",
-            "subdenomination": null,
             "typeDescriptions":
             {
               "typeIdentifier": "t_rational_2_by_1",
@@ -136,8 +132,8 @@
           "id": 9,
           "mutability": "mutable",
           "name": "c",
+          "nameLocation": "94:1:1",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 10,
           "src": "82:17:1",
           "stateVariable": true,
@@ -161,7 +157,6 @@
           },
           "value":
           {
-            "argumentTypes": null,
             "hexValue": "33",
             "id": 8,
             "isConstant": false,
@@ -171,7 +166,6 @@
             "lValueRequested": false,
             "nodeType": "Literal",
             "src": "98:1:1",
-            "subdenomination": null,
             "typeDescriptions":
             {
               "typeIdentifier": "t_rational_3_by_1",
@@ -183,7 +177,8 @@
         }
       ],
       "scope": 11,
-      "src": "0:102:1"
+      "src": "0:102:1",
+      "usedErrors": []
     }
   ],
   "src": "0:103:1"

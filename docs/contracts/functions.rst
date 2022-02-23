@@ -6,6 +6,41 @@
 Fonctions
 *********
 
+Functions can be defined inside and outside of contracts.
+
+Functions outside of a contract, also called "free functions", always have implicit ``internal``
+:ref:`visibility<visibility-and-getters>`. Their code is included in all contracts
+that call them, similar to internal library functions.
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.7.1 <0.9.0;
+
+    function sum(uint[] memory _arr) pure returns (uint s) {
+        for (uint i = 0; i < _arr.length; i++)
+            s += _arr[i];
+    }
+
+    contract ArrayExample {
+        bool found;
+        function f(uint[] memory _arr) public {
+            // This calls the free function internally.
+            // The compiler will add its code to the contract.
+            uint s = sum(_arr);
+            require(s >= 10);
+            found = true;
+        }
+    }
+
+.. note::
+    Functions defined outside a contract are still always executed
+    in the context of a contract. They still have access to the variable ``this``,
+    can call other contracts, send them Ether and destroy the contract that called them,
+    among other things. The main difference to functions defined inside a contract
+    is that free functions do not have direct access to storage variables and functions
+    not in their scope.
+
 .. _function-parameters-return-variables:
 
 Function Parameters and Return Variables
@@ -21,10 +56,12 @@ Function parameters are declared the same way as variables, and the name of
 unused parameters can be omitted.
 
 For example, if you want your contract to accept one kind of external call
-with two integers, you would use something like the following::
+with two integers, you would use something like the following:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
         uint sum;
@@ -39,8 +76,8 @@ Function parameters can be used as any other local variable and they can also be
 
   An :ref:`external function<external-function-calls>` cannot accept a
   multi-dimensional array as an input
-  parameter. This functionality is possible if you enable the new
-  ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
+  parameter. This functionality is possible if you enable the ABI coder v2
+  by adding ``pragma abicoder v2;`` to your source file.
 
   An :ref:`internal function<external-function-calls>` can accept a
   multi-dimensional array without enabling the feature.
@@ -54,10 +91,12 @@ Function return variables are declared with the same syntax after the
 ``returns`` keyword.
 
 For example, suppose you want to return two results: the sum and the product of
-two integers passed as function parameters, then you use something like::
+two integers passed as function parameters, then you use something like:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -76,13 +115,15 @@ are initialized with their :ref:`default value <default-value>` and have that
 value until they are (re-)assigned.
 
 You can either explicitly assign to return variables and
-then leave the function using ``return;``,
+then leave the function as above,
 or you can provide return values
 (either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
-statement::
+statement:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -94,14 +135,14 @@ statement::
         }
     }
 
-This form is equivalent to first assigning values to the
-return variables and then using ``return;`` to leave the function.
+If you use an early ``return`` to leave a function that has return variables,
+you must provide return values together with the return statement.
 
 .. note::
     You cannot return some types from non-internal functions, notably
     multi-dimensional dynamic arrays and structs. If you enable the
-    new ``ABIEncoderV2`` feature by adding ``pragma experimental
-    ABIEncoderV2;`` to your source file then more types are available, but
+    ABI coder v2 by adding ``pragma abicoder v2;``
+    to your source file then more types are available, but
     ``mapping`` types are still limited to inside a single contract and you
     cannot transfer them.
 
@@ -114,12 +155,22 @@ When a function has multiple return types, the statement ``return (v0, v1, ..., 
 The number of components must be the same as the number of return variables
 and their types have to match, potentially after an :ref:`implicit conversion <types-conversion-elementary-types>`.
 
+.. _state-mutability:
+
+State Mutability
+================
+
 .. index:: ! view function, function;view
 
 .. _view-functions:
 
+<<<<<<< HEAD
 Fonctions View
 ==============
+=======
+View Functions
+--------------
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 Les fonctions peuvent être déclarées ``view``, auquel cas elles promettent de ne pas modifier l'état.
 
@@ -138,14 +189,14 @@ Les déclarations suivantes sont considérées comme une modification de l'état
 #. Utilisation d'appels bas niveau.
 #. Utilisation d'assembleur inline qui contient certains opcodes.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.9.0;
 
     contract C {
         function f(uint a, uint b) public view returns (uint) {
-            return a * (b + 42) + now;
+            return a * (b + 42) + block.timestamp;
         }
     }
 
@@ -167,10 +218,20 @@ Les déclarations suivantes sont considérées comme une modification de l'état
 
 .. _pure-functions:
 
+<<<<<<< HEAD
 Fonctions Pure
 ==============
 
 Les fonctions peuvent être déclarées ``pures``, auquel cas elles promettent de ne pas lire ou modifier l'état.
+=======
+Pure Functions
+--------------
+
+Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
+In particular, it should be possible to evaluate a ``pure`` function at compile-time given
+only its inputs and ``msg.data``, but without any knowledge of the current blockchain state.
+This means that reading from ``immutable`` variables can be a non-pure operation.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 .. note::
   Si la cible EVM du compilateur est Byzantium ou plus récente (par défaut), on utilise l'opcode ``STATICCALL``, ce qui ne garantit pas que l'état ne soit pas lu, mais au moins qu'il ne soit pas modifié.
@@ -183,10 +244,10 @@ En plus de la liste des modificateurs d'état expliqués ci-dessus, sont consid�
 #. Appeler une fonction qui n'est pas marquée ``pure``.
 #. Utilisation d'assembleur inline qui contient certains opcodes.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.9.0;
 
     contract C {
         function f(uint a, uint b) public pure returns (uint) {
@@ -206,18 +267,26 @@ En plus de la liste des modificateurs d'état expliqués ci-dessus, sont consid�
   Avant la version 0.4.17, le compilateur n'appliquait pas le fait que ``pure`` ne lisait pas l'état.
   Il s'agit d'un contrôle de type à la compilation, qui peut être contourné en effectuant des conversions explicites invalides entre les types de contrats, parce que le compilateur peut vérifier que le type de contrat ne fait pas d'opérations de changement d'état, mais il ne peut pas vérifier que le contrat qui sera appelé à l'exécution est effectivement de ce type.
 
+.. _special-functions:
+
+Special Functions
+=================
+
 .. index:: ! receive ether function, function;receive ! receive
 
 .. _receive-ether-function:
 
 Receive Ether Function
-======================
+----------------------
 
 A contract can have at most one ``receive`` function, declared using
 ``receive() external payable { ... }``
 (without the ``function`` keyword).
 This function cannot have arguments, cannot return anything and must have
-``external`` visibility and ``payable`` state mutability. It is executed on a
+``external`` visibility and ``payable`` state mutability.
+It can be virtual, can override and can have modifiers.
+
+The receive function is executed on a
 call to the contract with empty calldata. This is the function that is executed
 on plain Ether transfers (e.g. via ``.send()`` or ``.transfer()``). If no such
 function exists, but a payable :ref:`fallback function <fallback-function>`
@@ -226,7 +295,7 @@ neither a receive Ether nor a payable fallback function is present, the
 contract cannot receive Ether through regular transactions and throws an
 exception.
 
-In the worst case, the fallback function can only rely on 2300 gas being
+In the worst case, the ``receive`` function can only rely on 2300 gas being
 available (for example when ``send`` or ``transfer`` is used), leaving little
 room to perform other operations except basic logging. The following operations
 will consume more gas than the 2300 gas stipend:
@@ -260,10 +329,10 @@ will consume more gas than the 2300 gas stipend:
 
 Below you can see an example of a Sink contract that uses function ``receive``.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.6.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     // This contract keeps all Ether sent to it with no way
     // to get it back.
@@ -278,6 +347,7 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 
 .. _fallback-function:
 
+<<<<<<< HEAD
 Fonction de repli
 =================
 
@@ -286,6 +356,31 @@ Elle est exécutée lors d'un appel au contrat si aucune des autres fonctions ne
 
 En outre, cette fonction est exécutée chaque fois que le contrat reçoit des Ethers bruts (sans données). De plus, pour recevoir des Ethers, la fonction de fallback doit être marquée ``payable``. En l'absence d'une telle fonction, le contrat ne peut recevoir
 d'Ether par des transactions traditionnelles.
+=======
+Fallback Function
+-----------------
+
+A contract can have at most one ``fallback`` function, declared using either ``fallback () external [payable]``
+or ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
+(both without the ``function`` keyword).
+This function must have ``external`` visibility. A fallback function can be virtual, can override
+and can have modifiers.
+
+The fallback function is executed on a call to the contract if none of the other
+functions match the given function signature, or if no data was supplied at
+all and there is no :ref:`receive Ether function <receive-ether-function>`.
+The fallback function always receives data, but in order to also receive Ether
+it must be marked ``payable``.
+
+If the version with parameters is used, ``_input`` will contain the full data sent to the contract
+(equal to ``msg.data``) and can return data in ``_output``. The returned data will not be
+ABI-encoded. Instead it will be returned without modifications (not even padding).
+
+In the worst case, if a payable fallback function is also used in
+place of a receive function, it can only rely on 2300 gas being
+available (see :ref:`receive Ether function <receive-ether-function>`
+for a brief description of the implications of this).
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 Dans le pire des cas, la fonction de fallback ne peut compter que sur la disponibilité de 2 300 gas (par exemple lorsque l'on utilise `send` ou `transfer`), ce qui laisse peu de place pour effectuer d'autres opérations que du log basique. Les opérations suivantes
 consommeront plus de gaz que le forfait de 2 300 gas alloué :
@@ -298,6 +393,7 @@ consommeront plus de gaz que le forfait de 2 300 gas alloué :
 Comme toute fonction, la fonction de fallback peut exécuter des opérations complexes tant que suffisamment de gas lui est transmis.
 
 .. note::
+<<<<<<< HEAD
     Même si la fonction de fallback ne peut pas avoir d'arguments, on peut toujours utiliser ``msg.data`` pour récupérer toute charge utile fournie avec l'appel.
 
 .. avertissement::
@@ -313,24 +409,35 @@ Comme toute fonction, la fonction de fallback peut exécuter des opérations com
 
     Cela signifie également que ``address(this).balance`` peut être plus élevé que la somme de certaines comptabilités manuelles implémentées dans un contrat (i.e. avoir un compteur mis à jour dans la fonction fallback).
 
+=======
+    If you want to decode the input data, you can check the first four bytes
+    for the function selector and then
+    you can use ``abi.decode`` together with the array slice syntax to
+    decode ABI-encoded data:
+    ``(c, d) = abi.decode(_input[4:], (uint256, uint256));``
+    Note that this should only be used as a last resort and
+    proper functions should be used instead.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.7.0;
+    pragma solidity >=0.6.2 <0.9.0;
 
     contract Test {
+        uint x;
         // This function is called for all messages sent to
         // this contract (there is no other function).
         // Sending Ether to this contract will cause an exception,
         // because the fallback function does not have the `payable`
         // modifier.
         fallback() external { x = 1; }
-        uint x;
     }
 
     contract TestPayable {
+        uint x;
+        uint y;
         // This function is called for all messages sent to
         // this contract, except plain Ether transfers
         // (there is no other function except the receive function).
@@ -341,8 +448,6 @@ Comme toute fonction, la fonction de fallback peut exécuter des opérations com
         // This function is called for plain Ether transfers, i.e.
         // for every call with empty calldata.
         receive() external payable { x = 2; y = msg.value; }
-        uint x;
-        uint y;
     }
 
     contract Caller {
@@ -370,8 +475,13 @@ Comme toute fonction, la fonction de fallback peut exécuter des opérations com
             // results in test.x becoming == 1 and test.y becoming 1.
 
             // If someone sends Ether to that contract, the receive function in TestPayable will be called.
-            require(address(test).send(2 ether));
+            // Since that function writes to storage, it takes more gas than is available with a
+            // simple ``send`` or ``transfer``. Because of that, we have to use a low-level call.
+            (success,) = address(test).call{value: 2 ether}("");
+            require(success);
             // results in test.x becoming == 2 and test.y becoming 2 ether.
+
+            return true;
         }
     }
 
@@ -386,10 +496,10 @@ Un contrat peut avoir plusieurs fonctions du même nom, mais avec des types de p
 Ce processus est appelé "surcharge" et s'applique également aux fonctions héritées.
 L'exemple suivant montre la surcharge de la fonction ``f`` dans le champ d'application du contrat ``A``.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
         function f(uint _in) public pure returns (uint out) {
@@ -404,10 +514,10 @@ L'exemple suivant montre la surcharge de la fonction ``f`` dans le champ d'appli
 
 Des fonctions surchargées sont également présentes dans l'interface externe. C'est une erreur si deux fonctions visibles de l'extérieur diffèrent par leur type Solidity (ici `A` et `B`) mais pas par leur type extérieur (ici ``address``).
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     // Ceci ne compile pas
     contract A {
@@ -434,10 +544,10 @@ Les fonctions surchargées sont sélectionnées en faisant correspondre les déc
 .. note::
     Le type des valeurs retournées par la fonction n'est pas pris en compte dans la résolution des surcharges.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
         function f(uint8 _in) public pure returns (uint8 out) {

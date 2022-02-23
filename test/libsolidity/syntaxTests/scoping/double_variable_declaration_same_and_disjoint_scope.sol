@@ -6,5 +6,5 @@ contract test {
     }
 }
 // ----
-// Warning: (73-79): This declaration shadows an existing declaration.
-// DeclarationError: (91-97): Identifier already declared.
+// DeclarationError 2333: (91-97): Identifier already declared.
+// Warning 2519: (73-79): This declaration shadows an existing declaration.

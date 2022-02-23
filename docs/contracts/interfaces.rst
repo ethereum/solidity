@@ -6,12 +6,14 @@
 Interfaces
 **********
 
-Interfaces are similar to abstract contracts, but they cannot have any functions implemented. There are further restrictions:
+Interfaces are similar to abstract contracts, but they cannot have any functions implemented.
+There are further restrictions:
 
 - They cannot inherit from other contracts, but they can inherit from other interfaces.
 - All declared functions must be external.
 - They cannot declare a constructor.
 - They cannot declare state variables.
+- They cannot declare modifiers.
 
 Some of these restrictions might be lifted in the future.
 
@@ -20,10 +22,10 @@ an interface should be possible without any information loss.
 
 Interfaces are denoted by their own keyword:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.7.0;
+    pragma solidity >=0.6.2 <0.9.0;
 
     interface Token {
         enum TokenType { Fungible, NonFungible }
@@ -33,18 +35,18 @@ Interfaces are denoted by their own keyword:
 
 Contracts can inherit interfaces as they would inherit other contracts.
 
-All functions declared in interfaces are implicitly ``virtual``, which means that
-they can be overridden. This does not automatically mean that an overriding function
-can be overridden again - this is only possible if the overriding
-function is marked ``virtual``.
+All functions declared in interfaces are implicitly ``virtual`` and any
+functions that override them do not need the ``override`` keyword.
+This does not automatically mean that an overriding function can be overridden again -
+this is only possible if the overriding function is marked ``virtual``.
 
 Interfaces can inherit from other interfaces. This has the same rules as normal
 inheritance.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.7.0;
+    pragma solidity >=0.6.2 <0.9.0;
 
     interface ParentA {
         function test() external returns (uint256);

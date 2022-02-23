@@ -7,4 +7,4 @@ contract E is D {
 	receive() external payable {}
 }
 // ----
-// TypeError: (93-122): Overriding function is missing "override" specifier.
+// TypeError 9456: (93-122): Overriding function is missing "override" specifier.

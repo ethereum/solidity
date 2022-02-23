@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Liana <liana@ethdev.com>
  * @date 2015
@@ -22,20 +23,35 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 
-Error::Error(Type _type, SourceLocation const& _location, string const& _description):
+Error::Error(
+	ErrorId _errorId, Error::Type _type,
+	std::string const& _description,
+	SourceLocation const& _location,
+	SecondarySourceLocation const& _secondaryLocation
+):
+	m_errorId(_errorId),
 	m_type(_type)
 {
 	switch (m_type)
 	{
+	case Type::CodeGenerationError:
+		m_typeName = "CodeGenerationError";
+		break;
 	case Type::DeclarationError:
 		m_typeName = "DeclarationError";
 		break;
 	case Type::DocstringParsingError:
 		m_typeName = "DocstringParsingError";
+		break;
+	case Type::Info:
+		m_typeName = "Info";
 		break;
 	case Type::ParserError:
 		m_typeName = "ParserError";
@@ -53,14 +69,30 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 
 	if (_location.isValid())
 		*this << errinfo_sourceLocation(_location);
+	if (!_secondaryLocation.infos.empty())
+		*this << errinfo_secondarySourceLocation(_secondaryLocation);
 	if (!_description.empty())
 		*this << util::errinfo_comment(_description);
 }
 
-Error::Error(Error::Type _type, std::string const& _description, SourceLocation const& _location):
-	Error(_type)
+SourceLocation const* Error::sourceLocation() const noexcept
 {
-	if (_location.isValid())
-		*this << errinfo_sourceLocation(_location);
-	*this << util::errinfo_comment(_description);
+	return boost::get_error_info<errinfo_sourceLocation>(*this);
+}
+
+SecondarySourceLocation const* Error::secondarySourceLocation() const noexcept
+{
+	return boost::get_error_info<errinfo_secondarySourceLocation>(*this);
+}
+
+optional<Error::Severity> Error::severityFromString(string _input)
+{
+	boost::algorithm::to_lower(_input);
+	boost::algorithm::trim(_input);
+
+	for (Severity severity: {Severity::Error, Severity::Warning, Severity::Info})
+		if (_input == formatErrorSeverityLowercase(severity))
+			return severity;
+
+	return nullopt;
 }

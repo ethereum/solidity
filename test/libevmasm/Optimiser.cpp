@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -24,12 +25,15 @@
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>
+#include <libevmasm/Inliner.h>
 #include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/Assembly.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <range/v3/algorithm/any_of.hpp>
 
 #include <string>
 #include <tuple>
@@ -65,7 +69,9 @@ namespace
 	{
 		AssemblyItems input = addDummyLocations(_input);
 
-		bool usesMsize = (find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
+		bool usesMsize = ranges::any_of(_input, [](AssemblyItem const& _i) {
+			return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+		});
 		evmasm::CommonSubexpressionEliminator cse(_state);
 		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
@@ -84,6 +90,45 @@ namespace
 	)
 	{
 		AssemblyItems output = CSE(_input, _state);
+		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
+	}
+
+	/// In contrast to the function `CSE`, this function doesn't finish the CSE optimization on an
+	/// instruction that breaks CSE Analysis block. Copied from Assembly.cpp
+	AssemblyItems fullCSE(AssemblyItems const& _input)
+	{
+		AssemblyItems optimisedItems;
+
+		bool usesMSize = ranges::any_of(_input, [](AssemblyItem const& _i) {
+			return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+		});
+
+		auto iter = _input.begin();
+		while (iter != _input.end())
+		{
+			KnownState emptyState;
+			CommonSubexpressionEliminator eliminator{emptyState};
+			auto orig = iter;
+			iter = eliminator.feedItems(iter, _input.end(), usesMSize);
+			bool shouldReplace = false;
+			AssemblyItems optimisedChunk;
+			optimisedChunk = eliminator.getOptimizedItems();
+			shouldReplace = (optimisedChunk.size() < static_cast<size_t>(iter - orig));
+			if (shouldReplace)
+				optimisedItems += optimisedChunk;
+			else
+				copy(orig, iter, back_inserter(optimisedItems));
+		}
+
+		return optimisedItems;
+	}
+
+	void checkFullCSE(
+		AssemblyItems const& _input,
+		AssemblyItems const& _expectation
+	)
+	{
+		AssemblyItems output = fullCSE(_input);
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
@@ -826,8 +871,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 		Instruction::JUMP,
 		AssemblyItem(Tag, 3)
 	};
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 
 	set<u256> pushTags;
 	for (AssemblyItem const& item: input)
@@ -857,8 +902,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_same)
 		AssemblyItem(PushTag, 1),
 		AssemblyItem(PushTag, 1),
 	} + blocks;
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
 }
 
@@ -876,8 +921,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_value)
 		AssemblyItem{AssignImmutable, 0x1234},
 		Instruction::JUMP
 	};
-	BlockDeduplicator dedup(input);
-	BOOST_CHECK(!dedup.deduplicate());
+	BlockDeduplicator deduplicator(input);
+	BOOST_CHECK(!deduplicator.deduplicate());
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
@@ -894,8 +939,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
 		AssemblyItem{AssignImmutable, 0xABCD},
 		Instruction::JUMP
 	};
-	BlockDeduplicator dedup(input);
-	BOOST_CHECK(!dedup.deduplicate());
+	BlockDeduplicator deduplicator(input);
+	BOOST_CHECK(!deduplicator.deduplicate());
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
@@ -920,8 +965,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 		AssemblyItem(PushTag, 2),
 		Instruction::JUMP,
 	};
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 
 	set<u256> pushTags;
 	for (AssemblyItem const& item: input)
@@ -1227,12 +1272,23 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	sub->append(t4.pushTag());
 	sub->append(Instruction::JUMP);
 
-	size_t subId = size_t(main.appendSubroutine(sub).data());
+	size_t subId = static_cast<size_t>(main.appendSubroutine(sub).data());
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
 
-	main.optimise(true, solidity::test::CommonOptions::get().evmVersion(), false, 200);
+	Assembly::OptimiserSettings settings;
+	settings.isCreation = false;
+	settings.runInliner = false;
+	settings.runJumpdestRemover = true;
+	settings.runPeephole = true;
+	settings.runDeduplicate = true;
+	settings.runCSE = true;
+	settings.runConstantOptimiser = true;
+	settings.evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	settings.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
+;
+	main.optimise(settings);
 
 	AssemblyItems expectationMain{
 		AssemblyItem(PushSubSize, 0),
@@ -1276,15 +1332,144 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 	});
 }
 
+BOOST_AUTO_TEST_CASE(cse_simple_verbatim)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{verbatim};
+	checkCSE(input, input);
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_mload_pop)
+{
+	AssemblyItems input{
+		u256(1000),
+		Instruction::MLOAD,
+		Instruction::POP,
+	};
+
+	AssemblyItems output{
+	};
+
+	checkCSE(input, output);
+	checkFullCSE(input, output);
+}
+
+BOOST_AUTO_TEST_CASE(cse_verbatim_mload)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(1000),
+		Instruction::MLOAD,	// Should not be removed
+		Instruction::POP,
+		verbatim,
+		u256(1000),
+		Instruction::MLOAD,	// Should not be removed
+		Instruction::POP,
+	};
+
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_sload_verbatim_dup)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+		u256(0),
+		Instruction::SLOAD,
+		verbatim
+	};
+
+	AssemblyItems output{
+		u256(0),
+		Instruction::SLOAD,
+		Instruction::DUP1,
+		verbatim
+	};
+
+	checkCSE(input, output);
+	checkFullCSE(input, output);
+}
+
+BOOST_AUTO_TEST_CASE(cse_verbatim_sload_sideeffect)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+		verbatim,
+		u256(0),
+		Instruction::SLOAD,
+	};
+
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_verbatim_eq)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+		verbatim,
+		Instruction::DUP1,
+		Instruction::EQ
+	};
+
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(verbatim_knownstate)
+{
+	KnownState state = createInitialState(AssemblyItems{
+			Instruction::DUP1,
+			Instruction::DUP2,
+			Instruction::DUP3,
+			Instruction::DUP4
+		});
+	map<int, unsigned> const& stackElements = state.stackElements();
+
+	BOOST_CHECK(state.stackHeight() == 4);
+	// One more than stack height because of the initial unknown element.
+	BOOST_CHECK(stackElements.size() == 5);
+	BOOST_CHECK(stackElements.count(0));
+	unsigned initialElement = stackElements.at(0);
+	// Check if all the DUPs were correctly matched to the same class.
+	for (auto const& height: {1, 2, 3, 4})
+		BOOST_CHECK(stackElements.at(height) == initialElement);
+
+	auto verbatim2i5o = AssemblyItem{bytes{1, 2, 3, 4, 5}, 2, 5};
+	state.feedItem(verbatim2i5o);
+
+	BOOST_CHECK(state.stackHeight() == 7);
+	// Stack elements
+	// Before verbatim: {{0, x}, {1, x}, {2, x}, {3, x}, {4, x}}
+	// After verbatim: {{0, x}, {1, x}, {2, x}, {3, a}, {4, b}, {5, c}, {6, d}, {7, e}}
+	BOOST_CHECK(stackElements.size() == 8);
+
+	for (auto const& height: {1, 2})
+		BOOST_CHECK(stackElements.at(height) == initialElement);
+
+	for (auto const& height: {3, 4, 5, 6, 7})
+		BOOST_CHECK(stackElements.at(height) != initialElement);
+
+	for (auto const& height1: {3, 4, 5, 6, 7})
+		for (auto const& height2: {3, 4, 5, 6, 7})
+			if (height1 < height2)
+				BOOST_CHECK(stackElements.at(height1) != stackElements.at(height2));
+}
+
 BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 {
 	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 
-	for (int i = 1; i < 256; i++)
+	for (unsigned i = 1; i < 256; i++)
 	{
 		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i)-1),
+			u256(boost::multiprecision::pow(u256(2), i) - 1),
 			Instruction::CALLVALUE,
 			u256(256-i),
 			Instruction::SHR,
@@ -1309,10 +1494,10 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 	}
 
 	// Check that opt. does NOT trigger
-	for (int i = 1; i < 255; i++)
+	for (unsigned i = 1; i < 255; i++)
 	{
 		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i)-1),
+			u256(boost::multiprecision::pow(u256(2), i) - 1),
 			Instruction::CALLVALUE,
 			u256(255-i),
 			Instruction::SHR,
@@ -1465,6 +1650,272 @@ BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 		Instruction::SHR
 	});
 }
+
+BOOST_AUTO_TEST_CASE(inliner)
+{
+	AssemblyItem jumpInto{Instruction::JUMP};
+	jumpInto.setJumpType(AssemblyItem::JumpType::IntoFunction);
+	AssemblyItem jumpOutOf{Instruction::JUMP};
+	jumpOutOf.setJumpType(AssemblyItem::JumpType::OutOfFunction);
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 2),
+		jumpInto,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		Instruction::CALLVALUE,
+		Instruction::SWAP1,
+		jumpOutOf,
+	};
+	AssemblyItems expectation{
+		AssemblyItem(PushTag, 1),
+		Instruction::CALLVALUE,
+		Instruction::SWAP1,
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		Instruction::CALLVALUE,
+		Instruction::SWAP1,
+		jumpOutOf,
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+
+BOOST_AUTO_TEST_CASE(inliner_no_inline_type)
+{
+	// Will not inline due to jump types.
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 2),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		Instruction::CALLVALUE,
+		Instruction::SWAP1,
+		Instruction::JUMP,
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		items.begin(), items.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_no_inline)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::CALLVALUE,
+		Instruction::JUMPI,
+		Instruction::JUMP,
+	};
+	AssemblyItems expectation{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::CALLVALUE,
+		Instruction::JUMPI,
+		Instruction::JUMP,
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+
+BOOST_AUTO_TEST_CASE(inliner_single_jump)
+{
+	AssemblyItem jumpInto{Instruction::JUMP};
+	jumpInto.setJumpType(AssemblyItem::JumpType::IntoFunction);
+	AssemblyItem jumpOutOf{Instruction::JUMP};
+	jumpOutOf.setJumpType(AssemblyItem::JumpType::OutOfFunction);
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 2),
+		jumpInto,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		jumpOutOf,
+	};
+	AssemblyItems expectation{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		jumpOutOf,
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_end_of_bytecode)
+{
+	AssemblyItem jumpInto{Instruction::JUMP};
+	jumpInto.setJumpType(AssemblyItem::JumpType::IntoFunction);
+	// Cannot inline, since the block at Tag_2 does not end in a jump.
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 2),
+		jumpInto,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		items.begin(), items.end()
+	);
+}
+
+
+BOOST_AUTO_TEST_CASE(inliner_cse_break)
+{
+	AssemblyItem jumpInto{Instruction::JUMP};
+	jumpInto.setJumpType(AssemblyItem::JumpType::IntoFunction);
+	AssemblyItem jumpOutOf{Instruction::JUMP};
+	jumpOutOf.setJumpType(AssemblyItem::JumpType::OutOfFunction);
+	// Could be inlined, but we only consider non-CSE-breaking blocks ending in JUMP so far.
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 2),
+		jumpInto,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		Instruction::STOP, // CSE breaking instruction
+		jumpOutOf
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		items.begin(), items.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_stop)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	AssemblyItems expectation{
+		Instruction::STOP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_stop_jumpi)
+{
+	// Because of `jumpi`, will not be inlined.
+	AssemblyItems items{
+		u256(1),
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	AssemblyItems expectation = items;
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_revert)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+	AssemblyItems expectation{
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT,
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_revert_increased_datagas)
+{
+	// Inlining this would increase data gas (5 bytes v/s 4 bytes), therefore, skipped.
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(0),
+		u256(0),
+		Instruction::REVERT
+	};
+
+	AssemblyItems expectation = items;
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_invalid)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::INVALID
+	};
+
+	AssemblyItems expectation = {
+		Instruction::INVALID,
+		AssemblyItem(Tag, 1),
+		Instruction::INVALID
+	};
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

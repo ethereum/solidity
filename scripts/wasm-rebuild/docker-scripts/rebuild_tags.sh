@@ -38,12 +38,13 @@ ORANGE='\033[0;33m'
 CYAN='\033[0;36m'
 RESET='\033[0m'
 
-function generate_bytecode_report() {
+function generate_bytecode_report
+{
   rm -rf /tmp/report.txt
 
   local EXIT_STATUS
 
-  if semver -r "<0.4.12" $3 > /dev/null; then
+  if semver -r "<0.4.12" "$3" > /dev/null; then
     set +e
     "${SCRIPTDIR}/genbytecode.sh" "$1" >/dev/null 2>&1
     EXIT_STATUS=$?
@@ -74,7 +75,8 @@ function generate_bytecode_report() {
     echo -e "${RED}FAILURE${RESET}"
   fi
 }
-function clean_git_checkout() {
+function clean_git_checkout
+{
   git submodule deinit --all -q
   git reset --hard HEAD --quiet
   git clean -f -d -x --quiet
@@ -82,12 +84,13 @@ function clean_git_checkout() {
   git submodule init -q
   git submodule update -q
 }
-function process_tag() {
+function process_tag
+{
   local TAG=$1
   cd /src
   # Checkout the historic commit instead of the tag directly.
-  local HISTORIC_COMMIT_HASH="$(grep "${TAG}+" /tmp/release_commit_list.txt | cut -d '+' -f 2 | cut -d '.' -f 2)"
-  if [ "$(git cat-file -t ${HISTORIC_COMMIT_HASH} 2>/dev/null)" == "commit" ]; then
+  local HISTORIC_COMMIT_HASH; HISTORIC_COMMIT_HASH="$(grep "${TAG}+" /tmp/release_commit_list.txt | cut -d '+' -f 2 | cut -d '.' -f 2)"
+  if [ "$(git cat-file -t "${HISTORIC_COMMIT_HASH}" 2>/dev/null)" == "commit" ]; then
     clean_git_checkout "$HISTORIC_COMMIT_HASH"
   else
     clean_git_checkout "${TAG}"
@@ -103,7 +106,7 @@ function process_tag() {
     VERSION=$(echo "$TAG" | cut -d v -f 2)
   fi
 
-  local COMMIT_HASH=$(git rev-parse --short=8 HEAD)
+  local COMMIT_HASH; COMMIT_HASH=$(git rev-parse --short=8 HEAD)
   local FULL_VERSION_SUFFIX="${TAG}+commit.${COMMIT_HASH}"
   local HISTORIC_VERSION_SUFFIX="${TAG}+commit.${HISTORIC_COMMIT_HASH}"
 
@@ -138,11 +141,11 @@ function process_tag() {
   if [ -f "${OUTPUTDIR}/bin/soljson-${FULL_VERSION_SUFFIX}.js" ]; then
 
     echo -ne "GENERATE BYTECODE REPORT FOR ${CYAN}${TAG}${RESET}... "
-    generate_bytecode_report "${OUTPUTDIR}/bin/soljson-${FULL_VERSION_SUFFIX}.js" "${OUTPUTDIR}"/log/reports/report-${TAG}.txt "${TAG}"
+    generate_bytecode_report "${OUTPUTDIR}/bin/soljson-${FULL_VERSION_SUFFIX}.js" "${OUTPUTDIR}/log/reports/report-${TAG}.txt" "${TAG}"
     echo -ne "GENERATE BYTECODE REPORT FOR HISTORIC ${CYAN}${TAG}${RESET}... "
     rm -rf /tmp/soljson.js
     if wget -q "$RELEASE_URL/soljson-${HISTORIC_VERSION_SUFFIX}.js" -O /tmp/soljson.js; then
-      generate_bytecode_report /tmp/soljson.js "${OUTPUTDIR}"/log/reports/report-historic-${TAG}.txt "${TAG}"
+      generate_bytecode_report /tmp/soljson.js "${OUTPUTDIR}/log/reports/report-historic-${TAG}.txt" "${TAG}"
     else
       echo -e "${ORANGE}CANNOT FETCH RELEASE${RESET}"
     fi
@@ -190,6 +193,7 @@ echo "Extract bytecode comparison scripts from v0.6.1..."
 cd /root/project
 git checkout v0.6.1 --quiet
 cp scripts/bytecodecompare/storebytecode.sh /tmp
+# shellcheck disable=SC2016
 sed -i -e 's/rm -rf "\$TMPDIR"/cp "\$TMPDIR"\/report.txt \/tmp\/report.txt ; rm -rf "\$TMPDIR"/' /tmp/storebytecode.sh
 sed -i -e 's/REPO_ROOT=.*/REPO_ROOT=\/src/' /tmp/storebytecode.sh
 export SOLC_EMSCRIPTEN="On"
@@ -224,6 +228,7 @@ mkdir -p "${OUTPUTDIR}"/bin
 echo "Prepare solc-js."
 cd /root/solc-js
 npm install >/dev/null 2>&1
+npm run build >/dev/null 2>&1
 
 echo "Install semver helper."
 npm install -g semver >/dev/null 2>&1

@@ -2,22 +2,24 @@
 Unités et variables globales
 ****************************
 
-.. index:: wei, finney, szabo, ether
+.. index:: wei, finney, szabo, gwei, ether
 
 Unités d'Ether
 ==============
 
-Un nombre littéral peut prendre un suffixe de "wei", "finney", "szabo" ou "ether" pour spécifier une sous-dénomination d'éther, où les nombres d'éther sans postfix sont supposés être Wei.
+Un nombre littéral peut prendre un suffixe de "wei", ``gwei`` ou "ether" pour spécifier une sous-dénomination d'éther, où les nombres d'éther sans postfix sont supposés être en Wei.
 
-::
+.. code-block:: solidity
+    :force:
 
     assert(1 wei == 1);
-    assert(1 szabo == 1e12);
-    assert(1 finney == 1e15);
+    assert(1 gwei == 1e9);
     assert(1 ether == 1e18);
 
 Le seul effet du suffixe de sous-dénomination est une multiplication par une puissance de dix..
 
+.. note::
+    The denominations ``finney`` and ``szabo`` have been removed in version 0.7.0.
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 
@@ -26,11 +28,11 @@ Unités de temps
 
 Des suffixes comme ``seconds``, ``minutes``, ``hours``, ``days`` et ``weeks`` peuvent être utilisés après les nombres littéraux pour spécifier les unités de temps où les secondes sont l'unité de base et les unités sont considérées naïvement de la façon suivante :
 
- * ``1 == 1 seconds``
- * ``1 minutes == 60 seconds``
- * ``1 hours == 60 minutes``
- * ``1 days == 24 hours``
- * ``1 weeks == 7 days``
+* ``1 == 1 seconds``
+* ``1 minutes == 60 seconds``
+* ``1 hours == 60 minutes``
+* ``1 days == 24 hours``
+* ``1 weeks == 7 days``
 
 Faites attention si vous effectuez des calculs calendaires en utilisant ces unités, parce que chaque année n'est pas égale à 365 jours ni même chaque jour n'a 24 heures à cause des `secondes bissextiles <https://en.wikipedia.org/wiki/Leap_second>`_.
 Les secondes intercalaires étant imprévisibles, une bibliothèque de calendrier exacte doit être mise à jour par un oracle externe.
@@ -38,10 +40,12 @@ Les secondes intercalaires étant imprévisibles, une bibliothèque de calendrie
 .. note::
     Le suffixe ``years`` a été supprimé dans la version 0.5.0 pour les raisons ci-dessus.
 
-Ces suffixes ne peuvent pas être appliqués aux variables. Si vous voulez interpréter une variable d'entrée en jours, par exemple, vous pouvez le faire de la manière suivante::
+Ces suffixes ne peuvent pas être appliqués aux variables. Si vous voulez interpréter un paramètre de fonctions en jours, par exemple, vous pouvez le faire de la manière suivante:
+
+.. code-block:: solidity
 
     function f(uint start, uint daysAfter) public {
-        if (now >= start + daysAfter * 1 days) {
+        if (block.timestamp >= start + daysAfter * 1 days) {
           // ...
         }
     }
@@ -51,7 +55,7 @@ Variables spéciales et fonctions
 
 Il y a des variables et des fonctions spéciales qui existent toujours dans l'espace de nommage global et qui sont principalement utilisées pour fournir des informations sur la chaîne de blocs ou sont des fonctions utilitaires générales.
 
-.. index:: abi, block, coinbase, difficulty, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin
+.. index:: abi, block, coinbase, difficulty, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin
 
 
 
@@ -59,6 +63,8 @@ Propriétés du bloc et des transactions
 --------------------------------------
 
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash du numéro de bloc passé - mnarche seulement pour les 256 plus récents, excluant le bloc courant
+- ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
+- ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): addresse du mineur du bloc courant
 - ``block.difficulty`` (``uint``): difficulté du bloc courant
 - ``block.gaslimit`` (``uint``): limite de gas actuelle
@@ -69,7 +75,6 @@ Propriétés du bloc et des transactions
 - ``msg.sender`` (``address payable``): expéditeur du message (appel courant)
 - ``msg.sig`` (``bytes4``): 4 premiers octets calldata (i.e. identifiant de function)
 - ``msg.value`` (``uint``): nombre de wei envoyés avec le message
-- ``now`` (``uint``): alias pour ``block.timestamp``
 - ``tx.gasprice`` (``uint``): prix de la transaction en gas
 - ``tx.origin`` (``address payable``): expéditeur de la transaction (appel global complet)
 
@@ -78,7 +83,13 @@ Propriétés du bloc et des transactions
     Ceci inclut les appels aux fonctions de librairies.
 
 .. note::
-    Ne vous basez pas sur ``block.timestamp``, ``now`` ou ``blockhash`` comme source de hasard, à moins de savoir ce que vous faites.
+    When contracts are evaluated off-chain rather than in context of a transaction included in a
+    block, you should not assume that ``block.*`` and ``tx.*`` refer to values from any specific
+    block or transaction. These values are provided by the EVM implementation that executes the
+    contract and can be arbitrary.
+
+.. note::
+    Ne vous basez pas sur ``block.timestamp`` ou ``blockhash`` comme source de hasard, à moins de savoir ce que vous faites.
 
     L'horodatage et le hashage du bloc peuvent tous deux être influencés dans une certaine mesure par les mineurs.
     Les mauvais acteurs de la communauté minière peuvent par exemple exécuter une fonction de casino sur un hash choisi et simplement réessayer un hash différent s'ils n'ont pas reçu d'argent.
@@ -95,22 +106,41 @@ Propriétés du bloc et des transactions
 .. note::
     La fonction ``gasleft`` était auparavant connue sous le nom de ``msg.gas``. Elle a été dépréciée dans la version 0.4.21 et supprimée dans la version 0.5.0.
 
+.. note::
+    In version 0.7.0, the alias ``now`` (for ``block.timestamp``) was removed.
+
 .. index:: abi, encoding, packed
 
 Fonctions d'encodage et de décodage de l'ABI
 --------------------------------------------
 
-- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: l'ABI décode les données données, tandis que les types sont donnés entre parenthèses comme second argument. Exemple : ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
-- ``abi.encode(...) returns (bytes memory)``: l'ABI encode les arguments passés.
-- ``abi.encodePacked(...) returns (bytes memory)``: exécute l':ref:`encodage structuré <abi_packed_mode>` des arguments donnés
-- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: l'ABI-encode les arguments donnés à partir du second et précède le sélecteur des quatre octets donnés.
-- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: équivalent à ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
+- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
+- ``abi.encode(...) returns (bytes memory)``: ABI-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments. Note that packed encoding can be ambiguous!
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
+- ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``: ABI-encodes a call to ``functionPointer`` with the arguments found in the tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, (...))``
 
 .. note::
     Ces fonctions d'encodage peuvent être utilisées pour créer des données pour des appels de fonctions externes sans réellement appeler une fonction externe. De plus, ``keccak256(abi.encododePacked(a, b))`` est un moyen de calculer le hash des données structurées (bien qu'il soit possible de créer une ``collision de hachage`` en utilisant différents types d'entrées).
 
 See the documentation about the :ref:`ABI <ABI>` and the
 :ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
+
+.. index:: bytes members
+
+Members of bytes
+----------------
+
+- ``bytes.concat(...) returns (bytes memory)``: :ref:`Concatenates variable number of bytes and bytes1, ..., bytes32 arguments to one byte array<bytes-concat>`
+
+.. index:: string members
+
+Members of string
+-----------------
+
+- ``string.concat(...) returns (string memory)``: :ref:`Concatenates variable number of string arguments to one string array<string-concat>`
+
 
 .. index:: assert, revert, require
 
@@ -120,9 +150,10 @@ Gestion des erreurs
 Voir la section dédiée sur :ref:`assert and require<assert-and-require>` pour plus de détails sur la gestion des erreurs et quand utiliser quelle fonction.
 
 ``assert(bool condition)``:
-    entraîne l'utilisation d'un opcode invalide et donc la réversion du changement d'état si la condition n'est pas remplie - à utiliser pour les erreurs internes.
+    entraîne une ``Panic error`` et donc la réversion du changement d'état si la condition n'est pas remplie - à utiliser pour les erreurs internes.
 ``require(bool condition)``:
     ``revert`` si la condition n'est pas remplie - à utiliser en cas d'erreurs dans les entrées ou les composants externes.
+
 ``require(bool condition, string memory message)``:
     ``revert`` si la condition n'est pas remplie - à utiliser en cas d'erreurs dans les entrées ou les composants externes. Fournit également un message d'erreur.
 ``revert()``:
@@ -131,6 +162,8 @@ Voir la section dédiée sur :ref:`assert and require<assert-and-require>` pour 
     annuler l'exécution et annuler les changements d'état, fournissant une phrase explicative
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
+
+.. _mathematical-and-cryptographic-functions:
 
 Fonctions mathématiques et cryptographiques
 -------------------------------------------
@@ -163,23 +196,23 @@ Fonctions mathématiques et cryptographiques
 
    La fonction ``ecrecover`` renvoie une ``address``, et non une ``address payable``. Voir :ref:`adresse payable<address>` pour la conversion, au cas où vous auriez besoin de transférer des fonds à l'adresse récupérée.
 
-    For further details, read `example usage <https://ethereum.stackexchange.com/q/1777/222>`_.
+    For further details, read `example usage <https://ethereum.stackexchange.com/questions/1777/workflow-on-signing-a-string-with-private-key-followed-by-signature-verificatio>`_.
 
 .. warning::
 
     If you use ``ecrecover``, be aware that a valid signature can be turned into a different valid signature without
     requiring knowledge of the corresponding private key. In the Homestead hard fork, this issue was fixed
-    for _transaction_ signatures (see `EIP-2 <http://eips.ethereum.org/EIPS/eip-2#specification>`_), but
+    for _transaction_ signatures (see `EIP-2 <https://eips.ethereum.org/EIPS/eip-2#specification>`_), but
     the ecrecover function remained unchanged.
 
     This is usually not a problem unless you require signatures to be unique or
-    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.org/v2.3.0/api/cryptography#ecdsa>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
+    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.com/contracts/2.x/api/cryptography#ECDSA>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
 
 .. note::
 
     Il se peut que vous rencontriez ``out-of-gas`` pour ``sha256``, ``ripemd160`` ou ``erecover`` sur une *blockchain privée*. La raison en est que ces contrats sont mis en œuvre sous la forme de contrats dits précompilés et que ces contrats n'existent réellement qu'après avoir reçu le premier message (bien que leur code contrat soit codé en dur). Les messages à des contrats inexistants sont plus coûteux et l'exécution se heurte donc à une erreur out-of-gas. Une solution de contournement pour ce problème est d'envoyer d'abord, par exemple, 1 Wei à chacun des contrats avant de les utiliser dans vos contrats réels. Le problème n'existe pas sur la cha^ine publique Ethereum ni sur les différents testnets officiels.
 
-.. index:: balance, send, transfer, call, callcode, delegatecall, staticcall
+.. index:: balance, codehash, send, transfer, call, callcode, delegatecall, staticcall
 
 .. _address_related:
 
@@ -189,8 +222,14 @@ Membres du type address
 ``<address>.balance`` (``uint256``):
     balance de l':ref:`address` en Wei
 
-``<address payable>.transfer(uint256 amount)``:
-    envoie la quantité donnée de Wei à :ref:`adress`, ``revert`` en cas d'échec, envoie 2300 gas (non réglable)
+``<address>.code`` (``bytes memory``)
+    code at the :ref:`address` (can be empty)
+
+``<address>.codehash`` (``bytes32``)
+    the codehash of the :ref:`address`
+
+``<address payable>.transfer(uint256 amount)``
+    send given amount of Wei to :ref:`address`, reverts on failure, forwards 2300 gas stipend, not adjustable
 
 ``<address payable>.send(uint256 amount) returns (bool)``:
     envoie la quantité donnée de Wei à :ref:`adress`, retourne ``false`` en cas d'échec, envoie 2300 gas (non réglable)
@@ -213,6 +252,16 @@ Pour plus d'informations, voir la section sur :ref:`adress`.
 .. warning::
     Il y a certains dangers à utiliser l'option ``send`` : Le transfert échoue si la profondeur de la pile d'appels est à 1024 (cela peut toujours être forcé par l'appelant) et il échoue également si le destinataire manque de gas. Donc, afin d'effectuer des transferts d'éther en toute sécurité, vérifiez toujours la valeur de retour de ``send``, utilisez  ``transfer`` ou mieux encore :
     Utilisez un modèle où le bénéficiaire retire l'argent.
+
+.. warning::
+    Due to the fact that the EVM considers a call to a non-existing contract to always succeed,
+    Solidity includes an extra check using the ``extcodesize`` opcode when performing external calls.
+    This ensures that the contract that is about to be called either actually exists (it contains code)
+    or an exception is raised.
+
+    The low-level calls which operate on addresses rather than contract instances (i.e. ``.call()``,
+    ``.delegatecall()``, ``.staticcall()``, ``.send()`` and ``.transfer()``) **do not** include this
+    check, which makes them cheaper in terms of gas but also less safe.
 
 .. note::
    Avant la version 0.5.0, Solidity permettait aux membres d'adresses d'être accessibles par une instance de contrat, par exemple ``this.balance``.

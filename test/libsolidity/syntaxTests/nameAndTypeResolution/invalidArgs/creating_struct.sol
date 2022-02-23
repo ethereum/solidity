@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (94-103): Wrong argument count for struct constructor: 1 arguments given but expected 2.
+// TypeError 9755: (94-103): Wrong argument count for struct constructor: 1 arguments given but expected 2.

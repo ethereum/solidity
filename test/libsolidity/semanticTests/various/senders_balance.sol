@@ -8,7 +8,7 @@ contract C {
 contract D {
     C c = new C();
 
-    constructor() public payable {}
+    constructor() payable {}
 
     function f() public view returns (uint256) {
         return c.f();
@@ -19,4 +19,7 @@ contract D {
 // compileViaYul: also
 // ----
 // constructor(), 27 wei ->
+// gas irOptimized: 175261
+// gas legacy: 222977
+// gas legacyOptimized: 169779
 // f() -> 27

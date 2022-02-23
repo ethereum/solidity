@@ -28,7 +28,7 @@
 #include <stddef.h>  /* Definition of size_t. */
 #include <stdint.h>  /* Definition of int64_t, uint64_t. */
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -44,7 +44,7 @@ enum
      *
      * @see @ref versioning
      */
-    EVMC_ABI_VERSION = 7
+    EVMC_ABI_VERSION = 9
 };
 
 
@@ -154,6 +154,7 @@ struct evmc_tx_context
     int64_t block_gas_limit;         /**< The block gas limit. */
     evmc_uint256be block_difficulty; /**< The block difficulty. */
     evmc_uint256be chain_id;         /**< The blockchain's ChainID. */
+    evmc_uint256be block_base_fee;   /**< The block base fee per gas (EIP-1559, EIP-3198). */
 };
 
 /**
@@ -294,6 +295,9 @@ enum evmc_status_code
      * reasons, including division by zero, validation errors, etc.
      */
     EVMC_WASM_TRAP = 16,
+
+    /** The caller does not have enough funds for value transfer. */
+    EVMC_INSUFFICIENT_BALANCE = 17,
 
     /** EVM implementation generic internal error. */
     EVMC_INTERNAL_ERROR = -1,
@@ -601,6 +605,52 @@ typedef void (*evmc_emit_log_fn)(struct evmc_host_context* context,
                                  size_t topics_count);
 
 /**
+ * Access status per EIP-2929: Gas cost increases for state access opcodes.
+ */
+enum evmc_access_status
+{
+    /**
+     * The entry hasn't been accessed before – it's the first access.
+     */
+    EVMC_ACCESS_COLD = 0,
+
+    /**
+     * The entry is already in accessed_addresses or accessed_storage_keys.
+     */
+    EVMC_ACCESS_WARM = 1
+};
+
+/**
+ * Access account callback function.
+ *
+ * This callback function is used by a VM to add the given address
+ * to accessed_addresses substate (EIP-2929).
+ *
+ * @param context  The Host execution context.
+ * @param address  The address of the account.
+ * @return         EVMC_ACCESS_WARM if accessed_addresses already contained the address
+ *                 or EVMC_ACCESS_COLD otherwise.
+ */
+typedef enum evmc_access_status (*evmc_access_account_fn)(struct evmc_host_context* context,
+                                                          const evmc_address* address);
+
+/**
+ * Access storage callback function.
+ *
+ * This callback function is used by a VM to add the given account storage entry
+ * to accessed_storage_keys substate (EIP-2929).
+ *
+ * @param context  The Host execution context.
+ * @param address  The address of the account.
+ * @param key      The index of the account's storage entry.
+ * @return         EVMC_ACCESS_WARM if accessed_storage_keys already contained the key
+ *                 or EVMC_ACCESS_COLD otherwise.
+ */
+typedef enum evmc_access_status (*evmc_access_storage_fn)(struct evmc_host_context* context,
+                                                          const evmc_address* address,
+                                                          const evmc_bytes32* key);
+
+/**
  * Pointer to the callback function supporting EVM calls.
  *
  * @param context  The pointer to the Host execution context.
@@ -655,6 +705,12 @@ struct evmc_host_interface
 
     /** Emit log callback function. */
     evmc_emit_log_fn emit_log;
+
+    /** Access account callback function. */
+    evmc_access_account_fn access_account;
+
+    /** Access storage callback function. */
+    evmc_access_storage_fn access_storage;
 };
 
 
@@ -758,19 +814,40 @@ enum evmc_revision
     /**
      * The Istanbul revision.
      *
-     * The spec draft: https://eips.ethereum.org/EIPS/eip-1679.
+     * https://eips.ethereum.org/EIPS/eip-1679
      */
     EVMC_ISTANBUL = 7,
 
     /**
      * The Berlin revision.
      *
-     * The spec draft: https://eips.ethereum.org/EIPS/eip-2070.
+     * https://github.com/ethereum/eth1.0-specs/blob/master/network-upgrades/mainnet-upgrades/berlin.md
      */
     EVMC_BERLIN = 8,
 
+    /**
+     * The London revision.
+     *
+     * https://github.com/ethereum/eth1.0-specs/blob/master/network-upgrades/mainnet-upgrades/london.md
+     */
+    EVMC_LONDON = 9,
+
+    /**
+     * The Shanghai revision.
+     *
+     * https://github.com/ethereum/eth1.0-specs/blob/master/network-upgrades/mainnet-upgrades/shanghai.md
+     */
+    EVMC_SHANGHAI = 10,
+
     /** The maximum EVM revision supported. */
-    EVMC_MAX_REVISION = EVMC_BERLIN
+    EVMC_MAX_REVISION = EVMC_SHANGHAI,
+
+    /**
+     * The latest known EVM revision with finalized specification.
+     *
+     * This is handy for EVM tools to always use the latest revision available.
+     */
+    EVMC_LATEST_STABLE_REVISION = EVMC_LONDON
 };
 
 
@@ -914,7 +991,7 @@ struct evmc_vm
 
 /* END Python CFFI declarations */
 
-#if EVMC_DOCUMENTATION
+#ifdef EVMC_DOCUMENTATION
 /**
  * Example of a function creating an instance of an example EVM implementation.
  *
@@ -933,7 +1010,7 @@ struct evmc_vm
 struct evmc_vm* evmc_create_example_vm(void);
 #endif
 
-#if __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

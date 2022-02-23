@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"Source contracts must be a non-empty array.","message":"Source contracts must be a non-empty array.","severity":"error","type":"JSONError"}]}

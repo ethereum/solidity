@@ -2,4 +2,4 @@
         enum ActionChoices { GoLeft, GoRight, GoLeft, Sit }
     }
 // ----
-// DeclarationError: (66-72): Identifier already declared.
+// DeclarationError 2333: (66-72): Identifier already declared.

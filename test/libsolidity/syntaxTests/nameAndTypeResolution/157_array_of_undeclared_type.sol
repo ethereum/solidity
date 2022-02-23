@@ -2,4 +2,4 @@ contract c {
     a[] public foo;
 }
 // ----
-// DeclarationError: (17-18): Identifier not found or not unique.
+// DeclarationError 7920: (17-18): Identifier not found or not unique.

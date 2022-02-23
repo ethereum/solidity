@@ -15,6 +15,8 @@
 // step: expressionJoiner
 //
 // {
-//     let x := calldataload(mload(2))
-//     sstore(x, 3)
+//     {
+//         let x := calldataload(mload(2))
+//         sstore(x, 3)
+//     }
 // }

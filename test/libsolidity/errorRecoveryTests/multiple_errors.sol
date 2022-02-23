@@ -6,7 +6,7 @@
 pragma solidity >=0.0.0;
 
 contract Error4 {
-  constructor() public {
+  constructor() {
     balances[tx.origin] = 1 2; // missing operator
   }
 
@@ -21,9 +21,9 @@ contract Error4 {
 
 }
 // ----
-// ParserError: (249-250): Expected ';' but got 'Number'
-// ParserError: (471-479): Expected ';' but got identifier
-// ParserError: (529-533): Expected ';' but got 'emit'
-// ParserError: (577-583): Expected ',' but got 'return'
-// ParserError: (577-583): Expected primary expression.
-// Warning: (588-589): Recovered in Statement at ';'.
+// ParserError 6635: (242-243): Expected ';' but got 'Number'
+// ParserError 6635: (464-472): Expected ';' but got identifier
+// ParserError 6635: (522-526): Expected ';' but got 'emit'
+// ParserError 6635: (570-576): Expected ',' but got 'return'
+// ParserError 6933: (570-576): Expected primary expression.
+// Warning 3796: (581-582): Recovered in Statement at ';'.

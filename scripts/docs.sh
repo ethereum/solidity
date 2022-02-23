@@ -5,7 +5,7 @@
 #
 # The documentation for solidity is hosted at:
 #
-#     https://solidity.readthedocs.org
+#     https://docs.soliditylang.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -28,6 +28,6 @@
 
 set -e
 cd docs
-pip3 install -r requirements.txt
+pip3 install -r requirements.txt --upgrade --upgrade-strategy eager
 sphinx-build -nW -b html -d _build/doctrees . _build/html
 cd ..

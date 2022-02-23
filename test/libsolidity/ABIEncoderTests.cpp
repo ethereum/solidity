@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for Solidity's ABI encoder.
  */
@@ -47,17 +48,6 @@ namespace solidity::frontend::test
 
 BOOST_FIXTURE_TEST_SUITE(ABIEncoderTest, SolidityExecutionFramework)
 
-BOOST_AUTO_TEST_CASE(both_encoders_macro)
-{
-	// This tests that the "both encoders macro" at least runs twice and
-	// modifies the source.
-	string sourceCode;
-	int runs = 0;
-	BOTH_ENCODERS(runs++;)
-	BOOST_CHECK(sourceCode == NewEncoderPragma);
-	BOOST_CHECK_EQUAL(runs, 2);
-}
-
 BOOST_AUTO_TEST_CASE(value_types)
 {
 	string sourceCode = R"(
@@ -69,7 +59,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 				assembly { b := 7 }
 				C c;
 				assembly { c := sub(0, 5) }
-				emit E(10, uint16(uint256(-2)), uint24(0x12121212), int24(int256(-1)), bytes3(x), b, c);
+				emit E(10, uint16(type(uint).max - 1), uint24(uint(0x12121212)), int24(int256(-1)), bytes3(x), b, c);
 			}
 		}
 	)";
@@ -77,7 +67,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		REQUIRE_LOG_DATA(encodeArgs(
-			10, u256(65534), u256(0x121212), u256(-1), string("\x1b\xab\xab"), true, u160(u256(-5))
+			10, u256(65534), u256(0x121212), u256(-1), string("\x1b\xab\xab"), true, h160("fffffffffffffffffffffffffffffffffffffffb")
 		));
 	)
 }
@@ -118,7 +108,7 @@ BOOST_AUTO_TEST_CASE(enum_type_cleanup)
 		compileAndRun(sourceCode);
 		BOOST_CHECK(callContractFunction("f(uint256)", 0) == encodeArgs(0));
 		BOOST_CHECK(callContractFunction("f(uint256)", 1) == encodeArgs(1));
-		BOOST_CHECK(callContractFunction("f(uint256)", 2) == encodeArgs());
+		BOOST_CHECK(callContractFunction("f(uint256)", 2) == panicData(PanicCode::EnumConversionError));
 	)
 }
 
@@ -165,7 +155,7 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		}
 	)";
 
-	if (!solidity::test::CommonOptions::get().useABIEncoderV2)
+	if (solidity::test::CommonOptions::get().useABIEncoderV1)
 	{
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
@@ -173,9 +163,11 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256("0xfffffffe"), u256("0xffffffff"), u256("0x100000000")));
 	}
 
-	compileAndRun(NewEncoderPragma + sourceCode);
-	callContractFunction("f()");
-	REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256(-2), u256(-1), u256(0)));
+	NEW_ENCODER(
+		compileAndRun(sourceCode);
+		callContractFunction("f()");
+		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256(-2), u256(-1), u256(0)));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(memory_array_two_dim)
@@ -188,7 +180,7 @@ BOOST_AUTO_TEST_CASE(memory_array_two_dim)
 				x[0] = new int16[](3);
 				x[1] = new int16[](2);
 				x[0][0] = 7;
-				x[0][1] = int16(0x010203040506);
+				x[0][1] = int16(int(0x010203040506));
 				x[0][2] = -1;
 				x[1][0] = 4;
 				x[1][1] = 5;
@@ -272,7 +264,11 @@ BOOST_AUTO_TEST_CASE(storage_array)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(u160(-1), u160(-2), u160(-3)));
+		REQUIRE_LOG_DATA(encodeArgs(
+			h160("ffffffffffffffffffffffffffffffffffffffff"),
+			h160("fffffffffffffffffffffffffffffffffffffffe"),
+			h160("fffffffffffffffffffffffffffffffffffffffd")
+		));
 	)
 }
 
@@ -293,7 +289,13 @@ BOOST_AUTO_TEST_CASE(storage_array_dyn)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(0x20, 3, u160(1), u160(2), u160(3)));
+		REQUIRE_LOG_DATA(encodeArgs(
+			0x20,
+			3,
+			h160("0000000000000000000000000000000000000001"),
+			h160("0000000000000000000000000000000000000002"),
+			h160("0000000000000000000000000000000000000003")
+		));
 	)
 }
 
@@ -470,7 +472,7 @@ BOOST_AUTO_TEST_CASE(structs2)
 				s1[0].t[0].e = E.B;
 				s1[0].t[0].y = 0x12;
 				s2 = new S[](2);
-				s2[1].c = C(0x1234);
+				s2[1].c = C(address(0x1234));
 				s2[1].t = new T[](3);
 				s2[1].t[1].x = 0x21;
 				s2[1].t[1].e = E.C;
@@ -487,7 +489,7 @@ BOOST_AUTO_TEST_CASE(structs2)
 			0x40,
 			0x100,
 			// S s1[0]
-			u256(u160(m_contractAddress)),
+			m_contractAddress,
 			0x40,
 			// T s1[0].t
 			1, // length
@@ -606,7 +608,7 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays)
 	BOTH_ENCODERS(
 		for (size_t size = 1; size < 15; size++)
 		{
-			for (size_t width: {1, 2, 4, 5, 7, 15, 16, 17, 31, 32})
+			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
 				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
 				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
@@ -651,7 +653,7 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
 	BOTH_ENCODERS(
 		for (size_t size = 0; size < 15; size++)
 		{
-			for (size_t width: {1, 2, 4, 5, 7, 15, 16, 17, 31, 32})
+			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
 				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
 				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
@@ -718,7 +720,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor)
 				string c;
 			}
 			S public x;
-			constructor(S memory s) public { x = s; }
+			constructor(S memory s) { x = s; }
 		}
 	)";
 
@@ -738,7 +740,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
 				string c;
 			}
 			S public x;
-			constructor(S memory s) public { x = s; }
+			constructor(S memory s) { x = s; }
 		}
 
 		contract D {
@@ -771,13 +773,13 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)
 				string c;
 			}
 			S public x;
-			constructor(S memory s) public { x = s; }
+			constructor(S memory s) { x = s; }
 		}
 	)";
 
 	NEW_ENCODER(
 		BOOST_CHECK(
-			compileAndRunWithoutCheck(sourceCode, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00)).empty()
+			compileAndRunWithoutCheck({{"", sourceCode}}, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00)).empty()
 		);
 	)
 }

@@ -8,4 +8,4 @@ contract C is A, B {
     modifier f() virtual override(A, B) { _; }
 }
 // ----
-// TypeError: (125-167): Override changes modifier signature.
+// TypeError 1078: (125-167): Override changes modifier signature.

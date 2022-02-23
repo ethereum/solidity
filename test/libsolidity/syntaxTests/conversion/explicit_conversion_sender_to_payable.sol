@@ -5,5 +5,5 @@ contract C {
 	}
 }
 // ----
-// Warning: (43-60): Unused local variable.
-// Warning: (86-103): Unused local variable.
+// Warning 2072: (43-60): Unused local variable.
+// Warning 2072: (86-103): Unused local variable.

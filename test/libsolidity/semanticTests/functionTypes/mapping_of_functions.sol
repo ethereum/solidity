@@ -15,7 +15,7 @@ contract Flow {
         success = true;
     }
 
-    constructor() public {
+    constructor() {
         stages[msg.sender] = stage0;
     }
 
@@ -25,6 +25,8 @@ contract Flow {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // success() -> false
 // f() -> 7

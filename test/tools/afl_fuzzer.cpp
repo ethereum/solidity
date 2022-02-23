@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Executable for use with AFL <http://lcamtuf.coredump.cx/afl>.
  */
@@ -113,7 +114,7 @@ Allowed options)",
 	{
 		string input;
 		if (inputFile.size() == 0)
-			input = readStandardInput();
+			input = readUntilEnd(cin);
 		else
 			input = readFileAsString(inputFile);
 

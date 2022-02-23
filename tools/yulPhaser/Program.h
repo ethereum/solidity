@@ -14,14 +14,16 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <libyul/optimiser/NameDispenser.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/Exceptions.h>
 
+#include <cstddef>
 #include <optional>
 #include <ostream>
 #include <set>
@@ -33,6 +35,7 @@ namespace solidity::langutil
 {
 
 class CharStream;
+class Scanner;
 
 }
 
@@ -41,13 +44,7 @@ namespace solidity::yul
 
 struct AsmAnalysisInfo;
 struct Dialect;
-
-}
-
-namespace std
-{
-
-std::ostream& operator<<(std::ostream& _outputStream, solidity::langutil::ErrorList const& _errors);
+struct CodeWeights;
 
 }
 
@@ -78,7 +75,7 @@ public:
 	static std::variant<Program, langutil::ErrorList> load(langutil::CharStream& _sourceCode);
 	void optimise(std::vector<std::string> const& _optimisationSteps);
 
-	size_t codeSize() const { return computeCodeSize(*m_ast); }
+	size_t codeSize(yul::CodeWeights const& _weights) const { return computeCodeSize(*m_ast, _weights); }
 	yul::Block const& ast() const { return *m_ast; }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Program const& _program);
@@ -113,7 +110,7 @@ private:
 		std::unique_ptr<yul::Block> _ast,
 		std::vector<std::string> const& _optimisationSteps
 	);
-	static size_t computeCodeSize(yul::Block const& _ast);
+	static size_t computeCodeSize(yul::Block const& _ast, yul::CodeWeights const& _weights);
 
 	std::unique_ptr<yul::Block> m_ast;
 	yul::Dialect const& m_dialect;

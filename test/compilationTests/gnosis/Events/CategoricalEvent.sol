@@ -18,7 +18,6 @@ contract CategoricalEvent is Event {
         Oracle _oracle,
         uint8 outcomeCount
     )
-        public
         Event(_collateralToken, _oracle, outcomeCount)
     {
 

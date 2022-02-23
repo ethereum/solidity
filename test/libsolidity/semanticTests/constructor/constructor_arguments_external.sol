@@ -2,7 +2,7 @@ contract Main {
     bytes3 name;
     bool flag;
 
-    constructor(bytes3 x, bool f) public {
+    constructor(bytes3 x, bool f) {
         name = x;
         flag = f;
     }
@@ -19,5 +19,8 @@ contract Main {
 // compileViaYul: also
 // ----
 // constructor(): "abc", true
+// gas irOptimized: 112563
+// gas legacy: 145838
+// gas legacyOptimized: 104017
 // getFlag() -> true
 // getName() -> "abc"

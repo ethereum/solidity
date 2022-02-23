@@ -9,4 +9,4 @@ string uintM = "Hello 4 you";
     }
 }
 // ----
-// Warning: (50-197): Function state mutability can be restricted to pure
+// Warning 2018: (50-197): Function state mutability can be restricted to pure

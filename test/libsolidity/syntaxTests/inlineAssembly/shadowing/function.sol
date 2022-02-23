@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (79-80): This declaration shadows a declaration outside the inline assembly block.
+// DeclarationError 3859: (79-80): This declaration shadows a declaration outside the inline assembly block.

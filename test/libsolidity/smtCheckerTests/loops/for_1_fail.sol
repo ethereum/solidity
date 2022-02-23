@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint x) public pure {
@@ -12,7 +10,9 @@ contract C
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning: (176-181): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (189-203): Assertion violation happens here
+// Warning 4984: (143-148): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+// Warning 6328: (156-170): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 14\n\nTransaction trace:\nC.constructor()\nC.f(4)
+// Warning 2661: (143-148): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

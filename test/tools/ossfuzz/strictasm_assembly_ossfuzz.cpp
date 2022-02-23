@@ -14,14 +14,20 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/AssemblyStack.h>
-#include <liblangutil/EVMVersion.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
+
+#include <liblangutil/DebugInfoSelection.h>
+#include <liblangutil/EVMVersion.h>
 
 using namespace solidity;
 using namespace solidity::yul;
 using namespace std;
+
+// Prototype as we can't use the FuzzerInterface.h header.
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
@@ -34,7 +40,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	AssemblyStack stack(
 		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		langutil::DebugInfoSelection::All()
 	);
 
 	if (!stack.parseAndAnalyze("source", input))

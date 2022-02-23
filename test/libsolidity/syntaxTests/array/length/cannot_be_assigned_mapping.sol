@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (80-93): Member "length" is read-only and cannot be used to resize arrays.
+// TypeError 7567: (80-93): Member "length" is read-only and cannot be used to resize arrays.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bool b) public pure {
 		uint v = 1;
@@ -8,6 +6,7 @@ contract C {
 		assert(v > 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (106-113): Assertion checker does not yet implement this assignment operator.
-// Warning: (117-130): Assertion violation happens here
+// Warning 6328: (84-97): CHC: Assertion violation happens here.

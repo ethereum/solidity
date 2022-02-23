@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that changes the code of a block so that all non-function definition
  * statements are moved to a block of their own followed by all function definitions.
@@ -21,9 +22,7 @@
 
 #include <libyul/optimiser/FunctionGrouper.h>
 
-#include <libyul/AsmData.h>
-
-#include <boost/range/algorithm_ext/erase.hpp>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;
@@ -36,7 +35,7 @@ void FunctionGrouper::operator()(Block& _block)
 		return;
 
 	vector<Statement> reordered;
-	reordered.emplace_back(Block{_block.location, {}});
+	reordered.emplace_back(Block{_block.debugData, {}});
 
 	for (auto&& statement: _block.statements)
 	{

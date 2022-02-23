@@ -13,5 +13,5 @@ contract C {
     }
 }
 // ----
-// Warning: (100-112): Unreachable code.
-// Warning: (222-230): Unreachable code.
+// Warning 5740: (100-112): Unreachable code.
+// Warning 5740: (222-230): Unreachable code.

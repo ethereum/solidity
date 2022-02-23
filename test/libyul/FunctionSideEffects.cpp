@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/FunctionSideEffects.h>
 #include <test/Common.h>
@@ -48,14 +49,27 @@ string toString(SideEffects const& _sideEffects)
 	vector<string> ret;
 	if (_sideEffects.movable)
 		ret.emplace_back("movable");
-	if (_sideEffects.sideEffectFree)
-		ret.emplace_back("sideEffectFree");
-	if (_sideEffects.sideEffectFreeIfNoMSize)
-		ret.emplace_back("sideEffectFreeIfNoMSize");
-	if (_sideEffects.invalidatesStorage)
-		ret.emplace_back("invalidatesStorage");
-	if (_sideEffects.invalidatesMemory)
-		ret.emplace_back("invalidatesMemory");
+	if (_sideEffects.movableApartFromEffects)
+		ret.emplace_back("movable apart from effects");
+	if (_sideEffects.canBeRemoved)
+		ret.emplace_back("can be removed");
+	if (_sideEffects.canBeRemovedIfNoMSize)
+		ret.emplace_back("can be removed if no msize");
+	if (!_sideEffects.cannotLoop)
+		ret.emplace_back("can loop");
+	if (_sideEffects.otherState == SideEffects::Write)
+		ret.emplace_back("writes other state");
+	else if (_sideEffects.otherState == SideEffects::Read)
+		ret.emplace_back("reads other state");
+	if (_sideEffects.storage == SideEffects::Write)
+		ret.emplace_back("writes storage");
+	else if (_sideEffects.storage == SideEffects::Read)
+		ret.emplace_back("reads storage");
+	if (_sideEffects.memory == SideEffects::Write)
+		ret.emplace_back("writes memory");
+	else if (_sideEffects.memory == SideEffects::Read)
+		ret.emplace_back("reads memory");
+
 	return joinHumanReadable(ret);
 }
 }
@@ -75,7 +89,7 @@ TestCase::TestResult FunctionSideEffects::run(ostream& _stream, string const& _l
 		BOOST_THROW_EXCEPTION(runtime_error("Parsing input failed."));
 
 	map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
-		EVMDialect::strictAssemblyForEVM(langutil::EVMVersion()),
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 		CallGraphGenerator::callGraph(*obj.code)
 	);
 
@@ -87,37 +101,5 @@ TestCase::TestResult FunctionSideEffects::run(ostream& _stream, string const& _l
 	for (auto const& fun: functionSideEffectsStr)
 		m_obtainedResult += fun.first + ":" + (fun.second.empty() ? "" : " ") + fun.second + "\n";
 
-	if (m_expectation != m_obtainedResult)
-	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
-		printIndented(_stream, m_expectation, nextIndentLevel);
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
-		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return TestResult::Failure;
-	}
-	return TestResult::Success;
-}
-
-
-void FunctionSideEffects::printSource(ostream& _stream, string const& _linePrefix, bool const) const
-{
-	printIndented(_stream, m_source, _linePrefix);
-}
-
-void FunctionSideEffects::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
-{
-	printIndented(_stream, m_obtainedResult, _linePrefix);
-}
-
-void FunctionSideEffects::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		if (line.empty())
-			// Avoid trailing spaces.
-			_stream << boost::trim_right_copy(_linePrefix) << endl;
-		else
-			_stream << _linePrefix << line << endl;
+	return checkResult(_stream, _linePrefix, _formatted);
 }

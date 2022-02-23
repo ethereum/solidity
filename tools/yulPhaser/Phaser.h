@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Contains the main class that controls yul-phaser based on command-line parameters and
  * associated factories for building instances of phaser's components.
@@ -24,8 +25,10 @@
 #include <tools/yulPhaser/AlgorithmRunner.h>
 #include <tools/yulPhaser/GeneticAlgorithms.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
+#include <cstddef>
 #include <istream>
 #include <memory>
 #include <optional>
@@ -36,6 +39,13 @@ namespace solidity::langutil
 {
 
 class CharStream;
+
+}
+
+namespace solidity::yul
+{
+
+struct CodeWeights;
 
 }
 
@@ -126,6 +136,17 @@ public:
 };
 
 /**
+ * Builds and validates instances of @a CodeWeights.
+ */
+class CodeWeightFactory
+{
+public:
+	static yul::CodeWeights buildFromCommandLine(
+		boost::program_options::variables_map const& _arguments
+	);
+};
+
+/**
  * Builds and validates instances of @a FitnessMetric and its derived classes.
  */
 class FitnessMetricFactory
@@ -144,7 +165,8 @@ public:
 	static std::unique_ptr<FitnessMetric> build(
 		Options const& _options,
 		std::vector<Program> _programs,
-		std::vector<std::shared_ptr<ProgramCache>> _programCaches
+		std::vector<std::shared_ptr<ProgramCache>> _programCaches,
+		yul::CodeWeights const& _weights
 	);
 };
 
@@ -221,7 +243,7 @@ public:
 	static std::vector<Program> build(Options const& _options);
 
 private:
-	static langutil::CharStream loadSource(std::string const& _sourcePath);
+	static langutil::CharStream loadSource(boost::filesystem::path const& _sourcePath);
 };
 
 /**

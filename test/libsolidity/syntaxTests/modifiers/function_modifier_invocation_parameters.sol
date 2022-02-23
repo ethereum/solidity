@@ -3,3 +3,4 @@ contract B {
     modifier mod1(uint a, bool b) { if (b) _; }
     modifier mod2(bytes7 a) { while (a == "1234567") _; }
 }
+// ----

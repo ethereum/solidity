@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (76-77): Expected '=' but got ';'
+// ParserError 2314: (76-77): Expected '=' but got ';'

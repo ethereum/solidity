@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (101-102): Expected type name
+// ParserError 3546: (101-102): Expected type name

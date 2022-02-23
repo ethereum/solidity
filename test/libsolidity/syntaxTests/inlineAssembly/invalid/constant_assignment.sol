@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (98-99): Constant variables cannot be assigned to.
+// TypeError 6252: (98-99): Constant variables cannot be assigned to.

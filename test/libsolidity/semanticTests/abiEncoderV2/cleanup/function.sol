@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
     struct S { function() external f; }
@@ -16,6 +16,8 @@ contract C {
         return (this.ggg(s.f), this.h(s));
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // ffff(uint256): 0 -> 0, 0
 // ggg(function): 0 -> 0

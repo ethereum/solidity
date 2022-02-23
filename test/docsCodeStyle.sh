@@ -4,17 +4,17 @@ set -e
 
 ## GLOBAL VARIABLES
 
-REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
 ## FUNCTIONS
 
 if [ "$CIRCLECI" ]
 then
-    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
-    function printError() { echo "$(tput setaf 1)$1$(tput setaf 7)"; }
+    function printTask { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
+    function printError { echo "$(tput setaf 1)$1$(tput setaf 7)"; }
 else
-    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
-    function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
+    function printTask { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+    function printError { echo "$(tput setaf 1)$1$(tput sgr0)"; }
 fi
 
 printTask "Checking docs examples style"
@@ -22,7 +22,7 @@ SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$SOLTMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
 
     if npm -v >/dev/null 2>&1; then
         if npm list -g | grep solhint >/dev/null 2>&1; then

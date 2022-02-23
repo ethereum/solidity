@@ -2,7 +2,7 @@ contract A {
     uint public a = 42;
     uint public b;
     uint public c;
-    constructor(uint x) public {
+    constructor(uint x) {
         b = a;
         a = x;
     }
@@ -14,7 +14,7 @@ contract B is A {
     uint public b_a;
     uint public b_b;
     uint public b_c;
-    constructor() public A(17) { b_a = a; b_b = b; b_c = c; }
+    constructor() A(17) { b_a = a; b_b = b; b_c = c; }
 }
 // ====
 // compileViaYul: true

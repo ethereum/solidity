@@ -7,6 +7,6 @@ contract A {
     }
 }
 // ----
-// Warning: (87-93): Unused local variable.
-// Warning: (121-127): Unused local variable.
-// Warning: (17-150): Function state mutability can be restricted to pure
+// Warning 2072: (87-93): Unused local variable.
+// Warning 2072: (121-127): Unused local variable.
+// Warning 2018: (17-150): Function state mutability can be restricted to pure

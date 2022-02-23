@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* contract = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	BOOST_REQUIRE(contract);
-	BOOST_CHECK(!contract->annotation().unimplementedDeclarations.empty());
+	BOOST_CHECK(!contract->annotation().unimplementedDeclarations->empty());
 	BOOST_CHECK(!contract->definedFunctions()[0]->isImplemented());
 }
 
@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
 	BOOST_REQUIRE(base);
-	BOOST_CHECK(!base->annotation().unimplementedDeclarations.empty());
+	BOOST_CHECK(!base->annotation().unimplementedDeclarations->empty());
 	BOOST_CHECK(!base->definedFunctions()[0]->isImplemented());
 	BOOST_REQUIRE(derived);
-	BOOST_CHECK(derived->annotation().unimplementedDeclarations.empty());
+	BOOST_CHECK(derived->annotation().unimplementedDeclarations->empty());
 	BOOST_CHECK(derived->definedFunctions()[0]->isImplemented());
 }
 
@@ -87,9 +87,9 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[1].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
 	BOOST_REQUIRE(base);
-	BOOST_CHECK(!base->annotation().unimplementedDeclarations.empty());
+	BOOST_CHECK(!base->annotation().unimplementedDeclarations->empty());
 	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().unimplementedDeclarations.empty());
+	BOOST_CHECK(!derived->annotation().unimplementedDeclarations->empty());
 }
 
 BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
@@ -97,14 +97,14 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		abstract contract base { function foo() public virtual; }
-		abstract contract foo is base { constructor() public {} }
+		abstract contract foo is base { constructor() {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	BOOST_CHECK_EQUAL(nodes.size(), 3);
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
 	BOOST_REQUIRE(derived);
-	BOOST_CHECK(!derived->annotation().unimplementedDeclarations.empty());
+	BOOST_CHECK(!derived->annotation().unimplementedDeclarations->empty());
 }
 
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 BOOST_AUTO_TEST_CASE(external_struct_signatures)
 {
 	char const* text = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Simple { uint i; }
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(external_struct_signatures)
 BOOST_AUTO_TEST_CASE(external_struct_signatures_in_libraries)
 {
 	char const* text = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		library Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Simple { uint i; }
@@ -377,58 +377,6 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
 	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file does not specify required compiler version!"));
-}
-
-BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
-{
-	char const* text = R"(
-		contract C { function f() public pure { uint returndatasize; returndatasize; assembly { pop(returndatasize()) }}}
-	)";
-	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
-	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
-	}
-	CHECK_ALLOW_MULTI(text, expectations);
-}
-
-BOOST_AUTO_TEST_CASE(create2_as_variable)
-{
-	char const* text = R"(
-		contract c { function f() public { uint create2; create2; assembly { pop(create2(0, 0, 0, 0)) } }}
-	)";
-	// This needs special treatment, because the message mentions the EVM version,
-	// so cannot be run via isoltest.
-	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
-	if (!solidity::test::CommonOptions::get().evmVersion().hasCreate2())
-	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"create2\" instruction is only available for Constantinople-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
-	}
-	CHECK_ALLOW_MULTI(text, expectations);
-}
-
-BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
-{
-	char const* text = R"(
-		contract c { function f() public view { uint extcodehash; extcodehash; assembly { pop(extcodehash(0)) } }}
-	)";
-	// This needs special treatment, because the message mentions the EVM version,
-	// so cannot be run via isoltest.
-	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
-	if (!solidity::test::CommonOptions::get().evmVersion().hasExtCodeHash())
-	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
-	}
-	CHECK_ALLOW_MULTI(text, expectations);
 }
 
 BOOST_AUTO_TEST_CASE(getter_is_memory_type)

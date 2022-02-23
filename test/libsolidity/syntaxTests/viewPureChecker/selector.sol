@@ -10,3 +10,4 @@ contract C {
         return this.f.selector ^ this.x.selector;
     }
 }
+// ----

@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (112-119): Expected ';' but got 'HexStringLiteral'
+// ParserError 2314: (112-119): Expected ';' but got 'HexStringLiteral'

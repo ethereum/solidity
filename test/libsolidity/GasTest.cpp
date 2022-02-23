@@ -14,12 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/GasTest.h>
 #include <test/Common.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -33,7 +34,6 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace solidity;
 using namespace std;
-namespace fs = boost::filesystem;
 using namespace boost::unit_test;
 
 GasTest::GasTest(string const& _filename):
@@ -42,7 +42,7 @@ GasTest::GasTest(string const& _filename):
 	m_source = m_reader.source();
 	m_optimise = m_reader.boolSetting("optimize", false);
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", false);
-	m_optimiseRuns = m_reader.sizetSetting("optimize-runs", 200);
+	m_optimiseRuns = m_reader.sizetSetting("optimize-runs", OptimiserSettings{}.expectedExecutionsPerDeployment);
 	parseExpectations(m_reader.stream());
 }
 
@@ -105,7 +105,7 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 	// Prerelease CBOR metadata varies in size due to changing version numbers and build dates.
 	// This leads to volatile creation cost estimates. Therefore we force the compiler to
 	// release mode for testing gas estimates.
-	compiler().overwriteReleaseFlag(true);
+	compiler().setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	OptimiserSettings settings = m_optimise ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	if (m_optimiseYul)
 	{
@@ -118,9 +118,8 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 
 	if (!compiler().parseAndAnalyze() || !compiler().compile())
 	{
-		SourceReferenceFormatterHuman formatter(_stream, _formatted);
-		for (auto const& error: compiler().errors())
-			formatter.printErrorInformation(*error);
+		SourceReferenceFormatter{_stream, compiler(), _formatted, false}
+			.printErrorInformation(compiler().errors());
 		return TestResult::FatalError;
 	}
 

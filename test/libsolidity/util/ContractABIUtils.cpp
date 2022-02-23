@@ -14,16 +14,21 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/util/ContractABIUtils.h>
 
 #include <test/libsolidity/util/SoltestErrors.h>
 
+#include <libsolidity/ast/Types.h>
+#include <libsolidity/ast/TypeProvider.h>
+#include <libsolutil/FunctionSelector.h>
+#include <libsolutil/CommonData.h>
+
 #include <liblangutil/Common.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
 
 #include <fstream>
@@ -37,7 +42,6 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend::test;
 using namespace std;
-using namespace soltest;
 
 namespace
 {
@@ -120,6 +124,21 @@ bool isTuple(string const& _type)
 bool isFixedTupleArray(string const& _type)
 {
 	return regex_match(_type, regex{"tuple\\[\\d+\\]"});
+}
+
+optional<ABIType> isFixedPoint(string const& type)
+{
+	optional<ABIType> fixedPointType;
+	smatch matches;
+	if (regex_match(type, matches, regex{"(u?)fixed(\\d+)x(\\d+)"}))
+	{
+		ABIType abiType(ABIType::SignedFixedPoint);
+		if (matches[1].str() == "u")
+			abiType.type = ABIType::UnsignedFixedPoint;
+		abiType.fractionalDigits = static_cast<unsigned>(std::stoi(matches[3].str()));
+		fixedPointType = abiType;
+	}
+	return fixedPointType;
 }
 
 string functionSignatureFromABI(Json::Value const& _functionABI)
@@ -243,6 +262,8 @@ bool ContractABIUtils::appendTypesFromName(
 			_dynamicTypes.push_back(ABIType{ABIType::String, ABIType::AlignLeft});
 		}
 	}
+	else if (optional<ABIType> fixedPointType = isFixedPoint(type))
+		_inplaceTypes.push_back(*fixedPointType);
 	else if (isBytes(type))
 		return false;
 	else if (isFixedTupleArray(type))
@@ -259,15 +280,17 @@ void ContractABIUtils::overwriteParameters(
 	solidity::frontend::test::ParameterList const& _sourceParameters
 )
 {
+	using namespace placeholders;
 	boost::for_each(
 		_sourceParameters,
 		_targetParameters,
-		boost::bind<void>(
+		std::bind<void>(
 			[&](Parameter _a, Parameter& _b) -> void
 			{
 				if (
 					_a.abiType.size != _b.abiType.size ||
-					_a.abiType.type != _b.abiType.type
+					_a.abiType.type != _b.abiType.type ||
+					_a.abiType.fractionalDigits != _b.abiType.fractionalDigits
 				)
 				{
 					_errorReporter.warning("Type or size of parameter(s) does not match.");
@@ -313,20 +336,34 @@ solidity::frontend::test::ParameterList ContractABIUtils::defaultParameters(size
 	return parameters;
 }
 
-solidity::frontend::test::ParameterList ContractABIUtils::failureParameters(bytes const _bytes)
+solidity::frontend::test::ParameterList ContractABIUtils::failureParameters(bytes const& _bytes)
 {
-	ParameterList parameters;
+	if (_bytes.empty())
+		return {};
+	else if (_bytes.size() < 4)
+		return {Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, _bytes.size()}, FormatInfo{}}};
+	else
+	{
+		ParameterList parameters;
+		parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}});
 
-	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}});
-	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
-	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});
-
-	/// If _bytes contains at least a 1 byte message (function selector + tail pointer + message length + message)
-	/// append an additional string parameter to represent that message.
-	if (_bytes.size() > 68)
-		parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::String}, FormatInfo{}});
-
-	return parameters;
+		uint64_t selector = fromBigEndian<uint64_t>(bytes{_bytes.begin(), _bytes.begin() + 4});
+		if (selector == selectorFromSignature32("Panic(uint256)"))
+			parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
+		else if (selector == selectorFromSignature32("Error(string)"))
+		{
+			parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
+			parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});
+			/// If _bytes contains at least a 1 byte message (function selector + tail pointer + message length + message)
+			/// append an additional string parameter to represent that message.
+			if (_bytes.size() > 68)
+				parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::String}, FormatInfo{}});
+		}
+		else
+			for (size_t i = 4; i < _bytes.size(); i += 32)
+				parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 32}, FormatInfo{}});
+		return parameters;
+	}
 }
 
 size_t ContractABIUtils::encodingSize(

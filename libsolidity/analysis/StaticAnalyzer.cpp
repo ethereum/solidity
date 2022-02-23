@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Federico Bond <federicobond@gmail.com>
  * @date 2016
@@ -85,7 +86,7 @@ StaticAnalyzer::~StaticAnalyzer()
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }
 
 bool StaticAnalyzer::visit(ContractDefinition const& _contract)
@@ -155,18 +156,19 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 			// This is not a no-op, the entry might pre-exist.
 			m_localVarUseCount[make_pair(_variable.id(), &_variable)] += 0;
 	}
-	else if (_variable.isStateVariable())
-	{
-		set<StructDefinition const*> structsSeen;
-		if (structureSizeEstimate(*_variable.type(), structsSeen) >= bigint(1) << 64)
-			m_errorReporter.warning(
-				3408_error,
-				_variable.location(),
-				"Variable covers a large part of storage and thus makes collisions likely. "
-				"Either use mappings or dynamic arrays and allow their size to be increased only "
-				"in small quantities per transaction."
-			);
-	}
+
+	if (_variable.isStateVariable() || _variable.referenceLocation() == VariableDeclaration::Location::Storage)
+		if (auto varType = dynamic_cast<CompositeType const*>(_variable.annotation().type))
+			for (Type const* type: varType->fullDecomposition())
+				if (type->storageSizeUpperBound() >= (bigint(1) << 64))
+				{
+					string message = "Type " + type->toString(true) +
+						" covers a large part of storage and thus makes collisions likely."
+						" Either use mappings or dynamic arrays and allow their size to be increased only"
+						" in small quantities per transaction.";
+					m_errorReporter.warning(7325_error, _variable.typeName().location(), message);
+				}
+
 	return true;
 }
 
@@ -183,7 +185,7 @@ bool StaticAnalyzer::visit(Return const& _return)
 
 bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 {
-	if (_statement.expression().annotation().isPure)
+	if (*_statement.expression().annotation().isPure)
 		m_errorReporter.warning(
 			6133_error,
 			_statement.location(),
@@ -222,6 +224,17 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					"Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode."
 				);
 		}
+		else if (
+			m_currentFunction &&
+			m_currentFunction->isReceive() &&
+			type->kind() == MagicType::Kind::Message &&
+			_memberAccess.memberName() == "data"
+		)
+			m_errorReporter.typeError(
+				7139_error,
+				_memberAccess.location(),
+				R"("msg.data" cannot be used inside of "receive" function.)"
+			);
 	}
 
 	if (_memberAccess.memberName() == "callcode")
@@ -285,13 +298,11 @@ bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
 bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 {
 	if (
-		_operation.rightExpression().annotation().isPure &&
+		*_operation.rightExpression().annotation().isPure &&
 		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod)
 	)
-		if (auto rhs = dynamic_cast<RationalNumberType const*>(
-			ConstantEvaluator(m_errorReporter).evaluate(_operation.rightExpression())
-		))
-			if (rhs->isZero())
+		if (auto rhs = ConstantEvaluator::evaluate(m_errorReporter, _operation.rightExpression()))
+			if (rhs->value == 0)
 				m_errorReporter.typeError(
 					1211_error,
 					_operation.location(),
@@ -303,18 +314,16 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 
 bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 {
-	if (_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
+	if (*_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
 	{
 		auto functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
 		solAssert(functionType, "");
 		if (functionType->kind() == FunctionType::Kind::AddMod || functionType->kind() == FunctionType::Kind::MulMod)
 		{
 			solAssert(_functionCall.arguments().size() == 3, "");
-			if (_functionCall.arguments()[2]->annotation().isPure)
-				if (auto lastArg = dynamic_cast<RationalNumberType const*>(
-					ConstantEvaluator(m_errorReporter).evaluate(*(_functionCall.arguments())[2])
-				))
-					if (lastArg->isZero())
+			if (*_functionCall.arguments()[2]->annotation().isPure)
+				if (auto lastArg = ConstantEvaluator::evaluate(m_errorReporter, *(_functionCall.arguments())[2]))
+					if (lastArg->value == 0)
 						m_errorReporter.typeError(
 							4195_error,
 							_functionCall.location(),
@@ -322,6 +331,7 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 						);
 		}
 		if (
+			m_currentContract &&
 			m_currentContract->isLibrary() &&
 			functionType->kind() == FunctionType::Kind::DelegateCall &&
 			functionType->declaration().scope() == m_currentContract
@@ -337,35 +347,4 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 			);
 	}
 	return true;
-}
-
-bigint StaticAnalyzer::structureSizeEstimate(Type const& _type, set<StructDefinition const*>& _structsSeen)
-{
-	switch (_type.category())
-	{
-	case Type::Category::Array:
-	{
-		auto const& t = dynamic_cast<ArrayType const&>(_type);
-		return structureSizeEstimate(*t.baseType(), _structsSeen) * (t.isDynamicallySized() ? 1 : t.length());
-	}
-	case Type::Category::Struct:
-	{
-		auto const& t = dynamic_cast<StructType const&>(_type);
-		bigint size = 1;
-		if (!_structsSeen.count(&t.structDefinition()))
-		{
-			_structsSeen.insert(&t.structDefinition());
-			for (auto const& m: t.members(nullptr))
-				size += structureSizeEstimate(*m.type, _structsSeen);
-		}
-		return size;
-	}
-	case Type::Category::Mapping:
-	{
-		return structureSizeEstimate(*dynamic_cast<MappingType const&>(_type).valueType(), _structsSeen);
-	}
-	default:
-		break;
-	}
-	return bigint(1);
 }

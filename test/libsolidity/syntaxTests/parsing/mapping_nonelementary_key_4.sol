@@ -2,4 +2,4 @@ contract c {
 	mapping(string[] => uint) data;
 }
 // ----
-// ParserError: (28-29): Expected '=>' but got '['
+// ParserError 2314: (28-29): Expected '=>' but got '['

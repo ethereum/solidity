@@ -1,13 +1,18 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	mapping (uint => uint) singleMap;
 	mapping (uint => uint)[] severalMaps;
 	mapping (uint => uint8)[] severalMaps8;
 	mapping (uint => uint)[][] severalMaps3d;
+	constructor() {
+		severalMaps.push();
+		severalMaps8.push();
+		severalMaps3d.push().push();
+	}
 	function f(mapping (uint => uint) storage map) internal {
 		map[0] = 42;
+		// Index accesses are safe but the assignment above makes
+		// them fail because of aliasing.
 		severalMaps[0][0] = 42;
 		severalMaps8[0][0] = 42;
 		severalMaps3d[0][0][0] = 42;
@@ -22,9 +27,20 @@ contract C
 		assert(map[0] == 42);
 	}
 	function g(uint x) public {
+		require(x < severalMaps.length);
 		f(severalMaps[x]);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (777-797): Assertion violation happens here
-// Warning: (777-797): Assertion violation happens here
+// Warning 6368: (439-453): CHC: Out of bounds access happens here.
+// Warning 6368: (492-508): CHC: Out of bounds access happens here.
+// Warning 6368: (492-511): CHC: Out of bounds access happens here.
+// Warning 6368: (622-636): CHC: Out of bounds access happens here.
+// Warning 6368: (850-866): CHC: Out of bounds access happens here.
+// Warning 6368: (850-869): CHC: Out of bounds access happens here.
+// Warning 6328: (936-956): CHC: Assertion violation happens here.
+// Warning 6368: (1029-1043): CHC: Out of bounds access might happen here.
+// Info 1180: Contract invariant(s) for :C:\n!(severalMaps8.length <= 0)\n

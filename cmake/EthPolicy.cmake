@@ -15,5 +15,9 @@ macro (eth_policy)
 		# do not interpret if() arguments as variables!
 		cmake_policy(SET CMP0054 NEW)
 	endif()
-endmacro()
 
+	if (POLICY CMP0091)
+		# Allow selecting MSVC runtime library using CMAKE_MSVC_RUNTIME_LIBRARY.
+		cmake_policy(SET CMP0091 NEW)
+	endif()
+endmacro()

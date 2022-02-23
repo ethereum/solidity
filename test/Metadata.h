@@ -14,12 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2017
  * Metadata processing helpers.
  */
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/JSON.h>
 
 #include <map>
 #include <optional>
@@ -47,8 +49,10 @@ std::string bytecodeSansMetadata(std::string const& _bytecode);
 /// - everything else is invalid
 std::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const& _metadata);
 
-/// Expects a serialised metadata JSON and returns true if the
-/// content is valid metadata.
-bool isValidMetadata(std::string const& _metadata);
+/// Expects a serialised metadata JSON and returns true if the content is valid metadata.
+bool isValidMetadata(std::string const& _serialisedMetadata);
+
+/// Expects a deserialised metadata JSON and returns true if the content is valid metadata.
+bool isValidMetadata(Json::Value const& _metadata);
 
 } // end namespaces

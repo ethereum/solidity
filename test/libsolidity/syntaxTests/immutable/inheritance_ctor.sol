@@ -1,14 +1,14 @@
 contract B {
     uint immutable x;
 
-    constructor() public {
+    constructor() {
         x = 3;
     }
 }
 
 contract C is B {
     uint immutable y;
-    constructor() public {
+    constructor() {
         y = 3;
     }
 }

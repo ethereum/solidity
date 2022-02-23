@@ -8,4 +8,4 @@ contract C
 	}
 }
 // ----
-// SyntaxError: (89-95): Variable declarations can only be used inside blocks.
+// SyntaxError 9079: (89-95): Variable declarations can only be used inside blocks.

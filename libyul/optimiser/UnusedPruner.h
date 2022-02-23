@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimisation stage that removes unused variables and functions.
  */
@@ -49,9 +50,7 @@ class UnusedPruner: public ASTModifier
 {
 public:
 	static constexpr char const* name{"UnusedPruner"};
-	static void run(OptimiserStepContext& _context, Block& _ast) {
-		UnusedPruner::runUntilStabilisedOnFullAST(_context.dialect, _ast, _context.reservedIdentifiers);
-	}
+	static void run(OptimiserStepContext& _context, Block& _ast);
 
 
 	using ASTModifier::operator();

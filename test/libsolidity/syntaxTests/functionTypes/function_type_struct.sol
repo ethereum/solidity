@@ -6,3 +6,4 @@ library L
 	}
 	function f(function(Nested memory) external) external pure {}
 }
+// ----

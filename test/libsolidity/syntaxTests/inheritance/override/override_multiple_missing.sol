@@ -18,5 +18,5 @@ abstract contract X is A, B, C, D {
 	function foo() internal override(A, C) virtual returns (uint256);
 }
 // ----
-// TypeError: (533-550): Invalid contract specified in override list: "C".
-// TypeError: (603-617): Function needs to specify overridden contracts "B" and "D".
+// TypeError 2353: (533-550): Invalid contract specified in override list: "C".
+// TypeError 4327: (603-617): Function needs to specify overridden contracts "B" and "D".

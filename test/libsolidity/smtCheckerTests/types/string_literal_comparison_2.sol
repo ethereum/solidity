@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bytes32 _x) public pure {
 		require(_x != "test");
@@ -9,6 +7,9 @@ contract C {
 		assert(y != "testx");
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (147-166): Assertion violation happens here
-// Warning: (170-190): Assertion violation happens here
+// Warning 6328: (114-133): CHC: Assertion violation happens here.
+// Warning 6328: (137-157): CHC: Assertion violation happens here.

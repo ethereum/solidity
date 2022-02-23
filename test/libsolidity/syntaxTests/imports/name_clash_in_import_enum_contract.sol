@@ -4,4 +4,4 @@ enum E { A }
 import "a";
 contract E { }
 // ----
-// DeclarationError: (b:12-26): Identifier already declared.
+// DeclarationError 2333: (b:12-26): Identifier already declared.

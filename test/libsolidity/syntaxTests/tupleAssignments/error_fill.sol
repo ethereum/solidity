@@ -7,5 +7,5 @@ contract C {
 	}
 }
 // ----
-// TypeError: (103-106): Type tuple(uint256,uint256,bytes32) is not implicitly convertible to expected type tuple(uint256,).
-// TypeError: (117-120): Type tuple(uint256,uint256,bytes32) is not implicitly convertible to expected type tuple(,bytes32).
+// TypeError 7407: (103-106): Type tuple(uint256,uint256,bytes32) is not implicitly convertible to expected type tuple(uint256,).
+// TypeError 7407: (117-120): Type tuple(uint256,uint256,bytes32) is not implicitly convertible to expected type tuple(,bytes32).

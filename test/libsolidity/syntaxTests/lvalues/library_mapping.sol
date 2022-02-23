@@ -4,4 +4,4 @@ library L {
     }
 }
 // ----
-// TypeError: (108-109): Mappings cannot be assigned to.
+// TypeError 9214: (108-109): Types in storage containing (nested) mappings cannot be assigned to.

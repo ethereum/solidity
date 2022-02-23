@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
     struct S { uint a; T[] sub; bytes b; }
     struct T { uint[2] x; }

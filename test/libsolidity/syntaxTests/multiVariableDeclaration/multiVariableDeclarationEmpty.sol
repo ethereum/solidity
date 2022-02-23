@@ -6,6 +6,6 @@ contract C {
     }
 }
 // ----
-// TypeError: (52-74): Different number of components on the left hand side (2) than on the right hand side (0).
-// TypeError: (84-98): Different number of components on the left hand side (1) than on the right hand side (0).
-// TypeError: (108-120): Different number of components on the left hand side (1) than on the right hand side (0).
+// TypeError 7364: (52-74): Different number of components on the left hand side (2) than on the right hand side (0).
+// TypeError 7364: (84-98): Different number of components on the left hand side (1) than on the right hand side (0).
+// TypeError 7364: (108-120): Different number of components on the left hand side (1) than on the right hand side (0).

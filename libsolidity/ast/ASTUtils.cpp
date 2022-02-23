@@ -14,16 +14,41 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 
+#include <libsolutil/Algorithms.h>
+
 namespace solidity::frontend
 {
+
+bool isConstantVariableRecursive(VariableDeclaration const& _varDecl)
+{
+	solAssert(_varDecl.isConstant(), "Constant variable expected");
+
+	auto visitor = [](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
+	{
+		solAssert(_depth < 256, "Recursion depth limit reached");
+		if (!_variable.value())
+			// This should result in an error later on.
+			return;
+
+		if (auto referencedVarDecl = dynamic_cast<VariableDeclaration const*>(
+			ASTNode::referencedDeclaration(*_variable.value()))
+		)
+			if (referencedVarDecl->isConstant())
+				_cycleDetector.run(*referencedVarDecl);
+	};
+
+	return util::CycleDetector<VariableDeclaration>(visitor).run(_varDecl) != nullptr;
+}
 
 VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration const& _varDecl)
 {
 	solAssert(_varDecl.isConstant(), "Constant variable expected");
+	solAssert(!isConstantVariableRecursive(_varDecl), "Recursive declaration");
 
 	VariableDeclaration const* rootDecl = &_varDecl;
 	Identifier const* identifier;

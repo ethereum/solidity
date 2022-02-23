@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <test/tools/ossfuzz/solProto.pb.h>
@@ -36,7 +37,7 @@ struct SolRandomNumGenerator
 	/// @returns a pseudo random unsigned integer
 	unsigned operator()()
 	{
-		return m_random();
+		return static_cast<unsigned>(m_random());
 	}
 
 	RandomEngine m_random;

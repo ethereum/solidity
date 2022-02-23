@@ -6,4 +6,4 @@ contract test {
     function fun(uint a) public returns(uint r) { return a; }
 }
 // ----
-// DeclarationError: (189-246): Function with same name and arguments defined twice.
+// DeclarationError 1686: (189-246): Function with same name and parameter types defined twice.

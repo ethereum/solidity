@@ -1,11 +1,9 @@
-pragma experimental SMTChecker;pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
     function f() public pure returns (bytes memory, bytes memory) {
         return (abi.encode(""), abi.encodePacked( "7?8r"));
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (162-165): Assertion checker does not yet implement type abi
-// Warning: (162-176): Assertion checker does not yet implement this type of function call.
-// Warning: (178-181): Assertion checker does not yet implement type abi
-// Warning: (178-203): Assertion checker does not yet implement this type of function call.

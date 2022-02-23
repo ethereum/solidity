@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
     function f(bool x, bool y) public pure {
         uint a;
@@ -19,3 +18,6 @@ contract C {
         assert(!xor_x_y || a > 0);
     }
 }
+// ====
+// SMTEngine: all
+// ----

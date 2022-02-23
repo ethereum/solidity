@@ -13,6 +13,9 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(uint256): 3 -> 10
 // a() -> 0

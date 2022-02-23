@@ -14,12 +14,15 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
+
+#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <iosfwd>
 #include <string>
@@ -46,8 +49,7 @@ private:
 
 	bool m_optimise = false;
 	bool m_optimiseYul = false;
-	size_t m_optimiseRuns = 200;
-	std::string m_source;
+	size_t m_optimiseRuns = OptimiserSettings{}.expectedExecutionsPerDeployment;
 	std::map<std::string, std::map<std::string, std::string>> m_expectations;
 };
 

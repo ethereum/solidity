@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: (114-115): Cannot access local Solidity variables from inside an inline assembly function.
+// DeclarationError 6578: (114-115): Cannot access local Solidity variables from inside an inline assembly function.

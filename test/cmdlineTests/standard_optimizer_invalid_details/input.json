@@ -1,16 +1,9 @@
 {
 	"language": "Solidity",
-	"sources":
-	{
-		"A":
-		{
-			"content": "//SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; contract C { function f() public pure {} }"
-		}
+	"sources": {
+		"A": {"urls": ["standard_optimizer_invalid_details/in.sol"]}
 	},
-	"settings":
-	{
-		"optimizer": {
-			"details": { "notThere": true }
-		}
+	"settings": {
+		"optimizer": {"details": {"notThere": true}}
 	}
 }

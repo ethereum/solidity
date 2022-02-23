@@ -1,9 +1,9 @@
 contract test {
     enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-    constructor() public {
+    constructor() {
         choices = Sit;
     }
     ActionChoices choices;
 }
 // ----
-// DeclarationError: (121-124): Undeclared identifier.
+// DeclarationError 7576: (114-117): Undeclared identifier.

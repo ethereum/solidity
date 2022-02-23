@@ -42,8 +42,6 @@
 
 #pragma once
 
-#include <libsolutil/Common.h>
-#include <liblangutil/Exceptions.h>
 #include <liblangutil/UndefMacros.h>
 
 #include <iosfwd>
@@ -83,7 +81,8 @@ namespace solidity::langutil
 	T(Semicolon, ";", 0)                                                \
 	T(Period, ".", 0)                                                   \
 	T(Conditional, "?", 3)                                              \
-	T(Arrow, "=>", 0)                                                   \
+	T(DoubleArrow, "=>", 0)                                             \
+	T(RightArrow, "->", 0)                                              \
 	\
 	/* Assignment operators. */										\
 	/* IsAssignmentOp() relies on this block of enum values being */	\
@@ -148,6 +147,7 @@ namespace solidity::langutil
 	K(As, "as", 0)                                                     \
 	K(Assembly, "assembly", 0)                                         \
 	K(Break, "break", 0)                                               \
+	K(Catch, "catch", 0)                                               \
 	K(Constant, "constant", 0)                                         \
 	K(Constructor, "constructor", 0)                                   \
 	K(Continue, "continue", 0)                                         \
@@ -187,17 +187,18 @@ namespace solidity::langutil
 	K(CallData, "calldata", 0)                                         \
 	K(Struct, "struct", 0)                                             \
 	K(Throw, "throw", 0)                                               \
+	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
+	K(Unchecked, "unchecked", 0)                                       \
+	K(Unicode, "unicode", 0)                                           \
 	K(Using, "using", 0)                                               \
-	K(Var, "var", 0)                                                   \
 	K(View, "view", 0)                                                 \
 	K(Virtual, "virtual", 0)                                           \
 	K(While, "while", 0)                                               \
 	\
 	/* Ether subdenominations */                                       \
 	K(SubWei, "wei", 0)                                                \
-	K(SubSzabo, "szabo", 0)                                            \
-	K(SubFinney, "finney", 0)                                          \
+	K(SubGwei, "gwei", 0)                                              \
 	K(SubEther, "ether", 0)                                            \
 	K(SubSecond, "seconds", 0)                                         \
 	K(SubMinute, "minutes", 0)                                         \
@@ -209,7 +210,6 @@ namespace solidity::langutil
 	K(Int, "int", 0)                                                   \
 	K(UInt, "uint", 0)                                                 \
 	K(Bytes, "bytes", 0)                                               \
-	K(Byte, "byte", 0)                                                 \
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
@@ -227,6 +227,7 @@ namespace solidity::langutil
 	K(FalseLiteral, "false", 0)                                        \
 	T(Number, nullptr, 0)                                              \
 	T(StringLiteral, nullptr, 0)                                       \
+	T(UnicodeStringLiteral, nullptr, 0)                                \
 	T(HexStringLiteral, nullptr, 0)                                    \
 	T(CommentLiteral, nullptr, 0)                                      \
 	\
@@ -238,8 +239,8 @@ namespace solidity::langutil
 	K(Alias, "alias", 0)                                               \
 	K(Apply, "apply", 0)                                               \
 	K(Auto, "auto", 0)                                                 \
+	K(Byte, "byte", 0)                                                 \
 	K(Case, "case", 0)                                                 \
-	K(Catch, "catch", 0)                                               \
 	K(CopyOf, "copyof", 0)                                             \
 	K(Default, "default", 0)                                           \
 	K(Define, "define", 0)                                             \
@@ -262,10 +263,12 @@ namespace solidity::langutil
 	K(Static, "static", 0)                                             \
 	K(Supports, "supports", 0)                                         \
 	K(Switch, "switch", 0)                                             \
-	K(Try, "try", 0)                                                   \
 	K(Typedef, "typedef", 0)                                           \
 	K(TypeOf, "typeof", 0)                                             \
-	K(Unchecked, "unchecked", 0)                                       \
+	K(Var, "var", 0)                                                   \
+	\
+	/* Yul-specific tokens, but not keywords. */                       \
+	T(Leave, "leave", 0)                                               \
 	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
@@ -306,25 +309,50 @@ namespace TokenTraits
 	constexpr bool isVisibilitySpecifier(Token op) { return isVariableVisibilitySpecifier(op) || op == Token::External; }
 	constexpr bool isLocationSpecifier(Token op) { return op == Token::Memory || op == Token::Storage || op == Token::CallData; }
 
-	constexpr bool isStateMutabilitySpecifier(Token op, bool _allowConstant = true)
+	constexpr bool isStateMutabilitySpecifier(Token op)
 	{
-		return (op == Token::Constant && _allowConstant)
-			|| op == Token::Pure || op == Token::View || op == Token::Payable;
+		return op == Token::Pure || op == Token::View || op == Token::Payable;
 	}
 
-	constexpr bool isEtherSubdenomination(Token op) { return op == Token::SubWei || op == Token::SubSzabo || op == Token::SubFinney || op == Token::SubEther; }
+	constexpr bool isEtherSubdenomination(Token op) { return op >= Token::SubWei && op <= Token::SubEther; }
 	constexpr bool isTimeSubdenomination(Token op) { return op == Token::SubSecond || op == Token::SubMinute || op == Token::SubHour || op == Token::SubDay || op == Token::SubWeek || op == Token::SubYear; }
-	constexpr bool isReservedKeyword(Token op) { return (Token::After <= op && op <= Token::Unchecked); }
+	constexpr bool isReservedKeyword(Token op) { return (Token::After <= op && op <= Token::Var); }
 
-	inline Token AssignmentToBinaryOp(Token op)
+	constexpr bool isYulKeyword(Token tok)
 	{
-		solAssert(isAssignmentOp(op) && op != Token::Assign, "");
-		return static_cast<Token>(static_cast<int>(op) + (static_cast<int>(Token::BitOr) - static_cast<int>(Token::AssignBitOr)));
+		return tok == Token::Function || tok == Token::Let || tok == Token::If || tok == Token::Switch || tok == Token::Case ||
+			tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue || tok == Token::Leave ||
+			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex;
 	}
+
+	bool isYulKeyword(std::string const& _literal);
+
+	Token AssignmentToBinaryOp(Token op);
 
 	// @returns the precedence > 0 for binary and compare
 	// operators; returns 0 otherwise.
-	int precedence(Token tok);
+	constexpr int precedence(Token tok)
+	{
+		int8_t constexpr precs[TokenTraits::count()] =
+		{
+			#define T(name, string, precedence) precedence,
+			TOKEN_LIST(T, T)
+			#undef T
+		};
+		return precs[static_cast<size_t>(tok)];
+	}
+
+	constexpr bool hasExpHighestPrecedence()
+	{
+		constexpr int expPrecedence = TokenTraits::precedence(Token::Exp);
+		static_assert(expPrecedence == 14, "Exp precedence changed.");
+
+		#define T(name, string, precedence) ((Token::name == Token::Exp) || precedence < expPrecedence) &&
+		return
+			TOKEN_LIST(T, T)
+			true;
+		#undef T
+	}
 
 	std::tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(std::string const& _literal);
 
@@ -359,17 +387,7 @@ public:
 	Token token() const { return m_token; }
 
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
-	std::string toString(bool const& tokenValue = false) const
-	{
-		std::string name = TokenTraits::toString(m_token);
-		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))
-			return name;
-		solAssert(name.size() >= 3, "Token name size should be greater than 3. Should not reach here.");
-		if (m_token == Token::FixedMxN || m_token == Token::UFixedMxN)
-			return name.substr(0, name.size() - 3) + std::to_string(m_firstNumber) + "x" + std::to_string(m_secondNumber);
-		else
-			return name.substr(0, name.size() - 1) + std::to_string(m_firstNumber);
-	}
+	std::string toString(bool const& tokenValue = false) const;
 
 private:
 	Token m_token;

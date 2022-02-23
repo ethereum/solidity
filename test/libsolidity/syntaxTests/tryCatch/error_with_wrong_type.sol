@@ -9,4 +9,4 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// TypeError: (94-123): Expected `catch Error(string memory ...) { ... }`.
+// TypeError 2943: (94-123): Expected `catch Error(string memory ...) { ... }`.

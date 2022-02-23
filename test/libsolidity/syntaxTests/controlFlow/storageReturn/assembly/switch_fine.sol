@@ -1,24 +1,18 @@
 contract C {
     struct S { bool f; }
     S s;
-    function f(uint256 a) internal pure returns (S storage c) {
-        assembly {
-            switch a
-            default { c_slot := s_slot }
-        }
-    }
-    function g(bool flag) internal pure returns (S storage c) {
+    function f(bool flag) internal pure returns (S storage c) {
         assembly {
             switch flag
-            case 0 { c_slot := s_slot }
-            default { c_slot := s_slot }
+            case 0 { c.slot := s.slot }
+            default { c.slot := s.slot }
         }
     }
-    function h(uint256 a) internal pure returns (S storage c) {
+    function g(uint256 a) internal pure returns (S storage c) {
         assembly {
             switch a
             case 0 { revert(0, 0) }
-            default { c_slot := s_slot }
+            default { c.slot := s.slot }
         }
     }
 }

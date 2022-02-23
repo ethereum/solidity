@@ -13,3 +13,4 @@ contract B is I {
 contract X is A, B {
 	function set() public override(A, B) { super.set(); }
 }
+// ----

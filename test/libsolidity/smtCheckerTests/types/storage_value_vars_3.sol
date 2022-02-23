@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C
 {
     function f(uint x) public {
@@ -23,3 +22,6 @@ contract C
     bool b;
     uint c;
 }
+// ====
+// SMTEngine: all
+// ----

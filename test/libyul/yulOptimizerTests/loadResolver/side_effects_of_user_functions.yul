@@ -12,17 +12,19 @@
 // step: loadResolver
 //
 // {
+//     {
+//         let _1 := 9
+//         let _2 := 2
+//         mstore(_2, _1)
+//         reads()
+//         let _4 := _1
+//         let _5 := 0
+//         sstore(_5, _4)
+//         stores()
+//         sstore(_5, mload(_2))
+//     }
 //     function stores()
 //     { mstore(0, 1) }
 //     function reads()
 //     { sstore(9, mload(7)) }
-//     let _6 := 9
-//     let _7 := 2
-//     mstore(_7, _6)
-//     reads()
-//     let _9 := _6
-//     let _10 := 0
-//     sstore(_10, _9)
-//     stores()
-//     sstore(_10, mload(_7))
 // }

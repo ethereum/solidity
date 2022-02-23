@@ -1,6 +1,7 @@
 .. index:: !mapping
 .. _mapping-types:
 
+<<<<<<< HEAD
 Mappages
 --------
 
@@ -17,6 +18,40 @@ Ils ne peuvent pas être utilisés comme paramètres ou paramètres de retour de
 
 Vous pouvez marquer les variables de type mapping comme ``public`` et Solidity crée un :ref:`getter <visibility-and-getters>` pour vous. Le ```_KeyType`` devient un paramètre pour le getter. Si ``_ValueType`` est un type de valeur ou une structure, le getter retourne ``_ValueType``.
 Si ``_ValueType`` est un tableau ou un mappage, le getter a un paramètre pour chaque ``_KeyType``, de manière récursive.
+=======
+Mapping Types
+=============
+
+Mapping types use the syntax ``mapping(_KeyType => _ValueType)`` and variables
+of mapping type are declared using the syntax ``mapping(_KeyType => _ValueType) _VariableName``.
+The ``_KeyType`` can be any
+built-in value type, ``bytes``, ``string``, or any contract or enum type. Other user-defined
+or complex types, such as mappings, structs or array types are not allowed.
+``_ValueType`` can be any type, including mappings, arrays and structs.
+
+You can think of mappings as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_, which are virtually initialised
+such that every possible key exists and is mapped to a value whose
+byte-representation is all zeros, a type's :ref:`default value <default-value>`.
+The similarity ends there, the key data is not stored in a
+mapping, only its ``keccak256`` hash is used to look up the value.
+
+Because of this, mappings do not have a length or a concept of a key or
+value being set, and therefore cannot be erased without extra information
+regarding the assigned keys (see :ref:`clearing-mappings`).
+
+Mappings can only have a data location of ``storage`` and thus
+are allowed for state variables, as storage reference types
+in functions, or as parameters for library functions.
+They cannot be used as parameters or return parameters
+of contract functions that are publicly visible.
+These restrictions are also true for arrays and structs that contain mappings.
+
+You can mark state variables of mapping type as ``public`` and Solidity creates a
+:ref:`getter <visibility-and-getters>` for you. The ``_KeyType`` becomes a parameter for the getter.
+If ``_ValueType`` is a value type or a struct, the getter returns ``_ValueType``.
+If ``_ValueType`` is an array or a mapping, the getter has one parameter for
+each ``_KeyType``, recursively.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
 In the example below, the ``MappingExample`` contract defines a public ``balances``
 mapping, with the key type an ``address``, and a value type a ``uint``, mapping
@@ -24,10 +59,10 @@ an Ethereum address to an unsigned integer value. As ``uint`` is a value type, t
 returns a value that matches the type, which you can see in the ``MappingUser``
 contract that returns the value at the specified address.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract MappingExample {
         mapping(address => uint) public balances;
@@ -50,10 +85,10 @@ The example below is a simplified version of an
 ``_allowances`` is an example of a mapping type inside another mapping type.
 The example below uses ``_allowances`` to record the amount someone else is allowed to withdraw from your account.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.9.0;
 
     contract MappingExample {
 
@@ -68,23 +103,24 @@ The example below uses ``_allowances`` to record the amount someone else is allo
         }
 
         function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+            require(_allowances[sender][msg.sender] >= amount, "ERC20: Allowance not high enough.");
+            _allowances[sender][msg.sender] -= amount;
             _transfer(sender, recipient, amount);
-            approve(sender, msg.sender, amount);
             return true;
         }
 
-        function approve(address owner, address spender, uint256 amount) public returns (bool) {
-            require(owner != address(0), "ERC20: approve from the zero address");
+        function approve(address spender, uint256 amount) public returns (bool) {
             require(spender != address(0), "ERC20: approve to the zero address");
 
-            _allowances[owner][spender] = amount;
-            emit Approval(owner, spender, amount);
+            _allowances[msg.sender][spender] = amount;
+            emit Approval(msg.sender, spender, amount);
             return true;
         }
 
         function _transfer(address sender, address recipient, uint256 amount) internal {
             require(sender != address(0), "ERC20: transfer from the zero address");
             require(recipient != address(0), "ERC20: transfer to the zero address");
+            require(_balances[sender] >= amount, "ERC20: Not enough funds.");
 
             _balances[sender] -= amount;
             _balances[recipient] += amount;
@@ -105,10 +141,11 @@ top of them and iterate over that. For example, the code below implements an
 ``IterableMapping`` library that the ``User`` contract then adds data too, and
 the ``sum`` function iterates over to sum all the values.
 
-::
+.. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
+    pragma solidity >=0.6.8 <0.9.0;
 
     struct IndexValue { uint keyIndex; uint value; }
     struct KeyFlag { uint key; bool deleted; }
@@ -149,7 +186,7 @@ the ``sum`` function iterates over to sum all the values.
         }
 
         function iterate_start(itmap storage self) internal view returns (uint keyIndex) {
-            return iterate_next(self, uint(-1));
+            return iterate_next(self, type(uint).max);
         }
 
         function iterate_valid(itmap storage self, uint keyIndex) internal view returns (bool) {

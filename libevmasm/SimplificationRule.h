@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Expression simplification pattern.
  */
@@ -29,9 +30,8 @@ namespace solidity::evmasm
 
 /**
  * Rule that contains a pattern, an action that can be applied
- * after the pattern has matched and a bool that indicates
- * whether the action would remove something from the expression
- * than is not a constant literal.
+ * after the pattern has matched and optional condition to check if the
+ * action should be applied.
  */
 template <class Pattern>
 struct SimplificationRule
@@ -39,18 +39,15 @@ struct SimplificationRule
 	SimplificationRule(
 		Pattern _pattern,
 		std::function<Pattern()> _action,
-		bool _removesNonConstants,
 		std::function<bool()> _feasible = {}
 	):
 		pattern(std::move(_pattern)),
 		action(std::move(_action)),
-		removesNonConstants(_removesNonConstants),
 		feasible(std::move(_feasible))
 	{}
 
 	Pattern pattern;
 	std::function<Pattern()> action;
-	bool removesNonConstants;
 	std::function<bool()> feasible;
 };
 
@@ -129,6 +126,7 @@ struct EVMBuiltins
 	static auto constexpr GASLIMIT = PatternGenerator<Instruction::GASLIMIT>{};
 	static auto constexpr CHAINID = PatternGenerator<Instruction::CHAINID>{};
 	static auto constexpr SELFBALANCE = PatternGenerator<Instruction::SELFBALANCE>{};
+	static auto constexpr BASEFEE = PatternGenerator<Instruction::BASEFEE>{};
 	static auto constexpr POP = PatternGenerator<Instruction::POP>{};
 	static auto constexpr MLOAD = PatternGenerator<Instruction::MLOAD>{};
 	static auto constexpr MSTORE = PatternGenerator<Instruction::MSTORE>{};

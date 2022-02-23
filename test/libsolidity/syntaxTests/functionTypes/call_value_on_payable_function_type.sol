@@ -4,3 +4,4 @@ contract C {
         x{value: 2}(1);
     }
 }
+// ----

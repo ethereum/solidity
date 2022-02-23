@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	bytes32 x;
@@ -11,5 +9,7 @@ contract C
 		return x;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (116-130): Assertion violation happens here
+// Warning 6328: (83-97): CHC: Assertion violation happens here.\nCounterexample:\nx = 0x0\ny = 0x0\n\nTransaction trace:\nC.constructor()\nState: x = 0x0\nC.f(0x0)\n    C.g() -- internal call

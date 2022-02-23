@@ -21,6 +21,10 @@ Both kinds of source mappings use integer identifiers to refer to source files.
 The identifier of a source file is stored in
 ``output['sources'][sourceName]['id']`` where ``output`` is the output of the
 standard-json compiler interface parsed as JSON.
+For some utility routines, the compiler generates "internal" source files
+that are not part of the original input but are referenced from the source
+mappings. These source files together with their identifiers can be
+obtained via ``output['contracts'][sourceName][contractName]['evm']['bytecode']['generatedSources']``.
 
 .. note ::
     In the case of instructions that are not associated with any particular source file,
@@ -52,11 +56,15 @@ used in a single modifier.
 In order to compress these source mappings especially for bytecode, the
 following rules are used:
 
- - If a field is empty, the value of the preceding element is used.
- - If a ``:`` is missing, all following fields are considered empty.
+- If a field is empty, the value of the preceding element is used.
+- If a ``:`` is missing, all following fields are considered empty.
 
 This means the following source mappings represent the same information:
 
 ``1:2:1;1:9:1;2:1:2;2:1:2;2:1:2``
 
 ``1:2:1;:9;2:1:2;;``
+
+Important to note is that when the :ref:`verbatim <yul-verbatim>` builtin is used,
+the source mappings will be invalid: The builtin is considered a single
+instruction instead of potentially multiple.

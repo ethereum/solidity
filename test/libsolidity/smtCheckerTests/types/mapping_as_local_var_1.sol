@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract c {
 	mapping(uint => uint) x;
 	mapping(uint => uint) y;
@@ -15,7 +13,9 @@ contract c {
 			assert(a[2] == y[2] && a[2] != x[2]);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (166-178): Internal error: Expression undefined for SMT solver.
-// Warning: (288-324): Assertion violation happens here
-// Warning: (336-372): Assertion violation happens here
+// Warning 6328: (255-291): CHC: Assertion violation happens here.
+// Warning 6328: (303-339): CHC: Assertion violation happens here.

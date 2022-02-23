@@ -12,6 +12,6 @@ contract B {
     }
 }
 // ----
-// TypeError: (160-165): Cannot call function via contract type name.
-// TypeError: (175-180): Cannot call function via contract type name.
-// TypeError: (190-195): Cannot call function via contract type name.
+// TypeError 3419: (160-165): Cannot call function via contract type name.
+// TypeError 3419: (175-180): Cannot call function via contract type name.
+// TypeError 3419: (190-195): Cannot call function via contract type name.

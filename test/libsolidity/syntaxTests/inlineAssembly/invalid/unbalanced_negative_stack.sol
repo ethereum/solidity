@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (85-86): Expected '(' but got '}'
+// ParserError 6913: (85-86): Call or assignment expected.

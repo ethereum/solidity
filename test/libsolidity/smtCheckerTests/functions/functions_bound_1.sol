@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library L
 {
 	function add(uint x, uint y) internal pure returns (uint) {
@@ -17,3 +15,6 @@ contract C
 		assert(y < 10000);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

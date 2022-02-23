@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (52-92): Named arguments cannot be used for functions that take arbitrary parameters.
+// TypeError 2627: (52-92): Named arguments cannot be used for functions that take arbitrary parameters.

@@ -14,9 +14,10 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/optimiser/VarDeclInitializer.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
@@ -46,11 +47,10 @@ void VarDeclInitializer::operator()(Block& _block)
 			else
 			{
 				OptionalStatements ret{vector<Statement>{}};
-				langutil::SourceLocation loc{std::move(_varDecl.location)};
 				for (auto& var: _varDecl.variables)
 				{
 					unique_ptr<Expression> expr = make_unique<Expression >(m_dialect.zeroLiteralForType(var.type));
-					ret->emplace_back(VariableDeclaration{loc, {std::move(var)}, std::move(expr)});
+					ret->emplace_back(VariableDeclaration{std::move(_varDecl.debugData), {std::move(var)}, std::move(expr)});
 				}
 				return ret;
 			}

@@ -2,7 +2,7 @@
 // "new A".
 contract B {
 	A a;
-	constructor() public {
+	constructor() {
 		a = new A(address(this));
 	}
 }
@@ -10,4 +10,4 @@ contract A {
 	constructor(address) internal {}
 }
 // ----
-// TypeError: (141-146): Contract with internal constructor cannot be created directly.
+// DeclarationError 1845: (175-207): Non-abstract contracts cannot have internal constructors. Remove the "internal" keyword and make the contract abstract to fix this.

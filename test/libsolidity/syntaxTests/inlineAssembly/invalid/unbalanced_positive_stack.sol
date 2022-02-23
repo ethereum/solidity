@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (83-84): Call or assignment expected.
+// ParserError 6913: (83-84): Call or assignment expected.

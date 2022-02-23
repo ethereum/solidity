@@ -16,7 +16,10 @@
 
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>
-#include <libsolidity/ast/Types.h>
+
+#include <test/ExecutionFramework.h>
+
+#include <utility>
 
 namespace solidity::frontend::test
 {
@@ -24,40 +27,42 @@ namespace solidity::frontend::test
 /**
  * All soltest tokens.
  */
-#define SOLT_TOKEN_LIST(T, K)      \
-	T(Unknown, "unknown", 0)       \
-	T(Invalid, "invalid", 0)       \
-	T(EOS, "EOS", 0)               \
-	T(Whitespace, "_", 0)          \
-	/* punctuations */             \
-	T(LParen, "(", 0)              \
-	T(RParen, ")", 0)              \
-	T(LBrack, "[", 0)              \
-	T(RBrack, "]", 0)              \
-	T(LBrace, "{", 0)              \
-	T(RBrace, "}", 0)              \
-	T(Sub,    "-", 0)              \
-	T(Colon,  ":", 0)              \
-	T(Comma,  ",", 0)              \
-	T(Period, ".", 0)              \
-	T(Arrow, "->", 0)              \
-	T(Newline, "//", 0)            \
-	/* Literals & identifier */    \
-	T(Comment, "#", 0)             \
-	T(Number, "number", 0)         \
-	T(HexNumber, "hex_number", 0)  \
-	T(String, "string", 0)         \
-	T(Identifier, "identifier", 0) \
-	/* type keywords */            \
-	K(Ether, "ether", 0)           \
-	K(Wei, "wei", 0)               \
-	K(Hex, "hex", 0)               \
-	K(Boolean, "boolean", 0)       \
-	/* special keywords */         \
-	K(Left, "left", 0)             \
-	K(Library, "library", 0)       \
-	K(Right, "right", 0)           \
-	K(Failure, "FAILURE", 0)       \
+#define SOLT_TOKEN_LIST(T, K)          \
+	T(Unknown, "unknown", 0)           \
+	T(Invalid, "invalid", 0)           \
+	T(EOS, "EOS", 0)                   \
+	T(Whitespace, "_", 0)              \
+	/* punctuations */                 \
+	T(LParen, "(", 0)                  \
+	T(RParen, ")", 0)                  \
+	T(LBrack, "[", 0)                  \
+	T(RBrack, "]", 0)                  \
+	T(LBrace, "{", 0)                  \
+	T(RBrace, "}", 0)                  \
+	T(Sub,    "-", 0)                  \
+	T(Tilde,  "~", 0)                  \
+	T(Colon,  ":", 0)                  \
+	T(Comma,  ",", 0)                  \
+	T(Period, ".", 0)                  \
+	T(Arrow, "->", 0)                  \
+	T(Newline, "//", 0)                \
+	/* Literals & identifier */        \
+	T(Comment, "#", 0)                 \
+	T(Number, "number", 0)             \
+	T(HexNumber, "hex_number", 0)      \
+	T(String, "string", 0)             \
+	T(Identifier, "identifier", 0)     \
+	/* type keywords */                \
+	K(Ether, "ether", 0)               \
+	K(Wei, "wei", 0)                   \
+	K(Hex, "hex", 0)                   \
+	K(Boolean, "boolean", 0)           \
+	/* special keywords */             \
+	K(Left, "left", 0)                 \
+	K(Library, "library", 0)           \
+	K(Right, "right", 0)               \
+	K(Failure, "FAILURE", 0)           \
+	K(Gas, "gas", 0)                   \
 
 namespace soltest
 {
@@ -102,7 +107,9 @@ struct ABIType
 		SignedDec,
 		Hex,
 		HexString,
-		String
+		String,
+		UnsignedFixedPoint,
+		SignedFixedPoint
 	};
 	enum Align
 	{
@@ -120,6 +127,9 @@ struct ABIType
 	Type type = ABIType::None;
 	Align align = ABIType::AlignRight;
 	size_t size = 32;
+
+	size_t fractionalDigits = 0;
+
 	bool alignDeclared = false;
 };
 
@@ -174,6 +184,8 @@ struct Parameter
 };
 using ParameterList = std::vector<Parameter>;
 
+struct FunctionCall;
+
 /**
  * Represents the expected result of a function call after it has been executed. This may be a single
  * return value or a comma-separated list of return values. It also contains the detected input
@@ -193,6 +205,7 @@ struct FunctionCallExpectations
 	/// A Comment that can be attached to the expectations,
 	/// that is retained and can be displayed.
 	std::string comment;
+
 	/// ABI encoded `bytes` of parsed expected return values. It is checked
 	/// against the actual result of a function call when used in test framework.
 	bytes rawBytes() const
@@ -202,6 +215,9 @@ struct FunctionCallExpectations
 			raw += param.rawBytes;
 		return raw;
 	}
+	/// Gas used by function call
+	/// Should have values for Yul, YulOptimized, Legacy and LegacyOptimized
+	std::map<std::string, u256> gasUsed;
 };
 
 /**
@@ -275,16 +291,51 @@ struct FunctionCall
 		MultiLine
 	};
 	DisplayMode displayMode = DisplayMode::SingleLine;
-	/// Marks this function call as the constructor.
-	bool isConstructor = false;
-	/// If this function call's signature has no name and no arguments,
-	/// a low-level call with unstructured calldata will be issued.
-	bool useCallWithoutSignature = false;
+
+	enum class Kind {
+		Regular,
+		/// Marks this function call as the constructor.
+		Constructor,
+		/// If this function call's signature has no name and no arguments,
+		/// a low-level call with unstructured calldata will be issued.
+		LowLevel,
+		/// Marks a library deployment call.
+		Library,
+		/// Call to a builtin.
+		/// Builtins get registered in `SemanticTest::initializeBuiltins()`.
+		Builtin
+	};
+	Kind kind = Kind::Regular;
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
-	/// Marks a library deployment call.
-	bool isLibrary = false;
+	/// A textual representation of the expected side-effect of the function call.
+	std::vector<std::string> expectedSideEffects{};
+	/// A textual representation of the actual side-effect of the function call.
+	std::vector<std::string> actualSideEffects{};
+};
+
+using Builtin = std::function<std::optional<bytes>(FunctionCall const&)>;
+using SideEffectHook = std::function<std::vector<std::string>(FunctionCall const&)>;
+
+struct LogRecord
+{
+	util::h160 creator;
+	bytes data;
+	std::vector<util::h256> topics;
+
+	LogRecord(util::h160 _creator, bytes _data, std::vector<util::h256> _topics):
+		creator(std::move(_creator)), data(std::move(_data)), topics(std::move(_topics)) {}
+
+	bool operator==(LogRecord const& other) const noexcept
+	{
+		return creator == other.creator && data == other.data && topics == other.topics;
+	}
+
+	bool operator!=(LogRecord const& other) const noexcept
+	{
+		return !operator==(other);
+	}
 };
 
 }

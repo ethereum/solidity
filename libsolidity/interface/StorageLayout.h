@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Generates the storage layout of a contract.
  */
@@ -41,10 +42,10 @@ private:
 	Json::Value generate(VariableDeclaration const& _var, u256 const& _slot, unsigned _offset);
 
 	/// Generates the JSON information for @param _type
-	void generate(TypePointer _type);
+	void generate(Type const* _type);
 
 	/// The key for the JSON object describing a type.
-	std::string typeKeyName(TypePointer _type);
+	std::string typeKeyName(Type const* _type);
 
 	Json::Value m_types;
 

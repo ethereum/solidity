@@ -14,18 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AssemblyStack.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/CommonData.h>
@@ -42,6 +41,9 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul::test::yul_fuzzer;
+
+// Prototype as we can't use the FuzzerInterface.h header.
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
@@ -60,7 +62,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	AssemblyStack stack(
 		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		DebugInfoSelection::All()
 	);
 	try
 	{
@@ -78,12 +81,17 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 	ostringstream os1;
 	ostringstream os2;
+	// Disable memory tracing to avoid false positive reports
+	// such as unused write to memory e.g.,
+	// { mstore(0, 1) }
+	// that would be removed by the redundant store eliminator.
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
+		/*disableMemoryTracing=*/true
 	);
-	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return 0;
 
 	stack.optimize();
@@ -91,8 +99,11 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		os2,
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
-		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
+		/*disableMemoryTracing=*/true
 	);
+
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
+		return 0;
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");

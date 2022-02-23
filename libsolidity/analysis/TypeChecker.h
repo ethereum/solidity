@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -51,15 +52,15 @@ public:
 		m_errorReporter(_errorReporter)
 	{}
 
-	/// Performs type checking on the given contract and all of its sub-nodes.
+	/// Performs type checking on the given source and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
-	bool checkTypeRequirements(ASTNode const& _contract);
+	bool checkTypeRequirements(SourceUnit const& _source);
 
 	/// @returns the type of an expression and asserts that it is present.
-	TypePointer const& type(Expression const& _expression) const;
+	Type const* type(Expression const& _expression) const;
 	/// @returns the type of the given variable and throws if the type is not present
 	/// (this can happen for variables with non-explicit types before their types are resolved)
-	TypePointer const& type(VariableDeclaration const& _variable) const;
+	Type const* type(VariableDeclaration const& _variable) const;
 
 	static bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall);
 
@@ -84,7 +85,7 @@ private:
 	TypePointers typeCheckMetaTypeFunctionAndRetrieveReturnType(FunctionCall const& _functionCall);
 
 	/// Performs type checks and determines result types for type conversion FunctionCall nodes.
-	TypePointer typeCheckTypeConversionAndRetrieveReturnType(
+	Type const* typeCheckTypeConversionAndRetrieveReturnType(
 		FunctionCall const& _functionCall
 	);
 
@@ -95,7 +96,6 @@ private:
 	);
 
 	void typeCheckFallbackFunction(FunctionDefinition const& _function);
-	void typeCheckReceiveFunction(FunctionDefinition const& _function);
 	void typeCheckConstructor(FunctionDefinition const& _function);
 
 	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node parameters.
@@ -110,15 +110,32 @@ private:
 		FunctionTypePointer _functionType
 	);
 
+	/// Performs checks specific to the ABI encode functions of type ABIEncodeCall
+	void typeCheckABIEncodeCallFunction(FunctionCall const& _functionCall);
+
+	/// Performs general checks and checks specific to string concat function call
+	void typeCheckStringConcatFunction(
+		FunctionCall const& _functionCall,
+		FunctionType const* _functionType
+	);
+
+	/// Performs general checks and checks specific to bytes concat function call
+	void typeCheckBytesConcatFunction(
+		FunctionCall const& _functionCall,
+		FunctionType const* _functionType
+	);
+
 	void endVisit(InheritanceSpecifier const& _inheritance) override;
-	void endVisit(UsingForDirective const& _usingFor) override;
 	void endVisit(ModifierDefinition const& _modifier) override;
 	bool visit(FunctionDefinition const& _function) override;
+	void endVisit(ArrayTypeName const& _typeName) override;
 	bool visit(VariableDeclaration const& _variable) override;
+	void endVisit(StructDefinition const& _struct) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
 	bool visit(EventDefinition const& _eventDef) override;
+	bool visit(ErrorDefinition const& _errorDef) override;
 	void endVisit(FunctionTypeName const& _funType) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(IfStatement const& _ifStatement) override;
@@ -127,6 +144,7 @@ private:
 	bool visit(ForStatement const& _forStatement) override;
 	void endVisit(Return const& _return) override;
 	void endVisit(EmitStatement const& _emit) override;
+	void endVisit(RevertStatement const& _revert) override;
 	bool visit(VariableDeclarationStatement const& _variable) override;
 	void endVisit(ExpressionStatement const& _statement) override;
 	bool visit(Conditional const& _conditional) override;
@@ -141,18 +159,18 @@ private:
 	bool visit(IndexAccess const& _indexAccess) override;
 	bool visit(IndexRangeAccess const& _indexRangeAccess) override;
 	bool visit(Identifier const& _identifier) override;
+	void endVisit(IdentifierPath const& _identifierPath) override;
+	void endVisit(UserDefinedTypeName const& _userDefinedTypeName) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;
+	void endVisit(UsingForDirective const& _usingForDirective) override;
 
-	bool contractDependenciesAreCyclic(
-		ContractDefinition const& _contract,
-		std::set<ContractDefinition const*> const& _seenContracts = std::set<ContractDefinition const*>()
-	) const;
+	void checkErrorAndEventParameters(CallableDeclaration const& _callable);
 
 	/// @returns the referenced declaration and throws on error.
 	Declaration const& dereference(Identifier const& _identifier) const;
 	/// @returns the referenced declaration and throws on error.
-	Declaration const& dereference(UserDefinedTypeName const& _typeName) const;
+	Declaration const& dereference(IdentifierPath const& _path) const;
 
 	std::vector<Declaration const*> cleanOverloadedDeclarations(
 		Identifier const& _reference,
@@ -165,7 +183,20 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression, bool _ordinaryAssignment);
 
-	ContractDefinition const* m_scope = nullptr;
+	bool useABICoderV2() const;
+
+	/// @returns the current scope that can have function or type definitions.
+	/// This is either a contract or a source unit.
+	ASTNode const* currentDefinitionScope() const
+	{
+		if (m_currentContract)
+			return m_currentContract;
+		else
+			return m_currentSourceUnit;
+	}
+
+	SourceUnit const* m_currentSourceUnit = nullptr;
+	ContractDefinition const* m_currentContract = nullptr;
 
 	langutil::EVMVersion m_evmVersion;
 

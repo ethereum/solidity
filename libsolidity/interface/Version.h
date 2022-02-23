@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -22,10 +23,15 @@
 
 #pragma once
 
-#include <libsolutil/Common.h>
+#include <cstdint>
+#include <vector>
 #include <string>
 
-namespace solidity::frontend
+namespace solidity
+{
+using bytes = std::vector<uint8_t>;
+
+namespace frontend
 {
 
 extern char const* VersionNumber;
@@ -34,4 +40,5 @@ extern std::string const VersionStringStrict;
 extern bytes const VersionCompactBytes;
 extern bool const VersionIsRelease;
 
+}
 }

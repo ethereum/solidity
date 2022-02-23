@@ -1,4 +1,7 @@
 contract test {
+    function fixedBytesHex() public returns(bytes32 ret) {
+        return hex"aabb00ff";
+    }
     function fixedBytes() public returns(bytes32 ret) {
         return "abc\x00\xff__";
     }
@@ -9,7 +12,9 @@ contract test {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
-// fixedBytes() -> "abc\0\xff__"
-// pipeThrough(bytes2, bool): "\0\x02", true -> "\0\x2", true
+// fixedBytesHex() -> "\xaa\xbb\x00\xff"
+// fixedBytes() -> "abc\x00\xff__"
+// pipeThrough(bytes2,bool): "\x00\x02", true -> "\x00\x02", true

@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (67-70): Cannot use builtin function name "mod" as identifier name.
+// ParserError 5568: (67-70): Cannot use builtin function name "mod" as identifier name.

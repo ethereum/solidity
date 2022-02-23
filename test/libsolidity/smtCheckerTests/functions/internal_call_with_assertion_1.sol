@@ -1,8 +1,6 @@
-pragma experimental SMTChecker;
-
 contract C{
     uint x;
-	constructor(uint y) public {
+	constructor(uint y) {
 		assert(x == 0);
 		x = 1;
 	}
@@ -19,7 +17,9 @@ contract C{
 		assert(x == 1);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
-// Warning: (70-76): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (163-166): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (245-248): Underflow (resulting value less than 0) happens here
+// Warning 5667: (37-43): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Info 1180: Contract invariant(s) for :C:\n!(x >= 2)\n(!(x <= 0) && !(x >= 2))\n(!(x >= 2) && !(x <= 0))\n

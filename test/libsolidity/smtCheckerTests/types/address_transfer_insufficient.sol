@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(address payable a, address payable b) public {
@@ -10,7 +8,10 @@ contract C
 		assert(a.balance == 600);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (134-149): Insufficient funds happens here
-// Warning: (153-169): Insufficient funds happens here
-// Warning: (213-237): Assertion violation happens here
+// Warning 6328: (180-204): CHC: Assertion violation happens here.
+// Warning 1236: (101-116): BMC: Insufficient funds happens here.
+// Warning 1236: (120-136): BMC: Insufficient funds happens here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f() public pure {
 		uint a = 0;
@@ -15,8 +13,9 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning: (128-133): Unreachable code.
-// Warning: (147-151): Unreachable code.
-// Warning: (180-194): Assertion violation happens here
+// Warning 5740: (95-100): Unreachable code.
+// Warning 5740: (114-118): Unreachable code.
+// Warning 6328: (147-161): CHC: Assertion violation happens here.\nCounterexample:\n\na = 1\n\nTransaction trace:\nC.constructor()\nC.f()

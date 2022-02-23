@@ -3,4 +3,4 @@ contract test {
     function tgeo() public { }
 }
 // ----
-// TypeError: (0-78): Function signature hash collision for tgeo()
+// TypeError 1860: (0-78): Function signature hash collision for tgeo()

@@ -14,10 +14,11 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/SourceUpgrade.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolidity/ast/AST.h>
 
@@ -194,6 +195,12 @@ Allowed options)",
 				m_suite.activateModule(Module::OverridingFunction);
 			else if (module == "virtual")
 				m_suite.activateModule(Module::VirtualFunction);
+			else if (module == "dotsyntax")
+				m_suite.activateModule(Module::DotSyntax);
+			else if (module == "now")
+				m_suite.activateModule(Module::NowKeyword);
+			else if (module == "constructor-visibility")
+				m_suite.activateModule(Module::ConstrutorVisibility);
 			else
 			{
 				error() << "Unknown upgrade module \"" + module + "\"" << endl;
@@ -299,13 +306,13 @@ void SourceUpgrade::tryCompile() const
 	{
 		error() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
 	}
-	catch (std::exception const& _e)
+	catch (std::exception const& _exception)
 	{
-		error() << (_e.what() ? ": " + string(_e.what()) : ".") << endl;
+		error() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
 	}
 	catch (...)
 	{
-		error() << "Unknown exception during compilation." << endl;
+		error() << "Unknown exception during compilation: " << boost::current_exception_diagnostic_information() << endl;
 	}
 }
 
@@ -340,14 +347,14 @@ bool SourceUpgrade::analyzeAndUpgrade(pair<string, string> const& _sourceCode)
 		log() << "Analyzing and upgrading " << _sourceCode.first << "." << endl;
 
 	if (m_compiler->state() >= CompilerStack::State::AnalysisPerformed)
-		m_suite.analyze(m_compiler->ast(_sourceCode.first));
+		m_suite.analyze(*m_compiler, m_compiler->ast(_sourceCode.first));
 
 	if (!m_suite.changes().empty())
 	{
 		auto& change = m_suite.changes().front();
 
 		if (verbose)
-			change.log(true);
+			change.log(*m_compiler, true);
 
 		if (change.level() == UpgradeChange::Level::Safe)
 		{
@@ -381,20 +388,19 @@ void SourceUpgrade::applyChange(
 		log() << _change.patch();
 	}
 
-	_change.apply();
-	m_sourceCodes[_sourceCode.first] = _change.source();
+	m_sourceCodes[_sourceCode.first] = _change.apply(_sourceCode.second);
 
 	if (!dryRun)
-		writeInputFile(_sourceCode.first, _change.source());
+		writeInputFile(_sourceCode.first, m_sourceCodes[_sourceCode.first]);
 }
 
 void SourceUpgrade::printErrors() const
 {
-	auto formatter = make_unique<langutil::SourceReferenceFormatterHuman>(cout, true);
+	langutil::SourceReferenceFormatter formatter{cout, *m_compiler, true, false};
 
 	for (auto const& error: m_compiler->errors())
 		if (error->type() != langutil::Error::Type::Warning)
-			formatter->printErrorInformation(*error);
+			formatter.printErrorInformation(*error);
 }
 
 void SourceUpgrade::printStatistics() const
@@ -415,7 +421,7 @@ bool SourceUpgrade::readInputFiles()
 	if (m_args.count(g_argInputFile))
 		for (string path: m_args[g_argInputFile].as<vector<string>>())
 		{
-			auto infile = boost::filesystem::path(path);
+			boost::filesystem::path infile = path;
 			if (!boost::filesystem::exists(infile))
 			{
 				if (!ignoreMissing)
@@ -442,13 +448,12 @@ bool SourceUpgrade::readInputFiles()
 				continue;
 			}
 
-			m_sourceCodes[infile.generic_string()] = readFileAsString(infile.string());
-			path = boost::filesystem::canonical(infile).string();
+			m_sourceCodes[infile.generic_string()] = readFileAsString(infile);
 		}
 
 	if (m_sourceCodes.size() == 0)
 	{
-		warning() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		warning() << "No input files given." << endl;
 		return false;
 	}
 
@@ -478,8 +483,8 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 	{
 		try
 		{
-			auto path = boost::filesystem::path(_path);
-			auto canonicalPath = boost::filesystem::weakly_canonical(path);
+			boost::filesystem::path path = _path;
+			boost::filesystem::path canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
@@ -502,7 +507,7 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 			if (!boost::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
 
-			auto contents = readFileAsString(canonicalPath.string());
+			string contents = readFileAsString(canonicalPath);
 			m_sourceCodes[path.generic_string()] = contents;
 			return ReadCallback::Result{true, contents};
 		}
@@ -512,7 +517,7 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 		}
 		catch (...)
 		{
-			return ReadCallback::Result{false, "Unknown exception in read callback."};
+			return ReadCallback::Result{false, "Unknown exception in read callback: " + boost::current_exception_diagnostic_information()};
 		}
 	};
 
@@ -528,7 +533,7 @@ void SourceUpgrade::resetCompiler()
 
 void SourceUpgrade::resetCompiler(ReadCallback::Callback const& _callback)
 {
-	m_compiler.reset(new CompilerStack(_callback));
+	m_compiler = std::make_unique<CompilerStack>(_callback);
 	m_compiler->setSources(m_sourceCodes);
 	m_compiler->setParserErrorRecovery(true);
 }

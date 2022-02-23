@@ -14,9 +14,11 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <ostream>
 #include <string>
@@ -41,24 +43,32 @@ class Chromosome
 public:
 	Chromosome() = default;
 	explicit Chromosome(std::vector<std::string> _optimisationSteps):
-		m_optimisationSteps(std::move(_optimisationSteps)) {}
-	explicit Chromosome(std::string const& _optimisationSteps);
+		m_genes(stepsToGenes(_optimisationSteps)) {}
+	explicit Chromosome(std::string _genes):
+		// NOTE: We don't validate the genes - they're only checked at the point of conversion to
+		// actual optimisation steps names. This is very convenient in mutation tests.
+		m_genes(std::move(_genes)) {}
 	static Chromosome makeRandom(size_t _length);
 
-	size_t length() const { return m_optimisationSteps.size(); }
-	std::vector<std::string> const& optimisationSteps() const { return m_optimisationSteps; }
+	size_t length() const { return m_genes.size(); }
+	std::string const& genes() const { return m_genes; }
+
+	std::vector<std::string> optimisationSteps() const { return genesToSteps(m_genes); }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Chromosome const& _chromosome);
 
-	bool operator==(Chromosome const& _other) const { return m_optimisationSteps == _other.m_optimisationSteps; }
+	bool operator==(Chromosome const& _other) const { return m_genes == _other.m_genes; }
 	bool operator!=(Chromosome const& _other) const { return !(*this == _other); }
 
 	static std::string const& randomOptimisationStep();
+	static char randomGene();
+	static std::string stepsToGenes(std::vector<std::string> const& _optimisationSteps);
+	static std::vector<std::string> genesToSteps(std::string const& _genes);
 
 private:
 	static std::vector<std::string> allStepNames();
 
-	std::vector<std::string> m_optimisationSteps;
+	std::string m_genes;
 };
 
 }

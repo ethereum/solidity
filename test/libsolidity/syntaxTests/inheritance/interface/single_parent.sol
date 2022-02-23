@@ -3,3 +3,4 @@ interface Super {
 }
 
 interface Sub is Super {}
+// ----

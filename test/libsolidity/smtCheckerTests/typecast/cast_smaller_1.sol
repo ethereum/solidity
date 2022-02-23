@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint16 x) public pure {
@@ -8,5 +6,6 @@ contract C
 		assert(y < 300);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (94-102): Type conversion is not yet fully supported and might yield false positives.

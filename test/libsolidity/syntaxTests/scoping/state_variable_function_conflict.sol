@@ -3,4 +3,4 @@ contract C {
     function f(uint) public pure {}
 }
 // ----
-// DeclarationError: (40-71): Identifier already declared.
+// DeclarationError 2333: (40-71): Identifier already declared.

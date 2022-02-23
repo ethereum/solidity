@@ -3,4 +3,4 @@ contract C {
     uint constant y = x();
 }
 // ----
-// TypeError: (74-77): Initial value for constant variable has to be compile-time constant.
+// TypeError 8349: (74-77): Initial value for constant variable has to be compile-time constant.

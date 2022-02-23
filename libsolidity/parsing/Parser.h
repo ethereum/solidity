@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -28,7 +29,7 @@
 
 namespace solidity::langutil
 {
-class Scanner;
+class CharStream;
 }
 
 namespace solidity::frontend
@@ -46,19 +47,18 @@ public:
 		m_evmVersion(_evmVersion)
 	{}
 
-	ASTPointer<SourceUnit> parse(std::shared_ptr<langutil::Scanner> const& _scanner);
+	ASTPointer<SourceUnit> parse(langutil::CharStream& _charStream);
 
 private:
 	class ASTNodeFactory;
 
+	enum class VarDeclKind { FileLevel, State, Other };
 	struct VarDeclParserOptions
 	{
 		// This is actually not needed, but due to a defect in the C++ standard, we have to.
 		// https://stackoverflow.com/questions/17430377
 		VarDeclParserOptions() {}
-
-		bool allowVar = false;
-		bool isStateVariable = false;
+		VarDeclKind kind = VarDeclKind::Other;
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
 		bool allowInitialValue = false;
@@ -92,9 +92,10 @@ private:
 	ASTPointer<OverrideSpecifier> parseOverrideSpecifier();
 	StateMutability parseStateMutability();
 	FunctionHeaderParserResult parseFunctionHeader(bool _isStateVariable);
-	ASTPointer<ASTNode> parseFunctionDefinition();
+	ASTPointer<ASTNode> parseFunctionDefinition(bool _freeFunction = false);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
+	ASTPointer<UserDefinedValueTypeDefinition> parseUserDefinedValueTypeDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(
 		VarDeclParserOptions const& _options = {},
@@ -102,20 +103,23 @@ private:
 	);
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();
+	ASTPointer<ErrorDefinition> parseErrorDefinition();
 	ASTPointer<UsingForDirective> parseUsingDirective();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
+	ASTPointer<Identifier> parseIdentifierOrAddress();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
+	ASTPointer<IdentifierPath> parseIdentifierPath();
 	ASTPointer<TypeName> parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory);
-	ASTPointer<TypeName> parseTypeName(bool _allowVar);
+	ASTPointer<TypeName> parseTypeName();
 	ASTPointer<FunctionTypeName> parseFunctionType();
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(
 		VarDeclParserOptions const& _options = {},
 		bool _allowEmpty = true
 	);
-	ASTPointer<Block> parseBlock(ASTPointer<ASTString> const& _docString = {});
-	ASTPointer<Statement> parseStatement();
+	ASTPointer<Block> parseBlock(bool _allowUncheckedBlock = false, ASTPointer<ASTString> const& _docString = {});
+	ASTPointer<Statement> parseStatement(bool _allowUncheckedBlock = false);
 	ASTPointer<InlineAssembly> parseInlineAssembly(ASTPointer<ASTString> const& _docString = {});
 	ASTPointer<IfStatement> parseIfStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<TryStatement> parseTryStatement(ASTPointer<ASTString> const& _docString);
@@ -124,6 +128,7 @@ private:
 	ASTPointer<WhileStatement> parseDoWhileStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<ForStatement> parseForStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<EmitStatement> parseEmitStatement(ASTPointer<ASTString> const& docString);
+	ASTPointer<RevertStatement> parseRevertStatement(ASTPointer<ASTString> const& docString);
 	/// A "simple statement" can be a variable declaration statement or an expression statement.
 	ASTPointer<Statement> parseSimpleStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<VariableDeclarationStatement> parseVariableDeclarationStatement(
@@ -150,10 +155,14 @@ private:
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
 	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseNamedArguments();
+	std::pair<ASTPointer<ASTString>, langutil::SourceLocation> expectIdentifierWithLocation();
 	///@}
 
 	///@{
 	///@name Helper functions
+
+	/// @return true if we are at the start of a variable declaration.
+	bool variableDeclarationStart();
 
 	/// Used as return value of @see peekStatementType.
 	enum class LookAheadInfo
@@ -196,6 +205,7 @@ private:
 	ASTPointer<Expression> expressionFromIndexAccessStructure(IndexAccessedPath const& _pathAndIndices);
 
 	ASTPointer<ASTString> expectIdentifierToken();
+	ASTPointer<ASTString> expectIdentifierTokenOrAddress();
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 

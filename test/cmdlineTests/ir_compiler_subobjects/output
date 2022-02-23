@@ -1,96 +1,122 @@
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
-object "C_2" {
+/// @use-src 0:"ir_compiler_subobjects/input.sol"
+object "C_3" {
     code {
         {
-            mstore(64, 128)
+            /// @src 0:82:95  "contract C {}"
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_2_deployed")
-            codecopy(0, dataoffset("C_2_deployed"), _1)
-            return(0, _1)
+            let _2 := datasize("C_3_deployed")
+            codecopy(_1, dataoffset("C_3_deployed"), _2)
+            return(_1, _2)
         }
     }
-    object "C_2_deployed" {
+    /// @use-src 0:"ir_compiler_subobjects/input.sol"
+    object "C_3_deployed" {
         code {
             {
-                mstore(64, 128)
+                /// @src 0:82:95  "contract C {}"
+                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }
 
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
-object "D_13" {
+/// @use-src 0:"ir_compiler_subobjects/input.sol"
+object "D_16" {
     code {
         {
-            mstore(64, 128)
+            /// @src 0:96:165  "contract D {..."
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_13_deployed")
-            codecopy(0, dataoffset("D_13_deployed"), _1)
-            return(0, _1)
+            let _2 := datasize("D_16_deployed")
+            codecopy(_1, dataoffset("D_16_deployed"), _2)
+            return(_1, _2)
         }
     }
-    object "D_13_deployed" {
+    /// @use-src 0:"ir_compiler_subobjects/input.sol"
+    object "D_16_deployed" {
         code {
             {
-                mstore(64, 128)
+                /// @src 0:96:165  "contract D {..."
+                let _1 := memoryguard(0x80)
+                mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_1)))
+                    let _2 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_2)))
                     {
-                        if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        let _2 := datasize("C_2")
-                        let _3 := add(128, _2)
-                        if or(gt(_3, 0xffffffffffffffff), lt(_3, 128)) { revert(_1, _1) }
-                        datacopy(128, dataoffset("C_2"), _2)
-                        pop(create(_1, 128, _2))
-                        return(allocateMemory(_1), _1)
+                        if callvalue() { revert(_2, _2) }
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
+                        /// @src 0:149:156  "new C()"
+                        let _3 := datasize("C_3")
+                        let _4 := add(_1, _3)
+                        if or(gt(_4, 0xffffffffffffffff), lt(_4, _1))
+                        {
+                            /// @src 0:96:165  "contract D {..."
+                            mstore(_2, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(_2, 0x24)
+                        }
+                        /// @src 0:149:156  "new C()"
+                        datacopy(_1, dataoffset("C_3"), _3)
+                        if iszero(create(/** @src 0:96:165  "contract D {..." */ _2, /** @src 0:149:156  "new C()" */ _1, sub(_4, _1)))
+                        {
+                            /// @src 0:96:165  "contract D {..."
+                            let pos := mload(64)
+                            returndatacopy(pos, _2, returndatasize())
+                            revert(pos, returndatasize())
+                        }
+                        return(mload(64), _2)
                     }
                 }
                 revert(0, 0)
             }
-            function allocateMemory(size) -> memPtr
-            {
-                memPtr := mload(64)
-                let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
-                mstore(64, newFreePtr)
-            }
         }
-        object "C_2" {
+        /// @use-src 0:"ir_compiler_subobjects/input.sol"
+        object "C_3" {
             code {
                 {
-                    mstore(64, 128)
+                    /// @src 0:82:95  "contract C {}"
+                    let _1 := memoryguard(0x80)
+                    mstore(64, _1)
                     if callvalue() { revert(0, 0) }
-                    let _1 := datasize("C_2_deployed")
-                    codecopy(0, dataoffset("C_2_deployed"), _1)
-                    return(0, _1)
+                    let _2 := datasize("C_3_deployed")
+                    codecopy(_1, dataoffset("C_3_deployed"), _2)
+                    return(_1, _2)
                 }
             }
-            object "C_2_deployed" {
+            /// @use-src 0:"ir_compiler_subobjects/input.sol"
+            object "C_3_deployed" {
                 code {
                     {
-                        mstore(64, 128)
+                        /// @src 0:82:95  "contract C {}"
+                        mstore(64, memoryguard(0x80))
                         revert(0, 0)
                     }
                 }
+                data ".metadata" hex"<BYTECODE REMOVED>"
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

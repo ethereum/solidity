@@ -1,7 +1,7 @@
 contract A {
     uint immutable public x = 1;
     uint public y;
-    constructor() public {
+    constructor() {
         y = this.x();
     }
 }
@@ -13,5 +13,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=tangerineWhistle
+// compileViaYul: also
 // ----
 // f() -> true

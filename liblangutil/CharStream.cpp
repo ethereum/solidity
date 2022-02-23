@@ -45,9 +45,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2014
- * Solidity scanner.
+ * Character stream / input file.
  */
 
 #include <liblangutil/CharStream.h>
@@ -85,7 +83,7 @@ string CharStream::lineAtPosition(int _position) const
 {
 	// if _position points to \n, it returns the line before the \n
 	using size_type = string::size_type;
-	size_type searchStart = min<size_type>(m_source.size(), _position);
+	size_type searchStart = min<size_type>(m_source.size(), size_type(_position));
 	if (searchStart > 0)
 		searchStart--;
 	size_type lineStart = m_source.rfind('\n', searchStart);
@@ -102,11 +100,12 @@ string CharStream::lineAtPosition(int _position) const
 	return line;
 }
 
-tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
+LineColumn CharStream::translatePositionToLineColumn(int _position) const
 {
 	using size_type = string::size_type;
-	size_type searchPosition = min<size_type>(m_source.size(), _position);
-	int lineNumber = count(m_source.begin(), m_source.begin() + searchPosition, '\n');
+	using diff_type = string::difference_type;
+	size_type searchPosition = min<size_type>(m_source.size(), size_type(_position));
+	int lineNumber = static_cast<int>(count(m_source.begin(), m_source.begin() + diff_type(searchPosition), '\n'));
 	size_type lineStart;
 	if (searchPosition == 0)
 		lineStart = 0;
@@ -115,5 +114,62 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 		lineStart = m_source.rfind('\n', searchPosition - 1);
 		lineStart = lineStart == string::npos ? 0 : lineStart + 1;
 	}
-	return tuple<int, int>(lineNumber, searchPosition - lineStart);
+	return LineColumn{lineNumber, static_cast<int>(searchPosition - lineStart)};
 }
+
+string_view CharStream::text(SourceLocation const& _location) const
+{
+	if (!_location.hasText())
+		return {};
+	solAssert(_location.sourceName && *_location.sourceName == m_name, "");
+	solAssert(static_cast<size_t>(_location.end) <= m_source.size(), "");
+	return string_view{m_source}.substr(
+		static_cast<size_t>(_location.start),
+		static_cast<size_t>(_location.end - _location.start)
+	);
+}
+
+string CharStream::singleLineSnippet(string const& _sourceCode, SourceLocation const& _location)
+{
+	if (!_location.hasText())
+		return {};
+
+	if (static_cast<size_t>(_location.start) >= _sourceCode.size())
+		return {};
+
+	string cut = _sourceCode.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
+	auto newLinePos = cut.find_first_of("\n\r");
+	if (newLinePos != string::npos)
+		cut = cut.substr(0, newLinePos) + "...";
+
+	return cut;
+}
+
+optional<int> CharStream::translateLineColumnToPosition(LineColumn const& _lineColumn) const
+{
+	return translateLineColumnToPosition(m_source, _lineColumn);
+}
+
+optional<int> CharStream::translateLineColumnToPosition(std::string const& _text, LineColumn const& _input)
+{
+	if (_input.line < 0)
+		return nullopt;
+
+	size_t offset = 0;
+	for (int i = 0; i < _input.line; i++)
+	{
+		offset = _text.find('\n', offset);
+		if (offset == _text.npos)
+			return nullopt;
+		offset++; // Skip linefeed.
+	}
+
+	size_t endOfLine = _text.find('\n', offset);
+	if (endOfLine == string::npos)
+		endOfLine = _text.size();
+
+	if (offset + static_cast<size_t>(_input.column) > endOfLine)
+		return nullopt;
+	return offset + static_cast<size_t>(_input.column);
+}
+

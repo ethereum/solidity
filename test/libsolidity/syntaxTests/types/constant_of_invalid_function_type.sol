@@ -4,4 +4,4 @@ contract C {
 
 }
 // ----
-// TypeError: (77-78): Name has to refer to a struct, enum or contract.
+// TypeError 5172: (77-78): Name has to refer to a struct, enum or contract.

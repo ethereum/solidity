@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"settings.modelChecker.contracts is not a JSON object.","message":"settings.modelChecker.contracts is not a JSON object.","severity":"error","type":"JSONError"}]}

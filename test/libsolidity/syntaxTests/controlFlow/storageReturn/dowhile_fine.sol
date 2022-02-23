@@ -29,4 +29,4 @@ contract C {
     }
 }
 // ----
-// Warning: (567-572): Unreachable code.
+// Warning 5740: (567-572): Unreachable code.

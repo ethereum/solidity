@@ -8,16 +8,15 @@
     ]
   },
   "id": 7,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 6,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         6
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -70,15 +70,14 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "ece866b9",
           "id": 5,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "l",
+          "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -101,7 +100,8 @@
         }
       ],
       "scope": 7,
-      "src": "0:90:1"
+      "src": "0:90:1",
+      "usedErrors": []
     }
   ],
   "src": "0:91:1"

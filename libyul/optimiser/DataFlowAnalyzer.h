@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Base class to perform data flow analysis during AST walks.
  * Tracks assignments and is used as base class for both Rematerialiser and
@@ -25,13 +26,10 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/YulString.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
 
-// TODO avoid
-#include <libevmasm/Instruction.h>
-
-#include <libsolutil/InvertibleMap.h>
+#include <libsolutil/Common.h>
 
 #include <map>
 #include <set>
@@ -88,11 +86,7 @@ public:
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
 		std::map<YulString, SideEffects> _functionSideEffects = {}
-	):
-		m_dialect(_dialect),
-		m_functionSideEffects(std::move(_functionSideEffects)),
-		m_knowledgeBase(_dialect, m_value)
-	{}
+	);
 
 	using ASTModifier::operator();
 	void operator()(ExpressionStatement& _statement) override;
@@ -106,7 +100,7 @@ public:
 
 protected:
 	/// Registers the assignment.
-	void handleAssignment(std::set<YulString> const& _names, Expression* _value);
+	void handleAssignment(std::set<YulString> const& _names, Expression* _value, bool _isDeclaration);
 
 	/// Creates a new inner scope.
 	void pushScope(bool _functionScope);
@@ -130,21 +124,39 @@ protected:
 	/// This only works if the current state is a direct successor of the older point,
 	/// i.e. `_otherStorage` and `_otherMemory` cannot have additional changes.
 	void joinKnowledge(
-		InvertibleMap<YulString, YulString> const& _olderStorage,
-		InvertibleMap<YulString, YulString> const& _olderMemory
+		std::unordered_map<YulString, YulString> const& _olderStorage,
+		std::unordered_map<YulString, YulString> const& _olderMemory
 	);
 
 	static void joinKnowledgeHelper(
-		InvertibleMap<YulString, YulString>& _thisData,
-		InvertibleMap<YulString, YulString> const& _olderData
+		std::unordered_map<YulString, YulString>& _thisData,
+		std::unordered_map<YulString, YulString> const& _olderData
 	);
 
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
 
+	/// Returns the literal value of the identifier, if it exists.
+	std::optional<u256> valueOfIdentifier(YulString const& _name);
+
+	enum class StoreLoadLocation {
+		Memory = 0,
+		Storage = 1,
+		Last = Storage
+	};
+
+	/// Checks if the statement is sstore(a, b) / mstore(a, b)
+	/// where a and b are variables and returns these variables in that case.
 	std::optional<std::pair<YulString, YulString>> isSimpleStore(
-		evmasm::Instruction _store,
+		StoreLoadLocation _location,
 		ExpressionStatement const& _statement
+	) const;
+
+	/// Checks if the expression is sload(a) / mload(a)
+	/// where a is a variable and returns the variable in that case.
+	std::optional<YulString> isSimpleLoad(
+		StoreLoadLocation _location,
+		Expression const& _expression
 	) const;
 
 	Dialect const& m_dialect;
@@ -154,14 +166,16 @@ protected:
 
 	/// Current values of variables, always movable.
 	std::map<YulString, AssignedValue> m_value;
-	/// m_references.forward[a].contains(b) <=> the current expression assigned to a references b
-	/// m_references.backward[b].contains(a) <=> the current expression assigned to a references b
-	InvertibleRelation<YulString> m_references;
+	/// m_references[a].contains(b) <=> the current expression assigned to a references b
+	std::unordered_map<YulString, std::set<YulString>> m_references;
 
-	InvertibleMap<YulString, YulString> m_storage;
-	InvertibleMap<YulString, YulString> m_memory;
+	std::unordered_map<YulString, YulString> m_storage;
+	std::unordered_map<YulString, YulString> m_memory;
 
 	KnowledgeBase m_knowledgeBase;
+
+	YulString m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	YulString m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
 
 	/// Current nesting depth of loops.
 	size_t m_loopDepth{0};

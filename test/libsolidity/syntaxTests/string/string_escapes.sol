@@ -1,6 +1,6 @@
 contract test {
     function f() public pure returns (bytes32) {
-        bytes32 escapeCharacters = "\t\b\n\r\f\'\"\\\b";
+        bytes32 escapeCharacters = "\n\r\'\"\\";
         return escapeCharacters;
     }
 }

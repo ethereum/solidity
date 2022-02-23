@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * EVM versioning.
  */
@@ -45,8 +46,9 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 		return hasChainID();
 	case Instruction::SELFBALANCE:
 		return hasSelfBalance();
+	case Instruction::BASEFEE:
+		return hasBaseFee();
 	default:
 		return true;
 	}
 }
-

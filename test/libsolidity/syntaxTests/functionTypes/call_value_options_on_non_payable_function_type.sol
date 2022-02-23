@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (94-105): Cannot set option "value" on a non-payable function type.
+// TypeError 7006: (94-105): Cannot set option "value" on a non-payable function type.

@@ -11,8 +11,10 @@
 // step: fullSimplify
 //
 // {
-//     let a := calldataload(0)
-//     let _4 := 0
-//     let b := a
-//     mstore(b, eq(calldataload(_4), a))
+//     {
+//         let a := calldataload(0)
+//         let _4 := 0
+//         let b := a
+//         mstore(b, eq(calldataload(_4), a))
+//     }
 // }

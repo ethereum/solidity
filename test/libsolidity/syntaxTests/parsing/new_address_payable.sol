@@ -3,3 +3,4 @@ contract C {
         m = new address payable[](10);
     }
 }
+// ----

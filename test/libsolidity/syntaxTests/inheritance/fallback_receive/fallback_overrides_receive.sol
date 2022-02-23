@@ -5,4 +5,4 @@ contract D is C {
 	fallback() override external {}
 }
 // ----
-// TypeError: (76-84): Function has override specified but does not override anything.
+// TypeError 7792: (76-84): Function has override specified but does not override anything.

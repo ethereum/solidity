@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (66-71): Member "pop" is not available in uint256[] calldata outside of storage.
+// TypeError 4994: (66-71): Member "pop" is not available in uint256[] calldata outside of storage.

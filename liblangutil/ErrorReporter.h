@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Rhett <roadriverrail@gmail.com>
  * @date 2017
@@ -23,6 +24,7 @@
 #pragma once
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Exceptions.h>
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
@@ -32,17 +34,6 @@
 
 namespace solidity::langutil
 {
-
-/**
- * Unique identifiers are used to tag and track individual error cases.
- * They are passed as the first parameter of error reporting functions.
- * Suffix _error helps to find them in the sources.
- * The struct ErrorId prevents incidental calls like typeError(3141) instead of typeError(3141_error).
- * To create a new ID, one can add 0000_error and then run "python ./scripts/correct_error_ids.py"
- * from the root of the repo.
- */
-struct ErrorId { unsigned long long error = 0; };
-ErrorId operator"" _error(unsigned long long error);
 
 class ErrorReporter
 {
@@ -72,12 +63,16 @@ public:
 		SecondarySourceLocation const& _secondaryLocation
 	);
 
+	void info(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+
 	void error(
 		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		std::string const& _description
 	);
+
+	void info(ErrorId _error, std::string const& _description);
 
 	void declarationError(
 		ErrorId _error,
@@ -121,20 +116,19 @@ public:
 	void fatalTypeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 	void fatalTypeError(ErrorId _error, SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
 
-	void docstringParsingError(ErrorId _error, std::string const& _description);
 	void docstringParsingError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	ErrorList const& errors() const;
 
 	void clear();
 
-	/// @returns true iff there is any error (ignores warnings).
+	/// @returns true iff there is any error (ignores warnings and infos).
 	bool hasErrors() const
 	{
 		return m_errorCount > 0;
 	}
 
-	/// @returns the number of errors (ignores warnings).
+	/// @returns the number of errors (ignores warnings and infos).
 	unsigned errorCount() const
 	{
 		return m_errorCount;
@@ -142,6 +136,28 @@ public:
 
 	// @returns true if the maximum error count has been reached.
 	bool hasExcessiveErrors() const;
+
+	class ErrorWatcher
+	{
+	public:
+		ErrorWatcher(ErrorReporter const& _errorReporter):
+			m_errorReporter(_errorReporter),
+			m_initialErrorCount(_errorReporter.errorCount())
+		{}
+		bool ok() const
+		{
+			solAssert(m_initialErrorCount <= m_errorReporter.errorCount(), "Unexpected error count.");
+			return m_initialErrorCount == m_errorReporter.errorCount();
+		}
+	private:
+		ErrorReporter const& m_errorReporter;
+		unsigned const m_initialErrorCount;
+	};
+
+	ErrorWatcher errorWatcher() const
+	{
+		return ErrorWatcher(*this);
+	}
 
 private:
 	void error(
@@ -171,9 +187,11 @@ private:
 
 	unsigned m_errorCount = 0;
 	unsigned m_warningCount = 0;
+	unsigned m_infoCount = 0;
 
 	unsigned const c_maxWarningsAllowed = 256;
 	unsigned const c_maxErrorsAllowed = 256;
+	unsigned const c_maxInfosAllowed = 256;
 };
 
 }

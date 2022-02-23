@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -37,6 +38,7 @@ namespace solidity::frontend
 {
 
 class ASTNode;
+class ScopeOpener;
 class SourceUnit;
 class PragmaDirective;
 class ImportDirective;
@@ -49,12 +51,14 @@ class UsingForDirective;
 class StructDefinition;
 class EnumDefinition;
 class EnumValue;
+class UserDefinedValueTypeDefinition;
 class ParameterList;
 class FunctionDefinition;
 class VariableDeclaration;
 class ModifierDefinition;
 class ModifierInvocation;
 class EventDefinition;
+class ErrorDefinition;
 class MagicVariableDeclaration;
 class TypeName;
 class ElementaryTypeName;
@@ -96,6 +100,25 @@ class Literal;
 class StructuredDocumentation;
 
 class VariableScope;
+
+template <class T>
+struct ASTCompareByID
+{
+	using is_transparent = void;
+
+	bool operator()(T const* _lhs, T const* _rhs) const
+	{
+		return _lhs->id() < _rhs->id();
+	}
+	bool operator()(T const* _lhs, int64_t _rhs) const
+	{
+		return _lhs->id() < _rhs;
+	}
+	bool operator()(int64_t _lhs, T const* _rhs) const
+	{
+		return _lhs < _rhs->id();
+	}
+};
 
 // Used as pointers to AST nodes, to be replaced by more clever pointers, e.g. pointers which do
 // not do reference counting but point to a special memory area that is completely released

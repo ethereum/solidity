@@ -1,5 +1,5 @@
 contract A {
-    constructor() public {
+    constructor() {
         address(this).call("123");
     }
 }

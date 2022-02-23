@@ -21,4 +21,3 @@ contract C {
 // f() -> 0x40, 0x80, 3, "any", 3, "any"
 // g() -> 0x60, 0x2a, 0xa0, 3, "any", 3, "any"
 // h() -> 0x20, 3, "any"
-

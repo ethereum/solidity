@@ -4,4 +4,4 @@ contract C {
 	function() external override virtual fp3;
 }
 // ----
-// ParserError: (34-41): Expected identifier but got 'virtual'
+// ParserError 2314: (34-41): Expected identifier but got 'virtual'

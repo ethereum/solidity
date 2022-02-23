@@ -104,7 +104,6 @@ contract MultiSigWallet {
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
     constructor(address[] memory _owners, uint _required)
-        public
         validRequirement(_owners.length, _required)
     {
         for (uint i=0; i<_owners.length; i++) {
@@ -227,7 +226,7 @@ contract MultiSigWallet {
     {
         if (isConfirmed(transactionId)) {
             Transaction storage tx = transactions[transactionId];
-            (tx.executed,) = tx.destination.call.value(tx.value)(tx.data);
+            (tx.executed,) = tx.destination.call{value: tx.value}(tx.data);
             if (tx.executed)
                 emit Execution(transactionId);
             else

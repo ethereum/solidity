@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	address owner;
@@ -16,6 +14,6 @@ contract C
 		return a;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (205-215): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (205-215): Type conversion is not yet fully supported and might yield false positives.

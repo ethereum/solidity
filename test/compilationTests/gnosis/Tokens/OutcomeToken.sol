@@ -32,7 +32,6 @@ contract OutcomeToken is StandardToken {
      */
     /// @dev Constructor sets events contract address
     constructor()
-        public
     {
         eventContract = msg.sender;
     }

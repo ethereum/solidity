@@ -5,4 +5,4 @@ contract X {
 	int public override() testvar;
 }
 // ----
-// ParserError: (93-94): Expected identifier but got ')'
+// ParserError 2314: (93-94): Expected identifier but got ')'

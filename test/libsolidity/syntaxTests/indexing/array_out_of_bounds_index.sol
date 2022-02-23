@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (65-70): Out of bounds array access.
+// TypeError 3383: (65-70): Out of bounds array access.

@@ -5,5 +5,5 @@ contract C {
   }
 }
 // ----
-// TypeError: (85-118): Type string memory is not implicitly convertible to expected type uint256.
-// TypeError: (85-118): Type uint256 is not implicitly convertible to expected type string memory.
+// TypeError 9574: (85-118): Type string memory is not implicitly convertible to expected type uint256.
+// TypeError 9574: (85-118): Type uint256 is not implicitly convertible to expected type string memory.

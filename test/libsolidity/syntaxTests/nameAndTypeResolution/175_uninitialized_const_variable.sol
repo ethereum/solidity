@@ -2,4 +2,4 @@ contract Foo {
     uint constant y;
 }
 // ----
-// TypeError: (19-34): Uninitialized "constant" variable.
+// TypeError 4266: (19-34): Uninitialized "constant" variable.

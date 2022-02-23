@@ -3,4 +3,4 @@ contract test {
 	uint128 variable;
 }
 // ----
-// DeclarationError: (36-52): Identifier already declared.
+// DeclarationError 2333: (36-52): Identifier already declared.

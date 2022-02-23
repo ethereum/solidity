@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (118-124): Expected ';' but got 'StringLiteral'
+// ParserError 2314: (118-124): Expected ';' but got 'StringLiteral'

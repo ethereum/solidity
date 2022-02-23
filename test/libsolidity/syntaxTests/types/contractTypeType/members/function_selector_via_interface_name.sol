@@ -7,3 +7,4 @@ contract B {
         return I.f.selector;
     }
 }
+// ----

@@ -6,7 +6,7 @@ contract test {
     testStruct data2;
     testStruct data3;
 
-    constructor() public {
+    constructor() {
         data1.m_value = 2;
     }
 
@@ -32,5 +32,8 @@ contract test {
     }
 }
 
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // assign() -> 2, 2, 3, 3

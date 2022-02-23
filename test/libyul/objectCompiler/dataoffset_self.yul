@@ -4,14 +4,14 @@ object "a" {
 }
 // ----
 // Assembly:
-//     /* "source":22:48   */
+//     /* "source":32:47   */
 //   0x00
 //     /* "source":29:30   */
-//   0x00
+//   dup1
 //     /* "source":22:48   */
 //   sstore
 // stop
 // data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421
-// Bytecode: 6000600055fe
-// Opcodes: PUSH1 0x0 PUSH1 0x0 SSTORE INVALID
-// SourceMappings: 22:26:0:-:0;29:1;22:26
+// Bytecode: 60008055fe
+// Opcodes: PUSH1 0x0 DUP1 SSTORE INVALID
+// SourceMappings: 32:15:0:-:0;29:1;22:26

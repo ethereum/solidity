@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Mutations.h>
@@ -155,7 +156,7 @@ Population ClassicGeneticAlgorithm::select(Population _population, size_t _selec
 	vector<Individual> selectedIndividuals;
 	for (size_t i = 0; i < _selectionSize; ++i)
 	{
-		uint32_t ball = SimulationRNG::uniformInt(0, rouletteRange - 1);
+		size_t ball = SimulationRNG::uniformInt(0, rouletteRange - 1);
 
 		size_t cumulativeFitness = 0;
 		for (auto const& individual: _population.individuals())

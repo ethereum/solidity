@@ -6,6 +6,6 @@ contract c {
     uint constant b3 = addmod(3, 4, a2 - 1);
 }
 // ----
-// TypeError: (88-103): Arithmetic modulo zero.
-// TypeError: (128-144): Arithmetic modulo zero.
-// TypeError: (169-189): Arithmetic modulo zero.
+// TypeError 4195: (88-103): Arithmetic modulo zero.
+// TypeError 4195: (128-144): Arithmetic modulo zero.
+// TypeError 4195: (169-189): Arithmetic modulo zero.

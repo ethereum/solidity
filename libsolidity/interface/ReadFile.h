@@ -14,21 +14,25 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <liblangutil/Exceptions.h>
 
-#include <boost/noncopyable.hpp>
 #include <functional>
 #include <string>
 
 namespace solidity::frontend
 {
 
-class ReadCallback: boost::noncopyable
+class ReadCallback
 {
 public:
+	/// Noncopyable.
+	ReadCallback(ReadCallback const&) = delete;
+	ReadCallback& operator=(ReadCallback const&) = delete;
+
 	/// File reading or generic query result.
 	struct Result
 	{

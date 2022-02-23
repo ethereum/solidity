@@ -3,6 +3,7 @@ contract c {
         uint256 a;
         uint256 b;
     }
+    uint[75] r;
     Struct data1;
     Struct data2;
 
@@ -15,5 +16,11 @@ contract c {
     }
 }
 
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // test() -> true
+// gas irOptimized: 110186
+// gas legacy: 110627
+// gas legacyOptimized: 109706

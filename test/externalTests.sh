@@ -28,23 +28,26 @@
 
 set -e
 
-if [ ! -f "$1" ]
-then
-  echo "Usage: $0 <path to soljson.js>"
-  exit 1
-fi
-
-SOLJSON="$1"
-REPO_ROOT="$(dirname "$0")"
-
 source scripts/common.sh
 source test/externalTests/common.sh
 
+REPO_ROOT=$(realpath "$(dirname "$0")/..")
+
+verify_input "$@"
+
 printTask "Running external tests..."
 
-$REPO_ROOT/externalTests/zeppelin.sh "$SOLJSON"
-$REPO_ROOT/externalTests/gnosis.sh "$SOLJSON"
-$REPO_ROOT/externalTests/colony.sh "$SOLJSON"
-
-# Disabled temporarily as it needs to be updated to latest Truffle first.
-#test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
+"{$REPO_ROOT}/test/externalTests/zeppelin.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/gnosis.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/gnosis-v2.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/colony.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/ens.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/trident.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/euler.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/yield-liquidator.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/bleeps.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/pool-together.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/perpetual-pools.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/uniswap.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/prb-math.sh" "$@"
+"{$REPO_ROOT}/test/externalTests/elementfi.sh" "$@"

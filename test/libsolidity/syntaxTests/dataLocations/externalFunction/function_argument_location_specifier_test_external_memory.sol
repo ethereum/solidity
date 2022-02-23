@@ -2,4 +2,5 @@ contract test {
     function f(bytes memory) external;
 }
 // ----
-// TypeError: (31-43): Data location must be "calldata" for parameter in external function, but "memory" was given.
+// TypeError 3656: (0-56): Contract "test" should be marked as abstract.
+// TypeError 5424: (20-54): Functions without implementation must be marked virtual.

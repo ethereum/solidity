@@ -7,7 +7,7 @@
 // step: fullSimplify
 //
 // {
+//     { mstore(f(), 0) }
 //     function f() -> a
 //     { }
-//     mstore(f(), 0)
 // }

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Miscellaneous utilities for use in yul-phaser's test cases.
  *
@@ -56,7 +57,7 @@ std::ostream& operator<<(std::ostream& _output, std::tuple<T1, T2> const& _tuple
 namespace boost::test_tools::tt_detail
 {
 
-// Boost won't find find the << operator unless we put it in the std namespace which is illegal.
+// Boost won't find the << operator unless we put it in the std namespace which is illegal.
 // The recommended solution is to overload print_log_value<> struct and make it use our global operator.
 template<typename T1,typename T2>
 struct print_log_value<std::tuple<T1, T2>>
@@ -106,31 +107,6 @@ size_t countDifferences(Chromosome const& _chromosome1, Chromosome const& _chrom
 /// integers.
 std::map<std::string, size_t> enumerateOptmisationSteps();
 
-// FILESYSTEM UTILITIES
-
-/**
- * An object that creates a unique temporary directory and automatically deletes it and its
- * content upon being destroyed.
- *
- * The directory is guaranteed to be newly created and empty. Directory names are generated
- * randomly. If a directory with the same name already exists (very unlikely but possible) the
- * object won't reuse it and will fail with an exception instead.
- */
-class TemporaryDirectory
-{
-public:
-	TemporaryDirectory(std::string const& _prefix = "yul-phaser-test-");
-	~TemporaryDirectory();
-
-	std::string const& path() const { return m_path; }
-
-	/// Converts a path relative to the directory held by the object into an absolute one.
-	std::string memberPath(std::string const& _relativePath) const;
-
-private:
-	std::string m_path;
-};
-
 // STRING UTILITIES
 
 /// Returns the input string with all the whitespace characters (spaces, line endings, etc.) removed.
@@ -157,9 +133,9 @@ double mean(std::vector<T> const& _samples)
 
 	double sum = 0;
 	for (T const& sample: _samples)
-		sum += static_cast<double>(sample);
+		sum += double(sample);
 
-	return sum / _samples.size();
+	return sum / double(_samples.size());
 }
 
 /// Calculates the sum of squared differences between @a _expectedValue and the values of a series
@@ -178,9 +154,9 @@ double meanSquaredError(std::vector<T> const& _samples, double _expectedValue)
 
 	double sumOfSquaredDifferences = 0;
 	for (T const& sample: _samples)
-		sumOfSquaredDifferences += (sample - _expectedValue) * (sample - _expectedValue);
+		sumOfSquaredDifferences += (double(sample) - _expectedValue) * (double(sample) - _expectedValue);
 
-	return sumOfSquaredDifferences / _samples.size();
+	return sumOfSquaredDifferences / double(_samples.size());
 }
 
 }

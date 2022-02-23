@@ -14,13 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Creates an independent copy of an AST, renaming identifiers to be unique.
  */
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 #include <libyul/YulString.h>
 
@@ -28,6 +29,7 @@
 #include <optional>
 #include <set>
 #include <vector>
+#include <map>
 
 namespace solidity::yul
 {
@@ -116,5 +118,22 @@ std::vector<T> ASTCopier::translateVector(std::vector<T> const& _values)
 	return translated;
 }
 
+/// Helper class that creates a copy of the function definition, replacing the names of the variable
+/// declarations with new names.
+class FunctionCopier: public ASTCopier
+{
+public:
+	FunctionCopier(
+		std::map<YulString, YulString> const& _translations
+	):
+		m_translations(_translations)
+	{}
+	using ASTCopier::operator();
+	YulString translateIdentifier(YulString _name) override;
+private:
+	/// A mapping between old and new names. We replace the names of variable declarations contained
+	/// in the mapping with their new names.
+	std::map<YulString, YulString> const& m_translations;
+};
 
 }

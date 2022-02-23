@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Contains an abstract base class representing a genetic algorithm and its concrete implementations.
  */
@@ -23,6 +24,7 @@
 #include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Population.h>
 
+#include <cstddef>
 #include <optional>
 
 namespace solidity::phaser

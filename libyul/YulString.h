@@ -14,13 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * String abstraction that avoids copies.
  */
 
 #pragma once
 
-#include <boost/noncopyable.hpp>
+#include <fmt/format.h>
 
 #include <unordered_map>
 #include <memory>
@@ -71,10 +72,10 @@ public:
 	{
 		// FNV hash - can be replaced by a better one, e.g. xxhash64
 		std::uint64_t hash = emptyHash();
-		for (auto c: v)
+		for (char c: v)
 		{
 			hash *= 1099511628211u;
-			hash ^= c;
+			hash ^= static_cast<uint64_t>(c);
 		}
 
 		return hash;
@@ -166,4 +167,34 @@ inline YulString operator "" _yulstring(char const* _string, std::size_t _size)
 	return YulString(std::string(_string, _size));
 }
 
+}
+
+namespace fmt
+{
+template <>
+struct formatter<solidity::yul::YulString>
+{
+	template <typename ParseContext>
+	constexpr auto parse(ParseContext& _context)
+	{
+		return _context.begin();
+	}
+
+	template <typename FormatContext>
+	auto format(solidity::yul::YulString _value, FormatContext& _context)
+	{
+		return format_to(_context.out(), "{}", _value.str());
+	}
+};
+}
+
+namespace std
+{
+template<> struct hash<solidity::yul::YulString>
+{
+	size_t operator()(solidity::yul::YulString const& x) const
+	{
+		return static_cast<size_t>(x.hash());
+	}
+};
 }

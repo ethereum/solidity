@@ -1,0 +1,372 @@
+IR:
+/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+
+/// @use-src 0:"revert_strings/input.sol"
+object "C_15" {
+    code {
+        /// @src 0:59:147  "contract C {..."
+        mstore(64, memoryguard(128))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_C_15()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset("C_15_deployed"), datasize("C_15_deployed"))
+
+        return(_1, datasize("C_15_deployed"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+
+            let start := allocate_unbounded()
+            let pos := start
+            mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+            pos := add(pos, 4)
+            mstore(pos, 0x20)
+            pos := add(pos, 0x20)
+            mstore(pos, 34)
+            pos := add(pos, 0x20)
+
+            mstore(add(pos, 0), "Ether sent to non-payable functi")
+
+            mstore(add(pos, 32), "on")
+
+            revert(start, 132)
+
+        }
+
+        /// @src 0:59:147  "contract C {..."
+        function constructor_C_15() {
+
+            /// @src 0:59:147  "contract C {..."
+
+        }
+        /// @src 0:59:147  "contract C {..."
+
+    }
+    /// @use-src 0:"revert_strings/input.sol"
+    object "C_15_deployed" {
+        code {
+            /// @src 0:59:147  "contract C {..."
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x02e8cd18
+                {
+                    // f(uint256[][],uint8)
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    let param_0, param_1 :=  abi_decode_tuple_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptrt_enum$_E_$3(4, calldatasize())
+                    fun_f_14(param_0, param_1)
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+
+                let start := allocate_unbounded()
+                let pos := start
+                mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+                pos := add(pos, 4)
+                mstore(pos, 0x20)
+                pos := add(pos, 0x20)
+                mstore(pos, 34)
+                pos := add(pos, 0x20)
+
+                mstore(add(pos, 0), "Ether sent to non-payable functi")
+
+                mstore(add(pos, 32), "on")
+
+                revert(start, 132)
+
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+
+                let start := allocate_unbounded()
+                let pos := start
+                mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+                pos := add(pos, 4)
+                mstore(pos, 0x20)
+                pos := add(pos, 0x20)
+                mstore(pos, 34)
+                pos := add(pos, 0x20)
+
+                mstore(add(pos, 0), "ABI decoding: tuple data too sho")
+
+                mstore(add(pos, 32), "rt")
+
+                revert(start, 132)
+
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+
+                let start := allocate_unbounded()
+                let pos := start
+                mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+                pos := add(pos, 4)
+                mstore(pos, 0x20)
+                pos := add(pos, 0x20)
+                mstore(pos, 34)
+                pos := add(pos, 0x20)
+
+                mstore(add(pos, 0), "ABI decoding: invalid tuple offs")
+
+                mstore(add(pos, 32), "et")
+
+                revert(start, 132)
+
+            }
+
+            function revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d() {
+
+                let start := allocate_unbounded()
+                let pos := start
+                mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+                pos := add(pos, 4)
+                mstore(pos, 0x20)
+                pos := add(pos, 0x20)
+                mstore(pos, 43)
+                pos := add(pos, 0x20)
+
+                mstore(add(pos, 0), "ABI decoding: invalid calldata a")
+
+                mstore(add(pos, 32), "rray offset")
+
+                revert(start, 132)
+
+            }
+
+            function round_up_to_mul_of_32(value) -> result {
+                result := and(add(value, 31), not(31))
+            }
+
+            function panic_error_0x41() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+
+            function finalize_allocation(memPtr, size) {
+                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
+
+            function allocate_memory(size) -> memPtr {
+                memPtr := allocate_unbounded()
+                finalize_allocation(memPtr, size)
+            }
+
+            function array_allocation_size_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptr(length) -> size {
+                // Make sure we can allocate memory without overflow
+                if gt(length, 0xffffffffffffffff) { panic_error_0x41() }
+
+                size := mul(length, 0x20)
+
+                // add length slot
+                size := add(size, 0x20)
+
+            }
+
+            function revert_error_81385d8c0b31fffe14be1da910c8bd3a80be4cfa248e04f42ec0faea3132a8ef() {
+
+                let start := allocate_unbounded()
+                let pos := start
+                mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+                pos := add(pos, 4)
+                mstore(pos, 0x20)
+                pos := add(pos, 0x20)
+                mstore(pos, 43)
+                pos := add(pos, 0x20)
+
+                mstore(add(pos, 0), "ABI decoding: invalid calldata a")
+
+                mstore(add(pos, 32), "rray stride")
+
+                revert(start, 132)
+
+            }
+
+            function array_allocation_size_t_array$_t_uint256_$dyn_memory_ptr(length) -> size {
+                // Make sure we can allocate memory without overflow
+                if gt(length, 0xffffffffffffffff) { panic_error_0x41() }
+
+                size := mul(length, 0x20)
+
+                // add length slot
+                size := add(size, 0x20)
+
+            }
+
+            function cleanup_t_uint256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function validator_revert_t_uint256(value) {
+                if iszero(eq(value, cleanup_t_uint256(value))) { revert(0, 0) }
+            }
+
+            function abi_decode_t_uint256(offset, end) -> value {
+                value := calldataload(offset)
+                validator_revert_t_uint256(value)
+            }
+
+            // uint256[]
+            function abi_decode_available_length_t_array$_t_uint256_$dyn_memory_ptr(offset, length, end) -> array {
+                array := allocate_memory(array_allocation_size_t_array$_t_uint256_$dyn_memory_ptr(length))
+                let dst := array
+
+                mstore(array, length)
+                dst := add(array, 0x20)
+
+                let srcEnd := add(offset, mul(length, 0x20))
+                if gt(srcEnd, end) {
+                    revert_error_81385d8c0b31fffe14be1da910c8bd3a80be4cfa248e04f42ec0faea3132a8ef()
+                }
+                for { let src := offset } lt(src, srcEnd) { src := add(src, 0x20) }
+                {
+
+                    let elementPos := src
+
+                    mstore(dst, abi_decode_t_uint256(elementPos, end))
+                    dst := add(dst, 0x20)
+                }
+            }
+
+            // uint256[]
+            function abi_decode_t_array$_t_uint256_$dyn_memory_ptr(offset, end) -> array {
+                if iszero(slt(add(offset, 0x1f), end)) { revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d() }
+                let length := calldataload(offset)
+                array := abi_decode_available_length_t_array$_t_uint256_$dyn_memory_ptr(add(offset, 0x20), length, end)
+            }
+
+            // uint256[][]
+            function abi_decode_available_length_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptr(offset, length, end) -> array {
+                array := allocate_memory(array_allocation_size_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptr(length))
+                let dst := array
+
+                mstore(array, length)
+                dst := add(array, 0x20)
+
+                let srcEnd := add(offset, mul(length, 0x20))
+                if gt(srcEnd, end) {
+                    revert_error_81385d8c0b31fffe14be1da910c8bd3a80be4cfa248e04f42ec0faea3132a8ef()
+                }
+                for { let src := offset } lt(src, srcEnd) { src := add(src, 0x20) }
+                {
+
+                    let innerOffset := calldataload(src)
+                    if gt(innerOffset, 0xffffffffffffffff) { revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d() }
+                    let elementPos := add(offset, innerOffset)
+
+                    mstore(dst, abi_decode_t_array$_t_uint256_$dyn_memory_ptr(elementPos, end))
+                    dst := add(dst, 0x20)
+                }
+            }
+
+            // uint256[][]
+            function abi_decode_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptr(offset, end) -> array {
+                if iszero(slt(add(offset, 0x1f), end)) { revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d() }
+                let length := calldataload(offset)
+                array := abi_decode_available_length_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptr(add(offset, 0x20), length, end)
+            }
+
+            function validator_revert_t_enum$_E_$3(value) {
+                if iszero(lt(value, 1)) { revert(0, 0) }
+            }
+
+            function abi_decode_t_enum$_E_$3(offset, end) -> value {
+                value := calldataload(offset)
+                validator_revert_t_enum$_E_$3(value)
+            }
+
+            function abi_decode_tuple_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptrt_enum$_E_$3(headStart, dataEnd) -> value0, value1 {
+                if slt(sub(dataEnd, headStart), 64) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := calldataload(add(headStart, 0))
+                    if gt(offset, 0xffffffffffffffff) { revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() }
+
+                    value0 := abi_decode_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptr(add(headStart, offset), dataEnd)
+                }
+
+                {
+
+                    let offset := 32
+
+                    value1 := abi_decode_t_enum$_E_$3(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+
+                let start := allocate_unbounded()
+                let pos := start
+                mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
+                pos := add(pos, 4)
+                mstore(pos, 0x20)
+                pos := add(pos, 0x20)
+                mstore(pos, 53)
+                pos := add(pos, 0x20)
+
+                mstore(add(pos, 0), "Contract does not have fallback ")
+
+                mstore(add(pos, 32), "nor receive functions")
+
+                revert(start, 132)
+
+            }
+
+            /// @ast-id 14
+            /// @src 0:93:145  "function f(uint[][] memory, E e) public pure {..."
+            function fun_f_14(var__7_mpos, var_e_10) {
+
+            }
+            /// @src 0:59:147  "contract C {..."
+
+        }
+
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+
+}

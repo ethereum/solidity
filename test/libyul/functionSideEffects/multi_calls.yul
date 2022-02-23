@@ -15,8 +15,8 @@
     }
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: invalidatesStorage
-// b: invalidatesStorage
-// c: invalidatesStorage, invalidatesMemory
-// d: movable, sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movable apart from effects, can be removed, can be removed if no msize
+// a: can loop, writes storage
+// b: can loop, writes storage
+// c: can loop, writes storage, writes memory
+// d: movable, movable apart from effects, can be removed, can be removed if no msize

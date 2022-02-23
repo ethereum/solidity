@@ -14,12 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul dialect.
  */
 
 #include <libyul/Dialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace solidity::yul;
 using namespace std;
@@ -28,8 +29,17 @@ using namespace solidity::langutil;
 Literal Dialect::zeroLiteralForType(solidity::yul::YulString _type) const
 {
 	if (_type == boolType && _type != defaultType)
-		return {SourceLocation{}, LiteralKind::Boolean, "false"_yulstring, _type};
-	return {SourceLocation{}, LiteralKind::Number, "0"_yulstring, _type};
+		return {DebugData::create(), LiteralKind::Boolean, "false"_yulstring, _type};
+	return {DebugData::create(), LiteralKind::Number, "0"_yulstring, _type};
+}
+
+
+Literal Dialect::trueLiteral() const
+{
+	if (boolType != defaultType)
+		return {DebugData::create(), LiteralKind::Boolean, "true"_yulstring, boolType};
+	else
+		return {DebugData::create(), LiteralKind::Number, "1"_yulstring, defaultType};
 }
 
 bool Dialect::validTypeForLiteral(LiteralKind _kind, YulString, YulString _type) const

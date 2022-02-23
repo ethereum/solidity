@@ -4,27 +4,27 @@
   {
     "C":
     [
-      11
+      12
     ]
   },
-  "id": 12,
-  "license": null,
+  "id": 13,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
-      "id": 11,
+      "id": 12,
       "linearizedBaseContracts":
       [
-        11
+        12
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -38,8 +38,8 @@
               "id": 2,
               "mutability": "mutable",
               "name": "x",
+              "nameLocation": "33:1:1",
               "nodeType": "VariableDeclaration",
-              "overrides": null,
               "scope": 3,
               "src": "28:6:1",
               "stateVariable": false,
@@ -61,24 +61,24 @@
                   "typeString": "uint256"
                 }
               },
-              "value": null,
               "visibility": "internal"
             }
           ],
           "name": "S",
+          "nameLocation": "24:1:1",
           "nodeType": "StructDefinition",
-          "scope": 11,
+          "scope": 12,
           "src": "17:20:1",
           "visibility": "public"
         },
         {
           "constant": false,
-          "id": 5,
+          "id": 6,
           "mutability": "mutable",
           "name": "s",
+          "nameLocation": "44:1:1",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
-          "scope": 11,
+          "scope": 12,
           "src": "42:3:1",
           "stateVariable": true,
           "storageLocation": "default",
@@ -89,10 +89,16 @@
           },
           "typeName":
           {
-            "contractScope": null,
-            "id": 4,
-            "name": "S",
+            "id": 5,
             "nodeType": "UserDefinedTypeName",
+            "pathNode":
+            {
+              "id": 4,
+              "name": "S",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 3,
+              "src": "42:1:1"
+            },
             "referencedDeclaration": 3,
             "src": "42:1:1",
             "typeDescriptions":
@@ -101,13 +107,12 @@
               "typeString": "struct C.S"
             }
           },
-          "value": null,
           "visibility": "internal"
         },
         {
           "body":
           {
-            "id": 9,
+            "id": 10,
             "nodeType": "Block",
             "src": "76:70:1",
             "statements":
@@ -124,7 +129,7 @@
                       "src": "97:17:1",
                       "value":
                       {
-                        "name": "s_offset",
+                        "name": "s.offset",
                         "nodeType": "YulIdentifier",
                         "src": "106:8:1"
                       },
@@ -146,7 +151,7 @@
                         "arguments":
                         [
                           {
-                            "name": "s_slot",
+                            "name": "s.slot",
                             "nodeType": "YulIdentifier",
                             "src": "128:6:1"
                           },
@@ -183,58 +188,60 @@
                 "externalReferences":
                 [
                   {
-                    "declaration": 5,
+                    "declaration": 6,
                     "isOffset": true,
                     "isSlot": false,
                     "src": "106:8:1",
+                    "suffix": "offset",
                     "valueSize": 1
                   },
                   {
-                    "declaration": 5,
+                    "declaration": 6,
                     "isOffset": false,
                     "isSlot": true,
                     "src": "128:6:1",
+                    "suffix": "slot",
                     "valueSize": 1
                   }
                 ],
-                "id": 8,
+                "id": 9,
                 "nodeType": "InlineAssembly",
                 "src": "86:54:1"
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "ffae15ba",
-          "id": 10,
+          "id": 11,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "e",
+          "nameLocation": "60:1:1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
-            "id": 6,
+            "id": 7,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "61:2:1"
           },
           "returnParameters":
           {
-            "id": 7,
+            "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "76:0:1"
           },
-          "scope": 11,
+          "scope": 12,
           "src": "51:95:1",
           "stateMutability": "pure",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 12,
-      "src": "0:148:1"
+      "scope": 13,
+      "src": "0:148:1",
+      "usedErrors": []
     }
   ],
   "src": "0:149:1"

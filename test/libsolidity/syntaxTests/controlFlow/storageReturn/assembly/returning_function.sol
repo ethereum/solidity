@@ -6,7 +6,7 @@ contract C {
         assembly {
             function f() { return(0, 0) }
             f()
-            c_slot := s_slot
+            c.slot := s.slot
         }
     }
 }

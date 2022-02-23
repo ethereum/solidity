@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <optional>
@@ -69,6 +70,10 @@ public:
 	/// The returned IRVariable is itself typed with the type of the stack slot as defined
 	/// in ``m_type.stackItems()`` and may again occupy multiple stack slots.
 	IRVariable part(std::string const& _slot) const;
+
+	/// @returns true if variable contains @a _name component
+	/// @a _name name of the component that is being checked
+	bool hasPart(std::string const& _name) const;
 
 	/// @returns a vector containing the names of the stack slots of the variable.
 	std::vector<std::string> stackSlots() const;

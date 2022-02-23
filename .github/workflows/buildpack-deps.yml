@@ -1,0 +1,42 @@
+name: buildpack-deps
+
+on:
+  pull_request:
+    branches: [ develop ]
+    paths:
+      - 'scripts/docker/buildpack-deps/Dockerfile.emscripten'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu1604.clang.ossfuzz'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2004.clang'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2004'
+
+jobs:
+  buildpack-deps:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKER_REPOSITORY: solbuildpackpusher/solidity-buildpack-deps
+      IMAGE_NAME: buildpack-deps
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image_variant: [emscripten, ubuntu1604.clang.ossfuzz, ubuntu2004.clang, ubuntu2004]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Upgrade ${{ env.IMAGE_NAME }}-${{ matrix.image_variant }}
+        run: |
+          echo ${DOCKERHUB_TOKEN} | docker login -u solbuildpackpusher --password-stdin
+          scripts/ci/docker_upgrade.sh ${{ env.IMAGE_NAME }} ${{ matrix.image_variant }} ${{ env.DOCKER_REPOSITORY }}
+          docker logout
+
+      - name: comment PR
+        if: "env.DOCKER_IMAGE"
+        uses: aarlt/comment-on-pr@v1.2.0
+        with:
+          msg: "`${{ env.DOCKER_IMAGE }} ${{ env.DOCKER_REPO_DIGEST }}`."

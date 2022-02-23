@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Assembly interface that ignores everything. Can be used as a backend for a compilation dry-run.
  */
@@ -44,7 +45,7 @@ namespace solidity::yul
 class NoOutputAssembly: public AbstractAssembly
 {
 public:
-	explicit NoOutputAssembly(bool _evm15 = false): m_evm15(_evm15) { }
+	explicit NoOutputAssembly() { }
 	~NoOutputAssembly() override = default;
 
 	void setSourceLocation(langutil::SourceLocation const&) override {}
@@ -55,27 +56,28 @@ public:
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;
 	LabelID newLabelId() override;
-	LabelID namedLabel(std::string const& _name) override;
+	LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) override;
 	void appendLinkerSymbol(std::string const& _name) override;
+	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables) override;
 
-	void appendJump(int _stackDiffAfter) override;
-	void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
-	void appendJumpToIf(LabelID _labelId) override;
-	void appendBeginsub(LabelID _labelId, int _arguments) override;
-	void appendJumpsub(LabelID _labelId, int _arguments, int _returns) override;
-	void appendReturnsub(int _returns, int _stackDiffAfter) override;
+	void appendJump(int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 
 	void appendAssemblySize() override;
-	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
-	void appendDataOffset(SubID _sub) override;
-	void appendDataSize(SubID _sub) override;
+	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(std::string _name = "") override;
+	void appendDataOffset(std::vector<SubID> const& _subPath) override;
+	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
+
+	void appendToAuxiliaryData(bytes const&) override {}
 
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
 
+	void markAsInvalid() override {}
+
 private:
-	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	int m_stackHeight = 0;
 };
 

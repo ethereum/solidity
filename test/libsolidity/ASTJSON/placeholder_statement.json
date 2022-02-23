@@ -8,16 +8,15 @@
     ]
   },
   "id": 6,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         5
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -43,11 +43,10 @@
               }
             ]
           },
-          "documentation": null,
           "id": 4,
           "name": "M",
+          "nameLocation": "22:1:1",
           "nodeType": "ModifierDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -61,7 +60,8 @@
         }
       ],
       "scope": 6,
-      "src": "0:32:1"
+      "src": "0:32:1",
+      "usedErrors": []
     }
   ],
   "src": "0:33:1"

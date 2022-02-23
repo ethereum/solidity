@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	mapping (uint => uint) map;
@@ -14,5 +12,8 @@ contract C
 		assert(b > 4);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (244-257): Assertion violation happens here
+// Warning 6328: (211-224): CHC: Assertion violation happens here.

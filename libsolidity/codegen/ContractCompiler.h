@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -116,6 +117,7 @@ private:
 	bool visit(Return const& _return) override;
 	bool visit(Throw const& _throw) override;
 	bool visit(EmitStatement const& _emit) override;
+	bool visit(RevertStatement const& _revert) override;
 	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(ExpressionStatement const& _expressionStatement) override;
 	bool visit(PlaceholderStatement const&) override;
@@ -129,8 +131,11 @@ private:
 	/// body itself if the last modifier was reached.
 	void appendModifierOrFunctionCode();
 
-	void appendStackVariableInitialisation(VariableDeclaration const& _variable);
-	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
+	/// Creates a stack slot for the given variable and assigns a default value.
+	/// If the default value is complex (needs memory allocation) and @a _provideDefaultValue
+	/// is false, this might be skipped.
+	void appendStackVariableInitialisation(VariableDeclaration const& _variable, bool _provideDefaultValue);
+	void compileExpression(Expression const& _expression, Type const* _targetType = nullptr);
 
 	/// Frees the variables of a certain scope (to be used when leaving).
 	void popScopedVariables(ASTNode const* _node);
@@ -142,6 +147,7 @@ private:
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;
+
 	/// Tag to jump to for a "break" statement and the stack height after freeing the local loop variables.
 	std::vector<std::pair<evmasm::AssemblyItem, unsigned>> m_breakTags;
 	/// Tag to jump to for a "continue" statement and the stack height after freeing the local loop variables.

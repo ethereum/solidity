@@ -14,19 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/util/BytesUtils.h>
-
 #include <test/libsolidity/util/ContractABIUtils.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
-#include <liblangutil/Common.h>
-
-#include <libsolutil/StringUtils.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
 
-#include <fstream>
 #include <iomanip>
 #include <memory>
 #include <regex>
@@ -34,11 +32,9 @@
 
 using namespace solidity;
 using namespace solidity::util;
-using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
-using namespace soltest;
 
 bytes BytesUtils::alignLeft(bytes _bytes)
 {
@@ -81,7 +77,7 @@ bytes BytesUtils::convertBoolean(string const& _literal)
 	else if (_literal == "false")
 		return bytes{false};
 	else
-		throw Error(Error::Type::ParserError, "Boolean literal invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("Boolean literal invalid."));
 }
 
 bytes BytesUtils::convertNumber(string const& _literal)
@@ -92,7 +88,32 @@ bytes BytesUtils::convertNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Number encoding invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("Number encoding invalid."));
+	}
+}
+
+bytes BytesUtils::convertFixedPoint(string const& _literal, size_t& o_fractionalDigits)
+{
+	size_t dotPos = _literal.find('.');
+	o_fractionalDigits = dotPos < _literal.size() ? _literal.size() - dotPos : 0;
+	bool negative = !_literal.empty() && _literal.at(0) == '-';
+	// remove decimal point
+	string valueInteger = _literal.substr(0, dotPos) + _literal.substr(dotPos + 1);
+	// erase leading zeros to avoid parsing as octal.
+	while (!valueInteger.empty() && (valueInteger.at(0) == '0' || valueInteger.at(0) == '-'))
+		valueInteger.erase(valueInteger.begin());
+	if (valueInteger.empty())
+		valueInteger = "0";
+	try
+	{
+		u256 value(valueInteger);
+		if (negative)
+			value = s2u(-u2s(value));
+		return toBigEndian(value);
+	}
+	catch (std::exception const&)
+	{
+		BOOST_THROW_EXCEPTION(TestParserError("Number encoding invalid."));
 	}
 }
 
@@ -104,7 +125,7 @@ bytes BytesUtils::convertHexNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("Hex number encoding invalid."));
 	}
 }
 
@@ -116,7 +137,7 @@ bytes BytesUtils::convertString(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "String encoding invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("String encoding invalid."));
 	}
 }
 
@@ -173,7 +194,7 @@ string BytesUtils::formatHexString(bytes const& _bytes)
 {
 	stringstream os;
 
-	os << "hex\"" << toHex(_bytes) << "\"";
+	os << "hex\"" << util::toHex(_bytes) << "\"";
 
 	return os.str();
 }
@@ -198,13 +219,34 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 				if (isprint(v))
 					os << v;
 				else
-					os << "\\x" << setw(2) << setfill('0') << hex << v;
-
+					os << "\\x" << toHex(v, HexCase::Lower);
 		}
 	}
 	os << "\"";
 
 	return os.str();
+}
+
+std::string BytesUtils::formatFixedPoint(bytes const& _bytes, bool _signed, size_t _fractionalDigits)
+{
+	string decimal;
+	bool negative = false;
+	if (_signed)
+	{
+		s256 signedValue{u2s(fromBigEndian<u256>(_bytes))};
+		negative = (signedValue < 0);
+		decimal = signedValue.str();
+	}
+	else
+		decimal = fromBigEndian<u256>(_bytes).str();
+	if (_fractionalDigits > 0)
+	{
+		size_t numDigits = decimal.length() - (negative ? 1 : 0);
+		if (_fractionalDigits >= numDigits)
+			decimal.insert(negative ? 1 : 0, string(_fractionalDigits + 1 - numDigits, '0'));
+		decimal.insert(decimal.length() - _fractionalDigits, ".");
+	}
+	return decimal;
 }
 
 string BytesUtils::formatRawBytes(
@@ -217,7 +259,7 @@ string BytesUtils::formatRawBytes(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
 
@@ -252,7 +294,35 @@ string BytesUtils::formatBytes(
 		if (*_bytes.begin() & 0x80)
 			os << formatSigned(_bytes);
 		else
-			os << formatUnsigned(_bytes);
+		{
+			std::string decimal(formatUnsigned(_bytes));
+			std::string hexadecimal(formatHex(_bytes));
+			unsigned int value = u256(_bytes).convert_to<unsigned int>();
+			if (value < 0x10)
+				os << decimal;
+			else if (value >= 0x10 && value <= 0xff) {
+				os << hexadecimal;
+			}
+			else
+			{
+				auto entropy = [](std::string const& str) -> double {
+					double result = 0;
+					map<char, double> frequencies;
+					for (char c: str)
+						frequencies[c]++;
+					for (auto p: frequencies)
+					{
+						double freq = p.second / double(str.length());
+						result -= freq * (log(freq) / log(2.0));
+					}
+					return result;
+				};
+				if (entropy(decimal) < entropy(hexadecimal.substr(2, hexadecimal.length())))
+					os << decimal;
+				else
+					os << hexadecimal;
+			}
+		}
 		break;
 	case ABIType::SignedDec:
 		os << formatSigned(_bytes);
@@ -269,8 +339,11 @@ string BytesUtils::formatBytes(
 	case ABIType::String:
 		os << formatString(_bytes, _bytes.size() - countRightPaddedZeros(_bytes));
 		break;
-	case ABIType::Failure:
+	case ABIType::UnsignedFixedPoint:
+	case ABIType::SignedFixedPoint:
+		os << formatFixedPoint(_bytes, _abiType.type == ABIType::SignedFixedPoint, _abiType.fractionalDigits);
 		break;
+	case ABIType::Failure:
 	case ABIType::None:
 		break;
 	}
@@ -291,7 +364,7 @@ string BytesUtils::formatBytesRange(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
 
@@ -320,10 +393,10 @@ string BytesUtils::formatBytesRange(
 
 size_t BytesUtils::countRightPaddedZeros(bytes const& _bytes)
 {
-	return find_if(
+	return static_cast<size_t>(find_if(
 		_bytes.rbegin(),
 		_bytes.rend(),
 		[](uint8_t b) { return b != '\0'; }
-	) - _bytes.rbegin();
+	) - _bytes.rbegin());
 }
 

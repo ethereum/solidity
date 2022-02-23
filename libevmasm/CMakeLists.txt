@@ -16,6 +16,8 @@ set(sources
 	ExpressionClasses.h
 	GasMeter.cpp
 	GasMeter.h
+	Inliner.cpp
+	Inliner.h
 	Instruction.cpp
 	Instruction.h
 	JumpdestRemover.cpp
@@ -36,4 +38,4 @@ set(sources
 )
 
 add_library(evmasm ${sources})
-target_link_libraries(evmasm PUBLIC solutil)
+target_link_libraries(evmasm PUBLIC solutil fmt::fmt-header-only)

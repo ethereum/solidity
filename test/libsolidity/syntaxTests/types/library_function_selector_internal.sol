@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (126-138): Member "selector" not found or not visible after argument-dependent lookup in function (uint256).
+// TypeError 9582: (126-138): Member "selector" not found or not visible after argument-dependent lookup in function (uint256).

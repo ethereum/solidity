@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/interface/StorageLayout.h>
 
@@ -47,10 +48,10 @@ Json::Value StorageLayout::generate(ContractDefinition const& _contractDef)
 Json::Value StorageLayout::generate(VariableDeclaration const& _var, u256 const& _slot, unsigned _offset)
 {
 	Json::Value varEntry;
-	TypePointer varType = _var.type();
+	Type const* varType = _var.type();
 
 	varEntry["label"] = _var.name();
-	varEntry["astId"] = int(_var.id());
+	varEntry["astId"] = static_cast<int>(_var.id());
 	varEntry["contract"] = m_contract->fullyQualifiedName();
 	varEntry["slot"] = _slot.str();
 	varEntry["offset"] = _offset;
@@ -61,7 +62,7 @@ Json::Value StorageLayout::generate(VariableDeclaration const& _var, u256 const&
 	return varEntry;
 }
 
-void StorageLayout::generate(TypePointer _type)
+void StorageLayout::generate(Type const* _type)
 {
 	if (m_types.isMember(typeKeyName(_type)))
 		return;
@@ -93,7 +94,7 @@ void StorageLayout::generate(TypePointer _type)
 	}
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(_type))
 	{
-		if (arrayType->isByteArray())
+		if (arrayType->isByteArrayOrString())
 			typeInfo["encoding"] = "bytes";
 		else
 		{
@@ -111,7 +112,7 @@ void StorageLayout::generate(TypePointer _type)
 	solAssert(typeInfo.isMember("encoding"), "");
 }
 
-string StorageLayout::typeKeyName(TypePointer _type)
+string StorageLayout::typeKeyName(Type const* _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
 		return TypeProvider::withLocationIfReference(refType->location(), _type)->richIdentifier();

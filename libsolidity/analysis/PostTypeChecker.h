@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -34,11 +35,12 @@ namespace solidity::frontend
 
 /**
  * This module performs analyses on the AST that are done after type checking and assignments of types:
- *  - whether there are circular references in constant state variables
+ *  - whether there are circular references in constant variables
  *  - whether override specifiers are actually contracts
  *  - whether a modifier is in a function header
  *  - whether an event is used outside of an emit statement
  *  - whether a variable is declared in a interface
+ *  - whether an error uses a reserved signature
  *
  *  When adding a new checker, make sure a visitor that forwards calls that your
  *  checker uses exists in PostTypeChecker. Add missing ones.
@@ -53,6 +55,9 @@ public:
 	{
 		Checker(langutil::ErrorReporter& _errorReporter):
 			m_errorReporter(_errorReporter) {}
+
+		/// Called after all source units have been visited.
+		virtual void finalize() {}
 	protected:
 		langutil::ErrorReporter& m_errorReporter;
 	};
@@ -62,6 +67,9 @@ public:
 
 	bool check(ASTNode const& _astRoot);
 
+	/// Called after all source units have been visited.
+	bool finalize();
+
 private:
 	bool visit(ContractDefinition const& _contract) override;
 	void endVisit(ContractDefinition const& _contract) override;
@@ -70,12 +78,18 @@ private:
 	bool visit(VariableDeclaration const& _variable) override;
 	void endVisit(VariableDeclaration const& _variable) override;
 
+	void endVisit(ErrorDefinition const& _error) override;
+
 	bool visit(EmitStatement const& _emit) override;
 	void endVisit(EmitStatement const& _emit) override;
+
+	bool visit(RevertStatement const& _revert) override;
+	void endVisit(RevertStatement const& _revert) override;
 
 	bool visit(FunctionCall const& _functionCall) override;
 
 	bool visit(Identifier const& _identifier) override;
+	bool visit(MemberAccess const& _identifier) override;
 
 	bool visit(StructDefinition const& _struct) override;
 	void endVisit(StructDefinition const& _struct) override;

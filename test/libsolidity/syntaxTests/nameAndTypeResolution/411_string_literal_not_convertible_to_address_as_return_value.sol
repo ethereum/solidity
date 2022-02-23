@@ -5,4 +5,4 @@ contract AddrString {
    }
 }
 // ----
-// TypeError: (149-193): Return argument type literal_string "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c" is not implicitly convertible to expected type (type of first return variable) address.
+// TypeError 6359: (149-193): Return argument type literal_string "0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c" is not implicitly convertible to expected type (type of first return variable) address.

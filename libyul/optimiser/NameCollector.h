@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Specific AST walkers that collect facts about identifiers and definitions.
  */
@@ -34,9 +35,24 @@ namespace solidity::yul
 class NameCollector: public ASTWalker
 {
 public:
-	explicit NameCollector(Block const& _block)
+	enum CollectWhat { VariablesAndFunctions, OnlyVariables };
+
+	explicit NameCollector(
+		Block const& _block,
+		CollectWhat _collectWhat = VariablesAndFunctions
+	):
+		m_collectWhat(_collectWhat)
 	{
 		(*this)(_block);
+	}
+
+	explicit NameCollector(
+		FunctionDefinition const& _functionDefinition,
+		CollectWhat _collectWhat = VariablesAndFunctions
+	):
+		m_collectWhat(_collectWhat)
+	{
+		(*this)(_functionDefinition);
 	}
 
 	using ASTWalker::operator ();
@@ -46,6 +62,7 @@ public:
 	std::set<YulString> names() const { return m_names; }
 private:
 	std::set<YulString> m_names;
+	CollectWhat m_collectWhat = VariablesAndFunctions;
 };
 
 /**
@@ -75,20 +92,6 @@ private:
 };
 
 /**
- * Specific AST walker that finds all variables that are assigned to.
- */
-class Assignments: public ASTWalker
-{
-public:
-	using ASTWalker::operator ();
-	void operator()(Assignment const& _assignment) override;
-
-	std::set<YulString> const& names() const { return m_names; }
-private:
-	std::set<YulString> m_names;
-};
-
-/**
  * Collects all names from a given continue statement on onwards.
  *
  * It makes only sense to be invoked from within a body of an outer for loop, that is,
@@ -112,5 +115,13 @@ private:
 	bool m_continueFound = false;
 	std::set<YulString> m_names;
 };
+
+/// @returns the names of all variables that are assigned to inside @a _code.
+/// (ignores variable declarations)
+std::set<YulString> assignedVariableNames(Block const& _code);
+
+/// @returns all function definitions anywhere in the AST.
+/// Requires disambiguated source.
+std::map<YulString, FunctionDefinition const*> allFunctionDefinitions(Block const& _block);
 
 }

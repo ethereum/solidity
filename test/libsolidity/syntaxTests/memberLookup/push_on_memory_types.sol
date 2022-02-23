@@ -5,4 +5,4 @@ contract Test {
 	}
 }
 // ----
-// TypeError: (77-83): Member "push" is not available in uint256[] memory outside of storage.
+// TypeError 4994: (77-83): Member "push" is not available in uint256[] memory outside of storage.

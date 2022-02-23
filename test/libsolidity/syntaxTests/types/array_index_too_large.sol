@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (140-218): Type int_const 1234...(70 digits omitted)...5678 is not implicitly convertible to expected type uint256.
+// TypeError 7407: (140-218): Type int_const 1234...(70 digits omitted)...5678 is not implicitly convertible to expected type uint256. Literal is too large to fit in uint256.

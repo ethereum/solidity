@@ -13,7 +13,7 @@ contract C {
 
         bytes32 slot = keccak256(abi.encode(uint(1), uint(0)));
         assembly {
-            _data_slot := slot
+            _data.slot := slot
         }
     }
 
@@ -25,6 +25,8 @@ contract C {
         return data().a;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // get() -> 0
 // mappingAccess(uint256): 1 -> 0, 0

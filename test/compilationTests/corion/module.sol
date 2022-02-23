@@ -90,10 +90,10 @@ contract module {
             @newModuleAddress   New module handler address
         */
         require( moduleStatus != status.New && moduleStatus != status.Disconnected);
-        (bool _success, uint256 _balance) = abstractModuleHandler(moduleHandlerAddress).balanceOf(address(this));
+        (bool _success, uint256 _balance) = abstractModuleHandler(moduleHandlerAddress).balanceOf(payable(this));
         require( _success );
         if ( _balance > 0 ) {
-            require( abstractModuleHandler(moduleHandlerAddress).transfer(address(this), newModuleAddress, _balance, false) );
+            require( abstractModuleHandler(moduleHandlerAddress).transfer(payable(this), newModuleAddress, _balance, false) );
         }
         if ( address(this).balance > 0 ) {
             require( newModuleAddress.send(address(this).balance) );

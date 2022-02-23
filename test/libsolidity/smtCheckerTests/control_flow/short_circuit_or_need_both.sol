@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract c {
 	uint x;
 	function f() internal returns (uint) {
@@ -14,5 +12,6 @@ contract c {
 		return b;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (101-106): Overflow (resulting value larger than 2**256 - 1) happens here

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library l1 {
 
 	uint private constant TON = 1000;
@@ -18,9 +16,8 @@ contract C {
 		assert(z == x + 1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (136-155): Assertion violation happens here
-// Warning: (229-234): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (300-302): Assertion checker does not yet implement type type(library l1)
-// Warning: (229-234): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (327-332): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 6328: (103-122): CHC: Assertion violation happens here.\nCounterexample:\nTON = 1000\n\nTransaction trace:\nl1.constructor()\nState: TON = 1000\nl1.f1()
+// Warning 4984: (196-201): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\n\nx = 115792089237316195423570985008687907853269984665640564039457584007913129639935\n\nTransaction trace:\nC.constructor()\nC.f(115792089237316195423570985008687907853269984665640564039457584007913129639935)\n    l1.f2(115792089237316195423570985008687907853269984665640564039457584007913129639935, 1) -- internal call

@@ -5,5 +5,5 @@ contract test {
     }
 }
 // ----
-// SyntaxError: (70-72): Use of unary + is disallowed.
-// TypeError: (70-72): Unary operator + cannot be applied to type uint256
+// SyntaxError 9636: (70-72): Use of unary + is disallowed.
+// TypeError 4907: (70-72): Unary operator + cannot be applied to type uint256

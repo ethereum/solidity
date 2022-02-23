@@ -8,7 +8,7 @@
 // step: fullSimplify
 //
 // {
+//     { mstore(0, sub(f(), f())) }
 //     function f() -> a
 //     { mstore(1, 2) }
-//     mstore(0, sub(f(), f()))
 // }

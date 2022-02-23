@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	bool b;
@@ -15,9 +13,11 @@ contract C
 		if (g(true) && b) {}
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (156-179): Condition is always false.
-// Warning: (190-213): Condition is always true.
-// Warning: (224-243): Condition is always false.
-// Warning: (254-277): Condition is always false.
-// Warning: (288-300): Condition is always true.
+// Warning 6838: (123-146): BMC: Condition is always false.
+// Warning 6838: (157-180): BMC: Condition is always true.
+// Warning 6838: (191-210): BMC: Condition is always false.
+// Warning 6838: (221-244): BMC: Condition is always false.
+// Warning 6838: (255-267): BMC: Condition is always true.

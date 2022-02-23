@@ -4,7 +4,7 @@ contract C {
 
   bool flag;
 
-  constructor() public {
+  constructor() {
     if (!flag) {
       flag = true;
       function() internal invalid;
@@ -19,5 +19,8 @@ contract Test {
     new C();
   }
 }
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
-// f() -> FAILURE
+// f() -> FAILURE, hex"4e487b71", 0x51

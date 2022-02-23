@@ -4,3 +4,4 @@ contract C {
 contract D is C {
 	fallback() override external {}
 }
+// ----

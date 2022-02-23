@@ -56,18 +56,18 @@ to call back into A before this interaction is completed. To give an example,
 the following code contains a bug (it is just a snippet and not a
 complete contract):
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            if (msg.sender.send(shares[msg.sender]))
+            if (payable(msg.sender).send(shares[msg.sender]))
                 shares[msg.sender] = 0;
         }
     }
@@ -80,14 +80,14 @@ basically retrieve all the Ether in the contract. In particular, the
 following contract will allow an attacker to refund multiple times
 as it uses ``call`` which forwards all remaining gas by default:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.7.0;
+    pragma solidity >=0.6.2 <0.9.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -100,19 +100,19 @@ as it uses ``call`` which forwards all remaining gas by default:
 To avoid re-entrancy, you can use the Checks-Effects-Interactions pattern as
 outlined further below:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.11 <0.7.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
             uint share = shares[msg.sender];
             shares[msg.sender] = 0;
-            msg.sender.transfer(share);
+            payable(msg.sender).transfer(share);
         }
     }
 
@@ -181,37 +181,70 @@ Sending and Receiving Ether
      contract. Again, the best practice here is to use a :ref:`"withdraw"
      pattern instead of a "send" pattern <withdrawal_pattern>`.
 
-Callstack Depth
-===============
+Call Stack Depth
+================
 
 External function calls can fail any time because they exceed the maximum
-call stack of 1024. In such situations, Solidity throws an exception.
+call stack size limit of 1024. In such situations, Solidity throws an exception.
 Malicious actors might be able to force the call stack to a high value
-before they interact with your contract.
+before they interact with your contract. Note that, since `Tangerine Whistle <https://eips.ethereum.org/EIPS/eip-608>`_ hardfork, the `63/64 rule <https://eips.ethereum.org/EIPS/eip-150>`_ makes call stack depth attack impractical. Also note that the call stack and the expression stack are unrelated, even though both have a size limit of 1024 stack slots.
 
 Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
 ``.call()``, ``.delegatecall()`` and ``.staticcall()`` behave in the same way.
+
+Authorized Proxies
+==================
+
+If your contract can act as a proxy, i.e. if it can call arbitrary contracts
+with user-supplied data, then the user can essentially assume the identity
+of the proxy contract. Even if you have other protective measures in place,
+it is best to build your contract system such that the proxy does not have
+any permissions (not even for itself). If needed, you can accomplish that
+using a second proxy:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.0;
+    contract ProxyWithMoreFunctionality {
+        PermissionlessProxy proxy;
+
+        function callOther(address _addr, bytes memory _payload) public
+                returns (bool, bytes memory) {
+            return proxy.callOther(_addr, _payload);
+        }
+        // Other functions and other functionality
+    }
+
+    // This is the full contract, it has no other functionality and
+    // requires no privileges to work.
+    contract PermissionlessProxy {
+        function callOther(address _addr, bytes memory _payload) public
+                returns (bool, bytes memory) {
+            return _addr.call(_payload);
+        }
+    }
 
 tx.origin
 =========
 
 Never use tx.origin for authorization. Let's say you have a wallet contract like this:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
         address owner;
 
-        constructor() public {
+        constructor() {
             owner = msg.sender;
         }
 
         function transferTo(address payable dest, uint amount) public {
+            // THE BUG IS RIGHT HERE, you must use msg.sender instead of tx.origin
             require(tx.origin == owner);
             dest.transfer(amount);
         }
@@ -219,11 +252,10 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 Now someone tricks you into sending Ether to the address of this attack wallet:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.6.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
     interface TxUserWallet {
         function transferTo(address payable dest, uint amount) external;
     }
@@ -231,8 +263,8 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
     contract TxAttackWallet {
         address payable owner;
 
-        constructor() public {
-            owner = msg.sender;
+        constructor() {
+            owner = payable(msg.sender);
         }
 
         receive() external payable {
@@ -248,21 +280,32 @@ Two's Complement / Underflows / Overflows
 =========================================
 
 As in many programming languages, Solidity's integer types are not actually integers.
-They resemble integers when the values are small, but behave differently if the numbers are larger.
-For example, the following is true: ``uint8(255) + uint8(1) == 0``. This situation is called
-an *overflow*. It occurs when an operation is performed that requires a fixed size variable
-to store a number (or piece of data) that is outside the range of the variable's data type.
-An *underflow* is the converse situation: ``uint8(0) - uint8(1) == 255``.
+They resemble integers when the values are small, but cannot represent arbitrarily large numbers.
+
+The following code causes an overflow because the result of the addition is too large
+to be stored in the type ``uint8``:
+
+.. code-block:: solidity
+
+  uint8 x = 255;
+  uint8 y = 1;
+  return x + y;
+
+Solidity has two modes in which it deals with these overflows: Checked and Unchecked or "wrapping" mode.
+
+The default checked mode will detect overflows and cause a failing assertion. You can disable this check
+using ``unchecked { ... }``, causing the overflow to be silently ignored. The above code would return
+``0`` if wrapped in ``unchecked { ... }``.
+
+Even in checked mode, do not assume you are protected from overflow bugs.
+In this mode, overflows will always revert. If it is not possible to avoid the
+overflow, this can lead to a smart contract being stuck in a certain state.
 
 In general, read about the limits of two's complement representation, which even has some
 more special edge cases for signed numbers.
 
 Try to use ``require`` to limit the size of inputs to a reasonable range and use the
-:ref:`SMT checker<smt_checker>` to find potential overflows, or use a library like
-`SafeMath <https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol>`_
-if you want all overflows to cause a revert.
-
-Code such as ``require((balanceOf[_to] + _value) >= balanceOf[_to])`` can also help you check if values are what you expect.
+:ref:`SMT checker<smt_checker>` to find potential overflows.
 
 .. _clearing-mappings:
 
@@ -280,10 +323,10 @@ field of a ``struct`` that is the base type of a dynamic storage array.  The
 ``mapping`` is also ignored in assignments of structs or arrays containing a
 ``mapping``.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract Map {
         mapping (uint => uint)[] array;
@@ -337,7 +380,7 @@ Recommendations
 Take Warnings Seriously
 =======================
 
-If the compiler warns you about something, you should better change it.
+If the compiler warns you about something, you should change it.
 Even if you do not think that this particular warning has security
 implications, there might be another issue buried beneath it.
 Any compiler warning we issue can be silenced by slight changes to the
@@ -345,6 +388,10 @@ code.
 
 Always use the latest version of the compiler to be notified about all recently
 introduced warnings.
+
+Messages of type ``info`` issued by the compiler are not dangerous, and simply
+represent extra suggestions and optional information that the compiler thinks
+might be useful to the user.
 
 Restrict the Amount of Ether
 ============================
@@ -404,256 +451,3 @@ Ask for Peer Review
 The more people examine a piece of code, the more issues are found.
 Asking people to review your code also helps as a cross-check to find out whether your code
 is easy to understand - a very important criterion for good smart contracts.
-
-.. _formal_verification:
-
-*******************
-Formal Verification
-*******************
-
-Using formal verification, it is possible to perform an automated mathematical
-proof that your source code fulfills a certain formal specification.
-The specification is still formal (just as the source code), but usually much
-simpler.
-
-Note that formal verification itself can only help you understand the
-difference between what you did (the specification) and how you did it
-(the actual implementation). You still need to check whether the specification
-is what you wanted and that you did not miss any unintended effects of it.
-
-Solidity implements a formal verification approach based on SMT solving.  The
-SMTChecker module automatically tries to prove that the code satisfies the
-specification given by ``require/assert`` statements. That is, it considers
-``require`` statements as assumptions and tries to prove that the conditions
-inside ``assert`` statements are always true.  If an assertion failure is
-found, a counterexample is given to the user, showing how the assertion can be
-violated.
-
-The SMTChecker also checks automatically for arithmetic underflow/overflow,
-trivial conditions and unreachable code.
-It is currently an experimental feature, therefore in order to use it you need
-to enable it via :ref:`a pragma directive<smt_checker>`.
-
-The SMTChecker traverses the Solidity AST creating and collecting program constraints.
-When it encounters a verification target, an SMT solver is invoked to determine the outcome.
-If a check fails, the SMTChecker provides specific input values that lead to the failure.
-
-While the SMTChecker encodes Solidity code into SMT constraints, it contains two
-reasoning engines that use that encoding in different ways.
-
-SMT Encoding
-============
-
-The SMT encoding tries to be as precise as possible, mapping Solidity types
-and expressions to their closest `SMT-LIB <http://smtlib.cs.uiowa.edu/>`_
-representation, as shown in the table below.
-
-+-----------------------+--------------+-----------------------------+
-|Solidity type          |SMT sort      |Theories (quantifier-free)   |
-+=======================+==============+=============================+
-|Boolean                |Bool          |Bool                         |
-+-----------------------+--------------+-----------------------------+
-|intN, uintN, address,  |Integer       |LIA, NIA                     |
-|bytesN, enum           |              |                             |
-+-----------------------+--------------+-----------------------------+
-|array, mapping, bytes, |Array         |Arrays                       |
-|string                 |              |                             |
-+-----------------------+--------------+-----------------------------+
-|other types            |Integer       |LIA                          |
-+-----------------------+--------------+-----------------------------+
-
-Types that are not yet supported are abstracted by a single 256-bit unsigned
-integer, where their unsupported operations are ignored.
-
-For more details on how the SMT encoding works internally, see the paper
-`SMT-based Verification of Solidity Smart Contracts <https://github.com/leonardoalt/text/blob/master/solidity_isola_2018/main.pdf>`_.
-
-Model Checking Engines
-======================
-
-The SMTChecker module implements two different reasoning engines that use the
-SMT encoding above, a Bounded Model Checker (BMC) and a system of Constrained
-Horn Clauses (CHC).  Both engines are currently under development, and have
-different characteristics.
-
-Bounded Model Checker (BMC)
----------------------------
-
-The BMC engine analyzes functions in isolation, that is, it does not take the
-overall behavior of the contract throughout many transactions into account when
-analyzing each function.  Loops are also ignored in this engine at the moment.
-Internal function calls are inlined as long as they are not recursive, direct
-or indirectly. External function calls are inlined if possible, and knowledge
-that is potentially affected by reentrancy is erased.
-
-The characteristics above make BMC easily prone to reporting false positives,
-but it is also lightweight and should be able to quickly find small local bugs.
-
-Constrained Horn Clauses (CHC)
-------------------------------
-
-The Solidity contract's Control Flow Graph (CFG) is modelled as a system of
-Horn clauses, where the lifecycle of the contract is represented by a loop
-that can visit every public/external function non-deterministically. This way,
-the behavior of the entire contract over an unbounded number of transactions
-is taken into account when analyzing any function. Loops are fully supported
-by this engine. Internal function calls are supported, but external function
-calls are currently unsupported.
-
-The CHC engine is much more powerful than BMC in terms of what it can prove,
-and might require more computing resources.
-
-Abstraction and False Positives
-===============================
-
-The SMTChecker implements abstractions in an incomplete and sound way: If a bug
-is reported, it might be a false positive introduced by abstractions (due to
-erasing knowledge or using a non-precise type). If it determines that a
-verification target is safe, it is indeed safe, that is, there are no false
-negatives (unless there is a bug in the SMTChecker).
-
-In the BMC engine, function calls to the same contract (or base contracts) are
-inlined when possible, that is, when their implementation is available.  Calls
-to functions in other contracts are not inlined even if their code is
-available, since we cannot guarantee that the actual deployed code is the same.
-
-The CHC engine creates nonlinear Horn clauses that use summaries of the called
-functions to support internal function calls. The same approach can and will be
-used for external function calls, but the latter requires more work regarding
-the entire state of the blockchain and is still unimplemented.
-
-Complex pure functions are abstracted by an uninterpreted function (UF) over
-the arguments.
-
-+-----------------------------------+--------------------------------------+
-|Functions                          |SMT behavior                          |
-+===================================+======================================+
-|``assert``                         |Verification target                   |
-+-----------------------------------+--------------------------------------+
-|``require``                        |Assumption                            |
-+-----------------------------------+--------------------------------------+
-|internal                           |BMC: Inline function call             |
-|                                   |CHC: Function summaries               |
-+-----------------------------------+--------------------------------------+
-|external                           |BMC: Inline function call or          |
-|                                   |erase knowledge about state variables |
-|                                   |and local storage references.         |
-|                                   |CHC: Function summaries and erase     |
-|                                   |state knowledge.                      |
-+-----------------------------------+--------------------------------------+
-|``gasleft``, ``blockhash``,        |Abstracted with UF                    |
-|``keccak256``, ``ecrecover``       |                                      |
-|``ripemd160``, ``addmod``,         |                                      |
-|``mulmod``                         |                                      |
-+-----------------------------------+--------------------------------------+
-|pure functions without             |Abstracted with UF                    |
-|implementation (external or        |                                      |
-|complex)                           |                                      |
-+-----------------------------------+--------------------------------------+
-|external functions without         |BMC: Unsupported                      |
-|implementation                     |CHC: Nondeterministic summary         |
-+-----------------------------------+--------------------------------------+
-|others                             |Currently unsupported                 |
-+-----------------------------------+--------------------------------------+
-
-Using abstraction means loss of precise knowledge, but in many cases it does
-not mean loss of proving power.
-
-::
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver available.
-
-    contract Recover
-    {
-        function f(
-            bytes32 hash,
-            uint8 _v1, uint8 _v2,
-            bytes32 _r1, bytes32 _r2,
-            bytes32 _s1, bytes32 _s2
-        ) public pure returns (address) {
-            address a1 = ecrecover(hash, _v1, _r1, _s1);
-            require(_v1 == _v2);
-            require(_r1 == _r2);
-            require(_s1 == _s2);
-            address a2 = ecrecover(hash, _v2, _r2, _s2);
-            assert(a1 == a2);
-            return a1;
-        }
-    }
-
-In the example above, the SMTChecker is not expressive enough to actually
-compute ``ecrecover``, but by modelling the function calls as uninterpreted
-functions we know that the return value is the same when called on equivalent
-parameters. This is enough to prove that the assertion above is always true.
-
-Abstracting a function call with an UF can be done for functions known to be
-deterministic, and can be easily done for pure functions.  It is however
-difficult to do this with general external functions, since they might depend
-on state variables.
-
-External function calls also imply that any current knowledge that the
-SMTChecker might have regarding mutable state variables needs to be erased to
-guarantee no false negatives, since the called external function might direct
-or indirectly call a function in the analyzed contract that changes state
-variables.
-
-Reference Types and Aliasing
-=============================
-
-Solidity implements aliasing for reference types with the same :ref:`data
-location<data-location>`.
-That means one variable may be modified through a reference to the same data
-area.
-The SMTChecker does not keep track of which references refer to the same data.
-This implies that whenever a local reference or state variable of reference
-type is assigned, all knowledge regarding variables of the same type and data
-location is erased.
-If the type is nested, the knowledge removal also includes all the prefix base
-types.
-
-::
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0;
-    pragma experimental SMTChecker;
-    // This will report a warning
-
-    contract Aliasing
-    {
-        uint[] array;
-        function f(
-            uint[] memory a,
-            uint[] memory b,
-            uint[][] memory c,
-            uint[] storage d
-        ) internal view {
-            require(array[0] == 42);
-            require(a[0] == 2);
-            require(c[0][0] == 2);
-            require(d[0] == 2);
-            b[0] = 1;
-            // Erasing knowledge about memory references should not
-            // erase knowledge about state variables.
-            assert(array[0] == 42);
-            // Fails because `a == b` is possible.
-            assert(a[0] == 2);
-            // Fails because `c[i] == b` is possible.
-            assert(c[0][0] == 2);
-            assert(d[0] == 2);
-            assert(b[0] == 1);
-        }
-    }
-
-After the assignment to ``b[0]``, we need to clear knowledge about ``a`` since
-it has the same type (``uint[]``) and data location (memory).  We also need to
-clear knowledge about ``c``, since its base type is also a ``uint[]`` located
-in memory. This implies that some ``c[i]`` could refer to the same data as
-``b`` or ``a``.
-
-Notice that we do not clear knowledge about ``array`` and ``d`` because they
-are located in storage, even though they also have type ``uint[]``.  However,
-if ``d`` was assigned, we would need to clear knowledge about ``array`` and
-vice-versa.

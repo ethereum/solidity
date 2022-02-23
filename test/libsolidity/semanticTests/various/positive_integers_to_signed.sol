@@ -4,6 +4,7 @@ contract test {
     int16 public q = 250;
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // x() -> 2

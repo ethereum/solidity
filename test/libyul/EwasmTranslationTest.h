@@ -14,17 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <test/TestCase.h>
-#include <libyul/Object.h>
 
-namespace solidity::langutil
+#include <libyul/AssemblyStack.h>
+
+namespace solidity::yul
 {
-class Scanner;
-class Error;
-using ErrorList = std::vector<std::shared_ptr<Error const>>;
+struct Object;
+class AssemblyStack;
 }
 
 namespace solidity::yul::test
@@ -42,20 +43,12 @@ public:
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
-	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
-	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
-
 private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	std::string interpret();
 
-	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
-
-	std::string m_source;
-	std::string m_expectation;
-
 	std::shared_ptr<Object> m_object;
-	std::string m_obtainedResult;
+	AssemblyStack m_stack;
 };
 
 }

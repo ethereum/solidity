@@ -6,6 +6,7 @@
 // step: varNameCleaner
 //
 // {
+//     { }
 //     function f()
 //     { let x := 0 }
 //     function g()

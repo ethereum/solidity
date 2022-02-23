@@ -1,7 +1,7 @@
 contract C {
     uint256 public initial;
 
-    constructor() public {
+    constructor() {
         initial = double(2);
     }
 
@@ -14,6 +14,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // runtime(uint256): 3 -> 6

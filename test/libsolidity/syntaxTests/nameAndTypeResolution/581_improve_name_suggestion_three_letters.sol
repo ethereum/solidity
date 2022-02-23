@@ -8,5 +8,5 @@ contract c {
     uint256 abc;
 }
 // ----
-// DeclarationError: (56-59): Undeclared identifier. Did you mean "abc" or "abi"?
-// DeclarationError: (73-76): Undeclared identifier.
+// DeclarationError 7576: (56-59): Undeclared identifier. Did you mean "abc" or "abi"?
+// DeclarationError 7576: (73-76): Undeclared identifier.

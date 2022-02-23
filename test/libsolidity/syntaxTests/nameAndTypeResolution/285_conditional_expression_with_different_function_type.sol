@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (106-118): True expression's type function (bool) doesn't match false expression's type function ().
+// TypeError 1080: (106-118): True expression's type function (bool) does not match false expression's type function ().

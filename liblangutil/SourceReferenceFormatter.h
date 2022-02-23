@@ -14,72 +14,90 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
- * @author Christian <c@ethdev.com>
- * @date 2014
  * Formatting functions for errors referencing positions and locations in the source.
  */
 
 #pragma once
 
-#include <ostream>
-#include <sstream>
-#include <functional>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceExtractor.h>
 
-namespace solidity::util
-{
-struct Exception; // forward
-}
+#include <libsolutil/AnsiColorized.h>
+
+#include <ostream>
+#include <sstream>
+#include <functional>
 
 namespace solidity::langutil
 {
+
+class CharStream;
+class CharStreamProvider;
 struct SourceLocation;
-class Scanner;
 
 class SourceReferenceFormatter
 {
 public:
-	explicit SourceReferenceFormatter(std::ostream& _stream):
-		m_stream(_stream)
+	SourceReferenceFormatter(
+		std::ostream& _stream,
+		CharStreamProvider const& _charStreamProvider,
+		bool _colored,
+		bool _withErrorIds
+	):
+		m_stream(_stream), m_charStreamProvider(_charStreamProvider), m_colored(_colored), m_withErrorIds(_withErrorIds)
 	{}
 
-	virtual ~SourceReferenceFormatter() = default;
-
 	/// Prints source location if it is given.
-	virtual void printSourceLocation(SourceReference const& _ref);
-	virtual void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
-
-	virtual void printSourceLocation(SourceLocation const* _location);
-	virtual void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
-	virtual void printErrorInformation(Error const& _error);
-
-	static std::string formatErrorInformation(Error const& _error)
-	{
-		return formatExceptionInformation(
-			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
-	}
+	void printSourceLocation(SourceReference const& _ref);
+	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
+	void printExceptionInformation(util::Exception const& _exception, std::string const& _severity);
+	void printErrorInformation(langutil::ErrorList const& _errors);
+	void printErrorInformation(Error const& _error);
 
 	static std::string formatExceptionInformation(
 		util::Exception const& _exception,
-		std::string const& _name
+		std::string const& _name,
+		CharStreamProvider const& _charStreamProvider,
+		bool _colored = false,
+		bool _withErrorIds = false
 	)
 	{
 		std::ostringstream errorOutput;
-
-		SourceReferenceFormatter formatter(errorOutput);
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
 		formatter.printExceptionInformation(_exception, _name);
 		return errorOutput.str();
 	}
 
-protected:
-	/// Prints source name if location is given.
-	void printSourceName(SourceReference const& _ref);
+	static std::string formatErrorInformation(
+		Error const& _error,
+		CharStreamProvider const& _charStreamProvider
+	)
+	{
+		return formatExceptionInformation(
+			_error,
+			Error::formatErrorSeverity(Error::errorSeverity(_error.type())),
+			_charStreamProvider
+		);
+	}
 
+	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream);
+
+private:
+	util::AnsiColorized normalColored() const;
+	util::AnsiColorized frameColored() const;
+	util::AnsiColorized errorColored(std::optional<langutil::Error::Severity> _severity) const;
+	util::AnsiColorized messageColored() const;
+	util::AnsiColorized secondaryColored() const;
+	util::AnsiColorized highlightColored() const;
+	util::AnsiColorized diagColored() const;
+
+private:
 	std::ostream& m_stream;
+	CharStreamProvider const& m_charStreamProvider;
+	bool m_colored;
+	bool m_withErrorIds;
 };
 
 }

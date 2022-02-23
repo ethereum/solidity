@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Program.h>
 
@@ -26,6 +27,7 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AST.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -38,6 +40,8 @@
 #include <libyul/optimiser/Suite.h>
 
 #include <libsolutil/JSON.h>
+
+#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <cassert>
 #include <memory>
@@ -54,16 +58,6 @@ namespace solidity::phaser
 
 ostream& operator<<(ostream& _stream, Program const& _program);
 
-}
-
-ostream& std::operator<<(ostream& _outputStream, ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(_outputStream);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
-
-	return _outputStream;
 }
 
 Program::Program(Program const& program):
@@ -119,14 +113,14 @@ ostream& phaser::operator<<(ostream& _stream, Program const& _program)
 string Program::toJson() const
 {
 	Json::Value serializedAst = AsmJsonConverter(0)(*m_ast);
-	return jsonPrettyPrint(serializedAst);
+	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 
 variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(move(_source));
+	auto scanner = make_shared<Scanner>(_source);
 
 	ObjectParser parser(errorReporter, _dialect);
 	shared_ptr<Object> object = parser.parse(scanner, false);
@@ -199,7 +193,12 @@ unique_ptr<Block> Program::applyOptimisationSteps(
 	// An empty set of reserved identifiers. It could be a constructor parameter but I don't
 	// think it would be useful in this tool. Other tools (like yulopti) have it empty too.
 	set<YulString> const externallyUsedIdentifiers = {};
-	OptimiserStepContext context{_dialect, _nameDispenser, externallyUsedIdentifiers};
+	OptimiserStepContext context{
+		_dialect,
+		_nameDispenser,
+		externallyUsedIdentifiers,
+		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+	};
 
 	for (string const& step: _optimisationSteps)
 		OptimiserSuite::allSteps().at(step)->run(context, *_ast);
@@ -207,7 +206,7 @@ unique_ptr<Block> Program::applyOptimisationSteps(
 	return _ast;
 }
 
-size_t Program::computeCodeSize(Block const& _ast)
+size_t Program::computeCodeSize(Block const& _ast, CodeWeights const& _weights)
 {
-	return CodeSize::codeSizeIncludingFunctions(_ast);
+	return CodeSize::codeSizeIncludingFunctions(_ast, _weights);
 }

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Entry point to the model checking engines.
  * The goal of this class is to make different
@@ -25,10 +26,14 @@
 #include <libsolidity/formal/BMC.h>
 #include <libsolidity/formal/CHC.h>
 #include <libsolidity/formal/EncodingContext.h>
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsolidity/formal/ModelCheckerSettings.h>
 
 #include <libsolidity/interface/ReadFile.h>
+
+#include <libsmtutil/SolverInterface.h>
+
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/UniqueErrorReporter.h>
 
 namespace solidity::langutil
 {
@@ -46,10 +51,18 @@ public:
 	/// should be used, even if all are available. The default choice is to use all.
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
+		langutil::CharStreamProvider const& _charStreamProvider,
 		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
-		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
-		smt::SMTSolverChoice _enabledSolvers = smt::SMTSolverChoice::All()
+		ModelCheckerSettings _settings = ModelCheckerSettings{},
+		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback()
 	);
+
+	// TODO This should be removed for 0.9.0.
+	void enableAllEnginesIfPragmaPresent(std::vector<std::shared_ptr<SourceUnit>> const& _sources);
+
+	/// Generates error messages if the requested sources and contracts
+	/// do not exist.
+	void checkRequestedSourcesAndContracts(std::vector<std::shared_ptr<SourceUnit>> const& _sources);
 
 	void analyze(SourceUnit const& _sources);
 
@@ -59,9 +72,21 @@ public:
 	std::vector<std::string> unhandledQueries();
 
 	/// @returns SMT solvers that are available via the C++ API.
-	static smt::SMTSolverChoice availableSolvers();
+	static smtutil::SMTSolverChoice availableSolvers();
 
 private:
+	/// Error reporter from CompilerStack.
+	/// We need to append m_uniqueErrorReporter
+	/// to this one when the analysis is done.
+	langutil::ErrorReporter& m_errorReporter;
+
+	/// Used by ModelChecker, SMTEncoder, BMC and CHC to avoid duplicates.
+	/// This is local to ModelChecker, so needs to be appended
+	/// to m_errorReporter at the end of the analysis.
+	langutil::UniqueErrorReporter m_uniqueErrorReporter;
+
+	ModelCheckerSettings m_settings;
+
 	/// Stores the context of the encoding.
 	smt::EncodingContext m_context;
 

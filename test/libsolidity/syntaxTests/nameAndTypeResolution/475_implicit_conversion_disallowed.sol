@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (95-98): Return argument type uint32 is not implicitly convertible to expected type (type of first return variable) bytes4.
+// TypeError 6359: (95-98): Return argument type uint32 is not implicitly convertible to expected type (type of first return variable) bytes4.

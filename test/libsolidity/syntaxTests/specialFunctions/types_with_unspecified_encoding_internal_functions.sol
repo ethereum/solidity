@@ -5,7 +5,7 @@ contract C {
     }
 }
 // ----
-// TypeError: (91-100): This type cannot be encoded.
-// TypeError: (102-103): This type cannot be encoded.
-// TypeError: (105-119): This type cannot be encoded.
-// TypeError: (121-130): This type cannot be encoded.
+// TypeError 2056: (91-100): This type cannot be encoded.
+// TypeError 2056: (102-103): This type cannot be encoded.
+// TypeError 2056: (105-119): This type cannot be encoded.
+// TypeError 2056: (121-130): This type cannot be encoded.

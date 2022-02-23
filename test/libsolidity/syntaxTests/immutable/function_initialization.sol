@@ -3,3 +3,4 @@ contract C {
 
     function f() public pure returns (uint) { return 3; }
 }
+// ----

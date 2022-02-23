@@ -9,4 +9,4 @@ contract B {
     }
 }
 // ----
-// TypeError: (130-133): Member "f" not unique after argument-dependent lookup in type(contract A).
+// TypeError 6675: (130-133): Member "f" not unique after argument-dependent lookup in type(contract A).

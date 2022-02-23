@@ -2,4 +2,4 @@
 // ----
 // step: fullSimplify
 //
-// { }
+// { { } }

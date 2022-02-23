@@ -1,7 +1,7 @@
 contract B {
     uint immutable private x;
 
-    constructor() public {
+    constructor() {
     }
 
     function f() internal view virtual returns(uint) { return 1; }
@@ -10,12 +10,12 @@ contract B {
 
 contract C is B {
     uint immutable y;
-    constructor() public {
+    constructor() {
         y = 3;
     }
     function f() internal view override returns(uint) { return readX(); }
 
 }
 // ----
-// TypeError: (0-209): Construction control flow ends without initializing all immutable state variables.
-// TypeError: (211-375): Construction control flow ends without initializing all immutable state variables.
+// TypeError 2658: (0-202): Construction control flow ends without initializing all immutable state variables.
+// TypeError 2658: (204-361): Construction control flow ends without initializing all immutable state variables.

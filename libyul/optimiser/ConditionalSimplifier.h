@@ -14,10 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 #include <libsolutil/Common.h>
 
@@ -42,7 +44,6 @@ namespace solidity::yul
  *
  * Future features:
  *  - allow replacements by "1"
- *  - take termination of user-defined functions into account
  *
  * Works best with SSA form and if dead code removal has run before.
  *
@@ -52,20 +53,21 @@ class ConditionalSimplifier: public ASTModifier
 {
 public:
 	static constexpr char const* name{"ConditionalSimplifier"};
-	static void run(OptimiserStepContext& _context, Block& _ast)
-	{
-		ConditionalSimplifier{_context.dialect}(_ast);
-	}
+	static void run(OptimiserStepContext& _context, Block& _ast);
 
 	using ASTModifier::operator();
 	void operator()(Switch& _switch) override;
 	void operator()(Block& _block) override;
 
 private:
-	explicit ConditionalSimplifier(Dialect const& _dialect):
-		m_dialect(_dialect)
+	explicit ConditionalSimplifier(
+		Dialect const& _dialect,
+		std::map<YulString, ControlFlowSideEffects> _sideEffects
+	):
+		m_dialect(_dialect), m_functionSideEffects(move(_sideEffects))
 	{}
 	Dialect const& m_dialect;
+	std::map<YulString, ControlFlowSideEffects> m_functionSideEffects;
 };
 
 }

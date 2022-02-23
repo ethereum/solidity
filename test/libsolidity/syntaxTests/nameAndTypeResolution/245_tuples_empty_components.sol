@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (47-53): Tuple component cannot be empty.
+// TypeError 8381: (47-53): Tuple component cannot be empty.

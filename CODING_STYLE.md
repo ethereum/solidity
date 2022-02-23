@@ -81,7 +81,7 @@ tuple<float, float> myNamespace::meanAndSigma(vector<float> const& _v)
    - Copyright
    - License (e.g. see COPYING)
 2. Never use `#ifdef`/`#define`/`#endif` file guards. Prefer `#pragma` once as first line below file comment.
-3. Prefer static const variable to value macros.
+3. Prefer static constexpr variables to value macros.
 4. Prefer inline constexpr functions to function macros.
 5. Split complex macro on multiple lines with `\`.
 
@@ -236,7 +236,7 @@ Example:
 #include <numeric>
 ```
 
-See [this issue](http://stackoverflow.com/questions/614302/c-header-order/614333#614333 "C header order") for the reason: this makes it easier to find missing includes in header files.
+See [this issue](https://stackoverflow.com/questions/614302/c-header-order/614333#614333 "C header order") for the reason: this makes it easier to find missing includes in header files.
 
 ## 13. Recommended reading
 

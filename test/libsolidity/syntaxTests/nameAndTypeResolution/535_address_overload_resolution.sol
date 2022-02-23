@@ -4,7 +4,7 @@ contract C {
         return 1;
     }
     function transfer(uint amount) public {
-        address(this).transfer(amount); // to avoid pureness warning
+        payable(this).transfer(amount); // to avoid pureness warning
     }
     receive() payable external {
     }
@@ -17,4 +17,4 @@ contract D {
     }
 }
 // ----
-// Warning: (17-134): Function state mutability can be restricted to view
+// Warning 2018: (17-134): Function state mutability can be restricted to view

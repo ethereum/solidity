@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser suite that combines all steps and also provides the settings for the heuristics.
  */
@@ -31,6 +32,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
+#include <libyul/optimiser/EqualStoreEliminator.h>
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
@@ -40,7 +42,10 @@
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
+#include <libyul/optimiser/FunctionSpecializer.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/Rematerialiser.h>
+#include <libyul/optimiser/UnusedFunctionParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -48,18 +53,20 @@
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
+#include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
-#include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/UnusedAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
+#include <libyul/optimiser/NameSimplifier.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AST.h>
 #include <libyul/Object.h>
 
 #include <libyul/backends/wasm/WasmDialect.h>
@@ -67,8 +74,13 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/map.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
+#include <libyul/CompilabilityChecker.h>
+
+#include <range/v3/view/map.hpp>
+#include <range/v3/action/remove.hpp>
+
+#include <limits>
+#include <tuple>
 
 using namespace std;
 using namespace solidity;
@@ -79,10 +91,17 @@ void OptimiserSuite::run(
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
-	string const& _optimisationSequence,
+	string_view _optimisationSequence,
+	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {
+	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
+	bool usesOptimizedCodeGenerator =
+		_optimizeStackAllocation &&
+		evmDialect &&
+		evmDialect->evmVersion().canOverchargeGasForCall() &&
+		evmDialect->providesObjectAccess();
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
@@ -93,12 +112,16 @@ void OptimiserSuite::run(
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
+	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
+	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
-	// Some steps depend on properties ensured by FunctionHoister, FunctionGrouper and
+	OptimiserSuite suite(context, Debug::None);
+
+	// Some steps depend on properties ensured by FunctionHoister, BlockFlattener, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
-	suite.runSequence("fgo", ast);
+	suite.runSequence("hgfo", ast);
 
+	NameSimplifier::run(suite.m_context, ast);
 	// Now the user-supplied part
 	suite.runSequence(_optimisationSequence, ast);
 
@@ -108,18 +131,32 @@ void OptimiserSuite::run(
 
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
-	StackCompressor::run(
-		_dialect,
-		_object,
-		_optimizeStackAllocation,
-		stackCompressorMaxIterations
-	);
+	if (!usesOptimizedCodeGenerator)
+		StackCompressor::run(
+			_dialect,
+			_object,
+			_optimizeStackAllocation,
+			stackCompressorMaxIterations
+		);
 	suite.runSequence("fDnTOc g", ast);
 
-	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
+	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{*dialect, *_meter}(ast);
+		ConstantOptimiser{*evmDialect, *_meter}(ast);
+		if (usesOptimizedCodeGenerator)
+		{
+			StackCompressor::run(
+				_dialect,
+				_object,
+				_optimizeStackAllocation,
+				stackCompressorMaxIterations
+			);
+			if (evmDialect->providesObjectAccess())
+				StackLimitEvader::run(suite.m_context, _object);
+		}
+		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
+			StackLimitEvader::run(suite.m_context, _object);
 	}
 	else if (dynamic_cast<WasmDialect const*>(&_dialect))
 	{
@@ -128,6 +165,9 @@ void OptimiserSuite::run(
 		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
 			ast.statements.erase(ast.statements.begin());
 	}
+
+	dispenser.reset(ast);
+	NameSimplifier::run(suite.m_context, ast);
 	VarNameCleaner::run(suite.m_context, ast);
 
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
@@ -165,6 +205,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			ConditionalUnsimplifier,
 			ControlFlowSimplifier,
 			DeadCodeEliminator,
+			EqualStoreEliminator,
 			EquivalentFunctionCombiner,
 			ExpressionInliner,
 			ExpressionJoiner,
@@ -176,18 +217,22 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			FullInliner,
 			FunctionGrouper,
 			FunctionHoister,
+			FunctionSpecializer,
 			LiteralRematerialiser,
 			LoadResolver,
 			LoopInvariantCodeMotion,
-			RedundantAssignEliminator,
+			UnusedAssignEliminator,
+			ReasoningBasedSimplifier,
 			Rematerialiser,
 			SSAReverser,
 			SSATransform,
 			StructuralSimplifier,
+			UnusedFunctionParameterPruner,
 			UnusedPruner,
 			VarDeclInitializer
 		>();
 	// Does not include VarNameCleaner because it destroys the property of unique names.
+	// Does not include NameSimplifier.
 	return instance;
 }
 
@@ -201,6 +246,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{ConditionalUnsimplifier::name,       'U'},
 		{ControlFlowSimplifier::name,         'n'},
 		{DeadCodeEliminator::name,            'D'},
+		{EqualStoreEliminator::name,          'E'},
 		{EquivalentFunctionCombiner::name,    'v'},
 		{ExpressionInliner::name,             'e'},
 		{ExpressionJoiner::name,              'j'},
@@ -212,21 +258,24 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{FullInliner::name,                   'i'},
 		{FunctionGrouper::name,               'g'},
 		{FunctionHoister::name,               'h'},
+		{FunctionSpecializer::name,           'F'},
 		{LiteralRematerialiser::name,         'T'},
 		{LoadResolver::name,                  'L'},
 		{LoopInvariantCodeMotion::name,       'M'},
-		{RedundantAssignEliminator::name,     'r'},
+		{ReasoningBasedSimplifier::name,      'R'},
+		{UnusedAssignEliminator::name,        'r'},
 		{Rematerialiser::name,                'm'},
 		{SSAReverser::name,                   'V'},
 		{SSATransform::name,                  'a'},
 		{StructuralSimplifier::name,          't'},
+		{UnusedFunctionParameterPruner::name, 'p'},
 		{UnusedPruner::name,                  'u'},
 		{VarDeclInitializer::name,            'd'},
 	};
 	yulAssert(lookupTable.size() == allSteps().size(), "");
 	yulAssert((
 			util::convertContainer<set<char>>(string(NonStepAbbreviations)) -
-			util::convertContainer<set<char>>(lookupTable | boost::adaptors::map_values)
+			util::convertContainer<set<char>>(lookupTable | ranges::views::values)
 		).size() == string(NonStepAbbreviations).size(),
 		"Step abbreviation conflicts with a character reserved for another syntactic element"
 	);
@@ -241,9 +290,9 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	return lookupTable;
 }
 
-void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
+void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 {
-	bool insideLoop = false;
+	int8_t nestingLevel = 0;
 	for (char abbreviation: _stepAbbreviations)
 		switch (abbreviation)
 		{
@@ -251,14 +300,15 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 		case '\n':
 			break;
 		case '[':
-			assertThrow(!insideLoop, OptimizerException, "Nested brackets are not supported");
-			insideLoop = true;
+			assertThrow(nestingLevel < numeric_limits<int8_t>::max(), OptimizerException, "Brackets nested too deep");
+			nestingLevel++;
 			break;
 		case ']':
-			assertThrow(insideLoop, OptimizerException, "Unbalanced brackets");
-			insideLoop = false;
+			nestingLevel--;
+			assertThrow(nestingLevel >= 0, OptimizerException, "Unbalanced brackets");
 			break;
 		default:
+		{
 			yulAssert(
 				string(NonStepAbbreviations).find(abbreviation) == string::npos,
 				"Unhandled syntactic element in the abbreviation sequence"
@@ -268,41 +318,105 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 				OptimizerException,
 				"'"s + abbreviation + "' is not a valid step abbreviation"
 			);
+			optional<string> invalid = allSteps().at(stepAbbreviationToNameMap().at(abbreviation))->invalidInCurrentEnvironment();
+			assertThrow(
+				!invalid.has_value(),
+				OptimizerException,
+				"'"s + abbreviation + "' is invalid in the current environment: " + *invalid
+			);
 		}
-	assertThrow(!insideLoop, OptimizerException, "Unbalanced brackets");
+		}
+	assertThrow(nestingLevel == 0, OptimizerException, "Unbalanced brackets");
 }
 
-void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+void OptimiserSuite::runSequence(string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable)
 {
 	validateSequence(_stepAbbreviations);
 
-	string input = _stepAbbreviations;
-	boost::remove_erase(input, ' ');
-	boost::remove_erase(input, '\n');
+	// This splits 'aaa[bbb]ccc...' into 'aaa' and '[bbb]ccc...'.
+	auto extractNonNestedPrefix = [](string_view _tail) -> tuple<string_view, string_view>
+	{
+		for (size_t i = 0; i < _tail.size(); ++i)
+		{
+			yulAssert(_tail[i] != ']');
+			if (_tail[i] == '[')
+				return {_tail.substr(0, i), _tail.substr(i)};
+		}
+		return {_tail, {}};
+	};
 
-	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
+	// This splits '[bbb]ccc...' into 'bbb' and 'ccc...'.
+	auto extractBracketContent = [](string_view _tail) -> tuple<string_view, string_view>
+	{
+		yulAssert(!_tail.empty() && _tail[0] == '[');
+
+		size_t contentLength = 0;
+		int8_t nestingLevel = 1;
+		for (char abbreviation: _tail.substr(1))
+		{
+			if (abbreviation == '[')
+			{
+				yulAssert(nestingLevel < numeric_limits<int8_t>::max());
+				++nestingLevel;
+			}
+			else if (abbreviation == ']')
+			{
+				--nestingLevel;
+				if (nestingLevel == 0)
+					break;
+			}
+			++contentLength;
+		}
+		yulAssert(nestingLevel == 0);
+		yulAssert(_tail[contentLength + 1] == ']');
+
+		return {_tail.substr(1, contentLength), _tail.substr(contentLength + 2)};
+	};
+
+	auto abbreviationsToSteps = [](string_view _sequence) -> vector<string>
 	{
 		vector<string> steps;
 		for (char abbreviation: _sequence)
-			steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+			if (abbreviation != ' ' && abbreviation != '\n')
+				steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
 		return steps;
 	};
 
-	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa[bbb]`
-	// `aaa` or `[bbb]` can be empty. For example we consider a sequence like `fgo[aaf]Oo` to have
-	// four segments, the last of which is an empty bracket.
-	size_t currentPairStart = 0;
-	while (currentPairStart < input.size())
+	vector<tuple<string_view, bool>> subsequences;
+	string_view tail = _stepAbbreviations;
+	while (!tail.empty())
 	{
-		size_t openingBracket = input.find('[', currentPairStart);
-		size_t closingBracket = input.find(']', openingBracket);
-		size_t firstCharInside = (openingBracket == string::npos ? input.size() : openingBracket + 1);
-		yulAssert((openingBracket == string::npos) == (closingBracket == string::npos), "");
+		string_view subsequence;
+		tie(subsequence, tail) = extractNonNestedPrefix(tail);
+		if (subsequence.size() > 0)
+			subsequences.push_back({subsequence, false});
 
-		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingBracket - currentPairStart)), _ast);
-		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingBracket - firstCharInside)), _ast);
+		if (tail.empty())
+			break;
 
-		currentPairStart = (closingBracket == string::npos ? input.size() : closingBracket + 1);
+		tie(subsequence, tail) = extractBracketContent(tail);
+		if (subsequence.size() > 0)
+			subsequences.push_back({subsequence, true});
+	}
+
+	size_t codeSize = 0;
+	for (size_t round = 0; round < MaxRounds; ++round)
+	{
+		for (auto const& [subsequence, repeat]: subsequences)
+		{
+			if (repeat)
+				runSequence(subsequence, _ast, true);
+			else
+				runSequence(abbreviationsToSteps(subsequence), _ast);
+		}
+
+		if (!_repeatUntilStable)
+			break;
+
+		size_t newSize = CodeSize::codeSizeIncludingFunctions(_ast);
+		if (newSize == codeSize)
+			break;
+		codeSize = newSize;
 	}
 }
 
@@ -328,23 +442,5 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}
-	}
-}
-
-void OptimiserSuite::runSequenceUntilStable(
-	std::vector<string> const& _steps,
-	Block& _ast,
-	size_t maxRounds
-)
-{
-	size_t codeSize = 0;
-	for (size_t rounds = 0; rounds < maxRounds; ++rounds)
-	{
-		size_t newSize = CodeSize::codeSizeIncludingFunctions(_ast);
-		if (newSize == codeSize)
-			break;
-		codeSize = newSize;
-
-		runSequence(_steps, _ast);
 	}
 }

@@ -14,19 +14,24 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul code and data object container.
  */
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
+
+#include <liblangutil/CharStreamProvider.h>
+#include <liblangutil/DebugInfoSelection.h>
 
 #include <libsolutil/Common.h>
 
 #include <memory>
 #include <set>
+#include <limits>
 
 namespace solidity::yul
 {
@@ -34,46 +39,92 @@ struct Dialect;
 struct AsmAnalysisInfo;
 
 
+using SourceNameMap = std::map<unsigned, std::shared_ptr<std::string const>>;
+
+struct Object;
+
 /**
  * Generic base class for both Yul objects and Yul data.
  */
 struct ObjectNode
 {
 	virtual ~ObjectNode() = default;
-	virtual std::string toString(Dialect const* _dialect) const = 0;
-	std::string toString() { return toString(nullptr); }
 
+	/// Name of the object.
+	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
+	virtual std::string toString(
+		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
+		langutil::CharStreamProvider const* _soliditySourceProvider
+	) const = 0;
 };
 
 /**
  * Named data in Yul objects.
  */
-struct Data: ObjectNode
+struct Data: public ObjectNode
 {
 	Data(YulString _name, bytes _data): data(std::move(_data)) { name = _name; }
-	std::string toString(Dialect const* _dialect) const override;
 
 	bytes data;
+
+	std::string toString(
+		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection,
+		langutil::CharStreamProvider const* _soliditySourceProvider
+	) const override;
 };
+
+
+struct ObjectDebugData
+{
+	std::optional<SourceNameMap> sourceNames = {};
+};
+
 
 /**
  * Yul code and data object container.
  */
-struct Object: ObjectNode
+struct Object: public ObjectNode
 {
 public:
-	/// @returns a (parseable) string representation. Includes types if @a _yul is set.
-	std::string toString(Dialect const* _dialect) const override;
+	/// @returns a (parseable) string representation.
+	std::string toString(
+		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
+	) const;
 
 	/// @returns the set of names of data objects accessible from within the code of
-	/// this object.
-	std::set<YulString> dataNames() const;
+	/// this object, including the name of object itself
+	/// Handles all names containing dots as reserved identifiers, not accessible as data.
+	std::set<YulString> qualifiedDataNames() const;
+
+	/// @returns vector of subIDs if possible to reach subobject with @a _qualifiedName, throws otherwise
+	/// For "B.C" should return vector of two values if success (subId of B and subId of C in B).
+	/// In object "A" if called for "A.B" will return only one value (subId for B)
+	/// will return empty vector for @a _qualifiedName that equals to object name.
+	/// Example:
+	/// A1{ B2{ C3, D3 }, E2{ F3{ G4, K4, H4{ I5 } } } }
+	/// pathToSubObject("A1.E2.F3.H4") == {1, 0, 2}
+	/// pathToSubObject("E2.F3.H4") == {1, 0, 2}
+	/// pathToSubObject("A1.E2") == {1}
+	/// The path must not lead to a @a Data object (will throw in that case).
+	std::vector<size_t> pathToSubObject(YulString _qualifiedName) const;
+
+	/// sub id for object if it is subobject of another object, max value if it is not subobject
+	size_t subId = std::numeric_limits<size_t>::max();
 
 	std::shared_ptr<Block> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;
 	std::map<YulString, size_t> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
+
+	std::shared_ptr<ObjectDebugData const> debugData;
+
+	/// @returns the name of the special metadata data object.
+	static std::string metadataName() { return ".metadata"; }
 };
 
 }

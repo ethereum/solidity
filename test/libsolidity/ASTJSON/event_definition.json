@@ -8,16 +8,15 @@
     ]
   },
   "id": 4,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 3,
       "linearizedBaseContracts":
@@ -25,14 +24,16 @@
         3
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
         {
           "anonymous": false,
-          "documentation": null,
+          "eventSelector": "92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028",
           "id": 2,
           "name": "E",
+          "nameLocation": "19:1:1",
           "nodeType": "EventDefinition",
           "parameters":
           {
@@ -45,7 +46,8 @@
         }
       ],
       "scope": 4,
-      "src": "0:25:1"
+      "src": "0:25:1",
+      "usedErrors": []
     }
   ],
   "src": "0:26:1"

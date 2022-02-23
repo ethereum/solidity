@@ -3,4 +3,4 @@ contract c {
     function g() public { fun(); }
 }
 // ----
-// DeclarationError: (69-72): Undeclared identifier. Did you mean "func"?
+// DeclarationError 7576: (69-72): Undeclared identifier. Did you mean "func"?

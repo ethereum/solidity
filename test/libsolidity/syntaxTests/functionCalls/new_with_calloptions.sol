@@ -1,4 +1,4 @@
-contract D { constructor() public payable {} }
+contract D { constructor() payable {} }
 contract C {
     function foo() pure internal {
 		new D{salt:"abc", value:3};

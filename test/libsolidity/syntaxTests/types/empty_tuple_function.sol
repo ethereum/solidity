@@ -7,5 +7,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (138-141): Tuple component cannot be empty.
-// TypeError: (157-160): Tuple component cannot be empty.
+// TypeError 6473: (138-141): Tuple component cannot be empty.
+// TypeError 6473: (157-160): Tuple component cannot be empty.

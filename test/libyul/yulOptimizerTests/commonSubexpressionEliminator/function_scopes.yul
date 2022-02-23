@@ -27,6 +27,15 @@
 // step: commonSubexpressionEliminator
 //
 // {
+//     let _6 := 0x20
+//     let _7 := allocate(_6)
+//     pop(_7)
+//     let _8 := 0x40
+//     let x := allocate(_8)
+//     let _9 := 2
+//     let _10 := 3
+//     let _11 := array_index_access(x, _10)
+//     mstore(_11, _9)
 //     function allocate(size) -> p
 //     {
 //         let _1 := 0x40
@@ -41,13 +50,4 @@
 //         let _5 := mul(index, _4)
 //         p_1 := add(array, _5)
 //     }
-//     let _6 := 0x20
-//     let _7 := allocate(_6)
-//     pop(_7)
-//     let _8 := 0x40
-//     let x := allocate(_8)
-//     let _9 := 2
-//     let _10 := 3
-//     let _11 := array_index_access(x, _10)
-//     mstore(_11, _9)
 // }

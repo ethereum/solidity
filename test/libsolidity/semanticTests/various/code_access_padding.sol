@@ -14,6 +14,7 @@ contract C {
         }
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // diff() -> 0 # This checks that the allocation function pads to multiples of 32 bytes #

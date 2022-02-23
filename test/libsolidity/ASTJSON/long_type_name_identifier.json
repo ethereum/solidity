@@ -8,16 +8,15 @@
     ]
   },
   "id": 16,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "c",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 15,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         15
       ],
       "name": "c",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -33,8 +33,8 @@
           "id": 3,
           "mutability": "mutable",
           "name": "a",
+          "nameLocation": "20:1:1",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 15,
           "src": "13:8:1",
           "stateVariable": true,
@@ -59,7 +59,6 @@
               }
             },
             "id": 2,
-            "length": null,
             "nodeType": "ArrayTypeName",
             "src": "13:6:1",
             "typeDescriptions":
@@ -68,7 +67,6 @@
               "typeString": "uint256[]"
             }
           },
-          "value": null,
           "visibility": "internal"
         },
         {
@@ -91,8 +89,8 @@
                     "id": 10,
                     "mutability": "mutable",
                     "name": "b",
+                    "nameLocation": "60:1:1",
                     "nodeType": "VariableDeclaration",
-                    "overrides": null,
                     "scope": 13,
                     "src": "45:16:1",
                     "stateVariable": false,
@@ -117,7 +115,6 @@
                         }
                       },
                       "id": 9,
-                      "length": null,
                       "nodeType": "ArrayTypeName",
                       "src": "45:6:1",
                       "typeDescriptions":
@@ -126,14 +123,12 @@
                         "typeString": "uint256[]"
                       }
                     },
-                    "value": null,
                     "visibility": "internal"
                   }
                 ],
                 "id": 12,
                 "initialValue":
                 {
-                  "argumentTypes": null,
                   "id": 11,
                   "name": "a",
                   "nodeType": "Identifier",
@@ -151,15 +146,14 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 14,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "32:1:1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 4,
@@ -182,7 +176,8 @@
         }
       ],
       "scope": 16,
-      "src": "0:70:1"
+      "src": "0:70:1",
+      "usedErrors": []
     }
   ],
   "src": "0:71:1"

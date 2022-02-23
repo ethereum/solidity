@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file SwarmHash.cpp
  */
 
@@ -28,7 +29,7 @@ using namespace solidity::util;
 namespace
 {
 
-bytes toLittleEndian(size_t _size)
+bytes toLittleEndian(uint64_t _size)
 {
 	bytes encoded(8);
 	for (size_t i = 0; i < 8; ++i)

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author julius <djudju@protonmail.com>
  * @date 2019
@@ -66,6 +67,7 @@ private:
 	template<class T>
 	ASTPointer<T> convertJsonToASTNode(Json::Value const& _node);
 
+	langutil::SourceLocation createNameSourceLocation(Json::Value const& _node);
 
 	/// \defgroup nodeCreators JSON to AST-Nodes
 	///@{
@@ -73,11 +75,13 @@ private:
 	ASTPointer<PragmaDirective> createPragmaDirective(Json::Value const& _node);
 	ASTPointer<ImportDirective> createImportDirective(Json::Value const& _node);
 	ASTPointer<ContractDefinition> createContractDefinition(Json::Value const& _node);
+	ASTPointer<IdentifierPath> createIdentifierPath(Json::Value const& _node);
 	ASTPointer<InheritanceSpecifier> createInheritanceSpecifier(Json::Value const& _node);
 	ASTPointer<UsingForDirective> createUsingForDirective(Json::Value const& _node);
 	ASTPointer<ASTNode> createStructDefinition(Json::Value const& _node);
 	ASTPointer<EnumDefinition> createEnumDefinition(Json::Value const& _node);
 	ASTPointer<EnumValue> createEnumValue(Json::Value const& _node);
+	ASTPointer<UserDefinedValueTypeDefinition> createUserDefinedValueTypeDefinition(Json::Value const& _node);
 	ASTPointer<ParameterList> createParameterList(Json::Value const& _node);
 	ASTPointer<OverrideSpecifier> createOverrideSpecifier(Json::Value const& _node);
 	ASTPointer<FunctionDefinition> createFunctionDefinition(Json::Value const& _node);
@@ -85,13 +89,14 @@ private:
 	ASTPointer<ModifierDefinition> createModifierDefinition(Json::Value const& _node);
 	ASTPointer<ModifierInvocation> createModifierInvocation(Json::Value const& _node);
 	ASTPointer<EventDefinition> createEventDefinition(Json::Value const& _node);
+	ASTPointer<ErrorDefinition> createErrorDefinition(Json::Value const& _node);
 	ASTPointer<ElementaryTypeName> createElementaryTypeName(Json::Value const& _node);
 	ASTPointer<UserDefinedTypeName> createUserDefinedTypeName(Json::Value const& _node);
 	ASTPointer<FunctionTypeName> createFunctionTypeName(Json::Value const& _node);
 	ASTPointer<Mapping> createMapping(Json::Value const& _node);
 	ASTPointer<ArrayTypeName> createArrayTypeName(Json::Value const& _node);
 	ASTPointer<InlineAssembly> createInlineAssembly(Json::Value const& _node);
-	ASTPointer<Block> createBlock(Json::Value const& _node);
+	ASTPointer<Block> createBlock(Json::Value const& _node, bool _unchecked);
 	ASTPointer<PlaceholderStatement> createPlaceholderStatement(Json::Value const& _node);
 	ASTPointer<IfStatement> createIfStatement(Json::Value const& _node);
 	ASTPointer<TryCatchClause> createTryCatchClause(Json::Value const& _node);
@@ -103,6 +108,7 @@ private:
 	ASTPointer<Return> createReturn(Json::Value const& _node);
 	ASTPointer<Throw> createThrow(Json::Value const& _node);
 	ASTPointer<EmitStatement> createEmitStatement(Json::Value const& _node);
+	ASTPointer<RevertStatement> createRevertStatement(Json::Value const& _node);
 	ASTPointer<VariableDeclarationStatement> createVariableDeclarationStatement(Json::Value const& _node);
 	ASTPointer<ExpressionStatement> createExpressionStatement(Json::Value const& _node);
 	ASTPointer<Conditional> createConditional(Json::Value const& _node);
@@ -147,13 +153,10 @@ private:
 	///@}
 
 	// =========== member variables ===============
-	/// Stores filepath as sourcenames to AST in JSON format
-	std::map<std::string, Json::Value> m_sourceList;
-	/// list of filepaths (used as sourcenames)
-	std::vector<std::shared_ptr<std::string const>> m_sourceLocations;
+	/// list of source names, order by source index
+	std::vector<std::shared_ptr<std::string const>> m_sourceNames;
 	/// filepath to AST
 	std::map<std::string, ASTPointer<SourceUnit>> m_sourceUnits;
-	std::string m_currentSourceName;
 	/// IDs already used by the nodes
 	std::set<int64_t> m_usedIDs;
 	/// Configured EVM version

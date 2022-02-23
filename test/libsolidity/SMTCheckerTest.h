@@ -14,12 +14,15 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <test/libsolidity/SyntaxTest.h>
 
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsmtutil/SolverInterface.h>
+
+#include <libsolidity/formal/ModelChecker.h>
 
 #include <string>
 
@@ -31,17 +34,32 @@ class SMTCheckerTest: public SyntaxTest
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::make_unique<SMTCheckerTest>(_config.filename, _config.evmVersion);
+		return std::make_unique<SMTCheckerTest>(_config.filename);
 	}
-	SMTCheckerTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
+	SMTCheckerTest(std::string const& _filename);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
+	void filterObtainedErrors() override;
+
 protected:
-	/// This is set via option SMTSolvers in the test.
-	/// The possible options are `all`, `z3`, `cvc4`, `none`,
-	/// where if none is given the default used option is `all`.
-	smt::SMTSolverChoice m_enabledSolvers;
+	/*
+	Options that can be set in the test:
+	SMTEngine: `all`, `chc`, `bmc`, `none`, where the default is `all`.
+		Set in m_modelCheckerSettings.
+	SMTIgnoreCex: `yes`, `no`, where the default is `no`.
+		Set in m_ignoreCex.
+	SMTIgnoreInv: `yes`, `no`, where the default is `no`.
+		Set in m_modelCheckerSettings.
+	SMTShowUnproved: `yes`, `no`, where the default is `yes`.
+		Set in m_modelCheckerSettings.
+	SMTSolvers: `all`, `cvc4`, `z3`, `none`, where the default is `all`.
+		Set in m_modelCheckerSettings.
+	*/
+
+	ModelCheckerSettings m_modelCheckerSettings;
+
+	bool m_ignoreCex = false;
 };
 
 }

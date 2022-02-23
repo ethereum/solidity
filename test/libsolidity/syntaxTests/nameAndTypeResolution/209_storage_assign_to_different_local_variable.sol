@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (163-164): Type uint8[] storage pointer is not implicitly convertible to expected type uint256[] storage pointer.
+// TypeError 7407: (163-164): Type uint8[] storage pointer is not implicitly convertible to expected type uint256[] storage pointer.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Module for applying replacement rules against Expressions.
  */
@@ -25,7 +26,7 @@
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
 #include <libevmasm/RuleList.h>
@@ -36,7 +37,7 @@ using namespace solidity::evmasm;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 
-SimplificationRule<yul::Pattern> const* SimplificationRules::findFirstMatch(
+SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
 	Dialect const& _dialect,
 	map<YulString, AssignedValue> const& _ssaValues
@@ -46,7 +47,16 @@ SimplificationRule<yul::Pattern> const* SimplificationRules::findFirstMatch(
 	if (!instruction)
 		return nullptr;
 
-	static SimplificationRules rules;
+	static std::map<std::optional<EVMVersion>, std::unique_ptr<SimplificationRules>> evmRules;
+
+	std::optional<EVMVersion> version;
+	if (yul::EVMDialect const* evmDialect = dynamic_cast<yul::EVMDialect const*>(&_dialect))
+		version = evmDialect->evmVersion();
+
+	if (!evmRules[version])
+		evmRules[version] = std::make_unique<SimplificationRules>(version);
+
+	SimplificationRules& rules = *evmRules[version];
 	assertThrow(rules.isInitialized(), OptimizerException, "Rule list not properly initialized.");
 
 	for (auto const& rule: rules.m_rules[uint8_t(instruction->first)])
@@ -76,18 +86,18 @@ std::optional<std::pair<evmasm::Instruction, vector<Expression> const*>>
 	return {};
 }
 
-void SimplificationRules::addRules(vector<SimplificationRule<Pattern>> const& _rules)
+void SimplificationRules::addRules(std::vector<Rule> const& _rules)
 {
 	for (auto const& r: _rules)
 		addRule(r);
 }
 
-void SimplificationRules::addRule(SimplificationRule<Pattern> const& _rule)
+void SimplificationRules::addRule(Rule const& _rule)
 {
 	m_rules[uint8_t(_rule.pattern.instruction())].push_back(_rule);
 }
 
-SimplificationRules::SimplificationRules()
+SimplificationRules::SimplificationRules(std::optional<langutil::EVMVersion> _evmVersion)
 {
 	// Multiple occurrences of one of these inside one rule must match the same equivalence class.
 	// Constants.
@@ -107,7 +117,7 @@ SimplificationRules::SimplificationRules()
 	Y.setMatchGroup(6, m_matchGroups);
 	Z.setMatchGroup(7, m_matchGroups);
 
-	addRules(simplificationRuleList(A, B, C, W, X, Y, Z));
+	addRules(simplificationRuleList(_evmVersion, A, B, C, W, X, Y, Z));
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
@@ -161,12 +171,22 @@ bool Pattern::matches(
 			return false;
 		assertThrow(m_arguments.size() == instrAndArgs->second->size(), OptimizerException, "");
 		for (size_t i = 0; i < m_arguments.size(); ++i)
-			if (!m_arguments[i].matches(instrAndArgs->second->at(i), _dialect, _ssaValues))
+		{
+			Expression const& arg = instrAndArgs->second->at(i);
+			// If this is a direct function call instead of a variable or literal,
+			// we reject the match because side-effects could prevent us from
+			// arbitrarily modifying the code.
+			if (
+				holds_alternative<FunctionCall>(arg) ||
+				!m_arguments[i].matches(arg, _dialect, _ssaValues)
+			)
 				return false;
+		}
 	}
 	else
 	{
 		assertThrow(m_arguments.empty(), OptimizerException, "\"Any\" should not have arguments.");
+		assertThrow(!holds_alternative<FunctionCall>(*expr), OptimizerException, "\"Any\" at top-level.");
 	}
 
 	if (m_matchGroup)
@@ -187,9 +207,14 @@ bool Pattern::matches(
 			assertThrow(m_kind == PatternKind::Any, OptimizerException, "Match group repetition for non-any.");
 			Expression const* firstMatch = (*m_matchGroups)[m_matchGroup];
 			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
-			return
-				SyntacticallyEqual{}(*firstMatch, _expr) &&
-				SideEffectsCollector(_dialect, _expr).movable();
+			assertThrow(
+				!holds_alternative<FunctionCall>(_expr) &&
+				!holds_alternative<FunctionCall>(*firstMatch),
+				OptimizerException,
+				"Group matches have to be literals or variables."
+			);
+
+			return SyntacticallyEqual{}(*firstMatch, _expr);
 		}
 		else if (m_kind == PatternKind::Any)
 			(*m_matchGroups)[m_matchGroup] = &_expr;
@@ -209,27 +234,26 @@ evmasm::Instruction Pattern::instruction() const
 	return m_instruction;
 }
 
-Expression Pattern::toExpression(SourceLocation const& _location) const
+Expression Pattern::toExpression(shared_ptr<DebugData const> const& _debugData) const
 {
 	if (matchGroup())
 		return ASTCopier().translate(matchGroupValue());
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, LiteralKind::Number, YulString{util::formatNumber(*m_data)}, {}};
+		return Literal{_debugData, LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
 		vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
-			arguments.emplace_back(arg.toExpression(_location));
+			arguments.emplace_back(arg.toExpression(_debugData));
 
 		string name = instructionInfo(m_instruction).name;
 		transform(begin(name), end(name), begin(name), [](auto _c) { return tolower(_c); });
 
-		return FunctionCall{
-			_location,
-			Identifier{_location, YulString{name}},
+		return FunctionCall{_debugData,
+			Identifier{_debugData, YulString{name}},
 			std::move(arguments)
 		};
 	}

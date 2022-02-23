@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (66-83): Unable to deduce common type for array elements.
+// TypeError 6378: (66-83): Unable to deduce common type for array elements.

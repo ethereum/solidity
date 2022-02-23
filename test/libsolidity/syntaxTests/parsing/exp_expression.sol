@@ -4,5 +4,5 @@ contract test {
     }
 }
 // ----
-// Warning: (61-70): Unused local variable.
-// Warning: (20-86): Function state mutability can be restricted to pure
+// Warning 2072: (61-70): Unused local variable.
+// Warning 2018: (20-86): Function state mutability can be restricted to pure

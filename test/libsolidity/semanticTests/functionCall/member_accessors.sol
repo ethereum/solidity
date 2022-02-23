@@ -3,7 +3,7 @@ contract test {
     bytes6 public name;
     bytes32 public a_hash;
     address public an_address;
-    constructor() public {
+    constructor() {
         data = 8;
         name = "Celina";
         a_hash = keccak256("\x7b");
@@ -14,6 +14,7 @@ contract test {
 }
 // ====
 // allowNonExistingFunctions: true
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // data() -> 8

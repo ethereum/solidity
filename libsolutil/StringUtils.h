@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file StringUtils.h
  * @author Balajiganapathi S <balajiganapathi.s@gmail.com>
  * @date 2017
@@ -23,10 +24,12 @@
 
 #pragma once
 
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
+
+#include <limits>
 #include <string>
 #include <vector>
-
-#include <libsolutil/CommonData.h>
 
 namespace solidity::util
 {
@@ -156,14 +159,14 @@ inline std::string formatNumberReadable(
 	if (_useTruncation)
 	{
 		// return as interior-truncated hex.
-		int len = str.size();
+		size_t len = str.size();
 
 		if (len < 24)
 			return str;
 
-		int const initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
-		int const finalChars = 4;
-		int numSkipped = len - initialChars - finalChars;
+		size_t const initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
+		size_t const finalChars = 4;
+		size_t numSkipped = len - initialChars - finalChars;
 
 		return str.substr(0, initialChars) +
 			"...{+" +
@@ -174,6 +177,24 @@ inline std::string formatNumberReadable(
 
 	// otherwise, show whole value.
 	return str;
+}
+
+/// Safely converts an usigned integer as string into an unsigned int type.
+///
+/// @return the converted number or nullopt in case of an failure (including if it would not fit).
+inline std::optional<unsigned> toUnsignedInt(std::string const& _value)
+{
+	try
+	{
+		auto const ulong = stoul(_value);
+		if (ulong > std::numeric_limits<unsigned>::max())
+			return std::nullopt;
+		return static_cast<unsigned>(ulong);
+	}
+	catch (...)
+	{
+		return std::nullopt;
+	}
 }
 
 }

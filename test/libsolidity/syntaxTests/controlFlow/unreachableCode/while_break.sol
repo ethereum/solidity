@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning: (138-141): Unreachable code.
+// Warning 5740: (138-141): Unreachable code.

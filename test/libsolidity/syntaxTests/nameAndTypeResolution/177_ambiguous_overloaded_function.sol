@@ -5,4 +5,4 @@ contract test {
     function g() public returns (uint) { return f(1); }
 }
 // ----
-// TypeError: (271-272): No unique declaration found after argument-dependent lookup.
+// TypeError 4487: (271-272): No unique declaration found after argument-dependent lookup.

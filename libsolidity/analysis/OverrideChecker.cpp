@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Component that verifies overloads, abstract contracts, function clashes and others
  * checks at contract or function level.
@@ -68,7 +69,7 @@ struct OverrideGraph
 	std::map<OverrideProxy, int> nodes;
 	std::map<int, OverrideProxy> nodeInv;
 	std::map<int, std::set<int>> edges;
-	int numNodes = 2;
+	size_t numNodes = 2;
 	void addEdge(int _a, int _b)
 	{
 		edges[_a].insert(_b);
@@ -82,10 +83,11 @@ private:
 		auto it = nodes.find(_function);
 		if (it != nodes.end())
 			return it->second;
-		int currentNode = numNodes++;
+		int currentNode = static_cast<int>(numNodes++);
 		nodes[_function] = currentNode;
 		nodeInv[currentNode] = _function;
-		if (_function.overrides())
+
+		if (!_function.baseFunctions().empty())
 			for (auto const& baseFunction: _function.baseFunctions())
 				addEdge(currentNode, visit(baseFunction));
 		else
@@ -116,21 +118,24 @@ private:
 	std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
 	std::set<OverrideProxy> m_cutVertices{};
 
-	void run(int _u = 0, int _depth = 0)
+	void run(size_t _u = 0, size_t _depth = 0)
 	{
 		m_visited.at(_u) = true;
-		m_depths.at(_u) = m_low.at(_u) = _depth;
-		for (int v: m_graph.edges.at(_u))
-			if (!m_visited.at(v))
+		m_depths.at(_u) = m_low.at(_u) = static_cast<int>(_depth);
+		for (int const v: m_graph.edges.at(static_cast<int>(_u)))
+		{
+			auto const vInd = static_cast<size_t>(v);
+			if (!m_visited.at(vInd))
 			{
-				m_parent[v] = _u;
-				run(v, _depth + 1);
-				if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
-					m_cutVertices.insert(m_graph.nodeInv.at(_u));
-				m_low[_u] = min(m_low[_u], m_low[v]);
+				m_parent[vInd] = static_cast<int>(_u);
+				run(vInd, _depth + 1);
+				if (m_low[vInd] >= m_depths[_u] && m_parent[_u] != -1)
+					m_cutVertices.insert(m_graph.nodeInv.at(static_cast<int>(_u)));
+				m_low[_u] = min(m_low[_u], m_low[vInd]);
 			}
 			else if (v != m_parent[_u])
-				m_low[_u] = min(m_low[_u], m_depths[v]);
+				m_low[_u] = min(m_low[_u], m_depths[vInd]);
+		}
 	}
 };
 
@@ -150,12 +155,12 @@ vector<ContractDefinition const*> resolveDirectBaseContracts(ContractDefinition 
 	return resolvedContracts;
 }
 
-vector<ASTPointer<UserDefinedTypeName>> sortByContract(vector<ASTPointer<UserDefinedTypeName>> const& _list)
+vector<ASTPointer<IdentifierPath>> sortByContract(vector<ASTPointer<IdentifierPath>> const& _list)
 {
 	auto sorted = _list;
 
 	stable_sort(sorted.begin(), sorted.end(),
-		[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
+		[] (ASTPointer<IdentifierPath> _a, ASTPointer<IdentifierPath> _b) {
 			if (!_a || !_b)
 				return _a < _b;
 
@@ -213,7 +218,7 @@ bool OverrideProxy::CompareBySignature::operator()(OverrideProxy const& _a, Over
 size_t OverrideProxy::id() const
 {
 	return std::visit(GenericVisitor{
-		[&](auto const* _item) -> size_t { return _item->id(); }
+		[&](auto const* _item) -> size_t { return static_cast<size_t>(_item->id()); }
 	}, m_item);
 }
 
@@ -286,7 +291,7 @@ StateMutability OverrideProxy::stateMutability() const
 	return std::visit(GenericVisitor{
 		[&](FunctionDefinition const* _item) { return _item->stateMutability(); },
 		[&](ModifierDefinition const*) { solAssert(false, "Requested state mutability from modifier."); return StateMutability{}; },
-		[&](VariableDeclaration const*) { return StateMutability::View; }
+		[&](VariableDeclaration const* _var) { return _var->isConstant() ? StateMutability::Pure : StateMutability::View; }
 	}, m_item);
 }
 
@@ -311,8 +316,8 @@ Token OverrideProxy::functionKind() const
 FunctionType const* OverrideProxy::functionType() const
 {
 	return std::visit(GenericVisitor{
-		[&](FunctionDefinition const* _item) { return FunctionType(*_item).asCallableFunction(false); },
-		[&](VariableDeclaration const* _item) { return FunctionType(*_item).asCallableFunction(false); },
+		[&](FunctionDefinition const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
+		[&](VariableDeclaration const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
 		[&](ModifierDefinition const*) -> FunctionType const* { solAssert(false, "Requested function type of modifier."); return nullptr; }
 	}, m_item);
 }
@@ -389,6 +394,10 @@ bool OverrideProxy::OverrideComparator::operator<(OverrideComparator const& _oth
 
 	if (functionKind != _other.functionKind)
 		return *functionKind < *_other.functionKind;
+
+	// Parameters do not matter for non-regular functions.
+	if (functionKind != Token::Function)
+		return false;
 
 	if (!parameterTypes || !_other.parameterTypes)
 		return false;
@@ -481,7 +490,12 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 	for (auto const* stateVar: _contract.stateVariables())
 	{
 		if (!stateVar->isPublic())
+		{
+			if (stateVar->overrides())
+				m_errorReporter.typeError(8022_error, stateVar->location(), "Override can only be used with public state variables.");
+
 			continue;
+		}
 
 		if (contains_if(inheritedMods, MatchByName{stateVar->name()}))
 			m_errorReporter.typeError(1456_error, stateVar->location(), "Override changes modifier to public state variable.");
@@ -505,8 +519,14 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 			"Override changes modifier signature."
 		);
 
-	if (!_overriding.overrides())
-		overrideError(_overriding, _super, 9456_error, "Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.");
+	if (!_overriding.overrides() && !(_super.isFunction() && _super.contract().isInterface()))
+		overrideError(
+			_overriding,
+			_super,
+			9456_error,
+			"Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.",
+			"Overridden " + _overriding.astNodeName() + " is here:"
+		);
 
 	if (_super.isVariable())
 		overrideError(
@@ -528,7 +548,13 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 	if (_overriding.isVariable())
 	{
 		if (_super.visibility() != Visibility::External)
-			overrideError(_overriding, _super, 5225_error, "Public state variables can only override functions with external visibility.");
+			overrideError(
+				_overriding,
+				_super,
+				5225_error,
+				"Public state variables can only override functions with external visibility.",
+				"Overridden function is here:"
+			);
 		solAssert(_overriding.visibility() == Visibility::External, "");
 	}
 	else if (_overriding.visibility() != _super.visibility())
@@ -539,7 +565,26 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 			_super.visibility() == Visibility::External &&
 			_overriding.visibility() == Visibility::Public
 		))
-			overrideError(_overriding, _super, 9098_error, "Overriding " + _overriding.astNodeName() + " visibility differs.");
+			overrideError(
+				_overriding,
+				_super,
+				9098_error,
+				"Overriding " + _overriding.astNodeName() + " visibility differs.",
+				"Overridden " + _overriding.astNodeName() + " is here:"
+			);
+	}
+
+	if (_overriding.unimplemented() && !_super.unimplemented())
+	{
+		solAssert(!_overriding.isVariable() || !_overriding.unimplemented(), "");
+		overrideError(
+			_overriding,
+			_super,
+			4593_error,
+			"Overriding an implemented " + _super.astNodeName() +
+			" with an unimplemented " + _overriding.astNodeName() +
+			" is not allowed."
+		);
 	}
 
 	if (_super.isFunction())
@@ -547,34 +592,41 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		FunctionType const* functionType = _overriding.functionType();
 		FunctionType const* superType = _super.functionType();
 
-		solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
-
-		if (!functionType->hasEqualReturnTypes(*superType))
-			overrideError(_overriding, _super, 4822_error, "Overriding " + _overriding.astNodeName() + " return types differ.");
-
-		// This is only relevant for a function overriding a function.
-		if (_overriding.isFunction())
+		if (_overriding.functionKind() != Token::Fallback)
 		{
-			if (_overriding.stateMutability() != _super.stateMutability())
-				overrideError(
-					_overriding,
-					_super,
-					2837_error,
-					"Overriding function changes state mutability from \"" +
-					stateMutabilityToString(_super.stateMutability()) +
-					"\" to \"" +
-					stateMutabilityToString(_overriding.stateMutability()) +
-					"\"."
-				);
+			solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
 
-			if (_overriding.unimplemented() && !_super.unimplemented())
+			if (!functionType->hasEqualReturnTypes(*superType))
 				overrideError(
 					_overriding,
 					_super,
-					4593_error,
-					"Overriding an implemented function with an unimplemented function is not allowed."
+					4822_error,
+					"Overriding " + _overriding.astNodeName() + " return types differ.",
+					"Overridden " + _overriding.astNodeName() + " is here:"
 				);
 		}
+
+		// Stricter mutability is always okay except when super is Payable
+		if (
+			(_overriding.isFunction() || _overriding.isVariable()) &&
+			(
+				_overriding.stateMutability() > _super.stateMutability() ||
+				_super.stateMutability() == StateMutability::Payable
+			) &&
+			_overriding.stateMutability() != _super.stateMutability()
+		)
+			overrideError(
+				_overriding,
+				_super,
+				6959_error,
+				"Overriding " +
+				_overriding.astNodeName() +
+				" changes state mutability from \"" +
+				stateMutabilityToString(_super.stateMutability()) +
+				"\" to \"" +
+				stateMutabilityToString(_overriding.stateMutability()) +
+				"\"."
+			);
 	}
 }
 
@@ -610,23 +662,21 @@ void OverrideChecker::overrideListError(
 	);
 }
 
-void OverrideChecker::overrideError(Declaration const& _overriding, Declaration const& _super, ErrorId _error, string const& _message, string const& _secondaryMsg)
+void OverrideChecker::overrideError(
+	OverrideProxy const& _overriding,
+	OverrideProxy const& _super,
+	ErrorId _error,
+	string const& _message,
+	optional<string> const& _secondaryMsg
+)
 {
 	m_errorReporter.typeError(
 		_error,
 		_overriding.location(),
-		SecondarySourceLocation().append(_secondaryMsg, _super.location()),
-		_message
-	);
-}
-
-
-void OverrideChecker::overrideError(OverrideProxy const& _overriding, OverrideProxy const& _super, ErrorId _error, string const& _message, string const& _secondaryMsg)
-{
-	m_errorReporter.typeError(
-		_error,
-		_overriding.location(),
-		SecondarySourceLocation().append(_secondaryMsg, _super.location()),
+		SecondarySourceLocation().append(
+			_secondaryMsg.value_or("Overridden " + _super.astNodeName() + " is here:"),
+			_super.location()
+		),
 		_message
 	);
 }
@@ -734,7 +784,7 @@ set<ContractDefinition const*, OverrideChecker::CompareByID> OverrideChecker::re
 {
 	set<ContractDefinition const*, CompareByID> resolved;
 
-	for (ASTPointer<UserDefinedTypeName> const& override: _overrides.overrides())
+	for (ASTPointer<IdentifierPath> const& override: _overrides.overrides())
 	{
 		Declaration const* decl  = override->annotation().referencedDeclaration;
 		solAssert(decl, "Expected declaration to be resolved.");
@@ -759,7 +809,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 	if (_item.overrides() && specifiedContracts.size() != _item.overrides()->overrides().size())
 	{
 		// Sort by contract id to find duplicate for error reporting
-		vector<ASTPointer<UserDefinedTypeName>> list =
+		vector<ASTPointer<IdentifierPath>> list =
 			sortByContract(_item.overrides()->overrides());
 
 		// Find duplicates and output error
@@ -779,7 +829,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 					list[i]->location(),
 					ssl,
 					"Duplicate contract \"" +
-					joinHumanReadable(list[i]->namePath(), ".") +
+					joinHumanReadable(list[i]->path(), ".") +
 					"\" found in override list of \"" +
 					_item.name() +
 					"\"."
@@ -847,10 +897,11 @@ OverrideChecker::OverrideProxyBySignatureMultiSet const& OverrideChecker::inheri
 				if (var->isPublic())
 					functionsInBase.emplace(OverrideProxy{var});
 
-			for (OverrideProxy const& func: inheritedFunctions(*base))
-				functionsInBase.insert(func);
-
 			result += functionsInBase;
+
+			for (OverrideProxy const& func: inheritedFunctions(*base))
+				if (!functionsInBase.count(func))
+					result.insert(func);
 		}
 
 		m_inheritedFunctions[&_contract] = result;

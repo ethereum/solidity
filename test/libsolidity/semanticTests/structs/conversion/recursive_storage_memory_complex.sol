@@ -6,7 +6,7 @@ contract CopyTest {
     Tree storageTree;
     Tree childStorageTree;
 
-    constructor() public {
+    constructor() {
         storageTree.data = 0x42;
         for (uint i = 0; i < 2; i++)
             storageTree.children.push(childStorageTree);
@@ -46,5 +46,7 @@ contract CopyTest {
         return result;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // run() -> 0x20, 10, 0x42, 0x4200, 0x420000, 0x420001, 0x420002, 0x4201, 0x420100, 0x420101, 0x420102, 0x420103

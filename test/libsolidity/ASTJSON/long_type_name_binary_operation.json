@@ -8,16 +8,15 @@
     ]
   },
   "id": 12,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "c",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 11,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         11
       ],
       "name": "c",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -48,8 +48,8 @@
                     "id": 4,
                     "mutability": "mutable",
                     "name": "a",
+                    "nameLocation": "40:1:1",
                     "nodeType": "VariableDeclaration",
-                    "overrides": null,
                     "scope": 9,
                     "src": "35:6:1",
                     "stateVariable": false,
@@ -71,14 +71,12 @@
                         "typeString": "uint256"
                       }
                     },
-                    "value": null,
                     "visibility": "internal"
                   }
                 ],
                 "id": 8,
                 "initialValue":
                 {
-                  "argumentTypes": null,
                   "commonType":
                   {
                     "typeIdentifier": "t_rational_5_by_1",
@@ -91,7 +89,6 @@
                   "lValueRequested": false,
                   "leftExpression":
                   {
-                    "argumentTypes": null,
                     "hexValue": "32",
                     "id": 5,
                     "isConstant": false,
@@ -101,7 +98,6 @@
                     "lValueRequested": false,
                     "nodeType": "Literal",
                     "src": "44:1:1",
-                    "subdenomination": null,
                     "typeDescriptions":
                     {
                       "typeIdentifier": "t_rational_2_by_1",
@@ -113,7 +109,6 @@
                   "operator": "+",
                   "rightExpression":
                   {
-                    "argumentTypes": null,
                     "hexValue": "33",
                     "id": 6,
                     "isConstant": false,
@@ -123,7 +118,6 @@
                     "lValueRequested": false,
                     "nodeType": "Literal",
                     "src": "48:1:1",
-                    "subdenomination": null,
                     "typeDescriptions":
                     {
                       "typeIdentifier": "t_rational_3_by_1",
@@ -143,15 +137,14 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 10,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "22:1:1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -174,7 +167,8 @@
         }
       ],
       "scope": 12,
-      "src": "0:54:1"
+      "src": "0:54:1",
+      "usedErrors": []
     }
   ],
   "src": "0:55:1"

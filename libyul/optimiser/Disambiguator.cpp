@@ -14,16 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that makes all identifiers unique.
  */
 
 #include <libyul/optimiser/Disambiguator.h>
 
-#include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
-#include <libyul/AsmScope.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Exceptions.h>
+#include <libyul/Scope.h>
 
 using namespace std;
 using namespace solidity;

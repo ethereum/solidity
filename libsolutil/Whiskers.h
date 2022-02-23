@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file Whiskers.h
  * @author Chris <chis@ethereum.org>
  * @date 2017
@@ -59,12 +60,13 @@ DEV_SIMPLE_EXCEPTION(WhiskersError);
  *  - Condition parameter: <?name>...<!name>...</name>, where "<!name>" is optional
  *    replaced (and recursively expanded) by the first part if the condition is true
  *    and by the second (or empty string if missing) if the condition is false
- *  - Conditional string parameter: <?+name>...<!+name>...</+name>
- *    Works similar to a conditional parameter where the checked condition is
- *    that the regular (string) parameter called "name" is non-empty.
  *  - List parameter: <#list>...</list>
  *    The part between the tags is repeated as often as values are provided
  *    in the mapping. Each list element can have its own parameter -> value mapping.
+ *  - Conditional value parameter: <?+name>...<!+name>...</+name>
+ *    Works similar to a conditional parameter where the checked condition is
+ *    that the string or list parameter called "name" is non-empty or contains
+ *    no elements respectively.
  */
 class Whiskers
 {
@@ -72,7 +74,7 @@ public:
 	using StringMap = std::map<std::string, std::string>;
 	using StringListMap = std::map<std::string, std::vector<StringMap>>;
 
-	explicit Whiskers(std::string _template);
+	explicit Whiskers(std::string _template = "");
 
 	/// Sets a single regular parameter, <paramName>.
 	Whiskers& operator()(std::string _parameter, std::string _value);
@@ -92,6 +94,12 @@ private:
 	Whiskers& operator()(std::string _parameter, long long);
 	void checkParameterValid(std::string const& _parameter) const;
 	void checkParameterUnknown(std::string const& _parameter) const;
+
+	/// Checks whether the string stored in `m_template` contains all the tags specified.
+	/// @param _parameter name of the parameter. This name is used to construct the tag(s).
+	/// @param _prefixes a vector of strings, where each element is used to compose the tag
+	///        like `"<" + element + _parameter + ">"`. Each element of _prefixes is used as a prefix of the tag name.
+	void checkTemplateContainsTags(std::string const& _parameter, std::vector<std::string> const& _prefixes) const;
 
 	static std::string replace(
 		std::string const& _template,

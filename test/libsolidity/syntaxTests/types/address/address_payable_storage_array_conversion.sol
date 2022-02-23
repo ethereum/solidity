@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (172-173): Type address payable[] storage pointer is not implicitly convertible to expected type address[] storage pointer.
+// TypeError 7407: (172-173): Type address payable[] storage pointer is not implicitly convertible to expected type address[] storage pointer.

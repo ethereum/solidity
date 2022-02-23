@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[] array;
@@ -40,17 +38,18 @@ contract C
 	}
 
 	function g(uint a, uint b, uint c, uint d, uint e) public {
-		f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
+		require(a < array2d.length);
+		require(b < array2d.length);
+		require(c < array4d.length);
+		require(c < array4d[c].length);
+		require(d < tinyArray3d.length);
+		require(e < array4d.length);
+		// Disabled because of Spacer seg fault.
+		//f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (468-485): Assertion violation happens here
-// Warning: (532-554): Assertion violation happens here
-// Warning: (606-633): Assertion violation happens here
-// Warning: (774-796): Assertion violation happens here
-// Warning: (936-962): Assertion violation happens here
-// Warning: (468-485): Assertion violation happens here
-// Warning: (532-554): Assertion violation happens here
-// Warning: (606-633): Assertion violation happens here
-// Warning: (774-796): Assertion violation happens here
-// Warning: (936-962): Assertion violation happens here
+// Warning 2018: (957-1329): Function state mutability can be restricted to view

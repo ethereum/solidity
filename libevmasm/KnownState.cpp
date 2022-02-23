@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @file KnownState.cpp
  * @author Christian <c@ethdev.com>
@@ -41,7 +42,7 @@ ostream& KnownState::stream(ostream& _out) const
 		if (!expr.item)
 			_out << " no item";
 		else if (expr.item->type() == UndefinedItem)
-			_out << " unknown " << int(expr.item->data());
+			_out << " unknown " << static_cast<int>(expr.item->data());
 		else
 			_out << *expr.item;
 		if (expr.sequenceNumber)
@@ -92,9 +93,31 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 		// can be ignored
 	}
 	else if (_item.type() == AssignImmutable)
+	{
 		// Since AssignImmutable breaks blocks, it should be fine to only consider its changes to the stack, which
-		// is the same as POP.
+		// is the same as two POPs.
+		// Note that the StoreOperation for POP is generic and _copyItem is ignored.
+		feedItem(AssemblyItem(Instruction::POP), _copyItem);
 		return feedItem(AssemblyItem(Instruction::POP), _copyItem);
+	}
+	else if (_item.type() == VerbatimBytecode)
+	{
+		m_sequenceNumber += 2;
+		resetMemory();
+		resetKnownKeccak256Hashes();
+		resetStorage();
+		// Consume all arguments and place unknown return values on the stack.
+		m_stackElements.erase(
+			m_stackElements.upper_bound(m_stackHeight - static_cast<int>(_item.arguments())),
+			m_stackElements.end()
+		);
+		m_stackHeight += static_cast<int>(_item.deposit());
+		for (size_t i = 0; i < _item.returnValues(); ++i)
+			setStackElement(
+				m_stackHeight - static_cast<int>(i),
+				m_expressionClasses->newClass(_item.location())
+			);
+	}
 	else if (_item.type() != Operation)
 	{
 		assertThrow(_item.deposit() == 1, InvalidDeposit, "");
@@ -112,21 +135,21 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 			setStackElement(
 				m_stackHeight + 1,
 				stackElement(
-					m_stackHeight - int(instruction) + int(Instruction::DUP1),
+					m_stackHeight - static_cast<int>(instruction) + static_cast<int>(Instruction::DUP1),
 					_item.location()
 				)
 			);
 		else if (SemanticInformation::isSwapInstruction(_item))
 			swapStackElements(
 				m_stackHeight,
-				m_stackHeight - 1 - int(instruction) + int(Instruction::SWAP1),
+				m_stackHeight - 1 - static_cast<int>(instruction) + static_cast<int>(Instruction::SWAP1),
 				_item.location()
 			);
 		else if (instruction != Instruction::POP)
 		{
-			vector<Id> arguments(info.args);
-			for (int i = 0; i < info.args; ++i)
-				arguments[i] = stackElement(m_stackHeight - i, _item.location());
+			vector<Id> arguments(static_cast<size_t>(info.args));
+			for (size_t i = 0; i < static_cast<size_t>(info.args); ++i)
+				arguments[i] = stackElement(m_stackHeight - static_cast<int>(i), _item.location());
 			switch (_item.instruction())
 			{
 			case Instruction::SSTORE:
@@ -134,7 +157,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				break;
 			case Instruction::SLOAD:
 				setStackElement(
-					m_stackHeight + _item.deposit(),
+					m_stackHeight + static_cast<int>(_item.deposit()),
 					loadFromStorage(arguments[0], _item.location())
 				);
 				break;
@@ -143,23 +166,28 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				break;
 			case Instruction::MLOAD:
 				setStackElement(
-					m_stackHeight + _item.deposit(),
+					m_stackHeight + static_cast<int>(_item.deposit()),
 					loadFromMemory(arguments[0], _item.location())
 				);
 				break;
 			case Instruction::KECCAK256:
 				setStackElement(
-					m_stackHeight + _item.deposit(),
+					m_stackHeight + static_cast<int>(_item.deposit()),
 					applyKeccak256(arguments.at(0), arguments.at(1), _item.location())
 				);
 				break;
 			default:
-				bool invMem = SemanticInformation::invalidatesMemory(_item.instruction());
-				bool invStor = SemanticInformation::invalidatesStorage(_item.instruction());
+				bool invMem =
+					SemanticInformation::memory(_item.instruction()) == SemanticInformation::Write;
+				bool invStor =
+					SemanticInformation::storage(_item.instruction()) == SemanticInformation::Write;
 				// We could be a bit more fine-grained here (CALL only invalidates part of
 				// memory, etc), but we do not for now.
 				if (invMem)
+				{
 					resetMemory();
+					resetKnownKeccak256Hashes();
+				}
 				if (invStor)
 					resetStorage();
 				if (invMem || invStor)
@@ -167,16 +195,16 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				assertThrow(info.ret <= 1, InvalidDeposit, "");
 				if (info.ret == 1)
 					setStackElement(
-						m_stackHeight + _item.deposit(),
+						m_stackHeight + static_cast<int>(_item.deposit()),
 						m_expressionClasses->find(_item, arguments, _copyItem)
 					);
 			}
 		}
 		m_stackElements.erase(
-			m_stackElements.upper_bound(m_stackHeight + _item.deposit()),
+			m_stackElements.upper_bound(m_stackHeight + static_cast<int>(_item.deposit())),
 			m_stackElements.end()
 		);
-		m_stackHeight += _item.deposit();
+		m_stackHeight += static_cast<int>(_item.deposit());
 	}
 	return op;
 }
@@ -369,31 +397,31 @@ KnownState::Id KnownState::applyKeccak256(
 	// unknown or too large length
 	if (!l || *l > 128)
 		return m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
-
+	unsigned length = unsigned(*l);
 	vector<Id> arguments;
-	for (u256 i = 0; i < *l; i += 32)
+	for (unsigned i = 0; i < length; i += 32)
 	{
 		Id slot = m_expressionClasses->find(
 			AssemblyItem(Instruction::ADD, _location),
-			{_start, m_expressionClasses->find(i)}
+			{_start, m_expressionClasses->find(u256(i))}
 		);
 		arguments.push_back(loadFromMemory(slot, _location));
 	}
-	if (m_knownKeccak256Hashes.count(arguments))
-		return m_knownKeccak256Hashes.at(arguments);
+	if (m_knownKeccak256Hashes.count({arguments, length}))
+		return m_knownKeccak256Hashes.at({arguments, length});
 	Id v;
 	// If all arguments are known constants, compute the Keccak-256 here
 	if (all_of(arguments.begin(), arguments.end(), [this](Id _a) { return !!m_expressionClasses->knownConstant(_a); }))
 	{
 		bytes data;
 		for (Id a: arguments)
-			data += util::toBigEndian(*m_expressionClasses->knownConstant(a));
-		data.resize(size_t(*l));
+			data += toBigEndian(*m_expressionClasses->knownConstant(a));
+		data.resize(length);
 		v = m_expressionClasses->find(AssemblyItem(u256(util::keccak256(data)), _location));
 	}
 	else
 		v = m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
-	return m_knownKeccak256Hashes[arguments] = v;
+	return m_knownKeccak256Hashes[{arguments, length}] = v;
 }
 
 set<u256> KnownState::tagsInExpression(KnownState::Id _expressionId)
@@ -419,4 +447,3 @@ KnownState::Id KnownState::tagUnion(set<u256> _tags)
 		return id;
 	}
 }
-

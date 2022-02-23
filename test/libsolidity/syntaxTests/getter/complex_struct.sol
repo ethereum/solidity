@@ -5,3 +5,4 @@ contract C {
     }
     mapping(uint256 => Y) public m;
 }
+// ----

@@ -20,7 +20,6 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
     /// @param _required Number of required confirmations.
     /// @param _dailyLimit Amount in wei, which can be withdrawn without confirmations on a daily basis.
     constructor(address[] memory _owners, uint _required, uint _dailyLimit)
-        public
         MultiSigWallet(_owners, _required)
     {
         dailyLimit = _dailyLimit;
@@ -48,7 +47,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         if (confirmed || tx.data.length == 0 && isUnderLimit(tx.value)) {
             if (!confirmed)
                 spentToday += tx.value;
-            (tx.executed,) = tx.destination.call.value(tx.value)(tx.data);
+            (tx.executed,) = tx.destination.call{value: tx.value}(tx.data);
             if (tx.executed)
                 emit Execution(transactionId);
             else {
@@ -69,8 +68,8 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         internal
         returns (bool)
     {
-        if (now > lastDay + 24 hours) {
-            lastDay = now;
+        if (block.timestamp > lastDay + 24 hours) {
+            lastDay = block.timestamp;
             spentToday = 0;
         }
         if (spentToday + amount > dailyLimit || spentToday + amount < spentToday)
@@ -88,7 +87,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         view
         returns (uint)
     {
-        if (now > lastDay + 24 hours)
+        if (block.timestamp > lastDay + 24 hours)
             return dailyLimit;
         if (dailyLimit < spentToday)
             return 0;

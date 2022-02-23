@@ -1,0 +1,136 @@
+Optimized IR:
+/*=====================================================*
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *=====================================================*/
+
+/// @use-src 0:"name_simplifier/input.sol"
+object "C_59" {
+    code {
+        {
+            /// @src 0:346:625  "contract C {..."
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize("C_59_deployed")
+            codecopy(_1, dataoffset("C_59_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:"name_simplifier/input.sol"
+    object "C_59_deployed" {
+        code {
+            {
+                /// @src 0:346:625  "contract C {..."
+                mstore(64, memoryguard(0x80))
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    if eq(0xf8eddcc6, shr(224, calldataload(_1)))
+                    {
+                        if callvalue() { revert(_1, _1) }
+                        let _2 := 32
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_1, _1) }
+                        let offset := calldataload(4)
+                        let _3 := 0xffffffffffffffff
+                        if gt(offset, _3) { revert(_1, _1) }
+                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
+                        let _4 := calldataload(add(4, offset))
+                        if gt(_4, _3) { panic_error_0x41() }
+                        let _5 := shl(5, _4)
+                        let dst := allocate_memory(add(_5, _2))
+                        let dst_1 := dst
+                        mstore(dst, _4)
+                        dst := add(dst, _2)
+                        let srcEnd := add(add(offset, _5), 36)
+                        if gt(srcEnd, calldatasize()) { revert(_1, _1) }
+                        let src := add(offset, 36)
+                        for { } lt(src, srcEnd) { src := add(src, _2) }
+                        {
+                            if slt(sub(calldatasize(), src), _2) { revert(_1, _1) }
+                            let value := allocate_memory_1172()
+                            mstore(value, calldataload(src))
+                            mstore(dst, value)
+                            dst := add(dst, _2)
+                        }
+                        let ret, ret_1 := fun_sumArray(dst_1)
+                        let memPos := mload(64)
+                        return(memPos, sub(abi_encode_uint256_string(memPos, ret, ret_1), memPos))
+                    }
+                }
+                revert(0, 0)
+            }
+            function panic_error_0x41()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+            function allocate_memory_1172() -> memPtr
+            {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, 32)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
+            function allocate_memory(size) -> memPtr
+            {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, and(add(size, 31), not(31)))
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
+            function abi_encode_uint256_string(headStart, value0, value1) -> tail
+            {
+                mstore(headStart, value0)
+                let _1 := 32
+                mstore(add(headStart, _1), 64)
+                let length := mload(value1)
+                mstore(add(headStart, 64), length)
+                let i := 0
+                for { } lt(i, length) { i := add(i, _1) }
+                {
+                    mstore(add(add(headStart, i), 96), mload(add(add(value1, i), _1)))
+                }
+                if gt(i, length)
+                {
+                    mstore(add(add(headStart, length), 96), 0)
+                }
+                tail := add(add(headStart, and(add(length, 31), not(31))), 96)
+            }
+            function panic_error_0x32()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x32)
+                revert(0, 0x24)
+            }
+            /// @ast-id 58 @src 0:381:623  "function sumArray(S[] memory _s) public returns (uint, string memory) {..."
+            function fun_sumArray(var_s_mpos) -> var, var_mpos
+            {
+                /// @src 0:346:625  "contract C {..."
+                if iszero(mload(var_s_mpos)) { panic_error_0x32() }
+                sstore(/** @src 0:472:473  "0" */ 0x00, /** @src 0:346:625  "contract C {..." */ mload(/** @src 0:469:474  "_s[0]" */ mload(/** @src 0:346:625  "contract C {..." */ add(var_s_mpos, 32))))
+                if iszero(lt(1, mload(var_s_mpos))) { panic_error_0x32() }
+                let _1 := mload(/** @src 0:489:494  "_s[1]" */ mload(/** @src 0:346:625  "contract C {..." */ add(var_s_mpos, 64)))
+                sstore(0x02, _1)
+                /// @src 0:500:619  "return (t.y[0], \"longstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstring\")"
+                var := _1
+                /// @src 0:346:625  "contract C {..."
+                let memPtr := mload(64)
+                let newFreePtr := add(memPtr, 160)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+                mstore(memPtr, 100)
+                mstore(add(memPtr, 32), "longstringlongstringlongstringlo")
+                mstore(add(memPtr, 64), "ngstringlongstringlongstringlong")
+                mstore(add(memPtr, 96), "stringlongstringlongstringlongst")
+                mstore(add(memPtr, 128), "ring")
+                /// @src 0:500:619  "return (t.y[0], \"longstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstring\")"
+                var_mpos := memPtr
+            }
+        }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}

@@ -55,6 +55,10 @@ public:
 	static bytes convertNumber(std::string const& _literal);
 
 	/// Tries to convert \param _literal to an unpadded `bytes`
+	/// representation of the decimal number literal. Throws if conversion fails.
+	static bytes convertFixedPoint(std::string const& _literal, size_t& o_fractionalDigits);
+
+	/// Tries to convert \param _literal to an unpadded `bytes`
 	/// representation of the hex literal. Throws if conversion fails.
 	static bytes convertHexNumber(std::string const& _literal);
 
@@ -97,6 +101,10 @@ public:
 	{
 		return formatString(_bytes, _bytes.size());
 	}
+
+	/// Converts \param _bytes to a soltest-compliant and human-readable
+	/// decimal string representation of a byte array. Format of \param _bytes is binary.
+	static std::string formatFixedPoint(bytes const& _bytes, bool _signed, size_t _fractionalDigits);
 
 	/// Used to print returned bytes from function calls to the commandline.
 	/// Returns a string representation of given _bytes in ranges of 32 bytes.

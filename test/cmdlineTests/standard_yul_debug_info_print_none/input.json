@@ -1,0 +1,12 @@
+{
+	"language": "Yul",
+	"sources": {
+		"C": {"urls": ["standard_yul_debug_info_print_none/in.yul"]}
+	},
+	"settings": {
+		"debug": {"debugInfo": []},
+		"outputSelection": {
+			"*": {"*": ["evm.assembly"]}
+		}
+	}
+}

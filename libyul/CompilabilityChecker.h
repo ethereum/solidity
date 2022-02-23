@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Component that checks whether all variables are reachable on the stack.
  */
@@ -21,7 +22,7 @@
 #pragma once
 
 #include <libyul/Dialect.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/Object.h>
 
 #include <map>
@@ -32,22 +33,20 @@ namespace solidity::yul
 
 /**
  * Component that checks whether all variables are reachable on the stack and
- * returns a mapping from function name to the largest stack difference found
- * in that function (no entry present if that function is compilable).
+ * provides a mapping from function name to the largest stack difference found
+ * in that function (no entry present if that function is compilable), as well
+ * as the set of unreachable variables for each function.
  *
  * This only works properly if the outermost block is compilable and
  * functions are not nested. Otherwise, it might miss reporting some functions.
  *
  * Only checks the code of the object itself, does not descend into sub-objects.
  */
-class CompilabilityChecker
+struct CompilabilityChecker
 {
-public:
-	static std::map<YulString, int> run(
-		Dialect const& _dialect,
-		Object const& _object,
-		bool _optimizeStackAllocation
-	);
+	CompilabilityChecker(Dialect const& _dialect, Object const& _object, bool _optimizeStackAllocation);
+	std::map<YulString, std::set<YulString>> unreachableVariables;
+	std::map<YulString, int> stackDeficit;
 };
 
 }

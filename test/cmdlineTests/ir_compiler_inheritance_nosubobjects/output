@@ -1,55 +1,67 @@
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
-object "C_6" {
+/// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+object "C_7" {
     code {
         {
-            mstore(64, 128)
+            /// @src 0:82:117  "contract C {..."
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_6_deployed")
-            codecopy(0, dataoffset("C_6_deployed"), _1)
-            return(0, _1)
+            let _2 := datasize("C_7_deployed")
+            codecopy(_1, dataoffset("C_7_deployed"), _2)
+            return(_1, _2)
         }
     }
-    object "C_6_deployed" {
+    /// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+    object "C_7_deployed" {
         code {
             {
-                mstore(64, 128)
+                /// @src 0:82:117  "contract C {..."
+                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }
 
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
-object "D_9" {
+/// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+object "D_10" {
     code {
         {
-            mstore(64, 128)
+            /// @src 0:118:137  "contract D is C {..."
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_9_deployed")
-            codecopy(0, dataoffset("D_9_deployed"), _1)
-            return(0, _1)
+            let _2 := datasize("D_10_deployed")
+            codecopy(_1, dataoffset("D_10_deployed"), _2)
+            return(_1, _2)
         }
     }
-    object "D_9_deployed" {
+    /// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+    object "D_10_deployed" {
         code {
             {
-                mstore(64, 128)
+                /// @src 0:118:137  "contract D is C {..."
+                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

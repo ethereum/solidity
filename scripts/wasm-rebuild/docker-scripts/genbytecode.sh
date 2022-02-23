@@ -85,14 +85,14 @@ for (var optimize of [false, true])
                 }
             } catch (e) {
                 console.log(filename + ': FATAL ERROR')
-		console.error(filename)
-		console.error(inputs)
+                console.error(filename)
+                console.error(inputs)
             }
         }
     }
 }
 EOF
     chmod +x solc
-    ./solc *.sol > /tmp/report.txt
+    ./solc -- *.sol > /tmp/report.txt
 )
 rm -rf "$TMPDIR"

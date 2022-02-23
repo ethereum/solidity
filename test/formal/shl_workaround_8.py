@@ -1,5 +1,6 @@
+from opcodes import SHL
 from rule import Rule
-from opcodes import *
+from z3 import BitVec, BV2Int, Int2BV, IntVal
 
 """
 Shift left workaround that Solidity implements

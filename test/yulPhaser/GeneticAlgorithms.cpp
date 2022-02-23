@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
@@ -56,7 +57,7 @@ protected:
 	};
 };
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(GeneticAlgorithmsTest)
 BOOST_AUTO_TEST_SUITE(RandomAlgorithmTest)
 
@@ -216,6 +217,9 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_
 {
 	constexpr double relativeTolerance = 0.1;
 	constexpr size_t populationSize = 1000;
+
+	SimulationRNG::reset(1);
+
 	assert(populationSize % 4 == 0 && "Choose a number divisible by 4 for this test");
 
 	auto population =

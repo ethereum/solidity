@@ -10,6 +10,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // revertStrings: debug
 // ----
 // library: L

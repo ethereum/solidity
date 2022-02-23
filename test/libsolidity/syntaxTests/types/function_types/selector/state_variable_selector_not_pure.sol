@@ -12,6 +12,6 @@ contract C is B {
     bytes4 constant s3 = this.h.selector;
 }
 // ----
-// TypeError: (176-186): Initial value for constant variable has to be compile-time constant.
-// TypeError: (213-225): Initial value for constant variable has to be compile-time constant.
-// TypeError: (252-267): Initial value for constant variable has to be compile-time constant.
+// TypeError 8349: (176-186): Initial value for constant variable has to be compile-time constant.
+// TypeError 8349: (213-225): Initial value for constant variable has to be compile-time constant.
+// TypeError 8349: (252-267): Initial value for constant variable has to be compile-time constant.

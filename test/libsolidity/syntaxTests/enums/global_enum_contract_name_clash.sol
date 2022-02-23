@@ -1,4 +1,4 @@
 enum E { A }
 contract E {}
 // ----
-// DeclarationError: (13-26): Identifier already declared.
+// DeclarationError 2333: (13-26): Identifier already declared.

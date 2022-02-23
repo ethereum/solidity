@@ -14,14 +14,15 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
- * Optimiser component that changes the code of a black so that all non-function definition
+ * Optimiser component that changes the code of a block so that all non-function definition
  * instructions are moved to a block of their own followed by all function definitions.
  */
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 namespace solidity::yul
 {
@@ -33,7 +34,7 @@ struct OptimiserStepContext;
  * all function definitions.
  *
  * After this step, a block is of the form
- * { { I...} F... }
+ * { { I... } F... }
  * Where I are (non-function-definition) instructions and F are function definitions.
  */
 class FunctionGrouper

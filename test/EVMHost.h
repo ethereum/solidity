@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * EVM execution host, i.e. component that implements a simulated Ethereum blockchain
  * for testing purposes.
@@ -29,6 +30,8 @@
 
 #include <libsolutil/FixedHash.h>
 
+#include <boost/filesystem.hpp>
+
 namespace solidity::test
 {
 using Address = util::h160;
@@ -39,20 +42,32 @@ public:
 	using MockedHost::get_code_size;
 	using MockedHost::get_balance;
 
-	/// Tries to dynamically load libevmone. @returns nullptr on failure.
-	/// The path has to be provided for the first successful run and will be ignored
-	/// afterwards.
+	/// Tries to dynamically load an evmc vm supporting evm1 or ewasm and caches the loaded VM.
+	/// @returns vmc::VM(nullptr) on failure.
 	static evmc::VM& getVM(std::string const& _path = {});
 
-	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm = getVM());
+	/// Tries to load all defined evmc vm shared libraries.
+	/// @param _vmPaths paths to multiple evmc shared libraries.
+	/// @throw Exception if multiple evm1 or multiple ewasm evmc vms where loaded.
+	/// @returns A pair of booleans, the first element being true, if an evmc vm supporting evm1 was loaded properly,
+	///          the second being true, if an evmc vm supporting ewasm was loaded properly.
+	static std::tuple<bool, bool> checkVmPaths(std::vector<boost::filesystem::path> const& _vmPaths);
 
-	void reset() { accounts.clear(); m_currentAddress = {}; }
+	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm);
+
+	void reset();
+	/// Clears EIP-2929 account and storage access indicator
+	void resetWarmAccess();
 	void newBlock()
 	{
 		tx_context.block_number++;
 		tx_context.block_timestamp += 15;
 		recorded_logs.clear();
+		resetWarmAccess();
 	}
+
+	/// @returns contents of storage at @param _addr.
+	std::map<evmc::bytes32, evmc::storage_value> const& get_address_storage(evmc::address const& _addr);
 
 	bool account_exists(evmc::address const& _addr) const noexcept final
 	{
@@ -70,8 +85,19 @@ public:
 	static util::h256 convertFromEVMC(evmc::bytes32 const& _data);
 	static evmc::bytes32 convertToEVMC(util::h256 const& _data);
 
+	/// @returns true, if the evmc VM has the given capability.
+	bool hasCapability(evmc_capabilities capability) const noexcept
+	{
+		return m_vm.has_capability(capability);
+	}
+
 private:
 	evmc::address m_currentAddress = {};
+
+	void transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept;
+
+	/// Records calls made via @param _message.
+	void recordCalls(evmc_message const& _message) noexcept;
 
 	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
 	static evmc::result precompileSha256(evmc_message const& _message) noexcept;
@@ -93,5 +119,29 @@ private:
 	evmc_revision m_evmRevision;
 };
 
+class EVMHostPrinter
+{
+public:
+	/// Constructs a host printer object for state at @param _address.
+	explicit EVMHostPrinter(EVMHost& _host, evmc::address _address):
+		m_host(_host),
+		m_account(_address)
+	{}
+	/// @returns state at account maintained by host.
+	std::string state();
+private:
+	/// Outputs storage at account to stateStream.
+	void storage();
+	/// Outputs call records for account to stateStream.
+	void callRecords();
+	/// Outputs balance of account to stateStream.
+	void balance();
+	/// Outputs self-destruct record for account to stateStream.
+	void selfdestructRecords();
+
+	std::ostringstream m_stateStream;
+	EVMHost& m_host;
+	evmc::address m_account;
+};
 
 }

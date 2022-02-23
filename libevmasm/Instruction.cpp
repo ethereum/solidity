@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file Instruction.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -23,7 +24,6 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonIO.h>
-#include <algorithm>
 #include <functional>
 
 using namespace std;
@@ -84,6 +84,7 @@ std::map<std::string, Instruction> const solidity::evmasm::c_instructions =
 	{ "GASLIMIT", Instruction::GASLIMIT },
 	{ "CHAINID", Instruction::CHAINID },
 	{ "SELFBALANCE", Instruction::SELFBALANCE },
+	{ "BASEFEE", Instruction::BASEFEE },
 	{ "POP", Instruction::POP },
 	{ "MLOAD", Instruction::MLOAD },
 	{ "MSTORE", Instruction::MSTORE },
@@ -230,6 +231,7 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{ Instruction::GASLIMIT,	{ "GASLIMIT",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::CHAINID,		{ "CHAINID",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::SELFBALANCE,	{ "SELFBALANCE",	0, 0, 1, false, Tier::Low } },
+	{ Instruction::BASEFEE,     { "BASEFEE",        0, 0, 1, false, Tier::Base } },
 	{ Instruction::POP,			{ "POP",			0, 1, 0, false, Tier::Base } },
 	{ Instruction::MLOAD,		{ "MLOAD",			0, 1, 1, true, Tier::VeryLow } },
 	{ Instruction::MSTORE,		{ "MSTORE",			0, 2, 0, true, Tier::VeryLow } },
@@ -330,8 +332,8 @@ void solidity::evmasm::eachInstruction(
 {
 	for (auto it = _mem.begin(); it < _mem.end(); ++it)
 	{
-		Instruction instr = Instruction(*it);
-		size_t additional = 0;
+		auto instr = Instruction(*it);
+		int additional = 0;
 		if (isValidInstruction(instr))
 			additional = instructionInfo(instr).additional;
 
@@ -352,18 +354,19 @@ void solidity::evmasm::eachInstruction(
 	}
 }
 
-string solidity::evmasm::disassemble(bytes const& _mem)
+string solidity::evmasm::disassemble(bytes const& _mem, string const& _delimiter)
 {
 	stringstream ret;
 	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
 		if (!isValidInstruction(_instr))
-			ret << "0x" << std::uppercase << std::hex << int(_instr) << " ";
+			ret << "0x" << std::uppercase << std::hex << static_cast<int>(_instr) << _delimiter;
 		else
 		{
 			InstructionInfo info = instructionInfo(_instr);
-			ret << info.name << " ";
+			ret << info.name;
 			if (info.additional)
-				ret << "0x" << std::uppercase << std::hex << _data << " ";
+				ret << " 0x" << std::uppercase << std::hex << _data;
+			ret << _delimiter;
 		}
 	});
 	return ret.str();

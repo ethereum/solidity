@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that undoes what the ExpressionSplitter did, i.e.
  * it more or less inlines variable declarations.
@@ -21,22 +22,26 @@
 
 #include <libyul/optimiser/ExpressionJoiner.h>
 
+#include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
+
+#include <limits>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void ExpressionJoiner::run(OptimiserStepContext&, Block& _ast)
+void ExpressionJoiner::run(OptimiserStepContext& _context, Block& _ast)
 {
 	ExpressionJoiner{_ast}(_ast);
+	FunctionGrouper::run(_context, _ast);
 }
 
 
@@ -93,7 +98,7 @@ void ExpressionJoiner::handleArguments(vector<Expression>& _arguments)
 	// on the right is an identifier or literal.
 
 	size_t i = _arguments.size();
-	for (Expression const& arg: _arguments | boost::adaptors::reversed)
+	for (Expression const& arg: _arguments | ranges::views::reverse)
 	{
 		--i;
 		if (!holds_alternative<Identifier>(arg) && !holds_alternative<Literal>(arg))
@@ -119,7 +124,7 @@ void ExpressionJoiner::decrementLatestStatementPointer()
 void ExpressionJoiner::resetLatestStatementPointer()
 {
 	m_currentBlock = nullptr;
-	m_latestStatementInBlock = size_t(-1);
+	m_latestStatementInBlock = numeric_limits<size_t>::max();
 }
 
 Statement* ExpressionJoiner::latestStatement()

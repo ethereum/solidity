@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	modifier m {
@@ -19,7 +17,6 @@ contract C
 		return a;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (247-257): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (162-172): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (247-257): Type conversion is not yet fully supported and might yield false positives.

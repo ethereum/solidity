@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Federico Bond <federicobond@gmail.com>
  * @date 2016
@@ -72,9 +73,6 @@ private:
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(BinaryOperation const& _operation) override;
 	bool visit(FunctionCall const& _functionCall) override;
-
-	/// @returns the size of this type in storage, including all sub-types.
-	static bigint structureSizeEstimate(Type const& _type, std::set<StructDefinition const*>& _structsSeen);
 
 	langutil::ErrorReporter& m_errorReporter;
 

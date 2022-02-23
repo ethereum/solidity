@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (72-75): Try can only be used with external function calls and contract creation calls.
+// TypeError 2536: (72-75): Try can only be used with external function calls and contract creation calls.

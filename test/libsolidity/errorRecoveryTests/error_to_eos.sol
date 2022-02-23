@@ -17,7 +17,7 @@ contract SendCoin {
 }
 
 // ----
-// ParserError: (212-220): Expected ')' but got identifier
-// ParserError: (220-221): Expected ';' but got ')'
-// ParserError: (220-221): Function, variable, struct or modifier declaration expected.
-// Warning: (235-236): Recovered in ContractDefinition at '}'.
+// ParserError 6635: (212-220): Expected ')' but got identifier
+// ParserError 6635: (220-221): Expected ';' but got ')'
+// ParserError 9182: (220-221): Function, variable, struct or modifier declaration expected.
+// Warning 3796: (235-236): Recovered in ContractDefinition at '}'.

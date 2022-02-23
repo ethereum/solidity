@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
@@ -34,7 +35,7 @@ using namespace solidity::util;
 namespace solidity::phaser::test
 {
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(SelectionsTest)
 BOOST_AUTO_TEST_SUITE(RangeSelectionTest)
 
@@ -217,7 +218,7 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 
 	vector<double> bernoulliTrials(collectionSize);
 	for (size_t i = 0; i < collectionSize; ++i)
-		bernoulliTrials[i] = indices.count(i);
+		bernoulliTrials[i] = double(indices.count(i));
 
 	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
 	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);

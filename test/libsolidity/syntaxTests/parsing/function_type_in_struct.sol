@@ -6,5 +6,5 @@ contract test {
     }
 }
 // ----
-// Warning: (49-55): Naming function type parameters is deprecated.
-// Warning: (57-63): Naming function type parameters is deprecated.
+// Warning 6162: (49-55): Naming function type parameters is deprecated.
+// Warning 6162: (57-63): Naming function type parameters is deprecated.

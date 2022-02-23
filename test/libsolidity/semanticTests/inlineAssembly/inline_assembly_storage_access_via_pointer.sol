@@ -10,14 +10,17 @@ contract C {
         Data storage x = a;
         uint256 off;
         assembly {
-            sstore(x_slot, 7)
-            off := x_offset
+            sstore(x.slot, 7)
+            off := x.offset
         }
         assert(off == 0);
         return true;
     }
 }
 
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> true
 // a() -> 7

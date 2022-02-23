@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Specific AST walkers that collect semantical facts.
  */
@@ -23,7 +24,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <set>
 
@@ -53,21 +54,60 @@ public:
 		Block const& _ast,
 		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
 	);
+	SideEffectsCollector(
+		Dialect const& _dialect,
+		ForLoop const& _ast,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _functionCall) override;
 
 	bool movable() const { return m_sideEffects.movable; }
-	bool sideEffectFree(bool _allowMSizeModification = false) const
+
+	bool movableRelativeTo(SideEffects const& _other, bool _codeContainsMSize)
+	{
+		if (!m_sideEffects.cannotLoop)
+			return false;
+
+		if (m_sideEffects.movable)
+			return true;
+
+		if (
+			!m_sideEffects.movableApartFromEffects ||
+			m_sideEffects.storage == SideEffects::Write ||
+			m_sideEffects.otherState == SideEffects::Write ||
+			m_sideEffects.memory == SideEffects::Write
+		)
+			return false;
+
+		if (m_sideEffects.otherState == SideEffects::Read)
+			if (_other.otherState == SideEffects::Write)
+				return false;
+
+		if (m_sideEffects.storage == SideEffects::Read)
+			if (_other.storage == SideEffects::Write)
+				return false;
+
+		if (m_sideEffects.memory == SideEffects::Read)
+			if (_codeContainsMSize || _other.memory == SideEffects::Write)
+				return false;
+
+		return true;
+	}
+
+	bool canBeRemoved(bool _allowMSizeModification = false) const
 	{
 		if (_allowMSizeModification)
-			return sideEffectFreeIfNoMSize();
+			return m_sideEffects.canBeRemovedIfNoMSize;
 		else
-			return m_sideEffects.sideEffectFree;
+			return m_sideEffects.canBeRemoved;
 	}
-	bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
-	bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
-	bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
+	bool cannotLoop() const { return m_sideEffects.cannotLoop; }
+	bool invalidatesStorage() const { return m_sideEffects.storage == SideEffects::Write; }
+	bool invalidatesMemory() const { return m_sideEffects.memory == SideEffects::Write; }
+
+	SideEffects sideEffects() { return m_sideEffects; }
 
 private:
 	Dialect const& m_dialect;
@@ -91,7 +131,8 @@ public:
 };
 
 /**
- * Class that can be used to find out if certain code contains the MSize instruction.
+ * Class that can be used to find out if certain code contains the MSize instruction
+ * or a verbatim bytecode builtin (which is always assumed that it could contain MSize).
  *
  * Note that this is a purely syntactic property meaning that even if this is false,
  * the code can still contain calls to functions that contain the msize instruction.
@@ -164,22 +205,31 @@ private:
 	std::set<YulString> m_variableReferences;
 };
 
+struct ControlFlowSideEffects;
 
 /**
  * Helper class to find "irregular" control flow.
- * This includes termination, break and continue.
+ * This includes termination, break, continue and leave.
+ * In general, it is applied only to "simple" statements. The control-flow
+ * of loops, switches and if statements is always "FlowOut" with the assumption
+ * that the caller will descend into them.
  */
 class TerminationFinder
 {
 public:
-	// TODO check all uses of TerminationFinder!
+	/// "Terminate" here means that there is no continuing control-flow.
+	/// If this is applied to a function that can revert or stop, but can also
+	/// exit regularly, the property is set to "FlowOut".
 	enum class ControlFlow { FlowOut, Break, Continue, Terminate, Leave };
 
-	TerminationFinder(Dialect const& _dialect): m_dialect(_dialect) {}
+	TerminationFinder(
+		Dialect const& _dialect,
+		std::map<YulString, ControlFlowSideEffects> const* _functionSideEffects = nullptr
+	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
 
 	/// @returns the index of the first statement in the provided sequence
 	/// that is an unconditional ``break``, ``continue``, ``leave`` or a
-	/// call to a terminating builtin function.
+	/// call to a terminating function.
 	/// If control flow can continue at the end of the list,
 	/// returns `FlowOut` and ``size_t(-1)``.
 	/// The function might return ``FlowOut`` even though control
@@ -192,13 +242,14 @@ public:
 	/// This function could return FlowOut even if control flow never continues.
 	ControlFlow controlFlowKind(Statement const& _statement);
 
-	/// @returns true if the expression statement is a direct
-	/// call to a builtin terminating function like
-	/// ``stop``, ``revert`` or ``return``.
-	bool isTerminatingBuiltin(ExpressionStatement const& _exprStmnt);
+	/// @returns true if the expression contains a
+	/// call to a terminating function, i.e. a function that does not have
+	/// a regular "flow out" control-flow (it might also be recursive).
+	bool containsNonContinuingFunctionCall(Expression const& _expr);
 
 private:
 	Dialect const& m_dialect;
+	std::map<YulString, ControlFlowSideEffects> const* m_functionSideEffects;
 };
 
 }

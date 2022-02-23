@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint x) internal pure returns (uint, bool, uint) {
@@ -14,5 +12,6 @@ contract C
 		assert(y == 999);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (152-157): Overflow (resulting value larger than 2**256 - 1) happens here

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2016
@@ -23,7 +24,6 @@
 #pragma once
 
 #include <liblangutil/Token.h>
-#include <liblangutil/Scanner.h>
 #include <memory>
 #include <string>
 
@@ -32,6 +32,7 @@ namespace solidity::langutil
 
 class ErrorReporter;
 class Scanner;
+struct SourceLocation;
 struct ErrorId;
 
 class ParserBase
@@ -46,7 +47,7 @@ public:
 		m_parserErrorRecovery = _parserErrorRecovery;
 	}
 
-	std::shared_ptr<CharStream> source() const { return m_scanner->charStream(); }
+	virtual ~ParserBase() = default;
 
 protected:
 	/// Utility class that creates an error and throws an exception if the
@@ -64,7 +65,7 @@ protected:
 	};
 
 	/// Location of the current token
-	SourceLocation currentLocation() const;
+	virtual SourceLocation currentLocation() const;
 
 	///@{
 	///@name Helper functions
@@ -80,7 +81,7 @@ protected:
 	Token peekNextToken() const;
 	std::string tokenName(Token _token);
 	std::string currentLiteral() const;
-	Token advance();
+	virtual Token advance();
 	///@}
 
 	/// Increases the recursion depth and throws an exception if it is too deep.
@@ -103,7 +104,7 @@ protected:
 	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	std::shared_ptr<Scanner> m_scanner;
-	/// The reference to the list of errors and warning to add errors/warnings during parsing
+	/// The reference to the list of errors, warnings and infos to add errors/warnings/infos during parsing
 	ErrorReporter& m_errorReporter;
 	/// Current recursion depth during parsing.
 	size_t m_recursionDepth = 0;

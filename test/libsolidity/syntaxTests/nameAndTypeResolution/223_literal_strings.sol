@@ -6,4 +6,4 @@ contract Foo {
     }
 }
 // ----
-// Warning: (19-238): Function state mutability can be restricted to pure
+// Warning 2018: (19-238): Function state mutability can be restricted to pure

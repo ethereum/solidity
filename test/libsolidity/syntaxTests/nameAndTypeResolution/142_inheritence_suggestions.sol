@@ -5,4 +5,4 @@ contract c is a {
     }
 }
 // ----
-// DeclarationError: (105-108): Undeclared identifier. Did you mean "func"?
+// DeclarationError 7576: (105-108): Undeclared identifier. Did you mean "func"?

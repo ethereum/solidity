@@ -4,14 +4,14 @@ contract C {
     function f() internal pure {
         S storage c;
         assembly {
-            for { c_slot := s_slot } iszero(0) {} {}
+            for { c.slot := s.slot } iszero(0) {} {}
         }
         c;
     }
     function g() internal pure {
         S storage c;
         assembly {
-            for { c_slot := s_slot } iszero(1) {} {}
+            for { c.slot := s.slot } iszero(1) {} {}
         }
         c;
     }

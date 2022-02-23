@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for UTF-8 validation.
  */
@@ -30,7 +31,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(UTF8)
+BOOST_AUTO_TEST_SUITE(UTF8, *boost::unit_test::label("nooptions"))
 
 namespace {
 

@@ -4,3 +4,4 @@ contract C
 	function foo2() virtual public {}
 	modifier modi() virtual {_;}
 }
+// ----

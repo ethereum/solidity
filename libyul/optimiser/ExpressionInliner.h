@@ -14,13 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that performs function inlining.
  */
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 #include <optional>
 #include <set>

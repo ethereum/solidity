@@ -14,16 +14,21 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Translates Yul code from EVM dialect to Ewasm dialect.
  */
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/Dialect.h>
 
+namespace solidity::langutil
+{
+class CharStreamProvider;
+}
 namespace solidity::yul
 {
 struct Object;
@@ -31,13 +36,17 @@ struct Object;
 class EVMToEwasmTranslator: public ASTModifier
 {
 public:
-	EVMToEwasmTranslator(Dialect const& _evmDialect): m_dialect(_evmDialect) {}
+	EVMToEwasmTranslator(Dialect const& _evmDialect, langutil::CharStreamProvider const& _charStreamProvider):
+		m_dialect(_evmDialect),
+		m_charStreamProvider(_charStreamProvider)
+	{}
 	Object run(Object const& _object);
 
 private:
 	void parsePolyfill();
 
 	Dialect const& m_dialect;
+	langutil::CharStreamProvider const& m_charStreamProvider;
 
 	std::shared_ptr<Block> m_polyfill;
 	std::set<YulString> m_polyfillFunctions;

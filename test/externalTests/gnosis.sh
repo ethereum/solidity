@@ -18,30 +18,62 @@
 #
 # (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
+
+set -e
+
 source scripts/common.sh
 source test/externalTests/common.sh
 
-verify_input "$1"
-SOLJSON="$1"
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
-function install_fn { npm install; }
+verify_input "$@"
+BINARY_TYPE="$1"
+BINARY_PATH="$2"
+SELECTED_PRESETS="$3"
+
 function compile_fn { npx truffle compile; }
 function test_fn { npm test; }
 
 function gnosis_safe_test
 {
-    OPTIMIZER_LEVEL=1
-    CONFIG="truffle.js"
+    local repo="https://github.com/solidity-external-tests/safe-contracts.git"
+    local ref_type=branch
+    local ref="development_080"
+    local config_file="truffle-config.js"
 
-    truffle_setup https://github.com/solidity-external-tests/safe-contracts.git development_060
+    local compile_only_presets=()
+    local settings_presets=(
+        "${compile_only_presets[@]}"
+        #ir-no-optimize            # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        ir-optimize-evm+yul
+        #legacy-no-optimize        # Compilation fails with "Stack too deep" error
+        #legacy-optimize-evm-only  # Compilation fails with "Stack too deep" error
+        legacy-optimize-evm+yul
+    )
 
-    force_truffle_version
-    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_060|g' package.json
+    [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")
+    print_presets_or_exit "$SELECTED_PRESETS"
 
-    run_install install_fn
-    replace_libsolc_call
+    setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
+    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
-    truffle_run_test compile_fn test_fn
+    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080|g' package.json
+
+    neutralize_package_lock
+    neutralize_package_json_hooks
+    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$(first_word "$SELECTED_PRESETS")"
+    npm install --package-lock
+    npm install eth-gas-reporter
+
+    replace_version_pragmas
+    [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
+
+    for preset in $SELECTED_PRESETS; do
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        store_benchmark_report truffle gnosis "$repo" "$preset"
+    done
 }
 
 external_test Gnosis-Safe gnosis_safe_test

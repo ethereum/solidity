@@ -4,9 +4,9 @@ contract test {
 		x;
 	}
 	function g() public {
-		suicide(0x0000000000000000000000000000000000000001);
+		suicide(payable(0x0000000000000000000000000000000000000001));
 	}
 }
 // ----
-// TypeError: (58-62): "sha3" has been deprecated in favour of "keccak256".
-// TypeError: (101-108): "suicide" has been deprecated in favour of "selfdestruct".
+// TypeError 3557: (58-62): "sha3" has been deprecated in favour of "keccak256".
+// TypeError 8050: (101-108): "suicide" has been deprecated in favour of "selfdestruct".

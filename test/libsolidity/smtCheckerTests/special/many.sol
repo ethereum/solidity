@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public payable {
@@ -9,18 +7,21 @@ contract C
 		assert(tx.gasprice == msg.value);
 		assert(tx.origin == msg.sender);
 		uint x = block.number;
-		assert(x + 2 > block.number);
-		assert(now > 10);
+		unchecked { x += 2; }
+		assert(x > block.number);
+		assert(block.timestamp > 10);
 		assert(gasleft() > 100);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (79-115): Assertion violation happens here
-// Warning: (119-161): Assertion violation happens here
-// Warning: (165-204): Assertion violation happens here
-// Warning: (208-240): Assertion violation happens here
-// Warning: (244-275): Assertion violation happens here
-// Warning: (311-316): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (304-332): Assertion violation happens here
-// Warning: (336-352): Assertion violation happens here
-// Warning: (356-379): Assertion violation happens here
+// Warning 6328: (46-82): CHC: Assertion violation happens here.
+// Warning 6328: (86-128): CHC: Assertion violation happens here.
+// Warning 6328: (132-171): CHC: Assertion violation happens here.
+// Warning 6328: (175-207): CHC: Assertion violation happens here.
+// Warning 6328: (211-242): CHC: Assertion violation happens here.
+// Warning 6328: (295-319): CHC: Assertion violation happens here.
+// Warning 6328: (323-351): CHC: Assertion violation happens here.
+// Warning 6328: (355-378): CHC: Assertion violation happens here.

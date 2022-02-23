@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (56-59): Index expression cannot be omitted.
+// TypeError 8830: (56-59): Index expression cannot be omitted.

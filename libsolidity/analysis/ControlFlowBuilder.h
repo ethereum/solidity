@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -25,24 +26,26 @@
 #include <array>
 #include <memory>
 
-namespace solidity::frontend {
+namespace solidity::frontend
+{
 
-/** Helper class that builds the control flow of a function or modifier.
- * Modifiers are not yet applied to the functions. This is done in a second
- * step in the CFG class.
+/**
+ * Helper class that builds the control flow of a function or modifier.
  */
 class ControlFlowBuilder: private ASTConstVisitor, private yul::ASTWalker
 {
 public:
 	static std::unique_ptr<FunctionFlow> createFunctionFlow(
 		CFG::NodeContainer& _nodeContainer,
-		FunctionDefinition const& _function
+		FunctionDefinition const& _function,
+		ContractDefinition const* _contract = nullptr
 	);
 
 private:
 	explicit ControlFlowBuilder(
 		CFG::NodeContainer& _nodeContainer,
-		FunctionFlow const& _functionFlow
+		FunctionFlow const& _functionFlow,
+		ContractDefinition const* _contract = nullptr
 	);
 
 	// Visits for constructing the control flow.
@@ -55,6 +58,7 @@ private:
 	bool visit(Break const&) override;
 	bool visit(Continue const&) override;
 	bool visit(Throw const&) override;
+	bool visit(RevertStatement const&) override;
 	bool visit(PlaceholderStatement const&) override;
 	bool visit(FunctionCall const& _functionCall) override;
 	bool visit(ModifierInvocation const& _modifierInvocation) override;
@@ -155,6 +159,8 @@ private:
 	CFGNode* m_returnNode = nullptr;
 	CFGNode* m_revertNode = nullptr;
 	CFGNode* m_transactionReturnNode = nullptr;
+
+	ContractDefinition const* m_contract = nullptr;
 
 	/// The current jump destination of break Statements.
 	CFGNode* m_breakJump = nullptr;

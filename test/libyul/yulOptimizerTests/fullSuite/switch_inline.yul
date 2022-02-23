@@ -1,5 +1,5 @@
 {
-	mstore(f(1), 0)
+	sstore(f(1), 0)
 	function f(x) -> y {
 		switch x
 		case 0 { y := 8 }
@@ -9,4 +9,4 @@
 // ----
 // step: fullSuite
 //
-// { { mstore(9, 0) } }
+// { { sstore(9, 0) } }

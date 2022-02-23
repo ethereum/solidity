@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 // 2 warnings, A.f and A.g
 contract A {
 	uint x;
@@ -18,8 +16,9 @@ contract B is A {
 		assert(x == 1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (121-135): Assertion violation happens here
-// Warning: (170-184): Assertion violation happens here
-// Warning: (276-290): Assertion violation happens here
-// Warning: (170-184): Assertion violation happens here
+// Warning 6328: (88-102): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.f()
+// Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.g()
+// Warning 6328: (243-257): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nB.constructor()\nState: x = 0\nB.f()

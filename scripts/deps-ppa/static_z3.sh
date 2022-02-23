@@ -24,19 +24,17 @@ set -ev
 
 keyid=70D110489D66E2F6
 email=builds@ethereum.org
-packagename=libz3-static-dev
-# On the next version the git cherry-pick below should be removed and the patch suffix removed from the version string.
-version=4.8.7
-version_patchsuffix=-1
+packagename=z3-static
+version=4.8.14
 
-DISTRIBUTIONS="bionic disco eoan focal"
+DISTRIBUTIONS="focal hirsute impish jammy"
 
 for distribution in $DISTRIBUTIONS
 do
 cd /tmp/
-rm -rf $distribution
-mkdir $distribution
-cd $distribution
+rm -rf "$distribution"
+mkdir "$distribution"
+cd "$distribution"
 
 pparepo=cpp-build-deps
 ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/${pparepo}/+files
@@ -44,10 +42,8 @@ ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/${pparepo}/+files
 # Fetch source
 git clone --branch z3-${version} https://github.com/Z3Prover/z3.git
 cd z3
-# Patch build failure.
-git cherry-pick e212159f4e
 
-debversion="${version}${version_patchsuffix}"
+debversion="${version}"
 
 CMAKE_OPTIONS="-DZ3_BUILD_LIBZ3_SHARED=OFF -DCMAKE_BUILD_TYPE=Release"
 
@@ -66,7 +62,7 @@ mkdir debian
 echo 9 > debian/compat
 # TODO: the Z3 packages have different build dependencies
 cat <<EOF > debian/control
-Source: libz3-static-dev
+Source: z3-static
 Section: science
 Priority: extra
 Maintainer: Daniel Kirchner <daniel@ekpyron.org>
@@ -82,9 +78,27 @@ Homepage: https://github.com/Z3Prover/z3
 Vcs-Git: git://github.com/Z3Prover/z3.git
 Vcs-Browser: https://github.com/Z3Prover/z3
 
+Package: z3-static
+Architecture: any
+Breaks: z3
+Replaces: z3
+Depends: \${misc:Depends}, \${shlibs:Depends}
+Description: theorem prover from Microsoft Research
+ Z3 is a state-of-the art theorem prover from Microsoft Research. It can be
+ used to check the satisfiability of logical formulas over one or more
+ theories. Z3 offers a compelling match for software analysis and verification
+ tools, since several common software constructs map directly into supported
+ theories.
+ .
+ The Z3 input format is an extension of the one defined by the SMT-LIB 2.0
+ standard.
+
+
 Package: libz3-static-dev
 Section: libdevel
-Architecture: any-i386 any-amd64
+Architecture: any-amd64
+Breaks: libz3-dev
+Replaces: libz3-dev
 Multi-Arch: same
 Depends: \${shlibs:Depends}, \${misc:Depends}
 Description: theorem prover from Microsoft Research - development files (static library)
@@ -135,6 +149,9 @@ usr/include/*
 usr/lib/*/libz3.a
 usr/lib/*/cmake/z3/*
 EOF
+cat <<EOF > debian/z3-static.install
+usr/bin/z3
+EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: z3
@@ -181,7 +198,7 @@ This program is free software: you can redistribute it and/or modify
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 EOF
 cat <<EOF > debian/changelog
-libz3-static-dev (0.0.1-2ubuntu0) saucy; urgency=low
+z3-static (0.0.1-1ubuntu0) saucy; urgency=low
 
   * Initial release.
 
@@ -191,8 +208,8 @@ mkdir debian/source
 echo "3.0 (quilt)" > debian/source/format
 chmod +x debian/rules
 
-versionsuffix=2ubuntu0~${distribution}
-EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "build of ${version}"
+versionsuffix=1ubuntu0~${distribution}
+EMAIL="$email" dch -v "1:${debversion}-${versionsuffix}" "build of ${version}"
 
 # build source package
 # If packages is rejected because original source is already present, add
@@ -201,13 +218,14 @@ EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "build of ${version}"
 debuild -S -d -sa -us -uc
 
 # prepare .changes file for Launchpad
-sed -i -e s/UNRELEASED/${distribution}/ -e s/urgency=medium/urgency=low/ ../*.changes
+sed -i -e "s/UNRELEASED/${distribution}/" -e s/urgency=medium/urgency=low/ ../*.changes
 
 # check if ubuntu already has the source tarball
 (
 cd ..
-orig=${packagename}_${debversion}.orig.tar.gz
-orig_size=$(ls -l $orig | cut -d ' ' -f 5)
+orig="${packagename}_${debversion}.orig.tar.gz"
+# shellcheck disable=SC2012
+orig_size=$(ls -l "$orig" | cut -d ' ' -f 5)
 orig_sha1=$(sha1sum $orig | cut -d ' ' -f 1)
 orig_sha256=$(sha256sum $orig | cut -d ' ' -f 1)
 orig_md5=$(md5sum $orig | cut -d ' ' -f 1)
@@ -216,19 +234,20 @@ if wget --quiet -O $orig-tmp "$ppafilesurl/$orig"
 then
     echo "[WARN] Original tarball found in Ubuntu archive, using it instead"
     mv $orig-tmp $orig
-    new_size=$(ls -l *.orig.tar.gz | cut -d ' ' -f 5)
+    # shellcheck disable=SC2012
+    new_size=$(ls -l ./*.orig.tar.gz | cut -d ' ' -f 5)
     new_sha1=$(sha1sum $orig | cut -d ' ' -f 1)
     new_sha256=$(sha256sum $orig | cut -d ' ' -f 1)
     new_md5=$(md5sum $orig | cut -d ' ' -f 1)
-    sed -i -e s,$orig_sha1,$new_sha1,g -e s,$orig_sha256,$new_sha256,g -e s,$orig_size,$new_size,g -e s,$orig_md5,$new_md5,g *.dsc
-    sed -i -e s,$orig_sha1,$new_sha1,g -e s,$orig_sha256,$new_sha256,g -e s,$orig_size,$new_size,g -e s,$orig_md5,$new_md5,g *.changes
+    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" ./*.dsc
+    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" ./*.changes
 fi
 )
 
 # sign the package
-debsign --re-sign -k ${keyid} ../${packagename}_${debversion}-${versionsuffix}_source.changes
+debsign --re-sign -k "${keyid}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
 
 # upload
-dput ${pparepo} ../${packagename}_${debversion}-${versionsuffix}_source.changes
+dput "${pparepo}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
 
 done

@@ -1,8 +1,6 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint x = f(2);
-	constructor () public {
+	constructor () {
 		assert(x == 2);
 	}
 
@@ -12,4 +10,6 @@ contract C {
 		return y;
 	}
 }
+// ====
+// SMTEngine: all
 // ----

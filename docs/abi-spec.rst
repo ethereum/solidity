@@ -19,12 +19,13 @@ We assume that all contracts will have the interface definitions of any contract
 This specification does not address contracts whose interface is dynamic or otherwise known only at run-time.
 
 .. _abi_function_selector:
+.. index:: selector
 
 Function Selector
 =================
 
 The first four bytes of the call data for a function call specifies the function to be called. It is the
-first (left, high-order in big-endian) four bytes of the Keccak-256 (SHA-3) hash of the signature of
+first (left, high-order in big-endian) four bytes of the Keccak-256 hash of the signature of
 the function. The signature is defined as the canonical expression of the basic prototype without data
 location specifier, i.e.
 the function name with the parenthesised list of parameter types. Parameter types are split by a single
@@ -61,7 +62,7 @@ The following elementary types exist:
 - ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1. For computing the function selector, ``bool`` is used.
 
 - ``fixed<M>x<N>``: signed fixed-point decimal number of ``M`` bits, ``8 <= M <= 256``,
-  ``M % 8 ==0``, and ``0 < N <= 80``, which denotes the value ``v`` as ``v / (10 ** N)``.
+  ``M % 8 == 0``, and ``0 < N <= 80``, which denotes the value ``v`` as ``v / (10 ** N)``.
 
 - ``ufixed<M>x<N>``: unsigned variant of ``fixed<M>x<N>``.
 
@@ -75,6 +76,10 @@ The following elementary types exist:
 The following (fixed-size) array type exists:
 
 - ``<type>[M]``: a fixed-length array of ``M`` elements, ``M >= 0``, of the given type.
+
+  .. note::
+
+      While this ABI specification can express fixed-length arrays with zero elements, they're not supported by the compiler.
 
 The following non-fixed-size types exist:
 
@@ -106,26 +111,30 @@ them.
 +-------------------------------+-----------------------------------------------------------------------------+
 |:ref:`contract<contracts>`     |``address``                                                                  |
 +-------------------------------+-----------------------------------------------------------------------------+
-|:ref:`enum<enums>`             |smallest ``uint`` type that is large enough to hold all values               |
-|                               |                                                                             |
-|                               |For example, an ``enum`` of 255 values or less is mapped to ``uint8`` and    |
-|                               |an ``enum`` of 256 values is mapped to ``uint16``.                           |
+|:ref:`enum<enums>`             |``uint8``                                                                    |
++-------------------------------+-----------------------------------------------------------------------------+
+|:ref:`user defined value types |its underlying value type                                                    |
+|<user-defined-value-types>`    |                                                                             |
 +-------------------------------+-----------------------------------------------------------------------------+
 |:ref:`struct<structs>`         |``tuple``                                                                    |
 +-------------------------------+-----------------------------------------------------------------------------+
+
+.. warning::
+    Before version ``0.8.0`` enums could have more than 256 members and were represented by the
+    smallest integer type just big enough to hold the value of any member.
 
 Design Criteria for the Encoding
 ================================
 
 The encoding is designed to have the following properties, which are especially useful if some arguments are nested arrays:
 
-  1. The number of reads necessary to access a value is at most the depth of the value
-  inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a
-  previous version of the ABI, the number of reads scaled linearly with the total number of dynamic
-  parameters in the worst case.
+1. The number of reads necessary to access a value is at most the depth of the value
+   inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a
+   previous version of the ABI, the number of reads scaled linearly with the total number of dynamic
+   parameters in the worst case.
 
-  2. The data of a variable or array element is not interleaved with other data and it is
-  relocatable, i.e. it only uses relative "addresses".
+2. The data of a variable or array element is not interleaved with other data and it is
+   relocatable, i.e. it only uses relative "addresses".
 
 
 Formal Specification of the Encoding
@@ -195,9 +204,9 @@ on the type of ``X`` being
 
 - ``string``:
 
-  ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is utf-8 encoded and this value is interpreted
+  ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is UTF-8 encoded and this value is interpreted
   as of ``bytes`` type and encoded further. Note that the length used in this subsequent
-  encoding is the number of bytes of the utf-8 encoded string, not its number of characters.
+  encoding is the number of bytes of the UTF-8 encoded string, not its number of characters.
 
 - ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order
   (left) side with zero-bytes such that the length is 32 bytes.
@@ -230,10 +239,11 @@ Examples
 
 Given the contract:
 
-::
+.. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Foo {
         function bar(bytes3[2] memory) public pure {}
@@ -307,21 +317,21 @@ these are directly the values we want to pass, whereas for the dynamic types ``u
 we use the offset in bytes to the start of their data area, measured from the start of the value
 encoding (i.e. not counting the first four bytes containing the hash of the function signature). These are:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000123`` (``0x123`` padded to 32 bytes)
- - ``0x0000000000000000000000000000000000000000000000000000000000000080`` (offset to start of data part of second parameter, 4*32 bytes, exactly the size of the head part)
- - ``0x3132333435363738393000000000000000000000000000000000000000000000`` (``"1234567890"`` padded to 32 bytes on the right)
- - ``0x00000000000000000000000000000000000000000000000000000000000000e0`` (offset to start of data part of fourth parameter = offset to start of data part of first dynamic parameter + size of data part of first dynamic parameter = 4\*32 + 3\*32 (see below))
+- ``0x0000000000000000000000000000000000000000000000000000000000000123`` (``0x123`` padded to 32 bytes)
+- ``0x0000000000000000000000000000000000000000000000000000000000000080`` (offset to start of data part of second parameter, 4*32 bytes, exactly the size of the head part)
+- ``0x3132333435363738393000000000000000000000000000000000000000000000`` (``"1234567890"`` padded to 32 bytes on the right)
+- ``0x00000000000000000000000000000000000000000000000000000000000000e0`` (offset to start of data part of fourth parameter = offset to start of data part of first dynamic parameter + size of data part of first dynamic parameter = 4\*32 + 3\*32 (see below))
 
 After this, the data part of the first dynamic argument, ``[0x456, 0x789]`` follows:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements of the array, 2)
- - ``0x0000000000000000000000000000000000000000000000000000000000000456`` (first element)
- - ``0x0000000000000000000000000000000000000000000000000000000000000789`` (second element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements of the array, 2)
+- ``0x0000000000000000000000000000000000000000000000000000000000000456`` (first element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000789`` (second element)
 
 Finally, we encode the data part of the second dynamic argument, ``"Hello, world!"``:
 
- - ``0x000000000000000000000000000000000000000000000000000000000000000d`` (number of elements (bytes in this case): 13)
- - ``0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000`` (``"Hello, world!"`` padded to 32 bytes on the right)
+- ``0x000000000000000000000000000000000000000000000000000000000000000d`` (number of elements (bytes in this case): 13)
+- ``0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000`` (``"Hello, world!"`` padded to 32 bytes on the right)
 
 All together, the encoding is (newline after function selector and each 32-bytes for clarity):
 
@@ -343,14 +353,14 @@ with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most
 
 First we encode the length and data of the first embedded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first array, 2; the elements themselves are ``1`` and ``2``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (first element)
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (second element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first array, 2; the elements themselves are ``1`` and ``2``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000001`` (first element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (second element)
 
 Then we encode the length and data of the second embedded dynamic array ``[3]`` of the first root array ``[[1, 2], [3]]``:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
 
 Then we need to find the offsets ``a`` and ``b`` for their respective dynamic arrays ``[1, 2]`` and ``[3]``.
 To calculate the offsets we can take a look at the encoded data of the first root array ``[[1, 2], [3]]``
@@ -375,12 +385,12 @@ thus ``b = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
 
 Then we encode the embedded strings of the second root array:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"one"``)
- - ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"one"``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"two"``)
- - ``0x74776f0000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"two"``)
- - ``0x0000000000000000000000000000000000000000000000000000000000000005`` (number of characters in word ``"three"``)
- - ``0x7468726565000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"three"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"one"``)
+- ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"one"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"two"``)
+- ``0x74776f0000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"two"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000005`` (number of characters in word ``"three"``)
+- ``0x7468726565000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"three"``)
 
 In parallel to the first root array, since strings are dynamic elements we need to find their offsets ``c``, ``d`` and ``e``:
 
@@ -411,11 +421,11 @@ and have the same encodings for a function with a signature ``g(string[],uint[][
 
 Then we encode the length of the first root array:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
 
 Then we encode the length of the second root array:
 
- - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
 
 Finally we find the offsets ``f`` and ``g`` for their respective root dynamic arrays ``[[1, 2], [3]]`` and
 ``["one", "two", "three"]``, and assemble parts in the correct order:
@@ -460,17 +470,20 @@ address, a series of up to four topics and some arbitrary length binary data. Ev
 ABI in order to interpret this (together with an interface spec) as a properly typed structure.
 
 Given an event name and series of event parameters, we split them into two sub-series: those which are indexed and
-those which are not. Those which are indexed, which may number up to 3, are used alongside the Keccak hash of the
-event signature to form the topics of the log entry. Those which are not indexed form the byte array of the event.
+those which are not.
+Those which are indexed, which may number up to 3 (for non-anonymous events) or 4 (for anonymous ones), are used
+alongside the Keccak hash of the event signature to form the topics of the log entry.
+Those which are not indexed form the byte array of the event.
 
 In effect, a log entry using this ABI is described as:
 
 - ``address``: the address of the contract (intrinsically provided by Ethereum);
 - ``topics[0]``: ``keccak(EVENT_NAME+"("+EVENT_ARGS.map(canonical_type_of).join(",")+")")`` (``canonical_type_of``
   is a function that simply returns the canonical type of a given argument, e.g. for ``uint indexed foo``, it would
-  return ``uint256``). If the event is declared as ``anonymous`` the ``topics[0]`` is not generated;
-- ``topics[n]``: ``abi_encode(EVENT_INDEXED_ARGS[n - 1])`` (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS``
-  that are indexed);
+  return ``uint256``). This value is only present in ``topics[0]`` if the event is not declared as ``anonymous``;
+- ``topics[n]``: ``abi_encode(EVENT_INDEXED_ARGS[n - 1])`` if the event is not declared as ``anonymous``
+  or ``abi_encode(EVENT_INDEXED_ARGS[n])`` if it is (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that
+  are indexed);
 - ``data``: ABI encoding of ``EVENT_NON_INDEXED_ARGS`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS``
   that are not indexed, ``abi_encode`` is the ABI encoding function used for returning a series of typed values
   from a function, as described above).
@@ -489,12 +502,51 @@ the arguments not be indexed). Developers may overcome this tradeoff and achieve
 efficient search and arbitrary legibility by defining events with two arguments — one
 indexed, one not — intended to hold the same value.
 
+.. _abi_errors:
+
+Errors
+======
+
+In case of a failure inside a contract, the contract can use a special opcode to abort execution and revert
+all state changes. In addition to these effects, descriptive data can be returned to the caller.
+This descriptive data is the encoding of an error and its arguments in the same way as data for a function
+call.
+
+As an example, let us consider the following contract whose ``transfer`` function always
+reverts with a custom error of "insufficient balance":
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.4;
+
+    contract TestToken {
+        error InsufficientBalance(uint256 available, uint256 required);
+        function transfer(address /*to*/, uint amount) public pure {
+            revert InsufficientBalance(0, amount);
+        }
+    }
+
+The return data would be encoded in the same way as the function call
+``InsufficientBalance(0, amount)`` to the function ``InsufficientBalance(uint256,uint256)``,
+i.e. ``0xcf479181``, ``uint256(0)``, ``uint256(amount)``.
+
+The error selectors ``0x00000000`` and ``0xffffffff`` are reserved for future use.
+
+.. warning::
+    Never trust error data.
+    The error data by default bubbles up through the chain of external calls, which
+    means that a contract may receive an error not defined in any of the contracts
+    it calls directly.
+    Furthermore, any contract can fake any error by returning data that matches
+    an error signature, even if the error is not defined anywhere.
+
 .. _abi_json:
 
 JSON
 ====
 
-The JSON format for a contract's interface is given by an array of function and/or event descriptions.
+The JSON format for a contract's interface is given by an array of function, event and error descriptions.
 A function description is a JSON object with the fields:
 
 - ``type``: ``"function"``, ``"constructor"``, ``"receive"`` (the :ref:`"receive Ether" function <receive-ether-function>`) or ``"fallback"`` (the :ref:`"default" function <fallback-function>`);
@@ -532,18 +584,37 @@ An event description is a JSON object with fairly similar fields:
 
 - ``anonymous``: ``true`` if the event was declared as ``anonymous``.
 
+Errors look as follows:
+
+- ``type``: always ``"error"``
+- ``name``: the name of the error.
+- ``inputs``: an array of objects, each of which contains:
+
+  * ``name``: the name of the parameter.
+  * ``type``: the canonical type of the parameter (more below).
+  * ``components``: used for tuple types (more below).
+
+.. note::
+  There can be multiple errors with the same name and even with identical signature
+  in the JSON array, for example if the errors originate from different
+  files in the smart contract or are referenced from another smart contract.
+  For the ABI, only the name of the error itself is relevant and not where it is
+  defined.
+
+
 For example,
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity ^0.8.4;
 
 
     contract Test {
-        constructor() public { b = hex"12345678901234567890123456789012"; }
+        constructor() { b = hex"12345678901234567890123456789012"; }
         event Event(uint indexed a, bytes32 b);
         event Event2(uint indexed a, bytes32 b);
+        error InsufficientBalance(uint256 available, uint256 required);
         function foo(uint a) public { emit Event(a, b); }
         bytes32 b;
     }
@@ -552,20 +623,24 @@ would result in the JSON:
 
 .. code-block:: json
 
-  [{
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event"
-  }, {
-  "type":"event",
-  "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
-  "name":"Event2"
-  }, {
-  "type":"function",
-  "inputs": [{"name":"a","type":"uint256"}],
-  "name":"foo",
-  "outputs": []
-  }]
+    [{
+    "type":"error",
+    "inputs": [{"name":"available","type":"uint256"},{"name":"required","type":"uint256"}],
+    "name":"InsufficientBalance"
+    }, {
+    "type":"event",
+    "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+    "name":"Event"
+    }, {
+    "type":"event",
+    "inputs": [{"name":"a","type":"uint256","indexed":true},{"name":"b","type":"bytes32","indexed":false}],
+    "name":"Event2"
+    }, {
+    "type":"function",
+    "inputs": [{"name":"a","type":"uint256"}],
+    "name":"foo",
+    "outputs": []
+    }]
 
 Handling tuple types
 --------------------
@@ -583,11 +658,11 @@ which is of array type and has the same structure as the top-level object except
 
 As an example, the code
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.19 <0.7.0;
-    pragma experimental ABIEncoderV2;
+    pragma solidity >=0.7.5 <0.9.0;
+    pragma abicoder v2;
 
     contract Test {
         struct S { uint a; uint[] b; T[] c; }
@@ -600,61 +675,61 @@ would result in the JSON:
 
 .. code-block:: json
 
-  [
-    {
-      "name": "f",
-      "type": "function",
-      "inputs": [
-        {
-          "name": "s",
-          "type": "tuple",
-          "components": [
-            {
-              "name": "a",
-              "type": "uint256"
-            },
-            {
-              "name": "b",
-              "type": "uint256[]"
-            },
-            {
-              "name": "c",
-              "type": "tuple[]",
-              "components": [
-                {
-                  "name": "x",
-                  "type": "uint256"
-                },
-                {
-                  "name": "y",
-                  "type": "uint256"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "t",
-          "type": "tuple",
-          "components": [
-            {
-              "name": "x",
-              "type": "uint256"
-            },
-            {
-              "name": "y",
-              "type": "uint256"
-            }
-          ]
-        },
-        {
-          "name": "a",
-          "type": "uint256"
-        }
-      ],
-      "outputs": []
-    }
-  ]
+    [
+      {
+        "name": "f",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "s",
+            "type": "tuple",
+            "components": [
+              {
+                "name": "a",
+                "type": "uint256"
+              },
+              {
+                "name": "b",
+                "type": "uint256[]"
+              },
+              {
+                "name": "c",
+                "type": "tuple[]",
+                "components": [
+                  {
+                    "name": "x",
+                    "type": "uint256"
+                  },
+                  {
+                    "name": "y",
+                    "type": "uint256"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "t",
+            "type": "tuple",
+            "components": [
+              {
+                "name": "x",
+                "type": "uint256"
+              },
+              {
+                "name": "y",
+                "type": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "a",
+            "type": "uint256"
+          }
+        ],
+        "outputs": []
+      }
+    ]
 
 .. _abi_packed_mode:
 
@@ -674,7 +749,7 @@ Non-standard Packed Mode
 
 Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode where:
 
-- types shorter than 32 bytes are neither zero padded nor sign extended and
+- types shorter than 32 bytes are concatenated directly, without padding or sign extension
 - dynamic types are encoded in-place and without the length.
 - array elements are padded, but still encoded in-place
 
@@ -691,18 +766,19 @@ As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
 
 More specifically:
- - During the encoding, everything is encoded in-place. This means that there is
-   no distinction between head and tail, as in the ABI encoding, and the length
-   of an array is not encoded.
- - The direct arguments of ``abi.encodePacked`` are encoded without padding,
-   as long as they are not arrays (or ``string`` or ``bytes``).
- - The encoding of an array is the concatenation of the
-   encoding of its elements **with** padding.
- - Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded
-   without their length field.
- - The encoding of ``string`` or ``bytes`` does not apply padding at the end
-   unless it is part of an array or struct (then it is padded to a multiple of
-   32 bytes).
+
+- During the encoding, everything is encoded in-place. This means that there is
+  no distinction between head and tail, as in the ABI encoding, and the length
+  of an array is not encoded.
+- The direct arguments of ``abi.encodePacked`` are encoded without padding,
+  as long as they are not arrays (or ``string`` or ``bytes``).
+- The encoding of an array is the concatenation of the
+  encoding of its elements **with** padding.
+- Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded
+  without their length field.
+- The encoding of ``string`` or ``bytes`` does not apply padding at the end
+  unless it is part of an array or struct (then it is padded to a multiple of
+  32 bytes).
 
 In general, the encoding is ambiguous as soon as there are two dynamically-sized elements,
 because of the missing length field.
@@ -714,12 +790,12 @@ for prepending a function selector. Since the encoding is ambiguous, there is no
 
 .. warning::
 
-  If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
-  it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
-  vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
-  If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
-  sure to always use the same types and check that at most one of them is dynamic.
-  Unless there is a compelling reason, ``abi.encode`` should be preferred.
+    If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
+    it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
+    vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
+    If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
+    sure to always use the same types and check that at most one of them is dynamic.
+    Unless there is a compelling reason, ``abi.encode`` should be preferred.
 
 
 .. _indexed_event_encoding:
@@ -731,13 +807,13 @@ Indexed event parameters that are not value types, i.e. arrays and structs are n
 stored directly but instead a keccak256-hash of an encoding is stored. This encoding
 is defined as follows:
 
- - the encoding of a ``bytes`` and ``string`` value is just the string contents
-   without any padding or length prefix.
- - the encoding of a struct is the concatenation of the encoding of its members,
-   always padded to a multiple of 32 bytes (even ``bytes`` and ``string``).
- - the encoding of an array (both dynamically- and statically-sized) is
-   the concatenation of the encoding of its elements, always padded to a multiple
-   of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
+- the encoding of a ``bytes`` and ``string`` value is just the string contents
+  without any padding or length prefix.
+- the encoding of a struct is the concatenation of the encoding of its members,
+  always padded to a multiple of 32 bytes (even ``bytes`` and ``string``).
+- the encoding of an array (both dynamically- and statically-sized) is
+  the concatenation of the encoding of its elements, always padded to a multiple
+  of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
 
 In the above, as usual, a negative number is padded by sign extension and not zero padded.
 ``bytesNN`` types are padded on the right while ``uintNN`` / ``intNN`` are padded on the left.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	bytes32 x;
@@ -11,6 +9,9 @@ contract C
 		return x;
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (96-110): Assertion violation happens here
-// Warning: (114-130): Assertion violation happens here
+// Warning 6328: (63-77): CHC: Assertion violation happens here.
+// Warning 6328: (81-97): CHC: Assertion violation happens here.

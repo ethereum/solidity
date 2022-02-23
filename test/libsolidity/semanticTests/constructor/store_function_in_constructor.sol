@@ -2,7 +2,7 @@ contract C {
     uint256 public result_in_constructor;
     function(uint256) returns (uint256) internal x;
 
-    constructor() public {
+    constructor() {
         x = double;
         result_in_constructor = use(2);
     }
@@ -16,6 +16,9 @@ contract C {
     }
 }
 
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // use(uint256): 3 -> 6
 // result_in_constructor() -> 4

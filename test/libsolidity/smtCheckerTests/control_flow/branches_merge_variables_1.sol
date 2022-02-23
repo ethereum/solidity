@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 // Branch does not touch variable a
 contract C {
     function f(uint x) public pure {
@@ -8,3 +7,6 @@ contract C {
         assert(a == 3);
     }
 }
+// ====
+// SMTEngine: all
+// ----

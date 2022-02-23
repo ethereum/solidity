@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <tools/solidityUpgrade/UpgradeChange.h>
@@ -49,7 +50,14 @@ public:
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
 private:
+	using Contracts = std::set<frontend::ContractDefinition const*, frontend::OverrideChecker::CompareByID>;
+
 	void endVisit(frontend::ContractDefinition const& _contract) override;
+
+	std::string appendOverride(
+		frontend::FunctionDefinition const& _function,
+		Contracts const& _expectedContracts
+	);
 };
 
 /**
@@ -64,6 +72,8 @@ public:
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
 private:
 	void endVisit(frontend::ContractDefinition const& _function) override;
+
+	std::string appendVirtual(frontend::FunctionDefinition const& _function) const;
 };
 
 }

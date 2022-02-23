@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	modifier m(uint a, uint b) {
@@ -16,4 +14,8 @@ contract C
 		assert(x > 1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
+// Warning 5740: (137-157): Unreachable code.
+// Warning 5740: (199-237): Unreachable code.

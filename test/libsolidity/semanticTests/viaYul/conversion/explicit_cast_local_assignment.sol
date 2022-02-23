@@ -5,6 +5,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // f(uint256): 0x12345678 -> 0x78

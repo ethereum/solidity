@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2016
@@ -22,18 +23,19 @@
 
 #pragma once
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
+#include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
 
-#include <libevmasm/Instruction.h>
-
+#include <map>
 #include <memory>
 #include <variant>
 #include <vector>
+#include <string_view>
 
 namespace solidity::yul
 {
@@ -46,25 +48,88 @@ public:
 		None, ForLoopPre, ForLoopPost, ForLoopBody
 	};
 
-	explicit Parser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
-		ParserBase(_errorReporter), m_dialect(_dialect) {}
+	enum class UseSourceLocationFrom
+	{
+		Scanner, LocationOverride, Comments,
+	};
+
+	explicit Parser(
+		langutil::ErrorReporter& _errorReporter,
+		Dialect const& _dialect,
+		std::optional<langutil::SourceLocation> _locationOverride = {}
+	):
+		ParserBase(_errorReporter),
+		m_dialect(_dialect),
+		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
+		m_useSourceLocationFrom{
+			_locationOverride ?
+			UseSourceLocationFrom::LocationOverride :
+			UseSourceLocationFrom::Scanner
+		}
+	{}
+
+	/// Constructs a Yul parser that is using the debug data
+	/// from the comments (via @src and other tags).
+	explicit Parser(
+		langutil::ErrorReporter& _errorReporter,
+		Dialect const& _dialect,
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceNames
+	):
+		ParserBase(_errorReporter),
+		m_dialect(_dialect),
+		m_sourceNames{std::move(_sourceNames)},
+		m_useSourceLocationFrom{
+			m_sourceNames.has_value() ?
+			UseSourceLocationFrom::Comments :
+			UseSourceLocationFrom::Scanner
+		}
+	{}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
-	/// @param _reuseScanner if true, do check for end of input after the `}`.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
+	std::unique_ptr<Block> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner);
 
-	/// @returns a map of all EVM instructions available to assembly.
-	static std::map<std::string, evmasm::Instruction> const& instructions();
+	/// Parses an assembly block starting with `{` and ending with `}`
+	/// and expects end of input after the '}'.
+	/// @returns an empty shared pointer on error.
+	std::unique_ptr<Block> parse(langutil::CharStream& _charStream);
 
 protected:
-	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;
+	langutil::SourceLocation currentLocation() const override
+	{
+		if (m_useSourceLocationFrom == UseSourceLocationFrom::LocationOverride)
+			return m_locationOverride;
+
+		return ParserBase::currentLocation();
+	}
+
+	langutil::Token advance() override;
+
+	void fetchDebugDataFromComment();
+
+	std::optional<std::pair<std::string_view, langutil::SourceLocation>> parseSrcComment(
+		std::string_view _arguments,
+		langutil::SourceLocation const& _commentLocation
+	);
+
+	std::optional<std::pair<std::string_view, std::optional<int>>> parseASTIDComment(
+		std::string_view _arguments,
+		langutil::SourceLocation const& _commentLocation
+	);
+
+	/// Creates a DebugData object with the correct source location set.
+	std::shared_ptr<DebugData const> createDebugData() const;
+
+	void updateLocationEndFrom(
+		std::shared_ptr<DebugData const>& _debugData,
+		langutil::SourceLocation const& _location
+	) const;
 
 	/// Creates an inline assembly node with the current source location.
 	template <class T> T createWithLocation() const
 	{
 		T r;
-		r.location = currentLocation();
+		r.debugData = createDebugData();
 		return r;
 	}
 
@@ -74,13 +139,12 @@ protected:
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
-	static std::map<evmasm::Instruction, std::string> const& instructionNames();
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin functian call (only the name).
-	ElementaryOperation parseElementaryOperation();
+	std::variant<Literal, Identifier> parseLiteralOrIdentifier();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	Expression parseCall(ElementaryOperation&& _initialOp);
+	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
 	TypedName parseTypedName();
 	YulString expectAsmIdentifier();
 
@@ -91,6 +155,12 @@ protected:
 
 private:
 	Dialect const& m_dialect;
+
+	std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> m_sourceNames;
+	langutil::SourceLocation m_locationOverride;
+	langutil::SourceLocation m_locationFromComment;
+	std::optional<int64_t> m_astIDFromComment;
+	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;
 };

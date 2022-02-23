@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -258,7 +259,7 @@ Type const* TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken const& 
 	}
 }
 
-TypePointer TypeProvider::fromElementaryTypeName(string const& _name)
+Type const* TypeProvider::fromElementaryTypeName(string const& _name)
 {
 	vector<string> nameParts;
 	boost::split(nameParts, _name, boost::is_any_of(" "));
@@ -338,7 +339,7 @@ ArrayType const* TypeProvider::stringMemory()
 	return m_stringMemory.get();
 }
 
-TypePointer TypeProvider::forLiteral(Literal const& _literal)
+Type const* TypeProvider::forLiteral(Literal const& _literal)
 {
 	switch (_literal.token())
 	{
@@ -348,6 +349,7 @@ TypePointer TypeProvider::forLiteral(Literal const& _literal)
 	case Token::Number:
 		return rationalNumber(_literal);
 	case Token::StringLiteral:
+	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
 		return stringLiteral(_literal.value());
 	default:
@@ -361,12 +363,12 @@ RationalNumberType const* TypeProvider::rationalNumber(Literal const& _literal)
 	std::tuple<bool, rational> validLiteral = RationalNumberType::isValidLiteral(_literal);
 	if (std::get<0>(validLiteral))
 	{
-		TypePointer compatibleBytesType = nullptr;
+		Type const* compatibleBytesType = nullptr;
 		if (_literal.isHexNumber())
 		{
 			size_t const digitCount = _literal.valueWithoutUnderscores().length() - 2;
 			if (digitCount % 2 == 0 && (digitCount / 2) <= 32)
-				compatibleBytesType = fixedBytes(digitCount / 2);
+				compatibleBytesType = fixedBytes(static_cast<unsigned>(digitCount / 2));
 		}
 
 		return rationalNumber(std::get<1>(validLiteral), compatibleBytesType);
@@ -429,6 +431,11 @@ FunctionType const* TypeProvider::function(EventDefinition const& _def)
 	return createAndGet<FunctionType>(_def);
 }
 
+FunctionType const* TypeProvider::function(ErrorDefinition const& _def)
+{
+	return createAndGet<FunctionType>(_def);
+}
+
 FunctionType const* TypeProvider::function(FunctionTypeName const& _typeName)
 {
 	return createAndGet<FunctionType>(_typeName);
@@ -438,13 +445,18 @@ FunctionType const* TypeProvider::function(
 	strings const& _parameterTypes,
 	strings const& _returnParameterTypes,
 	FunctionType::Kind _kind,
-	bool _arbitraryParameters,
-	StateMutability _stateMutability
+	StateMutability _stateMutability,
+	FunctionType::Options _options
 )
 {
+	// Can only use this constructor for "arbitraryParameters".
+	solAssert(!_options.valueSet && !_options.gasSet && !_options.saltSet && !_options.bound);
 	return createAndGet<FunctionType>(
-		_parameterTypes, _returnParameterTypes,
-		_kind, _arbitraryParameters, _stateMutability
+		_parameterTypes,
+		_returnParameterTypes,
+		_kind,
+		_stateMutability,
+		std::move(_options)
 	);
 }
 
@@ -454,13 +466,9 @@ FunctionType const* TypeProvider::function(
 	strings _parameterNames,
 	strings _returnParameterNames,
 	FunctionType::Kind _kind,
-	bool _arbitraryParameters,
 	StateMutability _stateMutability,
 	Declaration const* _declaration,
-	bool _gasSet,
-	bool _valueSet,
-	bool _bound,
-	bool _saltSet
+	FunctionType::Options _options
 )
 {
 	return createAndGet<FunctionType>(
@@ -469,13 +477,9 @@ FunctionType const* TypeProvider::function(
 		_parameterNames,
 		_returnParameterNames,
 		_kind,
-		_arbitraryParameters,
 		_stateMutability,
 		_declaration,
-		_gasSet,
-		_valueSet,
-		_bound,
-		_saltSet
+		std::move(_options)
 	);
 }
 
@@ -559,9 +563,10 @@ MagicType const* TypeProvider::meta(Type const* _type)
 	solAssert(
 		_type && (
 			_type->category() == Type::Category::Contract ||
-			_type->category() == Type::Category::Integer
+			_type->category() == Type::Category::Integer ||
+			_type->category() == Type::Category::Enum
 		),
-		"Only contracts or integer types supported for now."
+		"Only enum, contracts or integer types supported for now."
 	);
 	return createAndGet<MagicType>(_type);
 }
@@ -569,4 +574,9 @@ MagicType const* TypeProvider::meta(Type const* _type)
 MappingType const* TypeProvider::mapping(Type const* _keyType, Type const* _valueType)
 {
 	return createAndGet<MappingType>(_keyType, _valueType);
+}
+
+UserDefinedValueType const* TypeProvider::userDefinedValueType(UserDefinedValueTypeDefinition const& _definition)
+{
+	return createAndGet<UserDefinedValueType>(_definition);
 }

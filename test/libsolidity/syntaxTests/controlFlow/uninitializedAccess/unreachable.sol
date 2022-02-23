@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// Warning: (112-135): Unreachable code.
+// Warning 5740: (112-135): Unreachable code.

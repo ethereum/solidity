@@ -8,4 +8,4 @@ contract c {
     function f_internal() internal {}
 }
 // ----
-// Warning: (58-71): This declaration shadows an existing declaration.
+// Warning 2519: (58-71): This declaration shadows an existing declaration.

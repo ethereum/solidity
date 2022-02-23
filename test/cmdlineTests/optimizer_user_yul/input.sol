@@ -3,7 +3,7 @@ pragma solidity >=0.0;
 
 contract C
 {
-	constructor() public payable
+	constructor() payable
 	{
 		int a;
 

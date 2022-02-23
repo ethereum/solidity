@@ -8,5 +8,5 @@ contract C {
     }
 }
 // ----
-// Warning: (76-79): Unreachable code.
-// Warning: (114-128): Unreachable code.
+// Warning 5740: (76-79): Unreachable code.
+// Warning 5740: (114-128): Unreachable code.

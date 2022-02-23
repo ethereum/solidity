@@ -8,3 +8,4 @@ contract C {
 	}
 	function t() public pure returns (uint)  { return 7; }
 }
+// ----

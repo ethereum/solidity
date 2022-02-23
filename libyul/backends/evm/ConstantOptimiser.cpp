@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimisation stage that replaces constants by expressions that compute them.
  */
@@ -22,7 +23,7 @@
 
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/backends/evm/EVMMetrics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>
@@ -99,7 +100,7 @@ void ConstantOptimiser::visit(Expression& _e)
 
 		if (
 			Expression const* repr =
-				RepresentationFinder(m_dialect, m_meter, locationOf(_e), m_cache)
+				RepresentationFinder(m_dialect, m_meter, debugDataOf(_e), m_cache)
 				.tryFindRepresentation(valueOfLiteral(literal))
 		)
 			_e = ASTCopier{}.translate(*repr);
@@ -127,7 +128,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 
 	Representation routine = represent(_value);
 
-	if (bytesRequired(~_value) < bytesRequired(_value))
+	if (numberEncodingSize(~_value) < numberEncodingSize(_value))
 		// Negated is shorter to represent
 		routine = min(move(routine), represent("not"_yulstring, findRepresentation(~_value)));
 
@@ -179,7 +180,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 Representation RepresentationFinder::represent(u256 const& _value) const
 {
 	Representation repr;
-	repr.expression = make_unique<Expression>(Literal{m_location, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
+	repr.expression = make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
 	repr.cost = m_meter.costs(*repr.expression);
 	return repr;
 }
@@ -191,8 +192,8 @@ Representation RepresentationFinder::represent(
 {
 	Representation repr;
 	repr.expression = make_unique<Expression>(FunctionCall{
-		m_location,
-		Identifier{m_location, _instruction},
+		m_debugData,
+		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_argument.expression)}
 	});
 	repr.cost = _argument.cost + m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction);
@@ -207,8 +208,8 @@ Representation RepresentationFinder::represent(
 {
 	Representation repr;
 	repr.expression = make_unique<Expression>(FunctionCall{
-		m_location,
-		Identifier{m_location, _instruction},
+		m_debugData,
+		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}
 	});
 	repr.cost = m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction) + _arg1.cost + _arg2.cost;

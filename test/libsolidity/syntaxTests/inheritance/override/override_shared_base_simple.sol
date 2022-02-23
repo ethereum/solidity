@@ -4,3 +4,4 @@ contract I {
 contract A is I {}
 contract B is I {}
 contract C is A, B {}
+// ----

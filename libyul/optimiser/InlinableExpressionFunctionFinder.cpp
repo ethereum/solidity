@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that identifies functions to be inlined.
  */
@@ -21,7 +22,7 @@
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
 
 #include <libyul/optimiser/OptimizerUtilities.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;

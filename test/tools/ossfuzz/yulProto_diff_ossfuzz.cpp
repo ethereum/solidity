@@ -14,18 +14,23 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <fstream>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
 #include <test/tools/fuzzer_common.h>
 #include <test/tools/ossfuzz/protoToYul.h>
+
+#include <test/libyul/YulOptimizerTestCommon.h>
+
 #include <src/libfuzzer/libfuzzer_macro.h>
 
 #include <libyul/AssemblyStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -39,20 +44,6 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::yul::test::yul_fuzzer;
 
-namespace
-{
-void printErrors(ostream& _stream, ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(_stream);
-
-	for (auto const& error: _errors)
-		formatter.printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
-}
-}
-
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
 	ProtoConverter converter;
@@ -64,7 +55,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_DUMP_PATH=x.yul ./a.out proto-input
 		ofstream of(dump_path);
-		of.write(yul_source.data(), yul_source.size());
+		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
 	}
 
 	YulStringRepository::reset();
@@ -73,37 +64,66 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	AssemblyStack stack(
 		version,
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full(),
+		DebugInfoSelection::All()
 	);
 
 	// Parse protobuf mutated YUL code
-	if (!stack.parseAndAnalyze("source", yul_source) || !stack.parserResult()->code ||
-		!stack.parserResult()->analysisInfo)
+	if (
+		!stack.parseAndAnalyze("source", yul_source) ||
+		!stack.parserResult()->code ||
+		!stack.parserResult()->analysisInfo ||
+		Error::containsErrors(stack.errors())
+	)
 	{
-		printErrors(std::cout, stack.errors());
+		SourceReferenceFormatter formatter(std::cout, stack, false, false);
+
+		for (auto const& error: stack.errors())
+			formatter.printExceptionInformation(
+				*error,
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
+			);
 		yulAssert(false, "Proto fuzzer generated malformed program");
 	}
 
 	ostringstream os1;
 	ostringstream os2;
+	// Disable memory tracing to avoid false positive reports
+	// such as unused write to memory e.g.,
+	// { mstore(0, 1) }
+	// that would be removed by the redundant store eliminator.
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		EVMDialect::strictAssemblyForEVMObjects(version),
+		/*disableMemoryTracing=*/true
 	);
 
-	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
-	stack.optimize();
+	YulOptimizerTestCommon optimizerTest(
+		stack.parserResult(),
+		EVMDialect::strictAssemblyForEVMObjects(version)
+	);
+	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
+	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	yulAssert(astBlock != nullptr, "Optimiser error.");
 	termReason = yulFuzzerUtil::interpret(
 		os2,
-		stack.parserResult()->code,
+		astBlock,
 		EVMDialect::strictAssemblyForEVMObjects(version),
-		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
+		true
 	);
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
+		return;
 
 	bool isTraceEq = (os1.str() == os2.str());
-	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");
+	if (!isTraceEq)
+	{
+		cout << os1.str() << endl;
+		cout << os2.str() << endl;
+		yulAssert(false, "Interpreted traces for optimized and unoptimized code differ.");
+	}
 	return;
 }

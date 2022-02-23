@@ -23,7 +23,6 @@ contract DifficultyOracle is Oracle {
     /// @dev Contract constructor validates and sets target block number
     /// @param _blockNumber Target block number
     constructor(uint _blockNumber)
-        public
     {
         // Block has to be in the future
         require(_blockNumber > block.number);

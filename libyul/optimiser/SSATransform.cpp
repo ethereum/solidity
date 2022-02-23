@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that turns subsequent assignments to variable declarations
  * and assignments.
@@ -23,7 +24,7 @@
 
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -84,19 +85,19 @@ void IntroduceSSA::operator()(Block& _block)
 
 				// Replace "let a := v" by "let a_1 := v  let a := a_1"
 				// Replace "let a, b := v" by "let a_1, b_1 := v  let a := a_1 let b := b_2"
-				auto loc = varDecl.location;
+				shared_ptr<DebugData const> debugData = varDecl.debugData;
 				vector<Statement> statements;
-				statements.emplace_back(VariableDeclaration{loc, {}, std::move(varDecl.value)});
+				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(varDecl.value)});
 				TypedNameList newVariables;
 				for (auto const& var: varDecl.variables)
 				{
 					YulString oldName = var.name;
 					YulString newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{loc, newName, var.type});
+					newVariables.emplace_back(TypedName{debugData, newName, var.type});
 					statements.emplace_back(VariableDeclaration{
-						loc,
-						{TypedName{loc, oldName, var.type}},
-						make_unique<Expression>(Identifier{loc, newName})
+						debugData,
+						{TypedName{debugData, oldName, var.type}},
+						make_unique<Expression>(Identifier{debugData, newName})
 					});
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
@@ -111,23 +112,22 @@ void IntroduceSSA::operator()(Block& _block)
 
 				// Replace "a := v" by "let a_1 := v  a := v"
 				// Replace "a, b := v" by "let a_1, b_1 := v  a := a_1 b := b_2"
-				auto loc = assignment.location;
+				std::shared_ptr<DebugData const> debugData = assignment.debugData;
 				vector<Statement> statements;
-				statements.emplace_back(VariableDeclaration{loc, {}, std::move(assignment.value)});
+				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(assignment.value)});
 				TypedNameList newVariables;
 				for (auto const& var: assignment.variableNames)
 				{
 					YulString oldName = var.name;
 					YulString newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{
-						loc,
+					newVariables.emplace_back(TypedName{debugData,
 						newName,
 						m_typeInfo.typeOfVariable(oldName)
 					});
 					statements.emplace_back(Assignment{
-						loc,
-						{Identifier{loc, oldName}},
-						make_unique<Expression>(Identifier{loc, newName})
+						debugData,
+						{Identifier{debugData, oldName}},
+						make_unique<Expression>(Identifier{debugData, newName})
 					});
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
@@ -194,14 +194,9 @@ void IntroduceControlFlowSSA::operator()(FunctionDefinition& _function)
 
 void IntroduceControlFlowSSA::operator()(ForLoop& _for)
 {
-	(*this)(_for.pre);
+	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
-	Assignments assignments;
-	assignments(_for.body);
-	assignments(_for.post);
-
-
-	for (auto const& var: assignments.names())
+	for (auto const& var: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
 		if (m_variablesInScope.count(var))
 			m_variablesToReassign.insert(var);
 
@@ -237,9 +232,9 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 			{
 				YulString newName = m_nameDispenser.newName(toReassign);
 				toPrepend.emplace_back(VariableDeclaration{
-					locationOf(_s),
-					{TypedName{locationOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
-					make_unique<Expression>(Identifier{locationOf(_s), toReassign})
+					debugDataOf(_s),
+					{TypedName{debugDataOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
+					make_unique<Expression>(Identifier{debugDataOf(_s), toReassign})
 				});
 				assignedVariables.insert(toReassign);
 			}
@@ -357,17 +352,9 @@ void PropagateValues::operator()(Assignment& _assignment)
 
 void PropagateValues::operator()(ForLoop& _for)
 {
-	// This will clear the current value in case of a reassignment inside the
-	// init part, although the new variable would still be in scope inside the whole loop.
-	// This small inefficiency is fine if we move the pre part of all for loops out
-	// of the for loop.
-	(*this)(_for.pre);
+	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
-	Assignments assignments;
-	assignments(_for.body);
-	assignments(_for.post);
-
-	for (auto const& var: assignments.names())
+	for (auto const& var: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
 		m_currentVariableValues.erase(var);
 
 	visit(*_for.condition);
@@ -393,11 +380,10 @@ void PropagateValues::operator()(Block& _block)
 void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
 	TypeInfo typeInfo(_context.dialect, _ast);
-	Assignments assignments;
-	assignments(_ast);
-	IntroduceSSA{_context.dispenser, assignments.names(), typeInfo}(_ast);
-	IntroduceControlFlowSSA{_context.dispenser, assignments.names(), typeInfo}(_ast);
-	PropagateValues{assignments.names()}(_ast);
+	set<YulString> assignedVariables = assignedVariableNames(_ast);
+	IntroduceSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
+	IntroduceControlFlowSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
+	PropagateValues{assignedVariables}(_ast);
 }
 
 

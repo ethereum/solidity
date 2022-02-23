@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (71-77): Expected ',' but got 'memory'
+// ParserError 2314: (71-77): Expected ',' but got 'memory'

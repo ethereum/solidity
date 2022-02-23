@@ -4,4 +4,4 @@
         }
 }
 // ----
-// TypeError: (91-136): Data location must be "storage" for variable, but "memory" was given.
+// TypeError 4061: (91-136): Type mapping(string => uint24)[1] is only valid in storage because it contains a (nested) mapping.

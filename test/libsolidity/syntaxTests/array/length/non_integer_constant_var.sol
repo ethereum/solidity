@@ -3,4 +3,4 @@ contract C {
     uint[LEN] ids;
 }
 // ----
-// TypeError: (52-55): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (52-55): Invalid array length, expected integer literal or constant expression.

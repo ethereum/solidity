@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2017
  * Metadata processing helpers.
@@ -23,7 +24,6 @@
 #include <iostream>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/JSON.h>
 #include <test/Metadata.h>
 
 using namespace std;
@@ -33,25 +33,25 @@ namespace solidity::test
 
 bytes onlyMetadata(bytes const& _bytecode)
 {
-	unsigned size = _bytecode.size();
+	size_t size = _bytecode.size();
 	if (size < 5)
 		return bytes{};
-	size_t metadataSize = (_bytecode[size - 2] << 8) + _bytecode[size - 1];
+	size_t metadataSize = (static_cast<size_t>(_bytecode[size - 2]) << 8ul) + static_cast<size_t>(_bytecode[size - 1]);
 	if (size < (metadataSize + 2))
 		return bytes{};
 	// Sanity check: assume the first byte is a fixed-size CBOR array with 1, 2 or 3 entries
 	unsigned char firstByte = _bytecode[size - metadataSize - 2];
 	if (firstByte != 0xa1 && firstByte != 0xa2 && firstByte != 0xa3)
 		return bytes{};
-	return bytes(_bytecode.end() - metadataSize - 2, _bytecode.end() - 2);
+	return bytes(_bytecode.end() - static_cast<ptrdiff_t>(metadataSize) - 2, _bytecode.end() - 2);
 }
 
 bytes bytecodeSansMetadata(bytes const& _bytecode)
 {
-	unsigned metadataSize = onlyMetadata(_bytecode).size();
+	size_t metadataSize = onlyMetadata(_bytecode).size();
 	if (metadataSize == 0)
 		return bytes{};
-	return bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
+	return bytes(_bytecode.begin(), _bytecode.end() - static_cast<ptrdiff_t>(metadataSize) - 2);
 }
 
 string bytecodeSansMetadata(string const& _bytecode)
@@ -169,30 +169,35 @@ std::optional<map<string, string>> parseCBORMetadata(bytes const& _metadata)
 	}
 }
 
-bool isValidMetadata(string const& _metadata)
+bool isValidMetadata(string const& _serialisedMetadata)
 {
 	Json::Value metadata;
-	if (!util::jsonParseStrict(_metadata, metadata))
+	if (!util::jsonParseStrict(_serialisedMetadata, metadata))
 		return false;
 
+	return isValidMetadata(metadata);
+}
+
+bool isValidMetadata(Json::Value const& _metadata)
+{
 	if (
-		!metadata.isObject() ||
-		!metadata.isMember("version") ||
-		!metadata.isMember("language") ||
-		!metadata.isMember("compiler") ||
-		!metadata.isMember("settings") ||
-		!metadata.isMember("sources") ||
-		!metadata.isMember("output") ||
-		!metadata["settings"].isMember("evmVersion") ||
-		!metadata["settings"].isMember("metadata") ||
-		!metadata["settings"]["metadata"].isMember("bytecodeHash")
+		!_metadata.isObject() ||
+		!_metadata.isMember("version") ||
+		!_metadata.isMember("language") ||
+		!_metadata.isMember("compiler") ||
+		!_metadata.isMember("settings") ||
+		!_metadata.isMember("sources") ||
+		!_metadata.isMember("output") ||
+		!_metadata["settings"].isMember("evmVersion") ||
+		!_metadata["settings"].isMember("metadata") ||
+		!_metadata["settings"]["metadata"].isMember("bytecodeHash")
 	)
 		return false;
 
-	if (!metadata["version"].isNumeric() || metadata["version"] != 1)
+	if (!_metadata["version"].isNumeric() || _metadata["version"] != 1)
 		return false;
 
-	if (!metadata["language"].isString() || metadata["language"].asString() != "Solidity")
+	if (!_metadata["language"].isString() || _metadata["language"].asString() != "Solidity")
 		return false;
 
 	/// @TODO add more strict checks

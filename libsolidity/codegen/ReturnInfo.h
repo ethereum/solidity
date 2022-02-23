@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Component that computes information relevant during decoding an external function
  * call's return values.
@@ -34,7 +35,7 @@ struct ReturnInfo
 {
 	ReturnInfo(langutil::EVMVersion const& _evmVersion, FunctionType const& _functionType);
 
-	/// Vector of TypePointer, for each return variable. Dynamic types are already replaced if required.
+	/// Vector of Type const*, for each return variable. Dynamic types are already replaced if required.
 	TypePointers returnTypes = {};
 
 	/// Boolean, indicating whether or not return size is only known at runtime.

@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// TypeError: (93-94): Type int256[] memory is not implicitly convertible to expected type int256[] storage pointer.
-// TypeError: (102-110): Type int256[] memory is not implicitly convertible to expected type int256[] storage pointer.
+// TypeError 7407: (93-94): Type int256[] memory is not implicitly convertible to expected type int256[] storage pointer.
+// TypeError 7407: (102-110): Type int256[] memory is not implicitly convertible to expected type int256[] storage pointer.

@@ -14,7 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
+#include <test/TemporaryDirectory.h>
 #include <test/yulPhaser/TestHelpers.h>
 
 #include <tools/yulPhaser/Common.h>
@@ -30,6 +32,7 @@
 
 using namespace std;
 using namespace boost::test_tools;
+using namespace solidity::test;
 using namespace solidity::util;
 
 namespace solidity::phaser::test
@@ -66,17 +69,17 @@ map<string, TestEnum> const StringToTestEnumMap = invertMap(TestEnumToStringMap)
 
 }
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(CommonTest)
 
 BOOST_FIXTURE_TEST_CASE(readLinesFromFile_should_return_all_lines_from_a_text_file_as_strings_without_newlines, ReadLinesFromFileFixture)
 {
 	{
-		ofstream tmpFile(m_tempDir.memberPath("test-file.txt"));
+		ofstream tmpFile((m_tempDir.path() / "test-file.txt").string());
 		tmpFile << endl << "Line 1" << endl << endl << endl << "Line 2" << endl << "#" << endl << endl;
 	}
 
-	vector<string> lines = readLinesFromFile(m_tempDir.memberPath("test-file.txt"));
+	vector<string> lines = readLinesFromFile((m_tempDir.path() / "test-file.txt").string());
 	BOOST_TEST((lines == vector<string>{"", "Line 1", "", "", "Line 2", "#", ""}));
 }
 

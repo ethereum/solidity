@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2017
  * Abstract assembly interface, subclasses of which are to be used with the generic
@@ -22,11 +23,15 @@
 
 #pragma once
 
+#include <libyul/ASTForward.h>
+
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace solidity::langutil
 {
@@ -50,6 +55,7 @@ class AbstractAssembly
 public:
 	using LabelID = size_t;
 	using SubID = size_t;
+	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
 	virtual ~AbstractAssembly() = default;
 
@@ -70,39 +76,33 @@ public:
 	/// Generate a new unique label.
 	virtual LabelID newLabelId() = 0;
 	/// Returns a label identified by the given name. Creates it if it does not yet exist.
-	virtual LabelID namedLabel(std::string const& _name) = 0;
+	virtual LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) = 0;
 	/// Append a reference to a to-be-linked symbol.
 	/// Currently, we assume that the value is always a 20 byte number.
 	virtual void appendLinkerSymbol(std::string const& _name) = 0;
 
+	/// Append raw bytes that stay untouched by the optimizer.
+	virtual void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables) = 0;
+
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	/// This is helpful to stack height analysis if there is no continuing control flow.
-	virtual void appendJump(int _stackDiffAfter) = 0;
+	virtual void appendJump(int _stackDiffAfter, JumpType _jumpType = JumpType::Ordinary) = 0;
 
 	/// Append a jump-to-immediate operation.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0) = 0;
+	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0, JumpType _jumpType = JumpType::Ordinary) = 0;
 	/// Append a jump-to-if-immediate operation.
-	virtual void appendJumpToIf(LabelID _labelId) = 0;
-	/// Start a subroutine identified by @a _labelId that takes @a _arguments
-	/// stack slots as arguments.
-	virtual void appendBeginsub(LabelID _labelId, int _arguments) = 0;
-	/// Call a subroutine identified by @a _labelId, taking @a _arguments from the
-	/// stack upon call and putting @a _returns arguments onto the stack upon return.
-	virtual void appendJumpsub(LabelID _labelId, int _arguments, int _returns) = 0;
-	/// Return from a subroutine.
-	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	virtual void appendReturnsub(int _returns, int _stackDiffAfter = 0) = 0;
+	virtual void appendJumpToIf(LabelID _labelId, JumpType _jumpType = JumpType::Ordinary) = 0;
 
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
-	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() = 0;
+	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(std::string _name = "") = 0;
 	/// Appends the offset of the given sub-assembly or data.
-	virtual void appendDataOffset(SubID _sub) = 0;
+	virtual void appendDataOffset(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the size of the given sub-assembly or data.
-	virtual void appendDataSize(SubID _sub) = 0;
+	virtual void appendDataSize(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the given data to the assembly and returns its ID.
 	virtual SubID appendData(bytes const& _data) = 0;
 
@@ -110,15 +110,21 @@ public:
 	virtual void appendImmutable(std::string const& _identifier) = 0;
 	/// Appends an assignment to an immutable variable.
 	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
+
+	/// Appends data to the very end of the bytecode. Repeated calls concatenate.
+	virtual void appendToAuxiliaryData(bytes const& _data) = 0;
+
+	/// Mark this assembly as invalid. Any attempt to request bytecode from it should throw.
+	virtual void markAsInvalid() = 0;
 };
 
-enum class IdentifierContext { LValue, RValue, VariableDeclaration };
+enum class IdentifierContext { LValue, RValue, VariableDeclaration, NonExternal };
 
 /// Object that is used to resolve references and generate code for access to identifiers external
 /// to inline assembly (not used in standalone assembly mode).
 struct ExternalIdentifierAccess
 {
-	using Resolver = std::function<size_t(Identifier const&, IdentifierContext, bool /*_crossesFunctionBoundary*/)>;
+	using Resolver = std::function<bool(Identifier const&, IdentifierContext, bool /*_crossesFunctionBoundary*/)>;
 	/// Resolve an external reference given by the identifier in the given context.
 	/// @returns the size of the value (number of stack slots) or size_t(-1) if not found.
 	Resolver resolve;

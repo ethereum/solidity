@@ -5,10 +5,13 @@ contract C {
     }
     S public s;
 
-    constructor() public {
-        s = S({a: 1, x: true});
+    constructor() {
+        s = S({x: true, a: 1});
     }
 }
 
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // s() -> 1, true

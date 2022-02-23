@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning: (125-126): Unreachable code.
+// Warning 5740: (125-126): Unreachable code.

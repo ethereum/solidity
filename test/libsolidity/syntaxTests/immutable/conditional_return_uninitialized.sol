@@ -1,6 +1,6 @@
 contract C {
     uint immutable x;
-    constructor() public {
+    constructor() {
         if (false)
             return;
 
@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (93-100): Construction control flow ends without initializing all immutable state variables.
+// TypeError 2658: (86-93): Construction control flow ends without initializing all immutable state variables.

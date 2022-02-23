@@ -14,18 +14,26 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
-#include <libyul/Utilities.h>
+#include <libyul/AST.h>
 #include <libyul/optimiser/NameCollector.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
+
+void ConditionalSimplifier::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ConditionalSimplifier{
+		_context.dialect,
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+	}(_ast);
+}
 
 void ConditionalSimplifier::operator()(Switch& _switch)
 {
@@ -43,8 +51,8 @@ void ConditionalSimplifier::operator()(Switch& _switch)
 			(*this)(*_case.value);
 			_case.body.statements.insert(_case.body.statements.begin(),
 				Assignment{
-					_case.body.location,
-					{Identifier{_case.body.location, expr}},
+					_case.body.debugData,
+					{Identifier{_case.body.debugData, expr}},
 					make_unique<Expression>(*_case.value)
 				}
 			);
@@ -66,17 +74,17 @@ void ConditionalSimplifier::operator()(Block& _block)
 				if (
 					holds_alternative<Identifier>(*_if.condition) &&
 					!_if.body.statements.empty() &&
-					TerminationFinder(m_dialect).controlFlowKind(_if.body.statements.back()) !=
+					TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
 						TerminationFinder::ControlFlow::FlowOut
 				)
 				{
 					YulString condition = std::get<Identifier>(*_if.condition).name;
-					langutil::SourceLocation location = _if.location;
+					std::shared_ptr<DebugData const> debugData = _if.debugData;
 					return make_vector<Statement>(
 						std::move(_s),
 						Assignment{
-							location,
-							{Identifier{location, condition}},
+							debugData,
+							{Identifier{debugData, condition}},
 							make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
 						}
 					);

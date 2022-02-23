@@ -1,10 +1,12 @@
-pragma experimental SMTChecker;
 contract C {
-    bytes20 x;
-    function f(bytes16 b) public view {
-        b[uint8(x[2])];
+    function f() public pure {
+        bytes memory x = hex"00112233";
+        assert(x[0] == 0x00);
+        assert(x[1] == 0x11);
+        assert(x.length == 3);
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (116-120): Assertion checker does not yet support index accessing fixed bytes.
-// Warning: (108-122): Assertion checker does not yet support index accessing fixed bytes.
+// Warning 6328: (152-173): CHC: Assertion violation happens here.\nCounterexample:\n\nx = [0x0, 0x11, 0x22, 0x33]\n\nTransaction trace:\nC.constructor()\nC.f()

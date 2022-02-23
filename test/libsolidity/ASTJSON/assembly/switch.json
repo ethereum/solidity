@@ -8,23 +8,22 @@
     ]
   },
   "id": 7,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
-      "fullyImplemented": true,
       "id": 6,
       "linearizedBaseContracts":
       [
         6
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -182,15 +181,13 @@
               }
             ]
           },
-          "documentation": null,
-          "functionSelector": "26121ff0",
           "id": 5,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -213,7 +210,8 @@
         }
       ],
       "scope": 7,
-      "src": "0:198:1"
+      "src": "0:198:1",
+      "usedErrors": []
     }
   ],
   "src": "0:199:1"

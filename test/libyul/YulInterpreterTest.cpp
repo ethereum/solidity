@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/YulInterpreterTest.h>
 
@@ -22,10 +23,10 @@
 #include <test/Common.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AssemblyStack.h>
 #include <libyul/AsmAnalysisInfo.h>
 
+#include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -59,27 +60,7 @@ TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _li
 
 	m_obtainedResult = interpret();
 
-	if (m_expectation != m_obtainedResult)
-	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
-		// TODO could compute a simple diff with highlighted lines
-		printIndented(_stream, m_expectation, nextIndentLevel);
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
-		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return TestResult::Failure;
-	}
-	return TestResult::Success;
-}
-
-void YulInterpreterTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
-{
-	printIndented(_stream, m_source, _linePrefix);
-}
-
-void YulInterpreterTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
-{
-	printIndented(_stream, m_obtainedResult, _linePrefix);
+	return checkResult(_stream, _linePrefix, _formatted);
 }
 
 bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -87,7 +68,8 @@ bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool
 	AssemblyStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
 	);
 	if (stack.parseAndAnalyze("", m_source))
 	{
@@ -98,7 +80,8 @@ bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool
 	else
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, stack.errors());
+		SourceReferenceFormatter{_stream, stack, true, false}
+			.printErrorInformation(stack.errors());
 		return false;
 	}
 }
@@ -106,26 +89,23 @@ bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool
 string YulInterpreterTest::interpret()
 {
 	InterpreterState state;
-	state.maxTraceSize = 10000;
-	state.maxSteps = 10000;
-	Interpreter interpreter(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
+	state.maxTraceSize = 32;
+	state.maxSteps = 512;
+	state.maxExprNesting = 64;
 	try
 	{
-		interpreter(*m_ast);
+		Interpreter::run(
+			state,
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}),
+			*m_ast,
+			/*disableMemoryTracing=*/false
+		);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{
 	}
 
 	stringstream result;
-	state.dumpTraceAndState(result);
+	state.dumpTraceAndState(result, false);
 	return result.str();
-}
-
-void YulInterpreterTest::printErrors(ostream& _stream, ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(_stream);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
 }

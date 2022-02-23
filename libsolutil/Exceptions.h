@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -38,16 +39,32 @@ struct Exception: virtual std::exception, virtual boost::exception
 
 	/// @returns the errinfo_comment of this exception.
 	std::string const* comment() const noexcept;
-
-private:
 };
 
+/// Throws an exception with a given description and extra information about the location the
+/// exception was thrown from.
+/// @param _exceptionType The type of the exception to throw (not an instance).
+/// @param _description The message that describes the error.
+#define solThrow(_exceptionType, _description) \
+	::boost::throw_exception( \
+		_exceptionType() << \
+		::solidity::util::errinfo_comment(_description) << \
+		::boost::throw_function(ETH_FUNC) << \
+		::boost::throw_file(__FILE__) << \
+		::boost::throw_line(__LINE__) \
+	)
+
+/// Defines an exception type that's meant to signal a specific condition and be caught rather than
+/// unwind the stack all the way to the top-level exception handler and interrupt the program.
+/// As such it does not carry a message - the code catching it is expected to handle it without
+/// letting it escape.
 #define DEV_SIMPLE_EXCEPTION(X) struct X: virtual ::solidity::util::Exception { const char* what() const noexcept override { return #X; } }
 
 DEV_SIMPLE_EXCEPTION(InvalidAddress);
 DEV_SIMPLE_EXCEPTION(BadHexCharacter);
 DEV_SIMPLE_EXCEPTION(BadHexCase);
-DEV_SIMPLE_EXCEPTION(FileError);
+DEV_SIMPLE_EXCEPTION(FileNotFound);
+DEV_SIMPLE_EXCEPTION(NotAFile);
 DEV_SIMPLE_EXCEPTION(DataTooLong);
 DEV_SIMPLE_EXCEPTION(StringTooLong);
 

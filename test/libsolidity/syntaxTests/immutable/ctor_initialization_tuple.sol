@@ -1,7 +1,7 @@
 contract C {
     uint immutable x;
     uint immutable y;
-    constructor() public {
+    constructor() {
         (x, y) = f();
     }
 

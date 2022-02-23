@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @file ExpressionClasses.cpp
  * @author Christian <c@ethdev.com>
@@ -25,7 +26,6 @@
 
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/Assembly.h>
-#include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/RuleList.h>
 #include <libsolutil/Assertions.h>
 
@@ -92,7 +92,7 @@ Rules::Rules()
 	Y.setMatchGroup(6, m_matchGroups);
 	Z.setMatchGroup(7, m_matchGroups);
 
-	addRules(simplificationRuleList(A, B, C, W, X, Y, Z));
+	addRules(simplificationRuleList(nullopt, A, B, C, W, X, Y, Z));
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 

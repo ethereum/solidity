@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Framework for testing features from the analysis phase of compiler.
  */
@@ -50,9 +51,11 @@ AnalysisFramework::parseAnalyseAndReturnError(
 )
 {
 	compiler().reset();
+	// Do not insert license if it is already present.
+	bool insertLicense = _insertLicenseAndVersionPragma && _source.find("// SPDX-License-Identifier:") == string::npos;
 	compiler().setSources({{"",
-		_insertLicenseAndVersionPragma ?
-		"pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + _source :
+		string{_insertLicenseAndVersionPragma ? "pragma solidity >=0.0;\n" : ""} +
+		string{insertLicense ? "// SPDX-License-Identifier: GPL-3.0\n" : ""} +
 		_source
 	}});
 	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
@@ -72,28 +75,43 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	return make_pair(&compiler().ast(""), std::move(errors));
 }
 
-ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarnings) const
+ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarningsAndInfos) const
 {
 	ErrorList errors;
 	for (auto const& currentError: _errorList)
 	{
 		solAssert(currentError->comment(), "");
-		if (currentError->type() == Error::Type::Warning)
+		if (!Error::isError(currentError->type()))
 		{
-			if (!_includeWarnings)
+			if (!_includeWarningsAndInfos)
 				continue;
-			bool ignoreWarning = false;
+			bool ignoreWarningsAndInfos = false;
 			for (auto const& filter: m_warningsToFilter)
 				if (currentError->comment()->find(filter) == 0)
 				{
-					ignoreWarning = true;
+					ignoreWarningsAndInfos = true;
 					break;
 				}
-			if (ignoreWarning)
+			if (ignoreWarningsAndInfos)
 				continue;
 		}
 
-		errors.emplace_back(currentError);
+		std::shared_ptr<Error const> newError = currentError;
+		for (auto const& messagePrefix: m_messagesToCut)
+			if (currentError->comment()->find(messagePrefix) == 0)
+			{
+				SourceLocation const* location = currentError->sourceLocation();
+				// sufficient for now, but in future we might clone the error completely, including the secondary location
+				newError = make_shared<Error>(
+					currentError->errorId(),
+					currentError->type(),
+					messagePrefix + " ....",
+					location ? *location : SourceLocation()
+				);
+				break;
+			}
+
+		errors.emplace_back(newError);
 	}
 
 	return errors;
@@ -133,7 +151,7 @@ string AnalysisFramework::formatErrors() const
 
 string AnalysisFramework::formatError(Error const& _error) const
 {
-	return SourceReferenceFormatter::formatErrorInformation(_error);
+	return SourceReferenceFormatter::formatErrorInformation(_error, *m_compiler);
 }
 
 ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)

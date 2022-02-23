@@ -4,7 +4,7 @@
 #
 # The documentation for solidity is hosted at:
 #
-#     https://solidity.readthedocs.org
+#     https://docs.soliditylang.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -33,6 +33,23 @@
 # - /usr/local/Cellar
 # - /usr/local/Homebrew
 
+set -eu
+
+function validate_checksum {
+  local package="$1"
+  local expected_checksum="$2"
+
+  local actual_checksum
+  actual_checksum=$(sha256sum "$package")
+  if [[ $actual_checksum != "${expected_checksum}  ${package}" ]]
+  then
+    >&2 echo "ERROR: Wrong checksum for package $package."
+    >&2 echo "Actual:   $actual_checksum"
+    >&2 echo "Expected: $expected_checksum"
+    exit 1
+  fi
+}
+
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
   brew unlink python
@@ -40,20 +57,35 @@ then
   brew install cmake
   brew install wget
   brew install coreutils
+  brew install diffutils
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3
-  wget https://github.com/Z3Prover/z3/releases/download/z3-4.8.7/z3-4.8.7-x64-osx-10.14.6.zip
-  unzip z3-4.8.7-x64-osx-10.14.6.zip
-  rm -f z3-4.8.7-x64-osx-10.14.6.zip
-  cp z3-4.8.7-x64-osx-10.14.6/bin/libz3.a /usr/local/lib
-  cp z3-4.8.7-x64-osx-10.14.6/bin/z3 /usr/local/bin
-  cp z3-4.8.7-x64-osx-10.14.6/include/* /usr/local/include
-  rm -rf z3-4.8.7-x64-osx-10.14.6
+  z3_version="4.8.14"
+  z3_dir="z3-${z3_version}-x64-osx-10.16"
+  z3_package="${z3_dir}.zip"
+  wget "https://github.com/Z3Prover/z3/releases/download/z3-${z3_version}/${z3_package}"
+  validate_checksum "$z3_package" 1341671670e0c4e72da80815128a68975ee90816d50ceaf6bd820f06babe2cfd
+  unzip "$z3_package"
+  rm "$z3_package"
+  cp "${z3_dir}/bin/libz3.a" /usr/local/lib
+  cp "${z3_dir}/bin/z3" /usr/local/bin
+  cp "${z3_dir}/include/"* /usr/local/include
+  rm -r "$z3_dir"
 
   # evmone
-  wget https://github.com/ethereum/evmone/releases/download/v0.4.0/evmone-0.4.0-darwin-x86_64.tar.gz
-  tar xzpf evmone-0.4.0-darwin-x86_64.tar.gz -C /usr/local
-  rm -f evmone-0.4.0-darwin-x86_64.tar.gz
-fi
+  evmone_version="0.8.0"
+  evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
+  wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
+  validate_checksum "$evmone_package" e8efef478822f0ed6d0493e89004181e895893f93963152a2a81589acc3a0828
+  tar xzpf "$evmone_package" -C /usr/local
+  rm "$evmone_package"
 
+  # hera
+  hera_version="0.5.0"
+  hera_package="hera-${hera_version}-darwin-x86_64.tar.gz"
+  wget "https://github.com/ewasm/hera/releases/download/v${hera_version}/${hera_package}"
+  validate_checksum "$hera_package" 190050d7ace384ecd79ec1b1f607a9ff40e196b4eec75932958d4814d221d059
+  tar xzpf "$hera_package" -C /usr/local
+  rm "$hera_package"
+fi

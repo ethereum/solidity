@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (72-82): Explicit type conversion not allowed from "function () returns (address)" to "address".
+// TypeError 9640: (72-82): Explicit type conversion not allowed from "function () returns (address)" to "address".

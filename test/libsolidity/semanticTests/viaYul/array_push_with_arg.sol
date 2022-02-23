@@ -17,9 +17,9 @@ contract C {
 // test(uint256): 42 ->
 // getLength() -> 1
 // fetch(uint256): 0 -> 42
-// fetch(uint256): 1 -> FAILURE
+// fetch(uint256): 1 -> FAILURE, hex"4e487b71", 0x32
 // test(uint256): 23 ->
 // getLength() -> 2
 // fetch(uint256): 0 -> 42
 // fetch(uint256): 1 -> 23
-// fetch(uint256): 2 -> FAILURE
+// fetch(uint256): 2 -> FAILURE, hex"4e487b71", 0x32

@@ -14,6 +14,6 @@ contract C
     }
 }
 // ----
-// TypeError: (81-89): Different number of arguments in return statement than in returns declaration.
-// TypeError: (165-181): Different number of arguments in return statement than in returns declaration.
-// TypeError: (257-264): Return arguments required.
+// TypeError 8863: (81-89): Different number of arguments in return statement than in returns declaration.
+// TypeError 5132: (165-181): Different number of arguments in return statement than in returns declaration.
+// TypeError 6777: (257-264): Return arguments required.

@@ -5,7 +5,6 @@ contract C {
         struct S { uint256 [ ] [ 0.425781 ether ] s1 ;
                 uint [ 2 ** 0xFF ] [ 2 ** 0x42 ] s2 ;
                 X s3 ;
-                mapping ( uint => address payable ) c ;
                 uint [ 9 hours ** 16 ] d ;
                 string s ;
         }
@@ -14,4 +13,4 @@ contract C {
         }
 }
 // ----
-// TypeError: (530-540): Type too large for memory.
+// TypeError 1534: (474-484): Type too large for memory.

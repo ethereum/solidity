@@ -14,18 +14,27 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 #include <libyul/optimiser/NameCollector.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
+
+void ConditionalUnsimplifier::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ConditionalUnsimplifier{
+		_context.dialect,
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+	}(_ast);
+}
 
 void ConditionalUnsimplifier::operator()(Switch& _switch)
 {
@@ -78,7 +87,7 @@ void ConditionalUnsimplifier::operator()(Block& _block)
 					YulString condition = std::get<Identifier>(*_if.condition).name;
 					if (
 						holds_alternative<Assignment>(_stmt2) &&
-						TerminationFinder(m_dialect).controlFlowKind(_if.body.statements.back()) !=
+						TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
 							TerminationFinder::ControlFlow::FlowOut
 					)
 					{

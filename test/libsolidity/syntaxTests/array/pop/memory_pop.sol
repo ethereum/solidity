@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (72-77): Member "pop" is not available in uint256[] memory outside of storage.
+// TypeError 4994: (72-77): Member "pop" is not available in uint256[] memory outside of storage.

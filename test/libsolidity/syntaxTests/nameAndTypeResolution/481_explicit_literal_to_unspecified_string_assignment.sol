@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (52-76): Type literal_string "abc" is not implicitly convertible to expected type string storage pointer.
+// TypeError 9574: (52-76): Type literal_string "abc" is not implicitly convertible to expected type string storage pointer.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <chris@ethereum.org>
  * @date 2016
@@ -22,11 +23,20 @@
 
 #include <liblangutil/SemVerHandler.h>
 
+#include <liblangutil/Exceptions.h>
+
 #include <functional>
+#include <limits>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
+
+SemVerMatchExpressionParser::SemVerMatchExpressionParser(vector<Token> _tokens, vector<string> _literals):
+	m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
+{
+	solAssert(m_tokens.size() == m_literals.size(), "");
+}
 
 SemVerVersion::SemVerVersion(string const& _versionString)
 {
@@ -37,12 +47,12 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 	{
 		unsigned v = 0;
 		for (; i != end && '0' <= *i && *i <= '9'; ++i)
-			v = v * 10 + (*i - '0');
+			v = v * 10 + unsigned(*i - '0');
 		numbers[level] = v;
 		if (level < 2)
 		{
 			if (i == end || *i != '.')
-				throw SemVerError();
+				BOOST_THROW_EXCEPTION(SemVerError());
 			else
 				++i;
 		}
@@ -60,7 +70,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 		build = string(buildStart, i);
 	}
 	if (i != end)
-		throw SemVerError();
+		BOOST_THROW_EXCEPTION(SemVerError());
 }
 
 bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _version) const
@@ -100,10 +110,10 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 		int cmp = 0;
 		bool didCompare = false;
 		for (unsigned i = 0; i < levelsPresent && cmp == 0; i++)
-			if (version.numbers[i] != unsigned(-1))
+			if (version.numbers[i] != std::numeric_limits<unsigned>::max())
 			{
 				didCompare = true;
-				cmp = _version.numbers[i] - version.numbers[i];
+				cmp = static_cast<int>(_version.numbers[i] - version.numbers[i]);
 			}
 
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
@@ -146,9 +156,12 @@ bool SemVerMatchExpression::matches(SemVerVersion const& _version) const
 	return false;
 }
 
-SemVerMatchExpression SemVerMatchExpressionParser::parse()
+optional<SemVerMatchExpression> SemVerMatchExpressionParser::parse()
 {
 	reset();
+
+	if (m_tokens.empty())
+		return nullopt;
 
 	try
 	{
@@ -158,13 +171,14 @@ SemVerMatchExpression SemVerMatchExpressionParser::parse()
 			if (m_pos >= m_tokens.size())
 				break;
 			if (currentToken() != Token::Or)
-				throw SemVerError();
+				BOOST_THROW_EXCEPTION(SemVerError());
 			nextToken();
 		}
 	}
 	catch (SemVerError const&)
 	{
 		reset();
+		return nullopt;
 	}
 
 	return m_expression;
@@ -245,20 +259,20 @@ unsigned SemVerMatchExpressionParser::parseVersionPart()
 		return 0;
 	else if ('1' <= c && c <= '9')
 	{
-		unsigned v = c - '0';
+		auto v = static_cast<unsigned>(c - '0');
 		// If we skip to the next token, the current number is terminated.
 		while (m_pos == startPos && '0' <= currentChar() && currentChar() <= '9')
 		{
 			c = currentChar();
-			if (v * 10 < v || v * 10 + (c - '0') < v * 10)
-				throw SemVerError();
-			v = v * 10 + c - '0';
+			if (v * 10 < v || v * 10 + static_cast<unsigned>(c - '0') < v * 10)
+				BOOST_THROW_EXCEPTION(SemVerError());
+			v = v * 10 + static_cast<unsigned>(c - '0');
 			nextChar();
 		}
 		return v;
 	}
 	else
-		throw SemVerError();
+		BOOST_THROW_EXCEPTION(SemVerError());
 }
 
 char SemVerMatchExpressionParser::currentChar() const

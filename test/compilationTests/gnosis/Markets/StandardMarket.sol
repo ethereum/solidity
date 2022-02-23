@@ -39,7 +39,6 @@ contract StandardMarket is Market {
     /// @param _marketMaker Market maker contract
     /// @param _fee Market fee
     constructor(address _creator, Event _eventContract, MarketMaker _marketMaker, uint24 _fee)
-        public
     {
         // Validate inputs
         require(address(_eventContract) != address(0) && address(_marketMaker) != address(0) && _fee < FEE_RANGE);

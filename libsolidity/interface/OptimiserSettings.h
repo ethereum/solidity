@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Alex Beregszaszi
  * @date 2017
@@ -22,31 +23,41 @@
 
 #pragma once
 
+#include <liblangutil/Exceptions.h>
+
 #include <cstddef>
 #include <string>
 
 namespace solidity::frontend
 {
 
+enum class OptimisationPreset
+{
+	None,
+	Minimal,
+	Standard,
+	Full,
+};
+
 struct OptimiserSettings
 {
 	static char constexpr DefaultYulOptimiserSteps[] =
 		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
 		"["
-			"xarrscLM"                 // Turn into SSA and simplify
+			"xa[r]EscLM"               // Turn into SSA and simplify
 			"cCTUtTOntnfDIul"          // Perform structural simplification
 			"Lcul"                     // Simplify again
-			"Vcul jj"                  // Reverse SSA
+			"Vcul [j]"                 // Reverse SSA
 
 			// should have good "compilability" property here.
 
-			"eul"                      // Run functional expression inliner
-			"xarulrul"                 // Prune a bit more in SSA
-			"xarrcL"                   // Turn into SSA again and simplify
+			"Tpeul"                    // Run functional expression inliner
+			"xa[rul]"                  // Prune a bit more in SSA
+			"xa[r]cL"                  // Turn into SSA again and simplify
 			"gvif"                     // Run full inliner
-			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
+			"CTUca[r]LsTFOtfDnca[r]Iulc" // SSA plus simplify
 		"]"
-		"jmuljuljul VcTOcul jmul";     // Make source short and pretty
+		"jmul[jul] VcTOcul jmul";      // Make source short and pretty
 
 	/// No optimisations at all - not recommended.
 	static OptimiserSettings none()
@@ -66,6 +77,7 @@ struct OptimiserSettings
 	{
 		OptimiserSettings s;
 		s.runOrderLiterals = true;
+		s.runInliner = true;
 		s.runJumpdestRemover = true;
 		s.runPeephole = true;
 		s.runDeduplicate = true;
@@ -73,7 +85,6 @@ struct OptimiserSettings
 		s.runConstantOptimiser = true;
 		s.runYulOptimiser = true;
 		s.optimizeStackAllocation = true;
-		s.expectedExecutionsPerDeployment = 200;
 		return s;
 	}
 	/// Full optimisations. Currently an alias for standard optimisations.
@@ -82,10 +93,23 @@ struct OptimiserSettings
 		return standard();
 	}
 
+	static OptimiserSettings preset(OptimisationPreset _preset)
+	{
+		switch (_preset)
+		{
+			case OptimisationPreset::None: return none();
+			case OptimisationPreset::Minimal: return minimal();
+			case OptimisationPreset::Standard: return standard();
+			case OptimisationPreset::Full: return full();
+			default: solAssert(false, "");
+		}
+	}
+
 	bool operator==(OptimiserSettings const& _other) const
 	{
 		return
 			runOrderLiterals == _other.runOrderLiterals &&
+			runInliner == _other.runInliner &&
 			runJumpdestRemover == _other.runJumpdestRemover &&
 			runPeephole == _other.runPeephole &&
 			runDeduplicate == _other.runDeduplicate &&
@@ -100,6 +124,8 @@ struct OptimiserSettings
 	/// Move literals to the right of commutative binary operators during code generation.
 	/// This helps exploiting associativity.
 	bool runOrderLiterals = false;
+	/// Inliner
+	bool runInliner = false;
 	/// Non-referenced jump destination remover.
 	bool runJumpdestRemover = false;
 	/// Peephole optimizer

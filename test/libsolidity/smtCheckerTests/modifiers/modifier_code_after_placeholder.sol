@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint x;
@@ -13,13 +11,14 @@ contract C
 
 	function f() m public {
 		assert(x > 0);
-		x = x + 1;
+		unchecked { x = x + 1; }
 	}
 
 	function g(uint _x) public {
 		x = _x;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (203-208): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (136-149): Assertion violation happens here
+// Warning 6328: (103-116): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.g(115792089237316195423570985008687907853269984665640564039457584007913129639935)\nState: x = 115792089237316195423570985008687907853269984665640564039457584007913129639935\nC.f()

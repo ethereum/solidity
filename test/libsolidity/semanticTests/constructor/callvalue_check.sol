@@ -1,12 +1,12 @@
-contract A1 { constructor() public {} }
+contract A1 { constructor() {} }
 contract B1 is A1 {}
 
-contract A2 { constructor() public payable {} }
+contract A2 { constructor() payable {} }
 contract B2 is A2 {}
 
 contract B3 {}
 
-contract B4 { constructor() public {} }
+contract B4 { constructor() {} }
 
 contract C {
 	function createWithValue(bytes memory c, uint256 value) public payable returns (bool) {

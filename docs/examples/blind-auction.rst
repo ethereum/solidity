@@ -11,13 +11,21 @@ Dans cette section, nous allons montrer à quel point il est facile de créer un
 Enchère ouverte simple
 ======================
 
+<<<<<<< HEAD
 L'idée générale du contrat d'enchère simple suivant est que chacun peut envoyer ses offres pendant une période d'enchère. Les ordres incluent l'envoi d'argent / éther afin de lier les soumissionnaires à leur offre. Si l'enchère est la plus haute, l'enchérisseur qui avait fait l'offre la plus élevée auparavant récupère son argent. Après la fin de la période de soumission, le contrat doit être appelé manuellement pour que le bénéficiaire reçoive son argent - les contrats ne peuvent pas s'activer eux-mêmes.
+=======
+The general idea of the following simple auction contract is that everyone can
+send their bids during a bidding period. The bids already include sending money
+/ Ether in order to bind the bidders to their bid. If the highest bid is
+raised, the previous highest bidder gets their money back.  After the end of
+the bidding period, the contract has to be called manually for the beneficiary
+to receive their money - contracts cannot activate themselves.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
-
+    pragma solidity ^0.8.4;
     contract SimpleAuction {
         // Paramètres de l'enchère
         // temps unix absolus (secondes depuis 01-01-1970)
@@ -40,6 +48,7 @@ L'idée générale du contrat d'enchère simple suivant est que chacun peut envo
         event HighestBidIncreased(address bidder, uint amount);
         event AuctionEnded(address winner, uint amount);
 
+<<<<<<< HEAD
         // Ce qui suit est appelé commentaire natspec,
         // reconaissable à ses 3 slashes.
         // Ce message sera affiché quand l'utilisateur
@@ -48,14 +57,36 @@ L'idée générale du contrat d'enchère simple suivant est que chacun peut envo
         /// Créée une enchère simple de `_biddingTime`
         /// secondes au profit de l'addresse
         /// beneficaire address `_beneficiary`.
+=======
+        // Errors that describe failures.
+
+        // The triple-slash comments are so-called natspec
+        // comments. They will be shown when the user
+        // is asked to confirm a transaction or
+        // when an error is displayed.
+
+        /// The auction has already ended.
+        error AuctionAlreadyEnded();
+        /// There is already a higher or equal bid.
+        error BidNotHighEnough(uint highestBid);
+        /// The auction has not ended yet.
+        error AuctionNotYetEnded();
+        /// The function auctionEnd has already been called.
+        error AuctionEndAlreadyCalled();
+
+        /// Create a simple auction with `biddingTime`
+        /// seconds bidding time on behalf of the
+        /// beneficiary address `beneficiaryAddress`.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
         constructor(
-            uint _biddingTime,
-            address payable _beneficiary
-        ) public {
-            beneficiary = _beneficiary;
-            auctionEndTime = now + _biddingTime;
+            uint biddingTime,
+            address payable beneficiaryAddress
+        ) {
+            beneficiary = beneficiaryAddress;
+            auctionEndTime = block.timestamp + biddingTime;
         }
 
+<<<<<<< HEAD
         /// Faire une offre avec la valeur envoyée
         /// avec cette transaction.
         /// La valeur ne sera remboursée que si 
@@ -78,6 +109,31 @@ L'idée générale du contrat d'enchère simple suivant est que chacun peut envo
                 msg.value > highestBid,
                 "There already is a higher bid."
             );
+=======
+        /// Bid on the auction with the value sent
+        /// together with this transaction.
+        /// The value will only be refunded if the
+        /// auction is not won.
+        function bid() external payable {
+            // No arguments are necessary, all
+            // information is already part of
+            // the transaction. The keyword payable
+            // is required for the function to
+            // be able to receive Ether.
+
+            // Revert the call if the bidding
+            // period is over.
+            if (block.timestamp > auctionEndTime)
+                revert AuctionAlreadyEnded();
+
+            // If the bid is not higher, send the
+            // money back (the revert statement
+            // will revert all changes in this
+            // function execution including
+            // it having received the money).
+            if (msg.value <= highestBid)
+                revert BidNotHighEnough(highestBid);
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
             if (highestBid != 0) {
                 // Renvoyer l'argent avec un simple
@@ -92,16 +148,29 @@ L'idée générale du contrat d'enchère simple suivant est que chacun peut envo
             emit HighestBidIncreased(msg.sender, msg.value);
         }
 
+<<<<<<< HEAD
         /// Retirer l'argent d'une enchère dépassée
         function withdraw() public returns (bool) {
+=======
+        /// Withdraw a bid that was overbid.
+        function withdraw() external returns (bool) {
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
                 // Il est important de mettre cette valeur à zéro car l'utilisateur
                 // pourrait rappeler cette fonction avant le retour de `send`.
                 pendingReturns[msg.sender] = 0;
 
+<<<<<<< HEAD
                 if (!msg.sender.send(amount)) {
                     // Pas besoin d'avorter avec un throw ici, juste restaurer le montant
+=======
+                // msg.sender is not of type `address payable` and must be
+                // explicitly converted using `payable(msg.sender)` in order
+                // use the member function `send()`.
+                if (!payable(msg.sender).send(amount)) {
+                    // No need to call throw here, just reset the amount owing
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
                     pendingReturns[msg.sender] = amount;
                     return false;
                 }
@@ -109,6 +178,7 @@ L'idée générale du contrat d'enchère simple suivant est que chacun peut envo
             return true;
         }
 
+<<<<<<< HEAD
         /// Met fin à l'enchère et envoie
         /// le montant de l'enchère la plus haute au bénéficiaire.
         function auctionEnd() public {
@@ -124,10 +194,29 @@ L'idée générale du contrat d'enchère simple suivant est que chacun peut envo
             // Si des fonctions appelées en interne effectuent des appels 
             // à des contrats externes, elles doivent aussi êtres considérées
             // comme concernées par cette norme.
+=======
+        /// End the auction and send the highest bid
+        /// to the beneficiary.
+        function auctionEnd() external {
+            // It is a good guideline to structure functions that interact
+            // with other contracts (i.e. they call functions or send Ether)
+            // into three phases:
+            // 1. checking conditions
+            // 2. performing actions (potentially changing conditions)
+            // 3. interacting with other contracts
+            // If these phases are mixed up, the other contract could call
+            // back into the current contract and modify the state or cause
+            // effects (ether payout) to be performed multiple times.
+            // If functions called internally include interaction with external
+            // contracts, they also have to be considered interaction with
+            // external contracts.
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
             // 1. Conditions
-            require(now >= auctionEndTime, "Auction not yet ended.");
-            require(!ended, "auctionEnd has already been called.");
+            if (block.timestamp < auctionEndTime)
+                revert AuctionNotYetEnded();
+            if (ended)
+                revert AuctionEndAlreadyCalled();
 
             // 2. Éffets
             ended = true;
@@ -150,11 +239,11 @@ Un autre défi est de savoir comment rendre l'enchère **contraignante et aveugl
 Le contrat suivant résout ce problème en acceptant toute valeur supérieure à l'offre la plus élevée. Comme cela ne peut bien sûr être vérifié que pendant la phase de révélation, certaines offres peuvent être **invalides**, et c'est fait exprès (il fournit même un marqueur explicite pour placer des offres invalides avec des transferts de grande valeur) : Les soumissionnaires peuvent brouiller la concurrence en plaçant plusieurs offres invalides hautes ou basses.
 
 
-::
+.. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
-
+    pragma solidity ^0.8.4;
     contract BlindAuction {
         struct Bid {
             bytes32 blindedBid;
@@ -176,23 +265,50 @@ Le contrat suivant résout ce problème en acceptant toute valeur supérieure à
 
         event AuctionEnded(address winner, uint highestBid);
 
+<<<<<<< HEAD
         /// Les Modifiers sont une façon pratique de valider des entrées.
         /// `onlyBefore` est appliqué à `bid` ci-dessous:
         /// Le corps de la fonction sera placé dans le modifier
         /// où `_` est placé.
         modifier onlyBefore(uint _time) { require(now < _time); _; }
         modifier onlyAfter(uint _time) { require(now > _time); _; }
+=======
+        // Errors that describe failures.
+
+        /// The function has been called too early.
+        /// Try again at `time`.
+        error TooEarly(uint time);
+        /// The function has been called too late.
+        /// It cannot be called after `time`.
+        error TooLate(uint time);
+        /// The function auctionEnd has already been called.
+        error AuctionEndAlreadyCalled();
+
+        // Modifiers are a convenient way to validate inputs to
+        // functions. `onlyBefore` is applied to `bid` below:
+        // The new function body is the modifier's body where
+        // `_` is replaced by the old function body.
+        modifier onlyBefore(uint time) {
+            if (block.timestamp >= time) revert TooLate(time);
+            _;
+        }
+        modifier onlyAfter(uint time) {
+            if (block.timestamp <= time) revert TooEarly(time);
+            _;
+        }
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
 
         constructor(
-            uint _biddingTime,
-            uint _revealTime,
-            address payable _beneficiary
-        ) public {
-            beneficiary = _beneficiary;
-            biddingEnd = now + _biddingTime;
-            revealEnd = biddingEnd + _revealTime;
+            uint biddingTime,
+            uint revealTime,
+            address payable beneficiaryAddress
+        ) {
+            beneficiary = beneficiaryAddress;
+            biddingEnd = block.timestamp + biddingTime;
+            revealEnd = biddingEnd + revealTime;
         }
 
+<<<<<<< HEAD
         /// Placer une enchère à l'aveugle avec `_blindedBid` =
         /// keccak256(abi.encodePacked(value, fake, secret)).
         ///  L'éther envoyé n'est remboursé que si l'enchère est correctement
@@ -204,11 +320,24 @@ Le contrat suivant résout ce problème en acceptant toute valeur supérieure à
         /// plusieurs ordres
         function bid(bytes32 _blindedBid)
             public
+=======
+        /// Place a blinded bid with `blindedBid` =
+        /// keccak256(abi.encodePacked(value, fake, secret)).
+        /// The sent ether is only refunded if the bid is correctly
+        /// revealed in the revealing phase. The bid is valid if the
+        /// ether sent together with the bid is at least "value" and
+        /// "fake" is not true. Setting "fake" to true and sending
+        /// not the exact amount are ways to hide the real bid but
+        /// still make the required deposit. The same address can
+        /// place multiple bids.
+        function bid(bytes32 blindedBid)
+            external
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             payable
             onlyBefore(biddingEnd)
         {
             bids[msg.sender].push(Bid({
-                blindedBid: _blindedBid,
+                blindedBid: blindedBid,
                 deposit: msg.value
             }));
         }
@@ -217,24 +346,24 @@ Le contrat suivant résout ce problème en acceptant toute valeur supérieure à
         /// les enchères invalides et toutes les autres exceptée la plus haute
         /// le cas échéant.
         function reveal(
-            uint[] memory _values,
-            bool[] memory _fake,
-            bytes32[] memory _secret
+            uint[] calldata values,
+            bool[] calldata fakes,
+            bytes32[] calldata secrets
         )
-            public
+            external
             onlyAfter(biddingEnd)
             onlyBefore(revealEnd)
         {
             uint length = bids[msg.sender].length;
-            require(_values.length == length);
-            require(_fake.length == length);
-            require(_secret.length == length);
+            require(values.length == length);
+            require(fakes.length == length);
+            require(secrets.length == length);
 
             uint refund;
             for (uint i = 0; i < length; i++) {
                 Bid storage bidToCheck = bids[msg.sender][i];
                 (uint value, bool fake, bytes32 secret) =
-                        (_values[i], _fake[i], _secret[i]);
+                        (values[i], fakes[i], secrets[i]);
                 if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
                     // L'enchère n'a pas été révélée.
                     // Ne pas rembourser.
@@ -248,9 +377,10 @@ Le contrat suivant résout ce problème en acceptant toute valeur supérieure à
                 // Rendre impossible un double remboursement
                 bidToCheck.blindedBid = bytes32(0);
             }
-            msg.sender.transfer(refund);
+            payable(msg.sender).transfer(refund);
         }
 
+<<<<<<< HEAD
         // Cette fonction interne ("internal") ne peut être appelée que
         // que depuis l'intérieur du contrat (ou ses contrats dérivés).
         function placeBid(address bidder, uint value) internal
@@ -270,6 +400,10 @@ Le contrat suivant résout ce problème en acceptant toute valeur supérieure à
 
         /// Se faire rembourser une enchère battue.
         function withdraw() public {
+=======
+        /// Withdraw a bid that was overbid.
+        function withdraw() external {
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
                 // Il est important de mettre cette valeur à zéro car l'utilisateur
@@ -277,19 +411,41 @@ Le contrat suivant résout ce problème en acceptant toute valeur supérieure à
                 // (voir remarque sur conditions -> effets -> interaction).
                 pendingReturns[msg.sender] = 0;
 
-                msg.sender.transfer(amount);
+                payable(msg.sender).transfer(amount);
             }
         }
 
         /// Met fin à l'enchère et envoie
         /// le montant de l'enchère la plus haute au bénéficiaire.
         function auctionEnd()
-            public
+            external
             onlyAfter(revealEnd)
         {
-            require(!ended);
+            if (ended) revert AuctionEndAlreadyCalled();
             emit AuctionEnded(highestBidder, highestBid);
             ended = true;
             beneficiary.transfer(highestBid);
         }
+<<<<<<< HEAD
     }
+=======
+
+        // This is an "internal" function which means that it
+        // can only be called from the contract itself (or from
+        // derived contracts).
+        function placeBid(address bidder, uint value) internal
+                returns (bool success)
+        {
+            if (value <= highestBid) {
+                return false;
+            }
+            if (highestBidder != address(0)) {
+                // Refund the previously highest bidder.
+                pendingReturns[highestBidder] += highestBid;
+            }
+            highestBid = value;
+            highestBidder = bidder;
+            return true;
+        }
+    }
+>>>>>>> 47d77931747aba8e364452537d989b795df7ca04

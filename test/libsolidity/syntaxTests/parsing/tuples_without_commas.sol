@@ -1,7 +1,7 @@
 contract C {
 	function f() {
-		var a = (2 2);
+		uint a = (2 2);
 	}
 }
 // ----
-// ParserError: (42-43): Expected ',' but got 'Number'
+// ParserError 2314: (43-44): Expected ',' but got 'Number'

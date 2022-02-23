@@ -14,4 +14,4 @@ contract C{
 }
 
 // ----
-// TypeError: (141-144): Member "a" not found or not visible after argument-dependent lookup in contract B.
+// TypeError 9582: (141-144): Member "a" not found or not visible after argument-dependent lookup in contract B.

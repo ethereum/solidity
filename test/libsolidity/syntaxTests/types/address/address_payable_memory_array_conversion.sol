@@ -7,5 +7,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (166-167): Type address[] memory is not implicitly convertible to expected type address payable[] memory.
-// TypeError: (181-182): Type address payable[] memory is not implicitly convertible to expected type address[] memory.
+// TypeError 7407: (166-167): Type address[] memory is not implicitly convertible to expected type address payable[] memory.
+// TypeError 7407: (181-182): Type address payable[] memory is not implicitly convertible to expected type address[] memory.

@@ -6,4 +6,4 @@ contract test is base {
     function f(uint8 a) public { }
 }
 // ----
-// TypeError: (37-61): Function overload clash during conversion to external types for arguments.
+// TypeError 9914: (37-61): Function overload clash during conversion to external types for arguments.

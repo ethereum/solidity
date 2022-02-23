@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	enum D { Left, Right }
@@ -8,5 +6,6 @@ contract C
 		assert(x < 10);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (113-121): Type conversion is not yet fully supported and might yield false positives.

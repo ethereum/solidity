@@ -45,7 +45,7 @@ contract schellingDB is safeMath, schellingVars {
     /*
         Constructor
     */
-    constructor() public {
+    constructor() {
         rounds.push();
         rounds.push();
         rounds[0].blockHeight = block.number;
@@ -136,7 +136,7 @@ contract schelling is module, announcementTypes, schellingVars {
         module callbacks
     */
     function replaceModule(address payable addr) external override returns (bool) {
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         require( db.replaceOwner(addr) );
         super._replaceModule(addr);
         return true;
@@ -151,7 +151,7 @@ contract schelling is module, announcementTypes, schellingVars {
             @value     Amount
             @bool      Was the transaction successful?
         */
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         if ( to == address(this) ) {
             uint256 currentRound = getCurrentRound();
             schellingVars._rounds memory round = getRound(currentRound);
@@ -249,7 +249,7 @@ contract schelling is module, announcementTypes, schellingVars {
     bytes1 public belowChar = 0x30;
     schellingDB private db;
 
-    constructor(address payable _moduleHandler, address _db, bool _forReplace) public {
+    constructor(address payable _moduleHandler, address _db, bool _forReplace) {
         /*
             Installation function.
 
@@ -271,7 +271,7 @@ contract schelling is module, announcementTypes, schellingVars {
             @a      Sort of configuration
             @b      Value
         */
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         if      ( a == announcementType.schellingRoundBlockDelay )     { roundBlockDelay = b; }
         else if ( a == announcementType.schellingCheckRounds )         { interestCheckRounds = uint8(b); }
         else if ( a == announcementType.schellingCheckAboves )         { interestCheckAboves = uint8(b); }

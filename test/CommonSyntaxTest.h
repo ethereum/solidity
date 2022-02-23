@@ -14,11 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
+#include <test/TestCaseReader.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 
@@ -33,6 +35,7 @@ namespace solidity::test
 struct SyntaxTestError
 {
 	std::string type;
+	std::optional<langutil::ErrorId> errorId;
 	std::string message;
 	std::string sourceName;
 	int locationStart = -1;
@@ -40,6 +43,7 @@ struct SyntaxTestError
 	bool operator==(SyntaxTestError const& _rhs) const
 	{
 		return type == _rhs.type &&
+			errorId == _rhs.errorId &&
 			message == _rhs.message &&
 			sourceName == _rhs.sourceName &&
 			locationStart == _rhs.locationStart &&
@@ -78,7 +82,7 @@ protected:
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
-	std::map<std::string, std::string> m_sources;
+	frontend::test::SourceMap m_sources;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
 	langutil::EVMVersion const m_evmVersion;

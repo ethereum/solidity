@@ -3,4 +3,4 @@ contract Foo {
     uint constant x = 56;
 }
 // ----
-// TypeError: (48-49): Cannot assign to a constant variable.
+// TypeError 6520: (48-49): Cannot assign to a constant variable.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 /**
  * @title MerkleProof
  * @dev Merkle proof verification based on
@@ -33,10 +31,6 @@ library MerkleProof {
     }
 }
 
+// ====
+// SMTEngine: all
 // ----
-// Warning: (755-767): Assertion checker does not yet support this expression.
-// Warning: (988-991): Assertion checker does not yet implement type abi
-// Warning: (988-1032): Assertion checker does not yet implement this type of function call.
-// Warning: (1175-1178): Assertion checker does not yet implement type abi
-// Warning: (1175-1219): Assertion checker does not yet implement this type of function call.
-// Warning: (755-767): Assertion checker does not yet support this expression.

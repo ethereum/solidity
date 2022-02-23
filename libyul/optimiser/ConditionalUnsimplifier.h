@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
@@ -32,20 +33,21 @@ class ConditionalUnsimplifier: public ASTModifier
 {
 public:
 	static constexpr char const* name{"ConditionalUnsimplifier"};
-	static void run(OptimiserStepContext& _context, Block& _ast)
-	{
-		ConditionalUnsimplifier{_context.dialect}(_ast);
-	}
+	static void run(OptimiserStepContext& _context, Block& _ast);
 
 	using ASTModifier::operator();
 	void operator()(Switch& _switch) override;
 	void operator()(Block& _block) override;
 
 private:
-	explicit ConditionalUnsimplifier(Dialect const& _dialect):
-		m_dialect(_dialect)
+	explicit ConditionalUnsimplifier(
+		Dialect const& _dialect,
+		std::map<YulString, ControlFlowSideEffects> const& _sideEffects
+	):
+		m_dialect(_dialect), m_functionSideEffects(_sideEffects)
 	{}
 	Dialect const& m_dialect;
+	std::map<YulString, ControlFlowSideEffects> const& m_functionSideEffects;
 };
 
 }

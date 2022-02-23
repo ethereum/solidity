@@ -1,5 +1,5 @@
 // Used to cause ICE because of a too strict assert
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
     struct S { uint a; T[222222222222222222222222222] sub; }
     struct T { uint[] x; }
@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (226-234): Type too large for memory.
+// TypeError 1534: (226-234): Type too large for memory.

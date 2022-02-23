@@ -1,5 +1,4 @@
-pragma experimental SMTChecker;
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C
 {
@@ -10,7 +9,17 @@ contract C
 		uint8[][] memory dd,
 		uint[][][] memory eee
 	) public pure {
+		require(a.length > 0);
+		require(b.length > 0);
+		require(cc.length > 0);
+		require(cc[0].length > 0);
+		require(dd.length > 0);
+		require(dd[0].length > 0);
+		require(eee.length > 0);
+		require(eee[0].length > 0);
+		require(eee[0][0].length > 0);
 		a[0] = 2;
+		// The accesses below are safe but oob is reported because of aliasing.
 		cc[0][0] = 50;
 		dd[0][0] = 10;
 		eee[0][0][0] = 50;
@@ -25,5 +34,20 @@ contract C
 		assert(b[0] == 1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (400-457): Assertion violation happens here
+// Warning 6368: (523-528): CHC: Out of bounds access happens here.
+// Warning 6368: (523-531): CHC: Out of bounds access happens here.
+// Warning 6368: (557-563): CHC: Out of bounds access happens here.
+// Warning 6368: (557-566): CHC: Out of bounds access happens here.
+// Warning 6368: (557-569): CHC: Out of bounds access happens here.
+// Warning 6368: (578-582): CHC: Out of bounds access happens here.
+// Warning 6368: (699-703): CHC: Out of bounds access happens here.
+// Warning 6368: (712-717): CHC: Out of bounds access happens here.
+// Warning 6368: (712-720): CHC: Out of bounds access happens here.
+// Warning 6368: (730-736): CHC: Out of bounds access happens here.
+// Warning 6368: (730-739): CHC: Out of bounds access happens here.
+// Warning 6368: (730-742): CHC: Out of bounds access happens here.
+// Warning 6328: (692-749): CHC: Assertion violation happens here.
+// Warning 6368: (850-854): CHC: Out of bounds access happens here.

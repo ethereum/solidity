@@ -18,31 +18,65 @@
 #
 # (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
+
+set -e
+
 source scripts/common.sh
 source test/externalTests/common.sh
 
-verify_input "$1"
-SOLJSON="$1"
+REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
-function install_fn { yarn; git submodule update --init; }
+verify_input "$@"
+BINARY_TYPE="$1"
+BINARY_PATH="$2"
+SELECTED_PRESETS="$3"
+
 function compile_fn { yarn run provision:token:contracts; }
 function test_fn { yarn run test:contracts; }
 
 function colony_test
 {
-    OPTIMIZER_LEVEL=3
-    FORCE_ABIv2=false
-    CONFIG="truffle.js"
+    local repo="https://github.com/solidity-external-tests/colonyNetwork.git"
+    local ref_type=branch
+    local ref="develop_080"
+    local config_file="truffle.js"
 
-    truffle_setup https://github.com/solidity-external-tests/colonyNetwork.git develop_060
-    run_install install_fn
+    local compile_only_presets=(
+        ir-no-optimize            # Compiles but tests run out of gas
+        ir-optimize-evm-only      # Compiles but tests run out of gas
+        legacy-no-optimize        # Compiles but tests run out of gas
+        legacy-optimize-evm-only  # Compiles but tests run out of gas
+    )
+    local settings_presets=(
+        "${compile_only_presets[@]}"
+        ir-optimize-evm+yul
+        legacy-optimize-evm+yul
+    )
+
+    [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")
+    print_presets_or_exit "$SELECTED_PRESETS"
+
+    setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
+    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
+
+    neutralize_package_json_hooks
+    force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$(first_word "$SELECTED_PRESETS")"
+    yarn install
+    git submodule update --init
 
     cd lib
     rm -Rf dappsys
-    git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_060 dappsys
+    git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_080 dappsys
     cd ..
 
-    truffle_run_test compile_fn test_fn
+    replace_version_pragmas
+    [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
+
+    for preset in $SELECTED_PRESETS; do
+        truffle_run_test "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        store_benchmark_report truffle colony "$repo" "$preset"
+    done
 }
 
 external_test ColonyNetworks colony_test

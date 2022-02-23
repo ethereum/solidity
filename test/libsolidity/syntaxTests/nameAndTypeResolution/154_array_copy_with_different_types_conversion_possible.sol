@@ -3,3 +3,4 @@ contract c {
     uint8[] b;
     function f() public { a = b; }
 }
+// ----

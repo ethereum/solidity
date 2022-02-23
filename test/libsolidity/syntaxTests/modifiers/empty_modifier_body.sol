@@ -12,3 +12,4 @@ contract D is C {
 		_;
 	}
 }
+// ----

@@ -12,4 +12,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (165-177): True expression's type struct C.s1 memory doesn't match false expression's type struct C.s2 memory.
+// TypeError 1080: (165-177): True expression's type struct C.s1 memory does not match false expression's type struct C.s2 memory.

@@ -13,10 +13,10 @@ Commençons par un exemple de base qui fixe la valeur d'une variable et l'expose
 Exemple: Stockage
 =================
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract SimpleStorage {
         uint storedData;
@@ -34,16 +34,24 @@ The first line tells you that the source code is licensed under the
 GPL version 3.0. Machine-readable license specifiers are important
 in a setting where publishing the source code is the default.
 
-La ligne suivante indique simplement que le code source est écrit pour Solidity version 0.4.0 ou tout ce qui est plus récent qui ne casse pas la fonctionnalité (jusqu'à la version 0.6.0, mais non comprise). Il s'agit de s'assurer que le contrat n'est pas compilable avec une nouvelle version du compilateur (de rupture), où il pourrait se comporter différemment.
+La ligne suivante indique simplement que le code source est écrit pour Solidity version 0.4.16 ou tout ce qui est plus récent qui ne casse pas la fonctionnalité (jusqu'à la version 0.9.0, mais non comprise). Il s'agit de s'assurer que le contrat n'est pas compilable avec une nouvelle version du compilateur (de rupture), où il pourrait se comporter différemment.
 Les pré-cités pragmas sont des instructions courantes pour les compilateurs sur la façon de traiter le code source (par exemple `pragma once <https://fr.wikipedia.org/wiki/Pragma_once>`_).
 
-Un contrat au sens de Solidity est un ensemble de code (ses *fonctions*) et les données (son *état*) qui résident à une adresse spécifique sur la blockchain Ethereum. La ligne ``uint storedData;`` déclare une variable d'état appelée ``storedData``` de type ``uint`` (*u*nsigned *int*eger de *256* bits). Vous pouvez le considérer comme une case mémoire dans une base de données qui peut être interrogée et modifiée en appelant les fonctions du code qui gèrent la base de données. Dans le cas d'Ethereum, c'est toujours le contrat propriétaire. Et dans ce cas, les fonctions ``set`` et ``get`` peuvent être utilisées pour modifier
+Un contrat au sens de Solidity est un ensemble de code (ses *fonctions*) et les données
+(son *état*) qui résident à une adresse spécifique sur la blockchain Ethereum. La ligne ``uint storedData;``
+déclare une variable d'état appelée ``storedData``` de type ``uint`` (*u*nsigned *int*eger de *256* bits). Vous
+pouvez le considérer comme une case mémoire dans une base de données qui peut être interrogée et modifiée en appelant
+les fonctions du code qui gèrent la base de données.
+Et dans cet exemple, le contrat définit les fonctions ``set`` et ``get`` qui peuvent être utilisées pour modifier
 ou récupérer la valeur de la variable.
 
 Pour accéder à une variable d'état, vous n'avez pas besoin du préfixe ``this.`` d'autres langues.
+Unlike in some other languages, omitting it is not just a matter of style,
+it results in a completely different way to access the member, but more on this later.
 
 Ce contrat ne fait pas encore grand-chose en dehors de (en raison de l'infrastructure construite par Ethereum) permettre à n'importe qui de stocker un numéro unique qui est accessible par n'importe qui dans le monde sans un moyen (faisable) pour vous empêcher de publier ce numéro. Bien sûr, n'importe qui peut simplement appeler ``set`` à nouveau avec une valeur différente.
 et écraser votre numéro, mais le numéro sera toujours stocké dans l'historique de la blockchain. Plus tard, nous verrons comment vous pouvez imposer des restrictions d'accès pour que vous seul puissiez modifier le numéro.
+
 
 .. note::
     Tous les identifiants (noms de contrat, noms de fonctions et noms de variables) sont limités au jeu de caractères ASCII. Il est possible de stocker des données encodées en UTF-8 dans des variables de type string.
@@ -60,10 +68,10 @@ Le contrat suivant mettra en œuvre la forme la plus simple d'un contrat de
 cryptomonnaie. Ce contrat autorise son créateur à générer des pièces à partir de rien (des schéma d'émission différents sont possibles).
 De plus, n'importe qui peut s'envoyer des pièces sans avoir besoin de s'enregistrer avec un nom d'utilisateur et un mot de passe - tout ce dont vous avez besoin est une paire de clés Ethereum.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity ^0.8.4;
 
     contract Coin {
         // Le mot-clé "public" rend ces variables
@@ -77,7 +85,7 @@ De plus, n'importe qui peut s'envoyer des pièces sans avoir besoin de s'enregis
 
         // C'est le constructor, code qui n'est exécuté
         // qu'à la création du contrat.
-        constructor() public {
+        constructor() {
             minter = msg.sender;
         }
 
@@ -85,14 +93,23 @@ De plus, n'importe qui peut s'envoyer des pièces sans avoir besoin de s'enregis
         // Can only be called by the contract creator
         function mint(address receiver, uint amount) public {
             require(msg.sender == minter);
-            require(amount < 1e60);
             balances[receiver] += amount;
         }
+
+        // Errors allow you to provide information about
+        // why an operation failed. They are returned
+        // to the caller of the function.
+        error InsufficientBalance(uint requested, uint available);
 
         // Sends an amount of existing coins
         // from any caller to an address
         function send(address receiver, uint amount) public {
-            require(amount <= balances[msg.sender], "Insufficient balance.");
+            if (amount > balances[msg.sender])
+                revert InsufficientBalance({
+                    requested: amount,
+                    available: balances[msg.sender]
+                });
+
             balances[msg.sender] -= amount;
             balances[receiver] += amount;
             emit Sent(msg.sender, receiver, amount);
@@ -104,7 +121,9 @@ Ce contrat introduit quelques nouveaux concepts, passons-les en revue un à un.
 La ligne ``address public minter;`` déclare une variable d'état de type :ref:`address<address>` qui est accessible au public. Le type ``adress`` est une valeur de 160 bits qui ne permet aucune opération arithmétique. Il convient pour le stockage des adresses de contrats ou de paires de clés appartenant à des `comptes externes<accounts>`_ .
 
 Le mot-clé "public" génère automatiquement une fonction qui permet d'accéder à la valeur courante de la variable d'état de l'extérieur du contrat. Sans ce mot-clé, les autres contrats n'ont aucun moyen d'accéder à la variable.
-Le code de la fonction générée par le compilateur est à peu près équivalent à ce qui suit (ignorez ``external'' et ``view`` pour l'instant)::
+Le code de la fonction générée par le compilateur est à peu près équivalent à ce qui suit (ignorez ``external'' et ``view`` pour l'instant):
+
+.. code-block:: solidity
 
     function minter() external view returns (address) { return minter; }
 
@@ -121,7 +140,9 @@ virtuellement initialisées de sorte que toutes les clés possibles existent dè
 dont la représentation octale n'est que de zéros. Cette analogie ne va pas
 trop loin, car il n'est pas non plus possible d'obtenir une liste de toutes les clés d'un mapping, ni une liste de toutes les valeurs. Il faut donc garder à l'esprit (ou bien
 mieux, gardez une liste ou utilisez un type de données plus avancé) ce que vous avez ajouté à la cartographie ou l'utiliser dans un contexte où cela n'est pas nécessaire.
-La :ref:`fonction getter<fonctiongetter-fonctions>` créé par le mot-clé ``public`` est un peu plus complexe dans ce cas. Ça ressemble grossièrement à ça::
+La :ref:`fonction getter<fonctiongetter-fonctions>` créé par le mot-clé ``public`` est un peu plus complexe dans ce cas. Ça ressemble grossièrement à ça:
+
+.. code-block:: solidity
 
     function balances(address _account) external view returns (uint) {
         return balances[_account];
@@ -149,11 +170,33 @@ Pour écouter cet événement, vous devriez utiliser le code JavaScript suivant 
 
 .. index:: coin
 
-Le :ref:`constructor<constructor>` est une fonction spéciale qui est exécutée pendant la création du contrat et ne peut pas être appelée ultérieurement. Il stocke de façon permanente l'adresse de la personne qui crée le contrat : ``msg`` (avec ``tx`` et ``block``) est une variable globale spéciale qui contient certaines propriétés qui permettent d'accéder à la blockchain. ``msg.sender`` est toujours l'adresse d'où vient l'appel de la fonction courante (externe).
+Le :ref:`constructor<constructor>` est une fonction spéciale qui est exécutée pendant la création du contrat et ne peut pas être appelée ultérieurement. Dans cetr exemple, il stocke de façon permanente l'adresse de la personne qui crée le contrat.
+La variable ``msg`` (avec ``tx`` et ``block``) est une :ref:`special global variable <special-variables-functions>` qui contient certaines propriétés qui permettent d'accéder à la blockchain. ``msg.sender`` est toujours l'adresse d'où vient l'appel de la fonction courante (externe).
 
-Enfin, les fonctions qui finiront avec le contrat et qui peuvent être appelées par les utilisateurs et les contrats sont "mint" et "send".
-Si "mint" est appelé par quelqu'un d'autre que le compte qui a créé le contrat, rien ne se passera. Ceci est assuré par la fonction spéciale :ref:`require <assert-and-require>` qui fait que tous les changements sont annulés si son argument est évalué à faux.
+Les fonctions qui constituent le contrat et qui peuvent être appelées par les utilisateurs et les contrats sont ``mint`` et ``send``.
+
+== Ma version
+Si ``mint`` est appelé par quelqu'un d'autre que le compte qui a créé le contrat, rien ne se passera. Ceci est assuré par la fonction spéciale :ref:`require <assert-and-require>` qui fait que tous les changements sont annulés si son argument est évalué à faux.
 Le deuxième appel à ``require`` permet de s'assurer qu'il n'y aura pas trop de pièces, ce qui pourrait causer des erreurs de débordement de buffer plus tard.
+== Reformulation/precision 2022 (remplace mais ne remet pas en cause le propos précéddent)
+The ``mint`` function sends an amount of newly created coins to another address. The :ref:`require
+<assert-and-require>` function call defines conditions that reverts all changes if not met. In this
+example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call
+``mint``. In general, the creator can mint as many tokens as they like, but at some point, this will
+lead to a phenomenon called "overflow". Note that because of the default :ref:`Checked arithmetic
+<unchecked>`, the transaction would revert if the expression ``balances[receiver] += amount;``
+overflows, i.e., when ``balances[receiver] + amount`` in arbitrary precision arithmetic is larger
+than the maximum value of ``uint`` (``2**256 - 1``). This is also true for the statement
+``balances[receiver] += amount;`` in the function ``send``.
+==
+
+:ref:`Errors <errors>` allow you to provide more information to the caller about
+why a condition or operation failed. Errors are used together with the
+:ref:`revert statement <revert-statement>`. The ``revert`` statement unconditionally
+aborts and reverts all changes similar to the ``require`` function, but it also
+allows you to provide the name of an error and additional data which will be supplied to the caller
+(and eventually to the front-end application or block explorer) so that
+a failure can more easily be debugged or reacted upon.
 
 D'un autre côté, ``send`` peut être utilisé par n'importe qui (qui a déjà certaines de ces pièces) pour envoyer des pièces à n'importe qui d'autre. Si vous n'avez pas assez de pièces à envoyer, l'appel ``require`` échouera et fournira également à l'utilisateur un message d'erreur approprié.
 
@@ -205,7 +248,7 @@ Dans le cadre du mécanisme de sélection d'ordre (qu'on appelle "mining"), il p
 .. note::
     Il n'est pas garanti que les transactions seront incluses dans le bloc suivant ou dans tout bloc futur spécifique, puisque ce n'est pas à l'auteur d'une transaction, mais aux mineurs de déterminer dans quel bloc la transaction est incluse.
 
-    Si vous voulez programmer des appels futurs de votre contrat, vous pouvez utiliser le service `alarm clock <http://www.ethereum-alarm-clock.com/>`_ ou un service oracle similaire.
+    Si vous voulez programmer des appels futurs de votre contrat, vous pouvez utiliser le service `alarm clock <http://www.ethereum-alarm-clock.com/>`_ ou un service oracle ou automatisation de contrat similaire.
 
 .. _the-ethereum-virtual-machine:
 
@@ -361,3 +404,24 @@ La seule façon de supprimer du code de la blockchain est lorsqu'un contrat à c
 If you want to deactivate your contracts, you should instead **disable** them
 by changing some internal state which causes all functions to revert. This
 makes it impossible to use the contract, as it returns Ether immediately.
+
+
+.. index:: ! precompiled contracts, ! precompiles, ! contract;precompiled
+
+.. _precompiledContracts:
+
+Precompiled Contracts
+=====================
+
+There is a small set of contract addresses that are special:
+The address range between ``1`` and (including) ``8`` contains
+"precompiled contracts" that can be called as any other contract
+but their behaviour (and their gas consumption) is not defined
+by EVM code stored at that address (they do not contain code)
+but instead is implemented in the EVM execution environment itself.
+
+Different EVM-compatible chains might use a different set of
+precompiled contracts. It might also be possible that new
+precompiled contracts are added to the Ethereum main chain in the future,
+but you can reasonably expect them to always be in the range between
+``1`` and ``0xffff`` (inclusive).

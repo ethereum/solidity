@@ -24,45 +24,52 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
+
+#include <range/v3/algorithm/all_of.hpp>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void Rematerialiser::run(Dialect const& _dialect, Block& _ast, set<YulString> _varsToAlwaysRematerialize)
+void Rematerialiser::run(Dialect const& _dialect, Block& _ast, set<YulString> _varsToAlwaysRematerialize, bool _onlySelectedVariables)
 {
-	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize)}(_ast);
+	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_ast);
 }
 
 void Rematerialiser::run(
 	Dialect const& _dialect,
 	FunctionDefinition& _function,
-	set<YulString> _varsToAlwaysRematerialize
+	set<YulString> _varsToAlwaysRematerialize,
+	bool _onlySelectedVariables
 )
 {
-	Rematerialiser{_dialect, _function, std::move(_varsToAlwaysRematerialize)}(_function);
+	Rematerialiser{_dialect, _function, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_function);
 }
 
 Rematerialiser::Rematerialiser(
 	Dialect const& _dialect,
 	Block& _ast,
-	set<YulString> _varsToAlwaysRematerialize
+	set<YulString> _varsToAlwaysRematerialize,
+	bool _onlySelectedVariables
 ):
 	DataFlowAnalyzer(_dialect),
 	m_referenceCounts(ReferencesCounter::countReferences(_ast)),
-	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize))
+	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
+	m_onlySelectedVariables(_onlySelectedVariables)
 {
 }
 
 Rematerialiser::Rematerialiser(
 	Dialect const& _dialect,
 	FunctionDefinition& _function,
-	set<YulString> _varsToAlwaysRematerialize
+	set<YulString> _varsToAlwaysRematerialize,
+	bool _onlySelectedVariables
 ):
 	DataFlowAnalyzer(_dialect),
 	m_referenceCounts(ReferencesCounter::countReferences(_function)),
-	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize))
+	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
+	m_onlySelectedVariables(_onlySelectedVariables)
 {
 }
 
@@ -79,20 +86,24 @@ void Rematerialiser::visit(Expression& _e)
 			size_t refs = m_referenceCounts[name];
 			size_t cost = CodeCost::codeCost(m_dialect, *value.value);
 			if (
-				(refs <= 1 && value.loopDepth == m_loopDepth) ||
-				cost == 0 ||
-				(refs <= 5 && cost <= 1 && m_loopDepth == 0) ||
-				m_varsToAlwaysRematerialize.count(name)
+				(
+					!m_onlySelectedVariables && (
+						(refs <= 1 && value.loopDepth == m_loopDepth) ||
+						cost == 0 ||
+						(refs <= 5 && cost <= 1 && m_loopDepth == 0)
+					)
+				) || m_varsToAlwaysRematerialize.count(name)
 			)
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
-				for (auto const& ref: m_references.forward[name])
-					assertThrow(inScope(ref), OptimizerException, "");
-				// update reference counts
-				m_referenceCounts[name]--;
-				for (auto const& ref: ReferencesCounter::countReferences(*value.value))
-					m_referenceCounts[ref.first] += ref.second;
-				_e = (ASTCopier{}).translate(*value.value);
+				if (ranges::all_of(m_references[name], [&](auto const& ref) { return inScope(ref); }))
+				{
+					// update reference counts
+					m_referenceCounts[name]--;
+					for (auto const& ref: ReferencesCounter::countReferences(*value.value))
+						m_referenceCounts[ref.first] += ref.second;
+					_e = (ASTCopier{}).translate(*value.value);
+				}
 			}
 		}
 	}

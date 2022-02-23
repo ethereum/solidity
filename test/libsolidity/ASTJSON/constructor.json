@@ -8,16 +8,15 @@
     ]
   },
   "id": 6,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -25,6 +24,7 @@
         5
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -33,17 +33,16 @@
           {
             "id": 3,
             "nodeType": "Block",
-            "src": "35:4:1",
+            "src": "28:4:1",
             "statements": []
           },
-          "documentation": null,
           "id": 4,
           "implemented": true,
           "kind": "constructor",
           "modifiers": [],
           "name": "",
+          "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -56,18 +55,19 @@
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "35:0:1"
+            "src": "28:0:1"
           },
           "scope": 5,
-          "src": "14:25:1",
+          "src": "14:18:1",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
       "scope": 6,
-      "src": "0:41:1"
+      "src": "0:34:1",
+      "usedErrors": []
     }
   ],
-  "src": "0:42:1"
+  "src": "0:35:1"
 }

@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (290-299): Member "value" not unique after argument-dependent lookup in contract C - did you forget the "payable" modifier?
+// TypeError 6675: (290-299): Member "value" not unique after argument-dependent lookup in contract C - did you forget the "payable" modifier?

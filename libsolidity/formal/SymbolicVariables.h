@@ -14,13 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
-#include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/TypeProvider.h>
+
+#include <libsmtutil/SolverInterface.h>
+
+#include <map>
 #include <memory>
 
 namespace solidity::frontend::smt
@@ -36,13 +40,13 @@ class SymbolicVariable
 {
 public:
 	SymbolicVariable(
-		frontend::TypePointer _type,
-		frontend::TypePointer _originalType,
+		frontend::Type const* _type,
+		frontend::Type const* _originalType,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
 	SymbolicVariable(
-		SortPointer _sort,
+		smtutil::SortPointer _sort,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -51,13 +55,14 @@ public:
 
 	virtual ~SymbolicVariable() = default;
 
-	virtual Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const;
+	virtual smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const;
 	std::string currentName() const;
-	virtual Expression valueAtIndex(int _index) const;
-	virtual std::string nameAtIndex(int _index) const;
-	virtual Expression resetIndex();
-	virtual Expression increaseIndex();
-	virtual Expression operator()(std::vector<Expression> /*_arguments*/) const
+	virtual smtutil::Expression valueAtIndex(unsigned _index) const;
+	virtual std::string nameAtIndex(unsigned _index) const;
+	virtual smtutil::Expression resetIndex();
+	virtual smtutil::Expression setIndex(unsigned _index);
+	virtual smtutil::Expression increaseIndex();
+	virtual smtutil::Expression operator()(std::vector<smtutil::Expression> /*_arguments*/) const
 	{
 		solAssert(false, "Function application to non-function.");
 	}
@@ -65,19 +70,19 @@ public:
 	unsigned index() const { return m_ssa->index(); }
 	unsigned& index() { return m_ssa->index(); }
 
-	SortPointer const& sort() const { return m_sort; }
-	frontend::TypePointer const& type() const { return m_type; }
-	frontend::TypePointer const& originalType() const { return m_originalType; }
+	smtutil::SortPointer const& sort() const { return m_sort; }
+	frontend::Type const* type() const { return m_type; }
+	frontend::Type const* originalType() const { return m_originalType; }
 
 protected:
 	std::string uniqueSymbol(unsigned _index) const;
 
 	/// SMT sort.
-	SortPointer m_sort;
+	smtutil::SortPointer m_sort;
 	/// Solidity type, used for size and range in number types.
-	frontend::TypePointer m_type;
+	frontend::Type const* m_type;
 	/// Solidity original type, used for type conversion if necessary.
-	frontend::TypePointer m_originalType;
+	frontend::Type const* m_originalType;
 	std::string m_uniqueName;
 	EncodingContext& m_context;
 	std::unique_ptr<SSAVariable> m_ssa;
@@ -90,7 +95,7 @@ class SymbolicBoolVariable: public SymbolicVariable
 {
 public:
 	SymbolicBoolVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -103,8 +108,8 @@ class SymbolicIntVariable: public SymbolicVariable
 {
 public:
 	SymbolicIntVariable(
-		frontend::TypePointer _type,
-		frontend::TypePointer _originalType,
+		frontend::Type const* _type,
+		frontend::Type const* _originalType,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -129,7 +134,7 @@ class SymbolicFixedBytesVariable: public SymbolicIntVariable
 {
 public:
 	SymbolicFixedBytesVariable(
-		frontend::TypePointer _originalType,
+		frontend::Type const* _originalType,
 		unsigned _numBytes,
 		std::string _uniqueName,
 		EncodingContext& _context
@@ -148,37 +153,38 @@ class SymbolicFunctionVariable: public SymbolicVariable
 {
 public:
 	SymbolicFunctionVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
 	SymbolicFunctionVariable(
-		SortPointer _sort,
+		smtutil::SortPointer _sort,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
 
-	Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const override;
 
 	// Explicit request the function declaration.
-	Expression currentFunctionValue() const;
+	smtutil::Expression currentFunctionValue() const;
 
-	Expression valueAtIndex(int _index) const override;
+	smtutil::Expression valueAtIndex(unsigned _index) const override;
 
 	// Explicit request the function declaration.
-	Expression functionValueAtIndex(int _index) const;
+	smtutil::Expression functionValueAtIndex(unsigned _index) const;
 
-	Expression resetIndex() override;
-	Expression increaseIndex() override;
+	smtutil::Expression resetIndex() override;
+	smtutil::Expression setIndex(unsigned _index) override;
+	smtutil::Expression increaseIndex() override;
 
-	Expression operator()(std::vector<Expression> _arguments) const override;
+	smtutil::Expression operator()(std::vector<smtutil::Expression> _arguments) const override;
 
 private:
 	/// Creates a new function declaration.
 	void resetDeclaration();
 
 	/// Stores the current function declaration.
-	Expression m_declaration;
+	smtutil::Expression m_declaration;
 
 	/// Abstract representation.
 	SymbolicIntVariable m_abstract{
@@ -190,49 +196,13 @@ private:
 };
 
 /**
- * Specialization of SymbolicVariable for Mapping
- */
-class SymbolicMappingVariable: public SymbolicVariable
-{
-public:
-	SymbolicMappingVariable(
-		frontend::TypePointer _type,
-		std::string _uniqueName,
-		EncodingContext& _context
-	);
-};
-
-/**
- * Specialization of SymbolicVariable for Array
- */
-class SymbolicArrayVariable: public SymbolicVariable
-{
-public:
-	SymbolicArrayVariable(
-		frontend::TypePointer _type,
-		frontend::TypePointer _originalTtype,
-		std::string _uniqueName,
-		EncodingContext& _context
-	);
-	SymbolicArrayVariable(
-		SortPointer _sort,
-		std::string _uniqueName,
-		EncodingContext& _context
-	);
-
-	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
-
-	Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
-};
-
-/**
  * Specialization of SymbolicVariable for Enum
  */
 class SymbolicEnumVariable: public SymbolicVariable
 {
 public:
 	SymbolicEnumVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -245,22 +215,87 @@ class SymbolicTupleVariable: public SymbolicVariable
 {
 public:
 	SymbolicTupleVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
 	SymbolicTupleVariable(
-		SortPointer _sort,
+		smtutil::SortPointer _sort,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
 
-	std::vector<SortPointer> const& components();
-	Expression component(
+	smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const override;
+
+	std::vector<smtutil::SortPointer> const& components() const;
+	smtutil::Expression component(
 		size_t _index,
-		TypePointer _fromType = nullptr,
-		TypePointer _toType = nullptr
-	);
+		frontend::Type const* _fromType = nullptr,
+		frontend::Type const* _toType = nullptr
+	) const;
 };
+
+/**
+ * Specialization of SymbolicVariable for Array
+ */
+class SymbolicArrayVariable: public SymbolicVariable
+{
+public:
+	SymbolicArrayVariable(
+		frontend::Type const* _type,
+		frontend::Type const* _originalTtype,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+	SymbolicArrayVariable(
+		smtutil::SortPointer _sort,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+
+	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
+
+	smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const override;
+	smtutil::Expression valueAtIndex(unsigned _index) const override;
+	smtutil::Expression resetIndex() override { SymbolicVariable::resetIndex(); return m_pair.resetIndex(); }
+	smtutil::Expression setIndex(unsigned _index) override { SymbolicVariable::setIndex(_index); return m_pair.setIndex(_index); }
+	smtutil::Expression increaseIndex() override { SymbolicVariable::increaseIndex(); return m_pair.increaseIndex(); }
+	smtutil::Expression elements() const;
+	smtutil::Expression length() const;
+
+	smtutil::SortPointer tupleSort() { return m_pair.sort(); }
+
+private:
+	SymbolicTupleVariable m_pair;
+};
+
+/**
+ * Specialization of SymbolicVariable for Struct.
+ */
+class SymbolicStructVariable: public SymbolicVariable
+{
+public:
+	SymbolicStructVariable(
+		frontend::Type const* _type,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+
+	/// @returns the symbolic expression representing _member.
+	smtutil::Expression member(std::string const& _member) const;
+
+	/// @returns the symbolic expression representing this struct
+	/// with field _member updated.
+	smtutil::Expression assignMember(std::string const& _member, smtutil::Expression const& _memberValue);
+
+	/// @returns the symbolic expression representing this struct
+	/// with all fields updated with the given values.
+	smtutil::Expression assignAllMembers(std::vector<smtutil::Expression> const& _memberValues);
+
+private:
+	std::map<std::string, unsigned> m_memberIndices;
+};
+
+
 
 }

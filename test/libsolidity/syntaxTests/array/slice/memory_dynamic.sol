@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (70-76): Index range access is only supported for dynamic calldata arrays.
+// TypeError 1227: (70-76): Index range access is only supported for dynamic calldata arrays.

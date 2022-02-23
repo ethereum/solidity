@@ -14,15 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul interpreter module that evaluates EVM instructions.
  */
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 #include <vector>
 
@@ -64,13 +66,18 @@ struct InterpreterState;
 class EVMInstructionInterpreter
 {
 public:
-	explicit EVMInstructionInterpreter(InterpreterState& _state):
-		m_state(_state)
+	explicit EVMInstructionInterpreter(InterpreterState& _state, bool _disableMemWriteTrace):
+		m_state(_state),
+		m_disableMemoryWriteInstructions(_disableMemWriteTrace)
 	{}
 	/// Evaluate instruction
 	u256 eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
 	/// Evaluate builtin function
-	u256 evalBuiltin(BuiltinFunctionForEVM const& _fun, std::vector<u256> const& _arguments);
+	u256 evalBuiltin(
+		BuiltinFunctionForEVM const& _fun,
+		std::vector<Expression> const& _arguments,
+		std::vector<u256> const& _evaluatedArguments
+	);
 
 private:
 	/// Checks if the memory access is not too large for the interpreter and adjusts
@@ -87,12 +94,29 @@ private:
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryWord(u256 const& _offset, u256 const& _value);
 
-	void logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
+	void logTrace(
+		evmasm::Instruction _instruction,
+		std::vector<u256> const& _arguments = {},
+		bytes const& _data = {}
+	);
 	/// Appends a log to the trace representing an instruction or similar operation by string,
-	/// with arguments and auxiliary data (if nonempty).
-	void logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
+	/// with arguments and auxiliary data (if nonempty). Flag @param _writesToMemory indicates
+	/// whether the instruction writes to (true) or does not write to (false) memory.
+	void logTrace(
+		std::string const& _pseudoInstruction,
+		bool _writesToMemory,
+		std::vector<u256> const& _arguments = {},
+		bytes const& _data = {}
+	);
+	/// @returns disable trace flag.
+	bool memWriteTracingDisabled()
+	{
+		return m_disableMemoryWriteInstructions;
+	}
 
 	InterpreterState& m_state;
+	/// Flag to disable trace of instructions that write to memory.
+	bool m_disableMemoryWriteInstructions;
 };
 
 } // solidity::yul::test

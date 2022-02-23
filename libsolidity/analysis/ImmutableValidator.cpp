@@ -14,40 +14,44 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ImmutableValidator.h>
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 
 void ImmutableValidator::analyze()
 {
-	m_inConstructionContext = true;
+	m_inCreationContext = true;
 
-	auto linearizedContracts = m_currentContract.annotation().linearizedBaseContracts | boost::adaptors::reversed;
+	auto linearizedContracts = m_mostDerivedContract.annotation().linearizedBaseContracts | ranges::views::reverse;
 
 	for (ContractDefinition const* contract: linearizedContracts)
 		for (VariableDeclaration const* stateVar: contract->stateVariables())
 			if (stateVar->value())
-			{
 				stateVar->value()->accept(*this);
-				solAssert(m_initializedStateVariables.emplace(stateVar).second, "");
-			}
-
-	for (ContractDefinition const* contract: linearizedContracts)
-		if (contract->constructor())
-			visitCallableIfNew(*contract->constructor());
 
 	for (ContractDefinition const* contract: linearizedContracts)
 		for (std::shared_ptr<InheritanceSpecifier> const& inheritSpec: contract->baseContracts())
 			if (auto args = inheritSpec->arguments())
 				ASTNode::listAccept(*args, *this);
 
-	m_inConstructionContext = false;
+	for (ContractDefinition const* contract: linearizedContracts)
+	{
+		for (VariableDeclaration const* stateVar: contract->stateVariables())
+			if (stateVar->value())
+				m_initializedStateVariables.emplace(stateVar);
+
+		if (contract->constructor())
+			visitCallableIfNew(*contract->constructor());
+	}
+
+	m_inCreationContext = false;
 
 	for (ContractDefinition const* contract: linearizedContracts)
 	{
@@ -58,8 +62,17 @@ void ImmutableValidator::analyze()
 			visitCallableIfNew(*modDef);
 	}
 
-	checkAllVariablesInitialized(m_currentContract.location());
+	checkAllVariablesInitialized(m_mostDerivedContract.location());
 }
+
+bool ImmutableValidator::visit(Assignment const& _assignment)
+{
+	// Need to visit values first (rhs) as they might access other immutables.
+	_assignment.rightHandSide().accept(*this);
+	_assignment.leftHandSide().accept(*this);
+	return false;
+}
+
 
 bool ImmutableValidator::visit(FunctionDefinition const& _functionDefinition)
 {
@@ -119,10 +132,22 @@ bool ImmutableValidator::visit(WhileStatement const& _whileStatement)
 	return false;
 }
 
+void ImmutableValidator::endVisit(IdentifierPath const& _identifierPath)
+{
+	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifierPath.annotation().referencedDeclaration))
+		visitCallableIfNew(
+			*_identifierPath.annotation().requiredLookup == VirtualLookup::Virtual ?
+			callableDef->resolveVirtual(m_mostDerivedContract) :
+			*callableDef
+		);
+
+	solAssert(!dynamic_cast<VariableDeclaration const*>(_identifierPath.annotation().referencedDeclaration), "");
+}
+
 void ImmutableValidator::endVisit(Identifier const& _identifier)
 {
 	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))
-		visitCallableIfNew(callableDef->resolveVirtual(m_currentContract));
+		visitCallableIfNew(*_identifier.annotation().requiredLookup == VirtualLookup::Virtual ? callableDef->resolveVirtual(m_mostDerivedContract) : *callableDef);
 	if (auto const varDecl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 		analyseVariableReference(*varDecl, _identifier);
 }
@@ -135,15 +160,18 @@ void ImmutableValidator::endVisit(Return const& _return)
 
 bool ImmutableValidator::analyseCallable(CallableDeclaration const& _callableDeclaration)
 {
-	FunctionDefinition const* prevConstructor = m_currentConstructor;
-	m_currentConstructor = nullptr;
+	ScopedSaveAndRestore constructorGuard{m_currentConstructor, {}};
+	ScopedSaveAndRestore constructorContractGuard{m_currentConstructorContract, {}};
 
 	if (FunctionDefinition const* funcDef = dynamic_cast<decltype(funcDef)>(&_callableDeclaration))
 	{
 		ASTNode::listAccept(funcDef->modifiers(), *this);
 
 		if (funcDef->isConstructor())
+		{
+			m_currentConstructorContract = funcDef->annotation().contract;
 			m_currentConstructor = funcDef;
+		}
 
 		if (funcDef->isImplemented())
 			funcDef->body().accept(*this);
@@ -151,8 +179,6 @@ bool ImmutableValidator::analyseCallable(CallableDeclaration const& _callableDec
 	else if (ModifierDefinition const* modDef = dynamic_cast<decltype(modDef)>(&_callableDeclaration))
 		if (modDef->isImplemented())
 			modDef->body().accept(*this);
-
-	m_currentConstructor = prevConstructor;
 
 	return false;
 }
@@ -162,52 +188,74 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 	if (!_variableReference.isStateVariable() || !_variableReference.immutable())
 		return;
 
-	if (_expression.annotation().willBeWrittenTo && _expression.annotation().lValueOfOrdinaryAssignment)
+	// If this is not an ordinary assignment, we write and read at the same time.
+	bool write = _expression.annotation().willBeWrittenTo;
+	bool read = !_expression.annotation().willBeWrittenTo || !_expression.annotation().lValueOfOrdinaryAssignment;
+	if (write)
 	{
 		if (!m_currentConstructor)
 			m_errorReporter.typeError(
 				1581_error,
 				_expression.location(),
-				"Immutable variables can only be initialized inline or assigned directly in the constructor."
+				"Cannot write to immutable here: Immutable variables can only be initialized inline or assigned directly in the constructor."
 			);
 		else if (m_currentConstructor->annotation().contract->id() != _variableReference.annotation().contract->id())
 			m_errorReporter.typeError(
 				7484_error,
 				_expression.location(),
-				"Immutable variables must be initialized in the constructor of the contract they are defined in."
+				"Cannot write to immutable here: Immutable variables must be initialized in the constructor of the contract they are defined in."
 			);
 		else if (m_inLoop)
 			m_errorReporter.typeError(
 				6672_error,
 				_expression.location(),
-				"Immutable variables can only be initialized once, not in a while statement."
+				"Cannot write to immutable here: Immutable variables cannot be initialized inside a loop."
 			);
 		else if (m_inBranch)
 			m_errorReporter.typeError(
 				4599_error,
 				_expression.location(),
-				"Immutable variables must be initialized unconditionally, not in an if statement."
+				"Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement."
 			);
-
-		if (!m_initializedStateVariables.emplace(&_variableReference).second)
+		else if (m_initializedStateVariables.count(&_variableReference))
+		{
+			if (!read)
+				m_errorReporter.typeError(
+					1574_error,
+					_expression.location(),
+					"Immutable state variable already initialized."
+				);
+			else
+				m_errorReporter.typeError(
+					2718_error,
+					_expression.location(),
+					"Immutable variables cannot be modified after initialization."
+				);
+		}
+		else if (read)
 			m_errorReporter.typeError(
-				1574_error,
+				3969_error,
 				_expression.location(),
-				"Immutable state variable already initialized."
+				"Immutable variables must be initialized using an assignment."
 			);
+		m_initializedStateVariables.emplace(&_variableReference);
 	}
-	else if (m_inConstructionContext)
+	if (
+		read &&
+		m_inCreationContext &&
+		!m_initializedStateVariables.count(&_variableReference)
+	)
 		m_errorReporter.typeError(
 			7733_error,
 			_expression.location(),
-			"Immutable variables cannot be read during contract creation time, which means "
-			"they cannot be read in the constructor or any function or modifier called from it."
+			"Immutable variables cannot be read before they are initialized."
 		);
 }
 
 void ImmutableValidator::checkAllVariablesInitialized(solidity::langutil::SourceLocation const& _location)
 {
-	for (ContractDefinition const* contract: m_currentContract.annotation().linearizedBaseContracts)
+	for (ContractDefinition const* contract: m_mostDerivedContract.annotation().linearizedBaseContracts | ranges::views::reverse)
+	{
 		for (VariableDeclaration const* varDecl: contract->stateVariables())
 			if (varDecl->immutable())
 				if (!util::contains(m_initializedStateVariables, varDecl))
@@ -217,6 +265,11 @@ void ImmutableValidator::checkAllVariablesInitialized(solidity::langutil::Source
 						solidity::langutil::SecondarySourceLocation().append("Not initialized: ", varDecl->location()),
 						"Construction control flow ends without initializing all immutable state variables."
 					);
+
+		// Don't check further than the current c'tors contract
+		if (contract == m_currentConstructorContract)
+			break;
+	}
 }
 
 void ImmutableValidator::visitCallableIfNew(Declaration const& _declaration)

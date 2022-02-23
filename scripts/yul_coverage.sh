@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Bash script to determine the percantage of tests that are compilable via Yul.
+# Bash script to determine the percentage of tests that are compilable via Yul.
 #
 # Usage:
 #  ./yul_coverage.sh [--no-stats] [--successful] [--internal-compiler-errors]
@@ -30,7 +30,7 @@
 #
 # The documentation for solidity is hosted at:
 #
-#     https://solidity.readthedocs.org
+#     https://docs.soliditylang.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -83,7 +83,8 @@ for arg in "$@"; do
   esac
 done
 
-show_output_if() {
+function show_output_if
+{
   local VAR=${1}
   if [ -n "${VAR}" ]; then
     echo "${SOL_FILE}"
@@ -102,7 +103,8 @@ if [ ! -f "${SOLC}" ]; then
   exit 1
 fi
 
-test_file() {
+function test_file
+{
   local SOL_FILE
   local OUTPUT
   SOL_FILE=${1}

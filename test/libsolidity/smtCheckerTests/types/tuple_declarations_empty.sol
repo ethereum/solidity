@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function g() public pure {
@@ -7,3 +5,6 @@ contract C
 		assert(x == 2);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

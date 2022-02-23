@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 // Variable is not merged, if it is only read.
 contract C {
     function f(uint x) public pure {
@@ -11,3 +10,6 @@ contract C {
         assert(a == 3);
     }
 }
+// ====
+// SMTEngine: all
+// ----

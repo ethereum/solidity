@@ -1,6 +1,6 @@
 contract C {
     uint public i;
-    constructor() public {
+    constructor() {
         i = 2;
     }
 }
@@ -13,3 +13,4 @@ contract D {
 // compileViaYul: also
 // ----
 // f() -> 2
+// gas legacy: 101599

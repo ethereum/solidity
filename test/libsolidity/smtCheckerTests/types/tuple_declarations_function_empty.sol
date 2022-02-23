@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() internal pure returns (uint, bool, uint) {
@@ -13,5 +11,7 @@ contract C
 		assert(!b);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (224-234): Assertion violation happens here
+// Warning 6328: (191-201): CHC: Assertion violation happens here.\nCounterexample:\n\nb = true\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.f() -- internal call

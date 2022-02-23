@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (121-129): Expected ',' but got 'calldata'
+// ParserError 2314: (121-129): Expected ',' but got 'calldata'

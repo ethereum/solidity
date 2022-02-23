@@ -14,7 +14,7 @@
  */
 #pragma once
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -161,9 +161,9 @@ struct evmc_vm* evmc_load_and_configure(const char* config,
  * @return Error message or NULL if no additional information is available.
  *         The returned pointer MUST NOT be freed by the caller.
  */
-const char* evmc_last_error_msg();
+const char* evmc_last_error_msg(void);
 
-#if __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (115-116): Only direct number constants and references to such constants are supported by inline assembly.
+// TypeError 7615: (115-116): Only direct number constants and references to such constants are supported by inline assembly.

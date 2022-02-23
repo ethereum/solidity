@@ -11,4 +11,4 @@ contract C is A, B
 	function foo() internal override(A, B) {}
 }
 // ----
-// TypeError: (65-91): Trying to override non-virtual function. Did you forget to add "virtual"?
+// TypeError 4334: (65-91): Trying to override non-virtual function. Did you forget to add "virtual"?

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint _x) public pure returns (uint) {
@@ -15,5 +13,8 @@ contract D
 		assert(z == _y);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning: (191-206): Assertion violation happens here
+// Warning 6328: (158-173): CHC: Assertion violation happens here.

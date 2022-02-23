@@ -16,4 +16,4 @@ contract B is IJ
 }
 contract C is A, B {}
 // ----
-// TypeError: (229-250): Derived contract must override modifier "f". Two or more base classes define modifier with same name.
+// TypeError 6480: (229-250): Derived contract must override modifier "f". Two or more base classes define modifier with same name.

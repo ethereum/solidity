@@ -18,16 +18,16 @@ contract helper {
 contract test {
     helper h;
 
-    constructor() public payable {
+    constructor() payable {
         h = new helper();
     }
 
     function sendAmount(uint256 amount) public payable returns (uint256 bal) {
-        return h.getBalance.value(amount)();
+        return h.getBalance{value: amount}();
     }
 
     function outOfGas() public returns (bool ret) {
-        h.setFlag.gas(2)(); // should fail due to OOG
+        h.setFlag{gas: 2}(); // should fail due to OOG
         return true;
     }
 
@@ -37,8 +37,13 @@ contract test {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(), 20 wei ->
+// gas irOptimized: 285350
+// gas legacy: 402654
+// gas legacyOptimized: 274470
 // sendAmount(uint256): 5 -> 5
 // outOfGas() -> FAILURE # call to helper should not succeed but amount should be transferred anyway #
 // checkState() -> false, 15

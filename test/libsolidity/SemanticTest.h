@@ -30,6 +30,13 @@
 namespace solidity::frontend::test
 {
 
+struct AnnotatedEventSignature
+{
+	std::string signature;
+	std::vector<std::string> indexedTypes;
+	std::vector<std::string> nonIndexedTypes;
+};
+
 /**
  * Class that represents a semantic test (or end-to-end test) and allows running it as part of the
  * boost unit test environment or isoltest. It reads the Solidity source and an additional comment
@@ -40,9 +47,27 @@ class SemanticTest: public SolidityExecutionFramework, public EVMVersionRestrict
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _options)
-	{ return std::make_unique<SemanticTest>(_options.filename, _options.evmVersion, _options.enforceCompileViaYul); }
+	{
+		return std::make_unique<SemanticTest>(
+			_options.filename,
+			_options.evmVersion,
+			_options.vmPaths,
+			_options.enforceCompileViaYul,
+			_options.enforceCompileToEwasm,
+			_options.enforceGasCost,
+			_options.enforceGasCostMinValue
+		);
+	}
 
-	explicit SemanticTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _enforceViaYul = false);
+	explicit SemanticTest(
+		std::string const& _filename,
+		langutil::EVMVersion _evmVersion,
+		std::vector<boost::filesystem::path> const& _vmPaths,
+		bool _enforceViaYul = false,
+		bool _enforceCompileToEwasm = false,
+		bool _enforceGasCost = false,
+		u256 _enforceGasCostMinValue = 100000
+	);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 	void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool _formatted = false) const override;
@@ -60,15 +85,30 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
-	std::string m_source;
+	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun, bool _isEwasmRun);
+	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
+	std::map<std::string, Builtin> makeBuiltins();
+	std::vector<SideEffectHook> makeSideEffectHooks() const;
+	std::vector<std::string> eventSideEffectHook(FunctionCall const&) const;
+	std::optional<AnnotatedEventSignature> matchEvent(util::h256 const& hash) const;
+	static std::string formatEventParameter(std::optional<AnnotatedEventSignature> _signature, bool _indexed, size_t _index, bytes const& _data);
+	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
-	bool m_runWithYul = false;
-	bool m_runWithoutYul = true;
+	std::map<std::string, Builtin> const m_builtins;
+	std::vector<SideEffectHook> const m_sideEffectHooks;
+	bool m_testCaseWantsYulRun = false;
+	bool m_testCaseWantsEwasmRun = false;
+	bool m_testCaseWantsLegacyRun = true;
 	bool m_enforceViaYul = false;
+	bool m_enforceCompileToEwasm = false;
 	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
-	bool m_compileViaYulCanBeSet = false;
+	bool m_canEnableYulRun = false;
+	bool m_canEnableEwasmRun = false;
+	bool m_gasCostFailure = false;
+	bool m_enforceGasCost = false;
+	u256 m_enforceGasCostMinValue;
 };
 
 }

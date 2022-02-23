@@ -26,13 +26,13 @@ Différents bloc de coe assembleur ne partagent pas le même espace de noms, c'e
 Exemple
 -------
 
-L'exemple suivant fournit le code de bibliothèque pour accéder au code d'un autre contrat et le charger dans une variable ``bytes``. Ce n'est pas possible de base avec Solidity et l'idée est que les bibliothèques assembleur seront utilisées pour améliorer le langage Solidity.
+L'exemple suivant fournit le code de librairie pour accéder au code d'un autre contrat et le charger dans une variable ``bytes``. C'est possible de base avec Solidity en utilisant ``<address>.code`` mais l'idée est que les librairies assembleur peuvent améliorer le langage Solidity sans changer le compilateur.
 
-.. code::
+.. code-block:: solidity
 
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     library GetCode {
         function at(address _addr) public view returns (bytes memory o_code) {
@@ -53,10 +53,10 @@ L'exemple suivant fournit le code de bibliothèque pour accéder au code d'un au
 
 L'assembleur en ligne est également utile dans les cas où l'optimiseur ne parvient pas à produire un code efficace, par exemple :
 
-.. code::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     library VectorSum {
         // Cette fonction est moins efficace car l'optimiseur ne parvient
@@ -112,22 +112,63 @@ Access to External Variables, Functions and Libraries
 You can access Solidity variables and other identifiers by using their name.
 
 Local variables of value type are directly usable in inline assembly.
+They can both be read and assigned to.
 
-Local variables that refer to memory or calldata evaluate to the
-address of the variable in memory, resp. calldata, not the value itself.
+Local variables that refer to memory evaluate to the address of the variable in memory not the value itself.
+Such variables can also be assigned to, but note that an assignment will only change the pointer and not the data
+and that it is your responsibility to respect Solidity's memory management.
+See :ref:`Conventions in Solidity <conventions-in-solidity>`.
+
+Similarly, local variables that refer to statically-sized calldata arrays or calldata structs
+evaluate to the address of the variable in calldata, not the value itself.
+The variable can also be assigned a new offset, but note that no validation to ensure that
+the variable will not point beyond ``calldatasize()`` is performed.
+
+For external function pointers the address and the function selector can be
+accessed using ``x.address`` and ``x.selector``.
+The selector consists of four right-aligned bytes.
+Both values are can be assigned to. For example:
+
+.. code-block:: solidity
+    :force:
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.10 <0.9.0;
+
+    contract C {
+        // Assigns a new selector and address to the return variable @fun
+        function combineToFunctionPointer(address newAddress, uint newSelector) public pure returns (function() external fun) {
+            assembly {
+                fun.selector := newSelector
+                fun.address  := newAddress
+            }
+        }
+    }
+
+For dynamic calldata arrays, you can access
+their calldata offset (in bytes) and length (number of elements) using ``x.offset`` and ``x.length``.
+Both expressions can also be assigned to, but as for the static case, no validation will be performed
+to ensure that the resulting data area is within the bounds of ``calldatasize()``.
 
 For local storage variables or state variables, a single Yul identifier
 is not sufficient, since they do not necessarily occupy a single full storage slot.
 Therefore, their "address" is composed of a slot and a byte-offset
 inside that slot. To retrieve the slot pointed to by the variable ``x``, you
-use ``x_slot``, and to retrieve the byte-offset you use ``x_offset``.
+use ``x.slot``, and to retrieve the byte-offset you use ``x.offset``.
+Using ``x`` itself will result in an error.
+
+You can also assign to the ``.slot`` part of a local storage variable pointer.
+For these (structs, arrays or mappings), the ``.offset`` part is always zero.
+It is not possible to assign to the ``.slot`` or ``.offset`` part of a state variable,
+though.
 
 Local Solidity variables are available for assignments, for example:
 
-.. code::
+.. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     contract C {
         uint b;
@@ -135,14 +176,14 @@ Local Solidity variables are available for assignments, for example:
             assembly {
                 // We ignore the storage slot offset, we know it is zero
                 // in this special case.
-                r := mul(x, sload(b_slot))
+                r := mul(x, sload(b.slot))
             }
         }
     }
 
 .. warning::
     If you access variables of a type that spans less than 256 bits
-    (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
+    (for example ``uint64``, ``address``, or ``bytes16``),
     you cannot make any assumptions about bits not part of the
     encoding of the type. Especially, do not assume them to be zero.
     To be safe, always clear the data properly before you use it
@@ -152,23 +193,13 @@ Local Solidity variables are available for assignments, for example:
     ``assembly { signextend(<num_bytes_of_x_minus_one>, x) }``
 
 
-Since Solidity 0.6.0 the name of a inline assembly variable may not end in ``_offset`` or ``_slot``
-and it may not shadow any declaration visible in the scope of the inline assembly block
-(including variable, contract and function declarations). Similarly, if the name of a declared
-variable contains a dot ``.``, the prefix up to the ``.`` may not conflict with any
-declaration visible in the scope of the inline assembly block.
+Since Solidity 0.6.0 the name of a inline assembly variable may not
+shadow any declaration visible in the scope of the inline assembly block
+(including variable, contract and function declarations).
 
-
-Assignments are possible to assembly-local variables and to function-local
-variables. Take care that when you assign to variables that point to
-memory or storage, you will only change the pointer and not the data.
-
-You can assign to the ``_slot`` part of a local storage variable pointer.
-For these (structs, arrays or mappings), the ``_offset`` part is always zero.
-It is not possible to assign to the ``_slot`` or ``_offset`` part of a state variable,
-though.
-
-
+Since Solidity 0.7.0, variables and functions declared inside the
+inline assembly block may not contain ``.``, but using ``.`` is
+valid to access Solidity variables from outside the inline assembly block.
 
 Things to Avoid
 ---------------
@@ -179,6 +210,8 @@ rewriting rules and after that, the only thing the assembler does for you is re-
 functional-style opcodes, counting stack height for
 variable access and removing stack slots for assembly-local variables when the end
 of their block is reached.
+
+.. _conventions-in-solidity:
 
 Conventions in Solidity
 -----------------------
@@ -198,7 +231,9 @@ starting from where this pointer points at and update it.
 There is no guarantee that the memory has not been used before and thus
 you cannot assume that its contents are zero bytes.
 There is no built-in mechanism to release or free allocated memory.
-Here is an assembly snippet you can use for allocating memory that follows the process outlined above::
+Here is an assembly snippet you can use for allocating memory that follows the process outlined above
+
+.. code-block:: yul
 
     function allocate(length) -> pos {
       pos := mload(0x40)
@@ -213,7 +248,7 @@ This means that the allocatable memory starts at ``0x80``, which is the initial 
 of the free memory pointer.
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this is
-even true for ``byte[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
+even true for ``bytes1[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
 arrays are pointers to memory arrays. The length of a dynamic array is stored at the
 first slot of the array and followed by the array elements.
 

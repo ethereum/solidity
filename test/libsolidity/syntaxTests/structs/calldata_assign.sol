@@ -1,7 +1,7 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract Test {
     struct S { int a; }
     function f(S calldata s) external { s.a = 4; }
 }
 // ----
-// TypeError: (114-117): Calldata structs are read-only.
+// TypeError 4156: (114-117): Calldata structs are read-only.

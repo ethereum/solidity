@@ -3,4 +3,4 @@ contract C {
     uint[L] ids;
 }
 // ----
-// TypeError: (51-52): Array with fractional length specified.
+// TypeError 5462: (51-52): Invalid array length, expected integer literal or constant expression.

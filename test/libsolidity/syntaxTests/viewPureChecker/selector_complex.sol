@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (228-232): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (228-232): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".

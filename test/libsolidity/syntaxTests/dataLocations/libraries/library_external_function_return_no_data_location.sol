@@ -6,7 +6,7 @@ library L {
     function j() external pure returns (mapping(uint => uint)) {}
 }
 // ----
-// TypeError: (77-84): Data location must be "storage" or "memory" for return parameter in function, but none was given.
-// TypeError: (129-135): Data location must be "storage" or "memory" for return parameter in function, but none was given.
-// TypeError: (180-181): Data location must be "storage" or "memory" for return parameter in function, but none was given.
-// TypeError: (226-247): Data location must be "storage" or "memory" for return parameter in function, but none was given.
+// TypeError 6651: (77-84): Data location must be "storage", "memory" or "calldata" for return parameter in function, but none was given.
+// TypeError 6651: (129-135): Data location must be "storage", "memory" or "calldata" for return parameter in function, but none was given.
+// TypeError 6651: (180-181): Data location must be "storage", "memory" or "calldata" for return parameter in function, but none was given.
+// TypeError 6651: (226-247): Data location must be "storage", "memory" or "calldata" for return parameter in function, but none was given.

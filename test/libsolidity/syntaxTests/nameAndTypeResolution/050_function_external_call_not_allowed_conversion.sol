@@ -7,4 +7,4 @@ contract Test {
     function g (C c) external {}
 }
 // ----
-// TypeError: (103-106): Invalid type for argument in function call. Invalid implicit conversion from address to contract C requested.
+// TypeError 9553: (103-106): Invalid type for argument in function call. Invalid implicit conversion from address to contract C requested.

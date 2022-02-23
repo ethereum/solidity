@@ -6,6 +6,7 @@
 #include <evmc/evmc.hpp>
 #include <algorithm>
 #include <string>
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -23,12 +24,20 @@ struct storage_value
     /// True means this value has been modified already by the current transaction.
     bool dirty{false};
 
+    /// Is the storage key cold or warm.
+    evmc_access_status access_status{EVMC_ACCESS_COLD};
+
     /// Default constructor.
     storage_value() noexcept = default;
 
     /// Constructor.
     storage_value(const bytes32& _value, bool _dirty = false) noexcept  // NOLINT
       : value{_value}, dirty{_dirty}
+    {}
+
+    /// Constructor with initial access status.
+    storage_value(const bytes32& _value, evmc_access_status _access_status) noexcept
+      : value{_value}, access_status{_access_status}
     {}
 };
 
@@ -48,7 +57,7 @@ struct MockedAccount
     uint256be balance;
 
     /// The account storage map.
-    std::unordered_map<bytes32, storage_value> storage;
+    std::map<bytes32, storage_value> storage;
 
     /// Helper method for setting balance by numeric type.
     void set_balance(uint64_t x) noexcept
@@ -83,7 +92,7 @@ public:
     };
 
     /// SELFDESTRUCT record.
-    struct selfdestuct_record
+    struct selfdestruct_record
     {
         /// The address of the account which has self-destructed.
         address selfdestructed;
@@ -92,7 +101,7 @@ public:
         address beneficiary;
 
         /// Equal operator.
-        bool operator==(const selfdestuct_record& other) const noexcept
+        bool operator==(const selfdestruct_record& other) const noexcept
         {
             return selfdestructed == other.selfdestructed && beneficiary == other.beneficiary;
         }
@@ -131,13 +140,12 @@ public:
     std::vector<log_record> recorded_logs;
 
     /// The record of all SELFDESTRUCTs from the selfdestruct() method.
-    std::vector<selfdestuct_record> recorded_selfdestructs;
+    std::vector<selfdestruct_record> recorded_selfdestructs;
 
 private:
     /// The copy of call inputs for the recorded_calls record.
     std::vector<bytes> m_recorded_calls_inputs;
 
-public:
     /// Record an account access.
     /// @param addr  The address of the accessed account.
     void record_account_access(const address& addr) const
@@ -149,6 +157,7 @@ public:
             recorded_account_accesses.emplace_back(addr);
     }
 
+public:
     /// Returns true if an account exists (EVMC Host method).
     bool account_exists(const address& addr) const noexcept override
     {
@@ -311,6 +320,60 @@ public:
                   size_t topics_count) noexcept override
     {
         recorded_logs.push_back({addr, {data, data_size}, {topics, topics + topics_count}});
+    }
+
+    /// Record an account access.
+    ///
+    /// This method is required by EIP-2929 introduced in ::EVMC_BERLIN. It will record the account
+    /// access in MockedHost::recorded_account_accesses and return previous access status.
+    /// This methods returns ::EVMC_ACCESS_WARM for known addresses of precompiles.
+    /// The EIP-2929 specifies that evmc_message::sender and evmc_message::destination are always
+    /// ::EVMC_ACCESS_WARM. Therefore, you should init the MockedHost with:
+    ///
+    ///     mocked_host.access_account(msg.sender);
+    ///     mocked_host.access_account(msg.destination);
+    ///
+    /// The same way you can mock transaction access list (EIP-2930) for account addresses.
+    ///
+    /// @param addr  The address of the accessed account.
+    /// @returns     The ::EVMC_ACCESS_WARM if the account has been accessed before,
+    ///              the ::EVMC_ACCESS_COLD otherwise.
+    evmc_access_status access_account(const address& addr) noexcept override
+    {
+        // Check if the address have been already accessed.
+        const auto already_accessed =
+            std::find(recorded_account_accesses.begin(), recorded_account_accesses.end(), addr) !=
+            recorded_account_accesses.end();
+
+        record_account_access(addr);
+
+        // Accessing precompiled contracts is always warm.
+        if (addr >= 0x0000000000000000000000000000000000000001_address &&
+            addr <= 0x0000000000000000000000000000000000000009_address)
+            return EVMC_ACCESS_WARM;
+
+        return already_accessed ? EVMC_ACCESS_WARM : EVMC_ACCESS_COLD;
+    }
+
+    /// Access the account's storage value at the given key.
+    ///
+    /// This method is required by EIP-2929 introduced in ::EVMC_BERLIN. In records that the given
+    /// account's storage key has been access and returns the previous access status.
+    /// To mock storage access list (EIP-2930), you can pre-init account's storage values with
+    /// the ::EVMC_ACCESS_WARM flag:
+    ///
+    ///     mocked_host.accounts[msg.destination].storage[key] = {value, EVMC_ACCESS_WARM};
+    ///
+    /// @param addr  The account address.
+    /// @param key   The account's storage key.
+    /// @return      The ::EVMC_ACCESS_WARM if the storage key has been accessed before,
+    ///              the ::EVMC_ACCESS_COLD otherwise.
+    evmc_access_status access_storage(const address& addr, const bytes32& key) noexcept override
+    {
+        auto& value = accounts[addr].storage[key];
+        const auto access_status = value.access_status;
+        value.access_status = EVMC_ACCESS_WARM;
+        return access_status;
     }
 };
 }  // namespace evmc

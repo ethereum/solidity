@@ -3,4 +3,4 @@ contract A {
     function f(uint[] memory) internal pure {}
 }
 // ----
-// DeclarationError: (17-61): Function with same name and arguments defined twice.
+// DeclarationError 1686: (17-61): Function with same name and parameter types defined twice.

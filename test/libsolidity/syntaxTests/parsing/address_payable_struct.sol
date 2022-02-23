@@ -6,3 +6,4 @@ contract C {
         mapping(uint => address payable[]) d;
     }
 }
+// ----

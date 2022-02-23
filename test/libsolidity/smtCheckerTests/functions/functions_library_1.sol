@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library L
 {
 	function add(uint x, uint y) internal pure returns (uint) {
@@ -16,5 +14,6 @@ contract C
 		assert(y < 10000);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (228-229): Assertion checker does not yet implement type type(library L)

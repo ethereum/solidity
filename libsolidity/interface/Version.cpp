@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -22,11 +23,7 @@
 
 #include <libsolidity/interface/Version.h>
 
-#include <liblangutil/Exceptions.h>
-#include <libsolutil/CommonData.h>
-#include <libsolutil/Common.h>
 #include <solidity/BuildInfo.h>
-#include <string>
 
 using namespace std;
 

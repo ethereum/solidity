@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * EVM execution host, i.e. component that implements a simulated Ethereum blockchain
  * for testing purposes.
@@ -36,19 +37,22 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace evmc::literals;
 
+using StorageMap = std::map<evmc::bytes32, evmc::storage_value>;
+
 evmc::VM& EVMHost::getVM(string const& _path)
 {
-	static evmc::VM theVM;
-	if (!theVM && !_path.empty())
+	static evmc::VM NullVM{nullptr};
+	static map<string, unique_ptr<evmc::VM>> vms;
+	if (vms.count(_path) == 0)
 	{
 		evmc_loader_error_code errorCode = {};
 		auto vm = evmc::VM{evmc_load_and_configure(_path.c_str(), &errorCode)};
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
-			if (vm.get_capabilities() & EVMC_CAPABILITY_EVM1)
-				theVM = std::move(vm);
+			if (vm.get_capabilities() & (EVMC_CAPABILITY_EVM1 | EVMC_CAPABILITY_EWASM))
+				vms[_path] = make_unique<evmc::VM>(evmc::VM(move(vm)));
 			else
-				cerr << "VM loaded does not support EVM1" << endl;
+				cerr << "VM loaded neither supports EVM1 nor EWASM" << endl;
 		}
 		else
 		{
@@ -58,7 +62,38 @@ evmc::VM& EVMHost::getVM(string const& _path)
 			cerr << endl;
 		}
 	}
-	return theVM;
+
+	if (vms.count(_path) > 0)
+		return *vms[_path];
+
+	return NullVM;
+}
+
+std::tuple<bool, bool> EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
+{
+	bool evmVmFound = false;
+	bool ewasmVmFound = false;
+	for (auto const& path: _vmPaths)
+	{
+		evmc::VM& vm = EVMHost::getVM(path.string());
+		if (!vm)
+			continue;
+
+		if (vm.has_capability(EVMC_CAPABILITY_EVM1))
+		{
+			if (evmVmFound)
+				BOOST_THROW_EXCEPTION(runtime_error("Multiple evm1 evmc vms defined. Please only define one evm1 evmc vm."));
+			evmVmFound = true;
+		}
+
+		if (vm.has_capability(EVMC_CAPABILITY_EWASM))
+		{
+			if (ewasmVmFound)
+				BOOST_THROW_EXCEPTION(runtime_error("Multiple ewasm evmc vms where defined. Please only define one ewasm evmc vm."));
+			ewasmVmFound = true;
+		}
+	}
+	return {evmVmFound, ewasmVmFound};
 }
 
 EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
@@ -87,8 +122,38 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
 		m_evmRevision = EVMC_BERLIN;
+	else if (_evmVersion == langutil::EVMVersion::london())
+		m_evmRevision = EVMC_LONDON;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
+
+	tx_context.block_difficulty = evmc::uint256be{200000000};
+	tx_context.block_gas_limit = 20000000;
+	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
+	tx_context.tx_gas_price = evmc::uint256be{3000000000};
+	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
+	// Mainnet according to EIP-155
+	tx_context.chain_id = evmc::uint256be{1};
+	// The minimum value of basefee
+	tx_context.block_base_fee = evmc::bytes32{7};
+
+	// Reserve space for recording calls.
+	if (!recorded_calls.capacity())
+		recorded_calls.reserve(max_recorded_calls);
+
+	reset();
+}
+
+void EVMHost::reset()
+{
+	accounts.clear();
+	m_currentAddress = {};
+	// Clear self destruct records
+	recorded_selfdestructs.clear();
+	// Clear call records
+	recorded_calls.clear();
+	// Clear EIP-2929 account access indicator
+	recorded_account_accesses.clear();
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
@@ -98,31 +163,51 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	// roughly 22 days before the update went live.
 	for (unsigned precompiledAddress = 1; precompiledAddress <= 8; precompiledAddress++)
 	{
-		evmc::address address{};
-		address.bytes[19] = precompiledAddress;
+		evmc::address address{precompiledAddress};
 		// 1wei
 		accounts[address].balance = evmc::uint256be{1};
+		// Set according to EIP-1052.
+		if (precompiledAddress < 5 || m_evmVersion >= langutil::EVMVersion::byzantium())
+			accounts[address].codehash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470_bytes32;
 	}
+}
 
-	tx_context.block_difficulty = evmc::uint256be{200000000};
-	tx_context.block_gas_limit = 20000000;
-	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
-	tx_context.tx_gas_price = evmc::uint256be{3000000000};
-	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
-	// Mainnet according to EIP-155
-	tx_context.chain_id = evmc::uint256be{1};
+void EVMHost::resetWarmAccess()
+{
+	// Clear EIP-2929 account access indicator
+	recorded_account_accesses.clear();
+	// Clear EIP-2929 storage access indicator
+	for (auto& [address, account]: accounts)
+		for (auto& [slot, value]: account.storage)
+			value.access_status = EVMC_ACCESS_COLD;
+}
+
+void EVMHost::transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept
+{
+	assertThrow(u256(convertFromEVMC(_sender.balance)) >= _value, Exception, "Insufficient balance for transfer");
+	_sender.balance = convertToEVMC(u256(convertFromEVMC(_sender.balance)) - _value);
+	_recipient.balance = convertToEVMC(u256(convertFromEVMC(_recipient.balance)) + _value);
 }
 
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	evmc::uint256be balance = accounts[_addr].balance;
+
+	transfer(accounts[_addr], accounts[_beneficiary], convertFromEVMC(accounts[_addr].balance));
 	accounts.erase(_addr);
-	accounts[_beneficiary].balance = balance;
+	// Record self destructs
+	recorded_selfdestructs.push_back({_addr, _beneficiary});
+}
+
+void EVMHost::recordCalls(evmc_message const& _message) noexcept
+{
+	if (recorded_calls.size() < max_recorded_calls)
+		recorded_calls.emplace_back(_message);
 }
 
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
 {
+	recordCalls(_message);
 	if (_message.destination == 0x0000000000000000000000000000000000000001_address)
 		return precompileECRecover(_message);
 	else if (_message.destination == 0x0000000000000000000000000000000000000002_address)
@@ -166,7 +251,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	{
 		// TODO this is not the right formula
 		// TODO is the nonce incremented on failure, too?
-		Address createAddress(keccak256(
+		h160 createAddress(keccak256(
 			bytes(begin(message.sender.bytes), end(message.sender.bytes)) +
 			asBytes(to_string(sender.nonce++))
 		));
@@ -175,7 +260,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	}
 	else if (message.kind == EVMC_CREATE2)
 	{
-		Address createAddress(keccak256(
+		h160 createAddress(keccak256(
 			bytes(1, 0xff) +
 			bytes(begin(message.sender.bytes), end(message.sender.bytes)) +
 			bytes(begin(message.create2_salt.bytes), end(message.create2_salt.bytes)) +
@@ -195,12 +280,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
-	else if (message.kind == EVMC_DELEGATECALL)
-	{
-		code = accounts[message.destination].code;
-		message.destination = m_currentAddress;
-	}
-	else if (message.kind == EVMC_CALLCODE)
+	else if (message.kind == EVMC_DELEGATECALL || message.kind == EVMC_CALLCODE)
 	{
 		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
@@ -212,10 +292,24 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
-		sender.balance = convertToEVMC(u256(convertFromEVMC(sender.balance)) - value);
-		destination.balance = convertToEVMC(u256(convertFromEVMC(destination.balance)) + value);
+		if (value > convertFromEVMC(sender.balance))
+		{
+			evmc::result result({});
+			result.status_code = EVMC_INSUFFICIENT_BALANCE;
+			accounts = stateBackup;
+			return result;
+		}
+		transfer(sender, destination, value);
 	}
 
+	// Populate the access access list.
+	// Note, this will also properly touch the created address.
+	// TODO: support a user supplied access list too
+	if (m_evmRevision >= EVMC_BERLIN)
+	{
+		access_account(message.sender);
+		access_account(message.destination);
+	}
 	evmc::address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
 	evmc::result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
@@ -223,7 +317,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
 	{
-		result.gas_left -= evmasm::GasCosts::createDataGas * result.output_size;
+		result.gas_left -= static_cast<int64_t>(evmasm::GasCosts::createDataGas * result.output_size);
 		if (result.gas_left < 0)
 		{
 			result.gas_left = 0;
@@ -249,15 +343,15 @@ evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept
 	return convertToEVMC(u256("0x3737373737373737373737373737373737373737373737373737373737373737") + _number);
 }
 
-Address EVMHost::convertFromEVMC(evmc::address const& _addr)
+h160 EVMHost::convertFromEVMC(evmc::address const& _addr)
 {
-	return Address(bytes(begin(_addr.bytes), end(_addr.bytes)));
+	return h160(bytes(begin(_addr.bytes), end(_addr.bytes)));
 }
 
-evmc::address EVMHost::convertToEVMC(Address const& _addr)
+evmc::address EVMHost::convertToEVMC(h160 const& _addr)
 {
 	evmc::address a;
-	for (size_t i = 0; i < 20; ++i)
+	for (unsigned i = 0; i < 20; ++i)
 		a.bytes[i] = _addr[i];
 	return a;
 }
@@ -270,7 +364,7 @@ h256 EVMHost::convertFromEVMC(evmc::bytes32 const& _data)
 evmc::bytes32 EVMHost::convertToEVMC(h256 const& _data)
 {
 	evmc::bytes32 d;
-	for (size_t i = 0; i < 32; ++i)
+	for (unsigned i = 0; i < 32; ++i)
 		d.bytes[i] = _data[i];
 	return d;
 }
@@ -710,4 +804,80 @@ evmc::result EVMHost::resultWithGas(
 	result.output_data = _data.data();
 	result.output_size = _data.size();
 	return result;
+}
+
+StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
+{
+	assertThrow(account_exists(_addr), Exception, "Account does not exist.");
+	return accounts[_addr].storage;
+}
+
+string EVMHostPrinter::state()
+{
+	// Print state and execution trace.
+	if (m_host.account_exists(m_account))
+	{
+		storage();
+		balance();
+	}
+	else
+		selfdestructRecords();
+
+	callRecords();
+	return m_stateStream.str();
+}
+
+void EVMHostPrinter::storage()
+{
+	for (auto const& [slot, value]: m_host.get_address_storage(m_account))
+		if (m_host.get_storage(m_account, slot))
+			m_stateStream << "  "
+				<< m_host.convertFromEVMC(slot)
+				<< ": "
+				<< m_host.convertFromEVMC(value.value)
+				<< endl;
+}
+
+void EVMHostPrinter::balance()
+{
+	m_stateStream << "BALANCE "
+		<< m_host.convertFromEVMC(m_host.get_balance(m_account))
+		<< endl;
+}
+
+void EVMHostPrinter::selfdestructRecords()
+{
+	for (auto const& record: m_host.recorded_selfdestructs)
+		m_stateStream << "SELFDESTRUCT"
+			<< " BENEFICIARY "
+			<< m_host.convertFromEVMC(record.beneficiary)
+			<< endl;
+}
+
+void EVMHostPrinter::callRecords()
+{
+	static auto constexpr callKind = [](evmc_call_kind _kind) -> string
+	{
+		switch (_kind)
+		{
+			case evmc_call_kind::EVMC_CALL:
+				return "CALL";
+			case evmc_call_kind::EVMC_DELEGATECALL:
+				return "DELEGATECALL";
+			case evmc_call_kind::EVMC_CALLCODE:
+				return "CALLCODE";
+			case evmc_call_kind::EVMC_CREATE:
+				return "CREATE";
+			case evmc_call_kind::EVMC_CREATE2:
+				return "CREATE2";
+			default:
+				assertThrow(false, Exception, "Invalid call kind.");
+		}
+	};
+
+	for (auto const& record: m_host.recorded_calls)
+		m_stateStream << callKind(record.kind)
+			<< " VALUE "
+			<< m_host.convertFromEVMC(record.value)
+			<< endl;
 }

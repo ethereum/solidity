@@ -45,20 +45,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2014
- * Solidity scanner.
+ * Character stream / input file.
  */
 
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
 
 namespace solidity::langutil
 {
+
+struct SourceLocation;
+struct LineColumn;
 
 /**
  * Bidirectional stream of characters.
@@ -69,10 +71,10 @@ class CharStream
 {
 public:
 	CharStream() = default;
-	explicit CharStream(std::string  _source, std::string  name):
-		m_source(std::move(_source)), m_name(std::move(name)) {}
+	CharStream(std::string _source, std::string _name):
+		m_source(std::move(_source)), m_name(std::move(_name)) {}
 
-	int position() const { return m_position; }
+	size_t position() const { return m_position; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
 
 	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
@@ -90,13 +92,48 @@ public:
 	std::string const& source() const noexcept { return m_source; }
 	std::string const& name() const noexcept { return m_name; }
 
+	size_t size() const { return m_source.size(); }
+
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
 	std::string lineAtPosition(int _position) const;
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
+	LineColumn translatePositionToLineColumn(int _position) const;
 	///@}
+
+	/// Translates a line:column to the absolute position.
+	std::optional<int> translateLineColumnToPosition(LineColumn const& _lineColumn) const;
+
+	/// Translates a line:column to the absolute position for the given input text.
+	static std::optional<int> translateLineColumnToPosition(std::string const& _text, LineColumn const& _input);
+
+	/// Tests whether or not given octet sequence is present at the current position in stream.
+	/// @returns true if the sequence could be found, false otherwise.
+	bool prefixMatch(std::string_view _sequence)
+	{
+		if (isPastEndOfInput(_sequence.size()))
+			return false;
+
+		for (size_t i = 0; i < _sequence.size(); ++i)
+			if (_sequence[i] != get(i))
+				return false;
+
+		return true;
+	}
+
+	/// @returns the substring of the source that the source location references.
+	/// Returns an empty string view if the source location does not `hasText()`.
+	std::string_view text(SourceLocation const& _location) const;
+
+	/// @returns the first line of the referenced source fragment. If the fragment is longer than
+	/// one line, appends an ellipsis to indicate that.
+	std::string singleLineSnippet(SourceLocation const& _location) const
+	{
+		return singleLineSnippet(m_source, _location);
+	}
+
+	static std::string singleLineSnippet(std::string const& _sourceCode, SourceLocation const& _location);
 
 private:
 	std::string m_source;

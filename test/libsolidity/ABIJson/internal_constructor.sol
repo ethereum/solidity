@@ -1,7 +1,7 @@
 // bug #8712
-contract B {
+abstract contract B {
     uint immutable x;
-    constructor(function() internal returns(uint) fp) internal {
+    constructor(function() internal returns(uint) fp) {
         x = fp(); }
 }
 // ----

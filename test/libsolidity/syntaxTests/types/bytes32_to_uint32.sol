@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (75-94): Explicit type conversion not allowed from "bytes32" to "uint32".
+// TypeError 9640: (75-94): Explicit type conversion not allowed from "bytes32" to "uint32".

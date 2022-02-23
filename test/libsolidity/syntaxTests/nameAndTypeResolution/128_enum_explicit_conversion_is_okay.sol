@@ -1,6 +1,6 @@
 contract test {
     enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-    constructor() public {
+    constructor() {
         a = uint256(ActionChoices.GoStraight);
         b = uint64(ActionChoices.Sit);
     }

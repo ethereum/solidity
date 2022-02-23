@@ -8,5 +8,5 @@
 // ====
 // dialect: evmTyped
 // ----
-// TypeError: (51-52): Assigning a value of type "u256" to a variable of type "bool".
-// TypeError: (62-63): Assigning a value of type "bool" to a variable of type "u256".
+// TypeError 9547: (51-52): Assigning a value of type "u256" to a variable of type "bool".
+// TypeError 9547: (62-63): Assigning a value of type "bool" to a variable of type "u256".

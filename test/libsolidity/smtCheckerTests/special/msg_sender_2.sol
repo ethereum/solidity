@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public view {
@@ -9,5 +7,6 @@ contract C
 		assert(a == b);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning: (98-108): Type conversion is not yet fully supported and might yield false positives.

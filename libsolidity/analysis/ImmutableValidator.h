@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -27,8 +28,9 @@ namespace solidity::frontend
 
 /**
  * Validates access and initialization of immutable variables:
- * must be directly initialized in their respective c'tor
- * can not be read by any function/modifier called by the c'tor (or the c'tor itself)
+ * must be directly initialized in their respective c'tor or inline
+ * cannot be read before being initialized
+ * cannot be read when initializing state variables inline
  * must be initialized outside loops (only one initialization)
  * must be initialized outside ifs (must be initialized unconditionally)
  * must be initialized exactly once (no multiple statements)
@@ -40,18 +42,20 @@ class ImmutableValidator: private ASTConstVisitor
 
 public:
 	ImmutableValidator(langutil::ErrorReporter& _errorReporter, ContractDefinition const& _contractDefinition):
-		m_currentContract(_contractDefinition),
+		m_mostDerivedContract(_contractDefinition),
 		m_errorReporter(_errorReporter)
 	{ }
 
 	void analyze();
 
 private:
+	bool visit(Assignment const& _assignment);
 	bool visit(FunctionDefinition const& _functionDefinition);
 	bool visit(ModifierDefinition const& _modifierDefinition);
 	bool visit(MemberAccess const& _memberAccess);
 	bool visit(IfStatement const& _ifStatement);
 	bool visit(WhileStatement const& _whileStatement);
+	void endVisit(IdentifierPath const& _identifierPath);
 	void endVisit(Identifier const& _identifier);
 	void endVisit(Return const& _return);
 
@@ -62,7 +66,7 @@ private:
 
 	void visitCallableIfNew(Declaration const& _declaration);
 
-	ContractDefinition const& m_currentContract;
+	ContractDefinition const& m_mostDerivedContract;
 
 	CallableDeclarationSet m_visitedCallables;
 
@@ -70,9 +74,10 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentConstructor = nullptr;
+	ContractDefinition const* m_currentConstructorContract = nullptr;
 	bool m_inLoop = false;
 	bool m_inBranch = false;
-	bool m_inConstructionContext = false;
+	bool m_inCreationContext = true;
 };
 
 }
