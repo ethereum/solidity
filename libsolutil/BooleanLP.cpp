@@ -86,7 +86,7 @@ void BooleanLPSolver::pop()
 
 void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	// Internal variables are '$<number>', or '$c<numeber>' so escape `$` to `$$`.
+	// Internal variables are '$<number>', or '$c<number>' so escape `$` to `$$`.
 	string name = (_name.empty() || _name.at(0) != '$') ? _name : "$$" + _name;
 	// TODO This will not be an integer variable in our model.
 	// Introduce a new kind?
@@ -244,7 +244,7 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	}
 	else
 	{
-		//cout << "==============> CDCL final result: SATisfiable / UNKNON." << endl;
+		//cout << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
 		// TODO should be "unknown" later on
 		return {CheckResult::SATISFIABLE, {}};
 	}
