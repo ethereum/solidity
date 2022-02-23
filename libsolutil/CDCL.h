@@ -33,9 +33,10 @@ namespace solidity::util
  */
 struct Literal
 {
+	// TODO do we need to init them?
 	bool positive;
 	// Either points to a boolean variable or to a constraint.
-	size_t variable{0};
+	size_t variable;
 
 	Literal operator~() const { return Literal{!positive, variable}; }
 	bool operator==(Literal const& _other) const

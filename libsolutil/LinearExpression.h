@@ -55,6 +55,14 @@ public:
 		return result;
 	}
 
+	static LinearExpression constant(rational _factor)
+	{
+		LinearExpression result;
+		result.resize(1);
+		result[0] = std::move(_factor);
+		return result;
+	}
+
 	rational const& get(size_t _index) const
 	{
 		static rational const zero;
