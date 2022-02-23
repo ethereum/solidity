@@ -69,7 +69,6 @@ string toString(rational const& _x)
 void BooleanLPSolver::reset()
 {
 	m_state = vector<State>{{State{}}};
-	// TODO retain an instance of the LP solver, it should keep its cache!
 }
 
 void BooleanLPSolver::push()
@@ -196,11 +195,12 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	// should we compress them and store a mapping?
 	// Is it even a problem if the indices overlap?
 	for (auto&& [name, index]: state().variables)
-		if (state().isBooleanVariable.at(index))
+		if (state().isBooleanVariable.at(index) || isConditionalConstraint(index))
 			resizeAndSet(booleanVariables, index, name);
 		else
 			resizeAndSet(lpState.variableNames, index, name);
 
+	cout << "Boolean variables:" << joinHumanReadable(booleanVariables) << endl;
 	cout << "Running LP solver on fixed constraints." << endl;
 	if (m_lpSolver.check(lpState).first == LPResult::Infeasible)
 		return {CheckResult::UNSATISFIABLE, {}};
@@ -210,9 +210,8 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		SolvingState lpStateToCheck = lpState;
 		for (auto&& [constraintIndex, value]: _booleanAssignment)
 		{
-			if (!state().conditionalConstraints.count(constraintIndex))
+			if (!value || !state().conditionalConstraints.count(constraintIndex))
 				continue;
-			// assert that value is true?
 			// "reason" is already stored for those constraints.
 			Constraint const& constraint = state().conditionalConstraints.at(constraintIndex);
 			solAssert(
@@ -239,9 +238,16 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 
 	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver}.solve();
 	if (!optionalModel)
+	{
+		cout << "==============> CDCL final result: unsatisfiable." << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
+	}
 	else
-		return {CheckResult::UNKNOWN, {}};
+	{
+		cout << "==============> CDCL final result: SATisfiable / UNKNON." << endl;
+		// TODO should be "unknown" later on
+		return {CheckResult::SATISFIABLE, {}};
+	}
 }
 
 string BooleanLPSolver::toString() const
@@ -335,6 +341,7 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 		Constraint negated = c;
 		negated.data *= -1;
 		negated.data[0] -= 1;
+		negated.reasons.clear();
 		return Literal{true, addConditionalConstraint(negated)};
 	}
 	else
