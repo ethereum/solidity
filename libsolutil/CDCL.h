@@ -48,7 +48,68 @@ struct Literal
 		return std::make_tuple(positive, variable) < std::make_tuple(_other.positive, _other.variable);
 	}
 };
-using Clause = std::vector<Literal>;
+
+struct Clause {
+	const Literal& front() const
+	{
+		return lits.front();
+	}
+	const Literal& back() const
+	{
+		return lits.back();
+	}
+	Literal& front()
+	{
+		return lits.front();
+	}
+	Literal& back()
+	{
+		return lits.back();
+	}
+	const Literal& operator[](const size_t at) const
+	{
+		return lits.at(at);
+	}
+	const Literal& at(const size_t at) const
+	{
+		return lits.at(at);
+	}
+	Literal& operator[](const size_t at)
+	{
+		return lits.at(at);
+	}
+	Literal& at(const size_t at)
+	{
+		return lits.at(at);
+	}
+	auto size() const
+	{
+		return lits.size();
+	}
+	auto empty() const
+	{
+		return lits.empty();
+	}
+	auto begin() {
+		return lits.begin();
+	}
+	auto end() {
+		return lits.end();
+	}
+	auto begin() const {
+		return lits.begin();
+	}
+	auto end() const {
+		return lits.end();
+	}
+	void push_back(const Literal& l)
+	{
+		lits.push_back(l);
+	}
+
+	std::vector<Literal> lits;
+	uint64_t ID;
+};
 
 class CDCL
 {
@@ -56,7 +117,8 @@ public:
 	using Model = std::map<size_t, bool>;
 	CDCL(
 		std::vector<std::string> _variables,
-		std::vector<Clause> const& _clauses,
+		std::vector<std::vector<Literal>> const& _clauses,
+	    std::ostream* proof = nullptr,
 		std::function<std::optional<Clause>(std::map<size_t, bool> const&)> _theoryPropagator = {}
 	);
 
@@ -68,7 +130,7 @@ private:
 	std::pair<Clause, size_t> analyze(Clause _conflictClause);
 	size_t currentDecisionLevel() const { return m_decisionPoints.size(); }
 
-	void addClause(Clause _clause);
+	void addClause(const std::vector<Literal>& _lits);
 
 	void enqueue(Literal const& _literal, Clause const* _reason);
 
@@ -83,6 +145,8 @@ private:
 
 	std::string toString(Literal const& _literal) const;
 	std::string toString(Clause const& _clause) const;
+	std::string toProofString(Literal const& _literal) const;
+	std::string toProofString(Clause const& _clause) const;
 
 	/// Callback that receives an assignment and uses the theory to either returns nullopt ("satisfiable")
 	/// or a conflict clause, i.e. a clauses that is false in the theory with the given assignments.
@@ -116,6 +180,13 @@ private:
 
 	// Current state of the solver. If FALSE, we are in an UNSAT state.
 	bool ok = true;
+
+	// Proof log
+	std::ostream* proof = nullptr;
+	uint64_t clauseID = 1;
+	std::map<Literal, uint64_t> unit_cl_IDs;
+	uint64_t unsat_clause_ID = 0;
+	void write_final_proof_clauses();
 };
 
 

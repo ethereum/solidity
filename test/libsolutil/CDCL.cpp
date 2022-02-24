@@ -37,13 +37,13 @@ public:
 		return Literal{true, m_variables.size() - 1};
 	}
 
-	void satisfiable(vector<Clause> _clauses)
+	void satisfiable(vector<vector<Literal>> _clauses)
 	{
 		auto model = CDCL{m_variables, move(_clauses)}.solve();
 		BOOST_REQUIRE(!!model);
 	}
 
-	void unsatisfiable(vector<Clause> _clauses)
+	void unsatisfiable(vector<vector<Literal>> _clauses)
 	{
 		auto model = CDCL{m_variables, move(_clauses)}.solve();
 		BOOST_REQUIRE(!model);
@@ -60,7 +60,7 @@ BOOST_FIXTURE_TEST_SUITE(CDCL, CDCLTestFramework, *boost::unit_test::label("noop
 BOOST_AUTO_TEST_CASE(basic)
 {
 	auto x = variable("x");
-	Clause c1{x, ~x};
+	vector<Literal> c1{x, ~x};
 	satisfiable({c1});
 }
 
@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(basic_unsat2)
 {
 	auto x1 = variable("x1");
 	auto x2 = variable("x2");
-	Clause c1{x1, ~x2};
-	Clause c2{~x1, x2};
-	Clause c3{x1, x2};
-	Clause c4{~x1, ~x2};
+	vector<Literal> c1{x1, ~x2};
+	vector<Literal> c2{~x1, x2};
+	vector<Literal> c3{x1, x2};
+	vector<Literal> c4{~x1, ~x2};
 	unsatisfiable({c1, c2, c3, c4});
 }
 
