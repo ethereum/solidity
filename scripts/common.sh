@@ -180,7 +180,7 @@ function diff_values
     shift
     shift
 
-    diff --color=auto --unified=0 <(echo "$value1") <(echo "$value2") "$@"
+    diff --unified=0 <(echo "$value1") <(echo "$value2") "$@"
 }
 
 function safe_kill
