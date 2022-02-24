@@ -119,14 +119,7 @@ optional<CDCL::Model> CDCL::solve()
 void CDCL::setupWatches(Clause& _clause)
 {
 	assert(_clause.size() >= 2);
-
-	// NOTE: the 2nd literal is always unassigned.
-	// The 1st literal can be assigned ONLY in case we are attaching a learnt clause.
-	assert(!isAssigned(_clause[1]));
-	assert(!isAssigned(_clause[0]) || isAssignedTrue(_clause[0]));
-
-
-	for (size_t i = 0; i < min<size_t>(2, _clause.size()); i++)
+	for (size_t i = 0; i < 2; i++)
 		m_watches[_clause.at(i)].push_back(&_clause);
 }
 
