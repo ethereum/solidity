@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(basic_unsat2)
 	unsatisfiable({c1, c2, c3, c4});
 }
 
-BOOST_AUTO_TEST_CASE(basic_sat)
+BOOST_AUTO_TEST_CASE(basic_unsat3)
 {
 	auto x1 = variable("x1");
 	auto x2 = variable("x2");

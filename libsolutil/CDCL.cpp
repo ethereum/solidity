@@ -45,6 +45,10 @@ CDCL::CDCL(
 
 optional<CDCL::Model> CDCL::solve()
 {
+	if (!ok) {
+		return nullopt;
+	}
+
 	cout << "====" << endl;
 	for (unique_ptr<Clause> const& c: m_clauses)
 		cout << toString(*c) << endl;
@@ -72,8 +76,13 @@ optional<CDCL::Model> CDCL::solve()
 			for (size_t i = 1; i < learntClause.size(); i++)
 				solAssert(isAssignedFalse(learntClause.at(i)));
 
-			addClause(move(learntClause));
-			enqueue(m_clauses.back()->front(), &(*m_clauses.back()));
+			if (learntClause.size() == 1) {
+				assert(currentDecisionLevel() == 0);
+				enqueue(learntClause[0], nullptr);
+			} else {
+				addClause(move(learntClause));
+				enqueue(m_clauses.back()->front(), &(*m_clauses.back()));
+			}
 		}
 		else
 		{
@@ -96,6 +105,14 @@ optional<CDCL::Model> CDCL::solve()
 
 void CDCL::setupWatches(Clause& _clause)
 {
+	assert(_clause.size() >= 2);
+
+	// NOTE: the 2nd literal is always unassigned.
+	// The 1st literal can be assigned ONLY in case we are attaching a learnt clause.
+	assert(!isAssigned(_clause[1]));
+	assert(!isAssigned(_clause[0]) || isAssignedTrue(_clause[0]));
+
+
 	for (size_t i = 0; i < min<size_t>(2, _clause.size()); i++)
 		m_watches[_clause.at(i)].push_back(&_clause);
 }
@@ -115,13 +132,14 @@ optional<Clause> CDCL::propagate()
 		for (; it != end; ++it)
 		{
 			Clause& clause = **it;
+			assert(clause.size() >= 2);
 			cout << " watch clause: " << toString(clause) << endl;
 
 			solAssert(!clause.empty());
 			if (clause.front() != falseLiteral)
 				swap(clause[0], clause[1]);
 			solAssert(clause.front() == falseLiteral);
-			if (clause.size() >= 2 && isAssignedTrue(clause[1]))
+			if (isAssignedTrue(clause[1]))
 			{
 				// Clause is already satisfied, keezp the watch.
 				cout << " -> already satisfied by " << toString(clause[1]) << endl;
@@ -143,12 +161,9 @@ optional<Clause> CDCL::propagate()
 
 			// We did not find a new watch, i.e. all literals starting from index 2
 			// are false, thus clause[1] has to be true (if it exists)
-			if (clause.size() == 1 || isAssignedFalse(clause[1]))
+			if (isAssignedFalse(clause[1]))
 			{
-				if (clause.size() >= 2)
-					cout << " - Propagate resulted in conflict because " << toString(clause[1]) << " is also false." << endl;
-				else
-					cout << " - Propagate resulted in conflict since clause is single-literal." << endl;
+				cout << " - Propagate resulted in conflict because " << toString(clause[1]) << " is also false." << endl;
 				// Copy over the remaining watches and replace.
 				while (it != end) watchReplacement.emplace_back(move(*it++));
 				m_watches[falseLiteral] = move(watchReplacement);
@@ -232,6 +247,36 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 
 void CDCL::addClause(Clause _clause)
 {
+	if (!ok) {
+		return;
+	}
+
+	vector<Literal> lits;
+	for (const auto& l: _clause.lits) {
+		if (isAssignedTrue(l)) {
+			// Clause is satisfied, nothing to do.
+			return;
+		}
+		if (isAssignedFalse(l)) {
+			// Remove literal from clause.
+			continue;
+		}
+		lits.push_back(l);
+	}
+
+	// Empty clause, set UNSAT and return.
+	if (lits.size() == 0) {
+		*proof << clauseID++ << "0\n";
+		ok = false;
+		return;
+	}
+
+	// Unit clause, enqueue fact.
+	if (lits.size() == 1) {
+		enqueue(lits[0], nullptr);
+		return;
+	}
+	_clause = lits;
 	m_clauses.push_back(make_unique<Clause>(move(_clause)));
 	setupWatches(*m_clauses.back());
 }
@@ -241,7 +286,8 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 	cout << "Enqueueing " << toString(_literal) << " @" << currentDecisionLevel() << endl;
 	if (_reason)
 		cout << "  because of " << toString(*_reason) << endl;
-	// TODO assert that assignmnets was unknown
+
+	assert(!isAssigned(_literal));
 	m_assignments[_literal.variable] = _literal.positive;
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason)

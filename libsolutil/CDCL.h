@@ -113,6 +113,9 @@ private:
 	std::vector<size_t> m_decisionPoints;
 	/// Index into assignmentTrail: All assignments starting there have not yet been propagated.
 	size_t m_assignmentQueuePointer = 0;
+
+	// Current state of the solver. If FALSE, we are in an UNSAT state.
+	bool ok = true;
 };
 
 
