@@ -26,7 +26,11 @@
  - [ ] Click the `PUBLISH RELEASE` button on the release page, creating the tag.
  - [ ] Wait for the CI runs on the tag itself.
 
-### Download Binaries
+### Upload Release Artifacts
+ - [ ] Switch to the tag that archives have to be created for.
+ - [ ] Create the ``prerelease.txt`` file: (``echo -n > prerelease.txt``).
+ - [ ] Run ``scripts/create_source_tarball.sh`` while being on the tag to create the source tarball. This will create the tarball in a directory called ``upload``.
+ - [ ] Take the tarball from the upload directory (its name should be ``solidity_x.x.x.tar.gz``, otherwise ``prerelease.txt`` was missing in the step before) and upload the source tarball to the release page.
  - [ ] Take the ``solc.exe`` binary from the ``b_win_release`` run of the released commit in circle-ci and add it to the release page as ``solc-windows.exe``.
  - [ ] Take the ``solc`` binary from the ``b_osx`` run of the released commit in circle-ci and add it to the release page as ``solc-macos``.
  - [ ] Take the ``solc`` binary from the ``b_ubu_static`` run of the released commit in circle-ci and add it to the release page as ``solc-static-linux``.
