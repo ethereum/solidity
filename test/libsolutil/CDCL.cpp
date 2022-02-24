@@ -85,10 +85,10 @@ BOOST_AUTO_TEST_CASE(basic_unsat3)
 {
 	auto x1 = variable("x1");
 	auto x2 = variable("x2");
-	Clause c1{x1, ~x2};
-	Clause c2{~x1, x2};
-	Clause c3{x1, x2};
-	Clause c4{~x1, ~x2};
+	vector<Literal> c1{x1, ~x2};
+	vector<Literal> c2{~x1, x2};
+	vector<Literal> c3{x1, x2};
+	vector<Literal> c4{~x1, ~x2};
 	unsatisfiable({c1, c2, c3, c4});
 }
 
@@ -104,14 +104,14 @@ BOOST_AUTO_TEST_CASE(learning)
 	auto x10 = variable("x10");
 	auto x11 = variable("x11");
 	auto x12 = variable("x12");
-	Clause c1{x1, x4};
-	Clause c2{x1, ~x3, ~x8};
-	Clause c3{x1, x8, x12};
-	Clause c4{x2, x11};
-	Clause c5{~x7, ~x3, x9};
-	Clause c6{~x7, x8, ~x9};
-	Clause c7{x7, x8, ~x10};
-	Clause c8{x7, x10, ~x12};
+	vector<Literal> c1{x1, x4};
+	vector<Literal> c2{x1, ~x3, ~x8};
+	vector<Literal> c3{x1, x8, x12};
+	vector<Literal> c4{x2, x11};
+	vector<Literal> c5{~x7, ~x3, x9};
+	vector<Literal> c6{~x7, x8, ~x9};
+	vector<Literal> c7{x7, x8, ~x10};
+	vector<Literal> c8{x7, x10, ~x12};
 	satisfiable({c1, c2, c3, c4, c5, c6, c7, c8});
 }
 
