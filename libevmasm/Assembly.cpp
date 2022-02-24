@@ -347,6 +347,7 @@ AssemblyItem Assembly::loadItemFromJSON(Json::Value const& _json)
 		{
 			if (!value.empty())
 				data = u256(value);
+			updateUsedTags(data);
 			result = {AssemblyItemType::Tag, data, location};
 		}
 		else if (name == "PUSH data")
