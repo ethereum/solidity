@@ -1051,6 +1051,20 @@ jobs:
   t_ubu_release_cli: &t_ubu_release_cli
     <<: *t_ubu_cli
 
+  t_ubu_locale:
+    <<: *base_ubuntu2004_small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install all locales
+          command: |
+            apt update --assume-yes
+            apt install locales-all --assume-yes --no-install-recommends
+      - run: test/localeTest.sh build/solc/solc
+      - gitter_notify_failure_unless_pr
+
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
     <<: *base_ubuntu2004_small
@@ -1435,6 +1449,7 @@ workflows:
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu2004
+      - t_ubu_locale: *workflow_ubuntu2004
       - t_ubu_soltest_all: *workflow_ubuntu2004
       - t_ubu_soltest_enforce_yul: *workflow_ubuntu2004
       - b_ubu_clang: *workflow_trigger_on_tags
