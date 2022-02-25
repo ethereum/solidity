@@ -11,7 +11,7 @@ Compiler Features:
 
 Bugfixes:
  * Yul IR Code Generation: Optimize embedded creation code with correct settings. This fixes potential mismatches between the constructor code of a contract compiled in isolation and the bytecode in ``type(C).creationCode``, resp. the bytecode used for ``new C(...)``.
-
+ * Fix internal error for locales with unusual capitalization rules. Locale set in the environment is now completely ignored.
 
 ### 0.8.12 (2022-02-16)
 
