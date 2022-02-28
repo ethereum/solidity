@@ -32,7 +32,7 @@ parts:
     override-build: |
       if git describe --exact-match --tags 2> /dev/null
       then
-        echo -n > ../src/prerelease.txt
+        rm cmake/prerelease.lock
       fi
       snapcraftctl build
     after: [z3, cvc4]

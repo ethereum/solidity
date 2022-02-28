@@ -35,6 +35,9 @@ endif()
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
+option(SOL_FORCE_RELEASE "Build a release binary" OFF)
+option(SOL_VERSION_PRERELEASE, "String specifies the version of the pre-release")
+set(SOL_RELEASE_VERSION "" CACHE STRING "Extra pre-release information to be included in the version string. By default it's the name of the main branch and the date of the last commit in it. Must be empty when doing a release build." "")
 
 # Setup cccache.
 include(EthCcache)

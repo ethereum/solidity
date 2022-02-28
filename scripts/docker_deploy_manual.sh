@@ -23,9 +23,7 @@ echo -n "$commithash" > commit_hash.txt
 version=$("$(dirname "$0")/get_version.sh")
 if [ "$branch" = "release" ] || [ "$branch" = v"$version" ]
 then
-    echo -n > prerelease.txt
-else
-    date -u +"nightly.%Y.%-m.%-d" > prerelease.txt
+    rm cmake/prerelease.lock
 fi
 
 function tag_and_push

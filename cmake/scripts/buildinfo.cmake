@@ -19,39 +19,47 @@ if (NOT ETH_BUILD_PLATFORM)
 	set(ETH_BUILD_PLATFORM "unknown")
 endif()
 
-# Logic here: If prerelease.txt exists but is empty, it is a non-pre release.
-# If it does not exist, create our own prerelease string
+
 if (EXISTS ${ETH_SOURCE_DIR}/prerelease.txt)
-	file(READ ${ETH_SOURCE_DIR}/prerelease.txt SOL_VERSION_PRERELEASE)
-	string(STRIP "${SOL_VERSION_PRERELEASE}" SOL_VERSION_PRERELEASE)
-else()
+	message(FATAL_ERROR "The usage of the file prerelease.txt is no longer supported. Please use SOL_RELEASE_VERSION option if you want to build a release executable or SOL_PRERELEASE_STRING if you want to adjust the pre-release part of the version string.")
+endif()
+
+if (SOL_RELEASE_VERSION)
+	if (SOL_VERSION_PRERELEASE)
+		message(FATAL_ERROR "SOL_VERSION_PRERELEASE is set but SOL_RELEASE_VERSION is set. This is not allowed.")
+	endif()
+elseif(SOL_PRERELEASE_STRING)
+	set(SOL_VERSION_PRERELEASE "${SOL_PRERELEASE_STRING}")
+elseif(EXISTS ${ETH_SOURCE_DIR}/cmake/prerelease.lock)
 	string(TIMESTAMP SOL_VERSION_PRERELEASE "develop.%Y.%m.%d" UTC)
 	string(REPLACE .0 . SOL_VERSION_PRERELEASE "${SOL_VERSION_PRERELEASE}")
+else()
+	set(SOL_VERSION_PRERELEASE, "")
 endif()
 
 if (EXISTS ${ETH_SOURCE_DIR}/commit_hash.txt)
 	file(READ ${ETH_SOURCE_DIR}/commit_hash.txt SOL_COMMIT_HASH)
 	string(STRIP ${SOL_COMMIT_HASH} SOL_COMMIT_HASH)
-else()
-	execute_process(
-		COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} rev-parse --short=8 HEAD
-		OUTPUT_VARIABLE SOL_COMMIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
-	)
-	execute_process(
-		COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} diff HEAD --shortstat
-		OUTPUT_VARIABLE SOL_LOCAL_CHANGES OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
-	)
-endif()
-
-if (SOL_COMMIT_HASH)
+	if (SOL_COMMIT_HASH STREQUAL "$Format:%H$")
+		execute_process(
+			COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} rev-parse --short=8 HEAD
+			OUTPUT_VARIABLE SOL_COMMIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
+		)
+		execute_process(
+			COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} diff HEAD --shortstat
+			OUTPUT_VARIABLE SOL_LOCAL_CHANGES OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
+		)
+	endif()
 	string(STRIP ${SOL_COMMIT_HASH} SOL_COMMIT_HASH)
 	string(SUBSTRING ${SOL_COMMIT_HASH} 0 8 SOL_COMMIT_HASH)
 endif()
 
 if (NOT SOL_COMMIT_HASH)
 	message(FATAL_ERROR "Unable to determine commit hash. Either compile from within git repository or "
+		"supply an option called SOL_COMMIT_HASH or"
 		"supply a file called commit_hash.txt")
 endif()
+
 if (NOT SOL_COMMIT_HASH MATCHES [a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9])
     message(FATAL_ERROR "Malformed commit hash \"${SOL_COMMIT_HASH}\". It has to consist of exactly 8 hex digits.")
 endif()

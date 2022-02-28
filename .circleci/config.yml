@@ -89,7 +89,7 @@ defaults:
   - setup_prerelease_commit_hash: &setup_prerelease_commit_hash
       name: Store commit hash and prerelease
       command: |
-        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then rm cmake/prerelease.lock; fi
         echo -n "$CIRCLE_SHA1" > commit_hash.txt
 
   - run_build: &run_build

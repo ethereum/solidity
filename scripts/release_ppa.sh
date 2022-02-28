@@ -118,10 +118,11 @@ commithash=$(git rev-parse --short=8 HEAD)
 commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 
 echo "$commithash" > commit_hash.txt
+
 if is_release
 then
     debversion="$version"
-    echo -n > prerelease.txt # proper release
+    rm cmake/prerelease.lock # proper release
 else
     debversion="$version~develop-$commitdate-$commithash"
 fi

@@ -10,14 +10,15 @@ else
     BUILD_TYPE="$1"
 fi
 
-if [[ "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]; then
-	touch "${ROOTDIR}/prerelease.txt"
-fi
-
 mkdir -p "${BUILDDIR}"
 cd "${BUILDDIR}"
 
-cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${@:2}"
+if [[ "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]; then
+	cmake .. -DSOL_FORCE_RELEASE=On -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${@:2}"
+else
+	cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${@:2}"
+fi
+
 make -j2
 
 if [[ "${CI}" == "" ]]; then

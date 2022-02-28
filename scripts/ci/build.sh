@@ -7,13 +7,14 @@ cd "${ROOTDIR}"
 # shellcheck disable=SC2166
 if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" -o -n "$FORCE_RELEASE" ]
 then
-    echo -n "" >prerelease.txt
-else
-    # Use last commit date rather than build date to avoid ending up with builds for
-    # different platforms having different version strings (and therefore producing different bytecode)
-    # if the CI is triggered just before midnight.
-    TZ=UTC git show --quiet --date="format-local:%Y.%-m.%-d" --format="ci.%cd" >prerelease.txt
+    rm cmake/prerelease.lock
 fi
+# else
+#     # Use last commit date rather than build date to avoid ending up with builds for
+#     # different platforms having different version strings (and therefore producing different bytecode)
+#     # if the CI is triggered just before midnight.
+#     TZ=UTC git show --quiet --date="format-local:%Y.%-m.%-d" --format="ci.%cd" >cmake/prerelease.lock
+# fi
 
 if [ -n "$CIRCLE_SHA1" ]
 then

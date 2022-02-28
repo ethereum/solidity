@@ -1,0 +1,3 @@
+When this file is present, an executable that identifies as a pre-release is built by default.
+If you want a release build instead, add `SOL_FORCE_RELEASE=On` to your `cmake` command to override the default.
+If you want to customize the pre-release part in the version string, you can do it via the `SOL_PRERELEASE_STRING` CMake option.

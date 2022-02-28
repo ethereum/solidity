@@ -5,6 +5,7 @@
 # This script is expected to be run inside the docker image trzeci/emscripten:sdk-tag-1.39.3-64bit and
 # be called by ./rebuild_tags.sh.
 
+# FIXME: This prerelease.txt mechanism is supported only by versions up to 0.8.13.
 echo "========== STAGE 1: PREPARE ========== ($(date))"
 COMMIT_DATE="$(git show -s --format=%cI HEAD)"
 git rev-parse --short=8 HEAD >commit_hash.txt

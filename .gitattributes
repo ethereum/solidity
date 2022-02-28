@@ -1,1 +1,3 @@
 *.sol linguist-language=Solidity
+cmake/prerelease.lock export-ignore
+/commit_hash.txt export-subst
