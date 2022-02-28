@@ -72,7 +72,7 @@ optional<CDCL::Model> CDCL::solve()
 				ok = false;
 				if (proof) {
 					unsat_clause_ID = clauseID++;
-					*proof << "a " << unsat_clause_ID << "0\n";
+					*proof << "a " << unsat_clause_ID << " 0\n";
 					write_final_proof_clauses();
 				}
 				return nullopt;
@@ -80,7 +80,7 @@ optional<CDCL::Model> CDCL::solve()
 			auto&& [learntClause, backtrackLevel] = analyze(move(*conflictClause));
 			cancelUntil(backtrackLevel);
 			if (proof) {
-				*proof << "a " << learntClause.ID << toProofString(learntClause) << "0\n";
+				*proof << "a " << learntClause.ID << " " << toProofString(learntClause) << " 0\n";
 			}
 			solAssert(!learntClause.empty());
 			solAssert(!isAssigned(learntClause.front()));
@@ -260,7 +260,7 @@ void CDCL::addClause(const vector<Literal>& _lits)
 
 	Clause _clause {_lits, clauseID++};
 	if (proof) {
-		*proof <<  "o " << _clause.ID << toProofString(_clause) + string("0\n");
+		*proof <<  "o " << _clause.ID << " " << toProofString(_clause) << " 0\n";
 	}
 
 	Clause _clause_updated;
@@ -278,14 +278,14 @@ void CDCL::addClause(const vector<Literal>& _lits)
 	}
 
 	if (proof) {
-		*proof << "a " << _clause_updated.ID << toProofString(_clause_updated) << "0\n";
-		*proof << "d " << _clause.ID << toProofString(_clause) << "0\n";
+		*proof << "a " << _clause_updated.ID << " " << toProofString(_clause_updated) << " 0\n";
+		*proof << "d " << _clause.ID << " " << toProofString(_clause) << " 0\n";
 	}
 
 	// Empty clause, set UNSAT and return.
 	if (_clause_updated.lits.size() == 0) {
 		unsat_clause_ID = clauseID++;
-		*proof << "a " << unsat_clause_ID << "0\n";
+		*proof << "a " << unsat_clause_ID << " 0\n";
 		write_final_proof_clauses();
 		ok = false;
 		return;
@@ -381,7 +381,7 @@ string CDCL::toString(Literal const& _literal) const
 
 string CDCL::toProofString(Literal const& _literal) const
 {
-	return (_literal.positive ? "" : "-") + m_variables.at(_literal.variable);
+	return (_literal.positive ? "" : "-") + std::to_string(_literal.variable+1);
 }
 
 string CDCL::toString(Clause const& _clause) const
@@ -406,11 +406,11 @@ void CDCL::write_final_proof_clauses()
 	assert(unsat_clause_ID != 0);
 
 	for(const auto& cl: m_clauses) {
-		*proof << "f " << cl->ID << toProofString(*cl) << "0\n";
+		*proof << "f " << cl->ID << " " << toProofString(*cl) << " 0\n";
 	}
 	for(const auto& units: unit_cl_IDs) {
-		*proof << "f " << units.second << toProofString(units.first) << "0\n";
+		*proof << "f " << units.second << " " << toProofString(units.first) << " 0\n";
 	}
-	*proof << "f " << unsat_clause_ID << "0\n";
+	*proof << "f " << unsat_clause_ID << " 0\n";
 }
 
