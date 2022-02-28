@@ -54,16 +54,9 @@ typedef std::vector<Literal> Clause;
 
 class TriState {
 public:
-	TriState(const bool b)
-	{
-		if (b)
-			val = 1;
-		else
-			val = 0;
-	}
+	TriState(const bool b) : val(b ? 1 : 0) {}
 
-	TriState()
-	{}
+	TriState() {}
 
 	bool operator==(const TriState& other) const
 	{
