@@ -126,7 +126,7 @@ the ``sum`` function iterates over to sum all the values.
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.8 <0.9.0;
+    pragma solidity ^0.8.8;
 
     struct IndexValue { uint keyIndex; uint value; }
     struct KeyFlag { uint key; bool deleted; }
@@ -136,6 +136,8 @@ the ``sum`` function iterates over to sum all the values.
         KeyFlag[] keys;
         uint size;
     }
+
+    type Iterator is uint;
 
     library IterableMapping {
         function insert(itmap storage self, uint key, uint value) internal returns (bool replaced) {
@@ -166,24 +168,28 @@ the ``sum`` function iterates over to sum all the values.
             return self.data[key].keyIndex > 0;
         }
 
-        function iterateStart(itmap storage self) internal view returns (uint keyIndex) {
-            return iterateNext(self, type(uint).max);
+        function iterateStart(itmap storage self) internal view returns (Iterator) {
+            return iteratorSkipDeleted(self, 0);
         }
 
-        function iterateValid(itmap storage self, uint keyIndex) internal view returns (bool) {
-            return keyIndex < self.keys.length;
+        function iterateValid(itmap storage self, Iterator iterator) internal view returns (bool) {
+            return Iterator.unwrap(iterator) < self.keys.length;
         }
 
-        function iterateNext(itmap storage self, uint keyIndex) internal view returns (uint r_keyIndex) {
-            keyIndex++;
-            while (keyIndex < self.keys.length && self.keys[keyIndex].deleted)
-                keyIndex++;
-            return keyIndex;
+        function iterateNext(itmap storage self, Iterator iterator) internal view returns (Iterator) {
+            return iteratorSkipDeleted(self, Iterator.unwrap(iterator) + 1);
         }
 
-        function iterateGet(itmap storage self, uint keyIndex) internal view returns (uint key, uint value) {
+        function iterateGet(itmap storage self, Iterator iterator) internal view returns (uint key, uint value) {
+            uint keyIndex = Iterator.unwrap(iterator);
             key = self.keys[keyIndex].key;
             value = self.data[key].value;
+        }
+
+        function iteratorSkipDeleted(itmap storage self, uint keyIndex) private view returns (Iterator) {
+            while (keyIndex < self.keys.length && self.keys[keyIndex].deleted)
+                keyIndex++;
+            return Iterator.wrap(keyIndex);
         }
     }
 
@@ -206,7 +212,7 @@ the ``sum`` function iterates over to sum all the values.
         // Computes the sum of all stored data.
         function sum() public view returns (uint s) {
             for (
-                uint i = data.iterateStart();
+                Iterator i = data.iterateStart();
                 data.iterateValid(i);
                 i = data.iterateNext(i)
             ) {
