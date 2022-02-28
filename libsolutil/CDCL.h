@@ -103,7 +103,7 @@ public:
 
 private:
 	// Default value is UNSET
-	char val = 2;
+	uint8_t val = 2;
 };
 
 const TriState trisate_true = TriState(true);
