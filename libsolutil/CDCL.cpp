@@ -385,4 +385,3 @@ void CDCL::write_final_proof_clauses()
 	}
 	*proof << "f " << unsat_clause_ID << " 0\n";
 }
-
