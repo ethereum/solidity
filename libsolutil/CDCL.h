@@ -50,67 +50,7 @@ struct Literal
 	}
 };
 
-struct Clause {
-	const Literal& front() const
-	{
-		return lits.front();
-	}
-	const Literal& back() const
-	{
-		return lits.back();
-	}
-	Literal& front()
-	{
-		return lits.front();
-	}
-	Literal& back()
-	{
-		return lits.back();
-	}
-	const Literal& operator[](const size_t at) const
-	{
-		return lits.at(at);
-	}
-	const Literal& at(const size_t at) const
-	{
-		return lits.at(at);
-	}
-	Literal& operator[](const size_t at)
-	{
-		return lits.at(at);
-	}
-	Literal& at(const size_t at)
-	{
-		return lits.at(at);
-	}
-	auto size() const
-	{
-		return lits.size();
-	}
-	auto empty() const
-	{
-		return lits.empty();
-	}
-	auto begin() {
-		return lits.begin();
-	}
-	auto end() {
-		return lits.end();
-	}
-	auto begin() const {
-		return lits.begin();
-	}
-	auto end() const {
-		return lits.end();
-	}
-	void push_back(const Literal& l)
-	{
-		lits.push_back(l);
-	}
-
-	std::vector<Literal> lits;
-	uint64_t ID;
-};
+typedef std::vector<Literal> Clause;
 
 class TriState {
 public:
@@ -247,6 +187,7 @@ private:
 	std::map<Literal, uint64_t> unit_cl_IDs;
 	uint64_t unsat_clause_ID = 0;
 	void writeFinalProofClauses();
+	std::vector<uint64_t> clause_IDs;
 };
 
 inline bool CDCL::isAssigned(Literal const& _literal) const
