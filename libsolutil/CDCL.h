@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <cassert>
 
 namespace solidity::util
 {
@@ -111,15 +112,46 @@ struct Clause {
 	uint64_t ID;
 };
 
+enum class TriState {trisate_true, tristate_false, tristate_unset};
+TriState boolToTriState(const bool b);
+inline std::string triStateToString(const TriState v);
+inline std::string triStateToString(const TriState v)
+{
+	if (v == TriState::trisate_true) {
+		return "true";
+	} else if (v == TriState::tristate_false) {
+		return "false";
+	} else {
+		return "unset";
+	}
+}
+inline TriState boolToTriState(const bool b) {
+	if (b) {
+		return TriState::trisate_true;
+	} else {
+		return TriState::tristate_false;
+	}
+}
+
+inline bool triStateToBool(const TriState t) {
+	if (t == TriState::trisate_true) {
+		return true;
+	} else if (t == TriState::tristate_false) {
+		return false;
+	} else {
+		assert(false && "UNSET cannot be converted to bool");
+	}
+}
+
 class CDCL
 {
 public:
-	using Model = std::map<size_t, bool>;
+	using Model = std::vector<TriState>;
 	CDCL(
 		std::vector<std::string> _variables,
 		std::vector<std::vector<Literal>> const& _clauses,
 	    std::ostream* proof = nullptr,
-		std::function<std::optional<Clause>(std::map<size_t, bool> const&)> _theoryPropagator = {}
+		std::function<std::optional<Clause>(std::vector<TriState> const&)> _theoryPropagator = {}
 	);
 
 	std::optional<Model> solve();
@@ -138,10 +170,10 @@ private:
 
 	std::optional<size_t> nextDecisionVariable() const;
 
-	bool isAssigned(Literal const& _literal) const;
-	bool isAssignedTrue(Literal const& _literal) const;
-	bool isAssignedFalse(Literal const& _literal) const;
-	bool isUnknownOrAssignedTrue(Literal const& _literal) const;
+	inline bool isAssigned(Literal const& _literal) const;
+	inline bool isAssignedTrue(Literal const& _literal) const;
+	inline bool isAssignedFalse(Literal const& _literal) const;
+	inline bool isUnknownOrAssignedTrue(Literal const& _literal) const;
 
 	std::string toString(Literal const& _literal) const;
 	std::string toString(Clause const& _clause) const;
@@ -150,7 +182,7 @@ private:
 
 	/// Callback that receives an assignment and uses the theory to either returns nullopt ("satisfiable")
 	/// or a conflict clause, i.e. a clauses that is false in the theory with the given assignments.
-	std::function<std::optional<Clause>(std::map<size_t, bool>)> m_theorySolver;
+	std::function<std::optional<Clause>(std::vector<TriState>)> m_theorySolver;
 
 	std::vector<std::string> m_variables;
 	/// includes the learnt clauses
@@ -165,7 +197,7 @@ private:
 	std::map<Literal, std::vector<Clause*>> m_watches;
 
 	/// Current assignments.
-	std::map<size_t, bool> m_assignments;
+	std::vector<TriState> m_assignments;
 	std::map<size_t, size_t> m_levelForVariable;
 	/// TODO wolud be good to not have to copy the clauses
 	std::map<Literal, Clause const*> m_reason;
@@ -188,6 +220,32 @@ private:
 	uint64_t unsat_clause_ID = 0;
 	void write_final_proof_clauses();
 };
+
+inline bool CDCL::isAssigned(Literal const& _literal) const
+{
+	return m_assignments[_literal.variable] != TriState::tristate_unset;
+}
+
+inline bool CDCL::isAssignedTrue(Literal const& _literal) const
+{
+	return isAssigned(_literal) &&
+		(triStateToBool(m_assignments[_literal.variable]) ^ !_literal.positive) == true;
+}
+
+inline bool CDCL::isAssignedFalse(Literal const& _literal) const
+{
+	return isAssigned(_literal) &&
+		(triStateToBool(m_assignments[_literal.variable]) ^ !_literal.positive) == false;
+
+}
+
+inline bool CDCL::isUnknownOrAssignedTrue(Literal const& _literal) const
+{
+	return (
+		!isAssigned(_literal) ||
+		isAssignedTrue(_literal)
+	);
+}
 
 
 }

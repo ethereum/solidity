@@ -33,12 +33,13 @@ CDCL::CDCL(
 	vector<string> _variables,
 	vector<vector<Literal>> const& _clauses,
 	ostream* _proof,
-	std::function<std::optional<Clause>(std::map<size_t, bool> const&)> _theorySolver
+	std::function<std::optional<Clause>(std::vector<TriState> const&)> _theorySolver
 ):
 	m_theorySolver(_theorySolver),
 	m_variables(move(_variables)),
 	proof(_proof)
 {
+	m_assignments.resize(m_variables.size(), TriState::tristate_unset);
 	for (const auto& clause: _clauses)
 		addClause(clause);
 
@@ -108,8 +109,8 @@ optional<CDCL::Model> CDCL::solve()
 			else
 			{
 				cout << "satisfiable." << endl;
-				for (auto&& [var, value]: m_assignments)
-					cout << " " << m_variables.at(var) << ": " << (value ? "true" : "false") << endl;
+				for (size_t i = 0; i < m_assignments.size(); i++)
+					cout << " " << i << ": " << triStateToString(m_assignments[i]) << endl;
 				return m_assignments;
 			}
 		}
@@ -309,7 +310,7 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 		cout << "  because of " << toString(*_reason) << endl;
 
 	assert(!isAssigned(_literal));
-	m_assignments[_literal.variable] = _literal.positive;
+	m_assignments[_literal.variable] = boolToTriState(_literal.positive);
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason)
 		m_reason[_literal] = _reason;
@@ -327,7 +328,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		Literal l = m_assignmentTrail.back();
 		cout << "  undoing " << toString(l) << endl;
 		m_assignmentTrail.pop_back();
-		m_assignments.erase(l.variable);
+		m_assignments[l.variable] = TriState::tristate_unset;
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
@@ -340,38 +341,9 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 optional<size_t> CDCL::nextDecisionVariable() const
 {
 	for (size_t i = 0; i < m_variables.size(); i++)
-		if (!m_assignments.count(i))
+		if (m_assignments[i] == TriState::tristate_unset)
 			return i;
 	return nullopt;
-}
-
-bool CDCL::isAssigned(Literal const& _literal) const
-{
-	return m_assignments.count(_literal.variable);
-}
-
-bool CDCL::isAssignedTrue(Literal const& _literal) const
-{
-	return (
-		m_assignments.count(_literal.variable) &&
-		m_assignments.at(_literal.variable) == _literal.positive
-	);
-}
-
-bool CDCL::isAssignedFalse(Literal const& _literal) const
-{
-	return (
-		m_assignments.count(_literal.variable) &&
-		!m_assignments.at(_literal.variable) == _literal.positive
-	);
-}
-
-bool CDCL::isUnknownOrAssignedTrue(Literal const& _literal) const
-{
-	return (
-		!m_assignments.count(_literal.variable) ||
-		m_assignments.at(_literal.variable) == _literal.positive
-	);
 }
 
 string CDCL::toString(Literal const& _literal) const
