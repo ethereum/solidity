@@ -39,7 +39,7 @@ CDCL::CDCL(
 	m_variables(move(_variables)),
 	proof(_proof)
 {
-	m_assignments.resize(m_variables.size(), TriState::tristate_unset);
+	m_assignments.resize(m_variables.size(), tristate_unset);
 	for (const auto& clause: _clauses)
 		addClause(clause);
 
@@ -113,7 +113,7 @@ optional<CDCL::Model> CDCL::solve()
 			{
 				cout << "satisfiable." << endl;
 				for (size_t i = 0; i < m_assignments.size(); i++)
-					cout << " " << i << ": " << triStateToString(m_assignments[i]) << endl;
+					cout << " " << i << ": " << m_assignments[i].toString() << endl;
 				return m_assignments;
 			}
 		}
@@ -316,7 +316,7 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 		cout << "  because of " << toString(*_reason) << endl;
 
 	assert(!isAssigned(_literal));
-	m_assignments[_literal.variable] = boolToTriState(_literal.positive);
+	m_assignments[_literal.variable] = _literal.positive;
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason)
 		m_reason[_literal] = _reason;
@@ -334,7 +334,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		Literal l = m_assignmentTrail.back();
 		cout << "  undoing " << toString(l) << endl;
 		m_assignmentTrail.pop_back();
-		m_assignments[l.variable] = TriState::tristate_unset;
+		m_assignments[l.variable] = tristate_unset;
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
@@ -347,7 +347,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 optional<size_t> CDCL::nextDecisionVariable() const
 {
 	for (size_t i = 0; i < m_variables.size(); i++)
-		if (m_assignments[i] == TriState::tristate_unset)
+		if (m_assignments[i] == tristate_unset)
 			return i;
 	return nullopt;
 }

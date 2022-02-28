@@ -112,33 +112,64 @@ struct Clause {
 	uint64_t ID;
 };
 
-enum class TriState {trisate_true, tristate_false, tristate_unset};
-TriState boolToTriState(const bool b);
-inline std::string triStateToString(const TriState v);
-inline std::string triStateToString(const TriState v)
-{
-	if (v == TriState::trisate_true)
-		return "true";
-	else if (v == TriState::tristate_false)
-		return "false";
-	else
-		return "unset";
-}
-inline TriState boolToTriState(const bool b) {
-	if (b)
-		return TriState::trisate_true;
-	else
-		return TriState::tristate_false;
-}
+class TriState {
+public:
+	TriState(const bool b)
+	{
+		if (b)
+			val = 1;
+		else
+			val = 0;
+	}
 
-inline bool triStateToBool(const TriState t) {
-	if (t == TriState::trisate_true)
-		return true;
-	else if (t == TriState::tristate_false)
-		return false;
-	else
-		assert(false && "UNSET cannot be converted to bool");
-}
+	TriState()
+	{}
+
+	bool operator==(const TriState& other) const
+	{
+		return val == other.val;
+	}
+
+	bool operator!=(const TriState& other) const
+	{
+		return val != other.val;
+	}
+
+	bool toBool() const {
+		if (val == 1)
+			return true;
+		else if (val == 0)
+			return false;
+		else
+		{
+			assert(val== 2);
+			assert(false && "UNSET cannot be converted to bool");
+		}
+	}
+
+	std::string toString()
+	{
+		if (val == 1)
+			return "true";
+		else if (val == 0)
+			return "false";
+		else
+		{
+			assert(val == 2);
+			return "unset";
+		}
+	}
+
+
+private:
+	// Default value is UNSET
+	char val = 2;
+};
+
+const TriState trisate_true = TriState(true);
+const TriState tristate_false = TriState(false);
+const TriState tristate_unset = TriState();
+
 
 class CDCL
 {
@@ -220,19 +251,19 @@ private:
 
 inline bool CDCL::isAssigned(Literal const& _literal) const
 {
-	return m_assignments[_literal.variable] != TriState::tristate_unset;
+	return m_assignments[_literal.variable] != tristate_unset;
 }
 
 inline bool CDCL::isAssignedTrue(Literal const& _literal) const
 {
 	return isAssigned(_literal) &&
-		(triStateToBool(m_assignments[_literal.variable]) ^ !_literal.positive) == true;
+		(m_assignments[_literal.variable].toBool() ^ !_literal.positive) == true;
 }
 
 inline bool CDCL::isAssignedFalse(Literal const& _literal) const
 {
 	return isAssigned(_literal) &&
-		(triStateToBool(m_assignments[_literal.variable]) ^ !_literal.positive) == false;
+		(m_assignments[_literal.variable].toBool() ^ !_literal.positive) == false;
 
 }
 
