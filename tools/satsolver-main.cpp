@@ -45,7 +45,8 @@ vector<string> cut_string_by_space(string& input)
     vector<string> parts;
 
     size_t pos = 0;
-    while ((pos = input.find(" ")) != string::npos) {
+    while ((pos = input.find(" ")) != string::npos)
+	{
         parts.push_back(input.substr(0, pos));
         input.erase(0, pos + 1);
     }
@@ -58,14 +59,15 @@ optional<vector<Literal>> parse_line(std::string& line)
 	vector<Literal> cl;
 	bool end_of_clause = false;
 	auto parts = cut_string_by_space(line);
-	for(const auto& part: parts) {
+	for(const auto& part: parts)
+	{
 		assert(!end_of_clause);
-
 		const long lit = std::stol(part);
 		const long var = std::abs(lit);
-		if (var == 0) {
-			end_of_clause = true;
+		if (var == 0)
+		{
 			//end of clause
+			end_of_clause = true;
 			continue;
 		}
 		assert(var > 0);
@@ -73,19 +75,18 @@ optional<vector<Literal>> parse_line(std::string& line)
 		cl.push_back(l);
 	}
 
-	if (verbose) {
+	if (verbose)
+	{
 		cout << "Cl: ";
-		for(const auto& l: cl) {
+		for(const auto& l: cl)
 			cout << (l.positive ? "" : "-") << (l.variable+1) << " ";
-		}
 		cout << " end: " << (int)end_of_clause << endl;
 	}
 
-	if (end_of_clause) {
+	if (end_of_clause)
 		return cl;
-	} else {
+	else
 		return nullopt;
-	}
 }
 
 std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
@@ -113,9 +114,8 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 			continue;
 		}
 		const auto cl = parse_line(line);
-		if (cl) {
+		if (cl)
 			cls.push_back(cl.value());
-		}
 	}
 	if (varsByHeader == -1) {
 		cout << "ERROR: CNF did not have a header" << endl;
@@ -123,7 +123,8 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 	}
 
 	assert(clsByHeader >= 0);
-	if (cls.size() != (size_t)clsByHeader) {
+	if (cls.size() != (size_t)clsByHeader)
+	{
 		cout << "ERROR: header said number of clauses will be " << clsByHeader << " but we read " << cls.size() << endl;
 		exit(-1);
 	}
@@ -134,11 +135,10 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 size_t get_num_vars(const vector<vector<Literal>>& cls)
 {
 	size_t largestVar = 0;
-	for(const auto& cl: cls) {
-		for(const auto& l: cl) {
+	for(const auto& cl: cls)
+		for(const auto& l: cl)
 			largestVar = std::max(largestVar, l.variable+1);
-		}
-	}
+
 	return largestVar;
 }
 
@@ -157,23 +157,25 @@ int main(int argc, char** argv)
 	const size_t numVarsByCls = get_num_vars(cls);
 	vector<string> m_variables;
 
-	if (maxVarsByHeader < numVarsByCls) {
+	if (maxVarsByHeader < numVarsByCls)
+	{
 		cout << "ERROR: header promises less variables than what clauses say" << endl;
 		exit(-1);
 	}
 	assert(maxVarsByHeader >= numVarsByCls);
 
-	for(size_t i = 0; i < maxVarsByHeader; i ++) {
+	for(size_t i = 0; i < maxVarsByHeader; i ++)
+	{
 		m_variables.push_back(string("x") + std::to_string(i));
 	}
 
 	auto model = CDCL{m_variables, move(cls), &proofFile}.solve();
 
-	if (model) {
+	if (model)
 		cout << "s SATISFIABLE" << endl;
-	} else {
+	else
 		cout << "s UNSATISFIABLE" << endl;
-	}
+
 	proofFile.close();
 	return 0;
 }
