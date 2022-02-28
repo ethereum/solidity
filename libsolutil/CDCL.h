@@ -215,7 +215,7 @@ private:
 	uint64_t clauseID = 1;
 	std::map<Literal, uint64_t> unit_cl_IDs;
 	uint64_t unsat_clause_ID = 0;
-	void write_final_proof_clauses();
+	void writeFinalProofClauses();
 };
 
 inline bool CDCL::isAssigned(Literal const& _literal) const

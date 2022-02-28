@@ -376,7 +376,7 @@ string CDCL::toProofString(Clause const& _clause) const
 	return joinHumanReadable(literals, " ");
 }
 
-void CDCL::write_final_proof_clauses()
+void CDCL::writeFinalProofClauses()
 {
 	assert(proof);
 	assert(unsat_clause_ID != 0);
