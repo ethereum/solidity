@@ -27,7 +27,7 @@ done
 SOLIDITY_REPO_URL="https://github.com/ethereum/solidity"
 SOLC_JS_REPO_URL="https://github.com/ethereum/solc-js"
 SOLC_JS_BRANCH=wasmRebuildTests
-RELEASE_URL="https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/bin"
+RELEASE_URL="https://binaries.soliditylang.org/bin"
 RELEASE_COMMIT_LIST_URL="$RELEASE_URL/list.txt"
 
 SCRIPTDIR=$(dirname "$0")
@@ -196,6 +196,7 @@ cp scripts/bytecodecompare/storebytecode.sh /tmp
 # shellcheck disable=SC2016
 sed -i -e 's/rm -rf "\$TMPDIR"/cp "\$TMPDIR"\/report.txt \/tmp\/report.txt ; rm -rf "\$TMPDIR"/' /tmp/storebytecode.sh
 sed -i -e 's/REPO_ROOT=.*/REPO_ROOT=\/src/' /tmp/storebytecode.sh
+sed -i -e 's/git clone/git clone --branch '"${SOLC_JS_BRANCH}"'/' /tmp/storebytecode.sh
 export SOLC_EMSCRIPTEN="On"
 
 echo "Check out solc-js repository..."
@@ -213,7 +214,9 @@ ln -sf /emsdk_portable/emscripten/bin/* /usr/local/bin
 rm -rf /src
 ln -sf /root/project /src
 
+echo "Install dependencies and upgrade system packages."
 apt-get -qq update >/dev/null 2>&1
+apt-get -qq upgrade >/dev/null 2>&1
 apt-get -qq install cmake >/dev/null 2>&1
 
 echo "Create output directories."
@@ -228,7 +231,6 @@ mkdir -p "${OUTPUTDIR}"/bin
 echo "Prepare solc-js."
 cd /root/solc-js
 npm install >/dev/null 2>&1
-npm run build >/dev/null 2>&1
 
 echo "Install semver helper."
 npm install -g semver >/dev/null 2>&1
@@ -238,6 +240,7 @@ wget -q "${RELEASE_COMMIT_LIST_URL}" -O /tmp/release_commit_list.txt
 
 cd /src
 TAGS=$(git tag --list "${TAG_FILTER}" | tac)
+echo "Matching tags: ${TAGS}"
 for TAG in ${TAGS}; do
   process_tag "${TAG}"
 done
