@@ -42,6 +42,6 @@ contract D {
 // gas legacy: 98438801
 // gas legacyOptimized: 98438594
 // fpure() -> FAILURE
-// gas irOptimized: 98438626
+// gas irOptimized: 98438625
 // gas legacy: 98438801
 // gas legacyOptimized: 98438595

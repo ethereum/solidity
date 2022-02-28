@@ -102,6 +102,9 @@ private:
 	/// Generates a getter for the given declaration and returns its name
 	std::string generateGetter(VariableDeclaration const& _varDecl);
 
+	/// Generates the external part (ABI decoding and encoding) of a function or getter.
+	std::string generateExternalFunction(ContractDefinition const& _contract, FunctionType const& _functionType);
+
 	/// Generates code that assigns the initial value of the respective type.
 	std::string generateInitialAssignment(VariableDeclaration const& _varDecl);
 

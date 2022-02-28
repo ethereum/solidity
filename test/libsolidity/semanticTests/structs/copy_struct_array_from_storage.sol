@@ -88,7 +88,7 @@ contract Test {
 // compileViaYul: also
 // ----
 // test1() -> true
-// gas irOptimized: 150618
+// gas irOptimized: 150545
 // gas legacy: 150266
 // gas legacyOptimized: 149875
 // test2() -> true
