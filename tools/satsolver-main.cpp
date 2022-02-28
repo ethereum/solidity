@@ -17,6 +17,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/CDCL.h>
+#include <libsolutil/BooleanLP.h>
+#include <libsolutil/LinearExpression.h>
+#include <libsmtutil/Sorts.h>
+#include <libsolutil/StringUtils.h>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -34,13 +38,13 @@ using std::nullopt;
 using std::make_pair;
 
 const int verbose = 0;
-vector<string> cut_string_by_space(string& input);
-optional<vector<Literal>> parse_line(std::string& line);
-std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname);
-size_t get_num_vars(const vector<vector<Literal>>& cls);
+vector<string> cutStringBySpace(string& input);
+optional<vector<Literal>> parseLine(std::string& line);
+std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname);
+size_t getNumVars(const vector<vector<Literal>>& cls);
 
 
-vector<string> cut_string_by_space(string& input)
+vector<string> cutStringBySpace(string& input)
 {
     vector<string> parts;
 
@@ -54,11 +58,11 @@ vector<string> cut_string_by_space(string& input)
     return parts;
 }
 
-optional<vector<Literal>> parse_line(std::string& line)
+optional<vector<Literal>> parseLine(std::string& line)
 {
 	vector<Literal> cl;
 	bool end_of_clause = false;
-	auto parts = cut_string_by_space(line);
+	auto parts = cutStringBySpace(line);
 	for (const auto& part: parts)
 	{
 		assert(!end_of_clause);
@@ -89,7 +93,7 @@ optional<vector<Literal>> parse_line(std::string& line)
 		return nullopt;
 }
 
-std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
+std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 {
 	long varsByHeader = -1;
 	long clsByHeader = -1;
@@ -104,7 +108,7 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 		if (line[0] == 'p') {
 			assert(line.substr(0,6) == string("p cnf "));
 			line = line.substr(6);
-			vector<string> parts = cut_string_by_space(line);
+			vector<string> parts = cutStringBySpace(line);
 			varsByHeader = std::stol(parts[0]);
 			assert(varsByHeader >= 0);
 			clsByHeader =  std::stol(parts[1]);
@@ -112,7 +116,7 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 
 			continue;
 		}
-		const auto cl = parse_line(line);
+		const auto cl = parseLine(line);
 		if (cl)
 			cls.push_back(cl.value());
 	}
@@ -132,7 +136,7 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 	return make_pair(cls, (size_t)varsByHeader);
 }
 
-size_t get_num_vars(const vector<vector<Literal>>& cls)
+size_t getNumVars(const vector<vector<Literal>>& cls)
 {
 	size_t largestVar = 0;
 	for (const auto& cl: cls)
@@ -152,10 +156,10 @@ int main(int argc, char** argv)
 
 	const string cnfFileName = argv[1];
 	const string proofFileName = argv[2];
-	auto&& [cls, maxVarsByHeader] = read_cnf_file(cnfFileName);
+	auto&& [cls, maxVarsByHeader] = readCNFFile(cnfFileName);
 	std::ofstream proofFile;
 	proofFile.open(proofFileName.c_str(), std::ios::out);
-	const size_t numVarsByCls = get_num_vars(cls);
+	const size_t numVarsByCls = getNumVars(cls);
 	vector<string> m_variables;
 
 	if (maxVarsByHeader < numVarsByCls)
