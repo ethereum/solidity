@@ -81,7 +81,7 @@ optional<vector<Literal>> parseLine(std::string& line)
 
 	if (verbose)
 	{
-		cout << "Cl: ";
+		cout << "cl: ";
 		for (const auto& l: cl)
 			cout << (l.positive ? "" : "-") << (l.variable+1) << " ";
 		cout << " end: " << (int)end_of_clause << endl;
@@ -95,8 +95,8 @@ optional<vector<Literal>> parseLine(std::string& line)
 
 std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 {
-	long varsByHeader = -1;
-	long clsByHeader = -1;
+	long vars_by_header = -1;
+	long cls_by_header = -1;
 	vector<vector<Literal>> cls;
 	std::ifstream infile(fname.c_str());
 
@@ -109,10 +109,10 @@ std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 			assert(line.substr(0,6) == string("p cnf "));
 			line = line.substr(6);
 			vector<string> parts = cutStringBySpace(line);
-			varsByHeader = std::stol(parts[0]);
-			assert(varsByHeader >= 0);
-			clsByHeader =  std::stol(parts[1]);
-			assert(clsByHeader >= 0);
+			vars_by_header = std::stol(parts[0]);
+			assert(vars_by_header >= 0);
+			cls_by_header =  std::stol(parts[1]);
+			assert(cls_by_header >= 0);
 
 			continue;
 		}
@@ -120,20 +120,20 @@ std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 		if (cl)
 			cls.push_back(cl.value());
 	}
-	if (varsByHeader == -1)
+	if (vars_by_header == -1)
 	{
 		cout << "ERROR: CNF did not have a header" << endl;
 		exit(-1);
 	}
 
-	assert(clsByHeader >= 0);
-	if (cls.size() != (size_t)clsByHeader)
+	assert(cls_by_header >= 0);
+	if (cls.size() != (size_t)cls_by_header)
 	{
-		cout << "ERROR: header said number of clauses will be " << clsByHeader << " but we read " << cls.size() << endl;
+		cout << "ERROR: header said number of clauses will be " << cls_by_header << " but we read " << cls.size() << endl;
 		exit(-1);
 	}
 
-	return make_pair(cls, (size_t)varsByHeader);
+	return make_pair(cls, (size_t)vars_by_header);
 }
 
 size_t getNumVars(const vector<vector<Literal>>& cls)
@@ -154,31 +154,31 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 
-	const string cnfFileName = argv[1];
-	const string proofFileName = argv[2];
-	auto&& [cls, maxVarsByHeader] = readCNFFile(cnfFileName);
-	std::ofstream proofFile;
-	proofFile.open(proofFileName.c_str(), std::ios::out);
-	const size_t numVarsByCls = getNumVars(cls);
+	const string cnf_file_name = argv[1];
+	const string proof_fname = argv[2];
+	auto&& [cls, max_vars_by_header] = readCNFFile(cnf_file_name);
+	std::ofstream proof_file;
+	proof_file.open(proof_fname.c_str(), std::ios::out);
+	const size_t num_vars_by_cls = getNumVars(cls);
 	vector<string> m_variables;
 
-	if (maxVarsByHeader < numVarsByCls)
+	if (max_vars_by_header < num_vars_by_cls)
 	{
 		cout << "ERROR: header promises less variables than what clauses say" << endl;
 		exit(-1);
 	}
-	assert(maxVarsByHeader >= numVarsByCls);
+	assert(max_vars_by_header >= num_vars_by_cls);
 
-	for (size_t i = 0; i < maxVarsByHeader; i ++)
+	for (size_t i = 0; i < max_vars_by_header; i ++)
 		m_variables.push_back(string("x") + std::to_string(i));
 
-	auto model = CDCL{m_variables, move(cls), &proofFile}.solve();
+	auto model = CDCL{m_variables, move(cls), &proof_file}.solve();
 
 	if (model)
 		cout << "s SATISFIABLE" << endl;
 	else
 		cout << "s UNSATISFIABLE" << endl;
 
-	proofFile.close();
+	proof_file.close();
 	return 0;
 }
