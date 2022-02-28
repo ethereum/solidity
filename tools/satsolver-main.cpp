@@ -22,41 +22,157 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 
 using namespace solidity::util;
 using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
+using std::optional;
+using std::nullopt;
+using std::make_pair;
 
-Literal lit(string const& _name);
+const int verbose = 0;
+vector<string> cut_string_by_space(string& input);
+optional<vector<Literal>> parse_line(std::string& line);
+std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname);
+size_t get_num_vars(const vector<vector<Literal>>& cls);
 
-vector<string> m_variables;
 
-Literal lit(string const& _name)
+vector<string> cut_string_by_space(string& input)
 {
-	m_variables.emplace_back(_name);
-	return Literal{true, m_variables.size() - 1};
+    vector<string> parts;
+
+    size_t pos = 0;
+    while ((pos = input.find(" ")) != string::npos) {
+        parts.push_back(input.substr(0, pos));
+        input.erase(0, pos + 1);
+    }
+    parts.push_back(input);
+    return parts;
 }
 
-int main()
+optional<vector<Literal>> parse_line(std::string& line)
 {
-	std::ofstream proofFile;
-	proofFile.open("proof.frat", std::ios::out);
+	vector<Literal> cl;
+	bool end_of_clause = false;
+	auto parts = cut_string_by_space(line);
+	for(const auto& part: parts) {
+		assert(!end_of_clause);
 
-	auto x1 = lit("x1");
-	auto x2 = lit("x2");
-	vector<Literal> c1{x1, ~x2};
-	vector<Literal> c2{~x1, x2};
-	vector<Literal> c3{x1, x2};
-	vector<Literal> c4{~x1, ~x2};
-	const auto cls = {c1, c2, c3, c4};
+		const long lit = std::stol(part);
+		const long var = std::abs(lit);
+		if (var == 0) {
+			end_of_clause = true;
+			//end of clause
+			continue;
+		}
+		assert(var > 0);
+		const Literal l {lit > 0, (size_t)var-1};
+		cl.push_back(l);
+	}
+
+	if (verbose) {
+		cout << "Cl: ";
+		for(const auto& l: cl) {
+			cout << (l.positive ? "" : "-") << (l.variable+1) << " ";
+		}
+		cout << " end: " << (int)end_of_clause << endl;
+	}
+
+	if (end_of_clause) {
+		return cl;
+	} else {
+		return nullopt;
+	}
+}
+
+std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
+{
+	long varsByHeader = -1;
+	long clsByHeader = -1;
+	vector<vector<Literal>> cls;
+	std::ifstream infile(fname.c_str());
+
+	std::string line;
+	while (std::getline(infile, line))
+	{
+		if (line.empty()) {
+			continue;
+		}
+		if (line[0] == 'p') {
+			assert(line.substr(0,6) == string("p cnf "));
+			line = line.substr(6);
+			vector<string> parts = cut_string_by_space(line);
+			varsByHeader = std::stol(parts[0]);
+			assert(varsByHeader >= 0);
+			clsByHeader =  std::stol(parts[1]);
+			assert(clsByHeader >= 0);
+
+			continue;
+		}
+		const auto cl = parse_line(line);
+		if (cl) {
+			cls.push_back(cl.value());
+		}
+	}
+	if (varsByHeader == -1) {
+		cout << "ERROR: CNF did not have a header" << endl;
+		exit(-1);
+	}
+
+	assert(clsByHeader >= 0);
+	if (cls.size() != (size_t)clsByHeader) {
+		cout << "ERROR: header said number of clauses will be " << clsByHeader << " but we read " << cls.size() << endl;
+		exit(-1);
+	}
+
+	return make_pair(cls, (size_t)varsByHeader);
+}
+
+size_t get_num_vars(const vector<vector<Literal>>& cls)
+{
+	size_t largestVar = 0;
+	for(const auto& cl: cls) {
+		for(const auto& l: cl) {
+			largestVar = std::max(largestVar, l.variable+1);
+		}
+	}
+	return largestVar;
+}
+
+int main(int argc, char** argv)
+{
+	if (argc != 3) {
+		cout << "ERROR: you must give CNF and proof files as parameters" << endl;
+		exit(-1);
+	}
+
+	const string cnfFileName = argv[1];
+	const string proofFileName = argv[2];
+	auto&& [cls, maxVarsByHeader] = read_cnf_file(cnfFileName);
+	std::ofstream proofFile;
+	proofFile.open(proofFileName.c_str(), std::ios::out);
+	const size_t numVarsByCls = get_num_vars(cls);
+	vector<string> m_variables;
+
+	if (maxVarsByHeader < numVarsByCls) {
+		cout << "ERROR: header promises less variables than what clauses say" << endl;
+		exit(-1);
+	}
+	assert(maxVarsByHeader >= numVarsByCls);
+
+	for(size_t i = 0; i < maxVarsByHeader; i ++) {
+		m_variables.push_back(string("x") + std::to_string(i));
+	}
+
 	auto model = CDCL{m_variables, move(cls), &proofFile}.solve();
 
 	if (model) {
-		cout << "SATISFIABLE" << endl;
+		cout << "s SATISFIABLE" << endl;
 	} else {
-		cout << "UNSATISFIABLE" << endl;
+		cout << "s UNSATISFIABLE" << endl;
 	}
 	proofFile.close();
 	return 0;
