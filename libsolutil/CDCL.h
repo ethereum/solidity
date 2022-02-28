@@ -117,30 +117,27 @@ TriState boolToTriState(const bool b);
 inline std::string triStateToString(const TriState v);
 inline std::string triStateToString(const TriState v)
 {
-	if (v == TriState::trisate_true) {
+	if (v == TriState::trisate_true)
 		return "true";
-	} else if (v == TriState::tristate_false) {
+	else if (v == TriState::tristate_false)
 		return "false";
-	} else {
+	else
 		return "unset";
-	}
 }
 inline TriState boolToTriState(const bool b) {
-	if (b) {
+	if (b)
 		return TriState::trisate_true;
-	} else {
+	else
 		return TriState::tristate_false;
-	}
 }
 
 inline bool triStateToBool(const TriState t) {
-	if (t == TriState::trisate_true) {
+	if (t == TriState::trisate_true)
 		return true;
-	} else if (t == TriState::tristate_false) {
+	else if (t == TriState::tristate_false)
 		return false;
-	} else {
+	else
 		assert(false && "UNSET cannot be converted to bool");
-	}
 }
 
 class CDCL
