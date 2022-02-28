@@ -48,9 +48,8 @@ CDCL::CDCL(
 
 optional<CDCL::Model> CDCL::solve()
 {
-	if (!ok) {
+	if (!ok)
 		return nullopt;
-	}
 
 	cout << "====" << endl;
 	for (unique_ptr<Clause> const& c: m_clauses)
@@ -73,7 +72,7 @@ optional<CDCL::Model> CDCL::solve()
 				ok = false;
 				if (proof)
 				{
-					unsat_clause_ID = clauseID++;
+					unsat_clause_ID = clause_ID++;
 					*proof << "a " << unsat_clause_ID << " 0\n";
 					writeFinalProofClauses();
 				}
@@ -89,11 +88,14 @@ optional<CDCL::Model> CDCL::solve()
 			for (size_t i = 1; i < learntClause.size(); i++)
 				solAssert(isAssignedFalse(learntClause.at(i)));
 
-			if (learntClause.size() == 1) {
+			if (learntClause.size() == 1)
+			{
 				assert(currentDecisionLevel() == 0);
 				unit_cl_IDs[learntClause[0]] = learntClause.ID;
 				enqueue(learntClause[0], nullptr);
-			} else {
+			}
+			else
+			{
 				m_clauses.push_back(make_unique<Clause>(move(learntClause)));
 				setupWatches(*m_clauses.back());
 				enqueue(m_clauses.back()->front(), &(*m_clauses.back()));
@@ -197,7 +199,7 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 	solAssert(!_conflictClause.empty());
 	cout << "Analyzing conflict." << endl;
 	Clause learntClause;
-	learntClause.ID = clauseID++;
+	learntClause.ID = clause_ID++;
 	size_t backtrackLevel = 0;
 
 	set<size_t> seenVariables;
@@ -260,13 +262,13 @@ void CDCL::addClause(const vector<Literal>& _lits)
 		return;
 	}
 
-	Clause _clause {_lits, clauseID++};
+	Clause clause{_lits, clause_ID++};
 	if (proof)
-		*proof <<  "o " << _clause.ID << " " << toProofString(_clause) << " 0\n";
+		*proof <<  "o " << clause.ID << " " << toProofString(clause) << " 0\n";
 
-	Clause _clause_updated;
-	_clause_updated.ID = clauseID++;
-	for (const auto& l: _clause)
+	Clause clause_updated;
+	clause_updated.ID = clause_ID++;
+	for (const auto& l: clause)
 	{
 		// Clause is satisfied, nothing to do.
 		if (isAssignedTrue(l))
@@ -276,19 +278,19 @@ void CDCL::addClause(const vector<Literal>& _lits)
 		if (isAssignedFalse(l))
 			continue;
 
-		_clause_updated.lits.push_back(l);
+		clause_updated.lits.push_back(l);
 	}
 
 	if (proof)
 	{
-		*proof << "a " << _clause_updated.ID << " " << toProofString(_clause_updated) << " 0\n";
-		*proof << "d " << _clause.ID << " " << toProofString(_clause) << " 0\n";
+		*proof << "a " << clause_updated.ID << " " << toProofString(clause_updated) << " 0\n";
+		*proof << "d " << clause.ID << " " << toProofString(clause) << " 0\n";
 	}
 
 	// Empty clause, set UNSAT and return.
-	if (_clause_updated.lits.size() == 0)
+	if (clause_updated.lits.size() == 0)
 	{
-		unsat_clause_ID = clauseID++;
+		unsat_clause_ID = clause_ID++;
 		*proof << "a " << unsat_clause_ID << " 0\n";
 		writeFinalProofClauses();
 		ok = false;
@@ -296,14 +298,14 @@ void CDCL::addClause(const vector<Literal>& _lits)
 	}
 
 	// Unit clause, enqueue fact.
-	if (_clause_updated.lits.size() == 1)
+	if (clause_updated.lits.size() == 1)
 	{
-		unit_cl_IDs[_clause_updated.lits[0]] = _clause_updated.ID;
-		enqueue(_clause_updated.lits[0], nullptr);
+		unit_cl_IDs[clause_updated.lits[0]] = clause_updated.ID;
+		enqueue(clause_updated.lits[0], nullptr);
 		return;
 	}
 
-	m_clauses.push_back(make_unique<Clause>(move(_clause_updated)));
+	m_clauses.push_back(make_unique<Clause>(move(clause_updated)));
 	setupWatches(*m_clauses.back());
 }
 
@@ -381,10 +383,10 @@ void CDCL::writeFinalProofClauses()
 	assert(proof);
 	assert(unsat_clause_ID != 0);
 
-	for(const auto& cl: m_clauses)
+	for (const auto& cl: m_clauses)
 		*proof << "f " << cl->ID << " " << toProofString(*cl) << " 0\n";
 
-	for(const auto& units: unit_cl_IDs)
+	for (const auto& units: unit_cl_IDs)
 		*proof << "f " << units.second << " " << toProofString(units.first) << " 0\n";
 
 	*proof << "f " << unsat_clause_ID << " 0\n";

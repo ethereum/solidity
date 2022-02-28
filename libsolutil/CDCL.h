@@ -212,7 +212,7 @@ private:
 
 	// Proof log
 	std::ostream* proof = nullptr;
-	uint64_t clauseID = 1;
+	uint64_t clause_ID = 1;
 	std::map<Literal, uint64_t> unit_cl_IDs;
 	uint64_t unsat_clause_ID = 0;
 	void writeFinalProofClauses();

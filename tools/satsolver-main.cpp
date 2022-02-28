@@ -59,7 +59,7 @@ optional<vector<Literal>> parse_line(std::string& line)
 	vector<Literal> cl;
 	bool end_of_clause = false;
 	auto parts = cut_string_by_space(line);
-	for(const auto& part: parts)
+	for (const auto& part: parts)
 	{
 		assert(!end_of_clause);
 		const long lit = std::stol(part);
@@ -78,7 +78,7 @@ optional<vector<Literal>> parse_line(std::string& line)
 	if (verbose)
 	{
 		cout << "Cl: ";
-		for(const auto& l: cl)
+		for (const auto& l: cl)
 			cout << (l.positive ? "" : "-") << (l.variable+1) << " ";
 		cout << " end: " << (int)end_of_clause << endl;
 	}
@@ -99,9 +99,8 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 	std::string line;
 	while (std::getline(infile, line))
 	{
-		if (line.empty()) {
+		if (line.empty())
 			continue;
-		}
 		if (line[0] == 'p') {
 			assert(line.substr(0,6) == string("p cnf "));
 			line = line.substr(6);
@@ -117,7 +116,8 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 		if (cl)
 			cls.push_back(cl.value());
 	}
-	if (varsByHeader == -1) {
+	if (varsByHeader == -1)
+	{
 		cout << "ERROR: CNF did not have a header" << endl;
 		exit(-1);
 	}
@@ -135,8 +135,8 @@ std::pair<vector<vector<Literal>>, size_t> read_cnf_file(const string& fname)
 size_t get_num_vars(const vector<vector<Literal>>& cls)
 {
 	size_t largestVar = 0;
-	for(const auto& cl: cls)
-		for(const auto& l: cl)
+	for (const auto& cl: cls)
+		for (const auto& l: cl)
 			largestVar = std::max(largestVar, l.variable+1);
 
 	return largestVar;
@@ -144,7 +144,8 @@ size_t get_num_vars(const vector<vector<Literal>>& cls)
 
 int main(int argc, char** argv)
 {
-	if (argc != 3) {
+	if (argc != 3)
+	{
 		cout << "ERROR: you must give CNF and proof files as parameters" << endl;
 		exit(-1);
 	}
@@ -164,10 +165,8 @@ int main(int argc, char** argv)
 	}
 	assert(maxVarsByHeader >= numVarsByCls);
 
-	for(size_t i = 0; i < maxVarsByHeader; i ++)
-	{
+	for (size_t i = 0; i < maxVarsByHeader; i ++)
 		m_variables.push_back(string("x") + std::to_string(i));
-	}
 
 	auto model = CDCL{m_variables, move(cls), &proofFile}.solve();
 
