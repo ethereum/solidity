@@ -89,6 +89,12 @@ function elementfi_test
     # TODO: Remove when https://github.com/element-fi/elf-contracts/issues/243 is fixed.
     sed -i 's|^\s*require(_expiration - block\.timestamp < _unitSeconds);\s*$||g' contracts/ConvergentCurvePool.sol
 
+    # This test file is very flaky. There's one particular cases that fails randomly (see
+    # https://github.com/element-fi/elf-contracts/issues/240) but some others also depends on an external
+    # service which makes tests time out when that service is down.
+    # "ProviderError: Too Many Requests error received from eth-mainnet.alchemyapi.io"
+    rm test/mockERC20YearnVaultTest.ts
+
     # Several tests fail unless we use the exact versions hard-coded in package-lock.json
     #neutralize_package_lock
 
