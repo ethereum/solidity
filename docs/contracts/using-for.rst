@@ -120,7 +120,7 @@ It is also possible to extend elementary types in that way:
     }
 
 Note that all external library calls are actual EVM function calls. This means that
-if you pass memory or value types, a copy will be performed, even of the
+if you pass memory or value types, a copy will be performed, even in case of the
 ``self`` variable. The only situation where no copy will be performed
 is when storage reference variables are used or when internal library
 functions are called.
