@@ -75,7 +75,7 @@ optional<CDCL::Model> CDCL::solve()
 				{
 					unsat_clause_ID = clauseID++;
 					*proof << "a " << unsat_clause_ID << " 0\n";
-					write_final_proof_clauses();
+					writeFinalProofClauses();
 				}
 				return nullopt;
 			}
@@ -290,7 +290,7 @@ void CDCL::addClause(const vector<Literal>& _lits)
 	{
 		unsat_clause_ID = clauseID++;
 		*proof << "a " << unsat_clause_ID << " 0\n";
-		write_final_proof_clauses();
+		writeFinalProofClauses();
 		ok = false;
 		return;
 	}
