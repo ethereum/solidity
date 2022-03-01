@@ -42,13 +42,12 @@ function gnosis_safe_test
     local config_file="hardhat.config.ts"
     local config_var=userConfig
 
-    local compile_only_presets=(
-        ir-optimize-evm+yul        # Compiles but tests fail. See https://github.com/nomiclabs/hardhat/issues/2115
-    )
+    local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
         #ir-no-optimize            # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
         #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -69,6 +68,11 @@ function gnosis_safe_test
     # Disable two tests failing due to Hardhat's heuristics not yet updated to handle solc 0.8.10.
     # TODO: Remove this when Hardhat implements them (https://github.com/nomiclabs/hardhat/issues/2051).
     sed -i "s|\(it\)\(('should revert if called directly', async () => {\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
+
+    # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
+    # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/GnosisSafe.Setup.spec.ts
 
     neutralize_package_lock
     neutralize_package_json_hooks
