@@ -7,8 +7,10 @@ import os
 import subprocess
 import sys
 import traceback
+import re
 
 from typing import Any, List, Optional, Tuple, Union
+from enum import Enum, auto
 
 import colorama # Enables the use of SGR & CUP terminal VT sequences on Windows.
 from deepdiff import DeepDiff
@@ -17,6 +19,7 @@ from deepdiff import DeepDiff
 class BadHeader(Exception):
     def __init__(self, msg: str):
         super().__init__("Bad header: " + msg)
+
 
 class JsonRpcProcess:
     exe_path: str
@@ -116,12 +119,13 @@ SGR_STATUS_FAIL = '\033[1;31m'
 
 class ExpectationFailed(Exception):
     def __init__(self, actual, expected):
-        self.actual = actual
-        self.expected = expected
-        diff = DeepDiff(actual, expected)
+        self.actual = json.dumps(actual, sort_keys=True)
+        self.expected = json.dumps(expected, sort_keys=True)
+        diff = json.dumps(DeepDiff(actual, expected), indent=4)
         super().__init__(
-            f"Expectation failed.\n\tExpected {expected}\n\tbut got {actual}.\n\t{diff}"
+            f"\n\tExpected {self.expected}\n\tbut got {self.actual}.\n\t{diff}"
         )
+
 
 def create_cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Solidity LSP Test suite")
@@ -168,12 +172,25 @@ class Counter:
     passed: int = 0
     failed: int = 0
 
+
+class Marker(Enum):
+    SimpleRange = auto()
+    MultilineRange = auto()
+
+
+# Returns the given marker with the end extended by 'amount'
+def extendEnd(marker, amount=1):
+    marker["end"]["character"] += amount
+    return marker
+
+
 class SolidityLSPTestSuite: # {{{
     test_counter = Counter()
     assertion_counter = Counter()
     print_assertions: bool = False
     trace_io: bool = False
     test_pattern: str
+    marker_regexes: {}
 
     def __init__(self):
         colorama.init()
@@ -184,6 +201,10 @@ class SolidityLSPTestSuite: # {{{
         self.print_assertions = args.print_assertions
         self.trace_io = args.trace_io
         self.test_pattern = args.test_pattern
+        self.marker_regexes = {
+            Marker.SimpleRange: re.compile(R"(?P<range>[\^]+) (?P<tag>@\w+)"),
+            Marker.MultilineRange: re.compile(R"\^(?P<delimiter>[()]) (?P<tag>@\w+)$")
+        }
 
         print(f"{SGR_NOTICE}test pattern: {self.test_pattern}{SGR_RESET}")
 
@@ -206,9 +227,8 @@ class SolidityLSPTestSuite: # {{{
                 with JsonRpcProcess(self.solc_path, ["--lsp"], trace_io=self.trace_io) as solc:
                     test_fn(solc)
                     self.test_counter.passed += 1
-            except ExpectationFailed as e:
+            except ExpectationFailed:
                 self.test_counter.failed += 1
-                print(e)
                 print(traceback.format_exc())
             except Exception as e: # pragma pylint: disable=broad-except
                 self.test_counter.failed += 1
@@ -347,20 +367,26 @@ class SolidityLSPTestSuite: # {{{
         self,
         diagnostic,
         code: int,
-        lineNo: int,
-        startEndColumns: Tuple[int, int]
+        lineNo: int = None,
+        startEndColumns: Tuple[int, int] = None,
+        marker: {} = None
     ):
-        assert len(startEndColumns) == 2
-        [startColumn, endColumn] = startEndColumns
         self.expect_equal(diagnostic['code'], code, f'diagnostic: {code}')
-        self.expect_equal(
-            diagnostic['range'],
-            {
-                'start': {'character': startColumn, 'line': lineNo},
-                'end': {'character': endColumn, 'line': lineNo}
-            },
-            "diagnostic: check range"
-        )
+
+        if marker:
+            self.expect_equal(diagnostic['range'], marker, "diagnostic: check range")
+        else:
+            assert len(startEndColumns) == 2
+            [startColumn, endColumn] = startEndColumns
+            self.expect_equal(
+                diagnostic['range'],
+                {
+                    'start': {'character': startColumn, 'line': lineNo},
+                    'end': {'character': endColumn, 'line': lineNo}
+                },
+                "diagnostic: check range"
+            )
+
 
     def expect_location(
         self,
@@ -421,10 +447,12 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
         diagnostics = report['diagnostics']
 
+        markers = self.get_file_tags(TEST_NAME)
+
         self.expect_equal(len(diagnostics), 3, "3 diagnostic messages")
-        self.expect_diagnostic(diagnostics[0], code=6321, lineNo=13, startEndColumns=(44, 48))
-        self.expect_diagnostic(diagnostics[1], code=2072, lineNo= 7, startEndColumns=( 8, 19))
-        self.expect_diagnostic(diagnostics[2], code=2072, lineNo=15, startEndColumns=( 8, 20))
+        self.expect_diagnostic(diagnostics[0], code=6321, marker=markers["@unusedReturnVariable"])
+        self.expect_diagnostic(diagnostics[1], code=2072, marker=markers["@unusedVariable"])
+        self.expect_diagnostic(diagnostics[2], code=2072, marker=markers["@unusedContractVariable"])
 
     def test_publish_diagnostics_errors(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
@@ -437,10 +465,12 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
         diagnostics = report['diagnostics']
 
+        markers = self.get_file_tags(TEST_NAME)
+
         self.expect_equal(len(diagnostics), 3, "3 diagnostic messages")
-        self.expect_diagnostic(diagnostics[0], code=9574, lineNo= 7, startEndColumns=( 8, 21))
-        self.expect_diagnostic(diagnostics[1], code=6777, lineNo= 8, startEndColumns=( 8, 15))
-        self.expect_diagnostic(diagnostics[2], code=6160, lineNo=18, startEndColumns=(15, 36))
+        self.expect_diagnostic(diagnostics[0], code=9574, marker=markers["@conversionError"])
+        self.expect_diagnostic(diagnostics[1], code=6777, marker=markers["@argumentsRequired"])
+        self.expect_diagnostic(diagnostics[2], code=6160, marker=markers["@wrongArgumentsCount"])
 
     def test_publish_diagnostics_errors_multiline(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
@@ -453,13 +483,13 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
         diagnostics = report['diagnostics']
 
-        self.expect_equal(len(diagnostics), 1, "3 diagnostic messages")
+        self.expect_equal(len(diagnostics), 1, "1 diagnostic messages")
         self.expect_equal(diagnostics[0]['code'], 3656, "diagnostic: check code")
         self.expect_equal(
             diagnostics[0]['range'],
             {
-                'end': {'character': 1, 'line': 9},
-                'start': {'character': 0, 'line': 7}
+                'start': {'character': 0, 'line': 7},
+                'end': {'character': 1, 'line': 10}
             },
             "diagnostic: check range"
         )
@@ -480,11 +510,58 @@ class SolidityLSPTestSuite: # {{{
         report = published_diagnostics[1]
         self.expect_equal(report['uri'], self.get_test_file_uri('lib'), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 1, "one diagnostic")
-        self.expect_diagnostic(report['diagnostics'][0], code=2072, lineNo=31, startEndColumns=(8, 19))
+        marker = self.get_file_tags("lib")["@diagnostics"]
+        self.expect_diagnostic(report['diagnostics'][0], code=2072, marker=marker)
+
+
+    def get_file_tags(self, test_name: str, verbose=False):
+        """
+        Finds all tags (e.g. @tagname) in the given test and returns them as a
+        dictionary having the following structure: {
+            "@tagname": {
+             "start": { "character": 3, "line": 2 },
+             "end":   { "character": 30, "line": 2 }
+            }
+        }
+        """
+        content = self.get_test_file_contents(test_name)
+
+        markers = {}
+
+        for lineNum, line in enumerate(content.splitlines(), start=-1):
+            commentStart = line.find("//")
+            if commentStart == -1:
+                continue
+
+            for kind, regex in self.marker_regexes.items():
+                for match in regex.finditer(line[commentStart:]):
+                    if kind == Marker.SimpleRange:
+                        markers[match.group("tag")] = {
+                            "start": {
+                                "line": lineNum,
+                                "character": match.start("range") + commentStart
+                            },
+                            "end": {
+                                "line": lineNum,
+                                "character": match.end("range") + commentStart
+                        }}
+                    elif kind == Marker.MultilineRange:
+                        if match.group("delimiter") == "(":
+                            markers[match.group("tag")] = \
+                                { "start": { "line": lineNum, "character": 0 } }
+                        elif match.group("delimiter") == ")":
+                            markers[match.group("tag")]["end"] = \
+                                { "line": lineNum, "character": 0 }
+
+        if verbose:
+            print(markers)
+        return markers
+
 
     def test_didChange_in_A_causing_error_in_B(self, solc: JsonRpcProcess) -> None:
         # Reusing another test but now change some file that generates an error in the other.
         self.test_textDocument_didOpen_with_relative_import(solc)
+        marker = self.get_file_tags("lib")["@addFunction"]
         self.open_file_and_wait_for_diagnostics(solc, 'lib', 2)
         solc.send_message(
             'textDocument/didChange',
@@ -496,10 +573,7 @@ class SolidityLSPTestSuite: # {{{
                 'contentChanges':
                 [
                     {
-                        'range': {
-                            'start': { 'line': 24, 'character': 0 },
-                            'end':   { 'line': 29, 'character': 0 }
-                        },
+                        'range': marker,
                         'text': "" # deleting function `add`
                     }
                 ]
@@ -512,8 +586,9 @@ class SolidityLSPTestSuite: # {{{
         report = published_diagnostics[0]
         self.expect_equal(report['uri'], self.get_test_file_uri('didOpen_with_import'))
         diagnostics = report['diagnostics']
+        marker = self.get_file_tags("didOpen_with_import")["@diagnostics"]
         self.expect_equal(len(diagnostics), 1, "now, no diagnostics")
-        self.expect_diagnostic(diagnostics[0], code=9582, lineNo=9, startEndColumns=(15, 22))
+        self.expect_diagnostic(diagnostics[0], code=9582, marker=marker)
 
         # The modified file retains the same diagnostics.
         report = published_diagnostics[1]
@@ -543,7 +618,10 @@ class SolidityLSPTestSuite: # {{{
         report = published_diagnostics[1]
         self.expect_equal(report['uri'], self.get_test_file_uri('lib'), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 1, "one diagnostic")
-        self.expect_diagnostic(report['diagnostics'][0], code=2072, lineNo=31, startEndColumns=(8, 19))
+
+        marker = self.get_file_tags('lib')["@diagnostics"]
+        self.expect_diagnostic(report['diagnostics'][0], code=2072, marker=marker)
+
 
     def test_textDocument_didChange_updates_diagnostics(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
@@ -554,9 +632,10 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
         diagnostics = report['diagnostics']
         self.expect_equal(len(diagnostics), 3, "3 diagnostic messages")
-        self.expect_diagnostic(diagnostics[0], code=6321, lineNo=13, startEndColumns=(44, 48))
-        self.expect_diagnostic(diagnostics[1], code=2072, lineNo= 7, startEndColumns=( 8, 19))
-        self.expect_diagnostic(diagnostics[2], code=2072, lineNo=15, startEndColumns=( 8, 20))
+        markers = self.get_file_tags(TEST_NAME)
+        self.expect_diagnostic(diagnostics[0], code=6321, marker=markers["@unusedReturnVariable"])
+        self.expect_diagnostic(diagnostics[1], code=2072, marker=markers["@unusedVariable"])
+        self.expect_diagnostic(diagnostics[2], code=2072, marker=markers["@unusedContractVariable"])
 
         solc.send_message(
             'textDocument/didChange',
@@ -566,10 +645,7 @@ class SolidityLSPTestSuite: # {{{
                 },
                 'contentChanges': [
                     {
-                        'range': {
-                            'start': { 'line': 7, 'character': 1 },
-                            'end': {   'line': 8, 'character': 1 }
-                        },
+                        'range': extendEnd(markers["@unusedVariable"]),
                         'text': ""
                     }
                 ]
@@ -581,13 +657,16 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
         diagnostics = report['diagnostics']
         self.expect_equal(len(diagnostics), 2)
-        self.expect_diagnostic(diagnostics[0], code=6321, lineNo=12, startEndColumns=(44, 48))
-        self.expect_diagnostic(diagnostics[1], code=2072, lineNo=14, startEndColumns=( 8, 20))
+        self.expect_diagnostic(diagnostics[0], code=6321, marker=markers["@unusedReturnVariable"])
+        self.expect_diagnostic(diagnostics[1], code=2072, marker=markers["@unusedContractVariable"])
 
     def test_textDocument_didChange_delete_line_and_close(self, solc: JsonRpcProcess) -> None:
         # Reuse this test to prepare and ensure it is as expected
         self.test_textDocument_didOpen_with_relative_import(solc)
         self.open_file_and_wait_for_diagnostics(solc, 'lib', 2)
+
+        marker = self.get_file_tags('lib')["@diagnostics"]
+
         # lib.sol: Fix the unused variable message by removing it.
         solc.send_message(
             'textDocument/didChange',
@@ -599,11 +678,7 @@ class SolidityLSPTestSuite: # {{{
                 'contentChanges': # delete the in-body statement: `uint unused;`
                 [
                     {
-                        'range':
-                        {
-                            'start': { 'line': 31, 'character': 1 },
-                            'end':   { 'line': 32, 'character': 1 }
-                        },
+                        'range': extendEnd(marker),
                         'text': ""
                     }
                 ]
@@ -719,7 +794,11 @@ class SolidityLSPTestSuite: # {{{
         reports = self.wait_for_diagnostics(solc, 2)
         self.expect_equal(len(reports), 2, '')
         self.expect_equal(len(reports[0]['diagnostics']), 0, "should not contain diagnostics")
-        self.expect_diagnostic(reports[1]['diagnostics'][0], 2072, 31, (8, 19)) # unused variable in lib.sol
+
+        marker = self.get_file_tags("lib")["@diagnostics"]
+
+        # unused variable in lib.sol
+        self.expect_diagnostic(reports[1]['diagnostics'][0], code=2072, marker=marker)
 
         # Now close the file and expect the warning for lib.sol to be removed
         solc.send_message(
@@ -807,7 +886,7 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(len(published_diagnostics), 2, "publish diagnostics for 2 files")
         self.expect_equal(len(published_diagnostics[0]['diagnostics']), 0)
         self.expect_equal(len(published_diagnostics[1]['diagnostics']), 1)
-        self.expect_diagnostic(published_diagnostics[1]['diagnostics'][0], 2072, 31, (8, 19)) # unused variable in lib.sol
+        self.expect_diagnostic(published_diagnostics[1]['diagnostics'][0], 2072, 33, (8, 19)) # unused variable in lib.sol
 
         # import directive
         self.expect_goto_definition_location(
@@ -940,7 +1019,7 @@ class SolidityLSPTestSuite: # {{{
             document_uri=FILE_URI,
             document_position=(64, 33), # symbol `RGBColor` right hand side expression.
             expected_uri=LIB_URI,
-            expected_lineNo=35,
+            expected_lineNo=38,
             expected_startEndColumns=(7, 15),
             description="Struct constructor."
         )
@@ -962,7 +1041,7 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(len(published_diagnostics), 2, "publish diagnostics for 2 files")
         self.expect_equal(len(published_diagnostics[0]['diagnostics']), 0)
         self.expect_equal(len(published_diagnostics[1]['diagnostics']), 1)
-        self.expect_diagnostic(published_diagnostics[1]['diagnostics'][0], 2072, 31, (8, 19)) # unused variable in lib.sol
+        self.expect_diagnostic(published_diagnostics[1]['diagnostics'][0], 2072, 33, (8, 19)) # unused variable in lib.sol
 
         # import directive: test symbol alias
         self.expect_goto_definition_location(
