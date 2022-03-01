@@ -41,13 +41,12 @@ function zeppelin_test
     local ref="master"
     local config_file="hardhat.config.js"
 
-    local compile_only_presets=(
-        ir-optimize-evm+yul       # Compiles but tests fail. See https://github.com/nomiclabs/hardhat/issues/2115
-    )
+    local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
+        ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -58,6 +57,19 @@ function zeppelin_test
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$ref_type" "$ref" "$DIR"
+
+    # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
+    # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    pushd test/utils/
+    sed -i "s|it(\('reverts \)|it.skip(\1|g" math/SafeMath.test.js
+    sed -i "s|it(\('reverts \)|it.skip(\1|g" math/SignedSafeMath.test.js
+    sed -i "s|it(\('reverts \)|it.skip(\1|g" structs/EnumerableSet.behavior.js
+    popd
+
+    # In some cases Hardhat does not detect revert reasons properly via IR.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    sed -i "s|it(\('reverts if the current value is 0'\)|it.skip(\1|g" test/utils/Counters.test.js
 
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
