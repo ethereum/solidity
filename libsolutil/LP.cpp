@@ -317,6 +317,8 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 
 	LPResult result;
 	tie(result, _tableau) = simplexEq(move(_tableau));
+	if (result == LPResult::Unknown)
+		return make_pair(LPResult::Unknown, Tableau{});
 	solAssert(result != LPResult::Infeasible, "");
 
 	vector<rational> optimum = solutionVector(_tableau);
