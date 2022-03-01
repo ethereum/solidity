@@ -71,6 +71,46 @@ struct Tableau
 	std::vector<LinearExpression> data;
 };
 
+string toString(rational const& _x)
+{
+	if (_x.denominator() == 1)
+		return ::toString(_x.numerator());
+	else
+		return ::toString(_x.numerator()) + "/" + ::toString(_x.denominator());
+}
+
+string reasonToString(ReasonSet const& _reasons, size_t _minSize)
+{
+	auto reasonsAsStrings = _reasons | ranges::views::transform([](size_t _r) { return to_string(_r); });
+	string result = "[" + joinHumanReadable(reasonsAsStrings) + "]";
+	if (result.size() < _minSize)
+		result.resize(_minSize, ' ');
+	return result;
+}
+
+/*
+string toString(LinearExpression const& _expr)
+{
+	vector<string> items;
+	for (auto&& multiplier: _expr)
+		 if (multiplier != 0)
+			items.emplace_back(::toString(multiplier));
+		else
+			items.emplace_back("_");
+	for (string& item: items)
+		while (item.size() < 3)
+			item = " " + item;
+	return joinHumanReadable(items, " ");
+}
+
+string toString(Tableau const& _tableau)
+{
+	string s = toString(_tableau.objective) + "\n";
+	for (auto&& d: _tableau.data)
+		s += toString(d) + "\n";
+	return s;
+}
+*/
 
 /// Adds slack variables to remove non-equality costraints from a set of constraints
 /// and returns the data part of the tableau / constraints.
@@ -485,29 +525,6 @@ bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState cons
 	}
 	else
 		return _a.variableNames < _b.variableNames;
-}
-
-namespace
-{
-string toString(rational const& _x)
-{
-	if (_x.denominator() == 1)
-		return ::toString(_x.numerator());
-	else
-		return ::toString(_x.numerator()) + "/" + ::toString(_x.denominator());
-}
-}
-
-namespace
-{
-string reasonToString(ReasonSet const& _reasons, size_t _minSize)
-{
-	auto reasonsAsStrings = _reasons | ranges::views::transform([](size_t _r) { return to_string(_r); });
-	string result = "[" + joinHumanReadable(reasonsAsStrings) + "]";
-	if (result.size() < _minSize)
-		result.resize(_minSize, ' ');
-	return result;
-}
 }
 
 string SolvingState::toString() const
