@@ -61,14 +61,9 @@ public:
 		{
 			bool equality = static_cast<bool>(c[0]);
 			vector<int> factors(c.begin() + 1, c.end());
-			m_solvingState.constraints.push_back(
-				{
-					linearExpression(factors),
-					equality
-				}
-			);
-		    auto it = find_if(factors.rbegin(), factors.rend(), [](auto const& _i) { return _i != 0; });
-            size_t numVariablesInConstraint = factors.size() - 1 - static_cast<size_t>(distance(factors.rbegin(), it));
+			m_solvingState.constraints.push_back({linearExpression(factors), equality});
+			auto it = find_if(factors.rbegin(), factors.rend(), [](auto const& _i) { return _i != 0; });
+			size_t numVariablesInConstraint = factors.size() - 1 - static_cast<size_t>(distance(factors.rbegin(), it));
 			if (totalNumVariables < numVariablesInConstraint)
 				totalNumVariables = numVariablesInConstraint;
 		}
@@ -150,14 +145,6 @@ public:
 		BOOST_CHECK_MESSAGE(suppliedReason == _reason, "Reasons are different");
 	}
 
-	void sat()
-	{
-		auto [result, model] = m_solver.check(m_solvingState);
-		for (auto const& [var, value]: model)
-			cout << var << " = " << value << endl;
-		BOOST_REQUIRE(result == LPResult::Feasible);
-	}
-
 protected:
 	size_t variableIndex(string const& _name)
 	{
@@ -178,15 +165,6 @@ protected:
 
 
 BOOST_FIXTURE_TEST_SUITE(LP, LPTestFramework, *boost::unit_test::label("nooptions"))
-
-BOOST_AUTO_TEST_CASE(fuzzer)
-{
-	auto x = variable("x", -6);
-	auto y = variable("y", -6);
-	// expected result: -6x -6y = 8 is unsat since x >= 0 and y >= 0 are implied
-	addEQConstraint(x + y, constant(8));
-	sat();
-}
 
 BOOST_AUTO_TEST_CASE(fuzzer3)
 {

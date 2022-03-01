@@ -28,10 +28,9 @@
 namespace solidity::test::fuzzer::lpsolver
 {
 
-using solution = std::pair<
-    solidity::util::LPResult,
-	std::map<std::string, solidity::util::rational>
->;
+using Model = std::map<std::string, solidity::util::rational>;
+using ReasonSet = std::set<size_t>;
+using Solution = std::pair<solidity::util::LPResult, std::variant<Model, ReasonSet>>;
 
 class FuzzerSolverInterface
 {
@@ -54,7 +53,7 @@ public:
 	solidity::util::LinearExpression linearExpression(std::vector<int> _factors);
 
 	/// Queries LP solver and @returns solution.
-	solution checkLP();
+	Solution checkLP();
 
 	/// Queries Z3 solver and @returns solution.
 	z3::check_result checkZ3();

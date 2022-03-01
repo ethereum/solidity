@@ -45,7 +45,9 @@ LinearExpression FuzzerSolverInterface::linearExpression(vector<int> _factors)
 
 void FuzzerSolverInterface::addLPConstraint(pair<bool, vector<int>> _constraint)
 {
-	m_lpSolvingState.constraints.push_back({linearExpression(move(_constraint.second)), _constraint.first});
+	m_lpSolvingState.constraints.push_back(
+		{linearExpression(move(_constraint.second)), _constraint.first, {}}
+	);
 }
 
 void FuzzerSolverInterface::addLPVariable(string _varName)
@@ -95,7 +97,7 @@ void FuzzerSolverInterface::addZ3Constraints(vector<pair<bool, vector<int>>> _co
 		addZ3Constraint(c);
 }
 
-solution FuzzerSolverInterface::checkLP()
+Solution FuzzerSolverInterface::checkLP()
 {
 	return m_lpSolver.check(m_lpSolvingState);
 }
