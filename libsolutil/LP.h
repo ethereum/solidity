@@ -42,7 +42,7 @@ struct Constraint
 	LinearExpression data;
 	bool equality = false;
 	/// Set of literals the conjunction of which implies this constraint.
-	std::set<size_t> reasons;
+	std::set<size_t> reasons = {};
 
 	bool operator<(Constraint const& _other) const;
 	bool operator==(Constraint const& _other) const;
