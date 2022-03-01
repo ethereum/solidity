@@ -28,6 +28,8 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <libsolutil/BooleanLP.h>
+
 #include <utility>
 #include <memory>
 
@@ -40,7 +42,10 @@ using namespace solidity::smtutil;
 void ReasoningBasedSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
 	set<YulString> ssaVars = SSAValueTracker::ssaVariables(_ast);
-	ReasoningBasedSimplifier{_context.dialect, ssaVars}(_ast);
+	ReasoningBasedSimplifier simpl{_context.dialect, ssaVars};
+	// Hack to inject the boolean lp solver.
+	simpl.m_solver = make_unique<BooleanLPSolver>();
+	simpl(_ast);
 }
 
 std::optional<string> ReasoningBasedSimplifier::invalidInCurrentEnvironment()
@@ -120,12 +125,21 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 	switch (_instruction)
 	{
 	case evmasm::Instruction::ADD:
-		return wrap(arguments.at(0) + arguments.at(1));
+	{
+		auto result = arguments.at(0) + arguments.at(1) - (bigint(1) << 256) * newZeroOneVariable();
+		restrictToEVMWord(result);
+		return result;
+	}
 	case evmasm::Instruction::MUL:
 		return wrap(arguments.at(0) * arguments.at(1));
 	case evmasm::Instruction::SUB:
-		return wrap(arguments.at(0) - arguments.at(1));
+	{
+		auto result = arguments.at(0) - arguments.at(1) + (bigint(1) << 256) * newZeroOneVariable();
+		restrictToEVMWord(result);
+		return result;
+	}
 	case evmasm::Instruction::DIV:
+		// TODO add assertion that result is <= input
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
@@ -223,4 +237,16 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 		break;
 	}
 	return newRestrictedVariable();
+}
+
+smtutil::Expression ReasoningBasedSimplifier::newZeroOneVariable()
+{
+	smtutil::Expression var = newVariable();
+	m_solver->addAssertion(var == 0 || var == 1);
+	return var;
+}
+
+void ReasoningBasedSimplifier::restrictToEVMWord(smtutil::Expression _value)
+{
+	m_solver->addAssertion(0 <= _value && _value < bigint(1) << 256);
 }

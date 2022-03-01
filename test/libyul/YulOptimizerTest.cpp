@@ -53,12 +53,13 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
 
+	/*
 	if (m_optimizerStep == "reasoningBasedSimplifier" && (
 		solidity::test::CommonOptions::get().disableSMT ||
 		ReasoningBasedSimplifier::invalidInCurrentEnvironment()
 	))
 		m_shouldRun = false;
-
+*/
 	m_source = m_reader.source();
 
 	auto dialectName = m_reader.stringSetting("dialect", "evm");

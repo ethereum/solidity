@@ -69,6 +69,9 @@ private:
 		std::vector<Expression> const& _arguments
 	) override;
 
+	smtutil::Expression newZeroOneVariable();
+	void restrictToEVMWord(smtutil::Expression _value);
+
 	Dialect const& m_dialect;
 };
 

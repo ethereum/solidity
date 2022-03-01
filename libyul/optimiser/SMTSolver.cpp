@@ -81,6 +81,11 @@ smtutil::Expression SMTSolver::newVariable()
 	return m_solver->newVariable(uniqueName(), defaultSort());
 }
 
+smtutil::Expression SMTSolver::newBooleanVariable()
+{
+	return m_solver->newVariable(uniqueName(), SortProvider::boolSort);
+}
+
 smtutil::Expression SMTSolver::newRestrictedVariable(bigint _maxValue)
 {
 	smtutil::Expression var = newVariable();
@@ -100,6 +105,7 @@ shared_ptr<Sort> SMTSolver::defaultSort() const
 
 smtutil::Expression SMTSolver::booleanValue(smtutil::Expression _value)
 {
+	// TODO should not use ite
 	return smtutil::Expression::ite(_value, constantValue(1), constantValue(0));
 }
 
@@ -115,6 +121,7 @@ smtutil::Expression SMTSolver::literalValue(Literal const& _literal)
 
 smtutil::Expression SMTSolver::twosComplementToSigned(smtutil::Expression _value)
 {
+	// TODO will that work for LP?
 	return smtutil::Expression::ite(
 		_value < smtutil::Expression(bigint(1) << 255),
 		_value,
@@ -136,6 +143,7 @@ smtutil::Expression SMTSolver::wrap(smtutil::Expression _value)
 	smtutil::Expression rest = newRestrictedVariable();
 	smtutil::Expression multiplier = newVariable();
 	m_solver->addAssertion(_value == multiplier * smtutil::Expression(bigint(1) << 256) + rest);
+	m_solver->addAssertion(0 <= rest && rest < bigint(1) << 256);
 	return rest;
 }
 

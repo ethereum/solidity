@@ -47,12 +47,14 @@ struct State
 };
 
 /**
- * Component that satisfies the SMT SolverInterface and uses an LP solver plus the DPLL
+ * Component that satisfies the SMT SolverInterface and uses an LP solver plus the CDCL
  * algorithm internally.
  * It uses a rational relaxation of the integer program and thus will not be able to answer
  * "satisfiable", but its answers are still correct.
  *
- * TODO are integers always non-negative?
+ * Contrary to the usual SMT type system, it adds an implicit constraint for all variables
+ * and sub-expressions to be non-negative.
+ * TODO this does not apply to e.g. `x + y - something`
  *
  * Integers are unbounded.
  */
@@ -77,13 +79,15 @@ public:
 private:
 	using rational = boost::rational<bigint>;
 
-	smtutil::Expression declareInternalBoolean();
+	smtutil::Expression declareInternalVariable(bool _boolean);
 	void declareVariable(std::string const& _name, bool _boolean);
 
+	/// Parses an expression of sort bool and returns a literal.
 	std::optional<Literal> parseLiteral(smtutil::Expression const& _expr);
 	Literal negate(Literal const& _lit);
 
 	Literal parseLiteralOrReturnEqualBoolean(smtutil::Expression const& _expr);
+	smtutil::Expression parseLinearSumOrReturnEqualVariable(smtutil::Expression const& _expr);
 
 	/// Parses the expression and expects a linear sum of variables.
 	/// Returns a vector with the first element being the constant and the

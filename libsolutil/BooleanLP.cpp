@@ -97,31 +97,53 @@ void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _s
 
 void BooleanLPSolver::addAssertion(Expression const& _expr)
 {
+	solAssert(_expr.sort->kind == Kind::Bool);
 	if (_expr.arguments.empty())
-		state().clauses.emplace_back(Clause{vector<Literal>{*parseLiteral(_expr)}});
+	{
+		solAssert(isBooleanVariable(_expr.name));
+		state().clauses.emplace_back(Clause{Literal{
+			true,
+			state().variables.at(_expr.name)
+		}});
+	}
 	else if (_expr.name == "=")
 	{
-		// Try to see if both sides are linear.
-		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
-		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
-		if (left && right)
+		solAssert(_expr.arguments.at(0).sort->kind == _expr.arguments.at(1).sort->kind);
+		if (_expr.arguments.at(0).sort->kind == Kind::Bool)
 		{
-			LinearExpression data = *left - *right;
-			data[0] *= -1;
-			Constraint c{move(data), _expr.name == "=", {}};
-			if (!tryAddDirectBounds(c))
-				state().fixedConstraints.emplace_back(move(c));
+			if (_expr.arguments.at(0).arguments.empty() && isBooleanVariable(_expr.arguments.at(0).name))
+				addBooleanEquality(*parseLiteral(_expr.arguments.at(0)), _expr.arguments.at(1));
+			else if (_expr.arguments.at(1).arguments.empty() && isBooleanVariable(_expr.arguments.at(1).name))
+				addBooleanEquality(*parseLiteral(_expr.arguments.at(1)), _expr.arguments.at(0));
+			else
+			{
+				Literal newBoolean = *parseLiteral(declareInternalVariable(true));
+				addBooleanEquality(newBoolean, _expr.arguments.at(0));
+				addBooleanEquality(newBoolean, _expr.arguments.at(1));
+			}
 		}
-		else if (_expr.arguments.at(0).arguments.empty() && isBooleanVariable(_expr.arguments.at(0).name))
-			addBooleanEquality(*parseLiteral(_expr.arguments.at(0)), _expr.arguments.at(1));
-		else if (_expr.arguments.at(1).arguments.empty() && isBooleanVariable(_expr.arguments.at(1).name))
-			addBooleanEquality(*parseLiteral(_expr.arguments.at(1)), _expr.arguments.at(0));
+		else if (_expr.arguments.at(0).sort->kind == Kind::Int)
+		{
+			// Try to see if both sides are linear.
+			optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
+			optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
+			if (left && right)
+			{
+				LinearExpression data = *left - *right;
+				data[0] *= -1;
+				Constraint c{move(data), _expr.name == "=", {}};
+				if (!tryAddDirectBounds(c))
+					state().fixedConstraints.emplace_back(move(c));
+			}
+			else
+			{
+				Expression left = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(0));
+				Expression right = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(1));
+				addAssertion(left == right);
+			}
+		}
 		else
-		{
-			Literal newBoolean = *parseLiteral(declareInternalBoolean());
-			addBooleanEquality(newBoolean, _expr.arguments.at(0));
-			addBooleanEquality(newBoolean, _expr.arguments.at(1));
-		}
+			solAssert(false);
 	}
 	else if (_expr.name == "and")
 	{
@@ -137,7 +159,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 		{
 			// We cannot have more than one constraint per clause.
 			// TODO Why?
-			right = *parseLiteral(declareInternalBoolean());
+			right = *parseLiteral(declareInternalVariable(true));
 			addBooleanEquality(right, _expr.arguments.at(1));
 		}
 		state().clauses.emplace_back(Clause{vector<Literal>{left, right}});
@@ -152,18 +174,20 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 	{
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
 		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
-		if (!left || !right)
+		if (left && right)
 		{
-			cout << "Unable to parse expression" << endl;
-			// TODO fail in some way
-			return;
+			LinearExpression data = *left - *right;
+			data[0] *= -1;
+			Constraint c{move(data), _expr.name == "=", {}};
+			if (!tryAddDirectBounds(c))
+				state().fixedConstraints.emplace_back(move(c));
 		}
-
-		LinearExpression data = *left - *right;
-		data[0] *= -1;
-		Constraint c{move(data), _expr.name == "=", {}};
-		if (!tryAddDirectBounds(c))
-			state().fixedConstraints.emplace_back(move(c));
+		else
+		{
+			Expression left = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(0));
+			Expression right = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(1));
+			addAssertion(left <= right);
+		}
 	}
 	else if (_expr.name == ">=")
 		addAssertion(_expr.arguments.at(1) <= _expr.arguments.at(0));
@@ -275,11 +299,11 @@ string BooleanLPSolver::toString() const
 	return result;
 }
 
-Expression BooleanLPSolver::declareInternalBoolean()
+Expression BooleanLPSolver::declareInternalVariable(bool _boolean)
 {
 	string name = "$" + to_string(state().variables.size() + 1);
-	declareVariable(name, true);
-	return smtutil::Expression(name, {}, SortProvider::boolSort);
+	declareVariable(name, _boolean);
+	return smtutil::Expression(name, {}, _boolean ? SortProvider::boolSort : SortProvider::uintSort);
 }
 
 void BooleanLPSolver::declareVariable(string const& _name, bool _boolean)
@@ -350,15 +374,40 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 
 Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _expr)
 {
-	// TODO hen can this fail?
+	solAssert(_expr.sort->kind == Kind::Bool);
+	// TODO when can this fail?
 	if (optional<Literal> literal = parseLiteral(_expr))
 		return *literal;
 	else
 	{
-		Literal newBoolean = *parseLiteral(declareInternalBoolean());
+		Literal newBoolean = *parseLiteral(declareInternalVariable(true));
 		addBooleanEquality(newBoolean, _expr);
 		return newBoolean;
 	}
+}
+
+Expression BooleanLPSolver::parseLinearSumOrReturnEqualVariable(Expression const& _expr)
+{
+	solAssert(_expr.sort->kind == Kind::Int);
+	if (_expr.name == "ite")
+	{
+		Literal condition = parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0));
+		// TODO this adds too many variables
+		Expression conditionBoolean = declareInternalVariable(true);
+		addBooleanEquality(condition, conditionBoolean);
+		Expression trueValue = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(1));
+		Expression falseValue = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(2));
+		Expression result = declareInternalVariable(false);
+		addAssertion(conditionBoolean || (result == trueValue));
+		addAssertion(!conditionBoolean || (result == falseValue));
+		return result;
+	}
+	if (_expr.arguments.empty())
+		return _expr;
+	solAssert(parseLinearSum(_expr));
+	Expression result = declareInternalVariable(false);
+	addAssertion(result == _expr);
+	return result;
 }
 
 optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr) const
@@ -374,7 +423,12 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 		return _expr.name == "+" ? *left + *right : *left - *right;
 	}
 	else
+	{
+			// TOOD This should just resort to parseLinearSumOrReturn...
+			// and then use that variable
+		cout << "Invalid operator " << _expr.name << endl;
 		return std::nullopt;
+	}
 }
 
 optional<LinearExpression> BooleanLPSolver::parseProduct(smtutil::Expression const& _expr) const
@@ -477,6 +531,7 @@ size_t BooleanLPSolver::addConditionalConstraint(Constraint _constraint)
 
 void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expression const& _right)
 {
+	solAssert(_right.sort->kind == Kind::Bool);
 	if (optional<Literal> right = parseLiteral(_right))
 	{
 		// includes: not, <=, <, >=, >, boolean variables.
@@ -501,7 +556,7 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 		{
 			// We cannot have more than one constraint per clause.
 			// TODO Why?
-			b = *parseLiteral(declareInternalBoolean());
+			b = *parseLiteral(declareInternalVariable(true));
 			addBooleanEquality(b, _right.arguments.at(1));
 		}
 

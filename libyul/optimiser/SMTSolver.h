@@ -68,6 +68,7 @@ protected:
 	static smtutil::Expression bv2int(smtutil::Expression _arg);
 
 	smtutil::Expression newVariable();
+	smtutil::Expression newBooleanVariable();
 	virtual smtutil::Expression newRestrictedVariable(bigint _maxValue = (bigint(1) << 256) - 1);
 	std::string uniqueName();
 
