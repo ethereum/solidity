@@ -9,6 +9,7 @@ add_dependencies(ossfuzz
 )
 
 if (OSSFUZZ)
+    add_subdirectory(cdclsolver)
     add_custom_target(ossfuzz_proto)
     add_dependencies(ossfuzz_proto
             sol_proto_ossfuzz
@@ -23,6 +24,13 @@ if (OSSFUZZ)
 endif()
 
 if (OSSFUZZ)
+    add_executable(cdclsolver_ossfuzz
+      CDCLSolverFuzzer.cpp
+      CDCLSolverCustomMutatorInterface.cpp
+    )
+    target_link_libraries(cdclsolver_ossfuzz PRIVATE solutil cdclsolvergen z3)
+    set_target_properties(cdclsolver_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+
     add_executable(solc_ossfuzz
             solc_ossfuzz.cpp
             ../fuzzer_common.cpp
