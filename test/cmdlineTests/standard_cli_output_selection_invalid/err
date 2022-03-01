@@ -1,1 +1,0 @@
-The following outputs are not supported in standard JSON mode: --abi, --asm, --asm-json, --ast-compact-json, --bin, --bin-runtime, --devdoc, --ewasm, --ewasm-ir, --hashes, --ir, --ir-optimized, --metadata, --opcodes, --storage-layout, --userdoc.

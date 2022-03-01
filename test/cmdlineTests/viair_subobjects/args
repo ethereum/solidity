@@ -1,1 +1,0 @@
---ir-optimized --experimental-via-ir --optimize --bin --bin-runtime

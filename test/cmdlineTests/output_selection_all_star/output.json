@@ -1,1 +1,0 @@
-{"contracts":{"a.sol":{"A1":{"evm":{"bytecode":{"object":"<BYTECODE REMOVED>"}}},"A2":{"evm":{"bytecode":{"object":"<BYTECODE REMOVED>"}}}},"b.sol":{"A1":{"evm":{"bytecode":{"object":"<BYTECODE REMOVED>"}}},"B2":{"evm":{"bytecode":{"object":"<BYTECODE REMOVED>"}}}}},"sources":{"a.sol":{"id":0},"b.sol":{"id":1}}}

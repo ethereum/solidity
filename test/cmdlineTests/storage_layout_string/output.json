@@ -1,1 +1,0 @@
-{"contracts":{"fileA":{"A":{"storageLayout":{"storage":[{"astId":4,"contract":"fileA:A","label":"s1","offset":0,"slot":"0","type":"t_string_storage"},{"astId":6,"contract":"fileA:A","label":"s2","offset":0,"slot":"1","type":"t_string_storage"}],"types":{"t_string_storage":{"encoding":"bytes","label":"string","numberOfBytes":"32"}}}}}},"sources":{"fileA":{"id":0}}}

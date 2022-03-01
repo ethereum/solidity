@@ -1,7 +1,0 @@
-{"errors":[{"component":"general","errorCode":"1180","formattedMessage":"Info: Contract invariant(s) for A:test:
-(x <= 0)
-
-
-","message":"Contract invariant(s) for A:test:
-(x <= 0)
-","severity":"info","type":"Info"}],"sources":{"A":{"id":0}}}

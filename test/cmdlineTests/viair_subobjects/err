@@ -1,5 +1,0 @@
-Warning: Unused local variable.
- --> viair_subobjects/input.sol:8:9:
-  |
-8 |         C c = new C();
-  |         ^^^

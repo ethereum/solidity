@@ -1,2 +1,0 @@
-Compiler error: Stack too deep when compiling inline assembly: Variable value0 is 1 slot(s) too deep inside the stack.
-

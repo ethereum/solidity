@@ -1,5 +1,0 @@
-{
-}
-// ----
-// Assembly:
-// -- empty bytecode --

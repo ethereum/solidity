@@ -1,5 +1,0 @@
-Error: Identifier not found or not unique.
- --> too_long_line_both_sides_short/input.sol:5:15:
-  |
-5 |    function f(announcementTypeXXXXXXXXXXXXXXXXXXX ... XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Type,
-  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

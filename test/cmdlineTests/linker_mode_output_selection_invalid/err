@@ -1,1 +1,0 @@
-The following outputs are not supported in linker mode: --abi, --asm, --asm-json, --bin, --bin-runtime, --devdoc, --ewasm, --hashes, --ir, --ir-optimized, --metadata, --opcodes, --storage-layout, --userdoc.

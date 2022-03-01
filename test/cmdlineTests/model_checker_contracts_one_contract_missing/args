@@ -1,1 +1,0 @@
---model-checker-engine all --model-checker-contracts model_checker_contracts_all_explicit/input.sol:,model_checker_contracts_all_explicit/input.sol:A

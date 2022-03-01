@@ -1,1 +1,0 @@
-{"errors":[{"component":"general","formattedMessage":"settings.modelChecker.targets must be a non-empty array.","message":"settings.modelChecker.targets must be a non-empty array.","severity":"error","type":"JSONError"}]}

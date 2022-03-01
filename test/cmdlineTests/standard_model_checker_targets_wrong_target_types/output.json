@@ -1,1 +1,0 @@
-{"errors":[{"component":"general","formattedMessage":"Every target in settings.modelChecker.targets must be a string.","message":"Every target in settings.modelChecker.targets must be a string.","severity":"error","type":"JSONError"}]}

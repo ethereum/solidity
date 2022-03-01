@@ -1,6 +1,0 @@
-Warning: Yul is still experimental. Please use the output with care.
-Error: Expected keyword "object".
- --> strict_asm_only_cr/input.yul:1:2:
-  |
-1 | 
-  | ^

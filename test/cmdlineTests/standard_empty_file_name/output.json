@@ -1,3 +1,0 @@
-{"errors":[{"component":"general","errorCode":"2904","formattedMessage":"DeclarationError: Declaration \"A\" not found in \"\" (referenced as \".\").
-
-","message":"Declaration \"A\" not found in \"\" (referenced as \".\").","severity":"error","sourceLocation":{"end":79,"file":"","start":59},"type":"DeclarationError"}],"sources":{"":{"id":0}}}

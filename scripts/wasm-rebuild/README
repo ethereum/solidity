@@ -1,4 +1,0 @@
-This directory contains scripts that we used to rebuild historic releases to webassembly.
-The rebuild took place at the time of Solidity version 0.6.1 and was used to rebuild all versions from 0.3.6 to 0.6.1.
-The scripts are not actively tested or maintained, but we keep them for future reference in case we want to rebuild
-historic releases again at a later point.

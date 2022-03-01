@@ -1,5 +1,0 @@
-Error: No visibility specified. Did you intend to add "public"?
- --> too_long_line_multiline/input.sol:5:5:
-  |
-5 |     function f() returns (bytes1 _b, by ... _b7, bytes22 _b22, bytes32 _b32)  {
-  |     ^ (Relevant source part starts here and spans across multiple lines).

@@ -1,9 +1,0 @@
-{
-	"language": "Solidity",
-	"sources": {
-		"A": {"urls": ["standard_optimizer_invalid_details/in.sol"]}
-	},
-	"settings": {
-		"optimizer": {"details": {"notThere": true}}
-	}
-}

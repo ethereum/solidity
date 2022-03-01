@@ -1,6 +1,0 @@
-Warning: Yul is still experimental. Please use the output with care.
-Error: Function "jump" not found.
- --> strict_asm_jump/input.yul:1:3:
-  |
-1 | { jump(1) }
-  |   ^^^^

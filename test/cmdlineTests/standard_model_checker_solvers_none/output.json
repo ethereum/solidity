@@ -1,5 +1,0 @@
-{"errors":[{"component":"general","errorCode":"7649","formattedMessage":"Warning: CHC analysis was not possible since no Horn solver was enabled.
-
-","message":"CHC analysis was not possible since no Horn solver was enabled.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"7710","formattedMessage":"Warning: BMC analysis was not possible since no SMT solver was found and enabled.
-
-","message":"BMC analysis was not possible since no SMT solver was found and enabled.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}

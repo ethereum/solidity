@@ -1,1 +1,0 @@
-linking_qualified_library_name/contract1.sol --bin --libraries linking_qualified_library_name/math.sol:Log:0x7777777777777777777777777777777777777777

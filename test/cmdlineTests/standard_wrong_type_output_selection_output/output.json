@@ -1,1 +1,0 @@
-{"errors":[{"component":"general","formattedMessage":"\"settings.outputSelection.fileA.A\" must be a string array","message":"\"settings.outputSelection.fileA.A\" must be a string array","severity":"error","type":"JSONError"}]}

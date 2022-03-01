@@ -1,6 +1,0 @@
-{
-	"language": "Yul",
-	"sources": {
-		"C": {"urls": ["in.yul"]}
-	}
-}

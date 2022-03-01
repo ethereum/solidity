@@ -1,5 +1,0 @@
-contract C {
-}
-// ====
-// SMTEngine: all
-// ----

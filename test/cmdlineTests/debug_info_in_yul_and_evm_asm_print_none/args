@@ -1,1 +1,0 @@
---ir --ir-optimized --asm --optimize --debug-info none

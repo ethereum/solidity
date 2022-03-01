@@ -1,1 +1,0 @@
-{"errors":[{"component":"general","formattedMessage":"Every contract in settings.modelChecker.contracts must be a string.","message":"Every contract in settings.modelChecker.contracts must be a string.","severity":"error","type":"JSONError"}]}

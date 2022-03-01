@@ -1,1 +1,0 @@
-{"errors":[{"component":"general","formattedMessage":"settings.modelChecker.showUnproved must be a Boolean value.","message":"settings.modelChecker.showUnproved must be a Boolean value.","severity":"error","type":"JSONError"}]}

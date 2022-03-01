@@ -1,7 +1,0 @@
-{"errors":[{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation might happen here.
-  --> A:11:7:
-   |
-11 | \t\t\t\t\t\tassert(s.x > 0);
-   | \t\t\t\t\t\t^^^^^^^^^^^^^^^
-
-","message":"CHC: Assertion violation might happen here.","severity":"warning","sourceLocation":{"end":201,"file":"A","start":186},"type":"Warning"}],"sources":{"A":{"id":0}}}

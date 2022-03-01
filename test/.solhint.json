@@ -1,8 +1,0 @@
-{
-    "extends": "solhint:default",
-    "plugins": [],
-    "rules": {
-        "compiler-fixed": "off",
-        "no-inline-assembly": "off"
-    }
-}

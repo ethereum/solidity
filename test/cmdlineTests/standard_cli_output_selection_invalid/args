@@ -1,1 +1,0 @@
---ast-compact-json --asm --asm-json --opcodes --bin --bin-runtime --abi --ir --ir-optimized --ewasm --ewasm-ir --hashes --userdoc --devdoc --metadata --storage-layout

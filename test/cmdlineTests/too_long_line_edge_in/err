@@ -1,5 +1,0 @@
-Error: Identifier not found or not unique.
- --> too_long_line_edge_in/input.sol:5:36:
-  |
-5 |    function ffffffffffffffffffffff(announcementTypeTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT Ty, string A) onlyOwner external {
-  |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,1 +1,0 @@
-{"errors":[{"component":"general","formattedMessage":"settings.modelChecker.invariants must be an array.","message":"settings.modelChecker.invariants must be an array.","severity":"error","type":"JSONError"}]}
