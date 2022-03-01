@@ -74,7 +74,7 @@ struct Tableau
 
 /// Adds slack variables to remove non-equality costraints from a set of constraints
 /// and returns the data part of the tableau / constraints.
-/// The second return variable is true if a the original input had any equality constraints.
+/// The second return variable is true if the original input had any equality constraints.
 pair<vector<LinearExpression>, bool> toEquationalForm(vector<Constraint> _constraints)
 {
 	size_t varsNeeded = static_cast<size_t>(ranges::count_if(_constraints, [](Constraint const& _c) { return !_c.equality; }));
