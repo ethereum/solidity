@@ -39,7 +39,7 @@ CDCL::CDCL(
 	m_variables(move(_variables)),
 	proof(_proof)
 {
-	m_assignments.resize(m_variables.size(), tristate_unset);
+	m_assignments.resize(m_variables.size(), TriState::t_unset());
 	for (const auto& clause: _clauses)
 		addClause(clause);
 
@@ -85,9 +85,9 @@ optional<CDCL::Model> CDCL::solve()
 				*proof << "a " << ID << " " << toProofString(learntClause) << " 0\n";
 
 			solAssert(!learntClause.empty());
-			solAssert(!isAssigned(learntClause.front()));
+			solAssert(value(learntClause.front()) == TriState::t_unset());
 			for (size_t i = 1; i < learntClause.size(); i++)
-				solAssert(isAssignedFalse(learntClause.at(i)));
+				solAssert(value(learntClause[i]) == TriState::t_false());
 
 			if (learntClause.size() == 1)
 			{
@@ -151,7 +151,7 @@ optional<Clause> CDCL::propagate()
 			if (clause.front() != falseLiteral)
 				swap(clause[0], clause[1]);
 			solAssert(clause.front() == falseLiteral);
-			if (isAssignedTrue(clause[1]))
+			if (value(clause[1]) == TriState::t_true())
 			{
 				// Clause is already satisfied, keezp the watch.
 				cout << " -> already satisfied by " << toString(clause[1]) << endl;
@@ -161,7 +161,7 @@ optional<Clause> CDCL::propagate()
 
 			// find a new watch to swap
 			for (size_t i = 2; i < clause.size(); i++)
-				if (isUnknownOrAssignedTrue(clause[i]))
+				if (value(clause[i]) == TriState::t_unset() || value(clause[i]) == TriState::t_true())
 				{
 					cout << " -> swapping " << toString(clause.front()) << " with " << toString(clause[i]) << endl;
 					swap(clause.front(), clause[i]);
@@ -173,7 +173,7 @@ optional<Clause> CDCL::propagate()
 
 			// We did not find a new watch, i.e. all literals starting from index 2
 			// are false, thus clause[1] has to be true (if it exists)
-			if (isAssignedFalse(clause[1]))
+			if (value(clause[1]) == TriState::t_false())
 			{
 				cout << " - Propagate resulted in conflict because " << toString(clause[1]) << " is also false." << endl;
 				// Copy over the remaining watches and replace.
@@ -273,11 +273,11 @@ void CDCL::addClause(const vector<Literal>& _lits)
 	for (const auto& l: clause)
 	{
 		// Clause is satisfied, nothing to do.
-		if (isAssignedTrue(l))
+		if (value(l) == TriState::t_true())
 			return;
 
 		// Remove literal from clause.
-		if (isAssignedFalse(l))
+		if (value(l) == TriState::t_false())
 			continue;
 
 		clause_updated.push_back(l);
@@ -318,7 +318,7 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 	if (_reason)
 		cout << "  because of " << toString(*_reason) << endl;
 
-	assert(!isAssigned(_literal));
+	assert(value(_literal) == TriState::t_unset());
 	m_assignments[_literal.variable] = _literal.positive;
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason)
@@ -337,7 +337,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		Literal l = m_assignmentTrail.back();
 		cout << "  undoing " << toString(l) << endl;
 		m_assignmentTrail.pop_back();
-		m_assignments[l.variable] = tristate_unset;
+		m_assignments[l.variable] = TriState::t_unset();
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
@@ -350,7 +350,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 optional<size_t> CDCL::nextDecisionVariable() const
 {
 	for (size_t i = 0; i < m_variables.size(); i++)
-		if (m_assignments[i] == tristate_unset)
+		if (value(i) == TriState::t_unset())
 			return i;
 	return nullopt;
 }
