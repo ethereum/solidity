@@ -51,10 +51,10 @@ vector<string> cutStringBySpace(string& input)
 optional<vector<Literal>> parseLine(std::string& line)
 {
 	vector<Literal> cl;
-	bool end_of_clause = false;
+	bool endOfClause = false;
 	for (const auto& part: line | ranges::views::split(' '))
 	{
-		if (end_of_clause)
+		if (endOfClause)
 		{
 			cout << "ERROR: trailing elements after finishing `0` at the end of a clause in CNF file" << endl;
 			exit(-1);
@@ -64,7 +64,7 @@ optional<vector<Literal>> parseLine(std::string& line)
 		if (var == 0)
 		{
 			//end of clause
-			end_of_clause = true;
+			endOfClause = true;
 			continue;
 		}
 		assert(var > 0);
@@ -77,10 +77,10 @@ optional<vector<Literal>> parseLine(std::string& line)
 		cout << "cl: ";
 		for (const auto& l: cl)
 			cout << (l.positive ? "" : "-") << (l.variable+1) << " ";
-		cout << " end: " << (int)end_of_clause << endl;
+		cout << " end: " << (int)endOfClause << endl;
 	}
 
-	if (end_of_clause)
+	if (endOfClause)
 		return cl;
 	else
 		return nullopt;
@@ -88,8 +88,8 @@ optional<vector<Literal>> parseLine(std::string& line)
 
 std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 {
-	long vars_by_header = -1;
-	long cls_by_header = -1;
+	long varsByHeader = -1;
+	long clsByHeader = -1;
 	vector<vector<Literal>> cls;
 	std::ifstream infile(fname.c_str());
 
@@ -102,10 +102,10 @@ std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 			assert(line.substr(0,6) == string("p cnf "));
 			line = line.substr(6);
 			vector<string> parts = cutStringBySpace(line);
-			vars_by_header = std::stol(parts[0]);
-			assert(vars_by_header >= 0);
-			cls_by_header =  std::stol(parts[1]);
-			assert(cls_by_header >= 0);
+			varsByHeader = std::stol(parts[0]);
+			assert(varsByHeader >= 0);
+			clsByHeader =  std::stol(parts[1]);
+			assert(clsByHeader >= 0);
 
 			continue;
 		}
@@ -113,20 +113,20 @@ std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 		if (cl)
 			cls.push_back(cl.value());
 	}
-	if (vars_by_header == -1)
+	if (varsByHeader == -1)
 	{
 		cout << "ERROR: CNF did not have a header" << endl;
 		exit(-1);
 	}
 
-	assert(cls_by_header >= 0);
-	if (cls.size() != (size_t)cls_by_header)
+	assert(clsByHeader >= 0);
+	if (cls.size() != (size_t)clsByHeader)
 	{
-		cout << "ERROR: header said number of clauses will be " << cls_by_header << " but we read " << cls.size() << endl;
+		cout << "ERROR: header said number of clauses will be " << clsByHeader << " but we read " << cls.size() << endl;
 		exit(-1);
 	}
 
-	return make_pair(cls, (size_t)vars_by_header);
+	return make_pair(cls, (size_t)varsByHeader);
 }
 
 size_t getNumVars(const vector<vector<Literal>>& cls)
@@ -147,29 +147,29 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 
-	const string cnf_file_name = argv[1];
-	auto&& [cls, max_vars_by_header] = readCNFFile(cnf_file_name);
-	const size_t num_vars_by_cls = getNumVars(cls);
-	vector<string> m_variables;
+	const string cnfFileName = argv[1];
+	auto&& [cls, maxVarsByHeader] = readCNFFile(cnfFileName);
+	const size_t numVarsByCls = getNumVars(cls);
+	vector<string> variables;
 
-	if (max_vars_by_header < num_vars_by_cls)
+	if (maxVarsByHeader < numVarsByCls)
 	{
 		cout << "ERROR: header promises less variables than what clauses say" << endl;
 		exit(-1);
 	}
-	assert(max_vars_by_header >= num_vars_by_cls);
+	assert(maxVarsByHeader >= numVarsByCls);
 
-	for (size_t i = 0; i < max_vars_by_header; i ++)
-		m_variables.push_back(string("x") + std::to_string(i));
+	for (size_t i = 0; i < maxVarsByHeader; i ++)
+		variables.push_back(string("x") + std::to_string(i));
 
-	auto model = CDCL{m_variables, move(cls)}.solve();
+	auto model = CDCL{variables, move(cls)}.solve();
 
 	if (model) {
-		const size_t line_break_after = 80;
+		const size_t lineBreakAfter = 80;
 		stringstream ss;
 		ss << "v";
 		for(size_t i = 0; i < model->size(); i++) {
-			if (ss.str().size() > line_break_after) {
+			if (ss.str().size() > lineBreakAfter) {
 				cout << ss.str() << endl;
 				ss.clear();
 				ss << "v";
