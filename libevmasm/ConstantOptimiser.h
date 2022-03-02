@@ -26,6 +26,7 @@
 
 #include <liblangutil/EVMVersion.h>
 
+#include <libsolutil/Numeric.h>
 #include <libsolutil/Assertions.h>
 
 #include <vector>

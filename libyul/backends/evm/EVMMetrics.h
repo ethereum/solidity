@@ -23,6 +23,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <liblangutil/EVMVersion.h>
+#include <libsolutil/Numeric.h>
 #include <libevmasm/Instruction.h>
 
 namespace solidity::yul

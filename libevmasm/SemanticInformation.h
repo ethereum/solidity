@@ -26,6 +26,9 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <optional>
+#include <vector>
+
 namespace solidity::evmasm
 {
 

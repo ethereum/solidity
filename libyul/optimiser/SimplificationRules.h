@@ -27,6 +27,7 @@
 #include <libyul/YulString.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>

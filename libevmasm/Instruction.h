@@ -25,8 +25,6 @@
 #include <libevmasm/Exceptions.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
-#include <libsolutil/Numeric.h>
-#include <functional>
 
 namespace solidity::evmasm
 {
@@ -217,25 +215,25 @@ inline bool isLogInstruction(Instruction _inst)
 /// @returns the number of PUSH Instruction _inst
 inline unsigned getPushNumber(Instruction _inst)
 {
-	return (uint8_t)_inst - unsigned(Instruction::PUSH1) + 1;
+	return static_cast<uint8_t>(_inst) - unsigned(Instruction::PUSH1) + 1;
 }
 
 /// @returns the number of DUP Instruction _inst
 inline unsigned getDupNumber(Instruction _inst)
 {
-	return (uint8_t)_inst - unsigned(Instruction::DUP1) + 1;
+	return static_cast<uint8_t>(_inst) - unsigned(Instruction::DUP1) + 1;
 }
 
 /// @returns the number of SWAP Instruction _inst
 inline unsigned getSwapNumber(Instruction _inst)
 {
-	return (uint8_t)_inst - unsigned(Instruction::SWAP1) + 1;
+	return static_cast<uint8_t>(_inst) - unsigned(Instruction::SWAP1) + 1;
 }
 
 /// @returns the number of LOG Instruction _inst
 inline unsigned getLogNumber(Instruction _inst)
 {
-	return (uint8_t)_inst - unsigned(Instruction::LOG0);
+	return static_cast<uint8_t>(_inst) - unsigned(Instruction::LOG0);
 }
 
 /// @returns the PUSH<_number> instruction
@@ -266,7 +264,7 @@ inline Instruction logInstruction(unsigned _number)
 	return Instruction(unsigned(Instruction::LOG0) + _number);
 }
 
-enum class Tier : unsigned
+enum class Tier
 {
 	Zero = 0,	// 0, Zero
 	Base,		// 2, Quick
@@ -300,11 +298,5 @@ bool isValidInstruction(Instruction _inst);
 
 /// Convert from string mnemonic to Instruction type.
 extern const std::map<std::string, Instruction> c_instructions;
-
-/// Iterate through EVM code and call a function on each instruction.
-void eachInstruction(bytes const& _mem, std::function<void(Instruction, u256 const&)> const& _onInstruction);
-
-/// Convert from EVM code to simple EVM assembly language.
-std::string disassemble(bytes const& _mem, std::string const& _delimiter = " ");
 
 }
