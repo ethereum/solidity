@@ -32,11 +32,12 @@ using namespace solidity::util;
 CDCL::CDCL(
 	vector<string> _variables,
 	vector<Clause> const& _clauses,
-	std::function<std::optional<Clause>(std::map<size_t, bool> const&)> _theorySolver
+	std::function<std::optional<Clause>(std::vector<TriState> const&)> _theorySolver
 ):
 	m_theorySolver(_theorySolver),
 	m_variables(move(_variables))
 {
+	m_assignments.resize(m_variables.size(), TriState::t_unset());
 	for (Clause const& clause: _clauses)
 		addClause(clause);
 
@@ -45,6 +46,8 @@ CDCL::CDCL(
 
 optional<CDCL::Model> CDCL::solve()
 {
+	if (!ok) return nullopt;
+
 	cout << "====" << endl;
 	for (unique_ptr<Clause> const& c: m_clauses)
 		cout << toString(*c) << endl;
@@ -63,17 +66,28 @@ optional<CDCL::Model> CDCL::solve()
 			if (currentDecisionLevel() == 0)
 			{
 				cout << "Unsatisfiable" << endl;
+				ok = false;
 				return nullopt;
 			}
 			auto&& [learntClause, backtrackLevel] = analyze(move(*conflictClause));
 			cancelUntil(backtrackLevel);
-			solAssert(!learntClause.empty());
-			solAssert(!isAssigned(learntClause.front()));
-			for (size_t i = 1; i < learntClause.size(); i++)
-				solAssert(isAssignedFalse(learntClause.at(i)));
 
-			addClause(move(learntClause));
-			enqueue(m_clauses.back()->front(), &(*m_clauses.back()));
+			solAssert(!learntClause.empty());
+			solAssert(value(learntClause.front()) == TriState::t_unset());
+			for (size_t i = 1; i < learntClause.size(); i++)
+				solAssert(value(learntClause[i]) == TriState::t_false());
+
+			if (learntClause.size() == 1)
+			{
+				assert(currentDecisionLevel() == 0);
+				enqueue(learntClause[0], nullptr);
+			}
+			else
+			{
+				m_clauses.push_back(make_unique<Clause>(move(learntClause)));
+				setupWatches(*m_clauses.back());
+				enqueue(m_clauses.back()->front(), &(*m_clauses.back()));
+			}
 		}
 		else
 		{
@@ -86,8 +100,8 @@ optional<CDCL::Model> CDCL::solve()
 			else
 			{
 				cout << "satisfiable." << endl;
-				for (auto&& [var, value]: m_assignments)
-					cout << " " << m_variables.at(var) << ": " << (value ? "true" : "false") << endl;
+				for (size_t i = 0; i < m_assignments.size(); i++)
+					cout << " " << i << ": " << m_assignments[i].toString() << endl;
 				return m_assignments;
 			}
 		}
@@ -96,7 +110,8 @@ optional<CDCL::Model> CDCL::solve()
 
 void CDCL::setupWatches(Clause& _clause)
 {
-	for (size_t i = 0; i < min<size_t>(2, _clause.size()); i++)
+	assert(_clause.size() >= 2);
+	for (size_t i = 0; i < 2; i++)
 		m_watches[_clause.at(i)].push_back(&_clause);
 }
 
@@ -121,7 +136,7 @@ optional<Clause> CDCL::propagate()
 			if (clause.front() != falseLiteral)
 				swap(clause[0], clause[1]);
 			solAssert(clause.front() == falseLiteral);
-			if (clause.size() >= 2 && isAssignedTrue(clause[1]))
+			if (value(clause[1]) == TriState::t_true())
 			{
 				// Clause is already satisfied, keezp the watch.
 				cout << " -> already satisfied by " << toString(clause[1]) << endl;
@@ -131,7 +146,7 @@ optional<Clause> CDCL::propagate()
 
 			// find a new watch to swap
 			for (size_t i = 2; i < clause.size(); i++)
-				if (isUnknownOrAssignedTrue(clause[i]))
+				if (value(clause[i]) == TriState::t_unset() || value(clause[i]) == TriState::t_true())
 				{
 					cout << " -> swapping " << toString(clause.front()) << " with " << toString(clause[i]) << endl;
 					swap(clause.front(), clause[i]);
@@ -143,7 +158,7 @@ optional<Clause> CDCL::propagate()
 
 			// We did not find a new watch, i.e. all literals starting from index 2
 			// are false, thus clause[1] has to be true (if it exists)
-			if (clause.size() == 1 || isAssignedFalse(clause[1]))
+			if (value(clause[1]) == TriState::t_false())
 			{
 				if (clause.size() >= 2)
 					cout << " - Propagate resulted in conflict because " << toString(clause[1]) << " is also false." << endl;
@@ -230,9 +245,40 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 	return {move(learntClause), backtrackLevel};
 }
 
-void CDCL::addClause(Clause _clause)
+void CDCL::addClause(const Clause& _lits)
 {
-	m_clauses.push_back(make_unique<Clause>(move(_clause)));
+	if (!ok) return;
+
+	Clause clause{_lits};
+	Clause clause_updated;
+	for (const auto& l: clause)
+	{
+		// Clause is satisfied, nothing to do.
+		if (value(l) == TriState::t_true())
+			return;
+
+		// Remove literal from clause.
+		if (value(l) == TriState::t_false())
+			continue;
+
+		clause_updated.push_back(l);
+	}
+
+	// Empty clause, set UNSAT and return.
+	if (clause_updated.size() == 0)
+	{
+		ok = false;
+		return;
+	}
+
+	// Unit clause, enqueue fact.
+	if (clause_updated.size() == 1)
+	{
+		enqueue(clause_updated[0], nullptr);
+		return;
+	}
+
+	m_clauses.push_back(make_unique<Clause>(move(clause_updated)));
 	setupWatches(*m_clauses.back());
 }
 
@@ -241,8 +287,9 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 	cout << "Enqueueing " << toString(_literal) << " @" << currentDecisionLevel() << endl;
 	if (_reason)
 		cout << "  because of " << toString(*_reason) << endl;
-	// TODO assert that assignmnets was unknown
-	m_assignments[_literal.variable] = _literal.positive;
+
+	assert(value(_literal) == TriState::t_unset());
+	m_assignments[_literal.variable] = TriState(_literal.positive);
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason)
 		m_reason[_literal] = _reason;
@@ -260,7 +307,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		Literal l = m_assignmentTrail.back();
 		cout << "  undoing " << toString(l) << endl;
 		m_assignmentTrail.pop_back();
-		m_assignments.erase(l.variable);
+		m_assignments[l.variable] = TriState::t_unset();
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
@@ -273,38 +320,9 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 optional<size_t> CDCL::nextDecisionVariable() const
 {
 	for (size_t i = 0; i < m_variables.size(); i++)
-		if (!m_assignments.count(i))
+		if (value(i) == TriState::t_unset())
 			return i;
 	return nullopt;
-}
-
-bool CDCL::isAssigned(Literal const& _literal) const
-{
-	return m_assignments.count(_literal.variable);
-}
-
-bool CDCL::isAssignedTrue(Literal const& _literal) const
-{
-	return (
-		m_assignments.count(_literal.variable) &&
-		m_assignments.at(_literal.variable) == _literal.positive
-	);
-}
-
-bool CDCL::isAssignedFalse(Literal const& _literal) const
-{
-	return (
-		m_assignments.count(_literal.variable) &&
-		!m_assignments.at(_literal.variable) == _literal.positive
-	);
-}
-
-bool CDCL::isUnknownOrAssignedTrue(Literal const& _literal) const
-{
-	return (
-		!m_assignments.count(_literal.variable) ||
-		m_assignments.at(_literal.variable) == _literal.positive
-	);
 }
 
 string CDCL::toString(Literal const& _literal) const
