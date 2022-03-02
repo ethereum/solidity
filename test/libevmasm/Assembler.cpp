@@ -23,6 +23,7 @@
 
 #include <libevmasm/Assembly.h>
 #include <libsolutil/JSON.h>
+#include <libevmasm/Disassemble.h>
 #include <libyul/Exceptions.h>
 
 #include <boost/test/unit_test.hpp>

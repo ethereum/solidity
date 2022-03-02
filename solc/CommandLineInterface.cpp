@@ -44,6 +44,7 @@
 #include <libyul/AssemblyStack.h>
 
 #include <libevmasm/Instruction.h>
+#include <libevmasm/Disassemble.h>
 #include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
