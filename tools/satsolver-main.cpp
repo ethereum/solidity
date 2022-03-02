@@ -33,6 +33,7 @@ using std::cout;
 using std::endl;
 using std::optional;
 using std::nullopt;
+using std::stringstream;
 using std::make_pair;
 
 const int verbose = 0;
@@ -166,9 +167,24 @@ int main(int argc, char** argv)
 
 	auto model = CDCL{m_variables, move(cls), &proof_file}.solve();
 
-	if (model)
+	if (model) {
+		const size_t line_break_after = 80;
+		stringstream ss;
+		ss << "v";
+		for(size_t i = 0; i < model->size(); i++) {
+			if (ss.str().size() > line_break_after) {
+				cout << ss.str() << endl;
+				ss.clear();
+				ss << "v";
+			}
+			if (model->at(i) != TriState::t_unset()) {
+				ss << " " << (model->at(i) == TriState::t_true() ? "" : "-") << i+1;
+			}
+
+		}
+		cout << ss.str() << " 0" << endl;
 		cout << "s SATISFIABLE" << endl;
-	else
+	} else
 		cout << "s UNSATISFIABLE" << endl;
 
 	proof_file.close();
