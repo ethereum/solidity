@@ -51,14 +51,14 @@ optional<vector<Literal>> parseLine(std::string& line)
 {
 	vector<Literal> cl;
 	bool end_of_clause = false;
-	for (const auto& part: line | ranges::views::split(' ') | ranges::to<vector<string>>())
+	for (const auto& part: line | ranges::views::split(' '))
 	{
 		if (!end_of_clause)
 		{
 			cout << "ERROR: trailing elements after finishing `0` at the end of a clause in CNF file" << endl;
 			exit(-1);
 		}
-		const long lit = std::stol(part);
+		const long lit = std::stol(ranges::to<string>(part));
 		const long var = std::abs(lit);
 		if (var == 0)
 		{
