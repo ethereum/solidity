@@ -53,7 +53,7 @@ optional<vector<Literal>> parseLine(std::string& line)
 	bool end_of_clause = false;
 	for (const auto& part: line | ranges::views::split(' '))
 	{
-		if (!end_of_clause)
+		if (end_of_clause)
 		{
 			cout << "ERROR: trailing elements after finishing `0` at the end of a clause in CNF file" << endl;
 			exit(-1);
