@@ -54,40 +54,40 @@ using Clause = std::vector<Literal>;
 
 class TriState {
 public:
-	explicit constexpr TriState(const bool b) : val(b ? 1 : 0) {}
+	explicit constexpr TriState(bool const b) : m_val(b ? 1 : 0) {}
 	constexpr TriState() {}
 
-	bool operator==(const TriState& other) const
+	bool operator==(TriState const& other) const
 	{
-		return val == other.val;
+		return m_val == other.m_val;
 	}
 
-	bool operator!=(const TriState& other) const
+	bool operator!=(TriState const& other) const
 	{
-		return val != other.val;
+		return m_val != other.m_val;
 	}
 
 	bool toBool() const {
-		if (val == 1)
+		if (m_val == 1)
 			return true;
-		else if (val == 0)
+		else if (m_val == 0)
 			return false;
 		else
 		{
-			assert(val== 2);
+			assert(m_val== 2);
 			assert(false && "UNSET cannot be converted to bool");
 		}
 	}
 
 	std::string toString()
 	{
-		if (val == 1)
+		if (m_val == 1)
 			return "true";
-		else if (val == 0)
+		else if (m_val == 0)
 			return "false";
 		else
 		{
-			assert(val == 2);
+			assert(m_val == 2);
 			return "unset";
 		}
 	}
@@ -98,7 +98,7 @@ public:
 
 private:
 	// Default value is UNSET
-	uint8_t val = 2;
+	uint8_t m_val = 2;
 };
 
 constexpr TriState TriState::t_true() {
@@ -121,7 +121,7 @@ public:
 	CDCL(
 		std::vector<std::string> _variables,
 		std::vector<Clause> const& _clauses,
-		std::function<std::optional<Clause>(std::vector<TriState> const&)> _theoryPropagator = {}
+		std::function<std::optional<Clause>(std::vector<TriState> const&)> _theorySolver = {}
 	);
 
 	std::optional<Model> solve();
@@ -132,7 +132,7 @@ private:
 	std::pair<Clause, size_t> analyze(Clause _conflictClause);
 	size_t currentDecisionLevel() const { return m_decisionPoints.size(); }
 
-	void addClause(const Clause& _lits);
+	void addClause(Clause const& _clause);
 
 	void enqueue(Literal const& _literal, Clause const* _reason);
 

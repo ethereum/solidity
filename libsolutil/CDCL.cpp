@@ -136,7 +136,7 @@ optional<Clause> CDCL::propagate()
 			if (clause.front() != falseLiteral)
 				swap(clause[0], clause[1]);
 			solAssert(clause.front() == falseLiteral);
-			if (value(clause[1]) == TriState::t_true())
+			if (value(clause[1]) == TriState{true})
 			{
 				// Clause is already satisfied, keezp the watch.
 				cout << " -> already satisfied by " << toString(clause[1]) << endl;
@@ -146,7 +146,7 @@ optional<Clause> CDCL::propagate()
 
 			// find a new watch to swap
 			for (size_t i = 2; i < clause.size(); i++)
-				if (value(clause[i]) == TriState::t_unset() || value(clause[i]) == TriState::t_true())
+				if (value(clause[i]) == TriState::t_unset() || value(clause[i]) == TriState{true})
 				{
 					cout << " -> swapping " << toString(clause.front()) << " with " << toString(clause[i]) << endl;
 					swap(clause.front(), clause[i]);
@@ -245,40 +245,39 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 	return {move(learntClause), backtrackLevel};
 }
 
-void CDCL::addClause(const Clause& _lits)
+void CDCL::addClause(Clause const& _clause)
 {
 	if (m_state == State::unsat) return;
 
-	Clause clause{_lits};
-	Clause clause_updated;
-	for (const auto& l: clause)
+	Clause updatedClause;
+	for (auto const& l: _clause)
 	{
 		// Clause is satisfied, nothing to do.
-		if (value(l) == TriState::t_true())
+		if (value(l) == TriState{true})
 			return;
 
 		// Remove literal from clause.
 		if (value(l) == TriState::t_false())
 			continue;
 
-		clause_updated.push_back(l);
+		updatedClause.push_back(l);
 	}
 
 	// Empty clause, set UNSAT and return.
-	if (clause_updated.size() == 0)
+	if (updatedClause.size() == 0)
 	{
 		m_state = State::unsat;
 		return;
 	}
 
 	// Unit clause, enqueue fact.
-	if (clause_updated.size() == 1)
+	if (updatedClause.size() == 1)
 	{
-		enqueue(clause_updated[0], nullptr);
+		enqueue(updatedClause[0], nullptr);
 		return;
 	}
 
-	m_clauses.push_back(make_unique<Clause>(move(clause_updated)));
+	m_clauses.push_back(make_unique<Clause>(move(updatedClause)));
 	setupWatches(*m_clauses.back());
 }
 
