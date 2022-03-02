@@ -54,7 +54,7 @@ typedef std::vector<Literal> Clause;
 
 class TriState {
 public:
-	constexpr TriState(const bool b) : val(b ? 1 : 0) {}
+	explicit constexpr TriState(const bool b) : val(b ? 1 : 0) {}
 	constexpr TriState() {}
 
 	bool operator==(const TriState& other) const
@@ -195,7 +195,7 @@ inline TriState CDCL::value(Literal const& _literal) const
 	if (m_assignments[_literal.variable] == TriState::t_unset())
 		return TriState::t_unset();
 	else
-		return m_assignments[_literal.variable].toBool() ^ !_literal.positive;
+		return TriState(m_assignments[_literal.variable].toBool() ^ !_literal.positive);
 }
 
 inline TriState CDCL::value(size_t const& variable) const

@@ -319,7 +319,7 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 		cout << "  because of " << toString(*_reason) << endl;
 
 	assert(value(_literal) == TriState::t_unset());
-	m_assignments[_literal.variable] = _literal.positive;
+	m_assignments[_literal.variable] = TriState(_literal.positive);
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason)
 		m_reason[_literal] = _reason;
