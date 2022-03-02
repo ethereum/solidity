@@ -25,6 +25,7 @@
 #include <libyul/AssemblyStack.h>
 
 #include <libevmasm/Instruction.h>
+#include <libevmasm/Disassemble.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceReferenceFormatter.h>

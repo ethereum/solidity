@@ -26,6 +26,7 @@
 #include <libevmasm/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/Numeric.h>
 #include <libsolutil/Assertions.h>
 #include <optional>
 #include <iostream>

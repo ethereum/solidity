@@ -21,6 +21,7 @@
 #include <libsolutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
+#include <libsolutil/Numeric.h>
 
 #include <test/evmc/evmc.h>
 
@@ -47,7 +48,7 @@ static constexpr auto heraFilename = "libhera.so";
 static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases/download/v0.5.0/hera-0.5.0-linux-x86_64.tar.gz";
 #endif
 
-struct ConfigException : public util::Exception {};
+struct ConfigException: public util::Exception {};
 
 struct CommonOptions
 {
