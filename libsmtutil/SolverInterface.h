@@ -24,6 +24,7 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view.hpp>
@@ -489,6 +490,15 @@ public:
 	std::vector<Expression> arguments;
 	SortPointer sort;
 
+	std::string toString() const
+	{
+		if (arguments.empty())
+			return name;
+		std::vector<std::string> argsAsString;
+		for (auto const& arg: arguments)
+			argsAsString.emplace_back(arg.toString());
+		return name + "(" + util::joinHumanReadable(argsAsString) + ")";
+	}
 private:
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
 	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):

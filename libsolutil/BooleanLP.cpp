@@ -97,6 +97,7 @@ void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _s
 
 void BooleanLPSolver::addAssertion(Expression const& _expr)
 {
+	cout << " - " << _expr.toString() << endl;
 	solAssert(_expr.sort->kind == Kind::Bool);
 	if (_expr.arguments.empty())
 	{
@@ -137,9 +138,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 			}
 			else
 			{
-				Expression left = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(0));
-				Expression right = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(1));
-				addAssertion(left == right);
+				solAssert(false);
 			}
 		}
 		else
@@ -184,9 +183,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 		}
 		else
 		{
-			Expression left = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(0));
-			Expression right = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(1));
-			addAssertion(left <= right);
+			solAssert(false);
 		}
 	}
 	else if (_expr.name == ">=")
@@ -202,9 +199,9 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const&)
 {
-	//cout << "Solving boolean constraint system" << endl;
-	//cout << toString() << endl;
-	//cout << "--------------" << endl;
+	cout << "Solving boolean constraint system" << endl;
+	cout << toString() << endl;
+	cout << "--------------" << endl;
 
 	if (state().infeasible)
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});
@@ -270,7 +267,8 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	{
 		//cout << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
 		// TODO should be "unknown" later on
-		return {CheckResult::SATISFIABLE, {}};
+		//return {CheckResult::SATISFIABLE, {}};
+		return {CheckResult::UNKNOWN, {}};
 	}
 }
 
@@ -374,6 +372,8 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 
 Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _expr)
 {
+	if (_expr.sort->kind != Kind::Bool)
+		cout << "expected bool: " << _expr.toString() << endl;
 	solAssert(_expr.sort->kind == Kind::Bool);
 	// TODO when can this fail?
 	if (optional<Literal> literal = parseLiteral(_expr))
@@ -386,31 +386,7 @@ Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _exp
 	}
 }
 
-Expression BooleanLPSolver::parseLinearSumOrReturnEqualVariable(Expression const& _expr)
-{
-	solAssert(_expr.sort->kind == Kind::Int);
-	if (_expr.name == "ite")
-	{
-		Literal condition = parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0));
-		// TODO this adds too many variables
-		Expression conditionBoolean = declareInternalVariable(true);
-		addBooleanEquality(condition, conditionBoolean);
-		Expression trueValue = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(1));
-		Expression falseValue = parseLinearSumOrReturnEqualVariable(_expr.arguments.at(2));
-		Expression result = declareInternalVariable(false);
-		addAssertion(conditionBoolean || (result == trueValue));
-		addAssertion(!conditionBoolean || (result == falseValue));
-		return result;
-	}
-	if (_expr.arguments.empty())
-		return _expr;
-	solAssert(parseLinearSum(_expr));
-	Expression result = declareInternalVariable(false);
-	addAssertion(result == _expr);
-	return result;
-}
-
-optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr) const
+optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr)
 {
 	if (_expr.arguments.empty() || _expr.name == "*")
 		return parseProduct(_expr);
@@ -422,10 +398,15 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 			return std::nullopt;
 		return _expr.name == "+" ? *left + *right : *left - *right;
 	}
+	else if (_expr.name == "ite")
+	{
+		Expression result = declareInternalVariable(false);
+		addAssertion(_expr.arguments.at(0) || (result == _expr.arguments.at(1)));
+		addAssertion(!_expr.arguments.at(0) || (result == _expr.arguments.at(2)));
+		return parseLinearSum(result);
+	}
 	else
 	{
-			// TOOD This should just resort to parseLinearSumOrReturn...
-			// and then use that variable
 		cout << "Invalid operator " << _expr.name << endl;
 		return std::nullopt;
 	}

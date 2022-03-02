@@ -87,14 +87,13 @@ private:
 	Literal negate(Literal const& _lit);
 
 	Literal parseLiteralOrReturnEqualBoolean(smtutil::Expression const& _expr);
-	smtutil::Expression parseLinearSumOrReturnEqualVariable(smtutil::Expression const& _expr);
 
 	/// Parses the expression and expects a linear sum of variables.
 	/// Returns a vector with the first element being the constant and the
 	/// other elements the factors for the respective variables.
 	/// If the expression cannot be properly parsed or is not linear,
 	/// returns an empty vector.
-	std::optional<LinearExpression> parseLinearSum(smtutil::Expression const& _expression) const;
+	std::optional<LinearExpression> parseLinearSum(smtutil::Expression const& _expression);
 	std::optional<LinearExpression> parseProduct(smtutil::Expression const& _expression) const;
 	std::optional<LinearExpression> parseFactor(smtutil::Expression const& _expression) const;
 
