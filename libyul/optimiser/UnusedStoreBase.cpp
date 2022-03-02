@@ -73,6 +73,7 @@ void UnusedStoreBase::operator()(FunctionDefinition const& _functionDefinition)
 {
 	ScopedSaveAndRestore outerAssignments(m_stores, {});
 	ScopedSaveAndRestore forLoopInfo(m_forLoopInfo, {});
+	ScopedSaveAndRestore forLoopNestingDepth(m_forLoopNestingDepth, 0);
 
 	(*this)(_functionDefinition.body);
 
