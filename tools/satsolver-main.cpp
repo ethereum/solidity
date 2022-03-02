@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 				ss << "v";
 			}
 			if (model->at(i) != TriState::t_unset()) {
-				ss << " " << (model->at(i) == TriState::t_true() ? "" : "-") << i+1;
+				ss << " " << (model->at(i) == TriState{true} ? "" : "-") << i+1;
 			}
 
 		}

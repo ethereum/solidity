@@ -92,22 +92,12 @@ public:
 		}
 	}
 
-	constexpr static TriState t_true();
-	constexpr static TriState t_false();
 	constexpr static TriState t_unset();
 
 private:
 	// Default value is UNSET
 	uint8_t m_val = 2;
 };
-
-constexpr TriState TriState::t_true() {
-	return TriState(true);
-}
-
-constexpr TriState TriState::t_false() {
-	return TriState(false);
-}
 
 constexpr TriState TriState::t_unset() {
 	return TriState();

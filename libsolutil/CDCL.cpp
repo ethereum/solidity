@@ -75,7 +75,7 @@ optional<CDCL::Model> CDCL::solve()
 			solAssert(!learntClause.empty());
 			solAssert(value(learntClause.front()) == TriState::t_unset());
 			for (size_t i = 1; i < learntClause.size(); i++)
-				solAssert(value(learntClause[i]) == TriState::t_false());
+				solAssert(value(learntClause[i]) == TriState{false});
 
 			if (learntClause.size() == 1)
 			{
@@ -158,7 +158,7 @@ optional<Clause> CDCL::propagate()
 
 			// We did not find a new watch, i.e. all literals starting from index 2
 			// are false, thus clause[1] has to be true (if it exists)
-			if (value(clause[1]) == TriState::t_false())
+			if (value(clause[1]) == TriState{false})
 			{
 				if (clause.size() >= 2)
 					cout << " - Propagate resulted in conflict because " << toString(clause[1]) << " is also false." << endl;
@@ -257,7 +257,7 @@ void CDCL::addClause(Clause const& _clause)
 			return;
 
 		// Remove literal from clause.
-		if (value(l) == TriState::t_false())
+		if (value(l) == TriState{false})
 			continue;
 
 		updatedClause.push_back(l);
