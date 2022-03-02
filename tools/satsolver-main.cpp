@@ -23,6 +23,8 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <range/v3/view/split.hpp>
+#include <range/v3/to_container.hpp>
 
 using namespace solidity::util;
 using std::vector;
@@ -42,24 +44,14 @@ size_t getNumVars(const vector<vector<Literal>>& cls);
 
 vector<string> cutStringBySpace(string& input)
 {
-    vector<string> parts;
-
-    size_t pos = 0;
-    while ((pos = input.find(" ")) != string::npos)
-	{
-        parts.push_back(input.substr(0, pos));
-        input.erase(0, pos + 1);
-    }
-    parts.push_back(input);
-    return parts;
+    return input | ranges::views::split(' ') | ranges::to<vector<string>>();
 }
 
 optional<vector<Literal>> parseLine(std::string& line)
 {
 	vector<Literal> cl;
 	bool end_of_clause = false;
-	auto parts = cutStringBySpace(line);
-	for (const auto& part: parts)
+	for (const auto& part: line | ranges::views::split(' ') | ranges::to<vector<string>>())
 	{
 		if (!end_of_clause)
 		{
