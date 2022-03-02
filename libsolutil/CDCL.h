@@ -176,7 +176,8 @@ private:
 	size_t m_assignmentQueuePointer = 0;
 
 	// Current state of the solver. If FALSE, we are in an UNSAT state.
-	bool ok = true;
+	enum class State {unknown, unsat};
+	State m_state = State::unknown;
 };
 
 inline TriState CDCL::value(Literal const& _literal) const

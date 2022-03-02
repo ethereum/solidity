@@ -46,7 +46,7 @@ CDCL::CDCL(
 
 optional<CDCL::Model> CDCL::solve()
 {
-	if (!ok) return nullopt;
+	if (m_state == State::unsat) return nullopt;
 
 	cout << "====" << endl;
 	for (unique_ptr<Clause> const& c: m_clauses)
@@ -66,7 +66,7 @@ optional<CDCL::Model> CDCL::solve()
 			if (currentDecisionLevel() == 0)
 			{
 				cout << "Unsatisfiable" << endl;
-				ok = false;
+				m_state = State::unsat;
 				return nullopt;
 			}
 			auto&& [learntClause, backtrackLevel] = analyze(move(*conflictClause));
@@ -247,7 +247,7 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 
 void CDCL::addClause(const Clause& _lits)
 {
-	if (!ok) return;
+	if (m_state == State::unsat) return;
 
 	Clause clause{_lits};
 	Clause clause_updated;
@@ -267,7 +267,7 @@ void CDCL::addClause(const Clause& _lits)
 	// Empty clause, set UNSAT and return.
 	if (clause_updated.size() == 0)
 	{
-		ok = false;
+		m_state = State::unsat;
 		return;
 	}
 
