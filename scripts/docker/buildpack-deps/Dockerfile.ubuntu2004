@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:focal AS base
-LABEL version="10"
+LABEL version="11"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -37,7 +37,7 @@ RUN set -ex; \
 		cmake ninja-build \
 		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
-		libcvc4-dev libz3-static-dev z3-static \
+		libcvc4-dev libz3-static-dev z3-static jq \
 		; \
 	apt-get install -qy python3-pip python3-sphinx; \
 	pip3 install codecov; \
