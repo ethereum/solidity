@@ -22,11 +22,14 @@
 #include <libyul/optimiser/FullInliner.h>
 
 #include <libyul/optimiser/ASTCopier.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/FunctionCallFinder.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
@@ -46,8 +49,12 @@ void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
 }
 
 FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& _dialect):
-	m_ast(_ast), m_nameDispenser(_dispenser), m_dialect(_dialect)
+	m_ast(_ast),
+	m_recursiveFunctions(CallGraphGenerator::callGraph(_ast).recursiveFunctions()),
+	m_nameDispenser(_dispenser),
+	m_dialect(_dialect)
 {
+
 	// Determine constants
 	SSAValueTracker tracker;
 	tracker(m_ast);
@@ -71,6 +78,15 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& 
 			m_singleUse.emplace(fun.name);
 		updateCodeSize(fun);
 	}
+
+	// Check for memory guard.
+	vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
+		_ast,
+		"memoryguard"_yulstring
+	);
+	// We will perform less aggressive inlining, if no ``memoryguard`` call is found.
+	if (!memoryGuardCalls.empty())
+		m_hasMemoryGuard = true;
 }
 
 void FullInliner::run(Pass _pass)
@@ -177,8 +193,20 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (m_pass == Pass::InlineTiny)
 		return false;
 
-	// Do not inline into already big functions.
-	if (m_functionSizes.at(_callSite) > 45)
+	bool aggressiveInlining = true;
+
+	if (
+		EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect);
+		!evmDialect || !evmDialect->providesObjectAccess() || evmDialect->evmVersion() <= langutil::EVMVersion::homestead()
+	)
+		// No aggressive inlining with the old code transform.
+		aggressiveInlining = false;
+
+	// No aggressive inlining, if we cannot perform stack-to-memory.
+	if (!m_hasMemoryGuard || m_recursiveFunctions.count(_callSite))
+		aggressiveInlining = false;
+
+	if (!aggressiveInlining && m_functionSizes.at(_callSite) > 45)
 		return false;
 
 	if (m_singleUse.count(calledFunction->name))
@@ -196,7 +224,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 			break;
 		}
 
-	return (size < 6 || (constantArg && size < 12));
+	return (size < (aggressiveInlining ? 8 : 6) || (constantArg && size < (aggressiveInlining ? 16 : 12)));
 }
 
 void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _callSite)

@@ -7,6 +7,7 @@ Language Features:
 
 Compiler Features:
 * LSP: Add rudimentary support for semantic highlighting.
+ * Yul Optimizer: Improve inlining heuristics for via IR code generation and pure Yul compilation.
 
 
 Bugfixes:
