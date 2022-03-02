@@ -183,6 +183,23 @@ BOOST_AUTO_TEST_CASE(fuzzer3)
 	infeasible();
 }
 
+BOOST_AUTO_TEST_CASE(lpunknownz3known)
+{
+	addFuzzerInput(
+		{
+			{0,0,78,0,6,-23,53,57,-5},
+			{0,62,0,0,0,0,0,0,0,65,-3},
+			{0,0,95,-92,0,0,0,-55,100,14},
+			{0,0,83,0,690,0,-3},
+			{1,0,36,-12,6,0,0,0,0,6,8},
+			{0,0,0,43,0,-34},
+			{0,0,0,0,0,-20,0,9,0,-57}
+		}
+	);
+	// TODO: Add Z3 solution here.
+	feasible({});
+}
+
 BOOST_AUTO_TEST_CASE(fuzzer2)
 {
 	/*
@@ -460,7 +477,7 @@ BOOST_AUTO_TEST_CASE(reasons_split)
 	infeasible({0, 2});
 }
 
-BOOST_AUTO_TEST_CASE(fuzzer2)
+BOOST_AUTO_TEST_CASE(fuzzer2handwritten)
 {
 	/*
 		1,-1,0,0,0,0,90,9
