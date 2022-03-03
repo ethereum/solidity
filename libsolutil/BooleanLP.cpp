@@ -330,7 +330,7 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 	}
 	else if (_expr.name == "not")
 		return negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0)));
-	else if (_expr.name == "<=")
+	else if (_expr.name == "<=" || _expr.name == "=")
 	{
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
 		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
@@ -340,7 +340,7 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 		LinearExpression data = *left - *right;
 		data[0] *= -1;
 
-		return Literal{true, addConditionalConstraint(Constraint{move(data), false, {}})};
+		return Literal{true, addConditionalConstraint(Constraint{move(data), _expr.name == "=", {}})};
 	}
 	else if (_expr.name == ">=")
 		return parseLiteral(_expr.arguments.at(1) <= _expr.arguments.at(0));
@@ -357,17 +357,46 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 	if (isConditionalConstraint(_lit.variable))
 	{
 		Constraint const& c = conditionalConstraint(_lit.variable);
-		solAssert(!c.equality, "");
+		if (c.equality)
+		{
+			// X = b
 
-		// X > b
-		// -x < -b
-		// -x <= -b - 1
+			// X <= b - 1
+			Constraint le = c;
+			le.equality = false;
+			le.data[0] -= 1;
+			le.reasons.clear();
+			Literal leL{true, addConditionalConstraint(le)};
 
-		Constraint negated = c;
-		negated.data *= -1;
-		negated.data[0] -= 1;
-		negated.reasons.clear();
-		return Literal{true, addConditionalConstraint(negated)};
+			// X >= b + 1
+			// -X <= -b - 1
+			Constraint ge = c;
+			ge.equality = false;
+			ge.data *= -1;
+			ge.data[0] -= 1;
+			ge.reasons.clear();
+			Literal geL{true, addConditionalConstraint(ge)};
+
+
+			Literal equalBoolean = *parseLiteral(declareInternalVariable(true));
+			// a = or(x, y) <=> (-a \/ x \/ y) /\ (a \/ -x) /\ (a \/ -y)
+			state().clauses.emplace_back(Clause{vector<Literal>{negate(equalBoolean), leL, geL}});
+			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(leL)}});
+			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(geL)}});
+			return equalBoolean;
+		}
+		else
+		{
+			// X > b
+			// -x < -b
+			// -x <= -b - 1
+
+			Constraint negated = c;
+			negated.data *= -1;
+			negated.data[0] -= 1;
+			negated.reasons.clear();
+			return Literal{true, addConditionalConstraint(negated)};
+		}
 	}
 	else
 		return ~_lit;
