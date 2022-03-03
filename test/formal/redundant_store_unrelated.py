@@ -3,8 +3,8 @@ import sys
 
 """
 Tests that the conditions inside RedundantStoreEliminator::knownUnrelated
-properly account for overflow.
-
+only return "unrelated" incorrectly if one of the operation reverts
+due to large memory access.
 """
 
 n_bits = 256
@@ -34,7 +34,13 @@ restrict(diff)
 
 # These are the conditions in the code.
 solver.add(diff >= length1)
-solver.add(diff <= 2**n_bits - length2)
+solver.add(diff <= 2**(n_bits-1))
+
+# If start1 >= 2**(n_bits-1), the operation will revert,
+# so we assume the converse.
+solver.add(start1 < 2**(n_bits-1))
+
+# Now there should be no overlap:
 
 # x is a potential point where the memory operations
 # overlap.
