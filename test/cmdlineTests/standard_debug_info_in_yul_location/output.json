@@ -563,18 +563,24 @@ object \"C_54\" {
                 let expr_47
                 if _12 {
 
+                    let _13 := 32
+
+                    if gt(_13, returndatasize()) {
+                        _13 := returndatasize()
+                    }
+
                     // update freeMemoryPointer according to dynamic return size
-                    finalize_allocation(_10, returndatasize())
+                    finalize_allocation(_10, _13)
 
                     // decode return parameters from external try-call into retVars
-                    expr_47 :=  abi_decode_tuple_t_int256_fromMemory(_10, add(_10, returndatasize()))
+                    expr_47 :=  abi_decode_tuple_t_int256_fromMemory(_10, add(_10, _13))
                 }
                 /// @src 0:399:418  \"stateVar + this.f()\"
                 let expr_48 := checked_add_t_int256(expr_44, expr_47)
 
                 /// @src 0:421:429  \"immutVar\"
-                let _13 := loadimmutable(\"8\")
-                let expr_49 := _13
+                let _14 := loadimmutable(\"8\")
+                let expr_49 := _14
                 /// @src 0:399:429  \"stateVar + this.f() + immutVar\"
                 let expr_50 := checked_add_t_int256(expr_48, expr_49)
 
@@ -718,8 +724,10 @@ object \"C_54\" {
                 /// @src 0:410:418  \"this.f()\"
                 if _4
                 {
+                    let _5 := 32
+                    if gt(_5, returndatasize()) { _5 := returndatasize() }
                     /// @src 0:79:435  \"contract C...\"
-                    let newFreePtr := add(_3, and(add(/** @src 0:410:418  \"this.f()\" */ returndatasize(), /** @src 0:79:435  \"contract C...\" */ 31), not(31)))
+                    let newFreePtr := add(_3, and(add(_5, 31), not(31)))
                     if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _3))
                     {
                         mstore(_1, shl(224, 0x4e487b71))
@@ -728,7 +736,7 @@ object \"C_54\" {
                     }
                     mstore(64, newFreePtr)
                     /// @src 0:410:418  \"this.f()\"
-                    expr := abi_decode_int256_fromMemory(_3, add(_3, returndatasize()))
+                    expr := abi_decode_int256_fromMemory(_3, add(_3, _5))
                 }
                 /// @src 0:399:418  \"stateVar + this.f()\"
                 let expr_1 := checked_add_int256(ret, expr)
@@ -1402,18 +1410,24 @@ object \"D_72\" {
                 let expr_47
                 if _12 {
 
+                    let _13 := 32
+
+                    if gt(_13, returndatasize()) {
+                        _13 := returndatasize()
+                    }
+
                     // update freeMemoryPointer according to dynamic return size
-                    finalize_allocation(_10, returndatasize())
+                    finalize_allocation(_10, _13)
 
                     // decode return parameters from external try-call into retVars
-                    expr_47 :=  abi_decode_tuple_t_int256_fromMemory(_10, add(_10, returndatasize()))
+                    expr_47 :=  abi_decode_tuple_t_int256_fromMemory(_10, add(_10, _13))
                 }
                 /// @src 0:399:418  \"stateVar + this.f()\"
                 let expr_48 := checked_add_t_int256(expr_44, expr_47)
 
                 /// @src 0:421:429  \"immutVar\"
-                let _13 := loadimmutable(\"8\")
-                let expr_49 := _13
+                let _14 := loadimmutable(\"8\")
+                let expr_49 := _14
                 /// @src 0:399:429  \"stateVar + this.f() + immutVar\"
                 let expr_50 := checked_add_t_int256(expr_48, expr_49)
 
@@ -1565,8 +1579,10 @@ object \"D_72\" {
                 /// @src 0:410:418  \"this.f()\"
                 if _4
                 {
+                    let _5 := 32
+                    if gt(_5, returndatasize()) { _5 := returndatasize() }
                     /// @src 1:91:166  \"contract D is C(3)...\"
-                    let newFreePtr := add(_3, and(add(/** @src 0:410:418  \"this.f()\" */ returndatasize(), /** @src 1:91:166  \"contract D is C(3)...\" */ 31), not(31)))
+                    let newFreePtr := add(_3, and(add(_5, 31), not(31)))
                     if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _3))
                     {
                         mstore(_1, shl(224, 0x4e487b71))
@@ -1575,7 +1591,7 @@ object \"D_72\" {
                     }
                     mstore(64, newFreePtr)
                     /// @src 0:410:418  \"this.f()\"
-                    expr := abi_decode_int256_fromMemory(_3, add(_3, returndatasize()))
+                    expr := abi_decode_int256_fromMemory(_3, add(_3, _5))
                 }
                 /// @src 0:399:418  \"stateVar + this.f()\"
                 let expr_1 := checked_add_int256(ret, expr)
