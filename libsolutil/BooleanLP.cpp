@@ -155,6 +155,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 		// We could try to parse a full clause here.
 		Literal left = parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0));
 		Literal right = parseLiteralOrReturnEqualBoolean(_expr.arguments.at(1));
+		/*
 		if (isConditionalConstraint(left.variable) && isConditionalConstraint(right.variable))
 		{
 			// We cannot have more than one constraint per clause.
@@ -162,6 +163,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 			right = *parseLiteral(declareInternalVariable(true));
 			addBooleanEquality(right, _expr.arguments.at(1));
 		}
+		*/
 		state().clauses.emplace_back(Clause{vector<Literal>{left, right}});
 	}
 	else if (_expr.name == "not")
@@ -534,13 +536,14 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 	{
 		Literal a = parseLiteralOrReturnEqualBoolean(_right.arguments.at(0));
 		Literal b = parseLiteralOrReturnEqualBoolean(_right.arguments.at(1));
+		/*
 		if (isConditionalConstraint(a.variable) && isConditionalConstraint(b.variable))
 		{
 			// We cannot have more than one constraint per clause.
 			// TODO Why?
 			b = *parseLiteral(declareInternalVariable(true));
 			addBooleanEquality(b, _right.arguments.at(1));
-		}
+		}*/
 
 		if (_right.name == "and")
 		{
