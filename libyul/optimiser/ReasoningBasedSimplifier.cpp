@@ -67,25 +67,31 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	if (!SideEffectsCollector{m_dialect, *_if.condition}.movable())
 		return;
 
+	cout << "Checking if condition  can be false" << endl;
 	smtutil::Expression condition = encodeExpression(*_if.condition);
 	m_solver->push();
 	m_solver->addAssertion(condition == constantValue(0));
+	cout << "  running check" << endl;
 	CheckResult result = m_solver->check({}).first;
 	m_solver->pop();
 	if (result == CheckResult::UNSATISFIABLE)
 	{
+		cout << " unsat => cannot be false!" << endl;
 		Literal trueCondition = m_dialect.trueLiteral();
 		trueCondition.debugData = debugDataOf(*_if.condition);
 		_if.condition = make_unique<yul::Expression>(move(trueCondition));
 	}
 	else
 	{
+		cout << "Checking if condition  can be true" << endl;
 		m_solver->push();
 		m_solver->addAssertion(condition != constantValue(0));
+		cout << "  running check" << endl;
 		CheckResult result2 = m_solver->check({}).first;
 		m_solver->pop();
 		if (result2 == CheckResult::UNSATISFIABLE)
 		{
+			cout << " unsat => cannot be true!" << endl;
 			Literal falseCondition = m_dialect.zeroLiteralForType(m_dialect.boolType);
 			falseCondition.debugData = debugDataOf(*_if.condition);
 			_if.condition = make_unique<yul::Expression>(move(falseCondition));
@@ -96,6 +102,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	}
 
 	m_solver->push();
+	cout << "Setting condition true inside body" << endl;
 	m_solver->addAssertion(condition != constantValue(0));
 
 	ASTModifier::operator()(_if.body);

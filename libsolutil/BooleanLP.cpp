@@ -135,6 +135,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 				Constraint c{move(data), _expr.name == "=", {}};
 				if (!tryAddDirectBounds(c))
 					state().fixedConstraints.emplace_back(move(c));
+				cout << "Added as fixed constraint" << endl;
 			}
 			else
 			{

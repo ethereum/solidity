@@ -497,7 +497,10 @@ public:
 		std::vector<std::string> argsAsString;
 		for (auto const& arg: arguments)
 			argsAsString.emplace_back(arg.toString());
-		return name + "(" + util::joinHumanReadable(argsAsString) + ")";
+		if (arguments.size() == 2)
+			return "(" + argsAsString[0] + " " + name + " " + argsAsString[1] + ")";
+		else
+			return name + "(" + util::joinHumanReadable(argsAsString) + ")";
 	}
 private:
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
