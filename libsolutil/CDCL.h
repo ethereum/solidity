@@ -92,14 +92,14 @@ public:
 		}
 	}
 
-	constexpr static TriState t_unset();
+	constexpr static TriState unset();
 
 private:
 	// Default value is UNSET
 	uint8_t m_val = 2;
 };
 
-constexpr TriState TriState::t_unset() {
+constexpr TriState TriState::unset() {
 	return TriState();
 }
 
@@ -172,8 +172,8 @@ private:
 
 inline TriState CDCL::value(Literal const& _literal) const
 {
-	if (m_assignments[_literal.variable] == TriState::t_unset())
-		return TriState::t_unset();
+	if (m_assignments[_literal.variable] == TriState::unset())
+		return TriState::unset();
 	else
 		return TriState(m_assignments[_literal.variable].toBool() ^ !_literal.positive);
 }

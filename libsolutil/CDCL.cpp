@@ -37,7 +37,7 @@ CDCL::CDCL(
 	m_theorySolver(_theorySolver),
 	m_variables(move(_variables))
 {
-	m_assignments.resize(m_variables.size(), TriState::t_unset());
+	m_assignments.resize(m_variables.size(), TriState::unset());
 	for (Clause const& clause: _clauses)
 		addClause(clause);
 
@@ -73,7 +73,7 @@ optional<CDCL::Model> CDCL::solve()
 			cancelUntil(backtrackLevel);
 
 			solAssert(!learntClause.empty());
-			solAssert(value(learntClause.front()) == TriState::t_unset());
+			solAssert(value(learntClause.front()) == TriState::unset());
 			for (size_t i = 1; i < learntClause.size(); i++)
 				solAssert(value(learntClause[i]) == TriState{false});
 
@@ -146,7 +146,7 @@ optional<Clause> CDCL::propagate()
 
 			// find a new watch to swap
 			for (size_t i = 2; i < clause.size(); i++)
-				if (value(clause[i]) == TriState::t_unset() || value(clause[i]) == TriState{true})
+				if (value(clause[i]) == TriState::unset() || value(clause[i]) == TriState{true})
 				{
 					cout << " -> swapping " << toString(clause.front()) << " with " << toString(clause[i]) << endl;
 					swap(clause.front(), clause[i]);
@@ -287,7 +287,7 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 	if (_reason)
 		cout << "  because of " << toString(*_reason) << endl;
 
-	assert(value(_literal) == TriState::t_unset());
+	assert(value(_literal) == TriState::unset());
 	m_assignments[_literal.variable] = TriState(_literal.positive);
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason)
@@ -306,7 +306,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		Literal l = m_assignmentTrail.back();
 		cout << "  undoing " << toString(l) << endl;
 		m_assignmentTrail.pop_back();
-		m_assignments[l.variable] = TriState::t_unset();
+		m_assignments[l.variable] = TriState::unset();
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
@@ -319,7 +319,7 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 optional<size_t> CDCL::nextDecisionVariable() const
 {
 	for (size_t i = 0; i < m_variables.size(); i++)
-		if (value(i) == TriState::t_unset())
+		if (value(i) == TriState::unset())
 			return i;
 	return nullopt;
 }
