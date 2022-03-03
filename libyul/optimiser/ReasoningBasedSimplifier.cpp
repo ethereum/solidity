@@ -138,6 +138,7 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 		return result;
 	}
 	case evmasm::Instruction::MUL:
+		// TODO this only works for multiplication by constants.
 		return wrap(arguments.at(0) * arguments.at(1));
 	case evmasm::Instruction::SUB:
 	{
@@ -146,13 +147,18 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 		return result;
 	}
 	case evmasm::Instruction::DIV:
+		break;
+		/*
 		// TODO add assertion that result is <= input
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
 			arguments.at(0) / arguments.at(1)
 		);
+		*/
 	case evmasm::Instruction::SDIV:
+		break;
+		/*
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
@@ -164,13 +170,19 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 				twosComplementToUpscaledUnsigned(arguments.at(1))
 			))
 		);
+		*/
 	case evmasm::Instruction::MOD:
+		break;
+		/*
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
 			arguments.at(0) % arguments.at(1)
 		);
+		*/
 	case evmasm::Instruction::SMOD:
+		break;
+		/*
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
@@ -179,6 +191,7 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 				twosComplementToUpscaledUnsigned(arguments.at(1))
 			))
 		);
+		*/
 	case evmasm::Instruction::LT:
 		return booleanValue(arguments.at(0) < arguments.at(1));
 	case evmasm::Instruction::SLT:
@@ -202,49 +215,58 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 			(arguments.at(0) == 0 || arguments.at(0) == 1) &&
 			(arguments.at(1) == 0 || arguments.at(1) == 1),
 			booleanValue(arguments.at(0) == 1 && arguments.at(1) == 1),
-			bv2int(int2bv(arguments.at(0)) & int2bv(arguments.at(1)))
+			// TODO we could probably restrict it a bit more
+			newRestrictedVariable()
 		);
 	case evmasm::Instruction::OR:
 		return smtutil::Expression::ite(
 			(arguments.at(0) == 0 || arguments.at(0) == 1) &&
 			(arguments.at(1) == 0 || arguments.at(1) == 1),
 			booleanValue(arguments.at(0) == 1 || arguments.at(1) == 1),
-			bv2int(int2bv(arguments.at(0)) | int2bv(arguments.at(1)))
+			// TODO we could probably restrict it a bit more
+			newRestrictedVariable()
 		);
 	case evmasm::Instruction::XOR:
-		return bv2int(int2bv(arguments.at(0)) ^ int2bv(arguments.at(1)));
+		break;
+		//return bv2int(int2bv(arguments.at(0)) ^ int2bv(arguments.at(1)));
 	case evmasm::Instruction::NOT:
 		return smtutil::Expression(u256(-1)) - arguments.at(0);
 	case evmasm::Instruction::SHL:
 		return smtutil::Expression::ite(
 			arguments.at(0) > 255,
 			constantValue(0),
-			bv2int(int2bv(arguments.at(1)) << int2bv(arguments.at(0)))
+			newRestrictedVariable() // TODO bv2int(int2bv(arguments.at(1)) << int2bv(arguments.at(0)))
 		);
 	case evmasm::Instruction::SHR:
 		return smtutil::Expression::ite(
 			arguments.at(0) > 255,
 			constantValue(0),
-			bv2int(int2bv(arguments.at(1)) >> int2bv(arguments.at(0)))
+			newRestrictedVariable() // TODO bv2int(int2bv(arguments.at(1)) >> int2bv(arguments.at(0)))
 		);
 	case evmasm::Instruction::SAR:
 		return smtutil::Expression::ite(
 			arguments.at(0) > 255,
 			constantValue(0),
-			bv2int(smtutil::Expression::ashr(int2bv(arguments.at(1)), int2bv(arguments.at(0))))
+			newRestrictedVariable() // TODO bv2int(smtutil::Expression::ashr(int2bv(arguments.at(1)), int2bv(arguments.at(0))))
 		);
 	case evmasm::Instruction::ADDMOD:
+		break;
+		/*
 		return smtutil::Expression::ite(
 			arguments.at(2) == constantValue(0),
 			constantValue(0),
 			(arguments.at(0) + arguments.at(1)) % arguments.at(2)
 		);
+		*/
 	case evmasm::Instruction::MULMOD:
+		break;
+		/*
 		return smtutil::Expression::ite(
 			arguments.at(2) == constantValue(0),
 			constantValue(0),
 			(arguments.at(0) * arguments.at(1)) % arguments.at(2)
 		);
+		*/
 	// TODO SIGNEXTEND
 	default:
 		break;
