@@ -76,7 +76,8 @@ protected:
 	static smtutil::Expression booleanValue(smtutil::Expression _value);
 	static smtutil::Expression constantValue(bigint _value);
 	static smtutil::Expression literalValue(Literal const& _literal);
-	static smtutil::Expression twosComplementToSigned(smtutil::Expression _value);
+	/// Returns _value interpreted as a two's complement number and adds 2**256
+	static smtutil::Expression twosComplementToUpscaledUnsigned(smtutil::Expression _value);
 	static smtutil::Expression signedToTwosComplement(smtutil::Expression _value);
 	smtutil::Expression wrap(smtutil::Expression _value);
 

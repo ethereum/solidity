@@ -105,7 +105,6 @@ shared_ptr<Sort> SMTSolver::defaultSort() const
 
 smtutil::Expression SMTSolver::booleanValue(smtutil::Expression _value)
 {
-	// TODO should not use ite
 	return smtutil::Expression::ite(_value, constantValue(1), constantValue(0));
 }
 
@@ -119,13 +118,12 @@ smtutil::Expression SMTSolver::literalValue(Literal const& _literal)
 	return smtutil::Expression(valueOfLiteral(_literal));
 }
 
-smtutil::Expression SMTSolver::twosComplementToSigned(smtutil::Expression _value)
+smtutil::Expression SMTSolver::twosComplementToUpscaledUnsigned(smtutil::Expression _value)
 {
-	// TODO will that work for LP?
 	return smtutil::Expression::ite(
 		_value < smtutil::Expression(bigint(1) << 255),
-		_value,
-		_value - smtutil::Expression(bigint(1) << 256)
+		_value + smtutil::Expression(bigint(1) << 256),
+		_value
 	);
 }
 

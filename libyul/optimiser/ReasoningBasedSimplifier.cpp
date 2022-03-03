@@ -160,8 +160,8 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 			// in 2**255 which is "converted" to its two's complement
 			// representation 2**255 in `signedToTwosComplement`
 			signedToTwosComplement(smtutil::signedDivisionEVM(
-				twosComplementToSigned(arguments.at(0)),
-				twosComplementToSigned(arguments.at(1))
+				twosComplementToUpscaledUnsigned(arguments.at(0)),
+				twosComplementToUpscaledUnsigned(arguments.at(1))
 			))
 		);
 	case evmasm::Instruction::MOD:
@@ -175,18 +175,24 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
 			signedToTwosComplement(signedModuloEVM(
-				twosComplementToSigned(arguments.at(0)),
-				twosComplementToSigned(arguments.at(1))
+				twosComplementToUpscaledUnsigned(arguments.at(0)),
+				twosComplementToUpscaledUnsigned(arguments.at(1))
 			))
 		);
 	case evmasm::Instruction::LT:
 		return booleanValue(arguments.at(0) < arguments.at(1));
 	case evmasm::Instruction::SLT:
-		return booleanValue(twosComplementToSigned(arguments.at(0)) < twosComplementToSigned(arguments.at(1)));
+		return booleanValue(
+			twosComplementToUpscaledUnsigned(arguments.at(0)) + smtutil::Expression(bigint(1) << 256) <
+			twosComplementToUpscaledUnsigned(arguments.at(1)) + smtutil::Expression(bigint(1) << 256)
+		);
 	case evmasm::Instruction::GT:
 		return booleanValue(arguments.at(0) > arguments.at(1));
 	case evmasm::Instruction::SGT:
-		return booleanValue(twosComplementToSigned(arguments.at(0)) > twosComplementToSigned(arguments.at(1)));
+		return booleanValue(
+			twosComplementToUpscaledUnsigned(arguments.at(0)) + smtutil::Expression(bigint(1) << 256) >
+			twosComplementToUpscaledUnsigned(arguments.at(1)) + smtutil::Expression(bigint(1) << 256)
+		);
 	case evmasm::Instruction::EQ:
 		return booleanValue(arguments.at(0) == arguments.at(1));
 	case evmasm::Instruction::ISZERO:
