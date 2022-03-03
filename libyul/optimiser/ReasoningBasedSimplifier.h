@@ -57,6 +57,7 @@ public:
 	using ASTModifier::operator();
 	void operator()(VariableDeclaration& _varDecl) override;
 	void operator()(If& _if) override;
+	void operator()(ForLoop& _for) override;
 
 private:
 	explicit ReasoningBasedSimplifier(

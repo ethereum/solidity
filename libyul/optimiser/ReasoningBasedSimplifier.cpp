@@ -110,6 +110,57 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	m_solver->pop();
 }
 
+void ReasoningBasedSimplifier::operator()(ForLoop& _for)
+{
+	// TODO handle break / continue
+
+	if (!SideEffectsCollector{m_dialect, *_for.condition}.movable())
+		return;
+
+	cout << "Checking if condition  can be false" << endl;
+	smtutil::Expression condition = encodeExpression(*_for.condition);
+	m_solver->push();
+	m_solver->addAssertion(condition == constantValue(0));
+	cout << "  running check" << endl;
+	CheckResult result = m_solver->check({}).first;
+	m_solver->pop();
+	if (result == CheckResult::UNSATISFIABLE)
+	{
+		cout << " unsat => cannot be false!" << endl;
+		Literal trueCondition = m_dialect.trueLiteral();
+		trueCondition.debugData = debugDataOf(*_for.condition);
+		_for.condition = make_unique<yul::Expression>(move(trueCondition));
+	}
+	else
+	{
+		cout << "Checking if condition  can be true" << endl;
+		m_solver->push();
+		m_solver->addAssertion(condition != constantValue(0));
+		cout << "  running check" << endl;
+		CheckResult result2 = m_solver->check({}).first;
+		m_solver->pop();
+		if (result2 == CheckResult::UNSATISFIABLE)
+		{
+			cout << " unsat => cannot be true!" << endl;
+			Literal falseCondition = m_dialect.zeroLiteralForType(m_dialect.boolType);
+			falseCondition.debugData = debugDataOf(*_for.condition);
+			_for.condition = make_unique<yul::Expression>(move(falseCondition));
+			_for.body = yul::Block{};
+			// Nothing left to be done.
+			return;
+		}
+	}
+
+	m_solver->push();
+	cout << "Setting condition true inside body" << endl;
+	m_solver->addAssertion(condition != constantValue(0));
+
+	ASTModifier::operator()(_for.body);
+	ASTModifier::operator()(_for.post);
+
+	m_solver->pop();
+}
+
 ReasoningBasedSimplifier::ReasoningBasedSimplifier(
 	Dialect const& _dialect,
 	set<YulString> const& _ssaVariables
