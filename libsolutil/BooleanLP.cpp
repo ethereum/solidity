@@ -433,8 +433,8 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 	else if (_expr.name == "ite")
 	{
 		Expression result = declareInternalVariable(false);
-		addAssertion(_expr.arguments.at(0) || (result == _expr.arguments.at(1)));
-		addAssertion(!_expr.arguments.at(0) || (result == _expr.arguments.at(2)));
+		addAssertion(!_expr.arguments.at(0) || (result == _expr.arguments.at(1)));
+		addAssertion(_expr.arguments.at(0) || (result == _expr.arguments.at(2)));
 		return parseLinearSum(result);
 	}
 	else
