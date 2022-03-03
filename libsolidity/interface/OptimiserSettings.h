@@ -44,7 +44,7 @@ struct OptimiserSettings
 	static char constexpr DefaultYulOptimiserSteps[] =
 		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
 		"["
-			"xa[r]EscLM"               // Turn into SSA and simplify
+			"xa[r]EscRLM"               // Turn into SSA and simplify
 			"cCTUtTOntnfDIul"          // Perform structural simplification
 			"Lcul"                     // Simplify again
 			"Vcul [j]"                 // Reverse SSA
