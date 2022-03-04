@@ -1272,7 +1272,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	sub->append(t4.pushTag());
 	sub->append(Instruction::JUMP);
 
-	size_t subId = static_cast<size_t>(main.appendSubroutine(sub).data());
+	size_t subId = static_cast<size_t>(main.appendSubroutine(sub, false).data());
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));

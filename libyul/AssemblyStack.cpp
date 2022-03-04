@@ -37,8 +37,12 @@
 #include <libyul/optimiser/Suite.h>
 
 #include <libevmasm/Assembly.h>
+
 #include <liblangutil/Scanner.h>
+
+#include <boost/algorithm/string.hpp>
 #include <optional>
+
 
 using namespace std;
 using namespace solidity;
@@ -194,7 +198,11 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	yulAssert(_object.analysisInfo, "");
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
-			optimize(*subObject, false);
+		{
+			// TODO: determine this more properly, resp. store it earlier when the subobject is created
+			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
+			optimize(*subObject, isCreation);
+		}
 
 	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
 	unique_ptr<GasMeter> meter;

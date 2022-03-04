@@ -74,7 +74,7 @@ public:
 		m_yulUtilFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector)
 	{
 		if (m_runtimeContext)
-			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
+			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm, false).data());
 	}
 
 	langutil::EVMVersion const& evmVersion() const { return m_evmVersion; }
@@ -224,7 +224,7 @@ public:
 	}
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
-	evmasm::AssemblyItem addSubroutine(evmasm::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
+	evmasm::AssemblyItem addSubroutine(evmasm::AssemblyPointer const& _assembly, bool _creation) { return m_asm->appendSubroutine(_assembly, _creation); }
 	/// Pushes the size of the subroutine.
 	void pushSubroutineSize(size_t _subRoutine) { m_asm->pushSubroutineSize(_subRoutine); }
 	/// Pushes the offset of the subroutine.

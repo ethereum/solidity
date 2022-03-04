@@ -98,7 +98,7 @@ void NoOutputAssembly::appendAssemblySize()
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(std::string)
+pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(std::string, bool)
 {
 	yulAssert(false, "Sub assemblies not implemented.");
 	return {};

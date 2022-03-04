@@ -122,10 +122,10 @@ void EthAssemblyAdapter::appendAssemblySize()
 	m_assembly.appendProgramSize();
 }
 
-pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::createSubAssembly(string _name)
+pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::createSubAssembly(string _name, bool _creation)
 {
 	shared_ptr<evmasm::Assembly> assembly{make_shared<evmasm::Assembly>(std::move(_name))};
-	auto sub = m_assembly.newSub(assembly);
+	auto sub = m_assembly.newSub(assembly, _creation);
 	return {make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 

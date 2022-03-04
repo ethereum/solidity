@@ -56,9 +56,9 @@ public:
 	AssemblyItem namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID);
 	AssemblyItem newData(bytes const& _data) { util::h256 h(util::keccak256(util::asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	bytes const& data(util::h256 const& _i) const { return m_data.at(_i); }
-	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
-	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
-	Assembly& sub(size_t _sub) { return *m_subs.at(_sub); }
+	AssemblyItem newSub(AssemblyPointer const& _sub, bool _creation) { m_subs.emplace_back(_sub, _creation); return AssemblyItem(PushSub, m_subs.size() - 1); }
+	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub).first; }
+	Assembly& sub(size_t _sub) { return *m_subs.at(_sub).first; }
 	size_t numSubs() const { return m_subs.size(); }
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
@@ -89,7 +89,7 @@ public:
 
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
-	AssemblyItem appendSubroutine(AssemblyPointer const& _assembly) { auto sub = newSub(_assembly); append(newPushSubSize(size_t(sub.data()))); return sub; }
+	AssemblyItem appendSubroutine(AssemblyPointer const& _assembly, bool _creation) { auto sub = newSub(_assembly, _creation); append(newPushSubSize(size_t(sub.data()))); return sub; }
 	void pushSubroutineSize(size_t _subRoutine) { append(newPushSubSize(_subRoutine)); }
 	/// Pushes the offset of the subroutine.
 	void pushSubroutineOffset(size_t _subRoutine) { append(AssemblyItem(PushSub, _subRoutine)); }
@@ -204,7 +204,7 @@ protected:
 	std::map<util::h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
 	bytes m_auxiliaryData;
-	std::vector<std::shared_ptr<Assembly>> m_subs;
+	std::vector<std::pair<std::shared_ptr<Assembly>, bool>> m_subs;
 	std::map<util::h256, std::string> m_strings;
 	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 	std::map<util::h256, std::string> m_immutables; ///< Identifiers of immutables.

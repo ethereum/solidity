@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	// PushData
 	_assembly.append(bytes{0x1, 0x2, 0x3, 0x4});
 	// PushSubSize
-	auto sub = _assembly.appendSubroutine(_subAsmPtr);
+	auto sub = _assembly.appendSubroutine(_subAsmPtr, false);
 	// PushSub
 	_assembly.pushSubroutineOffset(static_cast<size_t>(sub.data()));
 	// PushDeployTimeAddress
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				assembly.appendImmutableAssignment(string(1, char('a' + i - 1)));
 			}
 
-			assembly.appendSubroutine(subAsm);
+			assembly.appendSubroutine(subAsm, false);
 
 			checkCompilation(assembly);
 
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(immutable)
 	_assembly.append(u256(0));
 	_assembly.appendImmutableAssignment("someOtherImmutable");
 
-	auto sub = _assembly.appendSubroutine(_subAsmPtr);
+	auto sub = _assembly.appendSubroutine(_subAsmPtr, false);
 	_assembly.pushSubroutineOffset(static_cast<size_t>(sub.data()));
 
 	checkCompilation(_assembly);
@@ -354,8 +354,8 @@ BOOST_AUTO_TEST_CASE(subobject_encode_decode)
 	shared_ptr<Assembly> subAsmPtr = make_shared<Assembly>();
 	shared_ptr<Assembly> subSubAsmPtr = make_shared<Assembly>();
 
-	assembly.appendSubroutine(subAsmPtr);
-	subAsmPtr->appendSubroutine(subSubAsmPtr);
+	assembly.appendSubroutine(subAsmPtr, false);
+	subAsmPtr->appendSubroutine(subSubAsmPtr, false);
 
 	BOOST_CHECK(assembly.encodeSubPath({0}) == 0);
 	BOOST_REQUIRE_THROW(assembly.encodeSubPath({1}), solidity::evmasm::AssemblyException);

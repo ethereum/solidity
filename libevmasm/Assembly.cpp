@@ -203,7 +203,7 @@ void Assembly::assemblyStream(
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			_out << endl << _prefix << "sub_" << i << ": assembly {\n";
-			m_subs[i]->assemblyStream(_out, _debugInfoSelection, _prefix + "    ", _sourceCodes);
+			m_subs[i].first->assemblyStream(_out, _debugInfoSelection, _prefix + "    ", _sourceCodes);
 			_out << _prefix << "}" << endl;
 		}
 	}
@@ -352,7 +352,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices);
+			data[hexStr.str()] = m_subs[i].first->assemblyJSON(_sourceIndices);
 		}
 	}
 
@@ -435,9 +435,8 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
 		OptimiserSettings settings = _settings;
-		// Disable creation mode for sub-assemblies.
-		settings.isCreation = false;
-		map<u256, u256> const& subTagReplacements = m_subs[subId]->optimiseInternal(
+		settings.isCreation = m_subs[subId].second;
+		map<u256, u256> const& subTagReplacements = m_subs[subId].first->optimiseInternal(
 			settings,
 			JumpdestRemover::referencedTags(m_items, subId)
 		);
@@ -582,7 +581,7 @@ LinkerObject const& Assembly::assemble() const
 	map<u256, pair<string, vector<size_t>>> immutableReferencesBySub;
 	for (auto const& sub: m_subs)
 	{
-		auto const& linkerObject = sub->assemble();
+		auto const& linkerObject = sub.first->assemble();
 		if (!linkerObject.immutableReferences.empty())
 		{
 			assertThrow(
@@ -592,7 +591,7 @@ LinkerObject const& Assembly::assemble() const
 			);
 			immutableReferencesBySub = linkerObject.immutableReferences;
 		}
-		for (size_t tagPos: sub->m_tagPositionsInBytecode)
+		for (size_t tagPos: sub.first->m_tagPositionsInBytecode)
 			if (tagPos != numeric_limits<size_t>::max() && tagPos > subTagSize)
 				subTagSize = tagPos;
 	}
@@ -626,7 +625,7 @@ LinkerObject const& Assembly::assemble() const
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
-		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
+		bytesRequiredIncludingData += static_cast<unsigned>(sub.first->assemble().bytecode.size());
 
 	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingData);
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
@@ -780,7 +779,7 @@ LinkerObject const& Assembly::assemble() const
 		vector<size_t> const& tagPositions =
 			subId == numeric_limits<size_t>::max() ?
 			m_tagPositionsInBytecode :
-			m_subs[subId]->m_tagPositionsInBytecode;
+			m_subs[subId].first->m_tagPositionsInBytecode;
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
@@ -870,7 +869,7 @@ Assembly const* Assembly::subAssemblyById(size_t _subId) const
 	Assembly const* currentAssembly = this;
 	for (size_t currentSubId: subIds)
 	{
-		currentAssembly = currentAssembly->m_subs.at(currentSubId).get();
+		currentAssembly = currentAssembly->m_subs.at(currentSubId).first.get();
 		assertThrow(currentAssembly, AssemblyException, "");
 	}
 

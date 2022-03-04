@@ -1521,7 +1521,7 @@ void CompilerUtils::copyContractCodeToMemory(ContractDefinition const& contract,
 				_context.compiledContract(contract) :
 				_context.compiledContractRuntime(contract);
 			// pushes size
-			auto subroutine = _context.addSubroutine(assembly);
+			auto subroutine = _context.addSubroutine(assembly, _creation);
 			_context << Instruction::DUP1 << subroutine;
 			_context << Instruction::DUP4 << Instruction::CODECOPY;
 			_context << Instruction::ADD;
