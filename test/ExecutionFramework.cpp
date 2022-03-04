@@ -266,7 +266,7 @@ h160 ExecutionFramework::logAddress(size_t _logIdx) const
 
 bytes ExecutionFramework::logData(size_t _logIdx) const
 {
-	const auto& data = m_evmcHost->recorded_logs.at(_logIdx).data;
+	auto const& data = m_evmcHost->recorded_logs.at(_logIdx).data;
 	// TODO: Return a copy of log data, because this is expected from REQUIRE_LOG_DATA(),
 	//       but reference type like string_view would be preferable.
 	return {data.begin(), data.end()};
