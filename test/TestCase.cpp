@@ -118,7 +118,7 @@ EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(string const& _filena
 	string comparator;
 	size_t versionBegin = 0;
 	for (auto character: versionString)
-		if (!isalpha(character))
+		if (!isalpha(character, locale::classic()))
 		{
 			comparator += character;
 			versionBegin++;

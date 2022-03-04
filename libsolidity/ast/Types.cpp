@@ -33,6 +33,7 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/StringUtils.h>
 #include <libsolutil/UTF8.h>
 
 #include <boost/algorithm/string.hpp>
@@ -781,8 +782,8 @@ tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 		if (radixPoint != _value.end())
 		{
 			if (
-				!all_of(radixPoint + 1, _value.end(), ::isdigit) ||
-				!all_of(_value.begin(), radixPoint, ::isdigit)
+				!all_of(radixPoint + 1, _value.end(), util::isDigit) ||
+				!all_of(_value.begin(), radixPoint, util::isDigit)
 			)
 				return make_tuple(false, rational(0));
 

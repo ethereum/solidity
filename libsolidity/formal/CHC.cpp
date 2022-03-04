@@ -33,6 +33,7 @@
 #include <libsmtutil/CHCSmtLib2Interface.h>
 #include <liblangutil/CharStreamProvider.h>
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/StringUtils.h>
 
 #ifdef HAVE_Z3_DLOPEN
 #include <z3_version.h>
@@ -1998,9 +1999,9 @@ map<unsigned, vector<unsigned>> CHC::summaryCalls(CHCSolverInterface::CexGraph c
 			// Predicates that do not have a CALLID have a predicate id at the end of <suffix>,
 			// so the assertion below should still hold.
 			auto beg = _s.data();
-			while (beg != _s.data() + _s.size() && !isdigit(*beg)) ++beg;
+			while (beg != _s.data() + _s.size() && !isDigit(*beg)) ++beg;
 			auto end = beg;
-			while (end != _s.data() + _s.size() && isdigit(*end)) ++end;
+			while (end != _s.data() + _s.size() && isDigit(*end)) ++end;
 
 			solAssert(beg != end, "Expected to find numerical call or predicate id.");
 
