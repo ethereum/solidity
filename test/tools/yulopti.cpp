@@ -21,6 +21,7 @@
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
+#include <libsolutil/StringUtils.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -155,7 +156,7 @@ public:
 				return (
 					!boost::algorithm::iequals(get<1>(_a), get<1>(_b)) ?
 					boost::algorithm::lexicographical_compare(get<1>(_a), get<1>(_b), boost::algorithm::is_iless()) :
-					tolower(get<0>(_a)) < tolower(get<0>(_b))
+					toLower(get<0>(_a)) < toLower(get<0>(_b))
 				);
 			});
 
