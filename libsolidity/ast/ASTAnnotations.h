@@ -47,7 +47,6 @@ namespace solidity::frontend
 
 class Type;
 class ArrayType;
-using namespace util;
 
 struct CallGraph;
 
