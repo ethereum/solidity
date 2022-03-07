@@ -397,7 +397,7 @@ Gas
 ===
 
 Upon creation, each transaction is charged with a certain amount of **gas**. 
-Imposing a cost on operations that write to the blockchain serves to secure the network:
+Imposing a cost on transactions serves to secure the network:
 it deincentivizes bad actors from spamming, and pays validators (i.e. miners and stakers)
 for the work that is required to validate new blocks. While the EVM executes the
 transaction, the gas is gradually depleted according to specific rules.
