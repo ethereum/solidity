@@ -505,7 +505,7 @@ bool ASTJsonConverter::visit(EventDefinition const& _node)
 			_attributes.emplace_back(
 				make_pair(
 					"eventSelector",
-					toHex(u256(h256::Arith(util::keccak256(_node.functionType(true)->externalSignature()))))
+					toHex(u256(util::h256::Arith(util::keccak256(_node.functionType(true)->externalSignature()))))
 				));
 
 	setJsonNode(_node, "EventDefinition", std::move(_attributes));

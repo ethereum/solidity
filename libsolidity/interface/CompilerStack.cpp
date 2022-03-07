@@ -278,7 +278,7 @@ void CompilerStack::setMetadataHash(MetadataHash _metadataHash)
 void CompilerStack::selectDebugInfo(DebugInfoSelection _debugInfoSelection)
 {
 	if (m_stackState >= CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must select debug info components before compilation."));
+		BOOST_THROW_EXCEPTION(CompilerError() << util::errinfo_comment("Must select debug info components before compilation."));
 	m_debugInfoSelection = _debugInfoSelection;
 }
 
@@ -573,7 +573,7 @@ bool CompilerStack::analyze()
 		if (noErrors)
 		{
 			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
-			auto allSources = applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
+			auto allSources = util::applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
 			modelChecker.enableAllEnginesIfPragmaPresent(allSources);
 			modelChecker.checkRequestedSourcesAndContracts(allSources);
 			for (Source const* source: m_sourceOrder)
@@ -1030,7 +1030,7 @@ Json::Value CompilerStack::interfaceSymbols(string const& _contractName) const
 	for (ErrorDefinition const* error: contractDefinition(_contractName).interfaceErrors())
 	{
 		string signature = error->functionType(true)->externalSignature();
-		interfaceSymbols["errors"][signature] = toHex(toCompactBigEndian(selectorFromSignature32(signature), 4));
+		interfaceSymbols["errors"][signature] = util::toHex(toCompactBigEndian(util::selectorFromSignature32(signature), 4));
 	}
 
 	for (EventDefinition const* event: ranges::concat_view(
@@ -1040,7 +1040,7 @@ Json::Value CompilerStack::interfaceSymbols(string const& _contractName) const
 		if (!event->isAnonymous())
 		{
 			string signature = event->functionType(true)->externalSignature();
-			interfaceSymbols["events"][signature] = toHex(u256(h256::Arith(keccak256(signature))));
+			interfaceSymbols["events"][signature] = toHex(u256(h256::Arith(util::keccak256(signature))));
 		}
 
 	return interfaceSymbols;
@@ -1494,7 +1494,7 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 			continue;
 
 		solAssert(s.second.charStream, "Character stream not available");
-		meta["sources"][s.first]["keccak256"] = "0x" + toHex(s.second.keccak256().asBytes());
+		meta["sources"][s.first]["keccak256"] = "0x" + util::toHex(s.second.keccak256().asBytes());
 		if (optional<string> licenseString = s.second.ast->licenseString())
 			meta["sources"][s.first]["license"] = *licenseString;
 		if (m_metadataLiteralSources)
@@ -1502,7 +1502,7 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 		else
 		{
 			meta["sources"][s.first]["urls"] = Json::arrayValue;
-			meta["sources"][s.first]["urls"].append("bzz-raw://" + toHex(s.second.swarmHash().asBytes()));
+			meta["sources"][s.first]["urls"].append("bzz-raw://" + util::toHex(s.second.swarmHash().asBytes()));
 			meta["sources"][s.first]["urls"].append(s.second.ipfsUrl());
 		}
 	}
@@ -1565,7 +1565,7 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 
 	meta["settings"]["libraries"] = Json::objectValue;
 	for (auto const& library: m_libraries)
-		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
+		meta["settings"]["libraries"][library.first] = "0x" + util::toHex(library.second.asBytes());
 
 	meta["output"]["abi"] = contractABI(_contract);
 	meta["output"]["userdoc"] = natspecUser(_contract);

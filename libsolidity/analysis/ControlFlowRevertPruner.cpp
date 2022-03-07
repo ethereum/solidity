@@ -57,7 +57,7 @@ void ControlFlowRevertPruner::run()
 
 void ControlFlowRevertPruner::findRevertStates()
 {
-	std::set<CFG::FunctionContractTuple> pendingFunctions = keys(m_functions);
+	std::set<CFG::FunctionContractTuple> pendingFunctions = util::keys(m_functions);
 	// We interrupt the search whenever we encounter a call to a function with (yet) unknown
 	// revert behaviour. The ``wakeUp`` data structure contains information about which
 	// searches to restart once we know about the behaviour.
