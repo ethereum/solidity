@@ -411,13 +411,15 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	if (m_tagReplacements)
 		return *m_tagReplacements;
 
+	assertThrow(_settings.isCreation == m_creation, OptimizerException, "Mismatching creation settings.");
+
 	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
 		OptimiserSettings settings = _settings;
-		// Disable creation mode for sub-assemblies.
-		settings.isCreation = false;
-		map<u256, u256> const& subTagReplacements = m_subs[subId]->optimiseInternal(
+		Assembly& sub = *m_subs[subId];
+		settings.isCreation = sub.isCreation();
+		map<u256, u256> const& subTagReplacements = sub.optimiseInternal(
 			settings,
 			JumpdestRemover::referencedTags(m_items, subId)
 		);

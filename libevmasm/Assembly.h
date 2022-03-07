@@ -48,7 +48,7 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
-	explicit Assembly(std::string _name = std::string()):m_name(std::move(_name)) { }
+	Assembly(bool _creation, std::string _name): m_creation(_creation), m_name(std::move(_name)) { }
 
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
@@ -157,6 +157,8 @@ public:
 	std::vector<size_t> decodeSubPath(size_t _subObjectId) const;
 	size_t encodeSubPath(std::vector<size_t> const& _subPath);
 
+	bool isCreation() const { return m_creation; }
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -214,6 +216,8 @@ protected:
 	mutable std::vector<size_t> m_tagPositionsInBytecode;
 
 	int m_deposit = 0;
+	/// True, if the assembly contains contract creation code.
+	bool const m_creation = false;
 	/// Internal name of the assembly object, only used with the Yul backend
 	/// currently
 	std::string m_name;

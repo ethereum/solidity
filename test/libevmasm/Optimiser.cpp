@@ -1250,8 +1250,8 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	// tag unifications (due to block deduplication) is also
 	// visible at the super-assembly.
 
-	Assembly main;
-	AssemblyPointer sub = make_shared<Assembly>();
+	Assembly main{false, {}};
+	AssemblyPointer sub = make_shared<Assembly>(true, string{});
 
 	sub->append(u256(1));
 	auto t1 = sub->newTag();
