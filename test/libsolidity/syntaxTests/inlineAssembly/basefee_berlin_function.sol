@@ -15,8 +15,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
-// EVMVersion: <=berlin
+// EVMVersion: =berlin
 // ----
-// f() -> 0
-// g() -> 1000
+// DeclarationError 5017: (98-105): The identifier "basefee" is reserved and can not be used.
+// DeclarationError 5017: (242-307): The identifier "basefee" is reserved and can not be used.
