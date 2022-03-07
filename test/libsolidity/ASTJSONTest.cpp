@@ -94,12 +94,8 @@ void replaceTagWithVersion(string& _input)
 
 }
 
-
-ASTJSONTest::ASTJSONTest(string const& _filename)
+void ASTJSONTest::generateTestVariants(string const& _filename)
 {
-	if (!boost::algorithm::ends_with(_filename, ".sol"))
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
-
 	string_view baseName = _filename;
 	baseName.remove_suffix(4);
 
@@ -118,10 +114,10 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 			m_variants.push_back(variant);
 		}
 	}
+}
 
-	if (m_variants.empty())
-		BOOST_THROW_EXCEPTION(runtime_error("Missing file with expected result for: \"" + _filename + "\"."));
-
+void ASTJSONTest::fillSources(string const& _filename)
+{
 	ifstream file(_filename);
 	if (!file)
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
@@ -152,13 +148,46 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 			if (m_expectedFailAfter.has_value())
 				BOOST_THROW_EXCEPTION(runtime_error("Duplicated \"failAfter\" directive"));
 			m_expectedFailAfter = stringToCompilerState(state);
+
 		}
 		else if (!line.empty() && !boost::algorithm::starts_with(line, delimiter))
 			source += line + "\n";
 	}
-
 	m_sources.emplace_back(sourceName.empty() ? "a" : sourceName, source);
 	file.close();
+}
+
+void ASTJSONTest::validateTestConfiguration() const
+{
+	if (m_variants.empty())
+		BOOST_THROW_EXCEPTION(runtime_error("No file with expected result found."));
+
+	if (m_expectedFailAfter.has_value())
+	{
+		auto unexpectedTestVariant = std::find_if(
+			m_variants.begin(), m_variants.end(),
+			[failAfter = m_expectedFailAfter](TestVariant v) { return v.stopAfter > failAfter; }
+		);
+
+		if (unexpectedTestVariant != m_variants.end())
+			BOOST_THROW_EXCEPTION(
+				runtime_error(
+					string("Unexpected JSON file: ") + unexpectedTestVariant->astFilename() +
+					" in \"failAfter: " +
+					compilerStateToString(m_expectedFailAfter.value()) + "\" scenario."
+				)
+			);
+	}
+}
+
+ASTJSONTest::ASTJSONTest(string const& _filename)
+{
+	if (!boost::algorithm::ends_with(_filename, ".sol"))
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
+
+	generateTestVariants(_filename);
+	fillSources(_filename);
+	validateTestConfiguration();
 }
 
 TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)

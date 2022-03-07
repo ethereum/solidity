@@ -89,6 +89,10 @@ private:
 		std::string const& _variant
 	) const;
 
+	void generateTestVariants(std::string const& _filename);
+	void fillSources(std::string const& _filename);
+	void validateTestConfiguration() const;
+
 	std::vector<TestVariant> m_variants;
 	std::optional<CompilerStack::State> m_expectedFailAfter;
 
