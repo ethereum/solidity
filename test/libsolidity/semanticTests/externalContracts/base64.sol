@@ -35,8 +35,8 @@ contract test {
 // ----
 // constructor()
 // gas irOptimized: 450044
-// gas legacy: 766936
-// gas legacyOptimized: 543094
+// gas legacy: 765640
+// gas legacyOptimized: 541810
 // encode_inline_asm(bytes): 0x20, 0 -> 0x20, 0
 // encode_inline_asm(bytes): 0x20, 1, "f" -> 0x20, 4, "Zg=="
 // encode_inline_asm(bytes): 0x20, 2, "fo" -> 0x20, 4, "Zm8="
@@ -53,9 +53,9 @@ contract test {
 // encode_no_asm(bytes): 0x20, 6, "foobar" -> 0x20, 8, "Zm9vYmFy"
 // encode_inline_asm_large()
 // gas irOptimized: 1385047
-// gas legacy: 1658033
-// gas legacyOptimized: 1210033
+// gas legacy: 1652033
+// gas legacyOptimized: 1201033
 // encode_no_asm_large()
 // gas irOptimized: 3335101
-// gas legacy: 4801077
-// gas legacyOptimized: 2929077
+// gas legacy: 4777077
+// gas legacyOptimized: 2890077
