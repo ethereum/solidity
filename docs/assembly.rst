@@ -297,8 +297,7 @@ model as follows:
 
 .. code-block:: solidity
 
-    /// @solidity memory-safe-assembly
-    assembly {
+    assembly ("memory-safe") {
         ...
     }
 
@@ -327,8 +326,7 @@ But the following is:
 
 .. code-block:: solidity
 
-    /// @solidity memory-safe-assembly
-    assembly {
+    assembly ("memory-safe") {
       let p := mload(0x40)
       returndatacopy(p, 0, returndatasize())
       revert(p, returndatasize())
@@ -341,8 +339,7 @@ If the memory operations use a length of zero, it is also fine to just use any o
 
 .. code-block:: solidity
 
-    /// @solidity memory-safe-assembly
-    assembly {
+    assembly ("memory-safe") {
       revert(0, 0)
     }
 
@@ -364,3 +361,16 @@ in memory is automatically considered memory-safe and does not need to be annota
     It is your responsibility to make sure that the assembly actually satisfies the memory model. If you annotate
     an assembly block as memory-safe, but violate one of the memory assumptions, this **will** lead to incorrect and
     undefined behaviour that cannot easily be discovered by testing.
+
+In case you are developing a library that is meant to be compatible across multiple versions
+of solidity, you can use a special comment to annotate an assembly block as memory-safe:
+
+.. code-block:: solidity
+
+    /// @solidity memory-safe-assembly
+    assembly {
+        ...
+    }
+
+Note that we will disallow the annotation via comment in a future breaking release, so if you are not concerned with
+backwards-compatibility with older compiler versions, prefer using the dialect string.

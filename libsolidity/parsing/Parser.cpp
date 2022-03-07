@@ -1321,13 +1321,28 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		advance();
 	}
 
+	ASTPointer<vector<ASTPointer<ASTString>>> flags;
+	if (m_scanner->currentToken() == Token::LParen)
+	{
+		flags = make_shared<vector<ASTPointer<ASTString>>>();
+		do
+		{
+			advance();
+			expectToken(Token::StringLiteral, false);
+			flags->emplace_back(make_shared<ASTString>(m_scanner->currentLiteral()));
+			advance();
+		}
+		while (m_scanner->currentToken() == Token::Comma);
+		expectToken(Token::RParen);
+	}
+
 	yul::Parser asmParser(m_errorReporter, dialect);
 	shared_ptr<yul::Block> block = asmParser.parseInline(m_scanner);
 	if (block == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());
 
 	location.end = nativeLocationOf(*block).end;
-	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, block);
+	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, move(flags), block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)

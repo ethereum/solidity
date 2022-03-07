@@ -251,6 +251,12 @@ mode AssemblyBlockMode;
 AssemblyDialect: '"evmasm"';
 AssemblyLBrace: '{' -> popMode, pushMode(YulMode);
 
+AssemblyFlagString: '"' DoubleQuotedStringCharacter+ '"';
+
+AssemblyBlockLParen: '(';
+AssemblyBlockRParen: ')';
+AssemblyBlockComma: ',';
+
 AssemblyBlockWS: [ \t\r\n\u000C]+ -> skip ;
 AssemblyBlockCOMMENT: '/*' .*? '*/' -> channel(HIDDEN) ;
 AssemblyBlockLINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN) ;
