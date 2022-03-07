@@ -28,5 +28,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4588: (231-245): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (492-507): Assertion checker does not yet implement this type of function call.
+// Warning 8729: (231-245): Contract deployment is only supported in the trusted mode for external calls with the CHC engine.
+// Warning 8729: (492-507): Contract deployment is only supported in the trusted mode for external calls with the CHC engine.

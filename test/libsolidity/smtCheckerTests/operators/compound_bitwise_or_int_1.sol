@@ -12,7 +12,6 @@ contract C {
 // SMTIgnoreOS: macos
 // ----
 // Warning 6368: (76-81): CHC: Out of bounds access might happen here.
-// Warning 6368: (76-84): CHC: Out of bounds access might happen here.
 // Warning 6368: (119-124): CHC: Out of bounds access might happen here.
 // Warning 6368: (119-127): CHC: Out of bounds access might happen here.
 // Warning 6368: (149-154): CHC: Out of bounds access might happen here.
