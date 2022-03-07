@@ -411,14 +411,11 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	if (m_tagReplacements)
 		return *m_tagReplacements;
 
-	assertThrow(_settings.isCreation == m_creation, OptimizerException, "Mismatching creation settings.");
-
 	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
 		OptimiserSettings settings = _settings;
 		Assembly& sub = *m_subs[subId];
-		settings.isCreation = sub.isCreation();
 		map<u256, u256> const& subTagReplacements = sub.optimiseInternal(
 			settings,
 			JumpdestRemover::referencedTags(m_items, subId)
@@ -438,7 +435,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 				m_items,
 				_tagsReferencedFromOutside,
 				_settings.expectedExecutionsPerDeployment,
-				_settings.isCreation,
+				isCreation(),
 				_settings.evmVersion
 			}.optimise();
 
@@ -539,8 +536,8 @@ map<u256, u256> const& Assembly::optimiseInternal(
 
 	if (_settings.runConstantOptimiser)
 		ConstantOptimisationMethod::optimiseConstants(
-			_settings.isCreation,
-			_settings.isCreation ? 1 : _settings.expectedExecutionsPerDeployment,
+			isCreation(),
+			isCreation() ? 1 : _settings.expectedExecutionsPerDeployment,
 			_settings.evmVersion,
 			*this
 		);

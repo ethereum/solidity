@@ -117,7 +117,6 @@ public:
 
 	struct OptimiserSettings
 	{
-		bool isCreation = false;
 		bool runInliner = false;
 		bool runJumpdestRemover = false;
 		bool runPeephole = false;
