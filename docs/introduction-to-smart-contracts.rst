@@ -396,14 +396,15 @@ returns that code when executed.
 Gas
 ===
 
-Upon creation, each transaction is charged with a certain amount of **gas**,
-whose purpose is to limit the amount of work that is needed to execute
-the transaction and to pay for this execution at the same time. While the EVM executes the
+Upon creation, each transaction is charged with a certain amount of **gas**. 
+Imposing a cost on operations that write to the blockchain serves to secure the network:
+it deincentivizes bad actors from spamming, and pays validators (i.e. miners and stakers)
+for the work that is required to validate new blocks. While the EVM executes the
 transaction, the gas is gradually depleted according to specific rules.
 
-The **gas price** is a value set by the creator of the transaction, who
+The **gas price** is a value set by the creator of the transaction (see `msg.sender), who
 has to pay ``gas_price * gas`` up front from the sending account.
-If some gas is left after the execution, it is refunded to the creator in the same way.
+If some gas is left after execution, it is refunded to the transaction originator.
 
 If the gas is used up at any point (i.e. it would be negative),
 an out-of-gas exception is triggered, which reverts all modifications
@@ -415,8 +416,7 @@ Storage, Memory and the Stack
 =============================
 
 The Ethereum Virtual Machine has three areas where it can store data-
-storage, memory and the stack, which are explained in the following
-paragraphs.
+storage, memory and the stack.
 
 Each account has a data area called **storage**, which is persistent between function calls
 and transactions.
@@ -505,11 +505,24 @@ Delegatecall / Callcode and Libraries
 There exists a special variant of a message call, named **delegatecall**
 which is identical to a message call apart from the fact that
 the code at the target address is executed in the context of the calling
-contract and ``msg.sender`` and ``msg.value`` do not change their values.
+<<<<<<< HEAD
+contract. In practice this means ``msg.sender`` and ``msg.value`` retain
+the values that were passed to the delegator, while executing code that
+lives in the delegated contract.
+=======
+contract. In practice this means ``msg.sender`` and ``msg.value`` retain 
+the values that were passed to the delegator, while executing code that 
+lives in the delegated contract. 
+>>>>>>> updates to delegatecall
 
 This means that a contract can dynamically load code from a different
 address at runtime. Storage, current address and balance still
 refer to the calling contract, only the code is taken from the called address.
+
+For example, say Alice calls a method in contract A to modify 
+state variable `A.var` according to method ``A.foo()``. 
+If contract A then delegates call to contract B, the logic of `B.foo()` 
+will be executed, but modifications will be made to state variable `A.var`. 
 
 This makes it possible to implement the "library" feature in Solidity:
 Reusable library code that can be applied to a contract's storage, e.g. in
