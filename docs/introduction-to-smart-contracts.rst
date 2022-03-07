@@ -505,11 +505,18 @@ Delegatecall / Callcode and Libraries
 There exists a special variant of a message call, named **delegatecall**
 which is identical to a message call apart from the fact that
 the code at the target address is executed in the context of the calling
-contract and ``msg.sender`` and ``msg.value`` do not change their values.
+contract. In practice this means ``msg.sender`` and ``msg.value`` retain 
+the values that were passed to the delegator, while executing code that 
+lives in the delegated contract. 
 
 This means that a contract can dynamically load code from a different
 address at runtime. Storage, current address and balance still
 refer to the calling contract, only the code is taken from the called address.
+
+For example, say Alice calls a method in contract A to modify 
+state variable `A.var` according to method ``A.foo()``. 
+If contract A then delegates call to contract B, the logic of `B.foo()` 
+will be executed, but modifications will be made to state variable `A.var`. 
 
 This makes it possible to implement the "library" feature in Solidity:
 Reusable library code that can be applied to a contract's storage, e.g. in
