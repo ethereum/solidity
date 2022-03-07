@@ -185,25 +185,27 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 	if (!_quiet)
 		cout << "Got " << numbers.size() << " inputs:" << endl;
 
-	Assembly assembly;
-	for (u256 const& n: numbers)
-	{
-		if (!_quiet)
-			cout << n << endl;
-		assembly.append(n);
-	}
 	for (bool isCreation: {false, true})
+	{
+		Assembly assembly{isCreation, {}};
+		for (u256 const& n: numbers)
+		{
+			if (!_quiet)
+				cout << n << endl;
+			assembly.append(n);
+		}
 		for (unsigned runs: {1u, 2u, 3u, 20u, 40u, 100u, 200u, 400u, 1000u})
 		{
 			// Make a copy here so that each time we start with the original state.
 			Assembly tmp = assembly;
 			ConstantOptimisationMethod::optimiseConstants(
-					isCreation,
-					runs,
-					langutil::EVMVersion{},
-					tmp
+				isCreation,
+				runs,
+				langutil::EVMVersion{},
+				tmp
 			);
 		}
+	}
 }
 
 void FuzzerUtil::testStandardCompiler(string const& _input, bool _quiet)
