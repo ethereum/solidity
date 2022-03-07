@@ -763,6 +763,7 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
+	bool lvalueAccessToMemoryVariable = false;
 	// External references have already been resolved in a prior stage and stored in the annotation.
 	// We run the resolve step again regardless.
 	yul::ExternalIdentifierAccess::Resolver identifierAccess = [&](
@@ -787,6 +788,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");
+			if (_context == yul::IdentifierContext::LValue && var->type()->dataStoredIn(DataLocation::Memory))
+				lvalueAccessToMemoryVariable = true;
 			if (var->immutable())
 			{
 				m_errorReporter.typeError(3773_error, nativeLocationOf(_identifier), "Assembly access to immutable variables is not supported.");
@@ -974,8 +977,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
-		return false;
-	return true;
+		solAssert(m_errorReporter.hasErrors());
+	_inlineAssembly.annotation().hasMemoryEffects =
+		lvalueAccessToMemoryVariable ||
+		(analyzer.sideEffects().memory != yul::SideEffects::None);
+	return false;
 }
 
 bool TypeChecker::visit(IfStatement const& _ifStatement)

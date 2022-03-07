@@ -48,6 +48,7 @@ private:
 	bool visit(ModifierDefinition const& _modifier) override;
 	bool visit(EventDefinition const& _event) override;
 	bool visit(ErrorDefinition const& _error) override;
+	bool visit(InlineAssembly const& _assembly) override;
 
 	void checkParameters(
 		CallableDeclaration const& _callable,
