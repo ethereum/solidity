@@ -27,7 +27,9 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
 
+#include <algorithm>
 #include <limits>
+#include <locale>
 #include <string>
 #include <vector>
 
@@ -195,6 +197,49 @@ inline std::optional<unsigned> toUnsignedInt(std::string const& _value)
 	{
 		return std::nullopt;
 	}
+}
+
+/// Converts parameter _c to its lowercase equivalent if c is an uppercase letter and has a lowercase equivalent. It uses the classic "C" locale semantics.
+/// @param _c value to be converted
+/// @return the converted value
+inline char toLower(char _c)
+{
+	return tolower(_c, std::locale::classic());
+}
+
+/// Converts parameter _c to its uppercase equivalent if c is an lowercase letter and has a uppercase equivalent. It uses the classic "C" locale semantics.
+/// @param _c value to be converted
+/// @return the converted value
+inline char toUpper(char _c)
+{
+	return toupper(_c, std::locale::classic());
+}
+
+/// Converts parameter _s to its lowercase equivalent. It uses the classic "C" locale semantics.
+/// @param _s value to be converted
+/// @return the converted value
+inline std::string toLower(std::string _s)
+{
+	std::transform(_s.begin(), _s.end(), _s.begin(), [](char _c) {
+		return toLower(_c);
+	});
+	return _s;
+}
+
+/// Checks whether _c is a decimal digit character. It uses the classic "C" locale semantics.
+/// @param _c character to be checked
+/// @return true if _c is a decimal digit character, false otherwise
+inline bool isDigit(char _c)
+{
+	return isdigit(_c, std::locale::classic());
+}
+
+// Checks if character is printable using classic "C" locale
+/// @param _c character to be checked
+/// @return true if _c is a printable character, false otherwise.
+inline bool isPrint(char _c)
+{
+	return isprint(_c, std::locale::classic());
 }
 
 }

@@ -90,7 +90,7 @@ protected:
 	template<typename IteratorType>
 	static void skipWhitespace(IteratorType& _it, IteratorType _end)
 	{
-		while (_it != _end && isspace(*_it))
+		while (_it != _end && std::isspace<char>(*_it, std::locale::classic()))
 			++_it;
 	}
 
