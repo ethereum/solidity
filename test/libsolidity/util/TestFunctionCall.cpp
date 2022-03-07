@@ -324,7 +324,7 @@ string TestFunctionCall::formatRawParameters(
 			for (auto const c: param.rawString)
 				// NOTE: Even though we have a toHex() overload specifically for uint8_t, the compiler
 				// chooses the one for bytes if the second argument is omitted.
-				os << (c >= ' ' ? string(1, c) : "\\x" + toHex(static_cast<uint8_t>(c), HexCase::Lower));
+				os << (c >= ' ' ? string(1, c) : "\\x" + util::toHex(static_cast<uint8_t>(c), HexCase::Lower));
 			if (&param != &_params.back())
 				os << ", ";
 		}

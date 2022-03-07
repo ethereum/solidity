@@ -403,7 +403,7 @@ void CompilerContext::appendInlineAssembly(
 	{
 		if (_insideFunction)
 			return false;
-		return contains(_localVariables, _identifier.name.str());
+		return util::contains(_localVariables, _identifier.name.str());
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,

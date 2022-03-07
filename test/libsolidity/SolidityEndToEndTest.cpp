@@ -4074,12 +4074,12 @@ BOOST_AUTO_TEST_CASE(strip_reason_strings)
 			m_optimiserSettings == OptimiserSettings::none()
 		)
 			// check that the reason string IS part of the binary.
-			BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") != std::string::npos);
+			BOOST_CHECK(util::toHex(m_output).find("736f6d6520726561736f6e") != std::string::npos);
 
 		m_revertStrings = RevertStrings::Strip;
 		compileAndRun(sourceCode, 0, "C");
 		// check that the reason string is NOT part of the binary.
-		BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") == std::string::npos);
+		BOOST_CHECK(util::toHex(m_output).find("736f6d6520726561736f6e") == std::string::npos);
 
 		ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(7));
 		ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs());

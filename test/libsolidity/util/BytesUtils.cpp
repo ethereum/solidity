@@ -219,7 +219,7 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 				if (isprint(v))
 					os << v;
 				else
-					os << "\\x" << toHex(v, HexCase::Lower);
+					os << "\\x" << util::toHex(v, HexCase::Lower);
 		}
 	}
 	os << "\"";

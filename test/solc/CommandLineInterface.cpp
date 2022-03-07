@@ -43,6 +43,7 @@
 using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::test;
+using namespace solidity::util;
 
 using PathSet = set<boost::filesystem::path>;
 

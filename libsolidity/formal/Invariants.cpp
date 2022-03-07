@@ -48,7 +48,7 @@ map<Predicate const*, set<string>> collectInvariants(
 
 	map<string, pair<smtutil::Expression, smtutil::Expression>> equalities;
 	// Collect equalities where one of the sides is a predicate we're interested in.
-	BreadthFirstSearch<smtutil::Expression const*>{{&_proof}}.run([&](auto&& _expr, auto&& _addChild) {
+	util::BreadthFirstSearch<smtutil::Expression const*>{{&_proof}}.run([&](auto&& _expr, auto&& _addChild) {
 		if (_expr->name == "=")
 			for (auto const& t: targets)
 			{

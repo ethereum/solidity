@@ -464,7 +464,7 @@ void CommandLineInterface::readInputFiles()
 		for (auto const& [sourceUnitName, normalizedInputPaths]: collisions)
 		{
 			message += sourceUnitName + " matches: ";
-			message += joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) + "\n";
+			message += util::joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) + "\n";
 		}
 
 		solThrow(CommandLineValidationError, message);
@@ -963,7 +963,7 @@ void CommandLineInterface::link()
 			string foundPlaceholder(it, it + placeholderSize);
 			if (librariesReplacements.count(foundPlaceholder))
 			{
-				string hexStr(toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
+				string hexStr(util::toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else

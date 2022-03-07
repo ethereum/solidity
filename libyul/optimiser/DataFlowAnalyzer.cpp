@@ -367,7 +367,7 @@ void DataFlowAnalyzer::joinKnowledgeHelper(
 	// of m_memory and thus any overlapping write would have cleared the keys
 	// that are not known to be different inside m_memory already.
 	cxx20::erase_if(_this, mapTuple([&_older](auto&& key, auto&& currentValue){
-		YulString const* oldValue = valueOrNullptr(_older, key);
+		YulString const* oldValue = util::valueOrNullptr(_older, key);
 		return !oldValue || *oldValue != currentValue;
 	}));
 }

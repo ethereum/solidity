@@ -580,7 +580,7 @@ optional<smtutil::Expression> symbolicTypeConversion(frontend::Type const* _from
 					return smtutil::Expression(size_t(0));
 				auto bytesVec = util::asBytes(strType->value());
 				bytesVec.resize(fixedBytesType->numBytes(), 0);
-				return smtutil::Expression(u256(toHex(bytesVec, util::HexPrefix::Add)));
+				return smtutil::Expression(u256(util::toHex(bytesVec, util::HexPrefix::Add)));
 			}
 
 	return std::nullopt;
