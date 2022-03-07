@@ -10,9 +10,12 @@ Optimized IR:
 object "D_12" {
     code {
         {
-            /// @src 0:82:161  "contract D {..."
+            /// @src 0:82:175  "contract D {..."
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
+            /// @src 0:115:139  "assembly { mstore(0,0) }"
+            mstore(0, 0)
+            /// @src 0:82:175  "contract D {..."
             let _1 := datasize("D_12_deployed")
             codecopy(128, dataoffset("D_12_deployed"), _1)
             return(128, _1)
@@ -22,7 +25,7 @@ object "D_12" {
     object "D_12_deployed" {
         code {
             {
-                /// @src 0:82:161  "contract D {..."
+                /// @src 0:82:175  "contract D {..."
                 let _1 := memoryguard(0x80)
                 mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))

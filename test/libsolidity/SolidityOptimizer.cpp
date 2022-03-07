@@ -25,6 +25,7 @@
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 #include <libevmasm/Instruction.h>
+#include <libevmasm/Disassemble.h>
 
 #include <boost/test/unit_test.hpp>
 

@@ -29,7 +29,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/optimiser/Suite.h>
 
-#include <libevmasm/Instruction.h>
+#include <libevmasm/Disassemble.h>
 
 #include <libsmtutil/Exceptions.h>
 

@@ -5,4 +5,4 @@ contract A {
     }
 }
 // ----
-// TypeError 8961: (88-96): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (88-96): Function cannot be declared as view because this expression (potentially) modifies the state.

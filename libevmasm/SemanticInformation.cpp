@@ -29,6 +29,125 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
+vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::SSTORE:
+	case Instruction::SLOAD:
+	{
+		assertThrow(memory(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(storage(_instruction) != Effect::None, OptimizerException, "");
+		Operation op;
+		op.effect = storage(_instruction);
+		op.location = Location::Storage;
+		op.startParameter = 0;
+		// We know that exactly one slot is affected.
+		op.lengthConstant = 1;
+		return {op};
+	}
+	case Instruction::MSTORE:
+	case Instruction::MSTORE8:
+	case Instruction::MLOAD:
+	{
+		assertThrow(memory(_instruction) != Effect::None, OptimizerException, "");
+		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		Operation op;
+		op.effect = memory(_instruction);
+		op.location = Location::Memory;
+		op.startParameter = 0;
+		if (_instruction == Instruction::MSTORE || _instruction == Instruction::MLOAD)
+			op.lengthConstant = 32;
+		else if (_instruction == Instruction::MSTORE8)
+			op.lengthConstant = 1;
+
+		return {op};
+	}
+	case Instruction::REVERT:
+	case Instruction::RETURN:
+	case Instruction::KECCAK256:
+	case Instruction::LOG0:
+	case Instruction::LOG1:
+	case Instruction::LOG2:
+	case Instruction::LOG3:
+	case Instruction::LOG4:
+	{
+		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(memory(_instruction) == Effect::Read, OptimizerException, "");
+		Operation op;
+		op.effect = memory(_instruction);
+		op.location = Location::Memory;
+		op.startParameter = 0;
+		op.lengthParameter = 1;
+		return {op};
+	}
+	case Instruction::EXTCODECOPY:
+	{
+		assertThrow(memory(_instruction) == Effect::Write, OptimizerException, "");
+		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		Operation op;
+		op.effect = memory(_instruction);
+		op.location = Location::Memory;
+		op.startParameter = 1;
+		op.lengthParameter = 3;
+		return {op};
+	}
+	case Instruction::CODECOPY:
+	case Instruction::CALLDATACOPY:
+	case Instruction::RETURNDATACOPY:
+	{
+		assertThrow(memory(_instruction) == Effect::Write, OptimizerException, "");
+		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		Operation op;
+		op.effect = memory(_instruction);
+		op.location = Location::Memory;
+		op.startParameter = 0;
+		op.lengthParameter = 2;
+		return {op};
+	}
+	case Instruction::STATICCALL:
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
+	{
+		size_t paramCount = static_cast<size_t>(instructionInfo(_instruction).args);
+		vector<Operation> operations{
+			Operation{Location::Memory, Effect::Read, paramCount - 4, paramCount - 3, {}},
+			Operation{Location::Storage, Effect::Read, {}, {}, {}}
+		};
+		if (_instruction != Instruction::STATICCALL)
+			operations.emplace_back(Operation{Location::Storage, Effect::Write, {}, {}, {}});
+		operations.emplace_back(Operation{
+			Location::Memory,
+			Effect::Write,
+			paramCount - 2,
+			paramCount - 1,
+			{}
+		});
+		return operations;
+	}
+	case Instruction::CREATE:
+	case Instruction::CREATE2:
+		return vector<Operation>{
+			Operation{
+				Location::Memory,
+				Effect::Read,
+				1,
+				2,
+				{}
+			},
+			Operation{Location::Storage, Effect::Read, {}, {}, {}},
+			Operation{Location::Storage, Effect::Write, {}, {}, {}}
+		};
+	case Instruction::MSIZE:
+		// This is just to satisfy the assert below.
+		return vector<Operation>{};
+	default:
+		assertThrow(storage(_instruction) == None && memory(_instruction) == None, AssemblyException, "");
+	}
+	return {};
+}
+
 bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool _msizeImportant)
 {
 	switch (_item.type())
@@ -49,7 +168,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	case PushLibraryAddress:
 	case PushImmutable:
 		return false;
-	case Operation:
+	case evmasm::Operation:
 	{
 		if (isSwapInstruction(_item) || isDupInstruction(_item))
 			return false;
@@ -79,7 +198,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 
 bool SemanticInformation::isCommutativeOperation(AssemblyItem const& _item)
 {
-	if (_item.type() != Operation)
+	if (_item.type() != evmasm::Operation)
 		return false;
 	switch (_item.instruction())
 	{
@@ -97,14 +216,14 @@ bool SemanticInformation::isCommutativeOperation(AssemblyItem const& _item)
 
 bool SemanticInformation::isDupInstruction(AssemblyItem const& _item)
 {
-	if (_item.type() != Operation)
+	if (_item.type() != evmasm::Operation)
 		return false;
 	return evmasm::isDupInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 {
-	if (_item.type() != Operation)
+	if (_item.type() != evmasm::Operation)
 		return false;
 	return evmasm::isSwapInstruction(_item.instruction());
 }
@@ -116,7 +235,7 @@ bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 {
-	if (_item.type() != Operation)
+	if (_item.type() != evmasm::Operation)
 		return false;
 	switch (_item.instruction())
 	{
@@ -166,7 +285,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 {
 	assertThrow(_item.type() != VerbatimBytecode, AssemblyException, "");
 
-	if (_item.type() != Operation)
+	if (_item.type() != evmasm::Operation)
 		return true;
 
 	switch (_item.instruction())

@@ -32,6 +32,7 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -493,24 +494,36 @@ bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 bool ASTJsonConverter::visit(EventDefinition const& _node)
 {
 	m_inEvent = true;
-	setJsonNode(_node, "EventDefinition", {
+	std::vector<pair<string, Json::Value>> _attributes = {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
 		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("anonymous", _node.isAnonymous())
-	});
+	};
+	if (m_stackState >= CompilerStack::State::AnalysisPerformed)
+			_attributes.emplace_back(
+				make_pair(
+					"eventSelector",
+					toHex(u256(h256::Arith(util::keccak256(_node.functionType(true)->externalSignature()))))
+				));
+
+	setJsonNode(_node, "EventDefinition", std::move(_attributes));
 	return false;
 }
 
 bool ASTJsonConverter::visit(ErrorDefinition const& _node)
 {
-	setJsonNode(_node, "ErrorDefinition", {
+	std::vector<pair<string, Json::Value>> _attributes = {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
 		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("parameters", toJson(_node.parameterList()))
-	});
+	};
+	if (m_stackState >= CompilerStack::State::AnalysisPerformed)
+		_attributes.emplace_back(make_pair("errorSelector", _node.functionType(true)->externalIdentifierHex()));
+
+	setJsonNode(_node, "ErrorDefinition", std::move(_attributes));
 	return false;
 }
 
@@ -587,11 +600,23 @@ bool ASTJsonConverter::visit(InlineAssembly const& _node)
 	for (Json::Value& it: externalReferences | ranges::views::values)
 		externalReferencesJson.append(std::move(it));
 
-	setJsonNode(_node, "InlineAssembly", {
+	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("AST", Json::Value(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations()))),
 		make_pair("externalReferences", std::move(externalReferencesJson)),
 		make_pair("evmVersion", dynamic_cast<solidity::yul::EVMDialect const&>(_node.dialect()).evmVersion().name())
-	});
+	};
+
+	if (_node.flags())
+	{
+		Json::Value flags(Json::arrayValue);
+		for (auto const& flag: *_node.flags())
+			if (flag)
+				flags.append(*flag);
+			else
+				flags.append(Json::nullValue);
+		attributes.emplace_back(make_pair("flags", move(flags)));
+	}
+	setJsonNode(_node, "InlineAssembly", move(attributes));
 
 	return false;
 }

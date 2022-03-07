@@ -22,7 +22,7 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="15"
+LABEL version="16"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -32,7 +32,7 @@ RUN apt-get update; \
 		software-properties-common \
 		ninja-build git wget \
 		libbz2-dev zlib1g-dev git curl uuid-dev \
-		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4; \
+		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4 jq; \
     apt-get install -qy python3-pip;
 
 # Install cmake 3.21.2 (minimum requirement is cmake 3.10)

@@ -11,6 +11,8 @@ set(sources
 	ConstantOptimiser.h
 	ControlFlowGraph.cpp
 	ControlFlowGraph.h
+	Disassemble.cpp
+	Disassemble.h
 	Exceptions.h
 	ExpressionClasses.cpp
 	ExpressionClasses.h

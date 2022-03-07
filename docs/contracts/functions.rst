@@ -102,10 +102,10 @@ two integers passed as function parameters, then you use something like:
         function arithmetic(uint _a, uint _b)
             public
             pure
-            returns (uint o_sum, uint o_product)
+            returns (uint sum, uint product)
         {
-            o_sum = _a + _b;
-            o_product = _a * _b;
+            sum = _a + _b;
+            product = _a * _b;
         }
     }
 
@@ -129,7 +129,7 @@ statement:
         function arithmetic(uint _a, uint _b)
             public
             pure
-            returns (uint o_sum, uint o_product)
+            returns (uint sum, uint product)
         {
             return (_a + _b, _a * _b);
         }

@@ -30,6 +30,7 @@
 #include <liblangutil/Common.h>
 
 #include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/view/filter.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -158,6 +159,81 @@ bool DocStringTagParser::visit(EventDefinition const& _event)
 bool DocStringTagParser::visit(ErrorDefinition const& _error)
 {
 	handleCallable(_error, _error, _error.annotation());
+
+	return true;
+}
+
+bool DocStringTagParser::visit(InlineAssembly const& _assembly)
+{
+	if (!_assembly.documentation())
+		return true;
+	StructuredDocumentation documentation{-1, _assembly.location(), _assembly.documentation()};
+	ErrorList errors;
+	ErrorReporter errorReporter{errors};
+	auto docTags = DocStringParser{documentation, errorReporter}.parse();
+
+	if (!errors.empty())
+	{
+		SecondarySourceLocation ssl;
+		for (auto const& error: errors)
+			if (error->comment())
+				ssl.append(
+					*error->comment(),
+					_assembly.location()
+				);
+		m_errorReporter.warning(
+			7828_error,
+			_assembly.location(),
+			"Inline assembly has invalid NatSpec documentation.",
+			ssl
+		);
+	}
+
+	for (auto const& [tagName, tagValue]: docTags)
+	{
+		if (tagName == "solidity")
+		{
+			vector<string> values;
+			boost::split(values, tagValue.content, isWhiteSpace);
+
+			set<string> valuesSeen;
+			set<string> duplicates;
+			for (auto const& value: values | ranges::views::filter(not_fn(&string::empty)))
+				if (valuesSeen.insert(value).second)
+				{
+					if (value == "memory-safe-assembly")
+					{
+						if (_assembly.annotation().markedMemorySafe)
+							m_errorReporter.warning(
+								8544_error,
+								_assembly.location(),
+								"Inline assembly marked as memory safe using both a NatSpec tag and an assembly flag. "
+								"If you are not concerned with backwards compatibility, only use the assembly flag, "
+								"otherwise only use the NatSpec tag."
+							);
+						_assembly.annotation().markedMemorySafe = true;
+					}
+					else
+						m_errorReporter.warning(
+							8787_error,
+							_assembly.location(),
+							"Unexpected value for @solidity tag in inline assembly: " + value
+						);
+				}
+				else if (duplicates.insert(value).second)
+					m_errorReporter.warning(
+						4377_error,
+						_assembly.location(),
+						"Value for @solidity tag in inline assembly specified multiple times: " + value
+					);
+		}
+		else
+			m_errorReporter.warning(
+				6269_error,
+				_assembly.location(),
+				"Unexpected NatSpec tag \"" + tagName + "\" with value \"" + tagValue.content + "\" in inline assembly."
+			);
+	}
 
 	return true;
 }

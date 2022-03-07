@@ -94,6 +94,8 @@ public:
 	void operator()(Leave const&) { }
 	void operator()(Block const& _block);
 
+	/// @returns the worst side effects encountered during analysis (including within defined functions).
+	SideEffects const& sideEffects() const { return m_sideEffects; }
 private:
 	/// Visits the expression, expects that it evaluates to exactly one value and
 	/// returns the type. Reports errors on errors and returns the default type.
@@ -128,6 +130,8 @@ private:
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<YulString> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;
+	/// Worst side effects encountered during analysis (including within defined functions).
+	SideEffects m_sideEffects;
 };
 
 }

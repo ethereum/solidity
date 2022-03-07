@@ -48,7 +48,7 @@ function ens_test
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul      # Compilation fails with "YulException: Variable _5 is 1 too deep in the stack [ _5 usr$i usr$h _7 usr$scratch usr$k usr$f _4 usr$len usr$j_2 RET _2 _1 var_data_mpos usr$totallen usr$x _12 ]"
+        ir-optimize-evm+yul      # Needs memory-safe inline assembly patch
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
     )
@@ -67,6 +67,8 @@ function ens_test
 
     replace_version_pragmas
     neutralize_packaged_contracts
+
+    find . -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn

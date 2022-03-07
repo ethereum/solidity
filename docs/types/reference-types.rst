@@ -190,11 +190,11 @@ If you want to use string parameters or other types that are not implicitly conv
     contract C {
         string s = "Storage";
         function f(bytes calldata bc, string memory sm, bytes16 b) public view {
-            string memory concat_string = string.concat(s, string(bc), "Literal", sm);
-            assert((bytes(s).length + bc.length + 7 + bytes(sm).length) == bytes(concat_string).length);
+            string memory concatString = string.concat(s, string(bc), "Literal", sm);
+            assert((bytes(s).length + bc.length + 7 + bytes(sm).length) == bytes(concatString).length);
 
-            bytes memory concat_bytes = bytes.concat(bytes(s), bc, bc[:2], "Literal", bytes(sm), b);
-            assert((bytes(s).length + bc.length + 2 + 7 + bytes(sm).length + b.length) == concat_bytes.length);
+            bytes memory concatBytes = bytes.concat(bytes(s), bc, bc[:2], "Literal", bytes(sm), b);
+            assert((bytes(s).length + bc.length + 2 + 7 + bytes(sm).length + b.length) == concatBytes.length);
         }
     }
 
@@ -376,20 +376,20 @@ Array Members
     pragma solidity >=0.6.0 <0.9.0;
 
     contract ArrayContract {
-        uint[2**20] m_aLotOfIntegers;
+        uint[2**20] aLotOfIntegers;
         // Note that the following is not a pair of dynamic arrays but a
         // dynamic array of pairs (i.e. of fixed size arrays of length two).
         // Because of that, T[] is always a dynamic array of T, even if T
         // itself is an array.
         // Data location for all state variables is storage.
-        bool[2][] m_pairsOfFlags;
+        bool[2][] pairsOfFlags;
 
         // newPairs is stored in memory - the only possibility
         // for public contract function arguments
         function setAllFlagPairs(bool[2][] memory newPairs) public {
             // assignment to a storage array performs a copy of ``newPairs`` and
-            // replaces the complete array ``m_pairsOfFlags``.
-            m_pairsOfFlags = newPairs;
+            // replaces the complete array ``pairsOfFlags``.
+            pairsOfFlags = newPairs;
         }
 
         struct StructType {
@@ -411,45 +411,45 @@ Array Members
 
         function setFlagPair(uint index, bool flagA, bool flagB) public {
             // access to a non-existing index will throw an exception
-            m_pairsOfFlags[index][0] = flagA;
-            m_pairsOfFlags[index][1] = flagB;
+            pairsOfFlags[index][0] = flagA;
+            pairsOfFlags[index][1] = flagB;
         }
 
         function changeFlagArraySize(uint newSize) public {
             // using push and pop is the only way to change the
             // length of an array
-            if (newSize < m_pairsOfFlags.length) {
-                while (m_pairsOfFlags.length > newSize)
-                    m_pairsOfFlags.pop();
-            } else if (newSize > m_pairsOfFlags.length) {
-                while (m_pairsOfFlags.length < newSize)
-                    m_pairsOfFlags.push();
+            if (newSize < pairsOfFlags.length) {
+                while (pairsOfFlags.length > newSize)
+                    pairsOfFlags.pop();
+            } else if (newSize > pairsOfFlags.length) {
+                while (pairsOfFlags.length < newSize)
+                    pairsOfFlags.push();
             }
         }
 
         function clear() public {
             // these clear the arrays completely
-            delete m_pairsOfFlags;
-            delete m_aLotOfIntegers;
+            delete pairsOfFlags;
+            delete aLotOfIntegers;
             // identical effect here
-            m_pairsOfFlags = new bool[2][](0);
+            pairsOfFlags = new bool[2][](0);
         }
 
-        bytes m_byteData;
+        bytes byteData;
 
         function byteArrays(bytes memory data) public {
             // byte arrays ("bytes") are different as they are stored without padding,
             // but can be treated identical to "uint8[]"
-            m_byteData = data;
+            byteData = data;
             for (uint i = 0; i < 7; i++)
-                m_byteData.push();
-            m_byteData[3] = 0x08;
-            delete m_byteData[2];
+                byteData.push();
+            byteData[3] = 0x08;
+            delete byteData[2];
         }
 
         function addFlag(bool[2] memory flag) public returns (uint) {
-            m_pairsOfFlags.push(flag);
-            return m_pairsOfFlags.length;
+            pairsOfFlags.push(flag);
+            return pairsOfFlags.length;
         }
 
         function createMemoryArray(uint size) public pure returns (bytes memory) {

@@ -20,6 +20,7 @@
   "nodes":
   [
     {
+      "errorSelector": "c1599bd9",
       "id": 2,
       "name": "X",
       "nameLocation": "6:1:1",
@@ -127,6 +128,7 @@
       "nodes":
       [
         {
+          "errorSelector": "2bc80f3a",
           "id": 11,
           "name": "T",
           "nameLocation": "63:1:1",
@@ -145,7 +147,7 @@
           {
             "id": 17,
             "nodeType": "Block",
-            "src": "97:8:1",
+            "src": "92:8:1",
             "statements":
             [
               {
@@ -160,7 +162,7 @@
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
                     "referencedDeclaration": 9,
-                    "src": "99:1:1",
+                    "src": "94:1:1",
                     "typeDescriptions":
                     {
                       "typeIdentifier": "t_function_internal_nonpayable$__$returns$__$",
@@ -175,7 +177,7 @@
                   "lValueRequested": false,
                   "names": [],
                   "nodeType": "FunctionCall",
-                  "src": "99:3:1",
+                  "src": "94:3:1",
                   "tryCall": false,
                   "typeDescriptions":
                   {
@@ -185,7 +187,7 @@
                 },
                 "id": 16,
                 "nodeType": "ExpressionStatement",
-                "src": "99:3:1"
+                "src": "94:3:1"
               }
             ]
           },
@@ -209,17 +211,17 @@
             "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "97:0:1"
+            "src": "92:0:1"
           },
           "scope": 19,
-          "src": "72:33:1",
-          "stateMutability": "pure",
+          "src": "72:28:1",
+          "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
       "scope": 20,
-      "src": "40:67:1",
+      "src": "40:62:1",
       "usedErrors":
       [
         2,
@@ -227,5 +229,5 @@
       ]
     }
   ],
-  "src": "0:108:1"
+  "src": "0:103:1"
 }

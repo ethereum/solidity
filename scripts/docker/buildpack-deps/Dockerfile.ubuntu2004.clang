@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:focal AS base
-LABEL version="10"
+LABEL version="11"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -38,7 +38,7 @@ RUN set -ex; \
 		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
 		clang \
-		libz3-static-dev \
+		libz3-static-dev jq \
 		; \
 	rm -rf /var/lib/apt/lists/*
 

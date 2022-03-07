@@ -1,6 +1,8 @@
 
 .. index: ir breaking changes
 
+.. _ir-breaking-changes:
+
 *********************************
 Solidity IR-based Codegen Changes
 *********************************

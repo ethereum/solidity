@@ -9,16 +9,16 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-10
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:e61939751ff9777307857361f712b581bfc8a8aaae75fab7b50febc764710587"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-11
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:9928dc357829e475e8729c62a1c2d495dbb41cb9fe4c4b115a5568be8e1ed69e"
   ubuntu-2004-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-10
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:0de8c68f084120b2a165406e3a0c2aab58b32f5b7182c2322245245f1d243b8d"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-11
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:72fb9574c90e8ef908dce4c9dd9788ff4de708b504d970cd9146eed8911c313e"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-15
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:87f1a57586eec194a6217ab624efc69d3d9af2f7ac8ca36497ad57488c2f08ae"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-16
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:fe54d8e5409827d43edb0dc8ad0d9e4232a675050ceb271c873b73e5ee267938"
   emscripten-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:emscripten-9

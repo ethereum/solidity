@@ -26,6 +26,9 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <optional>
+#include <vector>
+
 namespace solidity::evmasm
 {
 
@@ -44,6 +47,32 @@ struct SemanticInformation
 		Read,
 		Write
 	};
+
+	enum class Location { Storage, Memory };
+
+	/**
+	 * Represents a read or write operation from or to one of the data locations.
+	 */
+	struct Operation
+	{
+		Location location;
+		Effect effect;
+		/// Start of affected area as an index into the parameters.
+		/// Unknown if not provided.
+		std::optional<size_t> startParameter;
+		/// Length of the affected area as an index into the parameters (if this is an opcode).
+		/// Unknown if neither this nor lengthConstant is provided.
+		std::optional<size_t> lengthParameter;
+		/// Length as a constant.
+		/// Unknown if neither this nor lengthArgument is provided.
+		std::optional<size_t> lengthConstant;
+	};
+
+	/// @returns the sequence of read write operations performed by the instruction.
+	/// Order matters.
+	/// For external calls, there is just one unknown read and one unknown write operation,
+	/// event though there might be multiple.
+	static std::vector<Operation> readWriteOperations(Instruction _instruction);
 
 	/// @returns true if the given items starts a new block for common subexpression analysis.
 	/// @param _msizeImportant if false, consider an operation non-breaking if its only side-effect is that it modifies msize.
