@@ -397,26 +397,6 @@ AssemblyItem Assembly::newImmutableAssignment(string const& _identifier)
 	return AssemblyItem{AssignImmutable, h};
 }
 
-Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreation, size_t _runs)
-{
-	OptimiserSettings settings;
-	settings.isCreation = _isCreation;
-	settings.runInliner = true;
-	settings.runJumpdestRemover = true;
-	settings.runPeephole = true;
-	if (_enable)
-	{
-		settings.runDeduplicate = true;
-		settings.runCSE = true;
-		settings.runConstantOptimiser = true;
-	}
-	settings.evmVersion = _evmVersion;
-	settings.expectedExecutionsPerDeployment = _runs;
-	optimise(settings);
-	return *this;
-}
-
-
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
 	optimiseInternal(_settings, {});
