@@ -47,7 +47,6 @@ namespace solidity::frontend
 
 class Type;
 class ArrayType;
-using namespace util;
 
 struct CallGraph;
 
@@ -91,13 +90,13 @@ struct StructurallyDocumentedAnnotation
 struct SourceUnitAnnotation: ASTAnnotation
 {
 	/// The "absolute" (in the compiler sense) path of this source unit.
-	SetOnce<std::string> path;
+	util::SetOnce<std::string> path;
 	/// The exported symbols (all global symbols).
-	SetOnce<std::map<ASTString, std::vector<Declaration const*>>> exportedSymbols;
+	util::SetOnce<std::map<ASTString, std::vector<Declaration const*>>> exportedSymbols;
 	/// Experimental features.
 	std::set<ExperimentalFeature> experimentalFeatures;
 	/// Using the new ABI coder. Set to `false` if using ABI coder v1.
-	SetOnce<bool> useABICoderV2;
+	util::SetOnce<bool> useABICoderV2;
 };
 
 struct ScopableAnnotation
@@ -127,7 +126,7 @@ struct DeclarationAnnotation: ASTAnnotation, ScopableAnnotation
 struct ImportAnnotation: DeclarationAnnotation
 {
 	/// The absolute path of the source unit to import.
-	SetOnce<std::string> absolutePath;
+	util::SetOnce<std::string> absolutePath;
 	/// The actual source unit.
 	SourceUnit const* sourceUnit = nullptr;
 };
@@ -135,7 +134,7 @@ struct ImportAnnotation: DeclarationAnnotation
 struct TypeDeclarationAnnotation: DeclarationAnnotation
 {
 	/// The name of this type, prefixed by proper namespaces if globally accessible.
-	SetOnce<std::string> canonicalName;
+	util::SetOnce<std::string> canonicalName;
 };
 
 struct StructDeclarationAnnotation: TypeDeclarationAnnotation
@@ -162,9 +161,9 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocu
 	/// These can either be inheritance specifiers or modifier invocations.
 	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
 	/// A graph with edges representing calls between functions that may happen during contract construction.
-	SetOnce<std::shared_ptr<CallGraph const>> creationCallGraph;
+	util::SetOnce<std::shared_ptr<CallGraph const>> creationCallGraph;
 	/// A graph with edges representing calls between functions that may happen in a deployed contract.
-	SetOnce<std::shared_ptr<CallGraph const>> deployedCallGraph;
+	util::SetOnce<std::shared_ptr<CallGraph const>> deployedCallGraph;
 
 	/// List of contracts whose bytecode is referenced by this contract, e.g. through "new".
 	/// The Value represents the ast node that referenced the contract.
@@ -252,7 +251,7 @@ struct IdentifierPathAnnotation: ASTAnnotation
 	/// Referenced declaration, set during reference resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
 	/// What kind of lookup needs to be done (static, virtual, super) find the declaration.
-	SetOnce<VirtualLookup> requiredLookup;
+	util::SetOnce<VirtualLookup> requiredLookup;
 };
 
 struct ExpressionAnnotation: ASTAnnotation
@@ -260,11 +259,11 @@ struct ExpressionAnnotation: ASTAnnotation
 	/// Inferred type of the expression.
 	Type const* type = nullptr;
 	/// Whether the expression is a constant variable
-	SetOnce<bool> isConstant;
+	util::SetOnce<bool> isConstant;
 	/// Whether the expression is pure, i.e. compile-time constant.
-	SetOnce<bool> isPure;
+	util::SetOnce<bool> isPure;
 	/// Whether it is an LValue (i.e. something that can be assigned to).
-	SetOnce<bool> isLValue;
+	util::SetOnce<bool> isLValue;
 	/// Whether the expression is used in a context where the LValue is actually required.
 	bool willBeWrittenTo = false;
 	/// Whether the expression is an lvalue that is only assigned.
@@ -291,7 +290,7 @@ struct IdentifierAnnotation: ExpressionAnnotation
 	/// Referenced declaration, set at latest during overload resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
 	/// What kind of lookup needs to be done (static, virtual, super) find the declaration.
-	SetOnce<VirtualLookup> requiredLookup;
+	util::SetOnce<VirtualLookup> requiredLookup;
 	/// List of possible declarations it could refer to (can contain duplicates).
 	std::vector<Declaration const*> candidateDeclarations;
 	/// List of possible declarations it could refer to.
@@ -303,7 +302,7 @@ struct MemberAccessAnnotation: ExpressionAnnotation
 	/// Referenced declaration, set at latest during overload resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
 	/// What kind of lookup needs to be done (static, virtual, super) find the declaration.
-	SetOnce<VirtualLookup> requiredLookup;
+	util::SetOnce<VirtualLookup> requiredLookup;
 };
 
 struct BinaryOperationAnnotation: ExpressionAnnotation
