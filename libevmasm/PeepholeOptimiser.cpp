@@ -233,6 +233,65 @@ struct IsZeroIsZeroJumpI: SimplePeepholeOptimizerMethod<IsZeroIsZeroJumpI>
 	}
 };
 
+struct EqIsZeroJumpI: SimplePeepholeOptimizerMethod<EqIsZeroJumpI>
+{
+	static size_t applySimple(
+		AssemblyItem const& _eq,
+		AssemblyItem const& _iszero,
+		AssemblyItem const& _pushTag,
+		AssemblyItem const& _jumpi,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_eq == Instruction::EQ &&
+			_iszero == Instruction::ISZERO &&
+			_pushTag.type() == PushTag &&
+			_jumpi == Instruction::JUMPI
+		)
+		{
+			*_out = AssemblyItem(Instruction::SUB, _eq.location());
+			*_out = _pushTag;
+			*_out = _jumpi;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
+// push_tag_1 jumpi push_tag_2 jump tag_1: -> iszero push_tag_2 jumpi tag_1:
+struct DoubleJump: SimplePeepholeOptimizerMethod<DoubleJump>
+{
+	static size_t applySimple(
+		AssemblyItem const& _pushTag1,
+		AssemblyItem const& _jumpi,
+		AssemblyItem const& _pushTag2,
+		AssemblyItem const& _jump,
+		AssemblyItem const& _tag1,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_pushTag1.type() == PushTag &&
+			_jumpi == Instruction::JUMPI &&
+			_pushTag2.type() == PushTag &&
+			_jump == Instruction::JUMP &&
+			_tag1.type() == Tag &&
+			_pushTag1.data() == _tag1.data()
+		)
+		{
+			*_out = AssemblyItem(Instruction::ISZERO, _jumpi.location());
+			*_out = _pushTag2;
+			*_out = _jumpi;
+			*_out = _tag1;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
 struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext>
 {
 	static size_t applySimple(
@@ -372,7 +431,7 @@ bool PeepholeOptimiser::optimise()
 		applyMethods(
 			state,
 			PushPop(), OpPop(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
-			DupSwap(), IsZeroIsZeroJumpI(), JumpToNext(), UnreachableCode(),
+			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
 			TagConjunctions(), TruthyAnd(), Identity()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (

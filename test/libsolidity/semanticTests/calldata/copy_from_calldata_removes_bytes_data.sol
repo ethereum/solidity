@@ -11,9 +11,9 @@ contract c {
 // compileViaYul: also
 // ----
 // (): 1, 2, 3, 4, 5 ->
-// gas irOptimized: 155181
-// gas legacy: 155254
-// gas legacyOptimized: 155217
+// gas irOptimized: 155170
+// gas legacy: 155251
+// gas legacyOptimized: 155214
 // checkIfDataIsEmpty() -> false
 // sendMessage() -> true, 0x40, 0
 // checkIfDataIsEmpty() -> true

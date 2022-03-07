@@ -58,10 +58,9 @@ tag_6:
     /* "optimizer_user_yul/input.sol":384:392  sload(5) */
   dup1
     /* "optimizer_user_yul/input.sol":376:509  for { } sload(5) { } {... */
-  tag_8
+  iszero
+  tag_6
   jumpi
-  jump(tag_6)
-tag_8:
     /* "optimizer_user_yul/input.sol":380:383  { } */
   pop
     /* "optimizer_user_yul/input.sol":340:513  {... */
