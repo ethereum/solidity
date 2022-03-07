@@ -221,7 +221,7 @@ vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() c
 {
 	solAssert(annotation().creationCallGraph.set(), "");
 
-	return convertContainer<std::vector<EventDefinition const*>>(
+	return util::convertContainer<std::vector<EventDefinition const*>>(
 		(*annotation().creationCallGraph)->emittedEvents +
 		(*annotation().deployedCallGraph)->emittedEvents
 	);
@@ -239,7 +239,7 @@ vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _require
 		result +=
 			(*annotation().creationCallGraph)->usedErrors +
 			(*annotation().deployedCallGraph)->usedErrors;
-	return convertContainer<vector<ErrorDefinition const*>>(move(result));
+	return util::convertContainer<vector<ErrorDefinition const*>>(move(result));
 }
 
 vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const

@@ -253,7 +253,7 @@ bool LanguageServer::run()
 				string const methodName = (*jsonMessage)["method"].asString();
 				id = (*jsonMessage)["id"];
 
-				if (auto handler = valueOrDefault(m_handlers, methodName))
+				if (auto handler = util::valueOrDefault(m_handlers, methodName))
 					handler(id, (*jsonMessage)["params"]);
 				else
 					m_client.error(id, ErrorCode::MethodNotFound, "Unknown method " + methodName);
@@ -375,7 +375,7 @@ void LanguageServer::handleTextDocumentDidChange(Json::Value const& _args)
 			lspAssert(
 				change && change->hasText(),
 				ErrorCode::RequestFailed,
-				"Invalid source range: " + jsonCompactPrint(jsonContentChange["range"])
+				"Invalid source range: " + util::jsonCompactPrint(jsonContentChange["range"])
 			);
 
 			string buffer = m_fileRepository.sourceUnits().at(sourceUnitName);

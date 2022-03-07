@@ -313,7 +313,7 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 		{
 			auto const& vars = _assignment.variableNames;
 			for (auto const& identifier: vars)
-				if (auto externalInfo = valueOrNullptr(externalReferences, &identifier))
+				if (auto externalInfo = util::valueOrNullptr(externalReferences, &identifier))
 					if (auto varDecl = dynamic_cast<VariableDeclaration const*>(externalInfo->declaration))
 						assignedVars.insert(varDecl);
 		}

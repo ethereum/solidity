@@ -465,7 +465,7 @@ void CommandLineInterface::readInputFiles()
 		for (auto const& [sourceUnitName, normalizedInputPaths]: collisions)
 		{
 			message += sourceUnitName + " matches: ";
-			message += joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) + "\n";
+			message += util::joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) + "\n";
 		}
 
 		solThrow(CommandLineValidationError, message);

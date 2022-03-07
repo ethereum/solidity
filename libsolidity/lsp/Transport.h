@@ -69,7 +69,7 @@ private:
 	{ \
 		BOOST_THROW_EXCEPTION( \
 			RequestError(errorCode) << \
-			errinfo_comment(errorMessage) \
+			util::errinfo_comment(errorMessage) \
 		); \
 	}
 

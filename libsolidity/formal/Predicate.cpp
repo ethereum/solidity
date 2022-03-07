@@ -350,7 +350,7 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 
 	vector<smtutil::Expression> stateArgs(stateFirst, stateLast);
 	solAssert(stateArgs.size() == stateVars->size(), "");
-	auto stateTypes = applyMap(*stateVars, [&](auto const& _var) { return _var->type(); });
+	auto stateTypes = util::applyMap(*stateVars, [&](auto const& _var) { return _var->type(); });
 	return formatExpressions(stateArgs, stateTypes);
 }
 
@@ -412,7 +412,7 @@ pair<vector<optional<string>>, vector<VariableDeclaration const*>> Predicate::lo
 	auto first = _args.end() - static_cast<int>(localVars.size());
 	vector<smtutil::Expression> outValues(first, _args.end());
 
-	auto mask = applyMap(
+	auto mask = util::applyMap(
 		localVars,
 		[this](auto _var) {
 			auto varScope = dynamic_cast<ScopeOpener const*>(_var->scope());
@@ -422,7 +422,7 @@ pair<vector<optional<string>>, vector<VariableDeclaration const*>> Predicate::lo
 	auto localVarsInScope = util::filter(localVars, mask);
 	auto outValuesInScope = util::filter(outValues, mask);
 
-	auto outTypes = applyMap(localVarsInScope, [](auto _var) { return _var->type(); });
+	auto outTypes = util::applyMap(localVarsInScope, [](auto _var) { return _var->type(); });
 	return {formatExpressions(outValuesInScope, outTypes), localVarsInScope};
 }
 
@@ -496,7 +496,7 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 				if (_expr.name == "0")
 					return "0x0";
 				// For some reason the code below returns "0x" for "0".
-				return toHex(toCompactBigEndian(bigint(_expr.name)), HexPrefix::Add, HexCase::Lower);
+				return util::toHex(toCompactBigEndian(bigint(_expr.name)), util::HexPrefix::Add, util::HexCase::Lower);
 			}
 			catch (out_of_range const&)
 			{

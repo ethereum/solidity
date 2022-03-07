@@ -235,7 +235,7 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
 	// This code replaces the address added by appendDeployTimeAddress().
 	m_context.appendInlineAssembly(
-		Whiskers(R"(
+		util::Whiskers(R"(
 		{
 			// If code starts at 11, an mstore(0) writes to the full PUSH20 plus data
 			// without the need for a shift.
@@ -672,7 +672,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_function.location()) <<
-			errinfo_comment("Stack too deep, try removing local variables.")
+			util::errinfo_comment("Stack too deep, try removing local variables.")
 		);
 	while (!stackLayout.empty() && stackLayout.back() != static_cast<int>(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
@@ -842,7 +842,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 						BOOST_THROW_EXCEPTION(
 							StackTooDeepError() <<
 							errinfo_sourceLocation(_inlineAssembly.location()) <<
-							errinfo_comment("Stack too deep, try removing local variables.")
+							util::errinfo_comment("Stack too deep, try removing local variables.")
 						);
 					_assembly.appendInstruction(dupInstruction(stackDiff));
 				}
@@ -916,7 +916,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				BOOST_THROW_EXCEPTION(
 					StackTooDeepError() <<
 					errinfo_sourceLocation(_inlineAssembly.location()) <<
-					errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
+					util::errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
 				);
 			_assembly.appendInstruction(swapInstruction(stackDiff));
 			_assembly.appendInstruction(Instruction::POP);
@@ -1045,7 +1045,7 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
 
 		// stack: <selector>
-		m_context << Instruction::DUP1 << selectorFromSignature32("Error(string)") << Instruction::EQ;
+		m_context << Instruction::DUP1 << util::selectorFromSignature32("Error(string)") << Instruction::EQ;
 		m_context << Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(panicTag);
 		m_context << Instruction::POP; // remove selector
@@ -1077,7 +1077,7 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
 
 		// stack: <selector>
-		m_context << selectorFromSignature32("Panic(uint256)") << Instruction::EQ;
+		m_context << util::selectorFromSignature32("Panic(uint256)") << Instruction::EQ;
 		m_context << Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(fallbackTag);
 
