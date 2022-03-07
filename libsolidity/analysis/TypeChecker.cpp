@@ -2111,57 +2111,60 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 		return;
 	}
 
-	auto const functionPointerType = dynamic_cast<FunctionTypePointer>(type(*arguments.front()));
-
-	if (!functionPointerType)
+	FunctionType const* externalFunctionType = nullptr;
+	if (auto const functionPointerType = dynamic_cast<FunctionTypePointer>(type(*arguments.front())))
+	{
+		// this cannot be a library function, that is checked below
+		externalFunctionType = functionPointerType->asExternallyCallableFunction(false);
+		solAssert(externalFunctionType->kind() == functionPointerType->kind());
+	}
+	else
 	{
 		m_errorReporter.typeError(
 			5511_error,
 			arguments.front()->location(),
 			"Expected first argument to be a function pointer, not \"" +
-			type(*arguments.front())->canonicalName() +
+			type(*arguments.front())->toString() +
 			"\"."
 		);
 		return;
 	}
 
 	if (
-		functionPointerType->kind() != FunctionType::Kind::External &&
-		functionPointerType->kind() != FunctionType::Kind::Declaration
+		externalFunctionType->kind() != FunctionType::Kind::External &&
+		externalFunctionType->kind() != FunctionType::Kind::Declaration
 	)
 	{
 		string msg = "Expected regular external function type, or external view on public function.";
-		if (functionPointerType->kind() == FunctionType::Kind::Internal)
+		if (externalFunctionType->kind() == FunctionType::Kind::Internal)
 			msg += " Provided internal function.";
-		else if (functionPointerType->kind() == FunctionType::Kind::DelegateCall)
+		else if (externalFunctionType->kind() == FunctionType::Kind::DelegateCall)
 			msg += " Cannot use library functions for abi.encodeCall.";
-		else if (functionPointerType->kind() == FunctionType::Kind::Creation)
+		else if (externalFunctionType->kind() == FunctionType::Kind::Creation)
 			msg += " Provided creation function.";
 		else
 			msg += " Cannot use special function.";
 		SecondarySourceLocation ssl{};
 
-		if (functionPointerType->hasDeclaration())
+		if (externalFunctionType->hasDeclaration())
 		{
-			ssl.append("Function is declared here:", functionPointerType->declaration().location());
+			ssl.append("Function is declared here:", externalFunctionType->declaration().location());
 			if (
-				functionPointerType->declaration().visibility() == Visibility::Public &&
-				functionPointerType->declaration().scope() == m_currentContract
+				externalFunctionType->declaration().visibility() == Visibility::Public &&
+				externalFunctionType->declaration().scope() == m_currentContract
 			)
 				msg += " Did you forget to prefix \"this.\"?";
 			else if (util::contains(
 				m_currentContract->annotation().linearizedBaseContracts,
-				functionPointerType->declaration().scope()
-			) && functionPointerType->declaration().scope() != m_currentContract)
+				externalFunctionType->declaration().scope()
+			) && externalFunctionType->declaration().scope() != m_currentContract)
 				msg += " Functions from base contracts have to be external.";
 		}
 
 		m_errorReporter.typeError(3509_error, arguments[0]->location(), ssl, msg);
 		return;
 	}
-
-	solAssert(!functionPointerType->takesArbitraryParameters(), "Function must have fixed parameters.");
-
+	solAssert(!externalFunctionType->takesArbitraryParameters(), "Function must have fixed parameters.");
 	// Tuples with only one component become that component
 	vector<ASTPointer<Expression const>> callArguments;
 
@@ -2174,14 +2177,14 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 	else
 		callArguments.push_back(arguments[1]);
 
-	if (functionPointerType->parameterTypes().size() != callArguments.size())
+	if (externalFunctionType->parameterTypes().size() != callArguments.size())
 	{
 		if (tupleType)
 			m_errorReporter.typeError(
 				7788_error,
 				_functionCall.location(),
 				"Expected " +
-				to_string(functionPointerType->parameterTypes().size()) +
+				to_string(externalFunctionType->parameterTypes().size()) +
 				" instead of " +
 				to_string(callArguments.size()) +
 				" components for the tuple parameter."
@@ -2191,18 +2194,18 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 				7515_error,
 				_functionCall.location(),
 				"Expected a tuple with " +
-				to_string(functionPointerType->parameterTypes().size()) +
+				to_string(externalFunctionType->parameterTypes().size()) +
 				" components instead of a single non-tuple parameter."
 			);
 	}
 
 	// Use min() to check as much as we can before failing fatally
-	size_t const numParameters = min(callArguments.size(), functionPointerType->parameterTypes().size());
+	size_t const numParameters = min(callArguments.size(), externalFunctionType->parameterTypes().size());
 
 	for (size_t i = 0; i < numParameters; i++)
 	{
 		Type const& argType = *type(*callArguments[i]);
-		BoolResult result = argType.isImplicitlyConvertibleTo(*functionPointerType->parameterTypes()[i]);
+		BoolResult result = argType.isImplicitlyConvertibleTo(*externalFunctionType->parameterTypes()[i]);
 		if (!result)
 			m_errorReporter.typeError(
 				5407_error,
@@ -2212,7 +2215,7 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 				" from \"" +
 				argType.toString() +
 				"\" to \"" +
-				functionPointerType->parameterTypes()[i]->toString() +
+				externalFunctionType->parameterTypes()[i]->toString() +
 				"\"" +
 				(result.message().empty() ?  "." : ": " + result.message())
 			);
