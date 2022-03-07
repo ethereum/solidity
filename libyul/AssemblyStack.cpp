@@ -72,8 +72,7 @@ evmasm::Assembly::OptimiserSettings translateOptimiserSettings(
 )
 {
 	// Constructing it this way so that we notice changes in the fields.
-	evmasm::Assembly::OptimiserSettings asmSettings{false, false,  false, false, false, false, false, _evmVersion, 0};
-	asmSettings.isCreation = true;
+	evmasm::Assembly::OptimiserSettings asmSettings{false,  false, false, false, false, false, _evmVersion, 0};
 	asmSettings.runInliner = _settings.runInliner;
 	asmSettings.runJumpdestRemover = _settings.runJumpdestRemover;
 	asmSettings.runPeephole = _settings.runPeephole;
