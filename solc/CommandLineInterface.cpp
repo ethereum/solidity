@@ -26,18 +26,15 @@
 #include <solc/Exceptions.h>
 
 #include "license.h"
-#include "solidity/BuildInfo.h"
 
-#include <libsolidity/interface/Version.h>
-#include <libsolidity/ast/ASTJsonConverter.h>
-#include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/ImportRemapper.h>
+#include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/StorageLayout.h>
+#include <libsolidity/interface/Version.h>
 #include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Transport.h>
 
@@ -48,7 +45,6 @@
 #include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsmtutil/Exceptions.h>
@@ -64,6 +60,7 @@
 
 #include <range/v3/view/map.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/range/adaptor/filtered.hpp>
@@ -916,60 +913,69 @@ void CommandLineInterface::serveLSP()
 		solThrow(CommandLineExecutionError, "LSP terminated abnormally.");
 }
 
+vector<string> extractLines(string const& _source)
+{
+	auto stream = stringstream{_source};
+	vector<string> result;
+	string line;
+	while(getline(stream, line, '\n'))
+	{
+		result.push_back(line);
+	}
+
+	return result;
+}
+
 void CommandLineInterface::link()
 {
 	solAssert(m_options.input.mode == InputMode::Linker, "");
 
-	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
 	int const placeholderSize = 40; // 20 bytes or 40 hex characters
 	for (auto const& library: m_options.linker.libraries)
 	{
 		string const& name = library.first;
-		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
-		// This leaves 36 characters for the library identifier. The identifier used to
-		// be just the cropped or '_'-padded library name, but this changed to
-		// the cropped hex representation of the hash of the library name.
-		// We support both ways of linking here.
-		librariesReplacements["__" + evmasm::LinkerObject::libraryPlaceholder(name) + "__"] = library.second;
-
-		string replacement = "__";
-		for (size_t i = 0; i < placeholderSize - 4; ++i)
-			replacement.push_back(i < name.size() ? name[i] : '_');
-		replacement += "__";
-		librariesReplacements[replacement] = library.second;
+		librariesReplacements[name] = library.second;
 	}
 
 	FileReader::StringMap sourceCodes = m_fileReader.sourceUnits();
+
 	for (auto& src: sourceCodes)
 	{
-		auto end = src.second.end();
-		for (auto it = src.second.begin(); it != end;)
+		// Map from how the libraries will be named inside the bytecode to their addresses.
+		map<size_t, string> linkReferences;
+		string bytecode;
+		vector<string> sourceLines = extractLines(src.second);
+		for (auto const& library: m_options.linker.libraries)
 		{
-			while (it != end && *it != '_') ++it;
-			if (it == end) break;
-			if (
-				end - it < placeholderSize ||
-				*(it + 1) != '_' ||
-				*(it + placeholderSize - 2) != '_' ||
-				*(it + placeholderSize - 1) != '_'
-			)
-				solThrow(
-					CommandLineExecutionError,
-					"Error in binary object file " + src.first + " at position " + to_string(it - src.second.begin()) + "\n" +
-					'"' + string(it, it + min(placeholderSize, static_cast<int>(end - it))) + "\" is not a valid link reference."
-				);
+			string const& name = library.first;
+			// Bytecode we need is on the third line there's a blank line at the start
+			bytecode = sourceLines.at(3);
+			size_t libraryStartOffset = bytecode.find("__$");
 
-			string foundPlaceholder(it, it + placeholderSize);
-			if (librariesReplacements.count(foundPlaceholder))
+			for (size_t i = 0; i < placeholderSize; i++)
+				bytecode[libraryStartOffset + i] = '0';
+
+			if (libraryStartOffset != bytecode.length())
 			{
-				string hexStr(toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
-				copy(hexStr.begin(), hexStr.end(), it);
+				// Divide by 2 because it's going to be converted to bytes
+				linkReferences[libraryStartOffset / 2] = name;
 			}
-			else
-				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << endl;
-			it += placeholderSize;
 		}
+
+		evmasm::LinkerObject linkerObject
+			= {fromHex(bytecode),
+			   linkReferences,
+			   map<u256, std::pair<std::string, std::vector<size_t>>>(),
+			   std::map<std::string, evmasm::LinkerObject::FunctionDebugData>()};
+
+		linkerObject.link(librariesReplacements);
+		sourceLines.at(3) = toHex(linkerObject.bytecode);
+
+		std::string resolvedBytecode;
+		for (const auto &piece : sourceLines) resolvedBytecode += piece + '\n';
+		src.second = resolvedBytecode;
+
 		// Remove hints for resolved libraries.
 		for (auto const& library: m_options.linker.libraries)
 			boost::algorithm::erase_all(src.second, "\n" + libraryPlaceholderHint(library.first));
