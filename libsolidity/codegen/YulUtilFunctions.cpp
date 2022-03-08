@@ -1216,7 +1216,7 @@ std::string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 						length := tload(value)
 						<?byteArray>
 							length := <extractByteArrayLength>(length)
-7						</byteArray>
+						</byteArray>
 					</transient>
 					<?calldata>
 						length := len
