@@ -51,13 +51,6 @@ sub_0: assembly {
 }
 
 IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 
 /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_none/input.sol"
 object "C_6" {
@@ -166,13 +159,6 @@ object "C_6" {
 
 
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_none/input.sol"
 object "C_6" {
     code {

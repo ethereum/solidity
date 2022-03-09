@@ -60,14 +60,7 @@ sub_0: assembly {
 }
 "
                 },
-                "ir": "/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-
+                "ir": "
 /// @use-src 0:\"C\"
 object \"C_6\" {
     code {
@@ -180,14 +173,7 @@ object \"C_6\" {
 }
 
 ",
-                "irOptimized": "/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-/// @use-src 0:\"C\"
+                "irOptimized": "/// @use-src 0:\"C\"
 object \"C_6\" {
     code {
         {

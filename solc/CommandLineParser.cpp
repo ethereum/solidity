@@ -47,6 +47,7 @@ static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
+static string const g_strViaIR = "via-ir";
 static string const g_strExperimentalViaIR = "experimental-via-ir";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
@@ -225,7 +226,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		output.dir == _other.output.dir &&
 		output.overwriteFiles == _other.output.overwriteFiles &&
 		output.evmVersion == _other.output.evmVersion &&
-		output.experimentalViaIR == _other.output.experimentalViaIR &&
+		output.viaIR == _other.output.viaIR &&
 		output.revertStrings == _other.output.revertStrings &&
 		output.debugInfoSelection == _other.output.debugInfoSelection &&
 		output.stopAfter == _other.output.stopAfter &&
@@ -578,7 +579,11 @@ General Information)").c_str(),
 		)
 		(
 			g_strExperimentalViaIR.c_str(),
-			"Turn on experimental compilation mode via the IR (EXPERIMENTAL)."
+			"Deprecated synonym of --via-ir."
+		)
+		(
+			g_strViaIR.c_str(),
+			"Turn on compilation mode via the IR."
 		)
 		(
 			g_strRevertStrings.c_str(),
@@ -706,8 +711,8 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::binary).c_str(), "Binary of the contracts in hex.")
 		(CompilerOutputs::componentName(&CompilerOutputs::binaryRuntime).c_str(), "Binary of the runtime part of the contracts in hex.")
 		(CompilerOutputs::componentName(&CompilerOutputs::abi).c_str(), "ABI specification of the contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
-		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::ewasm).c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::ewasmIR).c_str(), "Intermediate representation (IR) converted to a form that can be translated directly into Ewasm text representation (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
@@ -906,6 +911,7 @@ void CommandLineParser::processArgs()
 		// TODO: This should eventually contain all options.
 		{g_strErrorRecovery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strExperimentalViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
 	};
 	vector<string> invalidOptionsForCurrentInputMode;
 	for (auto const& [optionName, inputModes]: validOptionInputModeCombinations)
@@ -1256,7 +1262,7 @@ void CommandLineParser::processArgs()
 		m_args.count(g_strModelCheckerSolvers) ||
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);
-	m_options.output.experimentalViaIR = (m_args.count(g_strExperimentalViaIR) > 0);
+	m_options.output.viaIR = (m_args.count(g_strExperimentalViaIR) > 0 || m_args.count(g_strViaIR) > 0);
 	if (m_options.input.mode == InputMode::Compiler)
 		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 
