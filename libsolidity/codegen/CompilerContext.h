@@ -65,7 +65,7 @@ public:
 		RevertStrings _revertStrings,
 		CompilerContext* _runtimeContext = nullptr
 	):
-		m_asm(std::make_shared<evmasm::Assembly>()),
+		m_asm(std::make_shared<evmasm::Assembly>(_runtimeContext != nullptr, std::string{})),
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
 		m_reservedMemory{0},

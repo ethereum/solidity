@@ -213,8 +213,8 @@ string IRGenerator::generate(
 	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
 	// This has to be called only after all other code generation for the creation object is complete.
-	bool creationInvolvesAssembly = m_context.inlineAssemblySeen();
-	t("memoryInitCreation", memoryInit(!creationInvolvesAssembly));
+	bool creationInvolvesMemoryUnsafeAssembly = m_context.memoryUnsafeInlineAssemblySeen();
+	t("memoryInitCreation", memoryInit(!creationInvolvesMemoryUnsafeAssembly));
 	t("useSrcMapCreation", formatUseSrcMap(m_context));
 
 	resetContext(_contract, ExecutionContext::Deployed);
@@ -239,8 +239,8 @@ string IRGenerator::generate(
 	t("useSrcMapDeployed", formatUseSrcMap(m_context));
 
 	// This has to be called only after all other code generation for the deployed object is complete.
-	bool deployedInvolvesAssembly = m_context.inlineAssemblySeen();
-	t("memoryInitDeployed", memoryInit(!deployedInvolvesAssembly));
+	bool deployedInvolvesMemoryUnsafeAssembly = m_context.memoryUnsafeInlineAssemblySeen();
+	t("memoryInitDeployed", memoryInit(!deployedInvolvesMemoryUnsafeAssembly));
 
 	solAssert(_contract.annotation().creationCallGraph->get() != nullptr, "");
 	solAssert(_contract.annotation().deployedCallGraph->get() != nullptr, "");

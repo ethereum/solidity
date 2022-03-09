@@ -5,12 +5,12 @@ Pretty printed source:
 object "RunsTest1" {
     code {
         {
-            let _1 := datasize("Runtime")
-            datacopy(0, dataoffset("Runtime"), _1)
+            let _1 := datasize("Runtime_deployed")
+            datacopy(0, dataoffset("Runtime_deployed"), _1)
             return(0, _1)
         }
     }
-    object "Runtime" {
+    object "Runtime_deployed" {
         code {
             {
                 sstore(0, 0xabc1234500000000000000000000000000000000000000000000000000000000)
@@ -24,28 +24,28 @@ Binary representation:
 602580600c6000396000f3fe7fabc123450000000000000000000000000000000000000000000000000000000060005500
 
 Text representation:
-    /* "yul_optimize_runs/input.yul":106:125   */
+    /* "yul_optimize_runs/input.yul":115:143   */
   dataSize(sub_0)
-    /* "yul_optimize_runs/input.yul":83:104   */
+    /* "yul_optimize_runs/input.yul":83:113   */
   dup1
   dataOffset(sub_0)
     /* "yul_optimize_runs/input.yul":80:81   */
   0x00
-    /* "yul_optimize_runs/input.yul":71:126   */
+    /* "yul_optimize_runs/input.yul":71:144   */
   codecopy
     /* "yul_optimize_runs/input.yul":80:81   */
   0x00
-    /* "yul_optimize_runs/input.yul":135:165   */
+    /* "yul_optimize_runs/input.yul":153:192   */
   return
 stop
 
 sub_0: assembly {
-        /* "yul_optimize_runs/input.yul":237:257   */
+        /* "yul_optimize_runs/input.yul":273:293   */
       0xabc1234500000000000000000000000000000000000000000000000000000000
-        /* "yul_optimize_runs/input.yul":277:278   */
+        /* "yul_optimize_runs/input.yul":313:314   */
       0x00
-        /* "yul_optimize_runs/input.yul":270:288   */
+        /* "yul_optimize_runs/input.yul":306:324   */
       sstore
-        /* "yul_optimize_runs/input.yul":208:298   */
+        /* "yul_optimize_runs/input.yul":244:334   */
       stop
 }

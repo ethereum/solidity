@@ -75,11 +75,12 @@ public:
 	/// the latter only if it is forced.
 	static std::string addPreamble(std::string const& _sourceCode);
 protected:
-
-	solidity::frontend::CompilerStack m_compiler;
+	using CompilerStack = solidity::frontend::CompilerStack;
+	CompilerStack m_compiler;
 	bool m_compileViaYul = false;
 	bool m_compileToEwasm = false;
 	bool m_showMetadata = false;
+	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
 	RevertStrings m_revertStrings = RevertStrings::Default;
 };
 

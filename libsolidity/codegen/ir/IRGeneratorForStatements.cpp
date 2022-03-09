@@ -203,7 +203,7 @@ private:
 		else
 			solAssert(false);
 
-		if (isdigit(value.front()))
+		if (isDigit(value.front()))
 			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::YulString{value}, {}};
 		else
 			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
@@ -2138,7 +2138,8 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 {
 	setLocation(_inlineAsm);
-	m_context.setInlineAssemblySeen();
+	if (*_inlineAsm.annotation().hasMemoryEffects && !_inlineAsm.annotation().markedMemorySafe)
+		m_context.setMemoryUnsafeInlineAssemblySeen();
 	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
 
 	yul::Statement modified = bodyCopier(_inlineAsm.operations());

@@ -397,26 +397,6 @@ AssemblyItem Assembly::newImmutableAssignment(string const& _identifier)
 	return AssemblyItem{AssignImmutable, h};
 }
 
-Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreation, size_t _runs)
-{
-	OptimiserSettings settings;
-	settings.isCreation = _isCreation;
-	settings.runInliner = true;
-	settings.runJumpdestRemover = true;
-	settings.runPeephole = true;
-	if (_enable)
-	{
-		settings.runDeduplicate = true;
-		settings.runCSE = true;
-		settings.runConstantOptimiser = true;
-	}
-	settings.evmVersion = _evmVersion;
-	settings.expectedExecutionsPerDeployment = _runs;
-	optimise(settings);
-	return *this;
-}
-
-
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
 	optimiseInternal(_settings, {});
@@ -435,9 +415,8 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
 		OptimiserSettings settings = _settings;
-		// Disable creation mode for sub-assemblies.
-		settings.isCreation = false;
-		map<u256, u256> const& subTagReplacements = m_subs[subId]->optimiseInternal(
+		Assembly& sub = *m_subs[subId];
+		map<u256, u256> const& subTagReplacements = sub.optimiseInternal(
 			settings,
 			JumpdestRemover::referencedTags(m_items, subId)
 		);
@@ -456,7 +435,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 				m_items,
 				_tagsReferencedFromOutside,
 				_settings.expectedExecutionsPerDeployment,
-				_settings.isCreation,
+				isCreation(),
 				_settings.evmVersion
 			}.optimise();
 
@@ -557,8 +536,8 @@ map<u256, u256> const& Assembly::optimiseInternal(
 
 	if (_settings.runConstantOptimiser)
 		ConstantOptimisationMethod::optimiseConstants(
-			_settings.isCreation,
-			_settings.isCreation ? 1 : _settings.expectedExecutionsPerDeployment,
+			isCreation(),
+			isCreation() ? 1 : _settings.expectedExecutionsPerDeployment,
 			_settings.evmVersion,
 			*this
 		);

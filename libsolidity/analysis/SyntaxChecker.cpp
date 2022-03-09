@@ -334,6 +334,27 @@ bool SyntaxChecker::visit(UnaryOperation const& _operation)
 
 bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 {
+	if (_inlineAssembly.flags())
+		for (auto flag: *_inlineAssembly.flags())
+		{
+			if (*flag == "memory-safe")
+			{
+				if (_inlineAssembly.annotation().markedMemorySafe)
+					m_errorReporter.syntaxError(
+						7026_error,
+						_inlineAssembly.location(),
+						"Inline assembly marked memory-safe multiple times."
+					);
+				_inlineAssembly.annotation().markedMemorySafe = true;
+			}
+			else
+				m_errorReporter.warning(
+					4430_error,
+					_inlineAssembly.location(),
+					"Unknown inline assembly flag: \"" + *flag + "\""
+				);
+		}
+
 	if (!m_useYulOptimizer)
 		return false;
 

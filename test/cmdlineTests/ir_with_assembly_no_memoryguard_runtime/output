@@ -10,7 +10,7 @@ Optimized IR:
 object "D_8" {
     code {
         {
-            /// @src 0:82:153  "contract D {..."
+            /// @src 0:82:166  "contract D {..."
             let _1 := memoryguard(0x80)
             mstore(64, _1)
             if callvalue() { revert(0, 0) }
@@ -23,7 +23,7 @@ object "D_8" {
     object "D_8_deployed" {
         code {
             {
-                /// @src 0:82:153  "contract D {..."
+                /// @src 0:82:166  "contract D {..."
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
@@ -32,6 +32,8 @@ object "D_8" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        /// @src 0:134:158  "assembly { mstore(0,0) }"
+                        mstore(/** @src 0:82:166  "contract D {..." */ _1, _1)
                         return(128, _1)
                     }
                 }

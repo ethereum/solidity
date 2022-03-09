@@ -160,8 +160,8 @@ public:
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 
-	bool inlineAssemblySeen() const { return m_inlineAssemblySeen; }
-	void setInlineAssemblySeen() { m_inlineAssemblySeen = true; }
+	bool memoryUnsafeInlineAssemblySeen() const { return m_memoryUnsafeInlineAssemblySeen; }
+	void setMemoryUnsafeInlineAssemblySeen() { m_memoryUnsafeInlineAssemblySeen = true; }
 
 	/// @returns the runtime ID to be used for the function in the dispatch routine
 	/// and for internal function pointers.
@@ -202,8 +202,8 @@ private:
 	/// Whether to use checked or wrapping arithmetic.
 	Arithmetic m_arithmetic = Arithmetic::Checked;
 
-	/// Flag indicating whether any inline assembly block was seen.
-	bool m_inlineAssemblySeen = false;
+	/// Flag indicating whether any memory-unsafe inline assembly block was seen.
+	bool m_memoryUnsafeInlineAssemblySeen = false;
 
 	/// Function definitions queued for code generation. They're the Solidity functions whose calls
 	/// were discovered by the IR generator during AST traversal.

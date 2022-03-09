@@ -38,6 +38,7 @@
 
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
+#include <boost/algorithm/string.hpp>
 #include <optional>
 
 using namespace std;
@@ -71,8 +72,7 @@ evmasm::Assembly::OptimiserSettings translateOptimiserSettings(
 )
 {
 	// Constructing it this way so that we notice changes in the fields.
-	evmasm::Assembly::OptimiserSettings asmSettings{false, false,  false, false, false, false, false, _evmVersion, 0};
-	asmSettings.isCreation = true;
+	evmasm::Assembly::OptimiserSettings asmSettings{false,  false, false, false, false, false, _evmVersion, 0};
 	asmSettings.runInliner = _settings.runInliner;
 	asmSettings.runJumpdestRemover = _settings.runJumpdestRemover;
 	asmSettings.runPeephole = _settings.runPeephole;
@@ -194,7 +194,10 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	yulAssert(_object.analysisInfo, "");
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
-			optimize(*subObject, false);
+		{
+			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
+			optimize(*subObject, isCreation);
+		}
 
 	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
 	unique_ptr<GasMeter> meter;
@@ -281,7 +284,7 @@ AssemblyStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 	yulAssert(m_parserResult->code, "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
-	evmasm::Assembly assembly;
+	evmasm::Assembly assembly(true, {});
 	EthAssemblyAdapter adapter(assembly);
 	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
 

@@ -4,6 +4,6 @@ pragma abicoder v2;
 
 contract D {
     function f() public pure {
-        assembly {}
+        assembly { mstore(0,0) }
     }
 }

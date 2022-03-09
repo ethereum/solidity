@@ -56,7 +56,7 @@ function trident_test
         "${compile_only_presets[@]}"
         #ir-no-optimize            # Compilation fails with: "YulException: Variable var_amount_165 is 9 slot(s) too deep inside the stack."
         #ir-optimize-evm-only      # Compilation fails with: "YulException: Variable var_amount_165 is 9 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul       # Compilation fails with: "YulException: Cannot swap Variable var_nearestTick with Variable _4: too deep in the stack by 4 slots"
+        ir-optimize-evm+yul       # Needs memory-safe inline assembly patch
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -87,6 +87,7 @@ function trident_test
     sed -i 's|uint32(-1)|type(uint32).max|g' contracts/flat/BentoBoxV1Flat.sol
     sed -i 's|IERC20(0)|IERC20(address(0))|g' contracts/flat/BentoBoxV1Flat.sol
     sed -i 's|IStrategy(0)|IStrategy(address(0))|g' contracts/flat/BentoBoxV1Flat.sol
+    find contracts -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 
     # @sushiswap/core package contains contracts that get built with 0.6.12 and fail our compiler
     # version check. It's not used by tests so we can remove it.

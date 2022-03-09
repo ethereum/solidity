@@ -65,7 +65,7 @@ public:
 	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 
 	void appendAssemblySize() override;
-	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(std::string _name = "") override;
+	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::string _name = "") override;
 	void appendDataOffset(std::vector<SubID> const& _subPath) override;
 	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
