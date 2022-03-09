@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/ControlFlowSideEffects.h>
 
 namespace solidity::yul
 {
@@ -50,10 +51,11 @@ private:
 	LoadResolver(
 		Dialect const& _dialect,
 		std::map<YulString, SideEffects> _functionSideEffects,
+		std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
 		bool _containsMSize,
 		std::optional<size_t> _expectedExecutionsPerDeployment
 	):
-		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)),
+		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects), std::move(_controlFlowSideEffects)),
 		m_containsMSize(_containsMSize),
 		m_expectedExecutionsPerDeployment(std::move(_expectedExecutionsPerDeployment))
 	{}

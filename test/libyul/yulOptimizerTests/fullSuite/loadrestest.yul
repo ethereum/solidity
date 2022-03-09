@@ -23,6 +23,6 @@
 //             mstore(_1, sload(0))
 //             return(_1, 32)
 //         }
-//         case 0xc2985578 { return(mload(64), 0) }
+//         case 0xc2985578 { return(_1, 0) }
 //     }
 // }

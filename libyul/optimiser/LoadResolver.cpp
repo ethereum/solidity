@@ -26,6 +26,7 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/SideEffects.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
@@ -47,6 +48,7 @@ void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 	LoadResolver{
 		_context.dialect,
 		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed(),
 		containsMSize,
 		_context.expectedExecutionsPerDeployment
 	}(_ast);

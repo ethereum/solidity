@@ -28,6 +28,7 @@
 #include <libyul/YulString.h>
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
+#include <libyul/ControlFlowSideEffects.h>
 
 #include <libsolutil/Common.h>
 
@@ -85,7 +86,8 @@ public:
 	///            The parameter is mostly used to determine movability of expressions.
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects = {}
+		std::map<YulString, SideEffects> _functionSideEffects = {},
+		std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects = {}
 	);
 
 	using ASTModifier::operator();
@@ -123,9 +125,12 @@ protected:
 	/// Joins knowledge about storage and memory with an older point in the control-flow.
 	/// This only works if the current state is a direct successor of the older point,
 	/// i.e. `_otherStorage` and `_otherMemory` cannot have additional changes.
+	/// If the last statement in the vector is not continuing, replace the current knowledge
+	/// with the old instead.
 	void joinKnowledge(
 		std::unordered_map<YulString, YulString> const& _olderStorage,
-		std::unordered_map<YulString, YulString> const& _olderMemory
+		std::unordered_map<YulString, YulString> const& _olderMemory,
+		Block const& _branch
 	);
 
 	static void joinKnowledgeHelper(
@@ -163,6 +168,7 @@ protected:
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
 	/// if this is not provided or the function is not found.
 	std::map<YulString, SideEffects> m_functionSideEffects;
+	std::map<YulString, ControlFlowSideEffects> m_controlFlowSideEffects;
 
 	/// Current values of variables, always movable.
 	std::map<YulString, AssignedValue> m_value;

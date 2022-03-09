@@ -43,10 +43,12 @@ using namespace solidity::yul;
 
 DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
-	map<YulString, SideEffects> _functionSideEffects
+	map<YulString, SideEffects> _functionSideEffects,
+	map<YulString, ControlFlowSideEffects> _controlFlowSideEffects
 ):
 	m_dialect(_dialect),
 	m_functionSideEffects(std::move(_functionSideEffects)),
+	m_controlFlowSideEffects(std::move(_controlFlowSideEffects)),
 	m_knowledgeBase(_dialect, m_value)
 {
 	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
@@ -120,9 +122,10 @@ void DataFlowAnalyzer::operator()(If& _if)
 	unordered_map<YulString, YulString> memory = m_memory;
 
 	ASTModifier::operator()(_if);
+	joinKnowledge(storage, memory, _if.body);
 
-	joinKnowledge(storage, memory);
-
+	// TODO we can do the same optimization here, but maybe this is already done in the ssa
+	// transform or some other step?
 	clearValues(assignedVariableNames(_if.body));
 }
 
@@ -136,8 +139,8 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 		unordered_map<YulString, YulString> storage = m_storage;
 		unordered_map<YulString, YulString> memory = m_memory;
 		(*this)(_case.body);
-		//TODO throw away knowledge if it is terminating
-		joinKnowledge(storage, memory);
+
+		joinKnowledge(storage, memory, _case.body);
 
 		set<YulString> variables = assignedVariableNames(_case.body);
 		assignedVariables += variables;
@@ -343,7 +346,8 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 {
-	// TODO with the extended side-effects, this could also be more precise now.
+	// TODO with the extended side-effects, this could also be more precise now,
+	// I.e. we should check collisions like we do for sstore and mstore
 	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
@@ -353,11 +357,25 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 
 void DataFlowAnalyzer::joinKnowledge(
 	unordered_map<YulString, YulString> const& _olderStorage,
-	unordered_map<YulString, YulString> const& _olderMemory
+	unordered_map<YulString, YulString> const& _olderMemory,
+	Block const& _branch
 )
 {
-	joinKnowledgeHelper(m_storage, _olderStorage);
-	joinKnowledgeHelper(m_memory, _olderMemory);
+	if (
+		_branch.statements.empty() ||
+		TerminationFinder(m_dialect, &m_controlFlowSideEffects).controlFlowKind(_branch.statements.back()) ==
+		TerminationFinder::ControlFlow::FlowOut
+	)
+	{
+		joinKnowledgeHelper(m_storage, _olderStorage);
+		joinKnowledgeHelper(m_memory, _olderMemory);
+	}
+	else
+	{
+		// TOOD test that this works with 'break' and 'continue'
+		m_storage = _olderStorage;
+		m_memory = _olderMemory;
+	}
 }
 
 void DataFlowAnalyzer::joinKnowledgeHelper(
