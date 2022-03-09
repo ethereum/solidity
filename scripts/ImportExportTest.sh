@@ -145,6 +145,40 @@ function testImportExportEquivalence {
                                 done
                             done
 
+                            if ! $SOLC --combined-json asm --pretty-json --import-asm-json expected.asm > obtained_direct_import_export.json 2> obtained_direct_import_export.error
+                            then
+                                printf "\n"
+                                echo "$nth_input_file"
+                                cat obtained_direct_import_export.error
+                                FAILED=$((FAILED + 1))
+                                return 0
+                            else
+                                for obtained_contract in $(jq '.contracts | keys | .[]' obtained_direct_import_export.json 2> /dev/null)
+                                do
+                                    jq --raw-output ".contracts.${obtained_contract}.\"asm\"" obtained_direct_import_export.json > obtained_direct_import_export.asm
+                                    set +e
+                                    DIFF="$(diff expected.asm obtained_direct_import_export.asm)"
+                                    set -e
+                                    if [ "$DIFF" != "" ]
+                                    then
+                                        if [ "$DIFFVIEW" == "" ]
+                                        then
+                                            echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
+                                            echo "Expected:"
+                                            cat  expected.asm
+                                            echo "Obtained:"
+                                            cat obtained_direct_import_export.asm
+                                        else
+                                            # Use user supplied diff view binary
+                                            $DIFFVIEW expected.asm obtained_direct_import_export.asm
+                                        fi
+                                        _TESTED=
+                                        FAILED=$((FAILED + 1))
+                                        return 0
+                                    fi
+                                done
+                            fi
+
                             rm obtained.json
                             rm -f obtained.error
                             for type in "${types[@]}"
