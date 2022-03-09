@@ -84,6 +84,34 @@ struct SolidityEndToEndTestExecutionFramework: public SolidityExecutionFramework
 
 BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, SolidityEndToEndTestExecutionFramework)
 
+BOOST_AUTO_TEST_CASE(creation_code_optimizer)
+{
+	string codeC = R"(
+		contract C {
+			constructor(uint x) {
+			if (x == 0xFFFFFFFFFFFFFFFF42)
+				revert();
+			}
+		}
+	)";
+	string codeD = R"(
+		contract D {
+			function f() public pure returns (bytes memory) {
+				return type(C).creationCode;
+			}
+		}
+	)";
+
+	m_metadataHash = CompilerStack::MetadataHash::None;
+	ALSO_VIA_YUL({
+		bytes bytecodeC = compileContract(codeC);
+		reset();
+		compileAndRun(codeC + codeD);
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, bytecodeC.size()) + encode(bytecodeC, false));
+		m_doEwasmTestrun = false;
+	})
+}
+
 unsigned constexpr roundTo32(unsigned _num)
 {
 	return (_num + 31) / 32 * 32;

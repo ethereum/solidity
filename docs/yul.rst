@@ -1126,6 +1126,11 @@ Above, ``Block`` refers to ``Block`` in the Yul code grammar explained in the pr
 
 .. note::
 
+    An object with a name that ends in ``_deployed`` is treated as deployed code by the Yul optimizer.
+    The only consequence of this is a different gas cost heuristic in the optimizer.
+
+.. note::
+
     Data objects or sub-objects whose names contain a ``.`` can be defined
     but it is not possible to access them through ``datasize``,
     ``dataoffset`` or ``datacopy`` because ``.`` is used as a separator
@@ -1172,17 +1177,17 @@ An example Yul Object is shown below:
 
             // now return the runtime object (the currently
             // executing code is the constructor code)
-            size := datasize("runtime")
+            size := datasize("Contract1_deployed")
             offset := allocate(size)
             // This will turn into a memory->memory copy for Ewasm and
             // a codecopy for EVM
-            datacopy(offset, dataoffset("runtime"), size)
+            datacopy(offset, dataoffset("Contract1_deployed"), size)
             return(offset, size)
         }
 
         data "Table2" hex"4123"
 
-        object "runtime" {
+        object "Contract1_deployed" {
             code {
                 function allocate(size) -> ptr {
                     ptr := mload(0x40)
@@ -1204,7 +1209,7 @@ An example Yul Object is shown below:
                 // code here ...
             }
 
-            object "runtime" {
+            object "Contract2_deployed" {
                 code {
                     // code here ...
                 }
