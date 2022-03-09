@@ -41,51 +41,28 @@ struct OptimiserState
 	std::back_insert_iterator<AssemblyItems> out;
 };
 
-template <class Method, size_t Arguments>
-struct ApplyRule
+template<typename FunctionType>
+struct FunctionParameterCount;
+template<typename R, typename... Args>
+struct FunctionParameterCount<R(Args...)>
 {
-};
-template <class Method>
-struct ApplyRule<Method, 4>
-{
-	static bool applyRule(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
-	{
-		return Method::applySimple(_in[0], _in[1], _in[2], _in[3], _out);
-	}
-};
-template <class Method>
-struct ApplyRule<Method, 3>
-{
-	static bool applyRule(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
-	{
-		return Method::applySimple(_in[0], _in[1], _in[2], _out);
-	}
-};
-template <class Method>
-struct ApplyRule<Method, 2>
-{
-	static bool applyRule(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
-	{
-		return Method::applySimple(_in[0], _in[1], _out);
-	}
-};
-template <class Method>
-struct ApplyRule<Method, 1>
-{
-	static bool applyRule(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out)
-	{
-		return Method::applySimple(_in[0], _out);
-	}
+	static constexpr auto value = sizeof...(Args);
 };
 
-template <class Method, size_t WindowSize>
+template <class Method>
 struct SimplePeepholeOptimizerMethod
 {
+	template <size_t... Indices>
+	static bool applyRule(AssemblyItems::const_iterator _in, back_insert_iterator<AssemblyItems> _out, index_sequence<Indices...>)
+	{
+		return Method::applySimple(_in[Indices]..., _out);
+	}
 	static bool apply(OptimiserState& _state)
 	{
+		static constexpr size_t WindowSize = FunctionParameterCount<decltype(Method::applySimple)>::value - 1;
 		if (
 			_state.i + WindowSize <= _state.items.size() &&
-			ApplyRule<Method, WindowSize>::applyRule(_state.items.begin() + static_cast<ptrdiff_t>(_state.i), _state.out)
+			applyRule(_state.items.begin() + static_cast<ptrdiff_t>(_state.i), _state.out, make_index_sequence<WindowSize>{})
 		)
 		{
 			_state.i += WindowSize;
@@ -96,7 +73,7 @@ struct SimplePeepholeOptimizerMethod
 	}
 };
 
-struct Identity: SimplePeepholeOptimizerMethod<Identity, 1>
+struct Identity: SimplePeepholeOptimizerMethod<Identity>
 {
 	static bool applySimple(AssemblyItem const& _item, std::back_insert_iterator<AssemblyItems> _out)
 	{
@@ -105,7 +82,7 @@ struct Identity: SimplePeepholeOptimizerMethod<Identity, 1>
 	}
 };
 
-struct PushPop: SimplePeepholeOptimizerMethod<PushPop, 2>
+struct PushPop: SimplePeepholeOptimizerMethod<PushPop>
 {
 	static bool applySimple(AssemblyItem const& _push, AssemblyItem const& _pop, std::back_insert_iterator<AssemblyItems>)
 	{
@@ -118,7 +95,7 @@ struct PushPop: SimplePeepholeOptimizerMethod<PushPop, 2>
 	}
 };
 
-struct OpPop: SimplePeepholeOptimizerMethod<OpPop, 2>
+struct OpPop: SimplePeepholeOptimizerMethod<OpPop>
 {
 	static bool applySimple(
 		AssemblyItem const& _op,
@@ -140,7 +117,7 @@ struct OpPop: SimplePeepholeOptimizerMethod<OpPop, 2>
 	}
 };
 
-struct DoubleSwap: SimplePeepholeOptimizerMethod<DoubleSwap, 2>
+struct DoubleSwap: SimplePeepholeOptimizerMethod<DoubleSwap>
 {
 	static size_t applySimple(AssemblyItem const& _s1, AssemblyItem const& _s2, std::back_insert_iterator<AssemblyItems>)
 	{
@@ -148,7 +125,7 @@ struct DoubleSwap: SimplePeepholeOptimizerMethod<DoubleSwap, 2>
 	}
 };
 
-struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush, 2>
+struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush>
 {
 	static bool applySimple(AssemblyItem const& _push1, AssemblyItem const& _push2, std::back_insert_iterator<AssemblyItems> _out)
 	{
@@ -163,7 +140,7 @@ struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush, 2>
 	}
 };
 
-struct CommutativeSwap: SimplePeepholeOptimizerMethod<CommutativeSwap, 2>
+struct CommutativeSwap: SimplePeepholeOptimizerMethod<CommutativeSwap>
 {
 	static bool applySimple(AssemblyItem const& _swap, AssemblyItem const& _op, std::back_insert_iterator<AssemblyItems> _out)
 	{
@@ -181,7 +158,7 @@ struct CommutativeSwap: SimplePeepholeOptimizerMethod<CommutativeSwap, 2>
 	}
 };
 
-struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison, 2>
+struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison>
 {
 	static bool applySimple(AssemblyItem const& _swap, AssemblyItem const& _op, std::back_insert_iterator<AssemblyItems> _out)
 	{
@@ -207,7 +184,7 @@ struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison, 2>
 };
 
 /// Remove swapN after dupN
-struct DupSwap: SimplePeepholeOptimizerMethod<DupSwap, 2>
+struct DupSwap: SimplePeepholeOptimizerMethod<DupSwap>
 {
 	static size_t applySimple(
 		AssemblyItem const& _dupN,
@@ -230,7 +207,7 @@ struct DupSwap: SimplePeepholeOptimizerMethod<DupSwap, 2>
 };
 
 
-struct IsZeroIsZeroJumpI: SimplePeepholeOptimizerMethod<IsZeroIsZeroJumpI, 4>
+struct IsZeroIsZeroJumpI: SimplePeepholeOptimizerMethod<IsZeroIsZeroJumpI>
 {
 	static size_t applySimple(
 		AssemblyItem const& _iszero1,
@@ -256,7 +233,7 @@ struct IsZeroIsZeroJumpI: SimplePeepholeOptimizerMethod<IsZeroIsZeroJumpI, 4>
 	}
 };
 
-struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext, 3>
+struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext>
 {
 	static size_t applySimple(
 		AssemblyItem const& _pushTag,
@@ -282,7 +259,7 @@ struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext, 3>
 	}
 };
 
-struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions, 3>
+struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions>
 {
 	static bool applySimple(
 		AssemblyItem const& _pushTag,
@@ -317,7 +294,7 @@ struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions, 3>
 	}
 };
 
-struct TruthyAnd: SimplePeepholeOptimizerMethod<TruthyAnd, 3>
+struct TruthyAnd: SimplePeepholeOptimizerMethod<TruthyAnd>
 {
 	static bool applySimple(
 		AssemblyItem const& _push,
