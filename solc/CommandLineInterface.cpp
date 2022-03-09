@@ -944,11 +944,24 @@ void CommandLineInterface::link()
 		string bytecode;
 		vector<string> sourceLines;
 		boost::split(sourceLines, src.second, boost::is_any_of("\n"));
+
+		if (sourceLines.size() < 3)
+			// no bytecode found
+			continue;
+
+		size_t bytecodeIndex;
+		// Bytecode can be on line 0 or 3, depending on if file header is included
+		// However if it is a file the first line is always blank as it just contains a '\n'
+		if (boost::starts_with(sourceLines.at(1), "======="))
+			bytecodeIndex = 3;
+		else
+			bytecodeIndex = 0;
+
 		for (auto const& library: m_options.linker.libraries)
 		{
 			string const& name = library.first;
 			// Bytecode we need is on the third line there's a blank line at the start
-			bytecode = sourceLines.at(3);
+			bytecode = sourceLines.at(bytecodeIndex);
 			size_t libraryStartOffset = bytecode.find("__$");
 
 			for (size_t i = 0; i < placeholderSize; i++)
@@ -969,10 +982,9 @@ void CommandLineInterface::link()
 		};
 
 		linkerObject.link(librariesReplacements);
-		sourceLines.at(3) = toHex(linkerObject.bytecode);
+		sourceLines.at(bytecodeIndex) = toHex(linkerObject.bytecode);
 
-		std::string resolvedBytecode;
-		for (const auto &piece : sourceLines) resolvedBytecode += piece + '\n';
+		std::string resolvedBytecode = boost::algorithm::join(sourceLines, "\n");
 		src.second = resolvedBytecode;
 
 		// Remove hints for resolved libraries.
