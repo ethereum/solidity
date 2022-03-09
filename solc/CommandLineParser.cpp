@@ -455,6 +455,13 @@ void CommandLineParser::parseOutputSelection()
 			CompilerOutputs::componentName(&CompilerOutputs::ewasm),
 			CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
 		};
+		static set<string> const evmAssemblyJsonImportModeOutputs = {
+			CompilerOutputs::componentName(&CompilerOutputs::asm_),
+			CompilerOutputs::componentName(&CompilerOutputs::binary),
+			CompilerOutputs::componentName(&CompilerOutputs::binaryRuntime),
+			CompilerOutputs::componentName(&CompilerOutputs::opcodes),
+			CompilerOutputs::componentName(&CompilerOutputs::asmJson),
+		};
 
 		switch (_mode)
 		{
@@ -465,8 +472,9 @@ void CommandLineParser::parseOutputSelection()
 			solAssert(false);
 		case InputMode::Compiler:
 		case InputMode::CompilerWithASTImport:
-		case InputMode::CompilerWithEvmAssemblyJsonImport:
 			return util::contains(compilerModeOutputs, _outputName);
+		case InputMode::CompilerWithEvmAssemblyJsonImport:
+			return util::contains(evmAssemblyJsonImportModeOutputs, _outputName);
 		case InputMode::Assembler:
 			return util::contains(assemblerModeOutputs, _outputName);
 		case InputMode::StandardJson:
@@ -936,7 +944,6 @@ void CommandLineParser::processArgs()
 		return;
 
 	checkMutuallyExclusive({g_strColor, g_strNoColor});
-
 	array<string, 9> const conflictingWithStopAfter{
 		CompilerOutputs::componentName(&CompilerOutputs::binary),
 		CompilerOutputs::componentName(&CompilerOutputs::ir),
@@ -952,9 +959,27 @@ void CommandLineParser::processArgs()
 	for (auto& option: conflictingWithStopAfter)
 		checkMutuallyExclusive({g_strStopAfter, option});
 
+	array<string, 11> const conflictingWithAsmJsonImport{
+		CompilerOutputs::componentName(&CompilerOutputs::ir),
+		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
+		g_strGas,
+		CompilerOutputs::componentName(&CompilerOutputs::metadata),
+		CompilerOutputs::componentName(&CompilerOutputs::natspecDev),
+		CompilerOutputs::componentName(&CompilerOutputs::natspecUser),
+		CompilerOutputs::componentName(&CompilerOutputs::signatureHashes),
+		CompilerOutputs::componentName(&CompilerOutputs::storageLayout),
+		CompilerOutputs::componentName(&CompilerOutputs::astCompactJson),
+	};
+
+	for (auto& option: conflictingWithAsmJsonImport)
+		checkMutuallyExclusive({g_strImportEvmAssemblerJson, option});
+
 	if (
 		m_options.input.mode != InputMode::Compiler &&
 		m_options.input.mode != InputMode::CompilerWithASTImport &&
+		m_options.input.mode != InputMode::CompilerWithEvmAssemblyJsonImport &&
 		m_options.input.mode != InputMode::Assembler
 	)
 	{
