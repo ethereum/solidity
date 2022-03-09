@@ -26,15 +26,18 @@
 #include <solc/Exceptions.h>
 
 #include "license.h"
+#include "solidity/BuildInfo.h"
 
-#include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <libsolidity/ast/ASTJsonConverter.h>
-#include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/interface/ImportRemapper.h>
-#include <libsolidity/interface/StandardCompiler.h>
-#include <libsolidity/interface/StorageLayout.h>
 #include <libsolidity/interface/Version.h>
+#include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
+#include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/StandardCompiler.h>
+#include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/interface/ImportRemapper.h>
+#include <libsolidity/interface/StorageLayout.h>
 #include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Transport.h>
 
@@ -45,6 +48,7 @@
 #include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsmtutil/Exceptions.h>
@@ -913,28 +917,21 @@ void CommandLineInterface::serveLSP()
 		solThrow(CommandLineExecutionError, "LSP terminated abnormally.");
 }
 
-vector<string> extractLines(string const& _source)
-{
-	auto stream = stringstream{_source};
-	vector<string> result;
-	string line;
-	while(getline(stream, line, '\n'))
-	{
-		result.push_back(line);
-	}
-
-	return result;
-}
-
 void CommandLineInterface::link()
 {
 	solAssert(m_options.input.mode == InputMode::Linker, "");
 
+	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
 	int const placeholderSize = 40; // 20 bytes or 40 hex characters
 	for (auto const& library: m_options.linker.libraries)
 	{
 		string const& name = library.first;
+		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
+		// This leaves 36 characters for the library identifier. The identifier used to
+		// be just the cropped or '_'-padded library name, but this changed to
+		// the cropped hex representation of the hash of the library name.
+		// We support both ways of linking here.
 		librariesReplacements[name] = library.second;
 	}
 
@@ -945,7 +942,8 @@ void CommandLineInterface::link()
 		// Map from how the libraries will be named inside the bytecode to their addresses.
 		map<size_t, string> linkReferences;
 		string bytecode;
-		vector<string> sourceLines = extractLines(src.second);
+		vector<string> sourceLines;
+		boost::split(sourceLines, src.second, boost::is_any_of("\n"));
 		for (auto const& library: m_options.linker.libraries)
 		{
 			string const& name = library.first;
@@ -963,11 +961,12 @@ void CommandLineInterface::link()
 			}
 		}
 
-		evmasm::LinkerObject linkerObject
-			= {fromHex(bytecode),
-			   linkReferences,
-			   map<u256, std::pair<std::string, std::vector<size_t>>>(),
-			   std::map<std::string, evmasm::LinkerObject::FunctionDebugData>()};
+		evmasm::LinkerObject linkerObject= {
+			fromHex(bytecode),
+			linkReferences,
+			map<u256, std::pair<std::string, std::vector<size_t>>>(),
+			std::map<std::string, evmasm::LinkerObject::FunctionDebugData>()
+		};
 
 		linkerObject.link(librariesReplacements);
 		sourceLines.at(3) = toHex(linkerObject.bytecode);
