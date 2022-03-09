@@ -136,16 +136,18 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 		unordered_map<YulString, YulString> storage = m_storage;
 		unordered_map<YulString, YulString> memory = m_memory;
 		(*this)(_case.body);
+		//TODO throw away knowledge if it is terminating
 		joinKnowledge(storage, memory);
 
 		set<YulString> variables = assignedVariableNames(_case.body);
 		assignedVariables += variables;
 		// This is a little too destructive, we could retain the old values.
 		clearValues(variables);
-		clearKnowledgeIfInvalidated(_case.body);
+		//clearKnowledgeIfInvalidated(_case.body);
 	}
-	for (auto& _case: _switch.cases)
-		clearKnowledgeIfInvalidated(_case.body);
+	// TODO Handle special case where we have a default switch body?
+	//for (auto& _case: _switch.cases)
+//		clearKnowledgeIfInvalidated(_case.body);
 	clearValues(assignedVariables);
 }
 
@@ -341,6 +343,7 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 {
+	// TODO with the extended side-effects, this could also be more precise now.
 	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
