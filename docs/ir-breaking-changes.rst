@@ -15,11 +15,7 @@ The IR-based code generator was introduced with an aim to not only allow
 code generation to be more transparent and auditable but also
 to enable more powerful optimization passes that span across functions.
 
-Currently, the IR-based code generator is still marked experimental,
-but it supports all language features and has received a lot of testing,
-so we consider it almost ready for production use.
-
-You can enable it on the command line using ``--experimental-via-ir``
+You can enable it on the command line using ``--via-ir``
 or with the option ``{"viaIR": true}`` in standard-json and we
 encourage everyone to try it out!
 

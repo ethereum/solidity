@@ -1,11 +1,4 @@
-{"contracts":{"C":{"C":{"ir":"/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-
+{"contracts":{"C":{"C":{"ir":"
 /// @use-src 0:\"C\"
 object \"C_54\" {
     code {
@@ -609,14 +602,7 @@ object \"C_54\" {
 
 }
 
-","irOptimized":"/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-/// @use-src 0:\"C\"
+","irOptimized":"/// @use-src 0:\"C\"
 object \"C_54\" {
     code {
         {
@@ -776,14 +762,7 @@ object \"C_54\" {
         data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 }
-"}},"D":{"D":{"ir":"/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-
+"}},"D":{"D":{"ir":"
 /// @use-src 0:\"C\", 1:\"D\"
 object \"D_72\" {
     code {
@@ -1455,14 +1434,7 @@ object \"D_72\" {
 
 }
 
-","irOptimized":"/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-/// @use-src 0:\"C\", 1:\"D\"
+","irOptimized":"/// @use-src 0:\"C\", 1:\"D\"
 object \"D_72\" {
     code {
         {

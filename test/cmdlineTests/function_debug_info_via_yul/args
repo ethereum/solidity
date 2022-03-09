@@ -1,1 +1,1 @@
---experimental-via-ir --optimize --combined-json function-debug,function-debug-runtime --pretty-json
+--via-ir --optimize --combined-json function-debug,function-debug-runtime --pretty-json

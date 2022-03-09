@@ -1,1 +1,1 @@
---experimental-via-ir --combined-json function-debug-runtime --pretty-json --json-indent 4
+--via-ir --combined-json function-debug-runtime --pretty-json --json-indent 4

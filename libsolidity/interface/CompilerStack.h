@@ -189,7 +189,7 @@ public:
 	/// Enable EVM Bytecode generation. This is enabled by default.
 	void enableEvmBytecodeGeneration(bool _enable = true) { m_generateEvmBytecode = _enable; }
 
-	/// Enable experimental generation of Yul IR code.
+	/// Enable generation of Yul IR code.
 	void enableIRGeneration(bool _enable = true) { m_generateIR = _enable; }
 
 	/// Enable experimental generation of Ewasm code. If enabled, IR is also generated.
@@ -373,8 +373,8 @@ private:
 		std::shared_ptr<evmasm::Assembly> evmRuntimeAssembly;
 		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
-		std::string yulIR; ///< Experimental Yul IR code.
-		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
+		std::string yulIR; ///< Yul IR code.
+		std::string yulIROptimized; ///< Optimized Yul IR code.
 		std::string ewasm; ///< Experimental Ewasm text representation
 		evmasm::LinkerObject ewasmObject; ///< Experimental Ewasm code
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
@@ -447,8 +447,7 @@ private:
 	/// Can only be called after state is SourcesSet.
 	Source const& source(std::string const& _sourceName) const;
 
-	/// @param _forIR If true, include a flag that indicates that the bytecode comes from the
-	///               experimental IR codegen.
+	/// @param _forIR If true, include a flag that indicates that the bytecode comes from IR codegen.
 	/// @returns the metadata JSON as a compact string for the given contract.
 	std::string createMetadata(Contract const& _contract, bool _forIR) const;
 

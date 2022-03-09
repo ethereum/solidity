@@ -93,7 +93,7 @@ pair<string, string> IRGenerator::run(
 	map<ContractDefinition const*, string_view const> const& _otherYulSources
 )
 {
-	string const ir = yul::reindent(generate(_contract, _cborMetadata, _otherYulSources));
+	string ir = yul::reindent(generate(_contract, _cborMetadata, _otherYulSources));
 
 	yul::AssemblyStack asmStack(
 		m_evmVersion,
@@ -113,15 +113,7 @@ pair<string, string> IRGenerator::run(
 	}
 	asmStack.optimize();
 
-	string warning =
-		"/*=====================================================*\n"
-		" *                       WARNING                       *\n"
-		" *  Solidity to Yul compilation is still EXPERIMENTAL  *\n"
-		" *       It can result in LOSS OF FUNDS or worse       *\n"
-		" *                !USE AT YOUR OWN RISK!               *\n"
-		" *=====================================================*/\n\n";
-
-	return {warning + ir, warning + asmStack.print(m_context.soliditySourceProvider())};
+	return {move(ir), asmStack.print(m_context.soliditySourceProvider())};
 }
 
 string IRGenerator::generate(

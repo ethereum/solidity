@@ -182,7 +182,7 @@ struct CommandLineOptions
 		boost::filesystem::path dir;
 		bool overwriteFiles = false;
 		langutil::EVMVersion evmVersion;
-		bool experimentalViaIR = false;
+		bool viaIR = false;
 		RevertStrings revertStrings = RevertStrings::Default;
 		std::optional<langutil::DebugInfoSelection> debugInfoSelection;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
