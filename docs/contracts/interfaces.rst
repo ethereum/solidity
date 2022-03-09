@@ -10,7 +10,7 @@ Interfaces are similar to abstract contracts, but they cannot have any functions
 There are further restrictions:
 
 - They cannot inherit from other contracts, but they can inherit from other interfaces.
-- All declared functions must be external.
+- All declared functions must be external in the interface, even if they are public in the contract.
 - They cannot declare a constructor.
 - They cannot declare state variables.
 - They cannot declare modifiers.
