@@ -233,12 +233,34 @@ function force_truffle_compiler_settings
 function name_hardhat_default_export
 {
     local config_file="$1"
-    local config_var_name="$2"
 
     local import="import {HardhatUserConfig} from 'hardhat/types';"
     local config="const config: HardhatUserConfig = {"
     sed -i "s|^\s*export\s*default\s*{|${import}\n${config}|g" "$config_file"
     echo "export default config;" >> "$config_file"
+}
+
+function force_hardhat_timeout
+{
+    local config_file="$1"
+    local config_var_name="$2"
+    local new_timeout="$3"
+
+    printLog "Configuring Hardhat..."
+    echo "-------------------------------------"
+    echo "Timeout: ${new_timeout}"
+    echo "-------------------------------------"
+
+    if [[ $config_file == *\.js ]]; then
+        [[ $config_var_name == "" ]] || assertFail
+        echo "module.exports.mocha = module.exports.mocha || {timeout: ${new_timeout}}"
+        echo "module.exports.mocha.timeout =  ${new_timeout}"
+    else
+        [[ $config_file == *\.ts ]] || assertFail
+        [[ $config_var_name != "" ]] || assertFail
+        echo "${config_var_name}.mocha = ${config_var_name}.mocha ?? {timeout: ${new_timeout}};"
+        echo "${config_var_name}.mocha!.timeout = ${new_timeout}"
+    fi >> "$config_file"
 }
 
 function force_hardhat_compiler_binary
