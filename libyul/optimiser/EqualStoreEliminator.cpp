@@ -25,6 +25,7 @@
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
@@ -38,7 +39,8 @@ void EqualStoreEliminator::run(OptimiserStepContext const& _context, Block& _ast
 {
 	EqualStoreEliminator eliminator{
 		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
+		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed(),
 	};
 	eliminator(_ast);
 

@@ -51,6 +51,7 @@ public:
 	void visit(Expression& _expression) override;
 
 private:
+	// TOOD why no function side effects?
 	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 };
 
