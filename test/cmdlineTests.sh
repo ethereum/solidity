@@ -339,7 +339,7 @@ function test_via_ir_equivalence()
     )
     asm_output_via_ir=$(
         echo "$solidity_code" |
-        msg_on_error --no-stderr "$SOLC" - --experimental-via-ir --asm --debug-info location "${optimizer_flags[@]}" |
+        msg_on_error --no-stderr "$SOLC" - --via-ir --asm --debug-info location "${optimizer_flags[@]}" |
         sed '/^======= <stdin>/d' |
         sed '/^EVM assembly:$/d'
     )
@@ -355,7 +355,7 @@ function test_via_ir_equivalence()
     )
     bin_output_via_ir=$(
         echo "$solidity_code" |
-        msg_on_error --no-stderr "$SOLC" - --experimental-via-ir --bin "${optimizer_flags[@]}" |
+        msg_on_error --no-stderr "$SOLC" - --via-ir --bin "${optimizer_flags[@]}" |
         sed '/^======= <stdin>/d' |
         sed '/^Binary:$/d'
     )
@@ -588,7 +588,7 @@ printTask "Testing assemble, yul, strict-assembly and optimize..."
     test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
 )
 
-printTask "Testing the eqivalence of --experimental-via-ir and a two-stage compilation..."
+printTask "Testing the eqivalence of --via-ir and a two-stage compilation..."
 (
     printTask " - Smoke test"
     test_via_ir_equivalence "contract C {}"

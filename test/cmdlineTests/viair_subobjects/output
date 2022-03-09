@@ -5,13 +5,6 @@ Binary:
 Binary of the runtime part:
 <BYTECODE REMOVED>
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"viair_subobjects/input.sol"
 object "C_3" {
     code {
@@ -44,13 +37,6 @@ Binary:
 Binary of the runtime part:
 <BYTECODE REMOVED>
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"viair_subobjects/input.sol"
 object "D_16" {
     code {

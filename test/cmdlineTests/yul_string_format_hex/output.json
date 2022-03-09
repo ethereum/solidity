@@ -1,11 +1,4 @@
-{"contracts":{"A":{"C":{"ir":"/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-
+{"contracts":{"A":{"C":{"ir":"
 /// @use-src 0:\"A\"
 object \"C_11\" {
     code {
