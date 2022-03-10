@@ -1,5 +1,16 @@
 [
     {
+        "uid": "SOL-2022-1",
+        "name": "AbiEncodeCallLiteralAsFixedBytesBug",
+        "summary": "Literals used for a fixed length bytes parameter in ``abi.encodeCall`` were encoded incorrectly.",
+        "description": "For the encoding, the compiler only considered the types of the expressions in the second argument of ``abi.encodeCall`` itself, but not the parameter types of the function given as first argument. In almost all cases the abi encoding of the type of the expression matches the abi encoding of the parameter type of the given function. This is because the type checker ensures the expression is implicitly convertible to the respective parameter type. However this is not true for number literals used for fixed bytes types shorter than 32 bytes, nor for string literals used for any fixed bytes type. Number literals were encoded as numbers instead of being shifted to become left-aligned. String literals were encoded as dynamically sized memory strings instead of being converted to a left-aligned bytes value.",
+        "link": "https://blog.soliditylang.org/2022/03/16/encodecall-bug/",
+        "introduced": "0.8.11",
+        "fixed": "0.8.13",
+        "severity": "very low"
+
+    },
+    {
         "uid": "SOL-2021-4",
         "name": "UserDefinedValueTypesBug",
         "summary": "User defined value types with underlying type shorter than 32 bytes used incorrect storage layout and wasted storage",
@@ -8,7 +19,6 @@
         "introduced": "0.8.8",
         "fixed": "0.8.9",
         "severity": "very low"
-
     },
     {
         "uid": "SOL-2021-3",

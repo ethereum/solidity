@@ -1258,6 +1258,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				function.kind() == FunctionType::Kind::ABIEncodeWithSignature;
 
 			TypePointers argumentTypes;
+			TypePointers targetTypes;
 
 			ASTNode::listAccept(arguments, *this);
 
@@ -1265,14 +1266,17 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				solAssert(arguments.size() == 2);
 
-				auto const functionPtr = dynamic_cast<FunctionTypePointer>(arguments[0]->annotation().type);
-				solAssert(functionPtr);
-
 				// Account for tuples with one component which become that component
 				if (auto const tupleType = dynamic_cast<TupleType const*>(arguments[1]->annotation().type))
 					argumentTypes = tupleType->components();
 				else
 					argumentTypes.emplace_back(arguments[1]->annotation().type);
+
+				auto functionPtr = dynamic_cast<FunctionTypePointer>(arguments[0]->annotation().type);
+				solAssert(functionPtr);
+				functionPtr = functionPtr->asExternallyCallableFunction(false);
+				solAssert(functionPtr);
+				targetTypes = functionPtr->parameterTypes();
 			}
 			else
 				for (unsigned i = 0; i < arguments.size(); ++i)
@@ -1292,12 +1296,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (isPacked)
 			{
 				solAssert(!function.padArguments(), "");
-				utils().packedEncode(argumentTypes, TypePointers());
+				utils().packedEncode(argumentTypes, targetTypes);
 			}
 			else
 			{
 				solAssert(function.padArguments(), "");
-				utils().abiEncode(argumentTypes, TypePointers());
+				utils().abiEncode(argumentTypes, targetTypes);
 			}
 			utils().fetchFreeMemoryPointer();
 			// stack: [<selector/functionPointer/signature>] <data_encoding_area_end> <bytes_memory_ptr>
