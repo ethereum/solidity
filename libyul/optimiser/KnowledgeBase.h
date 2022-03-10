@@ -28,6 +28,7 @@
 #include <libsolutil/Numeric.h>
 
 #include <map>
+#include <functional>
 
 namespace solidity::yul
 {
@@ -37,15 +38,16 @@ struct AssignedValue;
 
 /**
  * Class that can answer questions about values of variables and their relations.
- *
- * The reference to the map of values provided at construction is assumed to be updating.
  */
 class KnowledgeBase
 {
 public:
-	KnowledgeBase(Dialect const& _dialect, std::map<YulString, AssignedValue> const& _variableValues):
+	KnowledgeBase(
+		Dialect const& _dialect,
+		std::function<AssignedValue const*(YulString)> _variableValues
+	):
 		m_dialect(_dialect),
-		m_variableValues(_variableValues)
+		m_variableValues(std::move(_variableValues))
 	{}
 
 	bool knownToBeDifferent(YulString _a, YulString _b);
@@ -60,7 +62,7 @@ private:
 	Expression simplifyRecursively(Expression _expression);
 
 	Dialect const& m_dialect;
-	std::map<YulString, AssignedValue> const& m_variableValues;
+	std::function<AssignedValue const*(YulString)> m_variableValues;
 	size_t m_counter = 0;
 };
 

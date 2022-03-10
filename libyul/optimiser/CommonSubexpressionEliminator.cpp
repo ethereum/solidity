@@ -95,10 +95,10 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	if (Identifier const* identifier = get_if<Identifier>(&_e))
 	{
 		YulString identifierName = identifier->name;
-		if (m_value.count(identifierName))
+		if (AssignedValue const* assignedValue = variableValue(identifierName))
 		{
-			assertThrow(m_value.at(identifierName).value, OptimizerException, "");
-			if (Identifier const* value = get_if<Identifier>(m_value.at(identifierName).value))
+			assertThrow(assignedValue->value, OptimizerException, "");
+			if (Identifier const* value = get_if<Identifier>(assignedValue->value))
 				if (inScope(value->name))
 					_e = Identifier{debugDataOf(_e), value->name};
 		}
@@ -106,7 +106,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	else
 	{
 		// TODO this search is rather inefficient.
-		for (auto const& [variable, value]: m_value)
+		for (auto const& [variable, value]: allValues())
 		{
 			assertThrow(value.value, OptimizerException, "");
 			// Prevent using the default value of return variables

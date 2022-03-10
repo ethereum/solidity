@@ -238,7 +238,7 @@ bool UnusedStoreEliminator::knownUnrelated(
 	UnusedStoreEliminator::Operation const& _op2
 ) const
 {
-	KnowledgeBase knowledge(m_dialect, m_ssaValues);
+	KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
 
 	if (_op1.location != _op2.location)
 		return true;
@@ -319,7 +319,7 @@ bool UnusedStoreEliminator::knownCovered(
 		return true;
 	if (_covered.location == Location::Memory)
 	{
-		KnowledgeBase knowledge(m_dialect, m_ssaValues);
+		KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
 
 		if (_covered.length && knowledge.knownToBeZero(*_covered.length))
 			return true;
