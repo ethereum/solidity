@@ -763,12 +763,11 @@ string TestFileParser::Scanner::scanString()
 char TestFileParser::Scanner::scanHexPart()
 {
 	auto toLower = [](char _c) -> char { return tolower(_c, locale::classic()); };
-	auto isDigit = [](char _c) -> bool { return isdigit(_c, locale::classic()); };
 
 	advance(); // skip 'x'
 
 	int value{};
-	if (isDigit(current()))
+	if (util::isDigit(current()))
 		value = current() - '0';
 	else if (toLower(current()) >= 'a' && toLower(current()) <= 'f')
 		value = toLower(current()) - 'a' + 10;
@@ -780,7 +779,7 @@ char TestFileParser::Scanner::scanHexPart()
 		return static_cast<char>(value);
 
 	value <<= 4;
-	if (isDigit(current()))
+	if (util::isDigit(current()))
 		value |= current() - '0';
 	else if (toLower(current()) >= 'a' && toLower(current()) <= 'f')
 		value |= toLower(current()) - 'a' + 10;
