@@ -246,7 +246,7 @@ Members of Address Types
 ------------------------
 
 ``<address>.balance`` (``uint256``)
-    balance of the :ref:`address` in Wei
+    balance of the :ref:`address` in Wei. In the case of msg.sender, the returned value is reduced by the expected gas cost of the transaction (tx gas limit * ``tx.gasprice``)
 
 ``<address>.code`` (``bytes memory``)
     code at the :ref:`address` (can be empty)
