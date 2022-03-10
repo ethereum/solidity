@@ -25,7 +25,6 @@
 #include <libyul/Object.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/optimiser/SSAValueTracker.h>
-#include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/backends/evm/EVMDialect.h>

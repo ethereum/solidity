@@ -18,7 +18,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libsolutil/Common.h>
 
@@ -50,9 +49,6 @@ private:
 	StructuralSimplifier() = default;
 
 	void simplify(std::vector<Statement>& _statements);
-	bool expressionAlwaysTrue(Expression const& _expression);
-	bool expressionAlwaysFalse(Expression const& _expression);
-	std::optional<u256> hasLiteralValue(Expression const& _expression) const;
 };
 
 }
