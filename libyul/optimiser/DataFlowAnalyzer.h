@@ -29,6 +29,7 @@
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
 
+#include <libsolutil/Numeric.h>
 #include <libsolutil/Common.h>
 
 #include <map>
@@ -38,6 +39,7 @@ namespace solidity::yul
 {
 struct Dialect;
 struct SideEffects;
+class KnowledgeBase;
 
 /// Value assigned to a variable.
 struct AssignedValue
@@ -97,6 +99,13 @@ public:
 	void operator()(FunctionDefinition&) override;
 	void operator()(ForLoop&) override;
 	void operator()(Block& _block) override;
+
+	/// @returns the current value of the given variable, if known - always movable.
+	AssignedValue const* variableValue(YulString _variable) const { return util::valueOrNullptr(m_value, _variable); }
+	std::set<YulString> const* references(YulString _variable) const { return util::valueOrNullptr(m_references, _variable); }
+	std::map<YulString, AssignedValue> const& allValues() const { return m_value; }
+	std::optional<YulString> storageValue(YulString _key) const;
+	std::optional<YulString> memoryValue(YulString _key) const;
 
 protected:
 	/// Registers the assignment.

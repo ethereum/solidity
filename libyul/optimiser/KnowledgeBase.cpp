@@ -80,8 +80,8 @@ bool KnowledgeBase::knownToBeZero(YulString _a)
 
 optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
 {
-	if (m_variableValues.count(_a))
-		if (Literal const* literal = get_if<Literal>(m_variableValues.at(_a).value))
+	if (AssignedValue const* value = m_variableValues(_a))
+		if (Literal const* literal = get_if<Literal>(value->value))
 			return valueOfLiteral(*literal);
 	return {};
 }
