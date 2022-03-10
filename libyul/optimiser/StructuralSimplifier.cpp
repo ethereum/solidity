@@ -55,6 +55,30 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 		return optional<vector<Statement>>{vector<Statement>{}};
 }
 
+optional<u256> hasLiteralValue(Expression const& _expression)
+{
+	if (holds_alternative<Literal>(_expression))
+		return valueOfLiteral(std::get<Literal>(_expression));
+	else
+		return std::optional<u256>();
+}
+
+bool expressionAlwaysTrue(Expression const& _expression)
+{
+	if (std::optional<u256> value = hasLiteralValue(_expression))
+		return *value != 0;
+	else
+		return false;
+}
+
+bool expressionAlwaysFalse(Expression const& _expression)
+{
+	if (std::optional<u256> value = hasLiteralValue(_expression))
+		return *value == 0;
+	else
+		return false;
+}
+
 }
 
 void StructuralSimplifier::run(OptimiserStepContext&, Block& _ast)
@@ -102,28 +126,4 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			return result;
 		}
 	);
-}
-
-bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
-{
-	if (std::optional<u256> value = hasLiteralValue(_expression))
-		return *value != 0;
-	else
-		return false;
-}
-
-bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
-{
-	if (std::optional<u256> value = hasLiteralValue(_expression))
-		return *value == 0;
-	else
-		return false;
-}
-
-std::optional<u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
-{
-	if (holds_alternative<Literal>(_expression))
-		return valueOfLiteral(std::get<Literal>(_expression));
-	else
-		return std::optional<u256>();
 }
