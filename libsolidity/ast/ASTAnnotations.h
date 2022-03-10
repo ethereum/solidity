@@ -222,7 +222,7 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	/// True, if the assembly block was annotated to be memory-safe.
 	bool markedMemorySafe = false;
 	/// True, if the assembly block involves any memory opcode or assigns to variables in memory.
-	SetOnce<bool> hasMemoryEffects;
+	util::SetOnce<bool> hasMemoryEffects;
 };
 
 struct BlockAnnotation: StatementAnnotation, ScopableAnnotation
