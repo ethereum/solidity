@@ -26,6 +26,7 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/SideEffects.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
@@ -46,7 +47,7 @@ void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 	bool containsMSize = MSizeFinder::containsMSize(_context.dialect, _ast);
 	LoadResolver{
 		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
+		_ast,
 		containsMSize,
 		_context.expectedExecutionsPerDeployment
 	}(_ast);

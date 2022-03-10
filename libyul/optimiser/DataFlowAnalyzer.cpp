@@ -25,6 +25,7 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/KnowledgeBase.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
@@ -42,14 +43,13 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-DataFlowAnalyzer::DataFlowAnalyzer(
-	Dialect const& _dialect,
-	map<YulString, SideEffects> _functionSideEffects
-):
+DataFlowAnalyzer::DataFlowAnalyzer(Dialect const& _dialect, Block const& _ast):
 	m_dialect(_dialect),
-	m_functionSideEffects(std::move(_functionSideEffects)),
 	m_knowledgeBase(_dialect, [this](YulString _var) { return variableValue(_var); })
 {
+	m_functionSideEffects = SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast));
+	m_controlFlowSideEffects = ControlFlowSideEffectsCollector{_dialect, _ast}.functionSideEffectsNamed();
+
 	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
 		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
 	if (auto const* builtin = _dialect.memoryLoadFunction(YulString{}))
@@ -117,36 +117,51 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 void DataFlowAnalyzer::operator()(If& _if)
 {
 	clearKnowledgeIfInvalidated(*_if.condition);
-	unordered_map<YulString, YulString> storage = m_state.storage;
-	unordered_map<YulString, YulString> memory = m_state.memory;
+
+	State preState = m_state;
 
 	ASTModifier::operator()(_if);
 
-	joinKnowledge(storage, memory);
-
-	clearValues(assignedVariableNames(_if.body));
+	if (hasFlowOutControlFlow(_if.body))
+	{
+		joinKnowledge(preState);
+		clearValues(assignedVariableNames(_if.body));
+	}
+	else
+		m_state = move(preState);
 }
 
 void DataFlowAnalyzer::operator()(Switch& _switch)
 {
 	clearKnowledgeIfInvalidated(*_switch.expression);
 	visit(*_switch.expression);
-	set<YulString> assignedVariables;
+
+	State preState = m_state;
+
+	optional<State> postState;
+	if (!hasDefaultCase(_switch))
+		postState = m_state;
+
+	std::set<YulString> assignedVariables;
 	for (auto& _case: _switch.cases)
 	{
-		unordered_map<YulString, YulString> storage = m_state.storage;
-		unordered_map<YulString, YulString> memory = m_state.memory;
+		m_state = preState;
 		(*this)(_case.body);
-		joinKnowledge(storage, memory);
 
-		set<YulString> variables = assignedVariableNames(_case.body);
-		assignedVariables += variables;
-		// This is a little too destructive, we could retain the old values.
-		clearValues(variables);
-		clearKnowledgeIfInvalidated(_case.body);
+		if (hasFlowOutControlFlow(_case.body))
+		{
+			if (postState)
+				joinKnowledge(*postState);
+			assignedVariables += assignedVariableNames(_case.body);
+
+			postState = move(m_state);
+		}
 	}
-	for (auto& _case: _switch.cases)
-		clearKnowledgeIfInvalidated(_case.body);
+	if (postState)
+		m_state = move(*postState);
+	else
+		// No outflowing case.
+		m_state = {};
 	clearValues(assignedVariables);
 }
 
@@ -362,30 +377,6 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 		m_state.memory.clear();
 }
 
-void DataFlowAnalyzer::joinKnowledge(
-	unordered_map<YulString, YulString> const& _olderStorage,
-	unordered_map<YulString, YulString> const& _olderMemory
-)
-{
-	joinKnowledgeHelper(m_state.storage, _olderStorage);
-	joinKnowledgeHelper(m_state.memory, _olderMemory);
-}
-
-void DataFlowAnalyzer::joinKnowledgeHelper(
-	std::unordered_map<YulString, YulString>& _this,
-	std::unordered_map<YulString, YulString> const& _older
-)
-{
-	// We clear if the key does not exist in the older map or if the value is different.
-	// This also works for memory because _older is an "older version"
-	// of m_state.memory and thus any overlapping write would have cleared the keys
-	// that are not known to be different inside m_state.memory already.
-	cxx20::erase_if(_this, mapTuple([&_older](auto&& key, auto&& currentValue){
-		YulString const* oldValue = util::valueOrNullptr(_older, key);
-		return !oldValue || *oldValue != currentValue;
-	}));
-}
-
 bool DataFlowAnalyzer::inScope(YulString _variableName) const
 {
 	for (auto const& scope: m_variableScopes | ranges::views::reverse)
@@ -429,4 +420,33 @@ std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
 			if (Identifier const* key = std::get_if<Identifier>(&funCall->arguments.front()))
 				return key->name;
 	return {};
+}
+
+bool DataFlowAnalyzer::hasFlowOutControlFlow(Block const& _block) const
+{
+	return
+		_block.statements.empty() ||
+		TerminationFinder{m_dialect, &m_controlFlowSideEffects}.
+			controlFlowKind(_block.statements.back()) == TerminationFinder::ControlFlow::FlowOut;
+}
+
+void DataFlowAnalyzer::joinKnowledge(State const& _olderState)
+{
+	joinKnowledgeHelper(m_state.storage, _olderState.storage);
+	joinKnowledgeHelper(m_state.memory, _olderState.memory);
+}
+
+void DataFlowAnalyzer::joinKnowledgeHelper(
+	std::unordered_map<YulString, YulString>& _this,
+	std::unordered_map<YulString, YulString> const& _older
+)
+{
+	// We clear if the key does not exist in the older map or if the value is different.
+	// This also works for memory because _older is an "older version"
+	// of m_state.memory and thus any overlapping write would have cleared the keys
+	// that are not known to be different inside m_state.memory already.
+	cxx20::erase_if(_this, mapTuple([&_older](auto&& key, auto&& currentValue){
+		YulString const* oldValue = valueOrNullptr(_older, key);
+		return !oldValue || *oldValue != currentValue;
+	}));
 }

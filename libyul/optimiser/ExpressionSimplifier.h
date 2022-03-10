@@ -51,7 +51,9 @@ public:
 	void visit(Expression& _expression) override;
 
 private:
-	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	ExpressionSimplifier(Dialect const& _dialect, Block const& _ast):
+		DataFlowAnalyzer(_dialect, _ast)
+	{}
 };
 
 }

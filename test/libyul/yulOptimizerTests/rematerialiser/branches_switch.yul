@@ -16,7 +16,7 @@
 //     case 1 { b := 1 }
 //     default {
 //         let x := 1
-//         let y := b
+//         let y := 2
 //         b := 1
 //     }
 //     pop(add(1, b))

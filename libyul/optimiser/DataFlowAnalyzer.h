@@ -28,6 +28,7 @@
 #include <libyul/YulString.h>
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
+#include <libyul/ControlFlowSideEffects.h>
 
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Common.h>
@@ -81,14 +82,10 @@ struct AssignedValue
 class DataFlowAnalyzer: public ASTModifier
 {
 public:
-	/// @param _functionSideEffects
-	///            Side-effects of user-defined functions. Worst-case side-effects are assumed
-	///            if this is not provided or the function is not found.
-	///            The parameter is mostly used to determine movability of expressions.
-	explicit DataFlowAnalyzer(
-		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects = {}
-	);
+	/// Construct the data flow analyzer. The passed block should be the full AST
+	/// because side effects of user defined functions are computed from it.
+	/// Otherwise, worst-case side effects are assumed.
+	DataFlowAnalyzer(Dialect const& _dialect, Block const& _ast);
 
 	using ASTModifier::operator();
 	void operator()(ExpressionStatement& _statement) override;
@@ -129,19 +126,6 @@ protected:
 	/// Clears knowledge about storage or memory if they may be modified inside the expression.
 	void clearKnowledgeIfInvalidated(Expression const& _expression);
 
-	/// Joins knowledge about storage and memory with an older point in the control-flow.
-	/// This only works if the current state is a direct successor of the older point,
-	/// i.e. `_otherStorage` and `_otherMemory` cannot have additional changes.
-	void joinKnowledge(
-		std::unordered_map<YulString, YulString> const& _olderStorage,
-		std::unordered_map<YulString, YulString> const& _olderMemory
-	);
-
-	static void joinKnowledgeHelper(
-		std::unordered_map<YulString, YulString>& _thisData,
-		std::unordered_map<YulString, YulString> const& _olderData
-	);
-
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
 
@@ -168,10 +152,15 @@ protected:
 		Expression const& _expression
 	) const;
 
+	/// @returns true if the block is empty or the last statement has a
+	/// "flow out" control flow.
+	bool hasFlowOutControlFlow(Block const& _block) const;
+
 	Dialect const& m_dialect;
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
 	/// if this is not provided or the function is not found.
 	std::map<YulString, SideEffects> m_functionSideEffects;
+	std::map<YulString, ControlFlowSideEffects> m_controlFlowSideEffects;
 
 private:
 	struct State
@@ -184,6 +173,18 @@ private:
 		std::unordered_map<YulString, YulString> storage;
 		std::unordered_map<YulString, YulString> memory;
 	};
+
+	/// Joins knowledge about storage and memory with an older point in the control-flow.
+	/// This only works if the current state is a direct successor of the older point,
+	/// i.e. `_otherStorage` and `_otherMemory` cannot have additional changes.
+	void joinKnowledge(State const& _olderState);
+
+	static void joinKnowledgeHelper(
+		std::unordered_map<YulString, YulString>& _thisData,
+		std::unordered_map<YulString, YulString> const& _olderData
+	);
+
+
 	State m_state;
 
 protected:

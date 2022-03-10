@@ -23,6 +23,8 @@
 
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/Semantics.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 
 using namespace std;
@@ -31,7 +33,7 @@ using namespace solidity::yul;
 
 void ExpressionSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ExpressionSimplifier{_context.dialect}(_ast);
+	ExpressionSimplifier{_context.dialect, _ast}(_ast);
 }
 
 void ExpressionSimplifier::visit(Expression& _expression)

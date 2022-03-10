@@ -23,6 +23,7 @@
 
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/SideEffects.h>
 #include <libyul/Exceptions.h>
@@ -37,18 +38,13 @@ using namespace solidity::util;
 
 void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	CommonSubexpressionEliminator cse{
-		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
-	};
-	cse(_ast);
+	CommonSubexpressionEliminator{_context.dialect, _ast}(_ast);
 }
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	Dialect const& _dialect,
-	map<YulString, SideEffects> _functionSideEffects
-):
-	DataFlowAnalyzer(_dialect, std::move(_functionSideEffects))
+	Block const& _ast
+): DataFlowAnalyzer(_dialect, _ast)
 {
 }
 

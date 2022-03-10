@@ -56,7 +56,9 @@ namespace
 class RematCandidateSelector: public DataFlowAnalyzer
 {
 public:
-	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	RematCandidateSelector(Dialect const& _dialect, Block const& _ast):
+		DataFlowAnalyzer(_dialect, _ast)
+	{}
 
 	/// @returns a map from function name to rematerialisation costs to a vector of variables to rematerialise
 	/// and variables that occur in their expression.
@@ -165,7 +167,7 @@ void eliminateVariables(
 	bool _allowMSizeOptimization
 )
 {
-	RematCandidateSelector selector{_dialect};
+	RematCandidateSelector selector{_dialect, _ast};
 	selector(_ast);
 	map<YulString, map<size_t, vector<YulString>>> candidates = selector.candidates();
 
@@ -192,7 +194,7 @@ void eliminateVariablesOptimizedCodegen(
 	if (std::all_of(_unreachables.begin(), _unreachables.end(), [](auto const& _item) { return _item.second.empty(); }))
 		return;
 
-	RematCandidateSelector selector{_dialect};
+	RematCandidateSelector selector{_dialect, _ast};
 	selector(_ast);
 
 	map<YulString, size_t> candidates;

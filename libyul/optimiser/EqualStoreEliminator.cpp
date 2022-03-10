@@ -25,6 +25,7 @@
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
@@ -36,10 +37,7 @@ using namespace solidity::yul;
 
 void EqualStoreEliminator::run(OptimiserStepContext const& _context, Block& _ast)
 {
-	EqualStoreEliminator eliminator{
-		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
-	};
+	EqualStoreEliminator eliminator{_context.dialect, _ast};
 	eliminator(_ast);
 
 	StatementRemover remover{eliminator.m_pendingRemovals};

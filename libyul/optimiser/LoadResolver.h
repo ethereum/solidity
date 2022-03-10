@@ -49,11 +49,11 @@ public:
 private:
 	LoadResolver(
 		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects,
+		Block const& _ast,
 		bool _containsMSize,
 		std::optional<size_t> _expectedExecutionsPerDeployment
 	):
-		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)),
+		DataFlowAnalyzer(_dialect, _ast),
 		m_containsMSize(_containsMSize),
 		m_expectedExecutionsPerDeployment(std::move(_expectedExecutionsPerDeployment))
 	{}

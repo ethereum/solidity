@@ -43,11 +43,8 @@ public:
 	static void run(OptimiserStepContext const&, Block& _ast);
 
 private:
-	EqualStoreEliminator(
-		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects
-	):
-		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects))
+	EqualStoreEliminator(Dialect const& _dialect, Block const& _ast):
+		DataFlowAnalyzer(_dialect, _ast)
 	{}
 
 protected:

@@ -43,7 +43,7 @@ Rematerialiser::Rematerialiser(
 	set<YulString> _varsToAlwaysRematerialize,
 	bool _onlySelectedVariables
 ):
-	DataFlowAnalyzer(_dialect),
+	DataFlowAnalyzer(_dialect, _ast),
 	m_referenceCounts(ReferencesCounter::countReferences(_ast)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
 	m_onlySelectedVariables(_onlySelectedVariables)
@@ -85,6 +85,11 @@ void Rematerialiser::visit(Expression& _e)
 		}
 	}
 	DataFlowAnalyzer::visit(_e);
+}
+
+void LiteralRematerialiser::run(OptimiserStepContext& _context, Block& _ast)
+{
+	LiteralRematerialiser{_context.dialect, _ast}(_ast);
 }
 
 void LiteralRematerialiser::visit(Expression& _e)
