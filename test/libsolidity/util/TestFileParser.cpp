@@ -16,6 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+
+#include <libsolutil/StringUtils.h>
+
 #include <test/libsolidity/util/TestFileParser.h>
 
 #include <test/libsolidity/util/BytesUtils.h>
@@ -34,6 +37,7 @@
 #include <stdexcept>
 
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
@@ -767,7 +771,7 @@ char TestFileParser::Scanner::scanHexPart()
 	advance(); // skip 'x'
 
 	int value{};
-	if (util::isDigit(current()))
+	if (isDigit(current()))
 		value = current() - '0';
 	else if (toLower(current()) >= 'a' && toLower(current()) <= 'f')
 		value = toLower(current()) - 'a' + 10;
@@ -779,7 +783,7 @@ char TestFileParser::Scanner::scanHexPart()
 		return static_cast<char>(value);
 
 	value <<= 4;
-	if (util::isDigit(current()))
+	if (isDigit(current()))
 		value |= current() - '0';
 	else if (toLower(current()) >= 'a' && toLower(current()) <= 'f')
 		value |= toLower(current()) - 'a' + 10;
