@@ -1549,11 +1549,15 @@
         "released": "2021-11-09"
     },
     "0.8.11": {
-        "bugs": [],
+        "bugs": [
+            "AbiEncodeCallLiteralAsFixedBytesBug"
+        ],
         "released": "2021-12-20"
     },
     "0.8.12": {
-        "bugs": [],
+        "bugs": [
+            "AbiEncodeCallLiteralAsFixedBytesBug"
+        ],
         "released": "2022-02-16"
     },
     "0.8.2": {
