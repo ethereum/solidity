@@ -32,7 +32,10 @@ BINARY_PATH="$2"
 SELECTED_PRESETS="$3"
 
 function compile_fn { npm run compile; }
-function test_fn { npx --no hardhat --no-compile test; }
+function test_fn {
+    # The default timeout of 20000 ms is too short for unoptimized code (https://github.com/ethereum/solidity/pull/12765).
+    TEST_TIMEOUT=100000 npx --no hardhat --no-compile test
+}
 
 function euler_test
 {
@@ -63,8 +66,6 @@ function euler_test
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     force_hardhat_unlimited_contract_size "$config_file"
-    # Workaround for the timeout that's too short for unoptimized code (https://github.com/ethereum/solidity/pull/12765)
-    force_hardhat_timeout "$config_file" "" 100000
     npm install
 
     replace_version_pragmas
