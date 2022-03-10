@@ -654,7 +654,8 @@ void CommandLineInterface::processInput()
 		assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine);
 		break;
 	case InputMode::Linker:
-		link();
+		solAssert(m_options.input.mode == InputMode::Linker, "");
+		link(m_fileReader, m_options.linker.libraries, m_hasOutput, m_serr);
 		writeLinkedFiles();
 		break;
 	case InputMode::Compiler:
@@ -917,25 +918,23 @@ void CommandLineInterface::serveLSP()
 		solThrow(CommandLineExecutionError, "LSP terminated abnormally.");
 }
 
-void CommandLineInterface::link()
+static bool isBytecodeChar(char c)
 {
-	solAssert(m_options.input.mode == InputMode::Linker, "");
+	return isxdigit(c) || c == '_' || c == '$';
+}
 
+void CommandLineInterface::link(frontend::FileReader& fileReader, map<string, h160> const& libraries, bool& hasError, ostream& serr)
+{
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
 	int const placeholderSize = 40; // 20 bytes or 40 hex characters
-	for (auto const& library: m_options.linker.libraries)
+	for (auto const& library: libraries)
 	{
 		string const& name = library.first;
-		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
-		// This leaves 36 characters for the library identifier. The identifier used to
-		// be just the cropped or '_'-padded library name, but this changed to
-		// the cropped hex representation of the hash of the library name.
-		// We support both ways of linking here.
 		librariesReplacements[name] = library.second;
 	}
 
-	FileReader::StringMap sourceCodes = m_fileReader.sourceUnits();
+	FileReader::StringMap sourceCodes = fileReader.sourceUnits();
 
 	for (auto& src: sourceCodes)
 	{
@@ -945,55 +944,108 @@ void CommandLineInterface::link()
 		vector<string> sourceLines;
 		boost::split(sourceLines, src.second, boost::is_any_of("\n"));
 
-		if (sourceLines.size() < 3)
-			// no bytecode found
+		size_t bytecodeIndex;
+		bool bytecodeFound = false;
+		for (size_t i = 0; i < sourceLines.size(); ++i)
+		{
+			// If all characters are bytecode characters
+			if (sourceLines[i].size() > 0
+				&& all_of(sourceLines[i].begin(), sourceLines[i].end(), isBytecodeChar))
+			{
+				bytecodeFound = true;
+				bytecodeIndex = i;
+				break;
+			}
+		}
+
+		if (!bytecodeFound)
 			continue;
 
-		size_t bytecodeIndex;
-		// Bytecode can be on line 0 or 3, depending on if file header is included
-		// However if it is a file the first line is always blank as it just contains a '\n'
-		if (boost::starts_with(sourceLines.at(1), "======="))
-			bytecodeIndex = 3;
-		else
-			bytecodeIndex = 0;
-
-		for (auto const& library: m_options.linker.libraries)
+		for (auto const& library: libraries)
 		{
 			string const& name = library.first;
 			// Bytecode we need is on the third line there's a blank line at the start
 			bytecode = sourceLines.at(bytecodeIndex);
 			size_t libraryStartOffset = bytecode.find("__$");
+			size_t libraryEndOffset = bytecode.find("$__");
+
+			bool startMarkerFound = libraryStartOffset != string::npos;
+			bool endMarkerFound = libraryEndOffset != string::npos;
+
+			if (!startMarkerFound && !endMarkerFound)
+			{
+				// No placeholders found
+				continue;
+			}
+
+			if (startMarkerFound && !endMarkerFound)
+			{
+				solThrow(
+					CommandLineExecutionError,
+					"Error in binary object file " + src.first + " unbounded placeholder at " + to_string(libraryStartOffset) + "\n"
+				);
+			}
+
+			if (!startMarkerFound && endMarkerFound)
+			{
+				solThrow(
+					CommandLineExecutionError,
+					"Error in binary object file " + src.first + " unbounded placeholder without start point __$ at " + to_string(libraryEndOffset) + "\n"
+							);
+			}
+
+			if (startMarkerFound && endMarkerFound)
+			{
+				if ((libraryEndOffset - libraryStartOffset) != placeholderSize - 3)
+				{
+					solThrow(
+						CommandLineExecutionError,
+						"Error in binary object file " + src.first + " truncated placeholder found at " + to_string(libraryStartOffset) +
+							" placeholder addresses should be " + to_string(placeholderSize) + " characters long (including address markers __$ and $__)\n"
+					);
+				}
+			}
+
+			string foundPlaceholder;
 
 			for (size_t i = 0; i < placeholderSize; i++)
+			{
+				foundPlaceholder += bytecode[libraryStartOffset + i];
 				bytecode[libraryStartOffset + i] = '0';
+			}
 
 			if (libraryStartOffset != bytecode.length())
 			{
 				// Divide by 2 because it's going to be converted to bytes
 				linkReferences[libraryStartOffset / 2] = name;
 			}
+			else
+			{
+				serr << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved."<< endl;
+				hasError = true;
+			}
 		}
 
-		evmasm::LinkerObject linkerObject= {
+		evmasm::LinkerObject linkerObject = {
 			fromHex(bytecode),
 			linkReferences,
-			map<u256, std::pair<std::string, std::vector<size_t>>>(),
-			std::map<std::string, evmasm::LinkerObject::FunctionDebugData>()
+			{},
+			{}
 		};
 
 		linkerObject.link(librariesReplacements);
 		sourceLines.at(bytecodeIndex) = toHex(linkerObject.bytecode);
 
-		std::string resolvedBytecode = boost::algorithm::join(sourceLines, "\n");
+		string resolvedBytecode = boost::algorithm::join(sourceLines, "\n");
 		src.second = resolvedBytecode;
 
 		// Remove hints for resolved libraries.
-		for (auto const& library: m_options.linker.libraries)
+		for (auto const& library: libraries)
 			boost::algorithm::erase_all(src.second, "\n" + libraryPlaceholderHint(library.first));
 		while (!src.second.empty() && *prev(src.second.end()) == '\n')
 			src.second.resize(src.second.size() - 1);
 	}
-	m_fileReader.setSourceUnits(move(sourceCodes));
+	fileReader.setSourceUnits(move(sourceCodes));
 }
 
 void CommandLineInterface::writeLinkedFiles()

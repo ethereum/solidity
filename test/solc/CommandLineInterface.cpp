@@ -278,6 +278,113 @@ BOOST_AUTO_TEST_CASE(cli_not_a_file)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(linker)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+		{"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073__$b3157e226f2c4dddae135e6cab4ed4e747$__63b3de648b8360405"}
+	});
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	bool hasError = false;
+
+	CommandLineInterface::link(fileReader, libraries, hasError, cerr);
+	BOOST_TEST(!hasError);
+	BOOST_TEST(fileReader.sourceUnits().find("bytecodeInput.bin")->second.find(hashString) != string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(linker_unmatched_markers_no_end)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+		{"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073__$b3157e226f2c4dddae135e6cab4ed4e74763b3de648b8360405"}
+	});
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+		};
+
+	bool hasError = false;
+
+	string expectedMessage = "Error in binary object file bytecodeInput.bin unbounded placeholder at 54\n";
+
+	BOOST_CHECK_EXCEPTION(
+		CommandLineInterface::link(fileReader, libraries, hasError, cerr),
+		CommandLineExecutionError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
+	);
+}
+
+BOOST_AUTO_TEST_CASE(linker_unmatched_markers_no_start)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+								  {"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073$__b3157e226f2c4dddae135e6cab4ed4e74763b3de648b8360405"}
+							  });
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	bool hasError = false;
+
+	string expectedMessage ="Error in binary object file bytecodeInput.bin unbounded placeholder without start point __$ at 54\n";
+
+	BOOST_CHECK_EXCEPTION(
+		CommandLineInterface::link(fileReader, libraries, hasError, cerr),
+		CommandLineExecutionError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
+	);
+}
+
+BOOST_AUTO_TEST_CASE(linker_short_hash)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+								  {"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073__$b36cab4ed4e747$__63b3de648b8360405"}
+							  });
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	bool hasError = false;
+
+	string expectedMessage =
+		"Error in binary object file bytecodeInput.bin truncated placeholder found at 54 placeholder addresses should be 40 characters long (including address markers __$ and $__)\n";
+
+
+	BOOST_CHECK_EXCEPTION(
+		CommandLineInterface::link(fileReader, libraries, hasError, cerr),
+		CommandLineExecutionError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
+	);
+}
+
+BOOST_AUTO_TEST_CASE(linker_empty_string)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+		{"bytecodeInput.bin", ""}
+	});
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString) }
+		};
+
+	bool hasError = false;
+
+	BOOST_CHECK_NO_THROW(CommandLineInterface::link(fileReader, libraries, hasError, cerr));
+}
+
 BOOST_AUTO_TEST_CASE(standard_json_base_path)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);

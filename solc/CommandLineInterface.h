@@ -78,12 +78,13 @@ public:
 	FileReader const& fileReader() const { return m_fileReader; }
 	std::optional<std::string> const& standardJsonInput() const { return m_standardJsonInput; }
 
+	static void link(frontend::FileReader& fileReader, std::map<std::string, util::h160> const& libraries, bool& hasError, std::ostream& serr);
+
 private:
 	void printVersion();
 	void printLicense();
 	void compile();
 	void serveLSP();
-	void link();
 	void writeLinkedFiles();
 	/// @returns the ``// <identifier> -> name`` hint for library placeholders.
 	static std::string libraryPlaceholderHint(std::string const& _libraryName);
