@@ -95,7 +95,6 @@ object "C_2" {
         code {
             {
                 /// @src 0:265:278  "contract C {}"
-                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
@@ -559,7 +558,6 @@ object "D_27" {
                 code {
                     {
                         /// @src 0:265:278  "contract C {}"
-                        mstore(64, memoryguard(0x80))
                         revert(0, 0)
                     }
                 }

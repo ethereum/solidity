@@ -55,7 +55,7 @@ struct OptimiserSettings
 			"xa[rul]"                  // Prune a bit more in SSA
 			"xa[r]cL"                  // Turn into SSA again and simplify
 			"gvif"                     // Run full inliner
-			"CTUca[r]LsTFOtfDnca[r]Iulc" // SSA plus simplify
+			"CTUca[r]LSsTFOtfDnca[r]Iulc" // SSA plus simplify
 		"]"
 		"jmul[jul] VcTOcul jmul";      // Make source short and pretty
 
