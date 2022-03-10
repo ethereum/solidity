@@ -42,11 +42,10 @@ namespace
 
 int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 {
-	auto isDigit = [](char _c) -> bool {return isdigit(_c, std::locale::classic());};
-	if (_it == _end || !isDigit(*_it))
+	if (_it == _end || !util::isDigit(*_it))
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid test expectation. Source location expected."));
 	int result = 0;
-	while (_it != _end && isDigit(*_it))
+	while (_it != _end && util::isDigit(*_it))
 	{
 		result *= 10;
 		result += *_it - '0';
@@ -195,7 +194,6 @@ string CommonSyntaxTest::errorMessage(Exception const& _e)
 
 vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 {
-	auto isDigit = [](char _c) -> bool {return isdigit(_c, std::locale::classic());};
 	vector<SyntaxTestError> expectations;
 	string line;
 	while (getline(_stream, line))
@@ -215,7 +213,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		skipWhitespace(it, line.end());
 
 		optional<ErrorId> errorId;
-		if (it != line.end() && isDigit(*it))
+		if (it != line.end() && util::isDigit(*it))
 			errorId = ErrorId{static_cast<unsigned long long>(parseUnsignedInteger(it, line.end()))};
 
 		expect(it, line.end(), ':');
@@ -228,7 +226,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		if (it != line.end() && *it == '(')
 		{
 			++it;
-			if (it != line.end() && !isDigit(*it))
+			if (it != line.end() && !util::isDigit(*it))
 			{
 				auto sourceNameStart = it;
 				while (it != line.end() && *it != ':')
