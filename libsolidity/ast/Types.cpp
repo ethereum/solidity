@@ -2341,6 +2341,11 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 	return *m_interfaceType_library;
 }
 
+Declaration const* StructType::typeDefinition() const
+{
+	return &structDefinition();
+}
+
 BoolResult StructType::validForLocation(DataLocation _loc) const
 {
 	for (auto const& member: m_struct.members())
@@ -2473,6 +2478,11 @@ Type const* EnumType::encodingType() const
 	return TypeProvider::uint(8);
 }
 
+Declaration const* EnumType::typeDefinition() const
+{
+	return &enumDefinition();
+}
+
 TypeResult EnumType::unaryOperatorResult(Token _operator) const
 {
 	return _operator == Token::Delete ? TypeProvider::emptyTuple() : nullptr;
@@ -2539,6 +2549,11 @@ Type const& UserDefinedValueType::underlyingType() const
 	solAssert(type, "");
 	solAssert(type->category() != Category::UserDefinedValueType, "");
 	return *type;
+}
+
+Declaration const* UserDefinedValueType::typeDefinition() const
+{
+	return &m_definition;
 }
 
 string UserDefinedValueType::richIdentifier() const

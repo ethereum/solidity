@@ -11,11 +11,7 @@ object "D_12" {
     code {
         {
             /// @src 0:82:175  "contract D {..."
-            mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            /// @src 0:115:139  "assembly { mstore(0,0) }"
-            mstore(0, 0)
-            /// @src 0:82:175  "contract D {..."
             let _1 := datasize("D_12_deployed")
             codecopy(128, dataoffset("D_12_deployed"), _1)
             return(128, _1)
@@ -26,16 +22,14 @@ object "D_12" {
         code {
             {
                 /// @src 0:82:175  "contract D {..."
-                let _1 := memoryguard(0x80)
-                mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _2 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_2)))
+                    let _1 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_1)))
                     {
-                        if callvalue() { revert(_2, _2) }
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
-                        return(_1, _2)
+                        if callvalue() { revert(_1, _1) }
+                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        return(memoryguard(0x80), _1)
                     }
                 }
                 revert(0, 0)

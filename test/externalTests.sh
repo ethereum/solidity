@@ -39,7 +39,6 @@ printTask "Running external tests..."
 
 "{$REPO_ROOT}/test/externalTests/zeppelin.sh" "$@"
 "{$REPO_ROOT}/test/externalTests/gnosis.sh" "$@"
-"{$REPO_ROOT}/test/externalTests/gnosis-v2.sh" "$@"
 "{$REPO_ROOT}/test/externalTests/colony.sh" "$@"
 "{$REPO_ROOT}/test/externalTests/ens.sh" "$@"
 "{$REPO_ROOT}/test/externalTests/trident.sh" "$@"

@@ -622,7 +622,6 @@ object \"C_54\" {
         {
             /// @src 0:79:435  \"contract C...\"
             let _1 := memoryguard(0xa0)
-            mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let programSize := datasize(\"C_54\")
             let argSize := sub(codesize(), programSize)
@@ -1469,7 +1468,6 @@ object \"D_72\" {
         {
             /// @src 1:91:166  \"contract D is C(3)...\"
             let _1 := memoryguard(0xa0)
-            mstore(64, _1)
             if callvalue() { revert(0, 0) }
             let programSize := datasize(\"D_72\")
             let argSize := sub(codesize(), programSize)
@@ -1500,15 +1498,13 @@ object \"D_72\" {
             /// @src 0:154:156  \"42\"
             mstore(128, 0x2a)
             /// @src 1:91:166  \"contract D is C(3)...\"
-            sstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:107:108  \"3\" */ 0x03)
-            /// @src 1:91:166  \"contract D is C(3)...\"
             if and(1, sgt(var_init2, sub(shl(255, 1), 4)))
             {
-                mstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
+                mstore(0, shl(224, 0x4e487b71))
                 mstore(4, 0x11)
-                revert(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
+                revert(0, 0x24)
             }
-            sstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 1:91:166  \"contract D is C(3)...\" */ add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ var_init2))
+            sstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ var_init2))
         }
     }
     /// @use-src 0:\"C\", 1:\"D\"

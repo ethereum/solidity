@@ -1,8 +1,5 @@
 {"contracts":{"C":{"C":{"evm":{"assembly":"    /* \"C\":79:428  contract C... */
   0xa0
-  dup1
-  0x40
-  mstore
   jumpi(tag_6, callvalue)
   0x1f
   bytecodeSize
@@ -438,9 +435,6 @@ sub_0: assembly {
 }
 "}}},"D":{"D":{"evm":{"assembly":"    /* \"D\":91:166  contract D is C(3)... */
   0xa0
-  dup1
-  0x40
-  mstore
   jumpi(tag_6, callvalue)
   0x1f
   bytecodeSize
@@ -514,13 +508,8 @@ tag_4:
 tag_1:
     /* \"C\":147:149  42 */
   mstore(0x80, 0x2a)
-    /* \"D\":107:108  3 */
-  0x03
-    /* \"C\":203:219  stateVar = _init */
-  0x00
-    /* \"D\":91:166  contract D is C(3)... */
-  sstore
   sub(shl(0xff, 0x01), 0x04)
+    /* \"D\":91:166  contract D is C(3)... */
   dup2
   sgt
   0x01
@@ -531,9 +520,7 @@ tag_1:
   0x03
     /* \"D\":91:166  contract D is C(3)... */
   add
-    /* \"C\":203:219  stateVar = _init */
   0x00
-    /* \"D\":91:166  contract D is C(3)... */
   sstore
     /* \"D\":113:164  constructor(int _init2)... */
   jump\t// out
@@ -541,17 +528,9 @@ tag_1:
 tag_9:
   pop
   pop
-  shl(0xe0, 0x4e487b71)
-    /* \"C\":203:219  stateVar = _init */
-  0x00
-    /* \"D\":91:166  contract D is C(3)... */
-  mstore
+  mstore(0x00, shl(0xe0, 0x4e487b71))
   mstore(0x04, 0x11)
-  0x24
-    /* \"C\":203:219  stateVar = _init */
-  0x00
-    /* \"D\":91:166  contract D is C(3)... */
-  revert
+  revert(0x00, 0x24)
 stop
 
 sub_0: assembly {

@@ -369,6 +369,10 @@ public:
 	/// are returned without modification.
 	virtual TypeResult interfaceType(bool /*_inLibrary*/) const { return nullptr; }
 
+	/// @returns the declaration of a user defined type (enum, struct, user defined value type).
+	/// Returns nullptr otherwise.
+	virtual Declaration const* typeDefinition() const { return nullptr; }
+
 	/// Clears all internally cached values (if any).
 	virtual void clearCache() const;
 
@@ -1004,6 +1008,8 @@ public:
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
 
+	Declaration const* typeDefinition() const override;
+
 	BoolResult validForLocation(DataLocation _loc) const override;
 
 	bool recursive() const;
@@ -1069,6 +1075,8 @@ public:
 		return _inLibrary ? this : encodingType();
 	}
 
+	Declaration const* typeDefinition() const override;
+
 	EnumDefinition const& enumDefinition() const { return m_enum; }
 	/// @returns the value that the string has in the Enum
 	unsigned int memberValue(ASTString const& _member) const;
@@ -1101,6 +1109,9 @@ public:
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
 	Type const* encodingType() const override { return &underlyingType(); }
 	TypeResult interfaceType(bool /* _inLibrary */) const override {return &underlyingType(); }
+
+	Declaration const* typeDefinition() const override;
+
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 

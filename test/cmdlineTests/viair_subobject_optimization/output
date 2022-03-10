@@ -3,9 +3,6 @@
 EVM assembly:
     /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
   0x80
-  dup1
-  0x40
-  mstore
   jumpi(tag_6, callvalue)
   0x1f
   bytecodeSize
@@ -86,7 +83,6 @@ stop
 
 sub_0: assembly {
         /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
-      mstore(0x40, 0x80)
       0x00
       dup1
       revert
@@ -120,9 +116,6 @@ stop
 sub_0: assembly {
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
       0x80
-      dup1
-      0x40
-      mstore
       jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
     tag_3:
       pop
@@ -283,9 +276,6 @@ sub_0: assembly {
     sub_0: assembly {
             /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
           0x80
-          dup1
-          0x40
-          mstore
           jumpi(tag_6, callvalue)
           0x1f
           bytecodeSize
@@ -366,7 +356,6 @@ sub_0: assembly {
 
         sub_0: assembly {
                 /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
-              mstore(0x40, 0x80)
               0x00
               dup1
               revert

@@ -50,9 +50,9 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 1938339
-// gas legacy: 2480887
-// gas legacyOptimized: 1874490
+// gas irOptimized: 1937251
+// gas legacy: 2478955
+// gas legacyOptimized: 1877737
 // div(int256,int256): 3141592653589793238, 88714123 -> 35412542528203691288251815328
 // gas irOptimized: 22137
 // gas legacy: 22767
