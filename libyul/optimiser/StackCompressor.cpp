@@ -67,7 +67,8 @@ public:
 			if (size_t const* cost = util::valueOrNullptr(m_expressionCodeCost, candidate))
 			{
 				size_t numRef = m_numReferences[candidate];
-				cand[*cost * numRef].emplace_back(candidate, m_references[candidate]);
+				set<YulString> const* ref = references(candidate);
+				cand[*cost * numRef].emplace_back(candidate, ref ? move(*ref) : set<YulString>{});
 			}
 		}
 		return cand;
@@ -80,11 +81,11 @@ public:
 		if (_varDecl.variables.size() == 1)
 		{
 			YulString varName = _varDecl.variables.front().name;
-			if (m_value.count(varName))
+			if (AssignedValue const* value = variableValue(varName))
 			{
 				yulAssert(!m_expressionCodeCost.count(varName), "");
 				m_candidates.emplace_back(varName);
-				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *m_value[varName].value);
+				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *value->value);
 			}
 		}
 	}
@@ -105,7 +106,7 @@ public:
 			YulString name = std::get<Identifier>(_e).name;
 			if (m_expressionCodeCost.count(name))
 			{
-				if (!m_value.count(name))
+				if (!variableValue(name))
 					rematImpossible(name);
 				else
 					++m_numReferences[name];
