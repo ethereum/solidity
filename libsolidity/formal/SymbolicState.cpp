@@ -211,7 +211,7 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 
 
 		auto argTypes = [](auto const& _args) {
-			return applyMap(_args, [](auto arg) { return arg->annotation().type; });
+			return util::applyMap(_args, [](auto arg) { return arg->annotation().type; });
 		};
 
 		/// Since each abi.* function may have a different number of input/output parameters,

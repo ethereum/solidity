@@ -659,7 +659,7 @@ void TypeChecker::visitManually(
 		if (auto const* modifierContract = dynamic_cast<ContractDefinition const*>(modifierDecl->scope()))
 			if (m_currentContract)
 			{
-				if (!contains(m_currentContract->annotation().linearizedBaseContracts, modifierContract))
+				if (!util::contains(m_currentContract->annotation().linearizedBaseContracts, modifierContract))
 					m_errorReporter.typeError(
 						9428_error,
 						_modifier.location(),
@@ -2143,7 +2143,7 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 				functionPointerType->declaration().scope() == m_currentContract
 			)
 				msg += " Did you forget to prefix \"this.\"?";
-			else if (contains(
+			else if (util::contains(
 				m_currentContract->annotation().linearizedBaseContracts,
 				functionPointerType->declaration().scope()
 			) && functionPointerType->declaration().scope() != m_currentContract)

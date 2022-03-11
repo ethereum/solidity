@@ -59,7 +59,7 @@ bytes encodeLinkData(bytes const& _data)
 string base58Encode(bytes const& _data)
 {
 	static string const alphabet{"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"};
-	bigint data(toHex(_data, HexPrefix::Add));
+	bigint data(util::toHex(_data, HexPrefix::Add));
 	string output;
 	while (data)
 	{

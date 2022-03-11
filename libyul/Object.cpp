@@ -91,13 +91,13 @@ string Object::toString(
 set<YulString> Object::qualifiedDataNames() const
 {
 	set<YulString> qualifiedNames =
-		name.empty() || contains(name.str(), '.') ?
+		name.empty() || util::contains(name.str(), '.') ?
 		set<YulString>{} :
 		set<YulString>{name};
 	for (shared_ptr<ObjectNode> const& subObjectNode: subObjects)
 	{
 		yulAssert(qualifiedNames.count(subObjectNode->name) == 0, "");
-		if (contains(subObjectNode->name.str(), '.'))
+		if (util::contains(subObjectNode->name.str(), '.'))
 			continue;
 		qualifiedNames.insert(subObjectNode->name);
 		if (auto const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))

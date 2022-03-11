@@ -411,12 +411,12 @@ struct ReservedErrorSelector: public PostTypeChecker::Checker
 			);
 		else
 		{
-			uint32_t selector = selectorFromSignature32(_error.functionType(true)->externalSignature());
+			uint32_t selector = util::selectorFromSignature32(_error.functionType(true)->externalSignature());
 			if (selector == 0 || ~selector == 0)
 				m_errorReporter.syntaxError(
 					2855_error,
 					_error.location(),
-					"The selector 0x" + toHex(toCompactBigEndian(selector, 4)) + " is reserved. Please rename the error to avoid the collision."
+					"The selector 0x" + util::toHex(toCompactBigEndian(selector, 4)) + " is reserved. Please rename the error to avoid the collision."
 				);
 		}
 	}

@@ -16,6 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+
+#include <libsolutil/StringUtils.h>
+
 #include <test/libsolidity/util/TestFileParser.h>
 
 #include <test/libsolidity/util/BytesUtils.h>
@@ -34,6 +37,7 @@
 #include <stdexcept>
 
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
@@ -763,7 +767,6 @@ string TestFileParser::Scanner::scanString()
 char TestFileParser::Scanner::scanHexPart()
 {
 	auto toLower = [](char _c) -> char { return tolower(_c, locale::classic()); };
-	auto isDigit = [](char _c) -> bool { return isdigit(_c, locale::classic()); };
 
 	advance(); // skip 'x'
 

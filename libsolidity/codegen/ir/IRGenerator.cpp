@@ -234,7 +234,7 @@ string IRGenerator::generate(
 	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
 	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
 	t("metadataName", yul::Object::metadataName());
-	t("cborMetadata", toHex(_cborMetadata));
+	t("cborMetadata", util::toHex(_cborMetadata));
 
 	t("useSrcMapDeployed", formatUseSrcMap(m_context));
 
@@ -788,7 +788,7 @@ pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evalua
 	{
 		bool operator()(ContractDefinition const* _c1, ContractDefinition const* _c2) const
 		{
-			solAssert(contains(linearizedBaseContracts, _c1) && contains(linearizedBaseContracts, _c2), "");
+			solAssert(util::contains(linearizedBaseContracts, _c1) && util::contains(linearizedBaseContracts, _c2), "");
 			auto it1 = find(linearizedBaseContracts.begin(), linearizedBaseContracts.end(), _c1);
 			auto it2 = find(linearizedBaseContracts.begin(), linearizedBaseContracts.end(), _c2);
 			return it1 < it2;

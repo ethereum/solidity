@@ -268,7 +268,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_varDecl.location()) <<
-			errinfo_comment("Stack too deep.")
+			util::errinfo_comment("Stack too deep.")
 		);
 	m_context << dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
@@ -350,7 +350,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				BOOST_THROW_EXCEPTION(
 					StackTooDeepError() <<
 					errinfo_sourceLocation(_assignment.location()) <<
-					errinfo_comment("Stack too deep, try removing local variables.")
+					util::errinfo_comment("Stack too deep, try removing local variables.")
 				);
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
@@ -1452,7 +1452,7 @@ bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
 			solAssert(false, "Unexpected option name!");
 		acceptAndConvert(*_functionCallOptions.options()[i], *requiredType);
 
-		solAssert(!contains(presentOptions, newOption), "");
+		solAssert(!util::contains(presentOptions, newOption), "");
 		ptrdiff_t insertPos = presentOptions.end() - lower_bound(presentOptions.begin(), presentOptions.end(), newOption);
 
 		utils().moveIntoStack(static_cast<unsigned>(insertPos), 1);
@@ -2862,7 +2862,7 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError()
 			<< errinfo_sourceLocation(_expression.location())
-			<< errinfo_comment("Identifier type not supported or identifier not found."));
+			<< util::errinfo_comment("Identifier type not supported or identifier not found."));
 }
 
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
