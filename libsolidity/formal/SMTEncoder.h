@@ -136,6 +136,7 @@ protected:
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.
 
+	bool visit(ImportDirective const& _node) override;
 	bool visit(ContractDefinition const& _node) override;
 	void endVisit(ContractDefinition const& _node) override;
 	void endVisit(VariableDeclaration const& _node) override;

@@ -134,6 +134,11 @@ bool ViewPureChecker::check()
 	return !m_errors;
 }
 
+bool ViewPureChecker::visit(ImportDirective const&)
+{
+	return false;
+}
+
 bool ViewPureChecker::visit(FunctionDefinition const& _funDef)
 {
 	solAssert(!m_currentFunction, "");
