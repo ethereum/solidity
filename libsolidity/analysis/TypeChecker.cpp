@@ -2204,9 +2204,9 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 				"Cannot implicitly convert component at position " +
 				to_string(i) +
 				" from \"" +
-				argType.canonicalName() +
+				argType.toString() +
 				"\" to \"" +
-				functionPointerType->parameterTypes()[i]->canonicalName() +
+				functionPointerType->parameterTypes()[i]->toString() +
 				"\"" +
 				(result.message().empty() ?  "." : ": " + result.message())
 			);
