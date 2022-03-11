@@ -24,4 +24,4 @@ contract C {
 // TypeError 7788: (382-408): Expected 1 instead of 0 components for the tuple parameter.
 // TypeError 6219: (489-511): Expected two arguments: a function pointer followed by a tuple.
 // TypeError 7515: (597-628): Expected a tuple with 2 components instead of a single non-tuple parameter.
-// TypeError 5407: (621-627): Cannot implicitly convert component at position 0 from "uint8[2]" to "int256".
+// TypeError 5407: (621-627): Cannot implicitly convert component at position 0 from "uint8[2] memory" to "int256".
