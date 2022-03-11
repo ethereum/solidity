@@ -125,6 +125,8 @@ private:
 		FunctionType const* _functionType
 	);
 
+	bool visit(ImportDirective const&) override;
+
 	void endVisit(InheritanceSpecifier const& _inheritance) override;
 	void endVisit(ModifierDefinition const& _modifier) override;
 	bool visit(FunctionDefinition const& _function) override;
