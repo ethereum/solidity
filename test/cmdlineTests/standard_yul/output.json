@@ -26,4 +26,4 @@
         sstore(add(x, 0), 0)
     }
 }
-"}}},"errors":[{"component":"general","formattedMessage":"Yul is still experimental. Please use the output with care.","message":"Yul is still experimental. Please use the output with care.","severity":"warning","type":"Warning"}]}
+"}}},}

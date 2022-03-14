@@ -1017,8 +1017,6 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 {
 	solAssert(m_options.input.mode == InputMode::Assembler, "");
 
-	serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
-
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;
 	for (auto const& src: m_fileReader.sourceUnits())
