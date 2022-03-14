@@ -33,6 +33,7 @@
           }
         }
       ],
+      "global": false,
       "id": 3,
       "nodeType": "UsingForDirective",
       "src": "0:19:1",
@@ -154,6 +155,7 @@
       "nodes":
       [
         {
+          "global": false,
           "id": 12,
           "libraryName":
           {

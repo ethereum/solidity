@@ -3656,6 +3656,28 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 	);
 	solAssert(normalizedType);
 
+	if (_usingFor.global())
+	{
+		if (m_currentContract)
+			solAssert(m_errorReporter.hasErrors());
+		if (Declaration const* typeDefinition = _usingFor.typeName()->annotation().type->typeDefinition())
+		{
+			if (typeDefinition->scope() != m_currentSourceUnit)
+				m_errorReporter.typeError(
+					4117_error,
+					_usingFor.location(),
+					"Can only use \"global\" with types defined in the same source unit at file level."
+				);
+		}
+		else
+			m_errorReporter.typeError(
+				8841_error,
+				_usingFor.location(),
+				"Can only use \"global\" with user-defined types."
+			);
+	}
+
+
 	for (ASTPointer<IdentifierPath> const& path: _usingFor.functionsOrLibrary())
 	{
 		solAssert(path->annotation().referencedDeclaration);

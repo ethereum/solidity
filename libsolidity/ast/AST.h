@@ -641,6 +641,10 @@ private:
  * For version 3, T has to be implicitly convertible to the first parameter type of
  * all functions, and this is checked at the point of the using statement. For versions 1 and
  * 2, this check is only done when a function is called.
+ *
+ * Finally, `using {f1, f2, ..., fn} for T global` is also valid at file level, as long as T is
+ * a user-defined type defined in the same file at file level. In this case, the methods are
+ * attached to all objects of that type regardless of scope.
  */
 class UsingForDirective: public ASTNode
 {
@@ -650,9 +654,14 @@ public:
 		SourceLocation const& _location,
 		std::vector<ASTPointer<IdentifierPath>> _functions,
 		bool _usesBraces,
-		ASTPointer<TypeName> _typeName
+		ASTPointer<TypeName> _typeName,
+		bool _global
 	):
-		ASTNode(_id, _location), m_functions(_functions), m_usesBraces(_usesBraces), m_typeName(std::move(_typeName))
+		ASTNode(_id, _location),
+		m_functions(_functions),
+		m_usesBraces(_usesBraces),
+		m_typeName(std::move(_typeName)),
+		m_global{_global}
 	{
 	}
 
@@ -665,12 +674,14 @@ public:
 	/// @returns a list of functions or the single library.
 	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functions; }
 	bool usesBraces() const { return m_usesBraces; }
+	bool global() const { return m_global; }
 
 private:
 	/// Either the single library or a list of functions.
 	std::vector<ASTPointer<IdentifierPath>> m_functions;
 	bool m_usesBraces;
 	ASTPointer<TypeName> m_typeName;
+	bool m_global = false;
 };
 
 class StructDefinition: public Declaration, public ScopeOpener
