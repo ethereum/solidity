@@ -1,11 +1,4 @@
-{"contracts":{"A":{"C":{"irOptimized":"/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
-/// @use-src 0:\"A\"
+{"contracts":{"A":{"C":{"irOptimized":"/// @use-src 0:\"A\"
 object \"C_7\" {
     code {
         /// @src 0:79:121  \"contract C { function f() public pure {} }\"

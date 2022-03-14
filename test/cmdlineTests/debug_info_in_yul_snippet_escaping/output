@@ -1,11 +1,4 @@
 IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 
 /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "C_2" {
@@ -70,13 +63,6 @@ object "C_2" {
 
 
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "C_2" {
     code {
@@ -103,13 +89,6 @@ object "C_2" {
 }
 
 IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 
 /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "D_27" {
@@ -367,12 +346,6 @@ object "D_27" {
             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
 
         }
-        /*=====================================================*
-        *                       WARNING                       *
-        *  Solidity to Yul compilation is still EXPERIMENTAL  *
-        *       It can result in LOSS OF FUNDS or worse       *
-        *                !USE AT YOUR OWN RISK!               *
-        *=====================================================*/
 
         /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
         object "C_2" {
@@ -442,13 +415,6 @@ object "D_27" {
 
 
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
 object "D_27" {
     code {
