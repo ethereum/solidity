@@ -692,13 +692,13 @@ bool CompilerStack::compile(State _stopAfter)
 		optimiserSettings.runJumpdestRemover = m_optimiserSettings.runJumpdestRemover;
 		optimiserSettings.runPeephole = m_optimiserSettings.runPeephole;
 
-		m_contracts[evmSourceName].evmAssembly = make_shared<evmasm::Assembly>(evmSourceName);
+		m_contracts[evmSourceName].evmAssembly = make_shared<evmasm::Assembly>(true, evmSourceName);
 		m_contracts[evmSourceName].evmAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName]);
 		if (m_optimiserSettings.enabled)
 			m_contracts[evmSourceName].evmAssembly->optimise(optimiserSettings);
 		m_contracts[evmSourceName].object = m_contracts[evmSourceName].evmAssembly->assemble();
 
-		m_contracts[evmSourceName].evmRuntimeAssembly = make_shared<evmasm::Assembly>(evmSourceName);
+		m_contracts[evmSourceName].evmRuntimeAssembly = make_shared<evmasm::Assembly>(false, evmSourceName);
 		m_contracts[evmSourceName].evmRuntimeAssembly->setSources(m_contracts[evmSourceName].evmAssembly->sources());
 		m_contracts[evmSourceName].evmRuntimeAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName][".data"]["0"], false);
 		if (m_optimiserSettings.enabled)

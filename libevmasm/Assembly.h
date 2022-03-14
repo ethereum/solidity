@@ -134,13 +134,6 @@ public:
 	/// is optimised according to the settings in @a _settings.
 	Assembly& optimise(OptimiserSettings const& _settings);
 
-	/// Modify (if @a _enable is set) and return the current assembly such that creation and
-	/// execution gas usage is optimised. @a _isCreation should be true for the top-level assembly.
-	/// @a _runs specifes an estimate on how often each opcode in this assembly will be executed,
-	/// i.e. use a small value to optimise for size and a large value to optimise for runtime.
-	/// If @a _enable is not set, will perform some simple peephole optimizations.
-	Assembly& optimise(bool _enable, langutil::EVMVersion _evmVersion, bool _isCreation, size_t _runs);
-
 	/// Create a text representation of the assembly.
 	std::string assemblyString(
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),

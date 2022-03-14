@@ -602,7 +602,7 @@ bool Assembly::loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources 
 			this->m_data[h256(fromHex(key))] = fromHex(code.asString());
 		else
 		{
-			shared_ptr<Assembly> subassembly = make_shared<Assembly>();
+			shared_ptr<Assembly> subassembly = make_shared<Assembly>(false, "");
 			subassembly->setSources(this->sources());
 			result &= subassembly->loadFromAssemblyJSON(code, false);
 			this->m_subs.emplace_back(subassembly);
@@ -644,25 +644,6 @@ AssemblyItem Assembly::newImmutableAssignment(string const& _identifier)
 	h256 h(util::keccak256(_identifier));
 	m_immutables[h] = _identifier;
 	return AssemblyItem{AssignImmutable, h};
-}
-
-Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreation, size_t _runs)
-{
-	OptimiserSettings settings;
-	settings.isCreation = _isCreation;
-	settings.runInliner = true;
-	settings.runJumpdestRemover = true;
-	settings.runPeephole = true;
-	if (_enable)
-	{
-		settings.runDeduplicate = true;
-		settings.runCSE = true;
-		settings.runConstantOptimiser = true;
-	}
-	settings.evmVersion = _evmVersion;
-	settings.expectedExecutionsPerDeployment = _runs;
-	optimise(settings);
-	return *this;
 }
 
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)

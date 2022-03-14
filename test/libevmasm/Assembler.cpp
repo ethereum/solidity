@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 
-	Assembly _verbatimAsm;
+	Assembly _verbatimAsm(true, "");
 	auto verbatim_asm = make_shared<string>("verbatim.asm");
 	_verbatimAsm.setSourceLocation({8, 18, verbatim_asm});
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	BOOST_CHECK(util::jsonParseStrict(json, jsonValue));
 	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assembly.assemblyJSON(indices)), util::jsonCompactPrint(jsonValue));
 
-	Assembly _assemblyFromJson;
+	Assembly _assemblyFromJson(true, "");
 	_assemblyFromJson.loadFromAssemblyJSON(_assembly.assemblyJSON(indices));
 	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assemblyFromJson.assemblyJSON(indices)), util::jsonCompactPrint(jsonValue));
 	BOOST_CHECK_EQUAL(_assembly.assemble().toHex(), _assemblyFromJson.assemble().toHex());
