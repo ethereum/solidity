@@ -743,6 +743,7 @@ void CHC::visitPublicGetter(FunctionCall const& _funCall)
 	{
 		auto const& access = dynamic_cast<MemberAccess const&>(_funCall.expression());
 		auto const& contractType = dynamic_cast<ContractType const&>(*access.expression().annotation().type);
+		state().writeStateVars(*m_currentContract, state().thisAddress());
 		state().readStateVars(contractType.contractDefinition(), expr(access.expression()));
 	}
 	SMTEncoder::visitPublicGetter(_funCall);
