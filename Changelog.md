@@ -5,14 +5,15 @@ Language Features:
 
 
 Compiler Features:
-* JSON-AST: Added selector field for errors and events.
+ * JSON-AST: Added selector field for errors and events.
+ * LSP: Implements goto-definition.
  * Peephole Optimizer: Optimize comparisons in front of conditional jumps and conditional jumps across a single unconditional jump.
  * Yul Optimizer: Remove ``sstore`` and ``mstore`` operations that are never read from.
- * LSP: Implements goto-definition.
+
 
 Bugfixes:
+ * General: Fix internal error for locales with unusual capitalization rules. Locale set in the environment is now completely ignored.
  * Yul IR Code Generation: Optimize embedded creation code with correct settings. This fixes potential mismatches between the constructor code of a contract compiled in isolation and the bytecode in ``type(C).creationCode``, resp. the bytecode used for ``new C(...)``.
- * Fix internal error for locales with unusual capitalization rules. Locale set in the environment is now completely ignored.
 
 
 ### 0.8.12 (2022-02-16)
