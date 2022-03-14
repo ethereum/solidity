@@ -1448,10 +1448,6 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return output;
 	}
 
-	// TODO: move this warning to AssemblyStack
-	output["errors"] = Json::arrayValue;
-	output["errors"].append(formatError(Error::Severity::Warning, "Warning", "general", "Yul is still experimental. Please use the output with care."));
-
 	string contractName = stack.parserResult()->name.str();
 
 	bool const wildcardMatchesExperimental = true;

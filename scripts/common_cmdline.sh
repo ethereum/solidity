@@ -69,7 +69,6 @@ function compileFull
     local exit_code=$?
     local errors; errors=$(grep -v -E \
         -e 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\| ' \
-        -e 'Warning: Yul is still experimental. Please use the output with care.' \
         -e '^No text representation found.$' < "$stderr_path"
     )
 
