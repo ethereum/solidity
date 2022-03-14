@@ -115,6 +115,12 @@ void SMTEncoder::endVisit(ContractDefinition const& _contract)
 		m_context.popSolver();
 }
 
+bool SMTEncoder::visit(ImportDirective const&)
+{
+	// do not visit because the identifier therein will confuse us.
+	return false;
+}
+
 void SMTEncoder::endVisit(VariableDeclaration const& _varDecl)
 {
 	// State variables are handled by the constructor.
