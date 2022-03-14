@@ -17,17 +17,17 @@ that call them, similar to internal library functions.
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.1 <0.9.0;
 
-    function sum(uint[] memory _arr) pure returns (uint s) {
-        for (uint i = 0; i < _arr.length; i++)
-            s += _arr[i];
+    function sum(uint[] memory arr) pure returns (uint s) {
+        for (uint i = 0; i < arr.length; i++)
+            s += arr[i];
     }
 
     contract ArrayExample {
         bool found;
-        function f(uint[] memory _arr) public {
+        function f(uint[] memory arr) public {
             // This calls the free function internally.
             // The compiler will add its code to the contract.
-            uint s = sum(_arr);
+            uint s = sum(arr);
             require(s >= 10);
             found = true;
         }
@@ -65,8 +65,8 @@ with two integers, you would use something like the following:
 
     contract Simple {
         uint sum;
-        function taker(uint _a, uint _b) public {
-            sum = _a + _b;
+        function taker(uint a, uint b) public {
+            sum = a + b;
         }
     }
 
@@ -99,13 +99,13 @@ two integers passed as function parameters, then you use something like:
     pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
-        function arithmetic(uint _a, uint _b)
+        function arithmetic(uint a, uint b)
             public
             pure
             returns (uint sum, uint product)
         {
-            sum = _a + _b;
-            product = _a * _b;
+            sum = a + b;
+            product = a * b;
         }
     }
 
@@ -126,12 +126,12 @@ statement:
     pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
-        function arithmetic(uint _a, uint _b)
+        function arithmetic(uint a, uint b)
             public
             pure
             returns (uint sum, uint product)
         {
-            return (_a + _b, _a * _b);
+            return (a + b, a * b);
         }
     }
 
@@ -362,7 +362,7 @@ Fallback Function
 -----------------
 
 A contract can have at most one ``fallback`` function, declared using either ``fallback () external [payable]``
-or ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
+or ``fallback (bytes calldata input) external [payable] returns (bytes memory output)``
 (both without the ``function`` keyword).
 This function must have ``external`` visibility. A fallback function can be virtual, can override
 and can have modifiers.
@@ -373,8 +373,8 @@ all and there is no :ref:`receive Ether function <receive-ether-function>`.
 The fallback function always receives data, but in order to also receive Ether
 it must be marked ``payable``.
 
-If the version with parameters is used, ``_input`` will contain the full data sent to the contract
-(equal to ``msg.data``) and can return data in ``_output``. The returned data will not be
+If the version with parameters is used, ``input`` will contain the full data sent to the contract
+(equal to ``msg.data``) and can return data in ``output``. The returned data will not be
 ABI-encoded. Instead it will be returned without modifications (not even padding).
 
 In the worst case, if a payable fallback function is also used in
@@ -397,7 +397,7 @@ operations as long as there is enough gas passed on to it.
     for the function selector and then
     you can use ``abi.decode`` together with the array slice syntax to
     decode ABI-encoded data:
-    ``(c, d) = abi.decode(_input[4:], (uint256, uint256));``
+    ``(c, d) = abi.decode(input[4:], (uint256, uint256));``
     Note that this should only be used as a last resort and
     proper functions should be used instead.
 
@@ -486,13 +486,13 @@ The following example shows overloading of the function
     pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
-        function f(uint _in) public pure returns (uint out) {
-            out = _in;
+        function f(uint value) public pure returns (uint out) {
+            out = value;
         }
 
-        function f(uint _in, bool _really) public pure returns (uint out) {
-            if (_really)
-                out = _in;
+        function f(uint value, bool really) public pure returns (uint out) {
+            if (really)
+                out = value;
         }
     }
 
@@ -506,12 +506,12 @@ externally visible functions differ by their Solidity types but not by their ext
 
     // This will not compile
     contract A {
-        function f(B _in) public pure returns (B out) {
-            out = _in;
+        function f(B value) public pure returns (B out) {
+            out = value;
         }
 
-        function f(address _in) public pure returns (address out) {
-            out = _in;
+        function f(address value) public pure returns (address out) {
+            out = value;
         }
     }
 
@@ -539,12 +539,12 @@ candidate, resolution fails.
     pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
-        function f(uint8 _in) public pure returns (uint8 out) {
-            out = _in;
+        function f(uint8 val) public pure returns (uint8 out) {
+            out = val;
         }
 
-        function f(uint256 _in) public pure returns (uint256 out) {
-            out = _in;
+        function f(uint256 val) public pure returns (uint256 out) {
+            out = val;
         }
     }
 

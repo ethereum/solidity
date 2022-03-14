@@ -74,8 +74,8 @@ hiding new and different behavior in existing code.
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.7.0;
       contract C {
-          function f(uint _a) public pure mod() returns (uint _r) {
-              _r = _a++;
+          function f(uint a) public pure mod() returns (uint r) {
+              r = a++;
           }
           modifier mod() { _; _; }
       }
@@ -166,7 +166,7 @@ This causes differences in some contracts, for example:
 
       contract C {
           bytes x;
-          function f() public returns (uint _r) {
+          function f() public returns (uint r) {
               bytes memory m = "tmp";
               assembly {
                   mstore(m, 8)
@@ -174,7 +174,7 @@ This causes differences in some contracts, for example:
               }
               x = m;
               assembly {
-                  _r := sload(x.slot)
+                  r := sload(x.slot)
               }
           }
       }
@@ -197,8 +197,8 @@ This causes differences in some contracts, for example:
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function preincr_u8(uint8 _a) public pure returns (uint8) {
-              return ++_a + _a;
+          function preincr_u8(uint8 a) public pure returns (uint8) {
+              return ++a + a;
           }
       }
 
@@ -218,11 +218,11 @@ This causes differences in some contracts, for example:
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function add(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return _a + _b;
+          function add(uint8 a, uint8 b) public pure returns (uint8) {
+              return a + b;
           }
-          function g(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return add(++_a + ++_b, _a + _b);
+          function g(uint8 a, uint8 b) public pure returns (uint8) {
+              return add(++a + ++b, a + b);
           }
       }
 
@@ -321,13 +321,13 @@ For example:
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.1;
     contract C {
-        function f(uint8 _a) public pure returns (uint _r1, uint _r2)
+        function f(uint8 a) public pure returns (uint r1, uint r2)
         {
-            _a = ~_a;
+            a = ~a;
             assembly {
-                _r1 := _a
+                r1 := a
             }
-            _r2 = _a;
+            r2 = a;
         }
     }
 
@@ -336,6 +336,6 @@ The function ``f(1)`` returns the following values:
 - Old code generator: (``fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
 - New code generator: (``00000000000000000000000000000000000000000000000000000000000000fe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
 
-Note that, unlike the new code generator, the old code generator does not perform a cleanup after the bit-not assignment (``_a = ~_a``).
-This results in different values being assigned (within the inline assembly block) to return value ``_r1`` between the old and new code generators.
-However, both code generators perform a cleanup before the new value of ``_a`` is assigned to ``_r2``.
+Note that, unlike the new code generator, the old code generator does not perform a cleanup after the bit-not assignment (``a = ~a``).
+This results in different values being assigned (within the inline assembly block) to return value ``r1`` between the old and new code generators.
+However, both code generators perform a cleanup before the new value of ``a`` is assigned to ``r2``.
