@@ -145,7 +145,8 @@ function testImportExportEquivalence {
                                 done
                             done
 
-                            if ! $SOLC --combined-json asm --pretty-json --import-asm-json expected.asm > obtained_direct_import_export.json 2> obtained_direct_import_export.error
+                            # direct export via --asm-json, if imported with --import-asm-json.
+                            if ! $SOLC --asm-json --import-asm-json expected.asm | tail -n+4 > obtained_direct_import_export.json 2> obtained_direct_import_export.error
                             then
                                 printf "\n"
                                 echo "$nth_input_file"
