@@ -165,8 +165,14 @@ set(sources
 	lsp/HandlerBase.h
 	lsp/LanguageServer.cpp
 	lsp/LanguageServer.h
+	lsp/SemanticHighlight.cpp
+	lsp/SemanticHighlight.h
 	lsp/SemanticTokensBuilder.cpp
 	lsp/SemanticTokensBuilder.h
+	lsp/ReferenceCollector.cpp
+	lsp/ReferenceCollector.h
+	lsp/References.cpp
+	lsp/References.h
 	lsp/Transport.cpp
 	lsp/Transport.h
 	lsp/Utils.cpp
