@@ -244,7 +244,13 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(
 	// - Preserves case. Even if the filesystem is case-insensitive but case-preserving and the
 	//   case differs, the actual case from disk is NOT detected.
 
-	boost::filesystem::path canonicalWorkDir = boost::filesystem::weakly_canonical(boost::filesystem::current_path());
+	boost::filesystem::path canonicalWorkDir =
+#if defined(EMSCRIPTEN)
+		boost::filesystem::path("/")
+#else
+		boost::filesystem::weakly_canonical(boost::filesystem::current_path())
+#endif
+		;
 
 	// NOTE: On UNIX systems the path returned from current_path() has symlinks resolved while on
 	// Windows it does not. To get consistent results we resolve them on all platforms.

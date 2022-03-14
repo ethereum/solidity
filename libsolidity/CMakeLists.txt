@@ -176,3 +176,7 @@ set(sources
 
 add_library(solidity ${sources})
 target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost fmt::fmt-header-only)
+
+if(EMSCRIPTEN)
+	target_compile_definitions(solidity PRIVATE EMSCRIPTEN=1)
+endif()
