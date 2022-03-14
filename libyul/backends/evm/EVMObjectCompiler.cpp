@@ -89,7 +89,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			if (memoryGuardCalls.empty())
 				msg += "\nNo memoryguard was present. "
 					"Consider using memory-safe assembly only and annotating it via "
-					"\"/// @solidity memory-safe-assembly\".";
+					"'assembly (\"memory-safe\") { ... }'.";
 			else
 				msg += "\nmemoryguard was present.";
 			stackError << util::errinfo_comment(msg);
