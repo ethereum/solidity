@@ -137,13 +137,22 @@ extern char* solidity_compile(char const* _input, CStyleReadFileCallback _readCa
 	return solidityAllocations.emplace_back(compile(_input, _readCallback, _readContext)).data();
 }
 
-extern int solidity_lsp_start(CStyleReadFileCallback /*TODO(pr) _readCallback*/, void* /*_readContext*/) noexcept
+extern int solidity_lsp_start(CStyleReadFileCallback _readCallback) noexcept
 {
 	if (languageServer || languageServerTransport)
 		return -1;
 
-	languageServerTransport = make_unique<lsp::MockTransport>();
-	languageServer = make_unique<lsp::LanguageServer>(*languageServerTransport);
+	try
+	{
+		languageServerTransport = make_unique<lsp::MockTransport>();
+		languageServer = make_unique<lsp::LanguageServer>(*languageServerTransport);
+		(void) _readCallback; // TODO(pr) pass to LanguageServer()
+	}
+	catch (...)
+	{
+		return -2;
+	}
+
 	return 0;
 }
 
