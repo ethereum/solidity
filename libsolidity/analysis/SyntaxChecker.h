@@ -88,6 +88,9 @@ private:
 
 	bool visit(ContractDefinition const& _contract) override;
 	void endVisit(ContractDefinition const& _contract) override;
+
+	bool visit(UsingForDirective const& _usingFor) override;
+
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(FunctionTypeName const& _node) override;
 
