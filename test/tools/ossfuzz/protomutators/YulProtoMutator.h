@@ -103,5 +103,7 @@ struct YulProtoMutator
 	/// Obtain a basic block in a for stmt uniformly
 	/// at random
 	static Block* randomBlock(ForStmt* _msg);
+	/// Obtain a basic block in global scope.
+	static Block* globalBlock(Program* _program);
 };
 }

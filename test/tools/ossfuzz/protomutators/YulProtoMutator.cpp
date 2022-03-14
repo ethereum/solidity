@@ -73,6 +73,7 @@ static addControlFlow<SwitchStmt> c4;
 static addControlFlow<FunctionDef> c5;
 static addControlFlow<CaseStmt> c6;
 static addControlFlow<Code> c7;
+static addControlFlow<Program> c8;
 
 Literal* YPM::intLiteral(unsigned _value)
 {
@@ -261,6 +262,24 @@ Block* YPM::basicBlock(T* _msg)
 		return _msg->mutable_case_block();
 	else if constexpr (std::is_same_v<T, Code>)
 		return _msg->mutable_block();
+	else if constexpr (std::is_same_v<T, Program>)
+		return globalBlock(_msg);
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
+}
+
+Block* YPM::globalBlock(Program* _program)
+{
+	switch (_program->program_oneof_case())
+	{
+	case Program::kBlock:
+		return _program->mutable_block();
+	case Program::kObj:
+		return _program->mutable_obj()->mutable_code()->mutable_block();
+	case Program::PROGRAM_ONEOF_NOT_SET:
+	{
+		_program->set_allocated_block(new Block());
+		return _program->mutable_block();
+	}
+	}
 }
