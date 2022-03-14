@@ -57,6 +57,11 @@ public:
 	/// @return boolean indicating normal or abnormal termination.
 	bool run();
 
+	FileRepository& fileRepository() noexcept { return m_fileRepository; }
+	Transport& client() noexcept { return m_client; }
+	frontend::ASTNode const* astNodeAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos);
+	langutil::CharStreamProvider const& charStreamProvider() const noexcept { return m_compilerStack; }
+
 private:
 	/// Checks if the server is initialized (to be used by messages that need it to be initialized).
 	/// Reports an error and returns false if not.
@@ -66,28 +71,19 @@ private:
 	void handleTextDocumentDidOpen(Json::Value const& _args);
 	void handleTextDocumentDidChange(Json::Value const& _args);
 	void handleTextDocumentDidClose(Json::Value const& _args);
+	void handleGotoDefinition(MessageID _id, Json::Value const& _args);
 
 	/// Invoked when the server user-supplied configuration changes (initiated by the client).
 	void changeConfiguration(Json::Value const&);
 
 	/// Compile everything until after analysis phase.
 	void compile();
+	using MessageHandler = std::function<void(MessageID, Json::Value const&)>;
 
-	std::optional<langutil::SourceLocation> parsePosition(
-		std::string const& _sourceUnitName,
-		Json::Value const& _position
-	) const;
-	/// @returns the source location given a source unit name and an LSP Range object,
-	/// or nullopt on failure.
-	std::optional<langutil::SourceLocation> parseRange(
-		std::string const& _sourceUnitName,
-		Json::Value const& _range
-	) const;
-	Json::Value toRange(langutil::SourceLocation const& _location) const;
-	Json::Value toJson(langutil::SourceLocation const& _location) const;
+	Json::Value toRange(langutil::SourceLocation const& _location);
+	Json::Value toJson(langutil::SourceLocation const& _location);
 
 	// LSP related member fields
-	using MessageHandler = std::function<void(MessageID, Json::Value const&)>;
 
 	enum class State { Started, Initialized, ShutdownRequested, ExitRequested, ExitWithoutShutdown };
 	State m_state = State::Started;

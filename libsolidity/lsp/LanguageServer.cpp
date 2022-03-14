@@ -21,6 +21,11 @@
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/lsp/LanguageServer.h>
+#include <libsolidity/lsp/HandlerBase.h>
+#include <libsolidity/lsp/Utils.h>
+
+// LSP feature implementations
+#include <libsolidity/lsp/GotoDefinition.h>
 
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/CharStream.h>
@@ -48,31 +53,6 @@ using namespace solidity::frontend;
 namespace
 {
 
-Json::Value toJson(LineColumn _pos)
-{
-	Json::Value json = Json::objectValue;
-	json["line"] = max(_pos.line, 0);
-	json["character"] = max(_pos.column, 0);
-
-	return json;
-}
-
-Json::Value toJsonRange(LineColumn const& _start, LineColumn const& _end)
-{
-	Json::Value json;
-	json["start"] = toJson(_start);
-	json["end"] = toJson(_end);
-	return json;
-}
-
-optional<LineColumn> parseLineColumn(Json::Value const& _lineColumn)
-{
-	if (_lineColumn.isObject() && _lineColumn["line"].isInt() && _lineColumn["character"].isInt())
-		return LineColumn{_lineColumn["line"].asInt(), _lineColumn["character"].asInt()};
-	else
-		return nullopt;
-}
-
 int toDiagnosticSeverity(Error::Type _errorType)
 {
 	// 1=Error, 2=Warning, 3=Info, 4=Hint
@@ -97,9 +77,11 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"initialize", bind(&LanguageServer::handleInitialize, this, _1, _2)},
 		{"initialized", [](auto, auto) {}},
 		{"shutdown", [this](auto, auto) { m_state = State::ShutdownRequested; }},
+		{"textDocument/definition", GotoDefinition(*this) },
 		{"textDocument/didOpen", bind(&LanguageServer::handleTextDocumentDidOpen, this, _2)},
 		{"textDocument/didChange", bind(&LanguageServer::handleTextDocumentDidChange, this, _2)},
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _2)},
+		{"textDocument/implementation", GotoDefinition(*this) },
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2)},
 	},
 	m_fileRepository("/" /* basePath */),
@@ -107,55 +89,14 @@ LanguageServer::LanguageServer(Transport& _transport):
 {
 }
 
-optional<SourceLocation> LanguageServer::parsePosition(
-	string const& _sourceUnitName,
-	Json::Value const& _position
-) const
+Json::Value LanguageServer::toRange(SourceLocation const& _location)
 {
-	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
-		return nullopt;
-
-	if (optional<LineColumn> lineColumn = parseLineColumn(_position))
-		if (optional<int> const offset = CharStream::translateLineColumnToPosition(
-			m_fileRepository.sourceUnits().at(_sourceUnitName),
-			*lineColumn
-		))
-			return SourceLocation{*offset, *offset, make_shared<string>(_sourceUnitName)};
-	return nullopt;
+	return HandlerBase(*this).toRange(_location);
 }
 
-optional<SourceLocation> LanguageServer::parseRange(string const& _sourceUnitName, Json::Value const& _range) const
+Json::Value LanguageServer::toJson(SourceLocation const& _location)
 {
-	if (!_range.isObject())
-		return nullopt;
-	optional<SourceLocation> start = parsePosition(_sourceUnitName, _range["start"]);
-	optional<SourceLocation> end = parsePosition(_sourceUnitName, _range["end"]);
-	if (!start || !end)
-		return nullopt;
-	solAssert(*start->sourceName == *end->sourceName);
-	start->end = end->end;
-	return start;
-}
-
-Json::Value LanguageServer::toRange(SourceLocation const& _location) const
-{
-	if (!_location.hasText())
-		return toJsonRange({}, {});
-
-	solAssert(_location.sourceName, "");
-	CharStream const& stream = m_compilerStack.charStream(*_location.sourceName);
-	LineColumn start = stream.translatePositionToLineColumn(_location.start);
-	LineColumn end = stream.translatePositionToLineColumn(_location.end);
-	return toJsonRange(start, end);
-}
-
-Json::Value LanguageServer::toJson(SourceLocation const& _location) const
-{
-	solAssert(_location.sourceName);
-	Json::Value item = Json::objectValue;
-	item["uri"] = m_fileRepository.sourceUnitNameToClientPath(*_location.sourceName);
-	item["range"] = toRange(_location);
-	return item;
+	return HandlerBase(*this).toJson(_location);
 }
 
 void LanguageServer::changeConfiguration(Json::Value const& _settings)
@@ -316,8 +257,10 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	Json::Value replyArgs;
 	replyArgs["serverInfo"]["name"] = "solc";
 	replyArgs["serverInfo"]["version"] = string(VersionNumber);
-	replyArgs["capabilities"]["textDocumentSync"]["openClose"] = true;
+	replyArgs["capabilities"]["definitionProvider"] = true;
+	replyArgs["capabilities"]["implementationProvider"] = true;
 	replyArgs["capabilities"]["textDocumentSync"]["change"] = 2; // 0=none, 1=full, 2=incremental
+	replyArgs["capabilities"]["textDocumentSync"]["openClose"] = true;
 
 	m_client.reply(_id, move(replyArgs));
 }
@@ -371,7 +314,7 @@ void LanguageServer::handleTextDocumentDidChange(Json::Value const& _args)
 		string text = jsonContentChange["text"].asString();
 		if (jsonContentChange["range"].isObject()) // otherwise full content update
 		{
-			optional<SourceLocation> change = parseRange(sourceUnitName, jsonContentChange["range"]);
+			optional<SourceLocation> change = parseRange(m_fileRepository, sourceUnitName, jsonContentChange["range"]);
 			lspAssert(
 				change && change->hasText(),
 				ErrorCode::RequestFailed,
@@ -403,3 +346,19 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 
 	compileAndUpdateDiagnostics();
 }
+
+ASTNode const* LanguageServer::astNodeAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
+{
+	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
+		return nullptr;
+
+	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
+		return nullptr;
+
+	if (optional<int> sourcePos =
+		m_compilerStack.charStream(_sourceUnitName).translateLineColumnToPosition(_filePos))
+		return locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName));
+	else
+		return nullptr;
+}
+
