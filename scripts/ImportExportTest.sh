@@ -99,13 +99,13 @@ function testImportExportEquivalence {
                 UNCOMPILABLE=$((UNCOMPILABLE + 1))
                 return 0
             else
-                $SOLC --optimize --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected_optimized.json 2> expected_optimized.error
+                # $SOLC --optimize --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected_optimized.json 2> expected_optimized.error || true
                 for contract in $(jq '.contracts | keys | .[]' expected.json 2> /dev/null)
                 do
                     for type in "${types[@]}"
                     do
                         jq --raw-output ".contracts.${contract}.\"${type}\"" expected.json > "expected.${type}"
-                        jq --raw-output ".contracts.${contract}.\"${type}\"" expected_optimized.json > "expected_optimized.${type}"
+                        # jq --raw-output ".contracts.${contract}.\"${type}\"" expected_optimized.json > "expected_optimized.${type}"
                     done
 
                     assembly=$(cat expected.asm)
@@ -119,46 +119,51 @@ function testImportExportEquivalence {
                             FAILED=$((FAILED + 1))
                             return 0
                         else
-                            $SOLC --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json --import-asm-json expected.asm > obtained_optimized.json 2> obtained_optimized.error
+                            # try to optimize asm json import.
+                            # (may fail, because of e.g. "Some immutables were read from but never assigned, possibly because of optimization")
+                            # $SOLC --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json --import-asm-json expected.asm > obtained_optimized.json 2> obtained_optimized.error || true
                             for type in "${types[@]}"
                             do
                                 for obtained_contract in $(jq '.contracts | keys | .[]' obtained.json  2> /dev/null)
                                 do
                                     jq --raw-output ".contracts.${obtained_contract}.\"${type}\"" obtained.json > "obtained.${type}"
-                                    jq --raw-output ".contracts.${obtained_contract}.\"${type}\"" obtained_optimized.json > "obtained_optimized.${type}"
+                                    # jq --raw-output ".contracts.${obtained_contract}.\"${type}\"" obtained_optimized.json > "obtained_optimized.${type}"
                                     set +e
                                     DIFF="$(diff "expected.${type}" "obtained.${type}")"
                                     # DIFF_OPTIMIZED="$(diff "expected_optimized.${type}" "obtained_optimized.${type}")"
                                     set -e
-                                    if [ "$DIFFVIEW" == "" ]
+                                    if [ "$DIFF" != "" ] || [ "$DIFF_OPTIMIZED" != "" ]
                                     then
-                                        if [ "$DIFF" != "" ]
+                                        if [ "$DIFFVIEW" == "" ]
                                         then
-                                            echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
-                                            echo "Expected:"
-                                            cat  "expected.${type}"
-                                            echo "Obtained:"
-                                            cat "obtained.${type}"
-                                        fi
-                                        if [ "$DIFF_OPTIMIZED" != "" ]
-                                        then
-                                            echo -e "ERROR: JSONS (optimized) differ for $1: \n $DIFF \n"
-                                            echo "Expected (optimized):"
-                                            cat  "expected_optimized.${type}"
-                                            echo "Obtained (optimized):"
-                                            cat "obtained_optimized.${type}"
-                                        fi
-                                    else
-                                        # Use user supplied diff view binary
-                                        if [ "$DIFF" != "" ]
-                                        then
-                                            echo "$DIFFVIEW expected.json obtained.json"
-                                            $DIFFVIEW expected.json obtained.json
-                                        fi
-                                        if [ "$DIFF_OPTIMIZED" != "" ]
-                                        then
-                                            echo "$DIFFVIEW expected_optimized.json obtained_optimized.json"
-                                            $DIFFVIEW expected_optimized.json obtained_optimized.json
+                                            if [ "$DIFF" != "" ]
+                                            then
+                                                echo -e "ERROR: EVM Assembly JSON differ for $1: \n $DIFF \n"
+                                                echo "Expected:"
+                                                cat  "expected.${type}"
+                                                echo "Obtained:"
+                                                cat "obtained.${type}"
+                                            fi
+                                            if [ "$DIFF_OPTIMIZED" != "" ]
+                                            then
+                                                echo -e "ERROR: EVM Assembly JSON (optimization was enabled) differ for $1: \n $DIFF \n"
+                                                echo "Expected (optimized):"
+                                                cat  "expected_optimized.${type}"
+                                                echo "Obtained (optimized):"
+                                                cat "obtained_optimized.${type}"
+                                            fi
+                                        else
+                                            # Use user supplied diff view binary
+                                            if [ "$DIFF" != "" ]
+                                            then
+                                                echo "$DIFFVIEW expected.json obtained.json"
+                                                $DIFFVIEW expected.json obtained.json
+                                            fi
+                                            if [ "$DIFF_OPTIMIZED" != "" ]
+                                            then
+                                                echo "$DIFFVIEW expected_optimized.json obtained_optimized.json"
+                                                $DIFFVIEW expected_optimized.json obtained_optimized.json
+                                            fi
                                         fi
                                         _TESTED=
                                         FAILED=$((FAILED + 1))
