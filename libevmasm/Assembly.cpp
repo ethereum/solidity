@@ -223,7 +223,7 @@ string Assembly::assemblyString(
 }
 
 Json::Value Assembly::createJsonValue(
-	string _name, int _sourceIndex, size_t _modifierDepth, int _begin, int _end, string _value, string _jumpType)
+	string _name, int _sourceIndex, size_t _modifierDepth, int _begin, int _end, string const& _value, string const& _jumpType)
 {
 	Json::Value value{Json::objectValue};
 	value["name"] = _name;

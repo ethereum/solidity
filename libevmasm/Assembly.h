@@ -191,8 +191,8 @@ private:
 		size_t _modifierDepth,
 		int _begin,
 		int _end,
-		std::string _value = std::string(),
-		std::string _jumpType = std::string()
+		std::string const& _value = std::string(),
+		std::string const& _jumpType = std::string()
 	);
 	static std::string toStringInHex(u256 _value);
 
