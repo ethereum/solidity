@@ -38,6 +38,10 @@ void ExpressionSimplifier::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
 
-	while (auto const* match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_value))
+	while (auto const* match = SimplificationRules::findFirstMatch(
+		_expression,
+		m_dialect,
+		[this](YulString _var) { return variableValue(_var); }
+	))
 		_expression = match->action().toExpression(debugDataOf(_expression));
 }

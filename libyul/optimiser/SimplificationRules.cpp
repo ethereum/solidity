@@ -41,7 +41,7 @@ using namespace solidity::yul;
 SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	map<YulString, AssignedValue> const& _ssaValues
+	function<AssignedValue const*(YulString)> const& _ssaValues
 )
 {
 	auto instruction = instructionAndArguments(_dialect, _expr);
@@ -138,7 +138,7 @@ void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _
 bool Pattern::matches(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	map<YulString, AssignedValue> const& _ssaValues
+	function<AssignedValue const*(YulString)> const& _ssaValues
 ) const
 {
 	Expression const* expr = &_expr;
@@ -148,8 +148,8 @@ bool Pattern::matches(
 	if (m_kind != PatternKind::Any && holds_alternative<Identifier>(_expr))
 	{
 		YulString varName = std::get<Identifier>(_expr).name;
-		if (_ssaValues.count(varName))
-			if (Expression const* new_expr = _ssaValues.at(varName).value)
+		if (AssignedValue const* value = _ssaValues(varName))
+			if (Expression const* new_expr = value->value)
 				expr = new_expr;
 	}
 	assertThrow(expr, OptimizerException, "");
