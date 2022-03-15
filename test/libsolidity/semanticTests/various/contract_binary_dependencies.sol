@@ -21,4 +21,4 @@ contract C {
 // compileViaYul: also
 // ----
 // constructor() ->
-// gas irOptimized: 101495
+// gas irOptimized: 101063
