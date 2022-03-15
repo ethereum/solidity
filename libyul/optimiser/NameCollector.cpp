@@ -30,18 +30,22 @@ using namespace solidity::util;
 
 void NameCollector::operator()(VariableDeclaration const& _varDecl)
 {
-	for (auto const& var: _varDecl.variables)
-		m_names.emplace(var.name);
+	if (m_collectWhat != OnlyFunctions)
+		for (auto const& var: _varDecl.variables)
+			m_names.emplace(var.name);
 }
 
-void NameCollector::operator ()(FunctionDefinition const& _funDef)
+void NameCollector::operator()(FunctionDefinition const& _funDef)
 {
-	if (m_collectWhat == VariablesAndFunctions)
+	if (m_collectWhat != OnlyVariables)
 		m_names.emplace(_funDef.name);
-	for (auto const& arg: _funDef.parameters)
-		m_names.emplace(arg.name);
-	for (auto const& ret: _funDef.returnVariables)
-		m_names.emplace(ret.name);
+	if (m_collectWhat != OnlyFunctions)
+	{
+		for (auto const& arg: _funDef.parameters)
+			m_names.emplace(arg.name);
+		for (auto const& ret: _funDef.returnVariables)
+			m_names.emplace(ret.name);
+	}
 	ASTWalker::operator ()(_funDef);
 }
 
