@@ -37,16 +37,6 @@ void Rematerialiser::run(Dialect const& _dialect, Block& _ast, set<YulString> _v
 	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_ast);
 }
 
-void Rematerialiser::run(
-	Dialect const& _dialect,
-	FunctionDefinition& _function,
-	set<YulString> _varsToAlwaysRematerialize,
-	bool _onlySelectedVariables
-)
-{
-	Rematerialiser{_dialect, _function, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_function);
-}
-
 Rematerialiser::Rematerialiser(
 	Dialect const& _dialect,
 	Block& _ast,
@@ -55,19 +45,6 @@ Rematerialiser::Rematerialiser(
 ):
 	DataFlowAnalyzer(_dialect),
 	m_referenceCounts(ReferencesCounter::countReferences(_ast)),
-	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
-	m_onlySelectedVariables(_onlySelectedVariables)
-{
-}
-
-Rematerialiser::Rematerialiser(
-	Dialect const& _dialect,
-	FunctionDefinition& _function,
-	set<YulString> _varsToAlwaysRematerialize,
-	bool _onlySelectedVariables
-):
-	DataFlowAnalyzer(_dialect),
-	m_referenceCounts(ReferencesCounter::countReferences(_function)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
 	m_onlySelectedVariables(_onlySelectedVariables)
 {
