@@ -5,9 +5,11 @@ Language Features:
 
 Compiler Features:
  * Peephole Optimizer: Remove operations without side effects before simple terminations.
+ * Assembly-Json: Export: Include source list in `sourceList` field.
 
 
 Bugfixes:
+* Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
 
 
 
