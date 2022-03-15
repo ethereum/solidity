@@ -457,8 +457,7 @@ void ControlFlowBuilder::operator()(yul::Switch const& _switch)
 	}
 	mergeFlow(nodes);
 
-	bool hasDefault = util::contains_if(_switch.cases, [](yul::Case const& _case) { return !_case.value; });
-	if (!hasDefault)
+	if (!hasDefaultCase(_switch))
 		connect(beforeSwitch, m_currentNode);
 }
 
