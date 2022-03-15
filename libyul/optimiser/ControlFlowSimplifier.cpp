@@ -60,13 +60,7 @@ void removeEmptyDefaultFromSwitch(Switch& _switchStmt)
 
 void removeEmptyCasesFromSwitch(Switch& _switchStmt)
 {
-	bool hasDefault = std::any_of(
-		_switchStmt.cases.begin(),
-		_switchStmt.cases.end(),
-		[](Case const& _case) { return !_case.value; }
-	);
-
-	if (hasDefault)
+	if (hasDefaultCase(_switchStmt))
 		return;
 
 	ranges::actions::remove_if(

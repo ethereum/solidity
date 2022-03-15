@@ -144,4 +144,13 @@ template <class... Args> inline std::shared_ptr<DebugData const> debugDataOf(std
 	return std::visit([](auto const& _arg) { return debugDataOf(_arg); }, _node);
 }
 
+inline bool hasDefaultCase(Switch const& _switch)
+{
+	return std::any_of(
+		_switch.cases.begin(),
+		_switch.cases.end(),
+		[](Case const& _case) { return !_case.value; }
+	);
+}
+
 }
