@@ -16,6 +16,6 @@ contract C {
 // SMTContract: C
 // SMTEngine: all
 // SMTExtCalls: trusted
+// SMTIgnoreInv: yes
 // ----
 // Warning 6328: (69-85): CHC: Assertion violation happens here.\nCounterexample:\n\n_x = 100\n = 0\n\nTransaction trace:\nState.constructor()\nState.f(100)
-// Info 1180: Contract invariant(s) for :C:\n(!(z >= 3) && !(z <= 1))\n

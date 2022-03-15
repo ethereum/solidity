@@ -19,5 +19,6 @@ contract C {
 // SMTEngine: chc
 // SMTExtCalls: trusted
 // SMTTargets: assert
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (179-199): CHC: Assertion violation happens here.
