@@ -156,7 +156,13 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		vector<Token> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 		SemVerMatchExpressionParser parser(tokens, literals);
-		auto matchExpression = parser.parse();
+		auto matchExpressionOrError = parser.parse();
+		if (std::holds_alternative<SemVerError>(matchExpressionOrError))
+		{
+			auto matchExpressionError = std::get<SemVerError>(matchExpressionOrError);
+			BOOST_THROW_EXCEPTION(matchExpressionError);
+		}
+		auto matchExpression = std::get<std::optional<SemVerMatchExpression>>(matchExpressionOrError);
 		// An unparsable version pragma is an unrecoverable fatal error in the parser.
 		solAssert(matchExpression.has_value(), "");
 		static SemVerVersion const currentVersion{string(VersionString)};

@@ -52,7 +52,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 		if (level < 2)
 		{
 			if (i == end || *i != '.')
-				BOOST_THROW_EXCEPTION(SemVerError());
+				BOOST_THROW_EXCEPTION(SemVerError(9981_error, Error::Type::ParserError, "Invalid versionString: " + _versionString));
 			else
 				++i;
 		}
@@ -70,7 +70,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 		build = string(buildStart, i);
 	}
 	if (i != end)
-		BOOST_THROW_EXCEPTION(SemVerError());
+		BOOST_THROW_EXCEPTION(SemVerError(9982_error, Error::Type::ParserError, "Invalid versionString " + _versionString));
 }
 
 bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _version) const
@@ -156,7 +156,7 @@ bool SemVerMatchExpression::matches(SemVerVersion const& _version) const
 	return false;
 }
 
-optional<SemVerMatchExpression> SemVerMatchExpressionParser::parse()
+variant<SemVerError, optional<SemVerMatchExpression>> SemVerMatchExpressionParser::parse()
 {
 	reset();
 
@@ -171,14 +171,23 @@ optional<SemVerMatchExpression> SemVerMatchExpressionParser::parse()
 			if (m_pos >= m_tokens.size())
 				break;
 			if (currentToken() != Token::Or)
-				BOOST_THROW_EXCEPTION(SemVerError());
+			{
+				string tokenString = TokenTraits::toString(currentToken());
+				BOOST_THROW_EXCEPTION(
+					SemVerError(
+						9983_error,
+						Error::Type::ParserError,
+						"Invalid token or more than one version not delimited by ||; token: " + (tokenString.empty() ? "" : tokenString)
+					)
+				);
+			}
 			nextToken();
 		}
 	}
-	catch (SemVerError const&)
+	catch (SemVerError const& e)
 	{
 		reset();
-		return nullopt;
+		return e;
 	}
 
 	return m_expression;
@@ -265,14 +274,30 @@ unsigned SemVerMatchExpressionParser::parseVersionPart()
 		{
 			c = currentChar();
 			if (v * 10 < v || v * 10 + static_cast<unsigned>(c - '0') < v * 10)
-				BOOST_THROW_EXCEPTION(SemVerError());
+			{
+				BOOST_THROW_EXCEPTION(
+					SemVerError(
+						9984_error,
+						Error::Type::ParserError,
+						string("Invalid versionPart: ") + (c ? c : '\0')
+					)
+				);
+			}
 			v = v * 10 + static_cast<unsigned>(c - '0');
 			nextChar();
 		}
 		return v;
 	}
 	else
-		BOOST_THROW_EXCEPTION(SemVerError());
+	{
+		BOOST_THROW_EXCEPTION(
+			SemVerError(
+				9985_error,
+				Error::Type::ParserError,
+				string("Invalid versionPart: ") + (c ? c : '\0')
+			)
+		);
+	}
 }
 
 char SemVerMatchExpressionParser::currentChar() const
