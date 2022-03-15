@@ -27,10 +27,12 @@
 
 #include <functional>
 #include <limits>
+#include <fmt/format.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
+using namespace solidity::util;
 
 SemVerMatchExpressionParser::SemVerMatchExpressionParser(vector<Token> _tokens, vector<string> _literals):
 	m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
@@ -52,7 +54,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 		if (level < 2)
 		{
 			if (i == end || *i != '.')
-				BOOST_THROW_EXCEPTION(SemVerError());
+				solThrow(SemVerError, "Invalid versionString: "s + _versionString);
 			else
 				++i;
 		}
@@ -70,7 +72,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 		build = string(buildStart, i);
 	}
 	if (i != end)
-		BOOST_THROW_EXCEPTION(SemVerError());
+		solThrow(SemVerError, "Invalid versionString "s + _versionString);
 }
 
 bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _version) const
@@ -156,12 +158,12 @@ bool SemVerMatchExpression::matches(SemVerVersion const& _version) const
 	return false;
 }
 
-optional<SemVerMatchExpression> SemVerMatchExpressionParser::parse()
+SemVerMatchExpression SemVerMatchExpressionParser::parse()
 {
 	reset();
 
 	if (m_tokens.empty())
-		return nullopt;
+		solThrow(SemVerError, "Empty version pragma.");
 
 	try
 	{
@@ -171,14 +173,19 @@ optional<SemVerMatchExpression> SemVerMatchExpressionParser::parse()
 			if (m_pos >= m_tokens.size())
 				break;
 			if (currentToken() != Token::Or)
-				BOOST_THROW_EXCEPTION(SemVerError());
+			{
+				solThrow(
+					SemVerError,
+					"You can only combine version ranges using the || operator."
+				);
+			}
 			nextToken();
 		}
 	}
-	catch (SemVerError const&)
+	catch (SemVerError const& e)
 	{
 		reset();
-		return nullopt;
+		throw e;
 	}
 
 	return m_expression;
@@ -265,14 +272,22 @@ unsigned SemVerMatchExpressionParser::parseVersionPart()
 		{
 			c = currentChar();
 			if (v * 10 < v || v * 10 + static_cast<unsigned>(c - '0') < v * 10)
-				BOOST_THROW_EXCEPTION(SemVerError());
+				solThrow(SemVerError, "Integer too large to be used in a version number.");
 			v = v * 10 + static_cast<unsigned>(c - '0');
 			nextChar();
 		}
 		return v;
 	}
+	else if (c == char(-1))
+		solThrow(SemVerError, "Expected version number but reached end of pragma.");
 	else
-		BOOST_THROW_EXCEPTION(SemVerError());
+		solThrow(
+			SemVerError, fmt::format(
+				"Expected the start of a version number but instead found character '{}'. "
+				"Version number is invalid or the pragma is not terminated with a semicolon.",
+				c
+			)
+		);
 }
 
 char SemVerMatchExpressionParser::currentChar() const

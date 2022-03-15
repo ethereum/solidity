@@ -160,27 +160,31 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> const& _tokens, vector<string> const& _literals)
 {
 	SemVerMatchExpressionParser parser(_tokens, _literals);
-	auto matchExpression = parser.parse();
-	if (!matchExpression.has_value())
+	try
+	{
+		SemVerMatchExpression matchExpression = parser.parse();
+		static SemVerVersion const currentVersion{string(VersionString)};
+		// FIXME: only match for major version incompatibility
+		if (!matchExpression.matches(currentVersion))
+			// If m_parserErrorRecovery is true, the same message will appear from SyntaxChecker::visit(),
+			// so we don't need to report anything here.
+			if (!m_parserErrorRecovery)
+				m_errorReporter.fatalParserError(
+					5333_error,
+					_location,
+					"Source file requires different compiler version (current compiler is " +
+					string(VersionString) + ") - note that nightly builds are considered to be "
+					"strictly less than the released version"
+				);
+	}
+	catch (SemVerError const& matchError)
+	{
 		m_errorReporter.fatalParserError(
 			1684_error,
 			_location,
-			"Found version pragma, but failed to parse it. "
-			"Please ensure there is a trailing semicolon."
+			"Invalid version pragma. "s + matchError.what()
 		);
-	static SemVerVersion const currentVersion{string(VersionString)};
-	// FIXME: only match for major version incompatibility
-	if (!matchExpression->matches(currentVersion))
-		// If m_parserErrorRecovery is true, the same message will appear from SyntaxChecker::visit(),
-		// so we don't need to report anything here.
-		if (!m_parserErrorRecovery)
-			m_errorReporter.fatalParserError(
-				5333_error,
-				_location,
-				"Source file requires different compiler version (current compiler is " +
-				string(VersionString) + ") - note that nightly builds are considered to be "
-				"strictly less than the released version"
-			);
+	}
 }
 
 ASTPointer<StructuredDocumentation> Parser::parseStructuredDocumentation()
