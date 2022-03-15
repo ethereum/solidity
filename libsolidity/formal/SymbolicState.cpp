@@ -153,6 +153,16 @@ void SymbolicState::setAddressActive(
 	);
 }
 
+void SymbolicState::newStorage()
+{
+	auto newStorageVar = SymbolicTupleVariable(
+		m_state->member("storage").sort,
+		"havoc_storage_" + to_string(m_context.newUniqueId()),
+		m_context
+	);
+	m_state->assignMember("storage", newStorageVar.currentValue());
+}
+
 void SymbolicState::writeStateVars(ContractDefinition const& _contract, smtutil::Expression _address)
 {
 	auto stateVars = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);

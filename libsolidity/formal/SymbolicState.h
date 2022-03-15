@@ -132,6 +132,7 @@ public:
 	smtutil::Expression addressActive(smtutil::Expression _address) const;
 	void setAddressActive(smtutil::Expression _address, bool _active);
 
+	void newStorage();
 	void writeStateVars(ContractDefinition const& _contract, smtutil::Expression _address);
 	void readStateVars(ContractDefinition const& _contract, smtutil::Expression _address);
 	//@}

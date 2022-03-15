@@ -1387,11 +1387,60 @@ void CHC::defineExternalFunctionInterface(FunctionDefinition const& _function, C
 	state().addBalance(state().thisAddress(), k.currentValue());
 
 	if (encodeExternalCallsAsTrusted())
+	{
 		// If the contract has state variables that are addresses to other contracts,
 		// we need to encode the fact that those contracts may have been called in between
 		// transactions to _contract.
-		// We do that by adding nondet_interface constraints for those contracts.
-		addNondetCalls(*m_currentContract);
+		//
+		// We do that by adding nondet_interface constraints for those contracts,
+		// in the last line of this if block.
+		//
+		// If there are state variables of container types like structs or arrays
+		// that indirectly contain contract types, we havoc the state for simplicity,
+		// in the first part of this block.
+		// TODO: This could actually be supported.
+		// For structs: simply collect the SMT expressions of all the indirect contract type members.
+		// For arrays: more involved, needs to traverse the array symbolically and do the same for each contract.
+		// For mappings: way more complicated if the element type is a contract.
+		auto hasContractOrAddressSubType = [&](VariableDeclaration const* _var) -> bool {
+			bool foundContract = false;
+			solidity::util::BreadthFirstSearch<Type const*> bfs{{_var->type()}};
+			bfs.run([&](auto _type, auto&& _addChild) {
+				if (
+					_type->category() == Type::Category::Address ||
+					_type->category() == Type::Category::Contract
+				)
+				{
+					foundContract = true;
+					bfs.abort();
+				}
+				if (auto const* mapType = dynamic_cast<MappingType const*>(_type))
+					_addChild(mapType->valueType());
+				else if (auto const* arrayType = dynamic_cast<ArrayType const*>(_type))
+					_addChild(arrayType->baseType());
+				else if (auto const* structType = dynamic_cast<StructType const*>(_type))
+					for (auto const& member: structType->nativeMembers(nullptr))
+						_addChild(member.type);
+			});
+			return foundContract;
+		};
+		bool found = false;
+		for (auto var: m_currentContract->stateVariables())
+			if (
+				var->type()->category() != Type::Category::Address &&
+				var->type()->category() != Type::Category::Contract &&
+				hasContractOrAddressSubType(var)
+			)
+			{
+				found = true;
+				break;
+			}
+
+		if (found)
+			state().newStorage();
+		else
+			addNondetCalls(*m_currentContract);
+	}
 
 	errorFlag().increaseIndex();
 	m_context.addAssertion(summaryCall(_function));
