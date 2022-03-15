@@ -49,10 +49,10 @@
 //
 // Block2 [label="\
 // [ JUNK ]\l\
-// [ 0x0506 0x06 ]\l\
+// [ JUNK 0x0506 0x06 ]\l\
 // sstore\l\
-// [ ]\l\
-// [ ]\l\
+// [ JUNK ]\l\
+// [ JUNK ]\l\
 // "];
 // Block2Exit [label="MainExit"];
 // Block2 -> Block2Exit;

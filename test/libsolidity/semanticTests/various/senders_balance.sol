@@ -19,7 +19,7 @@ contract D {
 // compileViaYul: also
 // ----
 // constructor(), 27 wei ->
-// gas irOptimized: 178933
+// gas irOptimized: 175589
 // gas legacy: 222977
 // gas legacyOptimized: 169779
 // f() -> 27

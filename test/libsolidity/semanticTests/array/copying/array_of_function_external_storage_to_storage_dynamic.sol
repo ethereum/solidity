@@ -47,7 +47,7 @@ contract C {
 // compileViaYul: also
 // ----
 // copyExternalStorageArrayOfFunctionType() -> true
-// gas irOptimized: 104669
+// gas irOptimized: 104659
 // gas legacy: 108722
 // gas legacyOptimized: 102438
 // copyInternalArrayOfFunctionType() -> true
