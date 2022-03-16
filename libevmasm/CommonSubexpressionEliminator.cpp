@@ -219,7 +219,7 @@ void CSECodeGenerator::addDependencies(Id _c)
 {
 	if (m_classPositions.count(_c))
 		return; // it is already on the stack
-	if (m_neededBy.count(_c))
+	if (m_neededBy.find(_c) != m_neededBy.end())
 		return; // we already computed the dependencies for _c
 	ExpressionClasses::Expression expr = m_expressionClasses.representative(_c);
 	assertThrow(expr.item, OptimizerException, "");
@@ -300,8 +300,8 @@ void CSECodeGenerator::addDependencies(Id _c)
 
 void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 {
-	for (auto it: m_classPositions)
-		for (auto p: it.second)
+	for (auto const& it: m_classPositions)
+		for (int p: it.second)
 			if (p > m_stackHeight)
 			{
 				assertThrow(false, OptimizerException, "");
