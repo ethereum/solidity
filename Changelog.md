@@ -1,4 +1,4 @@
-### 0.8.13 (unreleased)
+### 0.8.13 (2022-03-16)
 
 Important Bugfixes:
  * Code Generator: Correctly encode literals used in ``abi.encodeCall`` in place of fixed bytes arguments.

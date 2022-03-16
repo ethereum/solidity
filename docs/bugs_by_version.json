@@ -1560,6 +1560,10 @@
         ],
         "released": "2022-02-16"
     },
+    "0.8.13": {
+        "bugs": [],
+        "released": "2022-03-16"
+    },
     "0.8.2": {
         "bugs": [
             "SignedImmutables",
