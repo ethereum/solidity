@@ -151,14 +151,18 @@ public:
 
 		vector<tuple<char, string>> sortedOptions =
 			ranges::views::concat(optimiserSteps, _extraOptions) |
-			ranges::to<vector<tuple<char, string>>>() |
-			ranges::actions::sort([](tuple<char, string> const& _a, tuple<char, string> const& _b) {
+			ranges::to<vector<tuple<char, string>>>();
+		std::sort(
+			sortedOptions.begin(),
+			sortedOptions.end(),
+			[](tuple<char, string> const& _a, tuple<char, string> const& _b) {
 				return (
 					!boost::algorithm::iequals(get<1>(_a), get<1>(_b)) ?
 					boost::algorithm::lexicographical_compare(get<1>(_a), get<1>(_b), boost::algorithm::is_iless()) :
 					toLower(get<0>(_a)) < toLower(get<0>(_b))
 				);
-			});
+			}
+		);
 
 		yulAssert(sortedOptions.size() > 0);
 		size_t rows = (sortedOptions.size() - 1) / _columns + 1;

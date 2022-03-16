@@ -28,7 +28,7 @@ parameters:
     default: london
 
 orbs:
-  win: circleci/windows@2.2.0
+  win: circleci/windows@4.1.1
 
 commands:
   gitter_notify_unless_pr:
@@ -368,18 +368,18 @@ defaults:
 
   - base_win_powershell: &base_win_powershell
       executor:
-        name: win/default
+        name: win/server-2022
         shell: powershell.exe
 
   - base_win_powershell_large: &base_win_powershell_large
       executor:
-        name: win/default
+        name: win/server-2022
         shell: powershell.exe
         size: large
 
   - base_win_cmd: &base_win_cmd
       executor:
-        name: win/default
+        name: win/server-2022
         shell: cmd.exe
 
   - base_osx: &base_osx
@@ -783,7 +783,9 @@ jobs:
       - checkout
       - run:
           name: Python unit tests
-          command: python.exe test/pyscriptTests.py
+          command: |
+            pip install requests
+            python test/pyscriptTests.py
       - gitter_notify_failure_unless_pr
 
   b_ubu: &b_ubu
