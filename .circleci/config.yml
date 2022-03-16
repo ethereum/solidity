@@ -1280,6 +1280,12 @@ jobs:
       - run:
           name: "Run soltest"
           command: .circleci/soltest.ps1
+      - run:
+          name: Install LSP test dependencies
+          command: python -m pip install --user deepdiff colorama
+      - run:
+          name: Executing solc LSP test suite
+          command: python ./test/lsp.py .\build\solc\Release\solc.exe
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
       - gitter_notify_failure_unless_pr
