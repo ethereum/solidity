@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Peephole Optimizer: Remove operations without side effects before simple terminations.
+ * Yul Optimizer: Take termination of branches into account for data flow analysis.
 
 
 Bugfixes:
