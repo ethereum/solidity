@@ -30,6 +30,48 @@ Semantic Only Changes
 This section lists the changes that are semantic-only, thus potentially
 hiding new and different behavior in existing code.
 
+- The order of state variable initialization has changed in case of inheritance.
+
+  The order used to be:
+
+  - All state variables are zero-initialized at the beginning.
+  - Evaluate base constructor arguments from most derived to most base contract.
+  - Initialize all state variables in the whole inheritance hierarchy from most base to most derived.
+  - Run the constructor, if present, for all contracts in the linearized hierarchy from most base to most derived.
+
+  New order:
+
+  - All state variables are zero-initialized at the beginning.
+  - Evaluate base constructor arguments from most derived to most base contract.
+  - For every contract in order from most base to most derived in the linearized hierarchy:
+
+      1. Initialize state variables.
+      2. Run the constructor (if present).
+
+  This causes differences in contracts where the initial value of a state
+  variable relies on the result of the constructor in another contract:
+
+  .. code-block:: solidity
+
+      // SPDX-License-Identifier: GPL-3.0
+      pragma solidity >=0.7.1;
+
+      contract A {
+          uint x;
+          constructor() {
+              x = 42;
+          }
+          function f() public view returns(uint256) {
+              return x;
+          }
+      }
+      contract B is A {
+          uint public y = f();
+      }
+
+  Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
+  With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
+
 - When storage structs are deleted, every storage slot that contains
   a member of the struct is set to zero entirely. Formerly, padding space
   was left untouched.
@@ -111,47 +153,6 @@ hiding new and different behavior in existing code.
     its first value.
   - New code generator: ``0`` as all parameters, including return parameters, will be re-initialized before
     each ``_;`` evaluation.
-
-- The order of contract initialization has changed in case of inheritance.
-
-  The order used to be:
-
-  - All state variables are zero-initialized at the beginning.
-  - Evaluate base constructor arguments from most derived to most base contract.
-  - Initialize all state variables in the whole inheritance hierarchy from most base to most derived.
-  - Run the constructor, if present, for all contracts in the linearized hierarchy from most base to most derived.
-
-  New order:
-
-  - All state variables are zero-initialized at the beginning.
-  - Evaluate base constructor arguments from most derived to most base contract.
-  - For every contract in order from most base to most derived in the linearized hierarchy execute:
-
-      1. If present at declaration, initial values are assigned to state variables.
-      2. Constructor, if present.
-
-This causes differences in some contracts, for example:
-
-  .. code-block:: solidity
-
-      // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >=0.7.1;
-
-      contract A {
-          uint x;
-          constructor() {
-              x = 42;
-          }
-          function f() public view returns(uint256) {
-              return x;
-          }
-      }
-      contract B is A {
-          uint public y = f();
-      }
-
-  Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
-  With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
 
 - Copying ``bytes`` arrays from memory to storage is implemented in a different way.
   The old code generator always copies full words, while the new one cuts the byte
