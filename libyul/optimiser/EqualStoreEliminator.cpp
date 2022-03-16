@@ -54,13 +54,13 @@ void EqualStoreEliminator::visit(Statement& _statement)
 	{
 		if (auto vars = isSimpleStore(StoreLoadLocation::Storage, *expression))
 		{
-			if (auto const* currentValue = valueOrNullptr(m_storage, vars->first))
+			if (optional<YulString> currentValue = storageValue(vars->first))
 				if (*currentValue == vars->second)
 					m_pendingRemovals.insert(&_statement);
 		}
 		else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, *expression))
 		{
-			if (auto const* currentValue = valueOrNullptr(m_memory, vars->first))
+			if (optional<YulString> currentValue = memoryValue(vars->first))
 				if (*currentValue == vars->second)
 					m_pendingRemovals.insert(&_statement);
 		}

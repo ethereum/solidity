@@ -268,7 +268,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_varDecl.location()) <<
-			errinfo_comment("Stack too deep.")
+			util::errinfo_comment("Stack too deep.")
 		);
 	m_context << dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
@@ -350,7 +350,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				BOOST_THROW_EXCEPTION(
 					StackTooDeepError() <<
 					errinfo_sourceLocation(_assignment.location()) <<
-					errinfo_comment("Stack too deep, try removing local variables.")
+					util::errinfo_comment("Stack too deep, try removing local variables.")
 				);
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
@@ -1258,6 +1258,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				function.kind() == FunctionType::Kind::ABIEncodeWithSignature;
 
 			TypePointers argumentTypes;
+			TypePointers targetTypes;
 
 			ASTNode::listAccept(arguments, *this);
 
@@ -1265,14 +1266,17 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				solAssert(arguments.size() == 2);
 
-				auto const functionPtr = dynamic_cast<FunctionTypePointer>(arguments[0]->annotation().type);
-				solAssert(functionPtr);
-
 				// Account for tuples with one component which become that component
 				if (auto const tupleType = dynamic_cast<TupleType const*>(arguments[1]->annotation().type))
 					argumentTypes = tupleType->components();
 				else
 					argumentTypes.emplace_back(arguments[1]->annotation().type);
+
+				auto functionPtr = dynamic_cast<FunctionTypePointer>(arguments[0]->annotation().type);
+				solAssert(functionPtr);
+				functionPtr = functionPtr->asExternallyCallableFunction(false);
+				solAssert(functionPtr);
+				targetTypes = functionPtr->parameterTypes();
 			}
 			else
 				for (unsigned i = 0; i < arguments.size(); ++i)
@@ -1292,12 +1296,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (isPacked)
 			{
 				solAssert(!function.padArguments(), "");
-				utils().packedEncode(argumentTypes, TypePointers());
+				utils().packedEncode(argumentTypes, targetTypes);
 			}
 			else
 			{
 				solAssert(function.padArguments(), "");
-				utils().abiEncode(argumentTypes, TypePointers());
+				utils().abiEncode(argumentTypes, targetTypes);
 			}
 			utils().fetchFreeMemoryPointer();
 			// stack: [<selector/functionPointer/signature>] <data_encoding_area_end> <bytes_memory_ptr>
@@ -1452,7 +1456,7 @@ bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
 			solAssert(false, "Unexpected option name!");
 		acceptAndConvert(*_functionCallOptions.options()[i], *requiredType);
 
-		solAssert(!contains(presentOptions, newOption), "");
+		solAssert(!util::contains(presentOptions, newOption), "");
 		ptrdiff_t insertPos = presentOptions.end() - lower_bound(presentOptions.begin(), presentOptions.end(), newOption);
 
 		utils().moveIntoStack(static_cast<unsigned>(insertPos), 1);
@@ -2862,7 +2866,7 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError()
 			<< errinfo_sourceLocation(_expression.location())
-			<< errinfo_comment("Identifier type not supported or identifier not found."));
+			<< util::errinfo_comment("Identifier type not supported or identifier not found."));
 }
 
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)

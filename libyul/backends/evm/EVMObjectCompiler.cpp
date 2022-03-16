@@ -30,6 +30,8 @@
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace solidity::yul;
 using namespace std;
 
@@ -48,7 +50,8 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	for (auto const& subNode: _object.subObjects)
 		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
-			auto subAssemblyAndID = m_assembly.createSubAssembly(subObject->name.str());
+			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
+			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, subObject->name.str());
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
 			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize);
@@ -86,7 +89,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			if (memoryGuardCalls.empty())
 				msg += "\nNo memoryguard was present. "
 					"Consider using memory-safe assembly only and annotating it via "
-					"\"/// @solidity memory-safe-assembly\".";
+					"'assembly (\"memory-safe\") { ... }'.";
 			else
 				msg += "\nmemoryguard was present.";
 			stackError << util::errinfo_comment(msg);

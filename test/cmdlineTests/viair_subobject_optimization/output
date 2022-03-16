@@ -1,0 +1,354 @@
+
+======= viair_subobject_optimization/input.sol:C =======
+EVM assembly:
+    /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+  0x80
+  jumpi(tag_6, callvalue)
+  0x1f
+  bytecodeSize
+  codesize
+  dup2
+  swap1
+  sub
+  swap2
+  dup3
+  add
+  not(0x1f)
+  and
+  dup4
+  add
+  swap2
+  sub(shl(0x40, 0x01), 0x01)
+  dup4
+  gt
+  dup5
+  dup5
+  lt
+  or
+  tag_4
+  jumpi
+  dup1
+  dup5
+  swap3
+  0x20
+  swap5
+  0x40
+  mstore
+  dup4
+  codecopy
+  dup2
+  add
+  sub
+  slt
+  tag_6
+  jumpi
+  tag_8
+  swap1
+  mload
+  tag_1
+  jump	// in
+tag_8:
+  mload(0x40)
+  dataSize(sub_0)
+  swap1
+  dup2
+  dataOffset(sub_0)
+  dup3
+  codecopy
+  return
+tag_6:
+  0x00
+  dup1
+  revert
+tag_4:
+  mstore(0x00, shl(0xe0, 0x4e487b71))
+  mstore(0x04, 0x41)
+  revert(0x00, 0x24)
+    /* "viair_subobject_optimization/input.sol":76:666  constructor(uint x) {... */
+tag_1:
+  sub(shl(0x48, 0x01), 0xbe)
+    /* "viair_subobject_optimization/input.sol":620:645  x == 0xFFFFFFFFFFFFFFFF42 */
+  eq
+    /* "viair_subobject_optimization/input.sol":616:661  if (x == 0xFFFFFFFFFFFFFFFF42)... */
+  tag_6
+  jumpi
+    /* "viair_subobject_optimization/input.sol":76:666  constructor(uint x) {... */
+  jump	// out
+stop
+
+sub_0: assembly {
+        /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+      0x00
+      dup1
+      revert
+
+    auxdata: <AUXDATA REMOVED>
+}
+
+
+======= viair_subobject_optimization/input.sol:D =======
+EVM assembly:
+    /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
+  0x80
+  dup1
+  0x40
+  mstore
+  jumpi(tag_1, callvalue)
+  dataSize(sub_0)
+  swap1
+  dup2
+  dataOffset(sub_0)
+  dup3
+  codecopy
+  return
+tag_1:
+  0x00
+  dup1
+  revert
+stop
+
+sub_0: assembly {
+        /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
+      0x80
+      jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
+      0x00
+      dup1
+      revert
+    tag_2:
+      0x00
+      swap1
+      dup2
+      calldataload
+      0xe0
+      shr
+      0x26121ff0
+      eq
+      tag_4
+      jumpi
+      pop
+      0x00
+      dup1
+      revert
+    tag_4:
+      jumpi(tag_8, callvalue)
+      dup2
+      add(calldatasize, not(0x03))
+      slt
+      tag_8
+      jumpi
+        /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
+      dataSize(sub_0)
+        /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
+      0x3f
+      dup2
+      add
+      not(0x1f)
+      and
+      dup3
+      add
+      0xffffffffffffffff
+      dup2
+      gt
+      dup4
+      dup3
+      lt
+      or
+      tag_10
+      jumpi
+      tag_12
+      swap4
+      pop
+      0x40
+      mstore
+        /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
+      dup1
+      dup3
+      mstore
+      dataOffset(sub_0)
+      0x20
+      dup4
+      add
+      codecopy
+        /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
+      mload(0x40)
+      swap2
+      dup3
+      swap2
+      dup3
+      tag_1
+      jump	// in
+    tag_12:
+      sub
+      swap1
+      return
+    tag_10:
+      shl(0xe0, 0x4e487b71)
+      dup5
+      mstore
+      mstore(0x04, 0x41)
+      0x24
+      dup5
+      revert
+    tag_8:
+      pop
+      dup1
+      revert
+    tag_1:
+      swap2
+      swap1
+      swap2
+      0x20
+      dup1
+      dup3
+      mstore
+      dup4
+      mload
+      swap1
+      dup2
+      dup2
+      dup5
+      add
+      mstore
+      0x00
+      swap5
+    tag_13:
+      dup3
+      dup7
+      lt
+      tag_14
+      jumpi
+      pop
+      pop
+      dup1
+      0x40
+      swap4
+      swap5
+      gt
+      tag_16
+      jumpi
+    tag_17:
+      0x1f
+      add
+      not(0x1f)
+      and
+      add
+      add
+      swap1
+      jump	// out
+    tag_16:
+      0x00
+      dup4
+      dup3
+      dup5
+      add
+      add
+      mstore
+      jump(tag_17)
+    tag_14:
+      dup6
+      dup2
+      add
+      dup3
+      add
+      mload
+      dup5
+      dup8
+      add
+      0x40
+      add
+      mstore
+      swap5
+      dup2
+      add
+      swap5
+      jump(tag_13)
+    stop
+
+    sub_0: assembly {
+            /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+          0x80
+          jumpi(tag_6, callvalue)
+          0x1f
+          bytecodeSize
+          codesize
+          dup2
+          swap1
+          sub
+          swap2
+          dup3
+          add
+          not(0x1f)
+          and
+          dup4
+          add
+          swap2
+          sub(shl(0x40, 0x01), 0x01)
+          dup4
+          gt
+          dup5
+          dup5
+          lt
+          or
+          tag_4
+          jumpi
+          dup1
+          dup5
+          swap3
+          0x20
+          swap5
+          0x40
+          mstore
+          dup4
+          codecopy
+          dup2
+          add
+          sub
+          slt
+          tag_6
+          jumpi
+          tag_8
+          swap1
+          mload
+          tag_1
+          jump	// in
+        tag_8:
+          mload(0x40)
+          dataSize(sub_0)
+          swap1
+          dup2
+          dataOffset(sub_0)
+          dup3
+          codecopy
+          return
+        tag_6:
+          0x00
+          dup1
+          revert
+        tag_4:
+          mstore(0x00, shl(0xe0, 0x4e487b71))
+          mstore(0x04, 0x41)
+          revert(0x00, 0x24)
+            /* "viair_subobject_optimization/input.sol":76:666  constructor(uint x) {... */
+        tag_1:
+          sub(shl(0x48, 0x01), 0xbe)
+            /* "viair_subobject_optimization/input.sol":620:645  x == 0xFFFFFFFFFFFFFFFF42 */
+          eq
+            /* "viair_subobject_optimization/input.sol":616:661  if (x == 0xFFFFFFFFFFFFFFFF42)... */
+          tag_6
+          jumpi
+            /* "viair_subobject_optimization/input.sol":76:666  constructor(uint x) {... */
+          jump	// out
+        stop
+
+        sub_0: assembly {
+                /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+              0x00
+              dup1
+              revert
+
+            auxdata: <AUXDATA REMOVED>
+        }
+    }
+
+    auxdata: <AUXDATA REMOVED>
+}

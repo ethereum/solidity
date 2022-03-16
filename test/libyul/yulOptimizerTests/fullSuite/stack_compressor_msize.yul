@@ -52,9 +52,9 @@
 //         pop(keccak256(gcd(_3, _2), or(gt(not(gcd(_3, _2)), _1), _1)))
 //         mstore(lt(or(gt(_1, or(or(gt(or(or(or(gt(or(gt(_6, _9), _1), _8), _7), _5), _1), _1), _4), _1)), _1), _1), _1)
 //         sstore(not(gcd(_3, _2)), _1)
-//         sstore(0, 0)
 //         sstore(2, _1)
 //         extcodecopy(_1, msize(), _1, _1)
+//         sstore(0, 0)
 //         sstore(3, _1)
 //     }
 //     function gcd(_a, _b) -> out

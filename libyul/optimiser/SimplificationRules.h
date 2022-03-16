@@ -62,7 +62,7 @@ public:
 	static Rule const* findFirstMatch(
 		Expression const& _expr,
 		Dialect const& _dialect,
-		std::map<YulString, AssignedValue> const& _ssaValues
+		std::function<AssignedValue const*(YulString)> const& _ssaValues
 	);
 
 	/// Checks whether the rulelist is non-empty. This is usually enforced
@@ -119,7 +119,7 @@ public:
 	bool matches(
 		Expression const& _expr,
 		Dialect const& _dialect,
-		std::map<YulString, AssignedValue> const& _ssaValues
+		std::function<AssignedValue const*(YulString)> const& _ssaValues
 	) const;
 
 	std::vector<Pattern> arguments() const { return m_arguments; }

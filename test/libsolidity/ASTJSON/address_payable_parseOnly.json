@@ -268,14 +268,15 @@
                     {
                       "id": 32,
                       "nodeType": "ElementaryTypeNameExpression",
-                      "src": "239:7:1",
+                      "src": "239:8:1",
                       "typeDescriptions": {},
                       "typeName":
                       {
                         "id": 31,
                         "name": "address",
                         "nodeType": "ElementaryTypeName",
-                        "src": "239:7:1",
+                        "src": "239:8:1",
+                        "stateMutability": "payable",
                         "typeDescriptions": {}
                       }
                     },

@@ -179,6 +179,8 @@ add_library(yul
 	optimiser/UnusedAssignEliminator.h
 	optimiser/UnusedStoreBase.cpp
 	optimiser/UnusedStoreBase.h
+	optimiser/UnusedStoreEliminator.cpp
+	optimiser/UnusedStoreEliminator.h
 	optimiser/Rematerialiser.cpp
 	optimiser/Rematerialiser.h
 	optimiser/SMTSolver.cpp

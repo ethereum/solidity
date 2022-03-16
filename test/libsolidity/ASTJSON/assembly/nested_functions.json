@@ -17,6 +17,7 @@
       "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
+      "fullyImplemented": true,
       "id": 8,
       "linearizedBaseContracts":
       [
@@ -32,21 +33,21 @@
           {
             "id": 6,
             "nodeType": "Block",
-            "src": "57:97:1",
+            "src": "57:95:1",
             "statements":
             [
               {
                 "AST":
                 {
                   "nodeType": "YulBlock",
-                  "src": "72:78:1",
+                  "src": "72:76:1",
                   "statements":
                   [
                     {
                       "body":
                       {
                         "nodeType": "YulBlock",
-                        "src": "94:50:1",
+                        "src": "94:35:1",
                         "statements":
                         [
                           {
@@ -59,43 +60,53 @@
                             "name": "f2",
                             "nodeType": "YulFunctionDefinition",
                             "src": "104:17:1"
-                          },
-                          {
-                            "nodeType": "YulAssignment",
-                            "src": "130:6:1",
-                            "value":
-                            {
-                              "kind": "number",
-                              "nodeType": "YulLiteral",
-                              "src": "135:1:1",
-                              "type": "",
-                              "value": "2"
-                            },
-                            "variableNames":
-                            [
-                              {
-                                "name": "x",
-                                "nodeType": "YulIdentifier",
-                                "src": "130:1:1"
-                              }
-                            ]
                           }
                         ]
                       },
                       "name": "f1",
                       "nodeType": "YulFunctionDefinition",
-                      "src": "80:64:1"
+                      "src": "80:49:1"
+                    },
+                    {
+                      "nodeType": "YulAssignment",
+                      "src": "136:6:1",
+                      "value":
+                      {
+                        "kind": "number",
+                        "nodeType": "YulLiteral",
+                        "src": "141:1:1",
+                        "type": "",
+                        "value": "2"
+                      },
+                      "variableNames":
+                      [
+                        {
+                          "name": "x",
+                          "nodeType": "YulIdentifier",
+                          "src": "136:1:1"
+                        }
+                      ]
                     }
                   ]
                 },
                 "evmVersion": %EVMVERSION%,
-                "externalReferences": [],
+                "externalReferences":
+                [
+                  {
+                    "declaration": 3,
+                    "isOffset": false,
+                    "isSlot": false,
+                    "src": "136:1:1",
+                    "valueSize": 1
+                  }
+                ],
                 "id": 5,
                 "nodeType": "InlineAssembly",
-                "src": "63:87:1"
+                "src": "63:85:1"
               }
             ]
           },
+          "functionSelector": "26121ff0",
           "id": 7,
           "implemented": true,
           "kind": "function",
@@ -127,14 +138,22 @@
                 "src": "49:6:1",
                 "stateVariable": false,
                 "storageLocation": "default",
-                "typeDescriptions": {},
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
                 "typeName":
                 {
                   "id": 2,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
                   "src": "49:4:1",
-                  "typeDescriptions": {}
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
                 },
                 "visibility": "internal"
               }
@@ -142,16 +161,16 @@
             "src": "48:8:1"
           },
           "scope": 8,
-          "src": "15:139:1",
+          "src": "15:137:1",
           "stateMutability": "pure",
           "virtual": false,
           "visibility": "public"
         }
       ],
       "scope": 9,
-      "src": "0:156:1",
+      "src": "0:154:1",
       "usedErrors": []
     }
   ],
-  "src": "0:157:1"
+  "src": "0:155:1"
 }

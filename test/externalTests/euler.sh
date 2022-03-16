@@ -32,7 +32,10 @@ BINARY_PATH="$2"
 SELECTED_PRESETS="$3"
 
 function compile_fn { npm run compile; }
-function test_fn { npx --no hardhat --no-compile test; }
+function test_fn {
+    # The default timeout of 20000 ms is too short for unoptimized code (https://github.com/ethereum/solidity/pull/12765).
+    TEST_TIMEOUT=100000 npx --no hardhat --no-compile test
+}
 
 function euler_test
 {

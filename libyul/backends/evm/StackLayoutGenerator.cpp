@@ -23,6 +23,8 @@
 
 #include <libyul/backends/evm/StackHelpers.h>
 
+#include <libevmasm/GasMeter.h>
+
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/cxx20.h>
 #include <libsolutil/Visitor.h>
@@ -400,6 +402,7 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 	}
 
 	stitchConditionalJumps(_entry);
+	fillInJunk(_entry);
 }
 
 optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
@@ -702,4 +705,111 @@ Stack StackLayoutGenerator::compressStack(Stack _stack)
 	}
 	while (firstDupOffset);
 	return _stack;
+}
+
+void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
+{
+	/// Recursively adds junk to the subgraph starting on @a _entry.
+	/// Since it is only called on cut-vertices, the full subgraph retains proper stack balance.
+	auto addJunkRecursive = [&](CFG::BasicBlock const* _entry, size_t _numJunk) {
+		util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{_entry}};
+		breadthFirstSearch.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+			auto& blockInfo = m_layout.blockInfos.at(_block);
+			blockInfo.entryLayout = Stack{_numJunk, JunkSlot{}} + move(blockInfo.entryLayout);
+			for (auto const& operation: _block->operations)
+			{
+				auto& operationEntryLayout = m_layout.operationEntryLayout.at(&operation);
+				operationEntryLayout = Stack{_numJunk, JunkSlot{}} + move(operationEntryLayout);
+			}
+			blockInfo.exitLayout = Stack{_numJunk, JunkSlot{}} + move(blockInfo.exitLayout);
+
+			std::visit(util::GenericVisitor{
+				[&](CFG::BasicBlock::MainExit const&) {},
+				[&](CFG::BasicBlock::Jump const& _jump)
+				{
+					_addChild(_jump.target);
+				},
+				[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+				{
+					_addChild(_conditionalJump.zero);
+					_addChild(_conditionalJump.nonZero);
+				},
+				[&](CFG::BasicBlock::FunctionReturn const&) { yulAssert(false); },
+				[&](CFG::BasicBlock::Terminated const&) {},
+			}, _block->exit);
+		});
+	};
+	/// @returns the number of operations required to transform @a _source to @a _target.
+	auto evaluateTransform = [](Stack _source, Stack const& _target) -> size_t {
+		size_t opGas = 0;
+		auto swap = [&](unsigned _swapDepth)
+		{
+			if (_swapDepth > 16)
+				opGas += 1000;
+			else
+				opGas += evmasm::GasMeter::runGas(evmasm::swapInstruction(_swapDepth));
+		};
+		auto dupOrPush = [&](StackSlot const& _slot)
+		{
+			if (canBeFreelyGenerated(_slot))
+				opGas += evmasm::GasMeter::runGas(evmasm::pushInstruction(32));
+			else
+			{
+				auto depth = util::findOffset(_source | ranges::views::reverse, _slot);
+				yulAssert(depth);
+				if (*depth < 16)
+					opGas += evmasm::GasMeter::runGas(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)));
+				else
+					opGas += 1000;
+			}
+		};
+		auto pop = [&]() { opGas += evmasm::GasMeter::runGas(evmasm::Instruction::POP); };
+		createStackLayout(_source, _target, swap, dupOrPush, pop);
+		return opGas;
+	};
+	/// Traverses the CFG and at each block that allows junk, i.e. that is a cut-vertex that never leads to a function
+	/// return, checks if adding junk reduces the shuffling cost upon entering and if so recursively adds junk
+	/// to the spanned subgraph.
+	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_block}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				_addChild(_jump.target);
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				for (CFG::BasicBlock* exit: {_conditionalJump.zero, _conditionalJump.nonZero})
+					if (exit->allowsJunk())
+					{
+						auto& blockInfo = m_layout.blockInfos.at(exit);
+						Stack entryLayout = blockInfo.entryLayout;
+						Stack nextLayout = exit->operations.empty() ? blockInfo.exitLayout : m_layout.operationEntryLayout.at(&exit->operations.front());
+
+						size_t bestCost = evaluateTransform(entryLayout, nextLayout);
+						size_t bestNumJunk = 0;
+						size_t maxJunk = entryLayout.size();
+						for (size_t numJunk = 1; numJunk <= maxJunk; ++numJunk)
+						{
+							size_t cost = evaluateTransform(entryLayout, Stack{numJunk, JunkSlot{}} + nextLayout);
+							if (cost < bestCost)
+							{
+								bestCost = cost;
+								bestNumJunk = numJunk;
+							}
+						}
+
+						if (bestNumJunk > 0)
+						{
+							addJunkRecursive(exit, bestNumJunk);
+							blockInfo.entryLayout = entryLayout;
+						}
+					}
+				_addChild(_conditionalJump.zero);
+				_addChild(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&) {},
+			[&](CFG::BasicBlock::Terminated const&) {},
+		}, _block->exit);
+	});
 }

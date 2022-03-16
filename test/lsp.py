@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# pragma pylint: disable=too-many-lines
 import argparse
 import fnmatch
 import json
@@ -361,6 +361,52 @@ class SolidityLSPTestSuite: # {{{
             },
             "diagnostic: check range"
         )
+
+    def expect_location(
+        self,
+        obj: dict,
+        uri: str,
+        lineNo: int,
+        startEndColumns: Tuple[int, int]
+    ):
+        """
+        obj is an JSON object containing two keys:
+            - 'uri': a string of the document URI
+            - 'range': the location range, two child objects 'start' and 'end',
+                        each having a 'line' and 'character' integer value.
+        """
+        [startColumn, endColumn] = startEndColumns
+        self.expect_equal(obj['uri'], uri)
+        self.expect_equal(obj['range']['start']['line'], lineNo)
+        self.expect_equal(obj['range']['start']['character'], startColumn)
+        self.expect_equal(obj['range']['end']['line'], lineNo)
+        self.expect_equal(obj['range']['end']['character'], endColumn)
+
+    def expect_goto_definition_location(
+        self,
+        solc: JsonRpcProcess,
+        document_uri: str,
+        document_position: Tuple[int, int],
+        expected_uri: str,
+        expected_lineNo: int,
+        expected_startEndColumns: Tuple[int, int],
+        description: str
+    ):
+        response = solc.call_method(
+            'textDocument/definition',
+            {
+                'textDocument': {
+                    'uri': document_uri,
+                },
+                'position': {
+                    'line': document_position[0],
+                    'character': document_position[1]
+                }
+            }
+        )
+        message = "Goto definition (" + description + ")"
+        self.expect_equal(len(response['result']), 1, message)
+        self.expect_location(response['result'][0], expected_uri, expected_lineNo, expected_startEndColumns)
     # }}}
 
     # {{{ actual tests
@@ -434,7 +480,7 @@ class SolidityLSPTestSuite: # {{{
         report = published_diagnostics[1]
         self.expect_equal(report['uri'], self.get_test_file_uri('lib'), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 1, "one diagnostic")
-        self.expect_diagnostic(report['diagnostics'][0], code=2072, lineNo=12, startEndColumns=(8, 19))
+        self.expect_diagnostic(report['diagnostics'][0], code=2072, lineNo=31, startEndColumns=(8, 19))
 
     def test_didChange_in_A_causing_error_in_B(self, solc: JsonRpcProcess) -> None:
         # Reusing another test but now change some file that generates an error in the other.
@@ -451,8 +497,8 @@ class SolidityLSPTestSuite: # {{{
                 [
                     {
                         'range': {
-                            'start': { 'line':  5, 'character': 0 },
-                            'end':   { 'line': 10, 'character': 0 }
+                            'start': { 'line': 24, 'character': 0 },
+                            'end':   { 'line': 29, 'character': 0 }
                         },
                         'text': "" # deleting function `add`
                     }
@@ -497,7 +543,7 @@ class SolidityLSPTestSuite: # {{{
         report = published_diagnostics[1]
         self.expect_equal(report['uri'], self.get_test_file_uri('lib'), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 1, "one diagnostic")
-        self.expect_diagnostic(report['diagnostics'][0], code=2072, lineNo=12, startEndColumns=(8, 19))
+        self.expect_diagnostic(report['diagnostics'][0], code=2072, lineNo=31, startEndColumns=(8, 19))
 
     def test_textDocument_didChange_updates_diagnostics(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
@@ -555,8 +601,8 @@ class SolidityLSPTestSuite: # {{{
                     {
                         'range':
                         {
-                            'start': { 'line': 12, 'character': 1 },
-                            'end':   { 'line': 13, 'character': 1 }
+                            'start': { 'line': 31, 'character': 1 },
+                            'end':   { 'line': 32, 'character': 1 }
                         },
                         'text': ""
                     }
@@ -673,7 +719,7 @@ class SolidityLSPTestSuite: # {{{
         reports = self.wait_for_diagnostics(solc, 2)
         self.expect_equal(len(reports), 2, '')
         self.expect_equal(len(reports[0]['diagnostics']), 0, "should not contain diagnostics")
-        self.expect_diagnostic(reports[1]['diagnostics'][0], 2072, 12, (8, 19)) # unused variable in lib.sol
+        self.expect_diagnostic(reports[1]['diagnostics'][0], 2072, 31, (8, 19)) # unused variable in lib.sol
 
         # Now close the file and expect the warning for lib.sol to be removed
         solc.send_message(
@@ -743,6 +789,231 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report3['uri'], FILE_URI, "Correct file URI")
         self.expect_equal(len(report3['diagnostics']), 1, "one diagnostic")
         self.expect_diagnostic(report3['diagnostics'][0], 4126, 6, (1, 23))
+
+    def test_textDocument_definition(self, solc: JsonRpcProcess) -> None:
+        self.setup_lsp(solc)
+        FILE_NAME = 'goto_definition'
+        FILE_URI = self.get_test_file_uri(FILE_NAME)
+        LIB_URI = self.get_test_file_uri('lib')
+        solc.send_message('textDocument/didOpen', {
+            'textDocument': {
+                'uri': FILE_URI,
+                'languageId': 'Solidity',
+                'version': 1,
+                'text': self.get_test_file_contents(FILE_NAME)
+            }
+        })
+        published_diagnostics = self.wait_for_diagnostics(solc, 2)
+        self.expect_equal(len(published_diagnostics), 2, "publish diagnostics for 2 files")
+        self.expect_equal(len(published_diagnostics[0]['diagnostics']), 0)
+        self.expect_equal(len(published_diagnostics[1]['diagnostics']), 1)
+        self.expect_diagnostic(published_diagnostics[1]['diagnostics'][0], 2072, 31, (8, 19)) # unused variable in lib.sol
+
+        # import directive
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(3, 9), # symbol `"./lib.sol"` in `import "./lib.sol"`
+            expected_uri=LIB_URI,
+            expected_lineNo=0,
+            expected_startEndColumns=(0, 0),
+            description="import directive"
+        )
+
+        # type symbol to jump to type defs (error, contract, enum, ...)
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(30, 19), # symbol `IA` in `new IA()`
+            expected_uri=FILE_URI,
+            expected_lineNo=10,
+            expected_startEndColumns=(9, 11),
+            description="type symbol to jump to definition"
+        )
+
+        # virtual function lookup?
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(31, 12), # symbol `f`, jumps to interface definition
+            expected_uri=FILE_URI,
+            expected_lineNo=7,
+            expected_startEndColumns=(13, 14),
+            description="virtual function lookup"
+        )
+
+        # using for
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(37, 10), # symbol `add` in `i.add(5)`
+            expected_uri=FILE_URI,
+            expected_lineNo=22,
+            expected_startEndColumns=(13, 16),
+            description="using for"
+        )
+
+        # library
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(43, 15), # symbol `Lib` in `Lib.add(n, 1)`
+            expected_uri=LIB_URI,
+            expected_lineNo=22,
+            expected_startEndColumns=(8, 11),
+            description="Library symbol from different file"
+        )
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(43, 19), # symbol `add` in `Lib.add(n, 1)`
+            expected_uri=LIB_URI,
+            expected_lineNo=24,
+            expected_startEndColumns=(13, 16),
+            description="Library member symbol from different file"
+        )
+
+        # enum type symbol and enum values
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(46, 19), # symbol `Color` in function signature's parameter
+            expected_uri=LIB_URI,
+            expected_lineNo=13,
+            expected_startEndColumns=(5, 10),
+            description="Enum type"
+        )
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(48, 24), # symbol `Red` in `Color.Red`
+            expected_uri=LIB_URI,
+            expected_lineNo=15,
+            expected_startEndColumns=(4, 7),
+            description="Enum value"
+        )
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(48, 24), # symbol `Red` in `Color.Red`
+            expected_uri=LIB_URI,
+            expected_lineNo=15,
+            expected_startEndColumns=(4, 7),
+            description="Enum value"
+        )
+
+        # local variable declarations
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(49, 17), # symbol `e` in `(c == e)`
+            expected_uri=FILE_URI,
+            expected_lineNo=48,
+            expected_startEndColumns=(14, 15),
+            description="local variable declaration"
+        )
+
+        # User defined type
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(58, 8), # symbol `Price` in `Price p ...`
+            expected_uri=FILE_URI,
+            expected_lineNo=55,
+            expected_startEndColumns=(9, 14),
+            description="User defined type on left hand side"
+        )
+
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(58, 18), # symbol `Price` in `Price.wrap()` expected_uri=FILE_URI,
+            expected_uri=FILE_URI,
+            expected_lineNo=55,
+            expected_startEndColumns=(9, 14),
+            description="User defined type on right hand side."
+        )
+
+        # struct constructor also properly jumps to the struct's declaration.
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(64, 33), # symbol `RGBColor` right hand side expression.
+            expected_uri=LIB_URI,
+            expected_lineNo=35,
+            expected_startEndColumns=(7, 15),
+            description="Struct constructor."
+        )
+
+    def test_textDocument_definition_imports(self, solc: JsonRpcProcess) -> None:
+        self.setup_lsp(solc)
+        FILE_NAME = 'goto_definition_imports'
+        FILE_URI = self.get_test_file_uri(FILE_NAME)
+        LIB_URI = self.get_test_file_uri('lib')
+        solc.send_message('textDocument/didOpen', {
+            'textDocument': {
+                'uri': FILE_URI,
+                'languageId': 'Solidity',
+                'version': 1,
+                'text': self.get_test_file_contents(FILE_NAME)
+            }
+        })
+        published_diagnostics = self.wait_for_diagnostics(solc, 2)
+        self.expect_equal(len(published_diagnostics), 2, "publish diagnostics for 2 files")
+        self.expect_equal(len(published_diagnostics[0]['diagnostics']), 0)
+        self.expect_equal(len(published_diagnostics[1]['diagnostics']), 1)
+        self.expect_diagnostic(published_diagnostics[1]['diagnostics'][0], 2072, 31, (8, 19)) # unused variable in lib.sol
+
+        # import directive: test symbol alias
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(3, 9), #  in `Weather` of `import {Weather as Wetter} from "./lib.sol"`
+            expected_uri=LIB_URI,
+            expected_lineNo=6,
+            expected_startEndColumns=(5, 12),
+            description="goto definition of symbol in symbol alias import directive"
+        )
+
+        # import directive: test symbol alias
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(8, 55), # `Wetter` in return type declaration
+            expected_uri=LIB_URI,
+            expected_lineNo=6,
+            expected_startEndColumns=(5, 12),
+            description="goto definition of symbol in symbol alias import directive"
+        )
+
+        # That.Color tests with `That` being the aliased library to be imported.
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(13, 55), # `That` in return type declaration
+            expected_uri=LIB_URI,
+            expected_lineNo=13,
+            expected_startEndColumns=(5, 10),
+            description="goto definition of symbol in symbol alias import directive"
+        )
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(15, 8),
+            expected_uri=LIB_URI,
+            expected_lineNo=13,
+            expected_startEndColumns=(5, 10),
+            description="`That` in LHS variable assignment"
+        )
+        self.expect_goto_definition_location(
+            solc=solc,
+            document_uri=FILE_URI,
+            document_position=(15, 27),
+            expected_uri=FILE_URI,
+            expected_lineNo=4,
+            expected_startEndColumns=(22, 26),
+            description="`That` in expression"
+        )
 
     def test_textDocument_didChange_empty_file(self, solc: JsonRpcProcess) -> None:
         """

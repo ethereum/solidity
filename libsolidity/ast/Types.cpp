@@ -33,7 +33,9 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/StringUtils.h>
 #include <libsolutil/UTF8.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -330,22 +332,46 @@ Type const* Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _scope)
 {
 	vector<UsingForDirective const*> usingForDirectives;
-	if (auto const* sourceUnit = dynamic_cast<SourceUnit const*>(&_scope))
-		usingForDirectives += ASTNode::filteredNodes<UsingForDirective>(sourceUnit->nodes());
-	else if (auto const* contract = dynamic_cast<ContractDefinition const*>(&_scope))
-		usingForDirectives +=
-			contract->usingForDirectives() +
-			ASTNode::filteredNodes<UsingForDirective>(contract->sourceUnit().nodes());
+	SourceUnit const* sourceUnit = dynamic_cast<SourceUnit const*>(&_scope);
+	if (auto const* contract = dynamic_cast<ContractDefinition const*>(&_scope))
+	{
+		sourceUnit = &contract->sourceUnit();
+		usingForDirectives += contract->usingForDirectives();
+	}
 	else
-		solAssert(false, "");
+		solAssert(sourceUnit, "");
+	usingForDirectives += ASTNode::filteredNodes<UsingForDirective>(sourceUnit->nodes());
+
+	if (Declaration const* typeDefinition = _type.typeDefinition())
+		if (auto const* sourceUnit = dynamic_cast<SourceUnit const*>(typeDefinition->scope()))
+			for (auto usingFor: ASTNode::filteredNodes<UsingForDirective>(sourceUnit->nodes()))
+				// We do not yet compare the type name because of normalization.
+				if (usingFor->global() && usingFor->typeName())
+					usingForDirectives.emplace_back(usingFor);
 
 	// Normalise data location of type.
 	DataLocation typeLocation = DataLocation::Storage;
 	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
 		typeLocation = refType->location();
 
-	set<Declaration const*> seenFunctions;
 	MemberList::MemberMap members;
+
+	set<pair<string, Declaration const*>> seenFunctions;
+	auto addFunction = [&](FunctionDefinition const& _function, optional<string> _name = {})
+	{
+		if (!_name)
+			_name = _function.name();
+		Type const* functionType =
+			_function.libraryFunction() ? _function.typeViaContractName() : _function.type();
+		solAssert(functionType, "");
+		FunctionType const* asBoundFunction =
+			dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
+		solAssert(asBoundFunction, "");
+
+		if (_type.isImplicitlyConvertibleTo(*asBoundFunction->selfType()))
+			if (seenFunctions.insert(make_pair(*_name, &_function)).second)
+				members.emplace_back(&_function, asBoundFunction, *_name);
+	};
 
 	for (UsingForDirective const* ufd: usingForDirectives)
 	{
@@ -353,7 +379,8 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 		// directive applies.
 		// Further down, we check more detailed for each function if `_type` is
 		// convertible to the function parameter type.
-		if (ufd->typeName() &&
+		if (
+			ufd->typeName() &&
 			*TypeProvider::withLocationIfReference(typeLocation, &_type, true) !=
 			*TypeProvider::withLocationIfReference(
 				typeLocation,
@@ -362,20 +389,28 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 			)
 		)
 			continue;
-		auto const& library = dynamic_cast<ContractDefinition const&>(
-			*ufd->libraryName().annotation().referencedDeclaration
-		);
-		for (FunctionDefinition const* function: library.definedFunctions())
+
+		for (auto const& pathPointer: ufd->functionsOrLibrary())
 		{
-			if (!function->isOrdinary() || !function->isVisibleAsLibraryMember() || seenFunctions.count(function))
-				continue;
-			seenFunctions.insert(function);
-			if (function->parameters().empty())
-				continue;
-			FunctionTypePointer fun =
-				dynamic_cast<FunctionType const&>(*function->typeViaContractName()).asBoundFunction();
-			if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
-				members.emplace_back(function, fun);
+			solAssert(pathPointer);
+			Declaration const* declaration = pathPointer->annotation().referencedDeclaration;
+			solAssert(declaration);
+
+			if (ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(declaration))
+			{
+				solAssert(library->isLibrary());
+				for (FunctionDefinition const* function: library->definedFunctions())
+				{
+					if (!function->isOrdinary() || !function->isVisibleAsLibraryMember() || function->parameters().empty())
+						continue;
+					addFunction(*function);
+				}
+			}
+			else
+				addFunction(
+					dynamic_cast<FunctionDefinition const&>(*declaration),
+					pathPointer->path().back()
+				);
 		}
 	}
 
@@ -781,8 +816,8 @@ tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 		if (radixPoint != _value.end())
 		{
 			if (
-				!all_of(radixPoint + 1, _value.end(), ::isdigit) ||
-				!all_of(_value.begin(), radixPoint, ::isdigit)
+				!all_of(radixPoint + 1, _value.end(), util::isDigit) ||
+				!all_of(_value.begin(), radixPoint, util::isDigit)
 			)
 				return make_tuple(false, rational(0));
 
@@ -2344,6 +2379,11 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 	return *m_interfaceType_library;
 }
 
+Declaration const* StructType::typeDefinition() const
+{
+	return &structDefinition();
+}
+
 BoolResult StructType::validForLocation(DataLocation _loc) const
 {
 	for (auto const& member: m_struct.members())
@@ -2476,6 +2516,11 @@ Type const* EnumType::encodingType() const
 	return TypeProvider::uint(8);
 }
 
+Declaration const* EnumType::typeDefinition() const
+{
+	return &enumDefinition();
+}
+
 TypeResult EnumType::unaryOperatorResult(Token _operator) const
 {
 	return _operator == Token::Delete ? TypeProvider::emptyTuple() : nullptr;
@@ -2542,6 +2587,11 @@ Type const& UserDefinedValueType::underlyingType() const
 	solAssert(type, "");
 	solAssert(type->category() != Category::UserDefinedValueType, "");
 	return *type;
+}
+
+Declaration const* UserDefinedValueType::typeDefinition() const
+{
+	return &m_definition;
 }
 
 string UserDefinedValueType::richIdentifier() const

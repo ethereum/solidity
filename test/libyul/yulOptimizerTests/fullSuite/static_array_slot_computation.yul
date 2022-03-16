@@ -39,7 +39,6 @@
 //                 mstore(4, 0x32)
 //                 revert(_1, 0x24)
 //             }
-//             mstore(_1, _1)
 //             sstore(0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56d, 0x05)
 //         }
 //     }

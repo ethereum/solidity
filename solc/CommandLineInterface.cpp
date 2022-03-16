@@ -464,7 +464,7 @@ void CommandLineInterface::readInputFiles()
 		for (auto const& [sourceUnitName, normalizedInputPaths]: collisions)
 		{
 			message += sourceUnitName + " matches: ";
-			message += joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) + "\n";
+			message += util::joinHumanReadable(normalizedInputPaths | ranges::views::transform(pathToQuotedString)) + "\n";
 		}
 
 		solThrow(CommandLineValidationError, message);
@@ -693,7 +693,7 @@ void CommandLineInterface::compile()
 			m_compiler->setModelCheckerSettings(m_options.modelChecker.settings);
 		m_compiler->setRemappings(m_options.input.remappings);
 		m_compiler->setLibraries(m_options.linker.libraries);
-		m_compiler->setViaIR(m_options.output.experimentalViaIR);
+		m_compiler->setViaIR(m_options.output.viaIR);
 		m_compiler->setEVMVersion(m_options.output.evmVersion);
 		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
 		if (m_options.output.debugInfoSelection.has_value())
@@ -963,7 +963,7 @@ void CommandLineInterface::link()
 			string foundPlaceholder(it, it + placeholderSize);
 			if (librariesReplacements.count(foundPlaceholder))
 			{
-				string hexStr(toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
+				string hexStr(util::toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
@@ -1016,8 +1016,6 @@ string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _
 void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine)
 {
 	solAssert(m_options.input.mode == InputMode::Assembler, "");
-
-	serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
 
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;

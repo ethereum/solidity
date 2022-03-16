@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
@@ -47,7 +48,7 @@ DataFlowAnalyzer::DataFlowAnalyzer(
 ):
 	m_dialect(_dialect),
 	m_functionSideEffects(std::move(_functionSideEffects)),
-	m_knowledgeBase(_dialect, m_value)
+	m_knowledgeBase(_dialect, [this](YulString _var) { return variableValue(_var); })
 {
 	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
 		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
@@ -64,20 +65,20 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 	if (auto vars = isSimpleStore(StoreLoadLocation::Storage, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		cxx20::erase_if(m_storage, mapTuple([&](auto&& key, auto&& value) {
+		cxx20::erase_if(m_state.storage, mapTuple([&](auto&& key, auto&& value) {
 			return
 				!m_knowledgeBase.knownToBeDifferent(vars->first, key) &&
 				!m_knowledgeBase.knownToBeEqual(vars->second, value);
 		}));
-		m_storage[vars->first] = vars->second;
+		m_state.storage[vars->first] = vars->second;
 	}
 	else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		cxx20::erase_if(m_memory, mapTuple([&](auto&& key, auto&& /* value */) {
+		cxx20::erase_if(m_state.memory, mapTuple([&](auto&& key, auto&& /* value */) {
 			return !m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, key);
 		}));
-		m_memory[vars->first] = vars->second;
+		m_state.memory[vars->first] = vars->second;
 	}
 	else
 	{
@@ -116,8 +117,8 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 void DataFlowAnalyzer::operator()(If& _if)
 {
 	clearKnowledgeIfInvalidated(*_if.condition);
-	unordered_map<YulString, YulString> storage = m_storage;
-	unordered_map<YulString, YulString> memory = m_memory;
+	unordered_map<YulString, YulString> storage = m_state.storage;
+	unordered_map<YulString, YulString> memory = m_state.memory;
 
 	ASTModifier::operator()(_if);
 
@@ -133,8 +134,8 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 	set<YulString> assignedVariables;
 	for (auto& _case: _switch.cases)
 	{
-		unordered_map<YulString, YulString> storage = m_storage;
-		unordered_map<YulString, YulString> memory = m_memory;
+		unordered_map<YulString, YulString> storage = m_state.storage;
+		unordered_map<YulString, YulString> memory = m_state.memory;
 		(*this)(_case.body);
 		joinKnowledge(storage, memory);
 
@@ -153,11 +154,8 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 {
 	// Save all information. We might rather reinstantiate this class,
 	// but this could be difficult if it is subclassed.
-	ScopedSaveAndRestore valueResetter(m_value, {});
+	ScopedSaveAndRestore stateResetter(m_state, {});
 	ScopedSaveAndRestore loopDepthResetter(m_loopDepth, 0u);
-	ScopedSaveAndRestore referencesResetter(m_references, {});
-	ScopedSaveAndRestore storageResetter(m_storage, {});
-	ScopedSaveAndRestore memoryResetter(m_memory, {});
 	pushScope(true);
 
 	for (auto const& parameter: _fun.parameters)
@@ -218,6 +216,22 @@ void DataFlowAnalyzer::operator()(Block& _block)
 	assertThrow(numScopes == m_variableScopes.size(), OptimizerException, "");
 }
 
+optional<YulString> DataFlowAnalyzer::storageValue(YulString _key) const
+{
+	if (YulString const* value = util::valueOrNullptr(m_state.storage, _key))
+		return *value;
+	else
+		return nullopt;
+}
+
+optional<YulString> DataFlowAnalyzer::memoryValue(YulString _key) const
+{
+	if (YulString const* value = util::valueOrNullptr(m_state.memory, _key))
+		return *value;
+	else
+		return nullopt;
+}
+
 void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expression* _value, bool _isDeclaration)
 {
 	if (!_isDeclaration)
@@ -242,17 +256,17 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 	auto const& referencedVariables = movableChecker.referencedVariables();
 	for (auto const& name: _variables)
 	{
-		m_references[name] = referencedVariables;
+		m_state.references[name] = referencedVariables;
 		if (!_isDeclaration)
 		{
 			// assignment to slot denoted by "name"
-			m_storage.erase(name);
+			m_state.storage.erase(name);
 			// assignment to slot contents denoted by "name"
-			cxx20::erase_if(m_storage, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
+			cxx20::erase_if(m_state.storage, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
 			// assignment to slot denoted by "name"
-			m_memory.erase(name);
+			m_state.memory.erase(name);
 			// assignment to slot contents denoted by "name"
-			cxx20::erase_if(m_memory, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
+			cxx20::erase_if(m_state.memory, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
 		}
 	}
 
@@ -265,9 +279,9 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 			// On the other hand, if we knew the value in the slot
 			// already, then the sload() / mload() would have been replaced by a variable anyway.
 			if (auto key = isSimpleLoad(StoreLoadLocation::Memory, *_value))
-				m_memory[*key] = variable;
+				m_state.memory[*key] = variable;
 			else if (auto key = isSimpleLoad(StoreLoadLocation::Storage, *_value))
-				m_storage[*key] = variable;
+				m_state.storage[*key] = variable;
 		}
 	}
 }
@@ -281,8 +295,8 @@ void DataFlowAnalyzer::popScope()
 {
 	for (auto const& name: m_variableScopes.back().variables)
 	{
-		m_value.erase(name);
-		m_references.erase(name);
+		m_state.value.erase(name);
+		m_state.references.erase(name);
 	}
 	m_variableScopes.pop_back();
 }
@@ -308,44 +322,44 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 	auto eraseCondition = mapTuple([&_variables](auto&& key, auto&& value) {
 		return _variables.count(key) || _variables.count(value);
 	});
-	cxx20::erase_if(m_storage, eraseCondition);
-	cxx20::erase_if(m_memory, eraseCondition);
+	cxx20::erase_if(m_state.storage, eraseCondition);
+	cxx20::erase_if(m_state.memory, eraseCondition);
 
 	// Also clear variables that reference variables to be cleared.
 	for (auto const& variableToClear: _variables)
-		for (auto const& [ref, names]: m_references)
+		for (auto const& [ref, names]: m_state.references)
 			if (names.count(variableToClear))
 				_variables.emplace(ref);
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)
 	{
-		m_value.erase(name);
-		m_references.erase(name);
+		m_state.value.erase(name);
+		m_state.references.erase(name);
 	}
 }
 
 void DataFlowAnalyzer::assignValue(YulString _variable, Expression const* _value)
 {
-	m_value[_variable] = {_value, m_loopDepth};
+	m_state.value[_variable] = {_value, m_loopDepth};
 }
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 {
 	SideEffectsCollector sideEffects(m_dialect, _block, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
-		m_storage.clear();
+		m_state.storage.clear();
 	if (sideEffects.invalidatesMemory())
-		m_memory.clear();
+		m_state.memory.clear();
 }
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 {
 	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
-		m_storage.clear();
+		m_state.storage.clear();
 	if (sideEffects.invalidatesMemory())
-		m_memory.clear();
+		m_state.memory.clear();
 }
 
 void DataFlowAnalyzer::joinKnowledge(
@@ -353,8 +367,8 @@ void DataFlowAnalyzer::joinKnowledge(
 	unordered_map<YulString, YulString> const& _olderMemory
 )
 {
-	joinKnowledgeHelper(m_storage, _olderStorage);
-	joinKnowledgeHelper(m_memory, _olderMemory);
+	joinKnowledgeHelper(m_state.storage, _olderStorage);
+	joinKnowledgeHelper(m_state.memory, _olderMemory);
 }
 
 void DataFlowAnalyzer::joinKnowledgeHelper(
@@ -364,10 +378,10 @@ void DataFlowAnalyzer::joinKnowledgeHelper(
 {
 	// We clear if the key does not exist in the older map or if the value is different.
 	// This also works for memory because _older is an "older version"
-	// of m_memory and thus any overlapping write would have cleared the keys
-	// that are not known to be different inside m_memory already.
+	// of m_state.memory and thus any overlapping write would have cleared the keys
+	// that are not known to be different inside m_state.memory already.
 	cxx20::erase_if(_this, mapTuple([&_older](auto&& key, auto&& currentValue){
-		YulString const* oldValue = valueOrNullptr(_older, key);
+		YulString const* oldValue = util::valueOrNullptr(_older, key);
 		return !oldValue || *oldValue != currentValue;
 	}));
 }
@@ -386,8 +400,8 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 
 optional<u256> DataFlowAnalyzer::valueOfIdentifier(YulString const& _name)
 {
-	if (m_value.count(_name))
-		if (Literal const* literal = get_if<Literal>(m_value.at(_name).value))
+	if (AssignedValue const* value = variableValue(_name))
+		if (Literal const* literal = get_if<Literal>(value->value))
 			return valueOfLiteral(*literal);
 	return nullopt;
 }

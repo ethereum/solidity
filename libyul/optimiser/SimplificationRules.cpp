@@ -21,15 +21,16 @@
 
 #include <libyul/optimiser/SimplificationRules.h>
 
-#include <libyul/optimiser/ASTCopier.h>
-#include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/SyntacticalEquality.h>
-#include <libyul/optimiser/DataFlowAnalyzer.h>
-#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/optimiser/ASTCopier.h>
+#include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SyntacticalEquality.h>
 
 #include <libevmasm/RuleList.h>
+#include <libsolutil/StringUtils.h>
 
 using namespace std;
 using namespace solidity;
@@ -40,7 +41,7 @@ using namespace solidity::yul;
 SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	map<YulString, AssignedValue> const& _ssaValues
+	function<AssignedValue const*(YulString)> const& _ssaValues
 )
 {
 	auto instruction = instructionAndArguments(_dialect, _expr);
@@ -137,7 +138,7 @@ void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _
 bool Pattern::matches(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	map<YulString, AssignedValue> const& _ssaValues
+	function<AssignedValue const*(YulString)> const& _ssaValues
 ) const
 {
 	Expression const* expr = &_expr;
@@ -147,8 +148,8 @@ bool Pattern::matches(
 	if (m_kind != PatternKind::Any && holds_alternative<Identifier>(_expr))
 	{
 		YulString varName = std::get<Identifier>(_expr).name;
-		if (_ssaValues.count(varName))
-			if (Expression const* new_expr = _ssaValues.at(varName).value)
+		if (AssignedValue const* value = _ssaValues(varName))
+			if (Expression const* new_expr = value->value)
 				expr = new_expr;
 	}
 	assertThrow(expr, OptimizerException, "");
@@ -249,8 +250,7 @@ Expression Pattern::toExpression(shared_ptr<DebugData const> const& _debugData) 
 		for (auto const& arg: m_arguments)
 			arguments.emplace_back(arg.toExpression(_debugData));
 
-		string name = instructionInfo(m_instruction).name;
-		transform(begin(name), end(name), begin(name), [](auto _c) { return tolower(_c); });
+		string name = util::toLower(instructionInfo(m_instruction).name);
 
 		return FunctionCall{_debugData,
 			Identifier{_debugData, YulString{name}},

@@ -82,12 +82,12 @@ Overflow
         uint immutable x;
         uint immutable y;
 
-        function add(uint _x, uint _y) internal pure returns (uint) {
-            return _x + _y;
+        function add(uint x_, uint y_) internal pure returns (uint) {
+            return x_ + y_;
         }
 
-        constructor(uint _x, uint _y) {
-            (x, y) = (_x, _y);
+        constructor(uint x_, uint y_) {
+            (x, y) = (x_, y_);
         }
 
         function stateAdd() public view returns (uint) {
@@ -116,7 +116,7 @@ Here, it reports the following:
         Overflow.add(1, 115792089237316195423570985008687907853269984665640564039457584007913129639935) -- internal call
      --> o.sol:9:20:
       |
-    9 |             return _x + _y;
+    9 |             return x_ + y_;
       |                    ^^^^^^^
 
 If we add ``require`` statements that filter out overflow cases,
@@ -131,12 +131,12 @@ the SMTChecker proves that no overflow is reachable (by not reporting warnings):
         uint immutable x;
         uint immutable y;
 
-        function add(uint _x, uint _y) internal pure returns (uint) {
-            return _x + _y;
+        function add(uint x_, uint y_) internal pure returns (uint) {
+            return x_ + y_;
         }
 
-        constructor(uint _x, uint _y) {
-            (x, y) = (_x, _y);
+        constructor(uint x_, uint y_) {
+            (x, y) = (x_, y_);
         }
 
         function stateAdd() public view returns (uint) {
@@ -155,7 +155,7 @@ An assertion represents an invariant in your code: a property that must be true
 
 The code below defines a function ``f`` that guarantees no overflow.
 Function ``inv`` defines the specification that ``f`` is monotonically increasing:
-for every possible pair ``(_a, _b)``, if ``_b > _a`` then ``f(_b) > f(_a)``.
+for every possible pair ``(a, b)``, if ``b > a`` then ``f(b) > f(a)``.
 Since ``f`` is indeed monotonically increasing, the SMTChecker proves that our
 property is correct. You are encouraged to play with the property and the function
 definition to see what results come out!
@@ -166,14 +166,14 @@ definition to see what results come out!
     pragma solidity >=0.8.0;
 
     contract Monotonic {
-        function f(uint _x) internal pure returns (uint) {
-            require(_x < type(uint128).max);
-            return _x * 42;
+        function f(uint x) internal pure returns (uint) {
+            require(x < type(uint128).max);
+            return x * 42;
         }
 
-        function inv(uint _a, uint _b) public pure {
-            require(_b > _a);
-            assert(f(_b) > f(_a));
+        function inv(uint a, uint b) public pure {
+            require(b > a);
+            assert(f(b) > f(a));
         }
     }
 
@@ -188,14 +188,14 @@ equal every element in the array.
     pragma solidity >=0.8.0;
 
     contract Max {
-        function max(uint[] memory _a) public pure returns (uint) {
+        function max(uint[] memory a) public pure returns (uint) {
             uint m = 0;
-            for (uint i = 0; i < _a.length; ++i)
-                if (_a[i] > m)
-                    m = _a[i];
+            for (uint i = 0; i < a.length; ++i)
+                if (a[i] > m)
+                    m = a[i];
 
-            for (uint i = 0; i < _a.length; ++i)
-                assert(m >= _a[i]);
+            for (uint i = 0; i < a.length; ++i)
+                assert(m >= a[i]);
 
             return m;
         }
@@ -222,15 +222,15 @@ For example, changing the code to
     pragma solidity >=0.8.0;
 
     contract Max {
-        function max(uint[] memory _a) public pure returns (uint) {
-            require(_a.length >= 5);
+        function max(uint[] memory a) public pure returns (uint) {
+            require(a.length >= 5);
             uint m = 0;
-            for (uint i = 0; i < _a.length; ++i)
-                if (_a[i] > m)
-                    m = _a[i];
+            for (uint i = 0; i < a.length; ++i)
+                if (a[i] > m)
+                    m = a[i];
 
-            for (uint i = 0; i < _a.length; ++i)
-                assert(m > _a[i]);
+            for (uint i = 0; i < a.length; ++i)
+                assert(m > a[i]);
 
             return m;
         }
@@ -243,7 +243,7 @@ gives us:
     Warning: CHC: Assertion violation happens here.
     Counterexample:
 
-    _a = [0, 0, 0, 0, 0]
+    a = [0, 0, 0, 0, 0]
      = 0
 
     Transaction trace:
@@ -251,7 +251,7 @@ gives us:
     Test.max([0, 0, 0, 0, 0])
       --> max.sol:14:4:
        |
-    14 |            assert(m > _a[i]);
+    14 |            assert(m > a[i]);
 
 
 State Properties
@@ -383,9 +383,9 @@ anything, including reenter the caller contract.
 
         Unknown immutable unknown;
 
-        constructor(Unknown _u) {
-            require(address(_u) != address(0));
-            unknown = _u;
+        constructor(Unknown u) {
+            require(address(u) != address(0));
+            unknown = u;
         }
 
         modifier mutex {
@@ -395,8 +395,8 @@ anything, including reenter the caller contract.
             lock = false;
         }
 
-        function set(uint _x) mutex public {
-            x = _x;
+        function set(uint x_) mutex public {
+            x = x_;
         }
 
         function run() mutex public {
@@ -754,15 +754,15 @@ not mean loss of proving power.
     {
         function f(
             bytes32 hash,
-            uint8 _v1, uint8 _v2,
-            bytes32 _r1, bytes32 _r2,
-            bytes32 _s1, bytes32 _s2
+            uint8 v1, uint8 v2,
+            bytes32 r1, bytes32 r2,
+            bytes32 s1, bytes32 s2
         ) public pure returns (address) {
-            address a1 = ecrecover(hash, _v1, _r1, _s1);
-            require(_v1 == _v2);
-            require(_r1 == _r2);
-            require(_s1 == _s2);
-            address a2 = ecrecover(hash, _v2, _r2, _s2);
+            address a1 = ecrecover(hash, v1, r1, s1);
+            require(v1 == v2);
+            require(r1 == r2);
+            require(s1 == s2);
+            address a2 = ecrecover(hash, v2, r2, s2);
             assert(a1 == a2);
             return a1;
         }

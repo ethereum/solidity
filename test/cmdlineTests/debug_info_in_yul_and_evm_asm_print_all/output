@@ -54,13 +54,6 @@ sub_0: assembly {
 }
 
 IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 
 /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_all/input.sol"
 object "C_6" {
@@ -176,13 +169,6 @@ object "C_6" {
 
 
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_all/input.sol"
 object "C_6" {
     code {
@@ -201,16 +187,14 @@ object "C_6" {
         code {
             {
                 /// @src 0:60:101  "contract C {..."
-                let _1 := memoryguard(0x80)
-                mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _2 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_2)))
+                    let _1 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_1)))
                     {
-                        if callvalue() { revert(_2, _2) }
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
-                        return(_1, _2)
+                        if callvalue() { revert(_1, _1) }
+                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        return(memoryguard(0x80), _1)
                     }
                 }
                 revert(0, 0)

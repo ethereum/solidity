@@ -10,16 +10,44 @@ Breaking changes:
  * General: The identifier ``basefee`` is a reserved identifier in Yul for all EVM versions.
 
 
-### 0.8.13 (unreleased)
+### 0.8.14 (unreleased)
 
 Language Features:
- * General: Allow annotating inline assembly as memory-safe to allow optimizations and stack limit evasion that rely on respecting Solidity's memory model.
 
 
 Compiler Features:
-* JSON-AST: Added selector field for errors and events.
+
 
 Bugfixes:
+
+
+
+### 0.8.13 (2022-03-16)
+
+Important Bugfixes:
+ * Code Generator: Correctly encode literals used in ``abi.encodeCall`` in place of fixed bytes arguments.
+
+
+Language Features:
+ * General: Allow annotating inline assembly as memory-safe to allow optimizations and stack limit evasion that rely on respecting Solidity's memory model.
+ * General: ``using M for Type;`` is allowed at file level and ``M`` can now also be a brace-enclosed list of free functions or library functions.
+ * General: ``using ... for T global;`` is allowed at file level where the user-defined type ``T`` has been defined, resulting in the effect of the statement being available everywhere ``T`` is available.
+
+
+Compiler Features:
+ * Commandline Interface: Allow the use of ``--via-ir`` in place of ``--experimental-via-ir``.
+ * Compilation via Yul IR is no longer marked as experimental.
+ * JSON-AST: Added selector field for errors and events.
+ * LSP: Implements goto-definition.
+ * Peephole Optimizer: Optimize comparisons in front of conditional jumps and conditional jumps across a single unconditional jump.
+ * Yul EVM Code Transform: Avoid unnecessary ``pop``s on terminating control flow.
+ * Yul Optimizer: Remove ``sstore`` and ``mstore`` operations that are never read from.
+
+
+Bugfixes:
+ * General: Fix internal error for locales with unusual capitalization rules. Locale set in the environment is now completely ignored.
+ * Type Checker: Fix incorrect type checker errors when importing overloaded functions.
+ * Yul IR Code Generation: Optimize embedded creation code with correct settings. This fixes potential mismatches between the constructor code of a contract compiled in isolation and the bytecode in ``type(C).creationCode``, resp. the bytecode used for ``new C(...)``.
 
 
 ### 0.8.12 (2022-02-16)

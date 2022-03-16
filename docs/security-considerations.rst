@@ -210,9 +210,9 @@ using a second proxy:
     contract ProxyWithMoreFunctionality {
         PermissionlessProxy proxy;
 
-        function callOther(address _addr, bytes memory _payload) public
+        function callOther(address addr, bytes memory payload) public
                 returns (bool, bytes memory) {
-            return proxy.callOther(_addr, _payload);
+            return proxy.callOther(addr, payload);
         }
         // Other functions and other functionality
     }
@@ -220,9 +220,9 @@ using a second proxy:
     // This is the full contract, it has no other functionality and
     // requires no privileges to work.
     contract PermissionlessProxy {
-        function callOther(address _addr, bytes memory _payload) public
+        function callOther(address addr, bytes memory payload) public
                 returns (bool, bytes memory) {
-            return _addr.call(_payload);
+            return addr.call(payload);
         }
     }
 

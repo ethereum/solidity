@@ -1,11 +1,4 @@
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"optimizer_array_sload/input.sol"
 object "Arraysum_34" {
     code {

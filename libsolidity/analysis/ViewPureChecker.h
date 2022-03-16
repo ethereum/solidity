@@ -50,6 +50,8 @@ private:
 		langutil::SourceLocation location;
 	};
 
+	bool visit(ImportDirective const&) override;
+
 	bool visit(FunctionDefinition const& _funDef) override;
 	void endVisit(FunctionDefinition const& _funDef) override;
 	bool visit(ModifierDefinition const& _modifierDef) override;

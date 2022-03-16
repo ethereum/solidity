@@ -403,7 +403,7 @@ void CompilerContext::appendInlineAssembly(
 	{
 		if (_insideFunction)
 			return false;
-		return contains(_localVariables, _identifier.name.str());
+		return util::contains(_localVariables, _identifier.name.str());
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,
@@ -572,8 +572,7 @@ void CompilerContext::updateSourceLocation()
 evmasm::Assembly::OptimiserSettings CompilerContext::translateOptimiserSettings(OptimiserSettings const& _settings)
 {
 	// Constructing it this way so that we notice changes in the fields.
-	evmasm::Assembly::OptimiserSettings asmSettings{false, false,  false, false, false, false, false, m_evmVersion, 0};
-	asmSettings.isCreation = true;
+	evmasm::Assembly::OptimiserSettings asmSettings{false,  false, false, false, false, false, m_evmVersion, 0};
 	asmSettings.runInliner = _settings.runInliner;
 	asmSettings.runJumpdestRemover = _settings.runJumpdestRemover;
 	asmSettings.runPeephole = _settings.runPeephole;

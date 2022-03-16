@@ -84,6 +84,34 @@ struct SolidityEndToEndTestExecutionFramework: public SolidityExecutionFramework
 
 BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, SolidityEndToEndTestExecutionFramework)
 
+BOOST_AUTO_TEST_CASE(creation_code_optimizer)
+{
+	string codeC = R"(
+		contract C {
+			constructor(uint x) {
+			if (x == 0xFFFFFFFFFFFFFFFF42)
+				revert();
+			}
+		}
+	)";
+	string codeD = R"(
+		contract D {
+			function f() public pure returns (bytes memory) {
+				return type(C).creationCode;
+			}
+		}
+	)";
+
+	m_metadataHash = CompilerStack::MetadataHash::None;
+	ALSO_VIA_YUL({
+		bytes bytecodeC = compileContract(codeC);
+		reset();
+		compileAndRun(codeC + codeD);
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, bytecodeC.size()) + encode(bytecodeC, false));
+		m_doEwasmTestrun = false;
+	})
+}
+
 unsigned constexpr roundTo32(unsigned _num)
 {
 	return (_num + 31) / 32 * 32;
@@ -4074,12 +4102,12 @@ BOOST_AUTO_TEST_CASE(strip_reason_strings)
 			m_optimiserSettings == OptimiserSettings::none()
 		)
 			// check that the reason string IS part of the binary.
-			BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") != std::string::npos);
+			BOOST_CHECK(util::toHex(m_output).find("736f6d6520726561736f6e") != std::string::npos);
 
 		m_revertStrings = RevertStrings::Strip;
 		compileAndRun(sourceCode, 0, "C");
 		// check that the reason string is NOT part of the binary.
-		BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") == std::string::npos);
+		BOOST_CHECK(util::toHex(m_output).find("736f6d6520726561736f6e") == std::string::npos);
 
 		ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(7));
 		ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs());

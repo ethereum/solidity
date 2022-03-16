@@ -40,9 +40,12 @@
 // You should have received a copy of the GNU General Public License
 // along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <liblangutil/Token.h>
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/Token.h>
+#include <libsolutil/StringUtils.h>
+
 #include <map>
+
 
 using namespace std;
 
@@ -180,11 +183,11 @@ tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _
 		return ret;
 	};
 
-	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
+	auto positionM = find_if(_literal.begin(), _literal.end(), util::isDigit);
 	if (positionM != _literal.end())
 	{
 		string baseType(_literal.begin(), positionM);
-		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
+		auto positionX = find_if_not(positionM, _literal.end(), util::isDigit);
 		int m = parseSize(positionM, positionX);
 		Token keyword = keywordByName(baseType);
 		if (keyword == Token::Bytes)
@@ -208,7 +211,7 @@ tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _
 				positionM < positionX &&
 				positionX < _literal.end() &&
 				*positionX == 'x' &&
-				all_of(positionX + 1, _literal.end(), ::isdigit)
+				all_of(positionX + 1, _literal.end(), util::isDigit)
 			) {
 				int n = parseSize(positionX + 1, _literal.end());
 				if (

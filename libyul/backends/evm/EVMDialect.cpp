@@ -21,17 +21,17 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <libyul/AsmAnalysisInfo.h>
+#include <libevmasm/Instruction.h>
+#include <libevmasm/SemanticInformation.h>
+#include <liblangutil/Exceptions.h>
+#include <libsolutil/StringUtils.h>
 #include <libyul/AST.h>
-#include <libyul/Object.h>
-#include <libyul/Exceptions.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmParser.h>
+#include <libyul/Exceptions.h>
+#include <libyul/Object.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
-#include <libevmasm/SemanticInformation.h>
-#include <libevmasm/Instruction.h>
-
-#include <liblangutil/Exceptions.h>
 
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/tail.hpp>
@@ -114,8 +114,7 @@ set<YulString> createReservedIdentifiers()
 	set<YulString> reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
-		string name = instr.first;
-		transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
+		string name = toLower(instr.first);
 		reserved.emplace(name);
 	}
 	reserved += vector<YulString>{
@@ -134,8 +133,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 	map<YulString, BuiltinFunctionForEVM> builtins;
 	for (auto const& instr: evmasm::c_instructions)
 	{
-		string name = instr.first;
-		transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
+		string name = toLower(instr.first);
 		auto const opcode = instr.second;
 
 		if (

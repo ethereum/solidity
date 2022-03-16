@@ -1,17 +1,9 @@
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"keccak_optimization_deploy_code/input.sol"
 object "C_12" {
     code {
         {
             /// @src 0:62:463  "contract C {..."
-            mstore(64, 128)
             if callvalue() { revert(0, 0) }
             /// @src 0:103:275  "assembly {..."
             mstore(0, 100)
@@ -27,10 +19,8 @@ object "C_12" {
         code {
             {
                 /// @src 0:62:463  "contract C {..."
-                mstore(64, 128)
                 if callvalue() { revert(0, 0) }
                 /// @src 0:317:454  "assembly {..."
-                mstore(0, 100)
                 sstore(0, 17385872270140913825666367956517731270094621555228275961425792378517567244498)
                 /// @src 0:62:463  "contract C {..."
                 stop()

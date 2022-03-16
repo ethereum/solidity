@@ -203,7 +203,7 @@ private:
 		else
 			solAssert(false);
 
-		if (isdigit(value.front()))
+		if (isDigit(value.front()))
 			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::YulString{value}, {}};
 		else
 			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
@@ -1160,9 +1160,21 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		for (auto const& argument: argumentsOfEncodeFunction)
 		{
 			argumentTypes.emplace_back(&type(*argument));
-			targetTypes.emplace_back(type(*argument).fullEncodingType(false, true, isPacked));
 			argumentVars += IRVariable(*argument).stackSlots();
 		}
+
+		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
+		{
+			auto encodedFunctionType = dynamic_cast<FunctionType const*>(arguments.front()->annotation().type);
+			solAssert(encodedFunctionType);
+			encodedFunctionType = encodedFunctionType->asExternallyCallableFunction(false);
+			solAssert(encodedFunctionType);
+			targetTypes = encodedFunctionType->parameterTypes();
+		}
+		else
+			for (auto const& argument: argumentsOfEncodeFunction)
+				targetTypes.emplace_back(type(*argument).fullEncodingType(false, true, isPacked));
+
 
 		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
 		{

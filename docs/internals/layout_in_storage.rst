@@ -140,8 +140,7 @@ by checking if the lowest bit is set: short (not set) and long (set).
 
 .. note::
   Handling invalidly encoded slots is currently not supported but may be added in the future.
-  If you are compiling via the experimental IR-based compiler pipeline, reading an invalidly encoded
-  slot results in a ``Panic(0x22)`` error.
+  If you are compiling via IR, reading an invalidly encoded slot results in a ``Panic(0x22)`` error.
 
 JSON Output
 ===========

@@ -16,6 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+
+#include <libsolutil/StringUtils.h>
+
 #include <test/libsolidity/util/TestFileParser.h>
 
 #include <test/libsolidity/util/BytesUtils.h>
@@ -34,6 +37,7 @@
 #include <stdexcept>
 
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
@@ -762,13 +766,15 @@ string TestFileParser::Scanner::scanString()
 // TODO: use fromHex() from CommonData
 char TestFileParser::Scanner::scanHexPart()
 {
+	auto toLower = [](char _c) -> char { return tolower(_c, locale::classic()); };
+
 	advance(); // skip 'x'
 
 	int value{};
-	if (isdigit(current()))
+	if (isDigit(current()))
 		value = current() - '0';
-	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
-		value = tolower(current()) - 'a' + 10;
+	else if (toLower(current()) >= 'a' && toLower(current()) <= 'f')
+		value = toLower(current()) - 'a' + 10;
 	else
 		BOOST_THROW_EXCEPTION(TestParserError("\\x used with no following hex digits."));
 
@@ -777,10 +783,10 @@ char TestFileParser::Scanner::scanHexPart()
 		return static_cast<char>(value);
 
 	value <<= 4;
-	if (isdigit(current()))
+	if (isDigit(current()))
 		value |= current() - '0';
-	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
-		value |= tolower(current()) - 'a' + 10;
+	else if (toLower(current()) >= 'a' && toLower(current()) <= 'f')
+		value |= toLower(current()) - 'a' + 10;
 
 	advance();
 

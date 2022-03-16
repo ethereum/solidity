@@ -1,11 +1,4 @@
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"ir_compiler_subobjects/input.sol"
 object "C_3" {
     code {
@@ -24,7 +17,6 @@ object "C_3" {
         code {
             {
                 /// @src 0:82:95  "contract C {}"
-                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
@@ -33,13 +25,6 @@ object "C_3" {
 }
 
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"ir_compiler_subobjects/input.sol"
 object "D_16" {
     code {
@@ -110,7 +95,6 @@ object "D_16" {
                 code {
                     {
                         /// @src 0:82:95  "contract C {}"
-                        mstore(64, memoryguard(0x80))
                         revert(0, 0)
                     }
                 }

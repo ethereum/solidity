@@ -32,6 +32,7 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -311,10 +312,26 @@ bool ASTJsonConverter::visit(InheritanceSpecifier const& _node)
 
 bool ASTJsonConverter::visit(UsingForDirective const& _node)
 {
-	setJsonNode(_node, "UsingForDirective", {
-		make_pair("libraryName", toJson(_node.libraryName())),
+	vector<pair<string, Json::Value>> attributes = {
 		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::nullValue)
-	});
+	};
+	if (_node.usesBraces())
+	{
+		Json::Value functionList;
+		for (auto const& function: _node.functionsOrLibrary())
+		{
+			Json::Value functionNode;
+			functionNode["function"] = toJson(*function);
+			functionList.append(move(functionNode));
+		}
+		attributes.emplace_back("functionList", move(functionList));
+	}
+	else
+		attributes.emplace_back("libraryName", toJson(*_node.functionsOrLibrary().front()));
+	attributes.emplace_back("global", _node.global());
+
+	setJsonNode(_node, "UsingForDirective", move(attributes));
+
 	return false;
 }
 
@@ -505,7 +522,7 @@ bool ASTJsonConverter::visit(EventDefinition const& _node)
 			_attributes.emplace_back(
 				make_pair(
 					"eventSelector",
-					toHex(u256(h256::Arith(util::keccak256(_node.functionType(true)->externalSignature()))))
+					toHex(u256(util::h256::Arith(util::keccak256(_node.functionType(true)->externalSignature()))))
 				));
 
 	setJsonNode(_node, "EventDefinition", std::move(_attributes));

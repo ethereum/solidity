@@ -117,6 +117,9 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 			case Token::Type:
 				nodes.push_back(parseUserDefinedValueTypeDefinition());
 				break;
+			case Token::Using:
+				nodes.push_back(parseUsingDirective());
+				break;
 			case Token::Function:
 				nodes.push_back(parseFunctionDefinition(true));
 				break;
@@ -962,16 +965,37 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::Using);
-	ASTPointer<IdentifierPath> library(parseIdentifierPath());
+
+	vector<ASTPointer<IdentifierPath>> functions;
+	bool const usesBraces = m_scanner->currentToken() == Token::LBrace;
+	if (usesBraces)
+	{
+		do
+		{
+			advance();
+			functions.emplace_back(parseIdentifierPath());
+		}
+		while (m_scanner->currentToken() == Token::Comma);
+		expectToken(Token::RBrace);
+	}
+	else
+		functions.emplace_back(parseIdentifierPath());
+
 	ASTPointer<TypeName> typeName;
 	expectToken(Token::For);
 	if (m_scanner->currentToken() == Token::Mul)
 		advance();
 	else
 		typeName = parseTypeName();
+	bool global = false;
+	if (m_scanner->currentToken() == Token::Identifier && currentLiteral() == "global")
+	{
+		global = true;
+		advance();
+	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<UsingForDirective>(library, typeName);
+	return nodeFactory.createNode<UsingForDirective>(move(functions), usesBraces, typeName, global);
 }
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()

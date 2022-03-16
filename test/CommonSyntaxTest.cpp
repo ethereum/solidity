@@ -29,7 +29,6 @@
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -43,10 +42,10 @@ namespace
 
 int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 {
-	if (_it == _end || !isdigit(*_it))
+	if (_it == _end || !util::isDigit(*_it))
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid test expectation. Source location expected."));
 	int result = 0;
-	while (_it != _end && isdigit(*_it))
+	while (_it != _end && util::isDigit(*_it))
 	{
 		result *= 10;
 		result += *_it - '0';
@@ -84,9 +83,9 @@ TestCase::TestResult CommonSyntaxTest::conclude(ostream& _stream, string const& 
 void CommonSyntaxTest::printExpectationAndError(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	string nextIndentLevel = _linePrefix + "  ";
-	AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+	util::AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
 	printErrorList(_stream, m_expectations, nextIndentLevel, _formatted);
-	AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+	util::AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
 	printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
 }
 
@@ -105,8 +104,8 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 				continue;
 
 			if (outputSourceNames)
-				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name << " ====" << formatting::RESET << endl;
-			vector<char const*> sourceFormatting(source.length(), formatting::RESET);
+				_stream << _linePrefix << util::formatting::CYAN << "==== Source: " << name << " ====" << util::formatting::RESET << endl;
+			vector<char const*> sourceFormatting(source.length(), util::formatting::RESET);
 			for (auto const& error: m_errorList)
 				if (error.sourceName == name && error.locationStart >= 0 && error.locationEnd >= 0)
 				{
@@ -116,11 +115,11 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 					for (int i = error.locationStart; i < error.locationEnd; i++)
 						if (isWarning)
 						{
-							if (sourceFormatting[static_cast<size_t>(i)] == formatting::RESET)
-								sourceFormatting[static_cast<size_t>(i)] = formatting::ORANGE_BACKGROUND_256;
+							if (sourceFormatting[static_cast<size_t>(i)] == util::formatting::RESET)
+								sourceFormatting[static_cast<size_t>(i)] = util::formatting::ORANGE_BACKGROUND_256;
 						}
 						else
-							sourceFormatting[static_cast<size_t>(i)] = formatting::RED_BACKGROUND;
+							sourceFormatting[static_cast<size_t>(i)] = util::formatting::RED_BACKGROUND;
 				}
 
 			_stream << _linePrefix << sourceFormatting.front() << source.front();
@@ -132,12 +131,12 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 					_stream << source[i];
 				else
 				{
-					_stream << formatting::RESET << endl;
+					_stream << util::formatting::RESET << endl;
 					if (i + 1 < source.length())
 						_stream << _linePrefix << sourceFormatting[i];
 				}
 			}
-			_stream << formatting::RESET;
+			_stream << util::formatting::RESET;
 		}
 		else
 		{
@@ -158,12 +157,12 @@ void CommonSyntaxTest::printErrorList(
 )
 {
 	if (_errorList.empty())
-		AnsiColorized(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
+		util::AnsiColorized(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
 	else
 		for (auto const& error: _errorList)
 		{
 			{
-				AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
+				util::AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
 				_stream << _linePrefix << error.type;
 				if (error.errorId.has_value())
 					_stream << ' ' << error.errorId->error;
@@ -185,7 +184,7 @@ void CommonSyntaxTest::printErrorList(
 		}
 }
 
-string CommonSyntaxTest::errorMessage(Exception const& _e)
+string CommonSyntaxTest::errorMessage(util::Exception const& _e)
 {
 	if (_e.comment() && !_e.comment()->empty())
 		return boost::replace_all_copy(*_e.comment(), "\n", "\\n");
@@ -207,14 +206,14 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		if (it == line.end()) continue;
 
 		auto typeBegin = it;
-		while (it != line.end() && isalpha(*it))
+		while (it != line.end() && isalpha(*it, locale::classic()))
 			++it;
 		string errorType(typeBegin, it);
 
 		skipWhitespace(it, line.end());
 
 		optional<ErrorId> errorId;
-		if (it != line.end() && isdigit(*it))
+		if (it != line.end() && util::isDigit(*it))
 			errorId = ErrorId{static_cast<unsigned long long>(parseUnsignedInteger(it, line.end()))};
 
 		expect(it, line.end(), ':');
@@ -227,7 +226,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		if (it != line.end() && *it == '(')
 		{
 			++it;
-			if (it != line.end() && !isdigit(*it))
+			if (it != line.end() && !util::isDigit(*it))
 			{
 				auto sourceNameStart = it;
 				while (it != line.end() && *it != ':')

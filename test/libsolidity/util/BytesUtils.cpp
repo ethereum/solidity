@@ -22,6 +22,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -216,10 +217,10 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 				os << "\\n";
 				break;
 			default:
-				if (isprint(v))
+				if (isPrint(static_cast<char>(v)))
 					os << v;
 				else
-					os << "\\x" << toHex(v, HexCase::Lower);
+					os << "\\x" << util::toHex(v, HexCase::Lower);
 		}
 	}
 	os << "\"";

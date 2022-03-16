@@ -25,7 +25,6 @@
 #include <libyul/Object.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/optimiser/SSAValueTracker.h>
-#include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -59,7 +58,7 @@ protected:
 		for (auto const& [name, expression]: m_ssaValues.values())
 			m_values[name].value = expression;
 
-		return KnowledgeBase(m_dialect, m_values);
+		return KnowledgeBase(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_values, _var); });
 	}
 
 	EVMDialect m_dialect{EVMVersion{}, true};

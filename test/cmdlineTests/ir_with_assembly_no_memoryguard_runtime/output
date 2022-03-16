@@ -1,11 +1,4 @@
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"ir_with_assembly_no_memoryguard_runtime/input.sol"
 object "D_8" {
     code {
@@ -24,7 +17,6 @@ object "D_8" {
         code {
             {
                 /// @src 0:82:166  "contract D {..."
-                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0
@@ -32,8 +24,6 @@ object "D_8" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        /// @src 0:134:158  "assembly { mstore(0,0) }"
-                        mstore(/** @src 0:82:166  "contract D {..." */ _1, _1)
                         return(128, _1)
                     }
                 }

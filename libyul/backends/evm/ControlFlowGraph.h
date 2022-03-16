@@ -195,6 +195,14 @@ struct CFG
 		std::shared_ptr<DebugData const> debugData;
 		std::vector<BasicBlock*> entries;
 		std::vector<Operation> operations;
+		/// True, if the block is the beginning of a disconnected subgraph. That is, if no block that is reachable
+		/// from this block is an ancestor of this block. In other words, this is true, if this block is the target
+		/// of a cut-edge/bridge in the CFG or if the block itself terminates.
+		bool isStartOfSubGraph = false;
+		/// True, if there is a path from this block to a function return.
+		bool needsCleanStack = false;
+		/// If the block starts a sub-graph and does not lead to a function return, we are free to add junk to it.
+		bool allowsJunk() const { return isStartOfSubGraph && !needsCleanStack; }
 		std::variant<MainExit, Jump, ConditionalJump, FunctionReturn, Terminated> exit = MainExit{};
 	};
 
@@ -205,6 +213,7 @@ struct CFG
 		BasicBlock* entry = nullptr;
 		std::vector<VariableSlot> parameters;
 		std::vector<VariableSlot> returnVariables;
+		std::vector<BasicBlock*> exits;
 	};
 
 	/// The main entry point, i.e. the start of the outermost Yul block.

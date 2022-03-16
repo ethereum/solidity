@@ -27,6 +27,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -49,6 +50,30 @@ namespace
 
 string const sourceDelimiter("==== Source: ");
 
+string compilerStateToString(CompilerStack::State _state)
+{
+	switch (_state)
+	{
+		case CompilerStack::State::Empty: return "Empty";
+		case CompilerStack::State::SourcesSet: return "SourcesSet";
+		case CompilerStack::State::Parsed: return "Parsed";
+		case CompilerStack::State::ParsedAndImported: return "ParsedAndImported";
+		case CompilerStack::State::AnalysisPerformed: return "AnalysisPerformed";
+		case CompilerStack::State::CompilationSuccessful: return "CompilationSuccessful";
+	}
+	soltestAssert(false, "Unexpected value of state parameter");
+}
+
+CompilerStack::State stringToCompilerState(const string& _state)
+{
+	for (unsigned int i = CompilerStack::State::Empty; i <= CompilerStack::State::CompilationSuccessful; ++i)
+	{
+		if (_state == compilerStateToString(CompilerStack::State(i)))
+			return CompilerStack::State(i);
+	}
+	BOOST_THROW_EXCEPTION(runtime_error("Unsupported compiler state (" + _state + ") in test contract file"));
+}
+
 void replaceVersionWithTag(string& _input)
 {
 	boost::algorithm::replace_all(
@@ -69,20 +94,30 @@ void replaceTagWithVersion(string& _input)
 
 }
 
-
-ASTJSONTest::ASTJSONTest(string const& _filename)
+void ASTJSONTest::generateTestVariants(string const& _filename)
 {
-	if (!boost::algorithm::ends_with(_filename, ".sol"))
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
-
 	string_view baseName = _filename;
 	baseName.remove_suffix(4);
 
-	m_variants = {
-		TestVariant(baseName, CompilerStack::State::Parsed),
-		TestVariant(baseName, CompilerStack::State::AnalysisPerformed),
+	const std::vector<CompilerStack::State> variantCompileStates = {
+		CompilerStack::State::Parsed,
+		CompilerStack::State::AnalysisPerformed
 	};
 
+	for (const auto state: variantCompileStates)
+	{
+		auto variant = TestVariant(baseName, state);
+		if (boost::filesystem::exists(variant.astFilename()))
+		{
+			variant.expectation = readFileAsString(variant.astFilename());
+			boost::replace_all(variant.expectation, "\r\n", "\n");
+			m_variants.push_back(variant);
+		}
+	}
+}
+
+void ASTJSONTest::fillSources(string const& _filename)
+{
 	ifstream file(_filename);
 	if (!file)
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
@@ -92,6 +127,7 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 	string source;
 	string line;
 	string const delimiter("// ----");
+	string const failMarker("// failAfter:");
 	while (getline(file, line))
 	{
 		if (boost::algorithm::starts_with(line, sourceDelimiter))
@@ -105,18 +141,53 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 			);
 			source = string();
 		}
+		else if (boost::algorithm::starts_with(line, failMarker))
+		{
+			string state = line.substr(failMarker.size());
+			boost::algorithm::trim(state);
+			if (m_expectedFailAfter.has_value())
+				BOOST_THROW_EXCEPTION(runtime_error("Duplicated \"failAfter\" directive"));
+			m_expectedFailAfter = stringToCompilerState(state);
+
+		}
 		else if (!line.empty() && !boost::algorithm::starts_with(line, delimiter))
 			source += line + "\n";
 	}
-
 	m_sources.emplace_back(sourceName.empty() ? "a" : sourceName, source);
 	file.close();
+}
 
-	for (TestVariant& variant: m_variants)
+void ASTJSONTest::validateTestConfiguration() const
+{
+	if (m_variants.empty())
+		BOOST_THROW_EXCEPTION(runtime_error("No file with expected result found."));
+
+	if (m_expectedFailAfter.has_value())
 	{
-		variant.expectation = readFileAsString(variant.astFilename());
-		boost::replace_all(variant.expectation, "\r\n", "\n");
+		auto unexpectedTestVariant = std::find_if(
+			m_variants.begin(), m_variants.end(),
+			[failAfter = m_expectedFailAfter](TestVariant v) { return v.stopAfter > failAfter; }
+		);
+
+		if (unexpectedTestVariant != m_variants.end())
+			BOOST_THROW_EXCEPTION(
+				runtime_error(
+					string("Unexpected JSON file: ") + unexpectedTestVariant->astFilename() +
+					" in \"failAfter: " +
+					compilerStateToString(m_expectedFailAfter.value()) + "\" scenario."
+				)
+			);
 	}
+}
+
+ASTJSONTest::ASTJSONTest(string const& _filename)
+{
+	if (!boost::algorithm::ends_with(_filename, ".sol"))
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
+
+	generateTestVariants(_filename);
+	fillSources(_filename);
+	validateTestConfiguration();
 }
 
 TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -141,13 +212,12 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 		if (!c.parseAndAnalyze(variant.stopAfter))
 		{
-			// Ignore non-fatal analysis errors, we only want to export.
-			if (c.state() > CompilerStack::State::Parsed)
-				continue;
-
-			SourceReferenceFormatter formatter(_stream, c, _formatted, false);
-			formatter.printErrorInformation(c.errors());
-			return TestResult::FatalError;
+			if (!m_expectedFailAfter.has_value() || m_expectedFailAfter.value() + 1 != c.state())
+			{
+				SourceReferenceFormatter formatter(_stream, c, _formatted, false);
+				formatter.printErrorInformation(c.errors());
+				return TestResult::FatalError;
+			}
 		}
 
 		resultsMatch = resultsMatch && runTest(

@@ -373,13 +373,7 @@ BOOST_AUTO_TEST_CASE(metadata_viair)
 			CompilerStack::MetadataFormat::WithReleaseVersionTag
 		);
 
-		if (_viaIR)
-		{
-			BOOST_CHECK(parsedCBORMetadata.count("experimental") == 1);
-			BOOST_CHECK(parsedCBORMetadata.at("experimental") == "true");
-		}
-		else
-			BOOST_CHECK(parsedCBORMetadata.count("experimental") == 0);
+		BOOST_CHECK(parsedCBORMetadata.count("experimental") == 0);
 	};
 
 	check(sourceCode, true);

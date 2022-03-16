@@ -120,6 +120,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--output-dir=/tmp/out",
 			"--overwrite",
 			"--evm-version=spuriousDragon",
+			"--via-ir",
 			"--experimental-via-ir",
 			"--revert-strings=strip",
 			"--debug-info=location",
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.output.dir = "/tmp/out";
 		expectedOptions.output.overwriteFiles = true;
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
-		expectedOptions.output.experimentalViaIR = true;
+		expectedOptions.output.viaIR = true;
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
 		expectedOptions.output.debugInfoSelection = DebugInfoSelection::fromString("location");
 		expectedOptions.formatting.json = JsonFormat{JsonFormat::Pretty, 7};
@@ -221,6 +222,13 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 		BOOST_TEST(parsedOptions == expectedOptions);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(via_ir_options)
+{
+	BOOST_TEST(!parseCommandLine({"solc", "contract.sol"}).output.viaIR);
+	for (string viaIrOption: {"--via-ir", "--experimental-via-ir"})
+		BOOST_TEST(parseCommandLine({"solc", viaIrOption, "contract.sol"}).output.viaIR);
 }
 
 BOOST_AUTO_TEST_CASE(assembly_mode_options)
@@ -415,7 +423,8 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 	map<string, vector<string>> invalidOptionInputModeCombinations = {
 		// TODO: This should eventually contain all options.
 		{"--error-recovery", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}}
+		{"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
+		{"--via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}}
 	};
 
 	for (auto const& [optionName, inputModes]: invalidOptionInputModeCombinations)

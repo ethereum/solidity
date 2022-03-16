@@ -24,11 +24,12 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
+#include <ostream>
 #include <set>
 #include <tuple>
-#include <ostream>
+#include <unordered_map>
+#include <vector>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
@@ -154,11 +155,11 @@ private:
 	/// Current height of the stack relative to the start.
 	int m_stackHeight = 0;
 	/// If (b, a) is in m_requests then b is needed to compute a.
-	std::multimap<Id, Id> m_neededBy;
+	std::unordered_multimap<Id, Id> m_neededBy;
 	/// Current content of the stack.
 	std::map<int, Id> m_stack;
 	/// Current positions of equivalence classes, equal to the empty set if already deleted.
-	std::map<Id, std::set<int>> m_classPositions;
+	std::unordered_map<Id, std::set<int>> m_classPositions;
 
 	/// The actual equivalence class items and how to compute them.
 	ExpressionClasses& m_expressionClasses;

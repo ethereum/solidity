@@ -48,7 +48,7 @@ using namespace std;
 
 namespace
 {
-// Removes edges to blocks that are not reachable.
+/// Removes edges to blocks that are not reachable.
 void cleanUnreachable(CFG& _cfg)
 {
 	// Determine which blocks are reachable from the entry.
@@ -77,7 +77,8 @@ void cleanUnreachable(CFG& _cfg)
 			return !reachabilityCheck.visited.count(entry);
 		});
 }
-// Sets the ``recursive`` member to ``true`` for all recursive function calls.
+
+/// Sets the ``recursive`` member to ``true`` for all recursive function calls.
 void markRecursiveCalls(CFG& _cfg)
 {
 	map<CFG::BasicBlock*, vector<CFG::FunctionCall*>> callsPerBlock;
@@ -124,6 +125,84 @@ void markRecursiveCalls(CFG& _cfg)
 			});
 		}
 }
+
+/// Marks each cut-vertex in the CFG, i.e. each block that begins a disconnected sub-graph of the CFG.
+/// Entering such a block means that control flow will never return to a previously visited block.
+void markStartsOfSubGraphs(CFG& _cfg)
+{
+	vector<CFG::BasicBlock*> entries;
+	entries.emplace_back(_cfg.entry);
+	for (auto&& functionInfo: _cfg.functionInfo | ranges::views::values)
+		entries.emplace_back(functionInfo.entry);
+	for (auto& entry: entries)
+	{
+		/**
+		 * Detect bridges following Algorithm 1 in https://arxiv.org/pdf/2108.07346.pdf
+		 * and mark the bridge targets as starts of sub-graphs.
+		 */
+		set<CFG::BasicBlock*> visited;
+		map<CFG::BasicBlock*, size_t> disc;
+		map<CFG::BasicBlock*, size_t> low;
+		map<CFG::BasicBlock*, CFG::BasicBlock*> parent;
+		size_t time = 0;
+		auto dfs = [&](CFG::BasicBlock* _u, auto _recurse) -> void {
+			visited.insert(_u);
+			disc[_u] = low[_u] = time;
+			time++;
+
+			vector<CFG::BasicBlock*> children = _u->entries;
+			visit(util::GenericVisitor{
+				[&](CFG::BasicBlock::Jump const& _jump) {
+					children.emplace_back(_jump.target);
+				},
+				[&](CFG::BasicBlock::ConditionalJump const& _jump) {
+					children.emplace_back(_jump.zero);
+					children.emplace_back(_jump.nonZero);
+				},
+				[&](CFG::BasicBlock::FunctionReturn const&) {},
+				[&](CFG::BasicBlock::Terminated const&) { _u->isStartOfSubGraph = true; },
+				[&](CFG::BasicBlock::MainExit const&) { _u->isStartOfSubGraph = true; }
+			}, _u->exit);
+			yulAssert(!util::contains(children, _u));
+
+			for (CFG::BasicBlock* v: children)
+				if (!visited.count(v))
+				{
+					parent[v] = _u;
+					_recurse(v, _recurse);
+					low[_u] = min(low[_u], low[v]);
+					if (low[v] > disc[_u])
+					{
+						// _u <-> v is a cut edge in the undirected graph
+						bool edgeVtoU = util::contains(_u->entries, v);
+						bool edgeUtoV = util::contains(v->entries, _u);
+						if (edgeVtoU && !edgeUtoV)
+							// Cut edge v -> _u
+							_u->isStartOfSubGraph = true;
+						else if (edgeUtoV && !edgeVtoU)
+							// Cut edge _u -> v
+							v->isStartOfSubGraph = true;
+					}
+				}
+				else if (v != parent[_u])
+					low[_u] = min(low[_u], disc[v]);
+		};
+		dfs(entry, dfs);
+	}
+}
+
+/// Marks each block that needs to maintain a clean stack. That is each block that has an outgoing
+/// path to a function return.
+void markNeedsCleanStack(CFG& _cfg)
+{
+	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
+		for (CFG::BasicBlock* exit: functionInfo.exits)
+			util::BreadthFirstSearch<CFG::BasicBlock*>{{exit}}.run([&](CFG::BasicBlock* _block, auto _addChild) {
+				_block->needsCleanStack = true;
+				for (CFG::BasicBlock* entry: _block->entries)
+					_addChild(entry);
+			});
+}
 }
 
 std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
@@ -141,6 +220,8 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 
 	cleanUnreachable(*result);
 	markRecursiveCalls(*result);
+	markStartsOfSubGraphs(*result);
+	markNeedsCleanStack(*result);
 
 	// TODO: It might be worthwhile to run some further simplifications on the graph itself here.
 	// E.g. if there is a jump to a node that has the jumping node as its only entry, the nodes can be fused, etc.
@@ -379,6 +460,7 @@ void ControlFlowGraphBuilder::operator()(Leave const& leave_)
 {
 	yulAssert(m_currentFunction.has_value(), "");
 	m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{debugDataOf(leave_), *m_currentFunction};
+	(*m_currentFunction)->exits.emplace_back(m_currentBlock);
 	m_currentBlock = &m_graph.makeBlock(debugDataOf(*m_currentBlock));
 }
 
@@ -395,6 +477,7 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 	builder.m_currentFunction = &functionInfo;
 	builder.m_currentBlock = functionInfo.entry;
 	builder(_function.body);
+	functionInfo.exits.emplace_back(builder.m_currentBlock);
 	builder.m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{debugDataOf(_function), &functionInfo};
 }
 
@@ -423,7 +506,8 @@ void ControlFlowGraphBuilder::registerFunction(FunctionDefinition const& _functi
 				std::get<Scope::Variable>(virtualFunctionScope->identifiers.at(_retVar.name)),
 				_retVar.debugData
 			};
-		}) | ranges::to<vector>
+		}) | ranges::to<vector>,
+		{}
 	})).second;
 	yulAssert(inserted);
 }

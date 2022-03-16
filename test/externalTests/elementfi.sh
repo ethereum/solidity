@@ -42,13 +42,12 @@ function elementfi_test
     local config_file="hardhat.config.ts"
     local config_var=config
 
-    local compile_only_presets=(
-        ir-optimize-evm+yul       # Compiles but tests fail. See https://github.com/nomiclabs/hardhat/issues/2115
-    )
+    local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
+        ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -89,6 +88,19 @@ function elementfi_test
     # The test suite uses forked mainnet and an expiration period that's too short.
     # TODO: Remove when https://github.com/element-fi/elf-contracts/issues/243 is fixed.
     sed -i 's|^\s*require(_expiration - block\.timestamp < _unitSeconds);\s*$||g' contracts/ConvergentCurvePool.sol
+
+    # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
+    # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    sed -i 's|it(\("fails to withdraw more shares than in balance"\)|it.skip(\1|g' test/compoundAssetProxyTest.ts
+    sed -i 's|it(\("should prevent withdrawal of Principal Tokens and Interest Tokens before the tranche expires "\)|it.skip(\1|g' test/trancheTest.ts
+    sed -i 's|it(\("should prevent withdrawal of more Principal Tokens and Interest Tokens than the user has"\)|it.skip(\1|g' test/trancheTest.ts
+
+    # This test file is very flaky. There's one particular cases that fails randomly (see
+    # https://github.com/element-fi/elf-contracts/issues/240) but some others also depends on an external
+    # service which makes tests time out when that service is down.
+    # "ProviderError: Too Many Requests error received from eth-mainnet.alchemyapi.io"
+    rm test/mockERC20YearnVaultTest.ts
 
     # Several tests fail unless we use the exact versions hard-coded in package-lock.json
     #neutralize_package_lock

@@ -13,7 +13,7 @@
         },
         "calldata_array_index_access_uint256_dyn_calldata":
         {
-          "entryPoint": 152,
+          "entryPoint": 145,
           "parameterSlots": 2,
           "returnSlots": 1
         }

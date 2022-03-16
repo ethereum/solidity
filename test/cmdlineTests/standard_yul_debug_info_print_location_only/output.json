@@ -23,14 +23,4 @@ tag_3:
             }
         }
     },
-    "errors":
-    [
-        {
-            "component": "general",
-            "formattedMessage": "Yul is still experimental. Please use the output with care.",
-            "message": "Yul is still experimental. Please use the output with care.",
-            "severity": "warning",
-            "type": "Warning"
-        }
-    ]
-}
+    }

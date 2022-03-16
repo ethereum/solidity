@@ -204,16 +204,16 @@
 //
 // Block12 [label="\
 // [ JUNK JUNK JUNK JUNK x JUNK ]\l\
-// [ 0x06 x ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK JUNK 0x06 x ]\l\
 // sstore\l\
-// [ ]\l\
-// [ 0x2a ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK JUNK ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK JUNK 0x2a ]\l\
 // Assignment(c)\l\
-// [ c ]\l\
-// [ 0x00 0x00 ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK JUNK c ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK JUNK 0x00 0x00 ]\l\
 // revert\l\
-// [ ]\l\
-// [ ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK JUNK ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK JUNK ]\l\
 // "];
 // Block12Exit [label="Terminated"];
 // Block12 -> Block12Exit;
@@ -254,10 +254,10 @@
 //
 // Block16 [label="\
 // [ JUNK JUNK JUNK JUNK JUNK ]\l\
-// [ 0x00 0x00 ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK 0x00 0x00 ]\l\
 // return\l\
-// [ ]\l\
-// [ ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK ]\l\
+// [ JUNK JUNK JUNK JUNK JUNK ]\l\
 // "];
 // Block16Exit [label="Terminated"];
 // Block16 -> Block16Exit;

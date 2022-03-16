@@ -15,11 +15,7 @@ The IR-based code generator was introduced with an aim to not only allow
 code generation to be more transparent and auditable but also
 to enable more powerful optimization passes that span across functions.
 
-Currently, the IR-based code generator is still marked experimental,
-but it supports all language features and has received a lot of testing,
-so we consider it almost ready for production use.
-
-You can enable it on the command line using ``--experimental-via-ir``
+You can enable it on the command line using ``--via-ir``
 or with the option ``{"viaIR": true}`` in standard-json and we
 encourage everyone to try it out!
 
@@ -33,6 +29,48 @@ Semantic Only Changes
 
 This section lists the changes that are semantic-only, thus potentially
 hiding new and different behavior in existing code.
+
+- The order of state variable initialization has changed in case of inheritance.
+
+  The order used to be:
+
+  - All state variables are zero-initialized at the beginning.
+  - Evaluate base constructor arguments from most derived to most base contract.
+  - Initialize all state variables in the whole inheritance hierarchy from most base to most derived.
+  - Run the constructor, if present, for all contracts in the linearized hierarchy from most base to most derived.
+
+  New order:
+
+  - All state variables are zero-initialized at the beginning.
+  - Evaluate base constructor arguments from most derived to most base contract.
+  - For every contract in order from most base to most derived in the linearized hierarchy:
+
+      1. Initialize state variables.
+      2. Run the constructor (if present).
+
+  This causes differences in contracts where the initial value of a state
+  variable relies on the result of the constructor in another contract:
+
+  .. code-block:: solidity
+
+      // SPDX-License-Identifier: GPL-3.0
+      pragma solidity >=0.7.1;
+
+      contract A {
+          uint x;
+          constructor() {
+              x = 42;
+          }
+          function f() public view returns(uint256) {
+              return x;
+          }
+      }
+      contract B is A {
+          uint public y = f();
+      }
+
+  Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
+  With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
 
 - When storage structs are deleted, every storage slot that contains
   a member of the struct is set to zero entirely. Formerly, padding space
@@ -78,8 +116,8 @@ hiding new and different behavior in existing code.
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.7.0;
       contract C {
-          function f(uint _a) public pure mod() returns (uint _r) {
-              _r = _a++;
+          function f(uint a) public pure mod() returns (uint r) {
+              r = a++;
           }
           modifier mod() { _; _; }
       }
@@ -116,47 +154,6 @@ hiding new and different behavior in existing code.
   - New code generator: ``0`` as all parameters, including return parameters, will be re-initialized before
     each ``_;`` evaluation.
 
-- The order of contract initialization has changed in case of inheritance.
-
-  The order used to be:
-
-  - All state variables are zero-initialized at the beginning.
-  - Evaluate base constructor arguments from most derived to most base contract.
-  - Initialize all state variables in the whole inheritance hierarchy from most base to most derived.
-  - Run the constructor, if present, for all contracts in the linearized hierarchy from most base to most derived.
-
-  New order:
-
-  - All state variables are zero-initialized at the beginning.
-  - Evaluate base constructor arguments from most derived to most base contract.
-  - For every contract in order from most base to most derived in the linearized hierarchy execute:
-
-      1. If present at declaration, initial values are assigned to state variables.
-      2. Constructor, if present.
-
-This causes differences in some contracts, for example:
-
-  .. code-block:: solidity
-
-      // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >=0.7.1;
-
-      contract A {
-          uint x;
-          constructor() {
-              x = 42;
-          }
-          function f() public view returns(uint256) {
-              return x;
-          }
-      }
-      contract B is A {
-          uint public y = f();
-      }
-
-  Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
-  With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
-
 - Copying ``bytes`` arrays from memory to storage is implemented in a different way.
   The old code generator always copies full words, while the new one cuts the byte
   array after its end. The old behaviour can lead to dirty data being copied after
@@ -170,7 +167,7 @@ This causes differences in some contracts, for example:
 
       contract C {
           bytes x;
-          function f() public returns (uint _r) {
+          function f() public returns (uint r) {
               bytes memory m = "tmp";
               assembly {
                   mstore(m, 8)
@@ -178,7 +175,7 @@ This causes differences in some contracts, for example:
               }
               x = m;
               assembly {
-                  _r := sload(x.slot)
+                  r := sload(x.slot)
               }
           }
       }
@@ -201,8 +198,8 @@ This causes differences in some contracts, for example:
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function preincr_u8(uint8 _a) public pure returns (uint8) {
-              return ++_a + _a;
+          function preincr_u8(uint8 a) public pure returns (uint8) {
+              return ++a + a;
           }
       }
 
@@ -222,11 +219,11 @@ This causes differences in some contracts, for example:
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function add(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return _a + _b;
+          function add(uint8 a, uint8 b) public pure returns (uint8) {
+              return a + b;
           }
-          function g(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return add(++_a + ++_b, _a + _b);
+          function g(uint8 a, uint8 b) public pure returns (uint8) {
+              return add(++a + ++b, a + b);
           }
       }
 
@@ -325,13 +322,13 @@ For example:
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.1;
     contract C {
-        function f(uint8 _a) public pure returns (uint _r1, uint _r2)
+        function f(uint8 a) public pure returns (uint r1, uint r2)
         {
-            _a = ~_a;
+            a = ~a;
             assembly {
-                _r1 := _a
+                r1 := a
             }
-            _r2 = _a;
+            r2 = a;
         }
     }
 
@@ -340,6 +337,6 @@ The function ``f(1)`` returns the following values:
 - Old code generator: (``fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
 - New code generator: (``00000000000000000000000000000000000000000000000000000000000000fe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
 
-Note that, unlike the new code generator, the old code generator does not perform a cleanup after the bit-not assignment (``_a = ~_a``).
-This results in different values being assigned (within the inline assembly block) to return value ``_r1`` between the old and new code generators.
-However, both code generators perform a cleanup before the new value of ``_a`` is assigned to ``_r2``.
+Note that, unlike the new code generator, the old code generator does not perform a cleanup after the bit-not assignment (``a = ~a``).
+This results in different values being assigned (within the inline assembly block) to return value ``r1`` between the old and new code generators.
+However, both code generators perform a cleanup before the new value of ``a`` is assigned to ``r2``.

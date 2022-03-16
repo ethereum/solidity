@@ -1,11 +1,4 @@
 Optimized IR:
-/*=====================================================*
- *                       WARNING                       *
- *  Solidity to Yul compilation is still EXPERIMENTAL  *
- *       It can result in LOSS OF FUNDS or worse       *
- *                !USE AT YOUR OWN RISK!               *
- *=====================================================*/
-
 /// @use-src 0:"keccak_optimization_low_runs/input.sol"
 object "C_7" {
     code {
@@ -24,7 +17,6 @@ object "C_7" {
         code {
             {
                 /// @src 0:62:285  "contract C {..."
-                mstore(64, 128)
                 if callvalue() { revert(0, 0) }
                 /// @src 0:109:277  "assembly {..."
                 mstore(0, 100)
