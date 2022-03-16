@@ -61,16 +61,15 @@ public:
 	/// @returns a map from function name to rematerialisation costs to a vector of variables to rematerialise
 	/// and variables that occur in their expression.
 	/// While the map is sorted by cost, the contained vectors are sorted by the order of occurrence.
-	map<YulString, map<size_t, vector<tuple<YulString, set<YulString>>>>> candidates()
+	map<YulString, map<size_t, vector<YulString>>> candidates()
 	{
-		map<YulString, map<size_t, vector<tuple<YulString, set<YulString>>>>> cand;
+		map<YulString, map<size_t, vector<YulString>>> cand;
 		for (auto const& [functionName, candidate]: m_candidates)
 		{
 			if (size_t const* cost = util::valueOrNullptr(m_expressionCodeCost, candidate))
 			{
 				size_t numRef = m_numReferences[candidate];
-				set<YulString> const* ref = references(candidate);
-				cand[functionName][*cost * numRef].emplace_back(candidate, ref ? move(*ref) : set<YulString>{});
+				cand[functionName][*cost * numRef].emplace_back(candidate);
 			}
 		}
 		return cand;
@@ -144,25 +143,16 @@ public:
 
 /// Selects at most @a _numVariables among @a _candidates.
 set<YulString> chooseVarsToEliminate(
-	map<size_t, vector<tuple<YulString, set<YulString>>>> const& _candidates,
+	map<size_t, vector<YulString>> const& _candidates,
 	size_t _numVariables
 )
 {
 	set<YulString> varsToEliminate;
 	for (auto&& [cost, candidates]: _candidates)
-		for (auto&& [candidate, references]: candidates)
+		for (auto&& candidate: candidates)
 		{
 			if (varsToEliminate.size() >= _numVariables)
 				return varsToEliminate;
-			// If a variable we would like to eliminate references another one
-			// we already selected for elimination, then stop selecting
-			// candidates. If we would add that variable, then the cost calculation
-			// for the previous variable would be off. Furthermore, we
-			// do not skip the variable because it would be better to properly re-compute
-			// the costs of all other variables instead.
-			for (YulString const& referencedVar: references)
-				if (varsToEliminate.count(referencedVar))
-					return varsToEliminate;
 			varsToEliminate.insert(candidate);
 		}
 	return varsToEliminate;
@@ -177,7 +167,7 @@ void eliminateVariables(
 {
 	RematCandidateSelector selector{_dialect};
 	selector(_ast);
-	map<YulString, map<size_t, vector<tuple<YulString, set<YulString>>>>> candidates = selector.candidates();
+	map<YulString, map<size_t, vector<YulString>>> candidates = selector.candidates();
 
 	set<YulString> varsToEliminate;
 	for (auto const& [functionName, numVariables]: _numVariables)
@@ -209,7 +199,7 @@ void eliminateVariablesOptimizedCodegen(
 	for (auto const& [functionName, candidatesInFunction]: selector.candidates())
 		for (auto [cost, candidatesWithCost]: candidatesInFunction)
 			for (auto candidate: candidatesWithCost)
-				candidates[get<0>(candidate)] = cost;
+				candidates[candidate] = cost;
 
 	set<YulString> varsToEliminate;
 
