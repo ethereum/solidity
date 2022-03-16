@@ -1,5 +1,5 @@
 {
-    function f(x) -> y {}
+    function f(x) -> y { log0(0, 0x20) }
     let a := 1
     let b := f(a)
     let c := a
@@ -14,5 +14,5 @@
 //     let c := 1
 //     mstore(add(1, b), 1)
 //     function f(x) -> y
-//     { }
+//     { log0(0, 0x20) }
 // }
