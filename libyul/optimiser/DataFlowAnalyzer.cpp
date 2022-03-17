@@ -93,7 +93,7 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 	set<YulString> names;
 	for (auto const& var: _assignment.variableNames)
 	{
-		m_state.latestAssignment[var] = m_assignmentCounter;
+		m_state.latestAssignment[var.name] = m_assignmentCounter;
 		names.emplace(var.name);
 	}
 	assertThrow(_assignment.value, OptimizerException, "");
