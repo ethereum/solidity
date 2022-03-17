@@ -89,9 +89,13 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
 {
+	m_assignmentCounter++;
 	set<YulString> names;
 	for (auto const& var: _assignment.variableNames)
+	{
+		m_state.latestAssignment[var] = m_assignmentCounter;
 		names.emplace(var.name);
+	}
 	assertThrow(_assignment.value, OptimizerException, "");
 	clearKnowledgeIfInvalidated(*_assignment.value);
 	visit(*_assignment.value);
@@ -123,10 +127,7 @@ void DataFlowAnalyzer::operator()(If& _if)
 	ASTModifier::operator()(_if);
 
 	if (hasFlowOutControlFlow(_if.body))
-	{
 		joinKnowledge(preState);
-		clearValues(assignedVariableNames(_if.body));
-	}
 	else
 		m_state = move(preState);
 }
@@ -142,7 +143,6 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 	if (!hasDefaultCase(_switch))
 		postState = m_state;
 
-	std::set<YulString> assignedVariables;
 	for (auto& _case: _switch.cases)
 	{
 		m_state = preState;
@@ -152,7 +152,6 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 		{
 			if (postState)
 				joinKnowledge(*postState);
-			assignedVariables += assignedVariableNames(_case.body);
 
 			postState = move(m_state);
 		}
@@ -162,7 +161,6 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 	else
 		// No outflowing case.
 		m_state = {};
-	clearValues(assignedVariables);
 }
 
 void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
@@ -189,35 +187,53 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	popScope();
 }
 
+void DataFlowAnalyzer::operator()(Break&)
+{
+	if (m_breakState)
+		joinKnowledge(*m_breakState);
+	m_breakState = move(m_state);
+	// we now have an empty state, which will clear everything.
+	// if this is in a conditional, it will be ignored.
+}
+
+void DataFlowAnalyzer::operator()(Continue&)
+{
+	if (m_continueState)
+		joinKnowledge(*m_continueState);
+	m_continueState = move(m_state);
+	// we now have an empty state, which will clear everything.
+	// if this is in a conditional, it will be ignored.
+}
+
 void DataFlowAnalyzer::operator()(ForLoop& _for)
 {
 	// If the pre block was not empty,
 	// we would have to deal with more complicated scoping rules.
 	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
 
+	ScopedSaveAndRestore storedBreakState(m_breakState, {});
+	ScopedSaveAndRestore storedContinueState(m_continueState, {});
+
 	++m_loopDepth;
 
-	AssignmentsSinceContinue assignmentsSinceCont;
-	assignmentsSinceCont(_for.body);
-
-	set<YulString> assignedVariables =
-		assignedVariableNames(_for.body) + assignedVariableNames(_for.post);
-	clearValues(assignedVariables);
-
-	// break/continue are tricky for storage and thus we almost always clear here.
+	// We are joining control flow with the future, so better clear more than too little.
+	clearValues(assignedVariableNames(_for.body) + assignedVariableNames(_for.post));
 	clearKnowledgeIfInvalidated(*_for.condition);
 	clearKnowledgeIfInvalidated(_for.post);
 	clearKnowledgeIfInvalidated(_for.body);
 
 	visit(*_for.condition);
+
+	State preState = m_state;
+
 	(*this)(_for.body);
-	clearValues(assignmentsSinceCont.names());
-	clearKnowledgeIfInvalidated(_for.body);
+	if (m_continueState)
+		joinKnowledge(*m_continueState);
 	(*this)(_for.post);
-	clearValues(assignedVariables);
-	clearKnowledgeIfInvalidated(*_for.condition);
-	clearKnowledgeIfInvalidated(_for.post);
-	clearKnowledgeIfInvalidated(_for.body);
+	if (m_breakState)
+		joinKnowledge(*m_breakState);
+
+	joinKnowledge(preState);
 
 	--m_loopDepth;
 }
@@ -434,6 +450,27 @@ void DataFlowAnalyzer::joinKnowledge(State const& _olderState)
 {
 	joinKnowledgeHelper(m_state.storage, _olderState.storage);
 	joinKnowledgeHelper(m_state.memory, _olderState.memory);
+
+	// TODO verify that this does not have to be symmetric,
+	// i.e. that variables that are only in _olderState
+	// do not have to be cleared here.
+	// We should not rely on _olderState really being an ancestor.
+	set<YulString> variablesToClear;
+	for (auto it = m_state.latestAssignment.begin(); it != m_state.latestAssignment.end();)
+	{
+		auto&& [var, counter] = *it;
+		if (
+			_olderState.latestAssignment.count(var) &&
+			_olderState.latestAssignment.at(var) == counter
+		)
+			++it;
+		else
+		{
+			variablesToClear.emplace(var);
+			it = m_state.latestAssignment.erase(it);
+		}
+	}
+	clearValues(variablesToClear);
 }
 
 void DataFlowAnalyzer::joinKnowledgeHelper(

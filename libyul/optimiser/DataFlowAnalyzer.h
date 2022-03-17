@@ -94,6 +94,8 @@ public:
 	void operator()(If& _if) override;
 	void operator()(Switch& _switch) override;
 	void operator()(FunctionDefinition&) override;
+	void operator()(Break&) override;
+	void operator()(Continue&) override;
 	void operator()(ForLoop&) override;
 	void operator()(Block& _block) override;
 
@@ -168,6 +170,8 @@ protected:
 private:
 	struct State
 	{
+		/// Latest assignment counter per variable.
+		std::map<YulString, size_t> latestAssignment;
 		/// Current values of variables, always movable.
 		std::map<YulString, AssignedValue> value;
 		/// m_references[a].contains(b) <=> the current expression assigned to a references b
@@ -191,6 +195,12 @@ private:
 	State m_state;
 
 protected:
+	std::optional<State> m_continueState;
+	std::optional<State> m_breakState;
+	// This is incremented for each assignment to track which variables
+	// have been reassigned between two joining control flows.
+	size_t m_assignmentCounter = 0;
+
 	KnowledgeBase m_knowledgeBase;
 
 	YulString m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
