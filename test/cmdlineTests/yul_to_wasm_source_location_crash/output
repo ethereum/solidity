@@ -9,8 +9,7 @@ object "C" {
     code {
         function main()
         {
-            let hi := i64.shl(i64.extend_i32_u(bswap32(i32.wrap_i64(0))), 32)
-            let y := i64.or(hi, i64.extend_i32_u(bswap32(i32.wrap_i64(i64.shr_u(0, 32)))))
+            let y := i64.or(i64.shl(i64.extend_i32_u(bswap32(i32.wrap_i64(0))), 32), i64.extend_i32_u(bswap32(i32.wrap_i64(i64.shr_u(0, 32)))))
             i64.store(0:i32, y)
             i64.store(i32.add(0:i32, 8:i32), y)
             i64.store(i32.add(0:i32, 16:i32), y)
@@ -27,8 +26,7 @@ object "C" {
         }
         function bswap32(x:i32) -> y:i32
         {
-            let hi:i32 := i32.shl(bswap16(x), 16:i32)
-            y := i32.or(hi, bswap16(i32.shr_u(x, 16:i32)))
+            y := i32.or(i32.shl(bswap16(x), 16:i32), bswap16(i32.shr_u(x, 16:i32)))
         }
     }
 }

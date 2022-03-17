@@ -646,21 +646,21 @@ object \"C_54\" {
         code {
             {
                 /// @src 0:79:435  \"contract C...\"
-                mstore(64, memoryguard(0x80))
+                let _1 := memoryguard(0x80)
+                mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    switch shr(224, calldataload(_1))
+                    let _2 := 0
+                    switch shr(224, calldataload(_2))
                     case 0x26121ff0 {
-                        if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        if callvalue() { revert(_2, _2) }
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
                         /// @src 0:297:305  \"immutVar\"
-                        let _2 := loadimmutable(\"8\")
+                        let _3 := loadimmutable(\"8\")
                         /// @src 0:79:435  \"contract C...\"
-                        if and(1, sgt(_2, sub(shl(255, 1), 42))) { panic_error_0x11() }
-                        let memPos := mload(64)
-                        mstore(memPos, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ _2))
-                        return(memPos, 32)
+                        if and(1, sgt(_3, sub(shl(255, 1), 42))) { panic_error_0x11() }
+                        mstore(_1, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ _3))
+                        return(_1, 32)
                     }
                     case 0x793816ec { external_fun_stateVar() }
                     case 0x9942ec6f { external_fun_f2() }
@@ -1484,21 +1484,21 @@ object \"D_72\" {
         code {
             {
                 /// @src 1:91:166  \"contract D is C(3)...\"
-                mstore(64, memoryguard(0x80))
+                let _1 := memoryguard(0x80)
+                mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    switch shr(224, calldataload(_1))
+                    let _2 := 0
+                    switch shr(224, calldataload(_2))
                     case 0x26121ff0 {
-                        if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        if callvalue() { revert(_2, _2) }
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
                         /// @src 0:297:305  \"immutVar\"
-                        let _2 := loadimmutable(\"8\")
+                        let _3 := loadimmutable(\"8\")
                         /// @src 1:91:166  \"contract D is C(3)...\"
-                        if and(1, sgt(_2, sub(shl(255, 1), 42))) { panic_error_0x11() }
-                        let memPos := mload(64)
-                        mstore(memPos, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ _2))
-                        return(memPos, 32)
+                        if and(1, sgt(_3, sub(shl(255, 1), 42))) { panic_error_0x11() }
+                        mstore(_1, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ _3))
+                        return(_1, 32)
                     }
                     case 0x793816ec { external_fun_stateVar() }
                     case 0x9942ec6f { external_fun_f2() }

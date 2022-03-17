@@ -12,7 +12,6 @@
 (func $main
     (local $p i32)
     (local $r i32)
-    (local $hi i64)
     (local $y i64)
     (local $z3 i64)
     (local $_1 i64)
@@ -21,8 +20,7 @@
         (local.set $r (i32.add (local.get $p) (i32.const 64)))
         (if (i32.lt_u (local.get $r) (local.get $p)) (then
             (unreachable)))
-        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.const 0)))) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (i64.const 0) (i64.const 32)))))))
+        (local.set $y (i64.or (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.const 0)))) (i64.const 32)) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (i64.const 0) (i64.const 32)))))))
         (i64.store (local.get $r) (local.get $y))
         (i64.store (i32.add (local.get $r) (i32.const 8)) (local.get $y))
         (i64.store (i32.add (local.get $r) (i32.const 16)) (local.get $y))
@@ -129,10 +127,8 @@
     (param $x i32)
     (result i32)
     (local $y i32)
-    (local $hi i32)
     (block $label__7
-        (local.set $hi (i32.shl (call $bswap16 (local.get $x)) (i32.const 16)))
-        (local.set $y (i32.or (local.get $hi) (call $bswap16 (i32.shr_u (local.get $x) (i32.const 16)))))
+        (local.set $y (i32.or (i32.shl (call $bswap16 (local.get $x)) (i32.const 16)) (call $bswap16 (i32.shr_u (local.get $x) (i32.const 16)))))
 
     )
     (local.get $y)
@@ -141,10 +137,8 @@
 (func $bswap64
     (result i64)
     (local $y i64)
-    (local $hi i64)
     (block $label__8
-        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.const 128)))) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (i64.const 128) (i64.const 32)))))))
+        (local.set $y (i64.or (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.const 128)))) (i64.const 32)) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (i64.const 128) (i64.const 32)))))))
 
     )
     (local.get $y)

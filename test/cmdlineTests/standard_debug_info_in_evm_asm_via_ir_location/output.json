@@ -69,9 +69,11 @@ stop
 
 sub_0: assembly {
         /* \"C\":79:428  contract C... */
-      mstore(0x40, 0x80)
+      0x80
+      dup1
+      0x40
+      mstore
       jumpi(tag_7, iszero(lt(calldatasize, 0x04)))
-    tag_8:
       0x00
       dup1
       revert
@@ -81,12 +83,13 @@ sub_0: assembly {
       calldataload
       0xe0
       shr
-      swap1
-      dup2
+      swap2
+      dup3
       0x26121ff0
       eq
       tag_9
       jumpi
+      pop
       pop
       dup1
       0x793816ec
@@ -97,26 +100,28 @@ sub_0: assembly {
       eq
       tag_13
       jumpi
+    tag_14:
       0x00
       dup1
       revert
     tag_13:
-      tag_8
+      tag_14
       tag_3
       jump\t// in
     tag_11:
       pop
-      tag_8
+      tag_14
       tag_2
       jump\t// in
     tag_9:
       jumpi(tag_19, callvalue)
-      dup1
+      dup2
       add(calldatasize, not(0x03))
       slt
       tag_19
       jumpi
       0x20
+      swap1
         /* \"C\":290:298  immutVar */
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
       sub(shl(0xff, 0x01), 0x2a)
@@ -129,9 +134,7 @@ sub_0: assembly {
       jumpi
         /* \"C\":79:428  contract C... */
     tag_22:
-      mload(0x40)
         /* \"C\":117:119  41 */
-      swap1
       0x29
       add
         /* \"C\":79:428  contract C... */
@@ -147,12 +150,13 @@ sub_0: assembly {
       jump(tag_22)
         /* \"C\":79:428  contract C... */
     tag_19:
+      pop
       dup1
       revert
     tag_2:
       pop
-      jumpi(tag_8, callvalue)
-      jumpi(tag_8, slt(add(not(0x03), calldatasize), 0x00))
+      jumpi(tag_14, callvalue)
+      jumpi(tag_14, slt(add(not(0x03), calldatasize), 0x00))
       0x20
       sload(0x00)
       mload(0x40)
@@ -162,12 +166,12 @@ sub_0: assembly {
       return
     tag_3:
       pop
-      jumpi(tag_8, callvalue)
+      jumpi(tag_14, callvalue)
       0x00
       dup1
       add(calldatasize, not(0x03))
       slt
-      tag_19
+      tag_30
       jumpi
       dup1
       sload
@@ -337,6 +341,9 @@ sub_0: assembly {
       jump\t// in
     tag_46:
       jump(tag_33)
+    tag_30:
+      dup1
+      revert
         /* \"C\":117:119  41 */
     tag_4:
       pop
@@ -397,7 +404,7 @@ sub_0: assembly {
       swap2
       sub
       slt
-      tag_8
+      tag_14
       jumpi
       mload
       swap1
@@ -500,9 +507,11 @@ stop
 
 sub_0: assembly {
         /* \"D\":91:166  contract D is C(3)... */
-      mstore(0x40, 0x80)
+      0x80
+      dup1
+      0x40
+      mstore
       jumpi(tag_7, iszero(lt(calldatasize, 0x04)))
-    tag_8:
       0x00
       dup1
       revert
@@ -512,12 +521,13 @@ sub_0: assembly {
       calldataload
       0xe0
       shr
-      swap1
-      dup2
+      swap2
+      dup3
       0x26121ff0
       eq
       tag_9
       jumpi
+      pop
       pop
       dup1
       0x793816ec
@@ -528,26 +538,28 @@ sub_0: assembly {
       eq
       tag_13
       jumpi
+    tag_14:
       0x00
       dup1
       revert
     tag_13:
-      tag_8
+      tag_14
       tag_3
       jump\t// in
     tag_11:
       pop
-      tag_8
+      tag_14
       tag_2
       jump\t// in
     tag_9:
       jumpi(tag_19, callvalue)
-      dup1
+      dup2
       add(calldatasize, not(0x03))
       slt
       tag_19
       jumpi
       0x20
+      swap1
         /* \"C\":290:298  immutVar */
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
       sub(shl(0xff, 0x01), 0x2a)
@@ -560,9 +572,7 @@ sub_0: assembly {
       jumpi
         /* \"D\":91:166  contract D is C(3)... */
     tag_22:
-      mload(0x40)
         /* \"C\":117:119  41 */
-      swap1
       0x29
       add
         /* \"D\":91:166  contract D is C(3)... */
@@ -578,12 +588,13 @@ sub_0: assembly {
       jump(tag_22)
         /* \"D\":91:166  contract D is C(3)... */
     tag_19:
+      pop
       dup1
       revert
     tag_2:
       pop
-      jumpi(tag_8, callvalue)
-      jumpi(tag_8, slt(add(not(0x03), calldatasize), 0x00))
+      jumpi(tag_14, callvalue)
+      jumpi(tag_14, slt(add(not(0x03), calldatasize), 0x00))
       0x20
       sload(0x00)
       mload(0x40)
@@ -593,12 +604,12 @@ sub_0: assembly {
       return
     tag_3:
       pop
-      jumpi(tag_8, callvalue)
+      jumpi(tag_14, callvalue)
       0x00
       dup1
       add(calldatasize, not(0x03))
       slt
-      tag_19
+      tag_30
       jumpi
       dup1
       sload
@@ -768,6 +779,9 @@ sub_0: assembly {
       jump\t// in
     tag_46:
       jump(tag_33)
+    tag_30:
+      dup1
+      revert
         /* \"C\":117:119  41 */
     tag_4:
       pop
@@ -828,7 +842,7 @@ sub_0: assembly {
       swap2
       sub
       slt
-      tag_8
+      tag_14
       jumpi
       mload
       swap1

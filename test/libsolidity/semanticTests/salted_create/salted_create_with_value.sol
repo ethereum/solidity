@@ -22,6 +22,6 @@ contract A {
 // compileViaYul: also
 // ----
 // f(), 10 ether -> 3007, 3008, 3009
-// gas irOptimized: 271831
+// gas irOptimized: 271828
 // gas legacy: 422501
 // gas legacyOptimized: 287472
