@@ -89,13 +89,9 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
 {
-	m_assignmentCounter++;
 	set<YulString> names;
 	for (auto const& var: _assignment.variableNames)
-	{
-		m_state.latestAssignment[var.name] = m_assignmentCounter;
 		names.emplace(var.name);
-	}
 	assertThrow(_assignment.value, OptimizerException, "");
 	clearKnowledgeIfInvalidated(*_assignment.value);
 	visit(*_assignment.value);
@@ -171,6 +167,7 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	ScopedSaveAndRestore loopDepthResetter(m_loopDepth, 0u);
 	pushScope(true);
 
+	// TODO The params also need their assignment counters set.
 	for (auto const& parameter: _fun.parameters)
 		m_variableScopes.back().variables.emplace(parameter.name);
 	for (auto const& var: _fun.returnVariables)
@@ -301,9 +298,11 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 			assignValue(name, _value);
 	}
 
+	m_assignmentCounter++;
 	auto const& referencedVariables = movableChecker.referencedVariables();
 	for (auto const& name: _variables)
 	{
+		m_state.latestAssignment[name] = m_assignmentCounter;
 		m_state.references[name] = referencedVariables;
 		if (!_isDeclaration)
 		{
