@@ -154,6 +154,9 @@ protected:
 
 	/// @returns true if the block is empty or the last statement has a
 	/// "flow out" control flow.
+	/// Note that this only considers the last statement. If there are
+	/// "leave", "break" or "continue" statements inside the block, this
+	/// has to be considered elsewhere.
 	bool hasFlowOutControlFlow(Block const& _block) const;
 
 	Dialect const& m_dialect;
