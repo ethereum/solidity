@@ -192,6 +192,7 @@ void DataFlowAnalyzer::operator()(Break&)
 	if (m_breakState)
 		joinKnowledge(*m_breakState);
 	m_breakState = move(m_state);
+	m_state = {};
 	// we now have an empty state, which will clear everything.
 	// if this is in a conditional, it will be ignored.
 }
@@ -201,6 +202,7 @@ void DataFlowAnalyzer::operator()(Continue&)
 	if (m_continueState)
 		joinKnowledge(*m_continueState);
 	m_continueState = move(m_state);
+	m_state = {};
 	// we now have an empty state, which will clear everything.
 	// if this is in a conditional, it will be ignored.
 }
@@ -224,16 +226,31 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 
 	visit(*_for.condition);
 
-	State preState = m_state;
+	State preLoopState = m_state;
 
 	(*this)(_for.body);
 	if (m_continueState)
-		joinKnowledge(*m_continueState);
+	{
+		if (hasFlowOutControlFlow(_for.body))
+			joinKnowledge(*m_continueState);
+		else
+			m_state = move(*m_continueState);
+	}
 	(*this)(_for.post);
-	if (m_breakState)
-		joinKnowledge(*m_breakState);
 
-	joinKnowledge(preState);
+	if (m_breakState)
+	{
+		if (hasFlowOutControlFlow(_for.post))
+			joinKnowledge(*m_breakState);
+		else
+			m_state = move(*m_breakState);
+		// TODO The state here is after post, but we actually
+		// execute the condition once more.
+		// On the other hand, we already clear knowledge before
+		// assigning preLoopState.
+	}
+
+	joinKnowledge(preLoopState);
 
 	--m_loopDepth;
 }
@@ -451,10 +468,6 @@ void DataFlowAnalyzer::joinKnowledge(State const& _olderState)
 	joinKnowledgeHelper(m_state.storage, _olderState.storage);
 	joinKnowledgeHelper(m_state.memory, _olderState.memory);
 
-	// TODO verify that this does not have to be symmetric,
-	// i.e. that variables that are only in _olderState
-	// do not have to be cleared here.
-	// We should not rely on _olderState really being an ancestor.
 	set<YulString> variablesToClear;
 	for (auto it = m_state.latestAssignment.begin(); it != m_state.latestAssignment.end();)
 	{
@@ -470,6 +483,12 @@ void DataFlowAnalyzer::joinKnowledge(State const& _olderState)
 			it = m_state.latestAssignment.erase(it);
 		}
 	}
+	// TODO is there a way we don't have to iterate both?
+	// Can we iterate in parallel?
+	for (auto&& [var, counter]: _olderState.latestAssignment)
+		if (!m_state.latestAssignment.count(var))
+			variablesToClear.emplace(var);
+
 	clearValues(variablesToClear);
 }
 
