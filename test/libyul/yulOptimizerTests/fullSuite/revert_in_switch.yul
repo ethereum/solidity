@@ -12,10 +12,4 @@
 // ----
 // step: fullSuite
 //
-// {
-//     {
-//         let x := 0
-//         if iszero(calldataload(x)) { x := calldataload(99) }
-//         sstore(0, x)
-//     }
-// }
+// { { sstore(0, 0) } }

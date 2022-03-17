@@ -18,7 +18,7 @@
 // {
 //     let x := 0
 //     let y := 2
-//     for { } sload(0) { let t := add(y, x) }
+//     for { } sload(0) { let t := add(y, 0) }
 //     {
 //         x := 0
 //         if calldataload(x)
