@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Peephole Optimizer: Remove operations without side effects before simple terminations.
 
 
 Bugfixes:

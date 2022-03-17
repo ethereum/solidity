@@ -125,7 +125,6 @@ sub_0: assembly {
       eq
       tag_4
       jumpi
-      pop
       0x00
       dup1
       revert

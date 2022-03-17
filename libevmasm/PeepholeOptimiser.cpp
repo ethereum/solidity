@@ -146,6 +146,35 @@ struct OpStop: SimplePeepholeOptimizerMethod<OpStop>
 	}
 };
 
+struct OpReturnRevert: SimplePeepholeOptimizerMethod<OpReturnRevert>
+{
+	static bool applySimple(
+		AssemblyItem const& _op,
+		AssemblyItem const& _push,
+		AssemblyItem const& _pushOrDup,
+		AssemblyItem const& _returnRevert,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			(_returnRevert == Instruction::RETURN || _returnRevert == Instruction::REVERT) &&
+			_push.type() == Push &&
+			(_pushOrDup.type() == Push || _pushOrDup == dupInstruction(1))
+		)
+			if (
+				(_op.type() == Operation && !instructionInfo(_op.instruction()).sideEffects) ||
+				_op.type() == Push
+			)
+			{
+					*_out = _push;
+					*_out = _pushOrDup;
+					*_out = _returnRevert;
+					return true;
+			}
+		return false;
+	}
+};
+
 struct DoubleSwap: SimplePeepholeOptimizerMethod<DoubleSwap>
 {
 	static size_t applySimple(AssemblyItem const& _s1, AssemblyItem const& _s2, std::back_insert_iterator<AssemblyItems>)
@@ -459,7 +488,7 @@ bool PeepholeOptimiser::optimise()
 	while (state.i < m_items.size())
 		applyMethods(
 			state,
-			PushPop(), OpPop(), OpStop(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
+			PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
 			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
 			TagConjunctions(), TruthyAnd(), Identity()
 		);
