@@ -238,41 +238,45 @@
 //         mstore(0x80, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
 //         mstore(0xa0, 8489654445897228341090914135473290831551238522473825886865492707826370766375)
 //         let notes := add(0x04, calldataload(0x04))
-//         if gt(calldataload(0x24), calldataload(notes))
+//         let n := calldataload(notes)
+//         if gt(calldataload(0x24), n)
 //         {
 //             mstore(0x00, 404)
 //             revert(0x00, 0x20)
 //         }
 //         let kn := calldataload(add(calldatasize(), not(191)))
-//         mstore(0x2a0, caller())
+//         let _1 := 0x2a0
+//         mstore(_1, caller())
 //         mstore(0x2c0, kn)
 //         mstore(0x2e0, calldataload(0x24))
 //         kn := mulmod(sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, kn), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
-//         hashCommitments(notes, calldataload(notes))
-//         let b := add(0x300, shl(7, calldataload(notes)))
+//         hashCommitments(notes, n)
+//         let b := add(0x300, shl(7, n))
 //         let i := 0
-//         for { } lt(i, calldataload(notes)) { i := add(i, 0x01) }
+//         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
+//             let noteIndex := add(add(calldataload(0x04), mul(i, 0xc0)), 0x24)
 //             let k := 0
 //             let a := calldataload(add(add(calldataload(0x04), mul(i, 0xc0)), 0x44))
-//             switch eq(add(i, 0x01), calldataload(notes))
+//             let c := mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//             let _2 := add(i, 0x01)
+//             switch eq(_2, n)
 //             case 1 {
 //                 k := kn
-//                 if eq(calldataload(0x24), calldataload(notes))
+//                 if eq(calldataload(0x24), n)
 //                 {
 //                     k := sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, kn)
 //                 }
 //             }
-//             case 0 {
-//                 k := calldataload(add(add(calldataload(0x04), mul(i, 0xc0)), 0x24))
-//             }
-//             validateCommitment(add(add(calldataload(0x04), mul(i, 0xc0)), 0x24), k, a)
-//             switch gt(add(i, 0x01), calldataload(0x24))
+//             case 0 { k := calldataload(noteIndex) }
+//             validateCommitment(noteIndex, k, a)
+//             switch gt(_2, calldataload(0x24))
 //             case 1 {
 //                 kn := addmod(kn, sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, k), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 let x := mod(mload(0), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 k := mulmod(k, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 a := mulmod(a, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//                 c := mulmod(mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 mstore(0, keccak256(0, 0x20))
 //             }
 //             case 0 {
@@ -280,7 +284,7 @@
 //             }
 //             calldatacopy(0xe0, add(add(calldataload(0x04), mul(i, 0xc0)), 164), 0x40)
 //             calldatacopy(0x20, add(add(calldataload(0x04), mul(i, 0xc0)), 100), 0x40)
-//             mstore(0x120, sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)))
+//             mstore(0x120, sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, c))
 //             mstore(0x60, k)
 //             mstore(0xc0, a)
 //             let result := call(gas(), 7, 0, 0xe0, 0x60, 0x1a0, 0x40)
@@ -297,10 +301,10 @@
 //             }
 //             if gt(i, calldataload(0x24))
 //             {
-//                 mstore(0x60, mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001))
-//                 let _1 := 0x220
-//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, _1, 0x40))
-//                 let result_5 := and(result_4, call(gas(), 6, 0, _1, 0x80, 0x260, 0x40))
+//                 mstore(0x60, c)
+//                 let _3 := 0x220
+//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, _3, 0x40))
+//                 let result_5 := and(result_4, call(gas(), 6, 0, _3, 0x80, 0x260, 0x40))
 //                 result := and(result_5, call(gas(), 6, 0, 0x1a0, 0x80, 0x1e0, 0x40))
 //             }
 //             if iszero(result)
@@ -310,8 +314,8 @@
 //             }
 //             b := add(b, 0x40)
 //         }
-//         if lt(calldataload(0x24), calldataload(notes)) { validatePairing() }
-//         if iszero(eq(mod(keccak256(0x2a0, add(b, not(671))), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)))
+//         if lt(calldataload(0x24), n) { validatePairing() }
+//         if iszero(eq(mod(keccak256(_1, add(b, not(671))), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)))
 //         {
 //             mstore(0, 404)
 //             revert(0, 0x20)
