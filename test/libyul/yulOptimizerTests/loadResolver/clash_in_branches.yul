@@ -4,11 +4,11 @@
     sstore(x, y)
     switch calldataload(2)
     case 0 {
-        x := 2
+        x := 20
         sstore(x, y)
     }
     default {
-        x := 3
+        x := 30
         sstore(x, y)
     }
     let t := sload(x)
@@ -23,14 +23,13 @@
 //         let x := calldataload(_1)
 //         let y := calldataload(1)
 //         sstore(x, y)
-//         let _3 := 2
-//         switch calldataload(_3)
+//         switch calldataload(2)
 //         case 0 {
-//             x := _3
-//             sstore(_3, y)
+//             x := 20
+//             sstore(x, y)
 //         }
 //         default {
-//             x := 3
+//             x := 30
 //             sstore(x, y)
 //         }
 //         sstore(_1, sload(x))
