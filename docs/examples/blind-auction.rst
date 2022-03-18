@@ -1,72 +1,65 @@
 .. index:: auction;blind, auction;open, blind auction, open auction
 
-*************
-Blind Auction
-*************
+****************
+盲拍（秘密竞价）
+****************
 
-In this section, we will show how easy it is to create a completely blind
-auction contract on Ethereum.  We will start with an open auction where
-everyone can see the bids that are made and then extend this contract into a
-blind auction where it is not possible to see the actual bid until the bidding
-period ends.
+在本节中，我们将展示如何轻松地在以太坊上创建一个盲拍的合约。
+我们将从一个公开拍卖开始，每个人都可以看到出价，
+然后将此合约扩展到盲拍合约， 在竞标期结束之前无法看到实际出价。
 
 .. _simple_auction:
 
-Simple Open Auction
+简单的公开拍卖
 ===================
 
-The general idea of the following simple auction contract is that everyone can
-send their bids during a bidding period. The bids already include sending money
-/ Ether in order to bind the bidders to their bid. If the highest bid is
-raised, the previous highest bidder gets their money back.  After the end of
-the bidding period, the contract has to be called manually for the beneficiary
-to receive their money - contracts cannot activate themselves.
+下面这个简单的拍卖合约的总体思路是，每个人都可以在竞标期间发送他们的竞标。
+竞标已经包括发送资金/以太币，以便将竞标者与他们的竞标绑定。
+如果最高出价被提高，之前的最高出价者就会拿回他们的钱。
+竞价期结束后，受益人需要手动调用合约，才能收到他们的钱 - 合约不能自己激活接收。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
     contract SimpleAuction {
-        // Parameters of the auction. Times are either
-        // absolute unix timestamps (seconds since 1970-01-01)
-        // or time periods in seconds.
+        // 拍卖的参数。
+        // 时间是 unix 的绝对时间戳（自1970-01-01以来的秒数）
+        // 或以秒为单位的时间段。
         address payable public beneficiary;
         uint public auctionEndTime;
 
-        // Current state of the auction.
+        // 拍卖的当前状态。
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // 允许取回以前的竞标。
         mapping(address => uint) pendingReturns;
 
-        // Set to true at the end, disallows any change.
-        // By default initialized to `false`.
+        // 拍卖结束后设为 `true`，将禁止所有的变更
+        // 默认初始化为 `false`。
         bool ended;
 
-        // Events that will be emitted on changes.
+        // 变化时将会发出的事件。
         event HighestBidIncreased(address bidder, uint amount);
         event AuctionEnded(address winner, uint amount);
 
-        // Errors that describe failures.
+        // 描述失败的错误信息。
 
-        // The triple-slash comments are so-called natspec
-        // comments. They will be shown when the user
-        // is asked to confirm a transaction or
-        // when an error is displayed.
+        // 三斜线的注释是所谓的 natspec 注释。
+        // 当用户被要求确认一个交易或显示一个错误时，它们将被显示。
 
-        /// The auction has already ended.
+        /// 竞拍已经结束。
         error AuctionAlreadyEnded();
-        /// There is already a higher or equal bid.
+        /// 已经有一个更高的或相等的出价。
         error BidNotHighEnough(uint highestBid);
-        /// The auction has not ended yet.
+        /// 竞拍还没有结束。
         error AuctionNotYetEnded();
-        /// The function auctionEnd has already been called.
+        /// 函数 auctionEnd 已经被调用。
         error AuctionEndAlreadyCalled();
 
-        /// Create a simple auction with `biddingTime`
-        /// seconds bidding time on behalf of the
-        /// beneficiary address `beneficiaryAddress`.
+        /// 以受益者地址 `beneficiaryAddress` 创建一个简单的拍卖，
+        /// 拍卖时长为 `_biddingTime`。
         constructor(
             uint biddingTime,
             address payable beneficiaryAddress
@@ -75,36 +68,27 @@ to receive their money - contracts cannot activate themselves.
             auctionEndTime = block.timestamp + biddingTime;
         }
 
-        /// Bid on the auction with the value sent
-        /// together with this transaction.
-        /// The value will only be refunded if the
-        /// auction is not won.
+        /// 对拍卖进行出价，具体的出价随交易一起发送。
+        /// 如果没有在拍卖中胜出，则返还出价。
         function bid() external payable {
-            // No arguments are necessary, all
-            // information is already part of
-            // the transaction. The keyword payable
-            // is required for the function to
-            // be able to receive Ether.
+            // 参数不是必要的。因为所有的信息已经包含在了交易中。
+            // 关键字 `payable` 是函数能够接收以太币的必要条件。
 
-            // Revert the call if the bidding
-            // period is over.
+            // 如果拍卖已结束，撤销函数的调用。
             if (block.timestamp > auctionEndTime)
                 revert AuctionAlreadyEnded();
 
-            // If the bid is not higher, send the
-            // money back (the revert statement
-            // will revert all changes in this
-            // function execution including
-            // it having received the money).
+            // 如果出价不高，就把钱送回去
+            //（revert语句将恢复这个函数执行中的所有变化，
+            // 包括它已经收到钱）。
             if (msg.value <= highestBid)
                 revert BidNotHighEnough(highestBid);
 
             if (highestBid != 0) {
-                // Sending back the money by simply using
-                // highestBidder.send(highestBid) is a security risk
-                // because it could execute an untrusted contract.
-                // It is always safer to let the recipients
-                // withdraw their money themselves.
+                // 简单地使用 highestBidder.send(highestBid)
+                // 返还出价时，是有安全风险的，
+                // 因为它可能执行一个不受信任的合约。
+                // 让接收方自己取钱总是比较安全的。
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
@@ -112,20 +96,20 @@ to receive their money - contracts cannot activate themselves.
             emit HighestBidIncreased(msg.sender, msg.value);
         }
 
-        /// Withdraw a bid that was overbid.
+        /// 撤回出价过高的竞标。
         function withdraw() external returns (bool) {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `send` returns.
+                // 将其设置为0是很重要的，
+                // 因为接收者可以在 `send` 返回之前再次调用这个函数
+                // 作为接收调用的一部分。
                 pendingReturns[msg.sender] = 0;
 
-                // msg.sender is not of type `address payable` and must be
-                // explicitly converted using `payable(msg.sender)` in order
-                // use the member function `send()`.
+                // msg.sender 不属于 `address payable` 类型，
+                // 必须使用 `payable(msg.sender)` 明确转换，
+                // 以便使用成员函数 `send()`。
                 if (!payable(msg.sender).send(amount)) {
-                    // No need to call throw here, just reset the amount owing
+                    // 这里不需抛出异常，只需重置未付款
                     pendingReturns[msg.sender] = amount;
                     return false;
                 }
@@ -133,66 +117,54 @@ to receive their money - contracts cannot activate themselves.
             return true;
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// 结束拍卖，并把最高的出价发送给受益人。
         function auctionEnd() external {
-            // It is a good guideline to structure functions that interact
-            // with other contracts (i.e. they call functions or send Ether)
-            // into three phases:
-            // 1. checking conditions
-            // 2. performing actions (potentially changing conditions)
-            // 3. interacting with other contracts
-            // If these phases are mixed up, the other contract could call
-            // back into the current contract and modify the state or cause
-            // effects (ether payout) to be performed multiple times.
-            // If functions called internally include interaction with external
-            // contracts, they also have to be considered interaction with
-            // external contracts.
+            // 对于可与其他合约交互的函数（意味着它会调用其他函数或发送以太币），
+            // 一个好的指导方针是将其结构分为三个阶段：
+            // 1. 检查条件
+            // 2. 执行动作 (可能会改变条件)
+            // 3. 与其他合约交互
+            // 如果这些阶段相混合，其他的合约可能会回调当前合约并修改状态，
+            // 或者导致某些效果（比如支付以太币）多次生效。
+            // 如果合约内调用的函数包含了与外部合约的交互，
+            // 则它也会被认为是与外部合约有交互的。
 
-            // 1. Conditions
+            // 1. 条件
             if (block.timestamp < auctionEndTime)
                 revert AuctionNotYetEnded();
             if (ended)
                 revert AuctionEndAlreadyCalled();
 
-            // 2. Effects
+            // 2. 影响
             ended = true;
             emit AuctionEnded(highestBidder, highestBid);
 
-            // 3. Interaction
+            // 3. 交互
             beneficiary.transfer(highestBid);
         }
     }
 
-Blind Auction
-=============
+盲拍（秘密竞拍）
+================
 
-The previous open auction is extended to a blind auction in the following. The
-advantage of a blind auction is that there is no time pressure towards the end
-of the bidding period. Creating a blind auction on a transparent computing
-platform might sound like a contradiction, but cryptography comes to the
-rescue.
+之前的公开拍卖接下来将被扩展为盲目拍卖。
+盲拍的好处是，在竞价期即将结束时没有时间压力。
+在一个透明的计算平台上创建一个盲拍可能听起来是一个矛盾，但加密技术可以实现它。
 
-During the **bidding period**, a bidder does not actually send their bid, but
-only a hashed version of it.  Since it is currently considered practically
-impossible to find two (sufficiently long) values whose hash values are equal,
-the bidder commits to the bid by that.  After the end of the bidding period,
-the bidders have to reveal their bids: They send their values unencrypted and
-the contract checks that the hash value is the same as the one provided during
-the bidding period.
+在 **竞标期间**，竞标者实际上并没有发送他们的出价，
+而只是发送一个哈希版本的出价。 由于目前几乎不可能找到两个（足够长的）值，
+其哈希值是相等的，因此竞标者可通过该方式提交报价。 在竞标结束后，
+竞标者必须公开他们的出价：他们发送未加密的值，
+合约检查出价的哈希值是否与竞标期间提供的值相同。
 
-Another challenge is how to make the auction **binding and blind** at the same
-time: The only way to prevent the bidder from just not sending the money after
-they won the auction is to make them send it together with the bid. Since value
-transfers cannot be blinded in Ethereum, anyone can see the value.
+另一个挑战是如何使拍卖同时做到 **绑定和秘密** :
+唯一能阻止竞标者在赢得拍卖后不付款的方式是，让他们将钱和竞标一起发出。
+但由于资金转移在 以太坊 中不能被隐藏，因此任何人都可以看到转移的资金。
 
-The following contract solves this problem by accepting any value that is
-larger than the highest bid. Since this can of course only be checked during
-the reveal phase, some bids might be **invalid**, and this is on purpose (it
-even provides an explicit flag to place invalid bids with high value
-transfers): Bidders can confuse competition by placing several high or low
-invalid bids.
-
+下面的合约通过接受任何大于最高出价的值来解决这个问题。
+当然，因为这只能在揭示阶段进行检查，有些出价可能是 **无效** 的，
+甚至，这是故意的(与高出价一起，它甚至提供了一个明确的标志来标识无效的出价):
+竞标者可以通过设置几个或高或低的无效出价来迷惑竞争对手。
 
 .. code-block:: solidity
     :force:
@@ -215,26 +187,25 @@ invalid bids.
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // 允许取回以前的竞标。
         mapping(address => uint) pendingReturns;
 
         event AuctionEnded(address winner, uint highestBid);
 
-        // Errors that describe failures.
+        // 描述失败的错误信息。
 
-        /// The function has been called too early.
-        /// Try again at `time`.
+        /// 该函数被过早调用。
+        /// 在 `time` 时间再试一次。
         error TooEarly(uint time);
-        /// The function has been called too late.
-        /// It cannot be called after `time`.
+        /// 该函数被过晚调用。
+        /// 它不能在 `time` 时间之后被调用。
         error TooLate(uint time);
-        /// The function auctionEnd has already been called.
+        /// 函数 auctionEnd 已经被调用。
         error AuctionEndAlreadyCalled();
 
-        // Modifiers are a convenient way to validate inputs to
-        // functions. `onlyBefore` is applied to `bid` below:
-        // The new function body is the modifier's body where
-        // `_` is replaced by the old function body.
+        // 使用 修饰符（modifier） 可以更便捷的校验函数的入参。
+        // `onlyBefore` 会被用于后面的 `bid` 函数：
+        // 新的函数体是由 modifier 本身的函数体，其中`_`被旧的函数体所取代。
         modifier onlyBefore(uint time) {
             if (block.timestamp >= time) revert TooLate(time);
             _;
@@ -254,15 +225,13 @@ invalid bids.
             revealEnd = biddingEnd + revealTime;
         }
 
-        /// Place a blinded bid with `blindedBid` =
-        /// keccak256(abi.encodePacked(value, fake, secret)).
-        /// The sent ether is only refunded if the bid is correctly
-        /// revealed in the revealing phase. The bid is valid if the
-        /// ether sent together with the bid is at least "value" and
-        /// "fake" is not true. Setting "fake" to true and sending
-        /// not the exact amount are ways to hide the real bid but
-        /// still make the required deposit. The same address can
-        /// place multiple bids.
+        /// 可以通过 `_blindedBid` = keccak256(value, fake, secret)
+        /// 设置一个盲拍。
+        /// 只有在出价披露阶段被正确披露，已发送的以太币才会被退还。
+        /// 如果与出价一起发送的以太币至少为 "value" 且 "fake" 不为真，则出价有效。
+        /// 将 "fake" 设置为 true ，
+        /// 然后发送满足订金金额但又不与出价相同的金额是隐藏实际出价的方法。
+        /// 同一个地址可以放置多个出价。
         function bid(bytes32 blindedBid)
             external
             payable
@@ -274,9 +243,8 @@ invalid bids.
             }));
         }
 
-        /// Reveal your blinded bids. You will get a refund for all
-        /// correctly blinded invalid bids and for all bids except for
-        /// the totally highest.
+        /// 披露你的盲拍出价。
+        /// 对于所有正确披露的无效出价以及除最高出价以外的所有出价，您都将获得退款。
         function reveal(
             uint[] calldata values,
             bool[] calldata fakes,
@@ -297,8 +265,8 @@ invalid bids.
                 (uint value, bool fake, bytes32 secret) =
                         (values[i], fakes[i], secrets[i]);
                 if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
-                    // Bid was not actually revealed.
-                    // Do not refund deposit.
+                    // 出价未能正确披露。
+                    // 不返还订金。
                     continue;
                 }
                 refund += bidToCheck.deposit;
@@ -306,29 +274,27 @@ invalid bids.
                     if (placeBid(msg.sender, value))
                         refund -= value;
                 }
-                // Make it impossible for the sender to re-claim
-                // the same deposit.
+                // 使发送者不可能再次认领同一笔订金。
                 bidToCheck.blindedBid = bytes32(0);
             }
             payable(msg.sender).transfer(refund);
         }
 
-        /// Withdraw a bid that was overbid.
+        /// 撤回出价过高的竞标。
         function withdraw() external {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `transfer` returns (see the remark above about
-                // conditions -> effects -> interaction).
+                // 这里很重要，首先要设零值。
+                // 因为，作为接收调用的一部分，
+                // 接收者可以在 `transfer` 返回之前重新调用该函数。
+                //（可查看上面关于 条件 -> 影响 -> 交互 的标注）
                 pendingReturns[msg.sender] = 0;
 
                 payable(msg.sender).transfer(amount);
             }
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// 结束拍卖，并把最高的出价发送给受益人。
         function auctionEnd()
             external
             onlyAfter(revealEnd)
@@ -339,9 +305,8 @@ invalid bids.
             beneficiary.transfer(highestBid);
         }
 
-        // This is an "internal" function which means that it
-        // can only be called from the contract itself (or from
-        // derived contracts).
+        // 这是一个 "internal" 函数，
+        // 意味着它只能在本合约（或继承合约）内被调用。
         function placeBid(address bidder, uint value) internal
                 returns (bool success)
         {
@@ -349,7 +314,7 @@ invalid bids.
                 return false;
             }
             if (highestBidder != address(0)) {
-                // Refund the previously highest bidder.
+                // 返还之前的最高出价
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBid = value;
