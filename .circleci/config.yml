@@ -690,9 +690,16 @@ jobs:
           name: Install pip
           command: apt -q update && apt install -y python3-pip
       - run:
-          name: Install pylint
-          command: python3 -m pip install pylint z3-solver pygments-lexer-solidity parsec tabulate deepdiff colorama
-          # also z3-solver, parsec and tabulate to make sure pylint knows about this module, pygments-lexer-solidity for docs
+          name: Install pylint and dependencies of the scripts that will be linted
+          command: python3 -m pip install
+            pylint
+            z3-solver
+            pygments-lexer-solidity
+            parsec
+            tabulate
+            deepdiff
+            colorama
+            requests
       - run:
           name: Linting Python Scripts
           command: ./scripts/pylint_all.py
