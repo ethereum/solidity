@@ -1,26 +1,20 @@
 .. index:: purchase, remote purchase, escrow
 
 ********************
-Safe Remote Purchase
+安全的远程购买
 ********************
 
-Purchasing goods remotely currently requires multiple parties that need to trust each other.
-The simplest configuration involves a seller and a buyer. The buyer would like to receive
-an item from the seller and the seller would like to get money (or an equivalent)
-in return. The problematic part is the shipment here: There is no way to determine for
-sure that the item arrived at the buyer.
+目前，远程购买商品需要多方相互信任。最简单的关系涉及一个卖家和一个买家。
+买方希望从卖方那里收到一件物品，卖方希望得到金钱（或等价物）作为回报。
+这里面有问题的部分是的运输。没有办法确定物品是否到达买方手中。
 
-There are multiple ways to solve this problem, but all fall short in one or the other way.
-In the following example, both parties have to put twice the value of the item into the
-contract as escrow. As soon as this happened, the money will stay locked inside
-the contract until the buyer confirms that they received the item. After that,
-the buyer is returned the value (half of their deposit) and the seller gets three
-times the value (their deposit plus the value). The idea behind
-this is that both parties have an incentive to resolve the situation or otherwise
-their money is locked forever.
+有多种方法来解决这个问题，但都有这样或那样的不足之处。
+在下面的例子中，双方都要把两倍价值于物品的资金放入合约中作为托管。
+只要发生这种情况，钱就会一直锁在合同里面，直到买方确认收到物品。
+之后，买方会得到退回的资金（他们押金的一半），卖方得到三倍的资金（他们的押金加上物品的价值）。
+这背后的想法是，双方都有动力去解决这个问题，否则他们的钱就会被永远锁定。
 
-This contract of course does not solve the problem, but gives an overview of how
-you can use state machine-like constructs inside a contract.
+这个合约当然不能解决问题，但它概述了如何在合约内使用类似状态机的构造。
 
 
 .. code-block:: solidity
@@ -33,7 +27,7 @@ you can use state machine-like constructs inside a contract.
         address payable public buyer;
 
         enum State { Created, Locked, Release, Inactive }
-        // The state variable has a default value of the first member, `State.created`
+        // 状态变量的默认值是第一个成员，`State.created`。
         State public state;
 
         modifier condition(bool condition_) {
@@ -41,13 +35,13 @@ you can use state machine-like constructs inside a contract.
             _;
         }
 
-        /// Only the buyer can call this function.
+        /// 只有买方可以调用这个函数。
         error OnlyBuyer();
-        /// Only the seller can call this function.
+        /// 只有卖方可以调用这个函数。
         error OnlySeller();
-        /// The function cannot be called at the current state.
+        /// 在当前状态下不能调用该函数。
         error InvalidState();
-        /// The provided value has to be even.
+        /// 提供的值必须是偶数。
         error ValueNotEven();
 
         modifier onlyBuyer() {
@@ -73,9 +67,9 @@ you can use state machine-like constructs inside a contract.
         event ItemReceived();
         event SellerRefunded();
 
-        // Ensure that `msg.value` is an even number.
-        // Division will truncate if it is an odd number.
-        // Check via multiplication that it wasn't an odd number.
+        // 确保 `msg.value` 是一个偶数。
+        // 如果是奇数，除法会截断。
+        // 通过乘法检查它不是一个奇数。
         constructor() payable {
             seller = payable(msg.sender);
             value = msg.value / 2;
@@ -83,9 +77,8 @@ you can use state machine-like constructs inside a contract.
                 revert ValueNotEven();
         }
 
-        /// Abort the purchase and reclaim the ether.
-        /// Can only be called by the seller before
-        /// the contract is locked.
+        /// 终止购买并收回 ether。
+        /// 只能由卖方在合同锁定前能调用。
         function abort()
             external
             onlySeller
@@ -93,17 +86,16 @@ you can use state machine-like constructs inside a contract.
         {
             emit Aborted();
             state = State.Inactive;
-            // We use transfer here directly. It is
-            // reentrancy-safe, because it is the
-            // last call in this function and we
-            // already changed the state.
+            // 我们在这里直接使用 `transfer`。
+            // 它可以安全地重入。
+            // 因为它是这个函数中的最后一次调用，
+            // 而且我们已经改变了状态。
             seller.transfer(address(this).balance);
         }
 
-        /// Confirm the purchase as buyer.
-        /// Transaction has to include `2 * value` ether.
-        /// The ether will be locked until confirmReceived
-        /// is called.
+        /// 买方确认购买。
+        /// 交易必须包括 `2 * value` ether。
+        /// Ether 将被锁住，直到调用 confirmReceived。
         function confirmPurchase()
             external
             inState(State.Created)
@@ -115,33 +107,31 @@ you can use state machine-like constructs inside a contract.
             state = State.Locked;
         }
 
-        /// Confirm that you (the buyer) received the item.
-        /// This will release the locked ether.
+        /// 确认您（买方）已经收到了该物品。
+        /// 这将释放锁定的 ether。
         function confirmReceived()
             external
             onlyBuyer
             inState(State.Locked)
         {
             emit ItemReceived();
-            // It is important to change the state first because
-            // otherwise, the contracts called using `send` below
-            // can call in again here.
+            // 首先改变状态是很重要的，否则的话，
+            // 下面使用 `send` 调用的合约可以在这里再次调用。
             state = State.Release;
 
             buyer.transfer(value);
         }
 
-        /// This function refunds the seller, i.e.
-        /// pays back the locked funds of the seller.
+        /// 该功能为卖家退款，
+        /// 即退还卖家锁定的资金。
         function refundSeller()
             external
             onlySeller
             inState(State.Release)
         {
             emit SellerRefunded();
-            // It is important to change the state first because
-            // otherwise, the contracts called using `send` below
-            // can call in again here.
+            // 首先改变状态是很重要的，否则的话，
+            // 下面使用 `send` 调用的合约可以在这里再次调用。
             state = State.Inactive;
 
             seller.transfer(3 * value);
