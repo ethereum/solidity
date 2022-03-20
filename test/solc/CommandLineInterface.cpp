@@ -197,8 +197,6 @@ BOOST_AUTO_TEST_CASE(cli_input)
 	PathSet expectedAllowedPaths = {
 		boost::filesystem::canonical(tempDir1),
 		boost::filesystem::canonical(tempDir2),
-		"b/c",
-		"c/d/e",
 	};
 
 	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles({

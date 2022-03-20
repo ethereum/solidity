@@ -1,5 +1,5 @@
 contract C {
-  function f() public pure {
+  function g() public pure {
     assembly {
       function f(a., x.b) -> t.b, b.. {}
     }

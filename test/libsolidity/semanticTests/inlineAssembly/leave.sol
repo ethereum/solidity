@@ -1,5 +1,5 @@
 contract C {
-    function f() public pure returns (uint w) {
+    function g() public pure returns (uint w) {
         assembly {
             function f() -> t {
                 t := 2
@@ -14,4 +14,4 @@ contract C {
 // compileToEwasm: also
 // compileViaYul: also
 // ----
-// f() -> 2
+// g() -> 2

@@ -1,1 +1,1 @@
---assemble --optimize --yul-dialect evm --machine ewasm
+--assemble --optimize --yul-dialect evm --machine ewasm  --bin --asm --ewasm --ewasm-ir --ir-optimized

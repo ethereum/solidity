@@ -285,23 +285,6 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 	{
 		solAssert(nativeLocationOf(identifier) == originLocationOf(identifier), "");
 		validateYulIdentifierName(identifier.name, nativeLocationOf(identifier));
-
-		if (
-			auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
-			!declarations.empty()
-		)
-		{
-			SecondarySourceLocation ssl;
-			for (auto const* decl: declarations)
-				ssl.append("The shadowed declaration is here:", decl->location());
-			if (!ssl.infos.empty())
-				m_errorReporter.declarationError(
-					3859_error,
-					nativeLocationOf(identifier),
-					ssl,
-					"This declaration shadows a declaration outside the inline assembly block."
-				);
-		}
 	}
 
 	if (_varDecl.value)
@@ -393,4 +376,20 @@ void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceL
 			_location,
 			"The identifier name \"" + _name.str() + "\" is reserved."
 		);
+
+	auto declarations = m_resolver.nameFromCurrentScope(_name.str());
+	if (!declarations.empty())
+	{
+		SecondarySourceLocation ssl;
+		for (auto const* decl: declarations)
+			if (decl->location().hasText())
+				ssl.append("The shadowed declaration is here:", decl->location());
+		if (!ssl.infos.empty())
+			m_errorReporter.declarationError(
+				3859_error,
+				_location,
+				ssl,
+				"This declaration shadows a declaration outside the inline assembly block."
+			);
+	}
 }

@@ -1,7 +1,7 @@
 contract C {
     struct S { bool f; }
     S s;
-    function f() internal pure {
+    function g() internal pure {
         S storage c;
         // this could be allowed, but currently control flow for functions is not analysed
         assembly {

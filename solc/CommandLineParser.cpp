@@ -297,18 +297,6 @@ void CommandLineParser::parseInputPathsAndRemappings()
 						"Please put them under 'settings.remappings' in the JSON input."
 					);
 
-				if (!remapping->target.empty())
-				{
-					// If the target is a directory, whitelist it. Otherwise whitelist containing dir.
-					// NOTE: /a/b/c/ is a directory while /a/b/c is not.
-					boost::filesystem::path remappingDir = remapping->target;
-					if (remappingDir.filename() != "..")
-						// As an exception we'll treat /a/b/c/.. as a directory too. It would be
-						// unintuitive to whitelist /a/b/c when the target is equivalent to /a/b/.
-						remappingDir.remove_filename();
-					m_options.input.allowedDirectories.insert(remappingDir.empty() ? "." : remappingDir);
-				}
-
 				m_options.input.remappings.emplace_back(move(remapping.value()));
 			}
 			else if (positionalArg == "-")
@@ -475,17 +463,6 @@ void CommandLineParser::parseOutputSelection()
 
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
-
-	if (m_options.input.mode == InputMode::Assembler && m_options.compiler.outputs == CompilerOutputs{})
-	{
-		// In assembly mode keep the default outputs enabled for backwards-compatibility.
-		// TODO: Remove this (must be done in a breaking release).
-		m_options.compiler.outputs.asm_ = true;
-		m_options.compiler.outputs.binary = true;
-		m_options.compiler.outputs.irOptimized = true;
-		m_options.compiler.outputs.ewasm = true;
-		m_options.compiler.outputs.ewasmIR = true;
-	}
 
 	vector<string> unsupportedOutputs;
 	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())

@@ -1,1 +1,1 @@
---strict-assembly
+--strict-assembly --bin --asm --ir-optimized

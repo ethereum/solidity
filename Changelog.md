@@ -1,3 +1,15 @@
+### 0.9.0 (unreleased)
+
+Breaking changes:
+ * Disallow ``.pop()`` on arrays containing nested mappings.
+ * Disallow ``delete`` on types that contain nested mappings.
+ * Disallow ``codecopy`` and ``codesize`` in ``pure`` functions.
+ * Inline Assembly: Consider functions, function parameters and return variables for shadowing checks.
+ * Commandline Interface: Remapping targets are not automatically added to allowed paths.
+ * Commandline Interface: Assembler mode no longer enables all outputs by default.
+ * General: The identifier ``basefee`` is a reserved identifier in Yul for all EVM versions.
+
+
 ### 0.8.14 (unreleased)
 
 Language Features:
@@ -50,7 +62,6 @@ Compiler Features:
  * Commandline Interface: Event and error signatures are also returned when using ``--hashes``.
  * Yul Optimizer: Remove ``mstore`` and ``sstore`` operations if the slot already contains the same value.
  * Yul: Emit immutable references for pure yul code when requested.
-
 
 
 Bugfixes:

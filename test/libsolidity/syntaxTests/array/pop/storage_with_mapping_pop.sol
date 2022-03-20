@@ -6,3 +6,4 @@ contract C {
     }
 }
 // ----
+// TypeError 6298: (109-118): Storage arrays with nested mappings do not support .pop().

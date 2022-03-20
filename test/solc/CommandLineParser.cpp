@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.input.basePath = "/home/user/";
 		expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
 
-		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
+		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts"};
 		expectedOptions.input.ignoreMissingFiles = true;
 		expectedOptions.input.errorRecovery = (inputMode == InputMode::Compiler);
 		expectedOptions.output.dir = "/tmp/out";
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.input.addStdin = true;
 		expectedOptions.input.basePath = "/home/user/";
 		expectedOptions.input.includePaths = {"/usr/lib/include/", "/home/user/include"};
-		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
+		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts"};
 		expectedOptions.input.ignoreMissingFiles = true;
 		expectedOptions.output.overwriteFiles = true;
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();

@@ -1,7 +1,7 @@
 contract C {
   function f() public pure {
     assembly {
-      switch codesize()
+      switch calldatasize()
       case "1" {}
       case "2" {}
     }
