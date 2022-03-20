@@ -263,17 +263,15 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 		return booleanValue(arguments.at(0) == constantValue(0));
 	case evmasm::Instruction::AND:
 		return smtutil::Expression::ite(
-			(arguments.at(0) == 0 || arguments.at(0) == 1) &&
-			(arguments.at(1) == 0 || arguments.at(1) == 1),
-			booleanValue(arguments.at(0) == 1 && arguments.at(1) == 1),
+			arguments.at(0) + arguments.at(1) <= 2,
+			booleanValue(arguments.at(0) + arguments.at(1) >= 2),
 			// TODO we could probably restrict it a bit more
 			newRestrictedVariable()
 		);
 	case evmasm::Instruction::OR:
 		return smtutil::Expression::ite(
-			(arguments.at(0) == 0 || arguments.at(0) == 1) &&
-			(arguments.at(1) == 0 || arguments.at(1) == 1),
-			booleanValue(arguments.at(0) == 1 || arguments.at(1) == 1),
+			arguments.at(0) + arguments.at(1) <= 2,
+			booleanValue(arguments.at(0) + arguments.at(1) >= 1),
 			// TODO we could probably restrict it a bit more
 			newRestrictedVariable()
 		);
