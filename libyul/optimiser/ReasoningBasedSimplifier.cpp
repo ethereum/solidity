@@ -85,6 +85,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	{
 		cout << "Checking if condition  can be true" << endl;
 		m_solver->push();
+		// TODO change this to >= 1 for simplicity?
 		m_solver->addAssertion(condition != constantValue(0));
 		cout << "  running check" << endl;
 		CheckResult result2 = m_solver->check({}).first;
@@ -99,6 +100,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 			// Nothing left to be done.
 			return;
 		}
+		cout << " unknown :(" << endl;
 	}
 
 	m_solver->push();

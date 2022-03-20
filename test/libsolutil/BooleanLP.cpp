@@ -344,6 +344,14 @@ BOOST_AUTO_TEST_CASE(pure_boolean)
 	infeasible();
 }
 
+BOOST_AUTO_TEST_CASE(more_test)
+{
+	Expression x = variable("x");
+	solver.addAssertion(x == 0);
+	solver.addAssertion(x != 0);
+	infeasible();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

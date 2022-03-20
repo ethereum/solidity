@@ -207,7 +207,10 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	cout << "--------------" << endl;
 
 	if (state().infeasible)
+	{
+		cout << "----->>>>> unsatisfiable" << endl;
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});
+	}
 
 	std::vector<std::string> booleanVariables;
 	std::vector<Clause> clauses = state().clauses;
@@ -227,7 +230,10 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	//cout << "Boolean variables:" << joinHumanReadable(booleanVariables) << endl;
 	//cout << "Running LP solver on fixed constraints." << endl;
 	if (m_lpSolver.check(lpState).first == LPResult::Infeasible)
+	{
+		cout << "----->>>>> unsatisfiable" << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
+	}
 
 	auto theorySolver = [&](map<size_t, bool> const& _booleanAssignment) -> optional<Clause>
 	{
@@ -263,12 +269,12 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver}.solve();
 	if (!optionalModel)
 	{
-		//cout << "==============> CDCL final result: unsatisfiable." << endl;
+		cout << "==============> CDCL final result: unsatisfiable." << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 	else
 	{
-		//cout << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
+		cout << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
 		// TODO should be "unknown" later on
 		//return {CheckResult::SATISFIABLE, {}};
 		return {CheckResult::UNKNOWN, {}};

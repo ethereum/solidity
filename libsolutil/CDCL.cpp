@@ -69,8 +69,8 @@ optional<CDCL::Model> CDCL::solve()
 			cancelUntil(backtrackLevel);
 			solAssert(!learntClause.empty());
 			solAssert(!isAssigned(learntClause.front()));
-			for (size_t i = 1; i < learntClause.size(); i++)
-				solAssert(isAssignedFalse(learntClause.at(i)));
+//			for (size_t i = 1; i < learntClause.size(); i++)
+//				solAssert(value(learntClause[i]) == TriState{false});
 
 			addClause(move(learntClause));
 			enqueue(m_clauses.back()->front(), &(*m_clauses.back()));
