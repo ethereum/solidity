@@ -1663,19 +1663,22 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	else
 		_operation.subExpression().accept(*this);
 	Type const* subExprType = type(_operation.subExpression());
-	Type const* t = type(_operation.subExpression())->unaryOperatorResult(op);
-	if (!t)
+	TypeResult result = type(_operation.subExpression())->unaryOperatorResult(op);
+	if (!result)
 	{
 		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->toString();
+		if (!result.message().empty())
+			description += ". " + result.message();
 		if (modifying)
 			// Cannot just report the error, ignore the unary operator, and continue,
 			// because the sub-expression was already processed with requireLValue()
 			m_errorReporter.fatalTypeError(9767_error, _operation.location(), description);
 		else
 			m_errorReporter.typeError(4907_error, _operation.location(), description);
-		t = subExprType;
+		_operation.annotation().type = subExprType;
 	}
-	_operation.annotation().type = t;
+	else
+		_operation.annotation().type = result.get();
 	_operation.annotation().isConstant = false;
 	_operation.annotation().isPure = !modifying && *_operation.subExpression().annotation().isPure;
 	_operation.annotation().isLValue = false;
