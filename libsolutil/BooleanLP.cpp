@@ -58,7 +58,11 @@ void resizeAndSet(vector<T>& _vector, size_t _index, T _value)
 
 string toString(rational const& _x)
 {
-	if (_x.denominator() == 1)
+	if (_x == u256(1) << 256)
+		return "2**256";
+	else if (_x ==  (u256(1) << 256) - 1)
+		return "2**256-1";
+	else if (_x.denominator() == 1)
 		return _x.numerator().str();
 	else
 		return _x.numerator().str() + "/" + _x.denominator().str();
