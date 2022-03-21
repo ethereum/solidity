@@ -98,6 +98,8 @@ std::pair<vector<vector<Literal>>, size_t> readCNFFile(const string& fname)
 	{
 		if (line.empty())
 			continue;
+		if (line[0] == 'c')
+			continue;
 		if (line[0] == 'p') {
 			assert(line.substr(0,6) == string("p cnf "));
 			line = line.substr(6);
@@ -166,18 +168,16 @@ int main(int argc, char** argv)
 
 	if (model) {
 		const size_t line_break_after = 80;
+		size_t last_line_break = 0;
 		stringstream ss;
 		ss << "v";
-		for (size_t i = 0; i < model->size(); i++) {
-			if (ss.str().size() > line_break_after) {
-				cout << ss.str() << endl;
-				ss.clear();
+		for(auto const& m: *model) {
+			if (ss.str().size()-last_line_break > line_break_after) {
+				ss << endl;
+				last_line_break = ss.str().size();
 				ss << "v";
 			}
-// 			if (model->at(i) != TriState::t_unset()) {
-// 				ss << " " << (model->at(i) == TriState::t_true() ? "" : "-") << i+1;
-// 			}
-
+			ss << " " << (m.second ? "" : "-") << m.first;
 		}
 		cout << ss.str() << " 0" << endl;
 		cout << "s SATISFIABLE" << endl;

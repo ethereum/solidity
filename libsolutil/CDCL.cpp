@@ -309,7 +309,9 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
-		order.insert((int)l.variable);
+		if (!order.inHeap((int)l.variable)) {
+			order.insert((int)l.variable);
+		}
 	}
 	m_decisionPoints.resize(_backtrackLevel);
 	m_assignmentQueuePointer = m_assignmentTrail.size();
