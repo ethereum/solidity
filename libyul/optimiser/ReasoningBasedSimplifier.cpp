@@ -191,8 +191,11 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 		return result;
 	}
 	case evmasm::Instruction::MUL:
-		// TODO this only works for multiplication by constants.
-		return wrap(arguments.at(0) * arguments.at(1));
+		// TODO this only works will with the rematerializer.
+		if (holds_alternative<Literal>(_arguments.at(0)) || holds_alternative<Literal>(_arguments.at(1)))
+			return wrap(arguments.at(0) * arguments.at(1));
+		else
+			return newRestrictedVariable();
 	case evmasm::Instruction::SUB:
 	{
 		auto result = arguments.at(0) - arguments.at(1) + (bigint(1) << 256) * newZeroOneVariable();
