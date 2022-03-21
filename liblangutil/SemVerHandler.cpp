@@ -116,7 +116,7 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 				cmp = static_cast<int>(_version.numbers[i] - version.numbers[i]);
 			}
 
-		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
+		if (cmp == 0 && levelsPresent == 3 && !_version.prerelease.empty() && didCompare)
 			cmp = -1;
 
 		switch (prefix)
