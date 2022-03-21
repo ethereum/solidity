@@ -172,6 +172,8 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 		Literal l = negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0)));
 		state().clauses.emplace_back(Clause{vector<Literal>{l}});
 	}
+	else if (_expr.name == "implies")
+		addAssertion(!_expr.arguments.at(0) || _expr.arguments.at(1));
 	else if (_expr.name == "<=")
 	{
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));

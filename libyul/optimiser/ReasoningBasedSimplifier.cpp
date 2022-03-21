@@ -86,7 +86,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 		cout << "Checking if condition  can be true" << endl;
 		m_solver->push();
 		// TODO change this to >= 1 for simplicity?
-		m_solver->addAssertion(condition != constantValue(0));
+		m_solver->addAssertion(condition >= 1);
 		cout << "  running check" << endl;
 		CheckResult result2 = m_solver->check({}).first;
 		m_solver->pop();
@@ -105,7 +105,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 
 	m_solver->push();
 	cout << "Setting condition true inside body" << endl;
-	m_solver->addAssertion(condition != constantValue(0));
+	m_solver->addAssertion(condition >= constantValue(1));
 
 	ASTModifier::operator()(_if.body);
 
@@ -264,12 +264,13 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 	case evmasm::Instruction::ISZERO:
 		return booleanValue(arguments.at(0) == constantValue(0));
 	case evmasm::Instruction::AND:
-		return smtutil::Expression::ite(
-			arguments.at(0) + arguments.at(1) <= 2,
-			booleanValue(arguments.at(0) + arguments.at(1) >= 2),
-			// TODO we could probably restrict it a bit more
-			newRestrictedVariable()
-		);
+	{
+		smtutil::Expression result = newRestrictedVariable();
+		m_solver->addAssertion(result <= arguments.at(0));
+		m_solver->addAssertion(result <= arguments.at(1));
+		// TODO can we say more?
+		return result;
+	}
 	case evmasm::Instruction::OR:
 		return smtutil::Expression::ite(
 			arguments.at(0) + arguments.at(1) <= 2,
