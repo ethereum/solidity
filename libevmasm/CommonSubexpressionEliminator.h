@@ -179,7 +179,12 @@ AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 )
 {
 	assertThrow(!m_breakingItem, OptimizerException, "Invalid use of CommonSubexpressionEliminator.");
-	for (; _iterator != _end && !SemanticInformation::breaksCSEAnalysisBlock(*_iterator, _msizeImportant); ++_iterator)
+	unsigned const maxChunkSize = 1000;
+	for (
+		unsigned chunkSize = 0;
+		_iterator != _end && !SemanticInformation::breaksCSEAnalysisBlock(*_iterator, _msizeImportant) && chunkSize < maxChunkSize;
+		++_iterator, ++chunkSize
+	)
 		feedItem(*_iterator);
 	if (_iterator != _end)
 		m_breakingItem = &(*_iterator++);
