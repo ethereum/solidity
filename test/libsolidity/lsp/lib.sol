@@ -23,13 +23,16 @@ enum Color {
 library Lib
 {
     function add(uint a, uint b) public pure returns (uint result)
+// ^( @addFunction
     {
         result = a + b;
     }
 
+// ^) @addFunction
     function warningWithUnused() public pure
     {
         uint unused;
+    //  ^^^^^^^^^^^ @diagnostics
     }
 }
 
