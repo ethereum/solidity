@@ -27,6 +27,7 @@
 #include <boost/rational.hpp>
 
 #include <range/v3/view/tail.hpp>
+#include <range/v3/view/enumerate.hpp>
 #include <range/v3/algorithm/all_of.hpp>
 
 #include <optional>
@@ -79,11 +80,9 @@ public:
 		return factors[_index];
 	}
 
-	auto begin() { return factors.begin(); }
-	auto end() { return factors.end(); }
-
-	auto begin() const { return factors.begin(); }
-	auto end() const { return factors.end(); }
+	auto enumerate() const { return factors | ranges::view::enumerate; }
+	// leave out the zero if exists
+	auto enumerateTail() const { return factors | ranges::view::enumerate | ranges::view::tail; }
 
 	rational const& front() const { return factors.front(); }
 

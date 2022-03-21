@@ -148,7 +148,7 @@ pair<vector<LinearExpression>, bool> toEquationalForm(vector<Constraint> _constr
 optional<size_t> findPivotColumn(Tableau const& _tableau)
 {
 	auto&& [maxColumn, maxValue] = ranges::max(
-		_tableau.objective | ranges::views::enumerate | ranges::views::tail,
+		_tableau.objective.enumerateTail(),
 		{},
 		[](std::pair<size_t, rational> const& _x) { return _x.second; }
 	);
@@ -468,7 +468,7 @@ pair<vector<bool>, vector<bool>> connectedComponent(SolvingState const& _state, 
 			if (includedRows[row])
 				continue;
 			includedRows[row] = true;
-			for (auto const& [index, entry]: _state.constraints[row].data | ranges::views::enumerate | ranges::views::tail)
+			for (auto const& [index, entry]: _state.constraints[row].data.enumerateTail())
 				if (entry && !seenColumns[index])
 				{
 					seenColumns[index] = true;
@@ -536,7 +536,7 @@ string SolvingState::toString() const
 	for (Constraint const& constraint: constraints)
 	{
 		vector<string> line;
-		for (auto&& [index, multiplier]: constraint.data | ranges::views::enumerate)
+		for (auto&& [index, multiplier]: constraint.data.enumerate())
 			if (index > 0 && multiplier != 0)
 			{
 				string mult =
@@ -631,7 +631,7 @@ optional<ReasonSet> SolvingStateSimplifier::extractDirectConstraints()
 	bool needsRemoval = false;
 	for (auto const& [index, constraint]: m_state.constraints | ranges::views::enumerate)
 	{
-		auto nonzeroCoefficients = constraint.data | ranges::views::enumerate | ranges::views::tail | ranges::views::filter(
+		auto nonzeroCoefficients = constraint.data.enumerateTail() | ranges::views::filter(
 			[](std::pair<size_t, rational> const& _x) { return !!_x.second; }
 		);
 		// TODO we can exit early on in the loop above since we only care about zero, one or more than one nonzero entries.
@@ -687,7 +687,7 @@ void SolvingStateSimplifier::removeEmptyColumns()
 	vector<bool> variablesSeen(m_state.bounds.size(), false);
 	for (auto const& constraint: m_state.constraints)
 	{
-		for (auto&& [index, factor]: constraint.data | ranges::views::enumerate | ranges::views::tail)
+		for (auto&& [index, factor]: constraint.data.enumerateTail())
 			if (factor)
 				variablesSeen[index] = true;
 	}

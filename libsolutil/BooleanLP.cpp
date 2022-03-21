@@ -489,7 +489,7 @@ optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression cons
 
 bool BooleanLPSolver::tryAddDirectBounds(Constraint const& _constraint)
 {
-	auto nonzero = _constraint.data | ranges::views::enumerate | ranges::views::tail | ranges::views::filter(
+	auto nonzero = _constraint.data.enumerateTail() | ranges::views::filter(
 		[](std::pair<size_t, rational> const& _x) { return !!_x.second; }
 	);
 	// TODO we can exit early on in the loop above.
@@ -650,7 +650,7 @@ string BooleanLPSolver::toString(Clause const& _clause) const
 string BooleanLPSolver::toString(Constraint const& _constraint) const
 {
 	vector<string> line;
-	for (auto&& [index, multiplier]: _constraint.data | ranges::views::enumerate)
+	for (auto&& [index, multiplier]: _constraint.data.enumerate())
 		if (index > 0 && multiplier != 0)
 		{
 			string mult =
