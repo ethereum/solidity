@@ -106,6 +106,10 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	ASTModifier::operator()(_if.body);
 
 	m_solver->pop();
+
+	// TODO if the body is non-continuing, we could assert that the condition is false
+	// but this might not be true anymore once we join with another control-flow.
+	// maybe it is best to let the conditional simplifier and the data flow analyzer do this for us.
 }
 
 void ReasoningBasedSimplifier::operator()(ForLoop& _for)
