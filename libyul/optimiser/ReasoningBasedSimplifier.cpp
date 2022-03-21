@@ -118,7 +118,7 @@ void ReasoningBasedSimplifier::operator()(ForLoop& _for)
 	cout << "Checking if condition  can be false" << endl;
 	smtutil::Expression condition = encodeExpression(*_for.condition);
 	m_solver->push();
-	m_solver->addAssertion(condition == constantValue(0));
+	m_solver->addAssertion(condition <= constantValue(0));
 	cout << "  running check" << endl;
 	CheckResult result = m_solver->check({}).first;
 	m_solver->pop();
@@ -133,7 +133,7 @@ void ReasoningBasedSimplifier::operator()(ForLoop& _for)
 	{
 		cout << "Checking if condition  can be true" << endl;
 		m_solver->push();
-		m_solver->addAssertion(condition != constantValue(0));
+		m_solver->addAssertion(condition >= constantValue(1));
 		cout << "  running check" << endl;
 		CheckResult result2 = m_solver->check({}).first;
 		m_solver->pop();
@@ -151,7 +151,7 @@ void ReasoningBasedSimplifier::operator()(ForLoop& _for)
 
 	m_solver->push();
 	cout << "Setting condition true inside body" << endl;
-	m_solver->addAssertion(condition != constantValue(0));
+	m_solver->addAssertion(condition >= constantValue(1));
 
 	ASTModifier::operator()(_for.body);
 	ASTModifier::operator()(_for.post);
@@ -325,7 +325,8 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 smtutil::Expression ReasoningBasedSimplifier::newZeroOneVariable()
 {
 	smtutil::Expression var = newVariable();
-	m_solver->addAssertion(var == 0 || var == 1);
+	m_solver->addAssertion(var <= 1);
+	m_solver->addAssertion(var <= 0 || var >= 1);
 	return var;
 }
 
