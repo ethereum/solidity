@@ -47,6 +47,8 @@ namespace solidity::yul
  *
  * Prerequisite: Disambiguator, SSATransform.
  */
+
+// TODO This only works for SSA variables - do we want to combine it wih the data flow analyzer?
 class ReasoningBasedSimplifier: public ASTModifier, SMTSolver
 {
 public:
