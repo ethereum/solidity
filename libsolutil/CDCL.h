@@ -154,6 +154,7 @@ private:
 	// TODO group those into a class
 
 	std::vector<Literal> m_assignmentTrail;
+	uint64_t m_longest_trail = 0;
 	/// Indices into assignmentTrail where decisions were taken.
 	std::vector<size_t> m_decisionPoints;
 	/// Index into assignmentTrail: All assignments starting there have not yet been propagated.

@@ -293,7 +293,6 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
 	if (_reason) {
 		m_reason[_literal] = _reason;
-		m_assignments_cache[_literal.variable] = _literal.positive;
 	}
 	m_assignmentTrail.push_back(_literal);
 }
@@ -304,6 +303,11 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 	//cout << "Canceling until " << _backtrackLevel << endl;
 	solAssert(m_assignmentQueuePointer == m_assignmentTrail.size());
 	size_t assignmentsToUndo = m_assignmentTrail.size() - m_decisionPoints.at(_backtrackLevel);
+	if (m_assignmentTrail.size() > m_longest_trail) {
+		m_assignments_cache= m_assignments;
+		m_longest_trail = m_assignmentTrail.size();
+	}
+
 	for (size_t i = 0; i < assignmentsToUndo; i++)
 	{
 		Literal l = m_assignmentTrail.back();
