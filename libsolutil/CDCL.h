@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include "heap.h"
 
 namespace solidity::util
 {
@@ -64,6 +65,20 @@ public:
 	std::optional<Model> solve();
 
 private:
+	struct VarOrderLt { ///Order variables according to their activities
+        const std::vector<double>&  activities;
+        bool operator () (const int x, const int y) const
+        {
+            return activities[(size_t)x] > activities[(size_t)y];
+        }
+
+        explicit VarOrderLt(const std::vector<double>& _activities) :
+            activities(_activities)
+        {}
+    };
+
+
+	bool solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& solution);
 	void setupWatches(Clause& _clause);
 	std::optional<Clause> propagate();
 	std::pair<Clause, size_t> analyze(Clause _conflictClause);
@@ -75,7 +90,7 @@ private:
 
 	void cancelUntil(size_t _backtrackLevel);
 
-	std::optional<size_t> nextDecisionVariable() const;
+	std::optional<size_t> nextDecisionVariable();
 
 	bool isAssigned(Literal const& _literal) const;
 	bool isAssignedTrue(Literal const& _literal) const;
@@ -103,9 +118,37 @@ private:
 
 	/// Current assignments.
 	std::map<size_t, bool> m_assignments;
+	std::map<size_t, bool> m_assignments_cache; // Polarity caching. All propagated values end up here
 	std::map<size_t, size_t> m_levelForVariable;
 	/// TODO wolud be good to not have to copy the clauses
 	std::map<Literal, Clause const*> m_reason;
+
+	// Var activity
+	Heap<VarOrderLt> order;
+	std::vector<double> activity;
+	double var_inc_vsids = 1;
+	double var_decay = 0.95;
+	void vsids_decay_var_act()
+	{
+		var_inc_vsids *= (1.0 / var_decay);
+	}
+	void vsids_bump_var_act(uint32_t var)
+	{
+		assert(activity.size() > var);
+		activity[var] += var_inc_vsids;
+
+		bool rescaled = false;
+		if (activity[var] > 1e100) {
+			// Rescale
+			for (auto& a: activity) a *= 1e-100;
+			rescaled = true;
+			var_inc_vsids *= 1e-100;
+		}
+
+		// Update order_heap with respect to new activity:
+		if (order.inHeap((int)var)) order.decrease((int)var);
+		if (rescaled) assert(order.heap_property());
+	}
 
 	// TODO group those into a class
 

@@ -35,7 +35,8 @@ CDCL::CDCL(
 	std::function<std::optional<Clause>(std::map<size_t, bool> const&)> _theorySolver
 ):
 	m_theorySolver(_theorySolver),
-	m_variables(move(_variables))
+	m_variables(move(_variables)),
+	order(VarOrderLt(activity))
 {
 	for (Clause const& clause: _clauses)
 		addClause(clause);
@@ -45,11 +46,25 @@ CDCL::CDCL(
 
 optional<CDCL::Model> CDCL::solve()
 {
-//	cout << "====" << endl;
-//	for (unique_ptr<Clause> const& c: m_clauses)
-//		cout << toString(*c) << endl;
-//	cout << "====" << endl;
-	while (true)
+	CDCL::Model model;
+	int solution;
+	uint32_t max_conflicts = 100;
+	bool solved = false;
+	while(!solved) {
+		solution = 3;
+		solved = solve_loop(max_conflicts, model, solution);
+		max_conflicts = uint32_t((double)max_conflicts * 1.2);
+	}
+	assert(solution != 3);
+	if (solution) return model;
+	else return nullopt;
+}
+
+bool CDCL::solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& solution)
+{
+	assert (max_conflicts > 0);
+	uint32_t conflicts = 0;
+	while (conflicts < max_conflicts)
 	{
 		optional<Clause> conflictClause = propagate();
 		if (!conflictClause && m_theorySolver)
@@ -60,10 +75,12 @@ optional<CDCL::Model> CDCL::solve()
 		}
 		if (conflictClause)
 		{
+			conflicts++;
 			if (currentDecisionLevel() == 0)
 			{
 //				cout << "Unsatisfiable" << endl;
-				return nullopt;
+				solution = 0;
+				return true;
 			}
 			auto&& [learntClause, backtrackLevel] = analyze(move(*conflictClause));
 			cancelUntil(backtrackLevel);
@@ -83,17 +100,25 @@ optional<CDCL::Model> CDCL::solve()
 				cout << ((m_assignments.size() * 100) / m_variables.size()) << "% of variables assigned." << endl;
 				m_decisionPoints.emplace_back(m_assignmentTrail.size());
 //				cout << "Deciding on " << m_variables.at(*variable) << " @" << currentDecisionLevel() << endl;
-				enqueue(Literal{false, *variable}, nullptr);
+
+				// Polarity caching below
+				bool positive = false;
+				auto const& found = m_assignments_cache.find(*variable);
+				if (found != m_assignments_cache.end()) positive = found->second;
+				enqueue(Literal{positive, *variable}, nullptr);
 			}
 			else
 			{
 				//cout << "satisfiable." << endl;
 				//for (auto&& [i, value]: m_assignments | ranges::view::enumerate())
 				//	cout << " " << m_variables.at(i) << ": " << value.toString() << endl;
-				return m_assignments;
+				solution = 1;
+				model = m_assignments;
+				return true;
 			}
 		}
 	}
+	return false;
 }
 
 void CDCL::setupWatches(Clause& _clause)
@@ -200,6 +225,7 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 				else
 				{
 					//cout << "    adding " << toString(literal) << " @" << variableLevel << " to learnt clause." << endl;
+					vsids_bump_var_act((uint32_t)literal.variable);
 					learntClause.push_back(literal);
 					backtrackLevel = max(backtrackLevel, variableLevel);
 				}
@@ -234,6 +260,19 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 
 void CDCL::addClause(Clause _clause)
 {
+	uint64_t max_var = (uint32_t)activity.size();
+	uint64_t new_max_var = 0;
+	for(auto const& l: _clause) {
+		new_max_var = std::max<uint64_t>(l.variable+1, max_var);
+	}
+	int64_t to_add = (int64_t)new_max_var - (int64_t)max_var;
+	if (to_add > 0) {
+		activity.insert(activity.end(), (uint64_t)to_add, 0.0);
+	}
+	for(auto const& l: _clause) {
+		if (!order.inHeap((int)l.variable)) order.insert((int)l.variable);
+	}
+
 	m_clauses.push_back(make_unique<Clause>(move(_clause)));
 	setupWatches(*m_clauses.back());
 }
@@ -248,8 +287,10 @@ void CDCL::enqueue(Literal const& _literal, Clause const* _reason)
 	// TODO assert that assignmnets was unknown
 	m_assignments[_literal.variable] = _literal.positive;
 	m_levelForVariable[_literal.variable] = currentDecisionLevel();
-	if (_reason)
+	if (_reason) {
 		m_reason[_literal] = _reason;
+		m_assignments_cache[_literal.variable] = _literal.positive;
+	}
 	m_assignmentTrail.push_back(_literal);
 }
 
@@ -268,17 +309,20 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
+		order.insert((int)l.variable);
 	}
 	m_decisionPoints.resize(_backtrackLevel);
 	m_assignmentQueuePointer = m_assignmentTrail.size();
 	solAssert(currentDecisionLevel() == _backtrackLevel);
 }
 
-optional<size_t> CDCL::nextDecisionVariable() const
+optional<size_t> CDCL::nextDecisionVariable()
 {
-	for (size_t i = 0; i < m_variables.size(); i++)
-		if (!m_assignments.count(i))
-			return i;
+	while(true) {
+		if (order.empty()) return nullopt;
+		size_t i = (size_t)order.removeMin();
+		if (!m_assignments.count(i)) return i;
+	}
 	return nullopt;
 }
 
