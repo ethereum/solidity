@@ -76,6 +76,10 @@ bool CDCL::solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& sol
 		if (conflictClause)
 		{
 			conflicts++;
+			m_sumConflicts++;
+			if (m_sumConflicts % 1000 == 999) {
+				cout << "c confl: " << m_sumConflicts << std::endl;
+			}
 			if (currentDecisionLevel() == 0)
 			{
 //				cout << "Unsatisfiable" << endl;
@@ -96,8 +100,8 @@ bool CDCL::solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& sol
 		{
 			if (auto variable = nextDecisionVariable())
 			{
-				cout << "Level " << currentDecisionLevel() << " - ";
-				cout << ((m_assignments.size() * 100) / m_variables.size()) << "% of variables assigned." << endl;
+// 				cout << "c Level " << currentDecisionLevel() << " - ";
+// 				cout << ((m_assignments.size() * 100) / m_variables.size()) << "% of variables assigned." << endl;
 				m_decisionPoints.emplace_back(m_assignmentTrail.size());
 //				cout << "Deciding on " << m_variables.at(*variable) << " @" << currentDecisionLevel() << endl;
 

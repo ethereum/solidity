@@ -177,7 +177,7 @@ int main(int argc, char** argv)
 				last_line_break = ss.str().size();
 				ss << "v";
 			}
-			ss << " " << (m.second ? "" : "-") << m.first;
+			ss << " " << (m.second ? "" : "-") << m.first+1;
 		}
 		cout << ss.str() << " 0" << endl;
 		cout << "s SATISFIABLE" << endl;
