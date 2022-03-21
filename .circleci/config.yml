@@ -1235,15 +1235,64 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Install dependencies of helper scripts
+          command: |
+            sudo apt update
+            sudo apt install python3-pip --assume-yes --no-install-recommends
+            python3 -m pip install requests --user
+      - run:
           name: Combine benchmark reports
           command: cat reports/externalTests/benchmark-*.json | scripts/externalTests/merge_benchmarks.sh > reports/externalTests/all-benchmarks.json
       - run:
           name: Summarize reports
           command: cat reports/externalTests/all-benchmarks.json | scripts/externalTests/summarize_benchmarks.sh > reports/externalTests/summarized-benchmarks.json
+      - run:
+          name: Download reports from base branch
+          command: |
+            if [[ $CIRCLE_PULL_REQUEST != "" ]]; then
+              mkdir reports/externalTests/base-branch/
+              cd reports/externalTests/base-branch/
+
+              pr_id=$(echo "$CIRCLE_PULL_REQUEST" | sed 's|\(.*\)\/||')
+              scripts_dir=../../../scripts
+
+              "${scripts_dir}/externalTests/download_benchmarks.py" --base-of-pr "$pr_id"
+            fi
+      - run:
+          name: Diff benchmarks
+          command: |
+            if [[ $CIRCLE_PULL_REQUEST != "" ]]; then
+              cd reports/externalTests/
+              mkdir diff/
+              scripts_dir=../../scripts
+
+              "${scripts_dir}/externalTests/benchmark_diff.py" table \
+                --output-format markdown \
+                --style humanized \
+                base-branch/summarized-benchmarks-*.json \
+                summarized-benchmarks.json > diff/benchmark-diff-summarized-table-markdown-humanized.md
+              "${scripts_dir}/externalTests/benchmark_diff.py" table \
+                --output-format markdown \
+                --style absolute \
+                base-branch/summarized-benchmarks-*.json \
+                summarized-benchmarks.json > diff/benchmark-diff-summarized-table-markdown-absolute.md
+              "${scripts_dir}/externalTests/benchmark_diff.py" inplace \
+                --style absolute \
+                base-branch/summarized-benchmarks-*.json \
+                summarized-benchmarks.json > diff/benchmark-diff-summarized-inplace-absolute.md
+              "${scripts_dir}/externalTests/benchmark_diff.py" inplace \
+                --style absolute \
+                base-branch/all-benchmarks-*.json \
+                all-benchmarks.json > diff/benchmark-diff-all-table-inplace-absolute.md
+            fi
       - store_artifacts:
           path: reports/externalTests/all-benchmarks.json
       - store_artifacts:
           path: reports/externalTests/summarized-benchmarks.json
+      - store_artifacts:
+          path: reports/externalTests/diff/
+      - store_artifacts:
+          path: reports/externalTests/base-branch/
 
   b_win: &b_win
     <<: *base_win_powershell_large
