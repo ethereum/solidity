@@ -654,8 +654,7 @@ void CommandLineInterface::processInput()
 		assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine);
 		break;
 	case InputMode::Linker:
-		solAssert(m_options.input.mode == InputMode::Linker, "");
-		link(m_fileReader, m_options.linker.libraries, m_hasOutput, m_serr);
+		link(m_fileReader, m_options.linker.libraries);
 		writeLinkedFiles();
 		break;
 	case InputMode::Compiler:
@@ -918,12 +917,64 @@ void CommandLineInterface::serveLSP()
 		solThrow(CommandLineExecutionError, "LSP terminated abnormally.");
 }
 
-static bool isBytecodeChar(char c)
+static bool isBytecodeString(string s)
 {
-	return isxdigit(c) || c == '_' || c == '$';
+	if (s.empty())
+		return false;
+
+	size_t placeholderAddressStart = s.find("__");
+	if (placeholderAddressStart == string::npos)
+		return false;
+	placeholderAddressStart += 3;
+
+	size_t  placeholderAddressEnd = s.find("__", placeholderAddressStart + 1) - 2;
+
+	for (size_t i = 0; i < s.size(); i++)
+	{
+		// inside the markers can contain anything, outside the hex digits is hex characters and spaces only
+		if (i >= placeholderAddressStart && i <= placeholderAddressEnd)
+			continue;
+
+		if (!isxdigit(s[i]) && s[i] != ' ' && s[i] != '$' && s[i] != '_')
+			return false;
+	}
+	return true;
 }
 
-void CommandLineInterface::link(frontend::FileReader& fileReader, map<string, h160> const& libraries, bool& hasError, ostream& serr)
+static size_t validateBytecode(string const& s, string const& fileName, string const& openingMarker, string const& closingMarker)
+{
+	size_t firstMarker = s.find(openingMarker);
+	size_t lastMarker = firstMarker + (openingMarker.size() - 1);
+
+	while (s.find(closingMarker, lastMarker) != string::npos)
+		lastMarker = s.find(closingMarker, lastMarker) + 1;
+
+	if (lastMarker == firstMarker + (openingMarker.size() - 1))
+		solThrow(
+			CommandLineExecutionError,
+			"Error in binary object file " + fileName + " unbounded placeholder at " + to_string(firstMarker) + "\n"
+			);
+
+	lastMarker = lastMarker + openingMarker.size() - 1;
+
+	if ((lastMarker - firstMarker) != 40)
+	{
+		solThrow(
+			CommandLineExecutionError,
+			"Error in binary object file \"" + fileName + "\" placeholder of invalid length found in column " + to_string(firstMarker) + ".\n"
+			+ " Placeholders must be exactly 40 characters long, including address markers __$ and $__.\n"
+			);
+	}
+
+	return firstMarker;
+}
+
+static size_t validateBytecode(string const& s, string const& fileName, string const& openingMarker)
+{
+	return validateBytecode(s, fileName, openingMarker, openingMarker);
+}
+
+void CommandLineInterface::link(frontend::FileReader& fileReader, map<string, h160> const& libraries)
 {
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
@@ -938,103 +989,51 @@ void CommandLineInterface::link(frontend::FileReader& fileReader, map<string, h1
 
 	for (auto& src: sourceCodes)
 	{
-		// Map from how the libraries will be named inside the bytecode to their addresses.
+		// Map from how the libraries will be named inside the bytecodeIter to their addresses.
 		map<size_t, string> linkReferences;
-		string bytecode;
+
+		if (src.second.empty())
+			// no bytecode
+			continue;
+
 		vector<string> sourceLines;
 		boost::split(sourceLines, src.second, boost::is_any_of("\n"));
-
-		size_t bytecodeIndex;
-		bool bytecodeFound = false;
-		for (size_t i = 0; i < sourceLines.size(); ++i)
-		{
-			// If all characters are bytecode characters
-			if (sourceLines[i].size() > 0
-				&& all_of(sourceLines[i].begin(), sourceLines[i].end(), isBytecodeChar))
-			{
-				bytecodeFound = true;
-				bytecodeIndex = i;
-				break;
-			}
-		}
-
-		if (!bytecodeFound)
-			continue;
+		auto bytecodeIter = find_if(sourceLines.begin(), sourceLines.end(), isBytecodeString);
 
 		for (auto const& library: libraries)
 		{
 			string const& name = library.first;
-			// Bytecode we need is on the third line there's a blank line at the start
-			bytecode = sourceLines.at(bytecodeIndex);
-			size_t libraryStartOffset = bytecode.find("__$");
-			size_t libraryEndOffset = bytecode.find("$__");
 
-			bool startMarkerFound = libraryStartOffset != string::npos;
-			bool endMarkerFound = libraryEndOffset != string::npos;
+			size_t startMarkerOffset = string::npos;
+			if (bytecodeIter->find("__$__") != string::npos)
+				startMarkerOffset = validateBytecode(*bytecodeIter, src.first, "__$__");
 
-			if (!startMarkerFound && !endMarkerFound)
-			{
-				// No placeholders found
+			if (bytecodeIter->find("__$") != string::npos)
+				startMarkerOffset = validateBytecode(*bytecodeIter, src.first, "__$", "$__");
+
+			if (bytecodeIter->find("__") != string::npos)
+				startMarkerOffset = validateBytecode(*bytecodeIter, src.first, "__");
+
+			if (startMarkerOffset == string::npos)
+				// no markers found
 				continue;
-			}
 
-			if (startMarkerFound && !endMarkerFound)
-			{
-				solThrow(
-					CommandLineExecutionError,
-					"Error in binary object file " + src.first + " unbounded placeholder at " + to_string(libraryStartOffset) + "\n"
-				);
-			}
+			string foundPlaceholder = bytecodeIter->substr(startMarkerOffset,placeholderSize);
+			bytecodeIter->replace(startMarkerOffset, placeholderSize, "0000000000000000000000000000000000000000");
 
-			if (!startMarkerFound && endMarkerFound)
-			{
-				solThrow(
-					CommandLineExecutionError,
-					"Error in binary object file " + src.first + " unbounded placeholder without start point __$ at " + to_string(libraryEndOffset) + "\n"
-							);
-			}
-
-			if (startMarkerFound && endMarkerFound)
-			{
-				if ((libraryEndOffset - libraryStartOffset) != placeholderSize - 3)
-				{
-					solThrow(
-						CommandLineExecutionError,
-						"Error in binary object file " + src.first + " truncated placeholder found at " + to_string(libraryStartOffset) +
-							" placeholder addresses should be " + to_string(placeholderSize) + " characters long (including address markers __$ and $__)\n"
-					);
-				}
-			}
-
-			string foundPlaceholder;
-
-			for (size_t i = 0; i < placeholderSize; i++)
-			{
-				foundPlaceholder += bytecode[libraryStartOffset + i];
-				bytecode[libraryStartOffset + i] = '0';
-			}
-
-			if (libraryStartOffset != bytecode.length())
+			if (startMarkerOffset != bytecodeIter->length())
 			{
 				// Divide by 2 because it's going to be converted to bytes
-				linkReferences[libraryStartOffset / 2] = name;
+				linkReferences[startMarkerOffset / 2] = name;
 			}
 			else
-			{
-				serr << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved."<< endl;
-				hasError = true;
-			}
+				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved."<< endl;
 		}
 
-		evmasm::LinkerObject linkerObject = {
-			fromHex(bytecode),
-			linkReferences,
-			{},
-			{}
-		};
+		evmasm::LinkerObject linkerObject = {fromHex(*bytecodeIter),linkReferences,{},{}};
 
 		linkerObject.link(librariesReplacements);
-		sourceLines.at(bytecodeIndex) = toHex(linkerObject.bytecode);
+		bytecodeIter->replace(bytecodeIter->begin(), bytecodeIter->end(), toHex(linkerObject.bytecode));
 
 		string resolvedBytecode = boost::algorithm::join(sourceLines, "\n");
 		src.second = resolvedBytecode;

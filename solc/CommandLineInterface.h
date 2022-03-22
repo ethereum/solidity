@@ -78,7 +78,7 @@ public:
 	FileReader const& fileReader() const { return m_fileReader; }
 	std::optional<std::string> const& standardJsonInput() const { return m_standardJsonInput; }
 
-	static void link(frontend::FileReader& fileReader, std::map<std::string, util::h160> const& libraries, bool& hasError, std::ostream& serr);
+	void link(frontend::FileReader& fileReader, std::map<std::string, util::h160> const& libraries);
 
 private:
 	void printVersion();

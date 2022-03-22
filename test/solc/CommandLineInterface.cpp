@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(linker)
 {
 	frontend::FileReader fileReader({},{},{});
 	fileReader.setSourceUnits({
-		{"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073__$b3157e226f2c4dddae135e6cab4ed4e747$__63b3de648b8360405"}
+		{"bytecodeInput.bin", "0390f35b6000730390f35b600073__$b3157e226f2c4dddae135e6cab4ed4e747$__63b3de648b83604063b3de648b836040"}
 	});
 
 	string hashString = "1234567890123456789012345678901234567890";
@@ -290,11 +290,114 @@ BOOST_AUTO_TEST_CASE(linker)
 		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
 	};
 
-	bool hasError = false;
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
 
-	CommandLineInterface::link(fileReader, libraries, hasError, cerr);
-	BOOST_TEST(!hasError);
-	BOOST_TEST(fileReader.sourceUnits().find("bytecodeInput.bin")->second.find(hashString) != string::npos);
+	cliInterface.link(fileReader, libraries);
+
+	map<string, string> expectedSources = {{
+		"bytecodeInput.bin",
+		"0390f35b6000730390f35b600073" + hashString + "63b3de648b83604063b3de648b836040"
+	}};
+
+	BOOST_TEST(fileReader.sourceUnits() == expectedSources);
+}
+
+BOOST_AUTO_TEST_CASE(linker_double_sided_marker)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+								  {"bytecodeInput.bin", "0390f35b6000730390f35b600073__$__157e226f2c4dddae135e6cab4ed4e7__$__63b3de648b83604063b3de648b836040"}
+							  });
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
+
+	cliInterface.link(fileReader, libraries);
+
+	map<string, string> expectedSources = {{
+											   "bytecodeInput.bin",
+											   "0390f35b6000730390f35b600073" + hashString + "63b3de648b83604063b3de648b836040"
+										   }};
+
+	BOOST_TEST(fileReader.sourceUnits() == expectedSources);
+}
+
+BOOST_AUTO_TEST_CASE(linker_old_style_marker_all_underscores)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+								  {"bytecodeInput.bin", "0390f35b6000730390f35b600073________________________________________63b3de648b83604063b3de648b836040"}
+							  });
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
+
+	cliInterface.link(fileReader, libraries);
+
+	map<string, string> expectedSources = {{
+											   "bytecodeInput.bin",
+											   "0390f35b6000730390f35b600073" + hashString + "63b3de648b83604063b3de648b836040"
+										   }};
+
+	BOOST_TEST(fileReader.sourceUnits() == expectedSources);
+}
+
+BOOST_AUTO_TEST_CASE(linker_nested_placeholders)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+								  {"bytecodeInput.bin", "0390f35b6000730390f35b600073__$b31__$226f2c4dddae135e6cab4e$__747$__63b3de648b83604063b3de648b836040"}
+							  });
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
+
+	cliInterface.link(fileReader, libraries);
+
+	map<string, string> expectedSources = {{
+											   "bytecodeInput.bin",
+											   "0390f35b6000730390f35b600073" + hashString + "63b3de648b83604063b3de648b836040"
+										   }};
+
+	BOOST_TEST(fileReader.sourceUnits() == expectedSources);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(linker_old_style_placeholder)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+								  {"bytecodeInput.bin", "0390f35b6000730390f35b600073___b3157e226f2c4dddae135e6cab4ed4e747___63b3de648b83604063b3de648b836040"}
+							  });
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
+
+	cliInterface.link(fileReader, libraries);
+
+	map<string, string> expectedSources = {{
+											   "bytecodeInput.bin",
+											   "0390f35b6000730390f35b600073" + hashString + "63b3de648b83604063b3de648b836040"
+										   }};
+
+	BOOST_TEST(fileReader.sourceUnits() == expectedSources);
 }
 
 BOOST_AUTO_TEST_CASE(linker_unmatched_markers_no_end)
@@ -307,14 +410,14 @@ BOOST_AUTO_TEST_CASE(linker_unmatched_markers_no_end)
 	string hashString = "1234567890123456789012345678901234567890";
 	map<string, util::FixedHash<20>> libraries = {
 		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
-		};
+	};
 
-	bool hasError = false;
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
 
 	string expectedMessage = "Error in binary object file bytecodeInput.bin unbounded placeholder at 54\n";
 
 	BOOST_CHECK_EXCEPTION(
-		CommandLineInterface::link(fileReader, libraries, hasError, cerr),
+		cliInterface.link(fileReader, libraries),
 		CommandLineExecutionError,
 		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
 	);
@@ -324,20 +427,19 @@ BOOST_AUTO_TEST_CASE(linker_unmatched_markers_no_start)
 {
 	frontend::FileReader fileReader({},{},{});
 	fileReader.setSourceUnits({
-								  {"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073$__b3157e226f2c4dddae135e6cab4ed4e74763b3de648b8360405"}
-							  });
+		{"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073$__b3157e226f2c4dddae135e6cab4ed4e74763b3de648b8360405"}
+	});
 
 	string hashString = "1234567890123456789012345678901234567890";
 	map<string, util::FixedHash<20>> libraries = {
 		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
 	};
 
-	bool hasError = false;
-
-	string expectedMessage ="Error in binary object file bytecodeInput.bin unbounded placeholder without start point __$ at 54\n";
+	string expectedMessage = "Error in binary object file bytecodeInput.bin unbounded placeholder at 55\n";
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
 
 	BOOST_CHECK_EXCEPTION(
-		CommandLineInterface::link(fileReader, libraries, hasError, cerr),
+		cliInterface.link(fileReader, libraries),
 		CommandLineExecutionError,
 		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
 	);
@@ -355,14 +457,39 @@ BOOST_AUTO_TEST_CASE(linker_short_hash)
 		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
 	};
 
-	bool hasError = false;
-
 	string expectedMessage =
-		"Error in binary object file bytecodeInput.bin truncated placeholder found at 54 placeholder addresses should be 40 characters long (including address markers __$ and $__)\n";
+		"Error in binary object file \"bytecodeInput.bin\" placeholder of invalid length found in column 54.\n Placeholders must be exactly 40 characters long, including address markers __$ and $__.\n";
+
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
 
 
 	BOOST_CHECK_EXCEPTION(
-		CommandLineInterface::link(fileReader, libraries, hasError, cerr),
+		cliInterface.link(fileReader, libraries),
+		CommandLineExecutionError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
+	);
+}
+
+BOOST_AUTO_TEST_CASE(linker_short_hash_old_markers)
+{
+	frontend::FileReader fileReader({},{},{});
+	fileReader.setSourceUnits({
+								  {"bytecodeInput.bin", "565b6040516100579190610158565b60405180910390f35b600073__b36cab4ed4e747__63b3de648b8360405"}
+							  });
+
+	string hashString = "1234567890123456789012345678901234567890";
+	map<string, util::FixedHash<20>> libraries = {
+		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString)}
+	};
+
+	string expectedMessage =
+		"Error in binary object file \"bytecodeInput.bin\" placeholder of invalid length found in column 54.\n Placeholders must be exactly 40 characters long, including address markers __$ and $__.\n";
+
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
+
+
+	BOOST_CHECK_EXCEPTION(
+		cliInterface.link(fileReader, libraries),
 		CommandLineExecutionError,
 		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
 	);
@@ -380,9 +507,9 @@ BOOST_AUTO_TEST_CASE(linker_empty_string)
 		{"test/libsolidity/semanticTests/libraries/stub.sol:L", FixedHash<20>("0x" + hashString) }
 		};
 
-	bool hasError = false;
+	CommandLineInterface cliInterface(cin, cout, cerr, {});
 
-	BOOST_CHECK_NO_THROW(CommandLineInterface::link(fileReader, libraries, hasError, cerr));
+	BOOST_CHECK_NO_THROW(cliInterface.link(fileReader, libraries));
 }
 
 BOOST_AUTO_TEST_CASE(standard_json_base_path)
