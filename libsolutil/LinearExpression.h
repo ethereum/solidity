@@ -51,7 +51,6 @@ public:
 	static LinearExpression factorForVariable(size_t _index, rational _factor)
 	{
 		LinearExpression result;
-		result.resize(_index + 1);
 		result[_index] = std::move(_factor);
 		return result;
 	}
@@ -59,20 +58,28 @@ public:
 	static LinearExpression constant(rational _factor)
 	{
 		LinearExpression result;
-		result.resize(1);
 		result[0] = std::move(_factor);
 		return result;
+	}
+
+	rational const& constantFactor() const
+	{
+		return get(0);
 	}
 
 	rational const& get(size_t _index) const
 	{
 		static rational const zero;
-		return _index < factors.size() ? factors[_index] : zero;
+		auto it = factors.find(_index);
+		if (it == factors.end())
+			return zero;
+		else
+			return it->second;
 	}
 
 	rational const& operator[](size_t _index) const
 	{
-		return factors[_index];
+		return get(_index);
 	}
 
 	rational& operator[](size_t _index)
@@ -80,75 +87,106 @@ public:
 		return factors[_index];
 	}
 
-	auto enumerate() const { return factors | ranges::view::enumerate; }
-	// leave out the zero if exists
-	auto enumerateTail() const { return factors | ranges::view::enumerate | ranges::view::tail; }
-
-	rational const& front() const { return factors.front(); }
-
-	void push_back(rational _value) { factors.push_back(std::move(_value)); }
-
-	size_t size() const { return factors.size(); }
-
-	void resize(size_t _size, rational _default = {})
+	auto const& enumerate() const { return factors; }
+	// leave out the constant factor if exists
+	auto enumerateTail() const
 	{
-		factors.resize(_size, std::move(_default));
+		auto it = factors.begin();
+		if (it != factors.end() && !it->first)
+			++it;
+		return ranges::subrange(it, factors.end());
+	}
+
+	void eraseIndices(std::vector<bool> const& _indices)
+	{
+		for (auto it = factors.begin(); it != factors.end();)
+		{
+			size_t i = it->first;
+			if (i < _indices.size() && _indices[i])
+				it = factors.erase(it);
+			else
+				++it;
+		}
+	}
+	/// Erases all indices greater or equal to _index.
+	void eraseIndicesGE(size_t _index)
+	{
+		auto it = factors.begin();
+		while (it != factors.end() && it->first < _index) ++it;
+		factors.erase(it, factors.end());
+	}
+	void erase(size_t _index) { factors.erase(_index); }
+
+	size_t maxIndex() const
+	{
+		if (factors.empty())
+			return 0;
+		else
+			return factors.rbegin()->first;
 	}
 
 	/// @returns true if all factors of variables are zero.
 	bool isConstant() const
 	{
-		return ranges::all_of(factors | ranges::views::tail, [](rational const& _v) { return !_v; });
+		return ranges::all_of(enumerateTail(), [](auto const& _item) -> bool { return !_item.second; });
+	}
+
+	bool operator<(LinearExpression const& _other) const
+	{
+		// "The comparison igrones the map's ordering"
+		return factors < _other.factors;
+	}
+
+	bool operator==(LinearExpression const& _other) const
+	{
+		// TODO this might be wrong if there are stray zeros.
+		return factors == _other.factors;
 	}
 
 	LinearExpression& operator/=(rational const& _divisor)
 	{
-		for (rational& x: factors)
-			if (x)
-				x /= _divisor;
+		for (auto& item: factors)
+			item.second /= _divisor;
 		return *this;
 	}
 
 	LinearExpression& operator*=(rational const& _factor)
 	{
-		for (rational& x: factors)
-			if (x)
-				x *= _factor;
+		for (auto& item: factors)
+			item.second *= _factor;
 		return *this;
 	}
 
 	friend LinearExpression operator*(rational const& _factor, LinearExpression _expr)
 	{
-		for (rational& x: _expr.factors)
-			if (x)
-				x *= _factor;
+		for (auto& item: _expr.factors)
+			item.second *= _factor;
 		return _expr;
-	}
-
-	LinearExpression& operator-=(LinearExpression const& _y)
-	{
-		if (size() < _y.size())
-			resize(_y.size());
-		for (size_t i = 0; i < size(); ++i)
-			if (i < _y.size() && _y[i])
-				(*this)[i] -= _y[i];
-		return *this;
-	}
-
-	LinearExpression operator-(LinearExpression const& _y) const
-	{
-		LinearExpression result = *this;
-		result -= _y;
-		return result;
 	}
 
 	LinearExpression& operator+=(LinearExpression const& _y)
 	{
-		if (size() < _y.size())
-			resize(_y.size());
-		for (size_t i = 0; i < size(); ++i)
-			if (i < _y.size() && _y[i])
-				(*this)[i] += _y[i];
+		for (auto const& [i, x]: _y.enumerate())
+		{
+			// TODO this could be even more efficient.
+			if (rational v = get(i) + x)
+				factors[i] = move(v);
+			else
+				factors.erase(i);
+		}
+		return *this;
+	}
+
+	LinearExpression& operator-=(LinearExpression const& _y)
+	{
+		for (auto const& [i, x]: _y.enumerate())
+		{
+			// TODO this could be even more efficient.
+			if (rational v = get(i) - x)
+				factors[i] = move(v);
+			else
+				factors.erase(i);
+		}
 		return *this;
 	}
 
@@ -156,6 +194,13 @@ public:
 	{
 		LinearExpression result = *this;
 		result += _y;
+		return result;
+	}
+
+	LinearExpression operator-(LinearExpression const& _y) const
+	{
+		LinearExpression result = *this;
+		result -= _y;
 		return result;
 	}
 
@@ -174,15 +219,13 @@ public:
 		if (!_y->isConstant())
 			return std::nullopt;
 
-		rational const& factor = _y->get(0);
-
-		for (rational& element: _x->factors)
-			element *= factor;
+		*_x *= _y->constantFactor();
 		return _x;
 	}
 
 private:
-	std::vector<rational> factors;
+	// TODO maybe a vector of pairs could be more efficient.
+	std::map<size_t, rational> factors;
 };
 
 }

@@ -65,6 +65,8 @@ inline std::vector<bool>& operator|=(std::vector<bool>& _x, std::vector<bool> co
  */
 struct Tableau
 {
+	size_t columns;
+	size_t rows;
 	/// The factors of the objective function (first row of the tableau)
 	LinearExpression objective;
 	/// The tableau matrix (equational form).
@@ -115,43 +117,45 @@ string toString(Tableau const& _tableau)
 /// Adds slack variables to remove non-equality costraints from a set of constraints
 /// and returns the data part of the tableau / constraints.
 /// The second return variable is true if the original input had any equality constraints.
-pair<vector<LinearExpression>, bool> toEquationalForm(vector<Constraint> _constraints)
+pair<Tableau, bool> toEquationalForm(vector<Constraint> _constraints)
 {
-	size_t varsNeeded = static_cast<size_t>(ranges::count_if(_constraints, [](Constraint const& _c) { return !_c.equality; }));
-	if (varsNeeded > 0)
+	Tableau t;
+
+	t.columns = 0;
+	for (Constraint const& constraint: _constraints)
+		t.columns = max(constraint.data.maxIndex() + 1, t.columns);
+	t.rows = _constraints.size();
+
+	size_t varsAdded = 0;
+	bool hadEquality = false;
+	for (Constraint& constraint: _constraints)
 	{
-		size_t columns = _constraints.at(0).data.size();
-		size_t varsAdded = 0;
-		for (Constraint& constraint: _constraints)
+		if (constraint.equality)
+			hadEquality = true;
+		else
 		{
-			solAssert(constraint.data.size() == columns, "");
-			constraint.data.resize(columns + varsNeeded);
-			if (!constraint.equality)
-			{
-				constraint.equality = true;
-				constraint.data[columns + varsAdded] = bigint(1);
-				varsAdded++;
-			}
+			constraint.data[t.columns + varsAdded] = bigint(1);
+			varsAdded++;
 		}
-		solAssert(varsAdded == varsNeeded);
+		t.data.emplace_back(move(constraint.data));
 	}
+	t.columns += varsAdded;
 
-	vector<LinearExpression> data;
-	for (Constraint& c: _constraints)
-		data.emplace_back(move(c.data));
-
-	return make_pair(move(data), varsNeeded < _constraints.size());
+	return make_pair(move(t), hadEquality);
 }
 
 /// Finds the simplex pivot column: The column with the largest positive objective factor.
 /// If all objective factors are zero or negative, the optimum has been found and nullopt is returned.
 optional<size_t> findPivotColumn(Tableau const& _tableau)
 {
-	auto&& [maxColumn, maxValue] = ranges::max(
-		_tableau.objective.enumerateTail(),
-		{},
-		[](std::pair<size_t, rational> const& _x) { return _x.second; }
-	);
+	size_t maxColumn = 0;
+	rational maxValue{};
+	for (auto const& [column, value]: _tableau.objective.enumerateTail())
+		if (value > maxValue)
+		{
+			maxColumn = column;
+			maxValue = value;
+		}
 
 	if (maxValue <= rational{0})
 		return nullopt; // found optimum
@@ -218,10 +222,8 @@ void selectLastVectorsAsBasis(Tableau& _tableau)
 {
 	// We might skip the operation for a column if it is already the correct
 	// unit vector and its objective coefficient is zero.
-	size_t columns = _tableau.objective.size();
-	size_t rows = _tableau.data.size();
-	for (size_t i = 0; i < rows; ++i)
-		performPivot(_tableau, i, columns - rows + i);
+	for (size_t i = 0; i < _tableau.rows; ++i)
+		performPivot(_tableau, i, _tableau.columns - _tableau.rows + i);
 }
 
 /// If column @a _column inside tableau is a basis vector
@@ -249,8 +251,8 @@ optional<size_t> basisIndex(Tableau const& _tableau, size_t _column)
 vector<rational> solutionVector(Tableau const& _tableau)
 {
 	vector<rational> result;
-	vector<bool> rowsSeen(_tableau.data.size(), false);
-	for (size_t j = 1; j < _tableau.objective.size(); j++)
+	vector<bool> rowsSeen(_tableau.rows, false);
+	for (size_t j = 1; j < _tableau.columns; j++)
 	{
 		optional<size_t> row = basisIndex(_tableau, j);
 		if (row && rowsSeen[*row])
@@ -270,7 +272,7 @@ vector<rational> solutionVector(Tableau const& _tableau)
 /// Tries for a number of iterations and then gives up.
 pair<LPResult, Tableau> simplexEq(Tableau _tableau)
 {
-	size_t const iterations = min<size_t>(60, 50 + _tableau.objective.size() * 2);
+	size_t const iterations = min<size_t>(60, 50 + _tableau.columns * 2);
 	for (size_t step = 0; step <= iterations; ++step)
 	{
 		optional<size_t> pivotColumn = findPivotColumn(_tableau);
@@ -298,18 +300,16 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 {
 	LinearExpression originalObjective = _tableau.objective;
 
-	size_t rows = _tableau.data.size();
-	size_t columns = _tableau.objective.size();
-	for (size_t i = 0; i < rows; ++i)
-	{
-		if (_tableau.data[i][0] < 0)
-			_tableau.data[i] *= -1;
-		_tableau.data[i].resize(columns + rows);
-		_tableau.data[i][columns + i] = 1;
-	}
+	size_t const columns = _tableau.columns;
 	_tableau.objective = {};
-	_tableau.objective.resize(columns);
-	_tableau.objective.resize(columns + rows, rational{-1});
+	_tableau.columns += _tableau.rows;
+	for (size_t i = 0; i < _tableau.rows; ++i)
+	{
+		if (_tableau.data[i].constantFactor() < 0)
+			_tableau.data[i] *= -1;
+		_tableau.data[i][columns + i] = 1;
+		_tableau.objective[columns + i] = rational{-1};
+	}
 
 	// This sets the objective factors of the slack variables
 	// to zero (and thus selects a basic feasible solution).
@@ -332,7 +332,7 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 	// Restore original objective and remove slack variables.
 	_tableau.objective = move(originalObjective);
 	for (auto& row: _tableau.data)
-		row.resize(columns);
+		row.eraseIndicesGE(columns);
 
 	return make_pair(LPResult::Feasible, move(_tableau));
 }
@@ -341,7 +341,7 @@ pair<LPResult, Tableau> simplexPhaseI(Tableau _tableau)
 bool needsPhaseI(Tableau const& _tableau)
 {
 	for (auto const& row: _tableau.data)
-		if (row[0] < 0)
+		if (row.constantFactor() < 0)
 			return true;
 	return false;
 }
@@ -350,10 +350,9 @@ bool needsPhaseI(Tableau const& _tableau)
 pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, LinearExpression _objectives)
 {
 	Tableau tableau;
-	tableau.objective = move(_objectives);
 	bool hasEquations = false;
-	tie(tableau.data, hasEquations) = toEquationalForm(_constraints);
-	tableau.objective.resize(tableau.data.at(0).size());
+	tie(tableau, hasEquations) = toEquationalForm(_constraints);
+	tableau.objective = move(_objectives);
 
 	if (hasEquations || needsPhaseI(tableau))
 	{
@@ -375,8 +374,6 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 /// @returns false if the bounds make the state infeasible.
 optional<ReasonSet> boundsToConstraints(SolvingState& _state)
 {
-	size_t columns = _state.variableNames.size();
-
 	// Bound zero should not exist because the variable zero does not exist.
 	for (auto const& [varIndex, bounds]: _state.bounds | ranges::views::enumerate | ranges::views::tail)
 	{
@@ -387,7 +384,6 @@ optional<ReasonSet> boundsToConstraints(SolvingState& _state)
 			if (*bounds.lower == *bounds.upper)
 			{
 				LinearExpression c;
-				c.resize(columns);
 				c[0] = *bounds.lower;
 				c[varIndex] = bigint(1);
 				_state.constraints.emplace_back(Constraint{move(c), true, bounds.lowerReasons + bounds.upperReasons});
@@ -397,7 +393,6 @@ optional<ReasonSet> boundsToConstraints(SolvingState& _state)
 		if (bounds.lower && *bounds.lower > 0)
 		{
 			LinearExpression c;
-			c.resize(columns);
 			c[0] = -*bounds.lower;
 			c[varIndex] = bigint(-1);
 			_state.constraints.emplace_back(Constraint{move(c), false, move(bounds.lowerReasons)});
@@ -405,7 +400,6 @@ optional<ReasonSet> boundsToConstraints(SolvingState& _state)
 		if (bounds.upper)
 		{
 			LinearExpression c;
-			c.resize(columns);
 			c[0] = *bounds.upper;
 			c[varIndex] = bigint(1);
 			_state.constraints.emplace_back(Constraint{move(c), false, move(bounds.upperReasons)});
@@ -426,12 +420,11 @@ void eraseIndices(T& _data, vector<bool> const& _indicesToRemove)
 	_data = move(result);
 }
 
-
 void removeColumns(SolvingState& _state, vector<bool> const& _columnsToRemove)
 {
 	eraseIndices(_state.bounds, _columnsToRemove);
 	for (Constraint& constraint: _state.constraints)
-		eraseIndices(constraint.data, _columnsToRemove);
+		constraint.data.eraseIndices(_columnsToRemove);
 	eraseIndices(_state.variableNames, _columnsToRemove);
 }
 
@@ -440,7 +433,7 @@ auto nonZeroEntriesInColumn(SolvingState const& _state, size_t _column)
 	return
 		_state.constraints |
 		ranges::views::enumerate |
-		ranges::views::filter([=](auto const& _entry) { return _entry.second.data[_column]; }) |
+		ranges::views::filter([=](auto const& _entry) -> bool { return _entry.second.data[_column]; }) |
 		ranges::views::transform([](auto const& _entry) { return _entry.first; });
 }
 
@@ -482,12 +475,8 @@ pair<vector<bool>, vector<bool>> connectedComponent(SolvingState const& _state, 
 void normalizeRowLengths(SolvingState& _state)
 {
 	size_t vars = max(_state.variableNames.size(), _state.bounds.size());
-	for (Constraint const& c: _state.constraints)
-		vars = max(vars, c.data.size());
 	_state.variableNames.resize(vars);
 	_state.bounds.resize(vars);
-	for (Constraint& c: _state.constraints)
-		c.data.resize(vars);
 }
 
 }
@@ -498,11 +487,7 @@ bool Constraint::operator<(Constraint const& _other) const
 	if (equality != _other.equality)
 		return equality < _other.equality;
 
-	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
-		if (rational diff = data.get(i) - _other.data.get(i))
-			return diff < 0;
-
-	return false;
+	return data < _other.data;
 }
 
 bool Constraint::operator==(Constraint const& _other) const
@@ -510,10 +495,7 @@ bool Constraint::operator==(Constraint const& _other) const
 	if (equality != _other.equality)
 		return false;
 
-	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
-		if (data.get(i) != _other.data.get(i))
-			return false;
-	return true;
+	return data == _other.data;
 }
 
 bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState const& _b) const
@@ -551,7 +533,7 @@ string SolvingState::toString() const
 			reasonToString(constraint.reasons, reasonLength) +
 			joinHumanReadable(line, " + ") +
 			(constraint.equality ? "  = " : " <= ") +
-			::toString(constraint.data.front()) +
+			::toString(constraint.data.constantFactor()) +
 			"\n";
 	}
 	result += "Bounds:\n";
@@ -617,7 +599,7 @@ optional<ReasonSet> SolvingStateSimplifier::removeFixedVariables()
 			if (constraint.data[index])
 			{
 				constraint.data[0] -= constraint.data[index] * lower;
-				constraint.data[index] = 0;
+				constraint.data.erase(index);
 				constraint.reasons += reasons;
 			}
 	}
@@ -645,8 +627,8 @@ optional<ReasonSet> SolvingStateSimplifier::extractDirectConstraints()
 		{
 			// 0 <= b or 0 = b
 			if (
-				constraint.data.front().numerator() < 0 ||
-				(constraint.equality && constraint.data.front())
+				constraint.data.constantFactor().numerator() < 0 ||
+				(constraint.equality && constraint.data.constantFactor())
 			)
 				return constraint.reasons;
 		}
@@ -654,7 +636,7 @@ optional<ReasonSet> SolvingStateSimplifier::extractDirectConstraints()
 		{
 			auto&& [varIndex, factor] = nonzeroCoefficients.front();
 			// a * x <= b
-			rational bound = constraint.data[0] / factor;
+			rational bound = constraint.data.constantFactor() / factor;
 			if (
 				(factor >= 0 || constraint.equality) &&
 				(!m_state.bounds[varIndex].upper || bound < m_state.bounds[varIndex].upper)
@@ -760,9 +742,15 @@ SolvingState ProblemSplitter::next()
 			// to undefined behaviour for connectedComponent
 			Constraint const& constraint = m_state.constraints[i];
 			Constraint splitRow{{}, constraint.equality, constraint.reasons};
-			for (size_t j = 0; j < constraint.data.size(); j++)
-				if (j == 0 || includedColumns[j])
-					splitRow.data.push_back(constraint.data[j]);
+			splitRow.data[0] = constraint.data.constantFactor();
+			size_t j = 1;
+			for (auto&& [i, included]: includedColumns | ranges::views::enumerate | ranges::views::tail)
+				if (included)
+				{
+					if (rational const& x = constraint.data.get(i))
+						splitRow.data[j] = x;
+					j++;
+				}
 			splitOff.constraints.push_back(move(splitRow));
 		}
 
@@ -818,8 +806,8 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(SolvingState _state)
 		else
 		{
 			LinearExpression objectives;
-			objectives.resize(1);
-			objectives.resize(split.constraints.front().data.size(), rational(bigint(1)));
+			for (size_t i = 1; i < split.variableNames.size(); i++)
+				objectives[i] = rational(bigint(1));
 			tie(lpResult, solution) = simplex(split.constraints, move(objectives));
 
 			// If we do not support models, do not store it in the cache because

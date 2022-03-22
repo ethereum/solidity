@@ -501,8 +501,8 @@ bool BooleanLPSolver::tryAddDirectBounds(Constraint const& _constraint)
 	{
 		// 0 <= b or 0 = b
 		if (
-			_constraint.data.front() < 0 ||
-			(_constraint.equality && _constraint.data.front() != 0)
+			_constraint.data.constantFactor() < 0 ||
+			(_constraint.equality && _constraint.data.constantFactor() == 0)
 		)
 		{
 //			cout << "SETTING INF" << endl;
@@ -665,7 +665,7 @@ string BooleanLPSolver::toString(Constraint const& _constraint) const
 	return
 		joinHumanReadable(line, " + ") +
 		(_constraint.equality ? "  = " : " <= ") +
-		::toString(_constraint.data.front());
+		::toString(_constraint.data.constantFactor());
 }
 
 Constraint const& BooleanLPSolver::conditionalConstraint(size_t _index) const
