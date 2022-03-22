@@ -152,6 +152,12 @@ public:
 		bool _includeSourceList = true
 	) const;
 
+	/// Loads the JSON representation of assembly.
+	/// @param _json JSON object containing assembly
+	/// @param _loadSources true, if source list should be included, false otherwise.
+	/// @returns true on success, false otherwise
+	bool loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources = true);
+
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }
 
@@ -160,6 +166,22 @@ public:
 
 	bool isCreation() const { return m_creation; }
 
+	/// Set the source list.
+	void setSources(std::vector<std::shared_ptr<std::string const>> _sources)
+	{
+		m_sources = std::move(_sources);
+	}
+
+	/// Set the source list from simple vector<string>.
+	void setSources(std::vector<std::string> const& _sources)
+	{
+		for (auto const& item: _sources)
+			m_sources.emplace_back(std::make_shared<std::string>(item));
+	}
+
+	/// @returns List of sources.
+	std::vector<std::shared_ptr<std::string const>> sources() const& { return m_sources; }
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -167,6 +189,14 @@ protected:
 	std::map<u256, u256> const& optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
 
 	unsigned codeSize(unsigned subTagSize) const;
+
+	/// Add all assembly items from given JSON array.
+	void addAssemblyItemsFromJSON(Json::Value const& _code);
+
+	/// Creates an AssemblyItem from a given JSON representation.
+	/// @param _json JSON representation of an assembly item
+	/// @returns AssemblyItem from a given JSON representation.
+	AssemblyItem loadItemFromJSON(Json::Value const& _json);
 
 private:
 	bool m_invalid = false;
@@ -214,6 +244,7 @@ protected:
 	std::string m_name;
 
 	langutil::SourceLocation m_currentSourceLocation;
+	std::vector<std::shared_ptr<std::string const>> m_sources;
 
 public:
 	size_t m_currentModifierDepth = 0;

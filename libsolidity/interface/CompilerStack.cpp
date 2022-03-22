@@ -415,6 +415,28 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 	storeContractDefinitions();
 }
 
+void CompilerStack::importEvmAssemblyJson(std::map<std::string, Json::Value> const& _sources)
+{
+	solAssert(_sources.size() == 1, "");
+	solAssert(m_sources.empty(), "");
+	solAssert(m_sourceOrder.empty(), "");
+	if (m_stackState != Empty)
+		solThrow(CompilerError, "Must call importEvmAssemblyJson only before the SourcesSet state.");
+
+	Json::Value jsonValue = _sources.begin()->second;
+	if (jsonValue.isMember("sourceList"))
+		for (auto const& item: jsonValue["sourceList"])
+		{
+			Source source;
+			source.charStream = std::make_shared<CharStream>(item.asString(), "");
+			m_sources.emplace(std::make_pair(item.asString(), source));
+			m_sourceOrder.push_back(&m_sources[item.asString()]);
+		}
+	m_evmAssemblyJson[_sources.begin()->first] = jsonValue;
+	m_importedSources = true;
+	m_stackState = SourcesSet;
+}
+
 bool CompilerStack::analyze()
 {
 	if (m_stackState != ParsedAndImported || m_stackState >= AnalysisPerformed)
@@ -604,6 +626,9 @@ bool CompilerStack::parseAndAnalyze(State _stopAfter)
 {
 	m_stopAfter = _stopAfter;
 
+	if (!m_evmAssemblyJson.empty())
+		return true;
+
 	bool success = parse();
 	if (m_stackState >= m_stopAfter)
 		return success;
@@ -653,55 +678,85 @@ bool CompilerStack::compile(State _stopAfter)
 	// Only compile contracts individually which have been requested.
 	map<ContractDefinition const*, shared_ptr<Compiler const>> otherCompilers;
 
-	for (Source const* source: m_sourceOrder)
-		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-				if (isRequestedContract(*contract))
-				{
-					try
+	if (!m_evmAssemblyJson.empty())
+	{
+		solAssert(m_importedSources, "");
+		solAssert(m_evmAssemblyJson.size() == 1, "");
+
+		string const evmSourceName = m_evmAssemblyJson.begin()->first;
+		Json::Value const evmJson = m_evmAssemblyJson.begin()->second;
+
+		evmasm::Assembly::OptimiserSettings optimiserSettings;
+		optimiserSettings.evmVersion = m_evmVersion;
+		optimiserSettings.expectedExecutionsPerDeployment = m_optimiserSettings.expectedExecutionsPerDeployment;
+		optimiserSettings.runCSE = m_optimiserSettings.runCSE;
+		optimiserSettings.runConstantOptimiser = m_optimiserSettings.runConstantOptimiser;
+		optimiserSettings.runDeduplicate = m_optimiserSettings.runDeduplicate;
+		optimiserSettings.runInliner = m_optimiserSettings.runInliner;
+		optimiserSettings.runJumpdestRemover = m_optimiserSettings.runJumpdestRemover;
+		optimiserSettings.runPeephole = m_optimiserSettings.runPeephole;
+
+		m_contracts[evmSourceName].evmAssembly = make_shared<evmasm::Assembly>(true, evmSourceName);
+		m_contracts[evmSourceName].evmAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName]);
+		if (m_optimiserSettings.enabled)
+			m_contracts[evmSourceName].evmAssembly->optimise(optimiserSettings);
+		m_contracts[evmSourceName].object = m_contracts[evmSourceName].evmAssembly->assemble();
+
+		m_contracts[evmSourceName].evmRuntimeAssembly = make_shared<evmasm::Assembly>(false, evmSourceName);
+		m_contracts[evmSourceName].evmRuntimeAssembly->setSources(m_contracts[evmSourceName].evmAssembly->sources());
+		m_contracts[evmSourceName].evmRuntimeAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName][".data"]["0"], false);
+		if (m_optimiserSettings.enabled)
+			m_contracts[evmSourceName].evmRuntimeAssembly->optimise(optimiserSettings);
+		m_contracts[evmSourceName].runtimeObject = m_contracts[evmSourceName].evmRuntimeAssembly->assemble();
+	}
+	else
+	{
+		for (Source const* source: m_sourceOrder)
+			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+				if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+					if (isRequestedContract(*contract))
 					{
-						if (m_viaIR || m_generateIR || m_generateEwasm)
-							generateIR(*contract);
-						if (m_generateEvmBytecode)
+						try
 						{
-							if (m_viaIR)
-								generateEVMFromIR(*contract);
-							else
-								compileContract(*contract, otherCompilers);
+							if (m_viaIR || m_generateIR || m_generateEwasm)
+								generateIR(*contract);
+							if (m_generateEvmBytecode)
+							{
+								if (m_viaIR)
+									generateEVMFromIR(*contract);
+								else
+									compileContract(*contract, otherCompilers);
+							}
+							if (m_generateEwasm)
+								generateEwasm(*contract);
 						}
-						if (m_generateEwasm)
-							generateEwasm(*contract);
-					}
-					catch (Error const& _error)
-					{
-						if (_error.type() != Error::Type::CodeGenerationError)
-							throw;
-						m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
-						return false;
-					}
-					catch (UnimplementedFeatureError const& _unimplementedError)
-					{
-						if (
-							SourceLocation const* sourceLocation =
-							boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
-						)
+						catch (Error const& _error)
 						{
-							string const* comment = _unimplementedError.comment();
-							m_errorReporter.error(
-								1834_error,
-								Error::Type::CodeGenerationError,
-								*sourceLocation,
-								"Unimplemented feature error" +
-								((comment && !comment->empty()) ? ": " + *comment : string{}) +
-								" in " +
-								_unimplementedError.lineInfo()
-							);
+							if (_error.type() != Error::Type::CodeGenerationError)
+								throw;
+							m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
 							return false;
 						}
-						else
-							throw;
+						catch (UnimplementedFeatureError const& _unimplementedError)
+						{
+							if (SourceLocation const* sourceLocation
+								= boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError))
+							{
+								string const* comment = _unimplementedError.comment();
+								m_errorReporter.error(
+									1834_error,
+									Error::Type::CodeGenerationError,
+									*sourceLocation,
+									"Unimplemented feature error"
+										+ ((comment && !comment->empty()) ? ": " + *comment : string{}) + " in "
+										+ _unimplementedError.lineInfo());
+								return false;
+							}
+							else
+								throw;
+						}
 					}
-				}
+	}
 	m_stackState = CompilationSuccessful;
 	this->link();
 	return true;
@@ -937,14 +992,21 @@ vector<string> CompilerStack::sourceNames() const
 	return names;
 }
 
-map<string, unsigned> CompilerStack::sourceIndices() const
+map<string, unsigned> CompilerStack::sourceIndices(bool _includeInternalSources /* = true */) const
 {
 	map<string, unsigned> indices;
 	unsigned index = 0;
-	for (auto const& s: m_sources)
-		indices[s.first] = index++;
-	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
-	indices[CompilerContext::yulUtilityFileName()] = index++;
+	if (m_evmAssemblyJson.empty())
+	{
+		for (auto const& s: m_sources)
+			indices[s.first] = index++;
+		solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
+		if (_includeInternalSources)
+			indices[CompilerContext::yulUtilityFileName()] = index++;
+	}
+	else
+		for (auto const& s: m_sourceOrder)
+			indices[s->charStream->source()] = index++;
 	return indices;
 }
 

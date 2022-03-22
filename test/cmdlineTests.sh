@@ -673,6 +673,16 @@ SOLTMPDIR=$(mktemp -d)
     fi
 )
 rm -r "$SOLTMPDIR"
+printTask "Testing EVM Assembly JSON import/export..."
+SOLTMPDIR=$(mktemp -d)
+(
+    cd "$SOLTMPDIR"
+    if ! "$REPO_ROOT/scripts/ImportExportTest.sh" evm-assembly
+    then
+        rm -r "$SOLTMPDIR"
+        fail
+    fi
+)
 
 printTask "Testing AST export with stop-after=parsing..."
 "$REPO_ROOT/test/stopAfterParseTests.sh"

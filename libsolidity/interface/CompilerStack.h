@@ -222,6 +222,10 @@ public:
 	/// Will throw errors if the import fails
 	void importASTs(std::map<std::string, Json::Value> const& _sources);
 
+	/// Imports given Evm Assembly Json. Leads to the same internal state as parse().
+	/// Will throw errors if the import fails
+	void importEvmAssemblyJson(std::map<std::string, Json::Value> const& _sources);
+
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
 	///  typechecking, staticAnalysis) on previously parsed sources.
 	/// @returns false on error.
@@ -240,7 +244,7 @@ public:
 
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
-	std::map<std::string, unsigned> sourceIndices() const;
+	std::map<std::string, unsigned> sourceIndices(bool _includeInternalSources = true) const;
 
 	/// @returns the previously used character stream, useful for counting lines during error reporting.
 	langutil::CharStream const& charStream(std::string const& _sourceName) const override;
@@ -498,6 +502,7 @@ private:
 	std::map<std::string const, Source> m_sources;
 	// if imported, store AST-JSONS for each filename
 	std::map<std::string, Json::Value> m_sourceJsons;
+	std::map<std::string, Json::Value> m_evmAssemblyJson;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;

@@ -243,6 +243,18 @@ string AssemblyItem::getJumpTypeAsString() const
 	}
 }
 
+void AssemblyItem::setJumpType(std::string const& _jumpType)
+{
+	if (_jumpType == "[in]")
+		m_jumpType = JumpType::IntoFunction;
+	else if (_jumpType == "[out]")
+		m_jumpType = JumpType::OutOfFunction;
+	else if (_jumpType.empty())
+		m_jumpType = JumpType::Ordinary;
+	else
+		assertThrow(false, AssemblyException, "Invalid jump type.");
+}
+
 string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 {
 	string text;

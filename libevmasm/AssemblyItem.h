@@ -173,6 +173,7 @@ public:
 	langutil::SourceLocation const& location() const { return m_location; }
 
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
+	void setJumpType(std::string const& _jumpType);
 	JumpType getJumpType() const { return m_jumpType; }
 	std::string getJumpTypeAsString() const;
 
