@@ -1000,6 +1000,9 @@ void CommandLineInterface::link(frontend::FileReader& fileReader, map<string, h1
 		boost::split(sourceLines, src.second, boost::is_any_of("\n"));
 		auto bytecodeIter = find_if(sourceLines.begin(), sourceLines.end(), isBytecodeString);
 
+		if (bytecodeIter == sourceLines.end())
+			continue;
+
 		for (auto const& library: libraries)
 		{
 			string const& name = library.first;
