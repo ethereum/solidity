@@ -129,6 +129,13 @@ class ExpectationFailed(Exception):
 
 def create_cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Solidity LSP Test suite")
+    parser.set_defaults(fail_fast=False)
+    parser.add_argument(
+        "-f, --fail-fast",
+        dest="fail_fast",
+        action="store_true",
+        help="Terminates the running tests on first failure."
+    )
     parser.set_defaults(trace_io=False)
     parser.add_argument(
         "-T, --trace-io",
@@ -189,6 +196,7 @@ class SolidityLSPTestSuite: # {{{
     assertion_counter = Counter()
     print_assertions: bool = False
     trace_io: bool = False
+    fail_fast: bool = False
     test_pattern: str
     marker_regexes: {}
 
@@ -201,6 +209,7 @@ class SolidityLSPTestSuite: # {{{
         self.print_assertions = args.print_assertions
         self.trace_io = args.trace_io
         self.test_pattern = args.test_pattern
+        self.fail_fast = args.fail_fast
         self.marker_regexes = {
             Marker.SimpleRange: re.compile(R"(?P<range>[\^]+) (?P<tag>@\w+)"),
             Marker.MultilineRange: re.compile(R"\^(?P<delimiter>[()]) (?P<tag>@\w+)$")
@@ -230,10 +239,14 @@ class SolidityLSPTestSuite: # {{{
             except ExpectationFailed:
                 self.test_counter.failed += 1
                 print(traceback.format_exc())
+                if self.fail_fast:
+                    break
             except Exception as e: # pragma pylint: disable=broad-except
                 self.test_counter.failed += 1
                 print(f"Unhandled exception {e.__class__.__name__} caught: {e}")
                 print(traceback.format_exc())
+                if self.fail_fast:
+                    break
 
         print(
             f"\n{SGR_NOTICE}Summary:{SGR_RESET}\n\n"
