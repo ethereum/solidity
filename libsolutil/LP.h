@@ -119,7 +119,7 @@ public:
 	SolvingStateSimplifier(SolvingState& _state):
 		m_state(_state) {}
 
-	std::pair<LPResult, std::variant<Model, ReasonSet>> simplify();
+	std::pair<LPResult, std::variant<std::map<size_t, rational>, ReasonSet>> simplify();
 
 private:
 	/// Remove variables that have equal lower and upper bound.
@@ -138,7 +138,7 @@ private:
 	bool m_changed = false;
 
 	SolvingState& m_state;
-	Model m_model;
+	std::map<size_t, rational> m_fixedVariables;
 };
 
 /**
@@ -180,8 +180,8 @@ class LPSolver
 public:
 	explicit LPSolver(bool _supportModels = true);
 
-	void setState(SolvingState _state);
-	void addConstraint(Constraint const& _constraint);
+	LPResult setState(SolvingState _state);
+	void addConstraint(Constraint _constraint);
 	std::pair<LPResult, std::variant<Model, ReasonSet>> check();
 
 private:
@@ -202,6 +202,7 @@ private:
 	SolvingState stateFromSubProblem(size_t _index) const;
 	ReasonSet reasonSetForSubProblem(SubProblem const& _subProblem);
 
+	std::map<size_t, rational> m_fixedVariables;
 	std::vector<std::optional<SubProblem>> m_subProblems;
 	std::vector<size_t> m_subProblemsPerVariable;
 	std::vector<size_t> m_subProblemsPerConstraint;

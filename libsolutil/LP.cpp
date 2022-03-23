@@ -586,9 +586,8 @@ string SolvingState::toString() const
 	return result;
 }
 
-pair<LPResult, variant<Model, ReasonSet>> SolvingStateSimplifier::simplify()
+pair<LPResult, variant<map<size_t, rational>, ReasonSet>> SolvingStateSimplifier::simplify()
 {
-
 	do
 	{
 		m_changed = false;
@@ -605,7 +604,7 @@ pair<LPResult, variant<Model, ReasonSet>> SolvingStateSimplifier::simplify()
 	}
 	while (m_changed);
 
-	return {LPResult::Unknown, move(m_model)};
+	return {LPResult::Unknown, move(m_fixedVariables)};
 }
 
 optional<ReasonSet> SolvingStateSimplifier::removeFixedVariables()
@@ -623,7 +622,8 @@ optional<ReasonSet> SolvingStateSimplifier::removeFixedVariables()
 		if (upper != lower)
 			continue;
 		set<size_t> reasons = bounds.lowerReasons + bounds.upperReasons;
-		m_model[m_state.variableNames.at(index)] = lower;
+		m_fixedVariables[index] = lower;
+		//cout << "Fixed " << m_state.variableNames.at(index) << " to " << ::toString(lower) << endl;
 		m_state.bounds[index] = {};
 		m_changed = true;
 
@@ -723,7 +723,7 @@ void SolvingStateSimplifier::removeEmptyColumns()
 				solAssert(!bounds.upper || bounds.upper >= 0);
 				if (bounds.lower && bounds.upper)
 					solAssert(*bounds.lower <= *bounds.upper);
-				m_model[m_state.variableNames.at(i)] =
+				m_fixedVariables[i] =
 					bounds.upper ?
 					*bounds.upper :
 					*bounds.lower;
@@ -795,25 +795,22 @@ LPSolver::LPSolver(bool)
 {
 }
 
-void LPSolver::setState(SolvingState _state)
+LPResult LPSolver::setState(SolvingState _state)
 {
 	//cout << "Set state:\n" << _state.toString() << endl;
 	m_state = move(_state);
 	m_subProblems.clear();
 
-	normalizeRowLengths(m_state);
-
 	m_subProblemsPerVariable.resize(m_state.variableNames.size(), static_cast<size_t>(-1));
 	m_subProblemsPerConstraint.resize(m_state.constraints.size(), static_cast<size_t>(-1));
 
-	// TODO we should simplify, otherwise we get big problems with constanst that are used everywhere.
-
-	// TODO we could simplify, but then we need the option to answer 'infeasible' here.
-	// TODO assert that none of the constraints here have a reason set.
-
-	// TODO if we eliminate variables, we should store their values and their reasons.
-	// If new constraints come in, the eliminated variables have to be substituted.
-
+	normalizeRowLengths(m_state);
+	auto&& [result, modelOrReasonSet] = SolvingStateSimplifier(m_state).simplify();
+	if (result == LPResult::Infeasible)
+		return result;
+	// We do not need to store reasons because at this point, we do not have any reasons yet.
+	// We can add this and just need to store the reasons together with the variables.
+	m_fixedVariables = std::get<decltype(m_fixedVariables)>(modelOrReasonSet);
 
 	//cout << "Splitting..." << endl;
 	ProblemSplitter splitter(m_state);
@@ -833,15 +830,26 @@ void LPSolver::setState(SolvingState _state)
 		//cout << m_subProblems.back()->state.toString() << endl;
 	}
 	//cout << "Done splitting." << endl;
+	return LPResult::Unknown;
 }
 
-void LPSolver::addConstraint(Constraint const& _constraint)
+void LPSolver::addConstraint(Constraint _constraint)
 {
 	//cout << "Adding constraint " << endl;
 	set<size_t> touchedProblems;
 	for (auto const& [index, entry]: _constraint.data.enumerateTail())
-		if (entry && m_subProblemsPerVariable[index] != static_cast<size_t>(-1))
-			touchedProblems.emplace(m_subProblemsPerVariable[index]);
+		if (entry)
+		{
+			if (m_fixedVariables.count(index))
+			{
+				// This can directly lead to a conflict. We will check it later during the
+				// simplify run on the split problems.
+				_constraint.data[0] -= _constraint.data[index] * m_fixedVariables.at(index);
+				_constraint.data[index] = {};
+			}
+			else if (m_subProblemsPerVariable[index] != static_cast<size_t>(-1))
+				touchedProblems.emplace(m_subProblemsPerVariable[index]);
+		}
 	if (touchedProblems.empty())
 	{
 		//cout << "Creating new sub problem." << endl;
@@ -861,15 +869,29 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 	//cout << "Checking" << endl;
 	for (auto&& [index, problem]: m_subProblems | ranges::views::enumerate)
 	{
-		if (!problem || !problem->dirty)
+		if (!problem)
+			continue;
+		if (!problem->dirty)
 		{
-			//cout << "not dirty" << endl;
+			solAssert(problem->result != LPResult::Infeasible);
 			continue;
 		}
+
 		//cout << "Updating sub problem" << endl;
 		SolvingState state = stateFromSubProblem(index);
 		normalizeRowLengths(state);
-		// TODO could also call simplify
+
+		// The simplify run is important because it detects conflicts
+		// due to fixed variables.
+		auto&& [result, modelOrReasonSet] = SolvingStateSimplifier(state).simplify();
+		if (result == LPResult::Infeasible)
+		{
+			problem->result = LPResult::Infeasible;
+			problem->model = {};
+			problem->dirty = false;
+			// TODO we could use the improved reason set above.
+			return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
+		}
 		//cout << state.toString() << endl;
 
 		if (auto conflict = boundsToConstraints(state))

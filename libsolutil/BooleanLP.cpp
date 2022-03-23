@@ -244,11 +244,10 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	// a cache.
 	// The current optimization is only for CDCL.
 	lpSolvers.emplace_back(0, LPSolver{});
-	lpSolvers.back().second.setState(lpState);
-
-	//cout << "Boolean variables:" << joinHumanReadable(booleanVariables) << endl;
-	//cout << "Running LP solver on fixed constraints." << endl;
-	if (lpSolvers.back().second.check().first == LPResult::Infeasible)
+	if (
+		lpSolvers.back().second.setState(lpState) == LPResult::Infeasible ||
+		lpSolvers.back().second.check().first == LPResult::Infeasible
+	)
 	{
 		cout << "----->>>>> unsatisfiable" << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
