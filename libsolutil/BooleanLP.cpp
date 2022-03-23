@@ -233,42 +233,41 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		else
 			resizeAndSet(lpState.variableNames, index, name);
 
+	// TODO keep a cache as a member that is never reset.
+	// TODO We can also keep the split unconditionals across push/pop
+	// We only need to be careful to update the number of variables.
+
+	std::vector<std::pair<size_t, LPSolver>> lpSolvers;
+
 	// TODO We start afresh here. If we want this to reuse the existing results
 	// from previous invocations of the boolean solver, we still have to use
 	// a cache.
 	// The current optimization is only for CDCL.
-	m_lpSolver.setState(lpState);
+	lpSolvers.emplace_back(0, LPSolver{});
+	lpSolvers.back().second.setState(lpState);
 
 	//cout << "Boolean variables:" << joinHumanReadable(booleanVariables) << endl;
 	//cout << "Running LP solver on fixed constraints." << endl;
-	if (m_lpSolver.check().first == LPResult::Infeasible)
+	if (lpSolvers.back().second.check().first == LPResult::Infeasible)
 	{
 		cout << "----->>>>> unsatisfiable" << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 
-	set<size_t> previousConditionalConstraints;
-	auto theorySolver = [&](size_t /*_decisionLevel*/, map<size_t, bool> const& _booleanAssignment) -> optional<Clause>
+	auto theorySolver = [&](size_t _trailSize, map<size_t, bool> const& _newBooleanAssignment) -> optional<Clause>
 	{
-		SolvingState lpStateToCheck = lpState;
-		set<size_t> conditionalConstraints;
-		for (auto&& [constraintIndex, value]: _booleanAssignment)
+		lpSolvers.emplace_back(_trailSize, LPSolver(lpSolvers.back().second));
+
+		for (auto&& [constraintIndex, value]: _newBooleanAssignment)
 		{
 			if (!value || !state().conditionalConstraints.count(constraintIndex))
 				continue;
-			conditionalConstraints.emplace(constraintIndex);
-		}
-		set<size_t> constraintsToRemove = previousConditionalConstraints - conditionalConstraints;
-		vector<Constraint> constraintsToAdd;
-		for (size_t constraintIndex: conditionalConstraints - previousConditionalConstraints)
-		{
 			// "reason" is already stored for those constraints.
 			Constraint const& constraint = state().conditionalConstraints.at(constraintIndex);
 			solAssert(constraint.reasons.size() == 1 && *constraint.reasons.begin() == constraintIndex);
-			constraintsToAdd.emplace_back(constraint);
+			lpSolvers.back().second.addConstraint(constraint);
 		}
-		auto&& [result, modelOrReason] = m_lpSolver.check(constraintsToRemove, move(constraintsToAdd));
-		previousConditionalConstraints = move(conditionalConstraints);
+		auto&& [result, modelOrReason] = lpSolvers.back().second.check();
 		// We can only really use the result "infeasible". Everything else should be "sat".
 		if (result == LPResult::Infeasible)
 		{
@@ -281,7 +280,11 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		else
 			return nullopt;
 	};
-	auto backtrackNotify = [](size_t /*_decisionLevel*/) {};
+	auto backtrackNotify = [&](size_t _trailSize)
+	{
+		while (lpSolvers.back().first > _trailSize)
+			lpSolvers.pop_back();
+	};
 
 	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver, backtrackNotify}.solve();
 	if (!optionalModel)

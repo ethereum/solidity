@@ -357,6 +357,7 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 	bool hasEquations = false;
 	tie(tableau.data, hasEquations) = toEquationalForm(_constraints);
 	tableau.objective.resize(tableau.data.at(0).size());
+	//cout << "Running simplex on " << tableau.objective.size() << " x " << tableau.data.size() << endl;
 
 	if (hasEquations || needsPhaseI(tableau))
 	{
@@ -796,10 +797,9 @@ LPSolver::LPSolver(bool)
 
 void LPSolver::setState(SolvingState _state)
 {
-	cout << "Set state:\n" << _state.toString() << endl;
+	//cout << "Set state:\n" << _state.toString() << endl;
 	m_state = move(_state);
 	m_subProblems.clear();
-	m_subProblemsPerConstraintReason = {};
 
 	normalizeRowLengths(m_state);
 
@@ -811,12 +811,16 @@ void LPSolver::setState(SolvingState _state)
 	// TODO we could simplify, but then we need the option to answer 'infeasible' here.
 	// TODO assert that none of the constraints here have a reason set.
 
-	cout << "Splitting..." << endl;
+	// TODO if we eliminate variables, we should store their values and their reasons.
+	// If new constraints come in, the eliminated variables have to be substituted.
+
+
+	//cout << "Splitting..." << endl;
 	ProblemSplitter splitter(m_state);
 	while (splitter)
 	{
 		auto&& [variables, constraints] = splitter.next();
-		m_subProblems.emplace_back(make_unique<SubProblem>());
+		m_subProblems.emplace_back(SubProblem());
 		solAssert(m_subProblems.back()->dirty);
 		for (auto&& [i, included]: variables | ranges::views::enumerate)
 			if (included)
@@ -825,111 +829,36 @@ void LPSolver::setState(SolvingState _state)
 			if (included)
 				m_subProblemsPerConstraint[i] = m_subProblems.size() - 1;
 		//cout << "Adding new sub problem with " << m_subProblems.back()->variables.size() << " vars and " << m_subProblems.back()->constraints.size() << " constraints\n" << endl;
-		// We do not need t ofill m_subProblemsPerConstraintReason because we do not assume
-		// these constraints to have reasons, so they cannot be removed.
-		// TODO we cauld assert that
 		//cout << "-------------------- Split out" << endl;
 		//cout << m_subProblems.back()->state.toString() << endl;
 	}
-	cout << "Updating..." << endl;
-	updateSubProblems();
+	//cout << "Done splitting." << endl;
 }
 
-pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(
-	std::set<size_t> const& _constraintsToRemove,
-	std::vector<Constraint> constraintsToAdd
-)
+void LPSolver::addConstraint(Constraint const& _constraint)
 {
-	set<size_t> subproblemsToUpdate;
-	for (size_t constraintReason: _constraintsToRemove)
-	{
-		//cout << "Removing constraint " << constraintReason << endl;
-		SubProblem& problem = *m_subProblems[m_subProblemsPerConstraintReason.at(constraintReason)];
-		problem.dirty = true;
-		cxx20::erase_if(
-			problem.removableConstraints,
-			[constraintReason](Constraint const& _constraint) {
-				if (_constraint.reasons.count(constraintReason))
-				{
-					solAssert(_constraint.reasons.size() == 1);
-					return true;
-				}
-				else
-					return false;
-			}
-		);
-	}
-
-	for (Constraint& constraint: constraintsToAdd)
-	{
-		//cout << "Adding constraint " << endl;
-		solAssert(constraint.reasons.size() == 1);
-		set<size_t> touchedProblems;
-		for (auto const& [index, entry]: constraint.data.enumerateTail())
-			if (entry && m_subProblemsPerVariable[index] != static_cast<size_t>(-1))
-				touchedProblems.emplace(m_subProblemsPerVariable[index]);
-		if (touchedProblems.empty())
-		{
-			//cout << "Creating new sub problem." << endl;
-			m_subProblems.emplace_back(make_unique<SubProblem>());
-			solAssert(m_subProblems.back()->dirty);
-			touchedProblems.emplace(m_subProblems.size() - 1);
-		}
-		for (size_t problemToErase: touchedProblems | ranges::views::tail | ranges::views::reverse)
-			combineSubProblems(*touchedProblems.begin(), problemToErase);
-		addConstraintToSubProblem(*touchedProblems.begin(), move(constraint));
-	}
-
-	// TODO here, we split again and also remove empty problems.
-
-	// TODO here, we can try to split again.
-	// If we split here, then we maybe don't need to split in setState.
-
-	updateSubProblems();
-
-	for (unique_ptr<SubProblem> const& problem: m_subProblems)
-		if (problem && problem->result == LPResult::Infeasible)
-			return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
-
-	return {LPResult::Unknown, Model{}};
-}
-
-void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
-{
-	m_subProblems[_combineInto]->dirty = true;
-
-	for (size_t& item: m_subProblemsPerVariable)
-		if (item == _combineFrom)
-			item = _combineInto;
-	for (size_t& item: m_subProblemsPerConstraint)
-		if (item == _combineFrom)
-			item = _combineInto;
-	for (auto& item: m_subProblemsPerConstraintReason)
-		if (item.second == _combineFrom)
-			item.second = _combineInto;
-
-	m_subProblems[_combineFrom].reset();
-}
-
-void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constraint)
-{
+	//cout << "Adding constraint " << endl;
+	set<size_t> touchedProblems;
 	for (auto const& [index, entry]: _constraint.data.enumerateTail())
-		if (entry)
-		{
-			solAssert(m_subProblemsPerVariable[index] == static_cast<size_t>(-1) || m_subProblemsPerVariable[index] == _subProblem);
-			m_subProblemsPerVariable[index] = _subProblem;
-		}
-	solAssert(!_constraint.reasons.empty());
+		if (entry && m_subProblemsPerVariable[index] != static_cast<size_t>(-1))
+			touchedProblems.emplace(m_subProblemsPerVariable[index]);
+	if (touchedProblems.empty())
 	{
-		solAssert(_constraint.reasons.size() == 1);
-		m_subProblemsPerConstraintReason[*_constraint.reasons.begin()] = _subProblem;
+		//cout << "Creating new sub problem." << endl;
+		// TODO we could find an empty spot for the pointer.
+		m_subProblems.emplace_back(SubProblem());
+		solAssert(m_subProblems.back()->dirty);
+		touchedProblems.emplace(m_subProblems.size() - 1);
 	}
-	m_subProblems[_subProblem]->dirty = true;
-	m_subProblems[_subProblem]->removableConstraints.emplace_back(move(_constraint));
+	for (size_t problemToErase: touchedProblems | ranges::views::tail | ranges::views::reverse)
+		combineSubProblems(*touchedProblems.begin(), problemToErase);
+	addConstraintToSubProblem(*touchedProblems.begin(), _constraint);
+	//cout << "done" << endl;
 }
 
-void LPSolver::updateSubProblems()
+pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 {
+	//cout << "Checking" << endl;
 	for (auto&& [index, problem]: m_subProblems | ranges::views::enumerate)
 	{
 		if (!problem || !problem->dirty)
@@ -947,11 +876,14 @@ void LPSolver::updateSubProblems()
 		{
 			problem->result = LPResult::Infeasible;
 			problem->model = {};
+			problem->dirty = false;
+			return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
 		}
 		else if (state.constraints.empty())
 		{
 			problem->result = LPResult::Feasible;
 			problem->model = {};
+			problem->dirty = false;
 		}
 		else
 		{
@@ -960,11 +892,39 @@ void LPSolver::updateSubProblems()
 			objectives.resize(state.variableNames.size(), rational(bigint(1)));
 			// TODO the model relies on the variable numbering.
 			tie(problem->result, problem->model) = simplex(state.constraints, move(objectives));
+			problem->dirty = false;
+			if (problem->result == LPResult::Infeasible)
+				return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
 		}
-		problem->dirty = false;
-		if (problem->result == LPResult::Infeasible)
-			break;
 	}
+
+	return {LPResult::Unknown, Model{}};
+}
+
+void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
+{
+	m_subProblems[_combineInto]->dirty = true;
+
+	for (size_t& item: m_subProblemsPerVariable)
+		if (item == _combineFrom)
+			item = _combineInto;
+	for (size_t& item: m_subProblemsPerConstraint)
+		if (item == _combineFrom)
+			item = _combineInto;
+
+	m_subProblems[_combineFrom].reset();
+}
+
+void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constraint)
+{
+	for (auto const& [index, entry]: _constraint.data.enumerateTail())
+		if (entry)
+		{
+			solAssert(m_subProblemsPerVariable[index] == static_cast<size_t>(-1) || m_subProblemsPerVariable[index] == _subProblem);
+			m_subProblemsPerVariable[index] = _subProblem;
+		}
+	m_subProblems[_subProblem]->dirty = true;
+	m_subProblems[_subProblem]->removableConstraints.emplace_back(move(_constraint));
 }
 
 SolvingState LPSolver::stateFromSubProblem(size_t _index) const

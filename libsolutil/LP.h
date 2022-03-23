@@ -181,12 +181,8 @@ public:
 	explicit LPSolver(bool _supportModels = true);
 
 	void setState(SolvingState _state);
-	/// Modifies the state by removing constraints (identified by their "reason"),
-	/// adding constraints and then checks for feasibility.
-	std::pair<LPResult, std::variant<Model, ReasonSet>> check(
-		std::set<size_t> const& _constraintsToRemove = {},
-		std::vector<Constraint> constraintsToAdd = {}
-	);
+	void addConstraint(Constraint const& _constraint);
+	std::pair<LPResult, std::variant<Model, ReasonSet>> check();
 
 private:
 	void combineSubProblems(size_t _combineInto, size_t _combineFrom);
@@ -196,6 +192,7 @@ private:
 	SolvingState m_state;
 	struct SubProblem
 	{
+		// TODO now we could actually put the constraints here again.
 		std::vector<Constraint> removableConstraints;
 		bool dirty = true;
 		LPResult result = LPResult::Unknown;
@@ -205,12 +202,9 @@ private:
 	SolvingState stateFromSubProblem(size_t _index) const;
 	ReasonSet reasonSetForSubProblem(SubProblem const& _subProblem);
 
-	// TODO we could also use optional
-	std::vector<std::unique_ptr<SubProblem>> m_subProblems;
+	std::vector<std::optional<SubProblem>> m_subProblems;
 	std::vector<size_t> m_subProblemsPerVariable;
 	std::vector<size_t> m_subProblemsPerConstraint;
-	/// The key of this is a constraint reason, not an index in the state.
-	std::map<size_t, size_t> m_subProblemsPerConstraintReason;
 	/// TODO also store the first infeasible subproblem?
 	/// TODO still retain the cache?
 };

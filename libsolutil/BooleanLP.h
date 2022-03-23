@@ -122,10 +122,6 @@ private:
 
 	/// Stack of state, to allow for push()/pop().
 	std::vector<State> m_state{{State{}}};
-	// TODO this is only here so that it can keep its cache.
-	// It might be better to just have the cache here.
-	// Although its stote is only the cache in the end...
-	LPSolver m_lpSolver{false};
 };
 
 

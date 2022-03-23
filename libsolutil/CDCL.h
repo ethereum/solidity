@@ -161,6 +161,8 @@ private:
 	std::vector<size_t> m_decisionPoints;
 	/// Index into assignmentTrail: All assignments starting there have not yet been propagated.
 	size_t m_assignmentQueuePointer = 0;
+
+	std::vector<size_t> m_assignemntTrailSizesWeCalledSolverFor;
 };
 
 
