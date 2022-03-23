@@ -798,22 +798,22 @@ LPSolver::LPSolver(bool)
 LPResult LPSolver::setState(SolvingState _state)
 {
 	//cout << "Set state:\n" << _state.toString() << endl;
-	m_state = move(_state);
+	m_state = make_shared<SolvingState>(move(_state));
 	m_subProblems.clear();
+	m_subProblemsPerVariable.resize(m_state->variableNames.size(), static_cast<size_t>(-1));
+	m_subProblemsPerConstraint.resize(m_state->constraints.size(), static_cast<size_t>(-1));
 
-	m_subProblemsPerVariable.resize(m_state.variableNames.size(), static_cast<size_t>(-1));
-	m_subProblemsPerConstraint.resize(m_state.constraints.size(), static_cast<size_t>(-1));
-
-	normalizeRowLengths(m_state);
-	auto&& [result, modelOrReasonSet] = SolvingStateSimplifier(m_state).simplify();
+	normalizeRowLengths(*m_state);
+	auto&& [result, modelOrReasonSet] = SolvingStateSimplifier(*m_state).simplify();
 	if (result == LPResult::Infeasible)
 		return result;
+
 	// We do not need to store reasons because at this point, we do not have any reasons yet.
 	// We can add this and just need to store the reasons together with the variables.
 	m_fixedVariables = std::get<decltype(m_fixedVariables)>(modelOrReasonSet);
 
 	//cout << "Splitting..." << endl;
-	ProblemSplitter splitter(m_state);
+	ProblemSplitter splitter(*m_state);
 	while (splitter)
 	{
 		auto&& [variables, constraints] = splitter.next();
@@ -985,13 +985,13 @@ SolvingState LPSolver::stateFromSubProblem(size_t _index) const
 	SubProblem const& problem = *m_subProblems[_index];
 	for (size_t varIndex: problem.variables)
 	{
-		split.variableNames.emplace_back(m_state.variableNames[varIndex]);
-		split.bounds.emplace_back(m_state.bounds[varIndex]);
+		split.variableNames.emplace_back(m_state->variableNames[varIndex]);
+		split.bounds.emplace_back(m_state->bounds[varIndex]);
 	}
 	for (auto&& item: m_subProblemsPerConstraint | ranges::views::enumerate)
 		if (item.second == _index)
 		{
-			Constraint const& constraint = m_state.constraints[item.first];
+			Constraint const& constraint = m_state->constraints[item.first];
 			Constraint splitRow{{}, constraint.equality, constraint.reasons};
 			splitRow.data.push_back(constraint.data.get(0));
 			for (size_t varIndex: problem.variables)

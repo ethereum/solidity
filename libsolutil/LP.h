@@ -192,7 +192,10 @@ private:
 	void addConstraintToSubProblem(size_t _subProblem, Constraint _constraint);
 	void updateSubProblems();
 
-	SolvingState m_state;
+	/// Ground state for CDCL. This is shared by copies of the solver.
+	/// Only ``setState`` changes the state. Copies will only use
+	/// ``addConstraint`` which does not change m_state.
+	std::shared_ptr<SolvingState> m_state;
 	struct SubProblem
 	{
 		// TODO now we could actually put the constraints here again.
