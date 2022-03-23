@@ -463,7 +463,7 @@ There is no additional semantic meaning added to a number literal containing und
 the underscores are ignored.
 
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
-using them together with anything else than a number literal expression (like boolean literals) or by explicit conversion).
+using them together with anything other than a number literal expression (like boolean literals) or by explicit conversion).
 This means that computations do not overflow and divisions do not truncate
 in number literal expressions.
 
