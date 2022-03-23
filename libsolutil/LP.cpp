@@ -595,9 +595,6 @@ pair<LPResult, variant<map<size_t, rational>, ReasonSet>> SolvingStateSimplifier
 			return {LPResult::Infeasible, move(*conflict)};
 		if (auto conflict = extractDirectConstraints())
 			return {LPResult::Infeasible, move(*conflict)};
-		// Used twice on purpose
-		if (auto conflict = removeFixedVariables())
-			return {LPResult::Infeasible, move(*conflict)};
 		// TODO we cannot do this anymore because it would
 		// mess up the variable numbering
 		// removeEmptyColumns();
