@@ -154,7 +154,7 @@ public:
 	operator bool() const { return m_column < m_state.variableNames.size(); }
 
 	/// @returns the next sub-problem.
-	std::pair<std::vector<bool>, SolvingState> next();
+	std::pair<std::vector<bool>, std::vector<bool>> next();
 
 private:
 	SolvingState const& m_state;
@@ -193,21 +193,30 @@ private:
 	void addConstraintToSubProblem(size_t _subProblem, Constraint _constraint);
 	void updateSubProblems();
 
+	SolvingState m_state;
 	struct SubProblem
 	{
-		//std::set<size_t> variables;
-		SolvingState state = {};
+		// TODO maybe it is better have a single vector of size_t that juts
+		// specifies which subproblem the variable belongs to.
+		// we need to traverse the variable vector anywoy.
+		// same for constraints.
+		std::set<size_t> variables;
+		/// This is an index into the constraint vector of m_state.
+		std::set<size_t> constraints;
+		std::vector<Constraint> removableConstraints;
 		bool dirty = true;
 		LPResult result = LPResult::Unknown;
 		std::vector<boost::rational<bigint>> model = {};
 	};
 
+	SolvingState stateFromSubProblem(SubProblem const& _problem) const;
 	ReasonSet reasonSetForSubProblem(SubProblem const& _subProblem);
 
 	// TODO we could also use optional
 	std::vector<std::unique_ptr<SubProblem>> m_subProblems;
 	std::map<size_t, size_t> m_subProblemsPerVariable;
-	std::map<size_t, size_t> m_subProblemsPerConstraint;
+	/// The key of this is a constraint reason, not an index in the state.
+	std::map<size_t, size_t> m_subProblemsPerConstraintReason;
 	/// TODO also store the first infeasible subproblem?
 	/// TODO still retain the cache?
 };
