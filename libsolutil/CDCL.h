@@ -59,7 +59,8 @@ public:
 	CDCL(
 		std::vector<std::string> _variables,
 		std::vector<Clause> const& _clauses,
-		std::function<std::optional<Clause>(std::map<size_t, bool> const&)> _theoryPropagator = {}
+		std::function<std::optional<Clause>(size_t, std::map<size_t, bool> const&)> _theorySolver = {},
+		std::function<void(size_t)> _backtrackNotify = {}
 	);
 
 	std::optional<Model> solve();
@@ -102,7 +103,8 @@ private:
 
 	/// Callback that receives an assignment and uses the theory to either returns nullopt ("satisfiable")
 	/// or a conflict clause, i.e. a clauses that is false in the theory with the given assignments.
-	std::function<std::optional<Clause>(std::map<size_t, bool>)> m_theorySolver;
+	std::function<std::optional<Clause>(size_t, std::map<size_t, bool>)> m_theorySolver;
+	std::function<void(size_t)> m_backtrackNotify;
 
 	std::vector<std::string> m_variables;
 	/// includes the learnt clauses

@@ -248,7 +248,7 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	}
 
 	set<size_t> previousConditionalConstraints;
-	auto theorySolver = [&](map<size_t, bool> const& _booleanAssignment) -> optional<Clause>
+	auto theorySolver = [&](size_t /*_decisionLevel*/, map<size_t, bool> const& _booleanAssignment) -> optional<Clause>
 	{
 		SolvingState lpStateToCheck = lpState;
 		set<size_t> conditionalConstraints;
@@ -281,8 +281,9 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		else
 			return nullopt;
 	};
+	auto backtrackNotify = [](size_t /*_decisionLevel*/) {};
 
-	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver}.solve();
+	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver, backtrackNotify}.solve();
 	if (!optionalModel)
 	{
 		cout << "==============> CDCL final result: unsatisfiable." << endl;

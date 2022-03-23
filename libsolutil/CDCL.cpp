@@ -32,9 +32,11 @@ using namespace solidity::util;
 CDCL::CDCL(
 	vector<string> _variables,
 	vector<Clause> const& _clauses,
-	std::function<std::optional<Clause>(std::map<size_t, bool> const&)> _theorySolver
+	std::function<std::optional<Clause>(size_t, std::map<size_t, bool> const&)> _theorySolver,
+	std::function<void(size_t)> _backtrackNotify
 ):
 	m_theorySolver(_theorySolver),
+	m_backtrackNotify(_backtrackNotify),
 	m_variables(move(_variables)),
 	order(VarOrderLt(activity))
 {
@@ -69,7 +71,7 @@ bool CDCL::solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& sol
 		optional<Clause> conflictClause = propagate();
 		if (!conflictClause && m_theorySolver)
 		{
-			conflictClause = m_theorySolver(m_assignments);
+			conflictClause = m_theorySolver(currentDecisionLevel(), m_assignments);
 //			if (conflictClause)
 //				cout << "Theory gave us conflict: " << toString(*conflictClause) << endl;
 		}
@@ -323,6 +325,8 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 	}
 	m_decisionPoints.resize(_backtrackLevel);
 	m_assignmentQueuePointer = m_assignmentTrail.size();
+	if (m_backtrackNotify)
+		m_backtrackNotify(currentDecisionLevel());
 	solAssert(currentDecisionLevel() == _backtrackLevel);
 }
 
