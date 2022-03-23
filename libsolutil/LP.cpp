@@ -817,11 +817,14 @@ LPResult LPSolver::setState(SolvingState _state)
 	while (splitter)
 	{
 		auto&& [variables, constraints] = splitter.next();
-		m_subProblems.emplace_back(SubProblem());
-		solAssert(m_subProblems.back()->dirty);
+		SubProblem& problem = *m_subProblems.emplace_back(SubProblem());
+		solAssert(problem.dirty);
 		for (auto&& [i, included]: variables | ranges::views::enumerate)
 			if (included)
+			{
 				m_subProblemsPerVariable[i] = m_subProblems.size() - 1;
+				problem.variables.emplace(i);
+			}
 		for (auto&& [i, included]: constraints | ranges::views::enumerate)
 			if (included)
 				m_subProblemsPerConstraint[i] = m_subProblems.size() - 1;
@@ -933,20 +936,23 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 	for (size_t& item: m_subProblemsPerConstraint)
 		if (item == _combineFrom)
 			item = _combineInto;
+	m_subProblems[_combineInto]->variables += move(m_subProblems[_combineFrom]->variables);
 
 	m_subProblems[_combineFrom].reset();
 }
 
 void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constraint)
 {
+	SubProblem& problem = *m_subProblems[_subProblem];
 	for (auto const& [index, entry]: _constraint.data.enumerateTail())
 		if (entry)
 		{
 			solAssert(m_subProblemsPerVariable[index] == static_cast<size_t>(-1) || m_subProblemsPerVariable[index] == _subProblem);
 			m_subProblemsPerVariable[index] = _subProblem;
+			problem.variables.emplace(index);
 		}
-	m_subProblems[_subProblem]->dirty = true;
-	m_subProblems[_subProblem]->removableConstraints.emplace_back(move(_constraint));
+	problem.dirty = true;
+	problem.removableConstraints.emplace_back(move(_constraint));
 }
 
 SolvingState LPSolver::stateFromSubProblem(size_t _index) const
@@ -956,29 +962,29 @@ SolvingState LPSolver::stateFromSubProblem(size_t _index) const
 	split.variableNames.emplace_back();
 	split.bounds.emplace_back();
 
-	for (auto&& item: m_subProblemsPerVariable | ranges::views::enumerate)
-		if (item.second == _index)
-		{
-			split.variableNames.emplace_back(m_state.variableNames[item.first]);
-			split.bounds.emplace_back(m_state.bounds[item.first]);
-		}
+	SubProblem const& problem = *m_subProblems[_index];
+	for (size_t varIndex: problem.variables)
+	{
+		split.variableNames.emplace_back(m_state.variableNames[varIndex]);
+		split.bounds.emplace_back(m_state.bounds[varIndex]);
+	}
 	for (auto&& item: m_subProblemsPerConstraint | ranges::views::enumerate)
 		if (item.second == _index)
 		{
 			Constraint const& constraint = m_state.constraints[item.first];
 			Constraint splitRow{{}, constraint.equality, constraint.reasons};
-			for (size_t j = 0; j < constraint.data.size(); j++)
-				if (j == 0 || m_subProblemsPerVariable[j] == _index)
-					splitRow.data.push_back(constraint.data[j]);
+			splitRow.data.push_back(constraint.data.get(0));
+			for (size_t varIndex: problem.variables)
+				splitRow.data.push_back(constraint.data.get(varIndex));
 			split.constraints.push_back(move(splitRow));
 		}
 
 	for (Constraint const& constraint: m_subProblems[_index]->removableConstraints)
 	{
 		Constraint splitRow{{}, constraint.equality, constraint.reasons};
-		for (size_t j = 0; j < constraint.data.size(); j++)
-			if (j == 0 || m_subProblemsPerVariable[j] == _index)
-				splitRow.data.push_back(constraint.data[j]);
+		splitRow.data.push_back(constraint.data.get(0));
+		for (size_t varIndex: problem.variables)
+			splitRow.data.push_back(constraint.data.get(varIndex));
 		split.constraints.push_back(move(splitRow));
 	}
 

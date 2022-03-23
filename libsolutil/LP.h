@@ -197,6 +197,7 @@ private:
 		bool dirty = true;
 		LPResult result = LPResult::Unknown;
 		std::vector<boost::rational<bigint>> model = {};
+		std::set<size_t> variables = {};
 	};
 
 	SolvingState stateFromSubProblem(size_t _index) const;
