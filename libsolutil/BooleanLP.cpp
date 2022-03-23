@@ -233,35 +233,45 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		else
 			resizeAndSet(lpState.variableNames, index, name);
 
+	// TODO We start afresh here. If we want this to reuse the existing results
+	// from previous invocations of the boolean solver, we still have to use
+	// a cache.
+	// The current optimization is only for CDCL.
+	m_lpSolver.setState(lpState);
+
 	//cout << "Boolean variables:" << joinHumanReadable(booleanVariables) << endl;
 	//cout << "Running LP solver on fixed constraints." << endl;
-	if (m_lpSolver.check(lpState).first == LPResult::Infeasible)
+	if (m_lpSolver.check().first == LPResult::Infeasible)
 	{
 		cout << "----->>>>> unsatisfiable" << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 
+	set<size_t> previousConditionalConstraints;
 	auto theorySolver = [&](map<size_t, bool> const& _booleanAssignment) -> optional<Clause>
 	{
 		SolvingState lpStateToCheck = lpState;
+		set<size_t> conditionalConstraints;
 		for (auto&& [constraintIndex, value]: _booleanAssignment)
 		{
 			if (!value || !state().conditionalConstraints.count(constraintIndex))
 				continue;
+			conditionalConstraints.emplace(constraintIndex);
+		}
+		set<size_t> constraintsToRemove = previousConditionalConstraints - conditionalConstraints;
+		vector<Constraint> constraintsToAdd;
+		for (size_t constraintIndex: conditionalConstraints - previousConditionalConstraints)
+		{
 			// "reason" is already stored for those constraints.
 			Constraint const& constraint = state().conditionalConstraints.at(constraintIndex);
-			solAssert(
-				constraint.reasons.size() == 1 &&
-				*constraint.reasons.begin() == constraintIndex
-			);
-			lpStateToCheck.constraints.emplace_back(constraint);
+			solAssert(constraint.reasons.size() == 1 && *constraint.reasons.begin() == constraintIndex);
+			constraintsToAdd.emplace_back(constraint);
 		}
-		auto&& [result, modelOrReason] = m_lpSolver.check(move(lpStateToCheck));
+		auto&& [result, modelOrReason] = m_lpSolver.check(constraintsToRemove, move(constraintsToAdd));
+		previousConditionalConstraints = move(conditionalConstraints);
 		// We can only really use the result "infeasible". Everything else should be "sat".
 		if (result == LPResult::Infeasible)
 		{
-			// TODO this could be the empty clause if the LP is already infeasible
-			// with only the fixed constraints - run it beforehand!
 			// TODO is it ok to ignore the non-constraint boolean variables here?
 			Clause conflictClause;
 			for (size_t constraintIndex: get<ReasonSet>(modelOrReason))

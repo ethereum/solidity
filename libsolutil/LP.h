@@ -76,6 +76,8 @@ struct SolvingState
 	// For each bound and constraint, store an index of the literal
 	// that implies it.
 
+	std::set<size_t> reasons() const;
+
 	struct Compare
 	{
 		explicit Compare(bool _considerVariableNames = true): considerVariableNames(_considerVariableNames) {}
@@ -146,17 +148,13 @@ private:
 class ProblemSplitter
 {
 public:
-	explicit ProblemSplitter(SolvingState const& _state):
-		m_state(_state),
-		m_column(1),
-		m_seenColumns(std::vector<bool>(m_state.variableNames.size(), false))
-	{}
+	explicit ProblemSplitter(SolvingState const& _state);
 
 	/// @returns true if there are still sub-problems to split out.
 	operator bool() const { return m_column < m_state.variableNames.size(); }
 
 	/// @returns the next sub-problem.
-	SolvingState next();
+	std::pair<std::vector<bool>, SolvingState> next();
 
 private:
 	SolvingState const& m_state;
@@ -182,13 +180,36 @@ class LPSolver
 public:
 	explicit LPSolver(bool _supportModels = true);
 
-	std::pair<LPResult, std::variant<Model, ReasonSet>> check(SolvingState _state);
+	void setState(SolvingState _state);
+	/// Modifies the state by removing constraints (identified by their "reason"),
+	/// adding constraints and then checks for feasibility.
+	std::pair<LPResult, std::variant<Model, ReasonSet>> check(
+		std::set<size_t> const& _constraintsToRemove = {},
+		std::vector<Constraint> constraintsToAdd = {}
+	);
 
 private:
-	using CacheValue = std::pair<LPResult, std::vector<boost::rational<bigint>>>;
+	void combineSubProblems(size_t _combineInto, size_t _combineFrom);
+	void addConstraintToSubProblem(size_t _subProblem, Constraint _constraint);
+	void updateSubProblems();
 
-	bool m_supportModels = true;
-	std::map<SolvingState, CacheValue, SolvingState::Compare> m_cache;
+	struct SubProblem
+	{
+		//std::set<size_t> variables;
+		SolvingState state = {};
+		bool dirty = true;
+		LPResult result = LPResult::Unknown;
+		std::vector<boost::rational<bigint>> model = {};
+	};
+
+	ReasonSet reasonSetForSubProblem(SubProblem const& _subProblem);
+
+	// TODO we could also use optional
+	std::vector<std::unique_ptr<SubProblem>> m_subProblems;
+	std::map<size_t, size_t> m_subProblemsPerVariable;
+	std::map<size_t, size_t> m_subProblemsPerConstraint;
+	/// TODO also store the first infeasible subproblem?
+	/// TODO still retain the cache?
 };
 
 }

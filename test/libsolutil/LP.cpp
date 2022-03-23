@@ -92,7 +92,8 @@ public:
 
 	void feasible(vector<pair<string, rational>> const& _solution)
 	{
-		auto [result, modelOrReasonSet] = m_solver.check(m_solvingState);
+		m_solver.setState(m_solvingState);
+		auto [result, modelOrReasonSet] = m_solver.check();
 		BOOST_REQUIRE(result == LPResult::Feasible);
 		Model model = get<Model>(modelOrReasonSet);
 		for (auto const& [var, value]: _solution)
@@ -104,7 +105,8 @@ public:
 
 	void infeasible(set<size_t> _reason = {})
 	{
-		auto [result, modelOrReason] = m_solver.check(m_solvingState);
+		m_solver.setState(m_solvingState);
+		auto [result, modelOrReason] = m_solver.check();
 		BOOST_REQUIRE(result == LPResult::Infeasible);
 		ReasonSet suppliedReason = get<ReasonSet>(modelOrReason);
 		BOOST_CHECK_MESSAGE(suppliedReason == _reason, "Reasons are different");

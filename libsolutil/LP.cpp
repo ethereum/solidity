@@ -22,9 +22,12 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/LinearExpression.h>
+#include <libsolutil/cxx20.h>
+
 #include <liblangutil/Exceptions.h>
 
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/reverse.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/tail.hpp>
@@ -502,7 +505,7 @@ bool Constraint::operator<(Constraint const& _other) const
 		if (rational diff = data.get(i) - _other.data.get(i))
 			return diff < 0;
 
-	return false;
+	return reasons < _other.reasons;
 }
 
 bool Constraint::operator==(Constraint const& _other) const
@@ -513,7 +516,8 @@ bool Constraint::operator==(Constraint const& _other) const
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
 		if (data.get(i) != _other.data.get(i))
 			return false;
-	return true;
+
+	return reasons == _other.reasons;
 }
 
 bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState const& _b) const
@@ -527,6 +531,16 @@ bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState cons
 	}
 	else
 		return _a.variableNames < _b.variableNames;
+}
+
+set<size_t> SolvingState::reasons() const
+{
+	set<size_t> ret;
+	for (Bounds const& b: bounds)
+		ret += b.lowerReasons + b.upperReasons;
+	for (Constraint const& c: constraints)
+		ret += c.reasons;
+	return ret;
 }
 
 string SolvingState::toString() const
@@ -719,7 +733,16 @@ void SolvingStateSimplifier::removeEmptyColumns()
 	}
 }
 
-SolvingState ProblemSplitter::next()
+ProblemSplitter::ProblemSplitter(const SolvingState& _state):
+	m_state(_state),
+	m_column(1),
+	m_seenColumns(std::vector<bool>(m_state.variableNames.size(), false))
+{
+	while (m_column < m_state.variableNames.size() && nonZeroEntriesInColumn(_state, m_column).empty())
+		m_column++;
+}
+
+pair<vector<bool>, SolvingState> ProblemSplitter::next()
 {
 	vector<bool> includedColumns;
 	vector<bool> includedRows;
@@ -728,18 +751,11 @@ SolvingState ProblemSplitter::next()
 	// Update state.
 	m_seenColumns |= includedColumns;
 	++m_column;
-	while (m_column < m_state.variableNames.size() && m_seenColumns[m_column])
+	while (m_column < m_state.variableNames.size() && (
+		m_seenColumns[m_column] ||
+		nonZeroEntriesInColumn(m_state, m_column).empty()
+	))
 		++m_column;
-
-	if (includedRows.empty())
-	{
-		// This should not happen if the SolvingStateSimplifier has been used beforehand.
-		// We just check that we did not miss any bounds.
-		for (auto&& [i, included]: includedColumns | ranges::views::enumerate | ranges::views::tail)
-			if (included)
-				solAssert(!m_state.bounds[i].lower && !!m_state.bounds[i].upper);
-		return next();
-	}
 
 	SolvingState splitOff;
 
@@ -766,100 +782,174 @@ SolvingState ProblemSplitter::next()
 			splitOff.constraints.push_back(move(splitRow));
 		}
 
-	return splitOff;
+	return {includedColumns, splitOff};
 }
 
-LPSolver::LPSolver(bool _supportModels):
-	m_supportModels(_supportModels),
-	m_cache(SolvingState::Compare{_supportModels})
+LPSolver::LPSolver(bool)
 {
 }
 
-pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(SolvingState _state)
+void LPSolver::setState(SolvingState _state)
 {
+	cout << "Set state:\n" << _state.toString() << endl;
+	m_subProblems.clear();
+	m_subProblemsPerVariable = {};
+	m_subProblemsPerConstraint = {};
+
 	normalizeRowLengths(_state);
-	//cout << "Running LP on:\n" << _state.toString() << endl;
 
-	auto&& [simplificationResult, modelOrReasonSet] = SolvingStateSimplifier{_state}.simplify();
-	switch (simplificationResult)
-	{
-	case LPResult::Infeasible:
-		//cout << "-> LP infeasible." << endl;
-		return {LPResult::Infeasible, modelOrReasonSet};
-	case LPResult::Feasible:
-	case LPResult::Unbounded:
-		solAssert(false);
-	case LPResult::Unknown:
-		break;
-	}
+	// TODO we should simplify, otherwise we get big problems with constanst that are used everywhere.
 
-	Model model = get<Model>(modelOrReasonSet);
+	// TODO we could simplify, but then we need the option to answer 'infeasible' here.
+	// TODO assert that none of the constraints here have a reason set.
 
-	bool canOnlyBeUnknown = false;
+	cout << "Splitting..." << endl;
 	ProblemSplitter splitter(move(_state));
 	while (splitter)
 	{
-		SolvingState split = splitter.next();
-		solAssert(!split.constraints.empty(), "");
-		solAssert(split.variableNames.size() >= 2, "");
+		auto&& [variables, subState] = splitter.next();
+		m_subProblems.emplace_back(make_unique<SubProblem>(SubProblem{move(subState)}));
+		for (auto&& [i, included]: variables | ranges::views::enumerate)
+		   if (included)
+				m_subProblemsPerVariable[i] = m_subProblems.size() - 1;
+		// We do not need t ofill m_subProblemsPerConstraint because we do not assume
+		// these constraints to have reasons, so they cannot be removed.
+		// TODO we cauld assert that
+		cout << "-------------------- Split out" << endl;
+		cout << m_subProblems.back()->state.toString() << endl;
+	}
+	updateSubProblems();
+}
 
-		LPResult lpResult;
-		vector<rational> solution;
+pair<LPResult, variant<Model, ReasonSet>> LPSolver::check(
+	std::set<size_t> const& _constraintsToRemove,
+	std::vector<Constraint> constraintsToAdd
+)
+{
+	set<size_t> subproblemsToUpdate;
+	for (size_t constraintIndex: _constraintsToRemove)
+	{
+		cout << "Removing constarint " << constraintIndex << endl;
+		SubProblem& problem = *m_subProblems[m_subProblemsPerConstraint.at(constraintIndex)];
+		problem.dirty = true;
+		cxx20::erase_if(
+			problem.state.constraints,
+			[constraintIndex](Constraint const& _constraint) {
+				if (_constraint.reasons.count(constraintIndex))
+				{
+					solAssert(_constraint.reasons.size() == 1);
+					return true;
+				}
+				else
+					return false;
+			}
+		);
+	}
 
-		if (auto conflict = boundsToConstraints(split))
+	for (Constraint& constraint: constraintsToAdd)
+	{
+		cout << "Adding constraint " << endl;
+		solAssert(constraint.reasons.size() == 1);
+		set<size_t> touchedProblems;
+		for (auto const& [index, entry]: constraint.data.enumerateTail())
+			if (entry && m_subProblemsPerVariable.count(index))
+				touchedProblems.emplace(m_subProblemsPerVariable[index]);
+		if (touchedProblems.empty())
 		{
-			//cout << "-> LP infeasible." << endl;
-			return {LPResult::Infeasible, move(*conflict)};
+			m_subProblems.emplace_back(make_unique<SubProblem>());
+			touchedProblems.emplace(m_subProblems.size() - 1);
 		}
+		for (size_t problemToErase: touchedProblems | ranges::views::tail | ranges::views::reverse)
+			combineSubProblems(*touchedProblems.begin(), problemToErase);
+		addConstraintToSubProblem(*touchedProblems.begin(), move(constraint));
+	}
+	// TODO here, we can try to split again.
+	// If we split here, then we maybe don't need to split in setState.
 
-		auto it = m_cache.find(split);
-		if (it != m_cache.end())
-			tie(lpResult, solution) = it->second;
+	updateSubProblems();
+
+	for (unique_ptr<SubProblem> const& problem: m_subProblems)
+		if (problem && problem->result == LPResult::Infeasible)
+			return {LPResult::Infeasible, problem->state.reasons()};
+
+	return {LPResult::Unknown, Model{}};
+}
+
+void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
+{
+	m_subProblems[_combineInto]->dirty = true;
+	for (auto& item: m_subProblemsPerVariable)
+		if (item.second == _combineFrom)
+			item.second = _combineInto;
+	for (auto& item: m_subProblemsPerConstraint)
+		if (item.second == _combineFrom)
+			item.second = _combineInto;
+
+	SolvingState& from = m_subProblems[_combineFrom]->state;
+	SolvingState& into = m_subProblems[_combineInto]->state;
+	cout << "Combining " << endl;
+	cout << from.toString() << "\n------------ with ----------\n" << into.toString() << "\n";
+	size_t fromVars = from.variableNames.size();
+	size_t intoVars = into.variableNames.size();
+	// TODO does it leave out index zero?
+	into.bounds += from.bounds;
+	into.variableNames += from.variableNames;
+	for (Constraint& constraint: into.constraints)
+		constraint.data.resize(fromVars + intoVars); // -1?
+	for (Constraint& constraint: from.constraints)
+	{
+		Constraint shifted;
+		shifted.equality = constraint.equality;
+		shifted.reasons = move(constraint.reasons);
+		// TODO this can be optimized
+		for (auto const& [index, entry]: constraint.data.enumerateTail())
+		{
+			shifted.data[index] = {};
+			shifted.data[intoVars + index] = entry;
+		}
+		into.constraints.emplace_back(move(shifted));
+	}
+	cout << "Result: " << endl;
+	cout << into.toString() << "\n";
+}
+
+void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constraint)
+{
+	for (auto const& [index, entry]: _constraint.data.enumerateTail())
+		if (entry)
+		{
+			solAssert(!m_subProblemsPerVariable.count(index) || m_subProblemsPerVariable[index] == _subProblem);
+			m_subProblemsPerVariable[index] = _subProblem;
+		}
+	if (!_constraint.reasons.empty())
+	{
+		solAssert(_constraint.reasons.size() == 1);
+		m_subProblemsPerConstraint[*_constraint.reasons.begin()] = _subProblem;
+	}
+	m_subProblems[_subProblem]->dirty = true;
+	m_subProblems[_subProblem]->state.constraints.emplace_back(move(_constraint));
+}
+
+void LPSolver::updateSubProblems()
+{
+	for (unique_ptr<SubProblem>& problem: m_subProblems)
+	{
+		if (!problem || !problem->dirty) continue;
+
+		if (auto conflict = boundsToConstraints(problem->state))
+		{
+			problem->result = LPResult::Infeasible;
+			problem->model = {};
+		}
 		else
 		{
 			LinearExpression objectives;
 			objectives.resize(1);
-			objectives.resize(split.constraints.front().data.size(), rational(bigint(1)));
-			tie(lpResult, solution) = simplex(split.constraints, move(objectives));
-
-			// If we do not support models, do not store it in the cache because
-			// the variable associations will be wrong.
-			// Otherwise, it is fine to use the model.
-			m_cache.emplace(split, make_pair(lpResult, m_supportModels ? solution : vector<rational>{}));
+			objectives.resize(problem->state.constraints.front().data.size(), rational(bigint(1)));
+			tie(problem->result, problem->model) = simplex(problem->state.constraints, move(objectives));
 		}
-
-		switch (lpResult)
-		{
-		case LPResult::Feasible:
-		case LPResult::Unbounded:
+		problem->dirty = false;
+		if (problem->result == LPResult::Infeasible)
 			break;
-		case LPResult::Infeasible:
-		{
-			solAssert(split.bounds.empty());
-			set<size_t> reasons;
-			for (auto const& constraint: split.constraints)
-				reasons += constraint.reasons;
-			//cout << "-> LP infeasible." << endl;
-			return {LPResult::Infeasible, move(reasons)};
-		}
-		case LPResult::Unknown:
-			// We do not stop here, because another independent query can still be infeasible.
-			canOnlyBeUnknown = true;
-			break;
-		}
-		for (auto&& [index, value]: solution | ranges::views::enumerate)
-			if (index + 1 < split.variableNames.size())
-				model[split.variableNames.at(index + 1)] = value;
 	}
-
-	if (canOnlyBeUnknown)
-	{
-		//cout << "-> LP unknown." << endl;
-		return {LPResult::Unknown, Model{}};
-	}
-
-	//cout << "-> LP feasible." << endl;
-	return {LPResult::Feasible, move(model)};
 }
-
-
