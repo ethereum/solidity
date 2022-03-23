@@ -114,14 +114,10 @@ Solidity, ``X[3]`` is always an array containing three elements of type ``X``,
 even if ``X`` is itself an array. This is not the case in other languages such
 as C.
 
-Indices are zero-based, and access is in the opposite direction of the
-declaration.
-
-For example, if you have a variable ``uint[][5] memory x``, you access the
-seventh ``uint`` in the third dynamic array using ``x[2][6]``, and to access the
-third dynamic array, use ``x[2]``. Again,
-if you have an array ``T[5] a`` for a type ``T`` that can also be an array,
-then ``a[2]`` always has type ``T``.
+Restating the foregoing, a declaration ``X[n][m]`` reads from right to left as
+"an array of length m each member of which is an array of length n each member
+of which is an X"; and reads from left to right as "things of type X which are formed
+into an array of length n which are formed into an array of length m".
 
 Array elements can be of any type, including mapping or struct. The general
 restrictions for types apply, in that mappings can only be stored in the
@@ -130,9 +126,44 @@ restrictions for types apply, in that mappings can only be stored in the
 It is possible to mark state variable arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index becomes a required parameter for the getter.
 
+.. _array_indexing:
+
+Array Indexing
+--------------
+
+Indices are zero-based, and access is in the opposite direction of the
+declaration. In other words, access is similar to other languages such as C.
+
 Accessing an array past its end causes a failing assertion. Methods ``.push()`` and ``.push(value)`` can be used
 to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
 a reference to it.
+
+For example, if you have a variable ``uint[][5] memory x``, you access the
+seventh ``uint`` in the third dynamic array using ``x[2][6]``, and to access the
+third dynamic array, use ``x[2]``. Again, if you have an array ``T[5] a`` for a type
+``T`` that can also be an array, then ``a[2]`` always has type ``T``.
+
+In more detail, contrast the type ``X[n][m]`` with the expression ``x[i][j]``: The latter
+reads right to left as "the j'th element of the i'th element of x"; and reads from left to right
+as "access x's i'th j'th element" or "x is an array of of which the i'th element is an
+array of which the j'th element is accessed."
+
+In other word the [] operator is peeling off or indexing into x's outermost physical dimension.
+``x[i]`` references the i'th thing (zero based) in x. When x is of type ``X[n][m]``, those things
+(thinking of x as a one dimensional array) are of type ``X[n]``. Notionally ``x[i]`` is like
+``(X[n][m])[i]``, where the ``[i]`` peels off the ``[m]`` part. Therefore, further
+indexing that as in ``x[i][j]`` is notionally like ``(X[n])[j]``, peeling of the ``[n]`` part
+and yielding an ``X``.
+
+In brief:
+
+* ``x[i][j]`` is ``(x[i])[j]`` which yields types ``(X[n][m])[i]`` -> ``(X[n])[j]`` -> ``X``
+* ``y = x[i]`` is the i'th ``X[n]``, where 0<i<m
+* y's type is ``X[n]``
+* ``y[j]``, is the j'th member of that particular ``X[n]`` array, where 0<j<n
+* ``x[i][j]`` is ``y[j]``
+* in ``x[i][j]`` the indexes must be 0<i<m && 0<j<n
+
 
 .. index:: ! string, ! bytes
 
