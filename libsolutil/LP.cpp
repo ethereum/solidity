@@ -506,7 +506,7 @@ bool Constraint::operator<(Constraint const& _other) const
 		if (rational diff = data.get(i) - _other.data.get(i))
 			return diff < 0;
 
-	return reasons < _other.reasons;
+	return false;
 }
 
 bool Constraint::operator==(Constraint const& _other) const
@@ -518,7 +518,7 @@ bool Constraint::operator==(Constraint const& _other) const
 		if (data.get(i) != _other.data.get(i))
 			return false;
 
-	return reasons == _other.reasons;
+	return true;
 }
 
 bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState const& _b) const
@@ -912,12 +912,32 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 		}
 		else
 		{
-			LinearExpression objectives;
-			objectives.resize(1);
-			objectives.resize(state.variableNames.size(), rational(bigint(1)));
-			// TODO the model relies on the variable numbering.
-			tie(problem->result, problem->model) = simplex(state.constraints, move(objectives));
+			optional<LPResult> result;
+			if (m_cache)
+			{
+				auto it = m_cache->find(state);
+				if (it != m_cache->end())
+				{
+					//cout << "Cache hit" << endl;
+					result = it->second;
+				}
+			}
+			if (!result)
+			{
+				LinearExpression objectives;
+				objectives.resize(1);
+				objectives.resize(state.variableNames.size(), rational(bigint(1)));
+				// TODO the model relies on the variable numbering.
+				result = LPResult::Unknown;
+				tie(*result, problem->model) = simplex(state.constraints, move(objectives));
+				if (m_cache)
+				{
+					(*m_cache)[state] = *result;
+					//cout << "Cache size " << m_cache->size() << endl;
+				}
+			}
 			problem->dirty = false;
+			problem->result = *result;
 			if (problem->result == LPResult::Infeasible)
 				return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
 		}

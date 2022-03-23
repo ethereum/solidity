@@ -80,7 +80,7 @@ struct SolvingState
 
 	struct Compare
 	{
-		explicit Compare(bool _considerVariableNames = true): considerVariableNames(_considerVariableNames) {}
+		explicit Compare(bool _considerVariableNames = false): considerVariableNames(_considerVariableNames) {}
 		bool operator()(SolvingState const& _a, SolvingState const& _b) const;
 		bool considerVariableNames;
 	};
@@ -179,6 +179,9 @@ class LPSolver
 {
 public:
 	explicit LPSolver(bool _supportModels = true);
+	explicit LPSolver(std::map<SolvingState, LPResult, SolvingState::Compare>* _cache):
+		m_cache(_cache) {}
+
 
 	LPResult setState(SolvingState _state);
 	void addConstraint(Constraint _constraint);
@@ -209,6 +212,8 @@ private:
 	std::vector<size_t> m_subProblemsPerConstraint;
 	/// TODO also store the first infeasible subproblem?
 	/// TODO still retain the cache?
+	std::map<SolvingState, LPResult, SolvingState::Compare>* m_cache = nullptr;
+
 };
 
 }

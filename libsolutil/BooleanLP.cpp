@@ -243,7 +243,7 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	// from previous invocations of the boolean solver, we still have to use
 	// a cache.
 	// The current optimization is only for CDCL.
-	lpSolvers.emplace_back(0, LPSolver{});
+	lpSolvers.emplace_back(0, LPSolver{&m_lpCache});
 	if (
 		lpSolvers.back().second.setState(lpState) == LPResult::Infeasible ||
 		lpSolvers.back().second.check().first == LPResult::Infeasible
