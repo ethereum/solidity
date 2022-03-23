@@ -814,7 +814,7 @@ LPResult LPSolver::setState(SolvingState _state)
 	while (splitter)
 	{
 		auto&& [variables, constraints] = splitter.next();
-		SubProblem& problem = *m_subProblems.emplace_back(SubProblem());
+		SubProblem& problem = *m_subProblems.emplace_back(make_shared<SubProblem>());
 		solAssert(problem.dirty);
 		for (auto&& [i, included]: variables | ranges::views::enumerate)
 			if (included)
@@ -854,13 +854,16 @@ void LPSolver::addConstraint(Constraint _constraint)
 	{
 		//cout << "Creating new sub problem." << endl;
 		// TODO we could find an empty spot for the pointer.
-		m_subProblems.emplace_back(SubProblem());
+		m_subProblems.emplace_back(make_shared<SubProblem>());
 		solAssert(m_subProblems.back()->dirty);
 		touchedProblems.emplace(m_subProblems.size() - 1);
 	}
 	for (size_t problemToErase: touchedProblems | ranges::views::tail | ranges::views::reverse)
 		combineSubProblems(*touchedProblems.begin(), problemToErase);
 	addConstraintToSubProblem(*touchedProblems.begin(), _constraint);
+//	cout << "subproblems: " << (
+//		m_subProblems | ranges::views::transform([&](auto&& p) { return !!p; })).size() <<
+//		" (total: " << m_subProblems.size() << endl;
 	//cout << "done" << endl;
 }
 
@@ -945,6 +948,9 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 
 void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 {
+	//cout << "Combining " << _combineInto << " <- " << _combineFrom << endl;
+	// TOOD creating a copy and setting dirty is on operation.
+	m_subProblems[_combineInto] = make_shared<SubProblem>(*m_subProblems[_combineInto]);
 	m_subProblems[_combineInto]->dirty = true;
 
 	for (size_t& item: m_subProblemsPerVariable)
@@ -960,7 +966,9 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 
 void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constraint)
 {
+	m_subProblems[_subProblem] = make_shared<SubProblem>(*m_subProblems[_subProblem]);
 	SubProblem& problem = *m_subProblems[_subProblem];
+	problem.dirty = true;
 	for (auto const& [index, entry]: _constraint.data.enumerateTail())
 		if (entry)
 		{
@@ -968,7 +976,6 @@ void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constra
 			m_subProblemsPerVariable[index] = _subProblem;
 			problem.variables.emplace(index);
 		}
-	problem.dirty = true;
 	problem.removableConstraints.emplace_back(move(_constraint));
 }
 

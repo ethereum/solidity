@@ -210,7 +210,8 @@ private:
 	ReasonSet reasonSetForSubProblem(SubProblem const& _subProblem);
 
 	std::map<size_t, rational> m_fixedVariables;
-	std::vector<std::optional<SubProblem>> m_subProblems;
+	/// These use "copy on write".
+	std::vector<std::shared_ptr<SubProblem>> m_subProblems;
 	std::vector<size_t> m_subProblemsPerVariable;
 	std::vector<size_t> m_subProblemsPerConstraint;
 	/// TODO also store the first infeasible subproblem?
