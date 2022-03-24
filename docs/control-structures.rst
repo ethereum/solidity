@@ -584,8 +584,9 @@ of an exception instead of "bubbling up".
 .. warning::
     The low-level functions ``call``, ``delegatecall`` and
     ``staticcall`` return ``true`` as their first return value
-    if the account called is non-existent, as part of the design
-    of the EVM. Account existence must be checked prior to calling if needed.
+    if the address called is non-existent or is a precompiled contract address,
+    as part of the design of the EVM. Address existence must be checked
+    prior to calling if needed.
 
 Exceptions can contain error data that is passed back to the caller
 in the form of :ref:`error instances <errors>`.
