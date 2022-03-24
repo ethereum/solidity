@@ -123,7 +123,7 @@ private:
 	/// Stack of state, to allow for push()/pop().
 	std::vector<State> m_state{{State{}}};
 
-	std::map<SolvingState, LPResult, SolvingState::Compare> m_lpCache;
+	std::unordered_map<SolvingState, LPResult> m_lpCache;
 
 };
 

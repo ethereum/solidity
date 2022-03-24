@@ -504,7 +504,11 @@ bool Constraint::operator<(Constraint const& _other) const
 
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
 		if (rational diff = data.get(i) - _other.data.get(i))
+		{
+			//cout << "Exit after " << i << endl;
 			return diff < 0;
+		}
+	//cout << "full traversal of " << max(data.size(), _other.data.size()) << endl;
 
 	return false;
 }
@@ -516,7 +520,11 @@ bool Constraint::operator==(Constraint const& _other) const
 
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
 		if (data.get(i) != _other.data.get(i))
+		{
+			//cout << "Exit after " << i << endl;
 			return false;
+		}
+	//cout << "full traversal of " << max(data.size(), _other.data.size()) << endl;
 
 	return true;
 }
