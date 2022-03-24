@@ -111,7 +111,7 @@ the operands, division on integers always results in an integer.
 In Solidity, division rounds towards zero. This means that ``int256(-5) / int256(2) == int256(-2)``.
 
 Note that in contrast, division on :ref:`literals<rational_literals>` results in fractional values
-of arbitrary precision.
+of arbitrary precision. Here, the word "arbitrary" means "any" or "unlimited."
 
 .. note::
   Division by zero causes a :ref:`Panic error<assert-and-require>`. This check can **not** be disabled through ``unchecked { ... }``.
@@ -465,7 +465,9 @@ the underscores are ignored.
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
 using them together with anything other than a number literal expression (like boolean literals) or by explicit conversion).
 This means that computations do not overflow and divisions do not truncate
-in number literal expressions.
+in number literal expressions. One way to achieve this is to represent fractional rational numbers as
+quotients of integers, converting to limited precision only when necessary (such as when assigning to a
+value type variable).
 
 For example, ``(2**800 + 1) - 2**800`` results in the constant ``1`` (of type ``uint8``)
 although intermediate results would not even fit the machine word size. Furthermore, ``.5 * 8`` results
@@ -494,21 +496,22 @@ regardless of the type of the right (exponent) operand.
     Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
-    Solidity has a number literal type for each rational number.
-    Integer literals and rational number literals belong to number literal types.
+    In solidity, rational numbers and integers expressed as literals are of number literal type.
     Moreover, all number literal expressions (i.e. the expressions that
-    contain only number literals and operators) belong to number literal
-    types.  So the number literal expressions ``1 + 2`` and ``2 + 1`` both
-    belong to the same number literal type for the rational number three.
+    contain only number literals and operators) are of number literal
+    type.  The number literal expressions ``1 + 2`` and ``2 + 1`` are both
+    of number literal type, just the same as ``3``. Technically speaking, the internal representation
+    for fractional rational numbers like ``1.5`` is different than that of ``3``, specifically to support
+    arbitrary precision. However, all number literals are treated as effectively the same type.
 
 
 .. note::
     Number literal expressions are converted into a non-literal type as soon as they are used with non-literal
-    expressions. Disregarding types, the value of the expression assigned to ``b``
-    below evaluates to an integer. Because ``a`` is of type ``uint128``, the
-    expression ``2.5 + a`` has to have a proper type, though. Since there is no common type
-    for the type of ``2.5`` and ``uint128``, the Solidity compiler does not accept
-    this code.
+    expressions. If not for type conversion considerations, when ``a=1`` the value of the expression ``2.5 + a + 0.5``
+    would be the integer ``4``. However, ``a`` is of type ``uint128``. Therefore, an implicit conversion to a non-literal
+    type must occur when evaluating the first part of the expression ``2.5 + a``. Since there is no such conversion
+    between the types of ``2.5`` (a fractional rational literal number type) and ``uint128`` (an unsigned integer
+    value type), the Solidity compiler does not accept this code.  See :ref:Operators<operator>
 
 .. code-block:: solidity
 
