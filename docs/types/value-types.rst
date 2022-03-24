@@ -708,8 +708,10 @@ type with 18 decimals and a minimal library to do arithmetic operations on the t
 
 Notice how ``UFixed256x18.wrap`` and ``FixedMath.toUFixed256x18`` have the same signature but
 perform two very different operations: The ``UFixed256x18.wrap`` function returns a ``UFixed256x18``
-that has the same data representation as the input, whereas ``toUFixed256x18`` returns a
-``UFixed256x18`` that has the same numerical value.
+that has the same data representation and literal integer value as the input, whereas
+``toUFixed256x18`` returns a ``UFixed256x18`` that has a different literal integer value: The scaled
+one value of ``a`` that represents the same number of use with the arithmetic functions defined in
+the library. ``wrap`` is used within the library to store these scaled values without further scaling.
 
 .. index:: ! function type, ! type; function
 
