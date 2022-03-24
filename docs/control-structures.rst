@@ -532,7 +532,7 @@ a failing assertion.
 The ``unchecked`` block can be used everywhere inside a block, but not as a replacement
 for a block. It also cannot be nested.
 
-The setting only affects the statements that are syntactically inside the block.
+The setting only affects the statements that are lexically inside the block.
 Functions called from within an ``unchecked`` block do not inherit the property.
 
 .. note::
