@@ -284,7 +284,7 @@ private:
 	SolvingState stateFromSubProblem(size_t _index) const;
 	ReasonSet reasonSetForSubProblem(SubProblem const& _subProblem);
 
-	std::map<size_t, rational> m_fixedVariables;
+	std::shared_ptr<std::map<size_t, rational>> m_fixedVariables;
 	/// These use "copy on write".
 	std::vector<std::shared_ptr<SubProblem>> m_subProblems;
 	std::vector<size_t> m_subProblemsPerVariable;

@@ -815,7 +815,7 @@ LPResult LPSolver::setState(SolvingState _state)
 
 	// We do not need to store reasons because at this point, we do not have any reasons yet.
 	// We can add this and just need to store the reasons together with the variables.
-	m_fixedVariables = std::get<decltype(m_fixedVariables)>(modelOrReasonSet);
+	m_fixedVariables = make_shared<std::map<size_t, rational>>(std::get<std::map<size_t, rational>>(modelOrReasonSet));
 
 	//cout << "Splitting..." << endl;
 	ProblemSplitter splitter(*m_state);
@@ -848,11 +848,11 @@ void LPSolver::addConstraint(Constraint _constraint)
 	for (auto const& [index, entry]: _constraint.data.enumerateTail())
 		if (entry)
 		{
-			if (m_fixedVariables.count(index))
+			if (m_fixedVariables->count(index))
 			{
 				// This can directly lead to a conflict. We will check it later during the
 				// simplify run on the split problems.
-				_constraint.data[0] -= _constraint.data[index] * m_fixedVariables.at(index);
+				_constraint.data[0] -= _constraint.data[index] * m_fixedVariables->at(index);
 				_constraint.data[index] = {};
 			}
 			else if (m_subProblemsPerVariable[index] != static_cast<size_t>(-1))
