@@ -480,7 +480,9 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 	solAssert(isOrdinary(), "");
 	solAssert(!libraryFunction(), "");
 
-	FunctionType const* functionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
+	// We actually do not want the externally callable function here.
+	// This is just to add an assertion since the comparison used to be less strict.
+	FunctionType const* externalFunctionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
 
 	bool foundSearchStart = (_searchStart == nullptr);
 	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
@@ -495,9 +497,12 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 				// With super lookup analysis guarantees that there is an implemented function in the chain.
 				// With virtual lookup there are valid cases where returning an unimplemented one is fine.
 				(function->isImplemented() || _searchStart == nullptr) &&
-				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(*functionType)
+				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(*externalFunctionType)
 			)
+			{
+				solAssert(FunctionType(*function).hasEqualParameterTypes(*TypeProvider::function(*this)));
 				return *function;
+			}
 	}
 
 	solAssert(false, "Virtual function " + name() + " not found.");

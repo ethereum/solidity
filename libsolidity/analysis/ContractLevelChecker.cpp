@@ -39,7 +39,7 @@ namespace
 {
 
 template <class T, class B>
-bool hasEqualParameters(T const& _a, B const& _b)
+bool hasEqualExternalCallableParameters(T const& _a, B const& _b)
 {
 	return FunctionType(_a).asExternallyCallableFunction(false)->hasEqualParameterTypes(
 		*FunctionType(_b).asExternallyCallableFunction(false)
@@ -204,7 +204,7 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (hasEqualParameters(*overloads[i], *overloads[j]))
+				if (hasEqualExternalCallableParameters(*overloads[i], *overloads[j]))
 				{
 					solAssert(
 						(

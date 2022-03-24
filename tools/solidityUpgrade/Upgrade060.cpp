@@ -72,7 +72,7 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 			{
 				auto& super = (*begin);
 				auto functionType = FunctionType(*function).asExternallyCallableFunction(false);
-				auto superType = super.functionType()->asExternallyCallableFunction(false);
+				auto superType = super.externalFunctionType();
 
 				if (functionType && functionType->hasEqualParameterTypes(*superType))
 				{
