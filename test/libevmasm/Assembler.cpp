@@ -56,7 +56,8 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
 	map<string, unsigned> indices = {
 		{ "root.asm", 0 },
-		{ "sub.asm", 1 }
+		{ "sub.asm", 1 },
+		{ "verbatim.asm", 2 }
 	};
 	Assembly _assembly{false, {}};
 	auto root_asm = make_shared<string>("root.asm");
@@ -65,10 +66,21 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	Assembly _subAsm{false, {}};
 	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
+
+	Assembly _verbatimAsm(true, "");
+	auto verbatim_asm = make_shared<string>("verbatim.asm");
+	_verbatimAsm.setSourceLocation({8, 18, verbatim_asm});
+
 	// PushImmutable
 	_subAsm.appendImmutable("someImmutable");
+	_subAsm.append(AssemblyItem(PushTag, 0));
 	_subAsm.append(Instruction::INVALID);
 	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
+
+	_verbatimAsm.appendVerbatim({0xff,0xff}, 0, 0);
+	_verbatimAsm.appendVerbatim({0x74, 0x65, 0x73, 0x74}, 0, 1);
+	_verbatimAsm.append(Instruction::MSTORE);
+	shared_ptr<Assembly> _verbatimAsmPtr = make_shared<Assembly>(_verbatimAsm);
 
 	// Tag
 	auto tag = _assembly.newTag();
@@ -77,7 +89,10 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	_assembly.append(u256(1));
 	_assembly.append(u256(2));
 	// Push
-	_assembly.append(Instruction::KECCAK256);
+	auto keccak256 = AssemblyItem(Instruction::KECCAK256);
+	_assembly.m_currentModifierDepth = 1;
+	_assembly.append(keccak256);
+	_assembly.m_currentModifierDepth = 0;
 	// PushProgramSize
 	_assembly.appendProgramSize();
 	// PushLibraryAddress
@@ -90,6 +105,10 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	auto sub = _assembly.appendSubroutine(_subAsmPtr);
 	// PushSub
 	_assembly.pushSubroutineOffset(static_cast<size_t>(sub.data()));
+	// PushSubSize
+	auto verbatim_sub = _assembly.appendSubroutine(_verbatimAsmPtr);
+	// PushSub
+	_assembly.pushSubroutineOffset(static_cast<size_t>(verbatim_sub.data()));
 	// PushDeployTimeAddress
 	_assembly.append(PushDeployTimeAddress);
 	// AssignImmutable.
@@ -102,16 +121,21 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	_assembly.appendToAuxiliaryData(bytes{0x42, 0x66});
 	_assembly.appendToAuxiliaryData(bytes{0xee, 0xaa});
 
+	_assembly.m_currentModifierDepth = 2;
+	_assembly.appendJump(tag);
+	_assembly.m_currentModifierDepth = 0;
+
 	checkCompilation(_assembly);
 
 	BOOST_CHECK_EQUAL(
 		_assembly.assemble().toHex(),
-		"5b6001600220606f73__$bf005014d9d0f534b8fcb268bd84c491a2$__"
-		"6000566067602260457300000000000000000000000000000000000000005050"
+		"5b6001600220607f73__$bf005014d9d0f534b8fcb268bd84c491a2$__"
+		"60005660776024604c600760707300000000000000000000000000000000000000005050"
 		"600260010152"
-		"00fe"
+		"006000"
+		"56fe"
 		"7f0000000000000000000000000000000000000000000000000000000000000000"
-		"fe010203044266eeaa"
+		"6000feffff7465737452010203044266eeaa"
 	);
 	BOOST_CHECK_EQUAL(
 		_assembly.assemblyString(),
@@ -124,30 +148,40 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"  data_a6885b3731702da62e8e4a8f584ac46a7f6822f4e2ba50fba902f67b1588d23b\n"
 		"  dataSize(sub_0)\n"
 		"  dataOffset(sub_0)\n"
+		"  dataSize(sub_1)\n"
+		"  dataOffset(sub_1)\n"
 		"  deployTimeAddress()\n"
 		"  assignImmutable(\"0xc3978657661c4d8e32e3d5f42597c009f0d3859e9f9d0d94325268f9799e2bfb\")\n"
 		"  0x02\n"
 		"  assignImmutable(\"0x26f2c0195e9d408feff3abd77d83f2971f3c9a18d1e8a9437c7835ae4211fc9f\")\n"
 		"  stop\n"
+		"  jump(tag_1)\n"
 		"stop\n"
 		"data_a6885b3731702da62e8e4a8f584ac46a7f6822f4e2ba50fba902f67b1588d23b 01020304\n"
 		"\n"
 		"sub_0: assembly {\n"
 		"        /* \"sub.asm\":6:8   */\n"
 		"      immutable(\"0x26f2c0195e9d408feff3abd77d83f2971f3c9a18d1e8a9437c7835ae4211fc9f\")\n"
+		"      tag_0\n"
 		"      invalid\n"
+		"}\n"
+		"\n"
+		"sub_1: assembly {\n"
+		"        /* \"verbatim.asm\":8:18   */\n"
+		"      verbatimbytecode_ffff\n"
+		"      verbatimbytecode_74657374\n"
+		"      mstore\n"
 		"}\n"
 		"\n"
 		"auxdata: 0x4266eeaa\n"
 	);
-	BOOST_CHECK_EQUAL(
-		util::jsonCompactPrint(_assembly.assemblyJSON(indices)),
+	string json{
 		"{\".auxdata\":\"4266eeaa\",\".code\":["
 		"{\"begin\":1,\"end\":3,\"name\":\"tag\",\"source\":0,\"value\":\"1\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\",\"source\":0},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"1\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"2\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"KECCAK256\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"modifierDepth\":1,\"name\":\"KECCAK256\",\"source\":0},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSHSIZE\",\"source\":0},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSHLIB\",\"source\":0,\"value\":\"someLibrary\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [tag]\",\"source\":0,\"value\":\"1\"},"
@@ -155,16 +189,28 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH data\",\"source\":0,\"value\":\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH #[$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH #[$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000001\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000001\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSHDEPLOYADDRESS\",\"source\":0},"
 		"{\"begin\":1,\"end\":3,\"name\":\"ASSIGNIMMUTABLE\",\"source\":0,\"value\":\"someOtherImmutable\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"2\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"ASSIGNIMMUTABLE\",\"source\":0,\"value\":\"someImmutable\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"STOP\",\"source\":0}"
+		"{\"begin\":1,\"end\":3,\"name\":\"STOP\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"modifierDepth\":2,\"name\":\"PUSH [tag]\",\"source\":0,\"value\":\"1\"},{\"begin\":1,\"end\":3,\"modifierDepth\":2,\"name\":\"JUMP\",\"source\":0}"
 		"],\".data\":{\"0\":{\".code\":["
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"},"
+		"{\"begin\":6,\"end\":8,\"name\":\"PUSH [ErrorTag]\",\"source\":1},"
 		"{\"begin\":6,\"end\":8,\"name\":\"INVALID\",\"source\":1}"
-		"]},\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"}}"
-	);
+		"]},"
+		"\"1\":{\".code\":["
+		"{\"begin\":8,\"end\":18,\"name\":\"VERBATIM\",\"source\":2,\"value\":\"ffff\"},"
+		"{\"begin\":8,\"end\":18,\"name\":\"VERBATIM\",\"source\":2,\"value\":\"74657374\"},"
+		"{\"begin\":8,\"end\":18,\"name\":\"MSTORE\",\"source\":2}"
+		"]},\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"},\"sourceList\":[\"root.asm\",\"sub.asm\",\"verbatim.asm\"]}"
+	};
+	Json::Value jsonValue;
+	BOOST_CHECK(util::jsonParseStrict(json, jsonValue));
+	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assembly.assemblyJSON(indices)), util::jsonCompactPrint(jsonValue));
 }
 
 BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
@@ -343,7 +389,7 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someOtherImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"}"
-		"]}}}"
+		"]}},\"sourceList\":[\"root.asm\",\"sub.asm\"]}"
 	);
 }
 

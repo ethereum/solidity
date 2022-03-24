@@ -21,6 +21,7 @@
 #include <libevmasm/Assembly.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/CommonIO.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/FixedHash.h>
@@ -35,6 +36,18 @@ using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
 static_assert(sizeof(size_t) <= 8, "size_t must be at most 64-bits wide");
+
+namespace
+{
+
+string toStringInHex(u256 _value)
+{
+	std::stringstream hexStr;
+	hexStr << std::uppercase << hex << _value;
+	return hexStr.str();
+}
+
+}
 
 AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 {
@@ -54,6 +67,44 @@ pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 	size_t subId = static_cast<size_t>((combined >> 64) - 1);
 	size_t tag = static_cast<size_t>(combined & 0xffffffffffffffffULL);
 	return make_pair(subId, tag);
+}
+
+pair<string, string> AssemblyItem::nameAndData() const
+{
+	switch (type())
+	{
+	case Operation:
+		return {instructionInfo(instruction()).name, m_data != nullptr ? toStringInHex(*m_data) : ""};
+	case Push:
+		return {"PUSH", toStringInHex(data())};
+	case PushTag:
+		if (data() == 0)
+			return {"PUSH [ErrorTag]", ""};
+		else
+			return {"PUSH [tag]", util::toString(data())};
+	case PushSub:
+		return {"PUSH [$]", toString(util::h256(data()))};
+	case PushSubSize:
+		return {"PUSH #[$]", toString(util::h256(data()))};
+	case PushProgramSize:
+		return {"PUSHSIZE", ""};
+	case PushLibraryAddress:
+		return {"PUSHLIB", toString(util::h256(data()))};
+	case PushDeployTimeAddress:
+		return {"PUSHDEPLOYADDRESS", ""};
+	case PushImmutable:
+		return {"PUSHIMMUTABLE", toString(util::h256(data()))};
+	case AssignImmutable:
+		return {"ASSIGNIMMUTABLE", toString(util::h256(data()))};
+	case Tag:
+		return {"tag", util::toString(data())};
+	case PushData:
+		return {"PUSH data", toStringInHex(data())};
+	case VerbatimBytecode:
+		return {"VERBATIM", util::toHex(verbatimData())};
+	default:
+		assertThrow(false, InvalidOpcode, "");
+	}
 }
 
 void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)

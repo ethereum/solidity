@@ -450,9 +450,9 @@ EVM assembly:
         {
           "begin": 77,
           "end": 158,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 0,
-          "value": "[in]"
+          "source": 0
         },
         {
           "begin": 77,
@@ -477,9 +477,9 @@ EVM assembly:
         {
           "begin": 77,
           "end": 158,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 0,
-          "value": "[in]"
+          "source": 0
         },
         {
           "begin": 77,
@@ -555,9 +555,9 @@ EVM assembly:
         {
           "begin": 118,
           "end": 125,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 0,
-          "value": "[in]"
+          "source": 0
         },
         {
           "begin": 118,
@@ -657,9 +657,9 @@ EVM assembly:
         {
           "begin": 77,
           "end": 158,
+          "jumpType": "[out]",
           "name": "JUMP",
-          "source": 0,
-          "value": "[out]"
+          "source": 0
         },
         {
           "begin": 88,
@@ -752,9 +752,9 @@ EVM assembly:
         {
           "begin": 334,
           "end": 411,
+          "jumpType": "[out]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[out]"
+          "source": 1
         },
         {
           "begin": 417,
@@ -792,9 +792,9 @@ EVM assembly:
         {
           "begin": 490,
           "end": 514,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[in]"
+          "source": 1
         },
         {
           "begin": 490,
@@ -875,9 +875,9 @@ EVM assembly:
         {
           "begin": 417,
           "end": 539,
+          "jumpType": "[out]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[out]"
+          "source": 1
         },
         {
           "begin": 545,
@@ -946,9 +946,9 @@ EVM assembly:
         {
           "begin": 645,
           "end": 678,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[in]"
+          "source": 1
         },
         {
           "begin": 645,
@@ -990,9 +990,9 @@ EVM assembly:
         {
           "begin": 545,
           "end": 684,
+          "jumpType": "[out]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[out]"
+          "source": 1
         },
         {
           "begin": 690,
@@ -1081,9 +1081,9 @@ EVM assembly:
         {
           "begin": 804,
           "end": 883,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[in]"
+          "source": 1
         },
         {
           "begin": 804,
@@ -1159,9 +1159,9 @@ EVM assembly:
         {
           "begin": 949,
           "end": 1002,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[in]"
+          "source": 1
         },
         {
           "begin": 949,
@@ -1221,9 +1221,9 @@ EVM assembly:
         {
           "begin": 690,
           "end": 1019,
+          "jumpType": "[out]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[out]"
+          "source": 1
         },
         {
           "begin": 1025,
@@ -1341,9 +1341,9 @@ EVM assembly:
         {
           "begin": 1270,
           "end": 1290,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[in]"
+          "source": 1
         },
         {
           "begin": 1270,
@@ -1393,9 +1393,9 @@ EVM assembly:
         {
           "begin": 1304,
           "end": 1324,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[in]"
+          "source": 1
         },
         {
           "begin": 1304,
@@ -1489,9 +1489,9 @@ EVM assembly:
         {
           "begin": 1464,
           "end": 1482,
+          "jumpType": "[in]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[in]"
+          "source": 1
         },
         {
           "begin": 1464,
@@ -1576,11 +1576,16 @@ EVM assembly:
         {
           "begin": 1211,
           "end": 1516,
+          "jumpType": "[out]",
           "name": "JUMP",
-          "source": 1,
-          "value": "[out]"
+          "source": 1
         }
       ]
     }
-  }
+  },
+  "sourceList":
+  [
+    "asm_json/input.sol",
+    "#utility.yul"
+  ]
 }
