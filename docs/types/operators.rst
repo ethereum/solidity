@@ -20,6 +20,9 @@ In case one of the operands is a :ref:`literal number <rational_literals>` it is
 (unsigned types of the same bit-width are considered "smaller" than the signed types).
 If both are literal numbers, the operation is computed with arbitrary precision.
 
+Certain imipicit conversions between number types are disallowed, such as implicit
+conversions between fractional rational literals and fixed point value types.
+
 The operator's result type is the same as the type the operation is performed in,
 except for comparison operators where the result is always ``bool``.
 
@@ -41,7 +44,8 @@ and 256 exceeds the range allowed for this type.
 
 Another consequence is that an expression like ``1.5 + 1.5`` is valid but ``1.5 + (true ? 1.5 : 2.5)`` is not.
 This is because the former is a rational expression evaluated in unlimited precision and only its final value matters.
-The latter involves a conversion of a fractional rational number to an integer, which is currently disallowed.
+The latter involves a conversion of a fractional rational number to an unsigned fixed point type (``ufixed8x1``, the
+minimal type that fits ``1.5``). This is a disallowed implicit conversion as mentioned above.
 
 .. index:: assignment, lvalue, ! compound operators
 
