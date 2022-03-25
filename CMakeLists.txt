@@ -57,6 +57,7 @@ include(EthCcache)
 
 # Let's find our dependencies
 include(EthDependencies)
+find_package(Boost REQUIRED COMPONENTS filesystem system unit_test_framework program_options)
 find_package(fmt CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(range-v3 CONFIG REQUIRED)

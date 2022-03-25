@@ -29,7 +29,8 @@
 #pragma warning(push)
 #pragma warning(disable:4535) // calling _set_se_translator requires /EHa
 #endif
-#include <boost/test/unit_test.hpp>
+#define BOOST_TEST_NO_MAIN
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/tree/traverse.hpp>
 #if defined(_MSC_VER)
 #pragma warning(pop)
@@ -217,11 +218,7 @@ void initializeOptions()
 
 }
 
-// TODO: Prototype -- why isn't this declared in the boost headers?
-// TODO: replace this with a (global) fixture.
-test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] );
-
-test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
+test_suite* solidity_init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	using namespace solidity::test;
 
@@ -291,17 +288,11 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	return nullptr;
 }
 
-// BOOST_TEST_DYN_LINK should be defined if user want to link against shared boost test library
-#ifdef BOOST_TEST_DYN_LINK
-
 // Because we want to have customized initialization function and support shared boost libraries at the same time,
 // we are forced to customize the entry point.
 // see: https://www.boost.org/doc/libs/1_67_0/libs/test/doc/html/boost_test/adv_scenarios/shared_lib_customizations/init_func.html
 
 int main(int argc, char* argv[])
 {
-	auto init_unit_test = []() -> bool { init_unit_test_suite(0, nullptr); return true; };
-	return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+	return ::boost::unit_test::unit_test_main(solidity_init_unit_test_suite, argc, argv);
 }
-
-#endif

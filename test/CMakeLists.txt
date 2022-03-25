@@ -201,7 +201,7 @@ add_executable(soltest ${sources}
     ${solcli_sources}
     ${yul_phaser_sources}
 )
-target_link_libraries(soltest PRIVATE solcli libsolc yul solidity smtutil solutil phaser Boost::boost yulInterpreter evmasm Boost::filesystem Boost::program_options Boost::unit_test_framework evmc)
+target_link_libraries(soltest PRIVATE solcli libsolc yul solidity smtutil solutil phaser Boost::boost yulInterpreter evmasm Boost::filesystem Boost::program_options evmc)
 
 
 # Special compilation flag for Visual Studio (version 2019 at least affected)
