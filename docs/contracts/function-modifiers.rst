@@ -109,7 +109,17 @@ Multiple modifiers are applied to a function by specifying them in a
 whitespace-separated list and are evaluated in the order presented.
 
 Modifiers cannot implicitly access or change the arguments and return values of functions they modify.
-Their values can only be passed to them explicitly at the point of invocation.
+Those identifiers can, however, be used to explicitly pass them into the modifier as its arguments.
+When one of those values happens to be a complex value reference type, the modified members of the referenced
+value will of course be visible to all accessors of the referenced item, including the modified function and
+the scope it ultimately returns to.
+
+The reference itself and items that are non-reference value types follow the usual rules: The
+visibility of changes to them is limited to the lexical scope of the modifier function. You
+can think of the called function as shadowing the symbol of the same name. Note that
+as a consequence, that means changes to the value made within the
+``_;`` (i.e. the modified function) are not visible within the modifier function, even
+after the ``_;``.
 
 Explicit returns from a modifier or function body only leave the current
 modifier or function body. Return variables are assigned and
@@ -127,7 +137,12 @@ body.
 The ``_`` symbol can appear in the modifier multiple times. Each occurrence is replaced with
 the function body.
 
-Arbitrary expressions are allowed for modifier arguments and in this context,
-all symbols visible from the function are visible in the modifier. Symbols
-introduced in the modifier are not visible in the function (as they might
-change by overriding).
+Arbitrary expressions are allowed for modifier arguments and in the context of supplying
+those arguments (e.g., as in here within ``function () pure public someModifier(here) { ... }`` )
+all symbols visible from the function that are not local to the function,
+are visible in the modifier, plus the declared calling parameters and its declared return variable.
+Put another way, the available symbols are those visible at the declaration site of the modified
+function.
+
+Symbols introduced in the modifir are not visible
+in the function (as they might change by overriding).
