@@ -11,6 +11,8 @@ contract C {
             pop(callvalue())
             pop(extcodesize(0))
             extcodecopy(0, 1, 2, 3)
+            pop(returndatasize())
+            returndatacopy(0, 1, 2)
             pop(extcodehash(0))
             pop(create(0, 1, 2))
             pop(create2(0, 1, 2, 3))
@@ -44,7 +46,7 @@ contract C {
 // ====
 // EVMVersion: >=london
 // ----
-// Warning 5740: (672-1083): Unreachable code.
+// Warning 5740: (742-1153): Unreachable code.
 // TypeError 2527: (79-87): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
 // TypeError 8961: (101-113): Function cannot be declared as pure because this expression (potentially) modifies the state.
 // TypeError 2527: (130-135): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
@@ -55,26 +57,28 @@ contract C {
 // TypeError 2527: (265-276): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
 // TypeError 2527: (294-308): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
 // TypeError 2527: (322-345): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (362-376): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 8961: (394-409): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (427-446): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (464-489): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (507-536): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (554-584): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 2527: (602-630): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 8961: (644-659): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (672-682): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (695-708): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (721-737): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (750-769): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 8961: (782-804): Function cannot be declared as pure because this expression (potentially) modifies the state.
-// TypeError 2527: (821-830): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (848-857): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (875-883): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (901-911): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (929-941): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (959-969): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (987-998): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (1016-1024): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (1042-1054): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (1072-1082): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (362-378): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (392-415): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (432-446): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 8961: (464-479): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (497-516): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (534-559): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (577-606): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (624-654): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 2527: (672-700): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 8961: (714-729): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (742-752): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (765-778): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (791-807): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (820-839): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 8961: (852-874): Function cannot be declared as pure because this expression (potentially) modifies the state.
+// TypeError 2527: (891-900): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (918-927): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (945-953): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (971-981): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (999-1011): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (1029-1039): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (1057-1068): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (1086-1094): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (1112-1124): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (1142-1152): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".

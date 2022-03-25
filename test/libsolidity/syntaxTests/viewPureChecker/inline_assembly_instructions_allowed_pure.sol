@@ -47,8 +47,8 @@ contract C {
             codecopy(0, 1, 2)
             //pop(extcodesize(0))
             //extcodecopy(0, 1, 2, 3)
-            pop(returndatasize())
-            returndatacopy(0, 1, 2)
+            //pop(returndatasize())
+            //returndatacopy(0, 1, 2)
             //pop(extcodehash(0))
             //pop(create(0, 1, 2))
             //pop(create2(0, 1, 2, 3))
@@ -85,6 +85,6 @@ contract C {
 // ====
 // EVMVersion: >=london
 // ----
-// Warning 5740: (94-1755): Unreachable code.
-// Warning 5740: (1768-1780): Unreachable code.
-// Warning 5740: (1823-1832): Unreachable code.
+// Warning 5740: (94-1759): Unreachable code.
+// Warning 5740: (1772-1784): Unreachable code.
+// Warning 5740: (1827-1836): Unreachable code.

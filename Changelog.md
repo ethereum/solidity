@@ -12,6 +12,7 @@ Compiler Features:
 Bugfixes:
 * Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
 * TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
+* View Pure Checker: Mark ``returndatasize`` and ``returndatacopy`` as view to disallow them in inline assembly blocks in pure functions.
 
 
 
