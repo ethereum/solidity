@@ -2,7 +2,7 @@
 set -ex
 
 apt-get update
-apt-get install curl zip unzip tar
+apt-get install -y curl zip unzip tar
 git submodule update --init --recursive
 
 ROOTDIR="/root/project"
