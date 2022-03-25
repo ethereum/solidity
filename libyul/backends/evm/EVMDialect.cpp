@@ -71,7 +71,7 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 			f.controlFlowSideEffects.canRevert = false;
 		}
 	}
-	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
+	f.isMSize = _instruction == evmasm::Instruction::_MSIZE;
 	f.literalArguments.clear();
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](

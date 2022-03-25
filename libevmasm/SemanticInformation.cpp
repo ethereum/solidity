@@ -141,7 +141,7 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 			Operation{Location::Storage, Effect::Read, {}, {}, {}},
 			Operation{Location::Storage, Effect::Write, {}, {}, {}}
 		};
-	case Instruction::MSIZE:
+	case Instruction::_MSIZE:
 		// This is just to satisfy the assert below.
 		return vector<Operation>{};
 	default:
@@ -176,7 +176,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 			return false;
 		if (_item.instruction() == Instruction::GAS || _item.instruction() == Instruction::PC)
 			return true; // GAS and PC assume a specific order of opcodes
-		if (_item.instruction() == Instruction::MSIZE)
+		if (_item.instruction() == Instruction::_MSIZE)
 			return true; // msize is modified already by memory access, avoid that for now
 		InstructionInfo info = instructionInfo(_item.instruction());
 		if (_item.instruction() == Instruction::SSTORE)
@@ -300,7 +300,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	case Instruction::CREATE2:
 	case Instruction::GAS:
 	case Instruction::PC:
-	case Instruction::MSIZE: // depends on previous writes and reads, not only on content
+	case Instruction::_MSIZE: // depends on previous writes and reads, not only on content
 	case Instruction::BALANCE: // depends on previous calls
 	case Instruction::SELFBALANCE: // depends on previous calls
 	case Instruction::EXTCODESIZE:
@@ -331,7 +331,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	case Instruction::RETURNDATASIZE:
 	case Instruction::SLOAD:
 	case Instruction::PC:
-	case Instruction::MSIZE:
+	case Instruction::_MSIZE:
 	case Instruction::GAS:
 		return false;
 	default:
@@ -376,7 +376,7 @@ SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction
 	case Instruction::CREATE2:
 	case Instruction::KECCAK256:
 	case Instruction::MLOAD:
-	case Instruction::MSIZE:
+	case Instruction::_MSIZE:
 	case Instruction::RETURN:
 	case Instruction::REVERT:
 	case Instruction::LOG0:

@@ -134,7 +134,7 @@ struct EVMBuiltins
 	static auto constexpr SLOAD = PatternGenerator<Instruction::SLOAD>{};
 	static auto constexpr SSTORE = PatternGenerator<Instruction::SSTORE>{};
 	static auto constexpr PC = PatternGenerator<Instruction::PC>{};
-	static auto constexpr MSIZE = PatternGenerator<Instruction::MSIZE>{};
+	static auto constexpr MSIZE = PatternGenerator<Instruction::_MSIZE>{};
 	static auto constexpr GAS = PatternGenerator<Instruction::GAS>{};
 	static auto constexpr LOG0 = PatternGenerator<Instruction::LOG0>{};
 	static auto constexpr LOG1 = PatternGenerator<Instruction::LOG1>{};

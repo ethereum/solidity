@@ -287,7 +287,7 @@ u256 EVMInstructionInterpreter::eval(
 		return 0;
 	case Instruction::PC:
 		return 0x77;
-	case Instruction::MSIZE:
+	case Instruction::_MSIZE:
 		return m_state.msize;
 	case Instruction::GAS:
 		return 0x99;

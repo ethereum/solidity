@@ -426,7 +426,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 			AssemblyItems optimisedItems;
 
 			bool usesMSize = ranges::any_of(m_items, [](AssemblyItem const& _i) {
-				return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+				return _i == AssemblyItem{Instruction::_MSIZE} || _i.type() == VerbatimBytecode;
 			});
 
 			auto iter = m_items.begin();

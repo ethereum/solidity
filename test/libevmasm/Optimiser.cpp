@@ -70,7 +70,7 @@ namespace
 		AssemblyItems input = addDummyLocations(_input);
 
 		bool usesMsize = ranges::any_of(_input, [](AssemblyItem const& _i) {
-			return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+			return _i == AssemblyItem{Instruction::_MSIZE} || _i.type() == VerbatimBytecode;
 		});
 		evmasm::CommonSubexpressionEliminator cse(_state);
 		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
@@ -100,7 +100,7 @@ namespace
 		AssemblyItems optimisedItems;
 
 		bool usesMSize = ranges::any_of(_input, [](AssemblyItem const& _i) {
-			return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+			return _i == AssemblyItem{Instruction::_MSIZE} || _i.type() == VerbatimBytecode;
 		});
 
 		auto iter = _input.begin();

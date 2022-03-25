@@ -98,7 +98,7 @@ enum class Instruction: uint8_t
 	JUMP,				///< alter the program counter
 	JUMPI,				///< conditionally alter the program counter
 	PC,					///< get the program counter
-	MSIZE,				///< get the size of active memory
+	_MSIZE,				///< get the size of active memory
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
 
