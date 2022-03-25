@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "solidity",
+  "version": "0.8.13",
+  "dependencies": [
+    "boost-system",
+    "boost-filesystem",
+    "boost-test",
+    "boost-program-options",
+    "boost-multiprecision",
+    "boost-bimap",
+    "boost-assign",
+    "boost-process",
+    "range-v3",
+    "fmt",
+    "jsoncpp",
+    "z3"
+  ]
+}

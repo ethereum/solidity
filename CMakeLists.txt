@@ -1,5 +1,21 @@
 cmake_minimum_required(VERSION 3.13.0)
 
+#set(vcpkg "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+#if (NOT CMAKE_TOOLCHAIN_FILE)
+#    if (EXISTS "${vcpkg}")
+#        set(CMAKE_TOOLCHAIN_FILE "${vcpkg}"
+#                CACHE FILEPATH "CMake toolchain file")
+#    else()
+#        set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+#                CACHE FILEPATH "CMake toolchain file")
+#    endif()
+#    message(STATUS "vcpkg toolchain found: ${CMAKE_TOOLCHAIN_FILE}")
+#endif ()
+
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CACHE FILEPATH "CMake toolchain file")
+message(STATUS "vcpkg toolchain found: ${CMAKE_TOOLCHAIN_FILE}")
+
 set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/cmake"   CACHE PATH "The the path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
@@ -41,10 +57,9 @@ include(EthCcache)
 
 # Let's find our dependencies
 include(EthDependencies)
-include(fmtlib)
-include(jsoncpp)
-include(range-v3)
-include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+find_package(fmt CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
+find_package(range-v3 CONFIG REQUIRED)
 
 find_package(Threads)
 
