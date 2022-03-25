@@ -481,6 +481,8 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODECOPY:
 	case Instruction::EXTCODEHASH:
+	case Instruction::RETURNDATASIZE:
+	case Instruction::RETURNDATACOPY:
 	case Instruction::BLOCKHASH:
 	case Instruction::COINBASE:
 	case Instruction::TIMESTAMP:

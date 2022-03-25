@@ -1,5 +1,5 @@
 contract C {
-    function f() pure external {
+    function f() view external {
         assembly {
             let s := returndatasize()
             returndatacopy(0, 0, s)

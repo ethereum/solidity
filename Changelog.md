@@ -8,6 +8,7 @@ Breaking changes:
  * Commandline Interface: Remapping targets are not automatically added to allowed paths.
  * Commandline Interface: Assembler mode no longer enables all outputs by default.
  * General: The identifier ``basefee`` is a reserved identifier in Yul for all EVM versions.
+ * View Pure Checker: Mark ``returndatasize`` and ``returndatacopy`` as view to disallow them in inline assembly blocks in pure functions.
 
 
 ### 0.8.15 (unreleased)
