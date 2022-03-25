@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
+git submodule update --init --recursive
+
 ROOTDIR="$(dirname "$0")/../.."
 cd "${ROOTDIR}"
 

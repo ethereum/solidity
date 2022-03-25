@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
+git submodule update --init --recursive
+
 ROOTDIR="/root/project"
 BUILDDIR="${ROOTDIR}/build"
 mkdir -p "${BUILDDIR}" && mkdir -p "$BUILDDIR/deps"

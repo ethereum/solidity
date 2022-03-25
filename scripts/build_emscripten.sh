@@ -28,6 +28,8 @@
 
 set -e
 
+git submodule update --init --recursive
+
 if test -z "$1"; then
     BUILD_DIR="emscripten_build"
 else

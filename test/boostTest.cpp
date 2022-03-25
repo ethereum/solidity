@@ -218,6 +218,8 @@ void initializeOptions()
 
 }
 
+test_suite* solidity_init_unit_test_suite( int /*argc*/, char* /*argv*/[] );
+
 test_suite* solidity_init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	using namespace solidity::test;
