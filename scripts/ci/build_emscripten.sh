@@ -34,6 +34,8 @@
 
 set -ev
 
+apt-get update
+apt-get install curl zip unzip tar
 git submodule update --init --recursive
 
 if test -z "$1"; then

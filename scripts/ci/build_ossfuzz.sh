@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
+apt-get update
+apt-get install curl zip unzip tar
 git submodule update --init --recursive
 
 ROOTDIR="/root/project"
