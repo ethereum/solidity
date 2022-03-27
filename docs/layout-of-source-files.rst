@@ -1,220 +1,207 @@
-********************************
-Layout of a Solidity Source File
-********************************
+**********************
+Solidity 源文件结构
+**********************
 
-Source files can contain an arbitrary number of
-:ref:`contract definitions<contract_structure>`, import_ directives,
-:ref:`pragma directives<pragma>` and
-:ref:`struct<structs>`, :ref:`enum<enums>`, :ref:`function<functions>`, :ref:`error<errors>`
-and :ref:`constant variable<constants>` definitions.
+源文件可以包含任意数量的
+:ref:`contract 定义<contract_structure>`, import_ 指令,
+:ref:`pragma 指令<pragma>` 和 :ref:`struct<structs>`,
+:ref:`enum<enums>`, :ref:`function<functions>`, :ref:`error<errors>`
+以及 :ref:`constant 变量<constants>` 的定义。
 
 .. index:: ! license, spdx
 
-SPDX License Identifier
+SPDX 许可标识符
 =======================
 
-Trust in smart contracts can be better established if their source code
-is available. Since making source code available always touches on legal problems
-with regards to copyright, the Solidity compiler encourages the use
-of machine-readable `SPDX license identifiers <https://spdx.org>`_.
-Every source file should start with a comment indicating its license:
+如果智能合约的源代码是公开的，就可以更好地建立对智能合约的信任。
+由于提供源代码总是涉及到版权方面的法律问题，
+Solidity编译器鼓励使用机器可读的 `SPDX 许可标识符 <https://spdx.org>`_ 。
+每个源文件都应该以一个注释开始，表明其许可证
 
 ``// SPDX-License-Identifier: MIT``
 
-The compiler does not validate that the license is part of the
-`list allowed by SPDX <https://spdx.org/licenses/>`_, but
-it does include the supplied string in the :ref:`bytecode metadata <metadata>`.
+编译器不会验证许可证是否属于 `SPDX许可的列表 <https://spdx.org/licenses/>`_，
+但它确实包括在 :ref:`字节码元数据（bytecode metadata） <metadata>` 提供的字符串中。
 
-If you do not want to specify a license or if the source code is
-not open-source, please use the special value ``UNLICENSED``.
-Note that ``UNLICENSED`` (no usage allowed, not present in SPDX license list)
-is different from ``UNLICENSE`` (grants all rights to everyone).
-Solidity follows `the npm recommendation <https://docs.npmjs.com/cli/v7/configuring-npm/package-json#license>`_.
+如果您不想指定一个许可，或者源代码不是开源的，
+请使用特殊值 ``UNLICENSED``。请注意， ``UNLICENSED`` （不允许使用，
+不存在于SPDX许可证列表中）与 ``UNLICENSED`` （授予所有人所有权利）不同。
+Solidity遵循 `npm 的推荐 <https://docs.npmjs.com/cli/v7/configuring-npm/package-json#license>`_。
 
-Supplying this comment of course does not free you from other
-obligations related to licensing like having to mention
-a specific license header in each source file or the
-original copyright holder.
+提供这个注释并不能使你摆脱与许可有关的其他义务，
+如必须在每个源文件中提到特定的许可头或原始版权人。
 
-The comment is recognized by the compiler anywhere in the file at the
-file level, but it is recommended to put it at the top of the file.
+编译器可以在文件的任何位置识别该注释，
+但建议把它放在文件的顶部。
 
-More information about how to use SPDX license identifiers
-can be found at the `SPDX website <https://spdx.org/ids-how>`_.
+关于如何使用SPDX许可证标识的更多信息可以在 `SPDX 网站 <https://spdx.org/ids-how>`_ 中找到。
 
 
 .. index:: ! pragma
 
 .. _pragma:
 
-Pragmas
-=======
+编译指示
+==========
 
-The ``pragma`` keyword is used to enable certain compiler features
-or checks. A pragma directive is always local to a source file, so
-you have to add the pragma to all your files if you want to enable it
-in your whole project. If you :ref:`import<import>` another file, the pragma
-from that file does *not* automatically apply to the importing file.
+``pragma`` 关键字用于启用某些编译器特性或检查。
+一个 pragma 指令始终是源文件的本地指令，
+所以如果您想在整个项目中使用pragma指令，
+您必须在您的所有文件中添加这个指令。
+如果你 :ref:`import<import>` 另一个文件，
+该文件的pragma指令 *不会* 自动应用于导入文件。
 
 .. index:: ! pragma, version
 
 .. _version_pragma:
 
-Version Pragma
+版本编译指示
 --------------
 
-Source files can (and should) be annotated with a version pragma to reject
-compilation with future compiler versions that might introduce incompatible
-changes. We try to keep these to an absolute minimum and
-introduce them in a way that changes in semantics also require changes
-in the syntax, but this is not always possible. Because of this, it is always
-a good idea to read through the changelog at least for releases that contain
-breaking changes. These releases always have versions of the form
-``0.x.0`` or ``x.0.0``.
+源文件可以（而且应该）用版本pragma指令来注释，
+以拒绝用未来的编译器版本进行编译，因为这可能会引入不兼容的变化。
+我们力图把这类变更做到尽可能小，
+我们需要以一种当修改语义时必须同步修改语法的方式引入变更，
+当然这有时候也难以做到。正因为如此，
+至少在包含重大变化的版本中，通读一下更新日志总是一个好主意。
+这些版本总是有 ``0.x.0`` 或 ``x.0.0`` 形式的版本。
 
-The version pragma is used as follows: ``pragma solidity ^0.5.2;``
+版本编译指示使用如下： ``pragma solidity ^0.5.2;``
 
-A source file with the line above does not compile with a compiler earlier than version 0.5.2,
-and it also does not work on a compiler starting from version 0.6.0 (this
-second condition is added by using ``^``). Because
-there will be no breaking changes until version ``0.6.0``, you can
-be sure that your code compiles the way you intended. The exact version of the
-compiler is not fixed, so that bugfix releases are still possible.
+带有上述代码的源文件在0.5.2版本之前的编译器上不能编译，
+在0.6.0版本之后的编译器上也不能工作（这第二个条件是通过使用 ``^`` 添加的）。
+因为在 ``0.6.0`` 版本之前不会有任何重大的变化，
+所以您可以确信您的代码是按照您的预期编译的。
+上面例子中不固定编译器的具体版本号，因此编译器的补丁版也可以使用。
 
-It is possible to specify more complex rules for the compiler version,
-these follow the same syntax used by `npm <https://docs.npmjs.com/cli/v6/using-npm/semver>`_.
+可以为编译器版本指定更复杂的规则，
+这些规则与 `npm <https://docs.npmjs.com/cli/v6/using-npm/semver>`_ 使用相同的语法。
 
 .. note::
-  Using the version pragma *does not* change the version of the compiler.
-  It also *does not* enable or disable features of the compiler. It just
-  instructs the compiler to check whether its version matches the one
-  required by the pragma. If it does not match, the compiler issues
-  an error.
+  使用版本 pragma指令 *不会* 改变编译器的版本。
+  它也 *不会* 启用或禁用编译器的功能。
+  它只是指示编译器检查它的版本是否与编译指示所要求的版本一致。
+  如果不匹配，编译器会发出一个错误。
 
-ABI Coder Pragma
+
+ABI编码编译指示
 ----------------
 
-By using ``pragma abicoder v1`` or ``pragma abicoder v2`` you can
-select between the two implementations of the ABI encoder and decoder.
+通过使用 ``pragma abicoder v1`` 或 ``pragma abicoder v2`` ，
+您可以选择ABI编码器和解码器的两种实现。
 
-The new ABI coder (v2) is able to encode and decode arbitrarily nested
-arrays and structs. It might produce less optimal code and has not
-received as much testing as the old encoder, but is considered
-non-experimental as of Solidity 0.6.0. You still have to explicitly
-activate it using ``pragma abicoder v2;``. Since it will be
-activated by default starting from Solidity 0.8.0, there is the option to select
-the old coder using ``pragma abicoder v1;``.
+新的ABI编码器（v2）能够对任意的嵌套数组和结构进行编码和解码。
+它可能产生不太理想的代码，并且没有得到像旧编码器那样多的测试，
+但从 Solidity 0.6.0 起，它被认为是非实验性的。
+你仍然必须使用 ``pragma abicoder v2;`` 明确激活它。
+由于它将从Solidity 0.8.0 开始被默认激活，
+所以可以选择使用 ``pragma abicoder v1;`` 来选择旧的编码器。
 
-The set of types supported by the new encoder is a strict superset of
-the ones supported by the old one. Contracts that use it can interact with ones
-that do not without limitations. The reverse is possible only as long as the
-non-``abicoder v2`` contract does not try to make calls that would require
-decoding types only supported by the new encoder. The compiler can detect this
-and will issue an error. Simply enabling ``abicoder v2`` for your contract is
-enough to make the error go away.
+新编码器所支持的类型集是旧编码器所支持的类型的一个严格超集。
+使用新编码器的合约可以与不使用新编码器的合约进行交互，没有任何限制。
+只有当非 ``abicoder v2`` 的合约不试图进行需要解码新编码器支持的类型的调用时，
+才有可能出现相反的情况。
+编译器可以检测到这一点，并会发出一个错误。
+只要为您的合同启用 ``abicoder v2`` ，就足以使错误消失。
 
 .. note::
-  This pragma applies to all the code defined in the file where it is activated,
-  regardless of where that code ends up eventually. This means that a contract
-  whose source file is selected to compile with ABI coder v1
-  can still contain code that uses the new encoder
-  by inheriting it from another contract. This is allowed if the new types are only
-  used internally and not in external function signatures.
+  这个编译指示适用于激活它的文件中定义的所有代码，
+  无论这些代码最终在哪里结束。这意味着，
+  一个合约的源文件被选择用ABI编码器v1编译，
+  它仍然可以包含通过从另一个合约继承来使用新编码器的代码。
+  如果新类型只在内部使用，而不是在外部函数签名中使用，
+  这是被允许的。
 
 .. note::
-  Up to Solidity 0.7.4, it was possible to select the ABI coder v2
-  by using ``pragma experimental ABIEncoderV2``, but it was not possible
-  to explicitly select coder v1 because it was the default.
+  到Solidity 0.7.4为止，可以通过使用 ``pragma experimental ABIEncoderV2``
+  来选择ABI编码器v2，但不可能明确选择编码器v1，因为它是默认的。
 
 .. index:: ! pragma, experimental
 
 .. _experimental_pragma:
 
-Experimental Pragma
+实验性编译指示
 -------------------
 
-The second pragma is the experimental pragma. It can be used to enable
-features of the compiler or language that are not yet enabled by default.
-The following experimental pragmas are currently supported:
+第二个编译指示是实验性的编译指示。
+它可以用来启用编译器或语言中尚未默认启用的功能。
+目前支持以下实验性编译指示：
 
 
-ABIEncoderV2
+ABI编码器V2
 ~~~~~~~~~~~~
 
-Because the ABI coder v2 is not considered experimental anymore,
-it can be selected via ``pragma abicoder v2`` (please see above)
-since Solidity 0.7.4.
+因为ABI编码器v2不再被认为是实验性的，
+它可以通过 ``pragma abicoder v2`` （请见上文）从Solidity 0.7.4开始选择。
 
 .. _smt_checker:
 
-SMTChecker
+SMT检查器
 ~~~~~~~~~~
 
-This component has to be enabled when the Solidity compiler is built
-and therefore it is not available in all Solidity binaries.
-The :ref:`build instructions<smt_solvers_build>` explain how to activate this option.
-It is activated for the Ubuntu PPA releases in most versions,
-but not for the Docker images, Windows binaries or the
-statically-built Linux binaries. It can be activated for solc-js via the
-`smtCallback <https://github.com/ethereum/solc-js#example-usage-with-smtsolver-callback>`_ if you have an SMT solver
-installed locally and run solc-js via node (not via the browser).
+这个组件必须在构建 Solidity 编译器时被启用，
+因此它不是在所有 Solidity 二进制文件中都可用。
+:ref:`构建说明<smt_solvers_build>` 解释了如何激活这个选项。
+它在大多数版本中为 Ubuntu PPA 版本激活，
+但不用于Docker镜像、Windows二进制文件或静态构建的Linux二进制文件。
+如果您在本地安装了SMT检查器并通过节点（而不是通过浏览器）运行solc-js，
+可以通过 `smtCallback <https://github.com/ethereum/solc-js#example-usage with-smtsolver-callback>`_
+为solc-js激活它。
 
-If you use ``pragma experimental SMTChecker;``, then you get additional
-:ref:`safety warnings<formal_verification>` which are obtained by querying an
-SMT solver.
-The component does not yet support all features of the Solidity language and
-likely outputs many warnings. In case it reports unsupported features, the
-analysis may not be fully sound.
+如果您使用 ``pragma experimental SMTChecker;``，
+那么你会得到额外的 :ref:`安全警告<formal_verification>`。
+这些警告是通过查询SMT求解器获得的。
+该组件还不支持Solidity语言的所有功能，可能会输出许多警告。
+如果它报告不支持的功能，那么分析可能不完全正确。
 
 .. index:: source file, ! import, module, source unit
 
 .. _import:
 
-Importing other Source Files
-============================
+导入其他源文件
+==============
 
-Syntax and Semantics
---------------------
+语法与语义
+----------
 
-Solidity supports import statements to help modularise your code that
-are similar to those available in JavaScript
-(from ES6 on). However, Solidity does not support the concept of
-a `default export <https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export#Description>`_.
+Solidity 支持导入语句，以帮助模块化您的代码，
+这些语句与 JavaScript 中可用的语句相似(从ES6开始)。
+然而，Solidity并不支持 `默认导出 <https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export#Description>`_
+的概念。
 
-At a global level, you can use import statements of the following form:
+在全局层面，您可以使用以下形式的导入语句：
 
 .. code-block:: solidity
 
     import "filename";
 
-The ``filename`` part is called an *import path*.
-This statement imports all global symbols from "filename" (and symbols imported there) into the
-current global scope (different than in ES6 but backwards-compatible for Solidity).
-This form is not recommended for use, because it unpredictably pollutes the namespace.
-If you add new top-level items inside "filename", they automatically
-appear in all files that import like this from "filename". It is better to import specific
-symbols explicitly.
+``filename`` 部分被称为 *导入路径*。
+该语句将所有来自 "filename" 的全局符号（以及在那里导入的符号）
+导入到当前的全局范围（与ES6中不同，但对Solidity来说是向后兼容的）。
+这种形式不建议使用，因为它不可预测地污染了命名空间。
+如果您在 "filename" 里面添加新的顶层项目，
+它们会自动出现在所有像这样从 "filename" 导入的文件中。
+最好是明确地导入特定的符号。
 
-The following example creates a new global symbol ``symbolName`` whose members are all
-the global symbols from ``"filename"``:
+下面的例子创建了一个新的全局符号 ``symbolName``，其成员均来自 ``"filename"`` 中全局符号；
 
 .. code-block:: solidity
 
     import * as symbolName from "filename";
 
-which results in all global symbols being available in the format ``symbolName.symbol``.
+这意味着所有全局符号以 ``symbolName.symbol`` 的格式提供。
 
-A variant of this syntax that is not part of ES6, but possibly useful is:
+另一种语法不属于 ES6，但可能是有用的：
 
 .. code-block:: solidity
 
   import "filename" as symbolName;
 
-which is equivalent to ``import * as symbolName from "filename";``.
+这条语句等同于 ``import * as symbolName from "filename";``。
 
-If there is a naming collision, you can rename symbols while importing. For example,
-the code below creates new global symbols ``alias`` and ``symbol2`` which reference
-``symbol1`` and ``symbol2`` from inside ``"filename"``, respectively.
+如果有命名冲突，您可以在导入的同时重命名符号。
+例如，下面的代码创建了新的全局符号 ``alias`` 和 ``symbol2``，
+它们分别从 ``"filename"`` 里面引用 ``symbol1`` 和 ``symbol2``。
 
 .. code-block:: solidity
 
@@ -222,56 +209,50 @@ the code below creates new global symbols ``alias`` and ``symbol2`` which refere
 
 .. index:: virtual filesystem, source unit name, import; path, filesystem path, import callback, Remix IDE
 
-Import Paths
-------------
+导入路径
+---------
 
-In order to be able to support reproducible builds on all platforms, the Solidity compiler has to
-abstract away the details of the filesystem where source files are stored.
-For this reason import paths do not refer directly to files in the host filesystem.
-Instead the compiler maintains an internal database (*virtual filesystem* or *VFS* for short) where
-each source unit is assigned a unique *source unit name* which is an opaque and unstructured identifier.
-The import path specified in an import statement is translated into a source unit name and used to
-find the corresponding source unit in this database.
+为了能够在所有平台上支持可重复的构建，
+Solidity 编译器必须抽象出存储源文件的文件系统的细节。
+由于这个原因，导入路径并不直接指向主机文件系统中的文件。
+相反，编译器维护一个内部数据库（ *虚拟文件系统* 或简称 *VFS* ），
+每个源单元被分配一个唯一的 *源单元名称*，
+这是一个不透明的、非结构化的标识。
+在导入语句中指定的导入路径被转译成源单元名称，并用于在这个数据库中找到相应的源单元。
 
-Using the :ref:`Standard JSON <compiler-api>` API it is possible to directly provide the names and
-content of all the source files as a part of the compiler input.
-In this case source unit names are truly arbitrary.
-If, however, you want the compiler to automatically find and load source code into the VFS, your
-source unit names need to be structured in a way that makes it possible for an :ref:`import callback
-<import-callback>` to locate them.
-When using the command-line compiler the default import callback supports only loading source code
-from the host filesystem, which means that your source unit names must be paths.
-Some environments provide custom callbacks that are more versatile.
-For example the `Remix IDE <https://remix.ethereum.org/>`_ provides one that
-lets you `import files from HTTP, IPFS and Swarm URLs or refer directly to packages in NPM registry
-<https://remix-ide.readthedocs.io/en/latest/import.html>`_.
+使用 :ref:`标准 JSON <compiler-api>` API，
+可以直接提供所有源文件的名称和内容作为编译器输入的一部分。
+在这种情况下，源单元的名称确实是任意的。
+然而，如果你想让编译器自动查找并将源代码加载到VFS中，
+您的源单元名称需要以一种结构化的方式，使 :ref:`回调引用 <import-callback>` 能够定位它们。
+当使用命令行编译器时，默认的回调引用只支持从主机文件系统加载源代码，
+这意味着您的源单元名称必须是路径。一些环境提供了自定义的回调，其用途更广。
+例如， `Remix IDE <https://remix.ethereum.org/>`_ 提供了一个可以让你
+`从HTTP、IPFS和Swarm URL导入文件，或者直接引用NPM注册表中的包 <https://remix-ide.readthedocs.io/en/latest/import.html>`_。
 
-For a complete description of the virtual filesystem and the path resolution logic used by the
-compiler see :ref:`Path Resolution <path-resolution>`.
+关于虚拟文件系统和编译器使用的路径解析逻辑的完整描述，请参见 :ref:`路径解析 <path-resolution>`。
 
 .. index:: ! comment, natspec
 
-Comments
+注释
 ========
 
-Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible.
+可以使用单行注释（ ``//`` ）和多行注释（ ``/*...*/`` ）
 
 .. code-block:: solidity
 
-    // This is a single-line comment.
+    // 这是一个单行注释。
 
     /*
-    This is a
-    multi-line comment.
+    这是一个
+    多行注释。
     */
 
 .. note::
-  A single-line comment is terminated by any unicode line terminator
-  (LF, VF, FF, CR, NEL, LS or PS) in UTF-8 encoding. The terminator is still part of
-  the source code after the comment, so if it is not an ASCII symbol
-  (these are NEL, LS and PS), it will lead to a parser error.
+  单行注释由UTF-8编码中的任何单码行结束符（LF、VF、FF、CR、NEL、LS或PS）结束。
+  终结符在注释之后仍然是源代码的一部分，
+  所以如果它不是一个ASCII符号（这些是NEL、LS和PS），将导致解析器错误。
 
-Additionally, there is another type of comment called a NatSpec comment,
-which is detailed in the :ref:`style guide<style_guide_natspec>`. They are written with a
-triple slash (``///``) or a double asterisk block (``/** ... */``) and
-they should be used directly above function declarations or statements.
+此外，还有一种注释叫做NatSpec注释，在 :ref:`格式指南<style_guide_natspec>` 中详细说明。
+它们用三斜线（ ``///`` ）或双星号块（ ``/** ... */`` ）来写，
+它们应该直接用在函数声明或语句的上方。
