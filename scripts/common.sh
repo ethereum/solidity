@@ -205,6 +205,35 @@ function diff_values
     diff --unified=0 <(echo "$value1") <(echo "$value2") "$@"
 }
 
+function diff_files
+{
+    (( $# >= 2 )) || fail "diff_files requires at least 2 arguments."
+
+    local file1="$1"
+    local file2="$2"
+    shift
+    shift
+
+    diff "${file1}" "${file2}"
+    local res=$?
+    if [[ $res != 0 ]]
+    then
+        if [ "$DIFFVIEW" == "" ]
+        then
+            printError "ERROR: files differ: ${file1} vs. ${file2}"
+            printError "Expected:"
+            cat "${file1}" >&2
+            printError "Obtained:"
+            cat "${file2}" >&2
+        else
+            # Use user supplied diff view binary
+            "$DIFFVIEW" "${file1}" "${file2}"
+        fi
+        return 1
+    fi
+    return 0
+}
+
 function safe_kill
 {
     local PID=${1}
@@ -277,3 +306,14 @@ function split_on_empty_lines_into_numbered_files
 
     awk -v RS= "{print > (\"${path_prefix}_\"NR \"${path_suffix}\")}"
 }
+
+function check_executable
+{
+    local program="$1"
+    local parameters=${*:2}
+    if ! "${program}" "${parameters}" > /dev/null 2>&1
+    then
+        fail "'${program}' not found or not executed successfully with parameter(s) '${parameters}'. aborting."
+    fi
+}
+
