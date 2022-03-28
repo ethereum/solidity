@@ -122,9 +122,10 @@ Details are given in the following example.
         uint info;
     }
 
-Note that above, we call ``Destructible.destroy()`` to "forward" the
-destruction request. The way this is done is problematic, as
-seen in the following example:
+Note that above, ``Named`` calls ``Destructible.destroy()`` to "forward" the
+destruction request. However, the code in Named references ``Destructible.destroy()``
+directly, instead of using ``super``. This could create a problem for contracts that
+derive from ``Named``. We can see why in the following example:
 
 .. code-block:: solidity
 
@@ -155,8 +156,8 @@ seen in the following example:
     }
 
 A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
-explicitly in the final override, but this function will bypass
-``Base1.destroy``. The way around this is to use ``super``:
+explicitly in the final override, but ``Base2.destroy`` directly references ``Destructible.destroy``.
+This causes ``Final``'s destroy to bypass ``Base1.destroy``. To fix this, use ``super``:
 
 .. code-block:: solidity
 
@@ -187,16 +188,20 @@ explicitly in the final override, but this function will bypass
         function destroy() public override(Base1, Base2) { super.destroy(); }
     }
 
-If ``Base2`` calls a function of ``super``, it does not simply
-call this function on one of its base contracts.  Rather, it
-calls this function on the next base contract in the final
-inheritance graph, so it will call ``Base1.destroy()`` (note that
-the final inheritance sequence is -- starting with the most
-derived contract: Final, Base2, Base1, Destructible, owned).
-The actual function that is called when using super is
-not known in the context of the class where it is used,
-although its type is known. This is similar for ordinary
-virtual method lookup.
+Calling a function of ``super`` still only calls a single function (the
+next one defined walking up the flattened inheritance list). However, if
+the coding convention of using ``super`` is also used by that function,
+the effect is that the calls "walk" up the inheritance list and call all
+definitions that are reachable that way. Thus, in the above example, the
+``super.destroy()`` in ``Base2.destroy`` resolves to ``Base1.destroy()``.
+
+The flattened inheritance list of ``Final`` is (starting with the most
+derived contract): Final, Base2, Base1, Destructible, owned.
+Although its type is known, the actual function that is called when
+using super is not known or set at the definition site by the compiler.
+Instead, ``super`` is evaluated based on inheritence heirarchy that exists
+at the innermost call site. This is similar to how which virtual method
+to call is looked up.
 
 .. index:: ! overriding;function
 
