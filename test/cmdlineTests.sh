@@ -662,11 +662,11 @@ SOLTMPDIR=$(mktemp -d)
 )
 rm -r "$SOLTMPDIR"
 
-printTask "Testing AST import..."
+printTask "Testing AST import/export..."
 SOLTMPDIR=$(mktemp -d)
 (
     cd "$SOLTMPDIR"
-    if ! "$REPO_ROOT/scripts/ASTImportTest.sh"
+    if ! "$REPO_ROOT/scripts/ImportExportTest.sh" ast
     then
         rm -r "$SOLTMPDIR"
         fail
@@ -683,6 +683,7 @@ SOLTMPDIR=$(mktemp -d)
         fail
     fi
 )
+rm -r "$SOLTMPDIR"
 
 printTask "Testing AST export with stop-after=parsing..."
 "$REPO_ROOT/test/stopAfterParseTests.sh"
