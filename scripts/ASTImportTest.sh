@@ -9,14 +9,15 @@ READLINK=readlink
 if [[ "$OSTYPE" == "darwin"* ]]; then
     READLINK=greadlink
 fi
+IMPORT_TEST_TYPE=${1}
 REPO_ROOT=$(${READLINK} -f "$(dirname "$0")"/..)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 SOLC=${SOLIDITY_BUILD_DIR}/solc/solc
 SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
 
 SYNTAXTESTS_DIR="${REPO_ROOT}/test/libsolidity/syntaxTests"
+SEMANTICTESTS_DIR="${REPO_ROOT}/test/libsolidity/semanticTests"
 ASTJSONTESTS_DIR="${REPO_ROOT}/test/libsolidity/ASTJSON"
-NSOURCES="$(find "$SYNTAXTESTS_DIR" -type f | wc -l)"
 
 # DEV_DIR="${REPO_ROOT}/../tmp/contracts/"
 # NSOURCES="$(find $DEV_DIR -type f | wc -l)" #TODO use find command
@@ -40,64 +41,210 @@ function testImportExportEquivalence {
     local nth_input_file="$1"
     IFS=" " read -r -a all_input_files <<< "$2"
 
-    if $SOLC "$nth_input_file" "${all_input_files[@]}" > /dev/null 2>&1
+    if $SOLC --bin "$nth_input_file" "${all_input_files[@]}" > /dev/null 2>&1
     then
         ! [[ -e stderr.txt ]] || { echo "stderr.txt already exists. Refusing to overwrite."; exit 1; }
 
-        # save exported json as expected result (silently)
-        $SOLC --combined-json ast --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> /dev/null
-        # import it, and export it again as obtained result (silently)
-        if ! $SOLC --import-ast --combined-json ast --pretty-json expected.json > obtained.json 2> stderr.txt
+        if [ "${IMPORT_TEST_TYPE}" == "ast" ]
         then
-            # For investigating, use exit 1 here so the script stops at the
-            # first failing test
-            # exit 1
-            FAILED=$((FAILED + 1))
-            echo -e "ERROR: AST reimport failed for input file $nth_input_file"
-            echo
-            echo "Compiler stderr:"
-            cat ./stderr.txt
-            echo
-            echo "Compiler stdout:"
-            cat ./obtained.json
-            return 1
-        fi
-        DIFF="$(diff expected.json obtained.json)"
-        if [ "$DIFF" != "" ]
-        then
-            if [ "$DIFFVIEW" == "" ]
+            # save exported json as expected result (silently)
+            $SOLC --combined-json ast --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> /dev/null
+            # import it, and export it again as obtained result (silently)
+            if ! $SOLC --import-ast --combined-json ast --pretty-json expected.json > obtained.json 2> stderr.txt
             then
-                echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
-                echo "Expected:"
-                cat ./expected.json
-                echo "Obtained:"
+                # For investigating, use exit 1 here so the script stops at the
+                # first failing test
+                # exit 1
+                FAILED=$((FAILED + 1))
+                echo -e "ERROR: AST reimport failed for input file $nth_input_file"
+                echo
+                echo "Compiler stderr:"
+                cat ./stderr.txt
+                echo
+                echo "Compiler stdout:"
                 cat ./obtained.json
-            else
-                # Use user supplied diff view binary
-                $DIFFVIEW expected.json obtained.json
+                return 1
             fi
-            FAILED=$((FAILED + 1))
-            return 2
+            set +e
+            DIFF="$(diff expected.json obtained.json)"
+            set +e
+            if [ "$DIFF" != "" ]
+            then
+                if [ "$DIFFVIEW" == "" ]
+                then
+                    echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
+                    echo "Expected:"
+                    cat ./expected.json
+                    echo "Obtained:"
+                    cat ./obtained.json
+                else
+                    # Use user supplied diff view binary
+                    $DIFFVIEW expected.json obtained.json
+                fi
+                FAILED=$((FAILED + 1))
+                return 2
+            fi
+            TESTED=$((TESTED + 1))
+            rm expected.json obtained.json
+            rm -f stderr.txt
+        elif [ "${IMPORT_TEST_TYPE}" == "evm-assembly" ]
+        then
+            local types=( "asm" "bin" "bin-runtime" "opcodes" "srcmap" "srcmap-runtime" )
+            local _TESTED=1
+            if ! $SOLC --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> expected.error
+            then
+                printf "\n"
+                echo "$nth_input_file"
+                cat expected.error
+                UNCOMPILABLE=$((UNCOMPILABLE + 1))
+                return 0
+            else
+                for contract in $(jq '.contracts | keys | .[]' expected.json 2> /dev/null)
+                do
+                    for type in "${types[@]}"
+                    do
+                        jq --raw-output ".contracts.${contract}.\"${type}\"" expected.json > "expected.${type}"
+                    done
+
+                    assembly=$(cat expected.asm)
+                    if [ "$assembly" != "" ] && [ "$assembly" != "null" ]
+                    then
+                        if ! $SOLC --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json --import-asm-json expected.asm > obtained.json 2> obtained.error
+                        then
+                            printf "\n"
+                            echo "$nth_input_file"
+                            cat obtained.error
+                            FAILED=$((FAILED + 1))
+                            return 0
+                        else
+                            for type in "${types[@]}"
+                            do
+                                for obtained_contract in $(jq '.contracts | keys | .[]' obtained.json  2> /dev/null)
+                                do
+                                    jq --raw-output ".contracts.${obtained_contract}.\"${type}\"" obtained.json > "obtained.${type}"
+                                    set +e
+                                    DIFF="$(diff "expected.${type}" "obtained.${type}")"
+                                    set -e
+                                    if [ "$DIFF" != "" ]
+                                    then
+                                        if [ "$DIFFVIEW" == "" ]
+                                        then
+                                            echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
+                                            echo "Expected:"
+                                            cat  "expected.${type}"
+                                            echo "Obtained:"
+                                            cat "obtained.${type}"
+                                        else
+                                            # Use user supplied diff view binary
+                                            $DIFFVIEW expected.json obtained.json
+                                        fi
+                                        _TESTED=
+                                        FAILED=$((FAILED + 1))
+                                        return 0
+                                    fi
+                                done
+                            done
+
+                            # direct export via --asm-json, if imported with --import-asm-json.
+                            if ! $SOLC --asm-json --import-asm-json expected.asm | tail -n+4 > obtained_direct_import_export.json 2> obtained_direct_import_export.error
+                            then
+                                printf "\n"
+                                echo "$nth_input_file"
+                                cat obtained_direct_import_export.error
+                                FAILED=$((FAILED + 1))
+                                return 0
+                            else
+                                for obtained_contract in $(jq '.contracts | keys | .[]' obtained_direct_import_export.json 2> /dev/null)
+                                do
+                                    jq --raw-output ".contracts.${obtained_contract}.\"asm\"" obtained_direct_import_export.json > obtained_direct_import_export.asm
+                                    set +e
+                                    DIFF="$(diff expected.asm obtained_direct_import_export.asm)"
+                                    set -e
+                                    if [ "$DIFF" != "" ]
+                                    then
+                                        if [ "$DIFFVIEW" == "" ]
+                                        then
+                                            echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
+                                            echo "Expected:"
+                                            cat  expected.asm
+                                            echo "Obtained:"
+                                            cat obtained_direct_import_export.asm
+                                        else
+                                            # Use user supplied diff view binary
+                                            $DIFFVIEW expected.asm obtained_direct_import_export.asm
+                                        fi
+                                        _TESTED=
+                                        FAILED=$((FAILED + 1))
+                                        return 0
+                                    fi
+                                done
+                            fi
+
+                            rm obtained.json
+                            rm -f obtained.error
+                            for type in "${types[@]}"
+                            do
+                                rm "obtained.${type}"
+                            done
+                        fi
+
+                        for type in "${types[@]}"
+                        do
+                            rm "expected.${type}"
+                        done
+                    fi
+                done
+                rm expected.json
+            fi
+            if [ -n "${_TESTED}" ]
+            then
+                TESTED=$((TESTED + 1))
+            fi
+        else
+            echo "unknown import test type. aborting."
+            exit 1
         fi
-        TESTED=$((TESTED + 1))
-        rm expected.json obtained.json
-        rm -f stderr.txt
     else
-        # echo "contract $solfile could not be compiled "
         UNCOMPILABLE=$((UNCOMPILABLE + 1))
     fi
-    # return 0
 }
-echo "Looking at $NSOURCES .sol files..."
 
 WORKINGDIR=$PWD
+NSOURCES=0
+
+# check whether SOLC works.
+if ! $SOLC --version > /dev/null 2>&1
+then
+    echo "$SOLC not found. aborting."
+    exit 1
+fi
+
+# check whether jq can be found.
+if ! jq --version > /dev/null 2>&1
+then
+    echo "jq needed. please install. aborting."
+    exit 1
+fi
 
 # for solfile in $(find $DEV_DIR -name *.sol)
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
 # bug. Since the test involves a malformed path, there is no point in running
 # AST tests on it. See https://github.com/boostorg/filesystem/issues/176
-# shellcheck disable=SC2044
-for solfile in $(find "$SYNTAXTESTS_DIR" "$ASTJSONTESTS_DIR" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
+if [ "${IMPORT_TEST_TYPE}" == "ast" ]
+then
+    IMPORT_TEST_FILES=$(find "${SYNTAXTESTS_DIR}" "${ASTJSONTESTS_DIR}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
+elif [ "${IMPORT_TEST_TYPE}" == "evm-assembly" ]
+then
+    IMPORT_TEST_FILES=$(find "${SYNTAXTESTS_DIR}" "${SEMANTICTESTS_DIR}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
+else
+    echo "unknown import test type. aborting. please specify $0 [ast|evm-assembly]."
+    exit 1
+fi
+
+NSOURCES="$(echo "$IMPORT_TEST_FILES" | wc -l)"
+echo "Looking at $NSOURCES .sol files..."
+
+for solfile in ${IMPORT_TEST_FILES}
 do
     echo -n "."
     # create a temporary sub-directory
@@ -148,7 +295,7 @@ echo ""
 
 if [ "$FAILED" = 0 ]
 then
-    echo "SUCCESS: $TESTED syntaxTests passed, $FAILED failed, $UNCOMPILABLE could not be compiled ($NSOURCES sources total)."
+    echo "SUCCESS: $TESTED tests passed, $FAILED failed, $UNCOMPILABLE could not be compiled ($NSOURCES sources total)."
 else
     echo "FAILURE: Out of $NSOURCES sources, $FAILED failed, ($UNCOMPILABLE could not be compiled)."
     exit 1
