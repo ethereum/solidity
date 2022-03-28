@@ -41,7 +41,7 @@
 #include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Transport.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Disassemble.h>
@@ -1014,18 +1014,18 @@ string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _
 	return out;
 }
 
-void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine)
+void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulStack::Machine _targetMachine)
 {
 	solAssert(m_options.input.mode == InputMode::Assembler, "");
 
 	bool successful = true;
-	map<string, yul::AssemblyStack> assemblyStacks;
+	map<string, yul::YulStack> yulStacks;
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		// --no-optimize-yul option is not accepted in assembly mode.
 		solAssert(!m_options.optimizer.noOptimizeYul, "");
 
-		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(
+		auto& stack = yulStacks[src.first] = yul::YulStack(
 			m_options.output.evmVersion,
 			_language,
 			m_options.optimiserSettings(),
@@ -1040,7 +1040,7 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 			stack.optimize();
 	}
 
-	for (auto const& sourceAndStack: assemblyStacks)
+	for (auto const& sourceAndStack: yulStacks)
 	{
 		auto const& stack = sourceAndStack.second;
 		SourceReferenceFormatter formatter(serr(false), stack, coloredOutput(m_options), m_options.formatting.withErrorIds);
@@ -1063,11 +1063,11 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		string machine =
-			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
+			_targetMachine == yul::YulStack::Machine::EVM ? "EVM" :
 			"Ewasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
-		yul::AssemblyStack& stack = assemblyStacks[src.first];
+		yul::YulStack& stack = yulStacks[src.first];
 
 		if (m_options.compiler.outputs.irOptimized)
 		{
@@ -1077,9 +1077,9 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 			sout() << stack.print() << endl;
 		}
 
-		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
+		if (_language != yul::YulStack::Language::Ewasm && _targetMachine == yul::YulStack::Machine::Ewasm)
 		{
-			stack.translate(yul::AssemblyStack::Language::Ewasm);
+			stack.translate(yul::YulStack::Language::Ewasm);
 			stack.optimize();
 
 			if (m_options.compiler.outputs.ewasmIR)
@@ -1103,10 +1103,10 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 				serr() << "No binary representation found." << endl;
 		}
 
-		solAssert(_targetMachine == yul::AssemblyStack::Machine::Ewasm || _targetMachine == yul::AssemblyStack::Machine::EVM, "");
+		solAssert(_targetMachine == yul::YulStack::Machine::Ewasm || _targetMachine == yul::YulStack::Machine::EVM, "");
 		if (
-			(_targetMachine == yul::AssemblyStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
-			(_targetMachine == yul::AssemblyStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
+			(_targetMachine == yul::YulStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
+			(_targetMachine == yul::YulStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
 		)
 		{
 			sout() << endl << "Text representation:" << endl;

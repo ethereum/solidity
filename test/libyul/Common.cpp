@@ -26,7 +26,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
@@ -55,9 +55,9 @@ Dialect const& defaultDialect(bool _yul)
 
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
-	AssemblyStack stack(
+	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
-		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
+		_yul ? YulStack::Language::Yul : YulStack::Language::StrictAssembly,
 		solidity::test::CommonOptions::get().optimize ?
 			solidity::frontend::OptimiserSettings::standard() :
 			solidity::frontend::OptimiserSettings::minimal(),

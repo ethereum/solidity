@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 
 #include <liblangutil/DebugInfoSelection.h>
@@ -37,9 +37,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	YulStringRepository::reset();
 
 	string input(reinterpret_cast<char const*>(_data), _size);
-	AssemblyStack stack(
+	YulStack stack(
 		langutil::EVMVersion(),
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
 		langutil::DebugInfoSelection::All()
 	);
@@ -49,7 +49,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 	try
 	{
-		MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
+		MachineAssemblyObject obj = stack.assemble(YulStack::Machine::EVM);
 		solAssert(obj.bytecode, "");
 	}
 	catch (StackTooDeepError const&)

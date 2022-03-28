@@ -23,7 +23,7 @@
 #include <test/Common.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/AsmAnalysisInfo.h>
 
 #include <liblangutil/DebugInfoSelection.h>
@@ -65,9 +65,9 @@ TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _li
 
 bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(
+	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::All()
 	);

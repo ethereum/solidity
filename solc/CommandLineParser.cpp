@@ -1132,8 +1132,8 @@ void CommandLineParser::processArgs()
 		}
 
 		// switch to assembly mode
-		using Input = yul::AssemblyStack::Language;
-		using Machine = yul::AssemblyStack::Machine;
+		using Input = yul::YulStack::Language;
+		using Machine = yul::YulStack::Machine;
 		m_options.assembly.inputLanguage = m_args.count(g_strYul) ? Input::Yul : (m_args.count(g_strStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 
 		if (m_args.count(g_strMachine))

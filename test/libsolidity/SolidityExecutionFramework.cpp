@@ -97,9 +97,9 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 				else if (forceEnableOptimizer)
 					optimiserSettings = OptimiserSettings::full();
 
-				yul::AssemblyStack asmStack(
+				yul::YulStack asmStack(
 					m_evmVersion,
-					yul::AssemblyStack::Language::StrictAssembly,
+					yul::YulStack::Language::StrictAssembly,
 					optimiserSettings,
 					DebugInfoSelection::All()
 				);
@@ -109,7 +109,7 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 				try
 				{
 					asmStack.optimize();
-					obj = move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+					obj = move(*asmStack.assemble(yul::YulStack::Machine::EVM).bytecode);
 					obj.link(_libraryAddresses);
 					break;
 				}

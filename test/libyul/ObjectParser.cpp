@@ -26,7 +26,7 @@
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Scanner.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
@@ -58,9 +58,9 @@ pair<bool, ErrorList> parse(string const& _source)
 {
 	try
 	{
-		AssemblyStack asmStack(
+		YulStack asmStack(
 			solidity::test::CommonOptions::get().evmVersion(),
-			AssemblyStack::Language::StrictAssembly,
+			YulStack::Language::StrictAssembly,
 			solidity::frontend::OptimiserSettings::none(),
 			DebugInfoSelection::All()
 		);
@@ -180,9 +180,9 @@ BOOST_AUTO_TEST_CASE(to_string)
 }
 )";
 	expectation = boost::replace_all_copy(expectation, "\t", "    ");
-	AssemblyStack asmStack(
+	YulStack asmStack(
 		solidity::test::CommonOptions::get().evmVersion(),
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::All()
 	);

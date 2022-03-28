@@ -30,7 +30,7 @@
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/Algorithms.h>
@@ -95,9 +95,9 @@ pair<string, string> IRGenerator::run(
 {
 	string ir = yul::reindent(generate(_contract, _cborMetadata, _otherYulSources));
 
-	yul::AssemblyStack asmStack(
+	yul::YulStack asmStack(
 		m_evmVersion,
-		yul::AssemblyStack::Language::StrictAssembly,
+		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_context.debugInfoSelection()
 	);

@@ -25,7 +25,7 @@
 
 #include <test/libyul/YulOptimizerTestCommon.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/Exceptions.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
@@ -61,10 +61,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	YulStringRepository::reset();
 
-	// AssemblyStack entry point
-	AssemblyStack stack(
+	// YulStack entry point
+	YulStack stack(
 		version,
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
 		DebugInfoSelection::All()
 	);

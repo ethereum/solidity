@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
@@ -38,9 +38,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	YulStringRepository::reset();
 
 	string input(reinterpret_cast<char const*>(_data), _size);
-	AssemblyStack stack(
+	YulStack stack(
 		langutil::EVMVersion(),
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
 		DebugInfoSelection::All()
 	);
