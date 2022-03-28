@@ -430,9 +430,16 @@ equivalent to ``constructor() {}``. For example:
         constructor() {}
     }
 
-You can use internal parameters in a constructor (for example storage pointers). In this case,
-the contract has to be marked :ref:`abstract <abstract-contract>`, because these parameters
-cannot be assigned valid values from outside but only through the constructors of derived contracts.
+When declaring a function with ``external`` visibility, it declares such parameters of internal type,
+the compiler will emit an error that ``external`` function must have ``calldata`` or ``memory`` parameters.
+For example ``function foo(bool[3] storage x) external {...}`` has a parameter x which is a storage reference.
+This function declaration is not valid, because there is no way for an outside context to pass
+in a storage reference.
+
+Likewise, since constructors are implicitely external, if a constructor declaration uses parameters
+that have internal type (for example storage references such as ``constructor(bytes[3] storage x)...``), then
+the contract has to be marked :ref:`abstract <abstract-contract>`, because these parameters cannot be
+passed valid values except by the constructors of derived contracts. 
 
 .. warning ::
     Prior to version 0.4.22, constructors were defined as functions with the same name as the contract.
