@@ -66,11 +66,6 @@ function perpetual_pools_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     yarn install
 
-    # The project depends on @openzeppelin/hardhat-upgrades, which is currently not prepared
-    # for the parallel compilation introduced in Hardhat 2.9.0.
-    # TODO: Remove when https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/528 is fixed.
-    yarn add hardhat@2.8.4
-
     # With ethers.js 5.6.2 many tests for revert messages fail.
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
     yarn add ethers@5.6.1
