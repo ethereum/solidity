@@ -81,6 +81,10 @@ function gnosis_safe_test
     npm install
     npm install hardhat-gas-reporter
 
+    # With ethers.js 5.6.2 many tests for revert messages fail.
+    # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
+    npm install ethers@5.6.1
+
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
 

@@ -71,6 +71,10 @@ function perpetual_pools_test
     # TODO: Remove when https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/528 is fixed.
     yarn add hardhat@2.8.4
 
+    # With ethers.js 5.6.2 many tests for revert messages fail.
+    # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
+    yarn add ethers@5.6.1
+
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do
