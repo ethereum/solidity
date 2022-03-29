@@ -263,8 +263,9 @@ Here is an assembly snippet you can use for allocating memory that follows the p
     }
 
 The first 64 bytes of memory can be used as "scratch space" for short-term
-allocation. The 32 bytes after the free memory pointer (i.e., starting at ``0x60``)
-are meant to be zero permanently and is used as the initial value for
+allocation. The free memory pointer is itself 32 bytes. The following 32 bytes
+after the free memory pointer (i.e., starting at ``0x60``)
+are meant to be zero permanently, and they are used as the initial value for
 empty dynamic memory arrays.
 This means that the allocatable memory starts at ``0x80``, which is the initial value
 of the free memory pointer.
