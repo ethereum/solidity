@@ -26,6 +26,11 @@ set -e
 # changes directory. The paths returned by `caller` are relative to it.
 _initial_work_dir=$(pwd)
 
+if [ -z ${CIRCLECI+x} ]
+then
+    CIRCLECI=0
+fi
+
 if [ "$CIRCLECI" ]
 then
     export TERM="${TERM:-xterm}"

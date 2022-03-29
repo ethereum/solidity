@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 IMPORT_TEST_TYPE="${1}"
 
 # Bash script to test the import/exports.
@@ -60,7 +60,7 @@ function Ast_ImportExportEquivalence
     set +e
     diff_files expected.json obtained.json
     DIFF=$?
-    set -e
+    set -euo pipefail
     if [[ ${DIFF} != 0 ]]
     then
         FAILED=$((FAILED + 1))
@@ -112,7 +112,7 @@ function JsonEvmAsm_ImportExportEquivalence
                             set +e
                             diff_files "expected.${output}" "obtained.${output}"
                             DIFF=$?
-                            set -e
+                            set -euo pipefail
                             if [[ ${DIFF} != 0 ]]
                             then
                                 _TESTED=
@@ -137,7 +137,7 @@ function JsonEvmAsm_ImportExportEquivalence
                             set +e
                             diff_files "expected.asm" "obtained_direct_import_export.asm"
                             DIFF=$?
-                            set -e
+                            set -euo pipefail
                             if [[ ${DIFF} != 0 ]]
                             then
                                 _TESTED=
@@ -165,6 +165,11 @@ function JsonEvmAsm_ImportExportEquivalence
 function testImportExportEquivalence {
     local nth_input_file="$1"
     IFS=" " read -r -a all_input_files <<< "$2"
+
+    if [ -z ${all_input_files+x} ]
+    then
+        all_input_files=( "" )
+    fi
 
     if $SOLC --bin "$nth_input_file" "${all_input_files[@]}" > /dev/null 2>&1
     then
@@ -219,7 +224,7 @@ do
     set +e
     OUTPUT=$("$SPLITSOURCES" "$solfile")
     SPLITSOURCES_RC=$?
-    set -e
+    set -euo pipefail
     if [ ${SPLITSOURCES_RC} == 0 ]
     then
         NSOURCES=$((NSOURCES - 1))
@@ -230,14 +235,14 @@ do
         done
     elif [ ${SPLITSOURCES_RC} == 1 ]
     then
-        testImportExportEquivalence "$solfile"
+        testImportExportEquivalence "$solfile" ""
     elif [ ${SPLITSOURCES_RC} == 2 ]
     then
         # The script will exit with return code 2, if an UnicodeDecodeError occurred.
         # This is the case if e.g. some tests are using invalid utf-8 sequences. We will ignore
         # these errors, but print the actual output of the script.
         printError "\n${OUTPUT}\n"
-        testImportExportEquivalence "$solfile"
+        testImportExportEquivalence "$solfile" ""
     else
         # All other return codes will be treated as critical errors. The script will exit.
         printError "\nGot unexpected return code ${SPLITSOURCES_RC} from ${SPLITSOURCES}. Aborting."
