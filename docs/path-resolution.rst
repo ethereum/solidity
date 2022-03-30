@@ -252,12 +252,14 @@ The compiler computes a source unit name from the import path in the following w
 
 1. First a prefix is computed
 
-    - Prefix is initialized with the source unit name of the importing source unit.
-    - The last path segment with preceding slashes is removed from the prefix.
-    - Then, the leading part of the normalized import path, consisting only of ``/`` and ``.``
+    a) Prefix is initialized with the source unit name of the importing source unit.
+    b) The last path segment with preceding slashes is removed from the prefix.
+    c) Then, the leading part of the normalized import path, consisting only of ``/`` and ``.``
       characters is considered.
-      For every ``..`` segment found in this part the last path segment with preceding slashes is
-      removed from the prefix.
+      For every ``.`` segment found in this part of the import path, the segment is removed from the
+      import path.
+      For every ``..`` segment found in this part of the import path the last path segment with
+      preceding slashes is removed from the prefix, and the corresponding element in the import path
 
 2. Then the prefix is prepended to the normalized import path.
    If the prefix is non-empty, a single slash is inserted between it and the import path.
@@ -291,6 +293,14 @@ Here are some examples of what you can expect if they are not:
     import "../util/../array/util.sol"; // source unit name: lib/src/array/util.sol
     import "../.././../util.sol";       // source unit name: util.sol
     import "../../.././../util.sol";    // source unit name: util.sol
+
+.. note::
+
+   This rule may lead to counterintuitive behavior for prefixes that end in relative path segments.
+   For example, when used to compute the import path ``../bar.sol``, the prefix ``a/b/..``
+   (e.g., from a source file ``a/b/../foo.sol``) becomes ``a/b`` and the import path becomes ``bar.sol``.
+   The result is ``a/b/bar.sol``. You may have expected the result to be ``bar.sol`` because
+   ``a/b/../../bar.sol`` evaluates to ``bar.sol`` when normalized as a full path without this rule.
 
 .. note::
 
