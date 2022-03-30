@@ -3,20 +3,20 @@
 .. _types:
 
 *****
-Types
+类型
 *****
 
-Solidity is a statically typed language, which means that the type of each
-variable (state and local) needs to be specified.
-Solidity provides several elementary types which can be combined to form complex types.
+Solidity 是一种静态类型语言，这意味着每个变量（状态变量和局部变量）都需要被指定。
+Solidity 提供了几种基本类型，可以用来组合出复杂类型。
 
-In addition, types can interact with each other in expressions containing
-operators. For a quick reference of the various operators, see :ref:`order`.
+除此之外，各个类型之间可以在包含运算符号的表达式中进行交互。
+关于各种运算符的快速参考，可以参考 :ref:`操作符优先级`。
 
-The concept of "undefined" or "null" values does not exist in Solidity, but newly
-declared variables always have a :ref:`default value<default-value>` dependent
-on its type. To handle any unexpected values, you should use the :ref:`revert function<assert-and-require>` to revert the whole transaction, or return a
-tuple with a second ``bool`` value denoting success.
+Solidity中不存在"未定义"或"空"值的概念，
+但新声明的变量总是有一个取决于其类型的 :ref:`默认值 <default-value>`。
+为了处理任何意外的值，您应该使用 :ref:`revert 函数 <assert-and-require>` 来回滚整个事务，
+或者返回一个带有第二个 ``bool`` 值的元组来表示成功。
+
 
 .. include:: types/value-types.rst
 
