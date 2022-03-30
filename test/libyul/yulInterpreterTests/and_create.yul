@@ -6,8 +6,6 @@
 }
 // ----
 // Trace:
-//   CREATE(0, 0xffffffffffffffffffffffffffffffffffffffff, 0)
-//   CREATE(0, 0xffffffffffffffffffffffffffffffffffffffff, 0)
 // Memory dump:
 //      0: 0000000000000000000000000000000000000000000000000000000000000001
 // Storage dump:

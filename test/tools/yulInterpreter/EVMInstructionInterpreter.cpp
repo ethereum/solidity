@@ -211,22 +211,24 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CALLDATASIZE:
 		return m_state.calldata.size();
 	case Instruction::CALLDATACOPY:
-		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.calldata,
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
 			);
+		if (arg[2] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::CODESIZE:
 		return m_state.code.size();
 	case Instruction::CODECOPY:
-		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.code,
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
 			);
+		if (arg[2] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::GASPRICE:
 		return m_state.gasprice;
@@ -239,23 +241,25 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::EXTCODEHASH:
 		return u256(keccak256(h256(arg[0] + 1)));
 	case Instruction::EXTCODECOPY:
-		logTrace(_instruction, arg);
 		if (accessMemory(arg[1], arg[3]))
 			// TODO this way extcodecopy and codecopy do the same thing.
 			copyZeroExtended(
 				m_state.memory, m_state.code,
 				size_t(arg[1]), size_t(arg[2]), size_t(arg[3])
 			);
+		if (arg[3] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::RETURNDATASIZE:
 		return m_state.returndata.size();
 	case Instruction::RETURNDATACOPY:
-		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.returndata,
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
 			);
+		if (arg[2] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::BLOCKHASH:
 		if (arg[0] >= m_state.blockNumber || arg[0] + 256 < m_state.blockNumber)
@@ -297,38 +301,54 @@ u256 EVMInstructionInterpreter::eval(
 		return 0x99;
 	case Instruction::LOG0:
 		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (arg[1] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG1:
 		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (arg[1] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG2:
 		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (arg[1] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG3:
 		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (arg[1] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG4:
 		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (arg[1] != 0)
+			logTrace(_instruction, arg);
 		return 0;
 	// --------------- calls ---------------
 	case Instruction::CREATE:
 		accessMemory(arg[1], arg[2]);
-		logTrace(_instruction, arg);
-		return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
+		if (arg[2] != 0)
+		{
+			logTrace(_instruction, arg);
+			return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
+		}
+		return 0xcccccc;
 	case Instruction::CREATE2:
 		accessMemory(arg[1], arg[2]);
-		logTrace(_instruction, arg);
-		return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
+		if (arg[2] != 0)
+		{
+			logTrace(_instruction, arg);
+			return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
+		}
+		return 0xdddddd;
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
-		accessMemory(arg[3], arg[4]);
-		accessMemory(arg[5], arg[6]);
-		logTrace(_instruction, arg);
+		if (arg[4] != 0)
+			accessMemory(arg[3], arg[4]);
+		if (arg[6] != 0)
+			accessMemory(arg[5], arg[6]);
+		if (arg[4] != 0 && arg[6] != 0)
+			logTrace(_instruction, arg);
 		// Randomly fail based on the called address if it isn't a call to self.
 		// Used for fuzzing.
 		return (
@@ -337,10 +357,12 @@ u256 EVMInstructionInterpreter::eval(
 		) ? 1 : 0;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
-		accessMemory(arg[2], arg[3]);
-		accessMemory(arg[4], arg[5]);
-		logTrace(_instruction, arg);
-
+		if (arg[3] != 0)
+			accessMemory(arg[2], arg[3]);
+		if (arg[5] != 0)
+			accessMemory(arg[4], arg[5]);
+		if (arg[3] != 0 && arg[5] != 0)
+			logTrace(_instruction, arg);
 		// Randomly fail based on the called address if it isn't a call to self.
 		// Used for fuzzing.
 		return (
@@ -352,12 +374,14 @@ u256 EVMInstructionInterpreter::eval(
 		m_state.returndata = {};
 		if (accessMemory(arg[0], arg[1]))
 			m_state.returndata = m_state.readMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg, m_state.returndata);
+		if (arg[1] != 0)
+			logTrace(_instruction, arg, m_state.returndata);
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminatedWithReturn());
 	}
 	case Instruction::REVERT:
 		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (arg[1] != 0)
+			logTrace(_instruction, arg);
 		m_state.storage.clear();
 		m_state.trace.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
@@ -479,7 +503,10 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 	else if (fun == "datacopy")
 	{
 		// This is identical to codecopy.
-		if (accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2)))
+		if (
+				_evaluatedArguments.at(2) != 0 &&
+				accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2))
+		)
 			copyZeroExtended(
 				m_state.memory,
 				m_state.code,
@@ -560,8 +587,13 @@ void EVMInstructionInterpreter::logTrace(
 	if (!(_writesToMemory && memWriteTracingDisabled()))
 	{
 		string message = _pseudoInstruction + "(";
+		std::pair<bool, size_t> inputMemoryPtrModified = isInputMemoryPtrModified(_pseudoInstruction, _arguments);
 		for (size_t i = 0; i < _arguments.size(); ++i)
-			message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+		{
+			bool printZero = inputMemoryPtrModified.first && inputMemoryPtrModified.second == i;
+			u256 arg = printZero ? 0 : _arguments[i];
+			message += (i > 0 ? ", " : "") + formatNumber(arg);
+		}
 		message += ")";
 		if (!_data.empty())
 			message += " [" + util::toHex(_data) + "]";
@@ -572,4 +604,66 @@ void EVMInstructionInterpreter::logTrace(
 			BOOST_THROW_EXCEPTION(TraceLimitReached());
 		}
 	}
+}
+
+std::pair<bool, size_t> EVMInstructionInterpreter::isInputMemoryPtrModified(
+	std::string const& _pseudoInstruction,
+	std::vector<u256> const& _arguments
+)
+{
+	if (_pseudoInstruction == "return" || _pseudoInstruction == "revert")
+	{
+		if (_arguments[1] == 0)
+			return {true, 0};
+		else
+			return {false, 0};
+	}
+	else if (
+		_pseudoInstruction == "returndatacopy" || _pseudoInstruction == "calldatacopy"
+		|| _pseudoInstruction == "codecopy")
+	{
+		if (_arguments[2] == 0)
+			return {true, 0};
+		else
+			return {false, 0};
+	}
+	else if (_pseudoInstruction == "extcodedatacopy")
+	{
+		if (_arguments[3] == 0)
+			return {true, 1};
+		else
+			return {false, 0};
+	}
+	else if (
+		_pseudoInstruction == "log0" || _pseudoInstruction == "log1" || _pseudoInstruction == "log2"
+		|| _pseudoInstruction == "log3" || _pseudoInstruction == "log4")
+	{
+		if (_arguments[1] == 0)
+			return {true, 0};
+		else
+			return {false, 0};
+	}
+	if (_pseudoInstruction == "create" || _pseudoInstruction == "create2")
+	{
+		if (_arguments[2] == 0)
+			return {true, 1};
+		else
+			return {false, 0};
+	}
+	if (_pseudoInstruction == "call" || _pseudoInstruction == "callcode")
+	{
+		if (_arguments[4] == 0)
+			return {true, 3};
+		else
+			return {false, 0};
+	}
+	else if (_pseudoInstruction == "delegatecall" || _pseudoInstruction == "staticcall")
+	{
+		if (_arguments[3] == 0)
+			return {true, 2};
+		else
+			return {false, 0};
+	}
+	else
+		return {false, 0};
 }
