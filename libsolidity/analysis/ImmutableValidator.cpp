@@ -21,6 +21,7 @@
 #include <libsolutil/CommonData.h>
 
 #include <range/v3/view/reverse.hpp>
+#include <vector>
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;
@@ -104,17 +105,39 @@ bool ImmutableValidator::visit(MemberAccess const& _memberAccess)
 
 bool ImmutableValidator::visit(IfStatement const& _ifStatement)
 {
+	// store old context variables
 	bool prevInBranch = m_inBranch;
+	VariableDeclarationSet prevWrites = std::move(m_immutableStateVariablesWrittenInBranch);
+	m_immutableStateVariablesWrittenInBranch.clear();
 
 	_ifStatement.condition().accept(*this);
 
 	m_inBranch = true;
+	m_immutableStateVariablesWrittenInBranch.clear();
 	_ifStatement.trueStatement().accept(*this);
 
-	if (auto falseStatement = _ifStatement.falseStatement())
+	// find out immutable state variables that are written in then/else branches
+	VariableDeclarationSet thenWrites = std::move(m_immutableStateVariablesWrittenInBranch);
+	m_immutableStateVariablesWrittenInBranch.clear();
+	VariableDeclarationSet elseWrites;
+	if (Statement const* falseStatement = _ifStatement.falseStatement())
+	{
+		m_immutableStateVariablesWrittenInBranch.clear();
 		falseStatement->accept(*this);
+		elseWrites = std::move(m_immutableStateVariablesWrittenInBranch);
+		m_immutableStateVariablesWrittenInBranch.clear();
+	}
 
+	// restore and update context
 	m_inBranch = prevInBranch;
+	m_immutableStateVariablesWrittenInBranch = prevWrites;
+	for (VariableDeclaration const* var: thenWrites)
+		if (elseWrites.count(var))
+		{
+			m_immutableStateVariablesWrittenInBranch.insert(var);
+			m_initializedStateVariables.emplace(var);
+		}
+	m_stateVariablesInitializedInOnlyOneBranch += (elseWrites - thenWrites) + (thenWrites - elseWrites);
 
 	return false;
 }
@@ -211,13 +234,7 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 				_expression.location(),
 				"Cannot write to immutable here: Immutable variables cannot be initialized inside a loop."
 			);
-		else if (m_inBranch)
-			m_errorReporter.typeError(
-				4599_error,
-				_expression.location(),
-				"Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement."
-			);
-		else if (m_initializedStateVariables.count(&_variableReference))
+		else if (writtenInCurrentControlFlow(_variableReference))
 		{
 			if (!read)
 				m_errorReporter.typeError(
@@ -238,12 +255,15 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 				_expression.location(),
 				"Immutable variables must be initialized using an assignment."
 			);
-		m_initializedStateVariables.emplace(&_variableReference);
+		if (m_inBranch)
+			m_immutableStateVariablesWrittenInBranch.emplace(&_variableReference);
+		else
+			m_initializedStateVariables.emplace(&_variableReference);
 	}
 	if (
 		read &&
 		m_inCreationContext &&
-		!m_initializedStateVariables.count(&_variableReference)
+		!writtenInCurrentControlFlow(_variableReference)
 	)
 		m_errorReporter.typeError(
 			7733_error,
@@ -258,14 +278,21 @@ void ImmutableValidator::checkAllVariablesInitialized(solidity::langutil::Source
 	{
 		for (VariableDeclaration const* varDecl: contract->stateVariables())
 			if (varDecl->immutable())
-				if (!util::contains(m_initializedStateVariables, varDecl))
+			{
+				if (util::contains(m_stateVariablesInitializedInOnlyOneBranch, varDecl))
+					m_errorReporter.typeError(
+						4599_error,
+						varDecl->nameLocation(),
+						"Immutable is not initialized in every branch of control flow."
+					);
+				else if (!util::contains(m_initializedStateVariables, varDecl))
 					m_errorReporter.typeError(
 						2658_error,
 						_location,
 						solidity::langutil::SecondarySourceLocation().append("Not initialized: ", varDecl->location()),
 						"Construction control flow ends without initializing all immutable state variables."
 					);
-
+			}
 		// Don't check further than the current c'tors contract
 		if (contract == m_currentConstructorContract)
 			break;
@@ -279,4 +306,13 @@ void ImmutableValidator::visitCallableIfNew(Declaration const& _declaration)
 
 	if (m_visitedCallables.emplace(_callable).second)
 		_declaration.accept(*this);
+}
+
+
+bool ImmutableValidator::writtenInCurrentControlFlow(VariableDeclaration const& _variableReference) const
+{
+	if (m_inBranch)
+		return m_immutableStateVariablesWrittenInBranch.count(&_variableReference);
+	else
+		return m_initializedStateVariables.count(&_variableReference);
 }

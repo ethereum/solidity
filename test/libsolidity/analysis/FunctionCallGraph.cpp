@@ -2009,16 +2009,19 @@ BOOST_AUTO_TEST_CASE(conversions_and_struct_array_constructors)
 BOOST_AUTO_TEST_CASE(immutable_initialization)
 {
 	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
-		function free() pure returns (uint) { return 42; }
+		function free1() pure returns (uint) { return 42; }
+		function free2() pure returns (uint) { return 42; }
 
 		contract Base {
-			function ext() external pure returns (uint) { free(); }
-			function inr() internal pure returns (uint) { free(); }
+			function ext1() external pure returns (uint) { free1(); }
+			function ext2() external pure returns (uint) { free2(); }
+			function inr1() internal pure returns (uint) { free1(); }
+			function inr2() internal pure returns (uint) { free2(); }
 		}
 
 		contract C is Base {
-			uint immutable extImmutable = this.ext();
-			uint immutable inrImmutable = inr();
+			uint immutable extImmutable = this.ext1();
+			uint immutable inrImmutable = inr2();
 		}
 
 		contract D is Base {
@@ -2026,8 +2029,16 @@ BOOST_AUTO_TEST_CASE(immutable_initialization)
 			uint immutable inrImmutable;
 
 			constructor () {
-				extImmutable = this.ext();
-				inrImmutable = inr();
+				if (true) {
+					extImmutable = this.ext1();
+				} else {
+					extImmutable = this.ext2();
+				}
+				if (true) {
+					inrImmutable = inr2();
+				} else {
+					inrImmutable = inr1();
+				}
 			}
 		}
 	)"s);
@@ -2036,28 +2047,36 @@ BOOST_AUTO_TEST_CASE(immutable_initialization)
 	map<string, EdgeNames> expectedCreationEdges = {
 		{"Base", {}},
 		{"C", {
-			{"Entry", "function Base.inr()"},
-			{"function Base.inr()", "function free()"},
+			{"Entry", "function Base.inr2()"},
+			{"function Base.inr2()", "function free2()"},
 		}},
 		{"D", {
 			{"Entry", "constructor of D"},
-			{"constructor of D", "function Base.inr()"},
-			{"function Base.inr()", "function free()"},
+			{"constructor of D", "function Base.inr1()"},
+			{"constructor of D", "function Base.inr2()"},
+			{"function Base.inr1()", "function free1()"},
+			{"function Base.inr2()", "function free2()"},
 		}},
 	};
 
 	map<string, EdgeNames> expectedDeployedEdges = {
 		{"Base", {
-			{"Entry", "function Base.ext()"},
-			{"function Base.ext()", "function free()"},
+			{"Entry", "function Base.ext1()"},
+			{"Entry", "function Base.ext2()"},
+			{"function Base.ext1()", "function free1()"},
+			{"function Base.ext2()", "function free2()"},
 		}},
 		{"C", {
-			{"Entry", "function Base.ext()"},
-			{"function Base.ext()", "function free()"},
+			{"Entry", "function Base.ext1()"},
+			{"function Base.ext1()", "function free1()"},
+			{"Entry", "function Base.ext2()"},
+			{"function Base.ext2()", "function free2()"},
 		}},
 		{"D", {
-			{"Entry", "function Base.ext()"},
-			{"function Base.ext()", "function free()"},
+			{"Entry", "function Base.ext1()"},
+			{"Entry", "function Base.ext2()"},
+			{"function Base.ext1()", "function free1()"},
+			{"function Base.ext2()", "function free2()"},
 		}},
 	};
 

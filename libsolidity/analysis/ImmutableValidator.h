@@ -32,13 +32,13 @@ namespace solidity::frontend
  * cannot be read before being initialized
  * cannot be read when initializing state variables inline
  * must be initialized outside loops (only one initialization)
- * must be initialized outside ifs (must be initialized unconditionally)
- * must be initialized exactly once (no multiple statements)
+ * must be initialized exactly once in each control flow (no multiple statements in the same control flow)
  * must be initialized exactly once (no early return to skip initialization)
 */
 class ImmutableValidator: private ASTConstVisitor
 {
 	using CallableDeclarationSet = std::set<CallableDeclaration const*, ASTNode::CompareByID>;
+	using VariableDeclarationSet = std::set<VariableDeclaration const*, ASTNode::CompareByID>;
 
 public:
 	ImmutableValidator(langutil::ErrorReporter& _errorReporter, ContractDefinition const& _contractDefinition):
@@ -66,17 +66,21 @@ private:
 
 	void visitCallableIfNew(Declaration const& _declaration);
 
+	bool writtenInCurrentControlFlow(VariableDeclaration const& _variableReference) const;
+
 	ContractDefinition const& m_mostDerivedContract;
 
 	CallableDeclarationSet m_visitedCallables;
 
-	std::set<VariableDeclaration const*, ASTNode::CompareByID> m_initializedStateVariables;
+	VariableDeclarationSet m_initializedStateVariables;
+	VariableDeclarationSet m_stateVariablesInitializedInOnlyOneBranch;
 	langutil::ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentConstructor = nullptr;
 	ContractDefinition const* m_currentConstructorContract = nullptr;
 	bool m_inLoop = false;
 	bool m_inBranch = false;
+	VariableDeclarationSet m_immutableStateVariablesWrittenInBranch;
 	bool m_inCreationContext = true;
 };
 
