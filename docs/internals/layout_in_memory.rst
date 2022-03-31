@@ -8,7 +8,7 @@ Layout in Memory
 Solidity reserves four 32-byte slots, with specific byte ranges (inclusive of endpoints) being used as follows:
 
 - ``0x00`` - ``0x3f`` (64 bytes): scratch space for hashing methods
-- ``0x40`` - ``0x5f`` (32 bytes): currently allocated memory size (aka. free memory pointer)
+- ``0x40`` - ``0x5f`` (32 bytes): currently allocated memory size (aka. `msize` free memory pointer)
 - ``0x60`` - ``0x7f`` (32 bytes): zero slot
 
 Scratch space can be used between statements (i.e. within inline assembly). The zero slot
@@ -27,14 +27,16 @@ elements.
 .. warning::
   There are some operations in Solidity that need a temporary memory area
   larger than 64 bytes and therefore will not fit into the scratch space.
-  They will be placed where the free memory points to, but given their
-  short lifetime, the pointer is not updated. The memory may or may not
-  be zeroed out. Because of this, one should not expect the free memory
-  to point to zeroed out memory.
+  These operations will use memory at the location pointed to by the ``msize``
+  free memory pointer, but given their short lifetime, the pointer is not updated.
+  That memory may or may not be zeroed out. Because of this, one should not
+  expect the free memory to point to zeroed out memory.
 
-  While it may seem like a good idea to use ``msize`` to arrive at a
-  definitely zeroed out memory area, using such a pointer non-temporarily
-  without updating the free memory pointer can have unexpected results.
+  Therefore, while it may seem like a good idea to use ``msize`` to arrive at
+  an unused and definitely zeroed out memory area, not only might that memory
+  not be zeroed out initially but using it except in an immediate well-controlled
+  way (such as via inline assembly) without updating the free memory pointer
+  can have unexpected results.
 
 
 Differences to Layout in Storage
