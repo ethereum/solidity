@@ -324,6 +324,7 @@ forbidden. Forbidden memory includes:
 
 Exceptions include:
   * the scratch area between ``0x00`` and ``0x3F`` (0 to 64, inclusive)
+  * the free memory pointer itself, at location ``0x40``, which you can increase in order to allocate memory for yourself
   * the scratch area beyond what the free memory pointer points to (see :ref:`Reserved Memory Areas and Memory Management Details`)
   * memory you have allocated yourself by increasing the free memory pointer (it should never be decreased)
 
