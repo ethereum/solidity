@@ -247,13 +247,33 @@ first.
 Memory Management
 =================
 
-Solidity manages memory in the following way. There is a "free memory pointer"
-at position ``0x40`` in memory. If you want to allocate memory, use the memory
-starting from where this pointer points at and update it.
-There is no guarantee that the memory has not been used before and thus
-you cannot assume that its contents are zero bytes.
-There is no built-in mechanism to release or free allocated memory.
-Here is an assembly snippet you can use for allocating memory that follows the process outlined above
+This section amounts to a brief recap of :ref:`Reserved Memory Areas and Memory Management Details`
+and :ref:`Layout in Memory`. Please read those documents before you attempt to
+use memory via inline assembly.
+
+Solidity is a high level language targetting the EVM. It implements complex data
+structures (such as multidimensional arrays) that require memory to be carefully
+managed so as to avoid collisions. This memory management happens by convention.
+
+Specifically, there is a "free memory pointer" at memory location ``0x40``.
+This pointer indicates the first memory location beyond which memory can be written
+to without colliding with Solidity data structures (variables) that have been
+previously allocated. There is no guarantee that the memory beyond the location
+pointed to by the free memory pointed has not been used before and thus
+you cannot assume that its contents are zero bytes. For similar reasons, you
+cannot rely on that memory not being written to in unexpected ways.
+
+In fact, unless you are using the memory beyond the free memory pointer only within
+inline assembly between Solidity statements, you should expect that it may
+be arbitrarily changed by other code (in the same way that your code is changing it).
+Therefore, you may wish to update the free memory pointer so that it points beyond
+the memory you want to use.
+
+This amounts to "allocating" memory for yourself. There is no built-in mechanism
+to release or free allocated memory.
+
+The following assembly snippet allocates `length` bytes which you can then safely
+use indefinitely:
 
 .. code-block:: yul
 
@@ -262,38 +282,34 @@ Here is an assembly snippet you can use for allocating memory that follows the p
       mstore(0x40, add(pos, length))
     }
 
-The first 64 bytes of memory can be used as "scratch space" for short-term
-allocation. The 32 bytes after the free memory pointer (i.e., starting at ``0x60``)
-are meant to be zero permanently and is used as the initial value for
-empty dynamic memory arrays.
-This means that the allocatable memory starts at ``0x80``, which is the initial value
-of the free memory pointer.
+In addition to the memory beyond the free memory pointer, the memory between ``0x00``
+and ``0x3F`` (inclusive, i.e. the first 64 bytes of memory) is "scratch space"
+available for short-term use.
 
-Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this is
-even true for ``bytes1[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
-arrays are pointers to memory arrays. The length of a dynamic array is stored at the
-first slot of the array and followed by the array elements.
+If you are accessing or writing to Solidity variables and data structures in memory
+or storage via inline assembly, you should read these relevant documents first:
 
-.. warning::
-    Statically-sized memory arrays do not have a length field, but it might be added later
-    to allow better convertibility between statically- and dynamically-sized arrays, so
-    do not rely on this.
+  * :ref:`Reserved Memory Areas and Memory Management Details`
+  * :ref:`Layout in Memory`
+  * :ref:`Layout of State Variables in Storage`
+  
 
 Memory Safety
 =============
 
-Without the use of inline assembly, the compiler can rely on memory to remain in a well-defined
-state at all times. This is especially relevant for :ref:`the new code generation pipeline via Yul IR <ir-breaking-changes>`:
-this code generation path can move local variables from stack to memory to avoid stack-too-deep errors and
-perform additional memory optimizations, if it can rely on certain assumptions about memory use.
+To understand this section, you should first read :ref:`Reserved Memory Areas and Memory Management Details`
 
-While we recommend to always respect Solidity's memory model, inline assembly allows you to use memory
-in an incompatible way. Therefore, moving stack variables to memory and additional memory optimizations are,
-by default, disabled in the presence of any inline assembly block that contains a memory operation or assigns
-to solidity variables in memory.
+The compiler generates code that relies on memory to remain in a well-defined state at all times.
+Memory management is especially important given :ref:`the new code generation pipeline via Yul IR <ir-breaking-changes>`.
+This code generation path may move local variables from stack to memory to avoid stack-too-deep errors and
+it may perform additional memory optimizations. It will not work correctly unless memory remains in a well-defined state.
 
-However, you can specifically annotate an assembly block to indicate that it in fact respects Solidity's memory
-model as follows:
+Because Solidity cannot enforce its memory management and layout conventions inside inline assembly blocks,
+it defends against potentially invalid memory states caused by inline assembly by disabling
+various optimizations and memory movements (including those that help manage the stack) in the presence
+of any inline assembly block that contains a memory operation or assigns to solidity variables in memory.
+
+However, to prevent this, you can specifically annotate an assembly block as "memory-safe":
 
 .. code-block:: solidity
 
@@ -301,41 +317,60 @@ model as follows:
         ...
     }
 
-In particular, a memory-safe assembly block may only access the following memory ranges:
+Memory safety (for current versions of Solidity) can be boiled down to not accessing memory that is
+forbidden. Forbidden memory includes:
+  * the zero slot at memory location ``0x60``
+  * any memory that would not safely be readable by a Solidity statement (outside an inline assembly block)
 
-- Memory allocated by yourself using a mechanism like the ``allocate`` function described above.
-- Memory allocated by Solidity, e.g. memory within the bounds of a memory array you reference.
-- The scratch space between memory offset 0 and 64 mentioned above.
-- Temporary memory that is located *after* the value of the free memory pointer at the beginning of the assembly block,
-  i.e. memory that is "allocated" at the free memory pointer without updating the free memory pointer.
+Exceptions include:
+  * the scratch area between ``0x00`` and ``0x3F`` (0 to 64, inclusive)
+  * the scratch area beyond what the free memory pointer points to (see :ref:`Reserved Memory Areas and Memory Management Details`)
+  * memory you have allocated yourself by increasing the free memory pointer (it should never be decreased)
 
-Furthermore, if the assembly block assigns to Solidity variables in memory, you need to assure that accesses to
-the Solidity variables only access these memory ranges.
+You should only mark an inline assembly block as "memory-safe" if it also does not cause operations
+after it to be unsafe. This could happen if Solidity generated code that runs later, accesses forbidden memory
+because of the values you wrote. This can happen by writing invalid values into Solidity
+variables of reference type, or by changing other values relied upon by Solidity's data structures in memory.
 
-Since this is mainly about the optimizer, these restrictions still need to be followed, even if the assembly block
-reverts or terminates. As an example, the following assembly snippet is not memory safe:
+For example, as described in :ref:`Layout of Arrays In Memory`, dynamically sized arrays (e.g. `uint[] varArray;`)
+encode their length into the first memory slot pointed to by that variable. It would be unsafe for inline assembly
+to change that length. It would also be unsafe for inline assembly to change the value of the array variable
+itself (the pointer) such that it points to some arbitrary location that is not also a dynamically sized array.
+Similarly, multi-dimensional arrays are arrays of pointers to arrays. It would be unsafe for inline assembly to
+change the memory location pointed to by an element of a multi-dimensional array.
+
+This description is intentionally somewhat ambiguous. It may technically not lead to unexpected
+behaviors to shorten the length of an array, or the repoint a multi-dimensional array element to another
+memory area with equivalent structure. However, it is better for you to consider these unsafe operations.
+Similarly, there may technically be no consequence from reading (vs writing) "any" memory location, even one in
+a forbidden area, but it is better for you to consider this too, an unsafe operation.
+
+In brief, if it's outside of the scratch areas or memory you've allocated yourself, don't write to it in ways
+that you can't using Solidity statements (vs inline assembly).
+
+Memory safety must be maintained even if the inline assembly block immediately reverts or terminates. For example,
+the following inline assembly should not be marked memory safe because `returndatasize()` may be larger than
+64, causing the `returndatacopy()` to write beyond the end of the 64 byte scratch area located at memory location 0.
 
 .. code-block:: solidity
 
     assembly {
-      returndatacopy(0, 0, returndatasize())
-      revert(0, returndatasize())
+      returndatacopy(0, 0, returndatasize()); // could overwrite the free memory pointer at 0x40
+      revert(0, returndatasize());
     }
 
-But the following is:
+By contrast, the following inline assembly block is memory safe:
 
 .. code-block:: solidity
 
     assembly ("memory-safe") {
-      let p := mload(0x40)
-      returndatacopy(p, 0, returndatasize())
-      revert(p, returndatasize())
+      let p := mload(0x40);
+      returndatacopy(p, 0, returndatasize());
+      revert(p, returndatasize());
     }
 
-Note that you do not need to update the free memory pointer if there is no following allocation,
-but you can only use memory starting from the current offset given by the free memory pointer.
-
-If the memory operations use a length of zero, it is also fine to just use any offset (not only if it falls into the scratch space):
+If your inline assembly memory operations are parameterized with a zero length, they are memory safe. For example,
+this code is safe:
 
 .. code-block:: solidity
 
@@ -343,8 +378,8 @@ If the memory operations use a length of zero, it is also fine to just use any o
       revert(0, 0)
     }
 
-Note that not only memory operations in inline assembly itself can be memory-unsafe, but also assignments to
-solidity variables of reference type in memory. For example the following is not memory-safe:
+It is also unsafe to cause Solidity statements to access the scratch areas, or to cause a memory variable of
+reference type to point to a location that does not actually store a value of that type. For example:
 
 .. code-block:: solidity
 
