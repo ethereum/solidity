@@ -341,7 +341,7 @@ Similarly, multi-dimensional arrays are arrays of pointers to arrays. It would b
 change the memory location pointed to by an element of a multi-dimensional array.
 
 This description is intentionally somewhat ambiguous. It may technically not lead to unexpected
-behaviors to shorten the length of an array, or the repoint a multi-dimensional array element to another
+behaviors to shorten the length of an array, or to repoint a multi-dimensional array element to another
 memory area with equivalent structure. However, it is better for you to consider these unsafe operations.
 Similarly, there may technically be no consequence from reading (vs writing) "any" memory location, even one in
 a forbidden area, but it is better for you to consider this too, an unsafe operation.
