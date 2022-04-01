@@ -303,9 +303,11 @@ private:
 		LPResult result = LPResult::Unknown;
 		std::vector<boost::rational<bigint>> model = {};
 		std::set<size_t> variables = {};
+		std::optional<SimplexWithBounds> simplex = std::nullopt;
+		std::map<size_t, size_t> varMapping = {};
 	};
 
-	SolvingState stateFromSubProblem(size_t _index) const;
+	std::pair<SolvingState, std::map<size_t, size_t>> stateFromSubProblem(size_t _index) const;
 	ReasonSet reasonSetForSubProblem(SubProblem const& _subProblem);
 
 	std::shared_ptr<std::map<size_t, rational>> m_fixedVariables;

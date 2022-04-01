@@ -117,7 +117,7 @@ string toString(Tableau const& _tableau)
 		s += toString(d) + "\n";
 	return s;
 }
-*/
+
 
 /// Adds slack variables to remove non-equality costraints from a set of constraints
 /// and returns the data part of the tableau / constraints.
@@ -355,6 +355,7 @@ bool needsPhaseI(Tableau const& _tableau)
 	return false;
 }
 
+
 /// Solve the LP Ax <= b s.t. min c^Tx
 pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, LinearExpression _objectives)
 {
@@ -380,6 +381,7 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 	solAssert(result != LPResult::Infeasible, "");
 	return make_pair(result, solutionVector(tableau));
 }
+
 
 /// Turns all bounds into constraints.
 /// @returns false if the bounds make the state infeasible.
@@ -424,6 +426,7 @@ optional<ReasonSet> boundsToConstraints(SolvingState& _state)
 	_state.bounds.clear();
 	return nullopt;
 }
+*/
 
 /// Removes incides set to true from a vector-like data structure.
 template <class T>
@@ -1091,32 +1094,46 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 		}
 
 		//cout << "Updating sub problem" << endl;
-		SolvingState state = stateFromSubProblem(index);
-		// TODO cache this in the subproblem so that we don't have to extract it
-		// if we add a new assertion, but can just update it.
-		normalizeRowLengths(state);
 
-		// The simplify run is important because it detects conflicts
-		// due to fixed variables.
-		auto&& [result, modelOrReasonSet] = SolvingStateSimplifier(state).simplify();
-		if (result == LPResult::Infeasible)
+		if (!problem->simplex)
 		{
-			problem->result = LPResult::Infeasible;
-			problem->model = {};
-			problem->dirty = false;
-			// TODO we could use the improved reason set above.
-			return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
+			auto&& [state, varMapping] = stateFromSubProblem(index);
+			problem->varMapping = move(varMapping);
+
+			// The simplify run is important because it detects conflicts
+			// due to fixed variables.
+			auto&& [result, modelOrReasonSet] = SolvingStateSimplifier{state}.simplify();
+			if (result == LPResult::Infeasible)
+			{
+				problem->result = LPResult::Infeasible;
+				problem->model = {};
+				problem->dirty = false;
+				// TODO we could use the improved reason set above.
+				return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
+			}
+			for (auto&& [fixedVar, value]: get<map<size_t, rational>>(modelOrReasonSet))
+			{
+				state.bounds.at(fixedVar).lower = value;
+				state.bounds.at(fixedVar).upper = value;
+			}
+
+			problem->simplex = SimplexWithBounds{state};
 		}
+
+		// TODO we can just set the fixed variables to fixed bounds.
+		// Then adding new constraints using those is still fine.
+
 		//cout << state.toString() << endl;
 
 		// This is the new algorithm that uses bounds directly.
 		// TODO This new algorithm also allows us to lift the restriction
 		// that variables need to be non-negative.
+				/*
 		bool useSimplexWithBounds = true;
 		if (useSimplexWithBounds)
-		{
+		{*/
 			optional<LPResult> result;
-			if (m_cache)
+/*			if (m_cache)
 			{
 				auto it = m_cache->find(state);
 				if (it != m_cache->end())
@@ -1124,22 +1141,22 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 					//cout << "Cache hit" << endl;
 					result = it->second;
 				}
-			}
+			}*/
 			if (!result)
 			{
-				*result = SimplexWithBounds{state}.check();
+				*result = problem->simplex->check();
 				// TODO we should even keep the updated tableau in the subproblem
-				if (m_cache)
+/*				if (m_cache)
 				{
 					(*m_cache)[state] = *result;
 					//cout << "Cache size " << m_cache->size() << endl;
-				}
+				}*/
 			}
 			problem->dirty = false;
 			problem->result = *result;
 			if (problem->result == LPResult::Infeasible)
 				return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
-		}
+		/*}
 		else if (auto conflict = boundsToConstraints(state))
 		{
 			problem->result = LPResult::Infeasible;
@@ -1183,7 +1200,7 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 			problem->result = *result;
 			if (problem->result == LPResult::Infeasible)
 				return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
-		}
+		}*/
 	}
 
 	return {LPResult::Unknown, Model{}};
@@ -1195,6 +1212,8 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 	// TOOD creating a copy and setting dirty is on operation.
 	m_subProblems[_combineInto] = make_shared<SubProblem>(*m_subProblems[_combineInto]);
 	m_subProblems[_combineInto]->dirty = true;
+	m_subProblems[_combineInto]->simplex = nullopt;
+	m_subProblems[_combineInto]->varMapping = {};
 
 	for (size_t& item: m_subProblemsPerVariable)
 		if (item == _combineFrom)
@@ -1209,9 +1228,11 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 
 void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constraint)
 {
+	// TODO This is called in a loop - maybe we shouldn't copy every time.
 	m_subProblems[_subProblem] = make_shared<SubProblem>(*m_subProblems[_subProblem]);
 	SubProblem& problem = *m_subProblems[_subProblem];
 	problem.dirty = true;
+	problem.simplex = nullopt;
 	for (auto const& [index, entry]: _constraint.data.enumerateTail())
 		if (entry)
 		{
@@ -1219,13 +1240,15 @@ void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constra
 			m_subProblemsPerVariable[index] = _subProblem;
 			problem.variables.emplace(index);
 		}
+
 	// TODO if we keep the matrix, we could just add this as a new row.
 	problem.removableConstraints.emplace_back(move(_constraint));
 }
 
-SolvingState LPSolver::stateFromSubProblem(size_t _index) const
+pair<SolvingState, map<size_t, size_t>> LPSolver::stateFromSubProblem(size_t _index) const
 {
 	SolvingState split;
+	map<size_t, size_t> varMapping;
 
 	split.variableNames.emplace_back();
 	split.bounds.emplace_back();
@@ -1233,6 +1256,7 @@ SolvingState LPSolver::stateFromSubProblem(size_t _index) const
 	SubProblem const& problem = *m_subProblems[_index];
 	for (size_t varIndex: problem.variables)
 	{
+		varMapping[varIndex] = split.variableNames.size();
 		split.variableNames.emplace_back(m_state->variableNames[varIndex]);
 		split.bounds.emplace_back(m_state->bounds[varIndex]);
 	}
@@ -1256,7 +1280,9 @@ SolvingState LPSolver::stateFromSubProblem(size_t _index) const
 		split.constraints.push_back(move(splitRow));
 	}
 
-	return split;
+	normalizeRowLengths(split);
+
+	return {split, varMapping};
 }
 
 ReasonSet LPSolver::reasonSetForSubProblem(LPSolver::SubProblem const& _subProblem)
