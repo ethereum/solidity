@@ -172,6 +172,30 @@ enum class LPResult
 };
 
 
+class SimplexWithBounds
+{
+public:
+	explicit SimplexWithBounds(SolvingState _state);
+	LPResult check();
+
+	std::string toString() const;
+private:
+	/// Set value of non-basic variable.
+	void update(size_t _var, rational const& _value);
+	/// @returns the index of the first basic variable violating its bounds.
+	std::optional<size_t> firstConflictingBasicVariable() const;
+	std::optional<size_t> firstReplacementVar(size_t _basicVarToReplace, bool _increasing) const;
+
+	void pivot(size_t _old, size_t _new);
+	void pivotAndUpdate(size_t _oldBasicVar, rational const& _newValue, size_t _newBasicVar);
+
+	SolvingState m_state;
+	std::vector<rational> m_assignments;
+	/// Variable index to row it controls.
+	std::map<size_t, size_t> m_basicVariables;
+};
+
+
 /**
  * Applies several strategies to simplify a given solving state.
  * During these simplifications, it can sometimes already be determined if the
