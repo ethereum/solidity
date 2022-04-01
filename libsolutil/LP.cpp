@@ -605,6 +605,12 @@ SimplexWithBounds::SimplexWithBounds(SolvingState _state):
 {
 	size_t varsNeeded =  m_state.constraints.size();
 	size_t row = 0;
+	// TODO the new method does not need zero as lower-bound on all variables,
+	// but we currently assume that in the BooleanLP at some places.
+	for (auto& bounds: m_state.bounds)
+		if (!bounds.lower)
+			bounds.lower = rational{0};
+
 	for (Constraint& c: m_state.constraints)
 	{
 		c.data.resize(m_state.variableNames.size() + varsNeeded);
@@ -613,13 +619,10 @@ SimplexWithBounds::SimplexWithBounds(SolvingState _state):
 		solAssert(m_state.variableNames.size() == m_state.bounds.size());
 		// TODO name needed unique?
 		m_state.variableNames.emplace_back("_s" + to_string(newVarIndex));
-		// TODO we assume zero as lower bound here, but we do not have to.
-		m_state.bounds.emplace_back(SolvingState::Bounds{
-			{c.equality ? rational{c.data[0]} : rational{0}},
-			{c.data[0]},
-			{},
-			{}
-		});
+		m_state.bounds.emplace_back();
+		if (c.equality)
+			m_state.bounds.back().lower = c.data[0];
+		m_state.bounds.back().upper = c.data[0];
 		c.equality = true;
 		solAssert(c.data.size() > newVarIndex);
 		c.data[newVarIndex] = -1;
