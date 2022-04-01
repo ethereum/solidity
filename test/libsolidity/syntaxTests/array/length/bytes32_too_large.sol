@@ -2,4 +2,4 @@ contract C {
     bytes32[8**90] ids;
 }
 // ----
-// TypeError 5462: (25-30): Invalid array length, expected integer literal or constant expression.
+// TypeError 1847: (25-30): Array length too large, maximum is 2**256 - 1.
