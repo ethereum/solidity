@@ -203,6 +203,8 @@ void performPivot(Tableau& _tableau, size_t _pivotRow, size_t _pivotColumn)
 	auto subtractMultipleOfPivotRow = [&](LinearExpression& _row) {
 		if (_row[_pivotColumn] == rational{1})
 			_row -= _pivotRowData;
+		else if (_row[_pivotColumn] == rational{-1})
+			_row += _pivotRowData;
 		else if (_row[_pivotColumn])
 			_row -= _row[_pivotColumn] * _pivotRowData;
 	};
