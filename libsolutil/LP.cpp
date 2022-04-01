@@ -76,7 +76,11 @@ struct Tableau
 
 string toString(rational const& _x)
 {
-	if (_x.denominator() == 1)
+	if (_x == bigint(1) << 256)
+		return "2**256";
+	else if (_x == (bigint(1) << 256) - 1)
+		return "2**256-1";
+	else if (_x.denominator() == 1)
 		return ::toString(_x.numerator());
 	else
 		return ::toString(_x.numerator()) + "/" + ::toString(_x.denominator());
@@ -376,6 +380,225 @@ pair<LPResult, vector<rational>> simplex(vector<Constraint> _constraints, Linear
 	solAssert(result != LPResult::Infeasible, "");
 	return make_pair(result, solutionVector(tableau));
 }
+
+/// Introduces a new variable for each now and returns
+/// a map from the indices of those variables
+/// to the constraint they correspond to.
+map<size_t, size_t> normalizeForSolvingWithBounds(SolvingState& _state)
+{
+	size_t varsNeeded =  _state.constraints.size();
+	/*
+	for (Constraint& c: _state.constraints)
+		if (!c.equality || c.data[0])
+			varsNeeded++;
+	*/
+
+	map<size_t, size_t> basicVariables;
+	size_t row = 0;
+	for (Constraint& c: _state.constraints)
+	{
+		c.data.resize(_state.variableNames.size() + varsNeeded);
+		/*
+		 if (c.equality && !c.data[0])
+			continue;
+		 */
+
+		// ax + by <= c
+		// -> ax + by - s = 0,  0 <= s <= c
+		// ax + by = c
+		// -> ax + by - s = 0, c <= s <= c
+		size_t newVarIndex = _state.variableNames.size();
+		basicVariables[newVarIndex] = row++;
+		solAssert(_state.variableNames.size() == _state.bounds.size());
+		// TODO name needed unique?
+		_state.variableNames.emplace_back("_s" + to_string(newVarIndex));
+		_state.bounds.emplace_back(SolvingState::Bounds{
+			{c.equality ? rational{c.data[0]} : rational{0}},
+			{c.data[0]},
+			{},
+			{}
+		});
+		c.equality = true;
+		solAssert(c.data.size() > newVarIndex);
+		c.data[newVarIndex] = -1;
+		c.data[0] = 0;
+	}
+
+	return basicVariables;
+}
+
+void withBoundsUpdate(
+	SolvingState& _state,
+	vector<rational>& _assignments,
+	map<size_t, size_t> const& _basicVariables,
+	size_t _i,
+	rational const& _value
+)
+{
+	rational delta = _value - _assignments[_i];
+	_assignments[_i] = _value;
+	for (size_t j = 0; j < _assignments.size(); j++)
+		if (_basicVariables.count(j) && _state.constraints[_basicVariables.at(j)].data[_i])
+			_assignments[j] += _state.constraints[_basicVariables.at(j)].data[_i] * delta;
+}
+
+optional<size_t> firstConflictingBasicVariable(
+	SolvingState& _state,
+	vector<rational>& _assignments,
+	map<size_t, size_t> const& _basicVariables
+)
+{
+	for (auto const& [i, bounds]: _state.bounds | ranges::views::enumerate)
+		if (_basicVariables.count(i) && (
+			(bounds.lower && _assignments[i] < *bounds.lower) ||
+			(bounds.upper && _assignments[i] > *bounds.upper)
+		))
+			return i;
+	return nullopt;
+}
+
+optional<size_t> firstReplacementVar(
+	SolvingState& _state,
+	vector<rational>& _assignments,
+	map<size_t, size_t> const& _basicVariables,
+	size_t _basicVarToReplace,
+	bool _increasing
+)
+{
+	LinearExpression const& basicVarEquation = _state.constraints[_basicVariables.at(_basicVarToReplace)].data;
+	for (auto const& [i, bounds]: _state.bounds | ranges::views::enumerate)
+	{
+		if (_basicVariables.count(i) || !basicVarEquation[i])
+			continue;
+		bool positive = basicVarEquation[i] > 0;
+		if (!_increasing)
+			positive = !positive;
+		if (positive && (!_state.bounds[i].upper || _assignments[i] < _state.bounds[i].upper))
+			return i;
+		if (!positive && (!_state.bounds[i].lower || _assignments[i] > _state.bounds[i].lower))
+			return i;
+	}
+	return nullopt;
+}
+
+void pivot(SolvingState& _state, map<size_t, size_t>& _basicVariables, size_t _old, size_t _new)
+{
+	// Transform pivotRow such that the coefficient for _new is -1
+	// Then use that to set all other coefficients for _new to zero.
+	size_t pivotRow = _basicVariables[_old];
+	LinearExpression& pivotRowData = _state.constraints[_basicVariables[_old]].data;
+
+	rational pivot = pivotRowData[_new];
+	solAssert(pivot != 0, "");
+	if (pivot != -1)
+		pivotRowData /= -pivot;
+	solAssert(pivotRowData[_new] == rational(-1), "");
+
+	auto subtractMultipleOfPivotRow = [&](LinearExpression& _row) {
+		if (_row[_new] == 0)
+			return;
+		else if (_row[_new] == rational{1})
+			_row += pivotRowData;
+		else if (_row[_new] == rational{-1})
+			_row -= pivotRowData;
+		else
+			_row += _row[_new] * pivotRowData;
+	};
+
+	for (size_t i = 0; i < _state.constraints.size(); ++i)
+		if (i != pivotRow)
+			subtractMultipleOfPivotRow(_state.constraints[i].data);
+
+	_basicVariables.erase(_old);
+	_basicVariables[_new] = pivotRow;
+}
+
+void pivotAndUpdate(
+	SolvingState& _state,
+	map<size_t, size_t>& _basicVariables,
+	vector<rational>& _assignments,
+	size_t _oldBasicVar,
+	rational const& _newValue,
+	size_t _newBasicVar
+)
+{
+	rational theta = (_newValue - _assignments[_oldBasicVar]) / _state.constraints[_basicVariables[_oldBasicVar]].data[_newBasicVar];
+
+	_assignments[_oldBasicVar] = _newValue;
+	_assignments[_newBasicVar] += theta;
+
+	for (auto const& [i, row]: _basicVariables)
+		if (i != _oldBasicVar && _state.constraints[row].data[_newBasicVar])
+			_assignments[i] += _state.constraints[row].data[_newBasicVar] * theta;
+
+	pivot(_state, _basicVariables, _oldBasicVar, _newBasicVar);
+	cout << "After pivot and update: " << endl << _state.toString() << endl;
+}
+
+
+pair<LPResult, vector<rational>> simplexWithBounds(SolvingState _state)
+{
+	cout << "===========================" << endl;
+	cout << "===========================" << endl;
+	cout << "simpl with bounds on\n" << _state.toString() << endl;
+	map<size_t, size_t> basicVariables = normalizeForSolvingWithBounds(_state);
+	cout << "After norm ------------------------\n" << _state.toString() << endl;
+
+	vector<rational> assignments(_state.variableNames.size());
+	// We start with an all-zero assignment and then gradually add
+	// the bounds we already have.
+
+	cout << "Adjusting bounds on non-basic variables\n";
+	// Adjust the assignments so we satisfy the bounds of the non-basic variables.
+	for (auto const& [i, bounds]: _state.bounds | ranges::views::enumerate)
+	{
+		if (basicVariables.count(i) || (!bounds.lower && !bounds.upper))
+			continue;
+		if (bounds.lower && bounds.upper)
+			solAssert(*bounds.lower <= *bounds.upper);
+		if (bounds.lower && assignments[i] < *bounds.lower)
+			withBoundsUpdate(_state, assignments, basicVariables, i, *bounds.lower);
+		else if (bounds.upper && assignments[i] > *bounds.upper)
+			withBoundsUpdate(_state, assignments, basicVariables, i, *bounds.upper);
+		cout << "Assignments after satisfying bound for " << _state.variableNames[i] << ":\n";
+		for (auto const& [j, val]: assignments | ranges::views::enumerate)
+		{
+			cout << " - " << _state.variableNames[j];
+			if (basicVariables.count(j)) cout << " (b)";
+			cout << " = " << ::toString(val) << endl;
+		}
+		cout << "----------------\n" << _state.toString() << endl;
+	}
+	cout << "Bounds on non-basic vaiables set.\n";
+
+	// Now try to make the basic variables happy, pivoting if necessary.
+
+	// TODO bound number of iterations
+	while (auto bvi = firstConflictingBasicVariable(_state, assignments, basicVariables))
+	{
+		cout << "Basic variable " << _state.variableNames[*bvi] << " is conflicting." << endl;
+		if (_state.bounds[*bvi].lower && assignments[*bvi] < *_state.bounds[*bvi].lower)
+		{
+			if (auto replacementVar = firstReplacementVar(_state, assignments, basicVariables, *bvi, true))
+				pivotAndUpdate(_state, basicVariables, assignments, *bvi, *_state.bounds.at(*bvi).lower, *replacementVar);
+			else
+				return make_pair(LPResult::Infeasible, vector<rational>{});
+		}
+		else if (_state.bounds[*bvi].upper && assignments[*bvi] > *_state.bounds[*bvi].upper)
+		{
+			if (auto replacementVar = firstReplacementVar(_state, assignments, basicVariables, *bvi, false))
+				pivotAndUpdate(_state, basicVariables, assignments, *bvi, *_state.bounds.at(*bvi).upper, *replacementVar);
+			else
+				return make_pair(LPResult::Infeasible, vector<rational>{});
+		}
+	}
+
+	cout << ">>>>>>>>>>>>>>>>>>>>>>" << endl;
+	cout << ">>>>>>>>>>>>>>>>>>>>>>" << endl;
+
+	return make_pair(LPResult::Feasible, move(assignments));
+}
+
 
 /// Turns all bounds into constraints.
 /// @returns false if the bounds make the state infeasible.
@@ -892,6 +1115,8 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 
 		//cout << "Updating sub problem" << endl;
 		SolvingState state = stateFromSubProblem(index);
+		// TODO cache this in the subproblem so that we don't have to extract it
+		// if we add a new assertion, but can just update it.
 		normalizeRowLengths(state);
 
 		// The simplify run is important because it detects conflicts
@@ -907,7 +1132,39 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 		}
 		//cout << state.toString() << endl;
 
-		if (auto conflict = boundsToConstraints(state))
+		// This is the new algorithm that uses bounds directly.
+		// TODO This new algorithm also allows us to lift the restriction
+		// that variables need to be non-negative.
+		bool useSimplexWithBounds = true;
+		if (useSimplexWithBounds)
+		{
+			optional<LPResult> result;
+			if (m_cache)
+			{
+				auto it = m_cache->find(state);
+				if (it != m_cache->end())
+				{
+					//cout << "Cache hit" << endl;
+					result = it->second;
+				}
+			}
+			if (!result)
+			{
+				result = LPResult::Unknown;
+				tie(*result, problem->model) = simplexWithBounds(state);
+				// TODO we should even keep the updated tableau in the subproblem
+				if (m_cache)
+				{
+					(*m_cache)[state] = *result;
+					//cout << "Cache size " << m_cache->size() << endl;
+				}
+			}
+			problem->dirty = false;
+			problem->result = *result;
+			if (problem->result == LPResult::Infeasible)
+				return {LPResult::Infeasible, reasonSetForSubProblem(*problem)};
+		}
+		else if (auto conflict = boundsToConstraints(state))
 		{
 			problem->result = LPResult::Infeasible;
 			problem->model = {};
