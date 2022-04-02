@@ -17,7 +17,7 @@ contract C {
 	}
 }
 // ----
-// TypeError 7006: (214-231): Cannot set option "value", since the constructor of contract B1 is not payable.
-// TypeError 7006: (237-254): Cannot set option "value", since the constructor of contract B2 is not payable.
-// TypeError 7006: (260-277): Cannot set option "value", since the constructor of contract B3 is not payable.
-// TypeError 7006: (283-300): Cannot set option "value", since the constructor of contract B4 is not payable.
+// TypeError 7006: (214-231='new B1{value: 10}'): Cannot set option "value", since the constructor of contract B1 is not payable.
+// TypeError 7006: (237-254='new B2{value: 10}'): Cannot set option "value", since the constructor of contract B2 is not payable.
+// TypeError 7006: (260-277='new B3{value: 10}'): Cannot set option "value", since the constructor of contract B3 is not payable.
+// TypeError 7006: (283-300='new B4{value: 10}'): Cannot set option "value", since the constructor of contract B4 is not payable.

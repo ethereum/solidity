@@ -25,4 +25,4 @@ contract D is C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (286-300): BMC: Assertion violation happens here.
+// Warning 4661: (286-300='assert(x == 1)'): BMC: Assertion violation happens here.

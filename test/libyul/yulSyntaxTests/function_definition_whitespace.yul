@@ -3,4 +3,4 @@
     }
 }
 // ----
-// ParserError 2314: (30-31): Expected '{' but got '-'
+// ParserError 2314: (30-31='-'): Expected '{' but got '-'

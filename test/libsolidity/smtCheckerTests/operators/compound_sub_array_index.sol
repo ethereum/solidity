@@ -15,4 +15,4 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (226-247): CHC: Assertion violation happens here.
+// Warning 6328: (226-247='assert(array[p] < 90)'): CHC: Assertion violation happens here.

@@ -4,4 +4,4 @@ library L {
   }
 }
 // ----
-// DeclarationError 7576: (41-46): Undeclared identifier. "super" is not (or not yet) visible at this point.
+// DeclarationError 7576: (41-46='super'): Undeclared identifier. "super" is not (or not yet) visible at this point.

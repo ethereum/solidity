@@ -10,5 +10,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6321: (43-47): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6838: (59-63): BMC: Condition is always true.
+// Warning 6321: (43-47='uint'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6838: (59-63='1==1'): BMC: Condition is always true.

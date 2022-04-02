@@ -5,4 +5,4 @@ contract C is I {
 	function f() external {}
 }
 // ----
-// TypeError 9456: (75-99): Overriding function is missing "override" specifier.
+// TypeError 9456: (75-99='function f() external {}'): Overriding function is missing "override" specifier.

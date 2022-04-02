@@ -6,4 +6,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// ParserError 2856: (62-64): Variable name must precede ":=" in assignment.
+// ParserError 2856: (62-64=':='): Variable name must precede ":=" in assignment.

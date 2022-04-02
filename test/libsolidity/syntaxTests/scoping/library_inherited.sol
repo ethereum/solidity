@@ -14,4 +14,4 @@ contract B is A {
     }
 }
 // ----
-// TypeError 9582: (246-255): Member "foo" not found or not visible after argument-dependent lookup in uint256.
+// TypeError 9582: (246-255='value.foo'): Member "foo" not found or not visible after argument-dependent lookup in uint256.

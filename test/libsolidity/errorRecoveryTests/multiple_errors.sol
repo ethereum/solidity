@@ -21,9 +21,9 @@ contract Error4 {
 
 }
 // ----
-// ParserError 6635: (242-243): Expected ';' but got 'Number'
-// ParserError 6635: (464-472): Expected ';' but got identifier
-// ParserError 6635: (522-526): Expected ';' but got 'emit'
-// ParserError 6635: (570-576): Expected ',' but got 'return'
-// ParserError 6933: (570-576): Expected primary expression.
-// Warning 3796: (581-582): Recovered in Statement at ';'.
+// ParserError 6635: (242-243='2'): Expected ';' but got 'Number'
+// ParserError 6635: (464-472='balances'): Expected ';' but got identifier
+// ParserError 6635: (522-526='emit'): Expected ';' but got 'emit'
+// ParserError 6635: (570-576='return'): Expected ',' but got 'return'
+// ParserError 6933: (570-576='return'): Expected primary expression.
+// Warning 3796: (581-582=';'): Recovered in Statement at ';'.

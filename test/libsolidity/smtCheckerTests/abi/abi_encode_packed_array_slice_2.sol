@@ -30,5 +30,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (643-658): Unused local variable.
-// Warning 6328: (298-328): CHC: Assertion violation happens here.
+// Warning 2072: (643-658='bytes memory b4'): Unused local variable.
+// Warning 6328: (298-328='assert(b1.length == b2.length)'): CHC: Assertion violation happens here.

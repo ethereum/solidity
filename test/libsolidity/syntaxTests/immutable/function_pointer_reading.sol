@@ -10,4 +10,4 @@ contract C is B(C.f) {
     function f() internal returns(uint) { return x + 2; }
 }
 // ----
-// TypeError 7733: (200-201): Immutable variables cannot be read before they are initialized.
+// TypeError 7733: (200-201='x'): Immutable variables cannot be read before they are initialized.

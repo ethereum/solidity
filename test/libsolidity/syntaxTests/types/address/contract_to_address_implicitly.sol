@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// TypeError 9574: (46-62): Type contract C is not implicitly convertible to expected type address.
+// TypeError 9574: (46-62='address a = this'): Type contract C is not implicitly convertible to expected type address.

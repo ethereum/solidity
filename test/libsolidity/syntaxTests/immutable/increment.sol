@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3969: (63-64): Immutable variables must be initialized using an assignment.
+// TypeError 3969: (63-64='x'): Immutable variables must be initialized using an assignment.

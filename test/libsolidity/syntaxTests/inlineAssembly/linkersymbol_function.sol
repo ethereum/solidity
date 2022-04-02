@@ -8,4 +8,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError 5017: (63-90): The identifier "linkersymbol" is reserved and can not be used.
+// DeclarationError 5017: (63-90='function linkersymbol(a) {}'): The identifier "linkersymbol" is reserved and can not be used.

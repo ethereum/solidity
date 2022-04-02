@@ -10,4 +10,4 @@ object "A" {
   data ".mightbereservedinthefuture" "TRS"
 }
 // ----
-// TypeError 3517: (90-119): Unknown data object ".mightbereservedinthefuture".
+// TypeError 3517: (90-119='".mightbereservedinthefuture"'): Unknown data object ".mightbereservedinthefuture".

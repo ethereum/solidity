@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5604: (122-125): Array component cannot be empty.
+// TypeError 5604: (122-125='f()'): Array component cannot be empty.

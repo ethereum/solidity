@@ -4,4 +4,4 @@
 	}
 }
 // ----
-// DeclarationError 6052: (20-35): Function name g already taken in this scope.
+// DeclarationError 6052: (20-35='function g() {}'): Function name g already taken in this scope.

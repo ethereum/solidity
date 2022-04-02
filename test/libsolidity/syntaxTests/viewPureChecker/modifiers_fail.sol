@@ -8,5 +8,5 @@ contract C is D {
     function g() nonpayablem(0) view public {}
 }
 // ----
-// TypeError 2527: (154-162): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 8961: (195-209): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 2527: (154-162='viewm(0)'): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 8961: (195-209='nonpayablem(0)'): Function cannot be declared as view because this expression (potentially) modifies the state.

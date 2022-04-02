@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3464: (87-98): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (87-98='S storage c'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.

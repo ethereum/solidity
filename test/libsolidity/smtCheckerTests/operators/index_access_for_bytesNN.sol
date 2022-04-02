@@ -7,4 +7,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (76-90): CHC: Out of bounds access might happen here.
+// Warning 6368: (76-90='b[uint8(x[2])]'): CHC: Out of bounds access might happen here.

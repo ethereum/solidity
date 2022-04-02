@@ -9,4 +9,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (83-99): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (83-99='assert(y > 1000)'): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()

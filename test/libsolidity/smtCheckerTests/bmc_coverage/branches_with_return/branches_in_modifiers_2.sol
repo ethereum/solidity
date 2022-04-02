@@ -38,6 +38,6 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (351-365): BMC: Assertion violation happens here.
-// Warning 4661: (602-619): BMC: Assertion violation happens here.
-// Warning 4661: (748-762): BMC: Assertion violation happens here.
+// Warning 4661: (351-365='assert(x == 1)'): BMC: Assertion violation happens here.
+// Warning 4661: (602-619='assert(oldx == x)'): BMC: Assertion violation happens here.
+// Warning 4661: (748-762='assert(x == 0)'): BMC: Assertion violation happens here.

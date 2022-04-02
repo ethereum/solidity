@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError 4061: (81-113): Type mapping(uint256 => uint256) is only valid in storage because it contains a (nested) mapping.
+// TypeError 4061: (81-113='mapping(uint => uint) calldata x'): Type mapping(uint256 => uint256) is only valid in storage because it contains a (nested) mapping.

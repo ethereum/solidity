@@ -10,7 +10,7 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (76-80): CHC: Out of bounds access might happen here.
-// Warning 6368: (115-119): CHC: Out of bounds access might happen here.
-// Warning 6368: (141-145): CHC: Out of bounds access might happen here.
-// Warning 6328: (134-151): CHC: Assertion violation might happen here.
+// Warning 6368: (76-80='c[0]'): CHC: Out of bounds access might happen here.
+// Warning 6368: (115-119='c[0]'): CHC: Out of bounds access might happen here.
+// Warning 6368: (141-145='c[0]'): CHC: Out of bounds access might happen here.
+// Warning 6328: (134-151='assert(c[0] <= 1)'): CHC: Assertion violation might happen here.

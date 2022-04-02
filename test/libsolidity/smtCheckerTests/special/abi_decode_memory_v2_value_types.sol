@@ -10,5 +10,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (91-98): Unused local variable.
-// Warning 2072: (146-153): Unused local variable.
+// Warning 2072: (91-98='bool b1'): Unused local variable.
+// Warning 2072: (146-153='bool b2'): Unused local variable.

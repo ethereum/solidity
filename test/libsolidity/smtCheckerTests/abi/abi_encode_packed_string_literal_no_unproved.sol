@@ -23,14 +23,14 @@ contract C {
 // SMTEngine: all
 // SMTShowUnproved: no
 // ----
-// Warning 1218: (226-256): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (310-340): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (483-513): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (568-598): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (654-684): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (226-256='assert(b1.length == b2.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (310-340='assert(b1.length == b3.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (483-513='assert(b1.length == b4.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (568-598='assert(b1.length == b5.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (654-684='assert(b1.length == b6.length)'): CHC: Error trying to invoke SMT solver.
 // Warning 5840: CHC: 5 verification condition(s) could not be proved. Enable the model checker option "show unproved" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
-// Warning 4661: (226-256): BMC: Assertion violation happens here.
-// Warning 4661: (310-340): BMC: Assertion violation happens here.
-// Warning 4661: (483-513): BMC: Assertion violation happens here.
-// Warning 4661: (568-598): BMC: Assertion violation happens here.
-// Warning 4661: (654-684): BMC: Assertion violation happens here.
+// Warning 4661: (226-256='assert(b1.length == b2.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (310-340='assert(b1.length == b3.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (483-513='assert(b1.length == b4.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (568-598='assert(b1.length == b5.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (654-684='assert(b1.length == b6.length)'): BMC: Assertion violation happens here.

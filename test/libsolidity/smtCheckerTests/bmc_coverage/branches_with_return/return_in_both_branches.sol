@@ -18,4 +18,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 5740: (232-240): Unreachable code.
+// Warning 5740: (232-240='return 1'): Unreachable code.

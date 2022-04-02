@@ -11,5 +11,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4984: (120-125): CHC: Overflow (resulting value larger than 255) happens here.\nCounterexample:\n\na = 128\nb = 2\n = 0\nc = 0\n\nTransaction trace:\nC.constructor()\nC.mul(128, 2)
-// Warning 6838: (137-147): BMC: Condition is always true.
+// Warning 4984: (120-125='a * b'): CHC: Overflow (resulting value larger than 255) happens here.\nCounterexample:\n\na = 128\nb = 2\n = 0\nc = 0\n\nTransaction trace:\nC.constructor()\nC.mul(128, 2)
+// Warning 6838: (137-147='c / a == b'): BMC: Condition is always true.

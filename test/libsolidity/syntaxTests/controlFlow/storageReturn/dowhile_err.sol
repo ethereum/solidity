@@ -45,12 +45,12 @@ contract C {
     }
 }
 // ----
-// TypeError 3464: (87-98): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// Warning 5740: (146-151): Unreachable code.
-// Warning 5740: (169-174): Unreachable code.
-// TypeError 3464: (223-234): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// Warning 5740: (316-321): Unreachable code.
-// TypeError 3464: (440-451): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (654-665): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (871-882): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// Warning 5740: (933-938): Unreachable code.
+// TypeError 3464: (87-98='S storage c'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// Warning 5740: (146-151='c = s'): Unreachable code.
+// Warning 5740: (169-174='false'): Unreachable code.
+// TypeError 3464: (223-234='S storage c'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// Warning 5740: (316-321='c = s'): Unreachable code.
+// TypeError 3464: (440-451='S storage c'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (654-665='S storage c'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (871-882='S storage c'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// Warning 5740: (933-938='c = s'): Unreachable code.

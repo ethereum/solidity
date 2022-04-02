@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 8820: (47-62): Member "value" is only available for payable functions.
+// TypeError 8820: (47-62='ecrecover.value'): Member "value" is only available for payable functions.

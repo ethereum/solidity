@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// ParserError 8936: (100-105): Invalid escape sequence.
+// ParserError 8936: (100-105='"\t\b'): Invalid escape sequence.

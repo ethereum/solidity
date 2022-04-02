@@ -6,4 +6,4 @@ contract C
 	}
 }
 // ----
-// Warning 2319: (58-70): This declaration shadows a builtin symbol.
+// Warning 2319: (58-70='bool suicide'): This declaration shadows a builtin symbol.

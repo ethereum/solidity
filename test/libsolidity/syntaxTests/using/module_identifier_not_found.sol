@@ -10,4 +10,4 @@ contract C {
     using { id } for uint;
 }
 // ----
-// DeclarationError 7920: (B:43-45): Identifier not found or not unique.
+// DeclarationError 7920: (B:43-45='id'): Identifier not found or not unique.

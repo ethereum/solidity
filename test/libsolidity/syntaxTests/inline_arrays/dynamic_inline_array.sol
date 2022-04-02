@@ -4,5 +4,5 @@ contract C {
     }
 }
 // ----
-// Warning 2072: (47-69): Unused local variable.
+// Warning 2072: (47-69='uint8[4][4] memory dyn'): Unused local variable.
 // Warning 2018: (17-135): Function state mutability can be restricted to pure

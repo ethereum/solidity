@@ -9,5 +9,5 @@ contract C {
 // ====
 // EVMVersion: >=london
 // ----
-// TypeError 2527: (67-76): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (147-160): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (67-76='basefee()'): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (147-160='block.basefee'): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".

@@ -4,4 +4,4 @@
 // ====
 // dialect: ewasm
 // ----
-// DeclarationError 4619: (6-18): Function "linkersymbol" not found.
+// DeclarationError 4619: (6-18='linkersymbol'): Function "linkersymbol" not found.

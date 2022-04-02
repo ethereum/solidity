@@ -9,4 +9,4 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 6838: (90-95): BMC: Condition is always false.
+// Warning 6838: (90-95='x > 2'): BMC: Condition is always false.

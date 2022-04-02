@@ -8,5 +8,5 @@ contract C {
     }
 }
 // ----
-// Warning 5740: (76-79): Unreachable code.
-// Warning 5740: (114-128): Unreachable code.
+// Warning 5740: (76-79='a++'): Unreachable code.
+// Warning 5740: (114-128='uint b = 42; b'): Unreachable code.

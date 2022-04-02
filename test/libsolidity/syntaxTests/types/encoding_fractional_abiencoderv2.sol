@@ -5,4 +5,4 @@ contract C {
    }
 }
 // ----
-// TypeError 6090: (126-129): Fractional numbers cannot yet be encoded.
+// TypeError 6090: (126-129='0.1'): Fractional numbers cannot yet be encoded.

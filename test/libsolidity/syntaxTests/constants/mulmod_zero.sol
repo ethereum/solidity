@@ -6,6 +6,6 @@ contract c {
     uint constant b3 = mulmod(3, 4, a2 - 1);
 }
 // ----
-// TypeError 4195: (88-103): Arithmetic modulo zero.
-// TypeError 4195: (128-144): Arithmetic modulo zero.
-// TypeError 4195: (169-189): Arithmetic modulo zero.
+// TypeError 4195: (88-103='mulmod(3, 4, 0)'): Arithmetic modulo zero.
+// TypeError 4195: (128-144='mulmod(3, 4, a1)'): Arithmetic modulo zero.
+// TypeError 4195: (169-189='mulmod(3, 4, a2 - 1)'): Arithmetic modulo zero.

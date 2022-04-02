@@ -3,4 +3,4 @@ contract Test {
     }
 }
 // ----
-// ParserError 2314: (36-40): Expected ',' but got 'type'
+// ParserError 2314: (36-40='type'): Expected ',' but got 'type'

@@ -14,5 +14,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (150-164): CHC: Assertion violation happens here.\nCounterexample:\n\nb = false\na = 0\nc = 2\n\nTransaction trace:\nC.constructor()\nC.f(false, 0)
-// Warning 6838: (122-123): BMC: Condition is always false.
+// Warning 6328: (150-164='assert(c == a)'): CHC: Assertion violation happens here.\nCounterexample:\n\nb = false\na = 0\nc = 2\n\nTransaction trace:\nC.constructor()\nC.f(false, 0)
+// Warning 6838: (122-123='b'): BMC: Condition is always false.

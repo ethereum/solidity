@@ -16,4 +16,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 3726: (77-92): The name "_" is reserved.
+// DeclarationError 3726: (77-92='string memory _'): The name "_" is reserved.

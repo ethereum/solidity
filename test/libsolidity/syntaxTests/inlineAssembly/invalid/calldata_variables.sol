@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1397: (111-126): Call data elements cannot be accessed directly. Use ".offset" and ".length" to access the calldata offset and length of this array and then use "calldatacopy".
+// TypeError 1397: (111-126='bytesAsCalldata'): Call data elements cannot be accessed directly. Use ".offset" and ".length" to access the calldata offset and length of this array and then use "calldatacopy".

@@ -9,5 +9,5 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 9302: (83-94): Return value of low-level calls not used.
-// Warning 4661: (133-149): BMC: Assertion violation happens here.
+// Warning 9302: (83-94='_a.call("")'): Return value of low-level calls not used.
+// Warning 4661: (133-149='assert(b1 == b2)'): BMC: Assertion violation happens here.

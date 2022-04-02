@@ -25,5 +25,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (320-334): CHC: Assertion violation happens here.
+// Warning 6328: (320-334='assert(x == 1)'): CHC: Assertion violation happens here.
 // Info 1180: Reentrancy property(ies) for :C:\n!(<errorCode> = 1)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(x == 0)\n<errorCode> = 2 -> Assertion failed at assert(x == 1)\n

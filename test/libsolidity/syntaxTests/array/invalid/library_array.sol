@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// TypeError 1130: (51-52): Invalid use of a library name.
+// TypeError 1130: (51-52='L'): Invalid use of a library name.

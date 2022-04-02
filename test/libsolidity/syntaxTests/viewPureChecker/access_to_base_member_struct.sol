@@ -15,7 +15,7 @@ contract B is A {
     }
 }
 // ----
-// TypeError 8961: (107-110): Function cannot be declared as view because this expression (potentially) modifies the state.
-// TypeError 8961: (166-171): Function cannot be declared as view because this expression (potentially) modifies the state.
-// TypeError 2527: (244-247): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 2527: (244-249): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 8961: (107-110='A.s'): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (166-171='A.s.x'): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 2527: (244-247='A.s'): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 2527: (244-249='A.s.x'): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".

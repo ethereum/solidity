@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 7576: (70-71): Undeclared identifier. "x" is not (or not yet) visible at this point.
+// DeclarationError 7576: (70-71='x'): Undeclared identifier. "x" is not (or not yet) visible at this point.

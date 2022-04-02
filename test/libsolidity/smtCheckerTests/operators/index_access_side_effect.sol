@@ -22,6 +22,6 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (335-354): CHC: Assertion violation might happen here.
+// Warning 6328: (335-354='assert(h()[2] == 3)'): CHC: Assertion violation might happen here.
 // Info 1180: Contract invariant(s) for :C:\n!(a.length <= 2)\n!(a.length <= 3)\n
-// Warning 4661: (335-354): BMC: Assertion violation happens here.
+// Warning 4661: (335-354='assert(h()[2] == 3)'): BMC: Assertion violation happens here.

@@ -8,4 +8,4 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// TypeError 1271: (72-97): Expected `catch Panic(uint ...) { ... }`.
+// TypeError 1271: (72-97='catch Panic() {         }'): Expected `catch Panic(uint ...) { ... }`.

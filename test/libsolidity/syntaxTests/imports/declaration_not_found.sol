@@ -4,4 +4,4 @@ contract A { }
 import {C} from "a";
 contract B { }
 // ----
-// DeclarationError 2904: (b:0-20): Declaration "C" not found in "a" (referenced as "a").
+// DeclarationError 2904: (b:0-20='import {C} from "a";'): Declaration "C" not found in "a" (referenced as "a").

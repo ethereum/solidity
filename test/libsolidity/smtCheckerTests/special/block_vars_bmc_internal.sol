@@ -30,8 +30,8 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (473-503): BMC: Assertion violation happens here.
-// Warning 4661: (531-562): BMC: Assertion violation happens here.
-// Warning 4661: (590-619): BMC: Assertion violation happens here.
-// Warning 4661: (647-677): BMC: Assertion violation happens here.
+// Warning 4661: (473-503='assert(coin == block.coinbase)'): BMC: Assertion violation happens here.
+// Warning 4661: (531-562='assert(dif == block.difficulty)'): BMC: Assertion violation happens here.
+// Warning 4661: (590-619='assert(gas == block.gaslimit)'): BMC: Assertion violation happens here.
+// Warning 4661: (647-677='assert(number == block.number)'): BMC: Assertion violation happens here.
 // Warning 4661: (705-741): BMC: Assertion violation happens here.

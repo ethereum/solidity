@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4599: (86-87): Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement.
+// TypeError 4599: (86-87='x'): Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement.

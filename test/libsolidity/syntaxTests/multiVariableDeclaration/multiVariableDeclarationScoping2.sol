@@ -6,6 +6,6 @@ contract C {
   }
 }
 // ----
-// DeclarationError 7576: (79-80): Undeclared identifier. "a" is not (or not yet) visible at this point.
-// DeclarationError 7576: (82-83): Undeclared identifier. "b" is not (or not yet) visible at this point.
-// DeclarationError 7576: (85-86): Undeclared identifier. "c" is not (or not yet) visible at this point.
+// DeclarationError 7576: (79-80='a'): Undeclared identifier. "a" is not (or not yet) visible at this point.
+// DeclarationError 7576: (82-83='b'): Undeclared identifier. "b" is not (or not yet) visible at this point.
+// DeclarationError 7576: (85-86='c'): Undeclared identifier. "c" is not (or not yet) visible at this point.

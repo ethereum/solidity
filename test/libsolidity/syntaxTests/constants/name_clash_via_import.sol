@@ -4,4 +4,4 @@ uint constant c = 7;
 import {c as d} from "a";
 uint constant d = 7;
 // ----
-// DeclarationError 2333: (b:26-45): Identifier already declared.
+// DeclarationError 2333: (b:26-45='uint constant d = 7'): Identifier already declared.

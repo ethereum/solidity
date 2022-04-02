@@ -34,12 +34,12 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (384-399): Unused local variable.
-// Warning 1218: (955-959): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (948-965): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (976-980): CHC: Error trying to invoke SMT solver.
-// Warning 6368: (489-493): CHC: Out of bounds access happens here.
-// Warning 6368: (955-959): CHC: Out of bounds access might happen here.
-// Warning 6328: (948-965): CHC: Assertion violation might happen here.
-// Warning 6368: (976-980): CHC: Out of bounds access might happen here.
-// Warning 4661: (948-965): BMC: Assertion violation happens here.
+// Warning 2072: (384-399='uint[] memory d'): Unused local variable.
+// Warning 1218: (955-959='a[0]'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (948-965='assert(a[0] == 2)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (976-980='b[0]'): CHC: Error trying to invoke SMT solver.
+// Warning 6368: (489-493='b[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (955-959='a[0]'): CHC: Out of bounds access might happen here.
+// Warning 6328: (948-965='assert(a[0] == 2)'): CHC: Assertion violation might happen here.
+// Warning 6368: (976-980='b[0]'): CHC: Out of bounds access might happen here.
+// Warning 4661: (948-965='assert(a[0] == 2)'): BMC: Assertion violation happens here.

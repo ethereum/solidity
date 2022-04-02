@@ -4,4 +4,4 @@ contract Scope {
     }
 }
 // ----
-// TypeError 9582: (101-115): Member "stateVar" not found or not visible after argument-dependent lookup in type(contract Scope).
+// TypeError 9582: (101-115='Scope.stateVar'): Member "stateVar" not found or not visible after argument-dependent lookup in type(contract Scope).

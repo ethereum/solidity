@@ -9,4 +9,4 @@ contract B {
 contract C is A, B {
 }
 // ----
-// DeclarationError 9097: (99-111): Identifier already declared.
+// DeclarationError 9097: (99-111='event dup();'): Identifier already declared.

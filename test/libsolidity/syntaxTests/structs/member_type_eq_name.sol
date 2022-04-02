@@ -3,4 +3,4 @@ contract C {
   function f(function(S memory) external) public {}
 }
 // ----
-// DeclarationError 7920: (25-26): Identifier not found or not unique.
+// DeclarationError 7920: (25-26='t'): Identifier not found or not unique.

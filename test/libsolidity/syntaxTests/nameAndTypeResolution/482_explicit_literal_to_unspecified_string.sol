@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning 6133: (52-65): Statement has no effect.
+// Warning 6133: (52-65='string("abc")'): Statement has no effect.

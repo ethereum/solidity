@@ -23,7 +23,7 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (213-243): CHC: Assertion violation happens here.
+// Warning 6328: (213-243='assert(f(0x4266, 0) == 0x4267)'): CHC: Assertion violation happens here.
 // Warning 6328: (327-365): CHC: Assertion violation happens here.
 // Warning 6328: (449-485): CHC: Assertion violation happens here.
-// Warning 6328: (560-588): CHC: Assertion violation happens here.
+// Warning 6328: (560-588='assert(f(0x4266, 0x20) == 1)'): CHC: Assertion violation happens here.

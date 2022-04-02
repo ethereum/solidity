@@ -12,5 +12,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (188-220): CHC: Assertion violation might happen here.
-// Warning 4661: (188-220): BMC: Assertion violation happens here.
+// Warning 6328: (188-220='assert(bytes(b[10:])[0] == 0xff)'): CHC: Assertion violation might happen here.
+// Warning 4661: (188-220='assert(bytes(b[10:])[0] == 0xff)'): BMC: Assertion violation happens here.

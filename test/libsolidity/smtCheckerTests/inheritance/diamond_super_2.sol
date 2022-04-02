@@ -30,5 +30,5 @@ contract D is B, C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (443-458): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
-// Warning 6328: (477-492): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
+// Warning 6328: (443-458='assert(r == 20)'): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
+// Warning 6328: (477-492='assert(r == 18)'): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call

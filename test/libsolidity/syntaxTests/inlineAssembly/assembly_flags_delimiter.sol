@@ -2,4 +2,4 @@ function f() pure {
 	assembly ("a" "b") {}
 }
 // ----
-// ParserError 2314: (35-38): Expected ')' but got 'StringLiteral'
+// ParserError 2314: (35-38='"b"'): Expected ')' but got 'StringLiteral'

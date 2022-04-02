@@ -5,6 +5,6 @@ contract test {
 }
 function h() {}
 // ----
-// Warning 2519: (63-69): This declaration shadows an existing declaration.
-// Warning 2519: (71-77): This declaration shadows an existing declaration.
-// Warning 2519: (79-85): This declaration shadows an existing declaration.
+// Warning 2519: (63-69='uint e'): This declaration shadows an existing declaration.
+// Warning 2519: (71-77='uint g'): This declaration shadows an existing declaration.
+// Warning 2519: (79-85='uint h'): This declaration shadows an existing declaration.

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2718: (74-75): Immutable variables cannot be modified after initialization.
+// TypeError 2718: (74-75='x'): Immutable variables cannot be modified after initialization.

@@ -5,4 +5,4 @@ contract J is C { constructor() C(3) { assert(a == 4); } }
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (211-225): CHC: Assertion violation happens here.\nCounterexample:\na = 3\n\nTransaction trace:\nJ.constructor()
+// Warning 6328: (211-225='assert(a == 4)'): CHC: Assertion violation happens here.\nCounterexample:\na = 3\n\nTransaction trace:\nJ.constructor()

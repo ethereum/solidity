@@ -4,4 +4,4 @@ contract C {
 	}
 }
 // ----
-// TypeError 7359: (38-41): "now" has been deprecated. Use "block.timestamp" instead.
+// TypeError 7359: (38-41='now'): "now" has been deprecated. Use "block.timestamp" instead.

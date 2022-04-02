@@ -5,4 +5,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// SyntaxError 2461: (50-58): Keyword "continue" in for-loop post block is not allowed.
+// SyntaxError 2461: (50-58='continue'): Keyword "continue" in for-loop post block is not allowed.

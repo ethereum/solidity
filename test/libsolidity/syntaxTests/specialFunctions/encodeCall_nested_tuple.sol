@@ -5,5 +5,5 @@ contract C {
 	}
 }
 // ----
-// TypeError 7788: (139-170): Expected 2 instead of 1 components for the tuple parameter.
-// TypeError 5407: (163-168): Cannot implicitly convert component at position 0 from "tuple(int_const 1,int_const 2)" to "int256".
+// TypeError 7788: (139-170='abi.encodeCall(this.f, ((1,2)))'): Expected 2 instead of 1 components for the tuple parameter.
+// TypeError 5407: (163-168='(1,2)'): Cannot implicitly convert component at position 0 from "tuple(int_const 1,int_const 2)" to "int256".

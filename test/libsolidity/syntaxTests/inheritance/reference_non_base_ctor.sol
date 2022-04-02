@@ -3,4 +3,4 @@ contract D {
     constructor() X(5) {}
 }
 // ----
-// TypeError 4659: (45-49): Referenced declaration is neither modifier nor base class.
+// TypeError 4659: (45-49='X(5)'): Referenced declaration is neither modifier nor base class.

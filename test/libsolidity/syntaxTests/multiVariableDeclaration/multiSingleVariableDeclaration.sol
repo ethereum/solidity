@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// Warning 5740: (78-79): Unreachable code.
+// Warning 5740: (78-79='a'): Unreachable code.

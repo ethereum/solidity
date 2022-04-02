@@ -9,4 +9,4 @@ contract B is A {
 	function f() override view internal returns (uint) { return x; }
 }
 // ----
-// TypeError 7733: (223-224): Immutable variables cannot be read before they are initialized.
+// TypeError 7733: (223-224='x'): Immutable variables cannot be read before they are initialized.

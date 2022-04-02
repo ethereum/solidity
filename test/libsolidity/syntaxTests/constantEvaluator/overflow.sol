@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2643: (65-70): Arithmetic error when computing constant value.
+// TypeError 2643: (65-70='a + 2'): Arithmetic error when computing constant value.

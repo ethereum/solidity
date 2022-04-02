@@ -3,4 +3,4 @@ contract C {
     function f() public { bytes1 a = s[2]; }
 }
 // ----
-// TypeError 9961: (64-68): Index access for string is not possible.
+// TypeError 9961: (64-68='s[2]'): Index access for string is not possible.

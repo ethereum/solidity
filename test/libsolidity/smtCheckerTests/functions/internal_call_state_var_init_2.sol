@@ -8,4 +8,4 @@ contract c {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6321: (54-58): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (54-58='uint'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

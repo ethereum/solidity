@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9574: (134-156): Type bytes8[] calldata is not implicitly convertible to expected type bytes10[] memory.
+// TypeError 9574: (134-156='bytes10[] memory m = c'): Type bytes8[] calldata is not implicitly convertible to expected type bytes10[] memory.

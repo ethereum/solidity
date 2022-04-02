@@ -11,4 +11,4 @@ contract test {
     }
 }
 // ----
-// TypeError 4883: (57-61): Error signature hash collision for tgeo()
+// TypeError 4883: (57-61='tgeo'): Error signature hash collision for tgeo()

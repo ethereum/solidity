@@ -12,6 +12,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4281: (108-133): CHC: Division by zero happens here.\nCounterexample:\n\ny = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\n\ny = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 4281: (230-245): CHC: Division by zero happens here.\nCounterexample:\n\nx = 0\ny = 0\nk = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.g(0, 0, 0)
+// Warning 4281: (108-133='addmod(2**256 - 1, 10, y)'): CHC: Division by zero happens here.\nCounterexample:\n\ny = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (137-151='assert(x == 1)'): CHC: Assertion violation happens here.\nCounterexample:\n\ny = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 4281: (230-245='addmod(x, y, k)'): CHC: Division by zero happens here.\nCounterexample:\n\nx = 0\ny = 0\nk = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.g(0, 0, 0)

@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError 7006: (99-116): Cannot set option "value", since the constructor of contract C is not payable.
+// TypeError 7006: (99-116='(new C){value: 2}'): Cannot set option "value", since the constructor of contract C is not payable.

@@ -25,4 +25,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (172-189): BMC: Assertion violation happens here.
+// Warning 4661: (172-189='assert(a[1] == 1)'): BMC: Assertion violation happens here.

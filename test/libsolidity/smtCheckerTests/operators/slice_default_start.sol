@@ -10,7 +10,7 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (150-182): CHC: Assertion violation might happen here.
-// Warning 6328: (186-218): CHC: Assertion violation might happen here.
-// Warning 4661: (150-182): BMC: Assertion violation happens here.
-// Warning 4661: (186-218): BMC: Assertion violation happens here.
+// Warning 6328: (150-182='assert(bytes(b[:20])[0] == 0xff)'): CHC: Assertion violation might happen here.
+// Warning 6328: (186-218='assert(bytes(b[:20])[5] == 0xff)'): CHC: Assertion violation might happen here.
+// Warning 4661: (150-182='assert(bytes(b[:20])[0] == 0xff)'): BMC: Assertion violation happens here.
+// Warning 4661: (186-218='assert(bytes(b[:20])[5] == 0xff)'): BMC: Assertion violation happens here.

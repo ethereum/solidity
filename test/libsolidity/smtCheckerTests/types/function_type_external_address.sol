@@ -7,4 +7,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 7650: (96-105): Assertion checker does not yet support this expression.
+// Warning 7650: (96-105='g.address'): Assertion checker does not yet support this expression.

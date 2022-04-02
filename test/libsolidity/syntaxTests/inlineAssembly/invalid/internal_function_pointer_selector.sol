@@ -16,5 +16,5 @@ contract C {
 	}
 }
 // ----
-// TypeError 8533: (198-209): Only Variables of type external function pointer support ".selector" and ".address".
-// TypeError 9582: (329-350): Member "selector" not found or not visible after argument-dependent lookup in function ().
+// TypeError 8533: (198-209='fp.selector'): Only Variables of type external function pointer support ".selector" and ".address".
+// TypeError 9582: (329-350='testFunction.selector'): Member "selector" not found or not visible after argument-dependent lookup in function ().

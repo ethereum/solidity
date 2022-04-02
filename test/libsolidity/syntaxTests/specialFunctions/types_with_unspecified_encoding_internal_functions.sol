@@ -5,7 +5,7 @@ contract C {
     }
 }
 // ----
-// TypeError 2056: (91-100): This type cannot be encoded.
-// TypeError 2056: (102-103): This type cannot be encoded.
-// TypeError 2056: (105-119): This type cannot be encoded.
-// TypeError 2056: (121-130): This type cannot be encoded.
+// TypeError 2056: (91-100='keccak256'): This type cannot be encoded.
+// TypeError 2056: (102-103='f'): This type cannot be encoded.
+// TypeError 2056: (105-119='this.f{gas: 2}'): This type cannot be encoded.
+// TypeError 2056: (121-130='blockhash'): This type cannot be encoded.

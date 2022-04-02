@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError 2314: (70-71): Expected identifier but got '.'
+// ParserError 2314: (70-71='.'): Expected identifier but got '.'

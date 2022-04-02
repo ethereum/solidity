@@ -19,8 +19,8 @@ contract D {
     }
 }
 // ----
-// Warning 6133: (136-150): Statement has no effect.
-// Warning 6133: (160-174): Statement has no effect.
-// Warning 6133: (184-201): Statement has no effect.
-// Warning 6133: (289-303): Statement has no effect.
-// Warning 6133: (313-327): Statement has no effect.
+// Warning 6133: (136-150='B.ext.selector'): Statement has no effect.
+// Warning 6133: (160-174='B.pub.selector'): Statement has no effect.
+// Warning 6133: (184-201='this.ext.selector'): Statement has no effect.
+// Warning 6133: (289-303='B.ext.selector'): Statement has no effect.
+// Warning 6133: (313-327='B.pub.selector'): Statement has no effect.

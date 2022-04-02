@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// TypeError 1859: (56-61): Out of bounds array access.
+// TypeError 1859: (56-61='b[64]'): Out of bounds array access.

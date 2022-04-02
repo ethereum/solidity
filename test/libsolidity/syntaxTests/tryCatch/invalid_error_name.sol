@@ -7,5 +7,5 @@ contract C {
     }
 }
 // ----
-// TypeError 3542: (93-119): Invalid catch clause name. Expected either `catch (...)`, `catch Error(...)`, or `catch Panic(...)`.
-// TypeError 3542: (120-143): Invalid catch clause name. Expected either `catch (...)`, `catch Error(...)`, or `catch Panic(...)`.
+// TypeError 3542: (93-119='catch Error2() {         }'): Invalid catch clause name. Expected either `catch (...)`, `catch Error(...)`, or `catch Panic(...)`.
+// TypeError 3542: (120-143='catch abc() {         }'): Invalid catch clause name. Expected either `catch (...)`, `catch Error(...)`, or `catch Panic(...)`.

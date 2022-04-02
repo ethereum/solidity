@@ -9,9 +9,9 @@ contract test {
     }
 }
 // ----
-// Warning 6321: (83-89): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6133: (95-96): Statement has no effect.
-// Warning 6133: (100-106): Statement has no effect.
-// Warning 6133: (110-114): Statement has no effect.
-// Warning 6133: (118-122): Statement has no effect.
-// Warning 6133: (126-133): Statement has no effect.
+// Warning 6321: (83-89='bytes1'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6133: (95-96='s'): Statement has no effect.
+// Warning 6133: (100-106='s(1,2)'): Statement has no effect.
+// Warning 6133: (110-114='s[7]'): Statement has no effect.
+// Warning 6133: (118-122='uint'): Statement has no effect.
+// Warning 6133: (126-133='uint[7]'): Statement has no effect.

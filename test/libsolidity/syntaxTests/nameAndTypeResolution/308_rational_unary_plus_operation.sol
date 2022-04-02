@@ -6,5 +6,5 @@ contract test {
     }
 }
 // ----
-// SyntaxError 9636: (70-75): Use of unary + is disallowed.
-// TypeError 4907: (70-75): Unary operator + cannot be applied to type rational_const 13 / 4
+// SyntaxError 9636: (70-75='+3.25'): Use of unary + is disallowed.
+// TypeError 4907: (70-75='+3.25'): Unary operator + cannot be applied to type rational_const 13 / 4

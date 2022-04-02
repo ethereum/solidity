@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// Warning 2072: (52-62): Unused local variable.
-// Warning 2072: (109-119): Unused local variable.
+// Warning 2072: (52-62='uint mload'): Unused local variable.
+// Warning 2072: (109-119='uint mload'): Unused local variable.

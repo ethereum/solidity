@@ -5,5 +5,5 @@ contract test {
     }
 }
 // ----
-// Warning 2072: (57-63): Unused local variable.
-// Warning 2072: (77-83): Unused local variable.
+// Warning 2072: (57-63='uint x'): Unused local variable.
+// Warning 2072: (77-83='uint x'): Unused local variable.

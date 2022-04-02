@@ -17,6 +17,6 @@ contract Impl is Ext1, Ext2 {
     function foo() public view {}
 }
 // ----
-// TypeError 9456: (424-453): Overriding function is missing "override" specifier.
-// TypeError 9456: (424-453): Overriding function is missing "override" specifier.
-// TypeError 4327: (424-453): Function needs to specify overridden contracts "Base1", "Base2" and "IBase".
+// TypeError 9456: (424-453='function foo() public view {}'): Overriding function is missing "override" specifier.
+// TypeError 9456: (424-453='function foo() public view {}'): Overriding function is missing "override" specifier.
+// TypeError 4327: (424-453='function foo() public view {}'): Function needs to specify overridden contracts "Base1", "Base2" and "IBase".

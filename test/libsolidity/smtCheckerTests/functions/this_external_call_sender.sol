@@ -25,5 +25,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (314-346): CHC: Assertion violation happens here.
-// Warning 6328: (356-388): CHC: Assertion violation happens here.
+// Warning 6328: (314-346='assert(lastCaller == msg.sender)'): CHC: Assertion violation happens here.
+// Warning 6328: (356-388='assert(lastCaller == address(0))'): CHC: Assertion violation happens here.

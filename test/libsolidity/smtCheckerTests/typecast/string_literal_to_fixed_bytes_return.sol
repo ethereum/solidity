@@ -10,4 +10,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (206-227): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.a()\n    C.f1() -- internal call\n        C.g() -- internal call\n    C.f1() -- internal call\n        C.g() -- internal call
+// Warning 6328: (206-227='assert(f1() == "cde")'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.a()\n    C.f1() -- internal call\n        C.g() -- internal call\n    C.f1() -- internal call\n        C.g() -- internal call

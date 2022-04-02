@@ -12,4 +12,4 @@ contract C {
 	}
 }
 // ----
-// TypeError 9272: (173-182): Variables of type function pointer only support ".selector" and ".address".
+// TypeError 9272: (173-182='fp.offset'): Variables of type function pointer only support ".selector" and ".address".

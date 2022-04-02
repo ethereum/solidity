@@ -5,5 +5,5 @@ contract C {
     }
 }
 // ----
-// Warning 2072: (80-90): Unused local variable.
+// Warning 2072: (80-90='S memory s'): Unused local variable.
 // Warning 2018: (50-118): Function state mutability can be restricted to pure

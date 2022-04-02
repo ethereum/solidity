@@ -10,4 +10,4 @@ contract C is A, B {
     }
 }
 // ----
-// TypeError 7501: (185-190): Cannot call unimplemented base function.
+// TypeError 7501: (185-190='B.f()'): Cannot call unimplemented base function.

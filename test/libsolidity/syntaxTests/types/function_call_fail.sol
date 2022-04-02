@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5704: (59-63): Type is not callable
+// TypeError 5704: (59-63='4(y)'): Type is not callable

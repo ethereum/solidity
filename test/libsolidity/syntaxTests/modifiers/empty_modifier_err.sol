@@ -5,6 +5,6 @@ contract C is B { }
 
 abstract contract D {modifier m;}
 // ----
-// TypeError 3656: (0-32): Contract "A" should be marked as abstract.
-// TypeError 3656: (76-95): Contract "C" should be marked as abstract.
-// TypeError 8063: (118-129): Modifiers without implementation must be marked virtual.
+// TypeError 3656: (0-32='contract A {modifier m virtual;}'): Contract "A" should be marked as abstract.
+// TypeError 3656: (76-95='contract C is B { }'): Contract "C" should be marked as abstract.
+// TypeError 8063: (118-129='modifier m;'): Modifiers without implementation must be marked virtual.

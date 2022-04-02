@@ -13,4 +13,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 4984: (136-143): CHC: Overflow (resulting value larger than 127) happens here.\nCounterexample:\n\nx = 100\n = 0\ny = (- 56)\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 4984: (136-143='x * 100'): CHC: Overflow (resulting value larger than 127) happens here.\nCounterexample:\n\nx = 100\n = 0\ny = (- 56)\n\nTransaction trace:\nC.constructor()\nC.f(0)

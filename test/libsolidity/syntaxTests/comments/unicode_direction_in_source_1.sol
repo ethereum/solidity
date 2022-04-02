@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError 2314: (65-66): Expected '(' but got 'ILLEGAL'
+// ParserError 2314: (65-66='â'): Expected '(' but got 'ILLEGAL'

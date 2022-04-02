@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// TypeError 3112: (77-80): Modifier can only be referenced in function headers.
+// TypeError 3112: (77-80='mod'): Modifier can only be referenced in function headers.

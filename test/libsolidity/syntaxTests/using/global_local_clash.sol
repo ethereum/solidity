@@ -18,4 +18,4 @@ contract C {
 import {gen as g, f1 as f, S} from "A";
 import "A" as A;
 // ----
-// TypeError 6675: (B:181-186): Member "f" not unique after argument-dependent lookup in struct S memory.
+// TypeError 6675: (B:181-186='g().f'): Member "f" not unique after argument-dependent lookup in struct S memory.

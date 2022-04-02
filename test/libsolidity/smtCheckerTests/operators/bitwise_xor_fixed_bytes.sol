@@ -10,4 +10,4 @@ contract Simp {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (140-171): CHC: Assertion violation happens here.
+// Warning 6328: (140-171='assert(y[1] ^ "e" != bytes1(0))'): CHC: Assertion violation happens here.

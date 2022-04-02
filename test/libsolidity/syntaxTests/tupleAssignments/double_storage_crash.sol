@@ -7,4 +7,4 @@ contract CrashContract {
        }
 }
 // ----
-// TypeError 5704: (170-177): Type is not callable
+// TypeError 5704: (170-177='1(x, x)'): Type is not callable

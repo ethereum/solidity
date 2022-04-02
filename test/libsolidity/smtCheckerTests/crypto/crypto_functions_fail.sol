@@ -27,12 +27,12 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (218-228): Unused local variable.
-// Warning 2072: (245-255): Unused local variable.
-// Warning 2072: (405-415): Unused local variable.
-// Warning 2072: (435-445): Unused local variable.
-// Warning 2072: (656-666): Unused local variable.
-// Warning 2072: (698-708): Unused local variable.
-// Warning 1218: (135-151): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (135-151): CHC: Assertion violation might happen here.
-// Warning 4661: (135-151): BMC: Assertion violation happens here.
+// Warning 2072: (218-228='bytes32 s0'): Unused local variable.
+// Warning 2072: (245-255='bytes32 s1'): Unused local variable.
+// Warning 2072: (405-415='bytes32 r0'): Unused local variable.
+// Warning 2072: (435-445='bytes32 r1'): Unused local variable.
+// Warning 2072: (656-666='address a0'): Unused local variable.
+// Warning 2072: (698-708='address a1'): Unused local variable.
+// Warning 1218: (135-151='assert(k0 == k1)'): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (135-151='assert(k0 == k1)'): CHC: Assertion violation might happen here.
+// Warning 4661: (135-151='assert(k0 == k1)'): BMC: Assertion violation happens here.

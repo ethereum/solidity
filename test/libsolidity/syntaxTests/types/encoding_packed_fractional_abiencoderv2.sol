@@ -5,5 +5,5 @@ contract C {
    }
 }
 // ----
-// TypeError 6090: (132-135): Fractional numbers cannot yet be encoded.
-// TypeError 7279: (137-138): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.
+// TypeError 6090: (132-135='0.1'): Fractional numbers cannot yet be encoded.
+// TypeError 7279: (137-138='1'): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.

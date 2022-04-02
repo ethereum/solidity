@@ -22,6 +22,6 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (315-331): CHC: Assertion violation happens here.
+// Warning 6328: (315-331='assert(b1 == b2)'): CHC: Assertion violation happens here.
 // Info 1180: Contract invariant(s) for :C:\n(x <= 0)\n
-// Warning 1236: (87-100): BMC: Insufficient funds happens here.
+// Warning 1236: (87-100='a.transfer(1)'): BMC: Insufficient funds happens here.

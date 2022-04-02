@@ -3,4 +3,4 @@ contract C {
     function f() internal returns (S calldata) {}
 }
 // ----
-// TypeError 3464: (76-86): This variable is of calldata pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (76-86='S calldata'): This variable is of calldata pointer type and can be returned without prior assignment, which would lead to undefined behaviour.

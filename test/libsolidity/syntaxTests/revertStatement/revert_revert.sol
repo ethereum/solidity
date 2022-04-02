@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning 2319: (0-15): This declaration shadows a builtin symbol.
+// Warning 2319: (0-15='error revert();'): This declaration shadows a builtin symbol.

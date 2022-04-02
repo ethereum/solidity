@@ -6,6 +6,6 @@
 // ====
 // dialect: evm
 // ----
-// TypeError 5859: (24-25): Function expects string literal.
-// TypeError 5859: (50-54): Function expects string literal.
-// TypeError 5859: (79-84): Function expects string literal.
+// TypeError 5859: (24-25='0'): Function expects string literal.
+// TypeError 5859: (50-54='true'): Function expects string literal.
+// TypeError 5859: (79-84='false'): Function expects string literal.

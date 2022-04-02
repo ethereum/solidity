@@ -6,5 +6,5 @@ contract test {
     }
 }
 // ----
-// Warning 5667: (33-42): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (33-42='uint256 a'): Unused function parameter. Remove or comment out the variable name to silence this warning.
 // Warning 2018: (20-136): Function state mutability can be restricted to pure

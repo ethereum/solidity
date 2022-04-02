@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9640: (76-94): Explicit type conversion not allowed from "uint32" to "bytes32".
+// TypeError 9640: (76-94='bytes32(uint32(0))'): Explicit type conversion not allowed from "uint32" to "bytes32".

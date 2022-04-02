@@ -15,5 +15,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (192-206): CHC: Assertion violation happens here.\nCounterexample:\n\ny = 42\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (192-206='assert(y == 1)'): CHC: Assertion violation happens here.\nCounterexample:\n\ny = 42\n\nTransaction trace:\nC.constructor()\nC.f()
 // Info 1180: Contract invariant(s) for :C:\n!(m.length <= 0)\n

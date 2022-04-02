@@ -13,4 +13,4 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (164-183): CHC: Assertion violation happens here.
+// Warning 6328: (164-183='assert(map[p] < 90)'): CHC: Assertion violation happens here.

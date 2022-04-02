@@ -21,4 +21,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (270-288): CHC: Assertion violation happens here.\nCounterexample:\ns = {innerM, sum: 21239}\n\nTransaction trace:\nC.constructor(0){ msg.sender: 0x6dc4 }\nState: s = {innerM, sum: 21239}\nC.g()
+// Warning 6328: (270-288='assert(s.sum == 0)'): CHC: Assertion violation happens here.\nCounterexample:\ns = {innerM, sum: 21239}\n\nTransaction trace:\nC.constructor(0){ msg.sender: 0x6dc4 }\nState: s = {innerM, sum: 21239}\nC.g()

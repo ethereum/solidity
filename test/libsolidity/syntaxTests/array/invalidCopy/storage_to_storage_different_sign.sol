@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError 7407: (102-107): Type uint256[10] storage ref is not implicitly convertible to expected type int256[32] storage ref.
-// TypeError 7407: (159-164): Type int256[32] storage ref is not implicitly convertible to expected type uint256[10] storage ref.
+// TypeError 7407: (102-107='data2'): Type uint256[10] storage ref is not implicitly convertible to expected type int256[32] storage ref.
+// TypeError 7407: (159-164='data1'): Type int256[32] storage ref is not implicitly convertible to expected type uint256[10] storage ref.

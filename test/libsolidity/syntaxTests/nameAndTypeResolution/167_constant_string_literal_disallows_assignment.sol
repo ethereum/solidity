@@ -7,4 +7,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 9961: (261-265): Index access for string is not possible.
+// TypeError 9961: (261-265='x[0]'): Index access for string is not possible.

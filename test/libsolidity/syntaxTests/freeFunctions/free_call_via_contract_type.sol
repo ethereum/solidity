@@ -5,4 +5,4 @@ function fun() {
     C.f();
 }
 // ----
-// TypeError 3419: (68-73): Cannot call function via contract type name.
+// TypeError 3419: (68-73='C.f()'): Cannot call function via contract type name.

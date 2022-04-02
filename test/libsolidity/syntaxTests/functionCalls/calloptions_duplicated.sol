@@ -10,8 +10,8 @@ contract C {
 // ====
 // EVMVersion: >=constantinople
 // ----
-// TypeError 9886: (78-101): Duplicate option "gas".
-// TypeError 9886: (111-138): Duplicate option "value".
+// TypeError 9886: (78-101='this.foo{gas:2, gas: 5}'): Duplicate option "gas".
+// TypeError 9886: (111-138='this.foo{value:2, value: 5}'): Duplicate option "value".
 // TypeError 9886: (148-189): Duplicate option "gas".
 // TypeError 9886: (148-189): Duplicate option "value".
-// TypeError 9886: (199-228): Duplicate option "salt".
+// TypeError 9886: (199-228='new D{salt:"abc", salt:"efg"}'): Duplicate option "salt".

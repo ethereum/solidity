@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// DeclarationError 7576: (101-105): Undeclared identifier. Did you mean "log8" or "log9"?
+// DeclarationError 7576: (101-105='lgox'): Undeclared identifier. Did you mean "log8" or "log9"?

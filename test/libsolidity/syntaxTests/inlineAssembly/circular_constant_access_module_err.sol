@@ -14,4 +14,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3558: (b:178-179): Constant variable is circular.
+// TypeError 3558: (b:178-179='a'): Constant variable is circular.

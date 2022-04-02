@@ -5,4 +5,4 @@ contract C {
     [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ [
 ....
 // ----
-// ParserError 7319: (287-288): Maximum recursion depth reached during parsing.
+// ParserError 7319: (287-288='['): Maximum recursion depth reached during parsing.

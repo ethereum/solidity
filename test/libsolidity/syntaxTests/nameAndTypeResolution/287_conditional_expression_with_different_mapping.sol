@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1080: (121-143): True expression's type mapping(uint8 => uint8) does not match false expression's type mapping(uint32 => uint8).
+// TypeError 1080: (121-143='true ? table1 : table2'): True expression's type mapping(uint8 => uint8) does not match false expression's type mapping(uint32 => uint8).

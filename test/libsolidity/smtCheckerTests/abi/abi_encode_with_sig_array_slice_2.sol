@@ -25,16 +25,16 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 1218: (589-619): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (703-733): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (972-1002): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (1087-1117): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (335-365): CHC: Assertion violation happens here.
-// Warning 6328: (589-619): CHC: Assertion violation might happen here.
-// Warning 6328: (703-733): CHC: Assertion violation might happen here.
-// Warning 6328: (972-1002): CHC: Assertion violation might happen here.
-// Warning 6328: (1087-1117): CHC: Assertion violation might happen here.
-// Warning 4661: (589-619): BMC: Assertion violation happens here.
-// Warning 4661: (703-733): BMC: Assertion violation happens here.
-// Warning 4661: (972-1002): BMC: Assertion violation happens here.
-// Warning 4661: (1087-1117): BMC: Assertion violation happens here.
+// Warning 1218: (589-619='assert(b1.length == b3.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (703-733='assert(b1.length == b4.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (972-1002='assert(b1.length == b5.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (1087-1117='assert(b4.length == b6.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (335-365='assert(b1.length == b2.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (589-619='assert(b1.length == b3.length)'): CHC: Assertion violation might happen here.
+// Warning 6328: (703-733='assert(b1.length == b4.length)'): CHC: Assertion violation might happen here.
+// Warning 6328: (972-1002='assert(b1.length == b5.length)'): CHC: Assertion violation might happen here.
+// Warning 6328: (1087-1117='assert(b4.length == b6.length)'): CHC: Assertion violation might happen here.
+// Warning 4661: (589-619='assert(b1.length == b3.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (703-733='assert(b1.length == b4.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (972-1002='assert(b1.length == b5.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (1087-1117='assert(b4.length == b6.length)'): BMC: Assertion violation happens here.

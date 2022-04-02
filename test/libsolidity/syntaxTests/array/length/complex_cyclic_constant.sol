@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5210: (17-44): Cyclic constant definition (or maximum recursion depth exhausted).
+// TypeError 5210: (17-44='uint constant L2 = LEN - 10'): Cyclic constant definition (or maximum recursion depth exhausted).

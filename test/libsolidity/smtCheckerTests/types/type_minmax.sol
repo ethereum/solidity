@@ -81,4 +81,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (178-207): CHC: Assertion violation happens here.\nCounterexample:\n\na = 4294967296\n\nTransaction trace:\nC.constructor()\nC.f(4294967296)
+// Warning 6328: (178-207='assert(a <= type(uint32).max)'): CHC: Assertion violation happens here.\nCounterexample:\n\na = 4294967296\n\nTransaction trace:\nC.constructor()\nC.f(4294967296)

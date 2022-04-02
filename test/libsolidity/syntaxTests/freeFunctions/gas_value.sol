@@ -3,4 +3,4 @@ function fun() {
     fun{value: 1}();
 }
 // ----
-// TypeError 2193: (21-32): Function call options can only be set on external function calls or contract creations.
+// TypeError 2193: (21-32='fun{gas: 1}'): Function call options can only be set on external function calls or contract creations.

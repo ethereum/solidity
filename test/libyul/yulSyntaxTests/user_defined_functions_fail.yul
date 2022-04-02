@@ -8,5 +8,5 @@
 // ====
 // dialect: evmTyped
 // ----
-// TypeError 3947: (126-127): Assigning value of type "bool" to variable of type "u256".
-// TypeError 3947: (129-136): Assigning value of type "u256" to variable of type "bool".
+// TypeError 3947: (126-127='x'): Assigning value of type "bool" to variable of type "u256".
+// TypeError 3947: (129-136='y: bool'): Assigning value of type "u256" to variable of type "bool".

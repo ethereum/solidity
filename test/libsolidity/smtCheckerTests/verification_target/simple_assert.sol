@@ -5,4 +5,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (50-64): CHC: Assertion violation happens here.
+// Warning 6328: (50-64='assert(a == 2)'): CHC: Assertion violation happens here.

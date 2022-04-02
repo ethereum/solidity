@@ -28,5 +28,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (255-272): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 1, b: false}\nx = 1\nb = false\ny = 0\nc = false\n\nTransaction trace:\nC.constructor()\nState: s = {x: 1, b: false}\nC.f()
-// Warning 6328: (377-391): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 42, b: false}\nx = 1\nb = false\ny = 42\nc = false\n\nTransaction trace:\nC.constructor()\nState: s = {x: 1, b: false}\nC.f()
+// Warning 6328: (255-272='assert(b == true)'): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 1, b: false}\nx = 1\nb = false\ny = 0\nc = false\n\nTransaction trace:\nC.constructor()\nState: s = {x: 1, b: false}\nC.f()
+// Warning 6328: (377-391='assert(y == x)'): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 42, b: false}\nx = 1\nb = false\ny = 42\nc = false\n\nTransaction trace:\nC.constructor()\nState: s = {x: 1, b: false}\nC.f()

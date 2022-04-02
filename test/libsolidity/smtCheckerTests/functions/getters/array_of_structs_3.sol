@@ -21,4 +21,4 @@ contract D {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (322-336): CHC: Assertion violation happens here.\nCounterexample:\nitems = [{x: 42, y: 43, arr: [0]}]\ntmp = [0]\na = 42\nb = 43\n\nTransaction trace:\nD.constructor()\nState: items = []\nD.test()
+// Warning 6328: (322-336='assert(b == 0)'): CHC: Assertion violation happens here.\nCounterexample:\nitems = [{x: 42, y: 43, arr: [0]}]\ntmp = [0]\na = 42\nb = 43\n\nTransaction trace:\nD.constructor()\nState: items = []\nD.test()

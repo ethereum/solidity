@@ -8,5 +8,5 @@ contract test {
     }
 }
 // ----
-// TypeError 4656: (98-106): State variables only support ".slot" and ".offset".
-// TypeError 4656: (119-127): State variables only support ".slot" and ".offset".
+// TypeError 4656: (98-106='x.length'): State variables only support ".slot" and ".offset".
+// TypeError 4656: (119-127='x.length'): State variables only support ".slot" and ".offset".

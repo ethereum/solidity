@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// Warning 6133: (113-136): Statement has no effect.
+// Warning 6133: (113-136='abi.decode("1234", (S))'): Statement has no effect.

@@ -10,4 +10,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 5729: (89-93): BMC does not yet implement this type of function call.
+// Warning 5729: (89-93='g(2)'): BMC does not yet implement this type of function call.

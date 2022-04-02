@@ -11,4 +11,4 @@ contract C
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 6838: (65-71): BMC: Condition is always true.
+// Warning 6838: (65-71='x < 10'): BMC: Condition is always true.

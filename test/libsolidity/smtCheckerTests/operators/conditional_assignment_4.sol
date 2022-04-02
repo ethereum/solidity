@@ -22,4 +22,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (240-246): Unused local variable.
+// Warning 2072: (240-246='uint y'): Unused local variable.

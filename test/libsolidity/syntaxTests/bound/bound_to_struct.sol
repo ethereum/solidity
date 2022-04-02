@@ -7,4 +7,4 @@ contract C {
     using S for S;
 }
 // ----
-// TypeError 4357: (113-114): Library name expected. If you want to attach a function, use '{...}'.
+// TypeError 4357: (113-114='S'): Library name expected. If you want to attach a function, use '{...}'.

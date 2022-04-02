@@ -10,5 +10,5 @@ contract C {
     }
 }
 // ----
-// TypeError 9717: (196-199): Invalid mobile type in true expression.
-// TypeError 3703: (202-205): Invalid mobile type in false expression.
+// TypeError 9717: (196-199='t.f'): Invalid mobile type in true expression.
+// TypeError 3703: (202-205='t.g'): Invalid mobile type in false expression.

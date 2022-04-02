@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 4718: (155-156): Multiple matching identifiers. Resolving overloaded identifiers is not supported.
+// DeclarationError 4718: (155-156='f'): Multiple matching identifiers. Resolving overloaded identifiers is not supported.

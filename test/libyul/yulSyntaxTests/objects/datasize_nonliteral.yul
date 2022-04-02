@@ -7,4 +7,4 @@ object "A" {
   data "B" hex"00"
 }
 // ----
-// TypeError 9114: (47-55): Function expects direct literals as arguments.
+// TypeError 9114: (47-55='datasize'): Function expects direct literals as arguments.

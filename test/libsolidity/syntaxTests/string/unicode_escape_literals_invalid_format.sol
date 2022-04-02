@@ -7,4 +7,4 @@ contract test {
 
 }
 // ----
-// ParserError 8936: (162-165): Invalid escape sequence.
+// ParserError 8936: (162-165='"\u'): Invalid escape sequence.

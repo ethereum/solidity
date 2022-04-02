@@ -28,5 +28,5 @@ contract LoopFor2 {
 // SMTIgnoreCex: yes
 // SMTSolvers: z3
 // ----
-// Warning 2072: (202-217): Unused local variable.
-// Warning 2072: (225-231): Unused local variable.
+// Warning 2072: (202-217='uint[] memory a'): Unused local variable.
+// Warning 2072: (225-231='uint i'): Unused local variable.

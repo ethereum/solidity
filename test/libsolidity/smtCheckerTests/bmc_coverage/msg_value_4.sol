@@ -13,4 +13,4 @@ contract B {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (154-176): BMC: Assertion violation happens here.
+// Warning 4661: (154-176='assert(msg.value == 0)'): BMC: Assertion violation happens here.

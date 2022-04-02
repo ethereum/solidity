@@ -12,12 +12,12 @@ function f() pure {
     assembly {}
 }
 // ----
-// Warning 6269: (189-200): Unexpected NatSpec tag "after" with value "bogus-value" in inline assembly.
-// Warning 6269: (189-200): Unexpected NatSpec tag "before" with value "bogus-value" in inline assembly.
-// Warning 8787: (189-200): Unexpected value for @solidity tag in inline assembly: a
-// Warning 8787: (189-200): Unexpected value for @solidity tag in inline assembly: b
-// Warning 8787: (189-200): Unexpected value for @solidity tag in inline assembly: c
-// Warning 8787: (189-200): Unexpected value for @solidity tag in inline assembly: d
-// Warning 8787: (289-300): Unexpected value for @solidity tag in inline assembly: a
-// Warning 4377: (289-300): Value for @solidity tag in inline assembly specified multiple times: a
-// Warning 4377: (289-300): Value for @solidity tag in inline assembly specified multiple times: memory-safe-assembly
+// Warning 6269: (189-200='assembly {}'): Unexpected NatSpec tag "after" with value "bogus-value" in inline assembly.
+// Warning 6269: (189-200='assembly {}'): Unexpected NatSpec tag "before" with value "bogus-value" in inline assembly.
+// Warning 8787: (189-200='assembly {}'): Unexpected value for @solidity tag in inline assembly: a
+// Warning 8787: (189-200='assembly {}'): Unexpected value for @solidity tag in inline assembly: b
+// Warning 8787: (189-200='assembly {}'): Unexpected value for @solidity tag in inline assembly: c
+// Warning 8787: (189-200='assembly {}'): Unexpected value for @solidity tag in inline assembly: d
+// Warning 8787: (289-300='assembly {}'): Unexpected value for @solidity tag in inline assembly: a
+// Warning 4377: (289-300='assembly {}'): Value for @solidity tag in inline assembly specified multiple times: a
+// Warning 4377: (289-300='assembly {}'): Value for @solidity tag in inline assembly specified multiple times: memory-safe-assembly

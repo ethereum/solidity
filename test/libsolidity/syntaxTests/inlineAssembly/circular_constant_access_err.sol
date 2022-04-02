@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3558: (171-172): Constant variable is circular.
+// TypeError 3558: (171-172='x'): Constant variable is circular.

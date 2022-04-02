@@ -5,4 +5,4 @@ contract C {
 	function f(S calldata) public {}
 }
 // ----
-// TypeError 4103: (56-66): Internal type is not allowed for public or external functions.
+// TypeError 4103: (56-66='S calldata'): Internal type is not allowed for public or external functions.

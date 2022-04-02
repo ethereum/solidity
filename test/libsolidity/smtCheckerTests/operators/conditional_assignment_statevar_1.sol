@@ -14,7 +14,7 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4984: (134-140): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 4984: (143-146): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 2661: (134-140): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 2661: (143-146): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (134-140='a + 10'): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+// Warning 4984: (143-146='++a'): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+// Warning 2661: (134-140='a + 10'): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 2661: (143-146='++a'): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

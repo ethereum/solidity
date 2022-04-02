@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// TypeError 3208: (141-146): Array with fractional length specified.
+// TypeError 3208: (141-146='7 / 3'): Array with fractional length specified.

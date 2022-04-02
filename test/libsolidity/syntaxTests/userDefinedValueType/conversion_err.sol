@@ -3,4 +3,4 @@ function f() {
     MyAddress a = MyAddress(5, 2);
 }
 // ----
-// TypeError 2558: (60-75): Exactly one argument expected for explicit type conversion.
+// TypeError 2558: (60-75='MyAddress(5, 2)'): Exactly one argument expected for explicit type conversion.

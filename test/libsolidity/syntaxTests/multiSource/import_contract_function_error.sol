@@ -7,4 +7,4 @@ contract C {
 ==== Source: s2.sol ====
 import {C.f as g} from "s1.sol";
 // ----
-// ParserError 2314: (s2.sol:9-10): Expected '}' but got '.'
+// ParserError 2314: (s2.sol:9-10='.'): Expected '}' but got '.'

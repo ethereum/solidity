@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// Warning 2519: (31-53): This declaration shadows an existing declaration.
+// Warning 2519: (31-53='function f() public {}'): This declaration shadows an existing declaration.

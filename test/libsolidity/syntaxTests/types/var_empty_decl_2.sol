@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError 6933: (52-55): Expected primary expression.
+// ParserError 6933: (52-55='var'): Expected primary expression.

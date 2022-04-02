@@ -27,5 +27,5 @@ contract A is B {
 // ====
 // SMTEngine: all
 // ----
-// Warning 5667: (222-228): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (252-266): CHC: Assertion violation happens here.\nCounterexample:\na = 4\nx = 0\n\nTransaction trace:\nA.constructor(0)
+// Warning 5667: (222-228='uint x'): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (252-266='assert(a == 5)'): CHC: Assertion violation happens here.\nCounterexample:\na = 4\nx = 0\n\nTransaction trace:\nA.constructor(0)

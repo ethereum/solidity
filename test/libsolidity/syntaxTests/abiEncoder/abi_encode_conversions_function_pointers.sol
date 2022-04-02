@@ -12,5 +12,5 @@ contract testContract {
     }
 }
 // ----
-// TypeError 5407: (278-286): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
-// TypeError 5407: (329-337): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
+// TypeError 5407: (278-286='(this.g)'): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
+// TypeError 5407: (329-337='(this.h)'): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".

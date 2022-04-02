@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9862: (47-63): "send" and "transfer" are only available for objects of type "address payable", not "address".
+// TypeError 9862: (47-63='(tx.origin).send'): "send" and "transfer" are only available for objects of type "address payable", not "address".

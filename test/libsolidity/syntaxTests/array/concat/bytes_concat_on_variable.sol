@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9582: (88-96): Member "concat" not found or not visible after argument-dependent lookup in bytes memory.
+// TypeError 9582: (88-96='a.concat'): Member "concat" not found or not visible after argument-dependent lookup in bytes memory.

@@ -4,4 +4,4 @@ contract C {
         }
 }
 // ----
-// TypeError 9640: (64-91): Explicit type conversion not allowed from "bytes20" to "contract C".
+// TypeError 9640: (64-91='C(bytes20(uint160(0x1234)))'): Explicit type conversion not allowed from "bytes20" to "contract C".

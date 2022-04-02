@@ -5,4 +5,4 @@ contract C {
     function f() internal returns(uint) { return x; }
 }
 // ----
-// TypeError 7733: (107-108): Immutable variables cannot be read before they are initialized.
+// TypeError 7733: (107-108='x'): Immutable variables cannot be read before they are initialized.

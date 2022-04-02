@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// Warning 5740: (103-117): Unreachable code.
-// Warning 5740: (160-171): Unreachable code.
+// Warning 5740: (103-117='a := add(a, 1)'): Unreachable code.
+// Warning 5740: (160-171='let b := 42'): Unreachable code.

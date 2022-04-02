@@ -26,4 +26,4 @@ contract D is C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (286-300): CHC: Assertion violation happens here.
+// Warning 6328: (286-300='assert(x == 1)'): CHC: Assertion violation happens here.

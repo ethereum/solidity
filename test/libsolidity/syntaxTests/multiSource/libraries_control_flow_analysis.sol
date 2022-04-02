@@ -12,5 +12,5 @@ contract C
 	function bar() public pure returns (uint) { L.reverting(); }
 }
 // ----
-// Warning 6321: (s2.sol:67-71): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6321: (s2.sol:126-130): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (s2.sol:67-71='uint'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (s2.sol:126-130='uint'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

@@ -10,4 +10,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2529: (90-100): CHC: Empty array "pop" happens here.\nCounterexample:\na = [[0], []]\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()
+// Warning 2529: (90-100='a[1].pop()'): CHC: Empty array "pop" happens here.\nCounterexample:\na = [[0], []]\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()

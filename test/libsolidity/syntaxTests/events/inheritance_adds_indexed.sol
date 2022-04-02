@@ -5,4 +5,4 @@ contract B is A {
     event X(uint indexed);
 }
 // ----
-// DeclarationError 5883: (56-78): Event with same name and parameter types defined twice.
+// DeclarationError 5883: (56-78='event X(uint indexed);'): Event with same name and parameter types defined twice.

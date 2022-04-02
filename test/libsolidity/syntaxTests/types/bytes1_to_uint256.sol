@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9640: (76-95): Explicit type conversion not allowed from "bytes1" to "uint256".
+// TypeError 9640: (76-95='uint256(bytes1(''))'): Explicit type conversion not allowed from "bytes1" to "uint256".

@@ -13,4 +13,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (108-123): CHC: Assertion violation happens here.\nCounterexample:\na = 42\nx = 42\n\nTransaction trace:\nC.constructor()\nState: a = 0\nC.f(42)\n    C.g(42) -- trusted external call
+// Warning 6328: (108-123='assert(a != 42)'): CHC: Assertion violation happens here.\nCounterexample:\na = 42\nx = 42\n\nTransaction trace:\nC.constructor()\nState: a = 0\nC.f(42)\n    C.g(42) -- trusted external call

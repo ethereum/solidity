@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError 8936: (75-76): Invalid token.
+// ParserError 8936: (75-76='â'): Invalid token.

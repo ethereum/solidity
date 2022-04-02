@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError 1465: (84-92): Illegal token: Invalid use of number separator '_'.
+// ParserError 1465: (84-92='hex"12__'): Illegal token: Invalid use of number separator '_'.

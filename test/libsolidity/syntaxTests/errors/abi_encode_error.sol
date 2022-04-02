@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2056: (108-109): This type cannot be encoded.
+// TypeError 2056: (108-109='E'): This type cannot be encoded.

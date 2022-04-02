@@ -18,4 +18,4 @@ contract D is C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (152-166): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nD.constructor()
+// Warning 6328: (152-166='assert(x == 3)'): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nD.constructor()

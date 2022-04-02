@@ -4,4 +4,4 @@ struct A { uint256 a; }
 import {A} from "a";
 struct A { uint256 a; }
 // ----
-// DeclarationError 2333: (b:21-44): Identifier already declared.
+// DeclarationError 2333: (b:21-44='struct A { uint256 a; }'): Identifier already declared.

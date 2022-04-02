@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError 8827: (107-120): Constructor for contract C must be payable for member "value" to be available.
+// TypeError 8827: (107-120='(new C).value'): Constructor for contract C must be payable for member "value" to be available.

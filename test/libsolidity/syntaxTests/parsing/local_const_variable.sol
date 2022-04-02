@@ -6,4 +6,4 @@ contract Foo {
 	}
 }
 // ----
-// ParserError 2314: (67-75): Expected ';' but got 'constant'
+// ParserError 2314: (67-75='constant'): Expected ';' but got 'constant'

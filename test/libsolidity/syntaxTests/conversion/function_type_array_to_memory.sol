@@ -41,9 +41,9 @@ contract C {
     }
 }
 // ----
-// TypeError 7407: (760-779): Type function () view external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (812-826): Type function () view returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
-// TypeError 7407: (1230-1249): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (1282-1296): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
-// TypeError 7407: (1688-1707): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (1737-1751): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
+// TypeError 7407: (760-779='[this.externalView]'): Type function () view external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
+// TypeError 7407: (812-826='[internalView]'): Type function () view returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
+// TypeError 7407: (1230-1249='[this.externalPure]'): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
+// TypeError 7407: (1282-1296='[internalPure]'): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
+// TypeError 7407: (1688-1707='[this.externalPure]'): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
+// TypeError 7407: (1737-1751='[internalPure]'): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.

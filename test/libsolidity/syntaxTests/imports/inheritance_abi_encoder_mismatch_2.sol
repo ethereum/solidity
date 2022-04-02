@@ -16,4 +16,4 @@ pragma abicoder v1;
 import "./B.sol";
 contract C is B { }
 // ----
-// TypeError 6594: (B.sol:38-57): Contract "B" does not use ABI coder v2 but wants to inherit from a contract which uses types that require it. Use "pragma abicoder v2;" for the inheriting contract as well to enable the feature.
+// TypeError 6594: (B.sol:38-57='contract B is A { }'): Contract "B" does not use ABI coder v2 but wants to inherit from a contract which uses types that require it. Use "pragma abicoder v2;" for the inheriting contract as well to enable the feature.

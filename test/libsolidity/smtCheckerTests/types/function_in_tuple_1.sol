@@ -6,4 +6,4 @@ contract K {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6133: (43-58): Statement has no effect.
+// Warning 6133: (43-58='(abi.encode, 2)'): Statement has no effect.

@@ -16,5 +16,5 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 5740: (95-100): Unreachable code.
-// Warning 5740: (114-118): Unreachable code.
+// Warning 5740: (95-100='a = 2'): Unreachable code.
+// Warning 5740: (114-118='true'): Unreachable code.

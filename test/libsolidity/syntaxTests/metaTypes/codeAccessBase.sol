@@ -22,5 +22,5 @@ contract Test4 is Base {
     }
 }
 // ----
-// TypeError 7813: (166-190): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".
-// TypeError 7813: (300-323): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".
+// TypeError 7813: (166-190='type(Test1).creationCode'): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".
+// TypeError 7813: (300-323='type(Test2).runtimeCode'): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".

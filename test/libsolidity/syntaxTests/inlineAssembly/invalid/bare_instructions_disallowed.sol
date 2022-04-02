@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// ParserError 6913: (95-98): Call or assignment expected.
+// ParserError 6913: (95-98='pop'): Call or assignment expected.

@@ -20,4 +20,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (247-267): CHC: Assertion violation happens here.\nCounterexample:\n\ne1 = 0\ne2 = 1\n\nTransaction trace:\nC.constructor()\nC.f()\n    allocate(true) -- internal call\n    allocate(false) -- internal call
+// Warning 6328: (247-267='assert(e2 == E.READ)'): CHC: Assertion violation happens here.\nCounterexample:\n\ne1 = 0\ne2 = 1\n\nTransaction trace:\nC.constructor()\nC.f()\n    allocate(true) -- internal call\n    allocate(false) -- internal call

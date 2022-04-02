@@ -7,4 +7,4 @@ contract TimelockUpgrade {
 }
 
 // ----
-// ParserError 8936: (124-135): Mismatching directional override markers in comment or string literal.
+// ParserError 8936: (124-135='/*month‮*'): Mismatching directional override markers in comment or string literal.

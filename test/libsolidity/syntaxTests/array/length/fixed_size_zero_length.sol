@@ -7,9 +7,9 @@ contract C {
   string[0] f;
 }
 // ----
-// TypeError 1406: (19-20): Array with zero length specified.
-// TypeError 1406: (32-33): Array with zero length specified.
-// TypeError 1406: (47-48): Array with zero length specified.
-// TypeError 1406: (63-64): Array with zero length specified.
-// TypeError 1406: (77-78): Array with zero length specified.
-// TypeError 1406: (92-93): Array with zero length specified.
+// TypeError 1406: (19-20='0'): Array with zero length specified.
+// TypeError 1406: (32-33='0'): Array with zero length specified.
+// TypeError 1406: (47-48='0'): Array with zero length specified.
+// TypeError 1406: (63-64='0'): Array with zero length specified.
+// TypeError 1406: (77-78='0'): Array with zero length specified.
+// TypeError 1406: (92-93='0'): Array with zero length specified.

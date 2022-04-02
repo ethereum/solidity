@@ -34,4 +34,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 5667: (151-162): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (151-162='S memory s2'): Unused function parameter. Remove or comment out the variable name to silence this warning.

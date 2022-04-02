@@ -3,4 +3,4 @@ function f() {
     type MyInt is int;
 }
 // ----
-// ParserError 2314: (44-49): Expected ';' but got identifier
+// ParserError 2314: (44-49='MyInt'): Expected ';' but got identifier

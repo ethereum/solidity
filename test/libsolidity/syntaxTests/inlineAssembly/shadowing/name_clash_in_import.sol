@@ -14,5 +14,5 @@ contract B {
     }
 }
 // ----
-// DeclarationError 3859: (b:105-106): This declaration shadows a declaration outside the inline assembly block.
-// DeclarationError 3927: (b:128-131): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3859: (b:105-106='b'): This declaration shadows a declaration outside the inline assembly block.
+// DeclarationError 3927: (b:128-131='b.a'): User-defined identifiers in inline assembly cannot contain '.'.

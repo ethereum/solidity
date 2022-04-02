@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError 6651: (104-107): Data location must be "storage", "memory" or "calldata" for variable, but none was given.
-// TypeError 6651: (123-131): Data location must be "storage", "memory" or "calldata" for variable, but none was given.
+// TypeError 6651: (104-107='S x'): Data location must be "storage", "memory" or "calldata" for variable, but none was given.
+// TypeError 6651: (123-131='uint[] y'): Data location must be "storage", "memory" or "calldata" for variable, but none was given.

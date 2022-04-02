@@ -8,4 +8,4 @@ contract B is A {
     }
 }
 // ----
-// TypeError 8961: (100-105): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (100-105='A.x()'): Function cannot be declared as view because this expression (potentially) modifies the state.

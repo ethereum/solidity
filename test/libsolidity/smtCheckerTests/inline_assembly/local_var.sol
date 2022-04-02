@@ -10,4 +10,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 7737: (64-88): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
+// Warning 7737: (64-88='assembly { 			x := 2 		}'): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).

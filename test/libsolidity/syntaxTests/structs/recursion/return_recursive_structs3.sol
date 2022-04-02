@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4103: (154-164): Recursive type not allowed for public or external contract functions.
+// TypeError 4103: (154-164='T memory t'): Recursive type not allowed for public or external contract functions.

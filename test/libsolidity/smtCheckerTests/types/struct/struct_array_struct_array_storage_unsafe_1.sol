@@ -42,8 +42,8 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (148-165): CHC: Assertion violation happens here.
-// Warning 6328: (183-202): CHC: Assertion violation happens here.
-// Warning 6328: (266-286): CHC: Assertion violation happens here.
-// Warning 6328: (404-427): CHC: Assertion violation happens here.
-// Warning 6328: (578-604): CHC: Assertion violation happens here.
+// Warning 6328: (148-165='assert(s1.x != 2)'): CHC: Assertion violation happens here.
+// Warning 6328: (183-202='assert(s1.t.y != 3)'): CHC: Assertion violation happens here.
+// Warning 6328: (266-286='assert(s1.a[2] != 4)'): CHC: Assertion violation happens here.
+// Warning 6328: (404-427='assert(s1.ts[3].y != 5)'): CHC: Assertion violation happens here.
+// Warning 6328: (578-604='assert(s1.ts[4].a[5] != 6)'): CHC: Assertion violation happens here.

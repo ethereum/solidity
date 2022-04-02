@@ -6,4 +6,4 @@ contract test {
     ActionChoices choices;
 }
 // ----
-// DeclarationError 7576: (114-117): Undeclared identifier.
+// DeclarationError 7576: (114-117='Sit'): Undeclared identifier.

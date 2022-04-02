@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5704: (90-108): Type is not callable
+// TypeError 5704: (90-108='3({a: 1, x: true})'): Type is not callable

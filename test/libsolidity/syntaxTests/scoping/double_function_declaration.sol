@@ -3,4 +3,4 @@ contract test {
     function fun() public { }
 }
 // ----
-// DeclarationError 1686: (20-45): Function with same name and parameter types defined twice.
+// DeclarationError 1686: (20-45='function fun() public { }'): Function with same name and parameter types defined twice.

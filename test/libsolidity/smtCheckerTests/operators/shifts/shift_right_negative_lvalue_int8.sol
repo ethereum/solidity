@@ -31,9 +31,9 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (203-226): CHC: Assertion violation happens here.
-// Warning 6328: (297-320): CHC: Assertion violation happens here.
-// Warning 6328: (390-413): CHC: Assertion violation happens here.
-// Warning 6328: (483-506): CHC: Assertion violation happens here.
-// Warning 6328: (577-600): CHC: Assertion violation happens here.
-// Warning 6328: (671-694): CHC: Assertion violation happens here.
+// Warning 6328: (203-226='assert(f(-66, 0) == -6)'): CHC: Assertion violation happens here.
+// Warning 6328: (297-320='assert(f(-66, 1) == -3)'): CHC: Assertion violation happens here.
+// Warning 6328: (390-413='assert(f(-66, 4) == -2)'): CHC: Assertion violation happens here.
+// Warning 6328: (483-506='assert(f(-66, 8) == -2)'): CHC: Assertion violation happens here.
+// Warning 6328: (577-600='assert(f(-66, 16) == 0)'): CHC: Assertion violation happens here.
+// Warning 6328: (671-694='assert(f(-66, 17) == 0)'): CHC: Assertion violation happens here.

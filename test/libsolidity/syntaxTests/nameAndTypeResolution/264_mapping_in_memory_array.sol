@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1164: (94-117): Array containing a (nested) mapping cannot be constructed in memory.
+// TypeError 1164: (94-117='mapping(uint => uint)[]'): Array containing a (nested) mapping cannot be constructed in memory.

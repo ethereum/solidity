@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3390: (53-59): Invalid rational number.
+// TypeError 3390: (53-59='2**270'): Invalid rational number.

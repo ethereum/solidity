@@ -21,8 +21,8 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 5667: (24-41): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 4588: (265-270): Assertion checker does not yet implement this type of function call.
-// Warning 6328: (309-325): CHC: Assertion violation happens here.
-// Warning 6328: (405-419): CHC: Assertion violation happens here.
-// Warning 6328: (464-486): CHC: Assertion violation happens here.
+// Warning 5667: (24-41='address payable a'): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 4588: (265-270='a.l()'): Assertion checker does not yet implement this type of function call.
+// Warning 6328: (309-325='assert(b1 == b2)'): CHC: Assertion violation happens here.
+// Warning 6328: (405-419='assert(x == 0)'): CHC: Assertion violation happens here.
+// Warning 6328: (464-486='assert(v == msg.value)'): CHC: Assertion violation happens here.

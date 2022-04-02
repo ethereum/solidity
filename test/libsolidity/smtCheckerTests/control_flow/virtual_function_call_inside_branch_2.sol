@@ -21,4 +21,4 @@ contract C is B {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6838: (271-275): BMC: Condition is always false.
+// Warning 6838: (271-275='0==1'): BMC: Condition is always false.

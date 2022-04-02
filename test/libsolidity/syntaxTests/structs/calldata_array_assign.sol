@@ -6,4 +6,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 4156: (144-147): Calldata structs are read-only.
+// TypeError 4156: (144-147='s.a'): Calldata structs are read-only.

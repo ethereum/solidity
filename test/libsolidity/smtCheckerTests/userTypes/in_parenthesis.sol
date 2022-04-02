@@ -15,5 +15,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (133-161): CHC: Assertion violation happens here.\nCounterexample:\n\na = 5\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (261-289): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.f() -- internal call
+// Warning 6328: (133-161='assert(MyInt.unwrap(a) == 6)'): CHC: Assertion violation happens here.\nCounterexample:\n\na = 5\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (261-289='assert(MyInt.unwrap(x) == 6)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.f() -- internal call

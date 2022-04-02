@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError 1621: (115-128): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// TypeError 1621: (115-128='(new C).value'): Using ".value(...)" is deprecated. Use "{value: ...}" instead.

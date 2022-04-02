@@ -3,4 +3,4 @@ contract test {
     constructor(uint k) { S[k]; }
 }
 // ----
-// TypeError 3940: (69-70): Integer constant expected.
+// TypeError 3940: (69-70='k'): Integer constant expected.

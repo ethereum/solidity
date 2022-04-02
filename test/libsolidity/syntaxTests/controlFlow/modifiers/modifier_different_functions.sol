@@ -9,4 +9,4 @@ contract A {
 	}
 }
 // ----
-// TypeError 3464: (118-132): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (118-132='uint[] storage'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.

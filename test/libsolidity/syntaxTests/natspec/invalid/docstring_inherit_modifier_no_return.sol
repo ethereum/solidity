@@ -7,4 +7,4 @@ contract D is C {
 	modifier m22 override { _; }
 }
 // ----
-// DocstringParsingError 6546: (14-24): Documentation tag @return not valid for modifiers.
+// DocstringParsingError 6546: (14-24='///@return'): Documentation tag @return not valid for modifiers.

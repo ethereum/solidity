@@ -22,11 +22,11 @@ object "A" {
   data ".other" "Hello, World2!"
 }
 // ----
-// TypeError 3517: (41-49): Unknown data object ".other".
-// TypeError 3517: (69-77): Unknown data object ".other".
-// TypeError 3517: (97-107): Unknown data object "B..other".
-// TypeError 3517: (160-169): Unknown data object "B.other".
-// TypeError 3517: (242-253): Unknown data object ".metadata".
-// TypeError 3517: (273-284): Unknown data object ".metadata".
-// TypeError 3517: (306-319): Unknown data object "B..metadata".
-// TypeError 3517: (339-352): Unknown data object "B..metadata".
+// TypeError 3517: (41-49='".other"'): Unknown data object ".other".
+// TypeError 3517: (69-77='".other"'): Unknown data object ".other".
+// TypeError 3517: (97-107='"B..other"'): Unknown data object "B..other".
+// TypeError 3517: (160-169='"B.other"'): Unknown data object "B.other".
+// TypeError 3517: (242-253='".metadata"'): Unknown data object ".metadata".
+// TypeError 3517: (273-284='".metadata"'): Unknown data object ".metadata".
+// TypeError 3517: (306-319='"B..metadata"'): Unknown data object "B..metadata".
+// TypeError 3517: (339-352='"B..metadata"'): Unknown data object "B..metadata".

@@ -20,7 +20,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4588: (238-243): Assertion checker does not yet implement this type of function call.
-// Warning 6328: (282-298): CHC: Assertion violation happens here.
-// Warning 6328: (317-331): CHC: Assertion violation happens here.
-// Warning 1236: (54-67): BMC: Insufficient funds happens here.
+// Warning 4588: (238-243='a.l()'): Assertion checker does not yet implement this type of function call.
+// Warning 6328: (282-298='assert(b1 == b2)'): CHC: Assertion violation happens here.
+// Warning 6328: (317-331='assert(x == 0)'): CHC: Assertion violation happens here.
+// Warning 1236: (54-67='a.transfer(1)'): BMC: Insufficient funds happens here.

@@ -16,4 +16,4 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 2072: (83-89): Unused local variable.
+// Warning 2072: (83-89='uint y'): Unused local variable.

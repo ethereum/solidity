@@ -18,16 +18,16 @@ contract C {
     }
 }
 // ----
-// TypeError 9977: (79-80): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (94-96): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (110-113): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (127-131): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (145-149): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (163-168): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (182-187): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (201-207): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (221-224): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (238-242): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
-// TypeError 9977: (256-261): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (79-80='0'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (94-96='-0'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (110-113='0.0'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (127-131='-0.0'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (145-149='0e10'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (163-168='-0e10'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (182-187='0e-10'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (201-207='-0e-10'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (221-224='(0)'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (238-242='0x00'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
+// TypeError 9977: (256-261='-0x00'): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
 // TypeError 9977: (275-341): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.
 // TypeError 9977: (375-442): Invalid type for argument in the string.concat function call. string type is required, but t_rational_0_by_1 provided.

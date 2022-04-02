@@ -6,8 +6,8 @@ contract C {
     }
 }
 // ----
-// TypeError 2056: (94-120): This type cannot be encoded.
-// TypeError 2056: (122-127): This type cannot be encoded.
-// TypeError 2056: (184-189): This type cannot be encoded.
-// TypeError 2056: (191-193): This type cannot be encoded.
-// TypeError 2056: (195-201): This type cannot be encoded.
+// TypeError 2056: (94-120='address(this).delegatecall'): This type cannot be encoded.
+// TypeError 2056: (122-127='super'): This type cannot be encoded.
+// TypeError 2056: (184-189='block'): This type cannot be encoded.
+// TypeError 2056: (191-193='tx'): This type cannot be encoded.
+// TypeError 2056: (195-201='mulmod'): This type cannot be encoded.

@@ -12,8 +12,8 @@ contract C {
 	function j() public pure {}
 }
 // ----
-// DocstringParsingError 6546: (0-14): Documentation tag @a&b not valid for contracts.
-// DocstringParsingError 2968: (28-49): Invalid character in custom tag @custom:x^y. Only lowercase letters and "-" are permitted.
-// DocstringParsingError 6564: (80-92): Custom documentation tag must contain a chosen name, i.e. @custom:mytag.
-// DocstringParsingError 2968: (123-141): Invalid character in custom tag @custom:abcDEF. Only lowercase letters and "-" are permitted.
-// DocstringParsingError 6564: (222-233): Custom documentation tag must contain a chosen name, i.e. @custom:mytag.
+// DocstringParsingError 6546: (0-14='/// @a&b test'): Documentation tag @a&b not valid for contracts.
+// DocstringParsingError 2968: (28-49='/// @custom:x^y test2'): Invalid character in custom tag @custom:x^y. Only lowercase letters and "-" are permitted.
+// DocstringParsingError 6564: (80-92='/// @custom:'): Custom documentation tag must contain a chosen name, i.e. @custom:mytag.
+// DocstringParsingError 2968: (123-141='/// @custom:abcDEF'): Invalid character in custom tag @custom:abcDEF. Only lowercase letters and "-" are permitted.
+// DocstringParsingError 6564: (222-233='/// @custom'): Custom documentation tag must contain a chosen name, i.e. @custom:mytag.

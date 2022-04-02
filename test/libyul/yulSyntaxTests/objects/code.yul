@@ -15,4 +15,4 @@ object "A" {
   }
 }
 // ----
-// ParserError 8794: (226-233): Object name "hello" already exists inside the containing object.
+// ParserError 8794: (226-233='"hello"'): Object name "hello" already exists inside the containing object.

@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError 8936: (71-83): Unicode direction override underflow in comment or string literal.
+// ParserError 8936: (71-83='/*underflow'): Unicode direction override underflow in comment or string literal.

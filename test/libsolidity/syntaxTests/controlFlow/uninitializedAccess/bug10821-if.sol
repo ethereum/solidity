@@ -10,4 +10,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 3464: (155-156): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (155-156='t'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

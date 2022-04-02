@@ -11,4 +11,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 2519: (170-226): This declaration shadows an existing declaration.
-// Warning 6328: (130-149): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.f() -- internal call\n    C.f() -- internal call
+// Warning 6328: (130-149='assert(f() == 1337)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.f() -- internal call\n    C.f() -- internal call

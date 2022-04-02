@@ -52,6 +52,6 @@ contract MyConc{
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2519: (740-759): This declaration shadows an existing declaration.
+// Warning 2519: (740-759='uint constant A = 1'): This declaration shadows an existing declaration.
 // Warning 2018: (976-1053): Function state mutability can be restricted to view
-// Warning 4984: (952-969): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (952-969='10 + block.number'): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.

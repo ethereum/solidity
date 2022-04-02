@@ -12,7 +12,7 @@ contract C {
     }
 }
 // ----
-// TypeError 2056: (151-152): This type cannot be encoded.
-// TypeError 2056: (154-155): This type cannot be encoded.
-// TypeError 9578: (220-221): Type not supported in packed mode.
-// TypeError 9578: (223-224): Type not supported in packed mode.
+// TypeError 2056: (151-152='s'): This type cannot be encoded.
+// TypeError 2056: (154-155='t'): This type cannot be encoded.
+// TypeError 9578: (220-221='s'): Type not supported in packed mode.
+// TypeError 9578: (223-224='t'): Type not supported in packed mode.

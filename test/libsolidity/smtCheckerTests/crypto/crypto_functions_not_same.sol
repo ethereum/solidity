@@ -12,6 +12,6 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 1218: (196-210): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (196-210): CHC: Assertion violation might happen here.
-// Warning 4661: (196-210): BMC: Assertion violation happens here.
+// Warning 1218: (196-210='assert(h == k)'): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (196-210='assert(h == k)'): CHC: Assertion violation might happen here.
+// Warning 4661: (196-210='assert(h == k)'): BMC: Assertion violation happens here.

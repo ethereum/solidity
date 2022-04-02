@@ -18,7 +18,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2319: (108-120): This declaration shadows a builtin symbol.
-// Warning 2319: (149-160): This declaration shadows a builtin symbol.
-// Warning 2319: (189-203): This declaration shadows a builtin symbol.
-// Warning 6328: (274-297): CHC: Assertion violation happens here.
+// Warning 2319: (108-120='S memory msg'): This declaration shadows a builtin symbol.
+// Warning 2319: (149-160='S memory tx'): This declaration shadows a builtin symbol.
+// Warning 2319: (189-203='S memory block'): This declaration shadows a builtin symbol.
+// Warning 6328: (274-297='assert(msg.value == 41)'): CHC: Assertion violation happens here.

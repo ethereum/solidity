@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2643: (83-88): Arithmetic error when computing constant value.
+// TypeError 2643: (83-88='a - 1'): Arithmetic error when computing constant value.

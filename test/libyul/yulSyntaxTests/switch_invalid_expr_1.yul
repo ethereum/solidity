@@ -4,4 +4,4 @@
     default {}
 }
 // ----
-// ParserError 1856: (13-14): Literal or identifier expected.
+// ParserError 1856: (13-14='{'): Literal or identifier expected.

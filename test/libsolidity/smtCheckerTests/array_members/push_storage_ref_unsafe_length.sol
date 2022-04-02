@@ -26,13 +26,13 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (238-242): CHC: Out of bounds access happens here.
-// Warning 6368: (238-245): CHC: Out of bounds access might happen here.
-// Warning 6368: (238-248): CHC: Out of bounds access might happen here.
-// Warning 6368: (311-315): CHC: Out of bounds access happens here.
-// Warning 6368: (343-347): CHC: Out of bounds access happens here.
-// Warning 6328: (336-360): CHC: Assertion violation happens here.
-// Warning 6368: (513-517): CHC: Out of bounds access happens here.
-// Warning 6368: (513-520): CHC: Out of bounds access happens here.
-// Warning 6368: (513-523): CHC: Out of bounds access happens here.
-// Warning 6328: (506-530): CHC: Assertion violation happens here.
+// Warning 6368: (238-242='c[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (238-245='c[0][0]'): CHC: Out of bounds access might happen here.
+// Warning 6368: (238-248='c[0][0][0]'): CHC: Out of bounds access might happen here.
+// Warning 6368: (311-315='d[1]'): CHC: Out of bounds access happens here.
+// Warning 6368: (343-347='a[0]'): CHC: Out of bounds access happens here.
+// Warning 6328: (336-360='assert(a[0].length == 0)'): CHC: Assertion violation happens here.
+// Warning 6368: (513-517='c[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (513-520='c[0][0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (513-523='c[0][0][0]'): CHC: Out of bounds access happens here.
+// Warning 6328: (506-530='assert(c[0][0][0] == 12)'): CHC: Assertion violation happens here.

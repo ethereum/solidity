@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// DocstringParsingError 1430: (42-59): Documentation tag @inheritdoc reference "S" is not a contract.
+// DocstringParsingError 1430: (42-59='/// @inheritdoc S'): Documentation tag @inheritdoc reference "S" is not a contract.

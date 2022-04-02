@@ -9,6 +9,6 @@ contract C {
 }
 contract C2 is C0 {}
 // ----
-// Warning 2519: (16-40): This declaration shadows an existing declaration.
-// Warning 2519: (43-70): This declaration shadows an existing declaration.
-// Warning 2519: (132-156): This declaration shadows an existing declaration.
+// Warning 2519: (16-40='function f() external {}'): This declaration shadows an existing declaration.
+// Warning 2519: (43-70='function f(int) external {}'): This declaration shadows an existing declaration.
+// Warning 2519: (132-156='function f() external {}'): This declaration shadows an existing declaration.

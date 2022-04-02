@@ -22,5 +22,5 @@ contract C {
 // ====
 // SMTEngine: chc
 // ----
-// Warning 6328: (s3.sol:223-238): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 89\ny = 88\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call
-// Warning 6328: (s3.sol:291-306): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 89\ny = 88\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call
+// Warning 6328: (s3.sol:223-238='assert(x == 88)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 89\ny = 88\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call
+// Warning 6328: (s3.sol:291-306='assert(y == 89)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 89\ny = 88\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call

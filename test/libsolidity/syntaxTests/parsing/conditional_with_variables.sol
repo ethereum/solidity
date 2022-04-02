@@ -7,6 +7,6 @@ contract A {
     }
 }
 // ----
-// Warning 2072: (87-93): Unused local variable.
-// Warning 2072: (121-127): Unused local variable.
+// Warning 2072: (87-93='uint z'): Unused local variable.
+// Warning 2072: (121-127='uint w'): Unused local variable.
 // Warning 2018: (17-150): Function state mutability can be restricted to pure

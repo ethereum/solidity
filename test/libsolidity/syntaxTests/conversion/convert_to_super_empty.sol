@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1744: (52-59): Cannot convert to the super type.
+// TypeError 1744: (52-59='super()'): Cannot convert to the super type.

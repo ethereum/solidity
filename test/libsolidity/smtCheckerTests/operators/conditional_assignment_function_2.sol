@@ -17,4 +17,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (345-359): CHC: Assertion violation happens here.
+// Warning 6328: (345-359='assert(c < 20)'): CHC: Assertion violation happens here.

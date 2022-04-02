@@ -10,5 +10,5 @@ function f(S memory) pure{}
 import {S} from "A";
 import "A" as A;
 // ----
-// TypeError 4117: (B:1-24): Can only use "global" with types defined in the same source unit at file level.
-// TypeError 4117: (B:25-50): Can only use "global" with types defined in the same source unit at file level.
+// TypeError 4117: (B:1-24='using {f} for S global;'): Can only use "global" with types defined in the same source unit at file level.
+// TypeError 4117: (B:25-50='using {f} for A.S global;'): Can only use "global" with types defined in the same source unit at file level.

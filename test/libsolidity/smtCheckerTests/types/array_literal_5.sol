@@ -13,4 +13,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (176-196): CHC: Assertion violation happens here.\nCounterexample:\ns = [1, 2, 3]\na = [1, 2, 3]\n\nTransaction trace:\nC.constructor()\nState: s = []\nC.f()
+// Warning 6328: (176-196='assert(s[2] != a[2])'): CHC: Assertion violation happens here.\nCounterexample:\ns = [1, 2, 3]\na = [1, 2, 3]\n\nTransaction trace:\nC.constructor()\nState: s = []\nC.f()

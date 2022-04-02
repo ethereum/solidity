@@ -4,4 +4,4 @@
 // ====
 // dialect: yul
 // ----
-// ParserError 2314: (12-15): Expected '{' but got reserved keyword 'let'
+// ParserError 2314: (12-15='let'): Expected '{' but got reserved keyword 'let'

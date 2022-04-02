@@ -6,4 +6,4 @@ contract Test {
 	}
 }
 // ----
-// TypeError 3464: (83-84): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (83-84='b'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

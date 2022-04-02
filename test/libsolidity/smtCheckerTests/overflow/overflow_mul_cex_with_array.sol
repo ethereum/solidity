@@ -9,5 +9,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (111-114): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 6368: (106-115): CHC: Out of bounds access happens here.
+// Warning 4984: (111-114='5*y'): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6368: (106-115='x[8][5*y]'): CHC: Out of bounds access happens here.

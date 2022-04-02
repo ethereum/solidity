@@ -6,4 +6,4 @@ contract C {
 }
 // ----
 // Warning 2519: (38-91): This declaration shadows an existing declaration.
-// TypeError 1885: (79-80): Expression has to be an error.
+// TypeError 1885: (79-80='f'): Expression has to be an error.

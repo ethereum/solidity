@@ -8,4 +8,4 @@ contract C {
 }
 // ----
 // DeclarationError 1686: (0-46): Function with same name and parameter types defined twice.
-// TypeError 9574: (168-189): Type uint256 is not implicitly convertible to expected type string memory.
+// TypeError 9574: (168-189='string memory s = g()'): Type uint256 is not implicitly convertible to expected type string memory.

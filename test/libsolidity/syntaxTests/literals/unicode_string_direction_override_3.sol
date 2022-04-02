@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError 8936: (88-108): Mismatching directional override markers in comment or string literal.
+// ParserError 8936: (88-108='unicode"overflow ‮'): Mismatching directional override markers in comment or string literal.

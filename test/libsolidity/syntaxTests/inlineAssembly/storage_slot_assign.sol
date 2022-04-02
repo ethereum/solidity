@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9739: (138-146): Only .slot can be assigned to.
+// TypeError 9739: (138-146='y.offset'): Only .slot can be assigned to.

@@ -7,4 +7,4 @@ contract C is D {
     }
 }
 // ----
-// DocstringParsingError 4682: (38-55): Documentation tag @inheritdoc references contract "D", but the contract does not contain a function that is overridden by this function.
+// DocstringParsingError 4682: (38-55='/// @inheritdoc D'): Documentation tag @inheritdoc references contract "D", but the contract does not contain a function that is overridden by this function.

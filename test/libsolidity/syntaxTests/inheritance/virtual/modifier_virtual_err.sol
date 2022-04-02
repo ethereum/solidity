@@ -4,4 +4,4 @@ library test {
     }
 }
 // ----
-// TypeError 3275: (19-38): Modifiers in a library cannot be virtual.
+// TypeError 3275: (19-38='modifier m virtual;'): Modifiers in a library cannot be virtual.

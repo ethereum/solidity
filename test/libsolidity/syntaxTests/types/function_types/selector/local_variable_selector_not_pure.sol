@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning 6321: (51-57): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (51-57='bytes4'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

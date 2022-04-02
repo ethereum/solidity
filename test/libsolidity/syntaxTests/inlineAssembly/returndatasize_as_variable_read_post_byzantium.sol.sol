@@ -10,4 +10,4 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// ParserError 7104: (137-151): Builtin function "returndatasize" must be called.
+// ParserError 7104: (137-151='returndatasize'): Builtin function "returndatasize" must be called.

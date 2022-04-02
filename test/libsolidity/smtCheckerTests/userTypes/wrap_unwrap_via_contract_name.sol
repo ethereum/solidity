@@ -32,5 +32,5 @@ contract D {
 // ----
 // Warning 6328: (403-436): CHC: Assertion violation happens here.
 // Warning 6328: (494-529): CHC: Assertion violation happens here.
-// Warning 6328: (575-598): CHC: Assertion violation happens here.
+// Warning 6328: (575-598='assert(h(0x42) == 0x43)'): CHC: Assertion violation happens here.
 // Warning 6328: (666-711): CHC: Assertion violation happens here.

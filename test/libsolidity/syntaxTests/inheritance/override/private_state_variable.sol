@@ -6,4 +6,4 @@ contract C is C1 {
    int override f;
 }
 // ----
-// TypeError 8022: (96-110): Override can only be used with public state variables.
+// TypeError 8022: (96-110='int override f'): Override can only be used with public state variables.

@@ -6,4 +6,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (123-143): CHC: Assertion violation happens here.\nCounterexample:\n\ng = 0\nh = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)\n    g(2) -- untrusted external call\n    h(2) -- untrusted external call
+// Warning 6328: (123-143='assert(g(2) == h(2))'): CHC: Assertion violation happens here.\nCounterexample:\n\ng = 0\nh = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)\n    g(2) -- untrusted external call\n    h(2) -- untrusted external call

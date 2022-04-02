@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2657: (103-104): Assignment requires variable.
+// TypeError 2657: (103-104='f'): Assignment requires variable.

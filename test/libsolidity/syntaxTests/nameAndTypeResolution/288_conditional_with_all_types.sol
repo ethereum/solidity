@@ -84,6 +84,6 @@ contract C {
     }
 }
 // ----
-// Warning 2519: (1013-1027): This declaration shadows an existing declaration.
+// Warning 2519: (1013-1027='bytes memory f'): This declaration shadows an existing declaration.
 // Warning 2018: (257-642): Function state mutability can be restricted to pure
 // Warning 2018: (647-1237): Function state mutability can be restricted to pure

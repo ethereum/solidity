@@ -11,4 +11,4 @@ contract C {
 }
 
 // ----
-// ParserError 6933: (224-225): Expected primary expression.
+// ParserError 6933: (224-225=')'): Expected primary expression.

@@ -18,5 +18,5 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (233-259): BMC: Assertion violation happens here.
-// Warning 4661: (287-314): BMC: Assertion violation happens here.
+// Warning 4661: (233-259='assert(gas == tx.gasprice)'): BMC: Assertion violation happens here.
+// Warning 4661: (287-314='assert(origin == tx.origin)'): BMC: Assertion violation happens here.

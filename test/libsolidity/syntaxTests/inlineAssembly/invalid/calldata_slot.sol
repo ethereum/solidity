@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1536: (111-131): Calldata variables only support ".offset" and ".length".
+// TypeError 1536: (111-131='bytesAsCalldata.slot'): Calldata variables only support ".offset" and ".length".

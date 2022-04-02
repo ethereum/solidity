@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 7407: (148-150): Type function () external[] storage ref is not implicitly convertible to expected type function () view external[] storage ref.
+// TypeError 7407: (148-150='s0'): Type function () external[] storage ref is not implicitly convertible to expected type function () view external[] storage ref.

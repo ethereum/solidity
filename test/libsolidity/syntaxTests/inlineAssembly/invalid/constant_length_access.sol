@@ -7,4 +7,4 @@ contract Test {
 	}
 }
 // ----
-// TypeError 3622: (91-99): The suffix ".length" is not supported by this variable or type.
+// TypeError 3622: (91-99='x.length'): The suffix ".length" is not supported by this variable or type.

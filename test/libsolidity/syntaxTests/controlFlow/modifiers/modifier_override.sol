@@ -13,5 +13,5 @@ contract B is A {
 	}
 }
 // ----
-// Warning 5740: (65-69): Unreachable code.
-// TypeError 3464: (49-63): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// Warning 5740: (65-69='{ 	}'): Unreachable code.
+// TypeError 3464: (49-63='uint[] storage'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.

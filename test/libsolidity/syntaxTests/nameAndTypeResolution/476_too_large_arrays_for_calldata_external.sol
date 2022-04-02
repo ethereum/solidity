@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1534: (28-56): Type too large for calldata.
+// TypeError 1534: (28-56='uint[85678901234] calldata a'): Type too large for calldata.

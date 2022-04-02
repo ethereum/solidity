@@ -6,4 +6,4 @@ function t() {
     g(2);
 }
 // ----
-// TypeError 4487: (176-177): No unique declaration found after argument-dependent lookup.
+// TypeError 4487: (176-177='g'): No unique declaration found after argument-dependent lookup.

@@ -7,5 +7,5 @@ contract B is A {
   function g() internal override {}
 }
 // ----
-// Warning 6321: (52-56): Unnamed return variable can remain unassigned when the function is called when "B" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6321: (173-177): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (52-56='uint'): Unnamed return variable can remain unassigned when the function is called when "B" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (173-177='uint'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

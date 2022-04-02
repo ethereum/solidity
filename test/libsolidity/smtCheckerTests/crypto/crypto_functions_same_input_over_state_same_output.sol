@@ -37,15 +37,15 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 1218: (544-563): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (567-586): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (590-609): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (613-632): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (544-563): CHC: Assertion violation might happen here.
-// Warning 6328: (567-586): CHC: Assertion violation might happen here.
-// Warning 6328: (590-609): CHC: Assertion violation might happen here.
-// Warning 6328: (613-632): CHC: Assertion violation might happen here.
-// Warning 4661: (544-563): BMC: Assertion violation happens here.
-// Warning 4661: (567-586): BMC: Assertion violation happens here.
-// Warning 4661: (590-609): BMC: Assertion violation happens here.
-// Warning 4661: (613-632): BMC: Assertion violation happens here.
+// Warning 1218: (544-563='assert(_kec == kec)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (567-586='assert(_sha == sha)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (590-609='assert(_rip == rip)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (613-632='assert(_erc == erc)'): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (544-563='assert(_kec == kec)'): CHC: Assertion violation might happen here.
+// Warning 6328: (567-586='assert(_sha == sha)'): CHC: Assertion violation might happen here.
+// Warning 6328: (590-609='assert(_rip == rip)'): CHC: Assertion violation might happen here.
+// Warning 6328: (613-632='assert(_erc == erc)'): CHC: Assertion violation might happen here.
+// Warning 4661: (544-563='assert(_kec == kec)'): BMC: Assertion violation happens here.
+// Warning 4661: (567-586='assert(_sha == sha)'): BMC: Assertion violation happens here.
+// Warning 4661: (590-609='assert(_rip == rip)'): BMC: Assertion violation happens here.
+// Warning 4661: (613-632='assert(_erc == erc)'): BMC: Assertion violation happens here.

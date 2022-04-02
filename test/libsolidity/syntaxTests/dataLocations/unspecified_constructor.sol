@@ -3,4 +3,4 @@ contract C {
   constructor(S) {}
 }
 // ----
-// TypeError 6651: (48-49): Data location must be "storage" or "memory" for constructor parameter, but none was given.
+// TypeError 6651: (48-49='S'): Data location must be "storage" or "memory" for constructor parameter, but none was given.

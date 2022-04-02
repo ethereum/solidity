@@ -5,4 +5,4 @@ contract test {
 }
 // ----
 // TypeError 7006: (91-124): Cannot set option "value" on a non-payable function type.
-// TypeError 8820: (156-184): Member "value" is only available for payable functions.
+// TypeError 8820: (156-184='(new receiver()).nopay.value'): Member "value" is only available for payable functions.

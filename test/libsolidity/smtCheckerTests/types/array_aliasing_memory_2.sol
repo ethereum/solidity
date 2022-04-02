@@ -27,7 +27,7 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6368: (327-331): CHC: Out of bounds access happens here.
-// Warning 6368: (584-588): CHC: Out of bounds access happens here.
-// Warning 6328: (577-594): CHC: Assertion violation happens here.
-// Warning 6368: (605-609): CHC: Out of bounds access happens here.
+// Warning 6368: (327-331='b[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (584-588='a[0]'): CHC: Out of bounds access happens here.
+// Warning 6328: (577-594='assert(a[0] == 2)'): CHC: Assertion violation happens here.
+// Warning 6368: (605-609='b[0]'): CHC: Out of bounds access happens here.

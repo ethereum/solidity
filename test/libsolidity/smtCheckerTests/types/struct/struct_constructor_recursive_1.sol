@@ -9,5 +9,5 @@ contract Test {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (104-133): Unused local variable.
+// Warning 2072: (104-133='RecursiveStruct[1] memory val'): Unused local variable.
 // Warning 8364: (138-180): Assertion checker does not yet implement type struct Test.RecursiveStruct memory

@@ -25,7 +25,7 @@ contract LoopFor2 {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (288-292): CHC: Out of bounds access might happen here.
-// Warning 6368: (459-463): CHC: Out of bounds access happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\na = []\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
-// Warning 6328: (452-471): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
-// Warning 6328: (475-494): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6368: (288-292='b[i]'): CHC: Out of bounds access might happen here.
+// Warning 6368: (459-463='a[0]'): CHC: Out of bounds access happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\na = []\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6328: (452-471='assert(a[0] == 900)'): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6328: (475-494='assert(b[0] == 900)'): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)

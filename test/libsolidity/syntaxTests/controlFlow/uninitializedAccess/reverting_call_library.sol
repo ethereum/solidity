@@ -14,4 +14,4 @@ contract C
 }
 
 // ----
-// Warning 6321: (128-135): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (128-135='uint256'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

@@ -9,4 +9,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 9302: (88-105): Return value of low-level calls not used.
+// Warning 9302: (88-105='_a.staticcall("")'): Return value of low-level calls not used.

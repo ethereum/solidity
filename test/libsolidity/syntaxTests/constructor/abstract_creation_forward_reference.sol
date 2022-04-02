@@ -12,4 +12,4 @@ contract Parent {
 contract Child is Parent {
 }
 // ----
-// TypeError 3656: (226-254): Contract "Child" should be marked as abstract.
+// TypeError 3656: (226-254='contract Child is Parent { }'): Contract "Child" should be marked as abstract.

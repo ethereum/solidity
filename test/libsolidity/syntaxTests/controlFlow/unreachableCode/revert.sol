@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning 5740: (70-83): Unreachable code.
+// Warning 5740: (70-83='uint a = 0; a'): Unreachable code.

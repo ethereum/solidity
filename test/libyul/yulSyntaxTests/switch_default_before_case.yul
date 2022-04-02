@@ -4,4 +4,4 @@
     case 1 {}
 }
 // ----
-// ParserError 4904: (35-39): Case not allowed after default case.
+// ParserError 4904: (35-39='case'): Case not allowed after default case.

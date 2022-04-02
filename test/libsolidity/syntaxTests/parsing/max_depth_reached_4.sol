@@ -25,4 +25,4 @@ contract C {
     }
 }
 // ----
-// ParserError 7319: (1305-1308): Maximum recursion depth reached during parsing.
+// ParserError 7319: (1305-1308='nok'): Maximum recursion depth reached during parsing.

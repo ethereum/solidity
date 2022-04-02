@@ -13,5 +13,5 @@ contract DepositContract {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4984: (256-277): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 2661: (256-277): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (256-277='deposit_count_2 += 10'): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+// Warning 2661: (256-277='deposit_count_2 += 10'): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

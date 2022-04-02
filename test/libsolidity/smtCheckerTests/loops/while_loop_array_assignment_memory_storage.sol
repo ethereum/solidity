@@ -33,4 +33,4 @@ contract LoopFor2 {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 2072: (280-286): Unused local variable.
+// Warning 2072: (280-286='uint i'): Unused local variable.

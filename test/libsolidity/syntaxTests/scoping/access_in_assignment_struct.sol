@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 7576: (90-91): Undeclared identifier. "x" is not (or not yet) visible at this point.
+// DeclarationError 7576: (90-91='x'): Undeclared identifier. "x" is not (or not yet) visible at this point.

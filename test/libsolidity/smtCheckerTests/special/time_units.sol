@@ -15,8 +15,8 @@ contract D {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (69-91): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
-// Warning 6328: (131-163): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
-// Warning 6328: (201-231): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
-// Warning 6328: (265-291): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
-// Warning 6328: (325-352): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
+// Warning 6328: (69-91='assert(2 == 1 seconds)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
+// Warning 6328: (131-163='assert(3 minutes == 120 seconds)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
+// Warning 6328: (201-231='assert(3 hours == 120 minutes)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
+// Warning 6328: (265-291='assert(4 days == 48 hours)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()
+// Warning 6328: (325-352='assert(25 weeks == 14 days)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()

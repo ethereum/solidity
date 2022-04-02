@@ -6,4 +6,4 @@ contract test {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (48-56): Unused local variable.
+// Warning 2072: (48-56='ufixed a'): Unused local variable.

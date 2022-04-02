@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// ParserError 9680: (62-66): State mutability already specified as "pure".
+// ParserError 9680: (62-66='pure'): State mutability already specified as "pure".

@@ -38,14 +38,14 @@ contract Test
   }
 }
 // ----
-// TypeError 9553: (1580-1596): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) view returns (uint256) to function (uint256) pure returns (uint256) requested.
-// TypeError 9553: (1653-1672): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) returns (uint256) to function (uint256) pure returns (uint256) requested.
-// TypeError 9553: (1733-1752): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) returns (uint256) to function (uint256) view returns (uint256) requested.
-// TypeError 9553: (1813-1834): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) view external returns (uint256) to function (uint256) pure external returns (uint256) requested.
-// TypeError 9553: (1891-1915): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) payable external returns (uint256) to function (uint256) pure external returns (uint256) requested.
-// TypeError 9553: (1975-1999): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) external returns (uint256) to function (uint256) pure external returns (uint256) requested.
-// TypeError 9553: (2060-2084): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) payable external returns (uint256) to function (uint256) view external returns (uint256) requested.
-// TypeError 9553: (2144-2168): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) external returns (uint256) to function (uint256) view external returns (uint256) requested.
-// TypeError 9553: (2232-2253): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) pure external returns (uint256) to function (uint256) payable external returns (uint256) requested.
-// TypeError 9553: (2316-2337): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) view external returns (uint256) to function (uint256) payable external returns (uint256) requested.
-// TypeError 9553: (2400-2424): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) external returns (uint256) to function (uint256) payable external returns (uint256) requested.
+// TypeError 9553: (1580-1596='internalViewFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) view returns (uint256) to function (uint256) pure returns (uint256) requested.
+// TypeError 9553: (1653-1672='internalMutableFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) returns (uint256) to function (uint256) pure returns (uint256) requested.
+// TypeError 9553: (1733-1752='internalMutableFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) returns (uint256) to function (uint256) view returns (uint256) requested.
+// TypeError 9553: (1813-1834='this.externalViewFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) view external returns (uint256) to function (uint256) pure external returns (uint256) requested.
+// TypeError 9553: (1891-1915='this.externalPayableFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) payable external returns (uint256) to function (uint256) pure external returns (uint256) requested.
+// TypeError 9553: (1975-1999='this.externalMutableFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) external returns (uint256) to function (uint256) pure external returns (uint256) requested.
+// TypeError 9553: (2060-2084='this.externalPayableFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) payable external returns (uint256) to function (uint256) view external returns (uint256) requested.
+// TypeError 9553: (2144-2168='this.externalMutableFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) external returns (uint256) to function (uint256) view external returns (uint256) requested.
+// TypeError 9553: (2232-2253='this.externalPureFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) pure external returns (uint256) to function (uint256) payable external returns (uint256) requested.
+// TypeError 9553: (2316-2337='this.externalViewFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) view external returns (uint256) to function (uint256) payable external returns (uint256) requested.
+// TypeError 9553: (2400-2424='this.externalMutableFunc'): Invalid type for argument in function call. Invalid implicit conversion from function (uint256) external returns (uint256) to function (uint256) payable external returns (uint256) requested.

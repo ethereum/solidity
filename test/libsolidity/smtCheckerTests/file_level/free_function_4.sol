@@ -4,4 +4,4 @@ function f()pure {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (20-28): Unused local variable.
+// Warning 2072: (20-28='ufixed a'): Unused local variable.

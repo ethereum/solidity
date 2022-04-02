@@ -6,7 +6,7 @@ contract C {
   }
 }
 // ----
-// DeclarationError 3927: (74-76): User-defined identifiers in inline assembly cannot contain '.'.
-// DeclarationError 3927: (78-81): User-defined identifiers in inline assembly cannot contain '.'.
-// DeclarationError 3927: (86-89): User-defined identifiers in inline assembly cannot contain '.'.
-// DeclarationError 3927: (91-94): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3927: (74-76='a.'): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3927: (78-81='x.b'): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3927: (86-89='t.b'): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3927: (91-94='b..'): User-defined identifiers in inline assembly cannot contain '.'.

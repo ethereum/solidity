@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4289: (72-88): Compound assignment is not allowed for tuple types.
+// TypeError 4289: (72-88='(a, b) += (1, 1)'): Compound assignment is not allowed for tuple types.

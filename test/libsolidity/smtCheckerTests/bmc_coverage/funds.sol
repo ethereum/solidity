@@ -6,4 +6,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 1236: (55-70): BMC: Insufficient funds happens here.
+// Warning 1236: (55-70='a.transfer(200)'): BMC: Insufficient funds happens here.

@@ -22,5 +22,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 5667: (259-273): Unused try/catch parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (280-294): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\ns = []\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f()\n    C.postinc() -- internal call
+// Warning 5667: (259-273='bytes memory s'): Unused try/catch parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (280-294='assert(x == 0)'): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\ns = []\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f()\n    C.postinc() -- internal call

@@ -10,4 +10,4 @@ contract C
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 5740: (69-72): Unreachable code.
+// Warning 5740: (69-72='++x'): Unreachable code.

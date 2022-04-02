@@ -5,5 +5,5 @@ contract C {
     }
 }
 // ----
-// TypeError 1039: (119-120): Argument has to be a type name.
-// TypeError 5132: (90-122): Different number of arguments in return statement than in returns declaration.
+// TypeError 1039: (119-120='E'): Argument has to be a type name.
+// TypeError 5132: (90-122='return abi.decode(msg.data, (E))'): Different number of arguments in return statement than in returns declaration.

@@ -5,4 +5,4 @@
 	{}
 }
 // ----
-// SyntaxError 3441: (27-35): Functions cannot be defined inside a for-loop init block.
+// SyntaxError 3441: (27-35='function'): Functions cannot be defined inside a for-loop init block.

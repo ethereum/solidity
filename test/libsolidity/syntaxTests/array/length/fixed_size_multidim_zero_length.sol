@@ -7,9 +7,9 @@ contract C {
   function e() public pure returns(string[0][500] memory) {}
 }
 // ----
-// TypeError 1406: (52-53): Array with zero length specified.
-// TypeError 1406: (111-112): Array with zero length specified.
-// TypeError 1406: (172-173): Array with zero length specified.
-// TypeError 1406: (234-235): Array with zero length specified.
-// TypeError 1406: (294-295): Array with zero length specified.
-// TypeError 1406: (355-356): Array with zero length specified.
+// TypeError 1406: (52-53='0'): Array with zero length specified.
+// TypeError 1406: (111-112='0'): Array with zero length specified.
+// TypeError 1406: (172-173='0'): Array with zero length specified.
+// TypeError 1406: (234-235='0'): Array with zero length specified.
+// TypeError 1406: (294-295='0'): Array with zero length specified.
+// TypeError 1406: (355-356='0'): Array with zero length specified.

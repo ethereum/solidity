@@ -14,4 +14,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (191-201): CHC: Assertion violation happens here.\nCounterexample:\n\nb = true\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.f() -- internal call
+// Warning 6328: (191-201='assert(!b)'): CHC: Assertion violation happens here.\nCounterexample:\n\nb = true\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.f() -- internal call

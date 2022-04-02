@@ -4,4 +4,4 @@ contract C {
     function(bytes memory) public a;
 }
 // ----
-// TypeError 6012: (139-170): Invalid visibility, can only be "external" or "internal".
+// TypeError 6012: (139-170='function(bytes memory) public a'): Invalid visibility, can only be "external" or "internal".

@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 7407: (101-106): Type bytes2[10] storage ref is not implicitly convertible to expected type bytes1[32] storage ref.
+// TypeError 7407: (101-106='data2'): Type bytes2[10] storage ref is not implicitly convertible to expected type bytes1[32] storage ref.

@@ -5,4 +5,4 @@
 // ====
 // dialect: evm
 // ----
-// TypeError 9114: (67-79): Function expects direct literals as arguments.
+// TypeError 9114: (67-79='linkersymbol'): Function expects direct literals as arguments.

@@ -31,5 +31,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (219-236): Unused local variable.
-// Warning 6328: (266-280): CHC: Assertion violation happens here.
+// Warning 2072: (219-236='address prevOwner'): Unused local variable.
+// Warning 6328: (266-280='assert(z == y)'): CHC: Assertion violation happens here.

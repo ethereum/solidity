@@ -6,6 +6,6 @@ contract C {
     }
 }
 // ----
-// TypeError 2056: (60-76): This type cannot be encoded.
-// TypeError 2056: (92-106): This type cannot be encoded.
-// TypeError 2056: (122-146): This type cannot be encoded.
+// TypeError 2056: (60-76='this.f{value: 2}'): This type cannot be encoded.
+// TypeError 2056: (92-106='this.f{gas: 2}'): This type cannot be encoded.
+// TypeError 2056: (122-146='this.f{value: 2, gas: 1}'): This type cannot be encoded.

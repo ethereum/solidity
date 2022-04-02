@@ -11,5 +11,5 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (52-76): CHC: Assertion violation happens here.
-// Warning 6328: (80-104): CHC: Assertion violation happens here.
+// Warning 6328: (52-76='assert(blockhash(x) > 0)'): CHC: Assertion violation happens here.
+// Warning 6328: (80-104='assert(blockhash(2) > 0)'): CHC: Assertion violation happens here.

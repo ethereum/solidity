@@ -39,5 +39,5 @@ contract C is B {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (403-417): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, x = 1\nc = (- 1)\n\nTransaction trace:\nC.constructor((- 1))
-// Warning 6328: (450-463): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, x = 0\nc = 0\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (403-417='assert(c >= 0)'): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, x = 1\nc = (- 1)\n\nTransaction trace:\nC.constructor((- 1))
+// Warning 6328: (450-463='assert(c < 0)'): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, x = 0\nc = 0\n\nTransaction trace:\nC.constructor(0)

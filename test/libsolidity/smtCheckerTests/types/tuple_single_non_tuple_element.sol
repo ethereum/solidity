@@ -6,4 +6,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6133: (43-46): Statement has no effect.
+// Warning 6133: (43-46='(2)'): Statement has no effect.

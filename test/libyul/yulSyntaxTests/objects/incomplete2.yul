@@ -4,4 +4,4 @@ object "A" {
 
 object
 // ----
-// ParserError 2314: (26-32): Expected end of source but got identifier
+// ParserError 2314: (26-32='object'): Expected end of source but got identifier

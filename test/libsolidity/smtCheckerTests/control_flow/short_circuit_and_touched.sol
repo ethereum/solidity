@@ -12,8 +12,8 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6838: (51-77): BMC: Condition is always false.
-// Warning 6838: (88-114): BMC: Condition is always true.
-// Warning 6838: (125-150): BMC: Condition is always false.
-// Warning 6838: (161-188): BMC: Condition is always false.
-// Warning 6838: (199-214): BMC: Condition is always true.
+// Warning 6838: (51-77='(b = false) && (b == true)'): BMC: Condition is always false.
+// Warning 6838: (88-114='(b == false) && (b = true)'): BMC: Condition is always true.
+// Warning 6838: (125-150='(b = false) && (b = true)'): BMC: Condition is always false.
+// Warning 6838: (161-188='(b == false) && (b == true)'): BMC: Condition is always false.
+// Warning 6838: (199-214='(b = true) && b'): BMC: Condition is always true.

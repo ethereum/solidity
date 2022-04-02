@@ -4,4 +4,4 @@
     default {}
 }
 // ----
-// ParserError 6931: (35-42): Only one default case allowed.
+// ParserError 6931: (35-42='default'): Only one default case allowed.

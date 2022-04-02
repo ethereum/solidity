@@ -15,7 +15,7 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 2661: (79-84): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4144: (155-160): BMC: Underflow (resulting value less than 0) happens here.
-// Warning 2661: (231-236): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 3046: (307-312): BMC: Division by zero happens here.
+// Warning 2661: (79-84='x + y'): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4144: (155-160='x - y'): BMC: Underflow (resulting value less than 0) happens here.
+// Warning 2661: (231-236='x * y'): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 3046: (307-312='x / y'): BMC: Division by zero happens here.

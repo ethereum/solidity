@@ -9,5 +9,5 @@ contract C
     }
 }
 // ----
-// TypeError 9574: (74-85): Type uint16 is not implicitly convertible to expected type int32.
-// TypeError 9574: (120-130): Type uint256 is not implicitly convertible to expected type int8.
+// TypeError 9574: (74-85='int32 b = a'): Type uint16 is not implicitly convertible to expected type int32.
+// TypeError 9574: (120-130='int8 d = c'): Type uint256 is not implicitly convertible to expected type int8.

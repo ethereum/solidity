@@ -9,4 +9,4 @@ contract test {
     }
 }
 // ----
-// TypeError 9214: (152-156): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 9214: (152-156='data'): Types in storage containing (nested) mappings cannot be assigned to.

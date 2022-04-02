@@ -6,4 +6,4 @@ contract C  {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4281: (80-85): CHC: Division by zero happens here.\nCounterexample:\n\nx = 0\ny = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)
+// Warning 4281: (80-85='x / y'): CHC: Division by zero happens here.\nCounterexample:\n\nx = 0\ny = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)

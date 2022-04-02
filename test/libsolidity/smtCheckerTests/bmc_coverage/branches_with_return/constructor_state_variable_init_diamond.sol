@@ -60,11 +60,11 @@ contract D4 is B, C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (337-351): BMC: Assertion violation happens here.
-// Warning 4661: (370-385): BMC: Assertion violation happens here.
-// Warning 4661: (460-474): BMC: Assertion violation happens here.
-// Warning 4661: (493-507): BMC: Assertion violation happens here.
-// Warning 4661: (670-684): BMC: Assertion violation happens here.
-// Warning 4661: (736-751): BMC: Assertion violation happens here.
-// Warning 4661: (827-841): BMC: Assertion violation happens here.
-// Warning 4661: (860-874): BMC: Assertion violation happens here.
+// Warning 4661: (337-351='assert(x == 1)'): BMC: Assertion violation happens here.
+// Warning 4661: (370-385='assert(x == -1)'): BMC: Assertion violation happens here.
+// Warning 4661: (460-474='assert(x == 0)'): BMC: Assertion violation happens here.
+// Warning 4661: (493-507='assert(x == 1)'): BMC: Assertion violation happens here.
+// Warning 4661: (670-684='assert(x == 0)'): BMC: Assertion violation happens here.
+// Warning 4661: (736-751='assert(x == -1)'): BMC: Assertion violation happens here.
+// Warning 4661: (827-841='assert(x == 0)'): BMC: Assertion violation happens here.
+// Warning 4661: (860-874='assert(x == 1)'): BMC: Assertion violation happens here.

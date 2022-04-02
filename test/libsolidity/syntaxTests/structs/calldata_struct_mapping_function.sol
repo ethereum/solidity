@@ -11,4 +11,4 @@ contract test {
     }
 }
 // ----
-// TypeError 4103: (155-167): Types containing (nested) mappings can only be parameters or return variables of internal or library functions.
+// TypeError 4103: (155-167='S calldata b'): Types containing (nested) mappings can only be parameters or return variables of internal or library functions.

@@ -4,4 +4,4 @@ enum E { A }
 import "a";
 struct E { uint256 a; }
 // ----
-// DeclarationError 2333: (b:12-35): Identifier already declared.
+// DeclarationError 2333: (b:12-35='struct E { uint256 a; }'): Identifier already declared.

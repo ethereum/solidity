@@ -8,4 +8,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError 2025: (90-92): Access to functions is not allowed in inline assembly.
+// DeclarationError 2025: (90-92='ff'): Access to functions is not allowed in inline assembly.

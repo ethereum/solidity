@@ -7,4 +7,4 @@ object "A" {
   }
 }
 // ----
-// ParserError 8794: (47-50): Object name "B" already exists inside the containing object.
+// ParserError 8794: (47-50='"B"'): Object name "B" already exists inside the containing object.

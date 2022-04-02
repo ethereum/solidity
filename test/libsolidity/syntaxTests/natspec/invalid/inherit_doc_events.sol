@@ -14,4 +14,4 @@ contract A is ERC20 {
 
 
 // ----
-// DocstringParsingError 6546: (305-326): Documentation tag @inheritdoc not valid for events.
+// DocstringParsingError 6546: (305-326='/// @inheritdoc ERC20'): Documentation tag @inheritdoc not valid for events.

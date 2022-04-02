@@ -14,7 +14,7 @@ contract C {
    }
 }
 // ----
-// TypeError 9640: (92-109): Explicit type conversion not allowed from "literal_string hex"1234"" to "bytes1". Literal is larger than the type.
-// TypeError 9640: (198-217): Explicit type conversion not allowed from "literal_string hex"123456"" to "bytes2". Literal is larger than the type.
-// TypeError 9640: (310-331): Explicit type conversion not allowed from "literal_string hex"12345678"" to "bytes3". Literal is larger than the type.
-// TypeError 9640: (430-453): Explicit type conversion not allowed from "literal_string hex"1234567890"" to "bytes4". Literal is larger than the type.
+// TypeError 9640: (92-109='bytes1(hex"1234")'): Explicit type conversion not allowed from "literal_string hex"1234"" to "bytes1". Literal is larger than the type.
+// TypeError 9640: (198-217='bytes2(hex"123456")'): Explicit type conversion not allowed from "literal_string hex"123456"" to "bytes2". Literal is larger than the type.
+// TypeError 9640: (310-331='bytes3(hex"12345678")'): Explicit type conversion not allowed from "literal_string hex"12345678"" to "bytes3". Literal is larger than the type.
+// TypeError 9640: (430-453='bytes4(hex"1234567890")'): Explicit type conversion not allowed from "literal_string hex"1234567890"" to "bytes4". Literal is larger than the type.

@@ -7,4 +7,4 @@ contract B {
 contract C is A, B {
 }
 // ----
-// DeclarationError 5883: (65-85): Event with same name and parameter types defined twice.
+// DeclarationError 5883: (65-85='event X(uint, uint);'): Event with same name and parameter types defined twice.

@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 7920: (115-123): Identifier not found or not unique.
+// DeclarationError 7920: (115-123='L.id_ext'): Identifier not found or not unique.

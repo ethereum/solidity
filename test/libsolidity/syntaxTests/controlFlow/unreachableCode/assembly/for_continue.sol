@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning 5740: (163-174): Unreachable code.
+// Warning 5740: (163-174='let b := 42'): Unreachable code.

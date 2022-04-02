@@ -15,4 +15,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (531-555): CHC: Assertion violation happens here.\nCounterexample:\nu = 165521356710917456517261742455526507355687727119203895813322792776\n\nTransaction trace:\nC.constructor()\nState: u = 165521356710917456517261742455526507355687727119203895813322792776\nC.f()
+// Warning 6328: (531-555='assert(T.unwrap(s) == 0)'): CHC: Assertion violation happens here.\nCounterexample:\nu = 165521356710917456517261742455526507355687727119203895813322792776\n\nTransaction trace:\nC.constructor()\nState: u = 165521356710917456517261742455526507355687727119203895813322792776\nC.f()

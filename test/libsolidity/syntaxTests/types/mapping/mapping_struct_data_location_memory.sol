@@ -4,4 +4,4 @@ contract C {
     function f(S memory) public {}
 }
 // ----
-// TypeError 4103: (104-112): Types containing (nested) mappings can only be parameters or return variables of internal or library functions.
+// TypeError 4103: (104-112='S memory'): Types containing (nested) mappings can only be parameters or return variables of internal or library functions.

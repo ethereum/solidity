@@ -10,4 +10,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreInv: yes
 // ----
-// Warning 6328: (134-151): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 6328: (134-151='assert(m[a] != 0)'): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)

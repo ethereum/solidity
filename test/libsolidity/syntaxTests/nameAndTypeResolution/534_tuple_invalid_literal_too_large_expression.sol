@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning 6133: (52-74): Statement has no effect.
+// Warning 6133: (52-74='((2**270) / 2**100, 1)'): Statement has no effect.

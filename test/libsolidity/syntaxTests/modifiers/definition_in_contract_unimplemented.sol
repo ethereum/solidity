@@ -4,4 +4,4 @@ contract C {
 }
 // ----
 // TypeError 3656: (0-57): Contract "C" should be marked as abstract.
-// TypeError 8063: (17-29): Modifiers without implementation must be marked virtual.
+// TypeError 8063: (17-29='modifier mu;'): Modifiers without implementation must be marked virtual.

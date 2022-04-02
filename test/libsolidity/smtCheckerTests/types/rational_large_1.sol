@@ -8,5 +8,5 @@ contract c {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6321: (48-52): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6328: (96-110): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0\nx = 8\n\nTransaction trace:\nc.constructor()\nc.f()
+// Warning 6321: (48-52='uint'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6328: (96-110='assert(x != 8)'): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0\nx = 8\n\nTransaction trace:\nc.constructor()\nc.f()

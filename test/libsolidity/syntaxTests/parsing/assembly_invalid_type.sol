@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// ParserError 4531: (55-64): Only "evmasm" supported.
+// ParserError 4531: (55-64='"failasm"'): Only "evmasm" supported.

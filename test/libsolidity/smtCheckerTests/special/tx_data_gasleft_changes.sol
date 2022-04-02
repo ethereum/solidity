@@ -18,5 +18,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (91-117): CHC: Assertion violation happens here.
-// Warning 6328: (186-212): CHC: Assertion violation happens here.
+// Warning 6328: (91-117='assert(gleft == gasleft())'): CHC: Assertion violation happens here.
+// Warning 6328: (186-212='assert(gleft == gasleft())'): CHC: Assertion violation happens here.

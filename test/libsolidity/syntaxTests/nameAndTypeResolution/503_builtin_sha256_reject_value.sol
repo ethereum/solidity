@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 8820: (47-59): Member "value" is only available for payable functions.
+// TypeError 8820: (47-59='sha256.value'): Member "value" is only available for payable functions.

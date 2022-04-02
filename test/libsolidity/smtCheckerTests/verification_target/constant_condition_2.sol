@@ -6,4 +6,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6838: (77-83): BMC: Condition is always false.
+// Warning 6838: (77-83='x < 10'): BMC: Condition is always false.

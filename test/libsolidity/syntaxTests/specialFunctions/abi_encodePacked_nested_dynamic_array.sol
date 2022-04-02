@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9578: (89-119): Type not supported in packed mode.
+// TypeError 9578: (89-119='[new uint[](5), new uint[](7)]'): Type not supported in packed mode.

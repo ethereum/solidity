@@ -27,5 +27,5 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (456-487): CHC: Assertion violation happens here.
+// Warning 6328: (456-487='assert(severalMaps[0][0] == 42)'): CHC: Assertion violation happens here.
 // Info 1180: Contract invariant(s) for :C:\n!(severalMaps3d.length <= 1)\n!(severalMaps8.length <= 1)\n

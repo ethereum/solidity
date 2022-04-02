@@ -2,4 +2,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// ParserError 2314: (15-18): Expected '{' but got reserved keyword 'let'
+// ParserError 2314: (15-18='let'): Expected '{' but got reserved keyword 'let'

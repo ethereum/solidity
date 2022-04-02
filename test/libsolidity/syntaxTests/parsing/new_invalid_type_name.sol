@@ -4,4 +4,4 @@ contract C {
 	}
 }
 // ----
-// ParserError 3546: (35-38): Expected type name
+// ParserError 3546: (35-38='var'): Expected type name

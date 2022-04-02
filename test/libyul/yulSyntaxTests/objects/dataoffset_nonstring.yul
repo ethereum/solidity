@@ -4,4 +4,4 @@ object "A" {
   }
 }
 // ----
-// TypeError 5859: (41-42): Function expects string literal.
+// TypeError 5859: (41-42='0'): Function expects string literal.

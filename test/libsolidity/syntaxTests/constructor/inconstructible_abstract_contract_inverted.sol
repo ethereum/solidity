@@ -10,4 +10,4 @@ abstract contract A {
 	constructor(address) {}
 }
 // ----
-// TypeError 4614: (134-139): Cannot instantiate an abstract contract.
+// TypeError 4614: (134-139='new A'): Cannot instantiate an abstract contract.

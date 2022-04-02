@@ -11,4 +11,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 9302: (94-109): Return value of low-level calls not used.
+// Warning 9302: (94-109='_a.call("aaaa")'): Return value of low-level calls not used.

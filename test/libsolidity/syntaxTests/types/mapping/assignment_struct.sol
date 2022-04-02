@@ -11,7 +11,7 @@ contract test {
     }
 }
 // ----
-// TypeError 9214: (172-180): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 9214: (195-203): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 9214: (219-227): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 9214: (229-237): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 9214: (172-180='data.map'): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 9214: (195-203='data.map'): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 9214: (219-227='data.map'): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 9214: (229-237='data.map'): Types in storage containing (nested) mappings cannot be assigned to.

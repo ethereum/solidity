@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 8871: (131-141): Storage arrays with nested mappings do not support .push(<arg>).
+// TypeError 8871: (131-141='array.push'): Storage arrays with nested mappings do not support .push(<arg>).

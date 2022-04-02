@@ -2,4 +2,4 @@ contract C {
     function f() pure public { abi.encodePacked(0/1); }
 }
 // ----
-// TypeError 7279: (61-64): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.
+// TypeError 7279: (61-64='0/1'): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.

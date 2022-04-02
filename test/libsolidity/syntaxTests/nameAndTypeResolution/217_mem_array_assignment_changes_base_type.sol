@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9574: (256-275): Type uint8[] memory is not implicitly convertible to expected type uint256[] memory.
+// TypeError 9574: (256-275='uint[] memory y = x'): Type uint8[] memory is not implicitly convertible to expected type uint256[] memory.

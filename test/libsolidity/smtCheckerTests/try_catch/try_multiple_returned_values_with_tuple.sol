@@ -24,4 +24,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (321-336): CHC: Assertion violation happens here.\nCounterexample:\n\nsuccess = false\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (321-336='assert(success)'): CHC: Assertion violation happens here.\nCounterexample:\n\nsuccess = false\n\nTransaction trace:\nC.constructor()\nC.f()

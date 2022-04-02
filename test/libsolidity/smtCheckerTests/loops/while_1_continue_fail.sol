@@ -19,5 +19,5 @@ contract C
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 5740: (136-143): Unreachable code.
-// Warning 6328: (194-209): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 10\nb = false\n\nTransaction trace:\nC.constructor()\nC.f(10, false)
+// Warning 5740: (136-143='x = 200'): Unreachable code.
+// Warning 6328: (194-209='assert(x >= 17)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 10\nb = false\n\nTransaction trace:\nC.constructor()\nC.f(10, false)

@@ -28,7 +28,7 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// TypeError 3464: (113-124): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (240-251): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (367-378): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (631-632): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (113-124='S storage r'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (240-251='S storage r'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (367-378='S storage r'): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (631-632='r'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

@@ -29,11 +29,11 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (270-296): CHC: Assertion violation happens here.
-// Warning 6328: (300-317): CHC: Assertion violation happens here.
-// Warning 6328: (321-347): CHC: Assertion violation happens here.
-// Warning 6328: (351-370): CHC: Assertion violation happens here.
-// Warning 6328: (374-400): CHC: Assertion violation happens here.
-// Warning 6328: (404-425): CHC: Assertion violation happens here.
-// Warning 6328: (429-457): CHC: Assertion violation happens here.
-// Warning 6328: (461-484): CHC: Assertion violation happens here.
+// Warning 6328: (270-296='assert(add(100, 0) != 100)'): CHC: Assertion violation happens here.
+// Warning 6328: (300-317='assert(c != 0xff)'): CHC: Assertion violation happens here.
+// Warning 6328: (321-347='assert(add(100, 1) != 101)'): CHC: Assertion violation happens here.
+// Warning 6328: (351-370='assert(c != 0xffff)'): CHC: Assertion violation happens here.
+// Warning 6328: (374-400='assert(add(100, 2) != 102)'): CHC: Assertion violation happens here.
+// Warning 6328: (404-425='assert(c != 0xffffff)'): CHC: Assertion violation happens here.
+// Warning 6328: (429-457='assert(add(100, 100) != 200)'): CHC: Assertion violation happens here.
+// Warning 6328: (461-484='assert(c != 0xffffffff)'): CHC: Assertion violation happens here.

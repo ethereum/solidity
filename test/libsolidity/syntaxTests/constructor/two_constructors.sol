@@ -3,4 +3,4 @@ contract test {
 	constructor() {}
 }
 // ----
-// DeclarationError 7997: (40-56): More than one constructor defined.
+// DeclarationError 7997: (40-56='constructor() {}'): More than one constructor defined.

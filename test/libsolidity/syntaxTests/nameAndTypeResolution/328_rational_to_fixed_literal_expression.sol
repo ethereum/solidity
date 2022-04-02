@@ -12,5 +12,5 @@ contract test {
 }
 // ----
 // UnimplementedFeatureError: Not yet implemented - FixedPointType.
-// Warning 2519: (238-252): This declaration shadows an existing declaration.
+// Warning 2519: (238-252='ufixed256x80 f'): This declaration shadows an existing declaration.
 // Warning 2018: (20-339): Function state mutability can be restricted to pure

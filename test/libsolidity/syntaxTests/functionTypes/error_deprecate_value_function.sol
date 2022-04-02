@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1621: (102-109): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// TypeError 1621: (102-109='x.value'): Using ".value(...)" is deprecated. Use "{value: ...}" instead.

@@ -25,7 +25,7 @@ contract C is B {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 5740: (119-124): Unreachable code.
-// Warning 4661: (277-291): BMC: Assertion violation happens here.
-// Warning 4661: (310-324): BMC: Assertion violation happens here.
-// Warning 4661: (343-357): BMC: Assertion violation happens here.
+// Warning 5740: (119-124='x = 3'): Unreachable code.
+// Warning 4661: (277-291='assert(x == 3)'): BMC: Assertion violation happens here.
+// Warning 4661: (310-324='assert(x == 2)'): BMC: Assertion violation happens here.
+// Warning 4661: (343-357='assert(x == 1)'): BMC: Assertion violation happens here.

@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 7944: (84-90): The suffixes ".offset", ".slot" and ".length" can only be used with variables.
+// TypeError 7944: (84-90='f.slot'): The suffixes ".offset", ".slot" and ".length" can only be used with variables.

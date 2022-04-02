@@ -5,4 +5,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// SyntaxError 2461: (51-56): Keyword "break" in for-loop post block is not allowed.
+// SyntaxError 2461: (51-56='break'): Keyword "break" in for-loop post block is not allowed.

@@ -17,4 +17,4 @@ contract C is B {
 
 }
 // ----
-// TypeError 7733: (202-203): Immutable variables cannot be read before they are initialized.
+// TypeError 7733: (202-203='x'): Immutable variables cannot be read before they are initialized.

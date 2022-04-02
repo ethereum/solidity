@@ -23,5 +23,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (127-141): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call
-// Warning 6328: (161-175): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call
+// Warning 6328: (127-141='assert(x == 0)'): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call
+// Warning 6328: (161-175='assert(x == 1)'): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call

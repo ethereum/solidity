@@ -12,5 +12,5 @@ function fun(uint[] calldata _x, uint[] storage _y) view  returns (uint, uint[] 
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (168-180): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 6368: (289-294): CHC: Out of bounds access happens here.
+// Warning 4984: (168-180='b.length + x'): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6368: (289-294='_y[0]'): CHC: Out of bounds access happens here.

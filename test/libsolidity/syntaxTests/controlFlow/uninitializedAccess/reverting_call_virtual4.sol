@@ -11,6 +11,6 @@ contract C is B {
   function g() internal virtual override { }
 }
 // ----
-// Warning 6321: (52-56): Unnamed return variable can remain unassigned when the function is called when "C" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6321: (181-185): Unnamed return variable can remain unassigned when the function is called when "C" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6321: (318-322): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (52-56='uint'): Unnamed return variable can remain unassigned when the function is called when "C" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (181-185='uint'): Unnamed return variable can remain unassigned when the function is called when "C" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (318-322='uint'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

@@ -4,4 +4,4 @@ contract C {
 	}
 }
 // ----
-// ParserError 2314: (43-44): Expected ',' but got 'Number'
+// ParserError 2314: (43-44='2'): Expected ',' but got 'Number'

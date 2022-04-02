@@ -17,4 +17,4 @@ contract D
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (158-173): CHC: Assertion violation happens here.
+// Warning 6328: (158-173='assert(z == _y)'): CHC: Assertion violation happens here.

@@ -6,5 +6,5 @@ contract C {
     function i() public { x = 2; }
 }
 // ----
-// TypeError 2527: (56-59): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError 8961: (130-133): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 2527: (56-59='g()'): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError 8961: (130-133='i()'): Function cannot be declared as view because this expression (potentially) modifies the state.

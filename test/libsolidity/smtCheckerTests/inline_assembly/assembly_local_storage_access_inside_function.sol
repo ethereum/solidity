@@ -20,5 +20,5 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 7737: (83-149): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
-// Warning 6328: (152-167): CHC: Assertion violation happens here.
-// Warning 6328: (186-200): CHC: Assertion violation happens here.
+// Warning 6328: (152-167='assert(z == 42)'): CHC: Assertion violation happens here.
+// Warning 6328: (186-200='assert(z == 7)'): CHC: Assertion violation happens here.

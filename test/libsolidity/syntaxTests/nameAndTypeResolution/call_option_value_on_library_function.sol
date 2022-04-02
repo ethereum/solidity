@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// TypeError 2193: (87-100): Function call options can only be set on external function calls or contract creations.
+// TypeError 2193: (87-100='L.l{value: 1}'): Function call options can only be set on external function calls or contract creations.

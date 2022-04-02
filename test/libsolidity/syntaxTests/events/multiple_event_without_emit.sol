@@ -13,4 +13,4 @@ contract test {
     }
 }
 // ----
-// TypeError 3132: (421-436): Event invocations have to be prefixed by "emit".
+// TypeError 3132: (421-436='SetFirstElem(1)'): Event invocations have to be prefixed by "emit".

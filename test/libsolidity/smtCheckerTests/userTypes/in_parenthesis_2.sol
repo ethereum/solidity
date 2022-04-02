@@ -20,7 +20,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6133: (87-99): Statement has no effect.
-// Warning 6133: (126-140): Statement has no effect.
-// Warning 6328: (274-302): CHC: Assertion violation happens here.
-// Warning 6328: (340-355): CHC: Assertion violation happens here.
+// Warning 6133: (87-99='(MyInt).wrap'): Statement has no effect.
+// Warning 6133: (126-140='(MyInt).unwrap'): Statement has no effect.
+// Warning 6328: (274-302='assert(MyInt.unwrap(x) == 6)'): CHC: Assertion violation happens here.
+// Warning 6328: (340-355='assert(y == 11)'): CHC: Assertion violation happens here.

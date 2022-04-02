@@ -16,5 +16,5 @@ contract Error1 {
   }
 }
 // ----
-// ParserError 6933: (88-89): Expected primary expression.
-// Warning 3347: (88-89): Recovered in Statement at ';'.
+// ParserError 6933: (88-89=';'): Expected primary expression.
+// Warning 3347: (88-89=';'): Recovered in Statement at ';'.

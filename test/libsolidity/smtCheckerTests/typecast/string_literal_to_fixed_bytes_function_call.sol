@@ -11,5 +11,5 @@ contract B {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (104-126): CHC: Assertion violation happens here.
-// Warning 6328: (130-152): CHC: Assertion violation happens here.
+// Warning 6328: (104-126='assert(a == "0123456")'): CHC: Assertion violation happens here.
+// Warning 6328: (130-152='assert(a == "1234567")'): CHC: Assertion violation happens here.

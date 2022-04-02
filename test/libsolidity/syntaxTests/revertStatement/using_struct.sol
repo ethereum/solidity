@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1885: (75-76): Expression has to be an error.
+// TypeError 1885: (75-76='S'): Expression has to be an error.

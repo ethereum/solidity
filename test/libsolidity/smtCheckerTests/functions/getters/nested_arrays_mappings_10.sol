@@ -19,5 +19,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (256-270): CHC: Assertion violation happens here.
+// Warning 6328: (256-270='assert(y == 1)'): CHC: Assertion violation happens here.
 // Info 1180: Contract invariant(s) for :C:\n!(m.length <= 0)\n!(m[0][1].length <= 2)\n

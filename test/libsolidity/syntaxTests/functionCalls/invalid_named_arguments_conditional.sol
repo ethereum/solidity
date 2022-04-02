@@ -8,7 +8,7 @@ contract C {
     }
 }
 // ----
-// TypeError 4974: (199-229): Named argument "x" does not match function declaration.
-// TypeError 4974: (199-229): Named argument "y" does not match function declaration.
-// TypeError 4974: (239-264): Named argument "x" does not match function declaration.
-// TypeError 4974: (239-264): Named argument "y" does not match function declaration.
+// TypeError 4974: (199-229='(true ? g : h)({x : 1, y : 2})'): Named argument "x" does not match function declaration.
+// TypeError 4974: (199-229='(true ? g : h)({x : 1, y : 2})'): Named argument "y" does not match function declaration.
+// TypeError 4974: (239-264='[g, h][1]({x : 1, y : 2})'): Named argument "x" does not match function declaration.
+// TypeError 4974: (239-264='[g, h][1]({x : 1, y : 2})'): Named argument "y" does not match function declaration.

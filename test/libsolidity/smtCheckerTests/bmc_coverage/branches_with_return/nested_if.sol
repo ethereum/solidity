@@ -22,5 +22,5 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (114-141): BMC: Assertion violation happens here.
-// Warning 6838: (299-315): BMC: Condition is always false.
+// Warning 4661: (114-141='assert(nested_if(a,b) == 1)'): BMC: Assertion violation happens here.
+// Warning 6838: (299-315='a == 2 && b == 2'): BMC: Condition is always false.

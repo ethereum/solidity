@@ -34,5 +34,5 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 5667: (125-140): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (125-140='uint[] memory c'): Unused function parameter. Remove or comment out the variable name to silence this warning.
 // Warning 2018: (106-254): Function state mutability can be restricted to view

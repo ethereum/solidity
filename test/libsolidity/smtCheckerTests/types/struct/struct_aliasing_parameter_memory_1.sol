@@ -18,4 +18,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (201-224): CHC: Assertion violation happens here.\nCounterexample:\n\namt = 0\ns = {sum: 0, a: []}\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (201-224='assert(s.a.length == 2)'): CHC: Assertion violation happens here.\nCounterexample:\n\namt = 0\ns = {sum: 0, a: []}\n\nTransaction trace:\nC.constructor(0)

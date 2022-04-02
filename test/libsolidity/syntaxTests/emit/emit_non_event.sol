@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// TypeError 9292: (66-70): Expression has to be an event invocation.
+// TypeError 9292: (66-70='Test'): Expression has to be an event invocation.

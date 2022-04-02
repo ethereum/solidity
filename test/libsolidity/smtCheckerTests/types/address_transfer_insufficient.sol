@@ -12,6 +12,6 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (180-204): CHC: Assertion violation happens here.
-// Warning 1236: (101-116): BMC: Insufficient funds happens here.
-// Warning 1236: (120-136): BMC: Insufficient funds happens here.
+// Warning 6328: (180-204='assert(a.balance == 600)'): CHC: Assertion violation happens here.
+// Warning 1236: (101-116='a.transfer(600)'): BMC: Insufficient funds happens here.
+// Warning 1236: (120-136='b.transfer(1000)'): BMC: Insufficient funds happens here.

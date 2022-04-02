@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 6182: (74-78): Calldata arrays are read-only.
+// TypeError 6182: (74-78='x[0]'): Calldata arrays are read-only.

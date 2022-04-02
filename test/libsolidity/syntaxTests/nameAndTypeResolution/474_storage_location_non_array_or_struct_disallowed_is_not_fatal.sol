@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 6651: (28-42): Data location can only be specified for array, struct or mapping types, but "storage" was given.
+// TypeError 6651: (28-42='uint storage a'): Data location can only be specified for array, struct or mapping types, but "storage" was given.

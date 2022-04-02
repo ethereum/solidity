@@ -22,5 +22,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2529: (88-97): CHC: Empty array "pop" happens here.
-// Warning 6328: (197-221): CHC: Assertion violation happens here.
+// Warning 2529: (88-97='s.a.pop()'): CHC: Empty array "pop" happens here.
+// Warning 6328: (197-221='assert(s.a[1] == s.a[0])'): CHC: Assertion violation happens here.

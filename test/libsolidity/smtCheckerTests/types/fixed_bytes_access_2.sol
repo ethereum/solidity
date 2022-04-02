@@ -10,4 +10,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 5667: (43-49): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (43-49='uint y'): Unused function parameter. Remove or comment out the variable name to silence this warning.

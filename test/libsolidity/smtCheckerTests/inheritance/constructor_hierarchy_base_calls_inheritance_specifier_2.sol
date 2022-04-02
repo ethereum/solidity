@@ -34,6 +34,6 @@ contract C is Z(5) {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (110-116): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4984: (300-307): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 6328: (376-390): CHC: Assertion violation happens here.
+// Warning 4984: (110-116='x += b'): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (300-307='z + f()'): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (376-390='assert(x > 90)'): CHC: Assertion violation happens here.

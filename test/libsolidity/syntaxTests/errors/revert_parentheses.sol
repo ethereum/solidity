@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9322: (77-83): No matching declaration found after argument-dependent lookup.
+// TypeError 9322: (77-83='revert'): No matching declaration found after argument-dependent lookup.

@@ -29,4 +29,4 @@ contract C
 // SMTEngine: all
 // ----
 // Info 1180: Contract invariant(s) for :C:\n!(a.length <= 2)\n
-// Warning 6838: (262-263): BMC: Condition is always true.
+// Warning 6838: (262-263='b'): BMC: Condition is always true.

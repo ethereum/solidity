@@ -8,4 +8,4 @@ contract C {
 }
 // ----
 // Warning 3628: (0-139): This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.
-// TypeError 7398: (92-96): Explicit type conversion not allowed from non-payable "address" to "contract C", which has a payable fallback function.
+// TypeError 7398: (92-96='C(a)'): Explicit type conversion not allowed from non-payable "address" to "contract C", which has a payable fallback function.

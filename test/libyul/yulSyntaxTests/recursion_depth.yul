@@ -4,4 +4,4 @@ let x:u256 := 0:u256
 // ====
 // dialect: evmTyped
 // ----
-// ParserError 7319: (600-601): Maximum recursion depth reached during parsing.
+// ParserError 7319: (600-601='{'): Maximum recursion depth reached during parsing.

@@ -7,4 +7,4 @@
 // ====
 // dialect: evm
 // ----
-// DeclarationError 6792: (25-34): Duplicate case "1" defined.
+// DeclarationError 6792: (25-34='case 1 {}'): Duplicate case "1" defined.

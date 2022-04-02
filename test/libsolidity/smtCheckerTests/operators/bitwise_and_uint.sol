@@ -13,6 +13,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (74-92): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 1\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (147-170): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 255\ny = 65535\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (174-197): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 255\ny = 65535\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (74-92='assert(x & y != 0)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 1\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (147-170='assert(x & y == 0xffff)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 255\ny = 65535\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (174-197='assert(x & y == 0x0000)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 255\ny = 65535\n\nTransaction trace:\nC.constructor()\nC.f()

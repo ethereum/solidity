@@ -14,5 +14,5 @@ contract C {
 }
 
 // ----
-// TypeError 7813: (48-53): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".
-// TypeError 7813: (161-166): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".
+// TypeError 7813: (48-53='new C'): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".
+// TypeError 7813: (161-166='new D'): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".

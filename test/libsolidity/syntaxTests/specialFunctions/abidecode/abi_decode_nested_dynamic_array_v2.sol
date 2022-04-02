@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// Warning 6133: (87-118): Statement has no effect.
+// Warning 6133: (87-118='abi.decode("1234", (uint[][3]))'): Statement has no effect.

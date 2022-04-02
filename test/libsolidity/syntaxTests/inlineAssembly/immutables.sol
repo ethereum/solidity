@@ -7,5 +7,5 @@ contract C {
   }
 }
 // ----
-// DeclarationError 4619: (63-75): Function "setimmutable" not found.
-// DeclarationError 4619: (92-105): Function "loadimmutable" not found.
+// DeclarationError 4619: (63-75='setimmutable'): Function "setimmutable" not found.
+// DeclarationError 4619: (92-105='loadimmutable'): Function "loadimmutable" not found.

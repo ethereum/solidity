@@ -10,5 +10,5 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// Warning 6321: (150-154): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 2072: (166-183): Unused local variable.
+// Warning 6321: (150-154='bool'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 2072: (166-183='uint[][] memory x'): Unused local variable.

@@ -27,4 +27,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (305-325): CHC: Assertion violation happens here.
+// Warning 6328: (305-325='assert(t.s.sum == 0)'): CHC: Assertion violation happens here.

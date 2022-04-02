@@ -11,4 +11,4 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (144-166): CHC: Assertion violation happens here.
+// Warning 6328: (144-166='assert(array[y] > 300)'): CHC: Assertion violation happens here.

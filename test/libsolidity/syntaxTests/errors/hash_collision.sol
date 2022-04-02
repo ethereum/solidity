@@ -3,4 +3,4 @@ contract test {
     error tgeo();
 }
 // ----
-// TypeError 4883: (43-47): Error signature hash collision for tgeo()
+// TypeError 4883: (43-47='tgeo'): Error signature hash collision for tgeo()

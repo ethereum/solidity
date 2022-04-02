@@ -12,6 +12,6 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 5740: (71-76): Unreachable code.
-// Warning 5740: (89-95): Unreachable code.
-// Warning 6328: (100-114): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 5740: (71-76='x = 1'): Unreachable code.
+// Warning 5740: (89-95='x == 0'): Unreachable code.
+// Warning 6328: (100-114='assert(x == 1)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()

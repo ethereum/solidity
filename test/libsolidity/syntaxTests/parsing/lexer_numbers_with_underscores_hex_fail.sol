@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// SyntaxError 2990: (56-79): Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.
+// SyntaxError 2990: (56-79='0x1234__1234__1234__123'): Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.

@@ -16,4 +16,4 @@ contract C {
     }
 }
 // ----
-// ParserError 2314: (156-157): Expected identifier but got '*'
+// ParserError 2314: (156-157='*'): Expected identifier but got '*'

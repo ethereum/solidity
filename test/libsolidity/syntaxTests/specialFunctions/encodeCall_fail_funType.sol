@@ -64,15 +64,15 @@ contract C is Base {
 	}
 }
 // ----
-// TypeError 5511: (742-743): Expected first argument to be a function pointer, not "int_const 1".
-// TypeError 3509: (855-869): Expected regular external function type, or external view on public function. Cannot use special function.
-// TypeError 3509: (982-991): Expected regular external function type, or external view on public function. Provided internal function.
-// TypeError 3509: (1187-1207): Expected regular external function type, or external view on public function. Provided internal function.
-// TypeError 3509: (1286-1297): Expected regular external function type, or external view on public function. Provided internal function.
-// TypeError 3509: (1329-1340): Expected regular external function type, or external view on public function. Cannot use library functions for abi.encodeCall.
-// TypeError 3509: (1471-1482): Expected regular external function type, or external view on public function. Cannot use library functions for abi.encodeCall.
-// TypeError 3509: (1592-1601): Expected regular external function type, or external view on public function. Provided internal function. Did you forget to prefix "this."?
-// TypeError 3509: (1722-1745): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
-// TypeError 3509: (1771-1796): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
-// TypeError 3509: (1902-1911): Expected regular external function type, or external view on public function. Provided internal function.
-// TypeError 3509: (2010-2019): Expected regular external function type, or external view on public function. Provided creation function.
+// TypeError 5511: (742-743='1'): Expected first argument to be a function pointer, not "int_const 1".
+// TypeError 3509: (855-869='abi.encodeCall'): Expected regular external function type, or external view on public function. Cannot use special function.
+// TypeError 3509: (982-991='fInternal'): Expected regular external function type, or external view on public function. Provided internal function.
+// TypeError 3509: (1187-1207='localFunctionPointer'): Expected regular external function type, or external view on public function. Provided internal function.
+// TypeError 3509: (1286-1297='L.fInternal'): Expected regular external function type, or external view on public function. Provided internal function.
+// TypeError 3509: (1329-1340='L.fExternal'): Expected regular external function type, or external view on public function. Cannot use library functions for abi.encodeCall.
+// TypeError 3509: (1471-1482='x.fExternal'): Expected regular external function type, or external view on public function. Cannot use library functions for abi.encodeCall.
+// TypeError 3509: (1592-1601='C.fPublic'): Expected regular external function type, or external view on public function. Provided internal function. Did you forget to prefix "this."?
+// TypeError 3509: (1722-1745='Base.baseFunctionPublic'): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
+// TypeError 3509: (1771-1796='Base.baseFunctionInternal'): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
+// TypeError 3509: (1902-1911='fileLevel'): Expected regular external function type, or external view on public function. Provided internal function.
+// TypeError 3509: (2010-2019='new Other'): Expected regular external function type, or external view on public function. Provided creation function.

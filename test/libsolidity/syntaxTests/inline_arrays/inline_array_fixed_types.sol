@@ -5,5 +5,5 @@ contract test {
 }
 // ----
 // UnimplementedFeatureError: Not yet implemented - FixedPointType.
-// Warning 2072: (50-67): Unused local variable.
+// Warning 2072: (50-67='fixed[3] memory a'): Unused local variable.
 // Warning 2018: (20-119): Function state mutability can be restricted to pure

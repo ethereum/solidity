@@ -14,4 +14,4 @@ function test() pure
 }
 
 // ----
-// TypeError 9582: (B:54-61): Member "g" not found or not visible after argument-dependent lookup in struct S memory.
+// TypeError 9582: (B:54-61='gen().g'): Member "g" not found or not visible after argument-dependent lookup in struct S memory.

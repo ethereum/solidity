@@ -59,7 +59,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (s2.sol:518-539): CHC: Assertion violation happens here.
-// Warning 6328: (s2.sol:704-725): CHC: Assertion violation happens here.
-// Warning 6328: (s2.sol:890-911): CHC: Assertion violation happens here.
-// Warning 6328: (s2.sol:980-994): CHC: Assertion violation happens here.
+// Warning 6328: (s2.sol:518-539='assert(r1[2] == 0x04)'): CHC: Assertion violation happens here.
+// Warning 6328: (s2.sol:704-725='assert(r2[2] == 0x04)'): CHC: Assertion violation happens here.
+// Warning 6328: (s2.sol:890-911='assert(r3[2] == 0x04)'): CHC: Assertion violation happens here.
+// Warning 6328: (s2.sol:980-994='assert(z == 7)'): CHC: Assertion violation happens here.

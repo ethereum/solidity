@@ -9,4 +9,4 @@ object "A" {
 	}
 }
 // ----
-// TypeError 3517: (41-54): Unknown data object ".metadata.x".
+// TypeError 3517: (41-54='".metadata.x"'): Unknown data object ".metadata.x".

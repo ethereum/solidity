@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3125: (65-74): Member "balance" not found or not visible after argument-dependent lookup in contract C. Use "address(c).balance" to access this address member.
+// TypeError 3125: (65-74='c.balance'): Member "balance" not found or not visible after argument-dependent lookup in contract C. Use "address(c).balance" to access this address member.

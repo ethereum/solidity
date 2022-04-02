@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning 2519: (38-61): This declaration shadows an existing declaration.
+// Warning 2519: (38-61='struct S { address x; }'): This declaration shadows an existing declaration.

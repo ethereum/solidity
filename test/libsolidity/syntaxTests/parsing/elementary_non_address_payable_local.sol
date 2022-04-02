@@ -16,16 +16,16 @@ contract C {
     }
 }
 // ----
-// ParserError 9106: (57-64): State mutability can only be specified for address types.
-// ParserError 9106: (83-90): State mutability can only be specified for address types.
-// ParserError 9106: (106-113): State mutability can only be specified for address types.
-// ParserError 9106: (132-139): State mutability can only be specified for address types.
-// ParserError 9106: (156-163): State mutability can only be specified for address types.
-// ParserError 9106: (183-190): State mutability can only be specified for address types.
-// ParserError 9106: (209-216): State mutability can only be specified for address types.
-// ParserError 9106: (234-241): State mutability can only be specified for address types.
-// ParserError 9106: (261-268): State mutability can only be specified for address types.
-// ParserError 9106: (286-293): State mutability can only be specified for address types.
-// ParserError 9106: (316-323): State mutability can only be specified for address types.
-// ParserError 9106: (342-349): State mutability can only be specified for address types.
-// ParserError 9106: (373-380): State mutability can only be specified for address types.
+// ParserError 9106: (57-64='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (83-90='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (106-113='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (132-139='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (156-163='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (183-190='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (209-216='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (234-241='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (261-268='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (286-293='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (316-323='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (342-349='payable'): State mutability can only be specified for address types.
+// ParserError 9106: (373-380='payable'): State mutability can only be specified for address types.

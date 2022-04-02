@@ -4,4 +4,4 @@ contract C {
     function f() public pure returns (uint) { return 3 + x; }
 }
 // ----
-// TypeError 7733: (99-100): Immutable variables cannot be read before they are initialized.
+// TypeError 7733: (99-100='x'): Immutable variables cannot be read before they are initialized.

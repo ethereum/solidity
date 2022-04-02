@@ -8,4 +8,4 @@ contract C is D {
     }
 }
 // ----
-// DocstringParsingError 1430: (63-82): Documentation tag @inheritdoc reference "D.S" is not a contract.
+// DocstringParsingError 1430: (63-82='/// @inheritdoc D.S'): Documentation tag @inheritdoc reference "D.S" is not a contract.

@@ -6,4 +6,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// ParserError 2856: (58-59): Variable name must precede "," in multiple assignment.
+// ParserError 2856: (58-59=','): Variable name must precede "," in multiple assignment.

@@ -11,4 +11,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (188-212): CHC: Assertion violation happens here.
+// Warning 6328: (188-212='assert(T.unwrap(x) != y)'): CHC: Assertion violation happens here.

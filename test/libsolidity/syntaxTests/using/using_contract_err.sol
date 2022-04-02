@@ -10,4 +10,4 @@ contract Test {
     using C for uint;
 }
 // ----
-// TypeError 4357: (127-128): Library name expected. If you want to attach a function, use '{...}'.
+// TypeError 4357: (127-128='C'): Library name expected. If you want to attach a function, use '{...}'.

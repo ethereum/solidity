@@ -8,4 +8,4 @@ contract c {
     }
 }
 // ----
-// DeclarationError 7576: (151-155): Undeclared identifier. Did you mean "var1", "var2", "var3", "var4" or "var5"?
+// DeclarationError 7576: (151-155='varx'): Undeclared identifier. Did you mean "var1", "var2", "var3", "var4" or "var5"?

@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// ParserError 2314: (45-50): Expected ';' but got identifier
+// ParserError 2314: (45-50='szabo'): Expected ';' but got identifier

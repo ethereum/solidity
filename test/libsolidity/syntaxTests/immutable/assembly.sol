@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3773: (118-119): Assembly access to immutable variables is not supported.
+// TypeError 3773: (118-119='x'): Assembly access to immutable variables is not supported.

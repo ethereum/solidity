@@ -3,4 +3,4 @@ contract C {
 }
 // ----
 // DeclarationError 7793: (17-56): Receive ether function must be payable, but is "nonpayable".
-// DeclarationError 6899: (44-53): Receive ether function cannot return values.
+// DeclarationError 6899: (44-53='(uint256)'): Receive ether function cannot return values.

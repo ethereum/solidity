@@ -9,4 +9,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (150-175): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0x0\nb = 0xff\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (150-175='assert(b == bytes1(0x00))'): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0x0\nb = 0xff\n\nTransaction trace:\nC.constructor()\nC.f()

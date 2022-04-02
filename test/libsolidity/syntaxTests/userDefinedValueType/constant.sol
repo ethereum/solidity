@@ -5,4 +5,4 @@ contract C {
     uint[MyInt.unwrap(mi)] arr;
 }
 // ----
-// TypeError 5462: (122-138): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (122-138='MyInt.unwrap(mi)'): Invalid array length, expected integer literal or constant expression.

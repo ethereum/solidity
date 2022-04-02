@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// ParserError 2314: (43-51): Expected '{' but got 'constant'
+// ParserError 2314: (43-51='constant'): Expected '{' but got 'constant'

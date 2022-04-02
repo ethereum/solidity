@@ -8,4 +8,4 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (51-65): CHC: Assertion violation happens here.
+// Warning 6328: (51-65='assert(c == d)'): CHC: Assertion violation happens here.

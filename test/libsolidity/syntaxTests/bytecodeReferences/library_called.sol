@@ -8,4 +8,4 @@ contract A {
     function f() public pure { L2.foo(); }
 }
 // ----
-// TypeError 7813: (43-48): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".
+// TypeError 7813: (43-48='new A'): Circular reference to contract bytecode either via "new" or "type(...).creationCode" / "type(...).runtimeCode".

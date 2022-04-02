@@ -19,4 +19,4 @@ function f() pure {
     y = y.id();
 }
 // ----
-// TypeError 9582: (B:57-61): Member "id" not found or not visible after argument-dependent lookup in uint256.
+// TypeError 9582: (B:57-61='y.id'): Member "id" not found or not visible after argument-dependent lookup in uint256.

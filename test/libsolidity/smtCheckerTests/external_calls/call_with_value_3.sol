@@ -10,6 +10,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 9302: (95-116): Return value of low-level calls not used.
+// Warning 9302: (95-116='i.call{value: 20}("")'): Return value of low-level calls not used.
 // Warning 6328: (120-153): CHC: Assertion violation might happen here.
 // Warning 4661: (120-153): BMC: Assertion violation happens here.

@@ -6,4 +6,4 @@ contract C {
 }
 // ----
 // TypeError 1534: (61-101): Type too large for memory.
-// TypeError 1534: (131-160): Type too large for memory.
+// TypeError 1534: (131-160='uint[2**30][2**30][][] memory'): Type too large for memory.

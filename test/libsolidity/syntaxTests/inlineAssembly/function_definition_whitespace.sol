@@ -7,4 +7,4 @@ contract C {
   }
 }
 // ----
-// ParserError 2314: (87-88): Expected '{' but got '-'
+// ParserError 2314: (87-88='-'): Expected '{' but got '-'

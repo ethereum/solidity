@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// TypeError 1130: (87-88): Invalid use of a library name.
+// TypeError 1130: (87-88='L'): Invalid use of a library name.

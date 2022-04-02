@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError 8936: (52-56): Expected even number of hex-nibbles.
+// ParserError 8936: (52-56='hex"'): Expected even number of hex-nibbles.

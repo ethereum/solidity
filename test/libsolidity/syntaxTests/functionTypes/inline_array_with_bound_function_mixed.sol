@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9563: (169-172): Invalid mobile type.
+// TypeError 9563: (169-172='t.f'): Invalid mobile type.

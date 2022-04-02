@@ -12,8 +12,8 @@ function f() pure {
     assembly {}
 }
 // ----
-// Warning 6269: (177-188): Unexpected NatSpec tag "after" with value "bogus-value" in inline assembly.
-// Warning 6269: (177-188): Unexpected NatSpec tag "before" with value "@solidity a   memory-safe-assembly b    c           d" in inline assembly.
-// Warning 8787: (277-288): Unexpected value for @solidity tag in inline assembly: a
-// Warning 4377: (277-288): Value for @solidity tag in inline assembly specified multiple times: a
-// Warning 4377: (277-288): Value for @solidity tag in inline assembly specified multiple times: memory-safe-assembly
+// Warning 6269: (177-188='assembly {}'): Unexpected NatSpec tag "after" with value "bogus-value" in inline assembly.
+// Warning 6269: (177-188='assembly {}'): Unexpected NatSpec tag "before" with value "@solidity a   memory-safe-assembly b    c           d" in inline assembly.
+// Warning 8787: (277-288='assembly {}'): Unexpected value for @solidity tag in inline assembly: a
+// Warning 4377: (277-288='assembly {}'): Value for @solidity tag in inline assembly specified multiple times: a
+// Warning 4377: (277-288='assembly {}'): Value for @solidity tag in inline assembly specified multiple times: memory-safe-assembly

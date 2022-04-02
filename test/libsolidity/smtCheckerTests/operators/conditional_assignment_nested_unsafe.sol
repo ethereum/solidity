@@ -7,4 +7,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (108-121): CHC: Assertion violation happens here.\nCounterexample:\n\nb1 = false\nb2 = false\nc = 1\n\nTransaction trace:\nC.constructor()\nC.f(false, false)
+// Warning 6328: (108-121='assert(c > 1)'): CHC: Assertion violation happens here.\nCounterexample:\n\nb1 = false\nb2 = false\nc = 1\n\nTransaction trace:\nC.constructor()\nC.f(false, false)

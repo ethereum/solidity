@@ -7,4 +7,4 @@ contract B is A {
 }
 // ----
 // Warning 2519: (58-101): This declaration shadows an existing declaration.
-// TypeError 9582: (130-133): Member "f" not found or not visible after argument-dependent lookup in function () pure returns (uint8).
+// TypeError 9582: (130-133='A.f'): Member "f" not found or not visible after argument-dependent lookup in function () pure returns (uint8).

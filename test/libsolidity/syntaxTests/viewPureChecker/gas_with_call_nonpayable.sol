@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// TypeError 8961: (90-109): Function cannot be declared as view because this expression (potentially) modifies the state.
-// TypeError 8961: (180-197): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (90-109='a.call{gas: 42}("")'): Function cannot be declared as view because this expression (potentially) modifies the state.
+// TypeError 8961: (180-197='this.h{gas: 42}()'): Function cannot be declared as view because this expression (potentially) modifies the state.

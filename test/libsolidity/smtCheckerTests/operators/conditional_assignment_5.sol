@@ -24,5 +24,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (249-255): Unused local variable.
-// Warning 6328: (271-295): CHC: Assertion violation happens here.
+// Warning 2072: (249-255='uint y'): Unused local variable.
+// Warning 6328: (271-295='assert(x == 2 || x == 1)'): CHC: Assertion violation happens here.

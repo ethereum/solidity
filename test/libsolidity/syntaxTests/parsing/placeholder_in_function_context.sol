@@ -5,4 +5,4 @@ contract c {
     }
 }
 // ----
-// DeclarationError 3726: (66-72): The name "_" is reserved.
+// DeclarationError 3726: (66-72='uint _'): The name "_" is reserved.

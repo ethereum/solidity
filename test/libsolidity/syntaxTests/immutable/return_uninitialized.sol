@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2658: (63-70): Construction control flow ends without initializing all immutable state variables.
+// TypeError 2658: (63-70='return;'): Construction control flow ends without initializing all immutable state variables.

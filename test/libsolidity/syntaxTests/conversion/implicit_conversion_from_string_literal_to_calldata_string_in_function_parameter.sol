@@ -9,6 +9,6 @@ contract C {
     }
 }
 // ----
-// TypeError 9553: (139-146): Invalid type for argument in function call. Invalid implicit conversion from literal_string "hello" to string calldata requested.
-// TypeError 9553: (159-173): Invalid type for argument in function call. Invalid implicit conversion from literal_string "hello" to string calldata requested.
-// TypeError 9553: (186-201): Invalid type for argument in function call. Invalid implicit conversion from literal_string "hello" to bytes calldata requested.
+// TypeError 9553: (139-146='"hello"'): Invalid type for argument in function call. Invalid implicit conversion from literal_string "hello" to string calldata requested.
+// TypeError 9553: (159-173='unicode"hello"'): Invalid type for argument in function call. Invalid implicit conversion from literal_string "hello" to string calldata requested.
+// TypeError 9553: (186-201='hex"68656c6c6f"'): Invalid type for argument in function call. Invalid implicit conversion from literal_string "hello" to bytes calldata requested.

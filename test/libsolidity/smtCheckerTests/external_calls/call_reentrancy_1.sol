@@ -12,7 +12,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2519: (100-106): This declaration shadows an existing declaration.
-// Warning 2072: (100-106): Unused local variable.
-// Warning 2072: (108-125): Unused local variable.
-// Warning 6328: (143-157): CHC: Assertion violation happens here.
+// Warning 2519: (100-106='bool s'): This declaration shadows an existing declaration.
+// Warning 2072: (100-106='bool s'): Unused local variable.
+// Warning 2072: (108-125='bytes memory data'): Unused local variable.
+// Warning 6328: (143-157='assert(x == 0)'): CHC: Assertion violation happens here.

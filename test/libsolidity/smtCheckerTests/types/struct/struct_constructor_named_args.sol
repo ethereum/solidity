@@ -20,4 +20,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (232-255): CHC: Assertion violation happens here.\nCounterexample:\n\ninner = {x: 43}\nouter = {s: {x: 43}, y: 512}\n\nTransaction trace:\nC.constructor()\nC.test()
+// Warning 6328: (232-255='assert(outer.s.x == 42)'): CHC: Assertion violation happens here.\nCounterexample:\n\ninner = {x: 43}\nouter = {s: {x: 43}, y: 512}\n\nTransaction trace:\nC.constructor()\nC.test()

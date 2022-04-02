@@ -11,4 +11,4 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 6328: (135-149): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 10\ny = 2\n\nTransaction trace:\nC.constructor()\nC.f(10)
+// Warning 6328: (135-149='assert(y == 3)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 10\ny = 2\n\nTransaction trace:\nC.constructor()\nC.f(10)

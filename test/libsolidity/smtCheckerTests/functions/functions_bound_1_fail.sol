@@ -18,4 +18,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (228-244): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 1\ny = 1000\n\nTransaction trace:\nC.constructor()\nC.f(1)\n    L.add(1, 999) -- internal call
+// Warning 6328: (228-244='assert(y < 1000)'): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 1\ny = 1000\n\nTransaction trace:\nC.constructor()\nC.f(1)\n    L.add(1, 999) -- internal call

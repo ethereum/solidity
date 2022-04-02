@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9574: (203-225): Type bytes8[] storage ref is not implicitly convertible to expected type bytes10[] memory.
+// TypeError 9574: (203-225='bytes10[] memory m = s'): Type bytes8[] storage ref is not implicitly convertible to expected type bytes10[] memory.

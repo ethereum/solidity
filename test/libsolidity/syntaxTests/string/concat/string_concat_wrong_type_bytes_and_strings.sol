@@ -9,7 +9,7 @@ contract C {
     }
 }
 // ----
-// TypeError 9977: (232-233): Invalid type for argument in the string.concat function call. string type is required, but t_bytes16 provided.
-// TypeError 9977: (238-241): Invalid type for argument in the string.concat function call. string type is required, but t_array$_t_uint8_$dyn_memory_ptr provided.
-// TypeError 9977: (253-254): Invalid type for argument in the string.concat function call. string type is required, but t_array$_t_bytes1_$dyn_memory_ptr provided.
-// TypeError 9977: (260-269): Invalid type for argument in the string.concat function call. string type is required, but t_bytes_calldata_ptr provided.
+// TypeError 9977: (232-233='b'): Invalid type for argument in the string.concat function call. string type is required, but t_bytes16 provided.
+// TypeError 9977: (238-241='num'): Invalid type for argument in the string.concat function call. string type is required, but t_array$_t_uint8_$dyn_memory_ptr provided.
+// TypeError 9977: (253-254='m'): Invalid type for argument in the string.concat function call. string type is required, but t_array$_t_bytes1_$dyn_memory_ptr provided.
+// TypeError 9977: (260-269='bytes(c1)'): Invalid type for argument in the string.concat function call. string type is required, but t_bytes_calldata_ptr provided.

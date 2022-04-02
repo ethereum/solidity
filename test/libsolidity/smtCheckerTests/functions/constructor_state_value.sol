@@ -14,4 +14,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (112-126): CHC: Assertion violation happens here.
+// Warning 6328: (112-126='assert(y == x)'): CHC: Assertion violation happens here.

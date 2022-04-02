@@ -3,4 +3,4 @@
     let s := unicode"underflow â€¬";
 }
 // ----
-// ParserError 1465: (35-47): Illegal token: Invalid character in string.
+// ParserError 1465: (35-47='"underflow â'): Illegal token: Invalid character in string.

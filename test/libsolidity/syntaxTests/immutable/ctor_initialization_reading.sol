@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 7733: (71-72): Immutable variables cannot be read before they are initialized.
+// TypeError 7733: (71-72='x'): Immutable variables cannot be read before they are initialized.

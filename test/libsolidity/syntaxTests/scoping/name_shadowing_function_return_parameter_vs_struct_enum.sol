@@ -12,9 +12,9 @@ contract C {
     function z(uint EnumType) external returns (EnumType e) {}
 }
 // ----
-// Warning 2519: (124-152): This declaration shadows an existing declaration.
-// Warning 2519: (192-209): This declaration shadows an existing declaration.
-// Warning 2519: (249-268): This declaration shadows an existing declaration.
-// Warning 2519: (270-296): This declaration shadows an existing declaration.
-// Warning 2519: (317-330): This declaration shadows an existing declaration.
-// TypeError 5172: (124-134): Name has to refer to a struct, enum or contract.
+// Warning 2519: (124-152='StructType memory StructType'): This declaration shadows an existing declaration.
+// Warning 2519: (192-209='EnumType EnumType'): This declaration shadows an existing declaration.
+// Warning 2519: (249-268='EnumType StructType'): This declaration shadows an existing declaration.
+// Warning 2519: (270-296='StructType memory EnumType'): This declaration shadows an existing declaration.
+// Warning 2519: (317-330='uint EnumType'): This declaration shadows an existing declaration.
+// TypeError 5172: (124-134='StructType'): Name has to refer to a struct, enum or contract.

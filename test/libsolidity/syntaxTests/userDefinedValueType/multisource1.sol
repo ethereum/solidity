@@ -7,4 +7,4 @@ contract A {
     function f(int x) external view returns(MyInt) { return MyInt.wrap(x); }
 }
 // ----
-// DeclarationError 7920: (B:100-105): Identifier not found or not unique.
+// DeclarationError 7920: (B:100-105='MyInt'): Identifier not found or not unique.

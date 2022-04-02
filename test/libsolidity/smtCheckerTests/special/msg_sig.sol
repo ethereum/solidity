@@ -25,6 +25,6 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (43-72): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(){ msg.sig: 0x26121ff0 }
-// Warning 6328: (370-399): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(){ msg.sig: 0x26121ff0 }\n    C.fi() -- internal call\n    C.gi() -- internal call
-// Warning 6328: (510-539): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.h(){ msg.sig: 0xb8c9d365 }
+// Warning 6328: (43-72='assert(msg.sig == 0x00000000)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(){ msg.sig: 0x26121ff0 }
+// Warning 6328: (370-399='assert(msg.sig == 0xe2179b8e)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(){ msg.sig: 0x26121ff0 }\n    C.fi() -- internal call\n    C.gi() -- internal call
+// Warning 6328: (510-539='assert(msg.sig == 0xe2179b8e)'): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.h(){ msg.sig: 0xb8c9d365 }

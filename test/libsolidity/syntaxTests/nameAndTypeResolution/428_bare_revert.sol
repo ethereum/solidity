@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2144: (81-87): No matching declaration found after variable lookup.
+// TypeError 2144: (81-87='revert'): No matching declaration found after variable lookup.

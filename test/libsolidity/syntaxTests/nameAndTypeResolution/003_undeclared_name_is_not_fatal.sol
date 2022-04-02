@@ -6,5 +6,5 @@ contract test {
     }
 }
 // ----
-// DeclarationError 7576: (85-93): Undeclared identifier.
-// DeclarationError 7576: (106-114): Undeclared identifier.
+// DeclarationError 7576: (85-93='notfound'): Undeclared identifier.
+// DeclarationError 7576: (106-114='notfound'): Undeclared identifier.

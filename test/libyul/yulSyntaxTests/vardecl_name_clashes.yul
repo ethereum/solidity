@@ -3,4 +3,4 @@
 	let x := 2
 }
 // ----
-// DeclarationError 1395: (15-25): Variable name x already taken in this scope.
+// DeclarationError 1395: (15-25='let x := 2'): Variable name x already taken in this scope.

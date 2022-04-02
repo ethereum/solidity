@@ -17,5 +17,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6368: (159-169): CHC: Out of bounds access happens here.
-// Warning 6328: (152-181): CHC: Assertion violation happens here.
+// Warning 6368: (159-169='array2d[2]'): CHC: Out of bounds access happens here.
+// Warning 6328: (152-181='assert(array2d[2].length > 0)'): CHC: Assertion violation happens here.

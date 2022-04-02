@@ -5,4 +5,4 @@ contract C {
     function f(S memory) public {}
 }
 // ----
-// TypeError 4103: (92-100): Internal type is not allowed for public or external functions.
+// TypeError 4103: (92-100='S memory'): Internal type is not allowed for public or external functions.

@@ -30,7 +30,7 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (860-880): CHC: Assertion violation happens here.
-// Warning 6368: (936-952): CHC: Out of bounds access might happen here.
-// Warning 6368: (936-955): CHC: Out of bounds access might happen here.
+// Warning 6328: (860-880='assert(map[0] == 42)'): CHC: Assertion violation happens here.
+// Warning 6368: (936-952='severalMaps3d[x]'): CHC: Out of bounds access might happen here.
+// Warning 6368: (936-955='severalMaps3d[x][0]'): CHC: Out of bounds access might happen here.
 // Info 1180: Contract invariant(s) for :C:\n!(severalMaps8.length <= 1)\n

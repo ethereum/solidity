@@ -38,5 +38,5 @@ contract ExtCallTest {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (ExtCall.sol:362-381): CHC: Assertion violation happens here.
-// Warning 4588: (ExtCall.t.sol:110-123): Assertion checker does not yet implement this type of function call.
+// Warning 6328: (ExtCall.sol:362-381='assert(x_prev == x)'): CHC: Assertion violation happens here.
+// Warning 4588: (ExtCall.t.sol:110-123='new ExtCall()'): Assertion checker does not yet implement this type of function call.

@@ -3,4 +3,4 @@ contract C {
     fallback() external {}
 }
 // ----
-// DeclarationError 7301: (96-118): Only one fallback function is allowed.
+// DeclarationError 7301: (96-118='fallback() external {}'): Only one fallback function is allowed.

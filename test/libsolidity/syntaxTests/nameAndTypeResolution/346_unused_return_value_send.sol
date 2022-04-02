@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// Warning 5878: (50-80): Failure condition of 'send' ignored. Consider using 'transfer' instead.
+// Warning 5878: (50-80='payable(address(0x12)).send(1)'): Failure condition of 'send' ignored. Consider using 'transfer' instead.

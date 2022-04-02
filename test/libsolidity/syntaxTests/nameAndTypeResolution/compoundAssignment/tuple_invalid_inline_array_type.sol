@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9563: (78-85): Invalid mobile type.
+// TypeError 9563: (78-85='100e100'): Invalid mobile type.

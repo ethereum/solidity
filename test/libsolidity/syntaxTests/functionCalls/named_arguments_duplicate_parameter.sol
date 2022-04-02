@@ -7,6 +7,6 @@ contract test {
     }
 }
 // ----
-// Warning 2519: (31-37): This declaration shadows an existing declaration.
-// Warning 2519: (39-45): This declaration shadows an existing declaration.
-// TypeError 6995: (159-160): Duplicate named argument "a".
+// Warning 2519: (31-37='uint a'): This declaration shadows an existing declaration.
+// Warning 2519: (39-45='uint b'): This declaration shadows an existing declaration.
+// TypeError 6995: (159-160='1'): Duplicate named argument "a".

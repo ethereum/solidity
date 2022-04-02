@@ -8,4 +8,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (80-94): Unused local variable.
+// Warning 2072: (80-94='bytes memory c'): Unused local variable.

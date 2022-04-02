@@ -5,4 +5,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// ParserError 5568: (75-87): Cannot use builtin function name "linkersymbol" as identifier name.
+// ParserError 5568: (75-87='linkersymbol'): Cannot use builtin function name "linkersymbol" as identifier name.

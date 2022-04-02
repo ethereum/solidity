@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9611: (118-119): Decoding type struct C.s memory not supported.
+// TypeError 9611: (118-119='s'): Decoding type struct C.s memory not supported.

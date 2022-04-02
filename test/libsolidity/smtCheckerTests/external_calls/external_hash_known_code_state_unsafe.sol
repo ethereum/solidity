@@ -39,5 +39,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (402-428): CHC: Assertion violation happens here.
+// Warning 6328: (402-428='assert(prevOwner == owner)'): CHC: Assertion violation happens here.
 // Warning 6328: (561-598): CHC: Assertion violation happens here.

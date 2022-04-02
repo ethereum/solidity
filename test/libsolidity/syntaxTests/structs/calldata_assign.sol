@@ -4,4 +4,4 @@ contract Test {
     function f(S calldata s) external { s.a = 4; }
 }
 // ----
-// TypeError 4156: (114-117): Calldata structs are read-only.
+// TypeError 4156: (114-117='s.a'): Calldata structs are read-only.

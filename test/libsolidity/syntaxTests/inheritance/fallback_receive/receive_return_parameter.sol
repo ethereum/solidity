@@ -5,4 +5,4 @@ contract D is C {
     receive() external payable override {}
 }
 // ----
-// DeclarationError 6899: (59-65): Receive ether function cannot return values.
+// DeclarationError 6899: (59-65='(uint)'): Receive ether function cannot return values.

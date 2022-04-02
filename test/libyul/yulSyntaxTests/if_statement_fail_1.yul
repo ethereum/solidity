@@ -2,4 +2,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// ParserError 1856: (5-8): Literal or identifier expected.
+// ParserError 1856: (5-8='let'): Literal or identifier expected.

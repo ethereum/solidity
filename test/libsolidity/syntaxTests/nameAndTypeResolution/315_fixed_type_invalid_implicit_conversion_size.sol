@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// TypeError 9574: (75-92): Type ufixed128x18 is not implicitly convertible to expected type ufixed248x8. Too many fractional digits.
+// TypeError 9574: (75-92='ufixed248x8 b = a'): Type ufixed128x18 is not implicitly convertible to expected type ufixed248x8. Too many fractional digits.

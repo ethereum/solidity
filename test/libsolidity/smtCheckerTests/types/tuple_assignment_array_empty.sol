@@ -17,4 +17,4 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (198-215): CHC: Assertion violation happens here.
+// Warning 6328: (198-215='assert(a[x] == 2)'): CHC: Assertion violation happens here.

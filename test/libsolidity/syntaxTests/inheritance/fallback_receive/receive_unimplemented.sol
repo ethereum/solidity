@@ -10,4 +10,4 @@ contract C is J {
     receive() external payable override {}
 }
 // ----
-// DeclarationError 6857: (25-33): Receive ether function cannot take parameters.
+// DeclarationError 6857: (25-33='(bytes2)'): Receive ether function cannot take parameters.

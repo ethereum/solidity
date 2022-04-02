@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9582: (177-185): Member "double" not found or not visible after argument-dependent lookup in uint256.
+// TypeError 9582: (177-185='a.double'): Member "double" not found or not visible after argument-dependent lookup in uint256.

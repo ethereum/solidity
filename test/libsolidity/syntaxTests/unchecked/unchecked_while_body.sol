@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError 5296: (65-74): "unchecked" blocks can only be used inside regular blocks.
+// ParserError 5296: (65-74='unchecked'): "unchecked" blocks can only be used inside regular blocks.

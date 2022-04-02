@@ -32,13 +32,13 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (182-210): CHC: Assertion violation happens here.
-// Warning 6328: (335-363): CHC: Assertion violation happens here.
-// Warning 6328: (414-442): CHC: Assertion violation happens here.
-// Warning 6328: (560-588): CHC: Assertion violation happens here.
-// Warning 6328: (607-635): CHC: Assertion violation happens here.
-// Warning 6328: (654-682): CHC: Assertion violation happens here.
+// Warning 6328: (182-210='assert(a.length == b.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (335-363='assert(a.length == d.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (414-442='assert(b.length == c.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (560-588='assert(e.length == a.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (607-635='assert(f.length == b.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (654-682='assert(e.length == g.length)'): CHC: Assertion violation happens here.
 // Warning 6328: (879-916): CHC: Assertion violation happens here.
-// Warning 6328: (1009-1037): CHC: Assertion violation happens here.
-// Warning 6328: (1056-1084): CHC: Assertion violation happens here.
-// Warning 6328: (1103-1131): CHC: Assertion violation happens here.
+// Warning 6328: (1009-1037='assert(k.length == a.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (1056-1084='assert(k.length == l.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (1103-1131='assert(l.length == b.length)'): CHC: Assertion violation happens here.

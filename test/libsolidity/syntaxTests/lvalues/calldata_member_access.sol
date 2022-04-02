@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4156: (128-131): Calldata structs are read-only.
+// TypeError 4156: (128-131='s.x'): Calldata structs are read-only.

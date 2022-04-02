@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError 1465: (72-73): Illegal token: Octal numbers not allowed.
+// ParserError 1465: (72-73='0'): Illegal token: Octal numbers not allowed.

@@ -15,12 +15,12 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6031: (233-249): Internal error: Expression undefined for SMT solver.
-// Warning 6031: (298-314): Internal error: Expression undefined for SMT solver.
-// Warning 6031: (398-414): Internal error: Expression undefined for SMT solver.
-// Warning 1218: (330-360): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (430-460): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (330-360): CHC: Assertion violation might happen here.
-// Warning 6328: (430-460): CHC: Assertion violation might happen here.
-// Warning 4661: (330-360): BMC: Assertion violation happens here.
-// Warning 4661: (430-460): BMC: Assertion violation happens here.
+// Warning 6031: (233-249='this.callMeMaybe'): Internal error: Expression undefined for SMT solver.
+// Warning 6031: (298-314='this.callMeMaybe'): Internal error: Expression undefined for SMT solver.
+// Warning 6031: (398-414='this.callMeMaybe'): Internal error: Expression undefined for SMT solver.
+// Warning 1218: (330-360='assert(b1.length == b2.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 1218: (430-460='assert(b1.length == b3.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (330-360='assert(b1.length == b2.length)'): CHC: Assertion violation might happen here.
+// Warning 6328: (430-460='assert(b1.length == b3.length)'): CHC: Assertion violation might happen here.
+// Warning 4661: (330-360='assert(b1.length == b2.length)'): BMC: Assertion violation happens here.
+// Warning 4661: (430-460='assert(b1.length == b3.length)'): BMC: Assertion violation happens here.

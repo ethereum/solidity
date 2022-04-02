@@ -4,4 +4,4 @@
 // ====
 // dialect: yul
 // ----
-// DeclarationError 1395: (26-36): Variable name x already taken in this scope.
+// DeclarationError 1395: (26-36='let x := 1'): Variable name x already taken in this scope.

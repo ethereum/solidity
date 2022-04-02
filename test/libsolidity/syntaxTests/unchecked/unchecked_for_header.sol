@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError 6933: (57-66): Expected primary expression.
+// ParserError 6933: (57-66='unchecked'): Expected primary expression.

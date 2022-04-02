@@ -11,5 +11,5 @@ contract C {
     }
 }
 // ----
-// TypeError 4247: (83-84): Expression has to be an lvalue.
-// TypeError 4247: (166-172): Expression has to be an lvalue.
+// TypeError 4247: (83-84='g'): Expression has to be an lvalue.
+// TypeError 4247: (166-172='this.i'): Expression has to be an lvalue.

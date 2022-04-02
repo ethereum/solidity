@@ -14,4 +14,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (126-146): CHC: Assertion violation happens here.\nCounterexample:\n\n_d = 1\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 6328: (126-146='assert(_d == E.Left)'): CHC: Assertion violation happens here.\nCounterexample:\n\n_d = 1\n\nTransaction trace:\nC.constructor()\nC.f(0)

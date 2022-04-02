@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// TypeError 4247: (160-168): Expression has to be an lvalue.
+// TypeError 4247: (160-168='s.x[2]()'): Expression has to be an lvalue.

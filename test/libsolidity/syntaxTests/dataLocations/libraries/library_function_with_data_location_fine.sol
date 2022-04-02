@@ -8,9 +8,9 @@ library L {
     function i(uint[] calldata, uint[] storage) external pure returns (S storage x) {return x; }
 }
 // ----
-// TypeError 3464: (197-198): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (203-204): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (359-360): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (365-366): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (460-461): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (557-558): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (197-198='a'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (203-204='c'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (359-360='a'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (365-366='c'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (460-461='x'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (557-558='x'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

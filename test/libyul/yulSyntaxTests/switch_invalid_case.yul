@@ -5,4 +5,4 @@
     default {}
 }
 // ----
-// ParserError 4805: (28-29): Literal expected.
+// ParserError 4805: (28-29='('): Literal expected.

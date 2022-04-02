@@ -30,8 +30,8 @@ contract H {
 }
 // ----
 // TypeError 6280: (17-67): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 6280: (120-148): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 9214: (263-264): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 6280: (312-340): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 6280: (407-414): Types in storage containing (nested) mappings cannot be assigned to.
-// TypeError 6280: (417-424): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 6280: (120-148='mapping (uint => uint) b = a'): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 9214: (263-264='a'): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 6280: (312-340='mapping (uint => uint) b = x'): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 6280: (407-414='S y = x'): Types in storage containing (nested) mappings cannot be assigned to.
+// TypeError 6280: (417-424='S z = z'): Types in storage containing (nested) mappings cannot be assigned to.

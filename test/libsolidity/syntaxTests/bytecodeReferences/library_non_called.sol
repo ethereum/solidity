@@ -8,4 +8,4 @@ contract A {
     function f() public pure { type(L2).creationCode; }
 }
 // ----
-// Warning 6133: (157-178): Statement has no effect.
+// Warning 6133: (157-178='type(L2).creationCode'): Statement has no effect.

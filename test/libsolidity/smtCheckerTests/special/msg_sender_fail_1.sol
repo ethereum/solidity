@@ -11,4 +11,4 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (122-145): CHC: Assertion violation happens here.
+// Warning 6328: (122-145='assert(c == msg.sender)'): CHC: Assertion violation happens here.

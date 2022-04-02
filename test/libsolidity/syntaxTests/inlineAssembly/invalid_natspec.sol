@@ -9,6 +9,6 @@ contract C {
 	}
 }
 // ----
-// Warning 6269: (60-71): Unexpected NatSpec tag "test" with value "test" in inline assembly.
-// Warning 8787: (95-106): Unexpected value for @solidity tag in inline assembly: test
-// Warning 7828: (122-133): Inline assembly has invalid NatSpec documentation.
+// Warning 6269: (60-71='assembly {}'): Unexpected NatSpec tag "test" with value "test" in inline assembly.
+// Warning 8787: (95-106='assembly {}'): Unexpected value for @solidity tag in inline assembly: test
+// Warning 7828: (122-133='assembly {}'): Inline assembly has invalid NatSpec documentation.

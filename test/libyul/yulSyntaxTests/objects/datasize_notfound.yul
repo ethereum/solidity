@@ -5,4 +5,4 @@ object "A" {
   data "B" ""
 }
 // ----
-// TypeError 3517: (39-42): Unknown data object "C".
+// TypeError 3517: (39-42='"C"'): Unknown data object "C".

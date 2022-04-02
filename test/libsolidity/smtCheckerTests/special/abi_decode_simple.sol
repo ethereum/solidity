@@ -9,8 +9,8 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (70-80): Unused local variable.
-// Warning 2072: (82-86): Unused local variable.
-// Warning 2072: (140-150): Unused local variable.
-// Warning 2072: (152-156): Unused local variable.
-// Warning 6328: (220-236): CHC: Assertion violation happens here.
+// Warning 2072: (70-80='bytes32 b1'): Unused local variable.
+// Warning 2072: (82-86='C c1'): Unused local variable.
+// Warning 2072: (140-150='bytes32 b2'): Unused local variable.
+// Warning 2072: (152-156='C c2'): Unused local variable.
+// Warning 6328: (220-236='assert(a1 != a2)'): CHC: Assertion violation happens here.

@@ -14,4 +14,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (56-81): BMC: Assertion violation happens here.
+// Warning 4661: (56-81='assert(simple_if(a) == 1)'): BMC: Assertion violation happens here.

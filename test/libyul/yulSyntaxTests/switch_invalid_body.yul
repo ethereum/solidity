@@ -5,4 +5,4 @@
     default {}
 }
 // ----
-// ParserError 2314: (27-30): Expected '{' but got identifier
+// ParserError 2314: (27-30='mul'): Expected '{' but got identifier

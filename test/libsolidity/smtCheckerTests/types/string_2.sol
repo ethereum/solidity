@@ -7,4 +7,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 2072: (43-58): Unused local variable.
+// Warning 2072: (43-58='string memory s'): Unused local variable.

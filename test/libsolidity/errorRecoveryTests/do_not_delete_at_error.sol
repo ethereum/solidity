@@ -10,4 +10,4 @@ contract Error2 {
 	mapping (address => uint balances; // missing ) before "balances"
 }
 // ----
-// ParserError 6635: (417-425): Expected ')' but got identifier
+// ParserError 6635: (417-425='balances'): Expected ')' but got identifier

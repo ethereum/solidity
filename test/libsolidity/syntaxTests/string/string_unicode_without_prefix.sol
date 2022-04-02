@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// ParserError 8936: (86-88): Invalid character in string.
+// ParserError 8936: (86-88='"ð'): Invalid character in string.

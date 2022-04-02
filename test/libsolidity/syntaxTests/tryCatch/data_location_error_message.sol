@@ -8,4 +8,4 @@ contract Foo {
     }
 }
 // ----
-// TypeError 6651: (88-101): Data location must be "memory" for parameter in function, but none was given.
+// TypeError 6651: (88-101='string reason'): Data location must be "memory" for parameter in function, but none was given.

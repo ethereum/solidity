@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// SyntaxError 8149: (63-68): Keyword "leave" can only be used inside a function.
+// SyntaxError 8149: (63-68='leave'): Keyword "leave" can only be used inside a function.

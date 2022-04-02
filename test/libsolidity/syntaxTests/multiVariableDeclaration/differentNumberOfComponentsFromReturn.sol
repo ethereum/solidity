@@ -19,11 +19,11 @@ contract C {
     function four() public pure returns (uint, uint, uint, uint) {}
 }
 // ----
-// TypeError 7364: (47-61): Different number of components on the left hand side (1) than on the right hand side (2).
-// TypeError 7364: (71-87): Different number of components on the left hand side (1) than on the right hand side (3).
-// TypeError 7364: (97-112): Different number of components on the left hand side (1) than on the right hand side (4).
+// TypeError 7364: (47-61='uint a = two()'): Different number of components on the left hand side (1) than on the right hand side (2).
+// TypeError 7364: (71-87='uint b = three()'): Different number of components on the left hand side (1) than on the right hand side (3).
+// TypeError 7364: (97-112='uint c = four()'): Different number of components on the left hand side (1) than on the right hand side (4).
 // TypeError 7364: (154-198): Different number of components on the left hand side (4) than on the right hand side (1).
 // TypeError 7364: (208-243): Different number of components on the left hand side (3) than on the right hand side (1).
-// TypeError 7364: (253-279): Different number of components on the left hand side (2) than on the right hand side (1).
+// TypeError 7364: (253-279='(uint a3, uint b3) = one()'): Different number of components on the left hand side (2) than on the right hand side (1).
 // TypeError 7364: (321-367): Different number of components on the left hand side (4) than on the right hand side (3).
 // TypeError 7364: (377-413): Different number of components on the left hand side (3) than on the right hand side (4).

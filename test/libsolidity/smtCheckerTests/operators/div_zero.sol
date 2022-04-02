@@ -5,4 +5,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4281: (36-41): CHC: Division by zero happens here.\nCounterexample:\nz = 0, x = 0\n\nTransaction trace:\nC.constructor()
+// Warning 4281: (36-41='2 / z'): CHC: Division by zero happens here.\nCounterexample:\nz = 0, x = 0\n\nTransaction trace:\nC.constructor()

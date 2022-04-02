@@ -7,6 +7,6 @@ contract B is A {
 	function g(int x) public pure override returns (int b) { return 2; }
 }
 // ----
-// DocstringParsingError 2604: (14-27): Documentation tag "@return a" exceeds the number of return parameters.
+// DocstringParsingError 2604: (14-27='/// @return a'): Documentation tag "@return a" exceeds the number of return parameters.
 // TypeError 4822: (98-166): Overriding function return types differ.
-// TypeError 8863: (64-72): Different number of arguments in return statement than in returns declaration.
+// TypeError 8863: (64-72='return 2'): Different number of arguments in return statement than in returns declaration.

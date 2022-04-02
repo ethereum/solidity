@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError 1465: (84-90): Illegal token: Expected even number of hex-nibbles.
+// ParserError 1465: (84-90='hex"ab'): Illegal token: Expected even number of hex-nibbles.

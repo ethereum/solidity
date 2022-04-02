@@ -14,8 +14,8 @@ contract C {
     }
 }
 // ----
-// TypeError 9640: (82-92): Explicit type conversion not allowed from "type(contract C)" to "address".
-// TypeError 9640: (102-112): Explicit type conversion not allowed from "type(contract I)" to "address".
-// TypeError 9640: (166-182): Explicit type conversion not allowed from "type(contract C)" to "address".
-// TypeError 9640: (192-208): Explicit type conversion not allowed from "type(contract I)" to "address".
-// TypeError 9640: (218-234): Explicit type conversion not allowed from "type(library L)" to "address".
+// TypeError 9640: (82-92='address(C)'): Explicit type conversion not allowed from "type(contract C)" to "address".
+// TypeError 9640: (102-112='address(I)'): Explicit type conversion not allowed from "type(contract I)" to "address".
+// TypeError 9640: (166-182='address(type(C))'): Explicit type conversion not allowed from "type(contract C)" to "address".
+// TypeError 9640: (192-208='address(type(I))'): Explicit type conversion not allowed from "type(contract I)" to "address".
+// TypeError 9640: (218-234='address(type(L))'): Explicit type conversion not allowed from "type(library L)" to "address".

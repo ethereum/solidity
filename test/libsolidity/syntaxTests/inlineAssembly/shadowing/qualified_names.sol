@@ -10,5 +10,5 @@ contract C {
     }
 }
 // ----
-// DeclarationError 3927: (115-118): User-defined identifiers in inline assembly cannot contain '.'.
-// DeclarationError 3927: (140-143): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3927: (115-118='D.a'): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3927: (140-143='D.b'): User-defined identifiers in inline assembly cannot contain '.'.

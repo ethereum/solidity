@@ -10,4 +10,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 5740: (122-136): Unreachable code.
+// Warning 5740: (122-136='assert(a == 3)'): Unreachable code.

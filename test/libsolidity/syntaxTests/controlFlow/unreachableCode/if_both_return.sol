@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning 5740: (142-149): Unreachable code.
+// Warning 5740: (142-149='return;'): Unreachable code.

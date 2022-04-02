@@ -3,4 +3,4 @@ contract test {
     Data public data;
 }
 // ----
-// TypeError 5359: (58-74): The struct has all its members omitted, therefore the getter cannot return any values.
+// TypeError 5359: (58-74='Data public data'): The struct has all its members omitted, therefore the getter cannot return any values.

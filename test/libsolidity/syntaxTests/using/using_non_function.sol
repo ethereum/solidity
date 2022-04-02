@@ -3,4 +3,4 @@ contract C {
     using {x} for uint;
 }
 // ----
-// TypeError 8187: (56-57): Expected function name.
+// TypeError 8187: (56-57='x'): Expected function name.

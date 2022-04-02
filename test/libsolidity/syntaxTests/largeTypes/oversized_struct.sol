@@ -9,4 +9,4 @@ contract C {
 }
 // ----
 // TypeError 7676: (60-152): Contract requires too much storage.
-// TypeError 1534: (146-149): Type too large for storage.
+// TypeError 1534: (146-149='S s'): Type too large for storage.

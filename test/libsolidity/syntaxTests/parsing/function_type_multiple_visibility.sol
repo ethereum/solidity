@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// ParserError 9439: (64-70): Visibility already specified as "public".
+// ParserError 9439: (64-70='public'): Visibility already specified as "public".

@@ -17,4 +17,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 5667: (155-169): Unused try/catch parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (155-169='bytes memory s'): Unused try/catch parameter. Remove or comment out the variable name to silence this warning.

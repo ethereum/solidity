@@ -23,5 +23,5 @@ contract C is B
 }
 
 // ----
-// Warning 6321: (146-153): Unnamed return variable can remain unassigned when the function is called when "C" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6321: (381-388): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (146-153='uint256'): Unnamed return variable can remain unassigned when the function is called when "C" is the most derived contract. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (381-388='uint256'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

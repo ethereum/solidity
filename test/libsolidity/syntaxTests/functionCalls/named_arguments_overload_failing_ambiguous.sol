@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4487: (233-234): No unique declaration found after argument-dependent lookup.
+// TypeError 4487: (233-234='f'): No unique declaration found after argument-dependent lookup.

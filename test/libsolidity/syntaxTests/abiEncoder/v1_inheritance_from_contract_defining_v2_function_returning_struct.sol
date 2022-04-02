@@ -14,4 +14,4 @@ import "A";
 
 contract D is C {}
 // ----
-// TypeError 6594: (B:33-51): Contract "D" does not use ABI coder v2 but wants to inherit from a contract which uses types that require it. Use "pragma abicoder v2;" for the inheriting contract as well to enable the feature.
+// TypeError 6594: (B:33-51='contract D is C {}'): Contract "D" does not use ABI coder v2 but wants to inherit from a contract which uses types that require it. Use "pragma abicoder v2;" for the inheriting contract as well to enable the feature.

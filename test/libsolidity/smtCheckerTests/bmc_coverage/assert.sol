@@ -19,7 +19,7 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (49-62): BMC: Assertion violation happens here.
-// Warning 6838: (111-117): BMC: Condition is always true.
-// Warning 6838: (186-192): BMC: Condition is always false.
-// Warning 2512: (254-260): BMC: Condition unreachable.
+// Warning 4661: (49-62='assert(x > 0)'): BMC: Assertion violation happens here.
+// Warning 6838: (111-117='x >= 0'): BMC: Condition is always true.
+// Warning 6838: (186-192='x != 2'): BMC: Condition is always false.
+// Warning 2512: (254-260='x != 2'): BMC: Condition unreachable.

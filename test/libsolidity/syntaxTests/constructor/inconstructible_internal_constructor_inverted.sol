@@ -10,4 +10,4 @@ contract A {
 	constructor(address) internal {}
 }
 // ----
-// DeclarationError 1845: (175-207): Non-abstract contracts cannot have internal constructors. Remove the "internal" keyword and make the contract abstract to fix this.
+// DeclarationError 1845: (175-207='constructor(address) internal {}'): Non-abstract contracts cannot have internal constructors. Remove the "internal" keyword and make the contract abstract to fix this.

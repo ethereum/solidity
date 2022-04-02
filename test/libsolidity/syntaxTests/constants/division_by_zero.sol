@@ -5,5 +5,5 @@ contract c {
     uint constant b2 = 7 / (a2 - 1);
 }
 // ----
-// TypeError 1211: (88-94): Division by zero.
-// TypeError 1211: (119-131): Division by zero.
+// TypeError 1211: (88-94='7 / a1'): Division by zero.
+// TypeError 1211: (119-131='7 / (a2 - 1)'): Division by zero.

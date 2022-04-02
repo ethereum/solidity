@@ -35,12 +35,12 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6368: (439-453): CHC: Out of bounds access happens here.
-// Warning 6368: (492-508): CHC: Out of bounds access happens here.
-// Warning 6368: (492-511): CHC: Out of bounds access happens here.
-// Warning 6368: (622-636): CHC: Out of bounds access happens here.
-// Warning 6368: (850-866): CHC: Out of bounds access happens here.
-// Warning 6368: (850-869): CHC: Out of bounds access happens here.
-// Warning 6328: (936-956): CHC: Assertion violation happens here.
-// Warning 6368: (1029-1043): CHC: Out of bounds access might happen here.
+// Warning 6368: (439-453='severalMaps[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (492-508='severalMaps3d[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (492-511='severalMaps3d[0][0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (622-636='severalMaps[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (850-866='severalMaps3d[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (850-869='severalMaps3d[0][0]'): CHC: Out of bounds access happens here.
+// Warning 6328: (936-956='assert(map[0] == 42)'): CHC: Assertion violation happens here.
+// Warning 6368: (1029-1043='severalMaps[x]'): CHC: Out of bounds access might happen here.
 // Info 1180: Contract invariant(s) for :C:\n!(severalMaps8.length <= 0)\n

@@ -6,4 +6,4 @@ contract C
 	}
 }
 // ----
-// Warning 2319: (58-67): This declaration shadows a builtin symbol.
+// Warning 2319: (58-67='bool sha3'): This declaration shadows a builtin symbol.

@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// Warning 5740: (112-135): Unreachable code.
+// Warning 5740: (112-135='a[0] = 0;         a = s'): Unreachable code.

@@ -34,5 +34,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (468-472): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [0x12, 0x34, 0x0]\n\nTransaction trace:\nC.constructor()\nC.h()
-// Warning 6368: (490-494): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [0x12, 0x34, 0x0]\n\nTransaction trace:\nC.constructor()\nC.h()
+// Warning 6368: (468-472='x[5]'): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [0x12, 0x34, 0x0]\n\nTransaction trace:\nC.constructor()\nC.h()
+// Warning 6368: (490-494='x[5]'): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [0x12, 0x34, 0x0]\n\nTransaction trace:\nC.constructor()\nC.h()

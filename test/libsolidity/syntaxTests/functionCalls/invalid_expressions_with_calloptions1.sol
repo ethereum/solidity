@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2622: (71-79): Expected callable expression before call options.
+// TypeError 2622: (71-79='a{val:5}'): Expected callable expression before call options.

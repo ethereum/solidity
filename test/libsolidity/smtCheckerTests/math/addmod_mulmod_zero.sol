@@ -21,8 +21,8 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6321: (220-227): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 4281: (61-76): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
-// Warning 6328: (80-93): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
-// Warning 4281: (147-162): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)
-// Warning 6328: (166-179): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)
+// Warning 6321: (220-227='uint256'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 4281: (61-76='addmod(1, 2, d)'): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 6328: (80-93='assert(x < d)'): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 4281: (147-162='mulmod(1, 2, d)'): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)
+// Warning 6328: (166-179='assert(x < d)'): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)

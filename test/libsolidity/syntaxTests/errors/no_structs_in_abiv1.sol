@@ -4,4 +4,4 @@ contract C {
     error MyError(S);
 }
 // ----
-// TypeError 3061: (70-71): This type is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.
+// TypeError 3061: (70-71='S'): This type is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

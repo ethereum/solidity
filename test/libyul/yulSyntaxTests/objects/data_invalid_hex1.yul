@@ -5,4 +5,4 @@ object "A" {
   data "1" hex"wronghexencoding"
 }
 // ----
-// ParserError 2314: (37-41): Expected 'StringLiteral' but got 'ILLEGAL'
+// ParserError 2314: (37-41='hex"'): Expected 'StringLiteral' but got 'ILLEGAL'

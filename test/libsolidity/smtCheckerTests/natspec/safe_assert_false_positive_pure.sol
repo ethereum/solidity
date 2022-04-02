@@ -27,5 +27,5 @@ contract C {
 // ----
 // Warning 2018: (33-335): Function state mutability can be restricted to view
 // Warning 2018: (457-524): Function state mutability can be restricted to pure
-// Warning 6328: (135-150): CHC: Assertion violation happens here.
+// Warning 6328: (135-150='assert(z == _x)'): CHC: Assertion violation happens here.
 // Info 1180: Contract invariant(s) for :C:\n(x <= 0)\n(y <= 0)\n

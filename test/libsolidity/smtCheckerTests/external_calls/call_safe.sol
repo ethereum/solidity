@@ -9,5 +9,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreInv: yes
 // ----
-// Warning 2072: (57-63): Unused local variable.
-// Warning 2072: (65-82): Unused local variable.
+// Warning 2072: (57-63='bool s'): Unused local variable.
+// Warning 2072: (65-82='bytes memory data'): Unused local variable.

@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3464: (109-110): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (109-110='r'): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

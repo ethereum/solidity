@@ -16,5 +16,5 @@ contract D {
 // ====
 // SMTEngine: all
 // ----
-// Warning 3944: (33-47): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor(){ msg.value: 0 }
-// Warning 3944: (160-174): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()\n    D.h() -- internal call
+// Warning 3944: (33-47='msg.value - 10'): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor(){ msg.value: 0 }
+// Warning 3944: (160-174='msg.value - 10'): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\n\n\nTransaction trace:\nD.constructor()\nD.f()\n    D.h() -- internal call

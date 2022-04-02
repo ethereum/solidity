@@ -8,4 +8,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6838: (114-116): BMC: Condition is always true.
+// Warning 6838: (114-116='b2'): BMC: Condition is always true.

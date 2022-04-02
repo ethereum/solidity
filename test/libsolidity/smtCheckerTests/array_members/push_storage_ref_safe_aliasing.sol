@@ -13,7 +13,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6368: (179-183): CHC: Out of bounds access happens here.
-// Warning 6368: (184-188): CHC: Out of bounds access happens here.
-// Warning 3944: (184-199): CHC: Underflow (resulting value less than 0) happens here.
+// Warning 6368: (179-183='a[0]'): CHC: Out of bounds access happens here.
+// Warning 6368: (184-188='a[0]'): CHC: Out of bounds access happens here.
+// Warning 3944: (184-199='a[0].length - 1'): CHC: Underflow (resulting value less than 0) happens here.
 // Warning 6328: (172-206): CHC: Assertion violation happens here.

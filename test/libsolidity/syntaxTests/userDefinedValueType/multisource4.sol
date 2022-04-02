@@ -6,4 +6,4 @@ contract C {
   function f(int x) public pure returns (MyInt) { return MyInt.wrap(x); }
 }
 // ----
-// DeclarationError 7920: (s2.sol:76-81): Identifier not found or not unique.
+// DeclarationError 7920: (s2.sol:76-81='MyInt'): Identifier not found or not unique.

@@ -4,4 +4,4 @@ contract test {
 	}
 }
 // ----
-// ParserError 8936: (44-47): Identifier-start is not allowed at end of a number.
+// ParserError 8936: (44-47='1.0'): Identifier-start is not allowed at end of a number.

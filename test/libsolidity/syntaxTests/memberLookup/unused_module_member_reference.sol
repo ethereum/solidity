@@ -12,4 +12,4 @@ contract C
     }
 }
 // ----
-// Warning 6133: (s1.sol:127-130): Statement has no effect.
+// Warning 6133: (s1.sol:127-130='A.L'): Statement has no effect.

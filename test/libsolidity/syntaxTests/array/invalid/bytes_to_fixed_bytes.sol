@@ -9,7 +9,7 @@ contract C {
     }
 }
 // ----
-// TypeError 7407: (183-184): Type bytes storage ref is not implicitly convertible to expected type bytes16.
-// TypeError 7407: (199-205): Type bytes calldata slice is not implicitly convertible to expected type bytes3.
-// TypeError 9640: (220-230): Explicit type conversion not allowed from "string memory" to "bytes32".
-// TypeError 7407: (245-246): Type string memory is not implicitly convertible to expected type bytes32.
+// TypeError 7407: (183-184='s'): Type bytes storage ref is not implicitly convertible to expected type bytes16.
+// TypeError 7407: (199-205='c[0:3]'): Type bytes calldata slice is not implicitly convertible to expected type bytes3.
+// TypeError 9640: (220-230='bytes32(m)'): Explicit type conversion not allowed from "string memory" to "bytes32".
+// TypeError 7407: (245-246='m'): Type string memory is not implicitly convertible to expected type bytes32.

@@ -36,5 +36,5 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6368: (706-720): CHC: Out of bounds access happens here.
-// Warning 6328: (699-730): CHC: Assertion violation happens here.
+// Warning 6368: (706-720='severalMaps[0]'): CHC: Out of bounds access happens here.
+// Warning 6328: (699-730='assert(severalMaps[0][0] == 42)'): CHC: Assertion violation happens here.

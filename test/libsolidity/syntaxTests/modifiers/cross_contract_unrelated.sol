@@ -8,4 +8,4 @@ contract D is A {
 }
 contract T is D, C {}
 // ----
-// TypeError 9428: (93-96): Can only use modifiers defined in the current contract or in base contracts.
+// TypeError 9428: (93-96='C.m'): Can only use modifiers defined in the current contract or in base contracts.

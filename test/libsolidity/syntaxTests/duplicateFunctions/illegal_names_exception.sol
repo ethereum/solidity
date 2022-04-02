@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// Warning 2319: (61-88): This declaration shadows a builtin symbol.
-// Warning 2319: (90-118): This declaration shadows a builtin symbol.
+// Warning 2319: (61-88='function this() public { 	}'): This declaration shadows a builtin symbol.
+// Warning 2319: (90-118='function super() public { 	}'): This declaration shadows a builtin symbol.

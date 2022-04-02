@@ -3,4 +3,4 @@ contract C {
     function f(S storage s) public {}
 }
 // ----
-// TypeError 6651: (69-80): Data location must be "memory" or "calldata" for parameter in function, but "storage" was given.
+// TypeError 6651: (69-80='S storage s'): Data location must be "memory" or "calldata" for parameter in function, but "storage" was given.

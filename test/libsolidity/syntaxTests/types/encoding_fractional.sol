@@ -4,4 +4,4 @@ contract C {
    }
 }
 // ----
-// TypeError 6090: (92-95): Fractional numbers cannot yet be encoded.
+// TypeError 6090: (92-95='0.1'): Fractional numbers cannot yet be encoded.

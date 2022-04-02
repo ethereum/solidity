@@ -9,5 +9,5 @@ contract C {
     function selector() external view returns(uint) { return x; }
 }
 // ----
-// Warning 6133: (78-97): Statement has no effect.
-// Warning 6133: (107-117): Statement has no effect.
+// Warning 6133: (78-97='C.selector.selector'): Statement has no effect.
+// Warning 6133: (107-117='C.selector'): Statement has no effect.

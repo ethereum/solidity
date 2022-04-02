@@ -10,5 +10,5 @@ contract B {
     }
 }
 // ----
-// TypeError 9574: (128-155): Type function A.f() is not implicitly convertible to expected type function () external. Special functions can not be converted to function types.
-// TypeError 9574: (165-197): Type function A.g() pure is not implicitly convertible to expected type function () pure external. Special functions can not be converted to function types.
+// TypeError 9574: (128-155='function() external f = A.f'): Type function A.f() is not implicitly convertible to expected type function () external. Special functions can not be converted to function types.
+// TypeError 9574: (165-197='function() external pure g = A.g'): Type function A.g() pure is not implicitly convertible to expected type function () pure external. Special functions can not be converted to function types.

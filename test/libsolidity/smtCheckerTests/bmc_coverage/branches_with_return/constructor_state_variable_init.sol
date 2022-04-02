@@ -35,7 +35,7 @@ contract C is B {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (297-311): BMC: Assertion violation happens here.
-// Warning 4661: (389-412): BMC: Assertion violation happens here.
-// Warning 4661: (489-513): BMC: Assertion violation happens here.
-// Warning 4661: (533-546): BMC: Assertion violation happens here.
+// Warning 4661: (297-311='assert(y == 4)'): BMC: Assertion violation happens here.
+// Warning 4661: (389-412='assert(x < 0 && y == 4)'): BMC: Assertion violation happens here.
+// Warning 4661: (489-513='assert(x >= 0 && y == 2)'): BMC: Assertion violation happens here.
+// Warning 4661: (533-546='assert(x > 0)'): BMC: Assertion violation happens here.

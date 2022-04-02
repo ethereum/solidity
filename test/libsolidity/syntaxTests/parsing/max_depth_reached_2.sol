@@ -8,4 +8,4 @@ contract C {
         {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ {
 ....
 // ----
-// ParserError 7319: (693-694): Maximum recursion depth reached during parsing.
+// ParserError 7319: (693-694='{'): Maximum recursion depth reached during parsing.

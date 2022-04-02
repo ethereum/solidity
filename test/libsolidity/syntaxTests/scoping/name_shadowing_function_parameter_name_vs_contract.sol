@@ -15,6 +15,6 @@ contract C {
     function f(uint C) public pure {}    // warning
 }
 // ----
-// Warning 2519: (91-97): This declaration shadows an existing declaration.
-// Warning 2519: (168-174): This declaration shadows an existing declaration.
-// Warning 2519: (283-289): This declaration shadows an existing declaration.
+// Warning 2519: (91-97='uint L'): This declaration shadows an existing declaration.
+// Warning 2519: (168-174='uint A'): This declaration shadows an existing declaration.
+// Warning 2519: (283-289='uint C'): This declaration shadows an existing declaration.

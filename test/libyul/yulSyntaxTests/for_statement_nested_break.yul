@@ -8,4 +8,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// SyntaxError 2592: (57-62): Keyword "break" needs to be inside a for-loop body.
+// SyntaxError 2592: (57-62='break'): Keyword "break" needs to be inside a for-loop body.

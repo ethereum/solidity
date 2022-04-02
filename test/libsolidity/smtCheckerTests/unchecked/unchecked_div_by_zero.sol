@@ -16,5 +16,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4281: (169-174): CHC: Division by zero happens here.\nCounterexample:\n\na = 0\nb = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.div(0, 0)
-// Warning 4281: (349-354): CHC: Division by zero happens here.\nCounterexample:\n\na = 0\nb = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.mod(0, 0)
+// Warning 4281: (169-174='a / b'): CHC: Division by zero happens here.\nCounterexample:\n\na = 0\nb = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.div(0, 0)
+// Warning 4281: (349-354='a % b'): CHC: Division by zero happens here.\nCounterexample:\n\na = 0\nb = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.mod(0, 0)

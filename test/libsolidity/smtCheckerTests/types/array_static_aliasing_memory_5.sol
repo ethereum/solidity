@@ -16,4 +16,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (385-402): CHC: Assertion violation happens here.
+// Warning 6328: (385-402='assert(a[0] == 2)'): CHC: Assertion violation happens here.

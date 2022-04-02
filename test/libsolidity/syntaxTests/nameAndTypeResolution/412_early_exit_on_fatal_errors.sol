@@ -8,5 +8,5 @@ contract C {
     }
 }
 // ----
-// DeclarationError 2333: (150-179): Identifier already declared.
-// DeclarationError 7920: (114-120): Identifier not found or not unique.
+// DeclarationError 2333: (150-179='function s() public s {     }'): Identifier already declared.
+// DeclarationError 7920: (114-120='ftring'): Identifier not found or not unique.

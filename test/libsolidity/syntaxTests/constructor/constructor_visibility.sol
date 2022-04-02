@@ -10,4 +10,4 @@ contract B is A {
 }
 // ----
 // TypeError 3656: (124-303): Contract "B" should be marked as abstract.
-// TypeError 9640: (252-256): Explicit type conversion not allowed from "string memory" to "contract A".
+// TypeError 9640: (252-256='A(y)'): Explicit type conversion not allowed from "string memory" to "contract A".

@@ -10,4 +10,4 @@ contract C
 	}
 }
 // ----
-// SyntaxError 9079: (109-115): Variable declarations can only be used inside blocks.
+// SyntaxError 9079: (109-115='uint z'): Variable declarations can only be used inside blocks.

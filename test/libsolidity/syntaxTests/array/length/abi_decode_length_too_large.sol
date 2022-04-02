@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// TypeError 6118: (75-92): Type too large for memory.
+// TypeError 6118: (75-92='bytes1[999999999]'): Type too large for memory.

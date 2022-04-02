@@ -12,4 +12,4 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 6838: (106-112): BMC: Condition is always true.
+// Warning 6838: (106-112='x == 2'): BMC: Condition is always true.

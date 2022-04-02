@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 3667: (85-87): Arithmetic error when computing constant value.
+// TypeError 3667: (85-87='-a'): Arithmetic error when computing constant value.

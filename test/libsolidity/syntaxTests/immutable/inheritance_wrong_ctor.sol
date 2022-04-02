@@ -8,4 +8,4 @@ contract C is B {
     }
 }
 // ----
-// TypeError 7484: (88-89): Cannot write to immutable here: Immutable variables must be initialized in the constructor of the contract they are defined in.
+// TypeError 7484: (88-89='x'): Cannot write to immutable here: Immutable variables must be initialized in the constructor of the contract they are defined in.

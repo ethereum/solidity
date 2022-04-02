@@ -5,5 +5,5 @@ contract C {
 	}
 }
 // ----
-// Warning 2072: (43-60): Unused local variable.
-// Warning 2072: (86-103): Unused local variable.
+// Warning 2072: (43-60='address payable p'): Unused local variable.
+// Warning 2072: (86-103='address payable q'): Unused local variable.

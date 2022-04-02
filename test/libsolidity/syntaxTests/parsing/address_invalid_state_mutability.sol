@@ -14,13 +14,13 @@ contract C {
 	function j() public pure returns (address pure) {}
 }
 // ----
-// TypeError 2311: (14-26): Address types can only be payable or non-payable.
-// TypeError 2311: (33-45): Address types can only be payable or non-payable.
-// TypeError 2311: (52-64): Address types can only be payable or non-payable.
-// TypeError 2311: (89-101): Address types can only be payable or non-payable.
-// TypeError 2311: (138-150): Address types can only be payable or non-payable.
-// TypeError 2311: (156-168): Address types can only be payable or non-payable.
-// TypeError 2311: (195-207): Address types can only be payable or non-payable.
-// TypeError 2311: (236-248): Address types can only be payable or non-payable.
-// TypeError 2311: (300-312): Address types can only be payable or non-payable.
-// TypeError 2311: (352-364): Address types can only be payable or non-payable.
+// TypeError 2311: (14-26='address view'): Address types can only be payable or non-payable.
+// TypeError 2311: (33-45='address pure'): Address types can only be payable or non-payable.
+// TypeError 2311: (52-64='address view'): Address types can only be payable or non-payable.
+// TypeError 2311: (89-101='address view'): Address types can only be payable or non-payable.
+// TypeError 2311: (138-150='address view'): Address types can only be payable or non-payable.
+// TypeError 2311: (156-168='address pure'): Address types can only be payable or non-payable.
+// TypeError 2311: (195-207='address view'): Address types can only be payable or non-payable.
+// TypeError 2311: (236-248='address pure'): Address types can only be payable or non-payable.
+// TypeError 2311: (300-312='address view'): Address types can only be payable or non-payable.
+// TypeError 2311: (352-364='address pure'): Address types can only be payable or non-payable.

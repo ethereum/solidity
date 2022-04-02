@@ -6,4 +6,4 @@ object "A" {
   }
 }
 // ----
-// ParserError 8311: (33-36): Object name cannot be the same as the name of the containing object.
+// ParserError 8311: (33-36='"A"'): Object name cannot be the same as the name of the containing object.

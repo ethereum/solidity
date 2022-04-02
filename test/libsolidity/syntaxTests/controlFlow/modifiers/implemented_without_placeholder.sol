@@ -5,4 +5,4 @@ abstract contract A {
     modifier mod() virtual { }
 }
 // ----
-// SyntaxError 2883: (129-132): Modifier body does not contain '_'.
+// SyntaxError 2883: (129-132='{ }'): Modifier body does not contain '_'.

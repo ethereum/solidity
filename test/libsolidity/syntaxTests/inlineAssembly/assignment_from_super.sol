@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError 8198: (72-77): Identifier "super" not found.
+// DeclarationError 8198: (72-77='super'): Identifier "super" not found.

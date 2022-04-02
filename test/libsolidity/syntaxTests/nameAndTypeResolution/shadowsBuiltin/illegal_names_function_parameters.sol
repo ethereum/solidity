@@ -16,13 +16,13 @@ contract C {
     }
 }
 // ----
-// DeclarationError 3726: (28-38): The name "super" is reserved.
-// DeclarationError 3726: (70-79): The name "this" is reserved.
-// DeclarationError 3726: (111-117): The name "_" is reserved.
-// DeclarationError 3726: (167-177): The name "super" is reserved.
-// DeclarationError 3726: (238-247): The name "this" is reserved.
-// DeclarationError 3726: (308-314): The name "_" is reserved.
-// Warning 2319: (28-38): This declaration shadows a builtin symbol.
-// Warning 2319: (70-79): This declaration shadows a builtin symbol.
-// Warning 2319: (167-177): This declaration shadows a builtin symbol.
-// Warning 2319: (238-247): This declaration shadows a builtin symbol.
+// DeclarationError 3726: (28-38='uint super'): The name "super" is reserved.
+// DeclarationError 3726: (70-79='uint this'): The name "this" is reserved.
+// DeclarationError 3726: (111-117='uint _'): The name "_" is reserved.
+// DeclarationError 3726: (167-177='uint super'): The name "super" is reserved.
+// DeclarationError 3726: (238-247='uint this'): The name "this" is reserved.
+// DeclarationError 3726: (308-314='uint _'): The name "_" is reserved.
+// Warning 2319: (28-38='uint super'): This declaration shadows a builtin symbol.
+// Warning 2319: (70-79='uint this'): This declaration shadows a builtin symbol.
+// Warning 2319: (167-177='uint super'): This declaration shadows a builtin symbol.
+// Warning 2319: (238-247='uint this'): This declaration shadows a builtin symbol.

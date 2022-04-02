@@ -29,4 +29,4 @@ contract A {
 // SMTIgnoreCex: yes
 // SMTIgnoreInv: yes
 // ----
-// Warning 6328: (392-408): CHC: Assertion violation happens here.
+// Warning 6328: (392-408='assert(A.y == 0)'): CHC: Assertion violation happens here.

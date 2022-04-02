@@ -9,6 +9,6 @@ contract Y {
 	}
 }
 // ----
-// TypeError 1130: (29-30): Invalid use of a library name.
-// TypeError 1130: (50-51): Invalid use of a library name.
-// TypeError 1130: (77-78): Invalid use of a library name.
+// TypeError 1130: (29-30='X'): Invalid use of a library name.
+// TypeError 1130: (50-51='X'): Invalid use of a library name.
+// TypeError 1130: (77-78='X'): Invalid use of a library name.

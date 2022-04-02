@@ -5,5 +5,5 @@ contract C {
     function i() external pure returns(uint[] memory) {}
 }
 // ----
-// Warning 6321: (51-64): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6321: (134-147): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (51-64='uint[] memory'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (134-147='uint[] memory'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

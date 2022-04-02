@@ -6,4 +6,4 @@ contract D is C {
     }
 }
 // ----
-// DeclarationError 7920: (74-81): Identifier not found or not unique.
+// DeclarationError 7920: (74-81='super.m'): Identifier not found or not unique.

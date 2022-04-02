@@ -24,6 +24,6 @@ interface Sub is SuperA, SuperB {
 
 // ----
 // TypeError 4327: (572-616): Function needs to specify overridden contracts "SuperA" and "SuperB".
-// TypeError 4327: (647-655): Function needs to specify overridden contracts "SuperA" and "SuperB".
-// TypeError 4327: (705-721): Function needs to specify overridden contract "SuperB".
-// TypeError 4327: (771-787): Function needs to specify overridden contract "SuperA".
+// TypeError 4327: (647-655='override'): Function needs to specify overridden contracts "SuperA" and "SuperB".
+// TypeError 4327: (705-721='override(SuperA)'): Function needs to specify overridden contract "SuperB".
+// TypeError 4327: (771-787='override(SuperB)'): Function needs to specify overridden contract "SuperA".

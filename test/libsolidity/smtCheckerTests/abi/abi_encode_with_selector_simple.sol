@@ -25,10 +25,10 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 5667: (100-115): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 1218: (855-885): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (571-601): CHC: Assertion violation happens here.
-// Warning 6328: (691-721): CHC: Assertion violation happens here.
-// Warning 6328: (740-770): CHC: Assertion violation happens here.
-// Warning 6328: (855-885): CHC: Assertion violation might happen here.
-// Warning 4661: (855-885): BMC: Assertion violation happens here.
+// Warning 5667: (100-115='uint[] memory b'): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 1218: (855-885='assert(b1.length == b6.length)'): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (571-601='assert(b1.length == b4.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (691-721='assert(b1.length != b5.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (740-770='assert(b1.length == b5.length)'): CHC: Assertion violation happens here.
+// Warning 6328: (855-885='assert(b1.length == b6.length)'): CHC: Assertion violation might happen here.
+// Warning 4661: (855-885='assert(b1.length == b6.length)'): BMC: Assertion violation happens here.

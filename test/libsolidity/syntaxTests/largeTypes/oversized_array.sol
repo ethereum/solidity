@@ -5,4 +5,4 @@ contract C {
 }
 // ----
 // TypeError 7676: (60-97): Contract requires too much storage.
-// TypeError 1534: (77-94): Type too large for storage.
+// TypeError 1534: (77-94='uint[2**255][2] a'): Type too large for storage.

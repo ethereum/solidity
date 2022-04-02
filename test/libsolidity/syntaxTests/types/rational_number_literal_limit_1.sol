@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError 2826: (128-134): Invalid literal value.
+// TypeError 2826: (128-134='1e1234'): Invalid literal value.

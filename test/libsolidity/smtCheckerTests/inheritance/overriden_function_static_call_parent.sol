@@ -19,5 +19,5 @@ contract Child is Base {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 5667: (52-58): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (282-296): CHC: Assertion violation happens here.
+// Warning 5667: (52-58='uint b'): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (282-296='assert(x == d)'): CHC: Assertion violation happens here.

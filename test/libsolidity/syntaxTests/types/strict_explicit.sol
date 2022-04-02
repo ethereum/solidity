@@ -43,4 +43,4 @@ contract C
     }
 }
 // ----
-// TypeError 9640: (801-809): Explicit type conversion not allowed from "uint8" to "int16".
+// TypeError 9640: (801-809='int16(o)'): Explicit type conversion not allowed from "uint8" to "int16".

@@ -9,4 +9,4 @@ contract C is A,B {
 }
 
 // ----
-// TypeError 9301: (140-141): Expected contract but got function ().
+// TypeError 9301: (140-141='g'): Expected contract but got function ().

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5887: (68-77): "msg.value" and "callvalue()" can only be used in payable constructors. Make the constructor "payable" to avoid this error.
+// TypeError 5887: (68-77='msg.value'): "msg.value" and "callvalue()" can only be used in payable constructors. Make the constructor "payable" to avoid this error.

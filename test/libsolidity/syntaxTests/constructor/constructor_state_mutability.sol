@@ -5,5 +5,5 @@ contract test2 {
   constructor() pure {}
 }
 // ----
-// TypeError 1558: (19-40): Constructor must be payable or non-payable, but is "view".
-// TypeError 1558: (62-83): Constructor must be payable or non-payable, but is "pure".
+// TypeError 1558: (19-40='constructor() view {}'): Constructor must be payable or non-payable, but is "view".
+// TypeError 1558: (62-83='constructor() pure {}'): Constructor must be payable or non-payable, but is "pure".

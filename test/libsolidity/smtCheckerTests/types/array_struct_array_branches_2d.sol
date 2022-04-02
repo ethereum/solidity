@@ -19,5 +19,5 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 5667: (51-57): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 2072: (75-87): Unused local variable.
+// Warning 5667: (51-57='bool b'): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 2072: (75-87='S[] memory c'): Unused local variable.

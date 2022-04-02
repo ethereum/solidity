@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 8113: (77-92): "block.blockhash()" has been deprecated in favor of "blockhash()"
+// TypeError 8113: (77-92='block.blockhash'): "block.blockhash()" has been deprecated in favor of "blockhash()"

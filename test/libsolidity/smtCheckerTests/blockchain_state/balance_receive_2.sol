@@ -16,6 +16,6 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (266-272): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (266-272='x + 10'): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 6328: (235-273): CHC: Assertion violation happens here.
 // Info 1180: Contract invariant(s) for :C:\nonce\n

@@ -5,4 +5,4 @@
 // ====
 // dialect: evm
 // ----
-// DeclarationError 4634: (25-26): Variable not found or variable not lvalue.
+// DeclarationError 4634: (25-26='x'): Variable not found or variable not lvalue.

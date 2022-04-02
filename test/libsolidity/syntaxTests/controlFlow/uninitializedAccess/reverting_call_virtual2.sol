@@ -16,4 +16,4 @@ contract C is B
 }
 
 // ----
-// Warning 6321: (135-142): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (135-142='uint256'): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

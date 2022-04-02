@@ -3,4 +3,4 @@
 }
 
 // ----
-// DeclarationError 4990: (19-20): Variable x used before it was declared.
+// DeclarationError 4990: (19-20='x'): Variable x used before it was declared.

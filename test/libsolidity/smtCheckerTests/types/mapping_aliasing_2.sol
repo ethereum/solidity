@@ -32,5 +32,5 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (364-384): CHC: Assertion violation happens here.
-// Warning 6328: (430-448): CHC: Assertion violation happens here.
+// Warning 6328: (364-384='assert(map1[0] == 2)'): CHC: Assertion violation happens here.
+// Warning 6328: (430-448='assert(a[0] == 42)'): CHC: Assertion violation happens here.

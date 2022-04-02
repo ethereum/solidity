@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9322: (118-119): No matching declaration found after argument-dependent lookup.
+// TypeError 9322: (118-119='e'): No matching declaration found after argument-dependent lookup.

@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9515: (104-113): Struct containing a (nested) mapping cannot be constructed.
+// TypeError 9515: (104-113='S({a: 1})'): Struct containing a (nested) mapping cannot be constructed.
