@@ -840,7 +840,8 @@ that also involves internal function calls), only a revert happening inside the 
 call itself. The ``returns`` part (which is optional) that follows declares return variables
 matching the types returned by the external call. In case there was no error,
 these variables are assigned and the contract's execution continues inside the
-first success block. If the end of the success block is reached, execution continues after the ``catch`` blocks.
+first. This block is called the "success block". If the end of the success block
+is reached, execution continues after the last ``catch`` block.
 
 Solidity supports different kinds of catch blocks depending on the
 type of error:
