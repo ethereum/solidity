@@ -178,6 +178,9 @@ public:
 	explicit SimplexWithBounds(SolvingState _state);
 	LPResult check();
 
+	size_t addVariable(std::string _name);
+	void addConstraint(Constraint _constraint);
+
 	std::string toString() const;
 private:
 	/// Set value of non-basic variable.

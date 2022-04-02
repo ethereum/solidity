@@ -606,7 +606,7 @@ string SolvingState::toString() const
 SimplexWithBounds::SimplexWithBounds(SolvingState _state):
 	m_state(move(_state))
 {
-	size_t varsNeeded =  m_state.constraints.size();
+	size_t varsNeeded = m_state.constraints.size();
 	size_t row = 0;
 	// TODO the new method does not need zero as lower-bound on all variables,
 	// but we currently assume that in the BooleanLP at some places.
@@ -616,6 +616,7 @@ SimplexWithBounds::SimplexWithBounds(SolvingState _state):
 
 	for (Constraint& c: m_state.constraints)
 	{
+		// TODO duplicated in addConstraint
 		c.data.resize(m_state.variableNames.size() + varsNeeded);
 		size_t newVarIndex = m_state.variableNames.size();
 		m_basicVariables[newVarIndex] = row++;
@@ -633,13 +634,15 @@ SimplexWithBounds::SimplexWithBounds(SolvingState _state):
 	}
 
 	m_assignments.resize(m_state.variableNames.size());
+	solAssert(m_assignments.size() == m_state.bounds.size());
 }
 
 LPResult SimplexWithBounds::check()
 {
-//	cout << "===========================" << endl;
-//	cout << "===========================" << endl;
-//	cout << "simpl with bounds on\n" << toString() << endl;
+	solAssert(m_assignments.size() == m_state.bounds.size());
+	cout << "===========================" << endl;
+	cout << "===========================" << endl;
+	cout << "simpl with bounds on\n" << toString() << endl;
 
 	// We start with an all-zero assignment and then gradually add
 	// the bounds we already have.
@@ -691,6 +694,40 @@ LPResult SimplexWithBounds::check()
 
 	return LPResult::Feasible;
 
+}
+
+size_t SimplexWithBounds::addVariable(string _name)
+{
+	m_state.variableNames.emplace_back(move(_name));
+	m_state.bounds.emplace_back();
+	solAssert(m_state.variableNames.size() == m_state.bounds.size());
+	// TODO relax in the future.
+	m_state.bounds.back().lower = 0;
+	m_assignments.emplace_back(0);
+	size_t varsBefore = m_state.variableNames.size();
+	normalizeRowLengths(m_state);
+	solAssert(m_state.variableNames.size() == varsBefore);
+	m_assignments.resize(m_state.variableNames.size());
+	solAssert(m_assignments.size() == m_state.bounds.size());
+	return m_state.variableNames.size() - 1;
+}
+
+void SimplexWithBounds::addConstraint(Constraint _constraint)
+{
+	m_state.constraints.emplace_back(move(_constraint));
+	Constraint& c = m_state.constraints.back();
+	// TODO name needed unique?
+	size_t slack = addVariable("_s" + to_string(m_state.variableNames.size()));
+	c.data.resize(m_state.variableNames.size());
+	m_basicVariables[slack] = m_state.constraints.size() - 1;
+	if (c.equality)
+		m_state.bounds.at(slack).lower = c.data[0];
+	m_state.bounds.at(slack).upper = c.data[0];
+	c.equality = true;
+	solAssert(c.data.size() > slack);
+	c.data[slack] = -1;
+	c.data[0] = 0;
+	solAssert(m_assignments.size() == m_state.bounds.size());
 }
 
 void SimplexWithBounds::update(size_t _var, rational const& _value)
@@ -1100,6 +1137,10 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 			auto&& [state, varMapping] = stateFromSubProblem(index);
 			problem->varMapping = move(varMapping);
 
+			// TODO if we do not use simplify, but just iteratively add constraints and bounsd
+			// to the simplex, we can detect "direct constraints" while adding (and compressing).
+			// and we might also be able to remove fixed variables.
+
 			// The simplify run is important because it detects conflicts
 			// due to fixed variables.
 			auto&& [result, modelOrReasonSet] = SolvingStateSimplifier{state}.simplify();
@@ -1117,6 +1158,7 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 				state.bounds.at(fixedVar).upper = value;
 			}
 
+			normalizeRowLengths(state);
 			problem->simplex = SimplexWithBounds{state};
 		}
 
@@ -1232,16 +1274,47 @@ void LPSolver::addConstraintToSubProblem(size_t _subProblem, Constraint _constra
 	m_subProblems[_subProblem] = make_shared<SubProblem>(*m_subProblems[_subProblem]);
 	SubProblem& problem = *m_subProblems[_subProblem];
 	problem.dirty = true;
-	problem.simplex = nullopt;
-	for (auto const& [index, entry]: _constraint.data.enumerateTail())
-		if (entry)
-		{
-			solAssert(m_subProblemsPerVariable[index] == static_cast<size_t>(-1) || m_subProblemsPerVariable[index] == _subProblem);
-			m_subProblemsPerVariable[index] = _subProblem;
-			problem.variables.emplace(index);
-		}
+	if (problem.simplex)
+	{
+		Constraint compressedConstraint(_constraint);
+		compressedConstraint.data.resize(1, _constraint.data[0]);
+		for (auto const& [index, entry]: _constraint.data.enumerateTail())
+			if (entry)
+			{
+				size_t cIndex = 0;
+				if (problem.varMapping.count(index))
+				{
+					cIndex = problem.varMapping.at(index);
+					solAssert(m_subProblemsPerVariable.at(index) == _subProblem);
+				}
+				else
+				{
+					cIndex = problem.simplex->addVariable(m_state->variableNames.at(index));
+					problem.varMapping[index] = cIndex;
+					problem.variables.emplace(index);
+					solAssert(m_subProblemsPerVariable.at(index) == static_cast<size_t>(-1));
+					m_subProblemsPerVariable[index] = _subProblem;
+				}
+				solAssert(cIndex >= compressedConstraint.data.size());
+				compressedConstraint.data.resize(cIndex + 1);
+				compressedConstraint.data[cIndex] = entry;
+			}
+		problem.simplex->addConstraint(move(compressedConstraint));
+	}
+	else
+	{
+		problem.simplex = nullopt;
+		problem.varMapping = {};
 
-	// TODO if we keep the matrix, we could just add this as a new row.
+		for (auto const& [index, entry]: _constraint.data.enumerateTail())
+			if (entry)
+			{
+				solAssert(m_subProblemsPerVariable[index] == static_cast<size_t>(-1) || m_subProblemsPerVariable[index] == _subProblem);
+				m_subProblemsPerVariable[index] = _subProblem;
+				problem.variables.emplace(index);
+			}
+	}
+
 	problem.removableConstraints.emplace_back(move(_constraint));
 }
 
