@@ -108,6 +108,7 @@ void SyntaxTest::parseAndAnalyze()
 				nullopt,
 				errorMessage(_e),
 				"",
+				"",
 				-1,
 				-1
 			});
@@ -149,6 +150,7 @@ void SyntaxTest::filterObtainedErrors()
 			currentError->errorId(),
 			errorMessage(*currentError),
 			sourceName,
+			locationString(sourceName, locationStart, locationEnd),
 			locationStart,
 			locationEnd
 		});

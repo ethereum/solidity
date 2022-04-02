@@ -154,7 +154,7 @@ void CommonSyntaxTest::printErrorList(
 	vector<SyntaxTestError> const& _errorList,
 	string const& _linePrefix,
 	bool _formatted
-)
+) const
 {
 	if (_errorList.empty())
 		util::AnsiColorized(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
@@ -178,6 +178,9 @@ void CommonSyntaxTest::printErrorList(
 				_stream << "-";
 				if (error.locationEnd >= 0)
 					_stream << error.locationEnd;
+				string locString = locationString(error.sourceName, error.locationStart, error.locationEnd);
+				if (!locString.empty())
+					_stream << "='" << locString << "'";
 				_stream << "): ";
 			}
 			_stream << error.message << endl;
@@ -190,6 +193,26 @@ string CommonSyntaxTest::errorMessage(util::Exception const& _e)
 		return boost::replace_all_copy(*_e.comment(), "\n", "\\n");
 	else
 		return "NONE";
+}
+
+string CommonSyntaxTest::locationString(string const& _sourceName, int _locationStart, int _locationEnd) const
+{
+	auto source = m_sources.sources.find(_sourceName);
+	if (source != m_sources.sources.end())
+	{
+		std::string locationString;
+		std::string content{source->second};
+		if ((_locationStart >= 0) && (_locationEnd >= 0))
+			locationString = content.substr(
+				static_cast<unsigned long>(_locationStart),
+				static_cast<unsigned long>(_locationEnd)
+				- static_cast<unsigned long>(_locationStart));
+		boost::replace_all(locationString, "\r\n", "\n");
+		boost::replace_all(locationString, "\n", " ");
+		if (!locationString.empty() && locationString.length() <= 32)
+			return boost::trim_copy(locationString);
+	}
+	return {};
 }
 
 vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
@@ -219,6 +242,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		expect(it, line.end(), ':');
 		skipWhitespace(it, line.end());
 
+		std::string locString;
 		int locationStart = -1;
 		int locationEnd = -1;
 		std::string sourceName;
@@ -237,10 +261,19 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 			locationStart = parseUnsignedInteger(it, line.end());
 			expect(it, line.end(), '-');
 			locationEnd = parseUnsignedInteger(it, line.end());
+			locString = locationString(sourceName, locationStart, locationEnd);
+			if (*it != '=')
+				locString = "";
+			else if (!locString.empty())
+			{
+				expect(it, line.end(), '=');
+				expect(it, line.end(), '\'');
+				it += static_cast<unsigned>(locString.length());
+				expect(it, line.end(), '\'');
+			}
 			expect(it, line.end(), ')');
 			expect(it, line.end(), ':');
 		}
-
 		skipWhitespace(it, line.end());
 
 		string errorMessage(it, line.end());
@@ -249,6 +282,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 			move(errorId),
 			move(errorMessage),
 			move(sourceName),
+			locString,
 			locationStart,
 			locationEnd
 		});

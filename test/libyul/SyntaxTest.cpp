@@ -65,6 +65,7 @@ void SyntaxTest::parseAndAnalyze()
 			error->errorId(),
 			errorMessage(*error),
 			name,
+			locationString(name, locationStart, locationEnd),
 			locationStart,
 			locationEnd
 		});

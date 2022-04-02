@@ -38,6 +38,7 @@ struct SyntaxTestError
 	std::optional<langutil::ErrorId> errorId;
 	std::string message;
 	std::string sourceName;
+	std::string locationString;
 	int locationStart = -1;
 	int locationEnd = -1;
 	bool operator==(SyntaxTestError const& _rhs) const
@@ -46,6 +47,7 @@ struct SyntaxTestError
 			errorId == _rhs.errorId &&
 			message == _rhs.message &&
 			sourceName == _rhs.sourceName &&
+			locationString == _rhs.locationString &&
 			locationStart == _rhs.locationStart &&
 			locationEnd == _rhs.locationEnd;
 	}
@@ -70,17 +72,19 @@ public:
 protected:
 	virtual void parseAndAnalyze() = 0;
 
-	static void printErrorList(
+	void printErrorList(
 		std::ostream& _stream,
 		std::vector<SyntaxTestError> const& _errors,
 		std::string const& _linePrefix,
 		bool _formatted = false
-	);
+	) const;
 
 	TestResult conclude(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
 	void printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
 
-	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
+	std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
+
+	std::string locationString(std::string const& _sourceName, int _locationStart, int _locationEnd) const;
 
 	frontend::test::SourceMap m_sources;
 	std::vector<SyntaxTestError> m_expectations;
