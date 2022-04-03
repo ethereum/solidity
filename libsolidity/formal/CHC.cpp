@@ -896,17 +896,8 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	/// so we just add the nondet_interface predicate.
 
 	solAssert(m_currentContract, "");
+
 	auto [callExpr, callOptions] = functionCallExpression(_funCall);
-
-	if (
-		encodeExternalCallsAsTrusted() ||
-		isExternalCallToThis(callExpr)
-	)
-	{
-		externalFunctionCallToTrustedCode(_funCall);
-		return;
-	}
-
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*callExpr->annotation().type);
 
 	auto kind = funType.kind();
@@ -917,12 +908,33 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 		""
 	);
 
-	solAssert(m_currentContract, "");
+
+	// Only consider high level external calls in trusted mode.
+	if (
+		kind == FunctionType::Kind::External &&
+		(encodeExternalCallsAsTrusted() || isExternalCallToThis(callExpr))
+	)
+	{
+		externalFunctionCallToTrustedCode(_funCall);
+		return;
+	}
+
+	// Low level calls are still encoded nondeterministically.
+
 	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	if (function)
 		for (auto var: function->returnParameters())
 			m_context.variable(*var)->increaseIndex();
 
+	// If we see a low level call in trusted mode,
+	// we need to havoc the global state.
+	if (
+		kind == FunctionType::Kind::BareCall &&
+		encodeExternalCallsAsTrusted()
+	)
+		state().newStorage();
+
+	// No reentrancy from constructor calls.
 	if (!m_currentFunction || m_currentFunction->isConstructor())
 		return;
 
