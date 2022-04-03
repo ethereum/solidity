@@ -40,8 +40,14 @@ struct State
 	std::map<size_t, Constraint> conditionalConstraints;
 	std::vector<Clause> clauses;
 
+	struct Bounds
+	{
+		std::optional<rational> lower;
+		std::optional<rational> upper;
+	};
+
 	// Unconditional bounds on variables
-	std::map<size_t, SolvingState::Bounds> bounds;
+	std::map<size_t, Bounds> bounds;
 	// Unconditional constraints
 	std::vector<Constraint> fixedConstraints;
 };
@@ -122,9 +128,6 @@ private:
 
 	/// Stack of state, to allow for push()/pop().
 	std::vector<State> m_state{{State{}}};
-
-	std::unordered_map<SolvingState, LPResult> m_lpCache;
-
 };
 
 

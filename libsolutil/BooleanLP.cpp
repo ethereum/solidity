@@ -136,7 +136,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 			{
 				LinearExpression data = *left - *right;
 				data[0] *= -1;
-				Constraint c{move(data), _expr.name == "=", {}};
+				Constraint c{move(data), _expr.name == "="};
 				if (!tryAddDirectBounds(c))
 					state().fixedConstraints.emplace_back(move(c));
 				cout << "Added as fixed constraint" << endl;
@@ -186,7 +186,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 		{
 			LinearExpression data = *left - *right;
 			data[0] *= -1;
-			Constraint c{move(data), _expr.name == "=", {}};
+			Constraint c{move(data), _expr.name == "="};
 			if (!tryAddDirectBounds(c))
 				state().fixedConstraints.emplace_back(move(c));
 		}
@@ -220,10 +220,24 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 
 	std::vector<std::string> booleanVariables;
 	std::vector<Clause> clauses = state().clauses;
-	SolvingState lpState;
+
+	// TODO we start building up a new set of solver
+	// for each query, but we should also keep some
+	// kind of cache across queries.
+	std::vector<std::pair<size_t, LPSolver>> lpSolvers;
+	lpSolvers.emplace_back(0, LPSolver{});
+	LPSolver& lpSolver = lpSolvers.back().second;
+
 	for (auto&& [index, bound]: state().bounds)
-		resizeAndSet(lpState.bounds, index, bound);
-	lpState.constraints = state().fixedConstraints;
+	{
+		if (bound.lower)
+			lpSolver.addLowerBound(index, *bound.lower);
+		if (bound.upper)
+			lpSolver.addUpperBound(index, *bound.upper);
+	}
+	for (Constraint const& c: state().fixedConstraints)
+		lpSolver.addConstraint(c);
+
 	// TODO this way, it will result in a lot of gaps in both sets of variables.
 	// should we compress them and store a mapping?
 	// Is it even a problem if the indices overlap?
@@ -231,23 +245,9 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		if (state().isBooleanVariable.at(index) || isConditionalConstraint(index))
 			resizeAndSet(booleanVariables, index, name);
 		else
-			resizeAndSet(lpState.variableNames, index, name);
+			lpSolver.setVariableName(index, name);
 
-	// TODO keep a cache as a member that is never reset.
-	// TODO We can also keep the split unconditionals across push/pop
-	// We only need to be careful to update the number of variables.
-
-	std::vector<std::pair<size_t, LPSolver>> lpSolvers;
-
-	// TODO We start afresh here. If we want this to reuse the existing results
-	// from previous invocations of the boolean solver, we still have to use
-	// a cache.
-	// The current optimization is only for CDCL.
-	lpSolvers.emplace_back(0, LPSolver{&m_lpCache});
-	if (
-		lpSolvers.back().second.setState(lpState) == LPResult::Infeasible ||
-		lpSolvers.back().second.check().first == LPResult::Infeasible
-	)
+	if (lpSolver.check().first == LPResult::Infeasible)
 	{
 		cout << "----->>>>> unsatisfiable" << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
@@ -263,8 +263,7 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 				continue;
 			// "reason" is already stored for those constraints.
 			Constraint const& constraint = state().conditionalConstraints.at(constraintIndex);
-			solAssert(constraint.reasons.size() == 1 && *constraint.reasons.begin() == constraintIndex);
-			lpSolvers.back().second.addConstraint(constraint);
+			lpSolvers.back().second.addConstraint(constraint, constraintIndex);
 		}
 		auto&& [result, modelOrReason] = lpSolvers.back().second.check();
 		// We can only really use the result "infeasible". Everything else should be "sat".
@@ -365,7 +364,7 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 		LinearExpression data = *left - *right;
 		data[0] *= -1;
 
-		return Literal{true, addConditionalConstraint(Constraint{move(data), _expr.name == "=", {}})};
+		return Literal{true, addConditionalConstraint(Constraint{move(data), _expr.name == "="})};
 	}
 	else if (_expr.name == ">=")
 		return parseLiteral(_expr.arguments.at(1) <= _expr.arguments.at(0));
@@ -390,7 +389,6 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 			Constraint le = c;
 			le.equality = false;
 			le.data[0] -= 1;
-			le.reasons.clear();
 			Literal leL{true, addConditionalConstraint(le)};
 
 			// X >= b + 1
@@ -399,7 +397,6 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 			ge.equality = false;
 			ge.data *= -1;
 			ge.data[0] -= 1;
-			ge.reasons.clear();
 			Literal geL{true, addConditionalConstraint(ge)};
 
 
@@ -419,7 +416,6 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 			Constraint negated = c;
 			negated.data *= -1;
 			negated.data[0] -= 1;
-			negated.reasons.clear();
 			return Literal{true, addConditionalConstraint(negated)};
 		}
 	}
@@ -561,8 +557,6 @@ size_t BooleanLPSolver::addConditionalConstraint(Constraint _constraint)
 	//  - integers
 	declareVariable(name, false);
 	size_t index = state().variables.at(name);
-	solAssert(_constraint.reasons.empty());
-	_constraint.reasons.emplace(index);
 	state().conditionalConstraints[index] = move(_constraint);
 	return index;
 }
