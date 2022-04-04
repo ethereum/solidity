@@ -88,18 +88,6 @@ contract MultiSigWallet {
         _;
     }
 
-    /// @dev Receive function allows to deposit ether.
-    receive()
-        external
-        payable
-    {
-        if (msg.value > 0)
-            emit Deposit(msg.sender, msg.value);
-    }
-
-    /*
-     * Public functions
-     */
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
@@ -114,6 +102,19 @@ contract MultiSigWallet {
         owners = _owners;
         required = _required;
     }
+
+    /// @dev Receive function allows to deposit ether.
+    receive()
+        external
+        payable
+    {
+        if (msg.value > 0)
+            emit Deposit(msg.sender, msg.value);
+    }
+
+    /*
+     * Public functions
+     */
 
     /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
     /// @param owner Address of new owner.
@@ -225,9 +226,9 @@ contract MultiSigWallet {
         notExecuted(transactionId)
     {
         if (isConfirmed(transactionId)) {
-            Transaction storage tx = transactions[transactionId];
-            (tx.executed,) = tx.destination.call{value: tx.value}(tx.data);
-            if (tx.executed)
+            Transaction storage transaction = transactions[transactionId];
+            (transaction.executed,) = transaction.destination.call{value: transaction.value}(transaction.data);
+            if (transaction.executed)
                 emit Execution(transactionId);
             else
                 emit ExecutionFailure(transactionId);
@@ -249,30 +250,7 @@ contract MultiSigWallet {
             if (count == required)
                 return true;
         }
-    }
-
-    /*
-     * Internal functions
-     */
-    /// @dev Adds a new transaction to the transaction mapping, if transaction does not exist yet.
-    /// @param destination Transaction target address.
-    /// @param value Transaction ether value.
-    /// @param data Transaction data payload.
-    /// @return transactionId Returns transaction ID.
-    function addTransaction(address destination, uint value, bytes memory data)
-        internal
-        notNull(destination)
-        returns (uint transactionId)
-    {
-        transactionId = transactionCount;
-        transactions[transactionId] = Transaction({
-            destination: destination,
-            value: value,
-            data: data,
-            executed: false
-        });
-        transactionCount += 1;
-        emit Submission(transactionId);
+        return false;
     }
 
     /*
@@ -361,5 +339,28 @@ contract MultiSigWallet {
         _transactionIds = new uint[](to - from);
         for (i=from; i<to; i++)
             _transactionIds[i - from] = transactionIdsTemp[i];
+    }
+    /*
+     * Internal functions
+     */
+    /// @dev Adds a new transaction to the transaction mapping, if transaction does not exist yet.
+    /// @param destination Transaction target address.
+    /// @param value Transaction ether value.
+    /// @param data Transaction data payload.
+    /// @return transactionId Returns transaction ID.
+    function addTransaction(address destination, uint value, bytes memory data)
+        internal
+        notNull(destination)
+        returns (uint transactionId)
+    {
+        transactionId = transactionCount;
+        transactions[transactionId] = Transaction({
+            destination: destination,
+            value: value,
+            data: data,
+            executed: false
+        });
+        transactionCount += 1;
+        emit Submission(transactionId);
     }
 }
