@@ -1,0 +1,25 @@
+{
+  "contracts":
+  {
+    "combined_json_with_devdoc/input.sol:C":
+    {
+      "devdoc":
+      {
+        "details": "This is devdoc.",
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "combined_json_with_devdoc/input.sol:D":
+    {
+      "devdoc":
+      {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      }
+    }
+  },
+  "version": "<VERSION REMOVED>"
+}

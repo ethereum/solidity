@@ -1,1 +1,1 @@
---error-recovery --ast-compact-json  --hashes
+--error-recovery --ast-compact-json --pretty-json  --hashes
