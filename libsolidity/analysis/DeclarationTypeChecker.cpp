@@ -297,7 +297,7 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		else if (optional<ConstantEvaluator::TypedRational> value = ConstantEvaluator::evaluate(m_errorReporter, *length))
 			lengthValue = value->value;
 
-		if (!lengthValue || lengthValue > TypeProvider::uint256()->max())
+		if (!lengthValue)
 			m_errorReporter.typeError(
 				5462_error,
 				length->location(),
@@ -309,6 +309,12 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 			m_errorReporter.typeError(3208_error, length->location(), "Array with fractional length specified.");
 		else if (*lengthValue < 0)
 			m_errorReporter.typeError(3658_error, length->location(), "Array with negative length specified.");
+		else if (lengthValue > TypeProvider::uint256()->max())
+			m_errorReporter.typeError(
+				1847_error,
+				length->location(),
+				"Array length too large, maximum is 2**256 - 1."
+			);
 
 		_typeName.annotation().type = TypeProvider::array(
 			DataLocation::Storage,
