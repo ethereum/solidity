@@ -68,6 +68,7 @@ private:
 	void requireServerInitialized();
 	void handleInitialize(MessageID _id, Json::Value const& _args);
 	void handleWorkspaceDidChangeConfiguration(Json::Value const& _args);
+	void setTrace(Json::Value const& _args);
 	void handleTextDocumentDidOpen(Json::Value const& _args);
 	void handleTextDocumentDidChange(Json::Value const& _args);
 	void handleTextDocumentDidClose(Json::Value const& _args);
