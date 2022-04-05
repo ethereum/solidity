@@ -34,6 +34,13 @@ namespace solidity::lsp
 
 using MessageID = Json::Value;
 
+enum class TraceValue
+{
+	Off,
+	Messages,
+	Verbose
+};
+
 enum class ErrorCode
 {
 	// Defined by JSON RPC
@@ -89,6 +96,15 @@ public:
 	virtual void notify(std::string _method, Json::Value _params) = 0;
 	virtual void reply(MessageID _id, Json::Value _result) = 0;
 	virtual void error(MessageID _id, ErrorCode _code, std::string _message) = 0;
+
+	void trace(std::string _message, Json::Value _extra = Json::nullValue);
+
+	TraceValue traceValue() const noexcept { return m_logTrace; }
+	void setTrace(TraceValue _value) noexcept { m_logTrace = _value; }
+
+
+private:
+	TraceValue m_logTrace = TraceValue::Off;
 };
 
 /**

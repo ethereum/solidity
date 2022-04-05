@@ -76,6 +76,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"exit", [this](auto, auto) { m_state = (m_state == State::ShutdownRequested ? State::ExitRequested : State::ExitWithoutShutdown); }},
 		{"initialize", bind(&LanguageServer::handleInitialize, this, _1, _2)},
 		{"initialized", [](auto, auto) {}},
+		{"$/setTrace", bind(&LanguageServer::setTrace, this, _2)},
 		{"shutdown", [this](auto, auto) { m_state = State::ShutdownRequested; }},
 		{"textDocument/definition", GotoDefinition(*this) },
 		{"textDocument/didOpen", bind(&LanguageServer::handleTextDocumentDidOpen, this, _2)},
@@ -164,6 +165,13 @@ void LanguageServer::compileAndUpdateDiagnostics()
 			}
 
 		diagnosticsBySourceUnit[*location->sourceName].append(jsonDiag);
+	}
+
+	if (m_client.traceValue() != TraceValue::Off)
+	{
+		Json::Value extra;
+		extra["openFileCount"] = Json::UInt64(diagnosticsBySourceUnit.size());
+		m_client.trace("Number of currently open files: " + to_string(diagnosticsBySourceUnit.size()), extra);
 	}
 
 	m_nonemptyDiagnostics.clear();
@@ -271,6 +279,21 @@ void LanguageServer::handleWorkspaceDidChangeConfiguration(Json::Value const& _a
 
 	if (_args["settings"].isObject())
 		changeConfiguration(_args["settings"]);
+}
+
+void LanguageServer::setTrace(Json::Value const& _args)
+{
+	if (!_args["value"].isString())
+		// Simply ignore invalid parameter.
+		return;
+
+	string const stringValue = _args["value"].asString();
+	if (stringValue == "off")
+		m_client.setTrace(TraceValue::Off);
+	else if (stringValue == "messages")
+		m_client.setTrace(TraceValue::Messages);
+	else if (stringValue == "verbose")
+		m_client.setTrace(TraceValue::Verbose);
 }
 
 void LanguageServer::handleTextDocumentDidOpen(Json::Value const& _args)
