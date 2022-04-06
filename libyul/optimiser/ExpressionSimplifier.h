@@ -52,6 +52,7 @@ public:
 
 private:
 	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	bool knownToBeZero(Expression const& _expression) const;
 };
 
 }
