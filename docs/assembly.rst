@@ -247,8 +247,11 @@ first.
 Memory Management
 =================
 
+This section is an abbreviated version of the information at
+:ref:`Reserved Memory Areas` and :ref:`Layout in Memory`
+
 Solidity manages memory in the following way. There is a "free memory pointer"
-at position ``0x40`` in memory. If you want to allocate memory, use the memory
+at position ``0x40`` (64) in memory. If you want to allocate memory, use the memory
 starting from where this pointer points at and update it.
 There is no guarantee that the memory has not been used before and thus
 you cannot assume that its contents are zero bytes.
@@ -262,12 +265,12 @@ Here is an assembly snippet you can use for allocating memory that follows the p
       mstore(0x40, add(pos, length))
     }
 
-The first 64 bytes of memory can be used as "scratch space" for short-term
-allocation. The free memory pointer is itself 32 bytes. The following 32 bytes
-after the free memory pointer (i.e., starting at ``0x60``)
-are meant to be zero permanently, and they are used as the initial value for
-empty dynamic memory arrays.
-This means that the allocatable memory starts at ``0x80``, which is the initial value
+The first 64 bytes of memory can be used as temporary "scratch space" for 
+quick tasks that will be complete before the next Solidity statement executes. Typically,
+such tasks are performed using inline assembly blocks. The 32 bytes following the 64 bytes of scratch
+space are the free memory pointer. The next 32 bytes after the free memory pointer
+(i.e., starting at ``0x60``) are meant to be zero permanently, and they are used as the initial value for
+empty dynamic memory arrays. This means that the allocatable memory starts at ``0x80``, which is the initial value
 of the free memory pointer.
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this is
