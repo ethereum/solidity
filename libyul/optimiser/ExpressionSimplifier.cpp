@@ -23,7 +23,11 @@
 
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
+
+#include <libevmasm/SemanticInformation.h>
 
 using namespace std;
 using namespace solidity;
@@ -44,4 +48,29 @@ void ExpressionSimplifier::visit(Expression& _expression)
 		[this](YulString _var) { return variableValue(_var); }
 	))
 		_expression = match->action().toExpression(debugDataOf(_expression));
+
+	if (auto* functionCall = get_if<FunctionCall>(&_expression))
+		if (optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
+			for (auto op: evmasm::SemanticInformation::readWriteOperations(*instruction))
+				if (op.startParameter && op.lengthParameter)
+				{
+					Expression& startArgument = functionCall->arguments.at(*op.startParameter);
+					Expression const& lengthArgument = functionCall->arguments.at(*op.lengthParameter);
+					if (
+						knownToBeZero(lengthArgument) &&
+						!knownToBeZero(startArgument) &&
+						!holds_alternative<FunctionCall>(startArgument)
+					)
+						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, "0"_yulstring, {}};
+				}
+}
+
+bool ExpressionSimplifier::knownToBeZero(Expression const& _expression) const
+{
+	if (auto const* literal = get_if<Literal>(&_expression))
+		return valueOfLiteral(*literal) == 0;
+	else if (auto const* identifier = get_if<Identifier>(&_expression))
+		return valueOfIdentifier(identifier->name) == 0;
+	else
+		return false;
 }

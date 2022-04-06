@@ -1,5 +1,5 @@
 {
-  for {} div(create(0, 1, 0), shl(msize(), 1)) {}
+  for {} div(create(0, 1, 1), shl(msize(), 1)) {}
   {
   }
 }
@@ -10,7 +10,7 @@
 //
 // {
 //     {
-//         for { } div(create(0, 1, 0), shl(msize(), 1)) { }
+//         for { } div(create(0, 1, 1), shl(msize(), 1)) { }
 //         { }
 //     }
 // }

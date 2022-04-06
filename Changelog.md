@@ -8,6 +8,7 @@ Language Features:
 
 Compiler Features:
  * Code Generator: More efficient overflow checks for multiplication.
+ * Yul Optimizer: Simplify the starting offset of zero-length operations to zero.
 
 
 Bugfixes:
