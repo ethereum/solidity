@@ -429,6 +429,7 @@ statement:
 	| breakStatement
 	| tryStatement
 	| returnStatement
+	| throwStatement
 	| emitStatement
 	| revertStatement
 	| assemblyStatement
@@ -464,6 +465,7 @@ tryStatement: Try expression (Returns LParen returnParameters=parameterList RPar
 catchClause: Catch (identifier? LParen (arguments=parameterList) RParen)? block;
 
 returnStatement: Return expression? Semicolon;
+throwStatement: Throw Semicolon;
 /**
  * An emit statement. The contained expression needs to refer to an event.
  */
