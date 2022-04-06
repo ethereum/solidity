@@ -246,3 +246,12 @@ function first_word
 
     echo "$words" | cut -d " " -f 1
 }
+
+# Function reads from stdin. Therefore it has to be used with pipes.
+function split_on_empty_lines_into_numbered_files
+{
+    path_prefix="${1}"
+    path_suffix="${2}"
+
+    awk -v RS= "{print > (\"${path_prefix}_\"NR \"${path_suffix}\")}"
+}
