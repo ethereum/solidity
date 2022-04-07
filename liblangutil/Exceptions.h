@@ -58,13 +58,13 @@ struct InvalidAstError: virtual util::Exception {};
 #endif
 
 #define solAssert_1(CONDITION) \
-	solAssert_2(CONDITION, "")
+	solAssert_2((CONDITION), "")
 
 #define solAssert_2(CONDITION, DESCRIPTION) \
 	assertThrowWithDefaultDescription( \
-		CONDITION, \
+		(CONDITION), \
 		::solidity::langutil::InternalCompilerError, \
-		DESCRIPTION, \
+		(DESCRIPTION), \
 		"Solidity assertion failed" \
 	)
 
@@ -77,13 +77,13 @@ struct InvalidAstError: virtual util::Exception {};
 #endif
 
 #define solUnimplementedAssert_1(CONDITION) \
-	solUnimplementedAssert_2(CONDITION, "")
+	solUnimplementedAssert_2((CONDITION), "")
 
 #define solUnimplementedAssert_2(CONDITION, DESCRIPTION) \
 	assertThrowWithDefaultDescription( \
-		CONDITION, \
+		(CONDITION), \
 		::solidity::langutil::UnimplementedFeatureError, \
-		DESCRIPTION, \
+		(DESCRIPTION), \
 		"Unimplemented feature" \
 	)
 
@@ -105,9 +105,9 @@ struct InvalidAstError: virtual util::Exception {};
 
 #define astAssert_2(CONDITION, DESCRIPTION) \
 	assertThrowWithDefaultDescription( \
-		CONDITION, \
+		(CONDITION), \
 		::solidity::langutil::InvalidAstError, \
-		DESCRIPTION, \
+		(DESCRIPTION), \
 		"AST assertion failed" \
 	)
 

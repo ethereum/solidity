@@ -63,7 +63,7 @@ inline std::string stringOrDefault(std::string _string, std::string _defaultStri
 		if (!(_condition)) \
 			solThrow( \
 				_exceptionType, \
-				::solidity::util::assertions::stringOrDefault(_description, _defaultDescription) \
+				::solidity::util::assertions::stringOrDefault((_description), (_defaultDescription)) \
 			); \
 	} \
 	while (false)
@@ -72,6 +72,6 @@ inline std::string stringOrDefault(std::string _string, std::string _defaultStri
 /// Use it as assertThrow(1 == 1, ExceptionType, "Mathematics is wrong.");
 /// The second parameter must be an exception class (rather than an instance).
 #define assertThrow(_condition, _exceptionType, _description) \
-	assertThrowWithDefaultDescription(_condition, _exceptionType, _description, "Assertion failed")
+	assertThrowWithDefaultDescription((_condition), _exceptionType, (_description), "Assertion failed")
 
 }

@@ -48,7 +48,7 @@ struct Exception: virtual std::exception, virtual boost::exception
 #define solThrow(_exceptionType, _description) \
 	::boost::throw_exception( \
 		_exceptionType() << \
-		::solidity::util::errinfo_comment(_description) << \
+		::solidity::util::errinfo_comment((_description)) << \
 		::boost::throw_function(ETH_FUNC) << \
 		::boost::throw_file(__FILE__) << \
 		::boost::throw_line(__LINE__) \

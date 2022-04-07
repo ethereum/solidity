@@ -63,13 +63,13 @@ struct StackTooDeepError: virtual YulException
 #endif
 
 #define yulAssert_1(CONDITION) \
-	yulAssert_2(CONDITION, "")
+	yulAssert_2((CONDITION), "")
 
 #define yulAssert_2(CONDITION, DESCRIPTION) \
 	assertThrowWithDefaultDescription( \
-		CONDITION, \
+		(CONDITION), \
 		::solidity::yul::YulAssertion, \
-		DESCRIPTION, \
+		(DESCRIPTION), \
 		"Yul assertion failed" \
 	)
 

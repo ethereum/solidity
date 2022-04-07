@@ -38,13 +38,13 @@ struct SMTLogicError: virtual util::Exception {};
 #endif
 
 #define smtAssert_1(CONDITION) \
-	smtAssert_2(CONDITION, "")
+	smtAssert_2((CONDITION), "")
 
 #define smtAssert_2(CONDITION, DESCRIPTION) \
 	assertThrowWithDefaultDescription( \
-		CONDITION, \
+		(CONDITION), \
 		::solidity::smtutil::SMTLogicError, \
-		DESCRIPTION, \
+		(DESCRIPTION), \
 		"SMT assertion failed" \
 	)
 

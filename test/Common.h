@@ -75,6 +75,9 @@ struct CommonOptions
 	langutil::EVMVersion evmVersion() const;
 
 	virtual void addOptions();
+	// @returns true if the program should continue, false if it should exit immediately without
+	// reporting an error.
+	// Throws ConfigException or std::runtime_error if parsing fails.
 	virtual bool parse(int argc, char const* const* argv);
 	// Throws a ConfigException on error
 	virtual void validate() const;

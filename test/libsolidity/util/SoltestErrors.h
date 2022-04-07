@@ -15,20 +15,35 @@
 #pragma once
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Exceptions.h>
+
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/facilities/empty.hpp>
+#include <boost/preprocessor/facilities/overload.hpp>
 
 namespace solidity::frontend::test
 {
 
-#define soltestAssert(CONDITION, DESCRIPTION) \
-	do \
-	{ \
-		if (!(CONDITION)) \
-			BOOST_THROW_EXCEPTION(std::runtime_error(DESCRIPTION)); \
-	} \
-	while (false)
+struct InternalSoltestError: virtual util::Exception {};
 
+#if !BOOST_PP_VARIADICS_MSVC
+#define soltestAssert(...) BOOST_PP_OVERLOAD(soltestAssert_,__VA_ARGS__)(__VA_ARGS__)
+#else
+#define soltestAssert(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(soltestAssert_,__VA_ARGS__)(__VA_ARGS__),BOOST_PP_EMPTY())
+#endif
+
+#define soltestAssert_1(CONDITION) \
+	soltestAssert_2((CONDITION), "")
+
+#define soltestAssert_2(CONDITION, DESCRIPTION) \
+	assertThrowWithDefaultDescription( \
+		(CONDITION), \
+		::solidity::frontend::test::InternalSoltestError, \
+		(DESCRIPTION), \
+		"Soltest assertion failed" \
+	)
 
 class TestParserError: virtual public util::Exception
 {
