@@ -93,9 +93,14 @@ except within the current assembly block.
 Zero Slot
 ---------
 
-The zero slot at ``0x60`` was used as the initial value for dynamic memory arrays by earlier versions
-of Solidity, and may still be used for that purpose. It must never
-be written to. See `Layout of Arrays in Memory`.
+The memory slot at ``0x60``, by convention, always has the value of zero, and may be used by the
+compiler for empty dynamic memory array variables.
+The zero slot must never be written to.
+
+The use of the zero slot allows the compiler to avoid allocating new empty arrays for uninitialized
+variables.
+It should be considered an implementation detail and is not guaranteed.
+You should not assume that all uninitialized dynamically sized memory arrays point at this slot.
 
 
 Layout of Arrays in Memory
