@@ -279,6 +279,8 @@ first slot of the array and followed by the array elements.
     to allow better convertibility between statically and dynamically-sized arrays; so,
     do not rely on this.
 
+.. _assembly-memory-safety:
+
 Memory Safety
 =============
 
