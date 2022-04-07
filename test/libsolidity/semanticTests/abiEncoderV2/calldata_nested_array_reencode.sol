@@ -14,10 +14,10 @@ contract C {
 // revertStrings: debug
 // ----
 // h(uint256[][]): 0x20, 1, 0x20, 0 ->
-// h(uint256[][]): 0x20, 1, 0x20, 1 ->
-// h(uint256[][]): 0x20, 1, 0x20, 2 ->
+// h(uint256[][]): 0x20, 1, 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access stride"
+// h(uint256[][]): 0x20, 1, 0x20, 2 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access stride"
 // h(uint256[][]): 0x20, 1, 0x20, 3 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access stride"
 // f((uint256[])): 0x20, 0x20, 0 ->
-// f((uint256[])): 0x20, 0x20, 1 ->
-// f((uint256[])): 0x20, 0x20, 2 ->
+// f((uint256[])): 0x20, 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access stride"
+// f((uint256[])): 0x20, 0x20, 2 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access stride"
 // f((uint256[])): 0x20, 0x20, 3 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access stride"
