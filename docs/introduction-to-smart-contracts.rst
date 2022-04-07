@@ -396,26 +396,33 @@ returns that code when executed.
 Gas
 ===
 
-Upon creation, each transaction is charged with a certain amount of **gas**.
-Imposing a cost on transactions serves to secure the network:
-it deincentivizes bad actors from spamming, and pays validators (i.e. miners and stakers)
-for the work that is required to validate new blocks. While the EVM executes the
+Upon creation, each transaction is charged with a certain amount of **gas**
+that has to be paid for by the originator of the transaction (``tx.origin``).
+While the EVM executes the
 transaction, the gas is gradually depleted according to specific rules.
-
-The **gas price** is a value set by the originator of the transaction, i.e. `tx.origin`, who
-has to pay ``gas_price * gas`` up front from the sending account.
-If some gas is left after execution, it is refunded to the transaction originator.
-
 If the gas is used up at any point (i.e. it would be negative),
-an out-of-gas exception is triggered, which reverts all modifications
+an out-of-gas exception is triggered, which ends execution and reverts all modifications
 made to the state in the current call frame.
+
+This mechanism incentivizes economical use of EVM execution time
+and also compensates EVM executors (i.e. miners / stakers) for their work.
+Since each block has a maximum amount of gas, it also limits the amount
+of work needed to validate a block.
+
+The **gas price** is a value set by the originator of the transaction, who
+has to pay ``gas_price * gas`` up front to the EVM executor.
+If some gas is left after execution, it is refunded to the transaction originator.
+In case of an exception that reverts changes, already used up gas is not refunded.
+
+Since EVM executors can choose to include a transaction or not,
+transaction senders cannot abuse the system by setting a low gas price.
 
 .. index:: ! storage, ! memory, ! stack
 
 Storage, Memory and the Stack
 =============================
 
-The Ethereum Virtual Machine has three areas where it can store data-
+The Ethereum Virtual Machine has three areas where it can store data:
 storage, memory and the stack.
 
 Each account has a data area called **storage**, which is persistent between function calls
@@ -504,10 +511,8 @@ Delegatecall / Callcode and Libraries
 
 There exists a special variant of a message call, named **delegatecall**
 which is identical to a message call apart from the fact that
-the code at the target address is executed in the context of the calling
-contract. In practice this means ``msg.sender`` and ``msg.value`` retain
-the values that were passed to the delegator, while executing code that
-lives in the delegated contract.
+the code at the target address is executed in the context (i.e. at the address) of the calling
+contract and ``msg.sender`` and ``msg.value`` do not change their values.
 
 This means that a contract can dynamically load code from a different
 address at runtime. Storage, current address and balance still
