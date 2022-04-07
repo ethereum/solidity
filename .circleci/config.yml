@@ -987,7 +987,7 @@ jobs:
       - run: *setup_prerelease_commit_hash
       - run:
           name: Build documentation
-          command: ./scripts/docs.sh
+          command: ./docs/docs.sh
       - store_artifacts:
           path: docs/_build/html/
           destination: docs-html
