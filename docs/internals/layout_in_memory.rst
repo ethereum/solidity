@@ -14,6 +14,9 @@ Solidity reserves four 32-byte slots, with specific byte ranges (inclusive of en
 - ``0x40`` - ``0x5f`` (32 bytes): allocated memory size (aka. free memory pointer)
 - ``0x60`` - ``0x7f`` (32 bytes): zero slot
 
+Free Memory Pointer
+-------------------
+
 Solidity is a high level language that is translated (compiled) into EVM instructions. Its features
 work because of the conventions Solidity defines and uses, in combination with the implementations
 of complex data structures that it provides (such as multi-dimensional arrays). These data
@@ -47,20 +50,20 @@ memory pointer itself is a memory access. After accessing the free memory pointe
 (by definition) return a value that is no smaller than the location of the free memory pointer
 plus its size: ``0x40 + 0x20``.
 
+The free memory pointer points to ``0x80`` initially. The Solidity compiler generates code that
+always places new objects at the location pointed to by the free memory pointer. Memory is never
+"freed" (this might change in the future). In other words, in the current version of Solidity, the
+free memory pointer is never reduced (moved back) by Solidity.
+
+
+Scratch Space
+-------------
+
 The memory between locations ``0x00`` and ``0x3F`` (inclusive) is called "scratch space." It exists
 solely by convention. Solidity's generated code observes the convention that this area is for
 extremely brief temporary use only. Since there is no guarantee that code not under your direct
 control will not change that memory, you should not rely on its value being preserved between statements
 except within the current assembly block.
-
-The zero slot at ``0x60`` was used as the initial value for dynamic memory arrays by earlier versions
-of Solidity, and may still be used for that purpose. It must never
-be written to. See `Layout of Arrays in Memory`.
-
-The free memory pointer points to ``0x80`` initially. The Solidity compiler generates code that
-always places new objects at the location pointed to by the free memory pointer. Memory is never
-"freed" (this might change in the future). In other words, in the current version of Solidity, the
-free memory pointer is never reduced (moved back) by Solidity.
 
 .. warning::
     There are some operations in Solidity that need a temporary memory area
@@ -85,6 +88,14 @@ free memory pointer is never reduced (moved back) by Solidity.
     pointed to by the free memory pointer can be considered scratch memory, and can be freely
     used between Solidity instructions via inline assembly, as long as you do not rely on it not being
     overwritten afterwards.
+
+Zero Slot
+---------
+
+The zero slot at ``0x60`` was used as the initial value for dynamic memory arrays by earlier versions
+of Solidity, and may still be used for that purpose. It must never
+be written to. See `Layout of Arrays in Memory`.
+
 
 Layout of Arrays in Memory
 ==========================
