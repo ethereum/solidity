@@ -265,13 +265,13 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 			Constraint const& constraint = state().conditionalConstraints.at(constraintIndex);
 			lpSolvers.back().second.addConstraint(constraint, constraintIndex);
 		}
-		auto&& [result, modelOrReason] = lpSolvers.back().second.check();
+		auto&& [result, reasonSet] = lpSolvers.back().second.check();
 		// We can only really use the result "infeasible". Everything else should be "sat".
 		if (result == LPResult::Infeasible)
 		{
 			// TODO is it ok to ignore the non-constraint boolean variables here?
 			Clause conflictClause;
-			for (size_t constraintIndex: get<ReasonSet>(modelOrReason))
+			for (size_t constraintIndex: reasonSet)
 				conflictClause.emplace_back(Literal{false, constraintIndex});
 			return conflictClause;
 		}

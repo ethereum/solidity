@@ -218,20 +218,28 @@ void LPSolver::setVariableName(size_t _variable, string _name)
 void LPSolver::addLowerBound(size_t _variable, rational _bound)
 {
 	SubProblem& p = unsealForVariable(_variable);
-	Variable& var = p.variables[p.varMapping.at(_variable)];
+	size_t innerIndex = p.varMapping.at(_variable);
+	Variable& var = p.variables[innerIndex];
 	if (!var.bounds.lower || *var.bounds.lower < _bound)
+	{
 		var.bounds.lower = move(_bound);
+		p.variablesPotentiallyOutOfBounds.insert(innerIndex);
+	}
 }
 
 void LPSolver::addUpperBound(size_t _variable, rational _bound)
 {
 	SubProblem& p = unsealForVariable(_variable);
-	Variable& var = p.variables[p.varMapping.at(_variable)];
+	size_t innerIndex = p.varMapping.at(_variable);
+	Variable& var = p.variables[innerIndex];
 	if (!var.bounds.upper || *var.bounds.upper > _bound)
+	{
 		var.bounds.upper = move(_bound);
+		p.variablesPotentiallyOutOfBounds.insert(innerIndex);
+	}
 }
 
-pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
+pair<LPResult, ReasonSet> LPSolver::check()
 {
 	for (auto&& [index, problem]: m_subProblems | ranges::views::enumerate)
 		if (problem)
@@ -248,7 +256,7 @@ pair<LPResult, variant<Model, ReasonSet>> LPSolver::check()
 			return {LPResult::Infeasible, problem->reasons};
 	}
 	//cout << "Feasible:\n" << toString() << endl;
-	return {LPResult::Feasible, model()};
+	return {LPResult::Feasible, {}};
 }
 
 string LPSolver::toString() const
@@ -257,6 +265,16 @@ string LPSolver::toString() const
 	for (auto const& problem: m_subProblems)
 		if (problem)
 			result += problem->toString();
+	return result;
+}
+
+map<string, rational> LPSolver::model() const
+{
+	map<string, rational> result;
+	for (auto const& problem: m_subProblems)
+		if (problem)
+			for (auto&& [outerIndex, innerIndex]: problem->varMapping)
+				result[problem->variables[innerIndex].name] = problem->variables[innerIndex].value;
 	return result;
 }
 
@@ -302,6 +320,8 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 		combineInto.factors.emplace_back(move(shiftedRow));
 	}
 	combineInto.variables += combineFrom.variables;
+	for (auto const& index: combineFrom.variablesPotentiallyOutOfBounds)
+		combineInto.variablesPotentiallyOutOfBounds.insert(index + varShift);
 	for (auto&& [index, row]: combineFrom.basicVariables)
 		combineInto.basicVariables.emplace(index + varShift, row + rowShift);
 	for (auto&& [outerIndex, innerIndex]: combineFrom.varMapping)
@@ -372,7 +392,8 @@ void LPSolver::addConstraintToSubProblem(
 	if (_constraint.equality)
 		problem.variables[slackIndex].bounds.lower = _constraint.data[0];
 	problem.variables[slackIndex].bounds.upper = _constraint.data[0];
-
+	// TODO it is a basic var, so we don't add it, unless we use this for basic vars.
+	//problem.variablesPotentiallyOutOfBounds.insert(slackIndex);
 
 	// Compress the constraint, i.e. turn outer variable indices into
 	// inner variable indices.
@@ -419,20 +440,6 @@ size_t LPSolver::addNewVariableToSubProblem(size_t _subProblem)
 	return index;
 }
 
-map<string, rational> LPSolver::model() const
-{
-	map<string, rational> result;
-	/*
-	 * // This is actually unused
-	for (auto const& problem: m_subProblems)
-		if (problem)
-			for (auto&& [outerIndex, innerIndex]: problem->varMapping)
-				result[problem->variables[innerIndex].name] = problem->variables[innerIndex].value;
-	cout << "MOdel size: " << to_string(result.size()) << endl;
-	*/
-	return result;
-}
-
 LPResult LPSolver::SubProblem::check()
 {
 
@@ -445,17 +452,8 @@ LPResult LPSolver::SubProblem::check()
 //	cout << "----------------------------" << endl;
 //	cout << "fixing non-basic..." << endl;
 	// Adjust the assignments so we satisfy the bounds of the non-basic variables.
-	for (auto const& [i, var]: variables | ranges::views::enumerate)
-	{
-		if (var.bounds.lower && var.bounds.upper && *var.bounds.lower > *var.bounds.upper)
-			return LPResult::Infeasible;
-		if (basicVariables.count(i) || (!var.bounds.lower && !var.bounds.upper))
-			continue;
-		if (var.bounds.lower && var.value < *var.bounds.lower)
-			update(i, *var.bounds.lower);
-		else if (var.bounds.upper && var.value > *var.bounds.upper)
-			update(i, *var.bounds.upper);
-	}
+	if (!correctNonbasic())
+		return LPResult::Infeasible;
 
 	// Now try to make the basic variables happy, pivoting if necessary.
 
@@ -552,26 +550,54 @@ string LPSolver::SubProblem::toString() const
 	return resultString + "----\n";
 }
 
+bool LPSolver::SubProblem::correctNonbasic()
+{
+	set<size_t> toCorrect;
+	swap(toCorrect, variablesPotentiallyOutOfBounds);
+	for (size_t i: toCorrect)
+	{
+		Variable& var = variables.at(i);
+		if (var.bounds.lower && var.bounds.upper && *var.bounds.lower > *var.bounds.upper)
+			return false;
+		if (basicVariables.count(i))
+		{
+			variablesPotentiallyOutOfBounds.insert(i);
+			continue;
+		}
+		if (!var.bounds.lower && !var.bounds.upper)
+			continue;
+		if (var.bounds.lower && var.value < *var.bounds.lower)
+			update(i, *var.bounds.lower);
+		else if (var.bounds.upper && var.value > *var.bounds.upper)
+			update(i, *var.bounds.upper);
+	}
+	return true;
+}
+
 void LPSolver::SubProblem::update(size_t _varIndex, rational const& _value)
 {
 	rational delta = _value - variables[_varIndex].value;
 	variables[_varIndex].value = _value;
 	for (size_t j = 0; j < variables.size(); j++)
 		if (basicVariables.count(j) && factors[basicVariables.at(j)][_varIndex])
+		{
 			variables[j].value += delta * factors[basicVariables.at(j)][_varIndex];
+			//variablesPotentiallyOutOfBounds.insert(j);
+		}
 
 }
 
 optional<size_t> LPSolver::SubProblem::firstConflictingBasicVariable() const
 {
-	for (auto const& varItem: basicVariables)
+	// TODO we could use "variablesPotentiallyOutOfBounds" here.
+	for (auto&& [i, row]: basicVariables)
 	{
-		Variable const& variable = variables[varItem.first];
+		Variable const& variable = variables[i];
 		if (
 			(variable.bounds.lower && variable.value < *variable.bounds.lower) ||
 			(variable.bounds.upper && variable.value > *variable.bounds.upper)
 		)
-			return varItem.first;
+			return i;
 	}
 	return nullopt;
 }
@@ -582,14 +608,14 @@ optional<size_t> LPSolver::SubProblem::firstReplacementVar(
 ) const
 {
 	LinearExpression const& basicVarEquation = factors[basicVariables.at(_basicVarToReplace)];
-	for (auto const& [i, var]: variables | ranges::views::enumerate)
+	for (auto const& [i, factor]: basicVarEquation.enumerate())
 	{
-		if (basicVariables.count(i) || !basicVarEquation[i])
+		if (i == _basicVarToReplace || !factor)
 			continue;
-		bool positive = basicVarEquation[i] > 0;
+		bool positive = factor > 0;
 		if (!_increasing)
 			positive = !positive;
-		Variable const& candidate = variables[i];
+		Variable const& candidate = variables.at(i);
 		if (positive && (!candidate.bounds.upper || candidate.value < *candidate.bounds.upper))
 			return i;
 		if (!positive && (!candidate.bounds.lower || candidate.value > *candidate.bounds.lower))

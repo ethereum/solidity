@@ -196,9 +196,10 @@ public:
 	void addLowerBound(size_t _variable, rational _bound);
 	void addUpperBound(size_t _variable, rational _bound);
 
-	std::pair<LPResult, std::variant<Model, ReasonSet>> check();
+	std::pair<LPResult, ReasonSet>check();
 
 	std::string toString() const;
+	std::map<std::string, rational> model() const;
 
 private:
 	struct Bounds
@@ -219,6 +220,7 @@ private:
 		std::optional<LPResult> result = std::nullopt;
 		std::vector<LinearExpression> factors;
 		std::vector<Variable> variables;
+		std::set<size_t> variablesPotentiallyOutOfBounds;
 		/// Variable index to constraint it controls.
 		std::map<size_t, size_t> basicVariables;
 		/// Maps outer indices to inner indices.
@@ -228,6 +230,7 @@ private:
 		LPResult check();
 		std::string toString() const;
 	private:
+		bool correctNonbasic();
 		/// Set value of non-basic variable.
 		void update(size_t _varIndex, rational const& _value);
 		/// @returns the index of the first basic variable violating its bounds.
@@ -246,8 +249,6 @@ private:
 	void addConstraintToSubProblem(size_t _subProblem, Constraint const& _constraint, std::optional<size_t> _reason);
 	void addOuterVariableToSubProblem(size_t _subProblem, size_t _outerIndex);
 	size_t addNewVariableToSubProblem(size_t _subProblem);
-
-	std::map<std::string, rational> model() const;
 
 	/// These use "copy on write".
 	std::vector<std::shared_ptr<SubProblem>> m_subProblems;
