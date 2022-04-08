@@ -27,7 +27,9 @@
 #------------------------------------------------------------------------------
 
 set -e
-cd docs
+
+script_dir="$(dirname "$0")"
+
+cd "${script_dir}"
 pip3 install -r requirements.txt --upgrade --upgrade-strategy eager
 sphinx-build -nW -b html -d _build/doctrees . _build/html
-cd ..
