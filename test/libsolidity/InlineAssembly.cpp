@@ -26,7 +26,7 @@
 
 #include <libsolidity/ast/AST.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
@@ -56,11 +56,11 @@ std::optional<Error> parseAndReturnFirstError(
 	string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,
-	AssemblyStack::Language _language = AssemblyStack::Language::Assembly,
-	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+	YulStack::Language _language = YulStack::Language::Assembly,
+	YulStack::Machine _machine = YulStack::Machine::EVM
 )
 {
-	AssemblyStack stack(
+	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		_language,
 		solidity::frontend::OptimiserSettings::none(),
@@ -103,24 +103,24 @@ bool successParse(
 	string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,
-	AssemblyStack::Language _language = AssemblyStack::Language::Assembly,
-	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
+	YulStack::Language _language = YulStack::Language::Assembly,
+	YulStack::Machine _machine = YulStack::Machine::EVM
 )
 {
 	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings, _language, _machine);
 }
 
-bool successAssemble(string const& _source, bool _allowWarnings = true, AssemblyStack::Language _language = AssemblyStack::Language::Assembly)
+bool successAssemble(string const& _source, bool _allowWarnings = true, YulStack::Language _language = YulStack::Language::Assembly)
 {
 	return
-		successParse(_source, true, _allowWarnings, _language, AssemblyStack::Machine::EVM);
+		successParse(_source, true, _allowWarnings, _language, YulStack::Machine::EVM);
 }
 
 Error expectError(
 	std::string const& _source,
 	bool _assemble,
 	bool _allowWarnings = false,
-	AssemblyStack::Language _language = AssemblyStack::Language::Assembly
+	YulStack::Language _language = YulStack::Language::Assembly
 )
 {
 
@@ -131,9 +131,9 @@ Error expectError(
 
 void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
-	AssemblyStack stack(
+	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
-		AssemblyStack::Language::Assembly,
+		YulStack::Language::Assembly,
 		OptimiserSettings::none(),
 		DebugInfoSelection::None()
 	);
@@ -157,7 +157,7 @@ do \
 } while(0)
 
 #define CHECK_ERROR(text, assemble, typ, substring, warnings) \
-CHECK_ERROR_LANG(text, assemble, typ, substring, warnings, AssemblyStack::Language::Assembly)
+CHECK_ERROR_LANG(text, assemble, typ, substring, warnings, YulStack::Language::Assembly)
 
 #define CHECK_PARSE_ERROR(text, type, substring) \
 CHECK_ERROR(text, false, type, substring, false)
@@ -169,13 +169,13 @@ CHECK_ERROR(text, false, type, substring, false)
 CHECK_ERROR(text, true, type, substring, false)
 
 #define CHECK_STRICT_ERROR(text, type, substring) \
-CHECK_ERROR_LANG(text, false, type, substring, false, AssemblyStack::Language::StrictAssembly)
+CHECK_ERROR_LANG(text, false, type, substring, false, YulStack::Language::StrictAssembly)
 
 #define CHECK_STRICT_WARNING(text, type, substring) \
-CHECK_ERROR(text, false, type, substring, false, AssemblyStack::Language::StrictAssembly)
+CHECK_ERROR(text, false, type, substring, false, YulStack::Language::StrictAssembly)
 
 #define SUCCESS_STRICT(text) \
-do { successParse((text), false, false, AssemblyStack::Language::StrictAssembly); } while (false)
+do { successParse((text), false, false, YulStack::Language::StrictAssembly); } while (false)
 
 
 BOOST_AUTO_TEST_SUITE(SolidityInlineAssembly)
@@ -221,9 +221,9 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
-	AssemblyStack stack(
+	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
-		AssemblyStack::Language::Assembly,
+		YulStack::Language::Assembly,
 		OptimiserSettings::none(),
 		DebugInfoSelection::None()
 	);

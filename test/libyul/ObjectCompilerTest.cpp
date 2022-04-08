@@ -22,7 +22,7 @@
 
 #include <libsolutil/AnsiColorized.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Disassemble.h>
@@ -63,9 +63,9 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename):
 
 TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(
+	YulStack stack(
 		EVMVersion(),
-		m_wasm ? AssemblyStack::Language::Ewasm : AssemblyStack::Language::StrictAssembly,
+		m_wasm ? YulStack::Language::Ewasm : YulStack::Language::StrictAssembly,
 		OptimiserSettings::preset(m_optimisationPreset),
 		DebugInfoSelection::All()
 	);
@@ -80,7 +80,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 
 	if (m_wasm)
 	{
-		MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::Ewasm);
+		MachineAssemblyObject obj = stack.assemble(YulStack::Machine::Ewasm);
 		solAssert(obj.bytecode, "");
 
 		m_obtainedResult = "Text:\n" + obj.assembly + "\n";
@@ -88,7 +88,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	}
 	else
 	{
-		MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
+		MachineAssemblyObject obj = stack.assemble(YulStack::Machine::EVM);
 		solAssert(obj.bytecode, "");
 		solAssert(obj.sourceMappings, "");
 
