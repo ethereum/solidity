@@ -26,7 +26,7 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
-set -e
+set -euo pipefail
 
 script_dir="$(dirname "$0")"
 
