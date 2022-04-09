@@ -76,9 +76,9 @@ Details are given in the following example.
     }
 
 
-    // Multiple inheritance is possible. Note that `owned` is
+    // Multiple inheritance is possible. Note that `Owned` is
     // also a base class of `Destructible`, yet there is only a single
-    // instance of `owned` (as for virtual inheritance in C++).
+    // instance of `Owned` (as for virtual inheritance in C++).
     contract Named is Owned, Destructible {
         constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
