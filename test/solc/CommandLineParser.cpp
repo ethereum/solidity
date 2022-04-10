@@ -366,12 +366,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.irOptimized = true;
 		expectedOptions.compiler.outputs.ewasm = true;
 		expectedOptions.compiler.outputs.ewasmIR = true;
-<<<<<<< HEAD
 		if (expectedLanguage == YulStack::Language::StrictAssembly || expectedLanguage == YulStack::Language::Ewasm)
-=======
-		if (expectedLanguage == AssemblyStack::Language::StrictAssembly
-			|| expectedLanguage == AssemblyStack::Language::Ewasm)
->>>>>>> fix: fixed api conflicts of refactored classes
 		{
 			expectedOptions.optimizer.enabled = true;
 			expectedOptions.optimizer.yulSteps = "agf";
