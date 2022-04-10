@@ -25,15 +25,15 @@
 #include <libsolidity/interface/FileReader.h>
 #include <libsolidity/interface/ImportRemapper.h>
 
-#include <libyul/AssemblyStack.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
+#include <libsolutil/FlagSet.h>
+#include <libyul/AssemblyStack.h>
 
 #include <libsolutil/JSON.h>
 
-#include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/program_options.hpp>
 
 #include <map>
 #include <memory>
@@ -59,16 +59,11 @@ enum class InputMode
 	LanguageServer
 };
 
-struct CompilerOutputs
+struct CompilerOutputs: public solidity::util::FlagSet<CompilerOutputs>
 {
-	bool operator!=(CompilerOutputs const& _other) const noexcept { return !(*this == _other); }
-	bool operator==(CompilerOutputs const& _other) const noexcept;
-	friend std::ostream& operator<<(std::ostream& _out, CompilerOutputs const& _requests);
-
-	static std::string const& componentName(bool CompilerOutputs::* _component);
-	static auto const& componentMap()
+	static auto const& flagMap()
 	{
-		static std::map<std::string, bool CompilerOutputs::*> const components = {
+		static std::map<std::string, bool CompilerOutputs::*> const flags = {
 			{"ast-compact-json", &CompilerOutputs::astCompactJson},
 			{"asm", &CompilerOutputs::asm_},
 			{"asm-json", &CompilerOutputs::asmJson},
@@ -86,7 +81,7 @@ struct CompilerOutputs
 			{"metadata", &CompilerOutputs::metadata},
 			{"storage-layout", &CompilerOutputs::storageLayout},
 		};
-		return components;
+		return flags;
 	}
 
 	bool astCompactJson = false;
@@ -107,16 +102,11 @@ struct CompilerOutputs
 	bool storageLayout = false;
 };
 
-struct CombinedJsonRequests
+struct CombinedJsonRequests: public solidity::util::FlagSet<CombinedJsonRequests>
 {
-	bool operator!=(CombinedJsonRequests const& _other) const noexcept { return !(*this == _other); }
-	bool operator==(CombinedJsonRequests const& _other) const noexcept;
-	friend std::ostream& operator<<(std::ostream& _out, CombinedJsonRequests const& _requests);
-
-	static std::string const& componentName(bool CombinedJsonRequests::* _component);
-	static auto const& componentMap()
+	static auto const& flagMap()
 	{
-		static std::map<std::string, bool CombinedJsonRequests::*> const components = {
+		static std::unordered_map<std::string, bool CombinedJsonRequests::*> const flags = {
 			{"abi", &CombinedJsonRequests::abi},
 			{"metadata", &CombinedJsonRequests::metadata},
 			{"bin", &CombinedJsonRequests::binary},
@@ -135,7 +125,7 @@ struct CombinedJsonRequests
 			{"userdoc", &CombinedJsonRequests::natspecUser},
 			{"ast", &CombinedJsonRequests::ast},
 		};
-		return components;
+		return flags;
 	}
 
 	bool abi = false;
