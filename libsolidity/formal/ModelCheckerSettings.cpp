@@ -82,38 +82,6 @@ map<TargetType, string> const ModelCheckerTargets::targetTypeToString{
 	{TargetType::OutOfBounds, "Out of bounds access"}
 };
 
-std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(string const& _targets)
-{
-	set<TargetType> chosenTargets;
-	if (_targets == "default" || _targets == "all")
-	{
-		bool all = _targets == "all";
-		for (auto&& v: targetStrings | ranges::views::values)
-		{
-			if (!all && (v == TargetType::Underflow || v == TargetType::Overflow))
-				continue;
-			chosenTargets.insert(v);
-		}
-	}
-	else
-		for (auto&& t: _targets | ranges::views::split(',') | ranges::to<vector<string>>())
-		{
-			if (!targetStrings.count(t))
-				return {};
-			chosenTargets.insert(targetStrings.at(t));
-		}
-
-	return ModelCheckerTargets{chosenTargets};
-}
-
-bool ModelCheckerTargets::setFromString(string const& _target)
-{
-	if (!targetStrings.count(_target))
-		return false;
-	targets.insert(targetStrings.at(_target));
-	return true;
-}
-
 std::optional<ModelCheckerContracts> ModelCheckerContracts::fromString(string const& _contracts)
 {
 	map<string, set<string>> chosen;

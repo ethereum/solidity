@@ -18,8 +18,9 @@
 
 #pragma once
 
+#include <cstdarg>
 #include <libsmtutil/SolverInterface.h>
-
+#include <libsolutil/FlagSet.h>
 #include <optional>
 #include <set>
 
@@ -56,38 +57,27 @@ struct ModelCheckerContracts
 	std::map<std::string, std::set<std::string>> contracts;
 };
 
-struct ModelCheckerEngine
+struct ModelCheckerEngine: public solidity::util::FlagSet<ModelCheckerEngine>
 {
 	bool bmc = false;
 	bool chc = false;
 
-	static constexpr ModelCheckerEngine All() { return {true, true}; }
-	static constexpr ModelCheckerEngine BMC() { return {true, false}; }
-	static constexpr ModelCheckerEngine CHC() { return {false, true}; }
-	static constexpr ModelCheckerEngine None() { return {false, false}; }
 
-	bool none() const { return !any(); }
-	bool any() const { return bmc || chc; }
-	bool all() const { return bmc && chc; }
-
-	static std::optional<ModelCheckerEngine> fromString(std::string const& _engine)
+	static auto const& flagMap()
 	{
-		static std::map<std::string, ModelCheckerEngine> engineMap{
-			{"all", All()},
-			{"bmc", BMC()},
-			{"chc", CHC()},
-			{"none", None()}
+		static std::unordered_map<std::string, bool ModelCheckerEngine::*> const flags = {
+			{"location", &ModelCheckerEngine::bmc},
+			{"snippet", &ModelCheckerEngine::chc},
 		};
-		if (engineMap.count(_engine))
-			return engineMap.at(_engine);
-		return {};
+		return flags;
 	}
-
-	bool operator!=(ModelCheckerEngine const& _other) const noexcept { return !(*this == _other); }
-	bool operator==(ModelCheckerEngine const& _other) const noexcept { return bmc == _other.bmc && chc == _other.chc; }
 };
 
-enum class InvariantType { Contract, Reentrancy };
+enum class InvariantType
+{
+	Contract,
+	Reentrancy
+};
 
 struct ModelCheckerInvariants
 {
@@ -113,31 +103,132 @@ struct ModelCheckerInvariants
 	std::set<InvariantType> invariants;
 };
 
-enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray, OutOfBounds };
-
-struct ModelCheckerTargets
+enum class VerificationTargetType
 {
-	/// Adds the default targets, that is, all except underflow and overflow.
-	static ModelCheckerTargets Default() { return *fromString("default"); }
-	/// Adds all targets, including underflow and overflow.
-	static ModelCheckerTargets All() { return *fromString("all"); }
+	ConstantCondition,
+	Underflow,
+	Overflow,
+	UnderOverflow,
+	DivByZero,
+	Balance,
+	Assert,
+	PopEmptyArray,
+	OutOfBounds
+};
 
-	static std::optional<ModelCheckerTargets> fromString(std::string const& _targets);
+struct ModelCheckerTargets: public solidity::util::FlagSet<ModelCheckerTargets>
+{
+	ModelCheckerTargets() = default;
 
-	bool has(VerificationTargetType _type) const { return targets.count(_type); }
+	ModelCheckerTargets(size_t nFlags, ...)
+	{
+		if (nFlags < 1)
+			return;
 
-	/// @returns true if the @p _target is valid,
-	/// and false otherwise.
-	bool setFromString(std::string const& _target);
+		std::va_list args{};
+		va_start(args, nFlags);
+
+		for (size_t i = 0; i < nFlags; ++i)
+		{
+			auto targetType = va_arg(args, VerificationTargetType);
+			setTargetType(targetType, true);
+		}
+
+		va_end(args);
+	}
+
+	[[nodiscard]] constexpr bool has(VerificationTargetType _type) const
+	{
+		switch (_type)
+		{
+		case VerificationTargetType::ConstantCondition:
+			return constantCondition;
+		case VerificationTargetType::Underflow:
+			return underflow;
+		case VerificationTargetType::Overflow:
+			return overflow;
+		case VerificationTargetType::UnderOverflow:
+			return underOverflow;
+		case VerificationTargetType::DivByZero:
+			return divByZero;
+		case VerificationTargetType::Balance:
+			return balance;
+		case VerificationTargetType::Assert:
+			return assert;
+		case VerificationTargetType::PopEmptyArray:
+			return popEmptyArray;
+		case VerificationTargetType::OutOfBounds:
+			return outOfBounds;
+		default:
+			return false;
+		}
+	}
+
+	bool setTargetType(VerificationTargetType targetType, bool _value = true)
+	{
+		switch (targetType)
+		{
+		case VerificationTargetType::ConstantCondition:
+			constantCondition = _value;
+			return true;
+		case VerificationTargetType::Underflow:
+			underOverflow = _value;
+			return true;
+		case VerificationTargetType::Overflow:
+			overflow = _value;
+			return true;
+		case VerificationTargetType::UnderOverflow:
+			underOverflow = _value;
+			return true;
+		case VerificationTargetType::DivByZero:
+			divByZero = _value;
+			return true;
+		case VerificationTargetType::Balance:
+			balance = _value;
+			return true;
+		case VerificationTargetType::Assert:
+			assert = _value;
+			return true;
+		case VerificationTargetType::PopEmptyArray:
+			popEmptyArray = _value;
+			return true;
+		case VerificationTargetType::OutOfBounds:
+			outOfBounds = _value;
+			return true;
+		default:
+			return false;
+		}
+	}
 
 	static std::map<std::string, VerificationTargetType> const targetStrings;
 
 	static std::map<VerificationTargetType, std::string> const targetTypeToString;
 
-	bool operator!=(ModelCheckerTargets const& _other) const noexcept { return !(*this == _other); }
-	bool operator==(ModelCheckerTargets const& _other) const noexcept { return targets == _other.targets; }
+	static auto const& flagMap()
+	{
+		static std::unordered_map<std::string, bool ModelCheckerTargets::*> const flags = {
+			{"constantCondition", &ModelCheckerTargets::constantCondition},
+			{"underflow", &ModelCheckerTargets::underflow},
+			{"overflow", &ModelCheckerTargets::overflow},
+			{"underOverflow", &ModelCheckerTargets::underOverflow},
+			{"divByZero", &ModelCheckerTargets::divByZero},
+			{"balance", &ModelCheckerTargets::balance},
+			{"assert", &ModelCheckerTargets::assert},
+			{"popEmptyArray", &ModelCheckerTargets::popEmptyArray},
+			{"outOfBounds", &ModelCheckerTargets::outOfBounds},
+		};
+		return flags;
+	}
 
-	std::set<VerificationTargetType> targets;
+	bool constantCondition{false};
+	bool underflow{false};
+	bool overflow{false};
+	bool underOverflow{false};
+	bool divByZero{false};
+	bool balance{false};
+	bool assert{false};
+	bool popEmptyArray{false};
+	bool outOfBounds{false};
 };
 
 struct ModelCheckerSettings
@@ -160,15 +251,9 @@ struct ModelCheckerSettings
 	bool operator!=(ModelCheckerSettings const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(ModelCheckerSettings const& _other) const noexcept
 	{
-		return
-			contracts == _other.contracts &&
-			divModNoSlacks == _other.divModNoSlacks &&
-			engine == _other.engine &&
-			invariants == _other.invariants &&
-			showUnproved == _other.showUnproved &&
-			solvers == _other.solvers &&
-			targets == _other.targets &&
-			timeout == _other.timeout;
+		return contracts == _other.contracts && divModNoSlacks == _other.divModNoSlacks && engine == _other.engine
+			   && invariants == _other.invariants && showUnproved == _other.showUnproved && solvers == _other.solvers
+			   && targets == _other.targets && timeout == _other.timeout;
 	}
 };
 
