@@ -137,7 +137,7 @@ vector<string> ModelChecker::unhandledQueries()
 
 solidity::smtutil::SMTSolverChoice ModelChecker::availableSolvers()
 {
-	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
+	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::Only("smtlib2");
 #ifdef HAVE_Z3
 	available.z3 = solidity::smtutil::Z3Interface::available();
 #endif

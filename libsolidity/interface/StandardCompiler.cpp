@@ -824,7 +824,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			for (Json::Value const& arrayValue: settings["debug"]["debugInfo"])
 				components.push_back(arrayValue.asString());
 
-			optional<DebugInfoSelection> debugInfoSelection = DebugInfoSelection::fromComponents(
+			optional<DebugInfoSelection> debugInfoSelection = DebugInfoSelection::fromFlags(
 				components,
 				true /* _acceptWildcards */
 			);
@@ -1027,7 +1027,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!s.isString())
 				return formatFatalError("JSONError", "Every target in settings.modelChecker.solvers must be a string.");
-			if (!solvers.setSolver(s.asString()))
+			if (!solvers.setFlag(s.asString()))
 				return formatFatalError("JSONError", "Invalid model checker solvers requested.");
 		}
 
@@ -1045,11 +1045,11 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!t.isString())
 				return formatFatalError("JSONError", "Every target in settings.modelChecker.targets must be a string.");
-			if (!targets.setFromString(t.asString()))
+			if (!targets.setFlag(t.asString()))
 				return formatFatalError("JSONError", "Invalid model checker targets requested.");
 		}
 
-		if (targets.targets.empty())
+		if (targets.none())
 			return formatFatalError("JSONError", "settings.modelChecker.targets must be a non-empty array.");
 
 		ret.modelCheckerSettings.targets = targets;

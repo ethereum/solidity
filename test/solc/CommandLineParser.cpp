@@ -26,10 +26,10 @@
 #include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
-#include <libsolutil/CommonData.h>
 #include <liblangutil/EVMVersion.h>
 #include <libsmtutil/SolverInterface.h>
 #include <libsolidity/interface/Version.h>
+#include <libsolutil/CommonData.h>
 
 #include <map>
 #include <optional>
@@ -49,7 +49,7 @@ namespace
 
 CommandLineOptions parseCommandLine(vector<string> const& _commandLine)
 {
-	vector<char const*> argv = test::makeArgv(_commandLine);
+	vector<char const*> argv = solidity::frontend::test::makeArgv(_commandLine);
 
 	CommandLineParser cliParser;
 	cliParser.parse(static_cast<int>(_commandLine.size()), argv.data());
@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 	{
 		vector<string> commandLine = {
 			"solc",
-			"contract.sol",             // Both modes do not care about file names, just about
-			"/tmp/projects/token.sol",  // their content. They also both support stdin.
+			"contract.sol",			   // Both modes do not care about file names, just about
+			"/tmp/projects/token.sol", // their content. They also both support stdin.
 			"/home/user/lib/dex.sol",
 			"file",
 			"input.json",
@@ -129,14 +129,27 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--no-color",
 			"--error-codes",
 			"--libraries="
-				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
-				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
-			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
+			"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
+			"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
+			"--ast-compact-json",
+			"--asm",
+			"--asm-json",
+			"--opcodes",
+			"--bin",
+			"--bin-runtime",
+			"--abi",
+			"--ir",
+			"--ir-optimized",
+			"--ewasm",
+			"--hashes",
+			"--userdoc",
+			"--devdoc",
+			"--metadata",
+			"--storage-layout",
 			"--gas",
 			"--combined-json="
-				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
-				"srcmap,srcmap-runtime,function-debug,function-debug-runtime,hashes,devdoc,userdoc,ast",
+			"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
+			"srcmap,srcmap-runtime,function-debug,function-debug-runtime,hashes,devdoc,userdoc,ast",
 			"--metadata-hash=swarm",
 			"--metadata-literal",
 			"--optimize",
@@ -159,7 +172,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 		CommandLineOptions expectedOptions;
 		expectedOptions.input.mode = inputMode;
-		expectedOptions.input.paths = {"contract.sol", "/tmp/projects/token.sol", "/home/user/lib/dex.sol", "file", "input.json"};
+		expectedOptions.input.paths
+			= {"contract.sol", "/tmp/projects/token.sol", "/home/user/lib/dex.sol", "file", "input.json"};
 		expectedOptions.input.remappings = {
 			{"", "/tmp", "/usr/lib/"},
 			{"a", "b", "c/d"},
@@ -186,20 +200,30 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		};
 		expectedOptions.formatting.coloredOutput = false;
 		expectedOptions.formatting.withErrorIds = true;
-		expectedOptions.compiler.outputs = {
-			true, true, true, true, true,
-			true, true, true, true, true,
-			true, true, true, true, true,
+		expectedOptions.compiler.outputs = CompilerOutputs{
+			{},
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
 			true,
 		};
 		expectedOptions.compiler.outputs.ewasmIR = false;
 		expectedOptions.compiler.estimateGas = true;
-		expectedOptions.compiler.combinedJsonRequests = {
-			true, true, true, true, true,
-			true, true, true, true, true,
-			true, true, true, true, true,
-			true, true,
-		};
+		expectedOptions.compiler.combinedJsonRequests = CombinedJsonRequests{
+			{}, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true};
+
 		expectedOptions.metadata.hash = CompilerStack::MetadataHash::Bzzr1;
 		expectedOptions.metadata.literalSources = true;
 		expectedOptions.optimizer.enabled = true;
@@ -207,14 +231,14 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.optimizer.yulSteps = "agf";
 
 		expectedOptions.modelChecker.initialize = true;
-		expectedOptions.modelChecker.settings = {
+		expectedOptions.modelChecker.settings = ModelCheckerSettings{
 			{{{"contract1.yul", {"A"}}, {"contract2.yul", {"B"}}}},
 			true,
-			{true, false},
+			{{}, true, false},
 			{{InvariantType::Contract, InvariantType::Reentrancy}},
 			true,
-			{false, true, true},
-			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
+			{{}, false, true, true},
+			{2, VerificationTargetType::Underflow, VerificationTargetType::DivByZero},
 			5,
 		};
 
@@ -234,16 +258,34 @@ BOOST_AUTO_TEST_CASE(via_ir_options)
 BOOST_AUTO_TEST_CASE(assembly_mode_options)
 {
 	static vector<tuple<vector<string>, AssemblyStack::Machine, AssemblyStack::Language>> const allowedCombinations = {
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--assemble"}, AssemblyStack::Machine::Ewasm, AssemblyStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--yul"}, AssemblyStack::Machine::Ewasm, AssemblyStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--strict-assembly"}, AssemblyStack::Machine::Ewasm, AssemblyStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--assemble"}, AssemblyStack::Machine::Ewasm, AssemblyStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--yul"}, AssemblyStack::Machine::Ewasm, AssemblyStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--strict-assembly"}, AssemblyStack::Machine::Ewasm, AssemblyStack::Language::StrictAssembly},
+		{{"--machine=ewasm", "--yul-dialect=ewasm", "--assemble"},
+		 AssemblyStack::Machine::Ewasm,
+		 AssemblyStack::Language::Ewasm},
+		{{"--machine=ewasm", "--yul-dialect=ewasm", "--yul"},
+		 AssemblyStack::Machine::Ewasm,
+		 AssemblyStack::Language::Ewasm},
+		{{"--machine=ewasm", "--yul-dialect=ewasm", "--strict-assembly"},
+		 AssemblyStack::Machine::Ewasm,
+		 AssemblyStack::Language::Ewasm},
+		{{"--machine=ewasm", "--yul-dialect=evm", "--assemble"},
+		 AssemblyStack::Machine::Ewasm,
+		 AssemblyStack::Language::StrictAssembly},
+		{{"--machine=ewasm", "--yul-dialect=evm", "--yul"},
+		 AssemblyStack::Machine::Ewasm,
+		 AssemblyStack::Language::StrictAssembly},
+		{{"--machine=ewasm", "--yul-dialect=evm", "--strict-assembly"},
+		 AssemblyStack::Machine::Ewasm,
+		 AssemblyStack::Language::StrictAssembly},
 		{{"--machine=ewasm", "--strict-assembly"}, AssemblyStack::Machine::Ewasm, AssemblyStack::Language::Ewasm},
-		{{"--machine=evm", "--yul-dialect=evm", "--assemble"}, AssemblyStack::Machine::EVM, AssemblyStack::Language::StrictAssembly},
-		{{"--machine=evm", "--yul-dialect=evm", "--yul"}, AssemblyStack::Machine::EVM, AssemblyStack::Language::StrictAssembly},
-		{{"--machine=evm", "--yul-dialect=evm", "--strict-assembly"}, AssemblyStack::Machine::EVM, AssemblyStack::Language::StrictAssembly},
+		{{"--machine=evm", "--yul-dialect=evm", "--assemble"},
+		 AssemblyStack::Machine::EVM,
+		 AssemblyStack::Language::StrictAssembly},
+		{{"--machine=evm", "--yul-dialect=evm", "--yul"},
+		 AssemblyStack::Machine::EVM,
+		 AssemblyStack::Language::StrictAssembly},
+		{{"--machine=evm", "--yul-dialect=evm", "--strict-assembly"},
+		 AssemblyStack::Machine::EVM,
+		 AssemblyStack::Language::StrictAssembly},
 		{{"--machine=evm", "--assemble"}, AssemblyStack::Machine::EVM, AssemblyStack::Language::Assembly},
 		{{"--machine=evm", "--yul"}, AssemblyStack::Machine::EVM, AssemblyStack::Language::Yul},
 		{{"--machine=evm", "--strict-assembly"}, AssemblyStack::Machine::EVM, AssemblyStack::Language::StrictAssembly},
@@ -272,29 +314,29 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--ignore-missing",
 			"--overwrite",
 			"--evm-version=spuriousDragon",
-			"--revert-strings=strip",      // Accepted but has no effect in assembly mode
+			"--revert-strings=strip", // Accepted but has no effect in assembly mode
 			"--debug-info=location",
 			"--pretty-json",
 			"--json-indent=1",
 			"--no-color",
 			"--error-codes",
 			"--libraries="
-				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
-				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
-			"--metadata-hash=swarm",       // Ignored in assembly mode
-			"--metadata-literal",          // Ignored in assembly mode
-			"--model-checker-contracts="   // Ignored in assembly mode
-				"contract1.yul:A,"
-				"contract2.yul:B",
-			"--model-checker-div-mod-no-slacks", // Ignored in assembly mode
-			"--model-checker-engine=bmc",  // Ignored in assembly mode
-			"--model-checker-invariants=contract,reentrancy",  // Ignored in assembly mode
-			"--model-checker-show-unproved", // Ignored in assembly mode
-			"--model-checker-solvers=z3,smtlib2", // Ignored in assembly mode
-			"--model-checker-targets="     // Ignored in assembly mode
-				"underflow,"
-				"divByZero",
-			"--model-checker-timeout=5",   // Ignored in assembly mode
+			"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
+			"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
+			"--metadata-hash=swarm",	 // Ignored in assembly mode
+			"--metadata-literal",		 // Ignored in assembly mode
+			"--model-checker-contracts=" // Ignored in assembly mode
+			"contract1.yul:A,"
+			"contract2.yul:B",
+			"--model-checker-div-mod-no-slacks",			  // Ignored in assembly mode
+			"--model-checker-engine=bmc",					  // Ignored in assembly mode
+			"--model-checker-invariants=contract,reentrancy", // Ignored in assembly mode
+			"--model-checker-show-unproved",				  // Ignored in assembly mode
+			"--model-checker-solvers=z3,smtlib2",			  // Ignored in assembly mode
+			"--model-checker-targets="						  // Ignored in assembly mode
+			"underflow,"
+			"divByZero",
+			"--model-checker-timeout=5", // Ignored in assembly mode
 			"--asm",
 			"--bin",
 			"--ir-optimized",
@@ -302,7 +344,8 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--ewasm-ir",
 		};
 		commandLine += assemblyOptions;
-		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
+		if (expectedLanguage == AssemblyStack::Language::StrictAssembly
+			|| expectedLanguage == AssemblyStack::Language::Ewasm)
 			commandLine += vector<string>{
 				"--optimize",
 				"--optimize-runs=1000",
@@ -312,7 +355,8 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		CommandLineOptions expectedOptions;
 		expectedOptions.input.mode = InputMode::Assembler;
 
-		expectedOptions.input.paths = {"contract.yul", "/tmp/projects/token.yul", "/home/user/lib/dex.yul", "file", "input.json"};
+		expectedOptions.input.paths
+			= {"contract.yul", "/tmp/projects/token.yul", "/home/user/lib/dex.yul", "file", "input.json"};
 		expectedOptions.input.remappings = {
 			{"", "/tmp", "/usr/lib/"},
 			{"a", "b", "c/d"},
@@ -327,7 +371,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
 		expectedOptions.output.debugInfoSelection = DebugInfoSelection::fromString("location");
-		expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 1};
+		expectedOptions.formatting.json = JsonFormat{JsonFormat::Pretty, 1};
 		expectedOptions.assembly.targetMachine = expectedMachine;
 		expectedOptions.assembly.inputLanguage = expectedLanguage;
 		expectedOptions.linker.libraries = {
@@ -341,7 +385,8 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.irOptimized = true;
 		expectedOptions.compiler.outputs.ewasm = true;
 		expectedOptions.compiler.outputs.ewasmIR = true;
-		if (expectedLanguage == AssemblyStack::Language::StrictAssembly || expectedLanguage == AssemblyStack::Language::Ewasm)
+		if (expectedLanguage == AssemblyStack::Language::StrictAssembly
+			|| expectedLanguage == AssemblyStack::Language::Ewasm)
 		{
 			expectedOptions.optimizer.enabled = true;
 			expectedOptions.optimizer.yulSteps = "agf";
@@ -365,33 +410,33 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"--include-path=/home/user/include",
 		"--allow-paths=/tmp,/home,project,../contracts",
 		"--ignore-missing",
-		"--output-dir=/tmp/out",           // Accepted but has no effect in Standard JSON mode
-		"--overwrite",                     // Accepted but has no effect in Standard JSON mode
-		"--evm-version=spuriousDragon",    // Ignored in Standard JSON mode
-		"--revert-strings=strip",          // Accepted but has no effect in Standard JSON mode
+		"--output-dir=/tmp/out",		// Accepted but has no effect in Standard JSON mode
+		"--overwrite",					// Accepted but has no effect in Standard JSON mode
+		"--evm-version=spuriousDragon", // Ignored in Standard JSON mode
+		"--revert-strings=strip",		// Accepted but has no effect in Standard JSON mode
 		"--pretty-json",
 		"--json-indent=1",
-		"--no-color",                      // Accepted but has no effect in Standard JSON mode
-		"--error-codes",                   // Accepted but has no effect in Standard JSON mode
-		"--libraries="                     // Ignored in Standard JSON mode
-			"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
-			"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
-		"--gas",                           // Accepted but has no effect in Standard JSON mode
-		"--combined-json=abi,bin",         // Accepted but has no effect in Standard JSON mode
-		"--metadata-hash=swarm",           // Ignored in Standard JSON mode
-		"--metadata-literal",              // Ignored in Standard JSON mode
-		"--model-checker-contracts="       // Ignored in Standard JSON mode
-			"contract1.yul:A,"
-			"contract2.yul:B",
-		"--model-checker-div-mod-no-slacks", // Ignored in Standard JSON mode
-		"--model-checker-engine=bmc",      // Ignored in Standard JSON mode
-		"--model-checker-invariants=contract,reentrancy",      // Ignored in Standard JSON mode
-		"--model-checker-show-unproved",      // Ignored in Standard JSON mode
-		"--model-checker-solvers=z3,smtlib2", // Ignored in Standard JSON mode
-		"--model-checker-targets="         // Ignored in Standard JSON mode
-			"underflow,"
-			"divByZero",
-		"--model-checker-timeout=5",       // Ignored in Standard JSON mode
+		"--no-color",	 // Accepted but has no effect in Standard JSON mode
+		"--error-codes", // Accepted but has no effect in Standard JSON mode
+		"--libraries="	 // Ignored in Standard JSON mode
+		"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
+		"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
+		"--gas",					 // Accepted but has no effect in Standard JSON mode
+		"--combined-json=abi,bin",	 // Accepted but has no effect in Standard JSON mode
+		"--metadata-hash=swarm",	 // Ignored in Standard JSON mode
+		"--metadata-literal",		 // Ignored in Standard JSON mode
+		"--model-checker-contracts=" // Ignored in Standard JSON mode
+		"contract1.yul:A,"
+		"contract2.yul:B",
+		"--model-checker-div-mod-no-slacks",			  // Ignored in Standard JSON mode
+		"--model-checker-engine=bmc",					  // Ignored in Standard JSON mode
+		"--model-checker-invariants=contract,reentrancy", // Ignored in Standard JSON mode
+		"--model-checker-show-unproved",				  // Ignored in Standard JSON mode
+		"--model-checker-solvers=z3,smtlib2",			  // Ignored in Standard JSON mode
+		"--model-checker-targets="						  // Ignored in Standard JSON mode
+		"underflow,"
+		"divByZero",
+		"--model-checker-timeout=5", // Ignored in Standard JSON mode
 	};
 
 	CommandLineOptions expectedOptions;
@@ -405,7 +450,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.output.dir = "/tmp/out";
 	expectedOptions.output.overwriteFiles = true;
 	expectedOptions.output.revertStrings = RevertStrings::Strip;
-	expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 1};
+	expectedOptions.formatting.json = JsonFormat{JsonFormat::Pretty, 1};
 	expectedOptions.formatting.coloredOutput = false;
 	expectedOptions.formatting.withErrorIds = true;
 	expectedOptions.compiler.estimateGas = true;
@@ -420,12 +465,11 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 
 BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 {
-	map<string, vector<string>> invalidOptionInputModeCombinations = {
-		// TODO: This should eventually contain all options.
-		{"--error-recovery", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}}
-	};
+	map<string, vector<string>> invalidOptionInputModeCombinations
+		= {// TODO: This should eventually contain all options.
+		   {"--error-recovery", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
+		   {"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
+		   {"--via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}}};
 
 	for (auto const& [optionName, inputModes]: invalidOptionInputModeCombinations)
 		for (string const& inputMode: inputModes)
@@ -434,7 +478,8 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 			vector<string> commandLine = {"solc", optionName, "file", inputMode};
 
 			string expectedMessage = "The following options are not supported in the current input mode: " + optionName;
-			auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
+			auto hasCorrectMessage
+				= [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
 
 			BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
 		}
