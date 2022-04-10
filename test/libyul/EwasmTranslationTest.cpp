@@ -25,7 +25,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/EVMToEwasmTranslator.h>
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AST.h>
 #include <libyul/Object.h>
@@ -80,9 +80,9 @@ TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _
 
 bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	m_stack = AssemblyStack(
+	m_stack = YulStack(
 		solidity::test::CommonOptions::get().evmVersion(),
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::All()
 	);

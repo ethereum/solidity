@@ -21,7 +21,7 @@
  */
 
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -48,16 +48,16 @@ using namespace solidity::langutil;
 
 namespace
 {
-Dialect const& languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
+Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _version)
 {
 	switch (_language)
 	{
-	case AssemblyStack::Language::Assembly:
-	case AssemblyStack::Language::StrictAssembly:
+	case YulStack::Language::Assembly:
+	case YulStack::Language::StrictAssembly:
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
-	case AssemblyStack::Language::Yul:
+	case YulStack::Language::Yul:
 		return EVMDialectTyped::instance(_version);
-	case AssemblyStack::Language::Ewasm:
+	case YulStack::Language::Ewasm:
 		return WasmDialect::instance();
 	}
 	yulAssert(false, "");
@@ -88,14 +88,14 @@ evmasm::Assembly::OptimiserSettings translateOptimiserSettings(
 }
 
 
-CharStream const& AssemblyStack::charStream(string const& _sourceName) const
+CharStream const& YulStack::charStream(string const& _sourceName) const
 {
 	yulAssert(m_charStream, "");
 	yulAssert(m_charStream->name() == _sourceName, "");
 	return *m_charStream;
 }
 
-bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
+bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
 {
 	m_errors.clear();
 	m_analysisSuccessful = false;
@@ -110,7 +110,7 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	return analyzeParsed();
 }
 
-void AssemblyStack::optimize()
+void YulStack::optimize()
 {
 	if (!m_optimiserSettings.runYulOptimiser)
 		return;
@@ -123,7 +123,7 @@ void AssemblyStack::optimize()
 	yulAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
 
-void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
+void YulStack::translate(YulStack::Language _targetLanguage)
 {
 	if (m_language == _targetLanguage)
 		return;
@@ -141,14 +141,14 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 	m_language = _targetLanguage;
 }
 
-bool AssemblyStack::analyzeParsed()
+bool YulStack::analyzeParsed()
 {
 	yulAssert(m_parserResult, "");
 	m_analysisSuccessful = analyzeParsed(*m_parserResult);
 	return m_analysisSuccessful;
 }
 
-bool AssemblyStack::analyzeParsed(Object& _object)
+bool YulStack::analyzeParsed(Object& _object)
 {
 	yulAssert(_object.code, "");
 	_object.analysisInfo = make_shared<AsmAnalysisInfo>();
@@ -168,7 +168,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 	return success;
 }
 
-void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
+void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 {
 	EVMDialect const* dialect = nullptr;
 	switch (m_language)
@@ -188,7 +188,7 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) cons
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize);
 }
 
-void AssemblyStack::optimize(Object& _object, bool _isCreation)
+void YulStack::optimize(Object& _object, bool _isCreation)
 {
 	yulAssert(_object.code, "");
 	yulAssert(_object.analysisInfo, "");
@@ -214,7 +214,7 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	);
 }
 
-MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
+MachineAssemblyObject YulStack::assemble(Machine _machine) const
 {
 	yulAssert(m_analysisSuccessful, "");
 	yulAssert(m_parserResult, "");
@@ -243,7 +243,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 }
 
 std::pair<MachineAssemblyObject, MachineAssemblyObject>
-AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
+YulStack::assembleWithDeployed(optional<string_view> _deployName) const
 {
 	auto [creationAssembly, deployedAssembly] = assembleEVMWithDeployed(_deployName);
 	yulAssert(creationAssembly, "");
@@ -277,7 +277,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 }
 
 std::pair<std::shared_ptr<evmasm::Assembly>, std::shared_ptr<evmasm::Assembly>>
-AssemblyStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
+YulStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 {
 	yulAssert(m_analysisSuccessful, "");
 	yulAssert(m_parserResult, "");
@@ -317,7 +317,7 @@ AssemblyStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 	return {make_shared<evmasm::Assembly>(assembly), {}};
 }
 
-string AssemblyStack::print(
+string YulStack::print(
 	CharStreamProvider const* _soliditySourceProvider
 ) const
 {
@@ -326,7 +326,7 @@ string AssemblyStack::print(
 	return m_parserResult->toString(&languageToDialect(m_language, m_evmVersion), m_debugInfoSelection, _soliditySourceProvider) + "\n";
 }
 
-shared_ptr<Object> AssemblyStack::parserResult() const
+shared_ptr<Object> YulStack::parserResult() const
 {
 	yulAssert(m_analysisSuccessful, "Analysis was not successful.");
 	yulAssert(m_parserResult, "");

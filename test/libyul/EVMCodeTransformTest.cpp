@@ -19,7 +19,7 @@
 #include <test/libyul/EVMCodeTransformTest.h>
 #include <test/libyul/Common.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 
@@ -51,9 +51,9 @@ TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = m_stackOpt;
-	AssemblyStack stack(
+	YulStack stack(
 		EVMVersion{},
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		settings,
 		DebugInfoSelection::All()
 	);

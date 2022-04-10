@@ -22,7 +22,7 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <libsolutil/Keccak256.h>
 

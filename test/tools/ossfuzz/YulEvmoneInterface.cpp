@@ -35,7 +35,7 @@ bytes YulAssembler::assemble()
 
 	if (m_optimiseYul)
 		m_stack.optimize();
-	return m_stack.assemble(AssemblyStack::Machine::EVM).bytecode->bytecode;
+	return m_stack.assemble(YulStack::Machine::EVM).bytecode->bytecode;
 }
 
 evmc::result YulEvmoneUtility::deployCode(bytes const& _input, EVMHost& _host)
