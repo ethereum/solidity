@@ -43,7 +43,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::All();
 	else if (choice == "none")
 		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
-	else if (!m_modelCheckerSettings.solvers.setSolver(choice))
+	else if (!m_modelCheckerSettings.solvers.setFlag(choice))
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT solver choice."));
 
 	m_modelCheckerSettings.solvers &= ModelChecker::availableSolvers();
