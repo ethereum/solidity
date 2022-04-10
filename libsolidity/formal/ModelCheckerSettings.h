@@ -65,8 +65,8 @@ struct ModelCheckerEngine: public solidity::util::FlagSet<ModelCheckerEngine>
 	static auto const& flagMap()
 	{
 		static std::map<std::string, bool ModelCheckerEngine::*> const flags = {
-			{"location", &ModelCheckerEngine::bmc},
-			{"snippet", &ModelCheckerEngine::chc},
+			{"bmc", &ModelCheckerEngine::bmc},
+			{"chc", &ModelCheckerEngine::chc},
 		};
 		return flags;
 	}
