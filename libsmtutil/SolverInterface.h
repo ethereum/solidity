@@ -22,13 +22,14 @@
 #include <libsmtutil/Sorts.h>
 
 #include <libsolutil/Common.h>
-#include <libsolutil/Numeric.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Numeric.h>
 
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view.hpp>
 
 #include <cstdio>
+#include <libsolutil/FlagSet.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -39,107 +40,63 @@
 namespace solidity::smtutil
 {
 
-struct SMTSolverChoice
+struct SMTSolverChoice: public solidity::util::FlagSet<SMTSolverChoice>
 {
 	bool cvc4 = false;
 	bool smtlib2 = false;
 	bool z3 = false;
 
-	static constexpr SMTSolverChoice All() noexcept { return {true, true, true}; }
-	static constexpr SMTSolverChoice CVC4() noexcept { return {true, false, false}; }
-	static constexpr SMTSolverChoice SMTLIB2() noexcept { return {false, true, false}; }
-	static constexpr SMTSolverChoice Z3() noexcept { return {false, false, true}; }
-	static constexpr SMTSolverChoice None() noexcept { return {false, false, false}; }
-
-	static std::optional<SMTSolverChoice> fromString(std::string const& _solvers)
+	static auto const& flagMap()
 	{
-		SMTSolverChoice solvers;
-		if (_solvers == "all")
-		{
-			smtAssert(solvers.setSolver("cvc4"), "");
-			smtAssert(solvers.setSolver("smtlib2"), "");
-			smtAssert(solvers.setSolver("z3"), "");
-		}
-		else
-			for (auto&& s: _solvers | ranges::views::split(',') | ranges::to<std::vector<std::string>>())
-				if (!solvers.setSolver(s))
-					return {};
-
-		return solvers;
+		static std::unordered_map<std::string, bool SMTSolverChoice::*> const components = {
+			{"cvc4", &SMTSolverChoice::cvc4},
+			{"smtlib2", &SMTSolverChoice::smtlib2},
+			{"z3", &SMTSolverChoice::z3},
+		};
+		return components;
 	}
-
-	SMTSolverChoice& operator&=(SMTSolverChoice const& _other)
-	{
-		cvc4 &= _other.cvc4;
-		smtlib2 &= _other.smtlib2;
-		z3 &= _other.z3;
-		return *this;
-	}
-
-	SMTSolverChoice operator&(SMTSolverChoice _other) const noexcept
-	{
-		_other &= *this;
-		return _other;
-	}
-
-	bool operator!=(SMTSolverChoice const& _other) const noexcept { return !(*this == _other); }
-
-	bool operator==(SMTSolverChoice const& _other) const noexcept
-	{
-		return cvc4 == _other.cvc4 &&
-			smtlib2 == _other.smtlib2 &&
-			z3 == _other.z3;
-	}
-
-	bool setSolver(std::string const& _solver)
-	{
-		static std::set<std::string> const solvers{"cvc4", "smtlib2", "z3"};
-		if (!solvers.count(_solver))
-			return false;
-		if (_solver == "cvc4")
-			cvc4 = true;
-		else if (_solver == "smtlib2")
-			smtlib2 = true;
-		else if (_solver == "z3")
-			z3 = true;
-		return true;
-	}
-
-	bool none() const noexcept { return !some(); }
-	bool some() const noexcept { return cvc4 || smtlib2 || z3; }
-	bool all() const noexcept { return cvc4 && smtlib2 && z3; }
 };
 
 enum class CheckResult
 {
-	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
+	SATISFIABLE,
+	UNSATISFIABLE,
+	UNKNOWN,
+	CONFLICTING,
+	ERROR
 };
 
 /// C++ representation of an SMTLIB2 expression.
 class Expression
 {
 	friend class SolverInterface;
+
 public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
-	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = ""): Expression(std::move(_name), {}, _sort) {}
-	explicit Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
-		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
+	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = "")
+		: Expression(std::move(_name), {}, _sort)
+	{
+	}
+	explicit Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort)
+		: name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort))
+	{
+	}
 	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::sintSort) {}
 	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
-	Expression(s256 const& _number): Expression(
-		_number >= 0 ? _number.str() : "-",
-		_number >= 0 ?
-			std::vector<Expression>{} :
-			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
-		SortProvider::sintSort
-	) {}
-	Expression(bigint const& _number): Expression(
-		_number >= 0 ? _number.str() : "-",
-		_number >= 0 ?
-			std::vector<Expression>{} :
-			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
-		SortProvider::sintSort
-	) {}
+	Expression(s256 const& _number)
+		: Expression(
+			_number >= 0 ? _number.str() : "-",
+			_number >= 0 ? std::vector<Expression>{} : std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+			SortProvider::sintSort)
+	{
+	}
+	Expression(bigint const& _number)
+		: Expression(
+			_number >= 0 ? _number.str() : "-",
+			_number >= 0 ? std::vector<Expression>{} : std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+			SortProvider::sintSort)
+	{
+	}
 
 	Expression(Expression const&) = default;
 	Expression(Expression&&) = default;
@@ -155,36 +112,16 @@ public:
 			return arguments.size() == tupleSort->components.size();
 		}
 
-		static std::map<std::string, unsigned> const operatorsArity{
-			{"ite", 3},
-			{"not", 1},
-			{"and", 2},
-			{"or", 2},
-			{"=>", 2},
-			{"=", 2},
-			{"<", 2},
-			{"<=", 2},
-			{">", 2},
-			{">=", 2},
-			{"+", 2},
-			{"-", 2},
-			{"*", 2},
-			{"div", 2},
-			{"mod", 2},
-			{"bvnot", 1},
-			{"bvand", 2},
-			{"bvor", 2},
-			{"bvxor", 2},
-			{"bvshl", 2},
-			{"bvlshr", 2},
-			{"bvashr", 2},
-			{"int2bv", 2},
-			{"bv2int", 1},
-			{"select", 2},
-			{"store", 3},
-			{"const_array", 2},
-			{"tuple_get", 2}
-		};
+		static std::map<std::string, unsigned> const operatorsArity{{"ite", 3},		 {"not", 1},	{"and", 2},
+																	{"or", 2},		 {"=>", 2},		{"=", 2},
+																	{"<", 2},		 {"<=", 2},		{">", 2},
+																	{">=", 2},		 {"+", 2},		{"-", 2},
+																	{"*", 2},		 {"div", 2},	{"mod", 2},
+																	{"bvnot", 1},	 {"bvand", 2},	{"bvor", 2},
+																	{"bvxor", 2},	 {"bvshl", 2},	{"bvlshr", 2},
+																	{"bvashr", 2},	 {"int2bv", 2}, {"bv2int", 1},
+																	{"select", 2},	 {"store", 3},	{"const_array", 2},
+																	{"tuple_get", 2}};
 		return operatorsArity.count(name) && operatorsArity.at(name) == arguments.size();
 	}
 
@@ -192,19 +129,15 @@ public:
 	{
 		smtAssert(*_trueValue.sort == *_falseValue.sort, "");
 		SortPointer sort = _trueValue.sort;
-		return Expression("ite", std::vector<Expression>{
-			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
-		}, std::move(sort));
+		return Expression(
+			"ite",
+			std::vector<Expression>{std::move(_condition), std::move(_trueValue), std::move(_falseValue)},
+			std::move(sort));
 	}
 
 	static Expression implies(Expression _a, Expression _b)
 	{
-		return Expression(
-			"=>",
-			std::move(_a),
-			std::move(_b),
-			Kind::Bool
-		);
+		return Expression("=>", std::move(_a), std::move(_b), Kind::Bool);
 	}
 
 	/// select is the SMT representation of an array index access.
@@ -215,11 +148,7 @@ public:
 		smtAssert(arraySort, "");
 		smtAssert(_index.sort, "");
 		smtAssert(*arraySort->domain == *_index.sort, "");
-		return Expression(
-			"select",
-			std::vector<Expression>{std::move(_array), std::move(_index)},
-			arraySort->range
-		);
+		return Expression("select", std::vector<Expression>{std::move(_array), std::move(_index)}, arraySort->range);
 	}
 
 	/// store is the SMT representation of an assignment to array index.
@@ -233,10 +162,7 @@ public:
 		smtAssert(*arraySort->domain == *_index.sort, "");
 		smtAssert(*arraySort->range == *_element.sort, "");
 		return Expression(
-			"store",
-			std::vector<Expression>{std::move(_array), std::move(_index), std::move(_element)},
-			arraySort
-		);
+			"store", std::vector<Expression>{std::move(_array), std::move(_index), std::move(_element)}, arraySort);
 	}
 
 	static Expression const_array(Expression _sort, Expression _value)
@@ -247,11 +173,7 @@ public:
 		smtAssert(sortSort && arraySort, "");
 		smtAssert(_value.sort, "");
 		smtAssert(*arraySort->range == *_value.sort, "");
-		return Expression(
-			"const_array",
-			std::vector<Expression>{std::move(_sort), std::move(_value)},
-			arraySort
-		);
+		return Expression("const_array", std::vector<Expression>{std::move(_sort), std::move(_value)}, arraySort);
 	}
 
 	static Expression tuple_get(Expression _tuple, size_t _index)
@@ -263,8 +185,7 @@ public:
 		return Expression(
 			"tuple_get",
 			std::vector<Expression>{std::move(_tuple), Expression(_index)},
-			tupleSort->components.at(_index)
-		);
+			tupleSort->components.at(_index));
 	}
 
 	static Expression tuple_constructor(Expression _tuple, std::vector<Expression> _arguments)
@@ -274,11 +195,7 @@ public:
 		auto tupleSort = std::dynamic_pointer_cast<TupleSort>(sortSort->inner);
 		smtAssert(tupleSort, "");
 		smtAssert(_arguments.size() == tupleSort->components.size(), "");
-		return Expression(
-			"tuple_constructor",
-			std::move(_arguments),
-			tupleSort
-		);
+		return Expression("tuple_constructor", std::move(_arguments), tupleSort);
 	}
 
 	static Expression int2bv(Expression _n, size_t _size)
@@ -290,8 +207,7 @@ public:
 		return Expression(
 			"int2bv",
 			std::vector<Expression>{std::move(_n), Expression(_size)},
-			std::make_shared<BitVectorSort>(_size)
-		);
+			std::make_shared<BitVectorSort>(_size));
 	}
 
 	static Expression bv2int(Expression _bv, bool _signed = false)
@@ -300,11 +216,7 @@ public:
 		std::shared_ptr<BitVectorSort> bvSort = std::dynamic_pointer_cast<BitVectorSort>(_bv.sort);
 		smtAssert(bvSort, "");
 		smtAssert(bvSort->size <= 256, "");
-		return Expression(
-			"bv2int",
-			std::vector<Expression>{std::move(_bv)},
-			SortProvider::intSort(_signed)
-		);
+		return Expression("bv2int", std::vector<Expression>{std::move(_bv)}, SortProvider::intSort(_signed));
 	}
 
 	static bool sameSort(std::vector<Expression> const& _args)
@@ -313,10 +225,7 @@ public:
 			return true;
 
 		auto sort = _args.front().sort;
-		return ranges::all_of(
-			_args,
-			[&](auto const& _expr){ return _expr.sort->kind == sort->kind; }
-		);
+		return ranges::all_of(_args, [&](auto const& _expr) { return _expr.sort->kind == sort->kind; });
 	}
 
 	static Expression mkAnd(std::vector<Expression> _args)
@@ -394,10 +303,7 @@ public:
 		smtAssert(_a.sort->kind == _b.sort->kind, "Trying to create an 'equal' expression with different sorts");
 		return Expression("=", std::move(_a), std::move(_b), Kind::Bool);
 	}
-	friend Expression operator!=(Expression _a, Expression _b)
-	{
-		return !(std::move(_a) == std::move(_b));
-	}
+	friend Expression operator!=(Expression _a, Expression _b) { return !(std::move(_a) == std::move(_b)); }
 	friend Expression operator<(Expression _a, Expression _b)
 	{
 		return Expression("<", std::move(_a), std::move(_b), Kind::Bool);
@@ -476,10 +382,7 @@ public:
 	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
-		smtAssert(
-			sort->kind == Kind::Function,
-			"Attempted function application to non-function."
-		);
+		smtAssert(sort->kind == Kind::Function, "Attempted function application to non-function.");
 		auto fSort = dynamic_cast<FunctionSort const*>(sort.get());
 		smtAssert(fSort, "");
 		return Expression(name, std::move(_arguments), fSort->codomain);
@@ -491,15 +394,22 @@ public:
 
 private:
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
-	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):
-		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
+	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind)
+		: Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind))
+	{
+	}
 
-	explicit Expression(std::string _name, Kind _kind):
-		Expression(std::move(_name), std::vector<Expression>{}, _kind) {}
-	Expression(std::string _name, Expression _arg, Kind _kind):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _kind) {}
-	Expression(std::string _name, Expression _arg1, Expression _arg2, Kind _kind):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _kind) {}
+	explicit Expression(std::string _name, Kind _kind): Expression(std::move(_name), std::vector<Expression>{}, _kind)
+	{
+	}
+	Expression(std::string _name, Expression _arg, Kind _kind)
+		: Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _kind)
+	{
+	}
+	Expression(std::string _name, Expression _arg1, Expression _arg2, Kind _kind)
+		: Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _kind)
+	{
+	}
 };
 
 DEV_SIMPLE_EXCEPTION(SolverError);

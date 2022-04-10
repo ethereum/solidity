@@ -21,12 +21,7 @@
 
 #pragma once
 
-#include <map>
-#include <optional>
-#include <ostream>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <libsolutil/FlagSet.h>
 
 namespace solidity::langutil
 {
@@ -37,50 +32,22 @@ namespace solidity::langutil
  * Provides extra functionality for enumerating the components and serializing/deserializing the
  * selection to/from a comma-separated string.
  */
-struct DebugInfoSelection
+
+struct DebugInfoSelection: public solidity::util::FlagSet<DebugInfoSelection>
 {
-	static DebugInfoSelection const All(bool _value = true) noexcept;
-	static DebugInfoSelection const None() noexcept { return All(false); }
-	static DebugInfoSelection const Only(bool DebugInfoSelection::* _member) noexcept;
-	static DebugInfoSelection const Default() noexcept { return All(); }
-
-	static std::optional<DebugInfoSelection> fromString(std::string_view _input);
-	static std::optional<DebugInfoSelection> fromComponents(
-		std::vector<std::string> const& _componentNames,
-		bool _acceptWildcards = false
-	);
-	bool enable(std::string _component);
-
-	bool all() const noexcept;
-	bool any() const noexcept;
-	bool none() const noexcept { return !any(); }
-	bool only(bool DebugInfoSelection::* _member) const noexcept { return *this == Only(_member); }
-
-	DebugInfoSelection& operator&=(DebugInfoSelection const& _other);
-	DebugInfoSelection& operator|=(DebugInfoSelection const& _other);
-	DebugInfoSelection operator&(DebugInfoSelection _other) const noexcept;
-	DebugInfoSelection operator|(DebugInfoSelection _other) const noexcept;
-
-	bool operator!=(DebugInfoSelection const& _other) const noexcept { return !(*this == _other); }
-	bool operator==(DebugInfoSelection const& _other) const noexcept;
-
-	friend std::ostream& operator<<(std::ostream& _stream, DebugInfoSelection const& _selection);
-
-	static auto const& componentMap()
+	static auto const& flagMap()
 	{
-		static std::map<std::string, bool DebugInfoSelection::*> const components = {
+		static std::unordered_map<std::string, bool DebugInfoSelection::*> const flags = {
 			{"location", &DebugInfoSelection::location},
 			{"snippet", &DebugInfoSelection::snippet},
 			{"ast-id", &DebugInfoSelection::astID},
 		};
-		return components;
+		return flags;
 	}
 
 	bool location = false; ///< Include source location. E.g. `@src 3:50:100`
 	bool snippet = false;  ///< Include source code snippet next to location. E.g. `@src 3:50:100 "contract C {..."`
-	bool astID = false;    ///< Include ID of the Solidity AST node. E.g. `@ast-id 15`
+	bool astID = false;	   ///< Include ID of the Solidity AST node. E.g. `@ast-id 15`
 };
-
-std::ostream& operator<<(std::ostream& _stream, DebugInfoSelection const& _selection);
 
 }

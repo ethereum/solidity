@@ -152,66 +152,6 @@ void CommandLineParser::checkMutuallyExclusive(vector<string> const& _optionName
 	}
 }
 
-bool CompilerOutputs::operator==(CompilerOutputs const& _other) const noexcept
-{
-	for (bool CompilerOutputs::* member: componentMap() | ranges::views::values)
-		if (this->*member != _other.*member)
-			return false;
-	return true;
-}
-
-ostream& operator<<(ostream& _out, CompilerOutputs const& _selection)
-{
-	vector<string> serializedSelection;
-	for (auto&& [componentName, component]: CompilerOutputs::componentMap())
-		if (_selection.*component)
-			serializedSelection.push_back(CompilerOutputs::componentName(component));
-
-	return _out << util::joinHumanReadable(serializedSelection, ",");
-}
-
-string const& CompilerOutputs::componentName(bool CompilerOutputs::* _component)
-{
-	solAssert(_component, "");
-
-	// NOTE: Linear search is not optimal but it's simpler than getting pointers-to-members to work as map keys.
-	for (auto const& [componentName, component]: CompilerOutputs::componentMap())
-		if (component == _component)
-			return componentName;
-
-	solAssert(false, "");
-}
-
-bool CombinedJsonRequests::operator==(CombinedJsonRequests const& _other) const noexcept
-{
-	for (bool CombinedJsonRequests::* member: componentMap() | ranges::views::values)
-		if (this->*member != _other.*member)
-			return false;
-	return true;
-}
-
-
-ostream& operator<<(ostream& _out, CombinedJsonRequests const& _requests)
-{
-	vector<string> serializedRequests;
-	for (auto&& [componentName, component]: CombinedJsonRequests::componentMap())
-		if (_requests.*component)
-			serializedRequests.push_back(CombinedJsonRequests::componentName(component));
-
-	return _out << util::joinHumanReadable(serializedRequests, ",");
-}
-
-string const& CombinedJsonRequests::componentName(bool CombinedJsonRequests::* _component)
-{
-	solAssert(_component, "");
-
-	for (auto const& [componentName, component]: CombinedJsonRequests::componentMap())
-		if (component == _component)
-			return componentName;
-
-	solAssert(false, "");
-}
-
 bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noexcept
 {
 	return
@@ -441,16 +381,16 @@ void CommandLineParser::parseOutputSelection()
 	static auto outputSupported = [](InputMode _mode, string_view _outputName)
 	{
 		static set<string> const compilerModeOutputs = (
-			CompilerOutputs::componentMap() |
+			CompilerOutputs::flagMap() |
 			ranges::views::keys |
 			ranges::to<set>()
-		) - set<string>{CompilerOutputs::componentName(&CompilerOutputs::ewasmIR)};
+		) - set<string>{CompilerOutputs::flagName(&CompilerOutputs::ewasmIR)};
 		static set<string> const assemblerModeOutputs = {
-			CompilerOutputs::componentName(&CompilerOutputs::asm_),
-			CompilerOutputs::componentName(&CompilerOutputs::binary),
-			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
-			CompilerOutputs::componentName(&CompilerOutputs::ewasm),
-			CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
+			CompilerOutputs::flagName(&CompilerOutputs::asm_),
+			CompilerOutputs::flagName(&CompilerOutputs::binary),
+			CompilerOutputs::flagName(&CompilerOutputs::irOptimized),
+			CompilerOutputs::flagName(&CompilerOutputs::ewasm),
+			CompilerOutputs::flagName(&CompilerOutputs::ewasmIR),
 		};
 
 		switch (_mode)
@@ -473,7 +413,7 @@ void CommandLineParser::parseOutputSelection()
 		solAssert(false, "");
 	};
 
-	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+	for (auto&& [optionName, outputComponent]: CompilerOutputs::flagMap())
 		m_options.compiler.outputs.*outputComponent = (m_args.count(optionName) > 0);
 
 	if (m_options.input.mode == InputMode::Assembler && m_options.compiler.outputs == CompilerOutputs{})
@@ -488,7 +428,7 @@ void CommandLineParser::parseOutputSelection()
 	}
 
 	vector<string> unsupportedOutputs;
-	for (auto&& [optionName, outputComponent]: CompilerOutputs::componentMap())
+	for (auto&& [optionName, outputComponent]: CompilerOutputs::flagMap())
 		if (m_options.compiler.outputs.*outputComponent && !outputSupported(m_options.input.mode, optionName))
 			unsupportedOutputs.push_back(optionName);
 
@@ -516,7 +456,7 @@ at standard output or in files in the output directory, if specified.
 Imports are automatically read from the filesystem, but it is also possible to
 remap paths using the context:prefix=path syntax.
 Example:
-solc --)" + CompilerOutputs::componentName(&CompilerOutputs::binary) + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
+solc --)" + CompilerOutputs::flagName(&CompilerOutputs::binary) + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
 
 General Information)").c_str(),
 		po::options_description::m_default_line_length,
@@ -595,7 +535,7 @@ General Information)").c_str(),
 			po::value<string>()->default_value(util::toString(DebugInfoSelection::Default())),
 			("Debug info components to be included in the produced EVM assembly and Yul code. "
 			"Value can be all, none or a comma-separated list containing one or more of the "
-			"following components: " + util::joinHumanReadable(DebugInfoSelection::componentMap() | ranges::views::keys) + ".").c_str()
+			"following components: " + util::joinHumanReadable(DebugInfoSelection::flagMap() | ranges::views::keys) + ".").c_str()
 		)
 		(
 			g_strStopAfter.c_str(),
@@ -639,7 +579,7 @@ General Information)").c_str(),
 			g_strImportAst.c_str(),
 			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
 			"Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
-			"--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
+			"--" + g_strCombinedJson + " " + CombinedJsonRequests::flagName(&CombinedJsonRequests::ast)).c_str()
 		)
 		(
 			g_strLSP.c_str(),
@@ -704,22 +644,22 @@ General Information)").c_str(),
 
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
-		(CompilerOutputs::componentName(&CompilerOutputs::astCompactJson).c_str(), "AST of all source files in a compact JSON format.")
-		(CompilerOutputs::componentName(&CompilerOutputs::asm_).c_str(), "EVM assembly of the contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::asmJson).c_str(), "EVM assembly of the contracts in JSON format.")
-		(CompilerOutputs::componentName(&CompilerOutputs::opcodes).c_str(), "Opcodes of the contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::binary).c_str(), "Binary of the contracts in hex.")
-		(CompilerOutputs::componentName(&CompilerOutputs::binaryRuntime).c_str(), "Binary of the runtime part of the contracts in hex.")
-		(CompilerOutputs::componentName(&CompilerOutputs::abi).c_str(), "ABI specification of the contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::ewasm).c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
-		(CompilerOutputs::componentName(&CompilerOutputs::ewasmIR).c_str(), "Intermediate representation (IR) converted to a form that can be translated directly into Ewasm text representation (EXPERIMENTAL).")
-		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables.")
+		(CompilerOutputs::flagName(&CompilerOutputs::astCompactJson).c_str(), "AST of all source files in a compact JSON format.")
+		(CompilerOutputs::flagName(&CompilerOutputs::asm_).c_str(), "EVM assembly of the contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::asmJson).c_str(), "EVM assembly of the contracts in JSON format.")
+		(CompilerOutputs::flagName(&CompilerOutputs::opcodes).c_str(), "Opcodes of the contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::binary).c_str(), "Binary of the contracts in hex.")
+		(CompilerOutputs::flagName(&CompilerOutputs::binaryRuntime).c_str(), "Binary of the runtime part of the contracts in hex.")
+		(CompilerOutputs::flagName(&CompilerOutputs::abi).c_str(), "ABI specification of the contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::ewasm).c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
+		(CompilerOutputs::flagName(&CompilerOutputs::ewasmIR).c_str(), "Intermediate representation (IR) converted to a form that can be translated directly into Ewasm text representation (EXPERIMENTAL).")
+		(CompilerOutputs::flagName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
+		(CompilerOutputs::flagName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
+		(CompilerOutputs::flagName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables.")
 	;
 	desc.add(outputComponents);
 
@@ -731,7 +671,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strCombinedJson.c_str(),
-			po::value<string>()->value_name(util::joinHumanReadable(CombinedJsonRequests::componentMap() | ranges::views::keys, ",")),
+			po::value<string>()->value_name(util::joinHumanReadable(CombinedJsonRequests::flagMap() | ranges::views::keys, ",")),
 			"Output a single json document containing the specified information."
 		)
 	;
@@ -933,15 +873,15 @@ void CommandLineParser::processArgs()
 	checkMutuallyExclusive({g_strColor, g_strNoColor});
 
 	array<string, 9> const conflictingWithStopAfter{
-		CompilerOutputs::componentName(&CompilerOutputs::binary),
-		CompilerOutputs::componentName(&CompilerOutputs::ir),
-		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
-		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
-		CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
+		CompilerOutputs::flagName(&CompilerOutputs::binary),
+		CompilerOutputs::flagName(&CompilerOutputs::ir),
+		CompilerOutputs::flagName(&CompilerOutputs::irOptimized),
+		CompilerOutputs::flagName(&CompilerOutputs::ewasm),
+		CompilerOutputs::flagName(&CompilerOutputs::ewasmIR),
 		g_strGas,
-		CompilerOutputs::componentName(&CompilerOutputs::asm_),
-		CompilerOutputs::componentName(&CompilerOutputs::asmJson),
-		CompilerOutputs::componentName(&CompilerOutputs::opcodes),
+		CompilerOutputs::flagName(&CompilerOutputs::asm_),
+		CompilerOutputs::flagName(&CompilerOutputs::asmJson),
+		CompilerOutputs::flagName(&CompilerOutputs::opcodes),
 	};
 
 	for (auto& option: conflictingWithStopAfter)
@@ -1276,12 +1216,12 @@ void CommandLineParser::parseCombinedJsonOption()
 
 	set<string> requests;
 	for (string const& item: boost::split(requests, m_args[g_strCombinedJson].as<string>(), boost::is_any_of(",")))
-		if (CombinedJsonRequests::componentMap().count(item) == 0)
+		if (CombinedJsonRequests::flagMap().count(item) == 0)
 			solThrow(CommandLineValidationError, "Invalid option to --" + g_strCombinedJson + ": " + item);
 
 	m_options.compiler.combinedJsonRequests = CombinedJsonRequests{};
-	for (auto&& [componentName, component]: CombinedJsonRequests::componentMap())
-		m_options.compiler.combinedJsonRequests.value().*component = (requests.count(componentName) > 0);
+	for (auto&& [flagName, component]: CombinedJsonRequests::flagMap())
+		m_options.compiler.combinedJsonRequests.value().*component = (requests.count(flagName) > 0);
 }
 
 size_t CommandLineParser::countEnabledOptions(vector<string> const& _optionNames) const
