@@ -106,7 +106,7 @@ struct CombinedJsonRequests: public solidity::util::FlagSet<CombinedJsonRequests
 {
 	static auto const& flagMap()
 	{
-		static std::unordered_map<std::string, bool CombinedJsonRequests::*> const flags = {
+		static std::map<std::string, bool CombinedJsonRequests::*> const flags = {
 			{"abi", &CombinedJsonRequests::abi},
 			{"metadata", &CombinedJsonRequests::metadata},
 			{"bin", &CombinedJsonRequests::binary},

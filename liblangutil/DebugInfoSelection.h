@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <map>
 #include <libsolutil/FlagSet.h>
 
 namespace solidity::langutil
@@ -37,7 +38,7 @@ struct DebugInfoSelection: public solidity::util::FlagSet<DebugInfoSelection>
 {
 	static auto const& flagMap()
 	{
-		static std::unordered_map<std::string, bool DebugInfoSelection::*> const flags = {
+		static std::map<std::string, bool DebugInfoSelection::*> const flags = {
 			{"location", &DebugInfoSelection::location},
 			{"snippet", &DebugInfoSelection::snippet},
 			{"ast-id", &DebugInfoSelection::astID},

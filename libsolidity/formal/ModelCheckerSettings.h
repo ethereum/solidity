@@ -62,10 +62,9 @@ struct ModelCheckerEngine: public solidity::util::FlagSet<ModelCheckerEngine>
 	bool bmc = false;
 	bool chc = false;
 
-
 	static auto const& flagMap()
 	{
-		static std::unordered_map<std::string, bool ModelCheckerEngine::*> const flags = {
+		static std::map<std::string, bool ModelCheckerEngine::*> const flags = {
 			{"location", &ModelCheckerEngine::bmc},
 			{"snippet", &ModelCheckerEngine::chc},
 		};
@@ -206,7 +205,7 @@ struct ModelCheckerTargets: public solidity::util::FlagSet<ModelCheckerTargets>
 
 	static auto const& flagMap()
 	{
-		static std::unordered_map<std::string, bool ModelCheckerTargets::*> const flags = {
+		static std::map<std::string, bool ModelCheckerTargets::*> const flags = {
 			{"constantCondition", &ModelCheckerTargets::constantCondition},
 			{"underflow", &ModelCheckerTargets::underflow},
 			{"overflow", &ModelCheckerTargets::overflow},

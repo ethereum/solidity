@@ -48,7 +48,7 @@ struct SMTSolverChoice: public solidity::util::FlagSet<SMTSolverChoice>
 
 	static auto const& flagMap()
 	{
-		static std::unordered_map<std::string, bool SMTSolverChoice::*> const components = {
+		static std::map<std::string, bool SMTSolverChoice::*> const components = {
 			{"cvc4", &SMTSolverChoice::cvc4},
 			{"smtlib2", &SMTSolverChoice::smtlib2},
 			{"z3", &SMTSolverChoice::z3},
