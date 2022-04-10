@@ -1,44 +1,38 @@
 .. index:: !mapping
 .. _mapping-types:
 
-Mapping Types
+映射类型
 =============
 
-Mapping types use the syntax ``mapping(_KeyType => _ValueType)`` and variables
-of mapping type are declared using the syntax ``mapping(_KeyType => _ValueType) _VariableName``.
-The ``_KeyType`` can be any
-built-in value type, ``bytes``, ``string``, or any contract or enum type. Other user-defined
-or complex types, such as mappings, structs or array types are not allowed.
-``_ValueType`` can be any type, including mappings, arrays and structs.
+映射类型使用语法 ``mapping(_KeyType => _ValueType)``，
+映射类型的变量使用语法 ``mapping(_KeyType => _ValueType) _VariableName`` 声明。
+``_KeyType`` 可以是任何内置的值类型， ``bytes``， ``string``，或任何合约或枚举类型。
+其他用户定义的或复杂的类型，如映射、结构体或数组类型是不允许的。
+``_ValueType`` 可以是任何类型，包括映射、数组和结构体。
 
-You can think of mappings as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_, which are virtually initialised
-such that every possible key exists and is mapped to a value whose
-byte-representation is all zeros, a type's :ref:`default value <default-value>`.
-The similarity ends there, the key data is not stored in a
-mapping, only its ``keccak256`` hash is used to look up the value.
+您可以把映射想象成 `哈希表 <https://en.wikipedia.org/wiki/Hash_table>`_，
+它实际上被初始化了，使每一个可能的键都存在，
+并将其映射到字节形式全是零的值，一个类型的 :ref:`默认值 <default-value>`。
+相似性到此为止，键数据不存储在映射中，而是它的 ``keccak256`` 哈希值被用来查询。
 
-Because of this, mappings do not have a length or a concept of a key or
-value being set, and therefore cannot be erased without extra information
-regarding the assigned keys (see :ref:`clearing-mappings`).
+正因为如此，映射没有长度，也没有被设置的键或值的概念，
+因此，如果没有关于分配的键的额外信息，就不能被删除（见 :ref:`清除映射`）。
 
-Mappings can only have a data location of ``storage`` and thus
-are allowed for state variables, as storage reference types
-in functions, or as parameters for library functions.
-They cannot be used as parameters or return parameters
-of contract functions that are publicly visible.
-These restrictions are also true for arrays and structs that contain mappings.
+映射只能有一个 ``storage`` 的数据位置，因此允许用于状态变量，
+可作为函数中的存储引用类型，或作为库函数的参数。
+但它们不能被用作公开可见的合约函数的参数或返回参数。
+这些限制对于包含映射的数组和结构也是如此。
 
-You can mark state variables of mapping type as ``public`` and Solidity creates a
-:ref:`getter <visibility-and-getters>` for you. The ``_KeyType`` becomes a parameter for the getter.
-If ``_ValueType`` is a value type or a struct, the getter returns ``_ValueType``.
-If ``_ValueType`` is an array or a mapping, the getter has one parameter for
-each ``_KeyType``, recursively.
+您可以把映射类型的状态变量标记为 ``public``，
+Solidity会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
+``_KeyType`` 将成为getter的参数。
+如果 ``_ValueType`` 是一个值类型或一个结构，getter返回 ``_ValueType``。
+如果 ``_ValueType`` 是一个数组或映射，getter对每个 ``_KeyType`` 递归出一个参数。
 
-In the example below, the ``MappingExample`` contract defines a public ``balances``
-mapping, with the key type an ``address``, and a value type a ``uint``, mapping
-an Ethereum address to an unsigned integer value. As ``uint`` is a value type, the getter
-returns a value that matches the type, which you can see in the ``MappingUser``
-contract that returns the value at the specified address.
+在下面的例子中， ``MappingExample`` 合约定义了一个公共的 ``balances`` 映射，
+键类型是 ``address``，值类型是 ``uint``，将一个Ethereum地址映射到一个无符号整数值。
+由于 ``uint`` 是一个值类型，getter 返回一个与该类型相匹配的值，
+您可以在 ``MappingUser`` 合约中看到它返回指定地址对应的值。
 
 .. code-block:: solidity
 
@@ -61,10 +55,11 @@ contract that returns the value at the specified address.
         }
     }
 
-The example below is a simplified version of an
-`ERC20 token <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol>`_.
-``_allowances`` is an example of a mapping type inside another mapping type.
-The example below uses ``_allowances`` to record the amount someone else is allowed to withdraw from your account.
+下面的例子是一个简化版本的
+`ERC20 代币 <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol>`_。
+``_allowances`` 是一个映射类型在另一个映射类型中的例子。
+下面的例子使用 ``_allowances`` 来记录别人允许从您的账户中提取的金额。
+
 
 .. code-block:: solidity
 
@@ -113,14 +108,13 @@ The example below uses ``_allowances`` to record the amount someone else is allo
 .. index:: !iterable mappings
 .. _iterable-mappings:
 
-Iterable Mappings
+递归映射
 -----------------
 
-You cannot iterate over mappings, i.e. you cannot enumerate their keys.
-It is possible, though, to implement a data structure on
-top of them and iterate over that. For example, the code below implements an
-``IterableMapping`` library that the ``User`` contract then adds data too, and
-the ``sum`` function iterates over to sum all the values.
+您不能对映射进行递归调用，也就是说，您不能列举它们的键。
+不过，可以在它们上层实现一个数据结构，并对其进行递归。例如，
+下面的代码实现了一个 ``IterableMapping`` 库， ``User`` 合约也添加了数据，
+``sum`` 函数对所有的值进行递归调用去累加这些值。
 
 .. code-block:: solidity
     :force:
@@ -187,23 +181,23 @@ the ``sum`` function iterates over to sum all the values.
         }
     }
 
-    // How to use it
+    // 如何使用
     contract User {
-        // Just a struct holding our data.
+        // 只是一个保存我们数据的结构体。
         itmap data;
-        // Apply library functions to the data type.
+        // 对数据类型应用库函数。
         using IterableMapping for itmap;
 
-        // Insert something
+        // 插入一些数据
         function insert(uint k, uint v) public returns (uint size) {
-            // This calls IterableMapping.insert(data, k, v)
+            // 这将调用 IterableMapping.insert(data, k, v)
             data.insert(k, v);
-            // We can still access members of the struct,
-            // but we should take care not to mess with them.
+            // 我们仍然可以访问结构中的成员，
+            // 但我们应该注意不要乱动他们。
             return data.size;
         }
 
-        // Computes the sum of all stored data.
+        // 计算所有存储数据的总和。
         function sum() public view returns (uint s) {
             for (
                 uint i = data.iterateStart();
