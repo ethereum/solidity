@@ -25,10 +25,8 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-map<string, InvariantType> const ModelCheckerInvariants::validInvariants{
-	{"contract", InvariantType::Contract},
-	{"reentrancy", InvariantType::Reentrancy}
-};
+map<string, InvariantType> const ModelCheckerInvariants::
+	validInvariants{{"contract", InvariantType::Contract}, {"reentrancy", InvariantType::Reentrancy}};
 
 std::optional<ModelCheckerInvariants> ModelCheckerInvariants::fromString(string const& _invs)
 {
@@ -68,8 +66,7 @@ map<string, TargetType> const ModelCheckerTargets::targetStrings{
 	{"balance", TargetType::Balance},
 	{"assert", TargetType::Assert},
 	{"popEmptyArray", TargetType::PopEmptyArray},
-	{"outOfBounds", TargetType::OutOfBounds}
-};
+	{"outOfBounds", TargetType::OutOfBounds}};
 
 map<TargetType, string> const ModelCheckerTargets::targetTypeToString{
 	{TargetType::ConstantCondition, "Constant condition"},
@@ -79,8 +76,87 @@ map<TargetType, string> const ModelCheckerTargets::targetTypeToString{
 	{TargetType::Balance, "Insufficient balance"},
 	{TargetType::Assert, "Assertion failed"},
 	{TargetType::PopEmptyArray, "Empty array pop"},
-	{TargetType::OutOfBounds, "Out of bounds access"}
-};
+	{TargetType::OutOfBounds, "Out of bounds access"}};
+
+ModelCheckerTargets::ModelCheckerTargets(size_t nFlags, ...)
+{
+	if (nFlags < 1)
+		return;
+
+	std::va_list args{};
+	va_start(args, nFlags);
+
+	for (size_t i = 0; i < nFlags; ++i)
+	{
+		auto targetType = va_arg(args, VerificationTargetType);
+		setTargetType(targetType, true);
+	}
+
+	va_end(args);
+}
+
+bool ModelCheckerTargets::setTargetType(VerificationTargetType targetType, bool _value)
+{
+	switch (targetType)
+	{
+	case VerificationTargetType::ConstantCondition:
+		constantCondition = _value;
+		return true;
+	case VerificationTargetType::Underflow:
+		underflow = _value;
+		return true;
+	case VerificationTargetType::Overflow:
+		overflow = _value;
+		return true;
+	case VerificationTargetType::UnderOverflow:
+		underOverflow = _value;
+		return true;
+	case VerificationTargetType::DivByZero:
+		divByZero = _value;
+		return true;
+	case VerificationTargetType::Balance:
+		balance = _value;
+		return true;
+	case VerificationTargetType::Assert:
+		assert = _value;
+		return true;
+	case VerificationTargetType::PopEmptyArray:
+		popEmptyArray = _value;
+		return true;
+	case VerificationTargetType::OutOfBounds:
+		outOfBounds = _value;
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool ModelCheckerTargets::has(VerificationTargetType _type) const
+{
+	switch (_type)
+	{
+	case VerificationTargetType::ConstantCondition:
+		return constantCondition;
+	case VerificationTargetType::Underflow:
+		return underflow;
+	case VerificationTargetType::Overflow:
+		return overflow;
+	case VerificationTargetType::UnderOverflow:
+		return underOverflow;
+	case VerificationTargetType::DivByZero:
+		return divByZero;
+	case VerificationTargetType::Balance:
+		return balance;
+	case VerificationTargetType::Assert:
+		return assert;
+	case VerificationTargetType::PopEmptyArray:
+		return popEmptyArray;
+	case VerificationTargetType::OutOfBounds:
+		return outOfBounds;
+	default:
+		return false;
+	}
+}
 
 std::optional<ModelCheckerContracts> ModelCheckerContracts::fromString(string const& _contracts)
 {

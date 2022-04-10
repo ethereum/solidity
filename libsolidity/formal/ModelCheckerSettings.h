@@ -119,85 +119,11 @@ struct ModelCheckerTargets: public solidity::util::FlagSet<ModelCheckerTargets>
 {
 	ModelCheckerTargets() = default;
 
-	ModelCheckerTargets(size_t nFlags, ...)
-	{
-		if (nFlags < 1)
-			return;
+	ModelCheckerTargets(size_t nFlags, ...);
 
-		std::va_list args{};
-		va_start(args, nFlags);
+	[[nodiscard]] bool has(VerificationTargetType _type) const;
 
-		for (size_t i = 0; i < nFlags; ++i)
-		{
-			auto targetType = va_arg(args, VerificationTargetType);
-			setTargetType(targetType, true);
-		}
-
-		va_end(args);
-	}
-
-	[[nodiscard]] constexpr bool has(VerificationTargetType _type) const
-	{
-		switch (_type)
-		{
-		case VerificationTargetType::ConstantCondition:
-			return constantCondition;
-		case VerificationTargetType::Underflow:
-			return underflow;
-		case VerificationTargetType::Overflow:
-			return overflow;
-		case VerificationTargetType::UnderOverflow:
-			return underOverflow;
-		case VerificationTargetType::DivByZero:
-			return divByZero;
-		case VerificationTargetType::Balance:
-			return balance;
-		case VerificationTargetType::Assert:
-			return assert;
-		case VerificationTargetType::PopEmptyArray:
-			return popEmptyArray;
-		case VerificationTargetType::OutOfBounds:
-			return outOfBounds;
-		default:
-			return false;
-		}
-	}
-
-	bool setTargetType(VerificationTargetType targetType, bool _value = true)
-	{
-		switch (targetType)
-		{
-		case VerificationTargetType::ConstantCondition:
-			constantCondition = _value;
-			return true;
-		case VerificationTargetType::Underflow:
-			underOverflow = _value;
-			return true;
-		case VerificationTargetType::Overflow:
-			overflow = _value;
-			return true;
-		case VerificationTargetType::UnderOverflow:
-			underOverflow = _value;
-			return true;
-		case VerificationTargetType::DivByZero:
-			divByZero = _value;
-			return true;
-		case VerificationTargetType::Balance:
-			balance = _value;
-			return true;
-		case VerificationTargetType::Assert:
-			assert = _value;
-			return true;
-		case VerificationTargetType::PopEmptyArray:
-			popEmptyArray = _value;
-			return true;
-		case VerificationTargetType::OutOfBounds:
-			outOfBounds = _value;
-			return true;
-		default:
-			return false;
-		}
-	}
+	bool setTargetType(VerificationTargetType targetType, bool _value = true);
 
 	static std::map<std::string, VerificationTargetType> const targetStrings;
 
