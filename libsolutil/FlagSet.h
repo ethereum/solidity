@@ -90,8 +90,9 @@ struct FlagSet
 	{
 		solAssert(Derived::flagMap().count("all") == 0, "");
 		solAssert(Derived::flagMap().count("none") == 0, "");
+		solAssert(Derived::flagMap().count("default") == 0, "");
 
-		if (_input == "all")
+		if (_input == "all" or _input == "default")
 			return All();
 		if (_input == "none")
 			return None();
