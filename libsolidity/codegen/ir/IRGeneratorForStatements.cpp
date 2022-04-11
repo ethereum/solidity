@@ -1785,7 +1785,20 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					functionType.declaration().isPartOfExternalInterface(),
 					""
 				);
-				define(IRVariable{_memberAccess}) << formatNumber(functionType.externalIdentifier() << 224) << "\n";
+				define(IRVariable{_memberAccess}) << formatNumber(
+					util::selectorFromSignature(functionType.externalSignature())
+				) << "\n";
+			}
+			else if (functionType.kind() == FunctionType::Kind::Event)
+			{
+				solAssert(functionType.hasDeclaration());
+				solAssert(functionType.kind() == FunctionType::Kind::Event);
+				solAssert(
+					!(dynamic_cast<EventDefinition const&>(functionType.declaration()).isAnonymous())
+				);
+				define(IRVariable{_memberAccess}) << formatNumber(
+					u256(h256::Arith(util::keccak256(functionType.externalSignature())))
+				) << "\n";
 			}
 			else
 				solAssert(false, "Invalid use of .selector: " + functionType.toString(false));

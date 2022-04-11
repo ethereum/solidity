@@ -3335,6 +3335,12 @@ MemberList::MemberMap FunctionType::nativeMembers(ASTNode const* _scope) const
 	}
 	case Kind::Error:
 		return {{"selector", TypeProvider::fixedBytes(4)}};
+	case Kind::Event:
+	{
+		if (!(dynamic_cast<EventDefinition const&>(declaration()).isAnonymous()))
+			return {{"selector", TypeProvider::fixedBytes(32)}};
+		return MemberList::MemberMap();
+	}
 	default:
 		return MemberList::MemberMap();
 	}
