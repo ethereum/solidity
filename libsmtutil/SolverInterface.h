@@ -22,14 +22,14 @@
 #include <libsmtutil/Sorts.h>
 
 #include <libsolutil/Common.h>
-#include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/FlagSet.h>
 
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view.hpp>
 
 #include <cstdio>
-#include <libsolutil/FlagSet.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -70,21 +70,21 @@ public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
 	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = ""): Expression(std::move(_name), {}, _sort) {}
 	explicit Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
-																								   name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
+		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
 	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::sintSort) {}
 	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
 	Expression(s256 const& _number): Expression(
 		_number >= 0 ? _number.str() : "-",
 		_number >= 0 ?
-					 std::vector<Expression>{} :
-					 std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+			std::vector<Expression>{} :
+			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
 		SortProvider::sintSort
 	) {}
 	Expression(bigint const& _number): Expression(
 		_number >= 0 ? _number.str() : "-",
 		_number >= 0 ?
-					 std::vector<Expression>{} :
-					 std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+			std::vector<Expression>{} :
+			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
 		SortProvider::sintSort
 	) {}
 
@@ -140,8 +140,8 @@ public:
 		smtAssert(*_trueValue.sort == *_falseValue.sort, "");
 		SortPointer sort = _trueValue.sort;
 		return Expression("ite", std::vector<Expression>{
-									 std::move(_condition), std::move(_trueValue), std::move(_falseValue)
-								 }, std::move(sort));
+			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
+		}, std::move(sort));
 	}
 
 	static Expression implies(Expression _a, Expression _b)
@@ -439,14 +439,14 @@ public:
 private:
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
 	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):
-																				   Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
+		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
 
 	explicit Expression(std::string _name, Kind _kind):
-														Expression(std::move(_name), std::vector<Expression>{}, _kind) {}
+		Expression(std::move(_name), std::vector<Expression>{}, _kind) {}
 	Expression(std::string _name, Expression _arg, Kind _kind):
-																Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _kind) {}
+		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _kind) {}
 	Expression(std::string _name, Expression _arg1, Expression _arg2, Kind _kind):
-																				   Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _kind) {}
+		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _kind) {}
 };
 
 DEV_SIMPLE_EXCEPTION(SolverError);
