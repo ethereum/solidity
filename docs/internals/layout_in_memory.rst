@@ -62,9 +62,9 @@ Scratch Space
 
 The memory between locations ``0x00`` and ``0x3F`` (inclusive) is called the *scratch space*. It exists
 solely by convention. Solidity's generated code observes the convention that this area is for
-extremely brief temporary use only. Since there is no guarantee that code not under your direct
-control will not change that memory, you should not rely on its value being preserved between statements
-except within the current assembly block.
+temporary use only. Specifically, since there is no guarantee that code not under your direct
+control will not change that memory, you should not rely on its value being preserved except
+within the current assembly block.
 
 .. warning::
     There are some operations in Solidity that need a temporary memory area
