@@ -179,7 +179,7 @@ AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 )
 {
 	assertThrow(!m_breakingItem, OptimizerException, "Invalid use of CommonSubexpressionEliminator.");
-	unsigned const maxChunkSize = 1000;
+	unsigned const maxChunkSize = 2000;
 	unsigned chunkSize = 0;
 	for (
 		;
