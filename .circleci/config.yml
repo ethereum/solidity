@@ -92,6 +92,27 @@ commands:
           event: release
           condition: on_success
 
+  prepare_bytecode_report:
+    description: "Generate bytecode report and upload it as an artifact."
+    parameters:
+      label:
+        type: string
+    steps:
+      - run: mkdir test-cases/
+      - run: cd test-cases && ../scripts/isolate_tests.py ../test/
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json --report-file "../bytecode-report-<< parameters.label >>-json.txt"
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli --report-file "../bytecode-report-<< parameters.label >>-cli.txt"
+      - store_artifacts:
+          path: bytecode-report-<< parameters.label >>-json.txt
+      - store_artifacts:
+          path: bytecode-report-<< parameters.label >>-cli.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bytecode-report-<< parameters.label >>-json.txt
+            - bytecode-report-<< parameters.label >>-cli.txt
+      - gitter_notify_failure_unless_pr
+
 defaults:
 
   # --------------------------------------------------------------------------
@@ -1389,20 +1410,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: build
-      - run: mkdir test-cases/
-      - run: cd test-cases && ../scripts/isolate_tests.py ../test/
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json --report-file ../bytecode-report-ubuntu-json.txt
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli --report-file ../bytecode-report-ubuntu-cli.txt
-      - store_artifacts:
-          path: bytecode-report-ubuntu-json.txt
-      - store_artifacts:
-          path: bytecode-report-ubuntu-cli.txt
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bytecode-report-ubuntu-json.txt
-            - bytecode-report-ubuntu-cli.txt
-      - gitter_notify_failure_unless_pr
+      - prepare_bytecode_report:
+          label: "ubuntu"
 
   b_bytecode_osx:
     <<: *base_osx
@@ -1410,20 +1419,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: mkdir test-cases/
-      - run: cd test-cases && ../scripts/isolate_tests.py ../test/
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json --report-file ../bytecode-report-osx-json.txt
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli --report-file ../bytecode-report-osx-cli.txt
-      - store_artifacts:
-          path: bytecode-report-osx-json.txt
-      - store_artifacts:
-          path: bytecode-report-osx-cli.txt
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bytecode-report-osx-json.txt
-            - bytecode-report-osx-cli.txt
-      - gitter_notify_failure_unless_pr
+      - prepare_bytecode_report:
+          label: "osx"
 
   b_bytecode_win:
     <<: *base_win_cmd
