@@ -246,23 +246,11 @@ defaults:
 
   - steps_install_dependencies_osx: &steps_install_dependencies_osx
       steps:
-        - restore_cache:
-            keys:
-              - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-        # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
-        # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
+        # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
+        # them each time. See https://github.com/ethereum/solidity/issues/12925.
         - run:
             name: Install build dependencies
             command: ./.circleci/osx_install_dependencies.sh
-        - save_cache:
-            key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-            paths:
-              - /usr/local/bin
-              - /usr/local/sbin
-              - /usr/local/lib
-              - /usr/local/include
-              - /usr/local/Cellar
-              - /usr/local/Homebrew
 
   # --------------------------------------------------------------------------
   # Base Image Templates
