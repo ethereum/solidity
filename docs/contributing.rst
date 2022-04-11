@@ -475,7 +475,7 @@ For example ``pragma solidity >=0.4.0 <0.9.0;``.
 Running Documentation Tests
 ---------------------------
 
-Make sure your contributions pass our documentation tests by running ``./scripts/docs.sh`` that installs dependencies
+Make sure your contributions pass our documentation tests by running ``./docs/docs.sh`` that installs dependencies
 needed for documentation and checks for any problems such as broken links or syntax issues.
 
 Solidity Language Design
