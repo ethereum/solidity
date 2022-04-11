@@ -25,8 +25,10 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-map<string, InvariantType> const ModelCheckerInvariants::
-	validInvariants{{"contract", InvariantType::Contract}, {"reentrancy", InvariantType::Reentrancy}};
+map<string, InvariantType> const ModelCheckerInvariants::validInvariants{
+	{"contract", InvariantType::Contract},
+	{"reentrancy", InvariantType::Reentrancy}
+};
 
 std::optional<ModelCheckerInvariants> ModelCheckerInvariants::fromString(string const& _invs)
 {
@@ -66,7 +68,8 @@ map<string, TargetType> const ModelCheckerTargets::targetStrings{
 	{"balance", TargetType::Balance},
 	{"assert", TargetType::Assert},
 	{"popEmptyArray", TargetType::PopEmptyArray},
-	{"outOfBounds", TargetType::OutOfBounds}};
+	{"outOfBounds", TargetType::OutOfBounds}
+};
 
 map<TargetType, string> const ModelCheckerTargets::targetTypeToString{
 	{TargetType::ConstantCondition, "Constant condition"},
@@ -76,7 +79,8 @@ map<TargetType, string> const ModelCheckerTargets::targetTypeToString{
 	{TargetType::Balance, "Insufficient balance"},
 	{TargetType::Assert, "Assertion failed"},
 	{TargetType::PopEmptyArray, "Empty array pop"},
-	{TargetType::OutOfBounds, "Out of bounds access"}};
+	{TargetType::OutOfBounds, "Out of bounds access"}
+};
 
 ModelCheckerTargets::ModelCheckerTargets(size_t nFlags, ...)
 {

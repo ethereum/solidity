@@ -33,7 +33,6 @@ namespace solidity::langutil
  * Provides extra functionality for enumerating the components and serializing/deserializing the
  * selection to/from a comma-separated string.
  */
-
 struct DebugInfoSelection: public solidity::util::FlagSet<DebugInfoSelection>
 {
 	static auto const& flagMap()

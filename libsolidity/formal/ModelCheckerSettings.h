@@ -72,11 +72,7 @@ struct ModelCheckerEngine: public solidity::util::FlagSet<ModelCheckerEngine>
 	}
 };
 
-enum class InvariantType
-{
-	Contract,
-	Reentrancy
-};
+enum class InvariantType { Contract, Reentrancy };
 
 struct ModelCheckerInvariants
 {
@@ -102,18 +98,7 @@ struct ModelCheckerInvariants
 	std::set<InvariantType> invariants;
 };
 
-enum class VerificationTargetType
-{
-	ConstantCondition,
-	Underflow,
-	Overflow,
-	UnderOverflow,
-	DivByZero,
-	Balance,
-	Assert,
-	PopEmptyArray,
-	OutOfBounds
-};
+enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray, OutOfBounds };
 
 struct ModelCheckerTargets: public solidity::util::FlagSet<ModelCheckerTargets>
 {
@@ -176,9 +161,15 @@ struct ModelCheckerSettings
 	bool operator!=(ModelCheckerSettings const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(ModelCheckerSettings const& _other) const noexcept
 	{
-		return contracts == _other.contracts && divModNoSlacks == _other.divModNoSlacks && engine == _other.engine
-			   && invariants == _other.invariants && showUnproved == _other.showUnproved && solvers == _other.solvers
-			   && targets == _other.targets && timeout == _other.timeout;
+		return
+			contracts == _other.contracts &&
+			divModNoSlacks == _other.divModNoSlacks &&
+			engine == _other.engine &&
+			invariants == _other.invariants &&
+			showUnproved == _other.showUnproved &&
+			solvers == _other.solvers &&
+			targets == _other.targets &&
+			timeout == _other.timeout;
 	}
 };
 

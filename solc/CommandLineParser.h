@@ -28,12 +28,12 @@
 #include <libyul/YulStack.h>
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
-#include <libsolutil/FlagSet.h>
 
+#include <libsolutil/FlagSet.h>
 #include <libsolutil/JSON.h>
 
-#include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <map>
 #include <memory>
