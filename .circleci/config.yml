@@ -248,7 +248,7 @@ defaults:
       steps:
         - restore_cache:
             keys:
-              - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+              - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}-v2
         - attach_workspace:
             at: .
 
@@ -902,14 +902,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}-v2
       # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
       # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
       - save_cache:
-          key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}-v2
           paths:
             - /usr/local/bin
             - /usr/local/sbin
