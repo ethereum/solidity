@@ -47,7 +47,7 @@ struct DebugInfoSelection: public solidity::util::FlagSet<DebugInfoSelection>
 
 	bool location = false; ///< Include source location. E.g. `@src 3:50:100`
 	bool snippet = false;  ///< Include source code snippet next to location. E.g. `@src 3:50:100 "contract C {..."`
-	bool astID = false;	   ///< Include ID of the Solidity AST node. E.g. `@ast-id 15`
+	bool astID = false;    ///< Include ID of the Solidity AST node. E.g. `@ast-id 15`
 };
 
 }

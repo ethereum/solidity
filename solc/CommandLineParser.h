@@ -26,6 +26,7 @@
 #include <libsolidity/interface/ImportRemapper.h>
 
 #include <libyul/YulStack.h>
+
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 

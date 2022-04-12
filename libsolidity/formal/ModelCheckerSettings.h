@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <cstdarg>
 #include <libsmtutil/SolverInterface.h>
 #include <libsolutil/FlagSet.h>
 #include <optional>
@@ -130,15 +129,15 @@ struct ModelCheckerTargets: public solidity::util::FlagSet<ModelCheckerTargets>
 		return flags;
 	}
 
-	bool constantCondition{false};
-	bool underflow{false};
-	bool overflow{false};
-	bool underOverflow{false};
-	bool divByZero{false};
-	bool balance{false};
-	bool assert{false};
-	bool popEmptyArray{false};
-	bool outOfBounds{false};
+	bool constantCondition = false;
+	bool underflow = false;
+	bool overflow = false;
+	bool underOverflow = false;
+	bool divByZero = false;
+	bool balance = false;
+	bool assert = false;
+	bool popEmptyArray = false;
+	bool outOfBounds = false;
 };
 
 struct ModelCheckerSettings
