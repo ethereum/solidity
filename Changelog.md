@@ -4,7 +4,7 @@ Language Features:
 
 
 Compiler Features:
-
+ * TypeChecker: Support using library constants in initializers of other constants.
 
 Bugfixes:
 
