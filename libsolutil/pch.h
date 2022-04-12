@@ -23,20 +23,20 @@
  * Generates a meta function `trait` to check existence of `method` with signature $sign in the given class `U`
  *
  */
-#define DEFINE_METHOD_CHECK(trait, method, sign)						\
-	template<typename U>                    						\
-	class trait										\
-	{											\
-	private:                                						\
-		template<typename T, T>                                                      \
-		struct helper;                                                               \
-                                                                                        	\
-		template<typename T>                                                         \
-		static std::true_type check(helper<sign, &T::method>*);                      \
-                                                                                        	\
-		template<typename T>                                                         \
-		static std::false_type check(...);                                           \
-                                                                                        	\
-	public:                                                                              \
-		static constexpr bool value = sizeof(check<U>(0)) == sizeof(std::true_type); \
+#define DEFINE_METHOD_CHECK(trait, method, sign)						                \
+	template<typename U>                    						                    \
+	class trait										                                    \
+	{											                                        \
+	private:                                						                    \
+		template<typename T, T>                                                         \
+		struct helper;                                                                  \
+                                                                                        \
+		template<typename T>                                                            \
+		static std::true_type check(helper<sign, &T::method>*);                         \
+                                                                                        \
+		template<typename T>                                                            \
+		static std::false_type check(...);                                              \
+                                                                                        \
+	public:                                                                             \
+		static constexpr bool value = sizeof(check<U>(0)) == sizeof(std::true_type);    \
 	}
