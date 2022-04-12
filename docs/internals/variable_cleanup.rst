@@ -12,7 +12,9 @@ For example, before writing a value to  memory, the padding bits need
 to be cleaned because the memory contents could be used for computing
 hashes or sent as the data of a message call. Similarly, before
 storing a value in storage, padding bits need to be cleaned
-because otherwise their value can be observed.
+because otherwise their value, which may not be deterministic across
+EVM or Solidity versions, may affect operations such as cryptographic
+functions or other operations which observe those values.
 
 Note that inline assembly instructions do not automatically clean padding bits
 of values used therein.
