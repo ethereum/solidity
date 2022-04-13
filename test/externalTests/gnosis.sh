@@ -82,6 +82,11 @@ function gnosis_safe_test
     # TODO: Remove this when Gnosis merges https://github.com/gnosis/safe-contracts/pull/394
     sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" contracts/handler/CompatibilityFallbackHandler.sol
 
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    sed -i "s|it\(('should enforce delegatecall'\)|it.skip\1|g" test/accessors/SimulateTxAccessor.spec.ts
+    sed -i "s|it\(('can only be called from Safe itself'\)|it.skip\1|g" test/libraries/Migration.spec.ts
+    sed -i "s|it\(('should enforce delegatecall to MultiSend'\)|it.skip\1|g" test/libraries/MultiSend.spec.ts
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
