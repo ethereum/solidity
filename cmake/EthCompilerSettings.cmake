@@ -54,9 +54,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wsign-conversion)
 	add_compile_options(-Wconversion)
 
-	eth_add_cxx_compiler_flag_if_supported(
-		$<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>
-	)
+	check_cxx_compiler_flag(-Wextra-semi WEXTRA_SEMI)
+	if(WEXTRA_SEMI)
+		add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>)
+	endif()
 	eth_add_cxx_compiler_flag_if_supported(-Wfinal-dtor-non-final-class)
 	eth_add_cxx_compiler_flag_if_supported(-Wnewline-eof)
 	eth_add_cxx_compiler_flag_if_supported(-Wsuggest-destructor-override)

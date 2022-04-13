@@ -222,122 +222,58 @@ string Assembly::assemblyString(
 	return tmp.str();
 }
 
-Json::Value Assembly::createJsonValue(string _name, int _source, int _begin, int _end, string _value, string _jumpType)
-{
-	Json::Value value{Json::objectValue};
-	value["name"] = _name;
-	value["source"] = _source;
-	value["begin"] = _begin;
-	value["end"] = _end;
-	if (!_value.empty())
-		value["value"] = _value;
-	if (!_jumpType.empty())
-		value["jumpType"] = _jumpType;
-	return value;
-}
-
-string Assembly::toStringInHex(u256 _value)
-{
-	std::stringstream hexStr;
-	hexStr << std::uppercase << hex << _value;
-	return hexStr.str();
-}
-
-Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) const
+Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, bool _includeSourceList) const
 {
 	Json::Value root;
 	root[".code"] = Json::arrayValue;
-
-	Json::Value& collection = root[".code"];
-	for (AssemblyItem const& i: m_items)
+	Json::Value& code = root[".code"];
+	for (AssemblyItem const& item: m_items)
 	{
 		int sourceIndex = -1;
-		if (i.location().sourceName)
+		if (item.location().sourceName)
 		{
-			auto iter = _sourceIndices.find(*i.location().sourceName);
+			auto iter = _sourceIndices.find(*item.location().sourceName);
 			if (iter != _sourceIndices.end())
 				sourceIndex = static_cast<int>(iter->second);
 		}
 
-		switch (i.type())
+		auto [name, data] = item.nameAndData();
+		Json::Value jsonItem;
+		jsonItem["name"] = name;
+		jsonItem["begin"] = item.location().start;
+		jsonItem["end"] = item.location().end;
+		if (item.m_modifierDepth != 0)
+			jsonItem["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
+		std::string jumpType = item.getJumpTypeAsString();
+		if (!jumpType.empty())
+			jsonItem["jumpType"] = jumpType;
+		if (name == "PUSHLIB")
+			data = m_libraries.at(h256(data));
+		else if (name == "PUSHIMMUTABLE" || name == "ASSIGNIMMUTABLE")
+			data = m_immutables.at(h256(data));
+		if (!data.empty())
+			jsonItem["value"] = data;
+		jsonItem["source"] = sourceIndex;
+		code.append(move(jsonItem));
+
+		if (item.type() == AssemblyItemType::Tag)
 		{
-		case Operation:
-			collection.append(
-				createJsonValue(
-					instructionInfo(i.instruction()).name,
-					sourceIndex,
-					i.location().start,
-					i.location().end,
-					i.getJumpTypeAsString())
-				);
-			break;
-		case Push:
-			collection.append(
-				createJsonValue("PUSH", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
-			break;
-		case PushTag:
-			if (i.data() == 0)
-				collection.append(
-					createJsonValue("PUSH [ErrorTag]", sourceIndex, i.location().start, i.location().end, ""));
-			else
-				collection.append(
-					createJsonValue("PUSH [tag]", sourceIndex, i.location().start, i.location().end, toString(i.data())));
-			break;
-		case PushSub:
-			collection.append(
-				createJsonValue("PUSH [$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
-			break;
-		case PushSubSize:
-			collection.append(
-				createJsonValue("PUSH #[$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
-			break;
-		case PushProgramSize:
-			collection.append(
-				createJsonValue("PUSHSIZE", sourceIndex, i.location().start, i.location().end));
-			break;
-		case PushLibraryAddress:
-			collection.append(
-				createJsonValue("PUSHLIB", sourceIndex, i.location().start, i.location().end, m_libraries.at(h256(i.data())))
-			);
-			break;
-		case PushDeployTimeAddress:
-			collection.append(
-				createJsonValue("PUSHDEPLOYADDRESS", sourceIndex, i.location().start, i.location().end)
-			);
-			break;
-		case PushImmutable:
-			collection.append(createJsonValue(
-				"PUSHIMMUTABLE",
-				sourceIndex,
-				i.location().start,
-				i.location().end,
-				m_immutables.at(h256(i.data()))
-			));
-			break;
-		case AssignImmutable:
-			collection.append(createJsonValue(
-				"ASSIGNIMMUTABLE",
-				sourceIndex,
-				i.location().start,
-				i.location().end,
-				m_immutables.at(h256(i.data()))
-			));
-			break;
-		case Tag:
-			collection.append(
-				createJsonValue("tag", sourceIndex, i.location().start, i.location().end, toString(i.data())));
-			collection.append(
-				createJsonValue("JUMPDEST", sourceIndex, i.location().start, i.location().end));
-			break;
-		case PushData:
-			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
-			break;
-		case VerbatimBytecode:
-			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, util::toHex(i.verbatimData())));
-			break;
-		default:
-			assertThrow(false, InvalidOpcode, "");
+			Json::Value jumpdest;
+			jumpdest["name"] = "JUMPDEST";
+			jumpdest["begin"] = item.location().start;
+			jumpdest["end"] = item.location().end;
+			jumpdest["source"] = sourceIndex;
+			if (item.m_modifierDepth != 0)
+				jumpdest["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
+			code.append(move(jumpdest));
 		}
+	}
+	if (_includeSourceList)
+	{
+		root["sourceList"] = Json::arrayValue;
+		Json::Value& jsonSourceList = root["sourceList"];
+		for (auto const& [name, index]: _sourceIndices)
+			jsonSourceList[index] = name;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -346,17 +282,17 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		Json::Value& data = root[".data"];
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
-				data[toStringInHex((u256)i.first)] = util::toHex(i.second);
+				data[util::toHex(toBigEndian((u256)i.first), util::HexPrefix::DontAdd, util::HexCase::Upper)] = util::toHex(i.second);
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices, /*_includeSourceList = */false);
 		}
 	}
 
-	if (m_auxiliaryData.size() > 0)
+	if (!m_auxiliaryData.empty())
 		root[".auxdata"] = util::toHex(m_auxiliaryData);
 
 	return root;

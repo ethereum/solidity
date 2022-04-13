@@ -119,7 +119,7 @@ Iterable Mappings
 You cannot iterate over mappings, i.e. you cannot enumerate their keys.
 It is possible, though, to implement a data structure on
 top of them and iterate over that. For example, the code below implements an
-``IterableMapping`` library that the ``User`` contract then adds data too, and
+``IterableMapping`` library that the ``User`` contract then adds data to, and
 the ``sum`` function iterates over to sum all the values.
 
 .. code-block:: solidity

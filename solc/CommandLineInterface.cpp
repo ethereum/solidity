@@ -41,7 +41,7 @@
 #include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Transport.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Disassemble.h>
@@ -317,7 +317,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 	if (!m_options.compiler.outputs.abi)
 		return;
 
-	string data = jsonCompactPrint(removeNullMembers(m_compiler->contractABI(_contract)));
+	string data = jsonPrint(removeNullMembers(m_compiler->contractABI(_contract)), m_options.formatting.json);
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
@@ -331,7 +331,7 @@ void CommandLineInterface::handleStorageLayout(string const& _contract)
 	if (!m_options.compiler.outputs.storageLayout)
 		return;
 
-	string data = jsonCompactPrint(removeNullMembers(m_compiler->storageLayout(_contract)));
+	string data = jsonPrint(removeNullMembers(m_compiler->storageLayout(_contract)), m_options.formatting.json);
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
 	else
@@ -361,12 +361,13 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 
 	if (enabled)
 	{
-		std::string output = jsonPrettyPrint(
+		std::string output = jsonPrint(
 			removeNullMembers(
 				_natspecDev ?
 				m_compiler->natspecDev(_contract) :
 				m_compiler->natspecUser(_contract)
-			)
+			),
+			m_options.formatting.json
 		);
 
 		if (!m_options.output.dir.empty())
@@ -892,7 +893,7 @@ void CommandLineInterface::handleAst()
 		{
 			stringstream data;
 			string postfix = "";
-			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first), m_options.formatting.json);
 			postfix += "_json";
 			boost::filesystem::path path(sourceCode.first);
 			createFile(path.filename().string() + postfix + ".ast", data.str());
@@ -904,7 +905,7 @@ void CommandLineInterface::handleAst()
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
 			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first), m_options.formatting.json);
 		}
 	}
 }
@@ -1013,18 +1014,18 @@ string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _
 	return out;
 }
 
-void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine)
+void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulStack::Machine _targetMachine)
 {
 	solAssert(m_options.input.mode == InputMode::Assembler, "");
 
 	bool successful = true;
-	map<string, yul::AssemblyStack> assemblyStacks;
+	map<string, yul::YulStack> yulStacks;
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		// --no-optimize-yul option is not accepted in assembly mode.
 		solAssert(!m_options.optimizer.noOptimizeYul, "");
 
-		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(
+		auto& stack = yulStacks[src.first] = yul::YulStack(
 			m_options.output.evmVersion,
 			_language,
 			m_options.optimiserSettings(),
@@ -1039,7 +1040,7 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 			stack.optimize();
 	}
 
-	for (auto const& sourceAndStack: assemblyStacks)
+	for (auto const& sourceAndStack: yulStacks)
 	{
 		auto const& stack = sourceAndStack.second;
 		SourceReferenceFormatter formatter(serr(false), stack, coloredOutput(m_options), m_options.formatting.withErrorIds);
@@ -1062,11 +1063,11 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		string machine =
-			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
+			_targetMachine == yul::YulStack::Machine::EVM ? "EVM" :
 			"Ewasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
-		yul::AssemblyStack& stack = assemblyStacks[src.first];
+		yul::YulStack& stack = yulStacks[src.first];
 
 		if (m_options.compiler.outputs.irOptimized)
 		{
@@ -1076,9 +1077,9 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 			sout() << stack.print() << endl;
 		}
 
-		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
+		if (_language != yul::YulStack::Language::Ewasm && _targetMachine == yul::YulStack::Machine::Ewasm)
 		{
-			stack.translate(yul::AssemblyStack::Language::Ewasm);
+			stack.translate(yul::YulStack::Language::Ewasm);
 			stack.optimize();
 
 			if (m_options.compiler.outputs.ewasmIR)
@@ -1102,10 +1103,10 @@ void CommandLineInterface::assemble(yul::AssemblyStack::Language _language, yul:
 				serr() << "No binary representation found." << endl;
 		}
 
-		solAssert(_targetMachine == yul::AssemblyStack::Machine::Ewasm || _targetMachine == yul::AssemblyStack::Machine::EVM, "");
+		solAssert(_targetMachine == yul::YulStack::Machine::Ewasm || _targetMachine == yul::YulStack::Machine::EVM, "");
 		if (
-			(_targetMachine == yul::AssemblyStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
-			(_targetMachine == yul::AssemblyStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
+			(_targetMachine == yul::YulStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
+			(_targetMachine == yul::YulStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
 		)
 		{
 			sout() << endl << "Text representation:" << endl;
@@ -1149,7 +1150,7 @@ void CommandLineInterface::outputCompilationResults()
 		{
 			string ret;
 			if (m_options.compiler.outputs.asmJson)
-				ret = jsonPrettyPrint(removeNullMembers(m_compiler->assemblyJSON(contract)));
+				ret = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
 			else
 				ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
 

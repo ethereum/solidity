@@ -39,6 +39,7 @@
 #include <sstream>
 #include <memory>
 #include <map>
+#include <utility>
 
 namespace solidity::evmasm
 {
@@ -147,7 +148,8 @@ public:
 
 	/// Create a JSON representation of the assembly.
 	Json::Value assemblyJSON(
-		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
+		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>(),
+		bool _includeSourceList = true
 	) const;
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
@@ -167,16 +169,6 @@ protected:
 	unsigned codeSize(unsigned subTagSize) const;
 
 private:
-	static Json::Value createJsonValue(
-		std::string _name,
-		int _source,
-		int _begin,
-		int _end,
-		std::string _value = std::string(),
-		std::string _jumpType = std::string()
-	);
-	static std::string toStringInHex(u256 _value);
-
 	bool m_invalid = false;
 
 	Assembly const* subAssemblyById(size_t _subId) const;
@@ -222,6 +214,7 @@ protected:
 	std::string m_name;
 
 	langutil::SourceLocation m_currentSourceLocation;
+
 public:
 	size_t m_currentModifierDepth = 0;
 };

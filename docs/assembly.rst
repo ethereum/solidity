@@ -313,7 +313,8 @@ Furthermore, if the assembly block assigns to Solidity variables in memory, you 
 the Solidity variables only access these memory ranges.
 
 Since this is mainly about the optimizer, these restrictions still need to be followed, even if the assembly block
-reverts or terminates. As an example, the following assembly snippet is not memory safe:
+reverts or terminates. As an example, the following assembly snippet is not memory safe, because the value of
+``returndatasize()`` may exceed the 64 byte scratch space:
 
 .. code-block:: solidity
 
@@ -322,7 +323,8 @@ reverts or terminates. As an example, the following assembly snippet is not memo
       revert(0, returndatasize())
     }
 
-But the following is:
+On the other hand, the following code *is* memory safe, because memory beyond the location pointed to by the
+free memory pointer can safely be used as temporary scratch space:
 
 .. code-block:: solidity
 

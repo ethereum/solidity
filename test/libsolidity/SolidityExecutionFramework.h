@@ -30,7 +30,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 namespace solidity::frontend::test
 {

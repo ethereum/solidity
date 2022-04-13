@@ -246,11 +246,11 @@ defaults:
 
   - steps_install_dependencies_osx: &steps_install_dependencies_osx
       steps:
-        - restore_cache:
-            keys:
-              - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-        - attach_workspace:
-            at: .
+        # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
+        # them each time. See https://github.com/ethereum/solidity/issues/12925.
+        - run:
+            name: Install build dependencies
+            command: ./.circleci/osx_install_dependencies.sh
 
   # --------------------------------------------------------------------------
   # Base Image Templates
@@ -582,6 +582,12 @@ defaults:
       binary_type: native
       nodejs_version: '16'
       resource_class: medium
+  - job_native_test_ext_brink: &job_native_test_ext_brink
+      <<: *workflow_ubuntu2004_static
+      name: t_native_test_ext_brink
+      project: brink
+      binary_type: native
+      nodejs_version: '16'
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
       <<: *workflow_emscripten
       name: t_ems_test_ext_colony
@@ -900,23 +906,9 @@ jobs:
       MAKEFLAGS: -j10
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-      # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
-      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
-      - run:
-          name: Install build dependencies
-          command: ./.circleci/osx_install_dependencies.sh
-      - save_cache:
-          key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
-          paths:
-            - /usr/local/bin
-            - /usr/local/sbin
-            - /usr/local/lib
-            - /usr/local/include
-            - /usr/local/Cellar
-            - /usr/local/Homebrew
+      - when:
+          condition: true
+          <<: *steps_install_dependencies_osx
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - store_artifacts: *artifact_solidity_upgrade
@@ -940,6 +932,8 @@ jobs:
       - when:
           condition: true
           <<: *steps_install_dependencies_osx
+      - attach_workspace:
+          at: .
       - run: *run_soltest
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
@@ -952,6 +946,8 @@ jobs:
       - when:
           condition: true
           <<: *steps_install_dependencies_osx
+      - attach_workspace:
+          at: .
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
       - gitter_notify_failure_unless_pr
@@ -987,7 +983,7 @@ jobs:
       - run: *setup_prerelease_commit_hash
       - run:
           name: Build documentation
-          command: ./scripts/docs.sh
+          command: ./docs/docs.sh
       - store_artifacts:
           path: docs/_build/html/
           destination: docs-html
@@ -1480,6 +1476,7 @@ workflows:
       - t_ems_ext: *job_native_test_ext_uniswap
       - t_ems_ext: *job_native_test_ext_prb_math
       - t_ems_ext: *job_native_test_ext_elementfi
+      - t_ems_ext: *job_native_test_ext_brink
 
       - c_ext_benchmarks:
           <<: *workflow_trigger_on_tags
@@ -1497,6 +1494,7 @@ workflows:
             - t_native_test_ext_uniswap
             - t_native_test_ext_prb_math
             - t_native_test_ext_elementfi
+            - t_native_test_ext_brink
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags

@@ -283,7 +283,7 @@ which only need to be created if there is a dispute.
                 salt,
                 keccak256(abi.encodePacked(
                     type(D).creationCode,
-                    arg
+                    abi.encode(arg)
                 ))
             )))));
 

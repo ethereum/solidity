@@ -98,6 +98,18 @@ void IOStreamTransport::error(MessageID _id, ErrorCode _code, string _message)
 	send(move(json), _id);
 }
 
+void Transport::trace(std::string _message, Json::Value _extra)
+{
+	if (m_logTrace != TraceValue::Off)
+	{
+		Json::Value params;
+		if (_extra.isObject())
+			params = move(_extra);
+		params["message"] = move(_message);
+		notify("$/logTrace", move(params));
+	}
+}
+
 void IOStreamTransport::send(Json::Value _json, MessageID _id)
 {
 	solAssert(_json.isObject());

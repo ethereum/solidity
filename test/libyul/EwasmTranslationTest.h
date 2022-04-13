@@ -20,12 +20,12 @@
 
 #include <test/TestCase.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 namespace solidity::yul
 {
 struct Object;
-class AssemblyStack;
+class YulStack;
 }
 
 namespace solidity::yul::test
@@ -48,7 +48,7 @@ private:
 	std::string interpret();
 
 	std::shared_ptr<Object> m_object;
-	AssemblyStack m_stack;
+	YulStack m_stack;
 };
 
 }

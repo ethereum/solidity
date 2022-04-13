@@ -30,8 +30,8 @@ add_library(yul
 	AsmParser.h
 	AsmPrinter.cpp
 	AsmPrinter.h
-	AssemblyStack.h
-	AssemblyStack.cpp
+	YulStack.h
+	YulStack.cpp
 	CompilabilityChecker.cpp
 	CompilabilityChecker.h
 	ControlFlowSideEffects.h

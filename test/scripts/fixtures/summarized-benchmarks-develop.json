@@ -1,0 +1,99 @@
+{
+    "bleeps": {
+        "ir-optimize-evm+yul": {
+            "bytecode_size": 132165,
+            "deployment_gas": 0,
+            "method_gas": 39289935,
+            "version": "bb90cd0"
+        },
+        "legacy-optimize-evm+yul": {
+            "bytecode_size": 137869,
+            "deployment_gas": 0,
+            "method_gas": 38863224,
+            "version": "bb90cd0"
+        }
+    },
+    "colony": {
+        "ir-optimize-evm+yul": {
+            "bytecode_size": 363606,
+            "deployment_gas": null,
+            "method_gas": null,
+            "version": "573399b"
+        },
+        "legacy-optimize-evm+yul": {
+            "bytecode_size": 363606,
+            "deployment_gas": null,
+            "method_gas": null,
+            "version": "573399b"
+        }
+    },
+    "elementfi": {
+        "legacy-no-optimize": {
+            "bytecode_size": 890560,
+            "deployment_gas": null,
+            "method_gas": null,
+            "version": "87f8b5e"
+        },
+        "legacy-optimize-evm+yul": {
+            "bytecode_size": 536668,
+            "version": "87f8b5e"
+        },
+        "legacy-optimize-evm-only": {},
+        "ir-no-optimize": {
+            "bytecode_size": null,
+            "method_gas": 2777867251,
+            "version": "87f8b5e"
+        }
+    },
+    "euler": {
+        "ir-no-optimize": {
+            "bytecode_size": 323909,
+            "deployment_gas": 61591870,
+            "method_gas": 3452105184,
+            "version": "2ef99fc"
+        },
+        "legacy-no-optimize": {
+            "bytecode_size": 323909,
+            "deployment_gas": 61591870,
+            "method_gas": 3452105184,
+            "version": "c23e8bd"
+        },
+        "legacy-optimize-evm+yul": {
+            "bytecode_size": 182190,
+            "deployment_gas": 35236828,
+            "method_gas": 2777867251,
+            "version": "c23e8bd"
+        },
+        "legacy-optimize-evm-only": {
+            "bytecode_size": 202106,
+            "deployment_gas": 38790600,
+            "method_gas": 2907368790,
+            "version": "v1.2.3"
+        },
+        "ir-optimize-evm-only": {
+            "bytecode_size": 182190,
+            "deployment_gas": 35236828,
+            "method_gas": 2777867251
+        },
+        "ir-optimize-evm+yul": {
+            "bytecode_size": 182190,
+            "deployment_gas": 35236828,
+            "method_gas": 2777867251
+        }
+    },
+    "ens": {
+        "legacy-optimize-evm+yul": {
+            "bytecode_size": 156937,
+            "deployment_gas": 30073789,
+            "method_gas": 105365362,
+            "version": "v0.0.8"
+        }
+    },
+    "zeppelin": {
+        "legacy-optimize-evm+yul": {
+            "bytecode_size": 510428,
+            "deployment_gas": 94501114,
+            "version": "af7ec04"
+        }
+    }
+}

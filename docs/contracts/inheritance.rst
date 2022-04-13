@@ -76,9 +76,9 @@ Details are given in the following example.
     }
 
 
-    // Multiple inheritance is possible. Note that `owned` is
+    // Multiple inheritance is possible. Note that `Owned` is
     // also a base class of `Destructible`, yet there is only a single
-    // instance of `owned` (as for virtual inheritance in C++).
+    // instance of `Owned` (as for virtual inheritance in C++).
     contract Named is Owned, Destructible {
         constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
@@ -443,7 +443,7 @@ cannot be assigned valid values from outside but only through the constructors o
     ``internal`` or ``public``.
 
 
-.. index:: ! base;constructor
+.. index:: ! base;constructor, inheritance list, contract;abstract, abstract contract
 
 Arguments for Base Constructors
 ===============================
@@ -467,9 +467,18 @@ derived contracts need to specify all of them. This can be done in two ways:
         constructor() {}
     }
 
-    // or through a "modifier" of the derived constructor.
+    // or through a "modifier" of the derived constructor...
     contract Derived2 is Base {
         constructor(uint y) Base(y * y) {}
+    }
+
+    // or declare abstract...
+    abstract contract Derived3 is Base {
+    }
+
+    // and have the next concrete derived contract initialize it.
+    contract DerivedFromDerived is Derived3 {
+        constructor() Base(10 + 10) {}
     }
 
 One way is directly in the inheritance list (``is Base(7)``).  The other is in
@@ -484,7 +493,12 @@ inheritance list or in modifier-style in the derived constructor.
 Specifying arguments in both places is an error.
 
 If a derived contract does not specify the arguments to all of its base
-contracts' constructors, it will be abstract.
+contracts' constructors, it must be declared abstract. In that case, when
+another contract derives from it, that other contract's inheritance list
+or constructor must provide the necessary parameters
+for all base classes that haven't had their parameters specified (otherwise,
+that other contract must be declared abstract as well). For example, in the above
+code snippet, see ``Derived3`` and ``DerivedFromDerived``.
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 

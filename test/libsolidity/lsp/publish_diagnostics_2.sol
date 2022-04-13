@@ -6,7 +6,9 @@ contract C
     function makeSomeError() public pure returns (uint res)
     {
         uint x = "hi";
+    //  ^^^^^^^^^^^^^ @conversionError
         return;
+     // ^^^^^^^ @argumentsRequired
         res = 2;
     }
 }
@@ -17,5 +19,6 @@ contract D
     {
         C c = new C();
         return c.makeSomeError(2, 3);
+          //   ^^^^^^^^^^^^^^^^^^^^^ @wrongArgumentsCount
     }
 }

@@ -26,7 +26,7 @@
 
 #include <src/libfuzzer/libfuzzer_macro.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
 
@@ -60,10 +60,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	YulStringRepository::reset();
 
-	// AssemblyStack entry point
-	AssemblyStack stack(
+	// YulStack entry point
+	YulStack stack(
 		version,
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
 		DebugInfoSelection::All()
 	);

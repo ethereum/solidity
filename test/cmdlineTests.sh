@@ -310,6 +310,9 @@ function test_solc_assembly_output
 
 function test_via_ir_equivalence()
 {
+    SOLTMPDIR=$(mktemp -d)
+    pushd "$SOLTMPDIR"
+
     (( $# <= 2 )) || fail "This function accepts at most two arguments."
 
     if [[ $2 != --optimize ]] && [[ $2 != "" ]]
@@ -317,50 +320,57 @@ function test_via_ir_equivalence()
         fail "The second argument must be --optimize if present."
     fi
 
-    local solidity_code="$1"
+    local solidity_file="$1"
     local optimize_flag="$2"
+
+    output_file_prefix=$(basename "$1" .sol)
 
     local optimizer_flags=()
     [[ $optimize_flag == "" ]] || optimizer_flags+=("$optimize_flag")
+    [[ $optimize_flag == "" ]] || output_file_prefix+="_optimize"
 
-    local ir_output
-    ir_output=$(
-        echo "$solidity_code" |
-        msg_on_error --no-stderr "$SOLC" - --ir-optimized --debug-info location "${optimizer_flags[@]}" |
-        sed '/^Optimized IR:$/d'
-    )
+    msg_on_error --no-stderr "$SOLC" --ir-optimized --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
+        sed '/^Optimized IR:$/d' |
+        split_on_empty_lines_into_numbered_files $output_file_prefix ".yul"
+
+    for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
+        msg_on_error --no-stderr "$SOLC" --strict-assembly --asm "${optimizer_flags[@]}" "$yul_file" |
+            sed '/^Text representation:$/d' > "${yul_file/.yul/.asm}"
+    done
 
     local asm_output_two_stage asm_output_via_ir
-    asm_output_two_stage=$(
-        echo "$ir_output" |
-        msg_on_error --no-stderr "$SOLC" - --strict-assembly --asm "${optimizer_flags[@]}" |
-        sed '/^======= <stdin>/d' |
-        sed '/^Text representation:$/d'
-    )
+    for asm_file in $(find . -name "${output_file_prefix}*.asm" | sort -V); do
+        asm_output_two_stage+=$(sed '/^asm_output_two_stage:$/d' "$asm_file" | sed '/^=======/d')
+    done
+
     asm_output_via_ir=$(
-        echo "$solidity_code" |
-        msg_on_error --no-stderr "$SOLC" - --via-ir --asm --debug-info location "${optimizer_flags[@]}" |
-        sed '/^======= <stdin>/d' |
-        sed '/^EVM assembly:$/d'
+        msg_on_error --no-stderr "$SOLC" --via-ir --asm --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
+            sed '/^EVM assembly:$/d' |
+            sed '/^=======/d'
     )
 
     diff_values "$asm_output_two_stage" "$asm_output_via_ir" --ignore-space-change --ignore-blank-lines
 
     local bin_output_two_stage bin_output_via_ir
-    bin_output_two_stage=$(
-        echo "$ir_output" |
-        msg_on_error --no-stderr "$SOLC" - --strict-assembly --bin "${optimizer_flags[@]}" |
-        sed '/^======= <stdin>/d' |
-        sed '/^Binary representation:$/d'
-    )
+
+    for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
+        bin_output_two_stage+=$(
+	    msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
+                sed '/^Binary representation:$/d' |
+                sed '/^=======/d'
+        )
+    done
+
     bin_output_via_ir=$(
-        echo "$solidity_code" |
-        msg_on_error --no-stderr "$SOLC" - --via-ir --bin "${optimizer_flags[@]}" |
-        sed '/^======= <stdin>/d' |
-        sed '/^Binary:$/d'
+        msg_on_error --no-stderr "$SOLC" --via-ir --bin "${optimizer_flags[@]}" "$solidity_file" |
+        sed '/^Binary:$/d' |
+        sed '/^=======/d'
     )
 
     diff_values "$bin_output_two_stage" "$bin_output_via_ir" --ignore-space-change --ignore-blank-lines
+
+    popd
+    rm -r "$SOLTMPDIR"
 }
 
 ## RUN
@@ -590,20 +600,21 @@ printTask "Testing assemble, yul, strict-assembly and optimize..."
 
 printTask "Testing the eqivalence of --via-ir and a two-stage compilation..."
 (
-    printTask " - Smoke test"
-    test_via_ir_equivalence "contract C {}"
-
-    printTask " - Smoke test (optimized)"
-    test_via_ir_equivalence "contract C {}" --optimize
-
     externalContracts=(
-        deposit_contract.sol
-        FixedFeeRegistrar.sol
-        _stringutils/stringutils.sol
+        externalTests/solc-js/DAO/TokenCreation.sol
+        libsolidity/semanticTests/externalContracts/_prbmath/PRBMathSD59x18.sol
+        libsolidity/semanticTests/externalContracts/_prbmath/PRBMathUD60x18.sol
+        libsolidity/semanticTests/externalContracts/_stringutils/stringutils.sol
+        libsolidity/semanticTests/externalContracts/deposit_contract.sol
+        libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
+        libsolidity/semanticTests/externalContracts/snark.sol
     )
+
     requiresOptimizer=(
-        deposit_contract.sol
-        FixedFeeRegistrar.sol
+        externalTests/solc-js/DAO/TokenCreation.sol
+        libsolidity/semanticTests/externalContracts/deposit_contract.sol
+        libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
+        libsolidity/semanticTests/externalContracts/snark.sol
     )
 
     for contractFile in "${externalContracts[@]}"
@@ -611,11 +622,11 @@ printTask "Testing the eqivalence of --via-ir and a two-stage compilation..."
         if ! [[ "${requiresOptimizer[*]}" =~ $contractFile ]]
         then
             printTask " - ${contractFile}"
-            test_via_ir_equivalence "$(cat "${REPO_ROOT}/test/libsolidity/semanticTests/externalContracts/${contractFile}")"
+            test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}"
         fi
 
         printTask " - ${contractFile} (optimized)"
-        test_via_ir_equivalence "$(cat "${REPO_ROOT}/test/libsolidity/semanticTests/externalContracts/${contractFile}")" --optimize
+        test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}" --optimize
     done
 )
 

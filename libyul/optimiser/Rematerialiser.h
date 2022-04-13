@@ -53,23 +53,11 @@ public:
 		std::set<YulString> _varsToAlwaysRematerialize = {},
 		bool _onlySelectedVariables = false
 	);
-	static void run(
-		Dialect const& _dialect,
-		FunctionDefinition& _function,
-		std::set<YulString> _varsToAlwaysRematerialize = {},
-		bool _onlySelectedVariables = false
-	);
 
 protected:
 	Rematerialiser(
 		Dialect const& _dialect,
 		Block& _ast,
-		std::set<YulString> _varsToAlwaysRematerialize = {},
-		bool _onlySelectedVariables = false
-	);
-	Rematerialiser(
-		Dialect const& _dialect,
-		FunctionDefinition& _function,
 		std::set<YulString> _varsToAlwaysRematerialize = {},
 		bool _onlySelectedVariables = false
 	);

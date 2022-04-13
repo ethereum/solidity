@@ -19,7 +19,7 @@
 
 #include <test/EVMHost.h>
 
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
 
@@ -37,7 +37,7 @@ public:
 	):
 		m_stack(
 			_version,
-			solidity::yul::AssemblyStack::Language::StrictAssembly,
+			solidity::yul::YulStack::Language::StrictAssembly,
 			_optSettings,
 			langutil::DebugInfoSelection::All()
 		),
@@ -46,7 +46,7 @@ public:
 	{}
 	solidity::bytes assemble();
 private:
-	solidity::yul::AssemblyStack m_stack;
+	solidity::yul::YulStack m_stack;
 	std::string m_yulProgram;
 	bool m_optimiseYul;
 };

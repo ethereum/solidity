@@ -42,15 +42,18 @@ function elementfi_test
     local config_file="hardhat.config.ts"
     local config_var=config
 
-    local compile_only_presets=()
-    local settings_presets=(
-        "${compile_only_presets[@]}"
+    local compile_only_presets=(
+        # ElementFi's test suite is hard-coded for mainnet forked via alchemy.io.
+        # Locally we can only compile.
         #ir-no-optimize           # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
+    )
+    local settings_presets=(
+        "${compile_only_presets[@]}"
     )
 
     [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")

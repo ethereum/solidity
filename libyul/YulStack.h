@@ -63,14 +63,14 @@ struct MachineAssemblyObject
  * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
  * Ewasm as output.
  */
-class AssemblyStack: public langutil::CharStreamProvider
+class YulStack: public langutil::CharStreamProvider
 {
 public:
 	enum class Language { Yul, Assembly, StrictAssembly, Ewasm };
 	enum class Machine { EVM, Ewasm };
 
-	AssemblyStack():
-		AssemblyStack(
+	YulStack():
+		YulStack(
 			langutil::EVMVersion{},
 			Language::Assembly,
 			solidity::frontend::OptimiserSettings::none(),
@@ -78,7 +78,7 @@ public:
 		)
 	{}
 
-	AssemblyStack(
+	YulStack(
 		langutil::EVMVersion _evmVersion,
 		Language _language,
 		solidity::frontend::OptimiserSettings _optimiserSettings,

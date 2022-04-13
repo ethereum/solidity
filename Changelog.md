@@ -16,9 +16,15 @@ Language Features:
 
 
 Compiler Features:
+ * Peephole Optimizer: Remove operations without side effects before simple terminations.
+ * Assembly-Json: Export: Include source list in `sourceList` field.
+ * Commandline Interface: option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
+ * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
 
 
 Bugfixes:
+* Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
+* TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
 
 
 

@@ -50,31 +50,40 @@ namespace
 /**
  * Class that discovers all variables that can be fully eliminated by rematerialization,
  * and the corresponding approximate costs.
+ *
+ * Prerequisite: Disambiguator, Function Grouper
  */
 class RematCandidateSelector: public DataFlowAnalyzer
 {
 public:
 	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 
-	/// @returns a map from rematerialisation costs to a vector of variables to rematerialise
+	/// @returns a map from function name to rematerialisation costs to a vector of variables to rematerialise
 	/// and variables that occur in their expression.
 	/// While the map is sorted by cost, the contained vectors are sorted by the order of occurrence.
-	map<size_t, vector<tuple<YulString, set<YulString>>>> candidates()
+	map<YulString, map<size_t, vector<YulString>>> candidates()
 	{
-		map<size_t, vector<tuple<YulString, set<YulString>>>> cand;
-		for (auto const& candidate: m_candidates)
+		map<YulString, map<size_t, vector<YulString>>> cand;
+		for (auto const& [functionName, candidate]: m_candidates)
 		{
 			if (size_t const* cost = util::valueOrNullptr(m_expressionCodeCost, candidate))
 			{
 				size_t numRef = m_numReferences[candidate];
-				set<YulString> const* ref = references(candidate);
-				cand[*cost * numRef].emplace_back(candidate, ref ? move(*ref) : set<YulString>{});
+				cand[functionName][*cost * numRef].emplace_back(candidate);
 			}
 		}
 		return cand;
 	}
 
 	using DataFlowAnalyzer::operator();
+	void operator()(FunctionDefinition& _function) override
+	{
+		yulAssert(m_currentFunctionName.empty());
+		m_currentFunctionName = _function.name;
+		DataFlowAnalyzer::operator()(_function);
+		m_currentFunctionName = {};
+	}
+
 	void operator()(VariableDeclaration& _varDecl) override
 	{
 		DataFlowAnalyzer::operator()(_varDecl);
@@ -84,7 +93,7 @@ public:
 			if (AssignedValue const* value = variableValue(varName))
 			{
 				yulAssert(!m_expressionCodeCost.count(varName), "");
-				m_candidates.emplace_back(varName);
+				m_candidates.emplace_back(m_currentFunctionName, varName);
 				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *value->value);
 			}
 		}
@@ -122,8 +131,10 @@ public:
 		m_expressionCodeCost.erase(_variable);
 	}
 
-	/// All candidate variables in order of occurrence.
-	vector<YulString> m_candidates;
+	YulString m_currentFunctionName = {};
+
+	/// All candidate variables by function name, in order of occurrence.
+	vector<pair<YulString, YulString>> m_candidates;
 	/// Candidate variables and the code cost of their value.
 	map<YulString, size_t> m_expressionCodeCost;
 	/// Number of references to each candidate variable.
@@ -132,86 +143,95 @@ public:
 
 /// Selects at most @a _numVariables among @a _candidates.
 set<YulString> chooseVarsToEliminate(
-	map<size_t, vector<tuple<YulString, set<YulString>>>> const& _candidates,
+	map<size_t, vector<YulString>> const& _candidates,
 	size_t _numVariables
 )
 {
 	set<YulString> varsToEliminate;
 	for (auto&& [cost, candidates]: _candidates)
-		for (auto&& [candidate, references]: candidates)
+		for (auto&& candidate: candidates)
 		{
 			if (varsToEliminate.size() >= _numVariables)
 				return varsToEliminate;
-			// If a variable we would like to eliminate references another one
-			// we already selected for elimination, then stop selecting
-			// candidates. If we would add that variable, then the cost calculation
-			// for the previous variable would be off. Furthermore, we
-			// do not skip the variable because it would be better to properly re-compute
-			// the costs of all other variables instead.
-			for (YulString const& referencedVar: references)
-				if (varsToEliminate.count(referencedVar))
-					return varsToEliminate;
 			varsToEliminate.insert(candidate);
 		}
 	return varsToEliminate;
 }
 
-template <typename ASTNode>
 void eliminateVariables(
 	Dialect const& _dialect,
-	ASTNode& _node,
-	size_t _numVariables,
+	Block& _ast,
+	map<YulString, int> const& _numVariables,
 	bool _allowMSizeOptimization
 )
 {
 	RematCandidateSelector selector{_dialect};
-	selector(_node);
-	Rematerialiser::run(_dialect, _node, chooseVarsToEliminate(selector.candidates(), _numVariables));
-	UnusedPruner::runUntilStabilised(_dialect, _node, _allowMSizeOptimization);
+	selector(_ast);
+	map<YulString, map<size_t, vector<YulString>>> candidates = selector.candidates();
+
+	set<YulString> varsToEliminate;
+	for (auto const& [functionName, numVariables]: _numVariables)
+	{
+		yulAssert(numVariables > 0);
+		varsToEliminate += chooseVarsToEliminate(candidates[functionName], static_cast<size_t>(numVariables));
+	}
+
+	Rematerialiser::run(_dialect, _ast, move(varsToEliminate));
+	// Do not remove functions.
+	set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
+	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);
 }
 
-void eliminateVariables(
+void eliminateVariablesOptimizedCodegen(
 	Dialect const& _dialect,
-	Block& _block,
-	vector<StackLayoutGenerator::StackTooDeep> const& _unreachables,
+	Block& _ast,
+	map<YulString, vector<StackLayoutGenerator::StackTooDeep>> const& _unreachables,
 	bool _allowMSizeOptimization
 )
 {
+	if (std::all_of(_unreachables.begin(), _unreachables.end(), [](auto const& _item) { return _item.second.empty(); }))
+		return;
+
 	RematCandidateSelector selector{_dialect};
-	selector(_block);
-	std::map<YulString, size_t> candidates;
-	for (auto [cost, candidatesWithCost]: selector.candidates())
-		for (auto candidate: candidatesWithCost)
-			candidates[get<0>(candidate)] = cost;
+	selector(_ast);
+
+	map<YulString, size_t> candidates;
+	for (auto const& [functionName, candidatesInFunction]: selector.candidates())
+		for (auto [cost, candidatesWithCost]: candidatesInFunction)
+			for (auto candidate: candidatesWithCost)
+				candidates[candidate] = cost;
 
 	set<YulString> varsToEliminate;
 
 	// TODO: this currently ignores the fact that variables may reference other variables we want to eliminate.
-	for (auto const& unreachable: _unreachables)
-	{
-		map<size_t, vector<YulString>> suitableCandidates;
-		size_t neededSlots = unreachable.deficit;
-		for (auto varName: unreachable.variableChoices)
+	for (auto const& [functionName, unreachables]: _unreachables)
+		for (auto const& unreachable: unreachables)
 		{
-			if (varsToEliminate.count(varName))
-				--neededSlots;
-			else if (size_t* cost = util::valueOrNullptr(candidates, varName))
-				if (!util::contains(suitableCandidates[*cost], varName))
-					suitableCandidates[*cost].emplace_back(varName);
-		}
-		for (auto candidatesByCost: suitableCandidates)
-		{
-			for (auto candidate: candidatesByCost.second)
-				if (neededSlots--)
-					varsToEliminate.emplace(candidate);
-				else
+			map<size_t, vector<YulString>> suitableCandidates;
+			size_t neededSlots = unreachable.deficit;
+			for (auto varName: unreachable.variableChoices)
+			{
+				if (varsToEliminate.count(varName))
+					--neededSlots;
+				else if (size_t* cost = util::valueOrNullptr(candidates, varName))
+					if (!util::contains(suitableCandidates[*cost], varName))
+						suitableCandidates[*cost].emplace_back(varName);
+			}
+			for (auto candidatesByCost: suitableCandidates)
+			{
+				for (auto candidate: candidatesByCost.second)
+					if (neededSlots--)
+						varsToEliminate.emplace(candidate);
+					else
+						break;
+				if (!neededSlots)
 					break;
-			if (!neededSlots)
-				break;
+			}
 		}
-	}
-	Rematerialiser::run(_dialect, _block, std::move(varsToEliminate), true);
-	UnusedPruner::runUntilStabilised(_dialect, _block, _allowMSizeOptimization);
+	Rematerialiser::run(_dialect, _ast, std::move(varsToEliminate), true);
+	// Do not remove functions.
+	set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
+	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);
 }
 
 }
@@ -239,21 +259,12 @@ bool StackCompressor::run(
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
 		unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, *_object.code);
-		Block& mainBlock = std::get<Block>(_object.code->statements.at(0));
-		if (
-			auto stackTooDeepErrors = StackLayoutGenerator::reportStackTooDeep(*cfg, YulString{});
-			!stackTooDeepErrors.empty()
-		)
-			eliminateVariables(_dialect, mainBlock, stackTooDeepErrors, allowMSizeOptimzation);
-		for (size_t i = 1; i < _object.code->statements.size(); ++i)
-		{
-			auto& fun = std::get<FunctionDefinition>(_object.code->statements[i]);
-			if (
-				auto stackTooDeepErrors = StackLayoutGenerator::reportStackTooDeep(*cfg, fun.name);
-				!stackTooDeepErrors.empty()
-			)
-				eliminateVariables(_dialect, fun.body, stackTooDeepErrors, allowMSizeOptimzation);
-		}
+		eliminateVariablesOptimizedCodegen(
+			_dialect,
+			*_object.code,
+			StackLayoutGenerator::reportStackTooDeep(*cfg),
+			allowMSizeOptimzation
+		);
 	}
 	else
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
@@ -261,32 +272,12 @@ bool StackCompressor::run(
 			map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
 			if (stackSurplus.empty())
 				return true;
-
-			if (stackSurplus.count(YulString{}))
-			{
-				yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
-				eliminateVariables(
-					_dialect,
-					std::get<Block>(_object.code->statements.at(0)),
-					static_cast<size_t>(stackSurplus.at({})),
-					allowMSizeOptimzation
-				);
-			}
-
-			for (size_t i = 1; i < _object.code->statements.size(); ++i)
-			{
-				auto& fun = std::get<FunctionDefinition>(_object.code->statements[i]);
-				if (!stackSurplus.count(fun.name))
-					continue;
-
-				yulAssert(stackSurplus.at(fun.name) > 0, "Invalid surplus value.");
-				eliminateVariables(
-					_dialect,
-					fun,
-					static_cast<size_t>(stackSurplus.at(fun.name)),
-					allowMSizeOptimzation
-				);
-			}
+			eliminateVariables(
+				_dialect,
+				*_object.code,
+				stackSurplus,
+				allowMSizeOptimzation
+			);
 		}
 	return false;
 }

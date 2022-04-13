@@ -1,0 +1,25 @@
+{
+  "contracts":
+  {
+    "combined_json_with_userdoc/input.sol:C":
+    {
+      "userdoc":
+      {
+        "kind": "user",
+        "methods": {},
+        "notice": "Description for users.",
+        "version": 1
+      }
+    },
+    "combined_json_with_userdoc/input.sol:D":
+    {
+      "userdoc":
+      {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    }
+  },
+  "version": "<VERSION REMOVED>"
+}

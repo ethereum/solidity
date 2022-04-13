@@ -190,9 +190,9 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 	return tuple;
 }
 
-void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
+void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node, util::JsonFormat const& _format)
 {
-	_stream << util::jsonPrettyPrint(toJson(_node));
+	_stream << util::jsonPrint(toJson(_node), _format);
 }
 
 Json::Value ASTJsonConverter::toJson(ASTNode const& _node)

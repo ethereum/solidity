@@ -62,7 +62,7 @@
 #include <libyul/YulString.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 
@@ -1382,9 +1382,9 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::AssemblyStack stack(
+	yul::YulStack stack(
 		m_evmVersion,
-		yul::AssemblyStack::Language::StrictAssembly,
+		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_debugInfoSelection
 	);
@@ -1414,22 +1414,22 @@ void CompilerStack::generateEwasm(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::AssemblyStack stack(
+	yul::YulStack stack(
 		m_evmVersion,
-		yul::AssemblyStack::Language::StrictAssembly,
+		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_debugInfoSelection
 	);
 	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
 
 	stack.optimize();
-	stack.translate(yul::AssemblyStack::Language::Ewasm);
+	stack.translate(yul::YulStack::Language::Ewasm);
 	stack.optimize();
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
 	// Turn into Ewasm text representation.
-	auto result = stack.assemble(yul::AssemblyStack::Machine::Ewasm);
+	auto result = stack.assemble(yul::YulStack::Machine::Ewasm);
 	compiledContract.ewasm = std::move(result.assembly);
 	compiledContract.ewasmObject = std::move(*result.bytecode);
 }

@@ -25,7 +25,7 @@
 #include <libsolidity/interface/ImportRemapper.h>
 
 #include <libsolidity/ast/ASTJsonConverter.h>
-#include <libyul/AssemblyStack.h>
+#include <libyul/YulStack.h>
 #include <libyul/Exceptions.h>
 #include <libyul/optimiser/Suite.h>
 
@@ -1407,9 +1407,9 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return output;
 	}
 
-	AssemblyStack stack(
+	YulStack stack(
 		_inputsAndSettings.evmVersion,
-		AssemblyStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		_inputsAndSettings.optimiserSettings,
 		_inputsAndSettings.debugInfoSelection.has_value() ?
 			_inputsAndSettings.debugInfoSelection.value() :

@@ -70,6 +70,8 @@ function zeppelin_test
     # In some cases Hardhat does not detect revert reasons properly via IR.
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
     sed -i "s|it(\('reverts if the current value is 0'\)|it.skip(\1|g" test/utils/Counters.test.js
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
+    sed -i "s|describe\(('Polygon-Child'\)|describe.skip\1|g" test/crosschain/CrossChainEnabled.test.js
 
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"

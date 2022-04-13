@@ -6,5 +6,7 @@ abstract contract A {
 }
 
 contract B is A
+// ^( @notAbstract
 {
 }
+// ^) @notAbstract
