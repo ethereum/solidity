@@ -582,6 +582,12 @@ defaults:
       binary_type: native
       nodejs_version: '16'
       resource_class: medium
+  - job_native_test_ext_brink: &job_native_test_ext_brink
+      <<: *workflow_ubuntu2004_static
+      name: t_native_test_ext_brink
+      project: brink
+      binary_type: native
+      nodejs_version: '16'
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
       <<: *workflow_emscripten
       name: t_ems_test_ext_colony
@@ -1470,6 +1476,7 @@ workflows:
       - t_ems_ext: *job_native_test_ext_uniswap
       - t_ems_ext: *job_native_test_ext_prb_math
       - t_ems_ext: *job_native_test_ext_elementfi
+      - t_ems_ext: *job_native_test_ext_brink
 
       - c_ext_benchmarks:
           <<: *workflow_trigger_on_tags
@@ -1487,6 +1494,7 @@ workflows:
             - t_native_test_ext_uniswap
             - t_native_test_ext_prb_math
             - t_native_test_ext_elementfi
+            - t_native_test_ext_brink
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
