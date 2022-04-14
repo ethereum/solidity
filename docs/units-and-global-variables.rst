@@ -1,13 +1,14 @@
-**************************************
-Units and Globally Available Variables
-**************************************
+*****************
+单位和全局变量
+*****************
 
 .. index:: wei, finney, szabo, gwei, ether
 
-Ether Units
-===========
+以太币（Ether） 单位
+======================
 
-A literal number can take a suffix of ``wei``, ``gwei`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
+一个字面常数可以带一个后缀 ``wei``， ``gwei`` 或 ``ether`` 来指定一个以太币的数量，
+其中没有后缀的以太数字被认为单位是wei。
 
 .. code-block:: solidity
     :force:
@@ -16,19 +17,18 @@ A literal number can take a suffix of ``wei``, ``gwei`` or ``ether`` to specify 
     assert(1 gwei == 1e9);
     assert(1 ether == 1e18);
 
-The only effect of the subdenomination suffix is a multiplication by a power of ten.
+单位后缀的唯一作用是乘以10的幂次方。
 
-.. note::
-    The denominations ``finney`` and ``szabo`` have been removed in version 0.7.0.
+.. 注解::
+    0.7.0版本中删除了 ``finney`` 和 ``szabo`` 这两个单位。
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 
-Time Units
+时间单位
 ==========
 
-Suffixes like ``seconds``, ``minutes``, ``hours``, ``days`` and ``weeks``
-after literal numbers can be used to specify units of time where seconds are the base
-unit and units are considered naively in the following way:
+诸如 ``seconds``， ``minutes``， ``hours``， ``days`` 和 ``weeks`` 等
+后缀在字面常数后面，可以用来指定时间单位，其中秒是基本单位，单位的考虑方式很直白：
 
 * ``1 == 1 seconds``
 * ``1 minutes == 60 seconds``
@@ -36,17 +36,15 @@ unit and units are considered naively in the following way:
 * ``1 days == 24 hours``
 * ``1 weeks == 7 days``
 
-Take care if you perform calendar calculations using these units, because
-not every year equals 365 days and not even every day has 24 hours
-because of `leap seconds <https://en.wikipedia.org/wiki/Leap_second>`_.
-Due to the fact that leap seconds cannot be predicted, an exact calendar
-library has to be updated by an external oracle.
+如果您使用这些单位进行日历计算，请注意，由于 `闰秒 <https://en.wikipedia.org/wiki/Leap_second>`_
+会造成不是每一年都等于365天，甚至不是每一天都有24小时，而且因为闰秒是无法预测的，
+所以需要借助外部的预言机（oracle，是一种链外数据服务，译者注）来对一个确定的日期代码库进行时间矫正。
 
-.. note::
-    The suffix ``years`` has been removed in version 0.5.0 due to the reasons above.
+.. 注解::
+    由于上述原因，在0.5.0版本中删除了后缀 ``years``。
 
-These suffixes cannot be applied to variables. For example, if you want to
-interpret a function parameter in days, you can in the following way:
+这些后缀单位不能应用于变量。例如，
+如果您想用时间单位（例如 days）来将输入变量换算为时间，您可以用以下方式：
 
 .. code-block:: solidity
 
@@ -58,329 +56,306 @@ interpret a function parameter in days, you can in the following way:
 
 .. _special-variables-functions:
 
-Special Variables and Functions
-===============================
+特殊变量和函数
+===============
 
-There are special variables and functions which always exist in the global
-namespace and are mainly used to provide information about the blockchain
-or are general-use utility functions.
+有一些特殊的变量和函数总是存在于全局命名空间，主要用于提供区块链的信息，或者是通用的工具函数。
 
 .. index:: abi, block, coinbase, difficulty, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin
 
 
-Block and Transaction Properties
---------------------------------
+区块和交易属性
+---------------
 
-- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block when ``blocknumber`` is one of the 256 most recent blocks; otherwise returns zero
-- ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
-- ``block.chainid`` (``uint``): current chain id
-- ``block.coinbase`` (``address payable``): current block miner's address
-- ``block.difficulty`` (``uint``): current block difficulty
-- ``block.gaslimit`` (``uint``): current block gaslimit
-- ``block.number`` (``uint``): current block number
-- ``block.timestamp`` (``uint``): current block timestamp as seconds since unix epoch
-- ``gasleft() returns (uint256)``: remaining gas
-- ``msg.data`` (``bytes calldata``): complete calldata
-- ``msg.sender`` (``address``): sender of the message (current call)
-- ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
-- ``msg.value`` (``uint``): number of wei sent with the message
-- ``tx.gasprice`` (``uint``): gas price of the transaction
-- ``tx.origin`` (``address``): sender of the transaction (full call chain)
+- ``blockhash(uint blockNumber) returns (bytes32)``: 当 ``blocknumber`` 是最近的256个区块之一时，给定区块的哈希值；否则返回0。
+- ``block.basefee`` （ ``uint``）： 当前区块的基本费用 （ `EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ 和 `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_）
+- ``block.chainid`` （ ``uint``）： 当前链的ID
+- ``block.coinbase`` （ ``address payable``）： 挖出当前区块的矿工地址
+- ``block.difficulty`` （ ``uint``）： 挖出当前区块的矿工地址
+- ``block.gaslimit`` （ ``uint``）： 当前区块 gas 限额
+- ``block.number`` （ ``uint``）： 当前区块号
+- ``block.timestamp`` （ ``uint``）： 自 unix epoch 起始到当前区块以秒计的时间戳
+- ``gasleft() returns (uint256)``： 剩余的 gas
+- ``msg.data`` （ ``bytes calldata``）： 完整的  calldata
+- ``msg.sender`` （ ``address``）： 消息发送者（当前调用）
+- ``msg.sig`` （ ``bytes4``）： calldata 的前 4 字节（也就是函数标识符）
+- ``msg.value`` （ ``uint``）： 随消息发送的 wei 的数量
+- ``tx.gasprice`` （ ``uint``）： 随消息发送的 wei 的数量
+- ``tx.origin`` （ ``address``）： 交易发起者（完全的调用链）
 
-.. note::
-    The values of all members of ``msg``, including ``msg.sender`` and
-    ``msg.value`` can change for every **external** function call.
-    This includes calls to library functions.
+.. 注解::
+    对于每一个 **外部（external）** 函数调用，
+    包括 ``msg.sender`` 和 ``msg.value`` 在内所有 ``msg`` 成员的值都会变化。
+    这里包括对库函数的调用。
 
-.. note::
-    When contracts are evaluated off-chain rather than in context of a transaction included in a
-    block, you should not assume that ``block.*`` and ``tx.*`` refer to values from any specific
-    block or transaction. These values are provided by the EVM implementation that executes the
-    contract and can be arbitrary.
+.. 注解::
+    当合约在链下而不是在区块中包含的交易的背景下计算时，
+    您不应该认为 ``block.*`` 和 ``tx.*`` 是指任何特定区块或交易的值。
+    这些值是由执行合约的EVM实现提供的，可以是任意的。
 
-.. note::
-    Do not rely on ``block.timestamp`` or ``blockhash`` as a source of randomness,
-    unless you know what you are doing.
+.. 注解::
+    不要依赖 ``block.timestamp`` 和 ``blockhash`` 产生随机数，除非您知道自己在做什么。
 
-    Both the timestamp and the block hash can be influenced by miners to some degree.
-    Bad actors in the mining community can for example run a casino payout function on a chosen hash
-    and just retry a different hash if they did not receive any money.
+    时间戳和区块哈希在一定程度上都可能受到挖矿矿工影响。
+    例如，挖矿社区中的恶意矿工可以用某个给定的哈希来运行赌场合约的 payout 函数，
+    而如果他们没收到钱，还可以用一个不同的哈希重新尝试。
 
-    The current block timestamp must be strictly larger than the timestamp of the last block,
-    but the only guarantee is that it will be somewhere between the timestamps of two
-    consecutive blocks in the canonical chain.
+    当前区块的时间戳必须严格大于最后一个区块的时间戳，
+    但这里唯一能确保的只是它会是在权威链上的两个连续区块的时间戳之间的数值。
 
-.. note::
-    The block hashes are not available for all blocks for scalability reasons.
-    You can only access the hashes of the most recent 256 blocks, all other
-    values will be zero.
+.. 注解::
+    基于可扩展因素，区块哈希不是对所有区块都有效。
+    您仅仅可以访问最近 256 个区块的哈希，其余的哈希均为零。
 
-.. note::
-    The function ``blockhash`` was previously known as ``block.blockhash``, which was deprecated in
-    version 0.4.22 and removed in version 0.5.0.
+.. 注解::
+    函数 ``blockhash`` 以前被称为 ``block.blockhash``，
+    在0.4.22版本中被废弃，在0.5.0版本中被删除。
 
-.. note::
-    The function ``gasleft`` was previously known as ``msg.gas``, which was deprecated in
-    version 0.4.21 and removed in version 0.5.0.
+.. 注解::
+    函数 ``gasleft`` 的前身是 ``msg.gas``，
+    在0.4.21版本中被弃用，在0.5.0版本中被删除。
 
-.. note::
-    In version 0.7.0, the alias ``now`` (for ``block.timestamp``) was removed.
+.. 注解::
+    在0.7.0版本中，删除了别名 ``now``（用于 ``block.timestamp``）。
 
 .. index:: abi, encoding, packed
 
-ABI Encoding and Decoding Functions
------------------------------------
+ABI编码和解码函数
+-------------------
 
-- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
-- ``abi.encode(...) returns (bytes memory)``: ABI-encodes the given arguments
-- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments. Note that packed encoding can be ambiguous!
-- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
-- ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``: ABI-encodes a call to ``functionPointer`` with the arguments found in the tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, (...))``
+- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: ABI-解码给定的数据，而类型在括号中作为第二个参数给出。例如： ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
+- ``abi.encode(...) returns (bytes memory)``： 对给定的参数进行ABI编码
+- ``abi.encodePacked(...) returns (bytes memory)``： 对给定参数执行 :ref:`紧打包编码 <abi_packed_mode>`。 请注意，打包编码可能会有歧义!
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``： ABI-对给定参数进行编码，并以给定的函数选择器作为起始的4字节数据一起返回
+- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``： 相当于 ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
+- ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``： 对 ``函数指针`` 的调用进行ABI编码，参数在元组中找到。执行全面的类型检查，确保类型与函数签名相符。结果相当于 ``abi.encodeWithSelector(functionPointer.selector, (...))``。
 
-.. note::
-    These encoding functions can be used to craft data for external function calls without actually
-    calling an external function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a way
-    to compute the hash of structured data (although be aware that it is possible to
-    craft a "hash collision" using different function parameter types).
+.. 注解::
+    这些编码函数可用于制作外部函数调用的数据，而无需实际调用外部函数。
+    此外， ``keccak256(abi.encodePacked(a, b))`` 是一种计算结构化数据的哈希值的方法
+    （但是要注意有可能使用不同的函数参数类型会制作出一个 "哈希碰撞"）。
 
-See the documentation about the :ref:`ABI <ABI>` and the
-:ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
+更多详情请参考 :ref:`ABI <ABI>` 和 :ref:`紧打包编码 <abi_packed_mode>`。
 
 .. index:: bytes members
 
-Members of bytes
+字节类型的成员
 ----------------
 
-- ``bytes.concat(...) returns (bytes memory)``: :ref:`Concatenates variable number of bytes and bytes1, ..., bytes32 arguments to one byte array<bytes-concat>`
+- ``bytes.concat(...) returns (bytes memory)``: :ref:`将可变数量的字节和byte1, ..., byte32参数串联成一个字节数组 <bytes-concat>`
 
 .. index:: string members
 
-Members of string
+字符串的成员
 -----------------
 
-- ``string.concat(...) returns (string memory)``: :ref:`Concatenates variable number of string arguments to one string array<string-concat>`
+- ``string.concat(...) returns (string memory)``: :ref:`将可变数量的字符串参数串联成一个字符串数组 <string-concat>`
 
 
 .. index:: assert, revert, require
 
-Error Handling
+错误处理
 --------------
 
-See the dedicated section on :ref:`assert and require<assert-and-require>` for
-more details on error handling and when to use which function.
+关于错误处理和何时使用哪个函数的更多细节，
+请参见 :ref:`assert 和 require <assert-and-require>` 的专门章节。
 
 ``assert(bool condition)``
-    causes a Panic error and thus state change reversion if the condition is not met - to be used for internal errors.
+    如果条件不满足，会导致异常，因此，状态变化会被恢复 - 用于内部错误。
 
 ``require(bool condition)``
-    reverts if the condition is not met - to be used for errors in inputs or external components.
+    如果条件不满足，则撤销状态更改 - 用于输入或外部组件的错误。
 
 ``require(bool condition, string memory message)``
-    reverts if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
+    如果条件不满足，则撤销状态更改 - 用于输入或外部组件的错误，可以同时提供一个错误消息。
 
 ``revert()``
-    abort execution and revert state changes
+    终止运行并撤销状态更改。
 
 ``revert(string memory reason)``
-    abort execution and revert state changes, providing an explanatory string
+    终止运行并撤销状态更改，可以同时提供一个解释性的字符串。
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
 
 .. _mathematical-and-cryptographic-functions:
 
-Mathematical and Cryptographic Functions
-----------------------------------------
+数学和密码学函数
+-------------------
 
 ``addmod(uint x, uint y, uint k) returns (uint)``
-    compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
+    计算 ``(x + y) % k``，加法会在任意精度下执行，并且加法的结果即使超过 ``2**256`` 也不会被截取。从 0.5.0 版本的编译器开始会加入对 ``k != 0`` 的校验（assert）。
 
 ``mulmod(uint x, uint y, uint k) returns (uint)``
-    compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
+    计算 ``(x * y) % k``，乘法会在任意精度下执行，并且乘法的结果即使超过 ``2**256`` 也不会被截取。从 0.5.0 版本的编译器开始会加入对 ``k != 0`` 的校验（assert）。
 
 ``keccak256(bytes memory) returns (bytes32)``
-    compute the Keccak-256 hash of the input
+    计算输入的 Keccak-256 哈希值。
 
-.. note::
+.. 注解::
 
-    There used to be an alias for ``keccak256`` called ``sha3``, which was removed in version 0.5.0.
+    以前 ``keccak256`` 的别名叫 ``sha3`` ，在0.5.0版本中被删除。
 
 ``sha256(bytes memory) returns (bytes32)``
-    compute the SHA-256 hash of the input
+    计算输入的 SHA-256 哈希值。
 
 ``ripemd160(bytes memory) returns (bytes20)``
-    compute RIPEMD-160 hash of the input
+    计算输入的 RIPEMD-160 哈希值。
 
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``
-    recover the address associated with the public key from elliptic curve signature or return zero on error.
-    The function parameters correspond to ECDSA values of the signature:
+    利用椭圆曲线签名恢复与公钥相关的地址，错误返回零值。
+    函数参数对应于签名的ECDSA值：
 
-    * ``r`` = first 32 bytes of signature
-    * ``s`` = second 32 bytes of signature
-    * ``v`` = final 1 byte of signature
+    * ``r`` = 签名的前32字节
+    * ``s`` = 签名的第二个32字节
+    * ``v`` = 签名的最后1个字节
 
-    ``ecrecover`` returns an ``address``, and not an ``address payable``. See :ref:`address payable<address>` for
-    conversion, in case you need to transfer funds to the recovered address.
+    ``ecrecover`` 返回一个 ``address``，而不是 ``address payable``。
+    参见 :ref:`地址类型 <address>` 进行转换，以备您需要向恢复的地址转移资金。
 
-    For further details, read `example usage <https://ethereum.stackexchange.com/questions/1777/workflow-on-signing-a-string-with-private-key-followed-by-signature-verificatio>`_.
+    更多细节，请阅读 `使用示例 <https://ethereum.stackexchange.com/questions/1777/workflow-on-signing-a-string-with-private-key-followed-by-signature-verificatio>`_.
 
-.. warning::
+.. 警告::
 
-    If you use ``ecrecover``, be aware that a valid signature can be turned into a different valid signature without
-    requiring knowledge of the corresponding private key. In the Homestead hard fork, this issue was fixed
-    for _transaction_ signatures (see `EIP-2 <https://eips.ethereum.org/EIPS/eip-2#specification>`_), but
-    the ecrecover function remained unchanged.
+    如果您使用 ``ecrecover``，请注意，一个有效的签名可以变成另一个有效的签名，而不需要知道相应的私钥。
+    在Homestead硬分叉中，这个问题对 _transaction_ 签名进行了修复
+    （见 `EIP-2 <https://eips.ethereum.org/EIPS/eip-2#specification>`_），
+    但ecrecover函数仍然没有改变。
 
-    This is usually not a problem unless you require signatures to be unique or
-    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.com/contracts/2.x/api/cryptography#ECDSA>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
+    这通常不是一个问题，除非您要求签名是唯一的，或者用它们来识别个体。
+    OpenZeppelin有一个 `ECDSA辅助库 <https://docs.openzeppelin.com/contracts/2.x/api/cryptography#ECDSA>`_，
+    您可以用它作为 ``ecrecover`` 的包装，那样就没有这个问题。
 
-.. note::
+.. 注解::
 
-    When running ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*, you might encounter Out-of-Gas. This is because these functions are implemented as "precompiled contracts" and only really exist after they receive the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution might run into an Out-of-Gas error. A workaround for this problem is to first send Wei (1 for example) to each of the contracts before you use them in your actual contracts. This is not an issue on the main or test net.
+    当在 *私有区块链* 上运行 ``sha256``， ``ripemd160`` 或 ``ecrecover`` 时，您可能会遇到超出gas（Out-of-Gas）的错误。这是因为这些功能是作为 "预编译合约" 实现的，只有在它们收到第一个消息后才真正存在（尽管它们的合约代码是硬编码的）。向不存在的合约发送消息的成本较高，因此执行时可能会遇到Out-of-Gas错误。这个问题的一个变通方法是，在您的实际合约中使用它们之前，先向每个合约发送Wei（例如1）。这在主网和测试网上都没有问题。
 
 .. index:: balance, codehash, send, transfer, call, callcode, delegatecall, staticcall
 
 .. _address_related:
 
-Members of Address Types
-------------------------
+地址类型的成员
+---------------
 
-``<address>.balance`` (``uint256``)
-    balance of the :ref:`address` in Wei
+``<address>.balance`` （ ``uint256`` ）
+    以 Wei 为单位的 :ref:`地址类型` 的余额。
 
-``<address>.code`` (``bytes memory``)
-    code at the :ref:`address` (can be empty)
+``<address>.code`` （ ``bytes memory`` ）
+    在 :ref:`地址类型` 的代码（可以是空的）。
 
-``<address>.codehash`` (``bytes32``)
-    the codehash of the :ref:`address`
+``<address>.codehash`` （ ``bytes32`` ）
+    :ref:`地址类型` 的代码哈希值
 
 ``<address payable>.transfer(uint256 amount)``
-    send given amount of Wei to :ref:`address`, reverts on failure, forwards 2300 gas stipend, not adjustable
+    向 :ref:`地址类型` 发送数量为 amount 的 Wei，失败时抛出异常，发送 2300 gas 的矿工费，不可调节。
 
 ``<address payable>.send(uint256 amount) returns (bool)``
-    send given amount of Wei to :ref:`address`, returns ``false`` on failure, forwards 2300 gas stipend, not adjustable
+    向 :ref:`地址类型` 发送数量为 amount 的 Wei，失败时返回 ``false`` 2300 gas 的矿工费用，不可调节。
 
 ``<address>.call(bytes memory) returns (bool, bytes memory)``
-    issue low-level ``CALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+    用给定的数据发出低级别的 ``CALL``，返回是否成功的结果和数据，发送所有可用 gas，可调节。
 
 ``<address>.delegatecall(bytes memory) returns (bool, bytes memory)``
-    issue low-level ``DELEGATECALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+    用给定的数据发出低级别的 ``DELEGATECALL``，返回是否成功的结果和数据，发送所有可用 gas，可调节。
 
 ``<address>.staticcall(bytes memory) returns (bool, bytes memory)``
-    issue low-level ``STATICCALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+    用给定的数据发出低级别的 ``STATICCALL``，返回是否成功的结果和数据，发送所有可用 gas，可调节。
 
-For more information, see the section on :ref:`address`.
+更多信息，请参见 :ref:`地址类型` 一节。
 
-.. warning::
-    You should avoid using ``.call()`` whenever possible when executing another contract function as it bypasses type checking,
-    function existence check, and argument packing.
+.. 警告::
+    您应该尽可能避免在执行另一个合约函数时使用 ``.call()``，因为它绕过了类型检查、函数存在性检查和参数打包。
 
-.. warning::
-    There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
-    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
-    to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
-    Use a pattern where the recipient withdraws the money.
+.. 警告::
+    使用 ``send`` 有很多危险：如果调用栈深度已经达到 1024（这总是可以由调用者所强制指定），
+    转账会失败；并且如果接收者用光了 gas，转账同样会失败。为了保证以太币转账安全，
+    总是检查 ``send`` 的返回值，使用 ``transfer`` 或者下面更好的方式： 用接收者提款的模式。
 
-.. warning::
-    Due to the fact that the EVM considers a call to a non-existing contract to always succeed,
-    Solidity includes an extra check using the ``extcodesize`` opcode when performing external calls.
-    This ensures that the contract that is about to be called either actually exists (it contains code)
-    or an exception is raised.
+.. 警告::
+    由于EVM认为对一个不存在的合约的调用总是成功的，
+    Solidity在执行外部调用时使用 ``extcodesize`` 操作码进行额外的检查。
+    这确保了即将被调用的合约要么实际存在（它包含代码），要么就会产生一个异常。
 
-    The low-level calls which operate on addresses rather than contract instances (i.e. ``.call()``,
-    ``.delegatecall()``, ``.staticcall()``, ``.send()`` and ``.transfer()``) **do not** include this
-    check, which makes them cheaper in terms of gas but also less safe.
+    对地址而不是合约实例进行低级调用
+    （即 ``.call()``, ``.delegatecall()``, ``.staticcall()``, ``.send()`` 和 ``.transfer()``）
+    **不包括** 这种检查，这使得它们在gas方面更便宜，但也更不安全。
 
-.. note::
-   Prior to version 0.5.0, Solidity allowed address members to be accessed by a contract instance, for example ``this.balance``.
-   This is now forbidden and an explicit conversion to address must be done: ``address(this).balance``.
+.. 注解::
+   在0.5.0版本之前，Solidity允许地址成员被合约实例访问，例如 ``this.balance``。
+   现在这被禁止了，必须做一个明确的地址转换。 ``address(this).balance``。
 
-.. note::
-   If state variables are accessed via a low-level delegatecall, the storage layout of the two contracts
-   must align in order for the called contract to correctly access the storage variables of the calling contract by name.
-   This is of course not the case if storage pointers are passed as function arguments as in the case for
-   the high-level libraries.
+.. 注解::
+   如果状态变量是通过低级别的委托调用来访问的，那么两个合约的存储布局必须一致，
+   以便被调用的合约能够正确地通过名称来访问调用合约的存储变量。
+   当然，如果存储指针作为函数参数被传递的话，情况就不是这样了，就像高层库的情况一样。
 
-.. note::
-    Prior to version 0.5.0, ``.call``, ``.delegatecall`` and ``.staticcall`` only returned the
-    success condition and not the return data.
+.. 注解::
+    在0.5.0版本之前， ``.call``, ``.delegatecall`` 和 ``.staticcall`` 只返回成功状况，
+    不返回数据。
 
-.. note::
-    Prior to version 0.5.0, there was a member called ``callcode`` with similar but slightly different
-    semantics than ``delegatecall``.
+.. 注解::
+    在0.5.0版本之前，有一个名为 ``callcode`` 的成员，其语义与 ``delegatecall`` 相似但略有不同。
 
 
 .. index:: this, selfdestruct
 
-Contract Related
-----------------
+合约相关
+----------
 
-``this`` (current contract's type)
-    the current contract, explicitly convertible to :ref:`address`
+``this`` （当前合约类型）
+    当前合约，可以明确转换为 :ref:`地址类型`
 
 ``selfdestruct(address payable recipient)``
-    Destroy the current contract, sending its funds to the given :ref:`address`
-    and end execution.
-    Note that ``selfdestruct`` has some peculiarities inherited from the EVM:
+    销毁当前合约，将其资金发送到给定的 :ref:`地址类型` 并结束执行。
+    注意， ``selfdestruct`` 有一些从EVM继承的特殊性：
 
-    - the receiving contract's receive function is not executed.
-    - the contract is only really destroyed at the end of the transaction and ``revert`` s might "undo" the destruction.
-
+    - 接收合约的接收函数不会被执行。
+    - 合约只有在交易结束时才真正被销毁， 任何一个 ``revert`` 可能会 "撤销" 销毁。
 
 
+此外，当前合约的所有函数都可以直接调用，包括当前函数。
 
-Furthermore, all functions of the current contract are callable directly including the current function.
-
-.. note::
-    Prior to version 0.5.0, there was a function called ``suicide`` with the same
-    semantics as ``selfdestruct``.
+.. 注解::
+    在0.5.0版本之前，有一个叫做 ``suicide`` 的函数，其语义与 ``selfdestruct`` 相同。
 
 .. index:: type, creationCode, runtimeCode
 
 .. _meta-type:
 
-Type Information
-----------------
+类型信息
+----------
 
-The expression ``type(X)`` can be used to retrieve information about the type
-``X``. Currently, there is limited support for this feature (``X`` can be either
-a contract or an integer type) but it might be expanded in the future.
+表达式 ``type(X)`` 可以用来检索关于 ``X`` 类型的信息。
+目前，对这一功能的支持是有限的（ ``X`` 可以是合约类型或整数型），但在未来可能会扩展。
 
-The following properties are available for a contract type ``C``:
+以下是合约类型 ``C`` 的可用属性：
 
 ``type(C).name``
-    The name of the contract.
+    合约的名称。
 
 ``type(C).creationCode``
-    Memory byte array that contains the creation bytecode of the contract.
-    This can be used in inline assembly to build custom creation routines,
-    especially by using the ``create2`` opcode.
-    This property can **not** be accessed in the contract itself or any
-    derived contract. It causes the bytecode to be included in the bytecode
-    of the call site and thus circular references like that are not possible.
+    内存字节数组，包含合约的创建字节码。
+    可以在内联程序中用来建立自定义的创建程序，
+    特别是通过使用 ``create2`` 操作码。
+    这个属性 **不能** 在合约本身或任何派生合约中被访问。
+    它会导致字节码被包含在调用站点的字节码中，因此像这样的循环引用是不可能的。
 
 ``type(C).runtimeCode``
-    Memory byte array that contains the runtime bytecode of the contract.
-    This is the code that is usually deployed by the constructor of ``C``.
-    If ``C`` has a constructor that uses inline assembly, this might be
-    different from the actually deployed bytecode. Also note that libraries
-    modify their runtime bytecode at time of deployment to guard against
-    regular calls.
-    The same restrictions as with ``.creationCode`` also apply for this
-    property.
+    内存字节数组，包含合约运行时的字节码。
+    通常是由 ``C`` 的构造函数部署的代码。
+    如果 ``C`` 有一个使用内联汇编的构造函数，这可能与实际部署的字节码不同。
+    还要注意的是，库合约在部署时修改其运行时字节码，以防止常规调用。
+    与 ``.creationCode`` 相同的限制也适用于这个属性。
 
-In addition to the properties above, the following properties are available
-for an interface type ``I``:
+除了上述属性外，以下属性对接口类型 ``I`` 可用：
 
 ``type(I).interfaceId``:
-    A ``bytes4`` value containing the `EIP-165 <https://eips.ethereum.org/EIPS/eip-165>`_
-    interface identifier of the given interface ``I``. This identifier is defined as the ``XOR`` of all
-    function selectors defined within the interface itself - excluding all inherited functions.
+    一个 ``bytes4`` 值，是包含给定接口 ``I`` 的 `EIP-165 <https://eips.ethereum.org/EIPS/eip-165>`_ 接口标识符。
+    这个标识符被定义为接口本身定义的所有函数选择器的 ``XOR``，不包括所有继承的函数。
 
-The following properties are available for an integer type ``T``:
+以下属性可用于整数类型 ``T``：
 
 ``type(T).min``
-    The smallest value representable by type ``T``.
+    类型 ``T`` 所能代表的最小值。
 
 ``type(T).max``
-    The largest value representable by type ``T``.
+    类型 ``T`` 所能代表的最大值。
