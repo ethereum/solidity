@@ -275,6 +275,12 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		assertThrow(data() < 0x10000, AssemblyException, "Declaration of sub-assembly tag.");
 		text = string("tag_") + to_string(static_cast<size_t>(data())) + ":";
 		break;
+	case StaticJump:
+		text = string("staticjump #") + to_string(static_cast<size_t>(data()));
+		break;
+	case StaticJumpI:
+		text = string("staticjumpi #") + to_string(static_cast<size_t>(data()));
+		break;
 	case PushData:
 		text = string("data_") + toHex(data());
 		break;
@@ -349,6 +355,12 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	}
 	case Tag:
 		_out << " Tag " << _item.data();
+		break;
+	case StaticJump:
+		_out << " StaticJump #" << _item.data();
+		break;
+	case StaticJumpI:
+		_out << " StaticJumpI #" << _item.data();
 		break;
 	case PushData:
 		_out << " PushData " << hex << static_cast<unsigned>(_item.data()) << dec;
