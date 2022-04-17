@@ -31,6 +31,7 @@
 
 #include <memory>
 #include <set>
+#include <string>
 #include <limits>
 #include <json/json.h>
 
@@ -115,6 +116,21 @@ public:
 	/// pathToSubObject("A1.E2") == {1}
 	/// The path must not lead to a @a Data object (will throw in that case).
 	std::vector<size_t> pathToSubObject(YulString _qualifiedName) const;
+
+	/// Searches for a subobject at @param _qualifiedName within the current object.
+	/// @returns a pointer to the subobject or a nullptr if it was not found.
+	Object const* subObjectAt(YulString _qualifiedName);
+
+	/// Visits all subobjects in the path given by the @a _qualifiedName
+	/// of the current object applying the function @a _visitor.
+	/// If @a _visitor returns `true` the visiting stops, otherwise,
+	/// it continues until the last subobject in the path is reached.
+	void visitPath(
+		YulString _qualifiedName,
+		std::function<bool(Object const*)> const& _visitor
+	) const;
+
+	Object const* at(YulString _name) const;
 
 	/// sub id for object if it is subobject of another object, max value if it is not subobject
 	size_t subId = std::numeric_limits<size_t>::max();
