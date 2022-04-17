@@ -712,7 +712,7 @@ LinkerObject const& Assembly::assemble() const
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
 		if (isStaticTagRef.count(i.first)) {
-			pos = pos - (i.first + bytesPerStaticTag); // TODO: do properly
+			pos = pos - (i.first + bytesPerStaticTag); // TODO: calculate relative figure properly
 			assertThrow(numberEncodingSize(pos) <= bytesPerStaticTag, AssemblyException, "Tag too large for reserved space.");
 			//pos = static_cast<uint16_t>(spos);
 			bytesRef r(ret.bytecode.data() + i.first, bytesPerStaticTag);
