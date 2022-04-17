@@ -152,6 +152,7 @@ void ReasoningBasedSimplifier::operator()(FunctionCall& _fun)
 	// TODO do not forget to add path condition!
 	// TODO and(x, 0xfff) -> x if x <= 0xfff
 	// TODO if _fun is not returning, assert that the path condition is aflse
+	// -> This should be the job of the structural simplifier!
 }
 
 void ReasoningBasedSimplifier::operator()(FunctionDefinition& _fun)
