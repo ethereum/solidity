@@ -580,6 +580,7 @@ LinkerObject const& Assembly::assemble() const
 		case StaticJumpI:
 		{
 			ret.bytecode.push_back(static_cast<uint8_t>((i.type() == StaticJump) ? Instruction::RJUMP : Instruction::RJUMPI));
+			cout << "Adding static jump" << i << "\n";
 			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
 			isStaticTagRef.insert(ret.bytecode.size());
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerStaticTag); // Place 0 as immediate for now
@@ -710,10 +711,11 @@ LinkerObject const& Assembly::assemble() const
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		cout << tagId << "\n";
 		size_t pos = tagPositions[tagId];
-		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
+//		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
 		if (isStaticTagRef.count(i.first)) {
 			pos = pos - (i.first + bytesPerStaticTag); // TODO: calculate relative figure properly
-			assertThrow(numberEncodingSize(pos) <= bytesPerStaticTag, AssemblyException, "Tag too large for reserved space.");
+			cout << "Change position of static jump to " << pos << "\n";
+//			assertThrow(numberEncodingSize(pos) <= bytesPerStaticTag, AssemblyException, "Tag too large for reserved space.");
 			//pos = static_cast<uint16_t>(spos);
 			bytesRef r(ret.bytecode.data() + i.first, bytesPerStaticTag);
 			toBigEndian(pos, r);

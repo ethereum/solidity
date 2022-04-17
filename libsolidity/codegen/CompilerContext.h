@@ -213,9 +213,11 @@ public:
 		evmasm::AssemblyItem const& _tag,
 		evmasm::AssemblyItem::JumpType _jumpType = evmasm::AssemblyItem::JumpType::Ordinary
 	) {
-		evmasm::AssemblyItem item = m_asm->appendStaticJump(_tag);
-		item.setJumpType(_jumpType);
-		return *this << item;
+		*m_asm << _tag.pushTag();
+		return appendJump(_jumpType);
+//		evmasm::AssemblyItem item = m_asm->appendStaticJump(_tag);
+//		item.setJumpType(_jumpType);
+//		return *this << item;
 	}
 	/// Appends pushing of a new tag and @returns the new tag.
 	evmasm::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
