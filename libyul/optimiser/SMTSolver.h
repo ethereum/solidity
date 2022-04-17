@@ -53,6 +53,7 @@ protected:
 	void encodeVariableDeclaration(VariableDeclaration const& _varDecl);
 	void encodeVariableAssignment(Assignment const& _assignment);
 	void encodeVariableUpdate(YulString const& _name, Expression const& _value);
+	void encodeVariableUpdateUnknown(YulString const& _name);
 
 	/// The encoding for a builtin. The type of encoding determines what we are
 	/// solving for.

@@ -158,6 +158,15 @@ void ReasoningBasedSimplifier::operator()(FunctionDefinition& _fun)
 {
 	ScopedSaveAndRestore counters(m_variableSequenceCounter, {});
 	ScopedSaveAndRestore pathCond(m_pathCondition, true);
+	for (auto const& param: _fun.parameters)
+		encodeVariableUpdateUnknown(param.name);
+	for (auto const& retVar: _fun.returnVariables)
+	{
+		encodeVariableUpdateUnknown(retVar.name);
+		// TODO remove the redundant encoding above
+		m_solver->addAssertion(currentVariableExpression(retVar.name) == 0);
+	}
+
 	ASTModifier::operator()(_fun);
 }
 

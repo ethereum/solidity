@@ -160,12 +160,19 @@ void SMTSolver::encodeVariableDeclaration(VariableDeclaration const& _varDecl)
 		_varDecl.value
 	)
 		encodeVariableUpdate(_varDecl.variables.front().name, *_varDecl.value);
+	else
+		for (auto const& var: _varDecl.variables)
+			encodeVariableUpdateUnknown(var.name);
+
 }
 
 void SMTSolver::encodeVariableAssignment(Assignment const& _assignment)
 {
 	if (_assignment.variableNames.size() == 1)
 		encodeVariableUpdate(_assignment.variableNames.front().name, *_assignment.value);
+	else
+		for (auto const& var: _assignment.variableNames)
+			encodeVariableUpdateUnknown(var.name);
 }
 
 void SMTSolver::encodeVariableUpdate(YulString const& _name, Expression const& _value)
@@ -178,4 +185,15 @@ void SMTSolver::encodeVariableUpdate(YulString const& _name, Expression const& _
 
 	m_solver->newVariable(variableNameAtIndex(_name, m_variableSequenceCounter[_name]), defaultSort());
 	m_solver->addAssertion(currentVariableExpression(_name) == value);
+}
+
+void SMTSolver::encodeVariableUpdateUnknown(const YulString& _name)
+{
+	if (m_variableSequenceCounter.count(_name))
+		++m_variableSequenceCounter[_name];
+	else
+		m_variableSequenceCounter[_name] = 1;
+
+	m_solver->newVariable(variableNameAtIndex(_name, m_variableSequenceCounter[_name]), defaultSort());
+	m_solver->addAssertion(0 <= currentVariableExpression(_name) && currentVariableExpression(_name) <= (bigint(1) << 256) - 1);
 }
