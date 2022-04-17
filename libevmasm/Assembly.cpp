@@ -580,10 +580,9 @@ LinkerObject const& Assembly::assemble() const
 		case StaticJumpI:
 		{
 			ret.bytecode.push_back(static_cast<uint8_t>((i.type() == StaticJump) ? Instruction::RJUMP : Instruction::RJUMPI));
-			ret.bytecode.push_back(tagPush);
 			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
 			isStaticTagRef.insert(ret.bytecode.size());
-			ret.bytecode.resize(ret.bytecode.size() + bytesPerStaticTag);
+			ret.bytecode.resize(ret.bytecode.size() + bytesPerStaticTag); // Place 0 as immediate for now
 			break;
 		}
 		case PushData:
@@ -709,6 +708,7 @@ LinkerObject const& Assembly::assemble() const
 			m_tagPositionsInBytecode :
 			m_subs[subId]->m_tagPositionsInBytecode;
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
+		cout << tagId << "\n";
 		size_t pos = tagPositions[tagId];
 		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
 		if (isStaticTagRef.count(i.first)) {
