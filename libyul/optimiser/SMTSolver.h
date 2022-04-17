@@ -47,13 +47,12 @@ namespace solidity::yul
 class SMTSolver
 {
 protected:
-	SMTSolver(
-		std::set<YulString> const& _ssaVariables,
-		Dialect const& _dialect
-	);
+	SMTSolver(Dialect const& _dialect);
 
 	/// Helper function that encodes VariableDeclaration
 	void encodeVariableDeclaration(VariableDeclaration const& _varDecl);
+	void encodeVariableAssignment(Assignment const& _assignment);
+	void encodeVariableUpdate(YulString const& _name, Expression const& _value);
 
 	/// The encoding for a builtin. The type of encoding determines what we are
 	/// solving for.
@@ -66,6 +65,10 @@ protected:
 
 	static smtutil::Expression int2bv(smtutil::Expression _arg);
 	static smtutil::Expression bv2int(smtutil::Expression _arg);
+
+	std::string variableNameAtIndex(YulString const& _name, size_t _index) const;
+	smtutil::Expression variableExpressionAtIndex(YulString const& _name, size_t _index) const;
+	smtutil::Expression currentVariableExpression(YulString const& _name) const;
 
 	smtutil::Expression newVariable();
 	smtutil::Expression newBooleanVariable();
@@ -81,9 +84,9 @@ protected:
 	static smtutil::Expression signedToTwosComplement(smtutil::Expression _value);
 	smtutil::Expression wrap(smtutil::Expression _value);
 
-	std::set<YulString> const& m_ssaVariables;
 	std::unique_ptr<smtutil::SolverInterface> m_solver;
-	std::map<YulString, smtutil::Expression> m_variables;
+	std::map<YulString, size_t> m_variableSequenceCounter;
+	std::optional<smtutil::Expression> m_pathCondition;
 
 	Dialect const& m_dialect;
 

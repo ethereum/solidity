@@ -58,14 +58,16 @@ public:
 
 	using ASTModifier::operator();
 	void operator()(VariableDeclaration& _varDecl) override;
+	void operator()(Assignment& _assignment) override;
 	void operator()(If& _if) override;
 	void operator()(ForLoop& _for) override;
+	void operator()(FunctionCall& _fun) override;
+	void operator()(FunctionDefinition& _fun) override;
 
 private:
-	explicit ReasoningBasedSimplifier(
-		Dialect const& _dialect,
-		std::set<YulString> const& _ssaVariables
-	);
+	explicit ReasoningBasedSimplifier(Dialect const& _dialect);
+
+	void checkIfConditionRedundant(If& _if);
 
 	smtutil::Expression encodeEVMBuiltin(
 		evmasm::Instruction _instruction,
@@ -74,8 +76,6 @@ private:
 
 	smtutil::Expression newZeroOneVariable();
 	void restrictToEVMWord(smtutil::Expression _value);
-
-	Dialect const& m_dialect;
 };
 
 }

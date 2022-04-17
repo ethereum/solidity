@@ -18,7 +18,6 @@
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SMTSolver.h>
 
-#include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
@@ -41,8 +40,7 @@ using namespace solidity::smtutil;
 
 void ReasoningBasedSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
-	set<YulString> ssaVars = SSAValueTracker::ssaVariables(_ast);
-	ReasoningBasedSimplifier simpl{_context.dialect, ssaVars};
+	ReasoningBasedSimplifier simpl{_context.dialect};
 	// Hack to inject the boolean lp solver.
 	simpl.m_solver = make_unique<BooleanLPSolver>();
 	simpl(_ast);
@@ -58,14 +56,120 @@ void ReasoningBasedSimplifier::operator()(VariableDeclaration& _varDecl)
 	SMTSolver::encodeVariableDeclaration(_varDecl);
 }
 
+void ReasoningBasedSimplifier::operator()(Assignment& _assignment)
+{
+	SMTSolver::encodeVariableAssignment(_assignment);
+}
+
 void ReasoningBasedSimplifier::operator()(If& _if)
+{
+	checkIfConditionRedundant(_if);
+
+	decltype(m_variableSequenceCounter) oldCounters(m_variableSequenceCounter);
+	optional<smtutil::Expression> oldPathCondition = m_pathCondition;
+
+	// TODO do not call encode again - assert it is a variable
+	smtutil::Expression ifCondition = encodeExpression(*_if.condition);
+	smtutil::Expression branchCondition = (ifCondition >= 1);
+	if (m_pathCondition)
+		m_pathCondition = *m_pathCondition && branchCondition;
+	else
+		m_pathCondition = branchCondition;
+	ASTModifier::operator()(_if.body);
+
+	// join control flow
+	for (auto& var: oldCounters)
+		if (m_variableSequenceCounter.at(var.first) != var.second)
+		{
+			YulString const& name = var.first;
+			size_t oldCounter = var.second;
+			size_t branchCounter = m_variableSequenceCounter.at(name);
+			size_t newCounter = branchCounter + 1;
+			m_solver->newVariable(variableNameAtIndex(name, newCounter), defaultSort());
+
+			// TODO full path condition?
+			m_solver->addAssertion(
+				ifCondition == 0 ||
+				variableExpressionAtIndex(name, newCounter) == variableExpressionAtIndex(name, branchCounter)
+			);
+			m_solver->addAssertion(
+				ifCondition >= 1 ||
+				variableExpressionAtIndex(name, newCounter) == variableExpressionAtIndex(name, oldCounter)
+			);
+			var.second = newCounter;
+		}
+
+	m_variableSequenceCounter = move(oldCounters);
+	m_pathCondition = move(oldPathCondition);
+}
+
+void ReasoningBasedSimplifier::operator()(ForLoop& _for)
+{
+	// TODO handle break / continue
+
+	decltype(m_variableSequenceCounter) oldCounters(m_variableSequenceCounter);
+	optional<smtutil::Expression> oldPathCondition = m_pathCondition;
+
+	// TODO do not call encode again - assert it is a variable
+	smtutil::Expression forCondition = encodeExpression(*_for.condition);
+	smtutil::Expression branchCondition = (forCondition >= 1);
+	if (m_pathCondition)
+		m_pathCondition = *m_pathCondition && branchCondition;
+	else
+		m_pathCondition = branchCondition;
+	yulAssert(_for.pre.statements.empty());
+	ASTModifier::operator()(_for.body);
+	// TODO clear modified variables!
+	ASTModifier::operator()(_for.post);
+
+	// join control flow
+	for (auto& var: oldCounters)
+		if (m_variableSequenceCounter.at(var.first) != var.second)
+		{
+			var.second++;
+			m_solver->newVariable(variableNameAtIndex(var.first, var.second), defaultSort());
+			restrictToEVMWord(currentVariableExpression(var.first));
+		}
+
+	m_variableSequenceCounter = move(oldCounters);
+	m_pathCondition = move(oldPathCondition);
+}
+
+void ReasoningBasedSimplifier::operator()(FunctionCall& _fun)
+{
+	ASTModifier::operator()(_fun);
+	// TODO do not forget to add path condition!
+	// TODO and(x, 0xfff) -> x if x <= 0xfff
+	// TODO if _fun is not returning, assert that the path condition is aflse
+}
+
+void ReasoningBasedSimplifier::operator()(FunctionDefinition& _fun)
+{
+	ScopedSaveAndRestore counters(m_variableSequenceCounter, {});
+	ScopedSaveAndRestore pathCond(m_pathCondition, true);
+	ASTModifier::operator()(_fun);
+}
+
+ReasoningBasedSimplifier::ReasoningBasedSimplifier(
+	Dialect const& _dialect
+):
+	SMTSolver(_dialect)
+{
+}
+
+void ReasoningBasedSimplifier::checkIfConditionRedundant(If& _if)
 {
 	if (!SideEffectsCollector{m_dialect, *_if.condition}.movable())
 		return;
 
 	cout << "Checking if condition  can be false" << endl;
+	// TODO should not call encode, but instead check if it is
+	// a variable and use its name / value
 	smtutil::Expression condition = encodeExpression(*_if.condition);
 	m_solver->push();
+	// TODO find a way so that we do not have to do that all the time.
+	if (m_pathCondition)
+		m_solver->addAssertion(*m_pathCondition);
 	m_solver->addAssertion(condition == constantValue(0));
 	cout << "  running check" << endl;
 	CheckResult result = m_solver->check({}).first;
@@ -81,7 +185,9 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	{
 		cout << "Checking if condition  can be true" << endl;
 		m_solver->push();
-		// TODO change this to >= 1 for simplicity?
+		// TODO find a way so that we do not have to do that all the time.
+		if (m_pathCondition)
+			m_solver->addAssertion(*m_pathCondition);
 		m_solver->addAssertion(condition >= 1);
 		cout << "  running check" << endl;
 		CheckResult result2 = m_solver->check({}).first;
@@ -93,83 +199,9 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 			falseCondition.debugData = debugDataOf(*_if.condition);
 			_if.condition = make_unique<yul::Expression>(move(falseCondition));
 			_if.body = yul::Block{};
-			// Nothing left to be done.
-			return;
 		}
 		cout << " unknown :(" << endl;
 	}
-
-	m_solver->push();
-	cout << "Setting condition true inside body" << endl;
-	m_solver->addAssertion(condition >= constantValue(1));
-
-	ASTModifier::operator()(_if.body);
-
-	m_solver->pop();
-
-	// TODO if the body is non-continuing, we could assert that the condition is false
-	// but this might not be true anymore once we join with another control-flow.
-	// maybe it is best to let the conditional simplifier and the data flow analyzer do this for us.
-}
-
-void ReasoningBasedSimplifier::operator()(ForLoop& _for)
-{
-	// TODO handle break / continue
-
-	if (!SideEffectsCollector{m_dialect, *_for.condition}.movable())
-		return;
-
-	cout << "Checking if condition  can be false" << endl;
-	smtutil::Expression condition = encodeExpression(*_for.condition);
-	m_solver->push();
-	m_solver->addAssertion(condition <= constantValue(0));
-	cout << "  running check" << endl;
-	CheckResult result = m_solver->check({}).first;
-	m_solver->pop();
-	if (result == CheckResult::UNSATISFIABLE)
-	{
-		cout << " unsat => cannot be false!" << endl;
-		Literal trueCondition = m_dialect.trueLiteral();
-		trueCondition.debugData = debugDataOf(*_for.condition);
-		_for.condition = make_unique<yul::Expression>(move(trueCondition));
-	}
-	else
-	{
-		cout << "Checking if condition  can be true" << endl;
-		m_solver->push();
-		m_solver->addAssertion(condition >= constantValue(1));
-		cout << "  running check" << endl;
-		CheckResult result2 = m_solver->check({}).first;
-		m_solver->pop();
-		if (result2 == CheckResult::UNSATISFIABLE)
-		{
-			cout << " unsat => cannot be true!" << endl;
-			Literal falseCondition = m_dialect.zeroLiteralForType(m_dialect.boolType);
-			falseCondition.debugData = debugDataOf(*_for.condition);
-			_for.condition = make_unique<yul::Expression>(move(falseCondition));
-			_for.body = yul::Block{};
-			// Nothing left to be done.
-			return;
-		}
-	}
-
-	m_solver->push();
-	cout << "Setting condition true inside body" << endl;
-	m_solver->addAssertion(condition >= constantValue(1));
-
-	ASTModifier::operator()(_for.body);
-	ASTModifier::operator()(_for.post);
-
-	m_solver->pop();
-}
-
-ReasoningBasedSimplifier::ReasoningBasedSimplifier(
-	Dialect const& _dialect,
-	set<YulString> const& _ssaVariables
-):
-	SMTSolver(_ssaVariables, _dialect),
-	m_dialect(_dialect)
-{
 }
 
 

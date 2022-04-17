@@ -33,8 +33,7 @@ using namespace solidity::smtutil;
 using namespace solidity;
 using namespace std;
 
-SMTSolver::SMTSolver(set<YulString> const& _ssaVariables, Dialect const& _dialect):
-	m_ssaVariables(_ssaVariables),
+SMTSolver::SMTSolver(Dialect const& _dialect):
 	m_solver(make_unique<smtutil::SMTPortfolio>()),
 	m_dialect(_dialect)
 { }
@@ -51,13 +50,7 @@ smtutil::Expression SMTSolver::encodeExpression(Expression const& _expression)
 		},
 		[&](Identifier const& _identifier)
 		{
-			if (
-				m_ssaVariables.count(_identifier.name) &&
-				m_variables.count(_identifier.name)
-			)
-				return m_variables.at(_identifier.name);
-			else
-				return newRestrictedVariable();
+			return currentVariableExpression(_identifier.name);
 		},
 		[&](Literal const& _literal)
 		{
@@ -74,6 +67,21 @@ smtutil::Expression SMTSolver::int2bv(smtutil::Expression _arg)
 smtutil::Expression SMTSolver::bv2int(smtutil::Expression _arg)
 {
 	return smtutil::Expression::bv2int(std::move(_arg));
+}
+
+string SMTSolver::variableNameAtIndex(YulString const& _name, size_t _index) const
+{
+	return "yul_" + to_string(_index) + "_"s + _name.str();
+}
+
+smtutil::Expression SMTSolver::variableExpressionAtIndex(YulString const& _name, size_t _index) const
+{
+	return smtutil::Expression(variableNameAtIndex(_name, _index), {}, defaultSort());
+}
+
+smtutil::Expression SMTSolver::currentVariableExpression(YulString const& _name) const
+{
+	return variableExpressionAtIndex(_name, m_variableSequenceCounter.at(_name));
 }
 
 smtutil::Expression SMTSolver::newVariable()
@@ -149,18 +157,25 @@ void SMTSolver::encodeVariableDeclaration(VariableDeclaration const& _varDecl)
 {
 	if (
 		_varDecl.variables.size() == 1 &&
-		_varDecl.value &&
-		m_ssaVariables.count(_varDecl.variables.front().name)
+		_varDecl.value
 	)
-	{
-		YulString const& variableName = _varDecl.variables.front().name;
-		bool const inserted = m_variables.insert({
-			variableName,
-			m_solver->newVariable("yul_" + variableName.str(), defaultSort())
-		}).second;
-		yulAssert(inserted, "");
-		m_solver->addAssertion(
-			m_variables.at(variableName) == encodeExpression(*_varDecl.value)
-		);
-	}
+		encodeVariableUpdate(_varDecl.variables.front().name, *_varDecl.value);
+}
+
+void SMTSolver::encodeVariableAssignment(Assignment const& _assignment)
+{
+	if (_assignment.variableNames.size() == 1)
+		encodeVariableUpdate(_assignment.variableNames.front().name, *_assignment.value);
+}
+
+void SMTSolver::encodeVariableUpdate(YulString const& _name, Expression const& _value)
+{
+	smtutil::Expression value = encodeExpression(_value);
+	if (m_variableSequenceCounter.count(_name))
+		++m_variableSequenceCounter[_name];
+	else
+		m_variableSequenceCounter[_name] = 1;
+
+	m_solver->newVariable(variableNameAtIndex(_name, m_variableSequenceCounter[_name]), defaultSort());
+	m_solver->addAssertion(currentVariableExpression(_name) == value);
 }
