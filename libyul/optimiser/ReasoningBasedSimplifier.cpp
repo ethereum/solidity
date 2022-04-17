@@ -118,6 +118,9 @@ void ReasoningBasedSimplifier::operator()(ForLoop& _for)
 	else
 		m_pathCondition = branchCondition;
 	yulAssert(_for.pre.statements.empty());
+
+	//TODO clear variables assigned inside body and post
+
 	ASTModifier::operator()(_for.body);
 	// TODO clear modified variables!
 	ASTModifier::operator()(_for.post);
