@@ -21,6 +21,7 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/optimiser/NameCollector.h>
 
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
@@ -121,20 +122,25 @@ void ReasoningBasedSimplifier::operator()(ForLoop& _for)
 		m_pathCondition = branchCondition;
 	yulAssert(_for.pre.statements.empty());
 
-	//TODO clear variables assigned inside body and post
+	// clear variables assigned inside body and post
+	for (YulString const& varName: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
+	{
+		m_variableSequenceCounter[varName]++;
+		m_solver->newVariable(variableNameAtIndex(varName, m_variableSequenceCounter.at(varName)), defaultSort());
+		restrictToEVMWord(currentVariableExpression(varName));
+	}
 
 	ASTModifier::operator()(_for.body);
 	// TODO clear modified variables!
 	ASTModifier::operator()(_for.post);
 
-	// join control flow
-	for (auto& var: oldCounters)
-		if (m_variableSequenceCounter.at(var.first) != var.second)
-		{
-			var.second++;
-			m_solver->newVariable(variableNameAtIndex(var.first, var.second), defaultSort());
-			restrictToEVMWord(currentVariableExpression(var.first));
-		}
+	// clear variables assigned inside body and post
+	for (YulString const& varName: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
+	{
+		m_variableSequenceCounter[varName]++;
+		m_solver->newVariable(variableNameAtIndex(varName, m_variableSequenceCounter.at(varName)), defaultSort());
+		restrictToEVMWord(currentVariableExpression(varName));
+	}
 
 	m_variableSequenceCounter = move(oldCounters);
 	m_pathCondition = move(oldPathCondition);
