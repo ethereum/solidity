@@ -17,6 +17,14 @@
 //
 // {
 //     let y := calldataload(0)
-//     let t := calldataload(32)
-//     if sgt(sub(y, 1), y) { if 1 { sstore(0, 1) } }
+//     let sum := 0
+//     let x := 0
+//     for { } lt(x, y) { }
+//     {
+//         if 0 { }
+//         if 0 { }
+//         sum := calldataload(add(0x20, mul(x, 0x20)))
+//         x := add(x, 1)
+//     }
+//     sstore(0, sum)
 // }

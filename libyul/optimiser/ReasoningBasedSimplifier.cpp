@@ -24,6 +24,7 @@
 
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
+#include <libsmtutil/Z3Interface.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -42,7 +43,8 @@ void ReasoningBasedSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
 	ReasoningBasedSimplifier simpl{_context.dialect};
 	// Hack to inject the boolean lp solver.
-	simpl.m_solver = make_unique<BooleanLPSolver>();
+	//simpl.m_solver = make_unique<BooleanLPSolver>();
+	simpl.m_solver = make_unique<Z3Interface>();
 	simpl(_ast);
 }
 
