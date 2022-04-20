@@ -1,0 +1,75 @@
+From 2a3f9cb99955ca49c0fb7f2c93027311092c4a92 Mon Sep 17 00:00:00 2001
+From: Facundo Tuesca <facu@tuesca.com>
+Date: Thu, 3 Sep 2020 10:42:39 +0200
+Subject: [PATCH] Avoid including empty <span> header when using MSVC and C++17
+
+MSVC's <span> only works when compiling with C++20. Otherwise it can
+be included but not used. Including it causes the compiler to print
+a warning.
+---
+ include/range/v3/detail/config.hpp  | 5 +++++
+ include/range/v3/range/access.hpp   | 4 +++-
+ include/range/v3/range/concepts.hpp | 4 +++-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/include/range/v3/detail/config.hpp b/include/range/v3/detail/config.hpp
+index a5d062fda..069bb3eca 100644
+--- a/include/range/v3/detail/config.hpp
++++ b/include/range/v3/detail/config.hpp
+@@ -280,6 +280,11 @@ namespace ranges
+ #define RANGES_WORKAROUND_MSVC_OLD_LAMBDA
+ #endif
+ 
++#if _MSVC_LANG <= 201703L
++#define RANGES_WORKAROUND_MSVC_UNUSABLE_SPAN // MSVC provides a <span> header that is
++                                             // guarded against use with std <= 17
++#endif
++
+ #elif defined(__GNUC__) || defined(__clang__)
+ #define RANGES_PRAGMA(X) _Pragma(#X)
+ #define RANGES_DIAGNOSTIC_PUSH RANGES_PRAGMA(GCC diagnostic push)
+diff --git a/include/range/v3/range/access.hpp b/include/range/v3/range/access.hpp
+index 3ded73815..5d9fbd002 100644
+--- a/include/range/v3/range/access.hpp
++++ b/include/range/v3/range/access.hpp
+@@ -14,6 +14,8 @@
+ #ifndef RANGES_V3_RANGE_ACCESS_HPP
+ #define RANGES_V3_RANGE_ACCESS_HPP
+ 
++#include <range/v3/detail/config.hpp>
++
+ #include <functional> // for reference_wrapper (whose use with begin/end is deprecated)
+ #include <initializer_list>
+ #include <iterator>
+@@ -21,7 +23,7 @@
+ #include <utility>
+ 
+ #ifdef __has_include
+-#if __has_include(<span>)
++#if __has_include(<span>) && !defined(RANGES_WORKAROUND_MSVC_UNUSABLE_SPAN)
+ #include <span>
+ #endif
+ #if __has_include(<string_view>)
+diff --git a/include/range/v3/range/concepts.hpp b/include/range/v3/range/concepts.hpp
+index 543669cac..680e70bfa 100644
+--- a/include/range/v3/range/concepts.hpp
++++ b/include/range/v3/range/concepts.hpp
+@@ -14,12 +14,14 @@
+ #ifndef RANGES_V3_RANGE_CONCEPTS_HPP
+ #define RANGES_V3_RANGE_CONCEPTS_HPP
+ 
++#include <range/v3/detail/config.hpp>
++
+ #include <initializer_list>
+ #include <type_traits>
+ #include <utility>
+ 
+ #ifdef __has_include
+-#if __has_include(<span>)
++#if __has_include(<span>) && !defined(RANGES_WORKAROUND_MSVC_UNUSABLE_SPAN)
+ #include <span>
+ #endif
+ #if __has_include(<string_view>)
+-- 
+2.29.2.windows.1
+

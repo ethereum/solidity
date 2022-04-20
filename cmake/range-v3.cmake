@@ -6,16 +6,26 @@ else()
     set(RANGE_V3_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
+# MSVC reports "The contents of <span> are available only with C++20 or later." 200+ times.
+# A fix (https://github.com/ericniebler/range-v3/commit/2a3f9cb999) is available,
+# but not included in the latest release.
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set(RANGE_V3_PATCH_COMMAND git apply --ignore-whitespace --directory=build/deps/src/range-v3-project ${CMAKE_SOURCE_DIR}/patches/avoid-including-empty-span-header-when-using-msvc.patch)
+else()
+    set(RANGE_V3_PATCH_COMMAND "")
+endif()
+
 set(prefix "${CMAKE_BINARY_DIR}/deps")
 set(RANGE_V3_INCLUDE_DIR "${prefix}/include")
 
 ExternalProject_Add(range-v3-project
     PREFIX "${prefix}"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
-    DOWNLOAD_NAME range-v3-0.11.0.tar.gz
+    DOWNLOAD_NAME range-v3-0.11.0.tar.gz  # remove RANGE_V3_PATCH_COMMAND and .patch on version update
     URL https://github.com/ericniebler/range-v3/archive/0.11.0.tar.gz
     URL_HASH SHA256=376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c
     CMAKE_COMMAND ${RANGE_V3_CMAKE_COMMAND}
+    PATCH_COMMAND ${RANGE_V3_PATCH_COMMAND}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DBUILD_TESTING=OFF
