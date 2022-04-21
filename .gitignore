@@ -65,3 +65,6 @@ tmp
 # OS specific local files
 .DS_Store
 Thumbs.db
+
+# Python virtual environment files
+venv

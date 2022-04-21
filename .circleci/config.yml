@@ -680,6 +680,21 @@ jobs:
           command: ./scripts/pylint_all.py
       - gitter_notify_failure_unless_pr
 
+  chk_mypy:
+    <<: *base_buildpack_focal_small
+    steps:
+      - checkout
+      - run:
+          name: Install pip
+          command: apt -q update && apt install -y python3-pip
+      - run:
+          name: Install mypy
+          command: python3 -m pip install mypy
+      - run:
+          name: Python Scripts Type Annotations
+          command: ./scripts/mypy_all.py
+      - gitter_notify_failure_unless_pr
+
   chk_antlr_grammar:
     <<: *base_buildpack_focal_small
     steps:
@@ -1419,6 +1434,7 @@ workflows:
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
       - chk_pylint: *workflow_trigger_on_tags
+      - chk_mypy: *workflow_trigger_on_tags
       - chk_errorcodes: *workflow_trigger_on_tags
       - chk_antlr_grammar: *workflow_trigger_on_tags
       - chk_docs_pragma_min_version: *workflow_trigger_on_tags
