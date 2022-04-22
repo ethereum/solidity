@@ -10,13 +10,15 @@ from textwrap import dedent
 import subprocess
 import sys
 
+from typing import Any
+
 PROJECT_ROOT = path.dirname(path.dirname(path.realpath(__file__)))
 PYLINT_RCFILE = f"{PROJECT_ROOT}/scripts/pylintrc"
 
 SGR_INFO = "\033[1;32m"
 SGR_CLEAR = "\033[0m"
 
-def pylint_all_filenames(dev_mode, rootdirs):
+def pylint_all_filenames(dev_mode: Any, rootdirs: Any) -> Any:
     """ Performs pylint on all python files within given root directory (recursively).  """
 
     BARE_COMMAND = [
@@ -56,7 +58,7 @@ def pylint_all_filenames(dev_mode, rootdirs):
     return True
 
 
-def parse_command_line():
+def parse_command_line() -> Any:
     script_description = dedent("""
         Runs pylint on all Python files in project directories known to contain Python scripts.
 
@@ -78,7 +80,7 @@ def parse_command_line():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     options = parse_command_line()
 
     rootdirs = [

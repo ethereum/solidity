@@ -13,11 +13,13 @@ import sys
 import os
 import traceback
 
+from typing import Any
+
 hasMultipleSources = False
 createdSources = []
 
 
-def uncaught_exception_hook(exc_type, exc_value, exc_traceback):
+def uncaught_exception_hook(exc_type: Any, exc_value: Any, exc_traceback: Any) -> None:
     # The script `scripts/ASTImportTest.sh` will interpret return code 3
     # as a critical error (because of the uncaught exception) and will
     # terminate further execution.
@@ -25,7 +27,7 @@ def uncaught_exception_hook(exc_type, exc_value, exc_traceback):
     sys.exit(3)
 
 
-def extractSourceName(line):
+def extractSourceName(line: Any) -> Any:
     if line.find("/") > -1:
         filePath = line[13: line.rindex("/")]
         # fileName = line[line.rindex("/")+1: line.find(" ====")]
@@ -36,7 +38,7 @@ def extractSourceName(line):
 
 # expects the first line of lines to be "==== Source: sourceName ===="
 # writes the following source into a file named sourceName
-def writeSourceToFile(lines):
+def writeSourceToFile(lines: Any) -> None:
     filePath, srcName = extractSourceName(lines[0])
     # print("sourceName is ", srcName)
     # print("filePath is", filePath)

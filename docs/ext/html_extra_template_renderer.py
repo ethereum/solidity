@@ -1,7 +1,9 @@
 import os.path
 
+from typing import Any
 
-def render_html_extra_templates(app):
+
+def render_html_extra_templates(app: Any) -> None:
     if app.builder.format != 'html':
         # Non-HTML builders do not provide .templates.render_string(). Note that a HTML
         # builder is still used also when building some other formats like json or epub.
@@ -27,7 +29,7 @@ def render_html_extra_templates(app):
         app.config.html_extra_path.append(template_config['target'])
 
 
-def setup(app):
+def setup(app: Any) -> Any:
     app.add_config_value('html_extra_templates', default={}, rebuild='', types=dict)
 
     # Register a handler for the env-before-read-docs event. Any event that's fired before static

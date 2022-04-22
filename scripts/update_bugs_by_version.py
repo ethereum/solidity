@@ -11,14 +11,16 @@ import json
 import re
 import sys
 
-def comp(version_string):
+from typing import Any
+
+def comp(version_string: Any) -> Any:
     return [int(c) for c in version_string.split('.')]
 
 path = os.path.dirname(os.path.realpath(__file__))
 with open(path + '/../docs/bugs.json', encoding='utf8') as bugsFile:
     bugs = json.load(bugsFile)
 
-versions = {}
+versions = {} # type: Any
 with open(path + '/../Changelog.md', encoding='utf8') as changelog:
     for line in changelog:
         m = re.search(r'^### (\S+) \((\d+-\d+-\d+)\)$', line)

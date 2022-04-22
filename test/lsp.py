@@ -27,12 +27,12 @@ class JsonRpcProcess:
     process: subprocess.Popen
     trace_io: bool
 
-    def __init__(self, exe_path: str, exe_args: List[str], trace_io: bool = True):
+    def __init__(self, exe_path: str, exe_args: List[str], trace_io: bool = True) -> None:
         self.exe_path = exe_path
         self.exe_args = exe_args
         self.trace_io = trace_io
 
-    def __enter__(self):
+    def __enter__(self) -> Any:
         self.process = subprocess.Popen(
             [self.exe_path, *self.exe_args],
             stdin=subprocess.PIPE,
@@ -41,7 +41,7 @@ class JsonRpcProcess:
         )
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback) -> None:
+    def __exit__(self, exception_type: Any, exception_value: Any, traceback: Any) -> None:
         self.process.kill()
         self.process.wait(timeout=2.0)
 
@@ -118,7 +118,7 @@ SGR_STATUS_OKAY = '\033[1;32m'
 SGR_STATUS_FAIL = '\033[1;31m'
 
 class ExpectationFailed(Exception):
-    def __init__(self, actual, expected):
+    def __init__(self, actual: Any, expected: Any) -> None:
         self.actual = json.dumps(actual, sort_keys=True)
         self.expected = json.dumps(expected, sort_keys=True)
         diff = json.dumps(DeepDiff(actual, expected), indent=4)
@@ -186,7 +186,7 @@ class Marker(Enum):
 
 
 # Returns the given marker with the end extended by 'amount'
-def extendEnd(marker, amount=1):
+def extendEnd(marker: Any, amount: Any=1) -> Any:
     marker["end"]["character"] += amount
     return marker
 
@@ -198,9 +198,9 @@ class SolidityLSPTestSuite: # {{{
     trace_io: bool = False
     fail_fast: bool = False
     test_pattern: str
-    marker_regexes: {}
+    marker_regexes: Any = {}
 
-    def __init__(self):
+    def __init__(self) -> None:
         colorama.init()
         args = create_cli_parser().parse_args()
         self.solc_path = args.solc_path
@@ -256,7 +256,7 @@ class SolidityLSPTestSuite: # {{{
 
         return min(max(self.test_counter.failed, self.assertion_counter.failed), 127)
 
-    def setup_lsp(self, lsp: JsonRpcProcess, expose_project_root=True):
+    def setup_lsp(self, lsp: JsonRpcProcess, expose_project_root: Any=True) -> None:
         """
         Prepares the solc LSP server by calling `initialize`,
         and `initialized` methods.
@@ -278,20 +278,20 @@ class SolidityLSPTestSuite: # {{{
                     'workspaceFolders': True
                 }
             }
-        }
+        } # type: Any
         if not expose_project_root:
             params['rootUri'] = None
         lsp.call_method('initialize', params)
         lsp.send_notification('initialized')
 
     # {{{ helpers
-    def get_test_file_path(self, test_case_name):
+    def get_test_file_path(self, test_case_name: Any) -> Any:
         return f"{self.project_root_dir}/{test_case_name}.sol"
 
-    def get_test_file_uri(self, test_case_name):
+    def get_test_file_uri(self, test_case_name: Any) -> Any:
         return "file://" + self.get_test_file_path(test_case_name)
 
-    def get_test_file_contents(self, test_case_name):
+    def get_test_file_contents(self, test_case_name: Any) -> Any:
         """
         Reads the file contents from disc for a given test case.
         The `test_case_name` will be the basename of the file
@@ -357,7 +357,7 @@ class SolidityLSPTestSuite: # {{{
         )
         return self.wait_for_diagnostics(solc_process, max_diagnostic_reports)
 
-    def expect_equal(self, actual, expected, description="Equality") -> None:
+    def expect_equal(self, actual: Any, expected: Any, description: Any="Equality") -> None:
         self.assertion_counter.total += 1
         prefix = f"[{self.assertion_counter.total}] {SGR_ASSERT_BEGIN}{description}: "
         diff = DeepDiff(actual, expected)
@@ -378,19 +378,19 @@ class SolidityLSPTestSuite: # {{{
 
     def expect_diagnostic(
         self,
-        diagnostic,
+        diagnostic: Any,
         code: int,
         lineNo: int = None,
         startEndColumns: Tuple[int, int] = None,
-        marker: {} = None
-    ):
+        marker: Any = None
+    ) -> None:
         self.expect_equal(diagnostic['code'], code, f'diagnostic: {code}')
 
         if marker:
             self.expect_equal(diagnostic['range'], marker, "diagnostic: check range")
         else:
-            assert len(startEndColumns) == 2
-            [startColumn, endColumn] = startEndColumns
+            assert len(startEndColumns) == 2 # type: ignore
+            [startColumn, endColumn] = startEndColumns # type: ignore
             self.expect_equal(
                 diagnostic['range'],
                 {
@@ -407,7 +407,7 @@ class SolidityLSPTestSuite: # {{{
         uri: str,
         lineNo: int,
         startEndColumns: Tuple[int, int]
-    ):
+    ) -> None:
         """
         obj is an JSON object containing two keys:
             - 'uri': a string of the document URI
@@ -430,7 +430,7 @@ class SolidityLSPTestSuite: # {{{
         expected_lineNo: int,
         expected_startEndColumns: Tuple[int, int],
         description: str
-    ):
+    ) -> None:
         response = solc.call_method(
             'textDocument/definition',
             {
@@ -527,7 +527,7 @@ class SolidityLSPTestSuite: # {{{
         self.expect_diagnostic(report['diagnostics'][0], code=2072, marker=marker)
 
 
-    def get_file_tags(self, test_name: str, verbose=False):
+    def get_file_tags(self, test_name: str, verbose: bool=False) -> Any:
         """
         Finds all tags (e.g. @tagname) in the given test and returns them as a
         dictionary having the following structure: {
@@ -618,8 +618,8 @@ class SolidityLSPTestSuite: # {{{
     def verify_didOpen_with_import_diagnostics(
         self,
         published_diagnostics: List[Any],
-        main_file_name='didOpen_with_import'
-    ):
+        main_file_name: Any='didOpen_with_import'
+    ) -> None:
         self.expect_equal(len(published_diagnostics), 2, "Diagnostic reports for 2 files")
 
         # primary file:

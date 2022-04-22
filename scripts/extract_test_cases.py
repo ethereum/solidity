@@ -9,7 +9,9 @@
 import sys
 import re
 
-def extract_test_cases(_path):
+from typing import Any
+
+def extract_test_cases(_path: Any) -> Any:
     with open(_path, mode='rb', encoding='utf8') as f:
         lines = f.read().splitlines()
 

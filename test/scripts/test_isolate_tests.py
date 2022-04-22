@@ -3,12 +3,12 @@
 import unittest
 
 from textwrap import dedent, indent
-
+from typing import Any
 from unittest_helpers import FIXTURE_DIR, load_fixture
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
 # pragma pylint: disable=import-error
-from isolate_tests import extract_solidity_docs_cases, extract_yul_docs_cases
+from isolate_tests import extract_solidity_docs_cases, extract_yul_docs_cases # type: ignore
 # pragma pylint: enable=import-error
 
 CODE_BLOCK_RST_PATH = FIXTURE_DIR / 'code_block.rst'
@@ -16,16 +16,16 @@ CODE_BLOCK_RST_CONTENT = load_fixture(CODE_BLOCK_RST_PATH)
 CODE_BLOCK_WITH_DIRECTIVES_RST_PATH = FIXTURE_DIR / 'code_block_with_directives.rst'
 CODE_BLOCK_WITH_DIRECTIVES_RST_CONTENT = load_fixture(CODE_BLOCK_WITH_DIRECTIVES_RST_PATH)
 
-def formatCase(text):
+def formatCase(text: Any) -> Any:
     """Formats code to contain only one indentation and terminate with a \n"""
     return indent(dedent(text.lstrip("\n")), "    ") + "\n"
 
 class TestExtractDocsCases(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.maxDiff = 10000
 
 
-    def test_solidity_block(self):
+    def test_solidity_block(self) -> None:
         expected_cases = [formatCase(case) for case in [
             """
                 // SPDX-License-Identifier: GPL-3.0
@@ -43,7 +43,7 @@ class TestExtractDocsCases(unittest.TestCase):
 
         self.assertEqual(extract_solidity_docs_cases(CODE_BLOCK_RST_PATH), expected_cases)
 
-    def test_solidity_block_with_directives(self):
+    def test_solidity_block_with_directives(self) -> None:
         expected_cases = [formatCase(case) for case in [
             """
                 // SPDX-License-Identifier: GPL-3.0
@@ -68,7 +68,7 @@ class TestExtractDocsCases(unittest.TestCase):
 
         self.assertEqual(extract_solidity_docs_cases(CODE_BLOCK_WITH_DIRECTIVES_RST_PATH), expected_cases)
 
-    def test_yul_block(self):
+    def test_yul_block(self) -> None:
         expected_cases = [formatCase(case) for case in [
             """
             {
@@ -95,7 +95,7 @@ class TestExtractDocsCases(unittest.TestCase):
 
         self.assertEqual(extract_yul_docs_cases(CODE_BLOCK_RST_PATH), expected_cases)
 
-    def test_yul_block_with_directives(self):
+    def test_yul_block_with_directives(self) -> None:
         expected_cases = [formatCase(case) for case in [
             """
             {

@@ -6,10 +6,11 @@ import os
 import sys
 import getopt
 import tempfile
+from typing import Any
 from getkey import getkey
 
 
-def parse_call(call):
+def parse_call(call: Any) -> Any:
     function = ''
     arguments = ""
     results = ""
@@ -33,7 +34,7 @@ def parse_call(call):
     return function.strip(), arguments.strip(), results.strip()
 
 
-def colorize(left, right, index):
+def colorize(left: Any, right: Any, index: Any) -> Any:
     red = "\x1b[31m"
     yellow = "\x1b[33m"
     reset = "\x1b[0m"
@@ -52,7 +53,7 @@ def colorize(left, right, index):
     return "    " + left + "\n" + bottom  # " {:<90} {:<90}\n{}".format(left, right, bottom)
 
 
-def get_checks(content, sol_file_path):
+def get_checks(content: Any, sol_file_path: Any) -> Any:
     constructors = []
     checks = []
     for line in content.split("\n"):
@@ -79,7 +80,7 @@ def get_checks(content, sol_file_path):
         return checks, sol_checks
 
 
-def show_test(name, content, sol_file_path, current_test, test_count):
+def show_test(name: Any, content: Any, sol_file_path: Any, current_test: Any, test_count: Any) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as cpp_file:
         cpp_file.write(content.encode())
         cpp_file.close()
@@ -108,7 +109,7 @@ def show_test(name, content, sol_file_path, current_test, test_count):
         print()
 
 
-def get_tests(e2e_path):
+def get_tests(e2e_path: Any) -> Any:
     tests = []
     for f in os.listdir(e2e_path):
         if f.endswith(".sol"):
@@ -116,7 +117,7 @@ def get_tests(e2e_path):
     return tests
 
 
-def process_input_file(e2e_path, input_file, interactive):
+def process_input_file(e2e_path: Any, input_file: Any, interactive: Any) -> None:
     tests = get_tests(e2e_path)
     with open(input_file, "r", encoding='utf8') as cpp_file:
         inside_test = False
@@ -154,7 +155,7 @@ def process_input_file(e2e_path, input_file, interactive):
         sys.stdout.flush()
 
 
-def main(argv):
+def main(argv: Any) -> None:
     interactive = False
     input_file = None
     try:

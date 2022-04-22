@@ -17,10 +17,10 @@ ETH_GAS_REPORT_GNOSIS_RST_CONTENT = load_fixture(ETH_GAS_REPORT_GNOSIS_RST_PATH)
 
 
 class TestEthGasReport(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.maxDiff = 10000
 
-    def test_parse_report(self):
+    def test_parse_report(self) -> None:
         parsed_report = parse_report(ETH_GAS_REPORT_GNOSIS_RST_CONTENT)
 
         expected_report = {
@@ -116,13 +116,13 @@ class TestEthGasReport(unittest.TestCase):
         }
         self.assertEqual(asdict(parsed_report), expected_report)
 
-    def test_parse_report_should_fail_if_report_is_empty(self):
+    def test_parse_report_should_fail_if_report_is_empty(self) -> None:
         text_report = ""
         with self.assertRaises(ReportValidationError) as manager:
             parse_report(text_report)
         self.assertEqual(str(manager.exception), "Report header not found.")
 
-    def test_parse_report_should_fail_if_report_has_no_header(self):
+    def test_parse_report_should_fail_if_report_has_no_header(self) -> None:
         text_report = dedent("""
             | Methods                                            |
             | ERC1155Token · mint() · 1 · 3 · 2 ·          6 · - |
@@ -133,7 +133,7 @@ class TestEthGasReport(unittest.TestCase):
             parse_report(text_report)
         self.assertEqual(str(manager.exception), "Report header not found.")
 
-    def test_parse_report_should_fail_if_data_rows_have_no_headers(self):
+    def test_parse_report_should_fail_if_data_rows_have_no_headers(self) -> None:
         text_report = dedent("""
             | ERC1155Token · mint() · 1 · 3 · 2 · 6 · - |
         """).strip('\n')
@@ -146,7 +146,7 @@ class TestEthGasReport(unittest.TestCase):
             parse_report(text_report)
         self.assertEqual(str(manager.exception), expected_message)
 
-    def test_parse_report_should_fail_if_report_has_more_than_one_header(self):
+    def test_parse_report_should_fail_if_report_has_more_than_one_header(self) -> None:
         text_report = dedent("""
             | Solc version: 0.8.10 · Optimizer enabled: true  · Runs: 200 · Block limit: 100000000 gas |
             | Solc version: 0.8.9  · Optimizer enabled: false · Runs: 111 · Block limit: 999999999 gas |
@@ -160,7 +160,7 @@ class TestEthGasReport(unittest.TestCase):
             parse_report(text_report)
         self.assertEqual(str(manager.exception), expected_message)
 
-    def test_parse_report_should_fail_if_row_matching_same_method_call_appears_twice(self):
+    def test_parse_report_should_fail_if_row_matching_same_method_call_appears_twice(self) -> None:
         text_report = dedent("""
             | Methods                                               |
             | ERC1155Token · mint() · 47934 · 59804 · 57826 · 6 · - |
@@ -175,7 +175,7 @@ class TestEthGasReport(unittest.TestCase):
             parse_report(text_report)
         self.assertEqual(str(manager.exception), expected_message)
 
-    def test_parse_report_should_fail_if_row_matching_same_contract_deployment_appears_twice(self):
+    def test_parse_report_should_fail_if_row_matching_same_contract_deployment_appears_twice(self) -> None:
         text_report = dedent("""
             | Deployments          ·        · % of limit ·   │
             | ERC1155Token · - · - · 525869 ·      0.5 % · - |
@@ -190,7 +190,7 @@ class TestEthGasReport(unittest.TestCase):
             parse_report(text_report)
         self.assertEqual(str(manager.exception), expected_message)
 
-    def test_parse_report_should_fail_if_method_row_appears_under_deployments_header(self):
+    def test_parse_report_should_fail_if_method_row_appears_under_deployments_header(self) -> None:
         text_report = dedent("""
             | Deployments           ·                       · % of limit ·   │
             | ERC1155Token · mint() · 47934 · 59804 · 57826 ·          6 · - |
@@ -204,7 +204,7 @@ class TestEthGasReport(unittest.TestCase):
             parse_report(text_report)
         self.assertEqual(str(manager.exception), expected_message)
 
-    def test_parse_report_should_fail_if_deployment_row_appears_under_methods_header(self):
+    def test_parse_report_should_fail_if_deployment_row_appears_under_methods_header(self) -> None:
         text_report = dedent("""
             | Methods                               |
             | ERC1155Token · - · - · 525869 · 5 · - |

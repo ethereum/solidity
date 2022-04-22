@@ -17,6 +17,7 @@ import sys
 import os
 import re
 
+from typing import Any
 from pygments_lexer_solidity import SolidityLexer, YulLexer
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -27,7 +28,7 @@ ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 sys.path.insert(0, os.path.join(ROOT_PATH, 'ext'))
 
-def setup(sphinx):
+def setup(sphinx: Any) -> None:
     sphinx.add_lexer('Solidity', SolidityLexer)
     sphinx.add_lexer('Yul', YulLexer)
 
@@ -71,7 +72,7 @@ project_copyright = '2016-2021, Ethereum'
 #
 # The short X.Y version.
 with open('../CMakeLists.txt', 'r', encoding='utf8') as f:
-    version = re.search('PROJECT_VERSION "([^"]+)"', f.read()).group(1)
+    version = re.search('PROJECT_VERSION "([^"]+)"', f.read()).group(1) # type: ignore
 # The full version, including alpha/beta/rc tags.
 if not os.path.isfile('../prerelease.txt') or os.path.getsize('../prerelease.txt') == 0:
     release = version
@@ -237,7 +238,7 @@ latex_elements = {
 
 # Additional stuff for the LaTeX preamble.
 #'preamble': '',
-}
+} # type: Any
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
@@ -272,7 +273,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-]
+] # type: Any
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
@@ -284,7 +285,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-]
+] # type: Any
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []

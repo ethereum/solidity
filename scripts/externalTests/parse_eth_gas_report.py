@@ -2,7 +2,7 @@
 # coding=utf-8
 
 from dataclasses import asdict, dataclass, field
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 import json
 import re
 import sys
@@ -55,11 +55,11 @@ class ReportValidationError(ReportError):
     pass
 
 class ReportParsingError(Exception):
-    def __init__(self, message: str, line: str, line_number: int):
+    def __init__(self, message: str, line: str, line_number: int) -> None:
         # pylint: disable=useless-super-delegation  # It's not useless, it adds type annotations.
         super().__init__(message, line, line_number)
 
-    def __str__(self):
+    def __str__(self) -> Any:
         return f"Parsing error on line {self.args[2] + 1}: {self.args[0]}\n{self.args[1]}"
 
 
@@ -71,7 +71,7 @@ class MethodGasReport:
     call_count: int
     total_gas: int = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, 'total_gas', self.avg_gas * self.call_count)
 
 
@@ -83,7 +83,7 @@ class ContractGasReport:
     methods: Optional[Dict[str, MethodGasReport]]
     total_method_gas: int = field(init=False, default=0)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.methods is not None:
             object.__setattr__(self, 'total_method_gas', sum(method.total_gas for method in self.methods.values()))
 
@@ -98,7 +98,7 @@ class GasReport:
     total_method_gas: int = field(init=False)
     total_deployment_gas: int = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, 'total_method_gas', sum(
             total_method_gas
             for total_method_gas in (contract.total_method_gas for contract in self.contracts.values())
@@ -110,7 +110,7 @@ class GasReport:
             if contract.avg_deployment_gas is not None
         ))
 
-    def to_json(self):
+    def to_json(self) -> Any:
         return json.dumps(asdict(self), indent=4, sort_keys=True)
 
 
@@ -159,15 +159,15 @@ def parse_method_row(line: str, line_number: int) -> Optional[Tuple[str, str, Me
         match['contract'].strip(),
         match['method'].strip(),
         MethodGasReport(
-            min_gas=parse_optional_int(match['min'], avg_gas),
-            max_gas=parse_optional_int(match['max'], avg_gas),
-            avg_gas=avg_gas,
+            min_gas=parse_optional_int(match['min'], avg_gas), # type: ignore
+            max_gas=parse_optional_int(match['max'], avg_gas), # type: ignore
+            avg_gas=avg_gas, # type: ignore
             call_count=call_count,
         )
     )
 
 
-def parse_deployment_row(line: str, line_number: int) -> Tuple[str, int, int, int]:
+def parse_deployment_row(line: str, line_number: int) -> Any:
     match = DEPLOYMENT_ROW_REGEX.match(line)
     if match is None:
         raise ReportParsingError("Expected a table row with deployment details.", line, line_number)
@@ -188,7 +188,7 @@ def preprocess_unicode_frames(input_string: str) -> str:
 
 def parse_report(rst_report: str) -> GasReport:
     report_params = None
-    methods_by_contract = {}
+    methods_by_contract = {} # type: Any
     deployment_costs = {}
     expected_row_type = None
 

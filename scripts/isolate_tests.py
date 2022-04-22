@@ -12,14 +12,15 @@ import hashlib
 from os.path import join, isfile, basename
 from argparse import ArgumentParser
 from textwrap import indent, dedent
+from typing import Any
 
-def extract_test_cases(path):
+def extract_test_cases(path: Any) -> Any:
     with open(path, encoding="utf8", errors='ignore', mode='r', newline='') as file:
         lines = file.read().splitlines()
 
     inside = False
     delimiter = ''
-    tests = []
+    tests = [] # type: Any
 
     for l in lines:
         if inside:
@@ -36,7 +37,7 @@ def extract_test_cases(path):
 
     return tests
 
-def extract_solidity_docs_cases(path):
+def extract_solidity_docs_cases(path: Any) -> Any:
     tests = extract_docs_cases(path, [".. code-block:: solidity", '::'])
 
     codeStart = "(// SPDX-License-Identifier:|pragma solidity|contract.*{|library.*{|interface.*{)"
@@ -48,10 +49,10 @@ def extract_solidity_docs_cases(path):
         if re.search(r'^\s{4}' + codeStart, test, re.MULTILINE) is not None
     ]
 
-def extract_yul_docs_cases(path):
+def extract_yul_docs_cases(path: Any) -> Any:
     tests = extract_docs_cases(path, [".. code-block:: yul"])
 
-    def wrap_in_object(code):
+    def wrap_in_object(code: Any) -> Any:
         for line in code.splitlines():
             line = line.lstrip()
             if line.startswith("//"):
@@ -71,10 +72,10 @@ def extract_yul_docs_cases(path):
 # Extract code examples based on the 'beginMarker' parameter
 # up until we reach EOF or a line that is not empty and doesn't start with 4
 # spaces.
-def extract_docs_cases(path, beginMarkers):
+def extract_docs_cases(path: Any, beginMarkers: Any) -> Any:
     immediatelyAfterMarker = False
     insideBlock = False
-    tests = []
+    tests = [] # type: Any
 
     # Collect all snippets of indented blocks
     with open(path, mode='r', errors='ignore', encoding='utf8', newline='') as f:
@@ -100,7 +101,7 @@ def extract_docs_cases(path, beginMarkers):
 
     return tests
 
-def write_cases(f, solidityTests, yulTests):
+def write_cases(f: Any, solidityTests: Any, yulTests: Any) -> None:
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for language, test in [("sol", t) for t in solidityTests] + [("yul", t) for t in yulTests]:
         # When code examples are extracted they are indented by 8 spaces, which violates the style guide,
@@ -111,7 +112,7 @@ def write_cases(f, solidityTests, yulTests):
         with open(sol_filename, mode='w', encoding='utf8', newline='') as fi:
             fi.write(remainder)
 
-def extract_and_write(path, language):
+def extract_and_write(path: Any, language: Any) -> None:
     assert language in ["solidity", "yul", ""]
     yulCases = []
     cases = []

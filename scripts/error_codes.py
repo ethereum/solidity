@@ -5,12 +5,13 @@ import os
 import getopt
 import sys
 from os import path
+from typing import Any
 
 ENCODING = "utf-8"
 SOURCE_FILE_PATTERN = r"\b\d+_error\b"
 
 
-def read_file(file_name):
+def read_file(file_name: Any) -> Any:
     content = None
     _, tail = path.split(file_name)
     is_latin = tail == "invalid_utf8_sequence.sol"
@@ -23,12 +24,12 @@ def read_file(file_name):
     return content
 
 
-def write_file(file_name, content):
+def write_file(file_name: Any, content: Any) -> None:
     with open(file_name, "w", encoding=ENCODING) as f:
         f.write(content)
 
 
-def in_comment(source, pos):
+def in_comment(source: Any, pos: Any) -> Any:
     slash_slash_pos = source.rfind("//", 0, pos)
     lf_pos = source.rfind("\n", 0, pos)
     if slash_slash_pos > lf_pos:
@@ -38,7 +39,7 @@ def in_comment(source, pos):
     return slash_star_pos > star_slash_pos
 
 
-def find_ids_in_source_file(file_name, id_to_file_names):
+def find_ids_in_source_file(file_name: Any, id_to_file_names: Any) -> None:
     source = read_file(file_name)
     for m in re.finditer(SOURCE_FILE_PATTERN, source):
         if in_comment(source, m.start()):
@@ -51,23 +52,23 @@ def find_ids_in_source_file(file_name, id_to_file_names):
             id_to_file_names[error_id] = [file_name]
 
 
-def find_ids_in_source_files(file_names):
+def find_ids_in_source_files(file_names: Any) -> Any:
     """Returns a dictionary with list of source files for every appearance of every id"""
 
-    id_to_file_names = {}
+    id_to_file_names = {} # type: Any
     for file_name in file_names:
         find_ids_in_source_file(file_name, id_to_file_names)
     return id_to_file_names
 
 
-def get_next_id(available_ids):
+def get_next_id(available_ids: Any) -> Any:
     assert len(available_ids) > 0, "Out of IDs"
     next_id = random.choice(list(available_ids))
     available_ids.remove(next_id)
     return next_id
 
 
-def fix_ids_in_source_file(file_name, id_to_count, available_ids):
+def fix_ids_in_source_file(file_name: Any, id_to_count: Any, available_ids: Any) -> Any:
     source = read_file(file_name)
 
     k = 0
@@ -92,13 +93,13 @@ def fix_ids_in_source_file(file_name, id_to_count, available_ids):
 
     destination.extend(source[k:])
 
-    destination = ''.join(destination)
+    destination = ''.join(destination) # type: ignore
     if source != destination:
         write_file(file_name, destination)
         print(f"Fixed file: {file_name}")
 
 
-def fix_ids_in_source_files(file_names, id_to_count):
+def fix_ids_in_source_files(file_names: Any, id_to_count: Any) -> Any:
     """
     Fixes ids in given source files;
     id_to_count contains number of appearances of every id in sources
@@ -109,7 +110,7 @@ def fix_ids_in_source_files(file_names, id_to_count):
         fix_ids_in_source_file(file_name, id_to_count, available_ids)
 
 
-def find_files(top_dir, sub_dirs, extensions):
+def find_files(top_dir: Any, sub_dirs: Any, extensions: Any) -> Any:
     """Builds a list of files with given extensions in specified subdirectories"""
 
     source_file_names = []
@@ -123,13 +124,13 @@ def find_files(top_dir, sub_dirs, extensions):
     return source_file_names
 
 
-def find_ids_in_test_file(file_name):
+def find_ids_in_test_file(file_name: Any) -> Any:
     source = read_file(file_name)
     pattern = r"^// (.*Error|Warning|Info) \d\d\d\d:"
     return {m.group(0)[-5:-1] for m in re.finditer(pattern, source, flags=re.MULTILINE)}
 
 
-def find_ids_in_test_files(file_names):
+def find_ids_in_test_files(file_names: Any) -> Any:
     """Returns a set containing all ids in tests"""
 
     ids = set()
@@ -138,13 +139,13 @@ def find_ids_in_test_files(file_names):
     return ids
 
 
-def find_ids_in_cmdline_test_err(file_name):
+def find_ids_in_cmdline_test_err(file_name: Any) -> Any:
     source = read_file(file_name)
     pattern = r' \(\d\d\d\d\):'
     return {m.group(0)[-6:-2] for m in re.finditer(pattern, source, flags=re.MULTILINE)}
 
 
-def print_ids(ids):
+def print_ids(ids: Any) -> None:
     for k, error_id in enumerate(sorted(ids)):
         if k % 10 > 0:
             print(" ", end="")
@@ -153,8 +154,8 @@ def print_ids(ids):
         print(error_id, end="")
 
 
-def print_ids_per_file(ids, id_to_file_names, top_dir):
-    file_name_to_ids = {}
+def print_ids_per_file(ids: Any, id_to_file_names: Any, top_dir: Any) -> None:
+    file_name_to_ids = {} # type: Any
     for error_id in ids:
         for file_name in id_to_file_names[error_id]:
             relpath = path.relpath(file_name, top_dir)
@@ -169,7 +170,7 @@ def print_ids_per_file(ids, id_to_file_names, top_dir):
         print()
 
 
-def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
+def examine_id_coverage(top_dir: Any, source_id_to_file_names: Any, new_ids_only: Any=False) -> Any:
     test_sub_dirs = [
         path.join("test", "libsolidity", "errorRecoveryTests"),
         path.join("test", "libsolidity", "smtCheckerTests"),
@@ -253,7 +254,7 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     return True
 
 
-def main(argv):
+def main(argv: Any) -> None:
     check = False
     fix = False
     no_confirm = False

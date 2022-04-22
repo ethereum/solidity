@@ -9,19 +9,21 @@ import glob
 import threading
 import time
 
+from typing import Any
+
 DESCRIPTION = """Regressor is a tool to run regression tests in a CI env."""
 
 class PrintDotsThread:
     """Prints a dot every "interval" (default is 300) seconds"""
 
-    def __init__(self, interval=300):
+    def __init__(self, interval: Any=300) -> None:
         self.interval = interval
 
         thread = threading.Thread(target=self.run, args=())
         thread.daemon = True
         thread.start()
 
-    def run(self):
+    def run(self) -> None:
         """ Runs until the main Python thread exits. """
         ## Print a newline at the very beginning.
         print("")
@@ -33,7 +35,7 @@ class PrintDotsThread:
 class regressor:
     _re_sanitizer_log = re.compile(r"""ERROR: (libFuzzer|UndefinedBehaviorSanitizer)""")
 
-    def __init__(self, description, args):
+    def __init__(self, description: Any, args: Any) -> None:
         self._description = description
         self._args = self.parseCmdLine(description, args)
         self._repo_root = os.path.dirname(sys.path[0])
@@ -42,14 +44,14 @@ class regressor:
         self._logpath = os.path.join(self._repo_root, "test_results")
 
     @classmethod
-    def parseCmdLine(cls, description, args):
+    def parseCmdLine(cls, description: Any, args: Any) -> Any:
         argParser = ArgumentParser(description)
         argParser.add_argument('-o', '--out-dir', required=True, type=str,
                                help="""Directory where test results will be written""")
         return argParser.parse_args(args)
 
     @staticmethod
-    def run_cmd(command, logfile=None, env=None):
+    def run_cmd(command: Any, logfile: Any=None, env: Any=None) -> Any:
         """
         Args:
             command (str): command to run
@@ -76,7 +78,7 @@ class regressor:
                 logfh.close()
                 return ret
 
-    def process_log(self, logfile):
+    def process_log(self, logfile: Any) -> Any:
         """
         Args:
             logfile (str): log file name
@@ -93,7 +95,7 @@ class regressor:
             rawtext = str(f.read())
         return not re.search(self._re_sanitizer_log, rawtext)
 
-    def run(self):
+    def run(self) -> Any:
         """
         Returns:
             bool: Test status.

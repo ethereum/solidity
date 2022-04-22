@@ -10,7 +10,7 @@ from enum import Enum
 from glob import glob
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 
 CONTRACT_SEPARATOR_PATTERN = re.compile(
@@ -91,7 +91,7 @@ class Statistics:
     missing_bytecode_count: int = 0
     missing_metadata_count: int = 0
 
-    def aggregate(self, report: FileReport):
+    def aggregate(self, report: FileReport) -> None:
         contract_reports = report.contract_reports if report.contract_reports is not None else []
 
         self.file_count += 1
@@ -233,7 +233,7 @@ def prepare_compiler_input(
     return (command_line, compiler_input)
 
 
-def detect_metadata_cli_option_support(compiler_path: Path):
+def detect_metadata_cli_option_support(compiler_path: Path) -> Any:
     process = subprocess.run(
         [str(compiler_path.absolute()), '--metadata', '-'],
         input="contract C {}",
@@ -329,7 +329,7 @@ def generate_report(
     report_file_path: Path,
     verbose: bool,
     exit_on_error: bool,
-):
+) -> None:
     statistics = Statistics()
     metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
 

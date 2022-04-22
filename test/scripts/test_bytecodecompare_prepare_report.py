@@ -46,12 +46,12 @@ SOLC_0_4_8_CLI_OUTPUT = load_fixture('solc_0.4.8_cli_output.txt')
 
 
 class PrepareReportTestBase(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.maxDiff = 10000
 
 
 class TestFileReport(PrepareReportTestBase):
-    def test_format_report(self):
+    def test_format_report(self) -> None:
         report = FileReport(
             file_name=Path('syntaxTests/scoping/library_inherited2.sol'),
             contract_reports=[
@@ -87,48 +87,48 @@ class TestFileReport(PrepareReportTestBase):
 
         self.assertEqual(report.format_report(), expected_output)
 
-    def test_format_report_should_print_error_if_contract_report_list_is_missing(self):
+    def test_format_report_should_print_error_if_contract_report_list_is_missing(self) -> None:
         report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         expected_output = "file.sol: <ERROR>\n"
 
         self.assertEqual(report.format_report(), expected_output)
 
-    def test_format_report_should_not_print_anything_if_contract_report_list_is_empty(self):
+    def test_format_report_should_not_print_anything_if_contract_report_list_is_empty(self) -> None:
         report = FileReport(file_name=Path('file.sol'), contract_reports=[])
 
         self.assertEqual(report.format_report(), '')
 
 class TestPrepareReport_Statistics(unittest.TestCase):
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         self.assertEqual(Statistics(), Statistics(0, 0, 0, 0, 0))
 
-    def test_aggregate_bytecode_and_metadata_present(self):
+    def test_aggregate_bytecode_and_metadata_present(self) -> None:
         statistics = Statistics()
         statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[ContractReport('C', 'c.sol', 'B', 'M')]))
         self.assertEqual(statistics, Statistics(1, 1, 0, 0, 0))
 
-    def test_aggregate_bytecode_missing(self):
+    def test_aggregate_bytecode_missing(self) -> None:
         statistics = Statistics()
         statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[ContractReport('C', 'c.sol', None, 'M')]))
         self.assertEqual(statistics, Statistics(1, 1, 0, 1, 0))
 
-    def test_aggregate_metadata_missing(self):
+    def test_aggregate_metadata_missing(self) -> None:
         statistics = Statistics()
         statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[ContractReport('C', 'c.sol', 'B', None)]))
         self.assertEqual(statistics, Statistics(1, 1, 0, 0, 1))
 
-    def test_aggregate_no_contract_reports(self):
+    def test_aggregate_no_contract_reports(self) -> None:
         statistics = Statistics()
         statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[]))
         self.assertEqual(statistics, Statistics(1, 0, 0, 0, 0))
 
-    def test_aggregate_missing_contract_report_list(self):
+    def test_aggregate_missing_contract_report_list(self) -> None:
         statistics = Statistics()
         statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=None))
         self.assertEqual(statistics, Statistics(1, 0, 1, 0, 0))
 
-    def test_aggregate_multiple_contract_reports(self):
+    def test_aggregate_multiple_contract_reports(self) -> None:
         statistics = Statistics()
         statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[
             ContractReport('C', 'c.sol', 'B', 'M'),
@@ -138,7 +138,7 @@ class TestPrepareReport_Statistics(unittest.TestCase):
         ]))
         self.assertEqual(statistics, Statistics(1, 4, 0, 2, 2))
 
-    def test_str(self):
+    def test_str(self) -> None:
         statistics = Statistics()
         statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[
             ContractReport('C', 'c.sol', 'B', 'M'),
@@ -153,7 +153,7 @@ class TestPrepareReport_Statistics(unittest.TestCase):
 
 
 class TestLoadSource(PrepareReportTestBase):
-    def test_load_source_should_strip_smt_pragmas_if_requested(self):
+    def test_load_source_should_strip_smt_pragmas_if_requested(self) -> None:
         expected_file_content = (
             "\n"
             "contract C {\n"
@@ -162,11 +162,11 @@ class TestLoadSource(PrepareReportTestBase):
 
         self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_file_content)
 
-    def test_load_source_should_not_strip_smt_pragmas_if_not_requested(self):
+    def test_load_source_should_not_strip_smt_pragmas_if_not_requested(self) -> None:
         self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.DISABLE), SMT_SMOKE_TEST_SOL_CODE)
         self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.PRESERVE), SMT_SMOKE_TEST_SOL_CODE)
 
-    def test_load_source_preserves_lf_newlines(self):
+    def test_load_source_preserves_lf_newlines(self) -> None:
         expected_output = (
             "\n"
             "\n"
@@ -176,7 +176,7 @@ class TestLoadSource(PrepareReportTestBase):
 
         self.assertEqual(load_source(SMT_CONTRACT_WITH_LF_NEWLINES_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_output)
 
-    def test_load_source_preserves_crlf_newlines(self):
+    def test_load_source_preserves_crlf_newlines(self) -> None:
         expected_output = (
             "\r\n"
             "\r\n"
@@ -186,7 +186,7 @@ class TestLoadSource(PrepareReportTestBase):
 
         self.assertEqual(load_source(SMT_CONTRACT_WITH_CRLF_NEWLINES_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_output)
 
-    def test_load_source_preserves_cr_newlines(self):
+    def test_load_source_preserves_cr_newlines(self) -> None:
         expected_output = (
             "\r"
             "\r"
@@ -196,7 +196,7 @@ class TestLoadSource(PrepareReportTestBase):
 
         self.assertEqual(load_source(SMT_CONTRACT_WITH_CR_NEWLINES_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_output)
 
-    def test_load_source_preserves_mixed_newlines(self):
+    def test_load_source_preserves_mixed_newlines(self) -> None:
         expected_output = (
             "\n"
             "\n"
@@ -208,7 +208,7 @@ class TestLoadSource(PrepareReportTestBase):
 
 
 class TestPrepareCompilerInput(PrepareReportTestBase):
-    def test_prepare_compiler_input_should_work_with_standard_json_interface(self):
+    def test_prepare_compiler_input_should_work_with_standard_json_interface(self) -> None:
         expected_compiler_input = {
             'language': 'Solidity',
             'sources': {
@@ -234,7 +234,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         self.assertEqual(command_line, ['solc', '--standard-json'])
         self.assertEqual(json.loads(compiler_input), expected_compiler_input)
 
-    def test_prepare_compiler_input_should_work_with_cli_interface(self):
+    def test_prepare_compiler_input_should_work_with_cli_interface(self) -> None:
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
@@ -251,7 +251,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         )
         self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 
-    def test_prepare_compiler_input_for_json_preserves_newlines(self):
+    def test_prepare_compiler_input_for_json_preserves_newlines(self) -> None:
         expected_compiler_input = {
             'language': 'Solidity',
             'sources': {
@@ -283,7 +283,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         self.assertEqual(command_line, ['solc', '--standard-json'])
         self.assertEqual(json.loads(compiler_input), expected_compiler_input)
 
-    def test_prepare_compiler_input_for_cli_preserves_newlines(self):
+    def test_prepare_compiler_input_for_cli_preserves_newlines(self) -> None:
         (_command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
@@ -296,7 +296,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
 
         self.assertEqual(compiler_input, SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_CODE)
 
-    def test_prepare_compiler_input_for_cli_should_handle_force_no_optimize_yul_flag(self):
+    def test_prepare_compiler_input_for_cli_should_handle_force_no_optimize_yul_flag(self) -> None:
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
@@ -313,7 +313,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         )
         self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 
-    def test_prepare_compiler_input_for_cli_should_not_use_metadata_option_if_not_supported(self):
+    def test_prepare_compiler_input_for_cli_should_not_use_metadata_option_if_not_supported(self) -> None:
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
@@ -332,7 +332,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
 
 
 class TestParseStandardJSONOutput(PrepareReportTestBase):
-    def test_parse_standard_json_output(self):
+    def test_parse_standard_json_output(self) -> None:
         expected_report = FileReport(
             file_name=Path('syntaxTests/scoping/library_inherited2.sol'),
             contract_reports=[
@@ -365,25 +365,25 @@ class TestParseStandardJSONOutput(PrepareReportTestBase):
         )
         self.assertEqual(report, expected_report)
 
-    def test_parse_standard_json_output_should_report_error_on_compiler_errors(self):
+    def test_parse_standard_json_output_should_report_error_on_compiler_errors(self) -> None:
         expected_report = FileReport(file_name=Path('syntaxTests/pragma/unknown_pragma.sol'), contract_reports=None)
 
         report = parse_standard_json_output(Path('syntaxTests/pragma/unknown_pragma.sol'), UNKNOWN_PRAGMA_SOL_JSON_OUTPUT)
         self.assertEqual(report, expected_report)
 
-    def test_parse_standard_json_output_should_report_error_on_empty_json(self):
+    def test_parse_standard_json_output_should_report_error_on_empty_json(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_standard_json_output(Path('file.sol'), '{}'), expected_report)
 
-    def test_parse_standard_json_output_should_report_error_if_contracts_is_empty(self):
+    def test_parse_standard_json_output_should_report_error_if_contracts_is_empty(self) -> None:
         compiler_output = '{"contracts": {}}'
 
         expected_report = FileReport(file_name=Path('contract.sol'), contract_reports=None)
 
         self.assertEqual(parse_standard_json_output(Path('contract.sol'), compiler_output), expected_report)
 
-    def test_parse_standard_json_output_should_report_error_if_every_file_has_no_contracts(self):
+    def test_parse_standard_json_output_should_report_error_if_every_file_has_no_contracts(self) -> None:
         compiler_output = (
             "{\n"
             "    \"contracts\": {\n"
@@ -397,7 +397,7 @@ class TestParseStandardJSONOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_standard_json_output(Path('contract.sol'), compiler_output), expected_report)
 
-    def test_parse_standard_json_output_should_not_report_error_if_there_is_at_least_one_file_with_contracts(self):
+    def test_parse_standard_json_output_should_not_report_error_if_there_is_at_least_one_file_with_contracts(self) -> None:
         compiler_output = (
             "{\n"
             "    \"contracts\": {\n"
@@ -414,24 +414,24 @@ class TestParseStandardJSONOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_standard_json_output(Path('contract.sol'), compiler_output), expected_report)
 
-    def test_parse_standard_json_output_should_report_error_on_unimplemented_feature_error(self):
+    def test_parse_standard_json_output_should_report_error_on_unimplemented_feature_error(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_standard_json_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_JSON_OUTPUT), expected_report)
 
-    def test_parse_standard_json_output_should_report_error_on_stack_too_deep_error(self):
+    def test_parse_standard_json_output_should_report_error_on_stack_too_deep_error(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_standard_json_output(Path('file.sol'), STACK_TOO_DEEP_JSON_OUTPUT), expected_report)
 
-    def test_parse_standard_json_output_should_report_error_on_code_generation_error(self):
+    def test_parse_standard_json_output_should_report_error_on_code_generation_error(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_standard_json_output(Path('file.sol'), CODE_GENERATION_ERROR_JSON_OUTPUT), expected_report)
 
 
 class TestParseCLIOutput(PrepareReportTestBase):
-    def test_parse_standard_json_output_should_report_missing_if_value_is_just_whitespace(self):
+    def test_parse_standard_json_output_should_report_missing_if_value_is_just_whitespace(self) -> None:
         compiler_output = dedent("""\
             {
                 "contracts": {
@@ -459,7 +459,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_standard_json_output(Path('contract.sol'), compiler_output), expected_report)
 
-    def test_parse_cli_output(self):
+    def test_parse_cli_output(self) -> None:
         expected_report = FileReport(
             file_name=Path('syntaxTests/scoping/library_inherited2.sol'),
             contract_reports=[
@@ -489,18 +489,18 @@ class TestParseCLIOutput(PrepareReportTestBase):
         report = parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), LIBRARY_INHERITED2_SOL_CLI_OUTPUT)
         self.assertEqual(report, expected_report)
 
-    def test_parse_cli_output_should_report_error_on_compiler_errors(self):
+    def test_parse_cli_output_should_report_error_on_compiler_errors(self) -> None:
         expected_report = FileReport(file_name=Path('syntaxTests/pragma/unknown_pragma.sol'), contract_reports=None)
 
         report = parse_cli_output(Path('syntaxTests/pragma/unknown_pragma.sol'), UNKNOWN_PRAGMA_SOL_CLI_OUTPUT)
         self.assertEqual(report, expected_report)
 
-    def test_parse_cli_output_should_report_error_on_empty_output(self):
+    def test_parse_cli_output_should_report_error_on_empty_output(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_cli_output(Path('file.sol'), ''), expected_report)
 
-    def test_parse_cli_output_should_report_missing_bytecode_and_metadata(self):
+    def test_parse_cli_output_should_report_missing_bytecode_and_metadata(self) -> None:
         compiler_output = dedent("""\
             ======= syntaxTests/scoping/library_inherited2.sol:A =======
             ======= syntaxTests/scoping/library_inherited2.sol:B =======
@@ -542,22 +542,22 @@ class TestParseCLIOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), compiler_output), expected_report)
 
-    def test_parse_cli_output_should_report_error_on_unimplemented_feature_error(self):
+    def test_parse_cli_output_should_report_error_on_unimplemented_feature_error(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_cli_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_CLI_OUTPUT), expected_report)
 
-    def test_parse_cli_output_should_report_error_on_stack_too_deep_error(self):
+    def test_parse_cli_output_should_report_error_on_stack_too_deep_error(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_cli_output(Path('file.sol'), STACK_TOO_DEEP_CLI_OUTPUT), expected_report)
 
-    def test_parse_cli_output_should_report_error_on_code_generation_error(self):
+    def test_parse_cli_output_should_report_error_on_code_generation_error(self) -> None:
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
         self.assertEqual(parse_cli_output(Path('file.sol'), CODE_GENERATION_ERROR_CLI_OUTPUT), expected_report)
 
-    def test_parse_cli_output_should_handle_output_from_solc_0_4_0(self):
+    def test_parse_cli_output_should_handle_output_from_solc_0_4_0(self) -> None:
         expected_report = FileReport(
             file_name=Path('contract.sol'),
             contract_reports=[
@@ -572,7 +572,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_0_CLI_OUTPUT), expected_report)
 
-    def test_parse_cli_output_should_handle_output_from_solc_0_4_8(self):
+    def test_parse_cli_output_should_handle_output_from_solc_0_4_8(self) -> None:
         expected_report = FileReport(
             file_name=Path('contract.sol'),
             contract_reports=[
@@ -589,7 +589,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_8_CLI_OUTPUT), expected_report)
 
-    def test_parse_cli_output_should_handle_leading_and_trailing_spaces(self):
+    def test_parse_cli_output_should_handle_leading_and_trailing_spaces(self) -> None:
         compiler_output = (
             ' =======  contract.sol : C  ======= \n'
             ' Binary: \n'
@@ -607,7 +607,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
 
-    def test_parse_cli_output_should_handle_empty_bytecode_and_metadata_lines(self):
+    def test_parse_cli_output_should_handle_empty_bytecode_and_metadata_lines(self) -> None:
         compiler_output = dedent("""\
             ======= contract.sol:C =======
             Binary:
@@ -641,7 +641,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
 
-    def test_parse_cli_output_should_handle_link_references_in_bytecode(self):
+    def test_parse_cli_output_should_handle_link_references_in_bytecode(self) -> None:
         compiler_output = dedent("""\
             ======= contract.sol:C =======
             Binary:

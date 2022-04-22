@@ -20,6 +20,7 @@ repository. The changes are compared against ``origin/develop``.
 import subprocess
 from pathlib import Path
 from enum import Enum
+from typing import Any
 from parsec import generate, ParseError, regex, string
 from tabulate import tabulate
 
@@ -43,12 +44,12 @@ gas_ir_optimized = string("gas irOptimized").result(Kind.IrOptimized)
 gas_legacy_optimized = string("gas legacyOptimized").result(Kind.LegacyOptimized)
 gas_legacy = string("gas legacy").result(Kind.Legacy)
 
-def number() -> int:
+def number() -> Any:
     """Parse number."""
     return regex(r"([0-9]*)").parsecmap(int)
 
 @generate
-def diff_string() -> (Kind, Diff, int):
+def diff_string() -> Any:
     """Usage: diff_string.parse(string)
 
     Example string:
@@ -65,7 +66,7 @@ def diff_string() -> (Kind, Diff, int):
     val = yield number()
     return (diff_kind, codegen_kind, val)
 
-def collect_statistics(lines) -> (int, int, int, int, int, int):
+def collect_statistics(lines: Any) -> Any:
     """Returns
 
     (old_ir_optimized, old_legacy_optimized, old_legacy, new_ir_optimized,
@@ -77,7 +78,7 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
     if not lines:
         raise Exception("Empty list")
 
-    def try_parse(line):
+    def try_parse(line: Any) -> Any:
         try:
             return diff_string.parse(line)
         except ParseError:
@@ -97,9 +98,9 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
         for _codegen_kind in codegen_kinds
     )
 
-def semantictest_statistics():
+def semantictest_statistics() -> Any:
     """Prints the tabulated statistics that can be pasted in github."""
-    def try_parse_git_diff(fname):
+    def try_parse_git_diff(fname: Any) -> Any:
         try:
             diff_output = subprocess.check_output(
                 "git diff --unified=0 origin/develop HEAD " + fname,
@@ -112,7 +113,7 @@ def semantictest_statistics():
             print("Error in the git diff:")
             print(e.output)
         return None
-    def stat(old, new):
+    def stat(old: Any, new: Any) -> Any:
         return ((new - old) / old) * 100  if old else 0
 
     table = []

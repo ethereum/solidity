@@ -1,3 +1,4 @@
+from typing import Any
 from opcodes import SIGNEXTEND
 from rule import Rule
 from z3 import BitVec, BitVecVal, Extract, SignExt, UGT
@@ -11,7 +12,7 @@ n_bits = 256
 
 x = BitVec('X', n_bits)
 
-def SIGNEXTEND_native(i, x):
+def SIGNEXTEND_native(i: Any, x: Any) -> Any:
     return SignExt(256 - 8 * i - 8, Extract(8 * i + 7, 0, x))
 
 for i in range(0, 32):

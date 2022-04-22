@@ -23,7 +23,7 @@ if __name__ == '__main__':
     sys.path.insert(0, str(SCRIPTS_DIR))
 
     # This is equivalent to `python -m unittest discover --start-directory $TEST_DIR`
-    test_suite = TestLoader().discover(start_dir=TEST_DIR)
+    test_suite = TestLoader().discover(start_dir=TEST_DIR) # type: ignore
     result = TextTestRunner().run(test_suite)
 
     if len(result.errors) > 0 or len(result.failures) > 0:

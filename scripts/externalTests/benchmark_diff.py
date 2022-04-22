@@ -134,7 +134,7 @@ class BenchmarkDiffer:
         return diff
 
     def _humanize_diff(self, diff: Union[str, int, float]) -> str:
-        def wrap(value: str, symbol: str):
+        def wrap(value: str, symbol: str) -> Any:
             return f"{symbol}{value}{symbol}"
 
         markdown = (self.output_format == OutputFormat.MARKDOWN)
@@ -275,7 +275,7 @@ class DiffTableFormatter:
     """)
 
     @classmethod
-    def run(cls, diff_table_set: DiffTableSet, output_format: OutputFormat):
+    def run(cls, diff_table_set: DiffTableSet, output_format: OutputFormat) -> Any:
         if output_format == OutputFormat.JSON:
             return json.dumps(diff_table_set.cells, indent=4, sort_keys=True)
         else:
@@ -313,7 +313,7 @@ class DiffTableFormatter:
             return output
 
     @classmethod
-    def _format_separator_row(cls, widths: Sequence[int], output_format: OutputFormat):
+    def _format_separator_row(cls, widths: Sequence[int], output_format: OutputFormat) -> Any:
         assert output_format in {OutputFormat.CONSOLE, OutputFormat.MARKDOWN}
 
         if output_format == OutputFormat.MARKDOWN:
@@ -322,7 +322,7 @@ class DiffTableFormatter:
             return '|-' + '-|-'.join('-' * width for width in widths) + '-|'
 
     @classmethod
-    def _format_data_row(cls, cells: Sequence[Union[int, float, str]], widths: Sequence[int]):
+    def _format_data_row(cls, cells: Sequence[Union[int, float, str]], widths: Sequence[int]) -> Any:
         assert len(cells) == len(widths)
 
         return '| ' + ' | '.join(str(cell).rjust(width) for cell, width in zip(cells, widths)) + ' |'
@@ -428,7 +428,7 @@ def process_commandline() -> CommandLineOptions:
     return processed_options
 
 
-def main():
+def main() -> Any:
     try:
         options = process_commandline()
 
@@ -442,7 +442,7 @@ def main():
             print(json.dumps(diff, indent=4, sort_keys=True))
         else:
             assert options.diff_mode == DiffMode.TABLE
-            print(DiffTableFormatter.run(DiffTableSet(diff), options.output_format))
+            print(DiffTableFormatter.run(DiffTableSet(diff), options.output_format)) # type: ignore
 
         return 0
     except CommandLineError as exception:

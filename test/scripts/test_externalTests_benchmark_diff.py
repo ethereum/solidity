@@ -4,6 +4,7 @@ from textwrap import dedent
 import json
 import unittest
 
+from typing import Any
 from unittest_helpers import FIXTURE_DIR, load_fixture
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
@@ -19,10 +20,10 @@ SUMMARIZED_DIFF_HUMANIZED_MD = load_fixture(SUMMARIZED_DIFF_HUMANIZED_MD_PATH)
 
 
 class TestBenchmarkDiff(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.maxDiff = 10000
 
-    def test_benchmark_diff(self):
+    def test_benchmark_diff(self) -> None:
         report_before = json.loads(load_fixture(SUMMARIZED_BENCHMARKS_DEVELOP_JSON_PATH))
         report_after = json.loads(load_fixture(SUMMARIZED_BENCHMARKS_BRANCH_JSON_PATH))
         expected_diff = {
@@ -117,18 +118,18 @@ class TestBenchmarkDiff(unittest.TestCase):
 
 
 class TestBenchmarkDiffer(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.maxDiff = 10000
 
     @staticmethod
-    def _nest(value, levels):
+    def _nest(value: Any, levels: Any) -> Any:
         nested_value = value
         for level in levels:
             nested_value = {level: nested_value}
 
         return nested_value
 
-    def _assert_single_value_diff_matches(self, differ, cases, nest_result=True, nestings=None):
+    def _assert_single_value_diff_matches(self, differ: Any, cases: Any, nest_result: Any=True, nestings: Any=None) -> None:
         if nestings is None:
             nestings = [[], ['p'], ['p', 's'], ['p', 's', 'a']]
 
@@ -140,17 +141,17 @@ class TestBenchmarkDiffer(unittest.TestCase):
                     f'Wrong diff for {self._nest(before, levels)} vs {self._nest(after, levels)}'
                 )
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         for style in DifferenceStyle:
             differ = BenchmarkDiffer(style, None, OutputFormat.JSON)
             self._assert_single_value_diff_matches(differ, [({}, {}, {})], nest_result=False)
 
-    def test_null(self):
+    def test_null(self) -> None:
         for style in DifferenceStyle:
             differ = BenchmarkDiffer(style, None, OutputFormat.JSON)
             self._assert_single_value_diff_matches(differ, [(None, None, {})], nest_result=False)
 
-    def test_number_diff_absolute_json(self):
+    def test_number_diff_absolute_json(self) -> None:
         for output_format in OutputFormat:
             self._assert_single_value_diff_matches(
                 BenchmarkDiffer(DifferenceStyle.ABSOLUTE, 4, output_format),
@@ -180,7 +181,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
                 ],
             )
 
-    def test_number_diff_json(self):
+    def test_number_diff_json(self) -> None:
         for output_format in OutputFormat:
             self._assert_single_value_diff_matches(
                 BenchmarkDiffer(DifferenceStyle.RELATIVE, 4, output_format),
@@ -210,7 +211,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
                 ],
             )
 
-    def test_number_diff_humanized_json_and_console(self):
+    def test_number_diff_humanized_json_and_console(self) -> None:
         for output_format in [OutputFormat.JSON, OutputFormat.CONSOLE]:
             self._assert_single_value_diff_matches(
                 BenchmarkDiffer(DifferenceStyle.HUMANIZED, 4, output_format),
@@ -240,7 +241,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
                 ],
             )
 
-    def test_number_diff_humanized_markdown(self):
+    def test_number_diff_humanized_markdown(self) -> None:
         self._assert_single_value_diff_matches(
             BenchmarkDiffer(DifferenceStyle.HUMANIZED, 4, OutputFormat.MARKDOWN),
             [
@@ -269,7 +270,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
             ],
         )
 
-    def test_type_mismatch(self):
+    def test_type_mismatch(self) -> None:
         for style in DifferenceStyle:
             self._assert_single_value_diff_matches(
                 BenchmarkDiffer(style, 4, OutputFormat.JSON),
@@ -288,7 +289,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
                 ],
             )
 
-    def test_version_mismatch(self):
+    def test_version_mismatch(self) -> None:
         for style in DifferenceStyle:
             self._assert_single_value_diff_matches(
                 BenchmarkDiffer(style, 4, OutputFormat.JSON),
@@ -308,7 +309,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
                 ],
             )
 
-    def test_missing(self):
+    def test_missing(self) -> None:
         for style in DifferenceStyle:
             self._assert_single_value_diff_matches(
                 BenchmarkDiffer(style, None, OutputFormat.JSON),
@@ -333,7 +334,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
                 ],
             )
 
-    def test_missing_vs_null(self):
+    def test_missing_vs_null(self) -> None:
         for style in DifferenceStyle:
             self._assert_single_value_diff_matches(
                 BenchmarkDiffer(style, None, OutputFormat.JSON),
@@ -346,7 +347,7 @@ class TestBenchmarkDiffer(unittest.TestCase):
 
 
 class TestDiffTableFormatter(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.maxDiff = 10000
 
         self.report_before = {
@@ -382,7 +383,7 @@ class TestDiffTableFormatter(unittest.TestCase):
             },
         }
 
-    def test_diff_table_formatter(self):
+    def test_diff_table_formatter(self) -> None:
         report_before = json.loads(load_fixture(SUMMARIZED_BENCHMARKS_DEVELOP_JSON_PATH))
         report_after = json.loads(load_fixture(SUMMARIZED_BENCHMARKS_BRANCH_JSON_PATH))
         differ = BenchmarkDiffer(DifferenceStyle.HUMANIZED, 4, OutputFormat.MARKDOWN)
@@ -390,7 +391,7 @@ class TestDiffTableFormatter(unittest.TestCase):
 
         self.assertEqual(DiffTableFormatter.run(DiffTableSet(diff), OutputFormat.MARKDOWN), SUMMARIZED_DIFF_HUMANIZED_MD)
 
-    def test_diff_table_formatter_json_absolute(self):
+    def test_diff_table_formatter_json_absolute(self) -> None:
         differ = BenchmarkDiffer(DifferenceStyle.ABSOLUTE, 4, OutputFormat.JSON)
         diff = differ.run(self.report_before, self.report_after)
 
@@ -444,7 +445,7 @@ class TestDiffTableFormatter(unittest.TestCase):
         )
         self.assertEqual(DiffTableFormatter.run(DiffTableSet(diff), OutputFormat.JSON), expected_formatted_table)
 
-    def test_diff_table_formatter_console_relative(self):
+    def test_diff_table_formatter_console_relative(self) -> None:
         differ = BenchmarkDiffer(DifferenceStyle.RELATIVE, 4, OutputFormat.CONSOLE)
         diff = differ.run(self.report_before, self.report_after)
 
@@ -473,7 +474,7 @@ class TestDiffTableFormatter(unittest.TestCase):
         """)
         self.assertEqual(DiffTableFormatter.run(DiffTableSet(diff), OutputFormat.CONSOLE), expected_formatted_table)
 
-    def test_diff_table_formatter_markdown_humanized(self):
+    def test_diff_table_formatter_markdown_humanized(self) -> None:
         differ = BenchmarkDiffer(DifferenceStyle.HUMANIZED, 4, OutputFormat.MARKDOWN)
         diff = differ.run(self.report_before, self.report_after)
 

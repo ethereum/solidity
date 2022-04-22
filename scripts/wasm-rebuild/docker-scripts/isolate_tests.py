@@ -9,15 +9,16 @@ import os
 import hashlib
 # Pylint for some reason insists that isfile() is unused
 from os.path import join, isfile  # pylint: disable=unused-import
+from typing import Any
 
 
-def extract_test_cases(path):
+def extract_test_cases(path: Any) -> Any:
     with open(path, encoding="utf8", errors='ignore', mode='rb') as f:
         lines = f.read().splitlines()
 
     inside = False
     delimiter = ''
-    tests = []
+    tests = [] # type: Any
 
     for l in lines:
       if inside:
@@ -35,7 +36,7 @@ def extract_test_cases(path):
 
     return tests
 
-def extract_and_write(f, path):
+def extract_and_write(f: Any, path: Any) -> None:
     if f.endswith('.sol'):
         with open(path, 'r', encoding='utf8') as _f:
             cases = [_f.read()]
@@ -43,7 +44,7 @@ def extract_and_write(f, path):
         cases = extract_test_cases(path)
     write_cases(f, cases)
 
-def write_cases(f, tests):
+def write_cases(f: Any, tests: Any) -> None:
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
         remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)

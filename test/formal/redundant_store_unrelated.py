@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 from z3 import Solver, Int, unsat
 
 """
@@ -12,11 +13,11 @@ n_bits = 256
 solver = Solver()
 solver.set("timeout", 60000)
 
-def restrict(x):
+def restrict(x: Any) -> None:
     solver.add(x >= 0)
     solver.add(x < 2**n_bits)
 
-def restrictedInt(x):
+def restrictedInt(x: Any) -> Any:
     var = Int(x)
     restrict(var)
     return var

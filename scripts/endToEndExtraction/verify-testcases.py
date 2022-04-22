@@ -16,9 +16,10 @@ import sys
 import getopt
 import json
 
+from typing import Any
 
 class Trace:
-    def __init__(self, kind, parameter):
+    def __init__(self, kind: Any, parameter: Any) -> None:
         self.kind = kind
         self.parameter = parameter
         self._input = ""
@@ -27,25 +28,25 @@ class Trace:
         self.result = ""
         self.gas = ""
 
-    def get_input(self):
+    def get_input(self) -> Any:
         return self._input
 
-    def set_input(self, bytecode):
+    def set_input(self, bytecode: Any) -> None:
         if self.kind == "create":
             # remove cbor encoded metadata from bytecode
             length = int(bytecode[-4:], 16) * 2
             self._input = bytecode[:len(bytecode) - length - 4]
 
-    def get_output(self):
+    def get_output(self) -> Any:
         return self._output
 
-    def set_output(self, output):
+    def set_output(self, output: Any) -> None:
         if self.kind == "create":
             # remove cbor encoded metadata from bytecode
             length = int(output[-4:], 16) * 2
             self._output = output[:len(output) - length - 4]
 
-    def __str__(self):
+    def __str__(self) -> Any:
         # we ignore the used gas
         result = str(
             "kind='" + self.kind + "' parameter='" + self.parameter + "' input='" + self._input +
@@ -55,24 +56,24 @@ class Trace:
 
 
 class TestCase:
-    def __init__(self, name):
+    def __init__(self, name: Any) -> None:
         self.name = name
         self.metadata = None
-        self.traces = []
+        self.traces = [] # type: Any
 
-    def add_trace(self, kind, parameter):
+    def add_trace(self, kind: Any, parameter: Any) -> Any:
         trace = Trace(kind, parameter)
         self.traces.append(trace)
         return trace
 
 
 class TraceAnalyser:
-    def __init__(self, file):
+    def __init__(self, file: Any) -> None:
         self.file = file
-        self.tests = {}
+        self.tests = {}  # type: Any
         self.ready = False
 
-    def analyse(self):
+    def analyse(self) -> None:
         with open(self.file, "r", encoding='utf8') as trace_file:
             trace = None
             test_case = None
@@ -85,17 +86,17 @@ class TraceAnalyser:
 
                 metadata = re.search(r'\s*metadata:\s*(.*)$', line, re.M | re.I)
                 if metadata:
-                    test_case.metadata = json.loads(metadata.group(1))
-                    del test_case.metadata["sources"]
-                    del test_case.metadata["compiler"]["version"]
+                    test_case.metadata = json.loads(metadata.group(1)) # type: ignore
+                    del test_case.metadata["sources"] # type: ignore
+                    del test_case.metadata["compiler"]["version"] # type: ignore
 
                 create = re.search(r'CREATE\s*([a-fA-F0-9]*):', line, re.M | re.I)
                 if create:
-                    trace = test_case.add_trace("create", create.group(1))
+                    trace = test_case.add_trace("create", create.group(1)) # type: ignore
 
                 call = re.search(r'CALL\s*([a-fA-F0-9]*)\s*->\s*([a-fA-F0-9]*):', line, re.M | re.I)
                 if call:
-                    trace = test_case.add_trace("call", call.group(1))  # + "->" + call.group(2))
+                    trace = test_case.add_trace("call", call.group(1))  # type: ignore
 
                 if not create and not call:
                     self.parse_parameters(line, trace)
@@ -107,7 +108,7 @@ class TraceAnalyser:
             self.ready = True
 
     @staticmethod
-    def parse_parameters(line, trace):
+    def parse_parameters(line: Any, trace: Any) -> None:
         input_match = re.search(r'\s*in:\s*([a-fA-F0-9]*)', line, re.M | re.I)
         if input_match:
             trace.input = input_match.group(1)
@@ -124,7 +125,7 @@ class TraceAnalyser:
         if value_match:
             trace.value = value_match.group(1)
 
-    def diff(self, analyser):
+    def diff(self, analyser: Any) -> None:
         if not self.ready:
             self.analyse()
         if not analyser.ready:
@@ -153,7 +154,7 @@ class TraceAnalyser:
         print(len(intersection), "test-cases - ", len(mismatches), " mismatche(s)")
 
     @classmethod
-    def check_traces(cls, test_name, left, right, mismatches):
+    def check_traces(cls, test_name: Any, left: Any, right: Any, mismatches: Any) -> None:
         for trace_id, trace in enumerate(left.traces):
             left_trace = trace
             right_trace = right.traces[trace_id]
@@ -174,7 +175,7 @@ class TraceAnalyser:
                 mismatches.add((test_name, mismatch_info))
 
 
-def main(argv):
+def main(argv: Any) -> None:
     extracted_tests_trace_file = None
     end_to_end_trace_file = None
     try:
