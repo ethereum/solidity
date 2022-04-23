@@ -1,89 +1,81 @@
-##################################
-Expressions and Control Structures
-##################################
+###################
+表达式和控制结构
+###################
 
 .. index:: ! parameter, parameter;input, parameter;output, function parameter, parameter;function, return variable, variable;return, return
 
 
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
-Control Structures
+控制结构
 ===================
 
-Most of the control structures known from curly-braces languages are available in Solidity:
+大多数从大括号语言中知道的控制结构都可以在Solidity中使用：
 
-There is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, with
-the usual semantics known from C or JavaScript.
+有： ``if``， ``else``，  ``while``， ``do``， ``for``， ``break``， ``continue``， ``return``，
+这些在 C 或者 JavaScript 中表达相同语义的关键词。
 
-Solidity also supports exception handling in the form of ``try``/``catch``-statements,
-but only for :ref:`external function calls <external-function-calls>` and
-contract creation calls. Errors can be created using the :ref:`revert statement <revert-statement>`.
+Solidity也支持 ``try`` / ``catch`` 形式的语句的异常处理，
+但只适用于 :ref:`外部函数调用 <external-function-calls>` 和合约创建调用。
+可以使用 :ref:`回退状态 <revert-statement>` 来创建错误。
 
-Parentheses can *not* be omitted for conditionals, but curly braces can be omitted
-around single-statement bodies.
+条件句 *不能* 省略括号，但单句体周围可以省略大括号。
 
-Note that there is no type conversion from non-boolean to boolean types as
-there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
-Solidity.
+请注意，没有像C和JavaScript那样从非布尔类型到布尔类型的类型转换，
+所以 ``if (1) { ... }`` 在Solidity *不是* 有效的。
 
 .. index:: ! function;call, function;internal, function;external
 
 .. _function-calls:
 
-Function Calls
-==============
+函数调用
+=========
 
 .. _internal-function-calls:
 
-Internal Function Calls
------------------------
+内部函数调用
+--------------
 
-Functions of the current contract can be called directly ("internally"), also recursively, as seen in
-this nonsensical example:
+当前合约中的函数可以直接（“从内部”）调用，也可以递归调用，就像下边这个荒谬的例子一样：
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.9.0;
 
-    // This will report a warning
+    // 这会有一个警告
     contract C {
         function g(uint a) public pure returns (uint ret) { return a + f(); }
         function f() internal pure returns (uint ret) { return g(7) + f(); }
     }
 
-These function calls are translated into simple jumps inside the EVM. This has
-the effect that the current memory is not cleared, i.e. passing memory references
-to internally-called functions is very efficient. Only functions of the same
-contract instance can be called internally.
+这些函数调用在EVM内部被转化为简单的跳转。
+这样做的效果是，当前的内存不会被清空，也就是说，
+将内存引用传递给内部调用的函数是非常有效的。
+但只有同一合约实例的函数可以被内部调用。
 
-You should still avoid excessive recursion, as every internal function call
-uses up at least one stack slot and there are only 1024 slots available.
+您还是应该避免过度的递归调用，因为每个内部函数的调用都会占用至少一个堆栈槽，而可用的堆栈槽只有1024个。
 
 .. _external-function-calls:
 
-External Function Calls
------------------------
+外部函数调用
+-------------
 
-Functions can also be called using the ``this.g(8);`` and ``c.g(2);`` notation, where
-``c`` is a contract instance and ``g`` is a function belonging to ``c``.
-Calling the function ``g`` via either way results in it being called "externally", using a
-message call and not directly via jumps.
-Please note that function calls on ``this`` cannot be used in the constructor,
-as the actual contract has not been created yet.
+函数也可以使用 ``this.g(8);`` 和 ``c.g(2);`` 符号来调用，
+其中 ``c`` 是一个合约实例， ``g`` 是属于 ``c`` 的函数。
+通过这两种方式调用函数 ``g`` 会导致它被 "外部 "调用，
+使用消息调用而不是直接通过跳转。
+请注意，对 ``this`` 的函数调用不能在构造函数中使用，因为实际的合约还没有被创建。
 
-Functions of other contracts have to be called externally. For an external call,
-all function arguments have to be copied to memory.
+其他合约的函数必须被外部调用。对于一个外部调用，
+所有的函数参数都必须被拷贝到内存中。
 
-.. note::
-    A function call from one contract to another does not create its own transaction,
-    it is a message call as part of the overall transaction.
+.. 注解::
+    从一个合约到另一个合约的函数调用并不创建自己的交易，它是作为整个交易的一部分的消息调用。
 
-When calling functions of other contracts, you can specify the amount of Wei or
-gas sent with the call with the special options ``{value: 10, gas: 10000}``.
-Note that it is discouraged to specify gas values explicitly, since the gas costs
-of opcodes can change in the future. Any Wei you send to the contract is added
-to the total balance of that contract:
+当调用其他合约的函数时，您可以用特殊的选项 ``{value: 10, gas: 10000}`` 指定随调用发送的Wei或气体（gas）数量。
+请注意，不鼓励明确指定气体值，因为操作码的气体成本可能在未来发生变化。
+您发送给合约的任何Wei都会被添加到该合约的总余额中：
 
 .. code-block:: solidity
 
@@ -100,63 +92,53 @@ to the total balance of that contract:
         function callFeed() public { feed.info{value: 10, gas: 800}(); }
     }
 
-You need to use the modifier ``payable`` with the ``info`` function because
-otherwise, the ``value`` option would not be available.
+您需要对 ``info`` 函数使用修饰符 ``payable``，
+因为不这样的话， ``value`` 选项则不可用。
 
-.. warning::
-  Be careful that ``feed.info{value: 10, gas: 800}`` only locally sets the
-  ``value`` and amount of ``gas`` sent with the function call, and the
-  parentheses at the end perform the actual call. So
-  ``feed.info{value: 10, gas: 800}`` does not call the function and
-  the ``value`` and ``gas`` settings are lost, only
-  ``feed.info{value: 10, gas: 800}()`` performs the function call.
+.. 警告::
+  注意 ``feed.info{value: 10, gas: 800}`` 只在本地设置 ``value`` 和随函数调用发送的 ``gas`` 数量，
+  最后的括号执行实际调用。所以 ``feed.info{value: 10, gas: 800}`` 不会调用函数，
+  ``value`` 和 ``gas`` 的设置也会丢失，
+  只有 ``feed.info{value: 10, gas: 800}()`` 执行了函数调用。
 
-Due to the fact that the EVM considers a call to a non-existing contract to
-always succeed, Solidity uses the ``extcodesize`` opcode to check that
-the contract that is about to be called actually exists (it contains code)
-and causes an exception if it does not. This check is skipped if the return
-data will be decoded after the call and thus the ABI decoder will catch the
-case of a non-existing contract.
+由于EVM认为对一个不存在的合约的调用总是成功的，
+Solidity使用 ``extcodesize`` 操作码来检查即将被调用的合约是否真的存在（它包含代码），
+如果不存在就会引起异常。如果返回数据将在调用后被解码，
+则跳过该检查，因此ABI解码器将捕获不存在的合约的情况。
 
-Note that this check is not performed in case of :ref:`low-level calls <address_related>` which
-operate on addresses rather than contract instances.
+请注意，这个检查在 :ref:`低级调用 <address_related>` 的情况下不执行，
+这些调用是对地址而不是合约实例进行操作。
 
-.. note::
-    Be careful when using high-level calls to
-    :ref:`precompiled contracts <precompiledContracts>`,
-    since the compiler considers them non-existing according to the
-    above logic even though they execute code and can return data.
+.. 注解::
+    在对 :ref:`预编译合约 <precompiledContracts>` 使用高级调用时要小心，
+    因为根据上述逻辑，编译器认为它们不存在，即使它们执行代码并可以返回数据。
 
-Function calls also cause exceptions if the called contract itself
-throws an exception or goes out of gas.
+如果被调用的合约本身抛出异常或超出了gas值，函数调用也会引起异常。
 
-.. warning::
-    Any interaction with another contract imposes a potential danger, especially
-    if the source code of the contract is not known in advance. The
-    current contract hands over control to the called contract and that may potentially
-    do just about anything. Even if the called contract inherits from a known parent contract,
-    the inheriting contract is only required to have a correct interface. The
-    implementation of the contract, however, can be completely arbitrary and thus,
-    pose a danger. In addition, be prepared in case it calls into other contracts of
-    your system or even back into the calling contract before the first
-    call returns. This means
-    that the called contract can change state variables of the calling contract
-    via its functions. Write your functions in a way that, for example, calls to
-    external functions happen after any changes to state variables in your contract
-    so your contract is not vulnerable to a reentrancy exploit.
+.. 警告::
+    与另一个合约的任何互动都会带来潜在的危险，
+    特别是当合约的源代码事先不知道的时候。
+    当前的合约将控制权交给了被调用的合约，而这有可能做任何事情。
+    即使被调用的合约继承自一个已知的父合约，
+    继承的合约也只需要有一个正确的接口。
+    然而，合约的实现完全可以是任意的，因此这会带来危险。
+    此外，要做好准备，以防它调用到您系统中的其他合约，
+    甚至在第一次调用返回之前就回到调用合约中。
+    这意味着被调用的合约可以通过这个函数改变调用合约的状态变量。
+    编写您的函数时，例如，对外部函数的调用发生在对您的合约中的状态变量的任何改变之后，
+    这样您的合约就不会受到重入性漏洞的攻击。
 
-.. note::
-    Before Solidity 0.6.2, the recommended way to specify the value and gas was to
-    use ``f.value(x).gas(g)()``. This was deprecated in Solidity 0.6.2 and is no
-    longer possible since Solidity 0.7.0.
+.. 注解::
+    在 Solidity 0.6.2 之前，指定以太值和气体值的推荐方法是
+    使用 ``f.value(x).gas(g)()``。这在Solidity 0.6.2中被废弃，
+    并且从Solidity 0.7.0开始不再支持。
 
-Named Calls and Anonymous Function Parameters
----------------------------------------------
+具名调用和匿名函数参数
+----------------------
 
-Function call arguments can be given by name, in any order,
-if they are enclosed in ``{ }`` as can be seen in the following
-example. The argument list has to coincide by name with the list of
-parameters from the function declaration, but can be in arbitrary order.
+函数调用参数可以用名字来表示，如果用 ``{ }`` 括起来的话，
+可以用任何顺序，如下面的例子所示。
+参数列表在名称上必须与函数声明中的参数列表相一致，但可以有任意的顺序。
 
 .. code-block:: solidity
 
@@ -176,11 +158,11 @@ parameters from the function declaration, but can be in arbitrary order.
 
     }
 
-Omitted Function Parameter Names
---------------------------------
+省略函数参数名称
+-----------------
 
-The names of unused parameters (especially return parameters) can be omitted.
-Those parameters will still be present on the stack, but they are inaccessible.
+未使用的参数（尤其是返回参数）的名称可以省略。
+这些参数将仍然存在于堆栈中，但它们是不可访问的。
 
 .. code-block:: solidity
 
@@ -188,7 +170,7 @@ Those parameters will still be present on the stack, but they are inaccessible.
     pragma solidity >=0.4.22 <0.9.0;
 
     contract C {
-        // omitted name for parameter
+        // 省略参数名称
         function func(uint k, uint) public pure returns(uint) {
             return k;
         }
@@ -199,12 +181,12 @@ Those parameters will still be present on the stack, but they are inaccessible.
 
 .. _creating-contracts:
 
-Creating Contracts via ``new``
-==============================
+通过 ``new`` 创建合约
+========================
 
-A contract can create other contracts using the ``new`` keyword. The full
-code of the contract being created has to be known when the creating contract
-is compiled so recursive creation-dependencies are not possible.
+一个合约可以使用 ``new`` 关键字创建其他合约。
+待创建合约的完整代码必须在创建的合约被编译时知道，
+所以递归的创建依赖是不可能的。
 
 .. code-block:: solidity
 
@@ -218,7 +200,7 @@ is compiled so recursive creation-dependencies are not possible.
     }
 
     contract C {
-        D d = new D(4); // will be executed as part of C's constructor
+        D d = new D(4); // 将作为合约 C 构造函数的一部分执行
 
         function createD(uint arg) public {
             D newD = new D(arg);
@@ -226,40 +208,33 @@ is compiled so recursive creation-dependencies are not possible.
         }
 
         function createAndEndowD(uint arg, uint amount) public payable {
-            // Send ether along with the creation
+            // 随合约的创建发送 ether
             D newD = new D{value: amount}(arg);
             newD.x();
         }
     }
 
-As seen in the example, it is possible to send Ether while creating
-an instance of ``D`` using the ``value`` option, but it is not possible
-to limit the amount of gas.
-If the creation fails (due to out-of-stack, not enough balance or other problems),
-an exception is thrown.
+正如在例子中所看到的，在使用 ``value`` 选项创建 ``D`` 的实例时，
+可以发送以太，但不可能限制气体的数量。
+如果创建失败（由于堆栈耗尽，没有足够的余额或其他问题），会抛出一个异常。
 
-Salted contract creations / create2
+加盐合约创建 / create2
 -----------------------------------
 
-When creating a contract, the address of the contract is computed from
-the address of the creating contract and a counter that is increased with
-each contract creation.
+当创建一个合约时，合约的地址是由创建合约的地址和一个计数器计算出来的，
+这个计数器在每次创建合约时都会增加。
 
-If you specify the option ``salt`` (a bytes32 value), then contract creation will
-use a different mechanism to come up with the address of the new contract:
+如果您指定了选项 ``salt`` （一个32字节的值），
+那么合约的创建将使用一种不同的机制来得出新合约的地址。
 
-It will compute the address from the address of the creating contract,
-the given salt value, the (creation) bytecode of the created contract and the constructor
-arguments.
+它将从创建合约的地址、给定的盐值、创建合约的（创建）字节码和构造函数参数中计算出地址。
 
-In particular, the counter ("nonce") is not used. This allows for more flexibility
-in creating contracts: You are able to derive the address of the
-new contract before it is created. Furthermore, you can rely on this address
-also in case the creating
-contracts creates other contracts in the meantime.
+特别的是，计数器（"nonce"）没有被使用。这使得创建合约时有更多的灵活性。
+您能够在新合约创建之前得出它的地址。此外，在创建合约的同时创建其他合约的情况下，
+您也可以依赖这个地址。
 
-The main use-case here is contracts that act as judges for off-chain interactions,
-which only need to be created if there is a dispute.
+这里的主要用例是作为链外互动的评判的合约，
+只有在有争议的时候才需要创建。
 
 .. code-block:: solidity
 
@@ -274,9 +249,9 @@ which only need to be created if there is a dispute.
 
     contract C {
         function createDSalted(bytes32 salt, uint arg) public {
-            // This complicated expression just tells you how the address
-            // can be pre-computed. It is just there for illustration.
-            // You actually only need ``new D{salt: salt}(arg)``.
+            // 这个复杂的表达式只是告诉您如何预先计算出地址。
+            // 它只是用于说明问题。
+            // 实际上您只需要 ``new D{salt: salt}(arg)``。
             address predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
                 bytes1(0xff),
                 address(this),
@@ -292,43 +267,36 @@ which only need to be created if there is a dispute.
         }
     }
 
-.. warning::
-    There are some peculiarities in relation to salted creation. A contract can be
-    re-created at the same address after having been destroyed. Yet, it is possible
-    for that newly created contract to have a different deployed bytecode even
-    though the creation bytecode has been the same (which is a requirement because
-    otherwise the address would change). This is due to the fact that the constructor
-    can query external state that might have changed between the two creations
-    and incorporate that into the deployed bytecode before it is stored.
+.. 警告::
+    在用加盐方式创建合约时，有一些特殊性。一个合约可以在被销毁后在同一地址重新创建。
+    然而，新创建的合约有可能具有不同的部署字节码，
+    即使创建字节码是相同的（这是一个要求，否则地址会改变）。
+    这是由于构造函数可以查询在两次创建之间可能发生变化的外部状态，
+    并在存储之前将其纳入部署字节码。
 
 
-Order of Evaluation of Expressions
-==================================
+表达式计算顺序
+================
 
-The evaluation order of expressions is not specified (more formally, the order
-in which the children of one node in the expression tree are evaluated is not
-specified, but they are of course evaluated before the node itself). It is only
-guaranteed that statements are executed in order and short-circuiting for
-boolean expressions is done.
+表达式的计算顺序不是特定的（更准确地说，
+表达式树中某节点的字节点间的计算顺序不是特定的，但它们的结算肯定会在节点自己的结算之前）。
+该规则只能保证语句按顺序执行，并对布尔表达式进行短路处理。
 
 .. index:: ! assignment
 
-Assignment
-==========
+赋值
+======
 
 .. index:: ! assignment;destructuring
 
-Destructuring Assignments and Returning Multiple Values
--------------------------------------------------------
+解构赋值和返回多个值
+---------------------
 
-Solidity internally allows tuple types, i.e. a list of objects
-of potentially different types whose number is a constant at
-compile-time. Those tuples can be used to return multiple values at the same time.
-These can then either be assigned to newly declared variables
-or to pre-existing variables (or LValues in general).
+Solidity 内部允许元组 (tuple) 类型，也就是一个在编译时元素数量固定的对象列表，
+列表中的元素可以是不同类型的对象。这些元组可以用来同时返回多个数值，
+也可以用它们来同时赋值给多个新声明的变量或者既存的变量（或通常的 LValues）：
 
-Tuples are not proper types in Solidity, they can only be used to form syntactic
-groupings of expressions.
+在Solidity中，元组不是适当的类型，它们只能被用来构建表达式的语法分组。
 
 .. code-block:: solidity
 
@@ -343,38 +311,36 @@ groupings of expressions.
         }
 
         function g() public {
-            // Variables declared with type and assigned from the returned tuple,
-            // not all elements have to be specified (but the number must match).
+            // 用类型声明的变量，并从返回的元组中分配，
+            // 不是所有的元素都必须被指定（但数量必须匹配）。
             (uint x, , uint y) = f();
-            // Common trick to swap values -- does not work for non-value storage types.
+            // 交换数值的常见技巧 -- 对非数值存储类型不起作用。
             (x, y) = (y, x);
-            // Components can be left out (also for variable declarations).
-            (index, , ) = f(); // Sets the index to 7
+            // 元素可以不使用（也适用于变量声明）。
+            (index, , ) = f(); // 将index设置为 7
         }
     }
 
-It is not possible to mix variable declarations and non-declaration assignments,
-i.e. the following is not valid: ``(x, uint y) = (1, 2);``
+不可能混合使用声明和非声明变量赋值。
+例如，下面的方法是无效的。 ``(x, uint y) = (1, 2);``。
 
-.. note::
-    Prior to version 0.5.0 it was possible to assign to tuples of smaller size, either
-    filling up on the left or on the right side (which ever was empty). This is
-    now disallowed, so both sides have to have the same number of components.
+.. 注解::
+    在0.5.0版本之前，给具有更少元素数的元组赋值都是可能的，
+    要么在左边填充，要么在右边填充（无论哪个是空的）。
+    现在这是不允许的，所以两边必须有相同数量的元素。
 
-.. warning::
-    Be careful when assigning to multiple variables at the same time when
-    reference types are involved, because it could lead to unexpected
-    copying behaviour.
+.. 警告::
+    当涉及到引用类型时，在同时向多个变量赋值时要小心，因为这可能导致意外的复制行为。
 
-Complications for Arrays and Structs
-------------------------------------
+数组和结构体的复杂情况
+----------------------
 
-The semantics of assignments are more complicated for non-value types like arrays and structs,
-including ``bytes`` and ``string``, see :ref:`Data location and assignment behaviour <data-location-assignment>` for details.
+对于像数组和结构体这样的非值类型，包括 ``bytes`` 和 ``string``，赋值的语义更为复杂，
+详见 :ref:`数据位置和赋值行为 <data-location-assignment>`。
 
-In the example below the call to ``g(x)`` has no effect on ``x`` because it creates
-an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
-because only a reference and not a copy is passed.
+在下面的例子中，调用 ``g(x)`` 对 ``x`` 没有影响，
+因为它在内存中创建了一个独立的存储值的副本。然而， ``h(x)`` 成功地修改了 ``x``，
+因为传递了一个引用而不是一个拷贝。
 
 .. code-block:: solidity
 
@@ -402,38 +368,31 @@ because only a reference and not a copy is passed.
 
 .. _default-value:
 
-Scoping and Declarations
-========================
+作用域和声明
+==============
 
-A variable which is declared will have an initial default
-value whose byte-representation is all zeros.
-The "default values" of variables are the typical "zero-state"
-of whatever the type is. For example, the default value for a ``bool``
-is ``false``. The default value for the ``uint`` or ``int``
-types is ``0``. For statically-sized arrays and ``bytes1`` to
-``bytes32``, each individual
-element will be initialized to the default value corresponding
-to its type. For dynamically-sized arrays, ``bytes``
-and ``string``, the default value is an empty array or string.
-For the ``enum`` type, the default value is its first member.
+一个被声明的变量将有一个初始默认值，其字节表示为所有的零。
+变量的 "默认值" 是任何类型的典型 "零状态"。
+例如， ``bool`` 的默认值是 ``false``。
+``uint`` 或 ``int`` 类型的默认值是 ``0``。
+对于静态大小的数组和 ``bytes1`` 到 ``bytes32``，
+每个单独的元素将被初始化为与其类型相应的默认值。
+对于动态大小的数组， ``bytes`` 和 ``string``，默认值是一个空数组或字符串。
+对于 ``enum`` 类型，默认值是其第一个成员。
 
-Scoping in Solidity follows the widespread scoping rules of C99
-(and many other languages): Variables are visible from the point right after their declaration
-until the end of the smallest ``{ }``-block that contains the declaration.
-As an exception to this rule, variables declared in the
-initialization part of a for-loop are only visible until the end of the for-loop.
+Solidity 中的作用域规则遵循了 C99（与其他很多语言一样）：
+变量将会从它们被声明之后可见，直到一对 ``{ }`` 块的结束。
+这一规则有个例外，在 for 循环语句中初始化的变量，其可见性仅维持到 for 循环的结束。
 
-Variables that are parameter-like (function parameters, modifier parameters,
-catch parameters, ...) are visible inside the code block that follows -
-the body of the function/modifier for a function and modifier parameter and the catch block
-for a catch parameter.
+类似于参数的变量（函数参数、修改器参数、捕获（catch）参数......）
+在后面的代码块中是可见的--对于函数和修改器参数，在函数/修改器的主体中，
+对于捕获参数，在捕获块中。
 
-Variables and other items declared outside of a code block, for example functions, contracts,
-user-defined types, etc., are visible even before they were declared. This means you can
-use state variables before they are declared and call functions recursively.
+在代码块之外声明的变量，例如函数、合约、用户定义的类型等，
+甚至在声明之前就已经可见。
+这意味着您可以在声明之前使用状态变量，并递归地调用函数。
 
-As a consequence, the following examples will compile without warnings, since
-the two variables have the same name but disjoint scopes.
+因此，下面的例子在编译时不会出现警告，因为这两个变量的名字虽然相同，但作用域不同。
 
 .. code-block:: solidity
 
@@ -453,15 +412,15 @@ the two variables have the same name but disjoint scopes.
         }
     }
 
-As a special example of the C99 scoping rules, note that in the following,
-the first assignment to ``x`` will actually assign the outer and not the inner variable.
-In any case, you will get a warning about the outer variable being shadowed.
+作为 C99 作用域规则的特例，请注意在下边的例子里，
+第一次对 ``x`` 的赋值实际上将赋给外层变量而不是内层变量。
+在任何情况下，您都会得到一个关于外部变量被影射（译者注：就是说被在内部作用域中由一个同名变量所替代）的警告。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
-    // This will report a warning
+    // 这将报告一个警告信息
     contract C {
         function f() pure public returns (uint) {
             uint x = 1;
@@ -473,17 +432,16 @@ In any case, you will get a warning about the outer variable being shadowed.
         }
     }
 
-.. warning::
-    Before version 0.5.0 Solidity followed the same scoping rules as
-    JavaScript, that is, a variable declared anywhere within a function would be in scope
-    for the entire function, regardless where it was declared. The following example shows a code snippet that used
-    to compile but leads to an error starting from version 0.5.0.
+.. 警告::
+    在0.5.0版本之前，Solidity遵循与JavaScript相同的作用域规则，
+    也就是说，在一个函数中的任何地方声明的变量都会在整个函数的作用域中，不管它是在哪里声明。
+    下面的例子显示了一个曾经可以编译的代码片段，但从0.5.0版本开始导致了一个错误。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
-    // This will not compile
+    // 这将无法编译
     contract C {
         function f() pure public returns (uint) {
             x = 2;
@@ -496,20 +454,18 @@ In any case, you will get a warning about the outer variable being shadowed.
 .. index:: ! safe math, safemath, checked, unchecked
 .. _unchecked:
 
-Checked or Unchecked Arithmetic
-===============================
+检查或不检查的算术
+==================
 
-An overflow or underflow is the situation where the resulting value of an arithmetic operation,
-when executed on an unrestricted integer, falls outside the range of the result type.
+上溢或下溢是指算术运算的结果值，当对一个不受限制的整数执行时，超出了结果类型的范围。
 
-Prior to Solidity 0.8.0, arithmetic operations would always wrap in case of
-under- or overflow leading to widespread use of libraries that introduce
-additional checks.
+在Solidity 0.8.0之前，算术运算总是在下溢或上溢的情况下被包起来，
+这导致广泛使用引入额外检查的库。
 
-Since Solidity 0.8.0, all arithmetic operations revert on over- and underflow by default,
-thus making the use of these libraries unnecessary.
+从Solidity 0.8.0开始，在默认情况下所有的算术运算都会在上溢和下溢时还原，
+从而使这些库的使用变得没有必要。
 
-To obtain the previous behaviour, an ``unchecked`` block can be used:
+为了获得以前的行为，可以使用一个 ``未检查（unchecked）`` 区块。
 
 .. code-block:: solidity
 
@@ -517,159 +473,137 @@ To obtain the previous behaviour, an ``unchecked`` block can be used:
     pragma solidity ^0.8.0;
     contract C {
         function f(uint a, uint b) pure public returns (uint) {
-            // This subtraction will wrap on underflow.
+            // 这个减法将在下溢时被包起来。
             unchecked { return a - b; }
         }
         function g(uint a, uint b) pure public returns (uint) {
-            // This subtraction will revert on underflow.
+            // 这个减法在下溢时将被还原。
             return a - b;
         }
     }
 
-The call to ``f(2, 3)`` will return ``2**256-1``, while ``g(2, 3)`` will cause
-a failing assertion.
+调用 ``f(2, 3)`` 将返回 ``2**256-1``，而 ``g(2, 3)`` 将导致一个失败的断言。
 
-The ``unchecked`` block can be used everywhere inside a block, but not as a replacement
-for a block. It also cannot be nested.
+``unchecked`` 代码块可以在代码块内的任何地方使用，但不能替代代码块。
+它也不能被嵌套。
 
-The setting only affects the statements that are syntactically inside the block.
-Functions called from within an ``unchecked`` block do not inherit the property.
+该设置只影响到在语法上位于代码块内的语句。
+从 ``unchecked`` 代码块内调用的函数不继承该属性。
 
-.. note::
-    To avoid ambiguity, you cannot use ``_;`` inside an ``unchecked`` block.
+.. 注解::
+    为了避免歧义，您不能在一个 ``unchecked`` 代码块内使用 ``_;``。
 
-The following operators will cause a failing assertion on overflow or underflow
-and will wrap without an error if used inside an unchecked block:
+以下运算符在上溢或下溢时将导致一个失败的断言，
+如果在一个未检查的代码块内使用，将被包裹而不会出现错误。
 
-``++``, ``--``, ``+``, binary ``-``, unary ``-``, ``*``, ``/``, ``%``, ``**``
+``++``， ``--``， ``+``， 二进制 ``-``， 单进制 ``-``， ``*``， ``/``， ``%``， ``**``
 
-``+=``, ``-=``, ``*=``, ``/=``, ``%=``
+``+=``， ``-=``， ``*=``， ``/=``， ``%=``
 
-.. warning::
-    It is not possible to disable the check for division by zero
-    or modulo by zero using the ``unchecked`` block.
+.. 警告::
+    不能使用 ``unchecked`` 代码块来禁止检查除以0或对0取余数。
 
-.. note::
-   Bitwise operators do not perform overflow or underflow checks.
-   This is particularly visible when using bitwise shifts (``<<``, ``>>``, ``<<=``, ``>>=``) in
-   place of integer division and multiplication by a power of 2.
-   For example ``type(uint256).max << 3`` does not revert even though ``type(uint256).max * 8`` would.
+.. 注解::
+   位操作符不执行上溢或下溢检查。
+   这在使用位操作符移位（ ``<<`` ， ``>>``， ``<<=``， ``>>=``）来代替整数除法和2的幂次方时尤其明显。
+   例如 ``type(uint256).max << 3`` 不会回退操作，尽管 ``type(uint256).max * 8`` 会回退操作。
 
-.. note::
-    The second statement in ``int x = type(int).min; -x;`` will result in an overflow
-    because the negative range can hold one more value than the positive range.
+.. 注解::
+    ``int x = type(int).min; -x;`` 中的第二条语句将导致溢出，
+    因为负数范围可以比正数范围多容纳一个值。
 
-Explicit type conversions will always truncate and never cause a failing assertion
-with the exception of a conversion from an integer to an enum type.
+明确的类型转换将总是截断，并且永远不会导致失败的断言，但从整数到枚举类型的转换除外。
 
 .. index:: ! exception, ! throw, ! assert, ! require, ! revert, ! errors
 
 .. _assert-and-require:
 
-Error handling: Assert, Require, Revert and Exceptions
+错误处理：Assert, Require, Revert and Exceptions
 ======================================================
 
-Solidity uses state-reverting exceptions to handle errors.
-Such an exception undoes all changes made to the
-state in the current call (and all its sub-calls) and
-flags an error to the caller.
+Solidity 使用状态回退异常来处理错误。
+这种异常将撤消对当前调用（及其所有子调用）中的状态所做的所有更改，
+并且还向调用者标记错误。
 
-When exceptions happen in a sub-call, they "bubble up" (i.e.,
-exceptions are rethrown) automatically unless they are caught in
-a ``try/catch`` statement. Exceptions to this rule are ``send``
-and the low-level functions ``call``, ``delegatecall`` and
-``staticcall``: they return ``false`` as their first return value in case
-of an exception instead of "bubbling up".
+当异常发生在子调用中时，它们会自动 "冒泡"（也就是说，异常被重新抛出），
+除非它们被 ``try/catch`` 语句捕获。这个规则的例外是 ``send``
+和低级函数 ``call``， ``delegatecall`` 和 ``staticcall``：
+它们在发生异常时返回 ``false`` 作为第一个返回值而不是 "冒泡"。
 
-.. warning::
-    The low-level functions ``call``, ``delegatecall`` and
-    ``staticcall`` return ``true`` as their first return value
-    if the account called is non-existent, as part of the design
-    of the EVM. Account existence must be checked prior to calling if needed.
+.. 警告::
+    如果被调用的账户不存在，低级函数 ``call``， ``delegatecall`` 和 ``staticcall``
+    的第一个返回值为 ``true``，这是EVM设计的一部分。
+    如果需要的话，必须在调用之前检查账户是否存在。
 
-Exceptions can contain error data that is passed back to the caller
-in the form of :ref:`error instances <errors>`.
-The built-in errors ``Error(string)`` and ``Panic(uint256)`` are
-used by special functions, as explained below. ``Error`` is used for "regular" error conditions
-while ``Panic`` is used for errors that should not be present in bug-free code.
+异常可以包含错误数据，以 :ref:`错误实例 <errors>` 的形式传回给调用者。
+内置的错误 ``Error(string)`` 和 ``Panic(uint256)`` 被特殊函数使用，
+解释如下。 ``Error`` 用于 "常规" 错误条件，而 ``Panic`` 用于在无错误代码中不应该出现的错误。
 
-Panic via ``assert`` and Error via ``require``
-----------------------------------------------
+通过 ``assert`` 引起Panic异常和通过 ``require`` 引起Error异常
+----------------------------------------------------------
 
-The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
-if the condition is not met.
+快捷函数 ``assert`` 和 ``require`` 可以用来检查条件，如果不符合条件就抛出一个异常。
 
-The ``assert`` function creates an error of type ``Panic(uint256)``.
-The same error is created by the compiler in certain situations as listed below.
+``assert`` 函数创建了一个 ``Panic(uint256)`` 类型的错误。
+在某些情况下，编译器也会产生同样的错误，如下所述。
 
-Assert should only be used to test for internal
-errors, and to check invariants. Properly functioning code should
-never create a Panic, not even on invalid external input.
-If this happens, then there
-is a bug in your contract which you should fix. Language analysis
-tools can evaluate your contract to identify the conditions and
-function calls which will cause a Panic.
+Assert应该只用于测试内部错误，以及检查不变量。
+正确运行的代码不应该创建一个Panic异常，甚至在无效的外部输入时也不应该。
+如果发生这种情况，那么您的合约中就有一个错误，您应该修复它。
+语言分析工具可以评估您的合约，以确定会导致Panic异常的条件和函数调用。
 
-A Panic exception is generated in the following situations.
-The error code supplied with the error data indicates the kind of panic.
+在下列情况下会产生一个Panic异常。
+与错误数据一起提供的错误代码表明Panic异常的种类。
 
-#. 0x00: Used for generic compiler inserted panics.
-#. 0x01: If you call ``assert`` with an argument that evaluates to false.
-#. 0x11: If an arithmetic operation results in underflow or overflow outside of an ``unchecked { ... }`` block.
-#. 0x12; If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-#. 0x21: If you convert a value that is too big or negative into an enum type.
-#. 0x22: If you access a storage byte array that is incorrectly encoded.
-#. 0x31: If you call ``.pop()`` on an empty array.
-#. 0x32: If you access an array, ``bytesN`` or an array slice at an out-of-bounds or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-#. 0x41: If you allocate too much memory or create an array that is too large.
-#. 0x51: If you call a zero-initialized variable of internal function type.
+#. 0x00： 用于一般的编译器插入Panic异常的情况。
+#. 0x01： 如果您带参数调用 ``assert`` 时结果是false。
+#. 0x11： 如果一个算术运算在一个 ``unchecked { ... }`` 代码块之外导致下溢或上溢。
+#. 0x12： 如果您对0做除法或者取余（例如 ``5 / 0`` 或者 ``23 % 0`` ）。
+#. 0x21： 如果您把一个太大的或负数的值转换成一个枚举类型。
+#. 0x22： 如果您访问一个编码不正确的存储字节数组。
+#. 0x31： 如果您在一个空数组上调用 ``.pop()``。
+#. 0x32： 如果您访问一个数组， ``bytesN`` 或一个数组切片索引超出数组长度或负索引（即 ``x[i]``，其中 ``i >= x.length`` 或 ``i < 0`` ）。
+#. 0x41： 如果您分配了太多的内存空间或创建了一个太大的数组。
+#. 0x51： 如果您调用一个零初始化的内部函数类型的变量。
 
-The ``require`` function either creates an error without any data or
-an error of type ``Error(string)``. It
-should be used to ensure valid conditions
-that cannot be detected until execution time.
-This includes conditions on inputs
-or return values from calls to external contracts.
+``require`` 函数要么创造一个没有任何数据的错误，
+要么创造一个 ``Error(string)`` 类型的错误。
+它应该被用来确保在执行之前无法检测到的有效条件。
+这包括对输入的条件或调用外部合约的返回值。
 
-.. note::
+.. 注解::
 
-    It is currently not possible to use custom errors in combination
-    with ``require``. Please use ``if (!condition) revert CustomError();`` instead.
+    目前不能将自定义错误与 ``require`` 结合使用。
+    请使用 ``if (!condition) revert CustomError();`` 代替。
 
-An ``Error(string)`` exception (or an exception without data) is generated
-by the compiler
-in the following situations:
+在下列情况下，编译器会产生一个 ``Error(string)`` 异常（或者没有数据的异常）。
 
-#. Calling ``require(x)`` where ``x`` evaluates to ``false``.
-#. If you use ``revert()`` or ``revert("description")``.
-#. If you perform an external function call targeting a contract that contains no code.
-#. If your contract receives Ether via a public function without
-   ``payable`` modifier (including the constructor and the fallback function).
-#. If your contract receives Ether via a public getter function.
+#. 调用 ``require(x)``，其中 ``x`` 的值为 ``false``。
+#. 如果您使用 ``revert()`` 或 ``revert("错误描述")``。
+#. 如果您执行一个外部函数调用，目标是一个不包含代码的合约。
+#. 如果您的合约通过一个没有 ``payable`` 修饰符的公开函数（包括构造函数和备用函数）接收以太。
+#. 如果您的合约通过一个公共的getter函数接收以太。
 
-For the following cases, the error data from the external call
-(if provided) is forwarded. This means that it can either cause
-an `Error` or a `Panic` (or whatever else was given):
+对于以下情况，来自外部调用的错误数据（如果提供的话）会被转发。
+这意味着它既可以引起 `Error` 异常，也可以引起 `Panic` 异常（或提供的其他什么错误）。
 
-#. If a ``.transfer()`` fails.
-#. If you call a function via a message call but it does not finish
-   properly (i.e., it runs out of gas, has no matching function, or
-   throws an exception itself), except when a low level operation
-   ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall``
-   is used. The low level operations never throw exceptions but
-   indicate failures by returning ``false``.
-#. If you create a contract using the ``new`` keyword but the contract
-   creation :ref:`does not finish properly<creating-contracts>`.
+#. 如果 ``.transfer()`` 失败。
+#. 如果您通过消息调用一个函数，但它不能正常完成
+   （即，耗尽了气体，没有匹配的函数，或自己抛出一个异常），
+   除非使用低级操作 ``call``， ``send``， ``delegatecall``， ``callcode``
+   或 ``staticcall``。低级操作从不抛出异常，但通过返回 ``false`` 表示失败。
+#. 如果您使用 ``new`` 关键字创建一个合约，
+   但合约创建 :ref:`没有正常完成 <creating-contracts>`。
 
 You can optionally provide a message string for ``require``, but not for ``assert``.
 
-.. note::
-    If you do not provide a string argument to ``require``, it will revert
-    with empty error data, not even including the error selector.
+.. 注解::
+    如果您没有给 ``require`` 提供一个字符串参数，它将以空的错误数据进行还原，
+    甚至不包括错误选择器。
 
 
-The following example shows how you can use ``require`` to check conditions on inputs
-and ``assert`` for internal error checking.
+下面的例子显示了如何使用 ``require`` 来检查输入的条件
+和 ``assert`` 进行内部错误检查。
 
 .. code-block:: solidity
     :force:
@@ -682,59 +616,54 @@ and ``assert`` for internal error checking.
             require(msg.value % 2 == 0, "Even value required.");
             uint balanceBeforeTransfer = address(this).balance;
             addr.transfer(msg.value / 2);
-            // Since transfer throws an exception on failure and
-            // cannot call back here, there should be no way for us to
-            // still have half of the money.
+            // 由于转账失败后抛出异常并且不能在这里回调，
+            // 因此我们应该没有办法仍然有一半的钱。
             assert(address(this).balance == balanceBeforeTransfer - msg.value / 2);
             return address(this).balance;
         }
     }
 
-Internally, Solidity performs a revert operation (instruction
-``0xfd``). This causes
-the EVM to revert all changes made to the state. The reason for reverting
-is that there is no safe way to continue execution, because an expected effect
-did not occur. Because we want to keep the atomicity of transactions, the
-safest action is to revert all changes and make the whole transaction
-(or at least call) without effect.
+在内部， Solidity 会执行回退操作（指令 ``0xfd`` ）。
+这会导致 EVM 撤销对状态所做的所有更改。回退的原因是不能继续安全地执行，
+因为没有实现预期的效果，还因为我们想保留交易的原子性，
+所以最安全的做法是回退所有更改并使整个交易（或至少是调用）不产生效果。
 
-In both cases, the caller can react on such failures using ``try``/``catch``, but
-the changes in the callee will always be reverted.
+在这两种情况下，调用者可以使用 ``try``/ ``catch`` 对这种失败做出处理，
+但被调用者的变化将总是被恢复。
 
-.. note::
+.. 注解::
 
-    Panic exceptions used to use the ``invalid`` opcode before Solidity 0.8.0,
-    which consumed all gas available to the call.
-    Exceptions that use ``require`` used to consume all gas until before the Metropolis release.
+    在Solidity 0.8.0之前，Panic异常曾使用 ``invalid`` 操作码，
+    它消耗了所有可用于调用的气体。在Metropolis发布之前，
+    使用 ``require`` 的异常会消耗所有气体。
 
 .. _revert-statement:
 
 ``revert``
 ----------
 
-A direct revert can be triggered using the ``revert`` statement and the ``revert`` function.
+可以使用 ``revert`` 语句和 ``revert`` 函数来触发直接回退。
 
-The ``revert`` statement takes a custom error as direct argument without parentheses:
+``revert`` 语句将一个自定义的错误作为直接参数，没有括号：
 
     revert CustomError(arg1, arg2);
 
-For backwards-compatibility reasons, there is also the ``revert()`` function, which uses parentheses
-and accepts a string:
+出于向后兼容的原因，还有一个 ``revert()`` 函数，
+它使用圆括号并接受一个字符串：
 
     revert();
     revert("description");
 
-The error data will be passed back to the caller and can be caught there.
-Using ``revert()`` causes a revert without any error data while ``revert("description")``
-will create an ``Error(string)`` error.
+错误数据将被传回给调用者，可以在那里捕获。
+使用 ``revert()`` 会导致没有任何错误数据的还原，
+而 ``revert("description")`` 将创建一个 ``Error(string)`` 错误。
 
-Using a custom error instance will usually be much cheaper than a string description,
-because you can use the name of the error to describe it, which is encoded in only
-four bytes. A longer description can be supplied via NatSpec which does not incur
-any costs.
+使用一个自定义的错误实例通常会比字符串描述便宜得多，
+因为您可以使用错误的名称来描述它，它的编码只有四个字节。
+可以通过NatSpec提供更长的描述，这不会产生任何费用。
 
-The following example shows how to use an error string and a custom error instance
-together with ``revert`` and the equivalent ``require``:
+下面的例子显示了如何将一个错误字符串和一个自定义的错误实例
+与 ``revert`` 和相应的 ``require`` 一起使用。
 
 .. code-block:: solidity
 
@@ -747,12 +676,12 @@ together with ``revert`` and the equivalent ``require``:
         function buy(uint amount) public payable {
             if (amount > msg.value / 2 ether)
                 revert("Not enough Ether provided.");
-            // Alternative way to do it:
+            // 另一种方法：
             require(
                 amount <= msg.value / 2 ether,
                 "Not enough Ether provided."
             );
-            // Perform the purchase.
+            // 执行购买。
         }
         function withdraw() public {
             if (msg.sender != owner)
@@ -762,39 +691,37 @@ together with ``revert`` and the equivalent ``require``:
         }
     }
 
-The two ways ``if (!condition) revert(...);`` and ``require(condition, ...);`` are
-equivalent as long as the arguments to ``revert`` and ``require`` do not have side-effects,
-for example if they are just strings.
+``if (!condition) revert(...);`` 和 ``require(condition, ...);`` 这两种方式是等价的，
+只要 ``revert`` 和 ``require`` 的参数没有副作用，比如说它们只是字符串。
 
-.. note::
-    The ``require`` function is evaluated just as any other function.
-    This means that all arguments are evaluated before the function itself is executed.
-    In particular, in ``require(condition, f())`` the function ``f`` is executed even if
-    ``condition`` is true.
+.. 注解::
+    ``require`` 函数和其他函数一样。这意味着在执行函数本身之前，所有参数都会被评估。
+    特别是，在 ``require(condition, f())`` 中，即使 ``condition`` 为真，
+    函数 ``f`` 也被执行。
 
-The provided string is :ref:`abi-encoded <ABI>` as if it were a call to a function ``Error(string)``.
-In the above example, ``revert("Not enough Ether provided.");`` returns the following hexadecimal as error return data:
+提供的字符串是 :ref:`ABI编码 <ABI>` 之后的，就像调用一个函数 ``Error(string)`` 一样。
+在上面的例子中， ``revert("Not enough Ether provided.");`` 返回以下十六进制作为错误返回数据：
 
 .. code::
 
-    0x08c379a0                                                         // Function selector for Error(string)
-    0x0000000000000000000000000000000000000000000000000000000000000020 // Data offset
-    0x000000000000000000000000000000000000000000000000000000000000001a // String length
-    0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // String data
+    0x08c379a0                                                         // Error(string) 的函数选择器
+    0x0000000000000000000000000000000000000000000000000000000000000020 // 数据的偏移量（32）
+    0x000000000000000000000000000000000000000000000000000000000000001a // 字符串长度（26）
+    0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // 字符串数据（"Not enough Ether provided." 的 ASCII 编码，26字节）
 
-The provided message can be retrieved by the caller using ``try``/``catch`` as shown below.
+调用者可以使用 ``try`` / ``catch`` 检索所提供的消息，如下所示。
 
-.. note::
-    There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
-    was deprecated in version 0.4.13 and removed in version 0.5.0.
+.. 注解::
+    以前有一个叫 ``throw`` 的关键字，其语义与 ``revert()`` 相同，
+    在0.4.13版本中被弃用，在0.5.0版本中被删除。
 
 
 .. _try-catch:
 
-``try``/``catch``
------------------
+``try`` / ``catch``
+---------------------
 
-A failure in an external call can be caught using a try/catch statement, as follows:
+外部调用的失败可以用 try/catch 语句来捕获，如下所示：
 
 .. code-block:: solidity
 
@@ -807,94 +734,77 @@ A failure in an external call can be caught using a try/catch statement, as foll
         DataFeed feed;
         uint errorCount;
         function rate(address token) public returns (uint value, bool success) {
-            // Permanently disable the mechanism if there are
-            // more than 10 errors.
+            // 如果有10个以上的错误，就永久停用该机制。
             require(errorCount < 10);
             try feed.getData(token) returns (uint v) {
                 return (v, true);
             } catch Error(string memory /*reason*/) {
-                // This is executed in case
-                // revert was called inside getData
-                // and a reason string was provided.
+                // 如果在getData中调用revert，
+                // 并且提供了一个原因字符串，
+                // 则执行该命令。
                 errorCount++;
                 return (0, false);
             } catch Panic(uint /*errorCode*/) {
-                // This is executed in case of a panic,
-                // i.e. a serious error like division by zero
-                // or overflow. The error code can be used
-                // to determine the kind of error.
+                // 在发生Panic异常的情况下执行，
+                // 即出现严重的错误，如除以零或溢出。
+                // 错误代码可以用来确定错误的种类。
                 errorCount++;
                 return (0, false);
             } catch (bytes memory /*lowLevelData*/) {
-                // This is executed in case revert() was used.
+                // 在使用revert()的情况下，会执行这个命令。
                 errorCount++;
                 return (0, false);
             }
         }
     }
 
-The ``try`` keyword has to be followed by an expression representing an external function call
-or a contract creation (``new ContractName()``).
-Errors inside the expression are not caught (for example if it is a complex expression
-that also involves internal function calls), only a revert happening inside the external
-call itself. The ``returns`` part (which is optional) that follows declares return variables
-matching the types returned by the external call. In case there was no error,
-these variables are assigned and the contract's execution continues inside the
-first success block. If the end of the success block is reached, execution continues after the ``catch`` blocks.
+``try`` 关键字后面必须有一个表达式，代表外部函数调用或合约建（ ``new ContractName()`` ）。
+表达式中的错误不会被捕获（例如，如果它是一个复杂的表达式，也涉及到内部函数调用），
+只有外部调用本身发生回退。
+接下来的 ``returns`` 部分（是可选的）声明了与外部调用返回的类型相匹配的返回变量。
+如果没有错误，这些变量将被分配，合约执行将在第一个成功代码块内继续。
+如果到达成功代码块的末端，则在 ``catch`` 块之后继续执行。
 
-Solidity supports different kinds of catch blocks depending on the
-type of error:
+Solidity 根据错误的类型，支持不同种类的捕获块：
 
-- ``catch Error(string memory reason) { ... }``: This catch clause is executed if the error was caused by ``revert("reasonString")`` or
-  ``require(false, "reasonString")`` (or an internal error that causes such an
-  exception).
+- ``catch Error(string memory reason) { ... }``： 这个catch子句会被执行，
+  如果错误是由 ``revert("reasonString")`` 或 ``require(false, "reasonString")`` 造成的
+  （或内部错误造成的）。
 
-- ``catch Panic(uint errorCode) { ... }``: If the error was caused by a panic, i.e. by a failing ``assert``, division by zero,
-  invalid array access, arithmetic overflow and others, this catch clause will be run.
+- ``catch Panic(uint errorCode) { ... }``： 如果错误是由Panic异常引起的，
+  例如由失败的 ``assert``、除以0、无效的数组访问、算术溢出和其他原因引起的，这个catch子句将被运行。
 
-- ``catch (bytes memory lowLevelData) { ... }``: This clause is executed if the error signature
-  does not match any other clause, if there was an error while decoding the error
-  message, or
-  if no error data was provided with the exception.
-  The declared variable provides access to the low-level error data in that case.
+- ``catch (bytes memory lowLevelData) { ... }``： 如果错误签名与其他子句不匹配，
+  或者在解码错误信息时出现了错误，或者没有与异常一起提供错误数据，
+  那么这个子句就会被执行。在这种情况下，声明的变量提供了对低级错误数据的访问。
 
-- ``catch { ... }``: If you are not interested in the error data, you can just use
-  ``catch { ... }`` (even as the only catch clause) instead of the previous clause.
+- ``catch { ... }``： 如果您对错误数据不感兴趣，您可以直接使用
+  ``catch { ... }`` （甚至作为唯一的catch子句）来代替前面的子句。
 
 
-It is planned to support other types of error data in the future.
-The strings ``Error`` and ``Panic`` are currently parsed as is and are not treated as identifiers.
+计划在未来支持其他类型的错误数据。字符串 ``Error`` 和 ``Panic`` 目前是按原样解析的，不作为标识符处理。
 
-In order to catch all error cases, you have to have at least the clause
-``catch { ...}`` or the clause ``catch (bytes memory lowLevelData) { ... }``.
+为了捕捉所有的错误情况，您至少要有 ``catch { ...}`` 或 ``catch (bytes memory lowLevelData) { ... }`` 子句。
 
-The variables declared in the ``returns`` and the ``catch`` clause are only
-in scope in the block that follows.
+在 ``returns`` 和 ``catch`` 子句中声明的变量只在后面的代码块中有作用域。
 
-.. note::
+.. 注解::
 
-    If an error happens during the decoding of the return data
-    inside a try/catch-statement, this causes an exception in the currently
-    executing contract and because of that, it is not caught in the catch clause.
-    If there is an error during decoding of ``catch Error(string memory reason)``
-    and there is a low-level catch clause, this error is caught there.
+    如果在 try/catch 语句内部的返回数据解码过程中发生错误，
+    这将导致当前执行的合约出现异常，正因为如此，它不会在catch子句中被捕获。
+    如果在 ``catch Error(string memory reason)`` 的解码过程中出现错误，
+    并且有一个低级的catch子句，那么这个错误就会在那里被捕获。
 
-.. note::
+.. 注解::
 
-    If execution reaches a catch-block, then the state-changing effects of
-    the external call have been reverted. If execution reaches
-    the success block, the effects were not reverted.
-    If the effects have been reverted, then execution either continues
-    in a catch block or the execution of the try/catch statement itself
-    reverts (for example due to decoding failures as noted above or
-    due to not providing a low-level catch clause).
+    如果执行到一个catch代码块，那么外部调用的状态改变效果已经被回退。
+    如果执行到了成功代码块，那么这些影响就没有被还原。
+    如果影响已经被还原，那么执行要么在catch代码块中继续，
+    要么try/catch语句的执行本身被还原（例如由于上面提到的解码失败或者由于没有提供低级别的catch子句）。
 
-.. note::
-    The reason behind a failed call can be manifold. Do not assume that
-    the error message is coming directly from the called contract:
-    The error might have happened deeper down in the call chain and the
-    called contract just forwarded it. Also, it could be due to an
-    out-of-gas situation and not a deliberate error condition:
-    The caller always retains at least 1/64th of the gas in a call and thus
-    even if the called contract goes out of gas, the caller still
-    has some gas left.
+.. 注解::
+    调用失败背后的原因可能是多方面的。不要认为错误信息是直接来自被调用的合约：
+    错误可能发生在调用链的更深处，被调用的合约只是转发了它。
+    另外，这可能是由于消耗完气体值的情况，而不是故意的错误状况。
+    调用方总是保留调用中至少1/64的气体值，
+    因此，即使被调用合约没有气体了，调用方仍然有一些气体。
