@@ -105,7 +105,7 @@ struct ModelCheckerTargets: public solidity::util::FlagSet<ModelCheckerTargets>
 
 	ModelCheckerTargets(size_t nFlags, ...);
 
-	[[nodiscard]] bool has(VerificationTargetType _type) const;
+	bool has(VerificationTargetType _type) const;
 
 	bool setTargetType(VerificationTargetType targetType, bool _value = true);
 
