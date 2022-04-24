@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "pch.h"
+#include "MethodCheck.h"
 #include <liblangutil/Exceptions.h>
 
 #include <libsolutil/StringUtils.h>
@@ -29,7 +29,6 @@
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/split.hpp>
 
-#include "StringUtils.h"
 #include <optional>
 #include <ostream>
 #include <string>
