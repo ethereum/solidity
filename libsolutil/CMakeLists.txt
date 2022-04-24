@@ -40,7 +40,7 @@ set(sources
         Whiskers.cpp
         Whiskers.h
         FlagSet.h
-        pch.h
+        MethodCheck.h
 )
 
 add_library(solutil ${sources})

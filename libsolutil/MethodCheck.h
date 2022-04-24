@@ -23,11 +23,11 @@
  * Generates a meta function `trait` to check existence of `method` with signature $sign in the given class `U`
  *
  */
-#define DEFINE_METHOD_CHECK(trait, method, sign)						                \
-	template<typename U>                    						                    \
-	class trait										                                    \
-	{											                                        \
-	private:                                						                    \
+#define DEFINE_METHOD_CHECK(trait, method, signature)                                   \
+	template<typename U>                                                                \
+	class trait                                                                         \
+	{                                                                                   \
+	private:                                                                            \
 		template<typename T, T>                                                         \
 		struct helper;                                                                  \
                                                                                         \
