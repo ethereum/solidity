@@ -32,7 +32,7 @@
 		struct helper;                                                                  \
                                                                                         \
 		template<typename T>                                                            \
-		static std::true_type check(helper<sign, &T::method>*);                         \
+		static std::true_type check(helper<signature, &T::method>*);                    \
                                                                                         \
 		template<typename T>                                                            \
 		static std::false_type check(...);                                              \
