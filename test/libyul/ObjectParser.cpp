@@ -74,7 +74,7 @@ pair<bool, ErrorList> parse(string const& _source)
 	return {false, {}};
 }
 
-std::optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarningsAndInfos = true)
+optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarningsAndInfos = true)
 {
 	bool success;
 	ErrorList errors;
@@ -112,7 +112,7 @@ Error expectError(string const& _source, bool _allowWarningsAndInfos = false)
 	return *error;
 }
 
-tuple<std::optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _source)
+tuple<optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _source)
 {
 	vector<string> lines;
 	boost::split(lines, _source, boost::is_any_of("\n"));
