@@ -1,36 +1,33 @@
 .. index:: ! contract;creation, constructor
 
 ******************
-Creating Contracts
+创建合约
 ******************
 
-Contracts can be created "from outside" via Ethereum transactions or from within Solidity contracts.
+可以通过以太坊交易 “从外部” 或从 Solidity 合约内部创建合约。
 
-IDEs, such as `Remix <https://remix.ethereum.org/>`_, make the creation process seamless using UI elements.
+集成开发环境，如 `Remix <https://remix.ethereum.org/>`_，使用UI元素使创建过程无缝化。
 
-One way to create contracts programmatically on Ethereum is via the JavaScript API `web3.js <https://github.com/ethereum/web3.js>`_.
-It has a function called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
-to facilitate contract creation.
+在以太坊上以编程方式创建合约的一种方法是通过JavaScript API `web3.js <https://github.com/ethereum/web3.js>`_。
+它有一个名为 `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_ 的函数，
+以方便创建合约。
 
-When a contract is created, its :ref:`constructor <constructor>` (a function declared with
-the ``constructor`` keyword) is executed once.
+当一个合约被创建时，它的 :ref:`构造函数（constructor） <constructor>`
+（一个用 ``constructor`` 关键字声明的函数）被执行一次。
 
-A constructor is optional. Only one constructor is allowed, which means
-overloading is not supported.
+构造函数是可选的。但是只允许有一个构造函数，这意味着不支持重载。
 
-After the constructor has executed, the final code of the contract is stored on the
-blockchain. This code includes all public and external functions and all functions
-that are reachable from there through function calls. The deployed code does not
-include the constructor code or internal functions only called from the constructor.
+构造函数执行完毕后，合约的最终代码被存储在区块链上。
+这段代码包括所有公开和外部函数，以及所有通过函数调用可从那里到达的函数。
+部署的代码不包括构造函数代码或只从构造函数调用的内部函数。
 
 .. index:: constructor;arguments
 
-Internally, constructor arguments are passed :ref:`ABI encoded <ABI>` after the code of
-the contract itself, but you do not have to care about this if you use ``web3.js``.
+在内部，构造函数参数在合约代码之后通过 :ref:`ABI编码 <ABI>` 传递，
+但是如果您使用 ``web3.js`` 则不必关心这个问题。
 
-If a contract wants to create another contract, the source code
-(and the binary) of the created contract has to be known to the creator.
-This means that cyclic creation dependencies are impossible.
+如果一个合约想创建另一个合约，创建者必须知道所创建合约的源代码（和二进制）。
+这意味着，循环的创建依赖是不可能的。
 
 .. code-block:: solidity
 
@@ -39,53 +36,46 @@ This means that cyclic creation dependencies are impossible.
 
 
     contract OwnedToken {
-        // `TokenCreator` is a contract type that is defined below.
-        // It is fine to reference it as long as it is not used
-        // to create a new contract.
+        // `TokenCreator` 是如下定义的合约类型。
+        // 不创建新合约的话，也可以引用它。
         TokenCreator creator;
         address owner;
         bytes32 name;
 
-        // This is the constructor which registers the
-        // creator and the assigned name.
+        // 这是注册 creator 和设置名称的构造函数。
         constructor(bytes32 _name) {
-            // State variables are accessed via their name
-            // and not via e.g. `this.owner`. Functions can
-            // be accessed directly or through `this.f`,
-            // but the latter provides an external view
-            // to the function. Especially in the constructor,
-            // you should not access functions externally,
-            // because the function does not exist yet.
-            // See the next section for details.
+            // 状态变量通过其名称访问，
+            // 而不是通过例如 `this.owner` 的方式访问。
+            // 函数可以直接或通过 `this.f` 访问。
+            // 但后者提供了一个对函数的外部可视方法。
+            // 特别是在构造函数中，您不应该从外部访问函数，
+            // 因为该函数还不存在。详见下一节。
             owner = msg.sender;
 
-            // We perform an explicit type conversion from `address`
-            // to `TokenCreator` and assume that the type of
-            // the calling contract is `TokenCreator`, there is
-            // no real way to verify that.
-            // This does not create a new contract.
+            // 我们进行了从 `address` 到 `TokenCreator` 的显式类型转换，
+            // 并假定调用合约的类型是 `TokenCreator`，
+            // 没有真正的方法来验证，
+            // 这并没有创建一个新的合约。
             creator = TokenCreator(msg.sender);
             name = _name;
         }
 
         function changeName(bytes32 newName) public {
-            // Only the creator can alter the name.
-            // We compare the contract based on its
-            // address which can be retrieved by
-            // explicit conversion to address.
+            // 只有创建者可以改变名称。
+            // 我们根据合约的地址进行比较，
+            // 它可以通过显式转换为地址来检索。
             if (msg.sender == address(creator))
                 name = newName;
         }
 
         function transfer(address newOwner) public {
-            // Only the current owner can transfer the token.
+            // 只有当前所有者才能发送 token。
             if (msg.sender != owner) return;
 
-            // We ask the creator contract if the transfer
-            // should proceed by using a function of the
-            // `TokenCreator` contract defined below. If
-            // the call fails (e.g. due to out-of-gas),
-            // the execution also fails here.
+            // 我们通过使用下面定义的 `TokenCreator` 合约的一个函数
+            // 来询问创建者合约是否应该进行转移。
+            // 如果调用失败（例如由于气体值耗尽），
+            // 这里的执行也会失败。
             if (creator.isTokenTransferOK(owner, newOwner))
                 owner = newOwner;
         }
@@ -97,27 +87,25 @@ This means that cyclic creation dependencies are impossible.
             public
             returns (OwnedToken tokenAddress)
         {
-            // Create a new `Token` contract and return its address.
-            // From the JavaScript side, the return type
-            // of this function is `address`, as this is
-            // the closest type available in the ABI.
+            // 创建一个新的 `Token` 合约并返回其地址。
+            // 从JavaScript方面来看，
+            // 这个函数的返回类型是 `address`，
+            // 因为这是ABI中最接近的类型。
             return new OwnedToken(name);
         }
 
         function changeName(OwnedToken tokenAddress, bytes32 name) public {
-            // Again, the external type of `tokenAddress` is
-            // simply `address`.
+            // 同样，`tokenAddress` 的外部类型是简单的 `address`。
             tokenAddress.changeName(name);
         }
 
-        // Perform checks to determine if transferring a token to the
-        // `OwnedToken` contract should proceed
+        // 执行检查，以确定是否应该将代币转移到 `OwnedToken` 合约上。
         function isTokenTransferOK(address currentOwner, address newOwner)
             public
             pure
             returns (bool ok)
         {
-            // Check an arbitrary condition to see if transfer should proceed
+            // 检查一个任意的条件，看是否应该进行转移。
             return keccak256(abi.encodePacked(currentOwner, newOwner))[0] == 0x7f;
         }
     }
