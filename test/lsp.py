@@ -536,6 +536,10 @@ class FileTestRunner:
                 self.suite.open_file_and_wait_for_diagnostics(self.solc, self.test_name)
 
             for diagnostics in published_diagnostics:
+                if not diagnostics["uri"].startswith(self.suite.project_root_uri + "/"):
+                    raise Exception(
+                        f"'{self.test_name}.sol' imported file outside of test directory: '{diagnostics['uri']}'"
+                    )
                 self.open_tests.append(diagnostics["uri"].replace(self.suite.project_root_uri + "/", "")[:-len(".sol")])
 
             self.suite.expect_equal(
@@ -570,8 +574,7 @@ class FileTestRunner:
                         marker=markers[expected_diagnostic.marker]
                     )
 
-        except Exception as e:
-            print(e)
+        except Exception:
             self.close_all_open_files()
             raise
 
