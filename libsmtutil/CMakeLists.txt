@@ -1,6 +1,8 @@
 set(sources
 	CHCSmtLib2Interface.cpp
 	CHCSmtLib2Interface.h
+	DLSolver.cpp
+	DLSolver.h
 	Exceptions.h
 	SMTLib2Interface.cpp
 	SMTLib2Interface.h

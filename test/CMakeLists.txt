@@ -62,6 +62,11 @@ set(liblangutil_sources
 )
 detect_stray_source_files("${liblangutil_sources}" "liblangutil/")
 
+set(libsmtutil_sources
+	libsmtutil/DLSolver.cpp
+)
+detect_stray_source_files("${libsmtutil_sources}" "libsmtutil/")
+
 set(libsolidity_sources
     libsolidity/ABIDecoderTests.cpp
     libsolidity/ABIEncoderTests.cpp
@@ -194,6 +199,7 @@ add_executable(soltest ${sources}
     ${contracts_sources}
     ${libsolutil_sources}
     ${liblangutil_sources}
+    ${libsmtutil_sources}
     ${libevmasm_sources}
     ${libyul_sources}
     ${libsolidity_sources}
