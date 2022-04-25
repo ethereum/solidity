@@ -22,3 +22,5 @@ contract D
           //   ^^^^^^^^^^^^^^^^^^^^^ @wrongArgumentsCount
     }
 }
+// ----
+// publish_diagnostics_2: @conversionError 9574 @argumentsRequired 6777 @wrongArgumentsCount 6160
