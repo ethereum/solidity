@@ -47,7 +47,7 @@ Json::Value HandlerBase::toJson(SourceLocation const& _location) const
 {
 	solAssert(_location.sourceName);
 	Json::Value item = Json::objectValue;
-	item["uri"] = fileRepository().sourceUnitNameToClientPath(*_location.sourceName);
+	item["uri"] = fileRepository().sourceUnitNameToUri(*_location.sourceName);
 	item["range"] = toRange(_location);
 	return item;
 }
@@ -55,7 +55,7 @@ Json::Value HandlerBase::toJson(SourceLocation const& _location) const
 pair<string, LineColumn> HandlerBase::extractSourceUnitNameAndLineColumn(Json::Value const& _args) const
 {
 	string const uri = _args["textDocument"]["uri"].asString();
-	string const sourceUnitName = fileRepository().clientPathToSourceUnitName(uri);
+	string const sourceUnitName = fileRepository().uriToSourceUnitName(uri);
 	if (!fileRepository().sourceUnits().count(sourceUnitName))
 		BOOST_THROW_EXCEPTION(
 			RequestError(ErrorCode::RequestFailed) <<

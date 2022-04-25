@@ -64,6 +64,13 @@ std::optional<langutil::SourceLocation> parseRange(
 	Json::Value const& _range
 );
 
+/// Strips the file:// URI prefix off the given path, if present,
+/// also taking special care of Windows-drive-letter paths.
+///
+/// So file:///path/to/some/file.txt returns /path/to/some/file.txt, as well as,
+/// file:///C:/file.txt will return C:/file.txt (forward-slash is okay on Windows).
+std::string stripFileUriSchemePrefix(std::string const& _path);
+
 /// Extracts the resolved declaration of the given expression AST node.
 ///
 /// This may for example be the type declaration of an identifier,

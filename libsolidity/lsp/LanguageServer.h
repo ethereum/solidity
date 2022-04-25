@@ -92,7 +92,7 @@ private:
 	Transport& m_client;
 	std::map<std::string, MessageHandler> m_handlers;
 
-	/// Set of files known to be open by the client.
+	/// Set of files (names in URI form) known to be open by the client.
 	std::set<std::string> m_openFiles;
 	/// Set of source unit names for which we sent diagnostics to the client in the last iteration.
 	std::set<std::string> m_nonemptyDiagnostics;
