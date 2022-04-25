@@ -109,6 +109,7 @@ of votes.
         function delegate(address to) external {
             // assigns reference
             Voter storage sender = voters[msg.sender];
+            require(sender.weight != 0, "You have no right to vote");
             require(!sender.voted, "You already voted.");
 
             require(to != msg.sender, "Self-delegation is disallowed.");
