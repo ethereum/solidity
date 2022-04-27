@@ -82,6 +82,16 @@ TAG_REGEXES = TagRegexesTuple(
     re.compile(R"\^(?P<delimiter>[()]{1,2}) (?P<tag>@\w+)$")
 )
 
+def split_path(path):
+    """
+    Return the test name and the subdir path of the given path.
+    """
+    sub_dir_separator = path.find("/")
+
+    if sub_dir_separator == -1:
+        return (path, None)
+
+    return (path[sub_dir_separator+1:], path[:sub_dir_separator])
 
 def count_index(lines, start=0):
     """
@@ -419,11 +429,11 @@ class TestParser:
 
         # Parse request header
         requestResult = TEST_REGEXES.sendRequest.match(self.current_line())
-        if requestResult is not None:
-            ret["method"] = requestResult.group("method")
-            ret["request"] = "{\n"
-        else:
-            raise TestParserException(ret, "Method for request not found")
+        if requestResult is None:
+            raise TestParserException(ret, "Method for request not found on line " + self.current_line())
+
+        ret["method"] = requestResult.group("method")
+        ret["request"] = "{\n"
 
         self.next_line()
 
@@ -505,13 +515,14 @@ class FileTestRunner:
         SuccessOrIgnored = auto()
         Reparse = auto()
 
-    def __init__(self, test_name, solc, suite):
+    def __init__(self, test_name, sub_dir, solc, suite):
         self.test_name = test_name
+        self.sub_dir = sub_dir
         self.suite = suite
         self.solc = solc
         self.open_tests = []
-        self.content = self.suite.get_test_file_contents(self.test_name)
-        self.markers = self.suite.get_file_tags(self.test_name)
+        self.content = self.suite.get_test_file_contents(self.test_name, self.sub_dir)
+        self.markers = self.suite.get_file_tags(self.test_name, self.sub_dir)
         self.parsed_testcases = None
         self.expected_diagnostics = None
 
@@ -533,7 +544,7 @@ class FileTestRunner:
                 tests[self.test_name] = []
 
             published_diagnostics = \
-                self.suite.open_file_and_wait_for_diagnostics(self.solc, self.test_name)
+                self.suite.open_file_and_wait_for_diagnostics(self.solc, self.test_name, self.sub_dir)
 
             for diagnostics in published_diagnostics:
                 if not diagnostics["uri"].startswith(self.suite.project_root_uri + "/"):
@@ -548,7 +559,8 @@ class FileTestRunner:
                 description="Amount of reports does not match!")
 
             for diagnostics in published_diagnostics:
-                testname = diagnostics["uri"].replace(self.suite.project_root_uri + "/", "")[:-len(".sol")]
+                testname_and_subdir = diagnostics["uri"].replace(self.suite.project_root_uri + "/", "")[:-len(".sol")]
+                testname, sub_dir = split_path(testname_and_subdir)
 
                 expected_diagnostics = tests[testname]
                 self.suite.expect_equal(
@@ -556,7 +568,7 @@ class FileTestRunner:
                     len(expected_diagnostics),
                     description="Unexpected amount of diagnostics"
                 )
-                markers = self.suite.get_file_tags(testname)
+                markers = self.suite.get_file_tags(testname, sub_dir)
                 for actual_diagnostic in diagnostics["diagnostics"]:
                     expected_diagnostic = next((diagnostic for diagnostic in
                         expected_diagnostics if actual_diagnostic['range'] ==
@@ -579,10 +591,12 @@ class FileTestRunner:
             raise
 
     def close_all_open_files(self):
-        for test in self.open_tests:
+        for testpath in self.open_tests:
+            test, sub_dir = split_path(testpath)
+
             self.solc.send_message(
                 'textDocument/didClose',
-                { 'textDocument': { 'uri': self.suite.get_test_file_uri(test) }}
+                { 'textDocument': { 'uri': self.suite.get_test_file_uri(test, sub_dir) }}
             )
             self.suite.wait_for_diagnostics(self.solc)
 
@@ -612,13 +626,13 @@ class FileTestRunner:
             self.close_all_open_files()
 
     def user_interaction_failed_method_test(self, testcase, actual, expected):
-        actual_pretty = self.suite.replace_ranges_with_tags(actual)
+        actual_pretty = self.suite.replace_ranges_with_tags(actual, self.sub_dir)
 
         if expected is None:
             print("Failed to parse expected response, received:\n" + actual)
         else:
             print("Expected:\n" + \
-                self.suite.replace_ranges_with_tags(expected) + \
+                self.suite.replace_ranges_with_tags(expected, self.sub_dir) + \
                 "\nbut got:\n" + actual_pretty
             )
 
@@ -631,10 +645,16 @@ class FileTestRunner:
             if user_response == "u":
                 actual = actual["result"]
                 self.content = self.content[:testcase.responseBegin] + \
-                    prepend_comments("<- " + self.suite.replace_ranges_with_tags(actual)) + \
+                    prepend_comments(
+                        "<- " + \
+                        self.suite.replace_ranges_with_tags(actual, self.sub_dir)) + \
                     self.content[testcase.responseEnd:]
 
-                with open(self.suite.get_test_file_path(self.test_name), mode="w", encoding="utf-8", newline='') as f:
+                with open(self.suite.get_test_file_path(\
+                    self.test_name, self.sub_dir), \
+                    mode="w", \
+                    encoding="utf-8", \
+                    newline='') as f:
                     f.write(self.content)
                 return self.TestResult.Reparse
             if user_response == "r":
@@ -650,12 +670,13 @@ class FileTestRunner:
         requestBodyJson = self.parse_json_with_tags(testcase.request, self.markers)
         # add textDocument/uri if missing
         if 'textDocument' not in requestBodyJson:
-            requestBodyJson['textDocument'] = { 'uri': self.suite.get_test_file_uri(self.test_name) }
+            requestBodyJson['textDocument'] = { 'uri': self.suite.get_test_file_uri(self.test_name, self.sub_dir) }
         actualResponseJson = self.solc.call_method(testcase.method, requestBodyJson)
 
         # simplify response
         for result in actualResponseJson["result"]:
-            result["uri"] = result["uri"].replace(self.suite.project_root_uri + "/", "")
+            if "uri" in result:
+                result["uri"] = result["uri"].replace(self.suite.project_root_uri + "/" + self.sub_dir + "/", "")
         if "jsonrpc" in actualResponseJson:
             actualResponseJson.pop("jsonrpc")
 
@@ -692,11 +713,14 @@ class FileTestRunner:
                     replace_tag(el, markers)
                 return data
 
+            if not isinstance(data, dict):
+                return data
+
             # Check if we need markers from a specific file
             # Needs to be done before the loop or it might be called only after
             # we found "range" or "position"
             if "uri" in data:
-                markers = self.suite.get_file_tags(data["uri"][:-len(".sol")])
+                markers = self.suite.get_file_tags(data["uri"][:-len(".sol")], self.sub_dir)
 
             for key, val in data.items():
                 if key == "range":
@@ -809,19 +833,21 @@ class SolidityLSPTestSuite: # {{{
         lsp.send_message("$/setTrace", { 'value': 'messages' })
 
     # {{{ helpers
-    def get_test_file_path(self, test_case_name):
+    def get_test_file_path(self, test_case_name, sub_dir=None):
+        if sub_dir:
+            return f"{self.project_root_dir}/{sub_dir}/{test_case_name}.sol"
         return f"{self.project_root_dir}/{test_case_name}.sol"
 
-    def get_test_file_uri(self, test_case_name):
-        return PurePath(self.get_test_file_path(test_case_name)).as_uri()
+    def get_test_file_uri(self, test_case_name, sub_dir=None):
+        return PurePath(self.get_test_file_path(test_case_name, sub_dir)).as_uri()
 
-    def get_test_file_contents(self, test_case_name):
+    def get_test_file_contents(self, test_case_name, sub_dir=None):
         """
         Reads the file contents from disc for a given test case.
         The `test_case_name` will be the basename of the file
-        in the test path (test/libsolidity/lsp).
+        in the test path (test/libsolidity/lsp/{sub_dir}).
         """
-        with open(self.get_test_file_path(test_case_name), mode="r", encoding="utf-8", newline='') as f:
+        with open(self.get_test_file_path(test_case_name, sub_dir), mode="r", encoding="utf-8", newline='') as f:
             return f.read().replace("\r\n", "\n")
 
     def require_params_for_method(self, method_name: str, message: dict) -> Any:
@@ -863,13 +889,13 @@ class SolidityLSPTestSuite: # {{{
 
         return sorted(reports, key=lambda x: x['uri'])
 
-    def fetch_and_format_diagnostics(self, solc: JsonRpcProcess, test):
+    def fetch_and_format_diagnostics(self, solc: JsonRpcProcess, test, sub_dir=None):
         expectations = ""
 
-        published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, test)
+        published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, test, sub_dir)
 
         for diagnostics in published_diagnostics:
-            testname = diagnostics["uri"].replace(self.project_root_uri + "/", "")[:-len(".sol")]
+            testname = diagnostics["uri"].replace(f"{self.project_root_uri}/{sub_dir}/", "")[:-len(".sol")]
 
             # Skip empty diagnostics within the same file
             if len(diagnostics["diagnostics"]) == 0 and testname == test:
@@ -878,7 +904,7 @@ class SolidityLSPTestSuite: # {{{
             expectations += f"// {testname}:"
 
             for diagnostic in diagnostics["diagnostics"]:
-                tag = self.find_tag_with_range(testname, diagnostic['range'])
+                tag = self.find_tag_with_range(testname, sub_dir, diagnostic['range'])
 
                 if tag is None:
                     raise Exception(f"No tag found for diagnostic range {diagnostic['range']}")
@@ -892,6 +918,7 @@ class SolidityLSPTestSuite: # {{{
         self,
         solc: JsonRpcProcess,
         test,
+        sub_dir,
         content,
         current_diagnostics: TestParser.Diagnostics
     ):
@@ -902,10 +929,10 @@ class SolidityLSPTestSuite: # {{{
 
         content = content[:current_diagnostics.start] + \
             test_header + \
-            self.fetch_and_format_diagnostics(solc, test) + \
+            self.fetch_and_format_diagnostics(solc, test, sub_dir) + \
             content[current_diagnostics.end:]
 
-        with open(self.get_test_file_path(test), mode="w", encoding="utf-8", newline='') as f:
+        with open(self.get_test_file_path(test, sub_dir), mode="w", encoding="utf-8", newline='') as f:
             f.write(content)
 
         return content
@@ -914,6 +941,7 @@ class SolidityLSPTestSuite: # {{{
         self,
         solc_process: JsonRpcProcess,
         test_case_name: str,
+        sub_dir=None
     ) -> List[Any]:
         """
         Opens file for given test case and waits for diagnostics to be published.
@@ -923,10 +951,10 @@ class SolidityLSPTestSuite: # {{{
             {
                 'textDocument':
                 {
-                    'uri': self.get_test_file_uri(test_case_name),
+                    'uri': self.get_test_file_uri(test_case_name, sub_dir),
                     'languageId': 'Solidity',
                     'version': 1,
-                    'text': self.get_test_file_contents(test_case_name)
+                    'text': self.get_test_file_contents(test_case_name, sub_dir)
                 }
             }
         )
@@ -1041,12 +1069,12 @@ class SolidityLSPTestSuite: # {{{
         self.expect_location(response['result'][0], expected_uri, expected_lineNo, expected_startEndColumns)
 
 
-    def find_tag_with_range(self, test, target_range):
+    def find_tag_with_range(self, test, sub_dir, target_range):
         """
         Find and return the tag that represents the requested range otherwise
         return None.
         """
-        markers = self.get_file_tags(test)
+        markers = self.get_file_tags(test, sub_dir)
 
         for tag, tag_range in markers.items():
             if tag_range == target_range:
@@ -1054,7 +1082,7 @@ class SolidityLSPTestSuite: # {{{
 
         return None
 
-    def replace_ranges_with_tags(self, content):
+    def replace_ranges_with_tags(self, content, sub_dir):
         """
         Replace matching ranges with "@<tagname>".
         """
@@ -1070,7 +1098,7 @@ class SolidityLSPTestSuite: # {{{
 
         for item in recursive_iter(content):
             if "uri" in item and "range" in item:
-                markers = self.get_file_tags(item["uri"][:-len(".sol")])
+                markers = self.get_file_tags(item["uri"][:-len(".sol")], sub_dir)
                 for tag, tagRange in markers.items():
                     if tagRange == item["range"]:
                         item["range"] = str(tag)
@@ -1085,6 +1113,7 @@ class SolidityLSPTestSuite: # {{{
         self,
         solc: JsonRpcProcess,
         test,
+        sub_dir,
         content,
         current_diagnostics: TestParser.Diagnostics
     ):
@@ -1098,19 +1127,19 @@ class SolidityLSPTestSuite: # {{{
             if user_response == "u":
                 while True:
                     try:
-                        self.update_diagnostics_in_file(solc, test, content, current_diagnostics)
+                        self.update_diagnostics_in_file(solc, test, sub_dir, content, current_diagnostics)
                         return False
                     # pragma pylint: disable=broad-except
                     except Exception as e:
                         print(e)
-                        if self.user_interaction_failed_autoupdate(test):
+                        if self.user_interaction_failed_autoupdate(test, sub_dir):
                             return True
             elif user_response == 's':
                 return True
             elif user_response == 'r':
                 return False
 
-    def user_interaction_failed_autoupdate(self, test):
+    def user_interaction_failed_autoupdate(self, test, sub_dir):
         print("(e)dit/(r)etry/(s)kip file?")
         user_response = getCharFromStdin()
         if user_response == "r":
@@ -1121,7 +1150,7 @@ class SolidityLSPTestSuite: # {{{
         if user_response == "e":
             editor = os.environ.get('VISUAL', os.environ.get('EDITOR', 'vi'))
             subprocess.run(
-                f'{editor} {self.get_test_file_path(test)}',
+                f'{editor} {self.get_test_file_path(test, sub_dir)}',
                 shell=True,
                 check=True
             )
@@ -1170,15 +1199,15 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
 
-        # imported file (./lib.sol):
+        # imported file (goto/lib.sol):
         report = published_diagnostics[1]
-        self.expect_equal(report['uri'], self.get_test_file_uri('lib'), "Correct file URI")
+        self.expect_equal(report['uri'], self.get_test_file_uri('lib', 'goto'), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 1, "one diagnostic")
-        marker = self.get_file_tags("lib")["@diagnostics"]
+        marker = self.get_file_tags("lib", "goto")["@diagnostics"]
         self.expect_diagnostic(report['diagnostics'][0], code=2072, marker=marker)
 
     @functools.lru_cache() # pragma pylint: disable=lru-cache-decorating-method
-    def get_file_tags(self, test_name: str, verbose=False):
+    def get_file_tags(self, test_name: str, sub_dir=None, verbose=False):
         """
         Finds all tags (e.g. @tagname) in the given test and returns them as a
         dictionary having the following structure: {
@@ -1188,7 +1217,7 @@ class SolidityLSPTestSuite: # {{{
             }
         }
         """
-        content = self.get_test_file_contents(test_name)
+        content = self.get_test_file_contents(test_name, sub_dir)
 
         markers = {}
 
@@ -1223,14 +1252,14 @@ class SolidityLSPTestSuite: # {{{
     def test_didChange_in_A_causing_error_in_B(self, solc: JsonRpcProcess) -> None:
         # Reusing another test but now change some file that generates an error in the other.
         self.test_textDocument_didOpen_with_relative_import(solc)
-        marker = self.get_file_tags("lib")["@addFunction"]
-        self.open_file_and_wait_for_diagnostics(solc, 'lib')
+        marker = self.get_file_tags("lib", "goto")["@addFunction"]
+        self.open_file_and_wait_for_diagnostics(solc, 'lib', "goto")
         solc.send_message(
             'textDocument/didChange',
             {
                 'textDocument':
                 {
-                    'uri': self.get_test_file_uri('lib')
+                    'uri': self.get_test_file_uri('lib', 'goto')
                 },
                 'contentChanges':
                 [
@@ -1254,7 +1283,7 @@ class SolidityLSPTestSuite: # {{{
 
         # The modified file retains the same diagnostics.
         report = published_diagnostics[1]
-        self.expect_equal(report['uri'], self.get_test_file_uri('lib'))
+        self.expect_equal(report['uri'], self.get_test_file_uri('lib', 'goto'))
         self.expect_equal(len(report['diagnostics']), 0)
         # The warning went away because the compiler aborts further processing after the error.
 
@@ -1276,58 +1305,64 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri(main_file_name), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 0, "one diagnostic")
 
-        # imported file (./lib.sol):
+        # imported file (./goto/lib.sol):
         report = published_diagnostics[1]
-        self.expect_equal(report['uri'], self.get_test_file_uri('lib'), "Correct file URI")
+        self.expect_equal(report['uri'], self.get_test_file_uri('lib', 'goto'), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 1, "one diagnostic")
 
-        markers = self.get_file_tags('lib')
+        markers = self.get_file_tags('lib', 'goto')
         marker = markers["@diagnostics"]
         self.expect_diagnostic(report['diagnostics'][0], code=2072, marker=marker)
 
     def test_generic(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
 
-        STATIC_TESTS = ['didChange_template', 'didOpen_with_import', 'publish_diagnostics_3']
-
-        tests = filter(
-            lambda x: x not in STATIC_TESTS,
-            map(lambda x: x[:-len(".sol")], os.listdir(self.project_root_dir))
+        sub_dirs = filter(
+            lambda filepath: filepath.is_dir(),
+            os.scandir(self.project_root_dir)
         )
 
-        for test in tests:
-            try_again = True
-            print(f"Running test {test}")
+        for sub_dir in map(lambda filepath: filepath.name, sub_dirs):
+            tests = map(
+                lambda filename: filename[:-len(".sol")],
+                os.listdir(f"{self.project_root_dir}/{sub_dir}")
+            )
 
-            while try_again:
-                runner = FileTestRunner(test, solc, self)
+            print(f"Running tests in subdirectory '{sub_dir}'...")
+            for test in tests:
+                try_again = True
+                print(f"\t{test}")
 
-                try:
-                    runner.test_diagnostics()
-                    try_again = not runner.test_methods()
-                except ExpectationFailed as e:
-                    print(e)
+                while try_again:
+                    runner = FileTestRunner(test, sub_dir, solc, self)
 
-                    if e.part == e.Part.Diagnostics:
-                        try_again = not self.user_interaction_failed_diagnostics(
-                            solc,
-                            test,
-                            runner.content,
-                            runner.expected_diagnostics
-                        )
-                    else:
-                        raise
+                    try:
+                        runner.test_diagnostics()
+                        try_again = not runner.test_methods()
+                    except ExpectationFailed as e:
+                        print(e)
+
+                        if e.part == e.Part.Diagnostics:
+                            try_again = not self.user_interaction_failed_diagnostics(
+                                solc,
+                                test,
+                                sub_dir,
+                                runner.content,
+                                runner.expected_diagnostics
+                            )
+                        else:
+                            raise
 
     def test_textDocument_didChange_updates_diagnostics(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
         TEST_NAME = 'publish_diagnostics_1'
-        published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, TEST_NAME)
+        published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, TEST_NAME, "goto")
         self.expect_equal(len(published_diagnostics), 1, "One published_diagnostics message")
         report = published_diagnostics[0]
-        self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
+        self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME, "goto"), "Correct file URI")
         diagnostics = report['diagnostics']
         self.expect_equal(len(diagnostics), 3, "3 diagnostic messages")
-        markers = self.get_file_tags(TEST_NAME)
+        markers = self.get_file_tags(TEST_NAME, "goto")
         self.expect_diagnostic(diagnostics[0], code=6321, marker=markers["@unusedReturnVariable"])
         self.expect_diagnostic(diagnostics[1], code=2072, marker=markers["@unusedVariable"])
         self.expect_diagnostic(diagnostics[2], code=2072, marker=markers["@unusedContractVariable"])
@@ -1336,7 +1371,7 @@ class SolidityLSPTestSuite: # {{{
             'textDocument/didChange',
             {
                 'textDocument': {
-                    'uri': self.get_test_file_uri(TEST_NAME)
+                    'uri': self.get_test_file_uri(TEST_NAME, "goto")
                 },
                 'contentChanges': [
                     {
@@ -1349,7 +1384,7 @@ class SolidityLSPTestSuite: # {{{
         published_diagnostics = self.wait_for_diagnostics(solc)
         self.expect_equal(len(published_diagnostics), 1)
         report = published_diagnostics[0]
-        self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME), "Correct file URI")
+        self.expect_equal(report['uri'], self.get_test_file_uri(TEST_NAME, "goto"), "Correct file URI")
         diagnostics = report['diagnostics']
         self.expect_equal(len(diagnostics), 2)
         self.expect_diagnostic(diagnostics[0], code=6321, marker=markers["@unusedReturnVariable"])
@@ -1358,9 +1393,9 @@ class SolidityLSPTestSuite: # {{{
     def test_textDocument_didChange_delete_line_and_close(self, solc: JsonRpcProcess) -> None:
         # Reuse this test to prepare and ensure it is as expected
         self.test_textDocument_didOpen_with_relative_import(solc)
-        self.open_file_and_wait_for_diagnostics(solc, 'lib')
+        self.open_file_and_wait_for_diagnostics(solc, 'lib', 'goto')
 
-        marker = self.get_file_tags('lib')["@diagnostics"]
+        marker = self.get_file_tags('lib', 'goto')["@diagnostics"]
 
         # lib.sol: Fix the unused variable message by removing it.
         solc.send_message(
@@ -1368,7 +1403,7 @@ class SolidityLSPTestSuite: # {{{
             {
                 'textDocument':
                 {
-                    'uri': self.get_test_file_uri('lib')
+                    'uri': self.get_test_file_uri('lib', 'goto')
                 },
                 'contentChanges': # delete the in-body statement: `uint unused;`
                 [
@@ -1385,13 +1420,13 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report1['uri'], self.get_test_file_uri('didOpen_with_import'), "Correct file URI")
         self.expect_equal(len(report1['diagnostics']), 0, "no diagnostics in didOpen_with_import.sol")
         report2 = published_diagnostics[1]
-        self.expect_equal(report2['uri'], self.get_test_file_uri('lib'), "Correct file URI")
+        self.expect_equal(report2['uri'], self.get_test_file_uri('lib', 'goto'), "Correct file URI")
         self.expect_equal(len(report2['diagnostics']), 0, "no diagnostics in lib.sol")
 
         # Now close the file and expect the warning to re-appear
         solc.send_message(
             'textDocument/didClose',
-            { 'textDocument': { 'uri': self.get_test_file_uri('lib') }}
+            { 'textDocument': { 'uri': self.get_test_file_uri('lib', 'goto') }}
         )
 
         published_diagnostics = self.wait_for_diagnostics(solc)
@@ -1483,14 +1518,14 @@ class SolidityLSPTestSuite: # {{{
                 'text':
                     '// SPDX-License-Identifier: UNLICENSED\n'
                     'pragma solidity >=0.8.0;\n'
-                    'import "./lib.sol";\n'
+                    'import "./goto/lib.sol";\n'
             }
         })
         reports = self.wait_for_diagnostics(solc)
         self.expect_equal(len(reports), 2, '')
         self.expect_equal(len(reports[0]['diagnostics']), 0, "should not contain diagnostics")
 
-        marker = self.get_file_tags("lib")["@diagnostics"]
+        marker = self.get_file_tags("lib", 'goto')["@diagnostics"]
 
         # unused variable in lib.sol
         self.expect_diagnostic(reports[1]['diagnostics'][0], code=2072, marker=marker)
@@ -1502,7 +1537,7 @@ class SolidityLSPTestSuite: # {{{
         )
         reports = self.wait_for_diagnostics(solc)
         self.expect_equal(len(reports), 1, '')
-        self.expect_equal(reports[0]['uri'], f'{self.project_root_uri}/lib.sol', "")
+        self.expect_equal(reports[0]['uri'], f'{self.project_root_uri}/goto/lib.sol', "")
         self.expect_equal(len(reports[0]['diagnostics']), 0, "should not contain diagnostics")
 
     def test_textDocument_didChange_at_eol(self, solc: JsonRpcProcess) -> None:
