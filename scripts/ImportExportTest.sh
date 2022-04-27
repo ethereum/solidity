@@ -75,11 +75,7 @@ function Ast_ImportExportEquivalence
         cat ./obtained.json >&2
         return 1
     fi
-    set +e
-    diff_files expected.json obtained.json
-    DIFF=$?
-    set -e
-    if [[ ${DIFF} != 0 ]]
+    if ! diff_files expected.json obtained.json
     then
         FAILED=$((FAILED + 1))
     fi
@@ -101,63 +97,67 @@ function JsonEvmAsm_ImportExportEquivalence
         cat expected.error >&2
         UNCOMPILABLE=$((UNCOMPILABLE + 1))
         return 0
-    else
-        for contract in $(jq '.contracts | keys | .[]' expected.json 2> /dev/null)
+    fi
+
+    # Note that we have some test files, that only consists of free functions.
+    # Those files doesn't define any contracts, so the resulting json does not define any
+    # keys. In this case `jq` returns an error like `jq: error: null (null) has no keys`
+    # to not get spammed by these errors, errors are redirected to /dev/null.
+    for contract in $(jq '.contracts | keys | .[]' expected.json 2> /dev/null)
+    do
+        for output in "${outputs[@]}"
         do
+            jq --raw-output ".contracts.${contract}.\"${output}\"" expected.json > "expected.${output}.json"
+        done
+
+        assembly=$(cat expected.asm.json)
+        if [ "$assembly" != "" ] && [ "$assembly" != "null" ]
+        then
+            if ! "${SOLC}" --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json --json-indent 4 --import-asm-json expected.asm.json > obtained.json 2> obtained.error
+            then
+                printError
+                printError "$sol_file"
+                cat obtained.error >&2
+                FAILED=$((FAILED + 1))
+                return 0
+            fi
+
             for output in "${outputs[@]}"
             do
-                jq --raw-output ".contracts.${contract}.\"${output}\"" expected.json > "expected.${output}.json"
-            done
-
-            assembly=$(cat expected.asm.json)
-            if [ "$assembly" != "" ] && [ "$assembly" != "null" ]
-            then
-                if ! "${SOLC}" --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json --json-indent 4 --import-asm-json expected.asm.json > obtained.json 2> obtained.error
-                then
-                    printError
-                    printError "$sol_file"
-                    cat obtained.error >&2
-                    FAILED=$((FAILED + 1))
-                    return 0
-                else
-                    for output in "${outputs[@]}"
-                    do
-                        for obtained_contract in $(jq '.contracts | keys | .[]' obtained.json  2> /dev/null)
-                        do
-                            jq --raw-output ".contracts.${obtained_contract}.\"${output}\"" obtained.json > "obtained.${output}.json"
-                            if ! diff_files "expected.${output}.json" "obtained.${output}.json"
-                            then
-                                _TESTED=
-                                FAILED=$((FAILED + 1))
-                                return 0
-                            fi
-                        done
-                    done
-
-                    # direct export via --asm-json, if imported with --import-asm-json.
-                    if ! "${SOLC}" --asm-json --import-asm-json expected.asm.json --pretty-json --json-indent 4 | tail -n+4 > obtained_direct_import_export.json 2> obtained_direct_import_export.error
+                for obtained_contract in $(jq '.contracts | keys | .[]' obtained.json  2> /dev/null)
+                do
+                    jq --raw-output ".contracts.${obtained_contract}.\"${output}\"" obtained.json > "obtained.${output}.json"
+                    if ! diff_files "expected.${output}.json" "obtained.${output}.json"
                     then
-                        printError
-                        printError "$sol_file"
-                        cat obtained_direct_import_export.error >&2
+                        _TESTED=
                         FAILED=$((FAILED + 1))
                         return 0
-                    else
-                        # reformat jsons using jq.
-                        jq . expected.asm.json > expected.asm.json.pretty
-                        jq . obtained_direct_import_export.json > obtained_direct_import_export.json.pretty
-                        if ! diff_files expected.asm.json.pretty obtained_direct_import_export.json.pretty
-                        then
-                            _TESTED=
-                            FAILED=$((FAILED + 1))
-                            return 0
-                        fi
                     fi
+                done
+            done
 
-                fi
+            # direct export via --asm-json, if imported with --import-asm-json.
+            if ! "${SOLC}" --asm-json --import-asm-json expected.asm.json --pretty-json --json-indent 4 | tail -n+4 > obtained_direct_import_export.json 2> obtained_direct_import_export.error
+            then
+                printError
+                printError "$sol_file"
+                cat obtained_direct_import_export.error >&2
+                FAILED=$((FAILED + 1))
+                return 0
             fi
-        done
-    fi
+
+            # reformat jsons using jq.
+            jq . expected.asm.json > expected.asm.json.pretty
+            jq . obtained_direct_import_export.json > obtained_direct_import_export.json.pretty
+            if ! diff_files expected.asm.json.pretty obtained_direct_import_export.json.pretty
+            then
+                _TESTED=
+                FAILED=$((FAILED + 1))
+                return 0
+            fi
+        fi
+    done
+
     if [ -n "${_TESTED}" ]
     then
         TESTED=$((TESTED + 1))
