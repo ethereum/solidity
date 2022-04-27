@@ -131,7 +131,7 @@ void ReasoningBasedSimplifier::operator()(ForLoop& _for)
 	}
 
 	ASTModifier::operator()(_for.body);
-	// TODO clear modified variables!
+	// TODO clear modified variables! - but only if there is a 'break'
 	ASTModifier::operator()(_for.post);
 
 	// clear variables assigned inside body and post
@@ -148,6 +148,14 @@ void ReasoningBasedSimplifier::operator()(ForLoop& _for)
 
 void ReasoningBasedSimplifier::operator()(FunctionCall& _fun)
 {
+	// TODO in general, a big problem is that all expressions involving
+	// literals have to be evaluated (expression simplifier)
+	// and rematerialized (literal rematerializer)
+	// otherwise, the mult by constant does not work.
+
+
+
+
 	ASTModifier::operator()(_fun);
 	// TODO do not forget to add path condition!
 	// TODO and(x, 0xfff) -> x if x <= 0xfff
