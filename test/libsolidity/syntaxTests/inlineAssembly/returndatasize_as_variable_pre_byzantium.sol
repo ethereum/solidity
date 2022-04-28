@@ -1,4 +1,4 @@
-contract C { function f() public pure { uint returndatasize; returndatasize; assembly { pop(returndatasize()) }}}
+contract C { function f() public view { uint returndatasize; returndatasize; assembly { pop(returndatasize()) }}}
 // ====
 // EVMVersion: =homestead
 // ----

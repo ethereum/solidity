@@ -1,5 +1,5 @@
 contract C {
-    function f() public pure {
+    function f() public view {
         uint returndatasize;
         returndatasize;
         assembly {
