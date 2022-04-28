@@ -317,12 +317,13 @@ will consume more gas than the 2300 gas stipend:
 - Sending Ether
 
 .. warning::
-    Contracts that receive Ether directly (without a function call, i.e. using ``send`` or ``transfer``)
-    but do not define a receive Ether function or a payable fallback function
-    throw an exception, sending back the Ether (this was different
-    before Solidity v0.4.0). So if you want your contract to receive Ether,
+    When Ether is sent directly to a contract (without a function call, i.e. sender uses ``send`` or ``transfer``)
+    but the receiving contract does not define a receive Ether function or a payable fallback function,
+    an exception will be thrown, sending back the Ether (this was different
+    before Solidity v0.4.0). If you want your contract to receive Ether,
     you have to implement a receive Ether function (using payable fallback functions for receiving Ether is
-    not recommended, since it would not fail on interface confusions).
+    not recommended, since the fallback is invoked and would not fail for interface confusions
+    on the part of the sender).
 
 
 .. warning::
