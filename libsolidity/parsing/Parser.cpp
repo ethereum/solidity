@@ -142,7 +142,7 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 					expectToken(Token::Semicolon);
 				}
 				else
-					fatalParserError(7858_error, "Expected pragma, import directive or contract/interface/library/struct/enum/constant/function definition.");
+					fatalParserError(7858_error, "Expected pragma, import directive or contract/interface/library/struct/enum/constant/function/error definition.");
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
