@@ -359,13 +359,11 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch) {
 			virtualLiteralVal = (int) valueOfLiteral(*c.value);
 		}
 
-		//m_assembly.setSourceLocation(originLocationOf(c));
 		caseMap[virtualLiteralVal] = make_pair(&c, m_assembly.newLabelId());
 		if (virtualLiteralVal > maxCase)
 			maxCase = virtualLiteralVal;
 	}
 
-	//int expressionHeight = m_assembly.stackHeight();
 	// Make label for default case
 	AbstractAssembly::LabelID defaultCaseLabel = m_assembly.newLabelId();
 	
