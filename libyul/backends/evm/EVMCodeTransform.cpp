@@ -311,11 +311,141 @@ void CodeTransform::operator()(If const& _if)
 	m_assembly.appendLabel(end);
 }
 
+bool CodeTransform::isSwitchEnumLike(Switch const& _switch)
+{
+	bool isEnumLike = true;
+	unsigned int numNonDefaultCases = 0;
+	std::set<u256> caseValues;
+	for (Case const& c: _switch.cases)
+	{
+		if (c.value)
+		{
+			caseValues.insert(valueOfLiteral(*c.value));
+			numNonDefaultCases++;
+		}
+	}
+	
+	for (unsigned int i = 0; i < numNonDefaultCases; ++i)
+	{
+		if (caseValues.count(u256(i)) == 0)
+		{
+			isEnumLike = false;
+			break;
+		}
+	}
+	
+	// Don't use the jump table if there are fewer than 3 cases
+	if (numNonDefaultCases < 3)
+		return false;
+	
+	// TODO: Support enum switches with more than 16 possibilities
+	// using codecopy
+	if (numNonDefaultCases > 16)
+		return false;
+	
+	return isEnumLike;
+}
+
+void CodeTransform::handleEnumLikeSwitch(Switch const& _switch) {
+	// Map case numbers to <case, block>
+	map<int, pair<Case const*, AbstractAssembly::LabelID>> caseMap;
+	int maxCase = -1;
+	for (Case const& c: _switch.cases)
+	{
+		// Default case is assigned -1
+		int virtualLiteralVal = -1;
+		if (c.value)
+		{
+			virtualLiteralVal = (int) valueOfLiteral(*c.value);
+		}
+
+		//m_assembly.setSourceLocation(originLocationOf(c));
+		caseMap[virtualLiteralVal] = make_pair(&c, m_assembly.newLabelId());
+		if (virtualLiteralVal > maxCase)
+			maxCase = virtualLiteralVal;
+	}
+
+	//int expressionHeight = m_assembly.stackHeight();
+	// Make label for default case
+	AbstractAssembly::LabelID defaultCaseLabel = m_assembly.newLabelId();
+	
+	// Find label tags
+	std::vector<AbstractAssembly::LabelID> labelTags;
+	for (int i = 0; i <= maxCase; ++i)
+	{
+		auto currentCase = caseMap.find(i);
+		yulAssert(currentCase != caseMap.end(), "Case " + std::to_string(i)
+			+ " not found in enum-like switch");
+		labelTags.push_back(currentCase->second.second);
+	}
+
+	m_assembly.setSourceLocation(originLocationOf(_switch));
+	// Mask
+	m_assembly.appendConstant(u256(0xffff));
+	// Jump offsets
+	m_assembly.appendJumpTablePush(labelTags);
+	// Get switch value
+	m_assembly.appendInstruction(evmasm::dupInstruction(3));
+	// Calculate shift amount
+	m_assembly.appendConstant(u256(0x04));
+	m_assembly.appendInstruction(evmasm::Instruction::SHL);
+	// Apply mask
+	m_assembly.appendInstruction(evmasm::Instruction::SHR);
+	m_assembly.appendInstruction(evmasm::Instruction::AND);
+
+	// Using push technique, version 1 (JUMPI still included)
+	// Jump to default case
+	m_assembly.appendInstruction(evmasm::dupInstruction(1));
+	m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
+	m_assembly.appendJumpToIf(defaultCaseLabel);
+	m_assembly.appendJump(1, AbstractAssembly::JumpType::Ordinary);
+
+	AbstractAssembly::LabelID end = m_assembly.newLabelId();
+
+	// Default case
+	m_assembly.appendLabel(defaultCaseLabel);
+	// Pop off 0x00
+	m_assembly.appendInstruction(evmasm::Instruction::POP);
+	auto defaultCase = caseMap.find(-1);
+	if (defaultCase != caseMap.end())
+	{
+		Case const* c = defaultCase->second.first;
+		m_assembly.setSourceLocation(originLocationOf(*c));
+		(*this)(c->body);
+	}
+	m_assembly.appendJumpTo(end);
+
+	// Add other cases
+	for (int i = 0; i <= maxCase; ++i)
+	{
+		auto currentCase = caseMap.find(i);
+		yulAssert(currentCase != caseMap.end(), "Case " + std::to_string(i)
+			+ " not found in enum-like switch");
+		m_assembly.appendLabel(currentCase->second.second);
+		Case const* c = currentCase->second.first;
+		m_assembly.setSourceLocation(originLocationOf(*c));
+		(*this)(c->body);
+
+		// Avoid useless jump in the last case
+		if (i != maxCase)
+			m_assembly.appendJumpTo(end);
+	}
+
+	m_assembly.appendLabel(end);
+}
+
 void CodeTransform::operator()(Switch const& _switch)
 {
 	visitExpression(*_switch.expression);
 	int expressionHeight = m_assembly.stackHeight();
 	map<Case const*, AbstractAssembly::LabelID> caseBodies;
+
+	if (isSwitchEnumLike(_switch)) {
+		handleEnumLikeSwitch(_switch);
+		m_assembly.appendInstruction(evmasm::Instruction::POP);
+		return;
+	}
+
 	AbstractAssembly::LabelID end = m_assembly.newLabelId();
 	for (Case const& c: _switch.cases)
 	{

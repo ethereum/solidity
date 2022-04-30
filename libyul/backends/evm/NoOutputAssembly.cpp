@@ -55,6 +55,11 @@ void NoOutputAssembly::appendLabelReference(LabelID)
 	appendInstruction(evmasm::pushInstruction(1));
 }
 
+void NoOutputAssembly::appendJumpTablePush(std::vector<LabelID>)
+{
+	appendInstruction(evmasm::pushInstruction(1));
+}
+
 NoOutputAssembly::LabelID NoOutputAssembly::newLabelId()
 {
 	return 1;

@@ -59,11 +59,27 @@ set<size_t> JumpdestRemover::referencedTags(AssemblyItems const& _items, size_t 
 {
 	set<size_t> ret;
 	for (auto const& item: _items)
-		if (item.type() == PushTag)
+	{
+		switch (item.type())
+		{
+		case PushTag:
 		{
 			auto subAndTag = item.splitForeignPushTag();
 			if (subAndTag.first == _subId)
 				ret.insert(subAndTag.second);
+			break;
 		}
+		case JumpTablePushTag:
+		{
+			// TODO: Do we need to look at the sub here?
+			for (size_t tag : item.jumpTableTags()) {
+				ret.insert(tag);
+			}
+			break;
+		}
+		default:
+			break;
+		}
+	}
 	return ret;
 }

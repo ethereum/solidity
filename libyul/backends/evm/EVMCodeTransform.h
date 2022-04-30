@@ -191,6 +191,11 @@ private:
 		return m_functionExitLabel.has_value();
 	}
 
+	/// Returns if a switch statement operates on an enum-like set of values 0,1,...,n
+	bool isSwitchEnumLike(Switch const& _switch);
+	/// Creates a switch for enums using a jump table
+	void handleEnumLikeSwitch(Switch const& _switch);
+
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
