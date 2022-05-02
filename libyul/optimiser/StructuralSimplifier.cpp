@@ -93,31 +93,26 @@ void StructuralSimplifier::operator()(Block& _block)
 
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
-	// Explicit local variables ifLambda, switchLambda, forLoopLambda are created to avoid MSVC C++17 Debug test crash
-	// (Run-Time Check Failure #2 - Stack around the variable '....' was corrupted).
-	// As soon as the issue is fixed, this workaround can be removed.
-	auto ifLambda = [&](If& _ifStmt) -> OptionalStatements
-	{
-		if (expressionAlwaysTrue(*_ifStmt.condition))
-			return {std::move(_ifStmt.body.statements)};
-		else if (expressionAlwaysFalse(*_ifStmt.condition))
-			return {vector<Statement>{}};
-		return {};
+	util::GenericVisitor visitor{
+		util::VisitorFallback<OptionalStatements>{},
+		[&](If& _ifStmt) -> OptionalStatements {
+			if (expressionAlwaysTrue(*_ifStmt.condition))
+				return {std::move(_ifStmt.body.statements)};
+			else if (expressionAlwaysFalse(*_ifStmt.condition))
+				return {vector<Statement>{}};
+			return {};
+		},
+		[&](Switch& _switchStmt) -> OptionalStatements {
+			if (std::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
+				return replaceConstArgSwitch(_switchStmt, constExprVal.value());
+			return {};
+		},
+		[&](ForLoop& _forLoop) -> OptionalStatements {
+			if (expressionAlwaysFalse(*_forLoop.condition))
+				return {std::move(_forLoop.pre.statements)};
+			return {};
+		}
 	};
-	auto switchLambda = [&](Switch& _switchStmt) -> OptionalStatements
-	{
-		if (std::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
-			return replaceConstArgSwitch(_switchStmt, constExprVal.value());
-		return {};
-	};
-	auto forLoopLambda = [&](ForLoop& _forLoop) -> OptionalStatements
-	{
-		if (expressionAlwaysFalse(*_forLoop.condition))
-			return {std::move(_forLoop.pre.statements)};
-		return {};
-	};
-
-	util::GenericVisitor visitor{util::VisitorFallback<OptionalStatements>{}, ifLambda, switchLambda, forLoopLambda};
 
 	util::iterateReplacing(
 		_statements,
