@@ -3,14 +3,13 @@
 .. _functions:
 
 *********
-Functions
+函数
 *********
 
-Functions can be defined inside and outside of contracts.
+可以在合约内部和外部定义函数。
 
-Functions outside of a contract, also called "free functions", always have implicit ``internal``
-:ref:`visibility<visibility-and-getters>`. Their code is included in all contracts
-that call them, similar to internal library functions.
+合约之外的函数，也称为 "自由函数"，总是隐含着 ``internal`` 的 :ref:`可见性 <visibility and-getters>`。
+它们的代码包含在所有调用它们的合约中，类似于内部库函数。
 
 .. code-block:: solidity
 
@@ -25,38 +24,33 @@ that call them, similar to internal library functions.
     contract ArrayExample {
         bool found;
         function f(uint[] memory _arr) public {
-            // This calls the free function internally.
-            // The compiler will add its code to the contract.
+            // 这在内部调用自由函数。
+            // 编译器会将其代码添加到合约中。
             uint s = sum(_arr);
             require(s >= 10);
             found = true;
         }
     }
 
-.. note::
-    Functions defined outside a contract are still always executed
-    in the context of a contract. They still have access to the variable ``this``,
-    can call other contracts, send them Ether and destroy the contract that called them,
-    among other things. The main difference to functions defined inside a contract
-    is that free functions do not have direct access to storage variables and functions
-    not in their scope.
+.. 注解::
+    在合约之外定义的函数，仍然总是在合约的背景下执行。它们仍然可以访问变量 ``this``，
+    可以调用其他合约，向它们发送以太，并销毁调用它们的合约，以及其他事项。
+    与合约内定义的函数的主要区别是，自由函数不能直接访问不在其范围内的存储变量和函数。
 
 .. _function-parameters-return-variables:
 
-Function Parameters and Return Variables
-========================================
+函数参数和返回变量
+====================
 
-Functions take typed parameters as input and may, unlike in many other
-languages, also return an arbitrary number of values as output.
+与许多其他语言不同, 函数接受类型化的参数作为输入，
+也可以返回任意数量的值作为输出。
 
-Function Parameters
+函数参数
 -------------------
 
-Function parameters are declared the same way as variables, and the name of
-unused parameters can be omitted.
+函数参数的声明方式与变量相同，未使用的参数名称可以省略。
 
-For example, if you want your contract to accept one kind of external call
-with two integers, you would use something like the following:
+例如，如果您想让您的合约接受一种带有两个整数的外部调用，您可以使用类似以下的方式：
 
 .. code-block:: solidity
 
@@ -70,28 +64,23 @@ with two integers, you would use something like the following:
         }
     }
 
-Function parameters can be used as any other local variable and they can also be assigned to.
+函数参数可以像任何其他局部变量一样使用，它们也可以被赋值。
 
-.. note::
+.. 注解::
 
-  An :ref:`external function<external-function-calls>` cannot accept a
-  multi-dimensional array as an input
-  parameter. This functionality is possible if you enable the ABI coder v2
-  by adding ``pragma abicoder v2;`` to your source file.
+  一个 :ref:`外部函数 <external-function-calls>` 不能接受一个多维数组作为输入参数。
+  如果您通过在源文件中添加 ``pragma abicoder v2;`` 来启用ABI编码器v2，就可以实现这个功能。
 
-  An :ref:`internal function<external-function-calls>` can accept a
-  multi-dimensional array without enabling the feature.
+  一个 :ref:`内部函数 <external-function-calls>` 可以不启用该功能而接受一个多维数组。
 
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
 
-Return Variables
+返回的变量
 ----------------
 
-Function return variables are declared with the same syntax after the
-``returns`` keyword.
+函数的返回变量在 ``returns`` 关键字之后用同样的语法声明。
 
-For example, suppose you want to return two results: the sum and the product of
-two integers passed as function parameters, then you use something like:
+例如，假设您想返回两个结果：作为函数参数传递的两个整数的总和和乘积，那么您就使用类似的方法：
 
 .. code-block:: solidity
 
@@ -109,16 +98,12 @@ two integers passed as function parameters, then you use something like:
         }
     }
 
-The names of return variables can be omitted.
-Return variables can be used as any other local variable and they
-are initialized with their :ref:`default value <default-value>` and have that
-value until they are (re-)assigned.
+返回变量的名字可以被省略。返回变量可以像其他本地变量一样使用，
+它们被初始化为相应的 :ref:`默认值 <default-value>`，
+并且在它们被（重新）赋值之前拥有这个值。
 
-You can either explicitly assign to return variables and
-then leave the function as above,
-or you can provide return values
-(either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
-statement:
+您可以明确地赋值给返回变量，然后像上面那样结束函数，
+或者您可以用 ``return`` 语句直接提供返回值（单个或 :ref:`多个返回值 <multi return>`）。
 
 .. code-block:: solidity
 
@@ -135,59 +120,55 @@ statement:
         }
     }
 
-If you use an early ``return`` to leave a function that has return variables,
-you must provide return values together with the return statement.
+如果您过早使用 ``return`` 来结束一个有返回变量的函数，您必须在返回语句中同时提供返回值。
 
-.. note::
-    You cannot return some types from non-internal functions, notably
-    multi-dimensional dynamic arrays and structs. If you enable the
-    ABI coder v2 by adding ``pragma abicoder v2;``
-    to your source file then more types are available, but
-    ``mapping`` types are still limited to inside a single contract and you
-    cannot transfer them.
+.. 注解::
+    您不能从非内部函数返回某些类型，特别是多维动态数组和结构。
+    如果您通过在源文件中添加 ``pragma abicoder v2;`` 来启用ABI编码器v2，
+    那么就会有更多的类型可用，但 ``映射（mapping）`` 类型仍然被限制在单个合约内，您不能转移它们。
 
 .. _multi-return:
 
-Returning Multiple Values
+返回多个值
 -------------------------
 
-When a function has multiple return types, the statement ``return (v0, v1, ..., vn)`` can be used to return multiple values.
-The number of components must be the same as the number of return variables
-and their types have to match, potentially after an :ref:`implicit conversion <types-conversion-elementary-types>`.
+当一个函数有多个返回类型时，语句 ``return (v0, v1, ..., vn)`` 可以用来返回多个值。
+声明的数量必须与返回变量的数量相同，并且它们的类型必须匹配，
+有可能是经过 :ref:`隐式转换 <types conversion-elementary-types>`。
 
 .. _state-mutability:
 
-State Mutability
+状态可变性
 ================
 
 .. index:: ! view function, function;view
 
 .. _view-functions:
 
-View Functions
+View 函数
 --------------
 
-Functions can be declared ``view`` in which case they promise not to modify the state.
+函数可以被声明为 ``view``，在这种情况下，它们承诺不修改状态。
 
-.. note::
-  If the compiler's EVM target is Byzantium or newer (default) the opcode
-  ``STATICCALL`` is used when ``view`` functions are called, which enforces the state
-  to stay unmodified as part of the EVM execution. For library ``view`` functions
-  ``DELEGATECALL`` is used, because there is no combined ``DELEGATECALL`` and ``STATICCALL``.
-  This means library ``view`` functions do not have run-time checks that prevent state
-  modifications. This should not impact security negatively because library code is
-  usually known at compile-time and the static checker performs compile-time checks.
+.. 注解::
+  如果编译器的EVM版本是Byzantium或更新的（默认），
+  当调用 ``view`` 函数时，会使用操作码 ``STATICCALL``，这使得状态作为EVM执行的一部分保持不被修改。
+  对于库合约的 ``view`` 函数，会使用 ``DELEGATECALL``，
+  因为没有组合的 ``DELEGATECALL`` 和 ``STATICCALL``。
+  这意味着库合约中的 ``view`` 函数没有防止状态修改的运行时的检查。
+  这应该不会对安全产生负面影响，因为库合约的代码通常在编译时就知道了，
+  而且静态检查器也会进行编译时检查。
 
-The following statements are considered modifying the state:
+以下声明被认为是修改状态：
 
-#. Writing to state variables.
-#. :ref:`Emitting events <events>`.
-#. :ref:`Creating other contracts <creating-contracts>`.
-#. Using ``selfdestruct``.
-#. Sending Ether via calls.
-#. Calling any function not marked ``view`` or ``pure``.
-#. Using low-level calls.
-#. Using inline assembly that contains certain opcodes.
+#. 修改状态变量。
+#. :ref:`产生事件 <events>`。
+#. :ref:`创建其它合约 <creating-contracts>`。
+#. 使用 ``selfdestruct``。
+#. 通过调用发送以太币。
+#. 调用任何没有标记为 ``view`` 或者 ``pure`` 的函数。
+#. 使用低级调用。
+#. 使用包含特定操作码的内联汇编。
 
 .. code-block:: solidity
 
@@ -200,43 +181,39 @@ The following statements are considered modifying the state:
         }
     }
 
-.. note::
-  ``constant`` on functions used to be an alias to ``view``, but this was dropped in version 0.5.0.
+.. 注解::
+  函数上的 ``constant`` 曾经是 ``view`` 的别名，但在0.5.0版本中被取消。
 
-.. note::
-  Getter methods are automatically marked ``view``.
+.. 注解::
+  Getter方法被自动标记为 ``view``。
 
-.. note::
-  Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
-  for ``view`` functions.
-  This enabled state modifications in ``view`` functions through the use of
-  invalid explicit type conversions.
-  By using  ``STATICCALL`` for ``view`` functions, modifications to the
-  state are prevented on the level of the EVM.
+.. 注解::
+  在0.5.0版本之前，编译器没有为 ``view`` 函数使用 ``STATICCALL`` 操作码。
+  这使得 ``view`` 函数通过使用无效的显式类型转换进行状态修改。
+  通过对 ``view`` 函数使用 ``STATICCALL``，在EVM层面上防止了对状态的修改。
 
 .. index:: ! pure function, function;pure
 
 .. _pure-functions:
 
-Pure Functions
+Pure 函数
 --------------
 
-Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
-In particular, it should be possible to evaluate a ``pure`` function at compile-time given
-only its inputs and ``msg.data``, but without any knowledge of the current blockchain state.
-This means that reading from ``immutable`` variables can be a non-pure operation.
+函数可以被声明为 ``pure``，在这种情况下，它们承诺不读取或修改状态。
+特别是，应该可以在编译时评估一个 ``pure`` 函数，只给它的输入和 ``msg.data``，
+但不知道当前区块链状态。这意味着读取 ``immutable`` 的变量可以是一个非标准pure的操作。
 
-.. note::
-  If the compiler's EVM target is Byzantium or newer (default) the opcode ``STATICCALL`` is used,
-  which does not guarantee that the state is not read, but at least that it is not modified.
+.. 注解::
+  如果编译器的EVM版本是Byzantium或更新的（默认），则使用操作码 ``STATICCALL``，
+  这并不能保证不读取状态，但至少不能修改。
 
-In addition to the list of state modifying statements explained above, the following are considered reading from the state:
+除了上面解释的状态修改语句列表外，以下内容被认为是从状态中读取的：
 
-#. Reading from state variables.
-#. Accessing ``address(this).balance`` or ``<address>.balance``.
-#. Accessing any of the members of ``block``, ``tx``, ``msg`` (with the exception of ``msg.sig`` and ``msg.data``).
-#. Calling any function not marked ``pure``.
-#. Using inline assembly that contains certain opcodes.
+#. 读取状态变量。
+#. 访问 ``address(this).balance`` 或者 ``<address>.balance``。
+#. 访问 ``block``， ``tx``， ``msg`` 中任意成员 （除 ``msg.sig`` 和 ``msg.data`` 之外）。
+#. 调用任何未标记为 ``pure`` 的函数。
+#. 使用包含某些操作码的内联汇编。
 
 .. code-block:: solidity
 
@@ -249,104 +226,88 @@ In addition to the list of state modifying statements explained above, the follo
         }
     }
 
-Pure functions are able to use the ``revert()`` and ``require()`` functions to revert
-potential state changes when an :ref:`error occurs <assert-and-require>`.
+当一个 :ref:`错误发生 <assert-and-require>` 时，
+Pure 函数能够使用 ``revert()`` 和 ``require()`` 函数来恢复潜在的状态变化。
 
-Reverting a state change is not considered a "state modification", as only changes to the
-state made previously in code that did not have the ``view`` or ``pure`` restriction
-are reverted and that code has the option to catch the ``revert`` and not pass it on.
+恢复一个状态变化不被认为是 "状态修改"，
+因为只有之前在没有 ``view`` 或 ``pure`` 限制的代码中对状态的改变才会被恢复，
+并且该代码可以选择捕捉 ``revert`` 而不传递给它。
 
-This behaviour is also in line with the ``STATICCALL`` opcode.
+这种行为也与 ``STATICCALL`` 操作码一致。
 
-.. warning::
+.. 警告::
   It is not possible to prevent functions from reading the state at the level
   of the EVM, it is only possible to prevent them from writing to the state
   (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
 
-.. note::
-  Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
-  for ``pure`` functions.
-  This enabled state modifications in ``pure`` functions through the use of
-  invalid explicit type conversions.
-  By using  ``STATICCALL`` for ``pure`` functions, modifications to the
-  state are prevented on the level of the EVM.
+.. 注解::
+  在0.5.0版本之前，编译器没有为 ``pure`` 函数使用 ``STATICCALL`` 操作码。
+  这使得在 ``pure`` 函数中通过使用无效的显式类型转换进行状态修改。
+  通过对 ``pure`` 函数使用 ``STATICCALL``，在EVM层面防止了对状态的修改。
 
-.. note::
-  Prior to version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
-  It is a compile-time type check, which can be circumvented doing invalid explicit conversions
-  between contract types, because the compiler can verify that the type of the contract does
-  not do state-changing operations, but it cannot check that the contract that will be called
-  at runtime is actually of that type.
+.. 注解::
+  在0.4.17版本之前，编译器并没有强制要求 ``pure`` 不读取状态。
+  这是一个编译时的类型检查，可以规避在合约类型之间做无效的显式转换，
+  因为编译器可以验证合约的类型不做改变状态的操作，
+  但它不能检查将在运行时被调用的合约是否真的属于该类型。
 
 .. _special-functions:
 
-Special Functions
+特殊的函数
 =================
 
 .. index:: ! receive ether function, function;receive ! receive
 
 .. _receive-ether-function:
 
-Receive Ether Function
+接收以太的函数
 ----------------------
 
-A contract can have at most one ``receive`` function, declared using
-``receive() external payable { ... }``
-(without the ``function`` keyword).
-This function cannot have arguments, cannot return anything and must have
-``external`` visibility and ``payable`` state mutability.
-It can be virtual, can override and can have modifiers.
+一个合约最多可以有一个 ``receive`` 函数，
+使用 ``receive() external payable { ... }`` 来声明。（没有  ``function`` 关键字）。
+这个函数不能有参数，不能返回任何东西，必须具有 ``external`` 的可见性和 ``payable`` 的状态可变性。
+它可以是虚拟的，可以重载，也可以有修饰器。
 
-The receive function is executed on a
-call to the contract with empty calldata. This is the function that is executed
-on plain Ether transfers (e.g. via ``.send()`` or ``.transfer()``). If no such
-function exists, but a payable :ref:`fallback function <fallback-function>`
-exists, the fallback function will be called on a plain Ether transfer. If
-neither a receive Ether nor a payable fallback function is present, the
-contract cannot receive Ether through regular transactions and throws an
-exception.
+接收（receive）函数是在调用合约时执行的，并带有空的 calldata。
+这是在纯以太传输（例如通过 ``.send()`` 或 ``.transfer()`` ）时执行的函数。
+如果不存在这样的函数，但存在一个可接收（payable修饰）的 :ref:`fallback函数 <fallback-function>`，
+这个fallback函数将在纯以太传输时被调用。
+如果既没有直接接收以太（receive函数），也没有可接收以太的备用函数，
+合约就不能通过常规交易接收以太，并抛出一个异常。
 
-In the worst case, the ``receive`` function can only rely on 2300 gas being
-available (for example when ``send`` or ``transfer`` is used), leaving little
-room to perform other operations except basic logging. The following operations
-will consume more gas than the 2300 gas stipend:
+在最坏的情况下， ``receive`` 函数只有2300个气体可用（例如当使用 ``send`` 或 ``transfer`` 时），
+除了基本的记录外，几乎没有空间来执行其他操作。以下操作的消耗气体将超过2300气体的规定：
 
-- Writing to storage
-- Creating a contract
-- Calling an external function which consumes a large amount of gas
-- Sending Ether
+- 写入存储
+- 创建合约
+- 调用消耗大量 gas 的外部函数
+- 发送以太币
 
-.. warning::
-    Contracts that receive Ether directly (without a function call, i.e. using ``send`` or ``transfer``)
-    but do not define a receive Ether function or a payable fallback function
-    throw an exception, sending back the Ether (this was different
-    before Solidity v0.4.0). So if you want your contract to receive Ether,
-    you have to implement a receive Ether function (using payable fallback functions for receiving Ether is
-    not recommended, since it would not fail on interface confusions).
+.. 警告::
+    直接接收以太的合约（没有函数调用，即使用 ``send`` 或 ``transfer``），
+    但没有定义接收以太的函数或可支付的fallback函数，会抛出一个异常，
+    将以太送回（这在Solidity v0.4.0之前是不同的）。因此，如果您想让您的合约接收以太，
+    您必须实现一个接收以太的函数（不建议使用可支付的fallback函数来接收以太，因为它不会因为接口混乱而失败）。
 
 
-.. warning::
-    A contract without a receive Ether function can receive Ether as a
-    recipient of a *coinbase transaction* (aka *miner block reward*)
-    or as a destination of a ``selfdestruct``.
+.. 警告::
+    没有接收以太币功能的合约可以作为 *coinbase交易*（又称 *矿工区块奖励*）的接收者
+    或作为 ``selfdestruct`` 的目的地接收以太币。
 
-    A contract cannot react to such Ether transfers and thus also
-    cannot reject them. This is a design choice of the EVM and
-    Solidity cannot work around it.
+    合约不能对这样的以太币转移做出反应，因此也不能拒绝它们。
+    这是EVM的一个设计选择，Solidity无法绕过它。
 
-    It also means that ``address(this).balance`` can be higher
-    than the sum of some manual accounting implemented in a
-    contract (i.e. having a counter updated in the receive Ether function).
+    这也意味着 ``address(this).balance`` 可以高于合约中
+    实现的一些手工记帐的总和（即在接收以太函数中更新的累加器）。
 
-Below you can see an example of a Sink contract that uses function ``receive``.
+下面您可以看到一个使用 ``receive`` 函数的Sink合约的例子。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.9.0;
 
-    // This contract keeps all Ether sent to it with no way
-    // to get it back.
+    // 这个合约会保留所有发送给它的以太币，没有办法返还。
     contract Sink {
         event Received(address, uint);
         receive() external payable {
@@ -358,48 +319,40 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 
 .. _fallback-function:
 
-Fallback Function
+Fallback 函数
 -----------------
 
-A contract can have at most one ``fallback`` function, declared using either ``fallback () external [payable]``
-or ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
-(both without the ``function`` keyword).
-This function must have ``external`` visibility. A fallback function can be virtual, can override
-and can have modifiers.
+一个合约最多可以有一个 ``fallback`` 函数，使用 ``fallback () external [payable]``
+或 ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
+来声明（都没有 ``function`` 关键字）。
+这个函数必须具有 ``external`` 的函数可见性。
+一个fallback函数可以是虚拟的，可以重载，也可以有修饰器。
 
-The fallback function is executed on a call to the contract if none of the other
-functions match the given function signature, or if no data was supplied at
-all and there is no :ref:`receive Ether function <receive-ether-function>`.
-The fallback function always receives data, but in order to also receive Ether
-it must be marked ``payable``.
+如果其他函数都不符合给定的函数签名，或者根本没有提供数据，
+也没有 :ref:`接收以太的函数 <receive-ether-function>`，那么fallback函数将在调用合约时执行。
+fallback函数总是接收数据，但为了同时接收以太，它必须被标记为 ``payable``。
 
-If the version with parameters is used, ``_input`` will contain the full data sent to the contract
-(equal to ``msg.data``) and can return data in ``_output``. The returned data will not be
-ABI-encoded. Instead it will be returned without modifications (not even padding).
+如果使用带参数的版本， ``_input``  将包含发送给合约的全部数据（等于 ``msg.data``），
+并可以在 ``_output`` 中返回数据。返回的数据将不会被ABI编码。
+相反，它将在没有修改的情况下返回（甚至没有填充）。
 
-In the worst case, if a payable fallback function is also used in
-place of a receive function, it can only rely on 2300 gas being
-available (see :ref:`receive Ether function <receive-ether-function>`
-for a brief description of the implications of this).
+在最坏的情况下，如果一个可接收以太的fallback函数也被用来代替接收功能，
+那么它只有2300气体是可用的
+（参见 :ref:`接收以太函数 <receive ether-function>` 对这一含义的简要描述）。
 
-Like any function, the fallback function can execute complex
-operations as long as there is enough gas passed on to it.
+像任何函数一样，只要有足够的气体传递给它，fallback函数就可以执行复杂的操作。
 
-.. warning::
-    A ``payable`` fallback function is also executed for
-    plain Ether transfers, if no :ref:`receive Ether function <receive-ether-function>`
-    is present. It is recommended to always define a receive Ether
-    function as well, if you define a payable fallback function
-    to distinguish Ether transfers from interface confusions.
+.. 警告::
+    如果没有 :ref:`接收以太函数 <receive ether-function>` 的存在，
+    一个标记为 ``payable`` 的fallback函数也会在普通的以太传输时执行。
+    如果您已经定义了一个可接收以太的fallback函数，
+    我们仍建议您也定义一个receive函数接收以太，以区分以太传输和接口混淆的情况。
 
-.. note::
-    If you want to decode the input data, you can check the first four bytes
-    for the function selector and then
-    you can use ``abi.decode`` together with the array slice syntax to
-    decode ABI-encoded data:
+.. 注解::
+    如果您想对输入数据进行解码，您可以检查前四个字节的函数选择器，
+    然后您可以使用 ``abi.decode`` 与数组切片语法一起对ABI编码的数据进行解码。
     ``(c, d) = abi.decode(_input[4:], (uint256, uint256));``
-    Note that this should only be used as a last resort and
-    proper functions should be used instead.
+    注意，这只能作为最后的手段，应该使用适当的函数来代替。
 
 
 .. code-block:: solidity
@@ -409,26 +362,22 @@ operations as long as there is enough gas passed on to it.
 
     contract Test {
         uint x;
-        // This function is called for all messages sent to
-        // this contract (there is no other function).
-        // Sending Ether to this contract will cause an exception,
-        // because the fallback function does not have the `payable`
-        // modifier.
+        // 所有发送到此合约的消息都会调用此函数（没有其他函数）。
+        // 向该合约发送以太币将引起异常，
+        // 因为fallback函数没有 `payable` 修饰符。
         fallback() external { x = 1; }
     }
 
     contract TestPayable {
         uint x;
         uint y;
-        // This function is called for all messages sent to
-        // this contract, except plain Ether transfers
-        // (there is no other function except the receive function).
-        // Any call with non-empty calldata to this contract will execute
-        // the fallback function (even if Ether is sent along with the call).
+        // 所有发送到此合约的消息都会调用这个函数，
+        // 除了普通的以太传输（除了receive函数，没有其他函数）。
+        // 任何对该合约的非空的调用都将执行fallback函数（即使以太与调用一起被发送）。
         fallback() external payable { x = 1; y = msg.value; }
 
-        // This function is called for plain Ether transfers, i.e.
-        // for every call with empty calldata.
+        // 这个函数是为纯以太传输而调用的，
+        // 即为每一个带有空calldata的调用。
         receive() external payable { x = 2; y = msg.value; }
     }
 
@@ -436,32 +385,31 @@ operations as long as there is enough gas passed on to it.
         function callTest(Test test) public returns (bool) {
             (bool success,) = address(test).call(abi.encodeWithSignature("nonExistingFunction()"));
             require(success);
-            // results in test.x becoming == 1.
+            // 结果是 test.x 等于 1。
 
-            // address(test) will not allow to call ``send`` directly, since ``test`` has no payable
-            // fallback function.
-            // It has to be converted to the ``address payable`` type to even allow calling ``send`` on it.
+            // address(test)将不允许直接调用 ``send``，
+            // 因为 ``test`` 没有可接收以太的fallback函数。
+            // 它必须被转换为 ``address payable`` 类型，才允许调用 ``send``。
             address payable testPayable = payable(address(test));
 
-            // If someone sends Ether to that contract,
-            // the transfer will fail, i.e. this returns false here.
+            // 如果有人向该合约发送以太币，转账将失败，即这里返回false。
             return testPayable.send(2 ether);
         }
 
         function callTestPayable(TestPayable test) public returns (bool) {
             (bool success,) = address(test).call(abi.encodeWithSignature("nonExistingFunction()"));
             require(success);
-            // results in test.x becoming == 1 and test.y becoming 0.
+            // 结果是 test.x 等于 1，test.y 等于 0。
             (success,) = address(test).call{value: 1}(abi.encodeWithSignature("nonExistingFunction()"));
             require(success);
-            // results in test.x becoming == 1 and test.y becoming 1.
+            // 结果是 test.x 等于 1，test.y 等于 1。
 
-            // If someone sends Ether to that contract, the receive function in TestPayable will be called.
-            // Since that function writes to storage, it takes more gas than is available with a
-            // simple ``send`` or ``transfer``. Because of that, we have to use a low-level call.
+            // 如果有人向该合约发送以太币，TestPayable的receive函数将被调用。
+            // 由于该函数会写入存储空间，它需要的气体比简单的 ``send`` 或 ``transfer`` 要多。
+            // 由于这个原因，我们必须要使用一个低级别的调用。
             (success,) = address(test).call{value: 2 ether}("");
             require(success);
-            // results in test.x becoming == 2 and test.y becoming 2 ether.
+            // 结果是 test.x 等于 1，test.y 等于 2 个以太。
 
             return true;
         }
@@ -471,14 +419,12 @@ operations as long as there is enough gas passed on to it.
 
 .. _overload-function:
 
-Function Overloading
+函数重载
 ====================
 
-A contract can have multiple functions of the same name but with different parameter
-types.
-This process is called "overloading" and also applies to inherited functions.
-The following example shows overloading of the function
-``f`` in the scope of contract ``A``.
+一个合约可以有多个同名的，但参数类型不同的函数。
+这个过程被称为 "重载"，也适用于继承的函数。
+下面的例子显示了在合约 ``A`` 范围内对函数 ``f`` 的重载。
 
 .. code-block:: solidity
 
@@ -496,15 +442,14 @@ The following example shows overloading of the function
         }
     }
 
-Overloaded functions are also present in the external interface. It is an error if two
-externally visible functions differ by their Solidity types but not by their external types.
+重载函数也存在于外部接口中。如果两个外部可见函数仅区别于 Solidity 内的类型而不是它们的外部类型则会导致错误。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
 
-    // This will not compile
+    // 这段代码不会编译
     contract A {
         function f(B _in) public pure returns (B out) {
             out = _in;
@@ -519,19 +464,17 @@ externally visible functions differ by their Solidity types but not by their ext
     }
 
 
-Both ``f`` function overloads above end up accepting the address type for the ABI although
-they are considered different inside Solidity.
+以上两个 ``f`` 函数重载最终都接受ABI的地址类型，尽管它们在Solidity中被认为是不同的。
 
-Overload resolution and Argument matching
+重载解析和参数匹配
 -----------------------------------------
 
-Overloaded functions are selected by matching the function declarations in the current scope
-to the arguments supplied in the function call. Functions are selected as overload candidates
-if all arguments can be implicitly converted to the expected types. If there is not exactly one
-candidate, resolution fails.
+通过将当前范围内的函数声明与函数调用中提供的参数相匹配，可以选择重载函数。
+如果所有参数都可以隐式地转换为预期类型，则选择函数作为重载候选项。
+如果一个候选都没有，解析失败。
 
-.. note::
-    Return parameters are not taken into account for overload resolution.
+.. 注解::
+    返回参数不作为重载解析的依据。
 
 .. code-block:: solidity
 
@@ -548,6 +491,6 @@ candidate, resolution fails.
         }
     }
 
-Calling ``f(50)`` would create a type error since ``50`` can be implicitly converted both to ``uint8``
-and ``uint256`` types. On another hand ``f(256)`` would resolve to ``f(uint256)`` overload as ``256`` cannot be implicitly
-converted to ``uint8``.
+调用 ``f(50)`` 会导致类型错误，因为 ``50`` 既可以被隐式转换为 ``uint8``
+也可以被隐式转换为 ``uint256``。 另一方面，调用 ``f(256)`` 则会解析为 ``f(uint256)`` 重载，
+因为 ``256`` 不能隐式转换为 ``uint8``。
