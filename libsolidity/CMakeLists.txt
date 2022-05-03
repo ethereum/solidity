@@ -163,6 +163,8 @@ set(sources
 	lsp/HandlerBase.h
 	lsp/LanguageServer.cpp
 	lsp/LanguageServer.h
+	lsp/SemanticTokensBuilder.cpp
+	lsp/SemanticTokensBuilder.h
 	lsp/Transport.cpp
 	lsp/Transport.h
 	lsp/Utils.cpp
