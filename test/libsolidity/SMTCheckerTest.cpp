@@ -69,7 +69,17 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT counterexample choice."));
 
-	auto const& ignoreInv = m_reader.stringSetting("SMTIgnoreInv", "no");
+	static auto removeInv = [](vector<SyntaxTestError>&& errors) {
+		vector<SyntaxTestError> filtered;
+		for (auto&& e: errors)
+			if (e.errorId != 1180_error)
+				filtered.emplace_back(e);
+		return filtered;
+	};
+	if (m_modelCheckerSettings.invariants.invariants.empty())
+		m_expectations = removeInv(move(m_expectations));
+
+	auto const& ignoreInv = m_reader.stringSetting("SMTIgnoreInv", "yes");
 	if (ignoreInv == "no")
 		m_modelCheckerSettings.invariants = ModelCheckerInvariants::All();
 	else if (ignoreInv == "yes")
