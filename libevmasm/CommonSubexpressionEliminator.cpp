@@ -26,6 +26,7 @@
 #include <libsolutil/Keccak256.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/AssemblyItem.h>
+#include <libsolutil/StackTooDeepString.h>
 
 #include <range/v3/view/reverse.hpp>
 
@@ -163,7 +164,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 				// Invalid sequenced operation.
 				// @todo quick fix for now. Proper fix needs to choose representative with higher
 				// sequence number during dependency analysis.
-				assertThrow(seqNr >= _initialSequenceNumber, StackTooDeepException, "");
+				assertThrow(seqNr >= _initialSequenceNumber, StackTooDeepException, util::stackTooDeepString);
 				sequencedExpressions.insert(make_pair(seqNr, id));
 			}
 
@@ -471,7 +472,7 @@ void CSECodeGenerator::appendDup(int _fromPosition, SourceLocation const& _locat
 {
 	assertThrow(_fromPosition != c_invalidPosition, OptimizerException, "");
 	int instructionNum = 1 + m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
+	assertThrow(instructionNum <= 16, StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(dupInstruction(static_cast<unsigned>(instructionNum)), _location));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
@@ -484,7 +485,7 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 	if (_fromPosition == m_stackHeight)
 		return;
 	int instructionNum = m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
+	assertThrow(instructionNum <= 16, StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(swapInstruction(static_cast<unsigned>(instructionNum)), _location));
 
