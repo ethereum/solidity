@@ -4,9 +4,6 @@ contract test {
 	uint x;
     function f(address _a) public {
 		_a.call("");
-		assert(x < 10);
+		assert(x == 0);
     }
-	function g() public view {
-		assert(x < 10);
-	}
 }

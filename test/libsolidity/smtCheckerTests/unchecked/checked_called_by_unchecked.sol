@@ -9,5 +9,6 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 4984: (96-101): CHC: Overflow (resulting value larger than 65535) happens here.\nCounterexample:\n\na = 65535\nb = 1\n = 0\n\nTransaction trace:\nC.constructor()\nC.add(65535, 1)
+// Warning 4984: (96-101): CHC: Overflow (resulting value larger than 65535) happens here.
