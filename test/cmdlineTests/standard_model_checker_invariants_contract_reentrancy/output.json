@@ -4,22 +4,28 @@
 7 | \t\t\t\t\t\t_a.call(\"\");
   | \t\t\t\t\t\t^^^^^^^^^^^
 
-","message":"Return value of low-level calls not used.","severity":"warning","sourceLocation":{"end":143,"file":"A","start":132},"type":"Warning"},{"component":"general","errorCode":"1180","formattedMessage":"Info: Contract invariant(s) for A:test:
-(x <= 0)
-Reentrancy property(ies) for A:test:
-((!(x <= 0) || !(<errorCode> >= 3)) && (!(x <= 0) || (x' <= 0)))
-((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0)))
-<errorCode> = 0 -> no errors
-<errorCode> = 1 -> Assertion failed at assert(x < 10)
-<errorCode> = 3 -> Assertion failed at assert(x < 10)
+","message":"Return value of low-level calls not used.","severity":"warning","sourceLocation":{"end":143,"file":"A","start":132},"type":"Warning"},{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation happens here.
+Counterexample:
+x = 0
+_a = 0x0
 
+Transaction trace:
+test.constructor()
+State: x = 0
+test.f(0x0)
+    _a.call(\"\") -- untrusted external call
+ --> A:8:7:
+  |
+8 | \t\t\t\t\t\tassert(x == 10);
+  | \t\t\t\t\t\t^^^^^^^^^^^^^^^
 
-","message":"Contract invariant(s) for A:test:
-(x <= 0)
-Reentrancy property(ies) for A:test:
-((!(x <= 0) || !(<errorCode> >= 3)) && (!(x <= 0) || (x' <= 0)))
-((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0)))
-<errorCode> = 0 -> no errors
-<errorCode> = 1 -> Assertion failed at assert(x < 10)
-<errorCode> = 3 -> Assertion failed at assert(x < 10)
-","severity":"info","type":"Info"}],"sources":{"A":{"id":0}}}
+","message":"CHC: Assertion violation happens here.
+Counterexample:
+x = 0
+_a = 0x0
+
+Transaction trace:
+test.constructor()
+State: x = 0
+test.f(0x0)
+    _a.call(\"\") -- untrusted external call","severity":"warning","sourceLocation":{"end":166,"file":"A","start":151},"type":"Warning"}],"sources":{"A":{"id":0}}}

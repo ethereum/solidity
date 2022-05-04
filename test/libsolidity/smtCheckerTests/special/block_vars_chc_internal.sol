@@ -32,4 +32,4 @@ contract C {
 // ====
 // SMTEngine: chc
 // ----
-// Warning 6328: (770-799): CHC: Assertion violation happens here.\nCounterexample:\ncoin = 0x0, dif = 0, gas = 0, number = 0, timestamp = 0\n\nTransaction trace:\nC.constructor()\nState: coin = 0x0, dif = 0, gas = 0, number = 0, timestamp = 0\nC.f(){ block.coinbase: 0x0, block.difficulty: 0, block.gaslimit: 0, block.number: 0, block.timestamp: 0 }\n    C.g() -- internal call
+// Warning 6328: (770-799): CHC: Assertion violation happens here.\nCounterexample:\ncoin = 0x1e28, dif = 0, gas = 0, number = 0, timestamp = 0\n\nTransaction trace:\nC.constructor()\nState: coin = 0x0, dif = 0, gas = 0, number = 0, timestamp = 0\nC.f(){ block.coinbase: 0x1e28, block.difficulty: 0, block.gaslimit: 0, block.number: 0, block.timestamp: 0 }\n    C.g() -- internal call

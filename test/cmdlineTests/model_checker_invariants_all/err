@@ -5,10 +5,8 @@ Warning: Return value of low-level calls not used.
   | 		^^^^^^^^^^^
 
 Info: Contract invariant(s) for model_checker_invariants_all/input.sol:test:
-(x <= 0)
+((x <= 0) || true)
 Reentrancy property(ies) for model_checker_invariants_all/input.sol:test:
-((!(x <= 0) || !(<errorCode> >= 3)) && (!(x <= 0) || (x' <= 0)))
-((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0)))
+(((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0))) || true)
 <errorCode> = 0 -> no errors
-<errorCode> = 1 -> Assertion failed at assert(x < 10)
-<errorCode> = 3 -> Assertion failed at assert(x < 10)
+<errorCode> = 1 -> Assertion failed at assert(x == 0)
