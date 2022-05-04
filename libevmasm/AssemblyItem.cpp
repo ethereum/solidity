@@ -116,9 +116,25 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(data);
 }
 
-void AssemblyItem::setJumpTableTags(std::vector<size_t> tags)
+pair<bool, size_t> AssemblyItem::getJumpTableBaseTag() const
 {
-    m_jumpTableTags = tags;
+	assertThrow(m_type == JumpTablePushTag, util::Exception, "");
+	u256 combined = u256(data());
+	bool isRelative = static_cast<bool>(combined >> 64);
+	size_t tag = 0;
+	if (isRelative)
+		tag = static_cast<size_t>(combined & 0xffffffffffffffffULL);
+	return make_pair(isRelative, tag);
+}
+
+void AssemblyItem::setJumpTableTags(std::vector<size_t> tags, bool isRelative, size_t baseTag)
+{
+	assertThrow(m_type == JumpTablePushTag, util::Exception, "");
+	m_jumpTableTags = tags;
+	u256 data = baseTag;
+	if (isRelative)
+		data |= u256(1) << 64;
+	setData(data);
 }
 
 size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) const
@@ -138,7 +154,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 	case PushSub:
 		return 1 + _addressLength;
 	case JumpTablePushTag:
-	    return 1 + (m_jumpTableTags.size() > 0 ? m_jumpTableTags.size() * 2 : 1);
+		return 1 + (m_jumpTableTags.size() > 0 ? m_jumpTableTags.size() * 2 : 1);
 	case PushLibraryAddress:
 	case PushDeployTimeAddress:
 		return 1 + 20;
@@ -279,11 +295,11 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	}
 	case JumpTablePushTag:
 	{
-	    string tag_list = "";
-	    for (size_t tag : m_jumpTableTags)
-	        tag_list += "_" + to_string(tag);
-	    text = string("jump_table") + tag_list;
-	    break;
+		string tag_list = "";
+		for (size_t tag : m_jumpTableTags)
+			tag_list += "_" + to_string(tag);
+		text = string("jump_table") + tag_list;
+		break;
 	}
 	case Tag:
 		assertThrow(data() < 0x10000, AssemblyException, "Declaration of sub-assembly tag.");
@@ -363,11 +379,11 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	}
 	case JumpTablePushTag:
 	{
-	    string tag_list = "";
-	    for (size_t tag : _item.jumpTableTags())
-	        tag_list += "_" + to_string(tag);
-	    _out << " JumpTablePushTag " << tag_list;
-	    break;
+		string tag_list = "";
+		for (size_t tag : _item.jumpTableTags())
+			tag_list += "_" + to_string(tag);
+		_out << " JumpTablePushTag " << tag_list;
+		break;
 	}
 	case Tag:
 		_out << " Tag " << _item.data();

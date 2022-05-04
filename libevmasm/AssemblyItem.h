@@ -103,8 +103,16 @@ public:
 	/// Sets sub-assembly part and tag for a push tag.
 	void setPushTagSubIdAndTag(size_t _subId, size_t _tag);
 	/// Sets jump table tags
+	/// @param tags vector of tags to jump to
+	/// @param isRelative whether the jump table is relative to a base tag (e.g., the default
+	///     case in a switch statement)
+	/// @param baseTag tag from which the other tags are offset in the pushed value
+	///     For instance, if the base tag is at 0x10 and the first case's jump address
+	///     is 0x15, then 0x05 is stored for that jump tag.
+	void setJumpTableTags(std::vector<size_t> tags, bool isRelative = false, size_t baseTag = 0);
 	std::vector<size_t> jumpTableTags() const { return m_jumpTableTags; }
-	void setJumpTableTags(std::vector<size_t> tags);
+	/// Gets isRelative and the base tag from a JumpTablePushTag
+	std::pair<bool, size_t> getJumpTableBaseTag() const;
 
 	AssemblyItemType type() const { return m_type; }
 	u256 const& data() const { assertThrow(m_type != Operation, util::Exception, ""); return *m_data; }

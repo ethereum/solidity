@@ -74,7 +74,7 @@ public:
 	/// Append a label reference.
 	virtual void appendLabelReference(LabelID _labelId) = 0;
 	/// Append a jump table push
-	virtual void appendJumpTablePush(std::vector<LabelID> labels) = 0;
+	virtual void appendJumpTablePush(std::vector<LabelID> labels, bool isRelative, LabelID defaultCase) = 0;
 	/// Generate a new unique label.
 	virtual LabelID newLabelId() = 0;
 	/// Returns a label identified by the given name. Creates it if it does not yet exist.

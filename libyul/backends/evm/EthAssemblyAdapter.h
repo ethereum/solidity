@@ -47,7 +47,7 @@ public:
 	void appendConstant(u256 const& _constant) override;
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;
-	void appendJumpTablePush(std::vector<LabelID> labels) override;
+	void appendJumpTablePush(std::vector<LabelID> labels, bool isRelative, LabelID defaultLabel) override;
 	size_t newLabelId() override;
 	size_t namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) override;
 	void appendLinkerSymbol(std::string const& _linkerSymbol) override;

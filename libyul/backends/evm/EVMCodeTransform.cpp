@@ -346,7 +346,7 @@ bool CodeTransform::isSwitchEnumLike(Switch const& _switch)
 	return isEnumLike;
 }
 
-void CodeTransform::handleEnumLikeSwitch(Switch const& _switch) {
+void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToDefaultCase) {
 	// Map case numbers to <case, block>
 	map<int, pair<Case const*, AbstractAssembly::LabelID>> caseMap;
 	int maxCase = -1;
@@ -381,21 +381,30 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch) {
 	// Mask
 	m_assembly.appendConstant(u256(0xffff));
 	// Jump offsets
-	m_assembly.appendJumpTablePush(labelTags);
+	m_assembly.appendJumpTablePush(labelTags, relativeToDefaultCase,
+	    relativeToDefaultCase ? defaultCaseLabel : 0);
 	// Get switch value
 	m_assembly.appendInstruction(evmasm::dupInstruction(3));
-	// Calculate shift amount
+	// Apply two-byte mask
 	m_assembly.appendConstant(u256(0x04));
 	m_assembly.appendInstruction(evmasm::Instruction::SHL);
-	// Apply mask
 	m_assembly.appendInstruction(evmasm::Instruction::SHR);
 	m_assembly.appendInstruction(evmasm::Instruction::AND);
-
-	// Using push technique, version 1 (JUMPI still included)
-	// Jump to default case
-	m_assembly.appendInstruction(evmasm::dupInstruction(1));
-	m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
-	m_assembly.appendJumpToIf(defaultCaseLabel);
+	
+	if (relativeToDefaultCase)
+	{
+		// Make a jump table relative to the default case. The default case address
+		// must be less than the jump destinations for the cases.
+		m_assembly.appendLabelReference(defaultCaseLabel);
+		m_assembly.appendInstruction(evmasm::Instruction::ADD);
+	}
+	else
+	{
+		// Make no assumption about default case
+		m_assembly.appendInstruction(evmasm::dupInstruction(1));
+		m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
+		m_assembly.appendJumpToIf(defaultCaseLabel);
+	}
 	m_assembly.appendJump(1, AbstractAssembly::JumpType::Ordinary);
 
 	AbstractAssembly::LabelID end = m_assembly.newLabelId();
@@ -439,7 +448,8 @@ void CodeTransform::operator()(Switch const& _switch)
 	map<Case const*, AbstractAssembly::LabelID> caseBodies;
 
 	if (isSwitchEnumLike(_switch)) {
-		handleEnumLikeSwitch(_switch);
+		// We assume the default case comes before the other cases
+		handleEnumLikeSwitch(_switch, true);
 		m_assembly.appendInstruction(evmasm::Instruction::POP);
 		return;
 	}
