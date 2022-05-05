@@ -133,7 +133,7 @@ of votes.
             // modifies `voters[msg.sender].voted`
             Voter storage delegate_ = voters[to];
 
-            // Voters cannot delegate to wallets that cannot vote.
+            // Voters cannot delegate to accounts that cannot vote.
             require(delegate_.weight >= 1);
             sender.voted = true;
             sender.delegate = to;
