@@ -753,12 +753,17 @@ LinkerObject const& Assembly::assemble() const
 		size_t pos = location.second - 1;
 		for (unsigned i = 0; i < tags.size(); i++)
 		{
-			size_t tagLoc = m_tagPositionsInBytecode.at(tags[i]);
-			if (isRelative)
+			size_t tagLoc = 0;
+			// A tag of 0 jumps to the default case (non-existent case)
+			if (tags[i] > 0)
 			{
-				assertThrow(baseTagAddress <= tagLoc, AssemblyException,
-					"Case jump address comes before base address in jump table");
-				tagLoc -= baseTagAddress;
+				tagLoc = m_tagPositionsInBytecode.at(tags[i]);
+				if (isRelative)
+				{
+					assertThrow(baseTagAddress <= tagLoc, AssemblyException,
+						"Case jump address comes before base address in jump table");
+					tagLoc -= baseTagAddress;
+				}
 			}
 			assertThrow(tagLoc < (size_t) (0x1 << (bytesPerJumpTableTag * 8)), AssemblyException,
 				"Destination address too large to fit in jump table");

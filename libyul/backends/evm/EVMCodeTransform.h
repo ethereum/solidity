@@ -191,6 +191,8 @@ private:
 		return m_functionExitLabel.has_value();
 	}
 
+	/// Returns the range of case values a switch statement has
+	std::optional<std::pair<u256, u256>> getSwitchRange(Switch const& _switch);
 	/// Returns if a switch statement operates on an enum-like set of values 0,1,...,n
 	bool isSwitchEnumLike(Switch const& _switch);
 	/// Creates a switch for enums using a jump table

@@ -311,71 +311,100 @@ void CodeTransform::operator()(If const& _if)
 	m_assembly.appendLabel(end);
 }
 
-bool CodeTransform::isSwitchEnumLike(Switch const& _switch)
+optional<pair<u256, u256>> CodeTransform::getSwitchRange(Switch const& _switch)
 {
-	bool isEnumLike = true;
-	unsigned int numNonDefaultCases = 0;
-	std::set<u256> caseValues;
+	optional<u256> minCase;
+	optional<u256> maxCase;
 	for (Case const& c: _switch.cases)
 	{
 		if (c.value)
 		{
-			caseValues.insert(valueOfLiteral(*c.value));
-			numNonDefaultCases++;
+			u256 literalVal = valueOfLiteral(*c.value);
+			if (!minCase.has_value() || !maxCase.has_value())
+			{
+				minCase = literalVal;
+				maxCase = literalVal;
+			}
+			if (literalVal < minCase)
+				minCase = literalVal;
+			if (literalVal > maxCase)
+				maxCase = literalVal;
 		}
 	}
+	if (minCase.has_value() && maxCase.has_value())
+		return make_optional(make_pair(minCase.value(), maxCase.value()));
+	return optional<pair<u256, u256>>();
+}
+
+bool CodeTransform::isSwitchEnumLike(Switch const& _switch)
+{
+	optional<pair<u256, u256>> switchRange = getSwitchRange(_switch);
+	// Accept any switch statement whose cases have a range <= 16
+	// TODO: Support enum switches with more than 16 possibilities
+	// using codecopy
+	if (switchRange.has_value() && (switchRange.value().second - switchRange.value().first) >= 16)
+		return false;
 	
-	for (unsigned int i = 0; i < numNonDefaultCases; ++i)
+	unsigned int numNonDefaultCases = 0;
+	for (Case const& c: _switch.cases)
 	{
-		if (caseValues.count(u256(i)) == 0)
-		{
-			isEnumLike = false;
-			break;
-		}
+		if (c.value)
+			++numNonDefaultCases;
 	}
 	
-	// Don't use the jump table if there are fewer than 3 cases
+	// TODO: Replace this check with a gas cost comparison somewhere else
 	if (numNonDefaultCases < 3)
 		return false;
 	
-	// TODO: Support enum switches with more than 16 possibilities
-	// using codecopy
-	if (numNonDefaultCases > 16)
-		return false;
-	
-	return isEnumLike;
+	return true;
 }
 
 void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToDefaultCase) {
 	// Map case numbers to <case, block>
-	map<int, pair<Case const*, AbstractAssembly::LabelID>> caseMap;
-	int maxCase = -1;
+	map<u256, pair<Case const*, AbstractAssembly::LabelID>> caseMap;
+	yulAssert(isSwitchEnumLike(_switch), "Switch not enum-like");
+	
+	optional<pair<u256, u256>> switchRange = getSwitchRange(_switch);
+	optional<Case const*> defaultCase;
 	for (Case const& c: _switch.cases)
 	{
-		// Default case is assigned -1
-		int virtualLiteralVal = -1;
 		if (c.value)
 		{
-			virtualLiteralVal = (int) valueOfLiteral(*c.value);
+			u256 virtualLiteralVal = valueOfLiteral(*c.value);
+			caseMap[virtualLiteralVal] = make_pair(&c, m_assembly.newLabelId());
 		}
-
-		caseMap[virtualLiteralVal] = make_pair(&c, m_assembly.newLabelId());
-		if (virtualLiteralVal > maxCase)
-			maxCase = virtualLiteralVal;
+		else
+			defaultCase = &c;
 	}
 
 	// Make label for default case
 	AbstractAssembly::LabelID defaultCaseLabel = m_assembly.newLabelId();
 	
 	// Find label tags
+	std::vector<u256> cases;
 	std::vector<AbstractAssembly::LabelID> labelTags;
-	for (int i = 0; i <= maxCase; ++i)
+	bool needSubtract = false;
+	if (switchRange.has_value())
 	{
-		auto currentCase = caseMap.find(i);
-		yulAssert(currentCase != caseMap.end(), "Case " + std::to_string(i)
-			+ " not found in enum-like switch");
-		labelTags.push_back(currentCase->second.second);
+		u256 minCaseVal, maxCaseVal;
+		tie(minCaseVal, maxCaseVal) = switchRange.value();
+		if (maxCaseVal < 16)
+			// Prefer starting from 0 where possible
+			minCaseVal = u256(0);
+		else
+			needSubtract = true;
+		for (u256 i = minCaseVal; i <= maxCaseVal; ++i)
+		{
+			cases.push_back(i);
+			auto currentCase = caseMap.find(i);
+			if (currentCase != caseMap.end())
+				labelTags.push_back(currentCase->second.second);
+			else
+				// Case does not exist, so jump to the default case (tag 0 is reserved)
+				labelTags.push_back(0);
+		}
 	}
+	yulAssert(labelTags.size() <= 16, "Too many cases");
 
 	m_assembly.setSourceLocation(originLocationOf(_switch));
 	// Mask
@@ -383,8 +412,16 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 	// Jump offsets
 	m_assembly.appendJumpTablePush(labelTags, relativeToDefaultCase,
 	    relativeToDefaultCase ? defaultCaseLabel : 0);
-	// Get switch value
-	m_assembly.appendInstruction(evmasm::dupInstruction(3));
+	// Subtract from minimum case value, if necessary, to get the value in range
+	if (needSubtract)
+	{
+		m_assembly.appendConstant(switchRange.value().first);
+		m_assembly.appendInstruction(evmasm::dupInstruction(4));
+		m_assembly.appendInstruction(evmasm::Instruction::SUB);
+	}
+	else
+		// Get switch value
+		m_assembly.appendInstruction(evmasm::dupInstruction(3));
 	// Apply two-byte mask
 	m_assembly.appendConstant(u256(0x04));
 	m_assembly.appendInstruction(evmasm::Instruction::SHL);
@@ -413,29 +450,29 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 	m_assembly.appendLabel(defaultCaseLabel);
 	// Pop off 0x00
 	m_assembly.appendInstruction(evmasm::Instruction::POP);
-	auto defaultCase = caseMap.find(-1);
-	if (defaultCase != caseMap.end())
+	if (defaultCase.has_value())
 	{
-		Case const* c = defaultCase->second.first;
+		Case const* c = defaultCase.value();
 		m_assembly.setSourceLocation(originLocationOf(*c));
 		(*this)(c->body);
 	}
 	m_assembly.appendJumpTo(end);
 
 	// Add other cases
-	for (int i = 0; i <= maxCase; ++i)
+	for (unsigned i = 0; i < cases.size(); ++i)
 	{
-		auto currentCase = caseMap.find(i);
-		yulAssert(currentCase != caseMap.end(), "Case " + std::to_string(i)
-			+ " not found in enum-like switch");
-		m_assembly.appendLabel(currentCase->second.second);
-		Case const* c = currentCase->second.first;
-		m_assembly.setSourceLocation(originLocationOf(*c));
-		(*this)(c->body);
+		u256 caseVal = cases[i];
+		auto currentCase = caseMap.find(caseVal);
+		if (currentCase != caseMap.end()) {
+			m_assembly.appendLabel(currentCase->second.second);
+			Case const* c = currentCase->second.first;
+			m_assembly.setSourceLocation(originLocationOf(*c));
+			(*this)(c->body);
 
-		// Avoid useless jump in the last case
-		if (i != maxCase)
-			m_assembly.appendJumpTo(end);
+			// Avoid useless jump in the last case
+			if (i != labelTags.size() - 1)
+				m_assembly.appendJumpTo(end);
+		}
 	}
 
 	m_assembly.appendLabel(end);
