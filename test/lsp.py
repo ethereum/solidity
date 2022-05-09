@@ -1450,7 +1450,7 @@ class SolidityLSPTestSuite: # {{{
         self.setup_lsp(solc)
 
         sub_dirs = filter(
-            lambda filepath: filepath.is_dir(),
+            lambda filepath: filepath.is_dir() and filepath.name != 'node_modules',
             os.scandir(self.project_root_dir)
         )
 

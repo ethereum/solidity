@@ -18,6 +18,7 @@
 #pragma once
 
 #include <libsolidity/interface/FileReader.h>
+#include <libsolutil/Result.h>
 
 #include <string>
 #include <map>
@@ -28,7 +29,10 @@ namespace solidity::lsp
 class FileRepository
 {
 public:
-	explicit FileRepository(boost::filesystem::path _basePath);
+	FileRepository(boost::filesystem::path _basePath, std::vector<boost::filesystem::path> _includePaths);
+
+	std::vector<boost::filesystem::path> const& includePaths() const noexcept { return m_includePaths; }
+	void setIncludePaths(std::vector<boost::filesystem::path> _paths);
 
 	boost::filesystem::path const& basePath() const { return m_basePath; }
 
@@ -50,6 +54,8 @@ public:
 	{
 		return [this](std::string const& _kind, std::string const& _path) { return readFile(_kind, _path); };
 	}
+
+	util::Result<boost::filesystem::path> tryResolvePath(std::string const& _sourceUnitName) const;
 
 private:
 	/// Base path without URI scheme.
