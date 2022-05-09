@@ -66,11 +66,13 @@ function sync_branch
     echo "${fork_name}: syncing branch ${branch}..."
     pushd "$fork_name" > /dev/null
     git fetch upstream "$branch" --quiet
-    git checkout "$branch" --quiet
+    git checkout -B "$branch" --track "upstream/$branch" --quiet
     git merge "upstream/${branch}" --ff-only --quiet
     git push origin "$branch"
     popd > /dev/null
 }
+
+mkdir -p "$target_dir"
 
 echo "Entering ${target_dir}"
 cd "$target_dir"
@@ -83,13 +85,13 @@ clone_repo ensdomains        ens-contracts
 clone_repo euler-xyz         euler-contracts
 clone_repo gnosis            gp-v2-contracts
 clone_repo gnosis            mock-contract
-clone_repo gnosis            safe-contracts
 clone_repo gnosis            util-contracts
 clone_repo JoinColony        colonyNetwork
 clone_repo mycelium-ethereum perpetual-pools-contracts
 clone_repo OpenZeppelin      openzeppelin-contracts
 clone_repo paulrberg         prb-math
 clone_repo pooltogether      v4-core                   pooltogether-v4-core
+clone_repo safe-global       safe-contracts
 clone_repo smartcontractkit  chainlink
 clone_repo sushiswap         trident
 clone_repo Uniswap           v2-core                   uniswap-v2-core
@@ -105,13 +107,13 @@ sync_branch ens-contracts             master
 sync_branch euler-contracts           master
 sync_branch gp-v2-contracts           main
 sync_branch mock-contract             master
-sync_branch safe-contracts            main
 sync_branch util-contracts            main
 sync_branch colonyNetwork             develop
 sync_branch perpetual-pools-contracts develop
 sync_branch openzeppelin-contracts    master
 sync_branch prb-math                  main
 sync_branch pooltogether-v4-core      master
+sync_branch safe-contracts            main
 sync_branch chainlink                 develop
 sync_branch trident                   master
 sync_branch uniswap-v2-core           master
