@@ -76,6 +76,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 
 void Assembly::addAssemblyItemsFromJSON(Json::Value const& _code)
 {
+	solAssert(m_items.empty(), "");
 	solAssert(_code.isArray(), "");
 	for (auto const& jsonItem: _code)
 		m_items.emplace_back(loadItemFromJSON(jsonItem));
@@ -106,28 +107,27 @@ AssemblyItem Assembly::loadItemFromJSON(Json::Value const& _json)
 	std::string jumpType = _json["jumpType"].isString() ? _json["jumpType"].asString() : "";
 	solAssert(!name.empty(), "");
 
+	SourceLocation location;
+	location.start = begin;
+	location.end = end;
+
 	auto updateUsedTags = [&](u256 const& data) {
-		auto tag = static_cast<unsigned>(data);
-		if (m_usedTags <= tag)
-			m_usedTags = tag + 1;
+		m_usedTags = max(m_usedTags, static_cast<unsigned>(data) + 1);
 		return data;
 	};
 
 	auto immutableHash = [&](string const& _immutableName) -> h256 {
-		h256 hash(util::keccak256(value));
+		h256 hash(util::keccak256(_immutableName));
 		m_immutables[hash] = _immutableName;
 		return hash;
 	};
 
 	auto libraryHash = [&](string const& _libraryName) -> h256 {
-		h256 hash(util::keccak256(value));
+		h256 hash(util::keccak256(_libraryName));
 		m_libraries[hash] = _libraryName;
 		return hash;
 	};
 
-	SourceLocation location;
-	location.start = begin;
-	location.end = end;
 	if (srcIndex > -1 && srcIndex < static_cast<int>(sources().size()))
 		location.sourceName = sources()[static_cast<size_t>(srcIndex)];
 
