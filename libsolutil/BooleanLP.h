@@ -78,8 +78,6 @@ public:
 	std::pair<smtutil::CheckResult, std::vector<std::string>>
 	check(std::vector<smtutil::Expression> const& _expressionsToEvaluate) override;
 
-	std::pair<smtutil::CheckResult, std::map<std::string, boost::rational<bigint>>> check();
-
 	std::string toString() const;
 
 private:

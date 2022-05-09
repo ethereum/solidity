@@ -441,15 +441,35 @@ Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _exp
 
 optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr)
 {
-	if (_expr.arguments.empty() || _expr.name == "*")
-		return parseProduct(_expr);
-	else if (_expr.name == "+" || _expr.name == "-")
+	if (_expr.arguments.empty())
+		return parseFactor(_expr);
+	else if (_expr.name == "+" || (_expr.name == "-" && _expr.arguments.size() == 2))
 	{
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
 		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
 		if (!left || !right)
 			return std::nullopt;
 		return _expr.name == "+" ? *left + *right : *left - *right;
+	}
+	else if (_expr.name == "-" && _expr.arguments.size() == 1)
+	{
+		optional<LinearExpression> arg = parseLinearSum(_expr.arguments.at(0));
+		if (arg)
+			return LinearExpression::constant(0) - *arg;
+		else
+			return std::nullopt;
+	}
+	else if (_expr.name == "*")
+		// This will result in nullopt unless one of them is a constant.
+		return parseLinearSum(_expr.arguments.at(0)) * parseLinearSum(_expr.arguments.at(1));
+	else if (_expr.name == "/")
+	{
+		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
+		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
+		if (!left || !right || !right->isConstant())
+			return std::nullopt;
+		*left /= right->get(0);
+		return left;
 	}
 	else if (_expr.name == "ite")
 	{
