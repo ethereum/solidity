@@ -423,7 +423,7 @@ void CompilerStack::importEvmAssemblyJson(std::map<std::string, Json::Value> con
 	if (m_stackState != Empty)
 		solThrow(CompilerError, "Must call importEvmAssemblyJson only before the SourcesSet state.");
 
-	Json::Value jsonValue = _sources.begin()->second;
+	Json::Value const& jsonValue = _sources.begin()->second;
 	if (jsonValue.isMember("sourceList"))
 		for (auto const& item: jsonValue["sourceList"])
 		{
@@ -696,15 +696,13 @@ bool CompilerStack::compile(State _stopAfter)
 		optimiserSettings.runJumpdestRemover = m_optimiserSettings.runJumpdestRemover;
 		optimiserSettings.runPeephole = m_optimiserSettings.runPeephole;
 
-		m_contracts[evmSourceName].evmAssembly = make_shared<evmasm::Assembly>(true, evmSourceName);
-		m_contracts[evmSourceName].evmAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName]);
+		m_contracts[evmSourceName].evmAssembly = evmasm::Assembly::loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName]);
 		if (m_optimiserSettings.enabled)
 			m_contracts[evmSourceName].evmAssembly->optimise(optimiserSettings);
 		m_contracts[evmSourceName].object = m_contracts[evmSourceName].evmAssembly->assemble();
 
-		m_contracts[evmSourceName].evmRuntimeAssembly = make_shared<evmasm::Assembly>(false, evmSourceName);
-		m_contracts[evmSourceName].evmRuntimeAssembly->setSources(m_contracts[evmSourceName].evmAssembly->sources());
-		m_contracts[evmSourceName].evmRuntimeAssembly->loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName][".data"]["0"], false);
+		m_contracts[evmSourceName].evmRuntimeAssembly = std::make_shared<evmasm::Assembly>(m_contracts[evmSourceName].evmAssembly->sub(0));
+		solAssert(m_contracts[evmSourceName].evmRuntimeAssembly->isCreation() == false, "");
 		if (m_optimiserSettings.enabled)
 			m_contracts[evmSourceName].evmRuntimeAssembly->optimise(optimiserSettings);
 		m_contracts[evmSourceName].runtimeObject = m_contracts[evmSourceName].evmRuntimeAssembly->assemble();

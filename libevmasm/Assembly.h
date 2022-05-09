@@ -156,7 +156,7 @@ public:
 	/// @param _json JSON object containing assembly
 	/// @param _loadSources true, if source list should be included, false otherwise.
 	/// @returns true on success, false otherwise
-	bool loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources = true);
+	static std::shared_ptr<Assembly> loadFromAssemblyJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList = {}, bool _isCreation = true);
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }

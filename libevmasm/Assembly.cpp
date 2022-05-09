@@ -409,24 +409,25 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 	return root;
 }
 
-bool Assembly::loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources /* = true */)
+std::shared_ptr<Assembly> Assembly::loadFromAssemblyJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList /* = {} */, bool _isCreation /* = true */)
 {
 	if (!_json[".code"].isArray())
-		return false;
-	bool success{true};
+		return {};
 
-	if (_loadSources)
+	std::shared_ptr<Assembly> result = std::make_shared<Assembly>(_isCreation, "");
+	vector<string> sourceList;
+	if (_sourceList.empty())
 	{
-		vector<string> sourceList;
 		if (_json.isMember("sourceList"))
 			for (auto const& it: _json["sourceList"])
 				sourceList.emplace_back(it.asString());
-		setSources(sourceList);
 	}
-
-	addAssemblyItemsFromJSON(_json[".code"]);
+	else
+		sourceList = _sourceList;
+	result->setSources(sourceList);
+	result->addAssemblyItemsFromJSON(_json[".code"]);
 	if (_json[".auxdata"].isString())
-		m_auxiliaryData = fromHex(_json[".auxdata"].asString());
+		result->m_auxiliaryData = fromHex(_json[".auxdata"].asString());
 	Json::Value const& data = _json[".data"];
 	for (Json::ValueConstIterator itr = data.begin(); itr != data.end(); itr++)
 	{
@@ -434,16 +435,15 @@ bool Assembly::loadFromAssemblyJSON(Json::Value const& _json, bool _loadSources 
 		std::string key = itr.key().asString();
 		Json::Value const& code = data[key];
 		if (code.isString())
-			m_data[h256(fromHex(key))] = fromHex(code.asString());
+			result->m_data[h256(fromHex(key))] = fromHex(code.asString());
 		else
 		{
-			shared_ptr<Assembly> subassembly = make_shared<Assembly>(false, "");
-			subassembly->setSources(sources());
-			success &= subassembly->loadFromAssemblyJSON(code, false);
-			m_subs.emplace_back(subassembly);
+			std::shared_ptr<Assembly> subassembly(Assembly::loadFromAssemblyJSON(code, sourceList, /* isCreation = */ false));
+			assertThrow(subassembly, AssemblyException, "");
+			result->m_subs.emplace_back(std::make_shared<Assembly>(*subassembly));
 		}
 	}
-	return success;
+	return result;
 }
 
 AssemblyItem Assembly::namedTag(string const& _name, size_t _params, size_t _returns, optional<uint64_t> _sourceID)
