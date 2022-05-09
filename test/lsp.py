@@ -1,24 +1,56 @@
 #!/usr/bin/env python3
 # pragma pylint: disable=too-many-lines
+# test line 1
 import argparse
 import fnmatch
+import functools
 import json
 import os
+import re
 import subprocess
 import sys
 import traceback
-import re
-import tty
-import functools
 from collections import namedtuple
 from copy import deepcopy
-from typing import Any, List, Optional, Tuple, Union
-from itertools import islice
-
 from enum import Enum, auto
+from itertools import islice
+from pathlib import PurePath
+from typing import Any, List, Optional, Tuple, Union
 
-import colorama # Enables the use of SGR & CUP terminal VT sequences on Windows.
+import colorama  # Enables the use of SGR & CUP terminal VT sequences on Windows.
 from deepdiff import DeepDiff
+
+if os.name == 'nt':
+    # pragma pylint: disable=import-error
+    import msvcrt
+else:
+    import tty
+    # Turn off user input buffering so we get the input immediately,
+    # not only after a line break
+    tty.setcbreak(sys.stdin.fileno())
+
+
+def escape_string(text: str) -> str:
+    """
+    Trivially escapes given input string's \r \n and \\.
+    """
+    return text.translate(str.maketrans({
+        "\r": r"\r",
+        "\n": r"\n",
+        "\\": r"\\"
+    }))
+
+
+def getCharFromStdin():
+    """
+    Gets a single character from stdin without line-buffering.
+    """
+    if os.name == 'nt':
+        # pragma pylint: disable=import-error
+        return msvcrt.getch().decode("utf-8")
+    else:
+        return sys.stdin.buffer.read(1)
+
 
 """
 Named tuple that holds various regexes used to parse the test specification.
@@ -100,7 +132,6 @@ class BadHeader(Exception):
     def __init__(self, msg: str):
         super().__init__("Bad header: " + msg)
 
-
 class JsonRpcProcess:
     exe_path: str
     exe_args: List[str]
@@ -143,10 +174,12 @@ class JsonRpcProcess:
                 # server quit
                 return None
             line = line.decode("utf-8")
+            if self.trace_io:
+                print(f"Received header-line: {escape_string(line)}")
             if not line.endswith("\r\n"):
                 raise BadHeader("missing newline")
-            # remove the "\r\n"
-            line = line[:-2]
+            # Safely remove the "\r\n".
+            line = line.rstrip("\r\n")
             if line == '':
                 break # done with the headers
             if line.startswith(CONTENT_LENGTH_HEADER):
@@ -588,7 +621,7 @@ class FileTestRunner:
 
         while True:
             print("(u)pdate/(r)etry/(i)gnore?")
-            user_response = sys.stdin.read(1)
+            user_response = getCharFromStdin()
             if user_response == "i":
                 return self.TestResult.SuccessOrIgnored
 
@@ -694,7 +727,7 @@ class SolidityLSPTestSuite: # {{{
         args = create_cli_parser().parse_args()
         self.solc_path = args.solc_path
         self.project_root_dir = os.path.realpath(args.project_root_dir) + "/test/libsolidity/lsp"
-        self.project_root_uri = "file://" + self.project_root_dir
+        self.project_root_uri = PurePath(self.project_root_dir).as_uri()
         self.print_assertions = args.print_assertions
         self.trace_io = args.trace_io
         self.test_pattern = args.test_pattern
@@ -777,7 +810,7 @@ class SolidityLSPTestSuite: # {{{
         return f"{self.project_root_dir}/{test_case_name}.sol"
 
     def get_test_file_uri(self, test_case_name):
-        return "file://" + self.get_test_file_path(test_case_name)
+        return PurePath(self.get_test_file_path(test_case_name)).as_uri()
 
     def get_test_file_contents(self, test_case_name):
         """
@@ -786,7 +819,7 @@ class SolidityLSPTestSuite: # {{{
         in the test path (test/libsolidity/lsp).
         """
         with open(self.get_test_file_path(test_case_name), mode="r", encoding="utf-8", newline='') as f:
-            return f.read()
+            return f.read().replace("\r\n", "\n")
 
     def require_params_for_method(self, method_name: str, message: dict) -> Any:
         """
@@ -1058,7 +1091,7 @@ class SolidityLSPTestSuite: # {{{
         """
         while True:
             print("(u)pdate/(r)etry/(s)kip file?")
-            user_response = sys.stdin.read(1)
+            user_response = getCharFromStdin()
             if user_response == "u":
                 while True:
                     try:
@@ -1067,8 +1100,8 @@ class SolidityLSPTestSuite: # {{{
                     # pragma pylint: disable=broad-except
                     except Exception as e:
                         print(e)
-                        if ret := self.user_interaction_failed_autoupdate(test):
-                            return ret
+                        if self.user_interaction_failed_autoupdate(test):
+                            return True
             elif user_response == 's':
                 return True
             elif user_response == 'r':
@@ -1076,7 +1109,7 @@ class SolidityLSPTestSuite: # {{{
 
     def user_interaction_failed_autoupdate(self, test):
         print("(e)dit/(r)etry/(s)kip file?")
-        user_response = sys.stdin.read(1)
+        user_response = getCharFromStdin()
         if user_response == "r":
             print("retrying...")
             # pragma pylint: disable=no-member
@@ -1141,7 +1174,7 @@ class SolidityLSPTestSuite: # {{{
         marker = self.get_file_tags("lib")["@diagnostics"]
         self.expect_diagnostic(report['diagnostics'][0], code=2072, marker=marker)
 
-    @functools.lru_cache # pragma pylint: disable=lru-cache-decorating-method
+    @functools.lru_cache() # pragma pylint: disable=lru-cache-decorating-method
     def get_file_tags(self, test_name: str, verbose=False):
         """
         Finds all tags (e.g. @tagname) in the given test and returns them as a
@@ -1438,7 +1471,7 @@ class SolidityLSPTestSuite: # {{{
         """
 
         self.setup_lsp(solc)
-        FILE_A_URI = f'file://{self.project_root_dir}/a.sol'
+        FILE_A_URI = f'{self.project_root_uri}/a.sol'
         solc.send_message('textDocument/didOpen', {
             'textDocument': {
                 'uri': FILE_A_URI,
@@ -1466,7 +1499,7 @@ class SolidityLSPTestSuite: # {{{
         )
         reports = self.wait_for_diagnostics(solc)
         self.expect_equal(len(reports), 1, '')
-        self.expect_equal(reports[0]['uri'], f'file://{self.project_root_dir}/lib.sol', "")
+        self.expect_equal(reports[0]['uri'], f'{self.project_root_uri}/lib.sol', "")
         self.expect_equal(len(reports[0]['diagnostics']), 0, "should not contain diagnostics")
 
     def test_textDocument_didChange_at_eol(self, solc: JsonRpcProcess) -> None:
@@ -1652,10 +1685,8 @@ class SolidityLSPTestSuite: # {{{
     # }}}
     # }}}
 
+
 if __name__ == "__main__":
-    # Turn off user input buffering so we get the input immediately,
-    # not only after a line break
-    tty.setcbreak(sys.stdin.fileno())
     suite = SolidityLSPTestSuite()
     exit_code = suite.main()
     sys.exit(exit_code)

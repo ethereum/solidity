@@ -912,7 +912,7 @@ void CommandLineInterface::handleAst()
 
 void CommandLineInterface::serveLSP()
 {
-	lsp::IOStreamTransport transport;
+	lsp::StdioTransport transport;
 	if (!lsp::LanguageServer{transport}.run())
 		solThrow(CommandLineExecutionError, "LSP terminated abnormally.");
 }
