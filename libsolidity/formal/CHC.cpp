@@ -82,17 +82,25 @@ void CHC::analyze(SourceUnit const& _source)
 	if (!shouldAnalyze(_source))
 		return;
 
+#ifdef HAVE_Z3_DLOPEN
+	if (m_settings.solvers.z3 && !Z3Interface::available())
+	{
+		m_errorReporter.warning(
+			8158_error,
+			SourceLocation(),
+			"z3 was selected as a Horn solver for CHC analysis but libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " was not found."
+		);
+		return;
+	}
+#endif
+
 	if (!m_settings.solvers.z3 && !m_settings.solvers.smtlib2)
 	{
-		if (!m_noSolverWarning)
-		{
-			m_noSolverWarning = true;
-			m_errorReporter.warning(
-				7649_error,
-				SourceLocation(),
-				"CHC analysis was not possible since no Horn solver was enabled."
-			);
-		}
+		m_errorReporter.warning(
+			7649_error,
+			SourceLocation(),
+			"CHC analysis was not possible since no Horn solver was enabled."
+		);
 		return;
 	}
 
@@ -115,20 +123,13 @@ void CHC::analyze(SourceUnit const& _source)
 	// actually given and the queries were solved.
 	if (auto const* smtLibInterface = dynamic_cast<CHCSmtLib2Interface const*>(m_interface.get()))
 		ranSolver = smtLibInterface->unhandledQueries().empty();
-	if (!ranSolver && !m_noSolverWarning)
-	{
-		m_noSolverWarning = true;
+	if (!ranSolver)
 		m_errorReporter.warning(
 			3996_error,
 			SourceLocation(),
-#ifdef HAVE_Z3_DLOPEN
-			"CHC analysis was not possible since libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " was not found."
-#else
 			"CHC analysis was not possible. No Horn solver was available."
 			" None of the installed solvers was enabled."
-#endif
 		);
-	}
 }
 
 vector<string> CHC::unhandledQueries() const
