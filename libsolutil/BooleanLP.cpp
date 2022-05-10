@@ -202,7 +202,10 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 	else if (_expr.name == ">")
 		addAssertion(_expr.arguments.at(1) < _expr.arguments.at(0));
 	else
+	{
 		cout << "Unknown operator " << _expr.name << endl;
+		solAssert(false);
+	}
 }
 
 
