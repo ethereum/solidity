@@ -51,7 +51,17 @@ docker build "scripts/docker/${IMAGE_NAME}" --file "scripts/docker/${IMAGE_NAME}
 
 echo "-- test_docker @ '${PWD}'"
 
-docker run --rm --volume "${PWD}:/root/project" "${IMAGE_NAME}" "/root/project/scripts/ci/${IMAGE_NAME}_test_${IMAGE_VARIANT}.sh"
+# NOTE: Since /root/project/ is a dir from outside the container and the owner of the files is different,
+# git show in the script refuses to work. It must be marked as safe to use first.
+# See https://github.blog/2022-04-12-git-security-vulnerability-announced/
+docker run \
+  --rm \
+  --volume "${PWD}:/root/project" \
+  "${IMAGE_NAME}" \
+  bash -c "
+    git config --global --add safe.directory /root/project &&
+    /root/project/scripts/ci/${IMAGE_NAME}_test_${IMAGE_VARIANT}.sh
+  "
 
 echo "-- push_docker"
 
