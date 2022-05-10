@@ -298,6 +298,7 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		arguments.push_back(fromZ3Expr(_expr.arg(i)));
 
 	auto kind = _expr.decl().decl_kind();
+
 	if (_expr.is_ite())
 		return Expression::ite(arguments[0], arguments[1], arguments[2]);
 	else if (_expr.is_not())
@@ -371,7 +372,10 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		return Expression("dt_accessor_" + _expr.decl().name().str(), arguments, sort);
 	else if (kind == Z3_OP_DT_IS)
 		return Expression("dt_is", {arguments.at(0)}, sort);
-	else if (kind == Z3_OP_UNINTERPRETED)
+	else if (
+		kind == Z3_OP_UNINTERPRETED ||
+		kind == Z3_OP_RECURSIVE
+	)
 		return Expression(_expr.decl().name().str(), arguments, fromZ3Sort(_expr.get_sort()));
 
 	smtAssert(false, "");
