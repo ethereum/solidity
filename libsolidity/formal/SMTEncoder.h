@@ -426,8 +426,6 @@ protected:
 
 	smt::VariableUsage m_variableUsage;
 	bool m_arrayAssignmentHappened = false;
-	// True if the "No SMT solver available" warning was already created.
-	bool m_noSolverWarning = false;
 
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
 	/// These may be direct application of UFs or Array index access.

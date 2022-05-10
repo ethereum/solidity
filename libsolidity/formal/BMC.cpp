@@ -63,15 +63,14 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 {
 	if (m_interface->solvers() == 0)
 	{
-		if (!m_noSolverWarning)
-		{
-			m_noSolverWarning = true;
-			m_errorReporter.warning(
-				7710_error,
-				SourceLocation(),
-				"BMC analysis was not possible since no SMT solver was found and enabled."
-			);
-		}
+		m_errorReporter.warning(
+			7710_error,
+			SourceLocation(),
+			"BMC analysis was not possible since no SMT solver was found and enabled."
+#ifdef HAVE_Z3_DLOPEN
+			" Install libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " to enable Z3."
+#endif
+		);
 		return;
 	}
 
@@ -108,21 +107,15 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		m_interface->solvers() == 1 &&
 		m_settings.solvers.smtlib2
 	)
-	{
-		if (!m_noSolverWarning)
-		{
-			m_noSolverWarning = true;
-			m_errorReporter.warning(
-				8084_error,
-				SourceLocation(),
-				"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
-				" None of the installed solvers was enabled."
+		m_errorReporter.warning(
+			8084_error,
+			SourceLocation(),
+			"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
+			" None of the installed solvers was enabled."
 #ifdef HAVE_Z3_DLOPEN
-				" Install libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " to enable Z3."
+			" Install libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " to enable Z3."
 #endif
-			);
-		}
-	}
+		);
 }
 
 bool BMC::shouldInlineFunctionCall(
