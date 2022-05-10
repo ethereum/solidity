@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * ABI Encoder: When encoding an empty string coming from storage do not add a superfluous empty slot for data.
 
 
 ### 0.8.14 (2022-05-17)
