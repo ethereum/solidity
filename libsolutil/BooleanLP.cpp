@@ -113,6 +113,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 	}
 	else if (_expr.name == "=")
 	{
+		solAssert(_expr.arguments.size() == 2);
 		solAssert(_expr.arguments.at(0).sort->kind == _expr.arguments.at(1).sort->kind);
 		if (_expr.arguments.at(0).sort->kind == Kind::Bool)
 		{
@@ -150,28 +151,19 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 			solAssert(false);
 	}
 	else if (_expr.name == "and")
-	{
-		addAssertion(_expr.arguments.at(0));
-		addAssertion(_expr.arguments.at(1));
-	}
+		for (auto const& arg: _expr.arguments)
+			addAssertion(arg);
 	else if (_expr.name == "or")
 	{
-		// We could try to parse a full clause here.
-		Literal left = parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0));
-		Literal right = parseLiteralOrReturnEqualBoolean(_expr.arguments.at(1));
-		/*
-		if (isConditionalConstraint(left.variable) && isConditionalConstraint(right.variable))
-		{
-			// We cannot have more than one constraint per clause.
-			// TODO Why?
-			right = *parseLiteral(declareInternalVariable(true));
-			addBooleanEquality(right, _expr.arguments.at(1));
-		}
-		*/
-		state().clauses.emplace_back(Clause{vector<Literal>{left, right}});
+		vector<Literal> literals;
+		// We could try to parse a full clause here instead.
+		for (auto const& arg: _expr.arguments)
+			literals.emplace_back(parseLiteralOrReturnEqualBoolean(arg));
+		state().clauses.emplace_back(Clause{move(literals)});
 	}
 	else if (_expr.name == "not")
 	{
+		solAssert(_expr.arguments.size() == 1);
 		// TODO can we still try to add a fixed constraint?
 		Literal l = negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0)));
 		state().clauses.emplace_back(Clause{vector<Literal>{l}});
