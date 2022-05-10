@@ -59,7 +59,6 @@ public:
 	SMTLib2Expression parseExpression()
 	{
 		skipWhitespace();
-		// TODO This does not check if there is trailing data after the closing ')'
 		if (token() == '(')
 		{
 			advance();
@@ -87,10 +86,13 @@ private:
 	{
 		skipWhitespace();
 		size_t start = m_pos;
+		bool isPipe = token() == '|';
 		while (m_pos < m_data.size())
 		{
 			char c = token();
-			if (langutil::isWhiteSpace(c) || c == '(' || c == ')')
+			if (isPipe && (m_pos > start && c == '|'))
+				break;
+			else if (!isPipe && (langutil::isWhiteSpace(c) || c == '(' || c == ')'))
 				break;
 			advance();
 		}
@@ -160,6 +162,30 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr)
 	}, _expr.data);
 }
 
+string removeComments(string _input)
+{
+	string result;
+	auto it = _input.begin();
+	auto end = _input.end();
+	while (it != end)
+	{
+		if (*it == ';')
+		{
+			while (it != end && *it != '\n')
+				++it;
+			if (it != end)
+				++it;
+		}
+		else
+		{
+			result.push_back(*it);
+			it++;
+		}
+
+	}
+	return result;
+}
+
 }
 
 int main(int argc, char** argv)
@@ -170,7 +196,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	string input = readFileAsString(argv[1]);
+	string input = removeComments(readFileAsString(argv[1]));
 	string_view inputToParse = input;
 
 	BooleanLPSolver solver;
@@ -195,6 +221,10 @@ int main(int argc, char** argv)
 			// TODO should be real, but we call it int...
 			SortPointer sort = type == "Real" ? SortProvider::intSort() : SortProvider::boolSort;
 			solver.declareVariable(variableName, move(sort));
+		}
+		else if (cmd == "define-fun")
+		{
+			cerr << "Ignoring 'define-fun'" << endl;
 		}
 		else if (cmd == "assert")
 		{

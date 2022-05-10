@@ -289,8 +289,8 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	{
 		cout << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
 		// TODO should be "unknown" later on
-		//return {CheckResult::SATISFIABLE, {}};
-		return {CheckResult::UNKNOWN, {}};
+		return {CheckResult::SATISFIABLE, {}};
+		//return {CheckResult::UNKNOWN, {}};
 	}
 }
 
