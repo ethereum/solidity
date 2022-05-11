@@ -94,7 +94,10 @@ public:
 				else if (value == 21)
 					return "true";
 				else
+				{
 					assertThrow(false, CBORException, "Unsupported simple value (not a boolean).");
+					return ""; // unreachable, but prevents compiler warning.
+				}
 			}
 			default:
 				assertThrow(false, CBORException, "Unsupported value type.");
