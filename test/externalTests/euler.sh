@@ -49,7 +49,7 @@ function euler_test
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with "YulException: Variable var_utilisation_307 is 6 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_utilisation_307 is 6 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul      # Compilation fails with "YulException: Variable var_status_mpos is 3 too deep in the stack"
+        ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
         legacy-no-optimize
