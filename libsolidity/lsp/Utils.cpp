@@ -22,7 +22,7 @@
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/lsp/Utils.h>
 
-#include <fmt/format.h>
+#include <regex>
 #include <fstream>
 
 namespace solidity::lsp
@@ -113,6 +113,17 @@ optional<SourceLocation> parseRange(FileRepository const& _fileRepository, strin
 	solAssert(*start->sourceName == *end->sourceName);
 	start->end = end->end;
 	return start;
+}
+
+string stripFileUriSchemePrefix(string const& _path)
+{
+	regex const windowsDriveLetterPath("^file:///[a-zA-Z]:/");
+	if (regex_search(_path, windowsDriveLetterPath))
+		return _path.substr(8);
+	if (_path.find("file://") == 0)
+		return _path.substr(7);
+	else
+		return _path;
 }
 
 }

@@ -19,3 +19,5 @@ contract D
    //   ^^^^^^^^^^^^ @unusedContractVariable
     }
 }
+// ----
+// publish_diagnostics_1: @unusedReturnVariable 6321 @unusedVariable 2072 @unusedContractVariable 2072

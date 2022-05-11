@@ -20,11 +20,14 @@ Compiler Features:
  * Assembly-Json: Export: Include source list in `sourceList` field.
  * Commandline Interface: option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
  * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
+ * Language Server: Allow full filesystem access to language server.
 
 
 Bugfixes:
+ * Type Checker: Properly check restrictions of ``using ... global`` in conjunction with libraries.
 * Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
 * TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
+* View Pure Checker: Mark ``returndatasize`` and ``returndatacopy`` as view to disallow them in inline assembly blocks in pure functions.
 
 
 

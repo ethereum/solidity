@@ -5,6 +5,6 @@ Warning: Return value of low-level calls not used.
   | 		^^^^^^^^^^^
 
 Info: Reentrancy property(ies) for model_checker_invariants_reentrancy/input.sol:test:
-((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0)))
+(((!(x <= 0) || (x' <= 0)) && (!(x <= 0) || (<errorCode> <= 0))) || true)
 <errorCode> = 0 -> no errors
 <errorCode> = 1 -> Assertion failed at assert(x < 10)

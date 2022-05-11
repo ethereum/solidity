@@ -42,4 +42,6 @@ contract C {
 // SMTIgnoreOS: macos
 // ----
 // Warning 2018: (33-88): Function state mutability can be restricted to view
-// Warning 6328: (367-381): CHC: Assertion violation happens here.
+// Warning 1218: (367-381): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (367-381): CHC: Assertion violation might happen here.
+// Warning 4661: (367-381): BMC: Assertion violation happens here.
