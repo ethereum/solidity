@@ -99,117 +99,16 @@ void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _s
 	declareVariable(name, _sort->kind == Kind::Bool);
 }
 
-void BooleanLPSolver::addAssertion(Expression const& _expr)
-{
-	cout << " - " << _expr.toString() << endl;
-	solAssert(_expr.sort->kind == Kind::Bool);
-	if (_expr.arguments.empty())
-	{
-		solAssert(isBooleanVariable(_expr.name));
-		state().clauses.emplace_back(Clause{Literal{
-			true,
-			state().variables.at(_expr.name)
-		}});
-	}
-	else if (_expr.name == "=")
-	{
-		solAssert(_expr.arguments.size() == 2);
-		solAssert(_expr.arguments.at(0).sort->kind == _expr.arguments.at(1).sort->kind);
-		if (_expr.arguments.at(0).sort->kind == Kind::Bool)
-		{
-			if (_expr.arguments.at(0).arguments.empty() && isBooleanVariable(_expr.arguments.at(0).name))
-				addBooleanEquality(*parseLiteral(_expr.arguments.at(0)), _expr.arguments.at(1));
-			else if (_expr.arguments.at(1).arguments.empty() && isBooleanVariable(_expr.arguments.at(1).name))
-				addBooleanEquality(*parseLiteral(_expr.arguments.at(1)), _expr.arguments.at(0));
-			else
-			{
-				Literal newBoolean = *parseLiteral(declareInternalVariable(true));
-				addBooleanEquality(newBoolean, _expr.arguments.at(0));
-				addBooleanEquality(newBoolean, _expr.arguments.at(1));
-			}
-		}
-		else if (_expr.arguments.at(0).sort->kind == Kind::Int)
-		{
-			// Try to see if both sides are linear.
-			optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
-			optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
-			if (left && right)
-			{
-				LinearExpression data = *left - *right;
-				data[0] *= -1;
-				Constraint c{move(data), _expr.name == "="};
-				if (!tryAddDirectBounds(c))
-					state().fixedConstraints.emplace_back(move(c));
-				cout << "Added as fixed constraint" << endl;
-			}
-			else
-			{
-				solAssert(false);
-			}
-		}
-		else
-			solAssert(false);
-	}
-	else if (_expr.name == "and")
-		for (auto const& arg: _expr.arguments)
-			addAssertion(arg);
-	else if (_expr.name == "or")
-	{
-		vector<Literal> literals;
-		// We could try to parse a full clause here instead.
-		for (auto const& arg: _expr.arguments)
-			literals.emplace_back(parseLiteralOrReturnEqualBoolean(arg));
-		state().clauses.emplace_back(Clause{move(literals)});
-	}
-	else if (_expr.name == "not")
-	{
-		solAssert(_expr.arguments.size() == 1);
-		// TODO can we still try to add a fixed constraint?
-		Literal l = negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0)));
-		state().clauses.emplace_back(Clause{vector<Literal>{l}});
-	}
-	else if (_expr.name == "implies")
-		addAssertion(!_expr.arguments.at(0) || _expr.arguments.at(1));
-	else if (_expr.name == "<=")
-	{
-		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
-		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
-		if (left && right)
-		{
-			LinearExpression data = *left - *right;
-			data[0] *= -1;
-			Constraint c{move(data), _expr.name == "="};
-			if (!tryAddDirectBounds(c))
-				state().fixedConstraints.emplace_back(move(c));
-		}
-		else
-		{
-			solAssert(false);
-		}
-	}
-	else if (_expr.name == ">=")
-		addAssertion(_expr.arguments.at(1) <= _expr.arguments.at(0));
-	else if (_expr.name == "<")
-		addAssertion(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1);
-	else if (_expr.name == ">")
-		addAssertion(_expr.arguments.at(1) < _expr.arguments.at(0));
-	else
-	{
-		cout << "Unknown operator " << _expr.name << endl;
-		solAssert(false);
-	}
-}
-
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const&)
 {
-	cout << "Solving boolean constraint system" << endl;
-	cout << toString() << endl;
-	cout << "--------------" << endl;
+	cerr << "Solving boolean constraint system" << endl;
+	cerr << toString() << endl;
+	cerr << "--------------" << endl;
 
 	if (state().infeasible)
 	{
-		cout << "----->>>>> unsatisfiable" << endl;
+		cerr << "----->>>>> unsatisfiable" << endl;
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});
 	}
 
@@ -244,7 +143,7 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 
 	if (lpSolver.check().first == LPResult::Infeasible)
 	{
-		cout << "----->>>>> unsatisfiable" << endl;
+		cerr << "----->>>>> unsatisfiable" << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 
@@ -282,12 +181,12 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver, backtrackNotify}.solve();
 	if (!optionalModel)
 	{
-		cout << "==============> CDCL final result: unsatisfiable." << endl;
+		cerr << "==============> CDCL final result: unsatisfiable." << endl;
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 	else
 	{
-		cout << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
+		cerr << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
 		// TODO should be "unknown" later on
 		return {CheckResult::SATISFIABLE, {}};
 		//return {CheckResult::UNKNOWN, {}};
@@ -319,6 +218,106 @@ string BooleanLPSolver::toString() const
 	return result;
 }
 
+void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> _letBindings)
+{
+	cerr << "adding assertion" << endl;
+	cerr << " - " << _expr.toString() << endl;
+	solAssert(_expr.sort->kind == Kind::Bool);
+	if (_expr.arguments.empty())
+	{
+		size_t index = _letBindings.count(_expr.name) ? _letBindings.at(_expr.name) : state().variables.at(_expr.name);
+		solAssert(isBooleanVariable(index));
+		state().clauses.emplace_back(Clause{Literal{true, index }});
+	}
+	else if (_expr.name == "let")
+	{
+		addLetBindings(_expr, _letBindings);
+		addAssertion(_expr.arguments.back(), move(_letBindings));
+	}
+	else if (_expr.name == "=")
+	{
+		solAssert(_expr.arguments.size() == 2);
+		solAssert(_expr.arguments.at(0).sort->kind == _expr.arguments.at(1).sort->kind);
+		if (_expr.arguments.at(0).sort->kind == Kind::Bool)
+		{
+			if (_expr.arguments.at(0).arguments.empty() && isBooleanVariable(_expr.arguments.at(0).name))
+				addBooleanEquality(*parseLiteral(_expr.arguments.at(0), _letBindings), _expr.arguments.at(1), _letBindings);
+			else if (_expr.arguments.at(1).arguments.empty() && isBooleanVariable(_expr.arguments.at(1).name))
+				addBooleanEquality(*parseLiteral(_expr.arguments.at(1), _letBindings), _expr.arguments.at(0), _letBindings);
+			else
+			{
+				Literal newBoolean = *parseLiteral(declareInternalVariable(true), {});
+				addBooleanEquality(newBoolean, _expr.arguments.at(0), _letBindings);
+				addBooleanEquality(newBoolean, _expr.arguments.at(1), _letBindings);
+			}
+		}
+		else if (_expr.arguments.at(0).sort->kind == Kind::Int)
+		{
+			// Try to see if both sides are linear.
+			optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
+			optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
+			if (left && right)
+			{
+				LinearExpression data = *left - *right;
+				data[0] *= -1;
+				Constraint c{move(data), _expr.name == "="};
+				if (!tryAddDirectBounds(c))
+					state().fixedConstraints.emplace_back(move(c));
+				cerr << "Added as fixed constraint" << endl;
+			}
+			else
+			{
+				solAssert(false);
+			}
+		}
+		else
+			solAssert(false);
+	}
+	else if (_expr.name == "and")
+		for (auto const& arg: _expr.arguments)
+			addAssertion(arg, _letBindings);
+	else if (_expr.name == "or")
+	{
+		vector<Literal> literals;
+		// We could try to parse a full clause here instead.
+		for (auto const& arg: _expr.arguments)
+			literals.emplace_back(parseLiteralOrReturnEqualBoolean(arg, _letBindings));
+		state().clauses.emplace_back(Clause{move(literals)});
+	}
+	else if (_expr.name == "not")
+	{
+		solAssert(_expr.arguments.size() == 1);
+		// TODO can we still try to add a fixed constraint?
+		Literal l = negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0), move(_letBindings)));
+		state().clauses.emplace_back(Clause{vector<Literal>{l}});
+	}
+	else if (_expr.name == "=>")
+		addAssertion(!_expr.arguments.at(0) || _expr.arguments.at(1), move(_letBindings));
+	else if (_expr.name == "<=")
+	{
+		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
+		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
+		solAssert(left && right);
+		LinearExpression data = *left - *right;
+		data[0] *= -1;
+		Constraint c{move(data), _expr.name == "="};
+		if (!tryAddDirectBounds(c))
+			state().fixedConstraints.emplace_back(move(c));
+	}
+	else if (_expr.name == ">=")
+		addAssertion(_expr.arguments.at(1) <= _expr.arguments.at(0), move(_letBindings));
+	else if (_expr.name == "<")
+		addAssertion(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1, move(_letBindings));
+	else if (_expr.name == ">")
+		addAssertion(_expr.arguments.at(1) < _expr.arguments.at(0), move(_letBindings));
+	else
+	{
+		cerr << "Unknown operator " << _expr.name << endl;
+		solAssert(false);
+	}
+}
+
+
 Expression BooleanLPSolver::declareInternalVariable(bool _boolean)
 {
 	string name = "$" + to_string(state().variables.size() + 1);
@@ -333,26 +332,44 @@ void BooleanLPSolver::declareVariable(string const& _name, bool _boolean)
 	resizeAndSet(state().isBooleanVariable, index, _boolean);
 }
 
-optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr)
+void BooleanLPSolver::addLetBindings(Expression const& _let, map<string, size_t>& _letBindings)
+{
+	map<string, size_t> newBindings;
+	solAssert(_let.name == "let");
+	for (size_t i = 0; i < _let.arguments.size() - 1; i++)
+	{
+		Expression binding = _let.arguments.at(i);
+		bool isBool = binding.arguments.at(0).sort->kind == Kind::Bool;
+		Expression var = declareInternalVariable(isBool);
+		newBindings.insert({binding.name, state().variables.at(var.name)});
+		addAssertion(var == binding.arguments.at(0));
+	}
+	for (auto&& [name, varIndex]: newBindings)
+		_letBindings.insert({name, varIndex});
+}
+
+optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr, map<string, size_t> _letBindings)
 {
 	// TODO constanst true/false?
 
+	if (_expr.name == "let")
+	{
+		addLetBindings(_expr, _letBindings);
+		return parseLiteral(_expr.arguments.back(), move(_letBindings));
+	}
+
 	if (_expr.arguments.empty())
 	{
-		if (isBooleanVariable(_expr.name))
-			return Literal{
-				true,
-				state().variables.at(_expr.name)
-			};
-		else
-			cout << "cannot encode " << _expr.name << " - not a boolean literal variable." << endl;
+		size_t index = _letBindings.count(_expr.name) ? _letBindings.at(_expr.name) : state().variables.at(_expr.name);
+		solAssert(isBooleanVariable(index));
+		return Literal{true, index};
 	}
 	else if (_expr.name == "not")
-		return negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0)));
+		return negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0), move(_letBindings)));
 	else if (_expr.name == "<=" || _expr.name == "=")
 	{
-		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
-		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
+		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
+		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
 		if (!left || !right)
 			return {};
 
@@ -362,11 +379,19 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 		return Literal{true, addConditionalConstraint(Constraint{move(data), _expr.name == "="})};
 	}
 	else if (_expr.name == ">=")
-		return parseLiteral(_expr.arguments.at(1) <= _expr.arguments.at(0));
+		return parseLiteral(_expr.arguments.at(1) <= _expr.arguments.at(0), move(_letBindings));
 	else if (_expr.name == "<")
-		return parseLiteral(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1);
+	{
+		cerr << "ERROR cannot properly encode '<'" << endl;
+		// TODO this is not the theory of reals!
+		return parseLiteral(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1, move(_letBindings));
+	}
 	else if (_expr.name == ">")
-		return parseLiteral(_expr.arguments.at(1) < _expr.arguments.at(0));
+	{
+		cerr << "ERROR cannot properly encode '>'" << endl;
+		// TODO this is not the theory of reals!
+		return parseLiteral(_expr.arguments.at(1) < _expr.arguments.at(0), move(_letBindings));
+	}
 
 	return {};
 }
@@ -395,7 +420,7 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 			Literal geL{true, addConditionalConstraint(ge)};
 
 
-			Literal equalBoolean = *parseLiteral(declareInternalVariable(true));
+			Literal equalBoolean = *parseLiteral(declareInternalVariable(true), {});
 			// a = or(x, y) <=> (-a \/ x \/ y) /\ (a \/ -x) /\ (a \/ -y)
 			state().clauses.emplace_back(Clause{vector<Literal>{negate(equalBoolean), leL, geL}});
 			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(leL)}});
@@ -418,37 +443,43 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 		return ~_lit;
 }
 
-Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _expr)
+Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _expr, map<string, size_t> _letBindings)
 {
 	if (_expr.sort->kind != Kind::Bool)
-		cout << "expected bool: " << _expr.toString() << endl;
+		cerr << "expected bool: " << _expr.toString() << endl;
 	solAssert(_expr.sort->kind == Kind::Bool);
 	// TODO when can this fail?
-	if (optional<Literal> literal = parseLiteral(_expr))
+	if (optional<Literal> literal = parseLiteral(_expr, _letBindings))
 		return *literal;
 	else
 	{
-		Literal newBoolean = *parseLiteral(declareInternalVariable(true));
-		addBooleanEquality(newBoolean, _expr);
+		Literal newBoolean = *parseLiteral(declareInternalVariable(true), _letBindings);
+		addBooleanEquality(newBoolean, _expr, _letBindings);
 		return newBoolean;
 	}
 }
 
-optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr)
+optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr, map<string, size_t> _letBindings)
 {
+	if (_expr.name == "let")
+	{
+		addLetBindings(_expr, _letBindings);
+		return parseLinearSum(_expr.arguments.back(), move(_letBindings));
+	}
+
 	if (_expr.arguments.empty())
-		return parseFactor(_expr);
+		return parseFactor(_expr, move(_letBindings));
 	else if (_expr.name == "+" || (_expr.name == "-" && _expr.arguments.size() == 2))
 	{
-		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
-		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
+		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
+		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
 		if (!left || !right)
 			return std::nullopt;
 		return _expr.name == "+" ? *left + *right : *left - *right;
 	}
 	else if (_expr.name == "-" && _expr.arguments.size() == 1)
 	{
-		optional<LinearExpression> arg = parseLinearSum(_expr.arguments.at(0));
+		optional<LinearExpression> arg = parseLinearSum(_expr.arguments.at(0), move(_letBindings));
 		if (arg)
 			return LinearExpression::constant(0) - *arg;
 		else
@@ -456,11 +487,11 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 	}
 	else if (_expr.name == "*")
 		// This will result in nullopt unless one of them is a constant.
-		return parseLinearSum(_expr.arguments.at(0)) * parseLinearSum(_expr.arguments.at(1));
+		return parseLinearSum(_expr.arguments.at(0), _letBindings) * parseLinearSum(_expr.arguments.at(1), _letBindings);
 	else if (_expr.name == "/")
 	{
-		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0));
-		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1));
+		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
+		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), move(_letBindings));
 		if (!left || !right || !right->isConstant())
 			return std::nullopt;
 		*left /= right->get(0);
@@ -469,29 +500,19 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 	else if (_expr.name == "ite")
 	{
 		Expression result = declareInternalVariable(false);
-		addAssertion(!_expr.arguments.at(0) || (result == _expr.arguments.at(1)));
-		addAssertion(_expr.arguments.at(0) || (result == _expr.arguments.at(2)));
-		return parseLinearSum(result);
+		addAssertion(!_expr.arguments.at(0) || (result == _expr.arguments.at(1)), _letBindings);
+		addAssertion(_expr.arguments.at(0) || (result == _expr.arguments.at(2)), _letBindings);
+		return parseLinearSum(result, {});
 	}
 	else
 	{
-		cout << "Invalid operator " << _expr.name << endl;
+		cerr << "Invalid operator " << _expr.name << endl;
 		return std::nullopt;
 	}
 }
 
-optional<LinearExpression> BooleanLPSolver::parseProduct(smtutil::Expression const& _expr) const
-{
-	if (_expr.arguments.empty())
-		return parseFactor(_expr);
-	else if (_expr.name == "*")
-		// The multiplication ensures that only one of them can be a variable.
-		return parseFactor(_expr.arguments.at(0)) * parseFactor(_expr.arguments.at(1));
-	else
-		return std::nullopt;
-}
 
-optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression const& _expr) const
+optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression const& _expr, map<string, size_t> _letBindings) const
 {
 	solAssert(_expr.arguments.empty(), "");
 	solAssert(!_expr.name.empty(), "");
@@ -504,7 +525,7 @@ optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression cons
 		// TODO do we want to do this?
 		return LinearExpression::constant(0);
 
-	size_t index = state().variables.at(_expr.name);
+	size_t index = _letBindings.count(_expr.name) ? _letBindings.at(_expr.name) : state().variables.at(_expr.name);
 	solAssert(index > 0, "");
 	if (isBooleanVariable(index))
 		return nullopt;
@@ -520,7 +541,7 @@ bool BooleanLPSolver::tryAddDirectBounds(Constraint const& _constraint)
 	if (ranges::distance(nonzero) > 1)
 		return false;
 
-	//cout << "adding direct bound." << endl;
+	//cerr << "adding direct bound." << endl;
 	if (ranges::distance(nonzero) == 0)
 	{
 		// 0 <= b or 0 = b
@@ -529,7 +550,7 @@ bool BooleanLPSolver::tryAddDirectBounds(Constraint const& _constraint)
 			(_constraint.equality && _constraint.data.front() != 0)
 		)
 		{
-//			cout << "SETTING INF" << endl;
+//			cerr << "SETTING INF" << endl;
 			state().infeasible = true;
 		}
 	}
@@ -548,7 +569,7 @@ bool BooleanLPSolver::tryAddDirectBounds(Constraint const& _constraint)
 
 void BooleanLPSolver::addUpperBound(size_t _index, rational _value)
 {
-	//cout << "adding " << variableName(_index) << " <= " << toString(_value) << endl;
+	//cerr << "adding " << variableName(_index) << " <= " << toString(_value) << endl;
 	if (!state().bounds[_index].upper || _value < *state().bounds[_index].upper)
 		state().bounds[_index].upper = move(_value);
 }
@@ -557,7 +578,7 @@ void BooleanLPSolver::addLowerBound(size_t _index, rational _value)
 {
 	// Lower bound must be at least zero.
 	_value = max(_value, rational{});
-	//cout << "adding " << variableName(_index) << " >= " << toString(_value) << endl;
+	//cerr << "adding " << variableName(_index) << " >= " << toString(_value) << endl;
 	if (!state().bounds[_index].lower || _value > *state().bounds[_index].lower)
 		state().bounds[_index].lower = move(_value);
 }
@@ -576,10 +597,10 @@ size_t BooleanLPSolver::addConditionalConstraint(Constraint _constraint)
 	return index;
 }
 
-void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expression const& _right)
+void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expression const& _right, map<string, size_t> _letBindings)
 {
 	solAssert(_right.sort->kind == Kind::Bool);
-	if (optional<Literal> right = parseLiteral(_right))
+	if (optional<Literal> right = parseLiteral(_right, _letBindings))
 	{
 		// includes: not, <=, <, >=, >, boolean variables.
 		// a = b <=> (-a \/ b) /\ (a \/ -b)
@@ -588,17 +609,19 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 		state().clauses.emplace_back(Clause{vector<Literal>{negLeft, *right}});
 		state().clauses.emplace_back(Clause{vector<Literal>{_left, negRight}});
 	}
-	else if (_right.name == "=" && parseLinearSum(_right.arguments.at(0)) && parseLinearSum(_right.arguments.at(1)))
+	// TODO This parses twice
+	else if (_right.name == "=" && parseLinearSum(_right.arguments.at(0), _letBindings) && parseLinearSum(_right.arguments.at(1), _letBindings))
 		// a = (x = y)  <=>  a = (x <= y && x >= y)
 		addBooleanEquality(
 			_left,
 			_right.arguments.at(0) <= _right.arguments.at(1) &&
-			_right.arguments.at(1) <= _right.arguments.at(0)
+			_right.arguments.at(1) <= _right.arguments.at(0),
+			move(_letBindings)
 		);
 	else
 	{
-		Literal a = parseLiteralOrReturnEqualBoolean(_right.arguments.at(0));
-		Literal b = parseLiteralOrReturnEqualBoolean(_right.arguments.at(1));
+		Literal a = parseLiteralOrReturnEqualBoolean(_right.arguments.at(0), _letBindings);
+		Literal b = parseLiteralOrReturnEqualBoolean(_right.arguments.at(1), _letBindings);
 		/*
 		if (isConditionalConstraint(a.variable) && isConditionalConstraint(b.variable))
 		{

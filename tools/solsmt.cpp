@@ -91,7 +91,10 @@ private:
 		{
 			char c = token();
 			if (isPipe && (m_pos > start && c == '|'))
+			{
+				advance();
 				break;
+			}
 			else if (!isPipe && (langutil::isWhiteSpace(c) || c == '(' || c == ')'))
 				break;
 			advance();
@@ -135,29 +138,50 @@ u256 parseRational(string_view _atom)
 		return u256(_atom);
 }
 
-smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr)
+smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<string, SortPointer> const& _variableSorts)
 {
 	return std::visit(GenericVisitor{
-		[](string_view const& _atom) {
+		[&](string_view const& _atom) {
 			if (isDigit(_atom.front()) || _atom.front() == '.')
 				return Expression(parseRational(_atom));
 			else
-				// TODO should be real, but internally, we use ints.
-				return Expression(string(_atom), {}, SortProvider::intSort());
+				return Expression(string(_atom), {}, _variableSorts.at(string(_atom)));
 		},
 		[&](vector<SMTLib2Expression> const& _subExpr) {
-			set<string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=", "=>"};
+			SortPointer sort;
 			vector<smtutil::Expression> arguments;
-			for (size_t i = 1; i < _subExpr.size(); i++)
-				arguments.emplace_back(toSMTUtilExpression(_subExpr[i]));
 			string_view op = get<string_view>(_subExpr.front().data);
-			return Expression(
-				string(op),
-				move(arguments),
-				contains(boolOperators, op) ?
-				SortProvider::boolSort :
-				SortProvider::intSort()
-			);
+			if (op == "let")
+			{
+				// TODO would be good if we did not have to copy this here.
+				map<string, SortPointer> subSorts = _variableSorts;
+				solAssert(_subExpr.size() == 3);
+				// We change the nesting here:
+				// (let ((x1 t1) (x2 t2)) T) -> let(x1(t1), x2(t2), T)
+				for (auto const& binding: get<vector<SMTLib2Expression>>(_subExpr.at(1).data))
+				{
+					auto const& bindingElements = get<vector<SMTLib2Expression>>(binding.data);
+					solAssert(bindingElements.size() == 2);
+					string_view varName = get<string_view>(bindingElements.at(0).data);
+					Expression replacement = toSMTUtilExpression(bindingElements.at(1), _variableSorts);
+					cout << "Binding " << varName << " to " << replacement.toString() << endl;
+					subSorts[string(varName)] = replacement.sort;
+					arguments.emplace_back(Expression(string(varName), {move(replacement)}, replacement.sort));
+				}
+				arguments.emplace_back(toSMTUtilExpression(_subExpr.at(2), subSorts));
+				sort = arguments.back().sort;
+			}
+			else
+			{
+				set<string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=", "=>"};
+				for (size_t i = 1; i < _subExpr.size(); i++)
+					arguments.emplace_back(toSMTUtilExpression(_subExpr[i], _variableSorts));
+				sort =
+					contains(boolOperators, op) ?
+					SortProvider::boolSort :
+					SortProvider::intSort(); // TODO should be real at some point
+			}
+			return Expression(string(op), move(arguments), move(sort));
 		}
 	}, _expr.data);
 }
@@ -199,14 +223,17 @@ int main(int argc, char** argv)
 	string input = removeComments(readFileAsString(argv[1]));
 	string_view inputToParse = input;
 
+	map<string, SortPointer> variableSorts;
 	BooleanLPSolver solver;
 	while (!inputToParse.empty())
 	{
 		//cout << line << endl;
 		SMTLib2Parser parser(inputToParse);
-		//cout << " -> " << parser.parseExpression().toString() << endl;
 		SMTLib2Expression expr = parser.parseExpression();
-		inputToParse = parser.remainingInput();
+		auto newInputToParse = parser.remainingInput();
+		cerr << "got : " << string(inputToParse.begin(), newInputToParse.begin()) << endl;
+		inputToParse = move(newInputToParse);
+		cerr << " -> " << expr.toString() << endl;
 		vector<SMTLib2Expression> const& items = get<vector<SMTLib2Expression>>(expr.data);
 		string_view cmd = command(expr);
 		if (cmd == "set-info")
@@ -220,6 +247,7 @@ int main(int argc, char** argv)
 			solAssert(type == "Real" || type == "Bool");
 			// TODO should be real, but we call it int...
 			SortPointer sort = type == "Real" ? SortProvider::intSort() : SortProvider::boolSort;
+			variableSorts[variableName] = sort;
 			solver.declareVariable(variableName, move(sort));
 		}
 		else if (cmd == "define-fun")
@@ -229,7 +257,7 @@ int main(int argc, char** argv)
 		else if (cmd == "assert")
 		{
 			solAssert(items.size() == 2);
-			solver.addAssertion(toSMTUtilExpression(items[1]));
+			solver.addAssertion(toSMTUtilExpression(items[1], variableSorts));
 		}
 		else if (cmd == "set-logic")
 		{
@@ -239,11 +267,11 @@ int main(int argc, char** argv)
 		{
 			auto&& [result, model] = solver.check({});
 			if (result == CheckResult::SATISFIABLE)
-				cout << "(sat)" << endl;
+				cout << "sat" << endl;
 			else if (result == CheckResult::UNSATISFIABLE)
-				cout << "(unsat)" << endl;
+				cout << "unsat" << endl;
 			else
-				cout << "(unknown)" << endl;
+				cout << "unknown" << endl;
 		}
 		else if (cmd == "exit")
 			return 0;

@@ -494,13 +494,24 @@ public:
 	{
 		if (arguments.empty())
 			return name;
-		std::vector<std::string> argsAsString;
-		for (auto const& arg: arguments)
-			argsAsString.emplace_back(arg.toString());
-		if (arguments.size() == 2)
-			return "(" + argsAsString[0] + " " + name + " " + argsAsString[1] + ")";
+		if (name == "let")
+		{
+			smtAssert(arguments.size() >= 2);
+			std::string result = name + "(";
+			for (size_t i = 0; i < arguments.size() - 1; i++)
+				result += "(" + arguments[i].name + " := " + arguments[i].arguments.at(0).toString() + ") ";
+			return result + "in " + arguments.back().toString() + ")";
+		}
 		else
-			return name + "(" + util::joinHumanReadable(argsAsString) + ")";
+		{
+			std::vector<std::string> argsAsString;
+			for (auto const& arg: arguments)
+				argsAsString.emplace_back(arg.toString());
+			if (arguments.size() == 2)
+				return "(" + argsAsString[0] + " " + name + " " + argsAsString[1] + ")";
+			else
+				return name + "(" + util::joinHumanReadable(argsAsString) + ")";
+		}
 	}
 private:
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
