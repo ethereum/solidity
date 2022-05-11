@@ -13,9 +13,10 @@ Compiler Features:
 
 Bugfixes:
  * Type Checker: Properly check restrictions of ``using ... global`` in conjunction with libraries.
-* Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
-* TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
-* View Pure Checker: Mark ``returndatasize`` and ``returndatacopy`` as view to disallow them in inline assembly blocks in pure functions.
+ * Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
+ * SMTChecker: Fix bug when z3 is selected but not available at runtime.
+ * TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
+ * View Pure Checker: Mark ``returndatasize`` and ``returndatacopy`` as view to disallow them in inline assembly blocks in pure functions.
 
 
 
