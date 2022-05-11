@@ -110,6 +110,14 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
+string toStringInParentheses(TypePointers const& _types, bool _short)
+{
+	return '(' + util::joinHumanReadable(
+		_types | ranges::views::transform([&](auto const* _type) { return _type->toString(_short); }),
+		","
+	) + ')';
+}
+
 }
 
 MemberList::Member::Member(Declaration const* _declaration, Type const* _type):
@@ -3090,6 +3098,19 @@ string FunctionType::canonicalName() const
 	return "function";
 }
 
+string FunctionType::humanReadableName() const
+{
+	switch (m_kind)
+	{
+	case Kind::Error:
+		return "error " + m_declaration->name() + toStringInParentheses(m_parameterTypes, /* _short */ true);
+	case Kind::Event:
+		return "event " + m_declaration->name() + toStringInParentheses(m_parameterTypes, /* _short */ true);
+	default:
+		return toString(/* _short */ false);
+	}
+}
+
 string FunctionType::toString(bool _short) const
 {
 	string name = "function ";
@@ -3101,20 +3122,15 @@ string FunctionType::toString(bool _short) const
 			name += *contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
-	name += '(';
-	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
-		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
-	name += ")";
+	name += toStringInParentheses(m_parameterTypes, _short);
 	if (m_stateMutability != StateMutability::NonPayable)
 		name += " " + stateMutabilityToString(m_stateMutability);
 	if (m_kind == Kind::External)
 		name += " external";
 	if (!m_returnParameterTypes.empty())
 	{
-		name += " returns (";
-		for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
-			name += (*it)->toString(_short) + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
-		name += ")";
+		name += " returns ";
+		name += toStringInParentheses(m_returnParameterTypes, _short);
 	}
 	return name;
 }

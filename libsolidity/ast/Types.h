@@ -339,6 +339,7 @@ public:
 	std::string toString() const { return toString(false); }
 	/// @returns the canonical name of this type for use in library function signatures.
 	virtual std::string canonicalName() const { return toString(true); }
+	virtual std::string humanReadableName() const { return toString(); }
 	/// @returns the signature of this type in external functions, i.e. `uint256` for integers
 	/// or `(uint256,bytes8)[2]` for an array of structs. If @a _structsByName,
 	/// structs are given by canonical name like `ContractName.StructName[2]`.
@@ -1378,6 +1379,7 @@ public:
 	TypeResult unaryOperatorResult(Token _operator) const override;
 	TypeResult binaryOperatorResult(Token, Type const*) const override;
 	std::string canonicalName() const override;
+	std::string humanReadableName() const override;
 	std::string toString(bool _short) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool canBeStored() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
