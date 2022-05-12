@@ -1028,7 +1028,7 @@ jobs:
     <<: *steps_soltest
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
-    <<: *base_ubuntu2004_clang
+    <<: *base_ubuntu2004_clang_large
     parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
