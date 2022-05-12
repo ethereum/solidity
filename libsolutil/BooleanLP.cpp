@@ -342,7 +342,7 @@ void BooleanLPSolver::addLetBindings(Expression const& _let, map<string, size_t>
 		bool isBool = binding.arguments.at(0).sort->kind == Kind::Bool;
 		Expression var = declareInternalVariable(isBool);
 		newBindings.insert({binding.name, state().variables.at(var.name)});
-		addAssertion(var == binding.arguments.at(0));
+		addAssertion(var == binding.arguments.at(0), _letBindings);
 	}
 	for (auto&& [name, varIndex]: newBindings)
 		_letBindings.insert({name, varIndex});
@@ -429,6 +429,7 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 		}
 		else
 		{
+			// TODO We can only do this if we know it is an integer!
 			// X > b
 			// -x < -b
 			// -x <= -b - 1

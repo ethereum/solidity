@@ -48,6 +48,56 @@ struct Constraint
 };
 
 /**
+ * A two-dimensional rational number "a + b*delta" that can be used to perform strict comparisons:
+ * x > 0 is transformed into x >= 1*delta, where delta is assumed to be "small". Its value
+ * is never explicitly computed / set, it is just a symbolic parameter.
+ */
+class RationalWithDelta
+{
+public:
+	RationalWithDelta(rational _x): m_main(move(_x)) {}
+	static RationalWithDelta delta()
+	{
+		RationalWithDelta x(0);
+		x.m_delta = 1;
+		return x;
+	}
+
+	RationalWithDelta& operator+=(RationalWithDelta const& _other)
+	{
+		m_main += _other.m_main;
+		m_delta += _other.m_delta;
+		return *this;
+	}
+	RationalWithDelta& operator*=(rational const& _factor)
+	{
+		m_main *= _factor;
+		m_delta *= _factor;
+		return *this;
+	}
+	bool operator<=(RationalWithDelta const& _other)
+	{
+		return std::tie(m_main, m_delta) <= std::tie(_other.m_main, _other.m_delta);
+	}
+	bool operator<(RationalWithDelta const& _other)
+	{
+		return std::tie(m_main, m_delta) < std::tie(_other.m_main, _other.m_delta);
+	}
+	bool operator==(RationalWithDelta const& _other)
+	{
+		return std::tie(m_main, m_delta) == std::tie(_other.m_main, _other.m_delta);
+	}
+	bool operator!=(RationalWithDelta const& _other)
+	{
+		return std::tie(m_main, m_delta) != std::tie(_other.m_main, _other.m_delta);
+	}
+
+private:
+	rational m_main;
+	rational m_delta;
+};
+
+/**
  * State used when solving an LP problem.
  */
 struct SolvingState

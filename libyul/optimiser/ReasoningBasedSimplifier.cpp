@@ -249,15 +249,19 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 		);
 		*/
 	case evmasm::Instruction::LT:
+		// TODO use x <= y - 1 directly?
 		return booleanValue(arguments.at(0) < arguments.at(1));
 	case evmasm::Instruction::SLT:
+		// TODO use x <= y - 1 directly?
 		return booleanValue(
 			twosComplementToUpscaledUnsigned(arguments.at(0)) + smtutil::Expression(bigint(1) << 256) <
 			twosComplementToUpscaledUnsigned(arguments.at(1)) + smtutil::Expression(bigint(1) << 256)
 		);
 	case evmasm::Instruction::GT:
+		// TODO use x >= y + 1 directly!
 		return booleanValue(arguments.at(0) > arguments.at(1));
 	case evmasm::Instruction::SGT:
+		// TODO use x >= y + 1 directly!
 		return booleanValue(
 			twosComplementToUpscaledUnsigned(arguments.at(0)) + smtutil::Expression(bigint(1) << 256) >
 			twosComplementToUpscaledUnsigned(arguments.at(1)) + smtutil::Expression(bigint(1) << 256)
