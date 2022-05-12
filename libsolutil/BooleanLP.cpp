@@ -307,7 +307,10 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> 
 	else if (_expr.name == ">=")
 		addAssertion(_expr.arguments.at(1) <= _expr.arguments.at(0), move(_letBindings));
 	else if (_expr.name == "<")
+	{
+		cerr << "ERROR cannot properly encode '<'" << endl;
 		addAssertion(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1, move(_letBindings));
+	}
 	else if (_expr.name == ">")
 		addAssertion(_expr.arguments.at(1) < _expr.arguments.at(0), move(_letBindings));
 	else
@@ -384,14 +387,11 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 	{
 		cerr << "ERROR cannot properly encode '<'" << endl;
 		// TODO this is not the theory of reals!
+
 		return parseLiteral(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1, move(_letBindings));
 	}
 	else if (_expr.name == ">")
-	{
-		cerr << "ERROR cannot properly encode '>'" << endl;
-		// TODO this is not the theory of reals!
 		return parseLiteral(_expr.arguments.at(1) < _expr.arguments.at(0), move(_letBindings));
-	}
 
 	return {};
 }
@@ -404,6 +404,8 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 		if (c.equality)
 		{
 			// X = b
+
+			cerr << "ERROR cannot properly encode '<'" << endl;
 
 			// X <= b - 1
 			Constraint le = c;
@@ -429,7 +431,7 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 		}
 		else
 		{
-			// TODO We can only do this if we know it is an integer!
+			cerr << "ERROR cannot properly encode '<'" << endl;
 			// X > b
 			// -x < -b
 			// -x <= -b - 1
