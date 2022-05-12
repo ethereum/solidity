@@ -1036,6 +1036,7 @@
     },
     "0.5.10": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1051,6 +1052,7 @@
     },
     "0.5.11": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1065,6 +1067,7 @@
     },
     "0.5.12": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1079,6 +1082,7 @@
     },
     "0.5.13": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1093,6 +1097,7 @@
     },
     "0.5.14": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1109,6 +1114,7 @@
     },
     "0.5.15": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1124,6 +1130,7 @@
     },
     "0.5.16": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1138,6 +1145,7 @@
     },
     "0.5.17": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1269,6 +1277,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1287,6 +1296,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1304,6 +1314,7 @@
     },
     "0.6.0": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1319,6 +1330,7 @@
     },
     "0.6.1": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1333,6 +1345,7 @@
     },
     "0.6.10": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1343,6 +1356,7 @@
     },
     "0.6.11": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1353,6 +1367,7 @@
     },
     "0.6.12": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1363,6 +1378,7 @@
     },
     "0.6.2": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1377,6 +1393,7 @@
     },
     "0.6.3": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1391,6 +1408,7 @@
     },
     "0.6.4": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
@@ -1405,6 +1423,7 @@
     },
     "0.6.5": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1419,6 +1438,7 @@
     },
     "0.6.6": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1432,6 +1452,7 @@
     },
     "0.6.7": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1445,6 +1466,7 @@
     },
     "0.6.8": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1455,6 +1477,7 @@
     },
     "0.6.9": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1466,6 +1489,7 @@
     },
     "0.7.0": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1476,6 +1500,7 @@
     },
     "0.7.1": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1487,6 +1512,7 @@
     },
     "0.7.2": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1497,6 +1523,7 @@
     },
     "0.7.3": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
@@ -1506,6 +1533,7 @@
     },
     "0.7.4": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
@@ -1514,6 +1542,7 @@
     },
     "0.7.5": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
@@ -1522,6 +1551,7 @@
     },
     "0.7.6": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
@@ -1530,6 +1560,7 @@
     },
     "0.8.0": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
@@ -1538,6 +1569,7 @@
     },
     "0.8.1": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
@@ -1545,27 +1577,34 @@
         "released": "2021-01-27"
     },
     "0.8.10": {
-        "bugs": [],
+        "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation"
+        ],
         "released": "2021-11-09"
     },
     "0.8.11": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "AbiEncodeCallLiteralAsFixedBytesBug"
         ],
         "released": "2021-12-20"
     },
     "0.8.12": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "AbiEncodeCallLiteralAsFixedBytesBug"
         ],
         "released": "2022-02-16"
     },
     "0.8.13": {
-        "bugs": [],
+        "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation"
+        ],
         "released": "2022-03-16"
     },
     "0.8.2": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
@@ -1574,6 +1613,7 @@
     },
     "0.8.3": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory"
         ],
@@ -1581,37 +1621,44 @@
     },
     "0.8.4": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
         "released": "2021-04-21"
     },
     "0.8.5": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
         "released": "2021-06-10"
     },
     "0.8.6": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
         "released": "2021-06-22"
     },
     "0.8.7": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
         "released": "2021-08-11"
     },
     "0.8.8": {
         "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation",
             "UserDefinedValueTypesBug",
             "SignedImmutables"
         ],
         "released": "2021-09-27"
     },
     "0.8.9": {
-        "bugs": [],
+        "bugs": [
+            "NestedCallataArrayAbiReencodingSizeValidation"
+        ],
         "released": "2021-09-29"
     }
 }
