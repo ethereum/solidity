@@ -36,5 +36,5 @@ fi
 
 # solbuildpackpusher/solidity-buildpack-deps:emscripten-10
 docker run -v "$(pwd):/root/project" -w /root/project \
-    solbuildpackpusher/solidity-buildpack-deps@sha256:bd23831e0025e35a106005b4ac06cb3618f690bfa2833a5881b573c02d35d9fc\
+    solbuildpackpusher/solidity-buildpack-deps@sha256:feac0e5fba12c346ad18d70eb10e98ffabba80da25074a71b22dced4f2148aed \
     ./scripts/ci/build_emscripten.sh "$BUILD_DIR"
