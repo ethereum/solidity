@@ -990,7 +990,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   t_ubu_soltest_all: &t_ubu_soltest_all
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_large
     parallelism: 50
     <<: *steps_soltest_all
 
