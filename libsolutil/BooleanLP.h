@@ -42,8 +42,8 @@ struct State
 
 	struct Bounds
 	{
-		std::optional<rational> lower;
-		std::optional<rational> upper;
+		std::optional<RationalWithDelta> lower;
+		std::optional<RationalWithDelta> upper;
 	};
 
 	// Unconditional bounds on variables
@@ -115,8 +115,8 @@ private:
 	std::optional<LinearExpression> parseFactor(smtutil::Expression const& _expression, std::map<std::string, size_t> _letBindings) const;
 
 	bool tryAddDirectBounds(Constraint const& _constraint);
-	void addUpperBound(size_t _index, rational _value);
-	void addLowerBound(size_t _index, rational _value);
+	void addUpperBound(size_t _index, RationalWithDelta _value);
+	void addLowerBound(size_t _index, RationalWithDelta _value);
 
 	size_t addConditionalConstraint(Constraint _constraint);
 

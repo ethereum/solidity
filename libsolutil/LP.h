@@ -34,14 +34,16 @@ using ReasonSet = std::set<size_t>;
 
 /**
  * Constraint of the form
- *  - data[1] * x_1 + data[2] * x_2 + ... <= data[0]  (equality == false)
- *  - data[1] * x_1 + data[2] * x_2 + ...  = data[0]  (equality == true)
+ *  - data[1] * x_1 + data[2] * x_2 + ... <= data[0]  (LESS_OR_EQUAL)
+ *  - data[1] * x_1 + data[2] * x_2 + ...  < data[0]  (LESS_THAN)
+ *  - data[1] * x_1 + data[2] * x_2 + ...  = data[0]  (EQUAL)
  * The set and order of variables is implied.
  */
 struct Constraint
 {
 	LinearExpression data;
-	bool equality = false;
+	enum Kind { EQUAL, LESS_THAN, LESS_OR_EQUAL };
+	Kind kind = LESS_OR_EQUAL;
 
 	bool operator<(Constraint const& _other) const;
 	bool operator==(Constraint const& _other) const;
@@ -52,10 +54,9 @@ struct Constraint
  * x > 0 is transformed into x >= 1*delta, where delta is assumed to be "small". Its value
  * is never explicitly computed / set, it is just a symbolic parameter.
  */
-class RationalWithDelta
+struct RationalWithDelta
 {
-public:
-	RationalWithDelta(rational _x): m_main(move(_x)) {}
+	RationalWithDelta(rational _x = {}): m_main(move(_x)) {}
 	static RationalWithDelta delta()
 	{
 		RationalWithDelta x(0);
@@ -69,30 +70,69 @@ public:
 		m_delta += _other.m_delta;
 		return *this;
 	}
+	RationalWithDelta& operator-=(RationalWithDelta const& _other)
+	{
+		m_main -= _other.m_main;
+		m_delta -= _other.m_delta;
+		return *this;
+	}
+	RationalWithDelta operator-(RationalWithDelta const& _other) const
+	{
+		RationalWithDelta ret = *this;
+		ret -= _other;
+		return ret;
+	}
 	RationalWithDelta& operator*=(rational const& _factor)
 	{
 		m_main *= _factor;
 		m_delta *= _factor;
 		return *this;
 	}
-	bool operator<=(RationalWithDelta const& _other)
+	RationalWithDelta operator*(rational const& _factor) const
+	{
+		RationalWithDelta ret = *this;
+		ret *= _factor;
+		return ret;
+	}
+	RationalWithDelta& operator/=(rational const& _factor)
+	{
+		m_main /= _factor;
+		m_delta /= _factor;
+		return *this;
+	}
+	RationalWithDelta operator/(rational const& _factor) const
+	{
+		RationalWithDelta ret = *this;
+		ret /= _factor;
+		return ret;
+	}
+	bool operator<=(RationalWithDelta const& _other) const
 	{
 		return std::tie(m_main, m_delta) <= std::tie(_other.m_main, _other.m_delta);
 	}
-	bool operator<(RationalWithDelta const& _other)
+	bool operator>=(RationalWithDelta const& _other) const
+	{
+		return std::tie(m_main, m_delta) >= std::tie(_other.m_main, _other.m_delta);
+	}
+	bool operator<(RationalWithDelta const& _other) const
 	{
 		return std::tie(m_main, m_delta) < std::tie(_other.m_main, _other.m_delta);
 	}
-	bool operator==(RationalWithDelta const& _other)
+	bool operator>(RationalWithDelta const& _other) const
+	{
+		return std::tie(m_main, m_delta) > std::tie(_other.m_main, _other.m_delta);
+	}
+	bool operator==(RationalWithDelta const& _other) const
 	{
 		return std::tie(m_main, m_delta) == std::tie(_other.m_main, _other.m_delta);
 	}
-	bool operator!=(RationalWithDelta const& _other)
+	bool operator!=(RationalWithDelta const& _other) const
 	{
 		return std::tie(m_main, m_delta) != std::tie(_other.m_main, _other.m_delta);
 	}
 
-private:
+	std::string toString() const;
+
 	rational m_main;
 	rational m_delta;
 };
@@ -107,8 +147,8 @@ struct SolvingState
 	std::vector<std::string> variableNames;
 	struct Bounds
 	{
-		std::optional<rational> lower;
-		std::optional<rational> upper;
+		std::optional<RationalWithDelta> lower;
+		std::optional<RationalWithDelta> upper;
 		bool operator<(Bounds const& _other) const { return make_pair(lower, upper) < make_pair(_other.lower, _other.upper); }
 		bool operator==(Bounds const& _other) const { return make_pair(lower, upper) == make_pair(_other.lower, _other.upper); }
 
@@ -159,6 +199,18 @@ inline void hashCombineVector(std::size_t& _seed, std::vector<T> const& _v)
 }
 
 template<>
+struct std::hash<solidity::util::RationalWithDelta>
+{
+	std::size_t operator()(solidity::util::RationalWithDelta const& _x) const noexcept
+	{
+		std::size_t result = 0;
+		hashCombine(result, _x.m_main);
+		hashCombine(result, _x.m_delta);
+		return result;
+	}
+};
+
+template<>
 struct std::hash<solidity::util::SolvingState::Bounds>
 {
 	std::size_t operator()(solidity::util::SolvingState::Bounds const& _bounds) const noexcept
@@ -189,7 +241,7 @@ struct std::hash<solidity::util::Constraint>
 	std::size_t operator()(solidity::util::Constraint const& _constraint) const noexcept
 	{
 		std::size_t result = 0;
-		hashCombine(result, _constraint.equality);
+		hashCombine(result, _constraint.kind);
 		hashCombine(result, _constraint.data);
 		return result;
 	}
@@ -243,8 +295,8 @@ class LPSolver
 public:
 	void addConstraint(Constraint const& _constraint, std::optional<size_t> _reason = std::nullopt);
 	void setVariableName(size_t _variable, std::string _name);
-	void addLowerBound(size_t _variable, rational _bound);
-	void addUpperBound(size_t _variable, rational _bound);
+	void addLowerBound(size_t _variable, RationalWithDelta _bound);
+	void addUpperBound(size_t _variable, RationalWithDelta _bound);
 
 	std::pair<LPResult, ReasonSet>check();
 
@@ -254,13 +306,13 @@ public:
 private:
 	struct Bounds
 	{
-		std::optional<rational> lower;
-		std::optional<rational> upper;
+		std::optional<RationalWithDelta> lower;
+		std::optional<RationalWithDelta> upper;
 	};
 	struct Variable
 	{
 		std::string name = {};
-		rational value = 0;
+		RationalWithDelta value = {};
 		Bounds bounds = {};
 	};
 	struct SubProblem
@@ -282,13 +334,13 @@ private:
 	private:
 		bool correctNonbasic();
 		/// Set value of non-basic variable.
-		void update(size_t _varIndex, rational const& _value);
+		void update(size_t _varIndex, RationalWithDelta const& _value);
 		/// @returns the index of the first basic variable violating its bounds.
 		std::optional<size_t> firstConflictingBasicVariable() const;
 		std::optional<size_t> firstReplacementVar(size_t _basicVarToReplace, bool _increasing) const;
 
 		void pivot(size_t _old, size_t _new);
-		void pivotAndUpdate(size_t _oldBasicVar, rational const& _newValue, size_t _newBasicVar);
+		void pivotAndUpdate(size_t _oldBasicVar, RationalWithDelta const& _newValue, size_t _newBasicVar);
 	};
 
 

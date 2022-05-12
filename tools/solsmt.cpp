@@ -143,7 +143,7 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 	return std::visit(GenericVisitor{
 		[&](string_view const& _atom) {
 			if (isDigit(_atom.front()) || _atom.front() == '.')
-				return Expression(parseRational(_atom));
+				return Expression(parseRational(_atom).str(), {}, SortProvider::realSort);
 			else
 				return Expression(string(_atom), {}, _variableSorts.at(string(_atom)));
 		},
@@ -179,7 +179,7 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 				sort =
 					contains(boolOperators, op) ?
 					SortProvider::boolSort :
-					SortProvider::intSort(); // TODO should be real at some point
+					arguments.back().sort;
 			}
 			return Expression(string(op), move(arguments), move(sort));
 		}
@@ -245,8 +245,7 @@ int main(int argc, char** argv)
 			solAssert(get<vector<SMTLib2Expression>>(items[2].data).empty());
 			string_view type = get<string_view>(items[3].data);
 			solAssert(type == "Real" || type == "Bool");
-			// TODO should be real, but we call it int...
-			SortPointer sort = type == "Real" ? SortProvider::intSort() : SortProvider::boolSort;
+			SortPointer sort = type == "Real" ? SortProvider::realSort : SortProvider::boolSort;
 			variableSorts[variableName] = sort;
 			solver.declareVariable(variableName, move(sort));
 		}

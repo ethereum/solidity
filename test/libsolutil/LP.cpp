@@ -55,12 +55,25 @@ public:
 	{
 		_lhs -= _rhs;
 		_lhs[0] = -_lhs[0];
-		m_solver.addConstraint({move(_lhs), false}, move(_reason));
+		m_solver.addConstraint({move(_lhs), Constraint::LESS_OR_EQUAL}, move(_reason));
 	}
 
 	void addLEConstraint(LinearExpression _lhs, rational _rhs)
 	{
-		addLEConstraint(move(_lhs), constant(_rhs));
+		addLEConstraint(move(_lhs), LinearExpression::constant(move(_rhs)));
+	}
+
+	/// Adds the constraint "_lhs < _rhs".
+	void addLTConstraint(LinearExpression _lhs, LinearExpression _rhs, optional<size_t> _reason = {})
+	{
+		_lhs -= _rhs;
+		_lhs[0] = -_lhs[0];
+		m_solver.addConstraint({move(_lhs), Constraint::LESS_THAN}, move(_reason));
+	}
+
+	void addLTConstraint(LinearExpression _lhs, rational _rhs)
+	{
+		addLTConstraint(move(_lhs), LinearExpression::constant(move(_rhs)));
 	}
 
 	/// Adds the constraint "_lhs = _rhs".
@@ -68,7 +81,7 @@ public:
 	{
 		_lhs -= _rhs;
 		_lhs[0] = -_lhs[0];
-		m_solver.addConstraint({move(_lhs), true}, move(_reason));
+		m_solver.addConstraint({move(_lhs), Constraint::EQUAL}, move(_reason));
 	}
 
 	void addLowerBound(string _variable, rational _value)
@@ -423,6 +436,17 @@ BOOST_AUTO_TEST_CASE(reasons_joined)
 	infeasible({0, 2});
 	addLEConstraint(x, z);
 	infeasible({0, 2, 3});
+}
+
+BOOST_AUTO_TEST_CASE(less_than)
+{
+	auto x = variable("x");
+	addLTConstraint(2 * x, 10);
+	feasible({{"x", 0}});
+	addLowerBound("x", 4);
+	feasible({{"x", 4}});
+	addLowerBound("x", 5);
+	infeasible();
 }
 
 

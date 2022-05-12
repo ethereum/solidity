@@ -31,6 +31,7 @@ namespace solidity::smtutil
 enum class Kind
 {
 	Int,
+	Real,
 	Bool,
 	BitVector,
 	Function,
@@ -206,6 +207,7 @@ struct SortProvider
 	static std::shared_ptr<IntSort> const sintSort;
 	static std::shared_ptr<IntSort> intSort(bool _signed = false);
 	static std::shared_ptr<BitVectorSort> const bitVectorSort;
+	static std::shared_ptr<Sort> const realSort;
 };
 
 }

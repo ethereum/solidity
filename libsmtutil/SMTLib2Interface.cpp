@@ -219,6 +219,8 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	{
 	case Kind::Int:
 		return "Int";
+	case Kind::Real:
+		return "Real";
 	case Kind::Bool:
 		return "Bool";
 	case Kind::BitVector:
@@ -278,8 +280,8 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			smtAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
+			smtAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool || e.sort->kind == Kind::Real, "Invalid sort for expression to evaluate.");
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + toSmtLibSort(*e.sort) + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";

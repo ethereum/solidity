@@ -92,10 +92,9 @@ void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _s
 {
 	// Internal variables are '$<number>', or '$c<number>' so escape `$` to `$$`.
 	string name = (_name.empty() || _name.at(0) != '$') ? _name : "$$" + _name;
-	// TODO This will not be an integer variable in our model.
-	// Introduce a new kind?
-	solAssert(_sort && (_sort->kind == Kind::Int || _sort->kind == Kind::Bool), "");
+	solAssert(_sort && (_sort->kind == Kind::Int || _sort->kind == Kind::Real || _sort->kind == Kind::Bool), "");
 	solAssert(!state().variables.count(name), "");
+	// TODO store the actual kind (integer, real, bool)
 	declareVariable(name, _sort->kind == Kind::Bool);
 }
 
@@ -206,10 +205,10 @@ string BooleanLPSolver::toString() const
 		if (!bounds.lower && !bounds.upper)
 			continue;
 		if (bounds.lower)
-			result += ::toString(*bounds.lower) + " <= ";
+			result += bounds.lower->toString() + " <= ";
 		result += variableName(index);
 		if (bounds.upper)
-			result += " <= " + ::toString(*bounds.upper);
+			result += " <= " + bounds.upper->toString();
 		result += "\n";
 	}
 	result += "-- Clauses:\n";
@@ -251,7 +250,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> 
 				addBooleanEquality(newBoolean, _expr.arguments.at(1), _letBindings);
 			}
 		}
-		else if (_expr.arguments.at(0).sort->kind == Kind::Int)
+		else if (_expr.arguments.at(0).sort->kind == Kind::Int || _expr.arguments.at(0).sort->kind == Kind::Real)
 		{
 			// Try to see if both sides are linear.
 			optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
@@ -260,7 +259,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> 
 			{
 				LinearExpression data = *left - *right;
 				data[0] *= -1;
-				Constraint c{move(data), _expr.name == "="};
+				Constraint c{move(data), Constraint::EQUAL};
 				if (!tryAddDirectBounds(c))
 					state().fixedConstraints.emplace_back(move(c));
 				cerr << "Added as fixed constraint" << endl;
@@ -293,24 +292,20 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> 
 	}
 	else if (_expr.name == "=>")
 		addAssertion(!_expr.arguments.at(0) || _expr.arguments.at(1), move(_letBindings));
-	else if (_expr.name == "<=")
+	else if (_expr.name == "<=" || _expr.name == "<")
 	{
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
 		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
 		solAssert(left && right);
 		LinearExpression data = *left - *right;
 		data[0] *= -1;
-		Constraint c{move(data), _expr.name == "="};
+		// TODO if the type is integer, transform x < y into x <= y - 1
+		Constraint c{move(data), _expr.name == "<=" ? Constraint::LESS_OR_EQUAL : Constraint::LESS_THAN};
 		if (!tryAddDirectBounds(c))
 			state().fixedConstraints.emplace_back(move(c));
 	}
 	else if (_expr.name == ">=")
 		addAssertion(_expr.arguments.at(1) <= _expr.arguments.at(0), move(_letBindings));
-	else if (_expr.name == "<")
-	{
-		cerr << "ERROR cannot properly encode '<'" << endl;
-		addAssertion(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1, move(_letBindings));
-	}
 	else if (_expr.name == ">")
 		addAssertion(_expr.arguments.at(1) < _expr.arguments.at(0), move(_letBindings));
 	else
@@ -325,7 +320,8 @@ Expression BooleanLPSolver::declareInternalVariable(bool _boolean)
 {
 	string name = "$" + to_string(state().variables.size() + 1);
 	declareVariable(name, _boolean);
-	return smtutil::Expression(name, {}, _boolean ? SortProvider::boolSort : SortProvider::uintSort);
+	// TODO also support integer
+	return smtutil::Expression(name, {}, _boolean ? SortProvider::boolSort : SortProvider::realSort);
 }
 
 void BooleanLPSolver::declareVariable(string const& _name, bool _boolean)
@@ -369,27 +365,25 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 	}
 	else if (_expr.name == "not")
 		return negate(parseLiteralOrReturnEqualBoolean(_expr.arguments.at(0), move(_letBindings)));
-	else if (_expr.name == "<=" || _expr.name == "=")
+	else if (_expr.name == "<=" || _expr.name == "<" || _expr.name == "=")
 	{
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
 		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
 		if (!left || !right)
 			return {};
 
+		// TODO if the type is int, use x < y -> x <= y - 1
 		LinearExpression data = *left - *right;
 		data[0] *= -1;
 
-		return Literal{true, addConditionalConstraint(Constraint{move(data), _expr.name == "="})};
+		Constraint::Kind kind =
+			_expr.name == "<=" ? Constraint::LESS_OR_EQUAL :
+			_expr.name == "<" ? Constraint::LESS_THAN :
+			Constraint::EQUAL;
+		return Literal{true, addConditionalConstraint(Constraint{move(data), kind})};
 	}
 	else if (_expr.name == ">=")
 		return parseLiteral(_expr.arguments.at(1) <= _expr.arguments.at(0), move(_letBindings));
-	else if (_expr.name == "<")
-	{
-		cerr << "ERROR cannot properly encode '<'" << endl;
-		// TODO this is not the theory of reals!
-
-		return parseLiteral(_expr.arguments.at(0) <= _expr.arguments.at(1) - 1, move(_letBindings));
-	}
 	else if (_expr.name == ">")
 		return parseLiteral(_expr.arguments.at(1) < _expr.arguments.at(0), move(_letBindings));
 
@@ -401,12 +395,12 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 	if (isConditionalConstraint(_lit.variable))
 	{
 		Constraint const& c = conditionalConstraint(_lit.variable);
-		if (c.equality)
+		if (c.kind == Constraint::EQUAL)
 		{
 			// X = b
 
-			cerr << "ERROR cannot properly encode '<'" << endl;
 
+			/* This is the integer case
 			// X <= b - 1
 			Constraint le = c;
 			le.equality = false;
@@ -421,24 +415,42 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 			ge.data[0] -= 1;
 			Literal geL{true, addConditionalConstraint(ge)};
 
+			*/
+
+			// X < b
+			Constraint lt = c;
+			lt.kind = Constraint::LESS_THAN;
+			Literal ltL{true, addConditionalConstraint(lt)};
+
+			// X > b <=> -X < -b
+			Constraint gt = c;
+			gt.kind = Constraint::LESS_THAN;
+			gt.data *= -1;
+			Literal gtL{true, addConditionalConstraint(gt)};
 
 			Literal equalBoolean = *parseLiteral(declareInternalVariable(true), {});
 			// a = or(x, y) <=> (-a \/ x \/ y) /\ (a \/ -x) /\ (a \/ -y)
-			state().clauses.emplace_back(Clause{vector<Literal>{negate(equalBoolean), leL, geL}});
-			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(leL)}});
-			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(geL)}});
+			state().clauses.emplace_back(Clause{vector<Literal>{negate(equalBoolean), ltL, gtL}});
+			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(ltL)}});
+			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(gtL)}});
 			return equalBoolean;
 		}
 		else
 		{
-			cerr << "ERROR cannot properly encode '<'" << endl;
-			// X > b
+			/* This is the integer case
 			// -x < -b
 			// -x <= -b - 1
 
 			Constraint negated = c;
 			negated.data *= -1;
 			negated.data[0] -= 1;
+			*/
+
+			// !(X <= b) <=> X > b <=> -X < -b
+			// !(X < b) <=> X >= b <=> -X <= -b
+			Constraint negated = c;
+			negated.data *= -1;
+			negated.kind = c.kind == Constraint::LESS_THAN ? Constraint::LESS_OR_EQUAL : Constraint::LESS_THAN;
 			return Literal{true, addConditionalConstraint(negated)};
 		}
 	}
@@ -547,10 +559,11 @@ bool BooleanLPSolver::tryAddDirectBounds(Constraint const& _constraint)
 	//cerr << "adding direct bound." << endl;
 	if (ranges::distance(nonzero) == 0)
 	{
-		// 0 <= b or 0 = b
+		// 0 < b or 0 <= b or 0 = b
 		if (
-			_constraint.data.front() < 0 ||
-			(_constraint.equality && _constraint.data.front() != 0)
+			(_constraint.kind == Constraint::LESS_THAN && _constraint.data.front() <= 0) ||
+			(_constraint.kind == Constraint::LESS_OR_EQUAL && _constraint.data.front() < 0) ||
+			(_constraint.kind == Constraint::EQUAL && _constraint.data.front() != 0)
 		)
 		{
 //			cerr << "SETTING INF" << endl;
@@ -560,27 +573,29 @@ bool BooleanLPSolver::tryAddDirectBounds(Constraint const& _constraint)
 	else
 	{
 		auto&& [varIndex, factor] = nonzero.front();
-		// a * x <= b
-		rational bound = _constraint.data[0] / factor;
-		if (factor > 0 || _constraint.equality)
+		// a * x <= b or a * x < b or a * x = b
+
+		RationalWithDelta bound = _constraint.data[0];
+		if (_constraint.kind == Constraint::LESS_THAN)
+			bound -= RationalWithDelta::delta();
+		bound /= factor;
+		if (factor > 0 || _constraint.kind == Constraint::EQUAL)
 			addUpperBound(varIndex, bound);
-		if (factor < 0 || _constraint.equality)
+		if (factor < 0 || _constraint.kind == Constraint::EQUAL)
 			addLowerBound(varIndex, bound);
 	}
 	return true;
 }
 
-void BooleanLPSolver::addUpperBound(size_t _index, rational _value)
+void BooleanLPSolver::addUpperBound(size_t _index, RationalWithDelta _value)
 {
 	//cerr << "adding " << variableName(_index) << " <= " << toString(_value) << endl;
 	if (!state().bounds[_index].upper || _value < *state().bounds[_index].upper)
 		state().bounds[_index].upper = move(_value);
 }
 
-void BooleanLPSolver::addLowerBound(size_t _index, rational _value)
+void BooleanLPSolver::addLowerBound(size_t _index, RationalWithDelta _value)
 {
-	// Lower bound must be at least zero.
-	_value = max(_value, rational{});
 	//cerr << "adding " << variableName(_index) << " >= " << toString(_value) << endl;
 	if (!state().bounds[_index].lower || _value > *state().bounds[_index].lower)
 		state().bounds[_index].lower = move(_value);
@@ -712,7 +727,11 @@ string BooleanLPSolver::toString(Constraint const& _constraint) const
 	// TODO reasons?
 	return
 		joinHumanReadable(line, " + ") +
-		(_constraint.equality ? "  = " : " <= ") +
+		(
+			_constraint.kind == Constraint::EQUAL ? "  = " :
+			_constraint.kind == Constraint::LESS_OR_EQUAL ? " <= " :
+			" <  "
+		) +
 		::toString(_constraint.data.front());
 }
 

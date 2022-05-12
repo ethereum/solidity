@@ -86,11 +86,10 @@ string reasonToString(ReasonSet const& _reasons, size_t _minSize)
 
 }
 
-
 bool Constraint::operator<(Constraint const& _other) const
 {
-	if (equality != _other.equality)
-		return equality < _other.equality;
+	if (kind != _other.kind)
+		return kind < _other.kind;
 
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
 		if (rational diff = data.get(i) - _other.data.get(i))
@@ -105,7 +104,7 @@ bool Constraint::operator<(Constraint const& _other) const
 
 bool Constraint::operator==(Constraint const& _other) const
 {
-	if (equality != _other.equality)
+	if (kind != _other.kind)
 		return false;
 
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
@@ -117,6 +116,17 @@ bool Constraint::operator==(Constraint const& _other) const
 	//cout << "full traversal of " << max(data.size(), _other.data.size()) << endl;
 
 	return true;
+}
+
+string RationalWithDelta::toString() const
+{
+	string result = ::toString(m_main);
+	if (m_delta)
+		result +=
+			(m_delta > 0 ? "+" : "-") +
+			(abs(m_delta) == 1 ? "" : ::toString(abs(m_delta))) +
+			"d";
+	return result;
 }
 
 bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState const& _b) const
@@ -160,7 +170,11 @@ string SolvingState::toString() const
 			}
 		result +=
 			joinHumanReadable(line, " + ") +
-			(constraint.equality ? "  = " : " <= ") +
+			(
+				constraint.kind == Constraint::EQUAL ? "  = " :
+				constraint.kind == Constraint::LESS_OR_EQUAL ? " <= " :
+				" <  "
+			) +
 			::toString(constraint.data.front()) +
 			"\n";
 	}
@@ -172,10 +186,10 @@ string SolvingState::toString() const
 		if (bounds.lower)
 			result +=
 				reasonToString(bounds.lowerReasons, reasonLength) +
-				::toString(*bounds.lower) + " <= ";
+				bounds.lower->toString() + " <= ";
 		result += variableNames.at(index);
 		if (bounds.upper)
-			result += " <= "s + ::toString(*bounds.upper) + " " + reasonToString(bounds.upperReasons, 0);
+			result += " <= "s + bounds.upper->toString() + " " + reasonToString(bounds.upperReasons, 0);
 		result += "\n";
 	}
 	return result;
@@ -215,7 +229,7 @@ void LPSolver::setVariableName(size_t _variable, string _name)
 	p.variables[p.varMapping.at(_variable)].name = move(_name);
 }
 
-void LPSolver::addLowerBound(size_t _variable, rational _bound)
+void LPSolver::addLowerBound(size_t _variable, RationalWithDelta _bound)
 {
 	SubProblem& p = unsealForVariable(_variable);
 	size_t innerIndex = p.varMapping.at(_variable);
@@ -227,7 +241,7 @@ void LPSolver::addLowerBound(size_t _variable, rational _bound)
 	}
 }
 
-void LPSolver::addUpperBound(size_t _variable, rational _bound)
+void LPSolver::addUpperBound(size_t _variable, RationalWithDelta _bound)
 {
 	SubProblem& p = unsealForVariable(_variable);
 	size_t innerIndex = p.varMapping.at(_variable);
@@ -274,7 +288,10 @@ map<string, rational> LPSolver::model() const
 	for (auto const& problem: m_subProblems)
 		if (problem)
 			for (auto&& [outerIndex, innerIndex]: problem->varMapping)
-				result[problem->variables[innerIndex].name] = problem->variables[innerIndex].value;
+				// TODO assign proper value to "delta"
+				result[problem->variables[innerIndex].name] =
+					problem->variables[innerIndex].value.m_main +
+					problem->variables[innerIndex].value.m_delta / rational(100000);
 	return result;
 }
 
@@ -376,10 +393,13 @@ void LPSolver::addConstraintToSubProblem(
 		// TODO we could avoid some of the steps by introducing an "addUpperBound"
 		// function on the subproblem.
 		rational factor = _constraint.data[latestVariableIndex];
-		rational bound = _constraint.data.front() / factor;
-		if (factor > 0 || _constraint.equality)
+		RationalWithDelta bound = _constraint.data.front();
+		if (_constraint.kind == Constraint::LESS_THAN)
+			bound -= RationalWithDelta::delta();
+		bound /= factor;
+		if (factor > 0 || _constraint.kind == Constraint::EQUAL)
 			addUpperBound(latestVariableIndex, bound);
-		if (factor < 0 || _constraint.equality)
+		if (factor < 0 || _constraint.kind == Constraint::EQUAL)
 			addLowerBound(latestVariableIndex, bound);
 		return;
 	}
@@ -389,15 +409,17 @@ void LPSolver::addConstraintToSubProblem(
 	// Name is only needed for printing
 	//problem.variables[slackIndex].name = "_s" + to_string(m_slackVariableCounter++);
 	problem.basicVariables[slackIndex] = problem.factors.size();
-	if (_constraint.equality)
+	if (_constraint.kind == Constraint::EQUAL)
 		problem.variables[slackIndex].bounds.lower = _constraint.data[0];
 	problem.variables[slackIndex].bounds.upper = _constraint.data[0];
+	if (_constraint.kind == Constraint::LESS_THAN)
+		*problem.variables[slackIndex].bounds.upper -= RationalWithDelta::delta();
 	// TODO it is a basic var, so we don't add it, unless we use this for basic vars.
 	//problem.variablesPotentiallyOutOfBounds.insert(slackIndex);
 
 	// Compress the constraint, i.e. turn outer variable indices into
 	// inner variable indices.
-	rational valueForSlack;
+	RationalWithDelta valueForSlack;
 	LinearExpression compressedConstraint;
 	LinearExpression basicVarNullifier;
 	compressedConstraint.resize(problem.variables.size());
@@ -504,15 +526,15 @@ string LPSolver::SubProblem::toString() const
 	for (auto&& [i, v]: variables | ranges::views::enumerate)
 	{
 		if (v.bounds.lower)
-			resultString += ::toString(*v.bounds.lower) + " <= ";
+			resultString += v.bounds.lower->toString() + " <= ";
 		else
 			resultString += "       ";
 		resultString += v.name;
 		if (v.bounds.upper)
-			resultString += " <= " + ::toString(*v.bounds.upper);
+			resultString += " <= " + v.bounds.upper->toString();
 		else
 			resultString += "       ";
-		resultString += "   := " + ::toString(v.value) + "\n";
+		resultString += "   := " + v.value.toString() + "\n";
 	}
 	for (auto&& [rowIndex, row]: factors | ranges::views::enumerate)
 	{
@@ -574,9 +596,9 @@ bool LPSolver::SubProblem::correctNonbasic()
 	return true;
 }
 
-void LPSolver::SubProblem::update(size_t _varIndex, rational const& _value)
+void LPSolver::SubProblem::update(size_t _varIndex, RationalWithDelta const& _value)
 {
-	rational delta = _value - variables[_varIndex].value;
+	RationalWithDelta delta = _value - variables[_varIndex].value;
 	variables[_varIndex].value = _value;
 	for (size_t j = 0; j < variables.size(); j++)
 		if (basicVariables.count(j) && factors[basicVariables.at(j)][_varIndex])
@@ -658,18 +680,18 @@ void LPSolver::SubProblem::pivot(size_t _old, size_t _new)
 
 void LPSolver::SubProblem::pivotAndUpdate(
 	size_t _oldBasicVar,
-	rational const& _newValue,
+	RationalWithDelta const& _newValue,
 	size_t _newBasicVar
 )
 {
-	rational theta = (_newValue - variables[_oldBasicVar].value) / factors[basicVariables[_oldBasicVar]][_newBasicVar];
+	RationalWithDelta theta = (_newValue - variables[_oldBasicVar].value) / factors[basicVariables[_oldBasicVar]][_newBasicVar];
 
 	variables[_oldBasicVar].value = _newValue;
 	variables[_newBasicVar].value += theta;
 
 	for (auto const& [i, row]: basicVariables)
 		if (i != _oldBasicVar && factors[row][_newBasicVar])
-			variables[i].value += factors[row][_newBasicVar] * theta;
+			variables[i].value += theta * factors[row][_newBasicVar];
 
 	pivot(_oldBasicVar, _newBasicVar);
 }

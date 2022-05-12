@@ -196,6 +196,9 @@ BOOST_AUTO_TEST_CASE(splittable)
 	Expression w = variable("w");
 	solver.addAssertion(x < y);
 	solver.addAssertion(x < y - 2);
+	solver.addAssertion(x >= 0);
+	solver.addAssertion(y >= 0);
+	solver.addAssertion(w >= 0);
 	solver.addAssertion(z + w == 28);
 
 	solver.push();
