@@ -18,6 +18,7 @@ contract C {
 // ====
 // SMTEngine: all
 // SMTExtCalls: trusted
+// SMTIgnoreOS: macos
 // ----
 // Warning 4984: (47-50): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 6328: (167-185): CHC: Assertion violation might happen here.

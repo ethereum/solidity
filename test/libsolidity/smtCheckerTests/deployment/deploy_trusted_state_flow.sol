@@ -17,6 +17,7 @@ contract C {
 // ====
 // SMTEngine: all
 // SMTExtCalls: trusted
+// SMTIgnoreOS: macos
 // ----
 // Warning 1218: (233-251): CHC: Error trying to invoke SMT solver.
 // Warning 4984: (47-50): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.

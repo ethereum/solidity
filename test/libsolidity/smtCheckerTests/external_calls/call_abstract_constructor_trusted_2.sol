@@ -17,8 +17,9 @@ contract C {
 // ====
 // SMTEngine: chc
 // SMTExtCalls: trusted
+// SMTIgnoreCex: yes
 // ----
 // Warning 9302: (257-293): Return value of low-level calls not used.
-// Warning 6328: (216-238): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x0119\n\nTransaction trace:\nC.constructor()
-// Warning 6328: (297-319): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x1720\n\nTransaction trace:\nC.constructor()
-// Warning 6328: (404-426): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x1720\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (216-238): CHC: Assertion violation happens here.
+// Warning 6328: (297-319): CHC: Assertion violation happens here.
+// Warning 6328: (404-426): CHC: Assertion violation happens here.
