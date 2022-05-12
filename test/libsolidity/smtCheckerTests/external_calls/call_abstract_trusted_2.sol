@@ -20,8 +20,6 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 9302: (263-299): Return value of low-level calls not used.
-// Warning 6031: (285-291): Internal error: Expression undefined for SMT solver.
 // Warning 6328: (222-244): CHC: Assertion violation happens here.
 // Warning 6328: (303-325): CHC: Assertion violation happens here.
 // Warning 6328: (410-432): CHC: Assertion violation happens here.
-// Info 1180: Reentrancy property(ies) for :C:\n!(<errorCode> = 1)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(D(d).x() == 42)\n<errorCode> = 2 -> Assertion failed at assert(D(d).x() == 21)\n<errorCode> = 4 -> Assertion failed at assert(D(d).x() == 21)\n<errorCode> = 5 -> Assertion failed at assert(D(d).x() == 42)\n

@@ -23,5 +23,5 @@ contract C {
 // SMTExtCalls: trusted
 // ----
 // Warning 6328: (231-253): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x0119\ny = 0\n\nTransaction trace:\nC.constructor()
-// Warning 6328: (293-307): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x188b\ny = 0\n\nTransaction trace:\nC.constructor()
-// Warning 6328: (359-374): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x0217\ny = 0\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (293-307): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x0217\ny = 3\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (359-374): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0x188b\ny = 0\n\nTransaction trace:\nC.constructor()

@@ -17,4 +17,4 @@ contract C {
 // SMTEngine: all
 // SMTExtCalls: trusted
 // ----
-// Warning 6328: (199-212): CHC: Assertion violation happens here.\nCounterexample:\nd = 0\n\nTransaction trace:\nC.constructor()\nState: d = 0\nC.g()\n    D.f() -- trusted external call
+// Warning 6328: (199-212): CHC: Assertion violation happens here.\nCounterexample:\nd = (- 1)\n\nTransaction trace:\nC.constructor()\nState: d = (- 1)\nC.g()\n    D.f() -- trusted external call

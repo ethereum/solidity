@@ -19,4 +19,4 @@ contract C {
 // SMTExtCalls: trusted
 // SMTTargets: assert
 // ----
-// Warning 6328: (203-221): CHC: Assertion violation happens here.\nCounterexample:\n\na = 42\n\nTransaction trace:\nC.constructor()\nC.f()\n    D.g() -- trusted external call
+// Warning 6328: (203-221): CHC: Assertion violation happens here.

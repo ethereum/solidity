@@ -32,4 +32,5 @@ contract C {
 // SMTEngine: chc
 // SMTExtCalls: trusted
 // ----
+// Warning 6328: (355-381): CHC: Assertion violation might happen here.
 // Warning 6328: (385-399): CHC: Assertion violation might happen here.
