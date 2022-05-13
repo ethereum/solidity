@@ -160,7 +160,6 @@ TestTool::Result TestTool::process()
 				m_path.string(),
 				m_options.evmVersion(),
 				m_options.vmPaths,
-				m_options.enforceViaYul,
 				m_options.enforceCompileToEwasm,
 				m_options.enforceGasTest,
 				m_options.enforceGasTestMinValue

@@ -13,6 +13,7 @@ contract C {
 }
 // ====
 // ABIEncoderV1Only: true
+// compileViaYul: false
 // ----
 // f(address): 0xffff1234567890123456789012345678901234567890 -> 0x0 # We input longer data on purpose.#
 // g(address): 0xffff1234567890123456789012345678901234567890 -> 0x0

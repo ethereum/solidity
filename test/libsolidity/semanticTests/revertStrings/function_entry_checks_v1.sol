@@ -5,7 +5,7 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ABIEncoderV1Only: true
-// compileViaYul: false
 // revertStrings: debug
+// compileViaYul: false
 // ----
 // t(uint256) -> FAILURE, hex"08c379a0", 0x20, 0x12, "Calldata too short"

@@ -9,5 +9,6 @@ contract C {
 // EVMVersion: >=byzantium
 // revertStrings: debug
 // ABIEncoderV1Only: true
+// compileViaYul: false
 // ----
 // f(uint8[]): 0x20, 2, 3, 3 -> FAILURE, hex"08c379a0", 0x20, 17, "Enum out of range"

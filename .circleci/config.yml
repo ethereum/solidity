@@ -1035,16 +1035,6 @@ jobs:
           condition: true
           <<: *steps_soltest
 
-  t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
-    <<: *base_ubuntu2004
-    parallelism: 20
-    environment:
-      EVM: << pipeline.parameters.evm-version >>
-      SOLTEST_FLAGS: --enforce-via-yul
-      OPTIMIZE: 0
-      TERM: xterm
-    <<: *steps_soltest
-
   t_ubu_clang_soltest: &t_ubu_clang_soltest
     <<: *base_ubuntu2004_clang
     parallelism: 20
@@ -1515,7 +1505,6 @@ workflows:
       - t_ubu_cli: *workflow_ubuntu2004
       - t_ubu_locale: *workflow_ubuntu2004
       - t_ubu_soltest_all: *workflow_ubuntu2004
-      - t_ubu_soltest_enforce_yul: *workflow_ubuntu2004
       - b_ubu_clang: *workflow_trigger_on_tags
       - t_ubu_clang_soltest: *workflow_ubuntu2004_clang
       - t_ubu_lsp: *workflow_ubuntu2004
