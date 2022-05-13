@@ -85,6 +85,10 @@ function gnosis_safe_test
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
     npm install ethers@5.6.1
 
+    # Hardhat 2.9.5 introduced a bug with handling padded arguments to getStorageAt().
+    # TODO: Remove when https://github.com/NomicFoundation/hardhat/issues/2709 is fixed.
+    npm install hardhat@2.9.4
+
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
 
