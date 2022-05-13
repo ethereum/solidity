@@ -21,8 +21,6 @@ Bugfixes:
  * SMTChecker: Fix bug when z3 is selected but not available at runtime.
  * SMTChecker: Fix ABI compatibility with z3 >=4.8.16.
  * TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
- * View Pure Checker: Mark ``returndatasize`` and ``returndatacopy`` as view to disallow them in inline assembly blocks in pure functions.
-
 
 
 ### 0.8.13 (2022-03-16)
