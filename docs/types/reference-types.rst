@@ -349,7 +349,7 @@ Array Members
 **pop()**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member
      function called ``pop()`` that you can use to remove an element from the
-     end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
+     end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element. The function returns nothing.
 
 .. note::
     Increasing the length of a storage array by calling ``push()``
