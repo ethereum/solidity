@@ -2,52 +2,47 @@
 .. index: memory layout
 
 ****************
-Layout in Memory
+内存中的存储结构
 ****************
 
-Solidity reserves four 32-byte slots, with specific byte ranges (inclusive of endpoints) being used as follows:
+Solidity保留了四个32字节的插槽，具体的字节范围（包括端点）使用如下：
 
-- ``0x00`` - ``0x3f`` (64 bytes): scratch space for hashing methods
-- ``0x40`` - ``0x5f`` (32 bytes): currently allocated memory size (aka. free memory pointer)
-- ``0x60`` - ``0x7f`` (32 bytes): zero slot
+- ``0x00`` - ``0x3f`` （64字节）： 用于哈希方法的临时空间
+- ``0x40`` - ``0x5f`` （32字节）： 当前分配的内存大小（又称空闲内存指针）。
+- ``0x60`` - ``0x7f`` （32字节）： 0 值插槽
 
-Scratch space can be used between statements (i.e. within inline assembly). The zero slot
-is used as initial value for dynamic memory arrays and should never be written to
-(the free memory pointer points to ``0x80`` initially).
+临时空间可以在语句之间使用（即在内联汇编之中）。
+0 值插槽则用来对动态内存数组进行初始化，且永远不会写入数据
+（因而可用的初始内存指针为 ``0x80``）。
 
-Solidity always places new objects at the free memory pointer and
-memory is never freed (this might change in the future).
+Solidity 总会把新对象保存在空闲内存指针的位置，
+所以这段内存实际上从来不会空闲（在未来可能会修改这个机制）。
 
-Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this
-is even true for ``bytes1[]``, but not for ``bytes`` and ``string``).
-Multi-dimensional memory arrays are pointers to memory arrays. The length of a
-dynamic array is stored at the first slot of the array and followed by the array
-elements.
+Solidity中内存数组中的元素总是占据32字节的倍数
+（对于 ``bytes1[]`` 来说也是如此，但对于 ``bytes`` 和 ``string`` 来说不是这样）。
+多维内存数组是指向内存数组的指针. 一个动态数组的长度被存储在数组的第一个槽里，后面是数组元素。
 
-.. warning::
-  There are some operations in Solidity that need a temporary memory area
-  larger than 64 bytes and therefore will not fit into the scratch space.
-  They will be placed where the free memory points to, but given their
-  short lifetime, the pointer is not updated. The memory may or may not
-  be zeroed out. Because of this, one should not expect the free memory
-  to point to zeroed out memory.
+.. 警告::
+  在Solidity中，有一些操作需要一个大于64字节的临时内存区域，
+  因此将不适合放在默认的临时空间中。它们将被放置在空闲内存指向的位置，
+  但由于这种数据的生命周期较短，这个指针不会即时更新。
+  这部分内存可能会被清零也可能不会。
+  所以我们不应该期望这些所谓的空闲内存总会被清零。
 
-  While it may seem like a good idea to use ``msize`` to arrive at a
-  definitely zeroed out memory area, using such a pointer non-temporarily
-  without updating the free memory pointer can have unexpected results.
+  虽然使用 ``msize`` 来到达一个绝对清零的内存区域似乎是个好主意，
+  但在不更新空闲内存指针的情况下，非临时性地使用这样的指针会产生意想不到的结果。
 
 
-Differences to Layout in Storage
+与存储结构的区别
 ================================
 
-As described above the layout in memory is different from the layout in
-:ref:`storage<storage-inplace-encoding>`. Below there are some examples.
+如上所述，内存中的存储结构与 :ref:`存储（storage） <storage-inplace-encoding>` 中的存储结构是不同的。
+下面是一些例子。
 
-Example for Difference in Arrays
+在数组中的差异的例子
 --------------------------------
 
-The following array occupies 32 bytes (1 slot) in storage, but 128
-bytes (4 items with 32 bytes each) in memory.
+下面的数组在存储中占用32字节（1个槽），但在内存中占用128字节（4项，每个32字节）。
 
 .. code-block:: solidity
 
@@ -55,11 +50,11 @@ bytes (4 items with 32 bytes each) in memory.
 
 
 
-Example for Difference in Struct Layout
+在结构体中存储结构差异的例子
 ---------------------------------------
 
-The following struct occupies 96 bytes (3 slots of 32 bytes) in storage,
-but 128 bytes (4 items with 32 bytes each) in memory.
+以下结构体在存储中占用96字节（3个32字节的槽），
+但在内存中占用128字节（4项，每个32字节）。
 
 
 .. code-block:: solidity
