@@ -1,16 +1,13 @@
 
 .. index: calldata layout
 
-*******************
-Layout of Call Data
-*******************
+***********************
+调用数据的存储结构
+***********************
 
-The input data for a function call is assumed to be in the format defined by the :ref:`ABI
-specification <ABI>`. Among others, the ABI specification requires arguments to be padded to multiples of 32
-bytes. The internal function calls use a different convention.
+一个函数调用的输入数据的格式被认为会遵循 :ref:`ABI规范 <ABI>` 所定义的格式。
+其中，ABI规范要求参数被填充为32字节的倍数。而内部函数调用会使用不同规则。
 
-Arguments for the constructor of a contract are directly appended at the end of the
-contract's code, also in ABI encoding. The constructor will access them through a hard-coded offset, and
-not by using the ``codesize`` opcode, since this of course changes when appending
-data to the code.
-
+合约的构造函数的参数直接附加在合约的字节码末尾，
+也是ABI编码的。构造函数将通过一个硬编码的偏移量来访问它们，
+而不是通过使用 ``codesize`` 操作码，因为在向代码追加数据时它会发生改变。
