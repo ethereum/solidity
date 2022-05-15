@@ -714,6 +714,9 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 				" with the CHC engine."
 			);
 		break;
+	case FunctionType::Kind::Selfdestruct:
+		visitSelfDestruct(_funCall);
+		break;
 	case FunctionType::Kind::DelegateCall:
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
@@ -915,6 +918,15 @@ void SMTEncoder::visitObjectCreation(FunctionCall const& _funCall)
 	symbArray->increaseIndex();
 	m_context.addAssertion(symbArray->length() == arraySize);
 	m_context.addAssertion(symbArray->elements() == zeroElements);
+}
+
+void SMTEncoder::visitSelfDestruct(FunctionCall const& _funCall)
+{
+	auto const& args = _funCall.arguments();
+	solAssert(args.size() == 1);
+	solAssert(args.at(0));
+
+	state().transfer(state().thisAddress(), expr(*args.at(0)), state().balance(state().thisAddress()));
 }
 
 void SMTEncoder::endVisit(Identifier const& _identifier)

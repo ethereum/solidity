@@ -602,6 +602,7 @@ void CHC::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::MulMod:
 	case FunctionType::Kind::Unwrap:
 	case FunctionType::Kind::Wrap:
+	case FunctionType::Kind::Selfdestruct:
 		[[fallthrough]];
 	default:
 		SMTEncoder::endVisit(_funCall);
