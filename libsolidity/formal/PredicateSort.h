@@ -33,25 +33,25 @@ namespace solidity::frontend::smt
  *
  * 1. Interface
  * The idle state of a contract. Signature:
- * interface(this, abiFunctions, cryptoFunctions, blockchainState, stateVariables).
+ * interface(destructed, this, abiFunctions, cryptoFunctions, blockchainState, stateVariables).
  *
  * 2. Nondet interface
  * The nondeterminism behavior of a contract. Signature:
- * nondet_interface(error, this, abiFunctions, cryptoFunctions, blockchainState, stateVariables, blockchainState', stateVariables').
+ * nondet_interface(error, destructed, this, abiFunctions, cryptoFunctions, blockchainState, stateVariables, blockchainState', stateVariables').
  *
  * 3. Constructor entry/summary
  * The summary of a contract's deployment procedure.
  * Signature:
  * If the contract has a constructor function, this is the same as the summary of that function. Otherwise:
- * constructor_summary(error, this, abiFunctions, cryptoFunctions, txData, blockchainState, blockchainState', stateVariables, stateVariables').
+ * constructor_summary(error, destructed, this, abiFunctions, cryptoFunctions, txData, blockchainState, blockchainState', stateVariables, stateVariables').
  *
  * 4. Function entry/summary
  * The entry point of a function definition. Signature:
- * function_entry(error, this, abiFunctions, cryptoFunctions, txData, blockchainState, stateVariables, inputVariables, blockchainState', stateVariables', inputVariables', outputVariables').
+ * function_entry(error, destructed, this, abiFunctions, cryptoFunctions, txData, blockchainState, stateVariables, inputVariables, blockchainState', stateVariables', inputVariables', outputVariables').
  *
  * 5. Function body
  * Use for any predicate within a function. Signature:
- * function_body(error, this, abiFunctions, cryptoFunctions, txData, blockchainState, stateVariables, inputVariables, blockchainState', stateVariables', inputVariables', outputVariables', localVariables).
+ * function_body(error, destructed, this, abiFunctions, cryptoFunctions, txData, blockchainState, stateVariables, inputVariables, blockchainState', stateVariables', inputVariables', outputVariables', localVariables).
  */
 
 /// @returns the interface predicate sort for _contract.

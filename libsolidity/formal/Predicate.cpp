@@ -272,7 +272,7 @@ string Predicate::formatSummaryCall(
 		}
 
 		// Here we are interested in txData from the summary predicate.
-		auto txValues = readTxVars(_args.at(4));
+		auto txValues = readTxVars(_args.at(5));
 		vector<string> values;
 		for (auto const& _var: txVars)
 			if (auto v = txValues.at(_var))
@@ -290,7 +290,7 @@ string Predicate::formatSummaryCall(
 	auto const* fun = programFunction();
 	solAssert(fun, "");
 
-	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size());
+	auto first = _args.begin() + 7 + static_cast<int>(stateVars->size());
 	auto last = first + static_cast<int>(fun->parameters().size());
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
@@ -334,12 +334,12 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 	vector<smtutil::Expression>::const_iterator stateLast;
 	if (auto const* function = programFunction())
 	{
-		stateFirst = _args.begin() + 6 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
+		stateFirst = _args.begin() + 7 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else if (programContract())
 	{
-		stateFirst = _args.begin() + 7 + static_cast<int>(stateVars->size());
+		stateFirst = _args.begin() + 8 + static_cast<int>(stateVars->size());
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else
@@ -366,7 +366,7 @@ vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expre
 
 	auto const& inParams = function->parameters();
 
-	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
+	auto first = _args.begin() + 7 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
 	auto last = first + static_cast<int>(inParams.size());
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
@@ -390,7 +390,7 @@ vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expr
 
 	auto const& inParams = function->parameters();
 
-	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
+	auto first = _args.begin() + 7 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 
@@ -443,10 +443,10 @@ map<string, string> Predicate::expressionSubstitution(smtutil::Expression const&
 	if (isInterface())
 	{
 		solAssert(starts_with(predName, "interface"), "");
-		subst[_predExpr.arguments.at(0).name] = "address(this)";
-		solAssert(nArgs == stateVars.size() + 4, "");
+		subst[_predExpr.arguments.at(1).name] = "address(this)";
+		solAssert(nArgs == stateVars.size() + 5, "");
 		for (size_t i = nArgs - stateVars.size(); i < nArgs; ++i)
-			subst[_predExpr.arguments.at(i).name] = stateVars.at(i - 4)->name();
+			subst[_predExpr.arguments.at(i).name] = stateVars.at(i - 5)->name();
 	}
 	// The signature of a nondet interface predicate is
 	// nondet_interface(error, this, abiFunctions, cryptoFunctions, blockchainState, stateVariables, blockchainState', stateVariables').
@@ -459,8 +459,8 @@ map<string, string> Predicate::expressionSubstitution(smtutil::Expression const&
 	{
 		solAssert(starts_with(predName, "nondet_interface"), "");
 		subst[_predExpr.arguments.at(0).name] = "<errorCode>";
-		subst[_predExpr.arguments.at(1).name] = "address(this)";
-		solAssert(nArgs == stateVars.size() * 2 + 6, "");
+		subst[_predExpr.arguments.at(2).name] = "address(this)";
+		solAssert(nArgs == stateVars.size() * 2 + 7, "");
 		for (size_t i = nArgs - stateVars.size(), s = 0; i < nArgs; ++i, ++s)
 			subst[_predExpr.arguments.at(i).name] = stateVars.at(s)->name() + "'";
 		for (size_t i = nArgs - (stateVars.size() * 2 + 1), s = 0; i < nArgs - (stateVars.size() + 1); ++i, ++s)

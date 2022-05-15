@@ -59,6 +59,7 @@ private:
 /**
  * Symbolic representation of the blockchain context:
  * - error flag
+ * - destructed (0: non-destructed, 1: destructed, 2: pending destruction)
  * - this (the address of the currently executing contract)
  * - state, represented as a tuple of:
  *   - balances
@@ -92,6 +93,14 @@ public:
 	SymbolicIntVariable& errorFlag() { return m_error; }
 	SymbolicIntVariable const& errorFlag() const { return m_error; }
 	smtutil::SortPointer const& errorFlagSort() const { return m_error.sort(); }
+	//@}
+
+	/// Destructed flag.
+	//@{
+	smtutil::Expression destructedFlag() const { return m_destructed.currentValue(); }
+	smtutil::Expression destructedFlag(unsigned _idx) const { return m_destructed.valueAtIndex(_idx); }
+	smtutil::Expression newDestructedFlag() { return m_destructed.increaseIndex(); }
+	smtutil::SortPointer const& destructedFlagSort() const { return m_destructed.sort(); }
 	//@}
 
 	/// This.
@@ -177,6 +186,13 @@ private:
 		TypeProvider::uint256(),
 		TypeProvider::uint256(),
 		"error",
+		m_context
+	};
+
+	SymbolicIntVariable m_destructed{
+		TypeProvider::uint256(),
+		TypeProvider::uint256(),
+		"destructed",
 		m_context
 	};
 

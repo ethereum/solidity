@@ -174,6 +174,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	smtutil::Expression zeroes(true);
 	for (auto var: stateVariablesIncludingInheritedAndPrivate(_contract))
 		zeroes = zeroes && currentValue(*var) == smt::zeroValue(var->type());
+	zeroes = zeroes && state().destructedFlag() == 0;
 	// The contract's address might already have funds before deployment,
 	// so the balance must be at least `msg.value`, but not equals.
 	auto initialBalanceConstraint = state().balance(state().thisAddress()) >= state().txMember("msg.value");
@@ -214,9 +215,12 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	for (auto base: _contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 	{
 		errorFlag().increaseIndex();
+		auto destructedPre = state().destructedFlag();
 		m_context.addAssertion(smt::constructorCall(*m_contractInitializers.at(&_contract).at(base), m_context));
 		connectBlocks(m_currentBlock, summary(_contract), errorFlag().currentValue() > 0);
+		auto destructedPost = state().destructedFlag();
 		m_context.addAssertion(errorFlag().currentValue() == 0);
+		m_context.addAssertion(state().newDestructedFlag() == destructedPre + destructedPost);
 	}
 
 	connectBlocks(m_currentBlock, summary(_contract));
@@ -231,7 +235,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 		if (!constructor || !constructor->isPayable())
 			txConstraints = txConstraints && state().txNonPayableConstraint();
 		m_queryPlaceholders[&_contract].push_back({txConstraints, errorFlag().currentValue(), m_currentBlock});
-		connectBlocks(m_currentBlock, interface(), txConstraints && errorFlag().currentValue() == 0);
+		connectBlocks(m_currentBlock, interface(), txConstraints && errorFlag().currentValue() == 0 && state().destructedFlag() == 0);
 	}
 
 	solAssert(m_scopes.back() == &_contract, "");
@@ -258,7 +262,7 @@ bool CHC::visit(FunctionDefinition const& _function)
 		)
 			conj = conj && currentEqualInitialVarsConstraints(stateVariablesIncludingInheritedAndPrivate(_function));
 
-		conj = conj && errorFlag().currentValue() == 0;
+		conj = conj && errorFlag().currentValue() == 0 && state().destructedFlag() == 0;
 		addRule(smtutil::Expression::implies(conj, summary(_function)), "summary_function_" + to_string(_function.id()));
 		return false;
 	}
@@ -335,7 +339,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		auto sum = externalSummary(_function);
 
 		m_queryPlaceholders[&_function].push_back({sum, errorFlag().currentValue(), ifacePre});
-		connectBlocks(ifacePre, interface(), sum && errorFlag().currentValue() == 0);
+		connectBlocks(ifacePre, interface(), sum && errorFlag().currentValue() == 0 && state().destructedFlag(0) == 0);
 	}
 
 	m_currentFunction = nullptr;
@@ -565,6 +569,7 @@ void CHC::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::MulMod:
 	case FunctionType::Kind::Unwrap:
 	case FunctionType::Kind::Wrap:
+	case FunctionType::Kind::Selfdestruct:
 		[[fallthrough]];
 	default:
 		SMTEncoder::endVisit(_funCall);
@@ -738,6 +743,8 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 			m_callGraph[m_currentContract].insert(function);
 	}
 
+	auto destructedPre = state().destructedFlag();
+
 	m_context.addAssertion(predicate(_funCall));
 
 	solAssert(m_errorDest, "");
@@ -747,6 +754,8 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 		errorFlag().currentValue() > 0
 	);
 	m_context.addAssertion(errorFlag().currentValue() == 0);
+	auto destructedPost = state().destructedFlag();
+	m_context.addAssertion(state().newDestructedFlag() == destructedPre + destructedPost);
 }
 
 void CHC::externalFunctionCall(FunctionCall const& _funCall)
@@ -811,6 +820,8 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	}
 
 	auto error = errorFlag().increaseIndex();
+	auto destructedPre = state().destructedFlag();
+	auto destructedPost = state().newDestructedFlag();
 
 	Predicate const& callPredicate = *createSymbolicBlock(
 		nondetInterfaceSort(*m_currentContract, state()),
@@ -819,7 +830,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 		&_funCall
 	);
 	auto postCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
-	vector<smtutil::Expression> stateExprs{error, state().thisAddress(), state().abi(), state().crypto()};
+	vector<smtutil::Expression> stateExprs{error, destructedPost, state().thisAddress(), state().abi(), state().crypto()};
 
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(stateExprs + preCallState + postCallState);
 	auto nondetCall = callPredicate(stateExprs + preCallState + postCallState);
@@ -838,6 +849,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 				m_callGraph[m_currentFunction].insert(definedFunction);
 
 	m_context.addAssertion(errorFlag().currentValue() == 0);
+	m_context.addAssertion(state().newDestructedFlag() == destructedPre + destructedPost);
 }
 
 void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
@@ -1176,11 +1188,17 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 					auto state2 = stateVariablesAtIndex(2, *contract);
 
 					auto errorPre = errorFlag().currentValue();
+					auto destructedPre = state().destructedFlag();
 					auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
+
 					auto errorPost = errorFlag().increaseIndex();
+					auto destructedPost = state().newDestructedFlag();
 					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-					vector<smtutil::Expression> args{errorPost, state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
+					auto destructedSummary = state().newDestructedFlag();
+					m_context.addAssertion(destructedPost == destructedPre + destructedSummary);
+
+					vector<smtutil::Expression> args{errorPost, destructedPre + destructedPost, state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
 					args += state1 +
 						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 						vector<smtutil::Expression>{state().state(2)} +
@@ -1218,6 +1236,7 @@ void CHC::defineExternalFunctionInterface(FunctionDefinition const& _function, C
 	state().addBalance(state().thisAddress(), k.currentValue());
 
 	errorFlag().increaseIndex();
+	state().newDestructedFlag();
 	m_context.addAssertion(summaryCall(_function));
 
 	connectBlocks(functionPred, externalSummary(_function));
@@ -1249,9 +1268,13 @@ void CHC::defineContractInitializer(ContractDefinition const& _contract, Contrac
 	if (auto constructor = _contract.constructor())
 	{
 		errorFlag().increaseIndex();
+		auto destructedPre = state().destructedFlag();
+		state().newDestructedFlag();
 		m_context.addAssertion(smt::functionCall(*m_summaries.at(&_contextContract).at(constructor), &_contextContract, m_context));
 		connectBlocks(m_currentBlock, initializer(_contract, _contextContract), errorFlag().currentValue() > 0);
 		m_context.addAssertion(errorFlag().currentValue() == 0);
+		auto destructedPost = state().destructedFlag();
+		m_context.addAssertion(state().newDestructedFlag() == destructedPre + destructedPost);
 	}
 
 	connectBlocks(m_currentBlock, initializer(_contract, _contextContract));
@@ -1495,7 +1518,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		solAssert(false, "Unreachable!");
 	};
 	errorFlag().increaseIndex();
-	vector<smtutil::Expression> args{errorFlag().currentValue(), contractAddressValue(_funCall), state().abi(), state().crypto(), state().tx(), state().state()};
+	vector<smtutil::Expression> args{errorFlag().currentValue(), state().newDestructedFlag(), contractAddressValue(_funCall), state().abi(), state().crypto(), state().tx(), state().state()};
 
 	auto const* contract = function->annotation().contract;
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;

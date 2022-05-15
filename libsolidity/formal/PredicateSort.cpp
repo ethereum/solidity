@@ -31,7 +31,7 @@ namespace solidity::frontend::smt
 SortPointer interfaceSort(ContractDefinition const& _contract, SymbolicState& _state)
 {
 	return make_shared<FunctionSort>(
-		vector<SortPointer>{_state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.stateSort()} + stateSorts(_contract),
+		vector<SortPointer>{_state.destructedFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.stateSort()} + stateSorts(_contract),
 		SortProvider::boolSort
 	);
 }
@@ -41,7 +41,7 @@ SortPointer nondetInterfaceSort(ContractDefinition const& _contract, SymbolicSta
 	auto varSorts = stateSorts(_contract);
 	vector<SortPointer> stateSort{_state.stateSort()};
 	return make_shared<FunctionSort>(
-		vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort()} +
+		vector<SortPointer>{_state.errorFlagSort(), _state.destructedFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort()} +
 			stateSort +
 			varSorts +
 			stateSort +
@@ -58,7 +58,7 @@ SortPointer constructorSort(ContractDefinition const& _contract, SymbolicState& 
 	auto varSorts = stateSorts(_contract);
 	vector<SortPointer> stateSort{_state.stateSort()};
 	return make_shared<FunctionSort>(
-		vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.txSort(), _state.stateSort(), _state.stateSort()} + varSorts + varSorts,
+		vector<SortPointer>{_state.errorFlagSort(), _state.destructedFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.txSort(), _state.stateSort(), _state.stateSort()} + varSorts + varSorts,
 		SortProvider::boolSort
 	);
 }
@@ -70,7 +70,7 @@ SortPointer functionSort(FunctionDefinition const& _function, ContractDefinition
 	auto inputSorts = applyMap(_function.parameters(), smtSort);
 	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
 	return make_shared<FunctionSort>(
-		vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.txSort(), _state.stateSort()} +
+		vector<SortPointer>{_state.errorFlagSort(), _state.destructedFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.txSort(), _state.stateSort()} +
 			varSorts +
 			inputSorts +
 			vector<SortPointer>{_state.stateSort()} +

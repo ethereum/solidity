@@ -74,6 +74,7 @@ smtutil::Expression BlockchainVariable::assignMember(string const& _member, smtu
 void SymbolicState::reset()
 {
 	m_error.resetIndex();
+	m_destructed.resetIndex();
 	m_thisAddress.resetIndex();
 	m_state.reset();
 	m_tx.reset();
