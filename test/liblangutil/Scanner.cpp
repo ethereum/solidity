@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(string_nonprintable)
 		if (v == '\n' || v == '\v' || v == '\f' || v == '\r')
 			BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalStringEndQuote);
 		else
-			BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalCharacterInString);
+			BOOST_CHECK_EQUAL(scanner.currentError(),ScannerError::UnicodeCharacterInNonUnicodeString);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "");
 	}
 }
