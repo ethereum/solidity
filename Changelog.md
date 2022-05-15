@@ -8,6 +8,7 @@ Compiler Features:
  * Assembly-Json: Export: Include source list in `sourceList` field.
  * Commandline Interface: option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
  * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
+ * SMTChecker: New trusted mode that assumes that any compile-time available code is the actual used code even in external calls. This can be used via the CLI option ``--model-checker-ext-calls=trusted`` or the JSON field ``settings.modelChecker.extCalls: "trusted"``.
  * Language Server: Allow full filesystem access to language server.
 
 
@@ -122,7 +123,6 @@ Compiler Features:
  * JSON AST: Set absolute paths of imports earlier, in the ``parsing`` stage.
  * SMTChecker: Output values for ``block.*``, ``msg.*`` and ``tx.*`` variables that are present in the called functions.
  * SMTChecker: Report contract invariants and reentrancy properties. This can be enabled via the CLI option ``--model-checker-invariants`` or the Standard JSON option ``settings.modelChecker.invariants``.
- * SMTChecker: New trusted mode that assumes that any compile-time available code is the actual used code even in external calls. This can be used via the CLI option ``--model-checker-ext-calls=trusted`` or the JSON field ``settings.modelChecker.extCalls: "trusted"``.
  * Standard JSON: Accept nested brackets in step sequences passed to ``settings.optimizer.details.yulDetails.optimizerSteps``.
  * Standard JSON: Add ``settings.debug.debugInfo`` option for selecting how much extra debug information should be included in the produced EVM assembly and Yul code.
  * Yul EVM Code Transform: Switch to new optimized code transform when compiling via Yul with enabled optimizer.
