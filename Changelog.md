@@ -12,7 +12,9 @@ Compiler Features:
  * Assembly-Json: Export: Include source list in `sourceList` field.
  * Commandline Interface: option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
  * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
+ * SMTChecker: Use the Horn solver Eldarica via its binary if installed in the system. It can be enabled via the CLI option ``--model-checker-solvers eld`` or the JSON field ``settings.modelChecker.solvers=["eld"]``.
  * SMTChecker: New trusted mode that assumes that any compile-time available code is the actual used code even in external calls. This can be used via the CLI option ``--model-checker-ext-calls=trusted`` or the JSON field ``settings.modelChecker.extCalls: "trusted"``.
+>>>>>>> e0e01b952 (Changelog and docs)
  * Language Server: Allow full filesystem access to language server.
 
 
