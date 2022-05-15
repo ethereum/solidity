@@ -145,16 +145,32 @@ inline std::string formatNumberReadable(
 
 	// when multiple trailing FF bytes, format as N * 2**x - 1
 	i = 0;
-	for (v = _value; (v & 0xff) == 0xff; v >>= 8)
+	std::string minus;
+	v = _value;
+	if ((v & 0xff) == 0xfe)
+	{
+		++i;
+		minus = "2";
+		v >>= 8;
+	}
+	else if ((v & 0xff) == 0xfd)
+	{
+		++i;
+		minus = "3";
+		v >>= 8;
+	}
+	else
+		minus = "1";
+	for (; (v & 0xff) == 0xff; v >>= 8)
 		++i;
 	if (i > 2)
 	{
 		// 0xFF yields 2**8 - 1 (v is 0 in that case)
 		if (v == 0)
-			return "2**" + std::to_string(i * 8) + " - 1";
+			return "2**" + std::to_string(i * 8) + " - " + minus;//1";
 		return toHex(toCompactBigEndian(T(v + 1)), prefix, hexcase) +
 			" * 2**" + std::to_string(i * 8) +
-			" - 1";
+			" - " + minus;//1";
 	}
 
 	std::string str = toHex(toCompactBigEndian(_value), prefix, hexcase);

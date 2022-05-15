@@ -123,6 +123,15 @@ SortPointer smtSort(frontend::Type const& _type)
 		else
 			tupleName = _type.toString(true);
 
+		while (tupleName.find(" => ") != string::npos)
+			tupleName.replace(tupleName.find(" => "), 4, "");
+		while (tupleName.find('(') != string::npos)
+			tupleName.replace(tupleName.find('('), 1, "$");
+		while (tupleName.find(')') != string::npos)
+			tupleName.replace(tupleName.find(')'), 1, "$");
+		while (tupleName.find(',') != string::npos)
+			tupleName.replace(tupleName.find(','), 1, "$");
+
 		tupleName += "_tuple";
 
 		return make_shared<TupleSort>(
@@ -134,8 +143,17 @@ SortPointer smtSort(frontend::Type const& _type)
 	case Kind::Tuple:
 	{
 		vector<string> members;
-		auto const& tupleName = _type.toString(true);
+		string tupleName = _type.toString(true);
 		vector<SortPointer> sorts;
+
+		while (tupleName.find(" => ") != string::npos)
+			tupleName.replace(tupleName.find(" => "), 4, "");
+		while (tupleName.find('(') != string::npos)
+			tupleName.replace(tupleName.find('('), 1, "$");
+		while (tupleName.find(')') != string::npos)
+			tupleName.replace(tupleName.find(')'), 1, "$");
+		while (tupleName.find(',') != string::npos)
+			tupleName.replace(tupleName.find(','), 1, "$");
 
 		if (auto const* tupleType = dynamic_cast<frontend::TupleType const*>(&_type))
 		{

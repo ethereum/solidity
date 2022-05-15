@@ -34,6 +34,7 @@
 using namespace std;
 using boost::algorithm::starts_with;
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::smtutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
@@ -496,7 +497,8 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 				if (_expr.name == "0")
 					return "0x0";
 				// For some reason the code below returns "0x" for "0".
-				return util::toHex(toCompactBigEndian(bigint(_expr.name)), util::HexPrefix::Add, util::HexCase::Lower);
+				return toHex(toCompactBigEndian(bigint(_expr.name)), HexPrefix::Add, HexCase::Lower);
+				//return formatNumberReadable(bigint(_expr.name));
 			}
 			catch (out_of_range const&)
 			{
@@ -506,6 +508,7 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 			}
 		}
 
+		//return formatNumberReadable(bigint(_expr.name));
 		return _expr.name;
 	}
 	if (smt::isBool(*_type))

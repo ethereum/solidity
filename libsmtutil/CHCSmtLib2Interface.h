@@ -68,6 +68,10 @@ private:
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
+	CHCSolverInterface::CexGraph parseCounterexample(std::string const& _result);
+
+	Expression parseInvariants(std::string const& _result);
+
 	/// Used to access toSmtLibSort, SExpr, and handle variables.
 	std::unique_ptr<SMTLib2Interface> m_smtlib2;
 

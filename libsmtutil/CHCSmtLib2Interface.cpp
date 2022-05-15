@@ -18,12 +18,14 @@
 
 #include <libsmtutil/CHCSmtLib2Interface.h>
 
+#include <libsolutil/Algorithms.h>
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <range/v3/view.hpp>
+#include <range/v3/algorithm/for_each.hpp>
 
 #include <array>
 #include <fstream>
@@ -110,15 +112,230 @@ tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Interface
 	CheckResult result;
 	// TODO proper parsing
 	if (boost::starts_with(response, "sat"))
-		result = CheckResult::UNSATISFIABLE;
+		return {CheckResult::UNSATISFIABLE, parseInvariants(response), {}};
 	else if (boost::starts_with(response, "unsat"))
-		result = CheckResult::SATISFIABLE;
+		return {CheckResult::SATISFIABLE, Expression (true), parseCounterexample(response)};
 	else if (boost::starts_with(response, "unknown"))
 		result = CheckResult::UNKNOWN;
 	else
 		result = CheckResult::ERROR;
 
 	return {result, Expression(true), {}};
+}
+
+namespace
+{
+
+string readToken(string const& _data, size_t _pos)
+{
+	string r;
+	while (_pos < _data.size())
+	{
+		char c = _data[_pos++];
+		if (iswspace(unsigned(c)) || c == ',' || c == '(' || c == ')')
+			break;
+		r += c;
+	}
+	return r;
+}
+
+size_t skipWhitespaces(string const& _data, size_t _pos)
+{
+	while (_pos < _data.size() && iswspace(unsigned(_data[_pos])))
+	{
+		++_pos;
+	}
+
+	return _pos;
+}
+
+/// @param _data here is always going to be either
+/// - term
+/// - term(args)
+pair<smtutil::Expression, size_t> parseExpression(string const& _data)
+{
+	size_t pos = skipWhitespaces(_data, 0);
+
+	string fname = readToken(_data, pos);
+	pos += fname.size();
+
+	if (pos >= _data.size() || _data[pos] != '(')
+	{
+		if (fname == "true" || fname == "false")
+			return {Expression(fname, {}, SortProvider::boolSort), pos};
+		return {Expression(fname, {}, SortProvider::uintSort), pos};
+	}
+
+	smtAssert(_data[pos] == '(');
+
+	vector<Expression> exprArgs;
+	do
+	{
+		++pos;
+		auto [arg, size] = parseExpression(_data.substr(pos));
+		pos += size;
+		exprArgs.emplace_back(move(arg));
+		smtAssert(_data[pos] == ',' || _data[pos] == ')');
+	} while (_data[pos] == ',');
+
+	smtAssert(_data[pos] == ')');
+	++pos;
+
+	if (fname == "const")
+		fname = "const_array";
+
+	return {Expression(fname, move(exprArgs), SortProvider::uintSort), pos};
+}
+
+/// @param _data here is always going to be either
+/// - term
+/// - (term arg1 arg2 ... argk), where each arg is an sexpr.
+pair<smtutil::Expression, size_t> parseSExpression(string const& _data)
+{
+	size_t pos = skipWhitespaces(_data, 0);
+
+	vector<Expression> exprArgs;
+	string fname;
+	if (_data[pos] != '(')
+	{
+		fname = readToken(_data, pos);
+		pos += fname.size();
+	}
+	else
+	{
+		++pos;
+
+		string subExpr = _data.substr(pos);
+		string target = "(as const ";
+		if (boost::starts_with(subExpr, target))
+		{
+			fname = "const_array";
+			pos += target.size();
+			auto [symbArg, newPos] = parseSExpression(_data.substr(pos));
+			exprArgs.emplace_back(move(symbArg));
+			pos += newPos;
+			++pos;
+		}
+		else
+		{
+			fname = readToken(_data, pos);
+			pos += fname.size();
+		}
+
+		do
+		{
+			auto [symbArg, newPos] = parseSExpression(_data.substr(pos));
+			exprArgs.emplace_back(move(symbArg));
+			pos += newPos;
+		} while (_data[pos] != ')');
+		++pos;
+	}
+
+	if (fname == "")
+		fname = "var-decl";
+	else if (fname == "const")
+		fname = "const_array";
+
+	if (fname == "true" || fname == "false")
+		return {Expression(fname, {}, SortProvider::boolSort), pos};
+
+	return {Expression(fname, move(exprArgs), SortProvider::uintSort), pos};
+}
+
+smtutil::Expression parseDefineFun(string const& _data)
+{
+	auto [defineFun, pos] = parseSExpression(_data);
+
+	vector<Expression> newArgs;
+	Expression const& curArgs = defineFun.arguments.at(1);
+	smtAssert(curArgs.name == "var-decl");
+	for (auto&& curArg: curArgs.arguments)
+		newArgs.emplace_back(move(curArg));
+
+	Expression predExpr{defineFun.arguments.at(0).name, move(newArgs), SortProvider::boolSort};
+
+	Expression& invExpr = defineFun.arguments.at(3);
+
+	solidity::util::BreadthFirstSearch<Expression*> bfs{{&invExpr}};
+	bfs.run([&](auto&& _expr, auto&& _addChild) {
+		if (_expr->name == "=")
+		{
+			smtAssert(_expr->arguments.size() == 2);
+			auto check = [](string const& _name) {
+				return boost::starts_with(_name, "mapping") && boost::ends_with(_name, "length");
+			};
+			if (check(_expr->arguments.at(0).name) || check(_expr->arguments.at(1).name))
+				*_expr = Expression(true);
+		}
+		for (auto& arg: _expr->arguments)
+			_addChild(&arg);
+	});
+
+	Expression eq{"=", {move(predExpr), move(defineFun.arguments.at(3))}, SortProvider::boolSort};
+
+	return eq;
+}
+
+}
+
+CHCSolverInterface::CexGraph CHCSmtLib2Interface::parseCounterexample(string const& _result)
+{
+	CHCSolverInterface::CexGraph cexGraph;
+
+	for (auto&& line: _result | ranges::views::split('\n') | ranges::to<vector<string>>())
+	{
+		string firstDelimiter = ": ";
+		string secondDelimiter = " -> ";
+
+		size_t f = line.find(firstDelimiter);
+		if (f != string::npos)
+		{
+			string id = line.substr(0, f);
+			string rest = line.substr(f + firstDelimiter.size());
+
+			size_t s = rest.find(secondDelimiter);
+			string pred;
+			string adj;
+			if (s == string::npos)
+				pred = rest;
+			else
+			{
+				pred = rest.substr(0, s);
+				adj = rest.substr(s + secondDelimiter.size());
+			}
+
+			if (pred == "FALSE")
+				pred = "false";
+
+			unsigned iid = unsigned(stoi(id));
+
+			vector<unsigned> children;
+			for (auto&& v: adj | ranges::views::split(',') | ranges::to<vector<string>>())
+				children.emplace_back(unsigned(stoi(v)));
+
+			auto [expr, size] = parseExpression(pred);
+
+			cexGraph.nodes.emplace(iid, move(expr));
+			cexGraph.edges.emplace(iid, move(children));
+		}
+	}
+
+	return cexGraph;
+}
+
+Expression CHCSmtLib2Interface::parseInvariants(string const& _result)
+{
+	vector<Expression> eqs;
+	for (auto&& line: _result | ranges::views::split('\n') | ranges::to<vector<string>>())
+	{
+		if (!boost::starts_with(line, "(define-fun"))
+			continue;
+
+		eqs.emplace_back(parseDefineFun(line));
+	}
+
+	Expression conj{"and", move(eqs), SortProvider::boolSort};
+	return conj;
 }
 
 void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
