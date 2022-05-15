@@ -24,8 +24,9 @@
 
 #include <test/Common.h>
 #include <test/FilesystemUtils.h>
-#include <test/TemporaryDirectory.h>
 #include <test/libsolidity/util/SoltestErrors.h>
+
+#include <libsolutil/TemporaryDirectory.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -36,6 +37,7 @@
 
 using namespace std;
 using namespace solidity::frontend;
+using namespace solidity::util;
 using namespace solidity::test;
 
 #define TEST_CASE_NAME (boost::unit_test::framework::current_test_case().p_name)

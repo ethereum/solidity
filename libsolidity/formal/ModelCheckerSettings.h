@@ -153,7 +153,7 @@ struct ModelCheckerSettings
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
 	ModelCheckerInvariants invariants = ModelCheckerInvariants::Default();
 	bool showUnproved = false;
-	smtutil::SMTSolverChoice solvers = smtutil::SMTSolverChoice::All();
+	smtutil::SMTSolverChoice solvers = smtutil::SMTSolverChoice::Z3();
 	ModelCheckerTargets targets = ModelCheckerTargets::Default();
 	std::optional<unsigned> timeout;
 

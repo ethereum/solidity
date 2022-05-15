@@ -653,7 +653,7 @@ void CommandLineInterface::processInput()
 	{
 		solAssert(m_standardJsonInput.has_value());
 
-		StandardCompiler compiler(m_fileReader.reader(), m_options.formatting.json);
+		StandardCompiler compiler(m_universalCallback.callback(), m_options.formatting.json);
 		sout() << compiler.compile(std::move(m_standardJsonInput.value())) << endl;
 		m_standardJsonInput.reset();
 		break;
@@ -692,7 +692,7 @@ void CommandLineInterface::compile()
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
-	m_compiler = make_unique<CompilerStack>(m_fileReader.reader());
+	m_compiler = make_unique<CompilerStack>(m_universalCallback.callback());
 
 	SourceReferenceFormatter formatter(serr(false), *m_compiler, coloredOutput(m_options), m_options.formatting.withErrorIds);
 

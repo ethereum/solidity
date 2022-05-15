@@ -4,20 +4,20 @@
         {
             "component": "general",
             "errorCode": "7649",
-            "formattedMessage": "Warning: CHC analysis was not possible since no Horn solver was found and enabled.
+            "formattedMessage": "Warning: CHC analysis was not possible since no Horn solver was found and enabled. The accepted solvers for CHC are Eldarica and z3.
 
 ",
-            "message": "CHC analysis was not possible since no Horn solver was found and enabled.",
+            "message": "CHC analysis was not possible since no Horn solver was found and enabled. The accepted solvers for CHC are Eldarica and z3.",
             "severity": "warning",
             "type": "Warning"
         },
         {
             "component": "general",
             "errorCode": "7710",
-            "formattedMessage": "Warning: BMC analysis was not possible since no SMT solver was found and enabled.
+            "formattedMessage": "Warning: BMC analysis was not possible since no SMT solver was found and enabled. The accepted solvers for BMC are cvc4 and z3.
 
 ",
-            "message": "BMC analysis was not possible since no SMT solver was found and enabled.",
+            "message": "BMC analysis was not possible since no SMT solver was found and enabled. The accepted solvers for BMC are cvc4 and z3.",
             "severity": "warning",
             "type": "Warning"
         }

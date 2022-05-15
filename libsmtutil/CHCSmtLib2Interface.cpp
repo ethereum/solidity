@@ -40,12 +40,14 @@ using namespace solidity::smtutil;
 CHCSmtLib2Interface::CHCSmtLib2Interface(
 	map<h256, string> const& _queryResponses,
 	ReadCallback::Callback _smtCallback,
+	SMTSolverChoice _enabledSolvers,
 	optional<unsigned> _queryTimeout
 ):
 	CHCSolverInterface(_queryTimeout),
 	m_smtlib2(make_unique<SMTLib2Interface>(_queryResponses, _smtCallback, m_queryTimeout)),
 	m_queryResponses(std::move(_queryResponses)),
-	m_smtCallback(_smtCallback)
+	m_smtCallback(_smtCallback),
+	m_enabledSolvers(_enabledSolvers)
 {
 	reset();
 }
@@ -203,12 +205,15 @@ string CHCSmtLib2Interface::querySolver(string const& _input)
 	util::h256 inputHash = util::keccak256(_input);
 	if (m_queryResponses.count(inputHash))
 		return m_queryResponses.at(inputHash);
+
+	smtAssert(m_enabledSolvers.smtlib2 || m_enabledSolvers.eld);
 	if (m_smtCallback)
 	{
 		auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), _input);
 		if (result.success)
 			return result.responseOrErrorMessage;
 	}
+
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";
 }

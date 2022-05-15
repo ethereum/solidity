@@ -577,9 +577,18 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
+			// Run SMTChecker
+
 			auto allSources = util::applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
-			modelChecker.enableAllEnginesIfPragmaPresent(allSources);
+			if (ModelChecker::isPragmaPresent(allSources))
+				m_modelCheckerSettings.engine = ModelCheckerEngine::All();
+
+			// m_modelCheckerSettings is spread to engines and solver interfaces,
+			// so we need to check whether the enabled ones are available before building the classes.
+			if (m_modelCheckerSettings.engine.any())
+				m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
+
+			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
 			modelChecker.checkRequestedSourcesAndContracts(allSources);
 			for (Source const* source: m_sourceOrder)
 				if (source->ast)
