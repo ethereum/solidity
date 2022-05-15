@@ -449,7 +449,8 @@ string CHCSmtLib2Interface::querySolver(string const& _input)
 			boost::process::child eld(
 				eldBin,
 				"-ssol",
-				"-scex",
+				//"-scex",
+				"-cex",
 				queryFileName,
 				boost::process::std_out > is
 			);

@@ -1194,7 +1194,7 @@ void CHC::resetSourceAnalysis()
 #endif
 	if (!usesZ3)
 	{
-		solAssert(m_settings.solvers.smtlib2);
+		solAssert(m_settings.solvers.smtlib2 || m_settings.solvers.eld);
 
 		if (!m_interface)
 			m_interface = make_unique<CHCSmtLib2Interface>(m_smtlib2Responses, m_smtCallback, m_settings.solvers, m_settings.timeout);
