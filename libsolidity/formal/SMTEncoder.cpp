@@ -1070,6 +1070,7 @@ bool SMTEncoder::shouldAnalyze(ContractDefinition const& _contract) const
 		return false;
 
 	return m_settings.contracts.isDefault() ||
+		//m_settings.contracts.has(_contract.sourceUnitName(), _contract.name());
 		m_settings.contracts.has(_contract.sourceUnitName());
 }
 
