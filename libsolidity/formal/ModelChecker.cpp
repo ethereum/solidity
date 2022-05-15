@@ -21,6 +21,8 @@
 #include <libsmtutil/Z3Interface.h>
 #endif
 
+#include <boost/process.hpp>
+
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view.hpp>
 
@@ -138,6 +140,7 @@ vector<string> ModelChecker::unhandledQueries()
 solidity::smtutil::SMTSolverChoice ModelChecker::availableSolvers()
 {
 	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
+	available.eld = !boost::process::search_path("eld").empty();
 #ifdef HAVE_Z3
 	available.z3 = solidity::smtutil::Z3Interface::available();
 #endif

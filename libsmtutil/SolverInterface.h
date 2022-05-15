@@ -42,14 +42,16 @@ namespace solidity::smtutil
 struct SMTSolverChoice
 {
 	bool cvc4 = false;
+	bool eld = false;
 	bool smtlib2 = false;
 	bool z3 = false;
 
-	static constexpr SMTSolverChoice All() noexcept { return {true, true, true}; }
-	static constexpr SMTSolverChoice CVC4() noexcept { return {true, false, false}; }
-	static constexpr SMTSolverChoice SMTLIB2() noexcept { return {false, true, false}; }
-	static constexpr SMTSolverChoice Z3() noexcept { return {false, false, true}; }
-	static constexpr SMTSolverChoice None() noexcept { return {false, false, false}; }
+	static constexpr SMTSolverChoice All() noexcept { return {true, true, true, true}; }
+	static constexpr SMTSolverChoice CVC4() noexcept { return {true, false, false, false}; }
+	static constexpr SMTSolverChoice ELD() noexcept { return {false, true, false, false}; }
+	static constexpr SMTSolverChoice SMTLIB2() noexcept { return {false, false, true, false}; }
+	static constexpr SMTSolverChoice Z3() noexcept { return {false, false, false, true}; }
+	static constexpr SMTSolverChoice None() noexcept { return {false, false, false, false}; }
 
 	static std::optional<SMTSolverChoice> fromString(std::string const& _solvers)
 	{
@@ -57,6 +59,7 @@ struct SMTSolverChoice
 		if (_solvers == "all")
 		{
 			smtAssert(solvers.setSolver("cvc4"), "");
+			smtAssert(solvers.setSolver("eld"), "");
 			smtAssert(solvers.setSolver("smtlib2"), "");
 			smtAssert(solvers.setSolver("z3"), "");
 		}
@@ -71,6 +74,7 @@ struct SMTSolverChoice
 	SMTSolverChoice& operator&=(SMTSolverChoice const& _other)
 	{
 		cvc4 &= _other.cvc4;
+		eld &= _other.eld;
 		smtlib2 &= _other.smtlib2;
 		z3 &= _other.z3;
 		return *this;
@@ -87,17 +91,20 @@ struct SMTSolverChoice
 	bool operator==(SMTSolverChoice const& _other) const noexcept
 	{
 		return cvc4 == _other.cvc4 &&
+			eld == _other.eld &&
 			smtlib2 == _other.smtlib2 &&
 			z3 == _other.z3;
 	}
 
 	bool setSolver(std::string const& _solver)
 	{
-		static std::set<std::string> const solvers{"cvc4", "smtlib2", "z3"};
+		static std::set<std::string> const solvers{"cvc4", "eld", "smtlib2", "z3"};
 		if (!solvers.count(_solver))
 			return false;
 		if (_solver == "cvc4")
 			cvc4 = true;
+		if (_solver == "eld")
+			eld = true;
 		else if (_solver == "smtlib2")
 			smtlib2 = true;
 		else if (_solver == "z3")
@@ -106,8 +113,8 @@ struct SMTSolverChoice
 	}
 
 	bool none() const noexcept { return !some(); }
-	bool some() const noexcept { return cvc4 || smtlib2 || z3; }
-	bool all() const noexcept { return cvc4 && smtlib2 && z3; }
+	bool some() const noexcept { return cvc4 || eld || smtlib2 || z3; }
+	bool all() const noexcept { return cvc4 && eld && smtlib2 && z3; }
 };
 
 enum class CheckResult

@@ -16,12 +16,16 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include <boost/filesystem/operations.hpp>
 #include <libsmtutil/CHCSmtLib2Interface.h>
 
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/process.hpp>
 
 #include <range/v3/view.hpp>
 
@@ -40,12 +44,14 @@ using namespace solidity::smtutil;
 CHCSmtLib2Interface::CHCSmtLib2Interface(
 	map<h256, string> const& _queryResponses,
 	ReadCallback::Callback _smtCallback,
+	SMTSolverChoice _enabledSolvers,
 	optional<unsigned> _queryTimeout
 ):
 	CHCSolverInterface(_queryTimeout),
 	m_smtlib2(make_unique<SMTLib2Interface>(_queryResponses, _smtCallback, m_queryTimeout)),
 	m_queryResponses(move(_queryResponses)),
-	m_smtCallback(_smtCallback)
+	m_smtCallback(_smtCallback),
+	m_enabledSolvers(_enabledSolvers)
 {
 	reset();
 }
@@ -203,12 +209,46 @@ string CHCSmtLib2Interface::querySolver(string const& _input)
 	util::h256 inputHash = util::keccak256(_input);
 	if (m_queryResponses.count(inputHash))
 		return m_queryResponses.at(inputHash);
-	if (m_smtCallback)
+
+	if (m_enabledSolvers.smtlib2 && m_smtCallback)
 	{
 		auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), _input);
 		if (result.success)
 			return result.responseOrErrorMessage;
 	}
+
+	if (m_enabledSolvers.eld)
+	{
+		auto tempDir = boost::filesystem::temp_directory_path();
+		auto queryFileName = tempDir / "query.smt2";
+
+		auto queryFile = boost::filesystem::ofstream(queryFileName);
+		queryFile << _input;
+
+		auto eldBin = boost::process::search_path("eld");
+		if (!eldBin.empty())
+		{
+			boost::process::ipstream is;
+			boost::process::child eld(
+				eldBin,
+				"-ssol",
+				"-scex",
+				queryFileName,
+				boost::process::std_out > is
+			);
+
+			vector<string> data;
+			string line;
+			while (eld.running() && std::getline(is, line))
+				if (!line.empty())
+					data.push_back(line);
+
+			eld.wait();
+
+			return boost::join(data, "\n");
+		}
+	}
+
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";
 }
