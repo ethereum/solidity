@@ -85,6 +85,10 @@ function gnosis_safe_test
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
     npm install ethers@5.6.1
 
+    # Note that ethers@5.6.1 depends on @ethersproject/contracts@5.6.0 while the dependency on hardhat-deploy
+    # pulls @ethersproject/contracts@5.6.1 (latest). Force 5.6.0 to avoid errors due to having two copies.
+    npm install @ethersproject/contracts@5.6.0
+
     # Hardhat 2.9.5 introduced a bug with handling padded arguments to getStorageAt().
     # TODO: Remove when https://github.com/NomicFoundation/hardhat/issues/2709 is fixed.
     npm install hardhat@2.9.4
