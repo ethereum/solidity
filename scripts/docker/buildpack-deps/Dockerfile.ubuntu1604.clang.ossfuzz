@@ -22,7 +22,7 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="16"
+LABEL version="18"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -61,7 +61,7 @@ RUN set -ex; \
 
 # Z3
 RUN set -ex; \
-    git clone --depth 1 -b z3-4.8.14 https://github.com/Z3Prover/z3.git \
+    git clone --depth 1 -b z3-4.8.17 https://github.com/Z3Prover/z3.git \
     /usr/src/z3; \
     cd /usr/src/z3; \
     mkdir build; \

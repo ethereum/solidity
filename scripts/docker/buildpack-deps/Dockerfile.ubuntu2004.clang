@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:focal AS base
-LABEL version="11"
+LABEL version="13"
 
 ARG DEBIAN_FRONTEND=noninteractive
 

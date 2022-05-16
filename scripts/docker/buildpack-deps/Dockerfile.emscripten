@@ -33,12 +33,12 @@
 # Using $(em-config CACHE)/sysroot/usr seems to work, though, and still has cmake find the
 # dependencies automatically.
 FROM emscripten/emsdk:2.0.33 AS base
-LABEL version="9"
+LABEL version="11"
 
 ADD emscripten.jam /usr/src
 RUN set -ex; \
 	cd /usr/src; \
-	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.14 --depth 1 ; \
+	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.17 --depth 1 ; \
 	cd z3; \
 	mkdir build; \
 	cd build; \

@@ -9,20 +9,20 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-12
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:5087cc068b48787e89887804e632120b3e65bc5c25086bdf7b152be4fe5fc9ba"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-13
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:aa64242ecba4f040a839eadfaf20e8489cf93d1cb96ab90df2b240cdbbfe7f7c"
   ubuntu-2004-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-12
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7f53f1bc3d89bdfb0725f604efbbec570d80ffa9b731b47a4842f4e286de0355"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-13
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:caaf8d42aaf07397d1540e570f096a4fb1ef11fda7da3f1141d8852ec8322a9e"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-17
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:85b298c763adf5c516238246beb283640eb555e79e7ad6a8e7a6c9ed47ef6324"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-18
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:048002d71a1f86f83dedb79dd057760b752256c75646ba5ad5c1bbe92e1695aa"
   emscripten-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:emscripten-10
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:bd23831e0025e35a106005b4ac06cb3618f690bfa2833a5881b573c02d35d9fc"
+    # solbuildpackpusher/solidity-buildpack-deps:emscripten-11
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:0ad7c65e8c54d926ba9cb80d56246e4fc49f9284ad5188aaaa4834f46ab0c315"
   evm-version:
     type: string
     default: london
@@ -990,7 +990,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   t_ubu_soltest_all: &t_ubu_soltest_all
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_large
     parallelism: 50
     <<: *steps_soltest_all
 

@@ -1454,7 +1454,7 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 					length := calldataload(value)
 					value := add(value, 0x20)
 					if gt(length, 0xffffffffffffffff) { <revertStringLength>() }
-					if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { <revertStringStride>() }
+					if sgt(value, sub(calldatasize(), mul(length, <calldataStride>))) { <revertStringStride>() }
 				)")
 				("calldataStride", toCompactHexWithPrefix(arrayType->calldataStride()))
 				// TODO add test

@@ -96,8 +96,8 @@ public:
 	void clear() { m_errorReporter.clear(); }
 
 private:
-	ErrorReporter m_errorReporter;
 	ErrorList m_uniqueErrors;
+	ErrorReporter m_errorReporter;
 	std::map<std::pair<ErrorId, SourceLocation>, std::string> m_seenErrors;
 };
 

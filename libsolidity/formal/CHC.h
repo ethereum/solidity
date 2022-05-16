@@ -421,6 +421,9 @@ private:
 
 	/// CHC solver.
 	std::unique_ptr<smtutil::CHCSolverInterface> m_interface;
+
+	std::map<util::h256, std::string> const& m_smtlib2Responses;
+	ReadCallback::Callback const& m_smtCallback;
 };
 
 }

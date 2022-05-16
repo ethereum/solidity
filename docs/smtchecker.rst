@@ -629,6 +629,11 @@ option ``--model-checker-solvers {all,cvc4,smtlib2,z3}`` or the JSON option
   - if a dynamic ``z3`` library of version 4.8.x is installed in a Linux system (from Solidity 0.7.6);
   - statically in ``soljson.js`` (from Solidity 0.6.9), that is, the Javascript binary of the compiler.
 
+.. note::
+  z3 version 4.8.16 broke ABI compatibility with previous versions and cannot
+  be used with solc <=0.8.13. If you are using z3 >=4.8.16 please use solc
+  >=0.8.14.
+
 Since both BMC and CHC use ``z3``, and ``z3`` is available in a greater variety
 of environments, including in the browser, most users will almost never need to be
 concerned about this option. More advanced users might apply this option to try
