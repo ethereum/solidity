@@ -73,6 +73,11 @@ function gnosis_safe_test
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
     # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
     sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/GnosisSafe.Setup.spec.ts
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    sed -i 's|\(it\)\(("changes the expected storage slot without touching the most important ones"\)|\1.skip\2|g' test/libraries/SignMessageLib.spec.ts
+    sed -i "s|\(it\)\(('can be used only via DELEGATECALL opcode'\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
+    sed -i 's|\(describe\)\(("Upgrade from Safe 1.1.1"\)|\1.skip\2|g' test/migration/UpgradeFromSafe111.spec.ts
+    sed -i 's|\(describe\)\(("Upgrade from Safe 1.2.0"\)|\1.skip\2|g' test/migration/UpgradeFromSafe120.spec.ts
 
     neutralize_package_lock
     neutralize_package_json_hooks
