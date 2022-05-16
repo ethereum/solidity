@@ -164,7 +164,7 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 					solAssert(bindingElements.size() == 2);
 					string_view varName = get<string_view>(bindingElements.at(0).data);
 					Expression replacement = toSMTUtilExpression(bindingElements.at(1), _variableSorts);
-					cout << "Binding " << varName << " to " << replacement.toString() << endl;
+					cerr << "Binding " << varName << " to " << replacement.toString() << endl;
 					subSorts[string(varName)] = replacement.sort;
 					arguments.emplace_back(Expression(string(varName), {move(replacement)}, replacement.sort));
 				}

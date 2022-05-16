@@ -670,7 +670,15 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 			state().clauses.emplace_back(Clause{vector<Literal>{negate(_left), a, negate(b)}});
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, negate(a), negate(b)}});
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, a, b}});
-		}
+		}/*
+		else if (_right.name == "ite")
+		{
+			// a = (c ? x : y)
+			// c ? a = x : a = y
+			// c => a = x  && !c => a = y
+			addAssertion(!_right.arguments.at(0) || (_left == _right.arguments.at(1)), _letBindings);
+			addAssertion(_right.arguments.at(0) || (_left == _right.arguments.at(2)), _letBindings);
+		}*/
 		else
 			solAssert(false, "Unsupported operation: " + _right.name);
 	}

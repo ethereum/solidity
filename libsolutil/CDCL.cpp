@@ -86,7 +86,7 @@ bool CDCL::solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& sol
 			conflicts++;
 			m_sumConflicts++;
 			if (m_sumConflicts % 1000 == 999) {
-				cout << "c confl: " << m_sumConflicts << std::endl;
+				cerr << "c confl: " << m_sumConflicts << std::endl;
 			}
 			if (currentDecisionLevel() == 0)
 			{

@@ -94,10 +94,10 @@ bool Constraint::operator<(Constraint const& _other) const
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
 		if (rational diff = data.get(i) - _other.data.get(i))
 		{
-			//cout << "Exit after " << i << endl;
+			//cerr << "Exit after " << i << endl;
 			return diff < 0;
 		}
-	//cout << "full traversal of " << max(data.size(), _other.data.size()) << endl;
+	//cerr << "full traversal of " << max(data.size(), _other.data.size()) << endl;
 
 	return false;
 }
@@ -110,10 +110,10 @@ bool Constraint::operator==(Constraint const& _other) const
 	for (size_t i = 0; i < max(data.size(), _other.data.size()); ++i)
 		if (data.get(i) != _other.data.get(i))
 		{
-			//cout << "Exit after " << i << endl;
+			//cerr << "Exit after " << i << endl;
 			return false;
 		}
-	//cout << "full traversal of " << max(data.size(), _other.data.size()) << endl;
+	//cerr << "full traversal of " << max(data.size(), _other.data.size()) << endl;
 
 	return true;
 }
@@ -209,7 +209,7 @@ void LPSolver::addConstraint(Constraint const& _constraint, optional<size_t> _re
 
 	if (touchedProblems.empty())
 	{
-		//cout << "Creating new sub problem." << endl;
+		//cerr << "Creating new sub problem." << endl;
 		// TODO we could find an empty spot for the pointer.
 		m_subProblems.emplace_back(make_shared<SubProblem>());
 		solAssert(!m_subProblems.back()->sealed);
@@ -218,7 +218,7 @@ void LPSolver::addConstraint(Constraint const& _constraint, optional<size_t> _re
 	for (size_t problemToErase: touchedProblems | ranges::views::tail | ranges::views::reverse)
 		combineSubProblems(*touchedProblems.begin(), problemToErase);
 	addConstraintToSubProblem(*touchedProblems.begin(), _constraint, move(_reason));
-	//cout << "Added constraint:\n" << toString() << endl;
+	//cerr << "Added constraint:\n" << toString() << endl;
 }
 
 void LPSolver::setVariableName(size_t _variable, string _name)
@@ -269,7 +269,7 @@ pair<LPResult, ReasonSet> LPSolver::check()
 		if (*problem->result == LPResult::Infeasible)
 			return {LPResult::Infeasible, problem->reasons};
 	}
-	//cout << "Feasible:\n" << toString() << endl;
+	//cerr << "Feasible:\n" << toString() << endl;
 	return {LPResult::Feasible, {}};
 }
 
@@ -318,8 +318,8 @@ LPSolver::SubProblem& LPSolver::unsealForVariable(size_t _outerIndex)
 
 void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 {
-	//cout << "Combining\n" << m_subProblems.at(_combineFrom)->toString();
-	//cout << "\ninto\n" << m_subProblems.at(_combineInto)->toString();
+	//cerr << "Combining\n" << m_subProblems.at(_combineFrom)->toString();
+	//cerr << "\ninto\n" << m_subProblems.at(_combineInto)->toString();
 	SubProblem& combineInto = unseal(_combineInto);
 	SubProblem const& combineFrom = *m_subProblems[_combineFrom];
 
@@ -350,8 +350,8 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 			item.second = _combineInto;
 
 	m_subProblems[_combineFrom].reset();
-	//cout << "result: \n" << m_subProblems.at(_combineInto)->toString();
-	//cout << "------------------------------\n";
+	//cerr << "result: \n" << m_subProblems.at(_combineInto)->toString();
+	//cerr << "------------------------------\n";
 }
 
 // TODO move this function into the problem struct and make it erturn set of vaiables added
@@ -469,34 +469,34 @@ LPResult LPSolver::SubProblem::check()
 	// is spent on "operator<" - maybe we can cache "is in bounds" for variables
 	// and invalidate that in the update procedures.
 
-//	cout << "checking..." << endl;
-//	cout << toString() << endl;
-//	cout << "----------------------------" << endl;
-//	cout << "fixing non-basic..." << endl;
+	cerr << "checking..." << endl;
+	cerr << toString() << endl;
+	cerr << "----------------------------" << endl;
+	cerr << "fixing non-basic..." << endl;
 	// Adjust the assignments so we satisfy the bounds of the non-basic variables.
 	if (!correctNonbasic())
 		return LPResult::Infeasible;
 
 	// Now try to make the basic variables happy, pivoting if necessary.
 
-//	cout << "fixed non-basic." << endl;
-//	cout << toString() << endl;
-//	cout << "----------------------------" << endl;
+	cerr << "fixed non-basic." << endl;
+	cerr << toString() << endl;
+	cerr << "----------------------------" << endl;
 
 	// TODO bound number of iterations
 	while (auto bvi = firstConflictingBasicVariable())
 	{
 		Variable const& basicVar = variables[*bvi];
-//		cout << toString() << endl;
-//		cout << "Fixing basic " << basicVar.name << endl;
-//		cout << "----------------------------" << endl;
+		cerr << toString() << endl;
+		cerr << "Fixing basic " << basicVar.name << endl;
+		cerr << "----------------------------" << endl;
 		if (basicVar.bounds.lower && basicVar.bounds.upper)
 			solAssert(*basicVar.bounds.lower <= *basicVar.bounds.upper);
 		if (basicVar.bounds.lower && basicVar.value < *basicVar.bounds.lower)
 		{
 			if (auto replacementVar = firstReplacementVar(*bvi, true))
 			{
-//				cout << "Replacing by " << variables[*replacementVar].name << endl;
+				cerr << "Replacing by " << variables[*replacementVar].name << endl;
 
 				pivotAndUpdate(*bvi, *basicVar.bounds.lower, *replacementVar);
 			}
@@ -507,14 +507,14 @@ LPResult LPSolver::SubProblem::check()
 		{
 			if (auto replacementVar = firstReplacementVar(*bvi, false))
 			{
-//				cout << "Replacing by " << variables[*replacementVar].name << endl;
+				cerr << "Replacing by " << variables[*replacementVar].name << endl;
 				pivotAndUpdate(*bvi, *basicVar.bounds.upper, *replacementVar);
 			}
 			else
 				return LPResult::Infeasible;
 		}
-//		cout << "Fixed basic " << basicVar.name << endl;
-//		cout << toString() << endl;
+		cerr << "Fixed basic " << basicVar.name << endl;
+		cerr << toString() << endl;
 	}
 
 	return LPResult::Feasible;
