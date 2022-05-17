@@ -1,6 +1,7 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x67f6235b42fbb5cc636b1d18ccd5622020b45eef0c634965f9adf8b4bb923a64":"(set-option :produce-models true)
+{"auxiliaryInputRequested":{"smtlib2queries":{"0xa19650cfa92f4bef9d851256ed20a3810153613417195cb61983a429a1d8591c":"(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
+(declare-fun |destructed_0| () Int)
 (declare-fun |this_0| () Int)
 (declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
 (declare-fun |state_0| () |state_type|)

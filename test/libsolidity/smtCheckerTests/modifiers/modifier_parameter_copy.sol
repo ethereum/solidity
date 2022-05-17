@@ -11,5 +11,6 @@ contract C
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 6328: (95-109): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 3\nx = 3\n\nTransaction trace:\nC.constructor()\nC.f(3)

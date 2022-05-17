@@ -15,8 +15,11 @@ contract C {
 		assert(g == 0x0001020304050607080900010203040506070809000102030405060708090002); // should fail
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (225-256): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x0\ne = 0x0\ng = 0x0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (352-399): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x010203040506070809000102030405\ne = 0x0\ng = 0x0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (526-589): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x010203040506070809000102030405\ne = 0x0102030405060708090001020304050607080900010203\ng = 0x0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (732-811): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 0x01020304050607\nd = 0x010203040506070809000102030405\ne = 0x0102030405060708090001020304050607080900010203\ng = 0x01020304050607080900010203040506070809000102030405060708090001\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (225-256): CHC: Assertion violation happens here.
+// Warning 6328: (352-399): CHC: Assertion violation happens here.
+// Warning 6328: (526-589): CHC: Assertion violation happens here.
+// Warning 6328: (732-811): CHC: Assertion violation happens here.

@@ -9,7 +9,8 @@ contract C
 		(bool success, bytes memory ret) = a.staticcall(data);
 		assert(success);
 		assert(x == 0);
-		assert(map[0] == 0);
+		// Disabled because of Spacer's seg fault
+		//assert(map[0] == 0);
 		// Disabled because of Spacer's seg fault
 		//assert(localMap[0] == 0);
 	}

@@ -51,6 +51,7 @@ contract MyConc{
 // ====
 // SMTEngine: all
 // SMTIgnoreCex: yes
+// SMTIgnoreOS: macos
 // ----
 // Warning 2519: (740-759): This declaration shadows an existing declaration.
 // Warning 2018: (976-1053): Function state mutability can be restricted to view
