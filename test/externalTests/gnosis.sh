@@ -79,6 +79,9 @@ function gnosis_safe_test
     sed -i 's|\(describe\)\(("Upgrade from Safe 1.1.1"\)|\1.skip\2|g' test/migration/UpgradeFromSafe111.spec.ts
     sed -i 's|\(describe\)\(("Upgrade from Safe 1.2.0"\)|\1.skip\2|g' test/migration/UpgradeFromSafe120.spec.ts
 
+    # TODO: Remove this when Gnosis merges https://github.com/gnosis/safe-contracts/pull/394
+    sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" contracts/handler/CompatibilityFallbackHandler.sol
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"

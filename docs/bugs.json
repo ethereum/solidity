@@ -1,5 +1,16 @@
 [
     {
+        "uid": "SOL-2022-3",
+        "name": "DataLocationChangeInInternalOverride",
+        "summary": "It was possible to change the data location of the parameters or return variables from ``calldata`` to ``memory`` and vice-versa while overriding internal and public functions. This caused invalid code to be generated when calling such a function internally through virtual function calls.",
+        "description": "When calling external functions, it is irrelevant if the data location of the parameters is ``calldata`` or ``memory``, the encoding of the data does not change. Because of that, changing the data location when overriding external functions is allowed. The compiler incorrectly also allowed a change in the data location for overriding public and internal functions. Since public functions can be called internally as well as externally, this causes invalid code to be generated when such an incorrectly overridden function is called internally through the base contract. The caller provides a memory pointer, but the called function interprets it as a calldata pointer or vice-versa.",
+        "link": "https://blog.soliditylang.org/2022/05/17/data-location-inheritance-bug/",
+        "introduced": "0.6.9",
+        "fixed": "0.8.14",
+        "severity": "very low"
+
+    },
+    {
         "uid": "SOL-2022-2",
         "name": "NestedCallataArrayAbiReencodingSizeValidation",
         "summary": "ABI-reencoding of nested dynamic calldata arrays did not always perform proper size checks against the size of calldata and could read beyond ``calldatasize()``.",

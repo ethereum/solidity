@@ -2,6 +2,7 @@
 
 Important Bugfixes:
  * ABI Encoder: When ABI-encoding values from calldata that contain nested arrays, correctly validate the nested array length against ``calldatasize()`` in all cases.
+ * Override Checker: Allow changing data location for parameters only when overriding external functions.
 
 
 Compiler Features:

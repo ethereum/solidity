@@ -1345,6 +1345,7 @@
     },
     "0.6.10": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1356,6 +1357,7 @@
     },
     "0.6.11": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1367,6 +1369,7 @@
     },
     "0.6.12": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1477,6 +1480,7 @@
     },
     "0.6.9": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1489,6 +1493,7 @@
     },
     "0.7.0": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1500,6 +1505,7 @@
     },
     "0.7.1": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1512,6 +1518,7 @@
     },
     "0.7.2": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1523,6 +1530,7 @@
     },
     "0.7.3": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1533,6 +1541,7 @@
     },
     "0.7.4": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1542,6 +1551,7 @@
     },
     "0.7.5": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1551,6 +1561,7 @@
     },
     "0.7.6": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1560,6 +1571,7 @@
     },
     "0.8.0": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1569,6 +1581,7 @@
     },
     "0.8.1": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1578,12 +1591,14 @@
     },
     "0.8.10": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation"
         ],
         "released": "2021-11-09"
     },
     "0.8.11": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "AbiEncodeCallLiteralAsFixedBytesBug"
         ],
@@ -1591,6 +1606,7 @@
     },
     "0.8.12": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "AbiEncodeCallLiteralAsFixedBytesBug"
         ],
@@ -1598,12 +1614,14 @@
     },
     "0.8.13": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation"
         ],
         "released": "2022-03-16"
     },
     "0.8.2": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory",
@@ -1613,6 +1631,7 @@
     },
     "0.8.3": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables",
             "ABIDecodeTwoDimensionalArrayMemory"
@@ -1621,6 +1640,7 @@
     },
     "0.8.4": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
@@ -1628,6 +1648,7 @@
     },
     "0.8.5": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
@@ -1635,6 +1656,7 @@
     },
     "0.8.6": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
@@ -1642,6 +1664,7 @@
     },
     "0.8.7": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "SignedImmutables"
         ],
@@ -1649,6 +1672,7 @@
     },
     "0.8.8": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation",
             "UserDefinedValueTypesBug",
             "SignedImmutables"
@@ -1657,6 +1681,7 @@
     },
     "0.8.9": {
         "bugs": [
+            "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation"
         ],
         "released": "2021-09-29"
