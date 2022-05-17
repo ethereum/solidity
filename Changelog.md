@@ -1,25 +1,22 @@
 ### 0.8.14 (unreleased)
 
 Important Bugfixes:
- * ABI Encoding: When ABI-encoding values from calldata that contain nested arrays, correctly validate the nested array length against ``calldatasize()`` in all cases.
-
-
-Language Features:
+ * ABI Encoder: When ABI-encoding values from calldata that contain nested arrays, correctly validate the nested array length against ``calldatasize()`` in all cases.
 
 
 Compiler Features:
- * Peephole Optimizer: Remove operations without side effects before simple terminations.
- * Assembly-Json: Export: Include source list in `sourceList` field.
- * Commandline Interface: option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
- * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
+ * Assembly-Json Exporter: Include source list in `sourceList` field.
+ * Commandline Interface: Option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
  * Language Server: Allow full filesystem access to language server.
+ * Peephole Optimizer: Remove operations without side effects before simple terminations.
+ * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
 
 
 Bugfixes:
- * Type Checker: Properly check restrictions of ``using ... global`` in conjunction with libraries.
- * Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
- * SMTChecker: Fix bug when z3 is selected but not available at runtime.
+ * Assembly-Json Exporter: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
  * SMTChecker: Fix ABI compatibility with z3 >=4.8.16.
+ * SMTChecker: Fix bug when z3 is selected but not available at runtime.
+ * Type Checker: Properly check restrictions of ``using ... global`` in conjunction with libraries.
  * TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
 
 
