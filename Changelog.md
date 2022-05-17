@@ -1,4 +1,4 @@
-### 0.8.14 (unreleased)
+### 0.8.14 (2022-05-17)
 
 Important Bugfixes:
  * ABI Encoder: When ABI-encoding values from calldata that contain nested arrays, correctly validate the nested array length against ``calldatasize()`` in all cases.
