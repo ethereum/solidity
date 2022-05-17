@@ -36,7 +36,7 @@ function test_fn { npm test; }
 
 function gnosis_safe_test
 {
-    local repo="https://github.com/gnosis/safe-contracts.git"
+    local repo="https://github.com/safe-global/safe-contracts.git"
     local ref_type=branch
     local ref=main
     local config_file="hardhat.config.ts"
@@ -73,6 +73,11 @@ function gnosis_safe_test
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
     # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
     sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/GnosisSafe.Setup.spec.ts
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    sed -i 's|\(it\)\(("changes the expected storage slot without touching the most important ones"\)|\1.skip\2|g' test/libraries/SignMessageLib.spec.ts
+    sed -i "s|\(it\)\(('can be used only via DELEGATECALL opcode'\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
+    sed -i 's|\(describe\)\(("Upgrade from Safe 1.1.1"\)|\1.skip\2|g' test/migration/UpgradeFromSafe111.spec.ts
+    sed -i 's|\(describe\)\(("Upgrade from Safe 1.2.0"\)|\1.skip\2|g' test/migration/UpgradeFromSafe120.spec.ts
 
     neutralize_package_lock
     neutralize_package_json_hooks
@@ -84,6 +89,10 @@ function gnosis_safe_test
     # With ethers.js 5.6.2 many tests for revert messages fail.
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
     npm install ethers@5.6.1
+
+    # Note that ethers@5.6.1 depends on @ethersproject/contracts@5.6.0 while the dependency on hardhat-deploy
+    # pulls @ethersproject/contracts@5.6.1 (latest). Force 5.6.0 to avoid errors due to having two copies.
+    npm install @ethersproject/contracts@5.6.0
 
     # Hardhat 2.9.5 introduced a bug with handling padded arguments to getStorageAt().
     # TODO: Remove when https://github.com/NomicFoundation/hardhat/issues/2709 is fixed.
