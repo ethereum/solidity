@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+* LSP: Add rudimentary support for semantic highlighting.
 
 
 Bugfixes:

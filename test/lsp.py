@@ -41,7 +41,7 @@ def escape_string(text: str) -> str:
     }))
 
 
-def getCharFromStdin():
+def getCharFromStdin() -> str:
     """
     Gets a single character from stdin without line-buffering.
     """
@@ -49,7 +49,7 @@ def getCharFromStdin():
         # pragma pylint: disable=import-error
         return msvcrt.getch().decode("utf-8")
     else:
-        return sys.stdin.buffer.read(1)
+        return sys.stdin.read(1)
 
 
 """

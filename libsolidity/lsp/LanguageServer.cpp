@@ -26,6 +26,7 @@
 
 // LSP feature implementations
 #include <libsolidity/lsp/GotoDefinition.h>
+#include <libsolidity/lsp/SemanticTokensBuilder.h>
 
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/CharStream.h>
@@ -64,6 +65,49 @@ int toDiagnosticSeverity(Error::Type _errorType)
 	return -1;
 }
 
+Json::Value semanticTokensLegend()
+{
+	Json::Value legend = Json::objectValue;
+
+	// NOTE! The (alphabetical) order and items must match exactly the items of
+	//       their respective enum class members.
+
+	Json::Value tokenTypes = Json::arrayValue;
+	tokenTypes.append("class");
+	tokenTypes.append("comment");
+	tokenTypes.append("enum");
+	tokenTypes.append("enumMember");
+	tokenTypes.append("event");
+	tokenTypes.append("function");
+	tokenTypes.append("interface");
+	tokenTypes.append("keyword");
+	tokenTypes.append("macro");
+	tokenTypes.append("method");
+	tokenTypes.append("modifier");
+	tokenTypes.append("number");
+	tokenTypes.append("operator");
+	tokenTypes.append("parameter");
+	tokenTypes.append("property");
+	tokenTypes.append("string");
+	tokenTypes.append("struct");
+	tokenTypes.append("type");
+	tokenTypes.append("typeParameter");
+	tokenTypes.append("variable");
+	legend["tokenTypes"] = tokenTypes;
+
+	Json::Value tokenModifiers = Json::arrayValue;
+	tokenModifiers.append("abstract");
+	tokenModifiers.append("declaration");
+	tokenModifiers.append("definition");
+	tokenModifiers.append("deprecated");
+	tokenModifiers.append("documentation");
+	tokenModifiers.append("modification");
+	tokenModifiers.append("readonly");
+	legend["tokenModifiers"] = tokenModifiers;
+
+	return legend;
+}
+
 }
 
 LanguageServer::LanguageServer(Transport& _transport):
@@ -81,6 +125,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"textDocument/didChange", bind(&LanguageServer::handleTextDocumentDidChange, this, _2)},
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _2)},
 		{"textDocument/implementation", GotoDefinition(*this) },
+		{"textDocument/semanticTokens/full", bind(&LanguageServer::semanticTokensFull, this, _1, _2)},
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2)},
 	},
 	m_fileRepository("/" /* basePath */),
@@ -266,8 +311,28 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	replyArgs["capabilities"]["implementationProvider"] = true;
 	replyArgs["capabilities"]["textDocumentSync"]["change"] = 2; // 0=none, 1=full, 2=incremental
 	replyArgs["capabilities"]["textDocumentSync"]["openClose"] = true;
+	replyArgs["capabilities"]["semanticTokensProvider"]["legend"] = semanticTokensLegend();
+	replyArgs["capabilities"]["semanticTokensProvider"]["range"] = false;
+	replyArgs["capabilities"]["semanticTokensProvider"]["full"] = true; // XOR requests.full.delta = true
 
 	m_client.reply(_id, move(replyArgs));
+}
+
+void LanguageServer::semanticTokensFull(MessageID _id, Json::Value const& _args)
+{
+	auto uri = _args["textDocument"]["uri"];
+
+	compile();
+
+	auto const sourceName = m_fileRepository.uriToSourceUnitName(uri.as<string>());
+	SourceUnit const& ast = m_compilerStack.ast(sourceName);
+	m_compilerStack.charStream(sourceName);
+	Json::Value data = SemanticTokensBuilder().build(ast, m_compilerStack.charStream(sourceName));
+
+	Json::Value reply = Json::objectValue;
+	reply["data"] = data;
+
+	m_client.reply(_id, std::move(reply));
 }
 
 void LanguageServer::handleWorkspaceDidChangeConfiguration(Json::Value const& _args)
