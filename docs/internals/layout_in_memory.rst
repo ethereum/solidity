@@ -48,13 +48,16 @@ which adjusts the value of the free memory pointer as necessary.
 There are no dedicated opcodes for managing the pointer.
 The slot holding pointer's value is just an ordinary memory location.
 
-Accessing the free memory pointer itself is a memory access and after such an access ``msize()``
-would (by definition) return a value that is no smaller than the location of the pointer plus its size.
+.. note::
+    To illustrate the operation of ``msize()`` consider any access to memory at any location.
+    Such an access changes the value returned by ``msize()`` if it is beyond its current value,
+    but does not change the free memory pointer. ``msize()`` is an internal EVM value distinct from the free memory pointer,
+    which is a Solidity managed concept that supports Solidity's memory management.
 
 Increasing the size of active memory is called *memory expansion* and incurs an extra gas cost that
 grows non-linearly the size of that memory.
 The specifics are beyond the scope of this documentation.
-More information about gas costs can be found in the Etherum Yellow Paper and the documentation of
+More information about gas costs and ``msize()`` can be found in the Etherum Yellow Paper and the documentation of
 specific EVM implementations.
 
 Scratch Space
