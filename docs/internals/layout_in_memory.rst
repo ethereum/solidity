@@ -18,7 +18,7 @@ Memory Allocation
 -----------------
 
 Solidity compiles to EVM instructions, and implements its complex data types on top of
-EVM features. Memory allocation is not an EVM feature. Inestead, Solidity implements its
+EVM features. Memory allocation is not an EVM feature. Instead, Solidity implements its
 memory allocation via the free memory pointer stored at location ``0x40``. That value tracks the next
 unallocated memory address available.
 The Solidity compiler generates code that always places new objects at the location pointed to by
