@@ -55,7 +55,7 @@ The slot holding pointer's value is just an ordinary memory location.
     which is a Solidity managed concept that supports Solidity's memory management.
 
 Increasing the size of active memory is called *memory expansion* and incurs an extra gas cost that
-grows non-linearly the size of that memory.
+grows with the size of that active memory.
 The specifics are beyond the scope of this documentation.
 More information about gas costs and ``msize()`` can be found in the Etherum Yellow Paper and the documentation of
 specific EVM implementations.
