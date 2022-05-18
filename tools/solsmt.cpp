@@ -164,7 +164,9 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 					solAssert(bindingElements.size() == 2);
 					string_view varName = get<string_view>(bindingElements.at(0).data);
 					Expression replacement = toSMTUtilExpression(bindingElements.at(1), _variableSorts);
+#ifdef DEBUG
 					cerr << "Binding " << varName << " to " << replacement.toString() << endl;
+#endif
 					subSorts[string(varName)] = replacement.sort;
 					arguments.emplace_back(Expression(string(varName), {move(replacement)}, replacement.sort));
 				}
@@ -231,9 +233,11 @@ int main(int argc, char** argv)
 		SMTLib2Parser parser(inputToParse);
 		SMTLib2Expression expr = parser.parseExpression();
 		auto newInputToParse = parser.remainingInput();
+#ifdef DEBUG
 		cerr << "got : " << string(inputToParse.begin(), newInputToParse.begin()) << endl;
-		inputToParse = move(newInputToParse);
 		cerr << " -> " << expr.toString() << endl;
+#endif
+		inputToParse = move(newInputToParse);
 		vector<SMTLib2Expression> const& items = get<vector<SMTLib2Expression>>(expr.data);
 		string_view cmd = command(expr);
 		if (cmd == "set-info")

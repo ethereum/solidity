@@ -101,13 +101,17 @@ void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _s
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const&)
 {
+#ifdef DEBUG
 	cerr << "Solving boolean constraint system" << endl;
 	cerr << toString() << endl;
 	cerr << "--------------" << endl;
+#endif
 
 	if (state().infeasible)
 	{
+#ifdef DEBUG
 		cerr << "----->>>>> unsatisfiable" << endl;
+#endif
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});
 	}
 
@@ -142,7 +146,9 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 
 	if (lpSolver.check().first == LPResult::Infeasible)
 	{
+#ifdef DEBUG
 		cerr << "----->>>>> unsatisfiable" << endl;
+#endif
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 
@@ -180,12 +186,16 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver, backtrackNotify}.solve();
 	if (!optionalModel)
 	{
+#ifdef DEBUG
 		cerr << "==============> CDCL final result: unsatisfiable." << endl;
+#endif
 		return {CheckResult::UNSATISFIABLE, {}};
 	}
 	else
 	{
+#ifdef DEBUG
 		cerr << "==============> CDCL final result: SATisfiable / UNKNOWN." << endl;
+#endif
 		// TODO should be "unknown" later on
 		return {CheckResult::SATISFIABLE, {}};
 		//return {CheckResult::UNKNOWN, {}};
@@ -219,8 +229,10 @@ string BooleanLPSolver::toString() const
 
 void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> _letBindings)
 {
+#ifdef DEBUG
 	cerr << "adding assertion" << endl;
 	cerr << " - " << _expr.toString() << endl;
+#endif
 	solAssert(_expr.sort->kind == Kind::Bool);
 	if (_expr.arguments.empty())
 	{
@@ -262,10 +274,14 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> 
 				Constraint c{move(data), Constraint::EQUAL};
 				if (!tryAddDirectBounds(c))
 					state().fixedConstraints.emplace_back(move(c));
+#ifdef DEBUG
 				cerr << "Added as fixed constraint" << endl;
+#endif
 			}
 			else
 			{
+				cerr << _expr.toString() << endl;
+				cerr << "Expected linear arguments." << endl;
 				solAssert(false);
 			}
 		}
@@ -521,6 +537,7 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 	}
 	else
 	{
+		cerr << _expr.toString() << endl;
 		cerr << "Invalid operator " << _expr.name << endl;
 		return std::nullopt;
 	}

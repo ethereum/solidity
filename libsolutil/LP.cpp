@@ -469,34 +469,42 @@ LPResult LPSolver::SubProblem::check()
 	// is spent on "operator<" - maybe we can cache "is in bounds" for variables
 	// and invalidate that in the update procedures.
 
+#ifdef DEBUG
 	cerr << "checking..." << endl;
 	cerr << toString() << endl;
 	cerr << "----------------------------" << endl;
 	cerr << "fixing non-basic..." << endl;
+#endif
 	// Adjust the assignments so we satisfy the bounds of the non-basic variables.
 	if (!correctNonbasic())
 		return LPResult::Infeasible;
 
 	// Now try to make the basic variables happy, pivoting if necessary.
 
+#ifdef DEBUG
 	cerr << "fixed non-basic." << endl;
 	cerr << toString() << endl;
 	cerr << "----------------------------" << endl;
+#endif
 
 	// TODO bound number of iterations
 	while (auto bvi = firstConflictingBasicVariable())
 	{
 		Variable const& basicVar = variables[*bvi];
+#ifdef DEBUG
 		cerr << toString() << endl;
 		cerr << "Fixing basic " << basicVar.name << endl;
 		cerr << "----------------------------" << endl;
+#endif
 		if (basicVar.bounds.lower && basicVar.bounds.upper)
 			solAssert(*basicVar.bounds.lower <= *basicVar.bounds.upper);
 		if (basicVar.bounds.lower && basicVar.value < *basicVar.bounds.lower)
 		{
 			if (auto replacementVar = firstReplacementVar(*bvi, true))
 			{
+#ifdef DEBUG
 				cerr << "Replacing by " << variables[*replacementVar].name << endl;
+#endif
 
 				pivotAndUpdate(*bvi, *basicVar.bounds.lower, *replacementVar);
 			}
@@ -507,14 +515,18 @@ LPResult LPSolver::SubProblem::check()
 		{
 			if (auto replacementVar = firstReplacementVar(*bvi, false))
 			{
+#ifdef DEBUG
 				cerr << "Replacing by " << variables[*replacementVar].name << endl;
+#endif
 				pivotAndUpdate(*bvi, *basicVar.bounds.upper, *replacementVar);
 			}
 			else
 				return LPResult::Infeasible;
 		}
+#ifdef DEBUG
 		cerr << "Fixed basic " << basicVar.name << endl;
 		cerr << toString() << endl;
+#endif
 	}
 
 	return LPResult::Feasible;
