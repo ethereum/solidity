@@ -25,9 +25,10 @@ The Solidity compiler generates code that always places new objects at the locat
 the free memory pointer.
 In inline assembly memory can be allocated manually by increasing the value of the pointer.
 
-Memory located beyond the value of the free memory pointer is considered scratch memory.
+Memory located beyond the value of the free memory pointer is considered additional scratch memory.
+To avoid confusion with the 64 bytes of scratch space at the beginning of memory we will refer to this as "temporary memory."
 Access to memory in inline assembly is not restricted by the value of the free memory pointer
-and can freely refer to memory located beyond it.
+and can freely refer to the "temporary memory" located beyond it.
 
 Allocated memory in Solidity is never freed.
 In other words, the value of the free memory pointer is never reduced by Solidity.
@@ -62,19 +63,19 @@ Scratch Space
 
 The memory between locations ``0x00`` and ``0x3F`` (inclusive) is called the *scratch space*. It exists
 solely by convention. Solidity's generated code observes the convention that this area is for
-temporary use only. Specifically, since there is no guarantee that code not under your direct
+immediate use only. Specifically, since there is no guarantee that code not under your direct
 control will not change that memory, you should not rely on its value being preserved except
 within the current assembly block.
 
 .. warning::
-    There are some operations in Solidity that need a temporary memory area
+    There are some operations in Solidity that need "temporary memory"
     larger than 64 bytes and therefore will not fit into the scratch space.
     Code for these operations therefore uses the unallocated area past
     the free memory pointer. Because such operations are known to be complete
     before the next instruction or operation managed by Solidity, the generated
     code does not update the free memory pointer. The memory used in such operations
     may or may not be zeroed out after the operation is complete. Solidity's
-    access of that memory may affect ``msize()``. Thus, it is reasonable to expect that
+    access of that memory may affect the value returned by the Yul ``msize()`` call. Thus, it is reasonable to expect that
     ``msize()`` might be larger than the value of the free memory pointer.
 
     While it may seem like a good idea to use ``msize()`` to arrive at a
@@ -84,6 +85,9 @@ within the current assembly block.
     from accessing any memory location whatsoever, but updating the free memory pointer
     at least ensures that Solidity itself won't unexpectedly use memory
     located below its value.
+
+    In brief, any memory you access beyond the memory pointed to by the
+    free memory pointer should be considered "temporary memory."
 
 Zero Slot
 ---------
