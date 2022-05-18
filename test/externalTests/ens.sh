@@ -37,8 +37,8 @@ function test_fn { yarn test; }
 function ens_test
 {
     local repo="https://github.com/ensdomains/ens-contracts.git"
-    local ref_type=tag
-    local ref="v0.0.8"     # The project is in flux right now and master might be too unstable for us
+    local ref_type=branch
+    local ref="master"
     local config_file="hardhat.config.js"
 
     local compile_only_presets=(
@@ -71,6 +71,10 @@ function ens_test
 
     replace_version_pragmas
     neutralize_packaged_contracts
+
+    # In some cases Hardhat does not detect revert reasons properly via IR.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
+    sed -i "s|it\(('Does not allow wrapping a name you do not own',\)|it.skip\1|g" test/wrapper/NameWrapper.js
 
     find . -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 

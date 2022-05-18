@@ -10,28 +10,37 @@ Breaking changes:
  * General: The identifier ``basefee`` is a reserved identifier in Yul for all EVM versions.
 
 
-### 0.8.14 (unreleased)
-
-Important Bugfixes:
- * ABI Encoding: When ABI-encoding values from calldata that contain nested arrays, correctly validate the nested array length against ``calldatasize()`` in all cases.
-
+### 0.8.15 (unreleased)
 
 Language Features:
 
 
 Compiler Features:
- * Peephole Optimizer: Remove operations without side effects before simple terminations.
- * Assembly-Json: Export: Include source list in `sourceList` field.
- * Commandline Interface: option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
- * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
- * Language Server: Allow full filesystem access to language server.
 
 
 Bugfixes:
- * Type Checker: Properly check restrictions of ``using ... global`` in conjunction with libraries.
- * Assembly-Json: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
- * SMTChecker: Fix bug when z3 is selected but not available at runtime.
+
+
+### 0.8.14 (2022-05-17)
+
+Important Bugfixes:
+ * ABI Encoder: When ABI-encoding values from calldata that contain nested arrays, correctly validate the nested array length against ``calldatasize()`` in all cases.
+ * Override Checker: Allow changing data location for parameters only when overriding external functions.
+
+
+Compiler Features:
+ * Assembly-Json Exporter: Include source list in `sourceList` field.
+ * Commandline Interface: Option ``--pretty-json`` works also with the following options: ``--abi``, ``--asm-json``, ``--ast-compact-json``, ``--devdoc``, ``--storage-layout``, ``--userdoc``.
+ * Language Server: Allow full filesystem access to language server.
+ * Peephole Optimizer: Remove operations without side effects before simple terminations.
+ * SMTChecker: Support ``abi.encodeCall`` taking into account the called selector.
+
+
+Bugfixes:
+ * Assembly-Json Exporter: Fix assembly json export to store jump types of operations in `jumpType` field instead of `value`.
  * SMTChecker: Fix ABI compatibility with z3 >=4.8.16.
+ * SMTChecker: Fix bug when z3 is selected but not available at runtime.
+ * Type Checker: Properly check restrictions of ``using ... global`` in conjunction with libraries.
  * TypeChecker: Convert parameters of function type to how they would be called for ``abi.encodeCall``.
 
 

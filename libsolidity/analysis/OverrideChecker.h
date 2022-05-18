@@ -84,7 +84,10 @@ public:
 	/// @returns receive / fallback / function (only the latter for modifiers and variables);
 	langutil::Token functionKind() const;
 
-	FunctionType const* functionType() const;
+	/// @returns the externally callable function type
+	FunctionType const* externalFunctionType() const;
+	/// @returns the (unmodified) function type
+	FunctionType const* originalFunctionType() const;
 	ModifierType const* modifierType() const;
 
 	Declaration const* declaration() const;
@@ -101,6 +104,7 @@ public:
 
 	/**
 	 * Struct to help comparing override items about whether they override each other.
+	 * Compares functions based on their "externally callable" type.
 	 * Does not produce a total order.
 	 */
 	struct OverrideComparator

@@ -66,10 +66,6 @@ function perpetual_pools_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     yarn install
 
-    # With ethers.js 5.6.2 many tests for revert messages fail.
-    # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
-    yarn add ethers@5.6.1
-
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do

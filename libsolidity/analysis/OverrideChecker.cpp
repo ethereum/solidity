@@ -313,12 +313,21 @@ Token OverrideProxy::functionKind() const
 	}, m_item);
 }
 
-FunctionType const* OverrideProxy::functionType() const
+FunctionType const* OverrideProxy::externalFunctionType() const
 {
 	return std::visit(GenericVisitor{
 		[&](FunctionDefinition const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
 		[&](VariableDeclaration const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
 		[&](ModifierDefinition const*) -> FunctionType const* { solAssert(false, "Requested function type of modifier."); return nullptr; }
+	}, m_item);
+}
+
+FunctionType const* OverrideProxy::originalFunctionType() const
+{
+	return std::visit(GenericVisitor{
+		[&](FunctionDefinition const* _item) { return TypeProvider::function(*_item); },
+		[&](VariableDeclaration const*) -> FunctionType const* { solAssert(false, "Requested specific function type of variable."); return nullptr; },
+		[&](ModifierDefinition const*) -> FunctionType const* { solAssert(false, "Requested specific function type of modifier."); return nullptr; }
 	}, m_item);
 }
 
@@ -413,7 +422,7 @@ OverrideProxy::OverrideComparator const& OverrideProxy::overrideComparator() con
 			[&](FunctionDefinition const* _function)
 			{
 				vector<string> paramTypes;
-				for (Type const* t: functionType()->parameterTypes())
+				for (Type const* t: externalFunctionType()->parameterTypes())
 					paramTypes.emplace_back(t->richIdentifier());
 				return OverrideComparator{
 					_function->name(),
@@ -424,7 +433,7 @@ OverrideProxy::OverrideComparator const& OverrideProxy::overrideComparator() con
 			[&](VariableDeclaration const* _var)
 			{
 				vector<string> paramTypes;
-				for (Type const* t: functionType()->parameterTypes())
+				for (Type const* t: externalFunctionType()->parameterTypes())
 					paramTypes.emplace_back(t->richIdentifier());
 				return OverrideComparator{
 					_var->name(),
@@ -589,19 +598,52 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 
 	if (_super.isFunction())
 	{
-		FunctionType const* functionType = _overriding.functionType();
-		FunctionType const* superType = _super.functionType();
+		FunctionType const* functionType = _overriding.externalFunctionType();
+		FunctionType const* superType = _super.externalFunctionType();
 
+		bool returnTypesDifferAlready = false;
 		if (_overriding.functionKind() != Token::Fallback)
 		{
 			solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
 
 			if (!functionType->hasEqualReturnTypes(*superType))
+			{
+				returnTypesDifferAlready = true;
 				overrideError(
 					_overriding,
 					_super,
 					4822_error,
 					"Overriding " + _overriding.astNodeName() + " return types differ.",
+					"Overridden " + _overriding.astNodeName() + " is here:"
+				);
+			}
+		}
+
+		// The override proxy considers calldata and memory the same data location.
+		// Here we do a more specific check:
+		// Data locations of parameters and return variables have to match
+		// unless we have a public function overriding an external one.
+		if (
+			_overriding.isFunction() &&
+			!returnTypesDifferAlready &&
+			_super.visibility() != Visibility::External &&
+			_overriding.functionKind() != Token::Fallback
+		)
+		{
+			if (!_overriding.originalFunctionType()->hasEqualParameterTypes(*_super.originalFunctionType()))
+				overrideError(
+					_overriding,
+					_super,
+					7723_error,
+					"Data locations of parameters have to be the same when overriding non-external functions, but they differ.",
+					"Overridden " + _overriding.astNodeName() + " is here:"
+				);
+			if (!_overriding.originalFunctionType()->hasEqualReturnTypes(*_super.originalFunctionType()))
+				overrideError(
+					_overriding,
+					_super,
+					1443_error,
+					"Data locations of return variables have to be the same when overriding non-external functions, but they differ.",
 					"Overridden " + _overriding.astNodeName() + " is here:"
 				);
 		}

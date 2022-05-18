@@ -86,6 +86,14 @@ function bleeps_test
     npm install npm-run-all
     npm install
 
+    # TODO: Bleeps depends on OpenZeppelin 4.3.2, which is affected by
+    # https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3293.
+    # Forcing OZ >= 4.6.0 fixes this but it also causes a lot of unrelated compilation errors.
+    # Remove this when Bleeps gets updated to support newer OpenZeppelin.
+    perl -i -0pe \
+        "s/(function hashProposal\(\n        address\[\] )calldata( targets,\n        uint256\[\] )calldata( values,\n        bytes\[\] )calldata( calldatas,)/\1memory\2memory\3memory\4/g" \
+        node_modules/@openzeppelin/contracts/governance/IGovernor.sol
+
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do
