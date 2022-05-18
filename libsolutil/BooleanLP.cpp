@@ -307,9 +307,13 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> 
 		state().clauses.emplace_back(Clause{vector<Literal>{l}});
 	}
 	else if (_expr.name == "=>")
+	{
+		solAssert(_expr.arguments.size() == 2);
 		addAssertion(!_expr.arguments.at(0) || _expr.arguments.at(1), move(_letBindings));
+	}
 	else if (_expr.name == "<=" || _expr.name == "<")
 	{
+		solAssert(_expr.arguments.size() == 2);
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
 		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
 		solAssert(left && right);
@@ -321,9 +325,15 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, size_t> 
 			state().fixedConstraints.emplace_back(move(c));
 	}
 	else if (_expr.name == ">=")
+	{
+		solAssert(_expr.arguments.size() == 2);
 		addAssertion(_expr.arguments.at(1) <= _expr.arguments.at(0), move(_letBindings));
+	}
 	else if (_expr.name == ">")
+	{
+		solAssert(_expr.arguments.size() == 2);
 		addAssertion(_expr.arguments.at(1) < _expr.arguments.at(0), move(_letBindings));
+	}
 	else
 	{
 		cerr << "Unknown operator " << _expr.name << endl;
@@ -500,27 +510,47 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 
 	if (_expr.arguments.empty())
 		return parseFactor(_expr, move(_letBindings));
-	else if (_expr.name == "+" || (_expr.name == "-" && _expr.arguments.size() == 2))
+	else if (_expr.name == "+")
 	{
-		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
-		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), _letBindings);
+		optional<LinearExpression> expr = LinearExpression::constant(0);
+		for (auto const& arg: _expr.arguments)
+			if (optional<LinearExpression> summand = parseLinearSum(arg, _letBindings))
+				*expr += move(*summand);
+			else
+				return std::nullopt;
+		return expr;
+	}
+	else if (_expr.name == "-")
+	{
+		optional<LinearExpression> left;
+		optional<LinearExpression> right;
+		if (_expr.arguments.size() == 2)
+		{
+			left = parseLinearSum(_expr.arguments.at(0), _letBindings);
+			right = parseLinearSum(_expr.arguments.at(1), _letBindings);
+		}
+		else if (_expr.arguments.size() == 1)
+		{
+			left = LinearExpression::constant(0);
+			right = parseLinearSum(_expr.arguments.at(0), _letBindings);
+		}
+		else
+			solAssert(false);
+
 		if (!left || !right)
 			return std::nullopt;
-		return _expr.name == "+" ? *left + *right : *left - *right;
-	}
-	else if (_expr.name == "-" && _expr.arguments.size() == 1)
-	{
-		optional<LinearExpression> arg = parseLinearSum(_expr.arguments.at(0), move(_letBindings));
-		if (arg)
-			return LinearExpression::constant(0) - *arg;
-		else
-			return std::nullopt;
+		return *left - *right;
 	}
 	else if (_expr.name == "*")
+	{
+		// TODO this can also have more than to args
+		solAssert(_expr.arguments.size() == 2);
 		// This will result in nullopt unless one of them is a constant.
 		return parseLinearSum(_expr.arguments.at(0), _letBindings) * parseLinearSum(_expr.arguments.at(1), _letBindings);
+	}
 	else if (_expr.name == "/")
 	{
+		solAssert(_expr.arguments.size() == 2);
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
 		optional<LinearExpression> right = parseLinearSum(_expr.arguments.at(1), move(_letBindings));
 		if (!left || !right || !right->isConstant())
@@ -530,6 +560,7 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 	}
 	else if (_expr.name == "ite")
 	{
+		solAssert(_expr.arguments.size() == 3);
 		Expression result = declareInternalVariable(false);
 		addAssertion(!_expr.arguments.at(0) || (result == _expr.arguments.at(1)), _letBindings);
 		addAssertion(_expr.arguments.at(0) || (result == _expr.arguments.at(2)), _letBindings);
