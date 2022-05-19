@@ -101,7 +101,6 @@ private:
 	bool m_enforceCompileToEwasm = false;
 	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
-	bool m_canEnableYulRun = false;
 	bool m_canEnableEwasmRun = false;
 	bool m_gasCostFailure = false;
 	bool m_enforceGasCost = false;

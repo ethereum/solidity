@@ -71,7 +71,7 @@ SemanticTest::SemanticTest(
 	if (m_runWithABIEncoderV1Only && !solidity::test::CommonOptions::get().useABIEncoderV1)
 		m_shouldRun = false;
 
-	string compileViaYul = m_reader.stringSetting("compileViaYul", "default");
+	string compileViaYul = m_reader.stringSetting("compileViaYul", "also");
 	if (m_runWithABIEncoderV1Only && compileViaYul != "false")
 		BOOST_THROW_EXCEPTION(runtime_error(
 			"ABIEncoderV1Only tests cannot be run via yul, "
@@ -345,7 +345,6 @@ TestCase::TestResult SemanticTest::runTest(
 		m_compileToEwasm = _isEwasmRun;
 	}
 
-	m_canEnableYulRun = false;
 	m_canEnableEwasmRun = false;
 
 	if (_isYulRun)
@@ -463,18 +462,6 @@ TestCase::TestResult SemanticTest::runTest(
 		test.setSideEffects(move(effects));
 
 		success &= test.call().expectedSideEffects == test.call().actualSideEffects;
-	}
-
-	if (!m_testCaseWantsYulRun && _isYulRun)
-	{
-		m_canEnableYulRun = success;
-		string message = success ?
-			"Test can pass via Yul, but marked with \"compileViaYul: false.\"" :
-			"Test compiles via Yul, but it gives different test results.";
-		AnsiColorized(_stream, _formatted, {BOLD, success ? YELLOW : MAGENTA}) <<
-			_linePrefix << endl <<
-			_linePrefix << message << endl;
-		return TestResult::Failure;
 	}
 
 	// Right now we have sometimes different test results in Yul vs. Ewasm.
@@ -654,25 +641,19 @@ void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) con
 void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePrefix)
 {
 	auto& settings = m_reader.settings();
-	if (settings.empty() && !m_canEnableYulRun)
+	if (settings.empty() && !m_canEnableEwasmRun)
 		return;
 
 	_stream << _linePrefix << "// ====" << endl;
 	if (m_canEnableEwasmRun)
 	{
-		soltestAssert(m_canEnableYulRun || m_testCaseWantsYulRun, "");
-		string compileViaYul = m_reader.stringSetting("compileViaYul", "");
-		if (!compileViaYul.empty())
-			_stream << _linePrefix << "// compileViaYul: " << compileViaYul << "\n";
+		soltestAssert(m_testCaseWantsYulRun, "");
 		_stream << _linePrefix << "// compileToEwasm: also\n";
 	}
-	else if (m_canEnableYulRun)
-		_stream << _linePrefix << "// compileViaYul: also\n";
 
 	for (auto const& [settingName, settingValue]: settings)
 		if (
-			!(settingName == "compileToEwasm" && m_canEnableEwasmRun) &&
-			!(settingName == "compileViaYul" && (m_canEnableYulRun || m_canEnableEwasmRun))
+			!(settingName == "compileToEwasm" && m_canEnableEwasmRun)
 		)
 			_stream << _linePrefix << "// " << settingName << ": " << settingValue<< endl;
 }
