@@ -25,12 +25,13 @@ contract C {
   }
 }
 // ====
-// compileViaYul: false
+// compileViaYul: also
 // ----
 // constructor() ->
-// gas legacy: 616124
-// gas legacyOptimized: 450817
-// h() -> 0x20, 0x40, 0x00, 2
+// gas irOptimized: 520903
+// gas legacy: 731840
+// gas legacyOptimized: 494859
+// h() -> 0x20, 0x40, 0x00, 0
 // ~ emit ev0(uint256[],uint256): 0x40, 0x21, 0x02, 0x00, 0x00
-// g() -> 0x20, 0x40, 0, 0x42
-// f(bytes): 0x20, 33, 0, -1 -> 0x20, 0x22, 0, 0xffff000000000000000000000000000000000000000000000000000000000000
+// g() -> 0x20, 0x40, 0, 0x00
+// f(bytes): 0x20, 33, 0, -1 -> 0x20, 0x22, 0, 0xff00000000000000000000000000000000000000000000000000000000000000
