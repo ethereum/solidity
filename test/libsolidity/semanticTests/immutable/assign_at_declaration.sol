@@ -4,6 +4,5 @@ contract A {
 		return a;
 	}
 }
-// ====
 // ----
 // f() -> 2

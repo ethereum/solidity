@@ -13,7 +13,6 @@ contract c {
     }
     function clear() public { delete data; }
 }
-// ====
 // ----
 // storageEmpty -> 1
 // fill() -> 8

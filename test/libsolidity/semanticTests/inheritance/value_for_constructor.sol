@@ -38,7 +38,6 @@ contract Main {
     }
 }
 
-// ====
 // ----
 // constructor(), 22 wei ->
 // gas irOptimized: 277680

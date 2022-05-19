@@ -11,6 +11,5 @@ contract c {
         l = data.length;
     }
 }
-// ====
 // ----
 // test() -> 1, 0

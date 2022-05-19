@@ -3,6 +3,5 @@ contract C {
         return string.concat(string.concat(a, b), c);
     }
 }
-// ====
 // ----
 // f(string,string,string): 0x60, 0x60, 0x60, 2, "ab" -> 0x20, 6, "ababab"

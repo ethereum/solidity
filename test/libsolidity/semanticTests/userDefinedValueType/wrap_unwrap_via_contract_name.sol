@@ -15,7 +15,6 @@ contract D {
         return g(f(x));
     }
 }
-// ====
 // ----
 // f(uint256): 0x42 -> 0x42
 // g(uint256): 0x42 -> 0x42

@@ -40,7 +40,6 @@ contract C {
         assert(s.b == 2);
     }
 }
-// ====
 // ----
 // f() ->
 // gas irOptimized: 121619

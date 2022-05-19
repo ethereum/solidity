@@ -34,7 +34,6 @@ contract c {
     }
 }
 
-// ====
 // ----
 // set(uint256): 7 -> true
 // gas irOptimized: 110051

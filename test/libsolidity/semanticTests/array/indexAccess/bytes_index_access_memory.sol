@@ -11,6 +11,5 @@ contract Main {
         return _s1;
     }
 }
-// ====
 // ----
 // f(bytes,uint256,uint256,uint256): 0x80, 3, 4, 5, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz" -> "d", "e", "f"

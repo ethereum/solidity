@@ -15,7 +15,6 @@ contract c {
         return 0;
     }
 }
-// ====
 // ----
 // test() -> 0
 // gas irOptimized: 157949

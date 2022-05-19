@@ -7,6 +7,5 @@ contract C {
         b = (MyInt).unwrap((MyInt).wrap(10));
     }
 }
-// ====
 // ----
 // f() -> 5, 10

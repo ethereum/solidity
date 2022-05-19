@@ -17,7 +17,6 @@ contract C {
 
     using {id, zero} for uint;
 }
-// ====
 // ----
 // f(uint256): 10 -> 10
 // g(uint256): 10 -> 0

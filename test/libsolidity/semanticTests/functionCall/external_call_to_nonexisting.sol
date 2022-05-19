@@ -21,7 +21,6 @@ contract C {
     }
 }
 
-// ====
 // ----
 // constructor(), 1 ether ->
 // gas irOptimized: 303935

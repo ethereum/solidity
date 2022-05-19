@@ -19,6 +19,5 @@ contract Derived is Base, Base1 {
 
 contract Final is Derived(4) {}
 
-// ====
 // ----
 // m_i() -> 4

@@ -10,7 +10,6 @@ contract C {
         state = _state;
     }
 }
-// ====
 // ----
 // constructor(), 2 wei: 3 ->
 // gas irOptimized: 107627

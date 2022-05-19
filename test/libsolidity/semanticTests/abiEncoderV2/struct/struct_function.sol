@@ -10,6 +10,5 @@ contract C {
     }
     function g() public returns (uint) { return 7; }
 }
-// ====
 // ----
 // test() -> 7, 3

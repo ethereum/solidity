@@ -4,6 +4,5 @@ contract C {
         return success;
     }
 }
-// ====
 // ----
 // f() -> true

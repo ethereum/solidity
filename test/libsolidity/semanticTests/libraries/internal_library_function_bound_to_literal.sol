@@ -19,7 +19,6 @@ contract C {
         return "abc".double();
     }
 }
-// ====
 // ----
 // double42() -> 84
 // doubleABC() -> 0x20, 6, "abcabc"

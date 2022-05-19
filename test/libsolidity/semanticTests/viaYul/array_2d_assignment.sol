@@ -8,6 +8,5 @@ contract C {
 		return b[1];
 	}
 }
-// ====
 // ----
 // f(uint256): 42 -> 42

@@ -6,6 +6,5 @@ contract C {
         return ecrecover(bytes32(type(uint256).max), 1, bytes32(uint(2)), bytes32(uint(3)));
     }
 }
-// ====
 // ----
 // f() -> 0

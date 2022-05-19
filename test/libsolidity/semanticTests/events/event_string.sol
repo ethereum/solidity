@@ -4,7 +4,6 @@ contract C {
         emit E("HELLO WORLD");
     }
 }
-// ====
 // ----
 // deposit() ->
 // ~ emit E(string): 0x20, 0x0b, "HELLO WORLD"

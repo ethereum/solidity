@@ -11,7 +11,6 @@ contract C is A {
 	constructor() A(m[1]) {
 	}
 }
-// ====
 // ----
 // m(uint256,uint256,uint256): 0, 0, 0 -> FAILURE
 // m(uint256,uint256,uint256): 1, 0, 1 -> 2

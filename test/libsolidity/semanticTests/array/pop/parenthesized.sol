@@ -6,6 +6,5 @@ contract C {
     return data.length;
   }
 }
-// ====
 // ----
 // f() -> 0

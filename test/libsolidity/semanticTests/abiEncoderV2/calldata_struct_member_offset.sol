@@ -19,6 +19,5 @@ contract C {
         return (b.b, this.g(b));
     }
 }
-// ====
 // ----
 // f() -> 11, 11

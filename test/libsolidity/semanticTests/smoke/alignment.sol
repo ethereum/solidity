@@ -18,7 +18,6 @@ contract D {
         return (stateBool, stateDecimal, stateBytes);
     }
 }
-// ====
 // ----
 // stateBool() -> true
 // stateBool() -> right(true)

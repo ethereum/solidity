@@ -6,6 +6,5 @@ contract C {
 		return a[0][0] = n;
 	}
 }
-// ====
 // ----
 // f(uint256): 42 -> 42

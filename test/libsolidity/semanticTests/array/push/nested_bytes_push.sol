@@ -11,7 +11,6 @@ contract C {
         assert(a[2][32] == "a");
     }
 }
-// ====
 // ----
 // f() ->
 // gas irOptimized: 179590

@@ -8,7 +8,6 @@ contract test {
         return this.table(k);
     }
 }
-// ====
 // ----
 // table(address): 0 -> 0
 // table(address): 0x01 -> 0

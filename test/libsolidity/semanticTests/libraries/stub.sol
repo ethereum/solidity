@@ -6,7 +6,6 @@ contract C {
         return L.f(v);
     }
 }
-// ====
 // ----
 // library: L
 // g(uint256): 1 -> 1

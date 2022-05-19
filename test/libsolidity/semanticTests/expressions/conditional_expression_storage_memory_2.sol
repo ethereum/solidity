@@ -23,7 +23,6 @@ contract test {
         return ret;
     }
 }
-// ====
 // ----
 // f(bool): true -> 1
 // f(bool): false -> 2

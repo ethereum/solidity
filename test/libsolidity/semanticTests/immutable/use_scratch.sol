@@ -13,7 +13,6 @@ contract C {
 		return (x+x,y);
 	}
 }
-// ====
 // ----
 // constructor(): 3 ->
 // gas irOptimized: 127454

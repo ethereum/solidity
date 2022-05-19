@@ -6,6 +6,5 @@ contract C {
     External _external;
     OtherExternal _otherExternal;
 }
-// ====
 // ----
 // constructor()

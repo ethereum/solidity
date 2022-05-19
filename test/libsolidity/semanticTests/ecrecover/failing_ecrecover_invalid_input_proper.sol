@@ -16,6 +16,5 @@ contract C {
         return ecrecover(hash, v, r, s);
     }
 }
-// ====
 // ----
 // f() -> 0

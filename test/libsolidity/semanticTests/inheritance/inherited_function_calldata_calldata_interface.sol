@@ -21,7 +21,6 @@ contract B {
     }
 }
 
-// ====
 // ----
 // g() -> 42
 // gas irOptimized: 80813

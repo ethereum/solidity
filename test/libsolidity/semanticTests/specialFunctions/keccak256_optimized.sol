@@ -12,7 +12,6 @@ contract C {
         return (a == keccak256(s), sc == keccak256(s));
     }
 }
-// ====
 // ----
 // short() -> true
 // long() -> true, true

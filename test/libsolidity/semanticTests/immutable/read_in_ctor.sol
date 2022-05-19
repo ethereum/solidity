@@ -11,6 +11,5 @@ contract A {
 		return x;
 	}
 }
-// ====
 // ----
 // readX() -> 3

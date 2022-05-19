@@ -45,6 +45,5 @@ contract C {
 	}
 }
 
-// ====
 // ----
 // callExternal() -> true

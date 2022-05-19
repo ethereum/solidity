@@ -46,7 +46,6 @@ contract C {
         return e;
     }
 }
-// ====
 // ----
 // getMinMax() -> 0, 255
 // intToEnum(uint8): 0 -> 0

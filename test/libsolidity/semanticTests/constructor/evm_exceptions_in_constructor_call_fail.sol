@@ -14,7 +14,6 @@ contract B {
     }
 }
 
-// ====
 // ----
 // testIt() ->
 // test() -> 2

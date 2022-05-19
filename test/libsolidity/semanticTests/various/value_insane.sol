@@ -17,7 +17,6 @@ contract test {
     }
 }
 
-// ====
 // ----
 // constructor(), 20 wei ->
 // gas irOptimized: 191991

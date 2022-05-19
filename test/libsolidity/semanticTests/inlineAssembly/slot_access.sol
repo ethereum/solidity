@@ -25,7 +25,6 @@ contract C {
         return data().a;
     }
 }
-// ====
 // ----
 // get() -> 0
 // mappingAccess(uint256): 1 -> 0, 0

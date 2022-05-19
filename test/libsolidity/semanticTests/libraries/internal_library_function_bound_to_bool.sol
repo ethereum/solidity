@@ -11,7 +11,6 @@ contract C {
         return a.xor(b);
     }
 }
-// ====
 // ----
 // foo(bool,bool): true, true -> false
 // foo(bool,bool): true, false -> true

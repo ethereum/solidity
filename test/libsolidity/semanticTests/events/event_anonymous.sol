@@ -4,7 +4,6 @@ contract ClientReceipt {
         emit Deposit();
     }
 }
-// ====
 // ----
 // deposit() ->
 // ~ emit <anonymous>

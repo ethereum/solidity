@@ -33,7 +33,6 @@ contract C {
     }
 }
 
-// ====
 // ----
 // convertParent() -> 1
 // gas irOptimized: 85524

@@ -13,6 +13,5 @@ contract C {
         return this.f(4, x, 5);
     }
 }
-// ====
 // ----
 // g() -> 7, 8

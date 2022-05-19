@@ -44,7 +44,6 @@ contract C {
 
     }
 }
-// ====
 // ----
 // f() -> true
 // gas irOptimized: 153260

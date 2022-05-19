@@ -20,7 +20,6 @@ contract c {
         return data1.data[i];
     }
 }
-// ====
 // ----
 // storageEmpty -> 1
 // set(uint256,bytes,uint256): 12, 0x60, 13, 33, "12345678901234567890123456789012", "3" -> true

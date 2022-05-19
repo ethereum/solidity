@@ -36,7 +36,6 @@ contract C is B {
         return (x, y);
     }
 }
-// ====
 // ----
 // test() -> 5, 10
 // gas irOptimized: 87337

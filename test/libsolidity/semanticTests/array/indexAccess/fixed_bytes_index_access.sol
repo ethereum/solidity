@@ -11,7 +11,6 @@ contract C {
         return uint256(uint8(data[0][4]));
     }
 }
-// ====
 // ----
 // f(bytes32): "789" -> "9"
 // g(bytes32): "789" -> 0x35

@@ -9,6 +9,5 @@ contract c {
     }
 }
 
-// ====
 // ----
 // foo() -> true

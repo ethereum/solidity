@@ -6,6 +6,5 @@ import {C} from "C/////c.sol";
 import {D} from "C/../////D/d.sol";
 contract Contract {
 }
-// ====
 // ----
 // constructor()

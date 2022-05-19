@@ -14,7 +14,6 @@ contract C {
         return x.equals(L.E(choice));
     }
 }
-// ====
 // ----
 // equalsA(uint256): 0 -> true
 // equalsA(uint256): 1 -> false

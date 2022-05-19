@@ -14,6 +14,5 @@ contract C {
     }
 }
 
-// ====
 // ----
 // test(uint256,bytes,uint256): 7, 0x60, 4, 2, "ab" -> "b", "a"

@@ -9,7 +9,6 @@ contract D {
         return new C().i();
     }
 }
-// ====
 // ----
 // f() -> 2
 // gas legacy: 101599

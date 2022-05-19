@@ -6,7 +6,6 @@ contract test {
         table[k] = v;
     }
 }
-// ====
 // ----
 // table(uint8): 0 -> 0
 // table(uint8): 0x01 -> 0

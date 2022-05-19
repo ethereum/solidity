@@ -9,7 +9,6 @@ contract C {
         return storageArray[access];
     }
 }
-// ====
 // ----
 // test_boundary_check(uint256,uint256): 10, 11 -> FAILURE, hex"4e487b71", 0x32
 // test_boundary_check(uint256,uint256): 10, 9 -> 0

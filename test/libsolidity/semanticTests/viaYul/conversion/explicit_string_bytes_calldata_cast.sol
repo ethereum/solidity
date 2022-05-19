@@ -5,6 +5,5 @@ contract C {
 		return string(test);
 	}
 }
-// ====
 // ----
 // f(string): 0x20, 3, "123" -> 0x20, 3, "123"

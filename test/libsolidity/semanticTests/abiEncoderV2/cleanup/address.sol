@@ -10,7 +10,6 @@ contract C {
         return this.g(x);
     }
 }
-// ====
 // ----
 // f(uint256): 0 -> 0
 // g(address): 0 -> 0 # test validation as well as sanity check #

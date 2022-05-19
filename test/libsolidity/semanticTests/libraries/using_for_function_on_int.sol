@@ -7,7 +7,6 @@ contract C {
 		return a.double();
 	}
 }
-// ====
 // ----
 // library: D
 // f(uint256): 9 -> 18

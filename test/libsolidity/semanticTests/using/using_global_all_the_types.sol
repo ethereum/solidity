@@ -32,6 +32,5 @@ contract C {
 
 import {E, S, T} from "A";
 
-// ====
 // ----
 // f() -> 1, 7, 9

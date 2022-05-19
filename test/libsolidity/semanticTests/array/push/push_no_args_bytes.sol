@@ -18,7 +18,6 @@ contract C {
 		return array[index];
 	}
 }
-// ====
 // ----
 // l() -> 0
 // g(uint256): 70 ->

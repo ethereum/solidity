@@ -11,6 +11,5 @@ contract C {
         return ptr();
     }
 }
-// ====
 // ----
 // g() -> 66

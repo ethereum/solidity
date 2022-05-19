@@ -10,7 +10,6 @@ contract C {
         L.o();
     }
 }
-// ====
 // ----
 // library: L
 // f() ->

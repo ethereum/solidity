@@ -20,6 +20,5 @@ contract C {
        assembly { a := sload(s.slot) b := sload(slot1) c := sload(slot2) d := sload(slot3) }
     }
 }
-// ====
 // ----
 // f() -> 0, 0, 0, 0

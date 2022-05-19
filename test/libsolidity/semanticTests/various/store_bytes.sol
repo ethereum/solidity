@@ -8,7 +8,6 @@ contract C {
 
     bytes savedData;
 }
-// ====
 // ----
 // save() -> 24 # empty copy loop #
 // save(): "abcdefg" -> 24

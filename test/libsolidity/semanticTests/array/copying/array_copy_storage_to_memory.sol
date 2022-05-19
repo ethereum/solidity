@@ -6,6 +6,5 @@ contract C {
         return (b[0], b.length);
     }
 }
-// ====
 // ----
 // f() -> 1, 3

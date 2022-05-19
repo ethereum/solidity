@@ -19,7 +19,6 @@ contract C {
 		assert(externalCalled == 2);
 	}
 }
-// ====
 // ----
 // f() ->
 // gas irOptimized: 112992

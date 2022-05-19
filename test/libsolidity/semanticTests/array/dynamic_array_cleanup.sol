@@ -11,7 +11,6 @@ contract c {
     }
     function fullClear() public { delete dynamic; }
 }
-// ====
 // ----
 // storageEmpty -> 1
 // fill() ->

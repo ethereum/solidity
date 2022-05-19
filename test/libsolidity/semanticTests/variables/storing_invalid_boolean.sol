@@ -25,7 +25,6 @@ contract C {
         return 1;
     }
 }
-// ====
 // ----
 // set() -> 1
 // perm() -> true

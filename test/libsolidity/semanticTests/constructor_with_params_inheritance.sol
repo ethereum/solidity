@@ -10,7 +10,6 @@ contract C {
 contract D is C {
     constructor(uint newI, uint newK) C(newI, newK + 1) {}
 }
-// ====
 // ----
 // constructor(): 2, 0 ->
 // gas irOptimized: 124199

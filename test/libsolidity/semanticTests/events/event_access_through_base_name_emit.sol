@@ -7,7 +7,6 @@ contract B is A {
         return 1;
     }
 }
-// ====
 // ----
 // f() -> 1
 // ~ emit x()

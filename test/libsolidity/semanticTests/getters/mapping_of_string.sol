@@ -7,7 +7,6 @@ contract C {
         x["def"][1] = 9;
     }
 }
-// ====
 // ----
 // x(string,uint256): 0x40, 0, 3, "abc" -> 1
 // x(string,uint256): 0x40, 1, 3, "abc" -> 2

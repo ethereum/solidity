@@ -5,7 +5,6 @@ contract test {
 	function max() public returns(uint) { return uint(type(MinMax).max); }
 }
 
-// ====
 // ----
 // min() -> 0
 // max() -> 3

@@ -10,7 +10,6 @@ contract C {
 		return z();
 	}
 }
-// ====
 // ----
 // f() -> 7
 // callZ() -> 7

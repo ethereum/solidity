@@ -14,6 +14,5 @@ contract test {
     }
 }
 
-// ====
 // ----
 // deleteIt() -> 0

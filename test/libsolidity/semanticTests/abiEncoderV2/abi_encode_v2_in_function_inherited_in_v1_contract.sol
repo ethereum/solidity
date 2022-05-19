@@ -28,7 +28,6 @@ contract C is B {
         return foo(new A());
     }
 }
-// ====
 // ----
 // test() -> 77
 // gas irOptimized: 119711

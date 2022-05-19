@@ -27,7 +27,6 @@ contract test {
         data.recursive[4].z = 9;
     }
 }
-// ====
 // ----
 // check() -> false
 // set() ->

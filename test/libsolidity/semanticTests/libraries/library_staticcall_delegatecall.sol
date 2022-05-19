@@ -13,7 +13,6 @@ contract Test {
         return Lib.x();
     }
 }
-// ====
 // ----
 // library: Lib
 // f() -> 1

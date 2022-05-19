@@ -20,7 +20,6 @@ contract ClientReceipt {
         return 4;
     }
 }
-// ====
 // ----
 // deposit() -> 1
 // ~ emit Deposit()

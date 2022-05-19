@@ -36,7 +36,6 @@ contract C {
         return (externalViewArray[0](), internalViewArray[0]());
     }
 }
-// ====
 // ----
 // testViewToDefault() -> 12, 22
 // testPureToDefault() -> 13, 23

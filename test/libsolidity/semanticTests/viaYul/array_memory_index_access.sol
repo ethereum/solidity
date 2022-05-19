@@ -21,7 +21,6 @@ contract C {
 		return array[uint256(idx)];
 	}
 }
-// ====
 // ----
 // index(uint256): 0 -> true
 // index(uint256): 10 -> true

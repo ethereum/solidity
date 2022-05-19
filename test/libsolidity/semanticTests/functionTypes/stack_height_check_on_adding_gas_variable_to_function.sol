@@ -19,6 +19,5 @@ contract C {
         return true;
     }
 }
-// ====
 // ----
 // test_function() -> true

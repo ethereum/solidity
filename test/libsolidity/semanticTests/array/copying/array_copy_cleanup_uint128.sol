@@ -19,7 +19,6 @@ contract C {
         return true;
     }
 }
-// ====
 // ----
 // f() -> true
 // gas irOptimized: 92740

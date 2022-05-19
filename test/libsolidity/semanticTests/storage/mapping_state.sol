@@ -15,7 +15,6 @@ contract Ballot {
 		return true;
 	}
 }
-// ====
 // ----
 // getVoteCount(address): 0 -> 0
 // getVoteCount(address): 1 -> 0

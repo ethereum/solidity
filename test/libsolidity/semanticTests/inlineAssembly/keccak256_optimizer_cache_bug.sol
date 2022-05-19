@@ -15,6 +15,5 @@ contract C {
     return true;
   }
 }
-// ====
 // ----
 // val() -> true

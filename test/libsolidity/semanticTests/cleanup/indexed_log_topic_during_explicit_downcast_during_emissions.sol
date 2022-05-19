@@ -9,7 +9,6 @@ contract C {
         emit ev0(x);
     }
 }
-// ====
 // ----
 // constructor() ->
 // ~ emit ev0(bytes1): #"1"

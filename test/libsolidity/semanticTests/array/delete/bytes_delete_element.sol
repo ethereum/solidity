@@ -14,7 +14,6 @@ contract c {
             uint8(data[97]) == 97;
     }
 }
-// ====
 // ----
 // test1() -> true
 // gas irOptimized: 225890

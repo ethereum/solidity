@@ -20,6 +20,5 @@ contract Derived is Base {
     }
 }
 
-// ====
 // ----
 // getA() -> 49

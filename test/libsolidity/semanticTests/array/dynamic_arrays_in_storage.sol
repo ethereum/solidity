@@ -39,7 +39,6 @@ contract c {
     }
 }
 
-// ====
 // ----
 // getLengths() -> 0, 0
 // setLengths(uint256,uint256): 48, 49 ->

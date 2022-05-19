@@ -12,6 +12,5 @@ contract C is I {
     }
     function f() public pure returns (uint) { return 7; }
 }
-// ====
 // ----
 // x() -> 7

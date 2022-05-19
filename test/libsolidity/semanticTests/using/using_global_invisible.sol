@@ -37,7 +37,6 @@ contract D {
         return c.f().inc().inc().dec().unwrap();
     }
 }
-// ====
 // ----
 // library: "A":L
 // test() -> 3

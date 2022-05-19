@@ -14,6 +14,5 @@ contract C {
         correct = r == (0x66 << 248);
     }
 }
-// ====
 // ----
 // f() -> true

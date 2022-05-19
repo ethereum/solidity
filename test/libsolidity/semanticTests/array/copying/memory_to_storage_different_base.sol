@@ -11,6 +11,5 @@ contract C {
         return (s.length, s[0], s[1], s[2]);
     }
 }
-// ====
 // ----
 // f() -> 3, "abcd", "bcde", "cdef"

@@ -2,6 +2,5 @@
 import {External} from "a";
 contract C {
 }
-// ====
 // ----
 // constructor()

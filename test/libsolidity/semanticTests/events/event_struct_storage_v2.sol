@@ -8,7 +8,6 @@ contract C {
         emit E(s);
     }
 }
-// ====
 // ----
 // createEvent(uint256): 42 ->
 // ~ emit E((uint256)): 0x2a

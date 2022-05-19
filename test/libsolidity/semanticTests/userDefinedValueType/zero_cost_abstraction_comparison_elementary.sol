@@ -16,7 +16,6 @@ contract C {
     }
 }
 
-// ====
 // ----
 // getX() -> 0
 // gas irOptimized: 23379

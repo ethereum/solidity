@@ -15,6 +15,5 @@ contract C {
         return input.at(1);
     }
 }
-// ====
 // ----
 // secondItem() -> 0x22

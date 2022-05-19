@@ -7,7 +7,6 @@ contract C {
     }
 }
 
-// ====
 // ----
 // constructor(): 1, 2, 3 ->
 // gas irOptimized: 142640

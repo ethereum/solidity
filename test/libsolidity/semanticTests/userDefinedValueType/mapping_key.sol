@@ -8,7 +8,6 @@ contract C {
         m[MyInt.wrap(key)] = value;
     }
 }
-// ====
 // ----
 // set(int256,int256): 1, 1 ->
 // m(int256): 1 -> 1

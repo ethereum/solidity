@@ -6,6 +6,5 @@ contract Test {
         return data["abc"];
     }
 }
-// ====
 // ----
 // f() -> 2

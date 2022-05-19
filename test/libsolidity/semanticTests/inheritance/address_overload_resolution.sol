@@ -19,7 +19,6 @@ contract D {
     }
 }
 
-// ====
 // ----
 // f() -> 1
 // gas irOptimized: 77051

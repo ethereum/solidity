@@ -7,7 +7,6 @@ contract C {
         k = newK;
     }
 }
-// ====
 // ----
 // constructor(): 2, 0 ->
 // gas irOptimized: 103630

@@ -33,7 +33,6 @@ contract c {
         return (small.length, large.length);
     }
 }
-// ====
 // ----
 // test() -> 0x02000202
 // gas irOptimized: 4652048

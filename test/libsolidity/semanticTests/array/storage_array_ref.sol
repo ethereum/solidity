@@ -39,7 +39,6 @@ contract Store is BinarySearch {
     }
 }
 
-// ====
 // ----
 // find(uint256): 7 -> -1
 // add(uint256): 7 ->

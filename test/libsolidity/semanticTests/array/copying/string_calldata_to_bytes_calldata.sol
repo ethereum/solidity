@@ -3,6 +3,5 @@ contract C {
         return bytes(s);
     }
 }
-// ====
 // ----
 // f(string): 0x20, 3, "abc" -> 0x20, 3, "abc"

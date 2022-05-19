@@ -4,6 +4,5 @@
 import {SubExternal} from "sub_external.sol";
 contract C {
 }
-// ====
 // ----
 // constructor()

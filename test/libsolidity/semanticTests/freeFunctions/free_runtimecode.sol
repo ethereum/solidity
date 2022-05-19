@@ -11,6 +11,5 @@ contract D {
     return test();
   }
 }
-// ====
 // ----
 // f() -> true

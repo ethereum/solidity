@@ -14,7 +14,6 @@ contract ClientReceipt {
         return other.getAddress();
     }
 }
-// ====
 // ----
 // constructor(), 2000 wei ->
 // gas irOptimized: 183544

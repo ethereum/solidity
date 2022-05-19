@@ -19,7 +19,6 @@ contract Test {
         return z;
     }
 }
-// ====
 // ----
 // x(uint256): 0 -> -1
 // x(uint256): 1 -> -2

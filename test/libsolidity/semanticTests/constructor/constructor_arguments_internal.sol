@@ -33,7 +33,6 @@ contract Main {
     }
 }
 
-// ====
 // ----
 // getFlag() -> true
 // getName() -> "abc"

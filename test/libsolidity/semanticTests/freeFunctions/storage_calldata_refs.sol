@@ -11,6 +11,5 @@ contract C {
 function fun(uint[] calldata _x, uint[] storage _y) view  returns (uint, uint[] calldata) {
 	return (_y[0], _x);
 }
-// ====
 // ----
 // f(uint256,uint256[]): 7, 0x40, 3, 8, 9, 10 -> 7, 9

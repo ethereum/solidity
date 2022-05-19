@@ -16,7 +16,6 @@ contract C {
         return (this.ggg(s.f), this.h(s));
     }
 }
-// ====
 // ----
 // ffff(uint256): 0 -> 0, 0
 // ggg(function): 0 -> 0

@@ -62,7 +62,6 @@ contract C {
     }
 
 }
-// ====
 // ----
 // storage_a() -> 0, 0
 // storage_b() -> 0, 1

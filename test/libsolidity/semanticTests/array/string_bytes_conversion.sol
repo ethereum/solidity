@@ -12,7 +12,6 @@ contract Test {
         return bytes(s).length;
     }
 }
-// ====
 // ----
 // f(string,uint256): 0x40, 0x02, 0x06, "abcdef" -> "c"
 // l() -> 0x06

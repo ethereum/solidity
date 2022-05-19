@@ -3,7 +3,6 @@ contract c {
     function del() public returns (bool) { delete data; return true; }
     bytes data;
 }
-// ====
 // ----
 // (): 7 ->
 // storageEmpty -> 0

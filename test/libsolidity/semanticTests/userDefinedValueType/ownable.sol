@@ -21,7 +21,6 @@ contract Ownable {
         owner = Owner.wrap(address(0));
     }
 }
-// ====
 // ----
 // owner() -> 0x1212121212121212121212121212120000000012
 // setOwner(address): 0x1212121212121212121212121212120000000012 ->

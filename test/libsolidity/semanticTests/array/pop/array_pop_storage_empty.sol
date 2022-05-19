@@ -5,7 +5,6 @@ contract c {
         data.pop();
     }
 }
-// ====
 // ----
 // test() ->
 // storageEmpty -> 1

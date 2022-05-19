@@ -16,7 +16,6 @@ contract C {
         return 1;
     }
 }
-// ====
 // ----
 // test_log_ok() -> 1
 // ~ emit Log(uint8): 0x00

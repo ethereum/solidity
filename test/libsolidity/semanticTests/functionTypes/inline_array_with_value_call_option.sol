@@ -6,6 +6,5 @@ contract C {
         return [this.f, this.g][0]{value: 1}();
     }
 }
-// ====
 // ----
 // h(), 1 ether -> 1

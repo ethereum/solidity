@@ -23,7 +23,6 @@ contract C {
         assembly { x := st }
     }
 }
-// ====
 // ----
 // a() -> -2
 // direct() -> -2

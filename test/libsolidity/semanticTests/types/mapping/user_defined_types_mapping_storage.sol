@@ -20,7 +20,6 @@ contract C {
 	}
 }
 
-// ====
 // ----
 // library: L
 // testAB() -> true

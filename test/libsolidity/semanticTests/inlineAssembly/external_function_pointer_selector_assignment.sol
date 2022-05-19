@@ -11,7 +11,6 @@ contract C {
 		return uint32(fp.selector);
 	}
 }
-// ====
 // ----
 // testYul(uint32): 0x12345678 -> 0x12345678
 // testYul(uint32): 0xABCDEF00 -> 0xABCDEF00

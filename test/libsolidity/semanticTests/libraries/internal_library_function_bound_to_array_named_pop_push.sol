@@ -13,6 +13,5 @@ contract C {
         input.pop();
     }
 }
-// ====
 // ----
 // test() ->

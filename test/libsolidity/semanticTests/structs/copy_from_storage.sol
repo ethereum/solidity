@@ -18,6 +18,5 @@ contract C {
         return sMemory;
     }
 }
-// ====
 // ----
 // f() -> 0x20, 1, 13

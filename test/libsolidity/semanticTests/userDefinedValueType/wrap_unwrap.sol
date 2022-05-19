@@ -5,6 +5,5 @@ contract C {
         MyAddress.unwrap;
     }
 }
-// ====
 // ----
 // f() ->

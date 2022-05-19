@@ -25,7 +25,6 @@ contract C {
 		return (a, (new A()).f(), (new B()).f());
 	}
 }
-// ====
 // ----
 // f() -> 3, 7, 5
 // gas irOptimized: 126136

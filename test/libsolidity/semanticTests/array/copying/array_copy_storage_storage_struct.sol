@@ -15,7 +15,6 @@ contract c {
         data2 = data1;
     }
 }
-// ====
 // ----
 // test() -> 4, 5
 // gas irOptimized: 238799

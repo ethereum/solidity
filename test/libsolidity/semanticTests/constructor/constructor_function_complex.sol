@@ -15,7 +15,6 @@ contract C {
         return 16;
     }
 }
-// ====
 // ----
 // f() -> 16
 // gas legacy: 103488

@@ -12,7 +12,6 @@ contract C {
         return L.f(x);
     }
 }
-// ====
 // ----
 // library: L
 // g(uint256): 4 -> 16

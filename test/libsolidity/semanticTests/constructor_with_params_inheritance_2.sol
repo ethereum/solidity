@@ -8,7 +8,6 @@ contract C {
     }
 }
 contract D is C(2, 1) {}
-// ====
 // ----
 // i() -> 2
 // k() -> 1

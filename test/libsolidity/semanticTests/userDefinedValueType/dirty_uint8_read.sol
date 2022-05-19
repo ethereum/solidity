@@ -18,7 +18,6 @@ contract C {
         }
     }
 }
-// ====
 // ----
 // x() -> -5
 // create_dirty_slot() ->

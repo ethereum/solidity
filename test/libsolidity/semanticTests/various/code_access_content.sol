@@ -36,7 +36,6 @@ contract C {
         return true;
     }
 }
-// ====
 // ----
 // testRuntime() -> true
 // gas legacy: 101579

@@ -8,6 +8,5 @@ contract test {
         data[7].d = true;
     }
 }
-// ====
 // ----
 // data(uint256): 7 -> 1, 2, true

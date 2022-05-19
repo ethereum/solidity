@@ -5,7 +5,6 @@ contract C {
 		return array.length;
 	}
 }
-// ====
 // ----
 // create(uint256): 0 -> 0
 // create(uint256): 7 -> 7

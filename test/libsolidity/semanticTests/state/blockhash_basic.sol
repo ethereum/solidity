@@ -10,7 +10,6 @@ contract C {
         return blockhash(blockNumber);
     }
 }
-// ====
 // ----
 // constructor()
 // gas irOptimized: 111584

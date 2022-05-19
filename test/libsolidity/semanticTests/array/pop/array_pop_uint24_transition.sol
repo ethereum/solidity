@@ -16,7 +16,6 @@ contract c {
             data.pop();
     }
 }
-// ====
 // ----
 // test() -> 20, 10
 // gas irOptimized: 159169
