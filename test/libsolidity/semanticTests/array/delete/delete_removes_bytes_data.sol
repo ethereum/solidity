@@ -4,7 +4,6 @@ contract c {
     bytes data;
 }
 // ====
-// compileViaYul: also
 // ----
 // (): 7 ->
 // storageEmpty -> 0

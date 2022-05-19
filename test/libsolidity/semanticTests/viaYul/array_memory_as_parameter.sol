@@ -18,7 +18,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // test(uint256,uint256): 0, 0 -> FAILURE, hex"4e487b71", 0x32
 // test(uint256,uint256): 1, 0 -> 1

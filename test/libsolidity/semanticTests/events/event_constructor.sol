@@ -5,7 +5,6 @@ contract ClientReceipt {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()
 // ~ emit Deposit(address,bytes32,uint256): #0x1212121212121212121212121212120000000012, #"abc", 0x07

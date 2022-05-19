@@ -8,7 +8,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // constructor(): 1, 2, 3 ->
 // gas irOptimized: 142640

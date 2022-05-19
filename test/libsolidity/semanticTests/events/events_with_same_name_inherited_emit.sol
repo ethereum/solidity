@@ -22,7 +22,6 @@ contract ClientReceipt is A, B {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // deposit() -> 1
 // ~ emit Deposit()

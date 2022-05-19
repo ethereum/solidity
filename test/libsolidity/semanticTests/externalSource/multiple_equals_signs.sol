@@ -3,6 +3,5 @@ import {External} from "a";
 contract C {
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()

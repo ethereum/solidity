@@ -35,7 +35,6 @@ contract c {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // set(uint256): 7 -> true
 // gas irOptimized: 110051

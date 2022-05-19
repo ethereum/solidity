@@ -21,7 +21,6 @@ contract c {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // length() -> 0
 // get(uint256): 3 -> FAILURE, hex"4e487b71", 0x32

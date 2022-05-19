@@ -19,6 +19,5 @@ contract X is D, C, B, A {
     constructor() A(f(1)) C(f(2)) B(f(3)) D(f(4)) {}
 }
 // ====
-// compileViaYul: also
 // ----
 // g() -> 0x20, 4, 1, 3, 2, 4

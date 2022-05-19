@@ -20,7 +20,6 @@ contract Derived is Base {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // getBMember() -> 5
 // getDMember() -> 6

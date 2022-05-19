@@ -26,7 +26,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // set() -> 1
 // perm() -> true

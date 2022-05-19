@@ -6,7 +6,6 @@ contract c {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // test() ->
 // storageEmpty -> 1

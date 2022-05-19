@@ -12,7 +12,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // f(uint256[3][]): 0x20, 1, 0x01 -> FAILURE
 // f(uint256[3][]): 0x20, 1, 0x01, 0x02 -> FAILURE

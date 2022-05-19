@@ -4,6 +4,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(string,string,string): 0x60, 0x60, 0x60, 2, "ab" -> 0x20, 6, "ababab"

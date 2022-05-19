@@ -58,7 +58,6 @@ contract C {
 }
 // ====
 // EVMVersion: >homestead
-// compileViaYul: also
 // ----
 // test_bytes() ->
 // gas irOptimized: 371912

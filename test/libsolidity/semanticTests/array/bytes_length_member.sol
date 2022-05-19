@@ -11,7 +11,6 @@ contract c {
     bytes data;
 }
 // ====
-// compileViaYul: also
 // ----
 // getLength() -> 0
 // set(): 1, 2 -> true

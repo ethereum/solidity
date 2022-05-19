@@ -21,7 +21,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // s() -> 0, 0, 0x00, 0
 // f((uint8,uint16,bytes2,uint8)): 1, 0xff, "ab", 15 ->

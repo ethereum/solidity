@@ -11,7 +11,6 @@ contract C is A {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // m(uint256): 1 -> 0
 // m(uint256): 5 -> 20

@@ -3,7 +3,6 @@ contract StorageNotEmpty {
     function set(uint256 _a) public { x = _a; }
 }
 // ====
-// compileViaYul: also
 // ----
 // storageEmpty -> 1
 // set(uint256): 1 ->

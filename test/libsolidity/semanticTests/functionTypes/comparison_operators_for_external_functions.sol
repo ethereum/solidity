@@ -75,7 +75,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // comparison_operators_for_external_functions() -> true
 // comparison_operators_for_local_external_function_pointers() -> true

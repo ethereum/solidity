@@ -40,7 +40,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // library: "a.sol":L
 // addr() -> false

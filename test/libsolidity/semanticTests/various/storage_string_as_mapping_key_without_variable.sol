@@ -7,6 +7,5 @@ contract Test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 2

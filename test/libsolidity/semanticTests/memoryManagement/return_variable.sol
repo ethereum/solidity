@@ -25,6 +25,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 0x0500, 0x0500, 0x0a00

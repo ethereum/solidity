@@ -7,6 +7,5 @@ import {D} from "C/../////D/d.sol";
 contract Contract {
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()

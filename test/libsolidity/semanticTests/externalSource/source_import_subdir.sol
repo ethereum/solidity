@@ -5,6 +5,5 @@ import {SubExternal} from "sub_external.sol";
 contract C {
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()

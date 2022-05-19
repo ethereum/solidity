@@ -20,7 +20,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // library: L
 // g(uint256): 4 -> 16

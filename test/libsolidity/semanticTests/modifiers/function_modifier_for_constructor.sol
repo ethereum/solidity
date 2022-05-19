@@ -23,7 +23,6 @@ contract C is A {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // getData() -> 6

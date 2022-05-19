@@ -17,7 +17,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // test_log_ok() -> 1
 // ~ emit Log(uint8): 0x00

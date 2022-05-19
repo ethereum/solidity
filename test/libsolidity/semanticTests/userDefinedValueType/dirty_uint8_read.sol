@@ -19,7 +19,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // x() -> -5
 // create_dirty_slot() ->

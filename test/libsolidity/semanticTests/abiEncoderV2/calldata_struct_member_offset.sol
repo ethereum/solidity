@@ -20,6 +20,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 11, 11

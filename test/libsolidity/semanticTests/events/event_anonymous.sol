@@ -5,7 +5,6 @@ contract ClientReceipt {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // deposit() ->
 // ~ emit <anonymous>

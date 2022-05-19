@@ -39,7 +39,6 @@ contract Main {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // constructor(), 22 wei ->
 // gas irOptimized: 277680

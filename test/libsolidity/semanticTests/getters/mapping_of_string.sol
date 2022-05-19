@@ -8,7 +8,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // x(string,uint256): 0x40, 0, 3, "abc" -> 1
 // x(string,uint256): 0x40, 1, 3, "abc" -> 2

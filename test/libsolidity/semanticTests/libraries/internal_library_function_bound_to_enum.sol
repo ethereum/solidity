@@ -15,7 +15,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // equalsA(uint256): 0 -> true
 // equalsA(uint256): 1 -> false

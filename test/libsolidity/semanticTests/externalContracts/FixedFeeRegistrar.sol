@@ -73,7 +73,6 @@ contract FixedFeeRegistrar is Registrar {
 	uint constant c_fee = 69 ether;
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()
 // gas irOptimized: 402812

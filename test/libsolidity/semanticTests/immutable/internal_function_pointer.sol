@@ -11,7 +11,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 7
 // callZ() -> 7

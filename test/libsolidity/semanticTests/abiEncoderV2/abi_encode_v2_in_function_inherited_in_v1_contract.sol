@@ -29,7 +29,6 @@ contract C is B {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // test() -> 77
 // gas irOptimized: 119711

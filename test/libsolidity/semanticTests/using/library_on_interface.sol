@@ -13,6 +13,5 @@ contract C is I {
     function f() public pure returns (uint) { return 7; }
 }
 // ====
-// compileViaYul: also
 // ----
 // x() -> 7

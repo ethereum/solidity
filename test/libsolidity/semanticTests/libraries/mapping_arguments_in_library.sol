@@ -22,7 +22,6 @@ contract Test {
 }
 // ====
 // compileToEwasm: false
-// compileViaYul: also
 // ----
 // library: Lib
 // set(uint256,uint256): 1, 42 -> 0

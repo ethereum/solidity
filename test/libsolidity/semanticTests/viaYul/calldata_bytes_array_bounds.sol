@@ -5,7 +5,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(bytes[],uint256): 0x40, 0, 1, 0x20, 2, hex"6162" -> 0x61
 // f(bytes[],uint256): 0x40, 1, 1, 0x20, 2, hex"6162" -> 0x62

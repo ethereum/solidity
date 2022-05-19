@@ -7,6 +7,5 @@ contract Foo {
 
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // constructor() ->

@@ -26,7 +26,6 @@ contract Flow {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // success() -> false
 // f() -> 7

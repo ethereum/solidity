@@ -13,7 +13,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // short() -> true
 // long() -> true, true

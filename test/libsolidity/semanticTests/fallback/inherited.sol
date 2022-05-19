@@ -5,7 +5,6 @@ contract A {
 }
 contract B is A {}
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // getData() -> 0

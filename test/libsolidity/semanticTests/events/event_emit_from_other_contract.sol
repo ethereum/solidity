@@ -14,7 +14,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor() ->
 // gas irOptimized: 173094

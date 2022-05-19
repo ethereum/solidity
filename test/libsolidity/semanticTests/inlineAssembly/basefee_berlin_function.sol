@@ -15,7 +15,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: <=berlin
 // ----
 // f() -> 0

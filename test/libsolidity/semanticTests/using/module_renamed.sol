@@ -21,6 +21,5 @@ using {M.g, M.f} for uint;
 import "B" as M;
 
 // ====
-// compileViaYul: also
 // ----
 // test(uint256,uint256): 1, 1 -> 9, 3

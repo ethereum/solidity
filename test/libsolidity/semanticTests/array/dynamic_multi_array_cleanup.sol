@@ -14,7 +14,6 @@ contract c {
     function clear() public { delete data; }
 }
 // ====
-// compileViaYul: also
 // ----
 // storageEmpty -> 1
 // fill() -> 8

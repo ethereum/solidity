@@ -50,7 +50,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // test_zeroed_indicies(uint256): 1 ->
 // test_zeroed_indicies(uint256): 5 ->

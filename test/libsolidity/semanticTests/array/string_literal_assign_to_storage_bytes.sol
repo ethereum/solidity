@@ -10,7 +10,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // s() -> 0x20, 3, "abc"
 // s1() -> 0x20, 4, "abcd"

@@ -18,6 +18,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f((uint256[])[]): 0x20, 3, 0x60, 0x60, 0x60, 0x20, 3, 1, 2, 3 -> 3, 1

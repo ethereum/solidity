@@ -8,7 +8,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 0
 // g() -> 1, 1

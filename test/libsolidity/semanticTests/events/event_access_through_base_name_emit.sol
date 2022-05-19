@@ -8,7 +8,6 @@ contract B is A {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 1
 // ~ emit x()

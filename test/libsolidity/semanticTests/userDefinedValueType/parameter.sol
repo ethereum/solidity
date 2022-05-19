@@ -23,7 +23,6 @@ contract C {
 
 }
 // ====
-// compileViaYul: also
 // ----
 // id(address): 5 -> 5
 // id(address): 0xffffffffffffffffffffffffffffffffffffffff -> 0xffffffffffffffffffffffffffffffffffffffff

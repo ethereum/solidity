@@ -7,7 +7,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // library: L
 // g(uint256): 1 -> 1

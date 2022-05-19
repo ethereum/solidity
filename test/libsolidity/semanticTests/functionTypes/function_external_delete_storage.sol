@@ -20,7 +20,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // x() -> 0
 // y() -> 0

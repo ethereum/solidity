@@ -23,7 +23,6 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // data(uint256): 0 -> 8
 // data(uint256): 8 -> FAILURE

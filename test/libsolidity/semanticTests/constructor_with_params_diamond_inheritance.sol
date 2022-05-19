@@ -20,7 +20,6 @@ contract D is B, C {
     constructor(uint newI, uint newK) B(newI) C(newI, newK + 1) {}
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor(): 2, 0 ->
 // gas irOptimized: 156071

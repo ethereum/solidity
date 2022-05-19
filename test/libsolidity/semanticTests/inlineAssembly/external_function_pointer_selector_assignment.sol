@@ -12,7 +12,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // testYul(uint32): 0x12345678 -> 0x12345678
 // testYul(uint32): 0xABCDEF00 -> 0xABCDEF00

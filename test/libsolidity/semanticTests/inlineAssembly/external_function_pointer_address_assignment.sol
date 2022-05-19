@@ -12,7 +12,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // testYul(address): 0x1234567890 -> 0x1234567890
 // testYul(address): 0xC0FFEE3EA7 -> 0xC0FFEE3EA7

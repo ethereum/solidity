@@ -7,6 +7,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> FAILURE, hex"59e4d4df", 0x40, 0x80, 3, "abc", 1, 7

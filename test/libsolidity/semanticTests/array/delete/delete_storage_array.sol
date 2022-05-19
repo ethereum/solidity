@@ -34,7 +34,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // len() -> 0
 // val() -> 0

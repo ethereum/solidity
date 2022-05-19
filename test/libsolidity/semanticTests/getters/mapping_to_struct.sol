@@ -14,7 +14,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // x(uint256,uint256): 1, 2 -> 3, 4, 5, 6
 // x(uint256,uint256): 0, 0 -> 0x00, 0x00, 0x00, 0x00

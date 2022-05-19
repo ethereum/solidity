@@ -10,7 +10,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // revertStrings: debug
 // ----
 // h(uint256[][]): 0x20, 1, 0x20, 0 ->

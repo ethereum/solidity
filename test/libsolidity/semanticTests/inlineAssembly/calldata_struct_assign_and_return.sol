@@ -14,7 +14,6 @@ contract C {
   function i() public pure returns(uint256) { abi.decode(msg.data[4:], (S)); return 0x42; }
 }
 // ====
-// compileViaYul: also
 // ----
 // g(): 0xCAFFEE, 0x42, 0x21 -> 0x42, 0x21
 // g(): 0xCAFFEE, 0x4242, 0x2121 -> FAILURE

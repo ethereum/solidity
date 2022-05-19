@@ -28,7 +28,6 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // check() -> false
 // set() ->

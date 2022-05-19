@@ -17,7 +17,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // testYul() -> 0xe16b4a9b
 // testSol() -> 0xe16b4a9b

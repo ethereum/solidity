@@ -17,7 +17,6 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // library: L
 // get(address): 0 -> 0

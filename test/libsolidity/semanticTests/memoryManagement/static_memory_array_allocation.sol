@@ -18,7 +18,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // withValue() -> 0x00
 // withoutValue() -> 0x0280

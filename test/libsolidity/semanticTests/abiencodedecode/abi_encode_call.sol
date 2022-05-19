@@ -46,6 +46,5 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // callExternal() -> true

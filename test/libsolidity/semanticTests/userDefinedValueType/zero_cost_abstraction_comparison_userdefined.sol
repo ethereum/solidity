@@ -18,7 +18,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // getX() -> 0
 // gas irOptimized: 23379

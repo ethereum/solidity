@@ -12,6 +12,5 @@ contract D {
   }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> true

@@ -43,7 +43,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f1(bytes32): left(0) -> left(0)
 // gg1(bytes1): left(0) -> left(0) # test validation as well as sanity check #

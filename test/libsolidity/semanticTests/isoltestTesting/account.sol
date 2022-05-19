@@ -4,7 +4,6 @@ contract AccountBuiltinTest {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()
 // account: 0 -> 0x1212121212121212121212121212120000000012

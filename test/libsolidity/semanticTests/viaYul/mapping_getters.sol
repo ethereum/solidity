@@ -9,7 +9,6 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // m1(uint256): 0 -> 0
 // m1(uint256): 0x01 -> 0

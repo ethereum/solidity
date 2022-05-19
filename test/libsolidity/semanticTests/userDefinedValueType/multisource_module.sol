@@ -7,7 +7,6 @@ contract C {
   function g(M.MyInt x) public pure returns (int) { return M.MyInt.unwrap(x); }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(int256): 5 -> 5
 // g(int256): 1 -> 1

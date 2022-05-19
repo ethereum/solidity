@@ -8,7 +8,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f(int8,uint8): 0x99, 0x00 -> FAILURE
 // f(int8,uint8): 0x99, 0x01 -> FAILURE

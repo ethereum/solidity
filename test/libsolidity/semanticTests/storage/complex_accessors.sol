@@ -11,7 +11,6 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // to_string_map(uint256): 42 -> "24"
 // to_bool_map(uint256): 42 -> false

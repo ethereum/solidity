@@ -8,7 +8,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // library: D
 // f(uint256): 9 -> 18

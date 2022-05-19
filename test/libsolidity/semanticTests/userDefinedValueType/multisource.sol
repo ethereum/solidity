@@ -8,7 +8,6 @@ contract A {
     function f(address x) external view returns(OurAddress) { return OurAddress.wrap(x); }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(int256): 5 -> 5
 // f(address): 1 -> 1

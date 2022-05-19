@@ -9,7 +9,6 @@ contract B is A {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f(uint256): 1337 -> 1337
 // g(uint256): 1337 -> 1338

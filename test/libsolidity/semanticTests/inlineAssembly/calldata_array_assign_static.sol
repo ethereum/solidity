@@ -5,6 +5,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(uint256[2][2]): 0x0, 8, 7, 6, 5 -> 8, 7, 6, 5

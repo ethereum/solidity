@@ -7,6 +7,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(uint256,bytes,uint256): 7, 0x60, 7, 4, "abcd" -> "c"

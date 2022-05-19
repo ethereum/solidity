@@ -11,7 +11,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(uint256): 0 -> false
 // gggg(bool): 0 -> false # test validation as well as sanity check #

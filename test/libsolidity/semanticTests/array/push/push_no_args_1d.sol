@@ -20,7 +20,6 @@ contract C {
 
 }
 // ====
-// compileViaYul: also
 // ----
 // l() -> 0
 // lv(uint256): 42 ->

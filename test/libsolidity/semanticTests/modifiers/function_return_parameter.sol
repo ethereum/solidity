@@ -5,7 +5,6 @@ contract B {
     modifier mod2(bytes7 a) { while (a == "1234567") _; }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // f(uint8): 5 -> 0x00

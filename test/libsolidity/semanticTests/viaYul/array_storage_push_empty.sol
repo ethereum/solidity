@@ -10,7 +10,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=petersburg
-// compileViaYul: also
 // ----
 // pushEmpty(uint256): 128
 // gas irOptimized: 412561

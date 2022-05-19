@@ -18,6 +18,5 @@ contract B is A {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // g() -> 23

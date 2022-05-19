@@ -59,7 +59,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // conv(bytes25): left(0xff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff) -> 0xff00ff00ff00ff00ff00ff00ff00ff00ffffffffffffffffffffffffffffffff

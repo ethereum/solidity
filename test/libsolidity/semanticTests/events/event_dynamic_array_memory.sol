@@ -9,7 +9,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // createEvent(uint256): 42 ->
 // ~ emit E(uint256[]): 0x20, 0x03, 0x2a, 0x2b, 0x2c

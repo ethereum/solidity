@@ -15,7 +15,6 @@ contract D {
 }
 // ====
 // EVMVersion: >=constantinople
-// compileViaYul: also
 // ----
 // constructor(): 2 ->
 // gas irOptimized: 200380

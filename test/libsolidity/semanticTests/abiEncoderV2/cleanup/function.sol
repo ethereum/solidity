@@ -17,7 +17,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // ffff(uint256): 0 -> 0, 0
 // ggg(function): 0 -> 0

@@ -29,7 +29,6 @@ contract C {
 }
 // ====
 // EVMVersion: >homestead
-// compileViaYul: also
 // ----
 // f(uint256), 2000 ether: 0 -> true
 // f(uint256), 2000 ether: 100 -> false

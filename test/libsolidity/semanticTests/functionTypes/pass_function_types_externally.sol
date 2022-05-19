@@ -17,7 +17,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // f(uint256): 7 -> 8
 // f2(uint256): 7 -> 8

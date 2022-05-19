@@ -12,6 +12,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 3, "abcd", "bcde", "cdef"

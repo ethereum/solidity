@@ -27,6 +27,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // get() -> 0x01, 0x00, 0x09, 0x00, 0x04, 0x05

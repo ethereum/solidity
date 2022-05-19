@@ -47,7 +47,6 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()
 // gas irOptimized: 1926032

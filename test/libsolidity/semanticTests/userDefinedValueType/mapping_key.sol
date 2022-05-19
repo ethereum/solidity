@@ -9,7 +9,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // set(int256,int256): 1, 1 ->
 // m(int256): 1 -> 1

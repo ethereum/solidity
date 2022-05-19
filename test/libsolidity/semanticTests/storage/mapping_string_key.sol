@@ -14,7 +14,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // set(string,uint256): 0x40, 8, 3, "abc" ->
 // get(string): 0x20, 3, "abc" -> 8

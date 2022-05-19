@@ -27,6 +27,5 @@ contract D is B, C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 4, 3, 2, 1

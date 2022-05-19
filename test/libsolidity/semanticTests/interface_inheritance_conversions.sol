@@ -34,7 +34,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // convertParent() -> 1
 // gas irOptimized: 85524

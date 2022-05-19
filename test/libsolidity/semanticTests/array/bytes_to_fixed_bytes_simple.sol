@@ -19,7 +19,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // fromMemory(bytes): 0x20, 16, "abcdefghabcdefgh" -> "abcdefghabcdefgh"
 // fromCalldata(bytes): 0x20, 16, "abcdefghabcdefgh" -> "abcdefghabcdefgh"

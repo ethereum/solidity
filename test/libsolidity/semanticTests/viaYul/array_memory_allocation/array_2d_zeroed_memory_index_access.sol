@@ -16,7 +16,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // ----
 // set(string,uint256,uint256,uint256,uint256): 0xa0, 2, 4, 0, 0, 32, "01234567890123456789012345678901" -> 0
 // set(string,uint256,uint256,uint256,uint256): 0xa0, 2, 4, 1, 3, 32, "01234567890123456789012345678901" -> 0

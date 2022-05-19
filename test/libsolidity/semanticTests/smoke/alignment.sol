@@ -19,7 +19,6 @@ contract D {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // stateBool() -> true
 // stateBool() -> right(true)

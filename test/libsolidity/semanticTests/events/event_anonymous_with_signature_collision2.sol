@@ -6,7 +6,6 @@ contract ClientReceipt {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // deposit(bytes32), 18 wei: 0x1234 ->
 // ~ emit Withdraw(uint256,string): #0x1234, 0x12

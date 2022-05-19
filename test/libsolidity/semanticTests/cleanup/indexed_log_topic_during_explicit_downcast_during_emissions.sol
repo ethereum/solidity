@@ -10,7 +10,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor() ->
 // ~ emit ev0(bytes1): #"1"

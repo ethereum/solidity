@@ -8,6 +8,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(bytes8[]): 0x20, 3, "abcd", "bcde", "cdef" -> 3, "abcd", "bcde", "cdef"

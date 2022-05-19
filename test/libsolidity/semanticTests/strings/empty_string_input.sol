@@ -17,7 +17,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f() -> 0x20, 0
 // g(string): 0x20, 0, "" -> 0x20, 0

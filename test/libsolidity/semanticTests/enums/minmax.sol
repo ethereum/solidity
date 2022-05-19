@@ -6,7 +6,6 @@ contract test {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // min() -> 0
 // max() -> 3

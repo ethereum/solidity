@@ -20,6 +20,5 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // test_function() -> true

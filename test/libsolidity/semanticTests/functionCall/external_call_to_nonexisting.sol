@@ -22,7 +22,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // constructor(), 1 ether ->
 // gas irOptimized: 303935

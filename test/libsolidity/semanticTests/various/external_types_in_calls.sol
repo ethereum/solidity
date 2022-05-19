@@ -24,7 +24,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // test() -> 9, 7
 // gas legacy: 129760

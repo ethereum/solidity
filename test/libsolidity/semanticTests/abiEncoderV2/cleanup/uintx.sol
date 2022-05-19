@@ -43,7 +43,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f8(uint256): 0 -> 0
 // ggg8(uint8): 0 -> 0 # test validation as well as sanity check #

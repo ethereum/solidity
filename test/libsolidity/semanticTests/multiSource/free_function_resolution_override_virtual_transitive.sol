@@ -21,6 +21,5 @@ contract E is D {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // g() -> 1339

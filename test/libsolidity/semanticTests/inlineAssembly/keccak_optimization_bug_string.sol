@@ -8,7 +8,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // f(string): "" -> false
 // f(string): 0x20, 5, "hello" -> false

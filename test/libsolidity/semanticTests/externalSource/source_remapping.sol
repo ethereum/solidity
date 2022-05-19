@@ -7,6 +7,5 @@ contract C {
     OtherExternal _otherExternal;
 }
 // ====
-// compileViaYul: also
 // ----
 // constructor()

@@ -38,7 +38,6 @@ contract D {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // library: "A":L
 // test() -> 3

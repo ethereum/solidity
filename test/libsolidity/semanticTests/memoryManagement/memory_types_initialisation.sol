@@ -9,7 +9,6 @@ contract Test {
     function nestedStat() public returns (uint[3][7] memory) { stat(); }
 }
 // ====
-// compileViaYul: also
 // ----
 // stat() -> 0, 0, 0, 0, 0
 // dyn() -> 0x20, 0

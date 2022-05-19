@@ -15,7 +15,6 @@ contract B {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // testIt() ->
 // test() -> 2

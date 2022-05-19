@@ -152,7 +152,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // storage_a() -> 0, 0
 // set_a(int64,int64): 100, 200 ->

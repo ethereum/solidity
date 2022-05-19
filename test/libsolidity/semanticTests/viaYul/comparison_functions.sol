@@ -26,7 +26,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // equal() -> true, false, false
 // unequal() -> false, true, true

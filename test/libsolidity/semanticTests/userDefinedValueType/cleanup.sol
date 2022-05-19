@@ -35,7 +35,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // ----
 // ret() -> 0xff
 // f(uint8): 0x1ff -> FAILURE

@@ -6,6 +6,5 @@ contract C {
 }
 // ====
 // EVMVersion: >=petersburg
-// compileViaYul: also
 // ----
 // popEmpty() -> FAILURE, hex"4e487b71", 0x31

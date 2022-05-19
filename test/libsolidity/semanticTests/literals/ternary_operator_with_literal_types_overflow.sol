@@ -13,7 +13,6 @@ contract TestTernary
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // g() -> FAILURE, hex"4e487b71", 0x11
 // h() -> FAILURE, hex"4e487b71", 0x11

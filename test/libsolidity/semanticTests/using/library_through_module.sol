@@ -25,7 +25,6 @@ contract C {
 import "A" as M;
 
 // ====
-// compileViaYul: also
 // ----
 // library: "A":L
 // f(uint256): 5 -> 5

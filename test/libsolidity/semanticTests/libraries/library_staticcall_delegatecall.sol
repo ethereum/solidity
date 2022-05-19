@@ -14,7 +14,6 @@ contract Test {
     }
 }
 // ====
-// compileViaYul: also
 // ----
 // library: Lib
 // f() -> 1

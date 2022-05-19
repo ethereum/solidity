@@ -19,7 +19,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // associated() -> 42
 // unassociated() -> 42
