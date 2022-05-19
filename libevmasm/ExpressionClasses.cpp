@@ -23,36 +23,57 @@
  */
 
 #include <libevmasm/ExpressionClasses.h>
+
 #include <libevmasm/Assembly.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/SimplificationRules.h>
 
+#include <boost/container_hash/hash.hpp>
+
 #include <functional>
-#include <tuple>
 #include <limits>
+#include <tuple>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
-bool ExpressionClasses::Expression::operator<(ExpressionClasses::Expression const& _other) const
+bool ExpressionClasses::Expression::operator==(ExpressionClasses::Expression const& _other) const
 {
 	assertThrow(!!item && !!_other.item, OptimizerException, "");
 	auto type = item->type();
 	auto otherType = _other.item->type();
 	if (type != otherType)
-		return type < otherType;
+		return false;
 	else if (type == Operation)
 	{
 		auto instr = item->instruction();
 		auto otherInstr = _other.item->instruction();
-		return std::tie(instr, arguments, sequenceNumber) <
+		return std::tie(instr, arguments, sequenceNumber) ==
 			std::tie(otherInstr, _other.arguments, _other.sequenceNumber);
 	}
 	else
-		return std::tie(item->data(), arguments, sequenceNumber) <
+		return std::tie(item->data(), arguments, sequenceNumber) ==
 			std::tie(_other.item->data(), _other.arguments, _other.sequenceNumber);
+}
+
+std::size_t ExpressionClasses::Expression::ExpressionHash::operator()(Expression const& _expression) const
+{
+	assertThrow(!!_expression.item, OptimizerException, "");
+	std::size_t seed = 0;
+	auto type = _expression.item->type();
+	boost::hash_combine(seed, type);
+
+	if (type == Operation)
+		boost::hash_combine(seed, _expression.item->instruction());
+	else
+		boost::hash_combine(seed, _expression.item->data());
+
+	boost::hash_range(seed, _expression.arguments.begin(), _expression.arguments.end());
+	boost::hash_combine(seed, _expression.sequenceNumber);
+
+	return seed;
 }
 
 ExpressionClasses::Id ExpressionClasses::find(

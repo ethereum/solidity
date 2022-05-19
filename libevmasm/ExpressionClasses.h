@@ -24,13 +24,13 @@
 
 #pragma once
 
-#include <libsolutil/Common.h>
 #include <libevmasm/AssemblyItem.h>
 
-#include <vector>
-#include <map>
+#include <libsolutil/Common.h>
+
 #include <memory>
-#include <set>
+#include <unordered_set>
+#include <vector>
 
 namespace solidity::langutil
 {
@@ -61,8 +61,14 @@ public:
 		/// Storage modification sequence, only used for storage and memory operations.
 		unsigned sequenceNumber = 0;
 		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments, sequenceNumber).
-		bool operator<(Expression const& _other) const;
+		bool operator==(Expression const& _other) const;
+
+		struct ExpressionHash
+		{
+			std::size_t operator()(Expression const& _expression) const;
+		};
 	};
+
 
 	/// Retrieves the id of the expression equivalence class resulting from the given item applied to the
 	/// given classes, might also create a new one.
@@ -122,7 +128,7 @@ private:
 	/// Expression equivalence class representatives - we only store one item of an equivalence.
 	std::vector<Expression> m_representatives;
 	/// All expression ever encountered.
-	std::set<Expression> m_expressions;
+	std::unordered_set<Expression, Expression::ExpressionHash> m_expressions;
 	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItems;
 };
 
