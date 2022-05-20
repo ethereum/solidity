@@ -66,6 +66,10 @@ function euler_test
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
     sed -i "/expectError: 'JUNK_UPGRADE_TEST_FAILURE'/d" test/moduleUpgrade.js
 
+    # One of the tests is currently broken in the upstream, due to changed behavior of chainid in @ethereumjs/vm.
+    # TODO: Remove this when https://github.com/euler-xyz/euler-contracts/issues/119 gets fixed.
+    sed -i 's/domainSeparatorMatch)\.to\.equal(true/domainSeparatorMatch)\.to\.equal(false/g' test/eulStakes.js
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
