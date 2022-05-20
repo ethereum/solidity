@@ -75,6 +75,9 @@ function ens_test
     # In some cases Hardhat does not detect revert reasons properly via IR.
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
     sed -i "s|it\(('Does not allow wrapping a name you do not own',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    # Related to disallow returndatasize and returndatacopy in inline assembly blocks in pure functions https://github.com/ethereum/solidity/pull/13028
+    # TODO: Remove this after release 0.9 and ENS updated to support it.
+    sed -i 's/pure/view/' contracts/utils/LowLevelCallUtils.sol
 
     find . -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 
