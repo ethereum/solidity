@@ -28,6 +28,7 @@ set(sources
 	picosha2.h
 	Result.h
 	SetOnce.h
+	StackTooDeepString.h
 	StringUtils.cpp
 	StringUtils.h
 	SwarmHash.cpp

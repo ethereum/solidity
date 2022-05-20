@@ -31,6 +31,7 @@
 
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Whiskers.h>
+#include <libsolutil/StackTooDeepString.h>
 
 #include <libevmasm/Instruction.h>
 #include <liblangutil/Exceptions.h>
@@ -242,7 +243,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 				assertThrow(
 					2 + byteOffsetSize + sourceBaseType->sizeOnStack() <= 16,
 					StackTooDeepError,
-					"Stack too deep, try removing local variables."
+					util::stackTooDeepString
 				);
 				// fetch target storage reference
 				_context << dupInstruction(2 + byteOffsetSize + sourceBaseType->sizeOnStack());

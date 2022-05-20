@@ -1428,7 +1428,7 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	BOOST_REQUIRE(result["errors"].isArray());
 	BOOST_CHECK(result["errors"][0]["severity"] == "error");
 	BOOST_REQUIRE(result["errors"][0]["message"].isString());
-	BOOST_CHECK(result["errors"][0]["message"].asString().find("Stack too deep when compiling inline assembly") != std::string::npos);
+	BOOST_CHECK(result["errors"][0]["message"].asString().find("When compiling inline assembly") != std::string::npos);
 	BOOST_CHECK(result["errors"][0]["type"] == "CompilerError");
 }
 

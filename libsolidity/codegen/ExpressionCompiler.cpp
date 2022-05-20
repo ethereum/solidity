@@ -37,6 +37,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Whiskers.h>
+#include <libsolutil/StackTooDeepString.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <numeric>
@@ -268,7 +269,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_varDecl.location()) <<
-			util::errinfo_comment("Stack too deep.")
+			util::errinfo_comment(util::stackTooDeepString)
 		);
 	m_context << dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
@@ -350,7 +351,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				BOOST_THROW_EXCEPTION(
 					StackTooDeepError() <<
 					errinfo_sourceLocation(_assignment.location()) <<
-					util::errinfo_comment("Stack too deep, try removing local variables.")
+					util::errinfo_comment(util::stackTooDeepString)
 				);
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)

@@ -28,6 +28,8 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libevmasm/Instruction.h>
 
+#include <libsolutil/StackTooDeepString.h>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
@@ -50,7 +52,7 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_location) <<
-			util::errinfo_comment("Stack too deep, try removing local variables.")
+			util::errinfo_comment(util::stackTooDeepString)
 		);
 	solAssert(stackPos + 1 >= m_size, "Size and stack pos mismatch.");
 	for (unsigned i = 0; i < m_size; ++i)
@@ -64,7 +66,7 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_location) <<
-			util::errinfo_comment("Stack too deep, try removing local variables.")
+			util::errinfo_comment(util::stackTooDeepString)
 		);
 	else if (stackDiff > 0)
 		for (unsigned i = 0; i < m_size; ++i)
