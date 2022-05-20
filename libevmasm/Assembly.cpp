@@ -765,7 +765,7 @@ LinkerObject const& Assembly::assemble() const
 					tagLoc -= baseTagAddress;
 				}
 			}
-			assertThrow(tagLoc < (size_t) (0x1 << (bytesPerJumpTableTag * 8)), AssemblyException,
+			assertThrow(tagLoc < ((size_t) 0x1 << (bytesPerJumpTableTag * 8)), AssemblyException,
 				"Destination address too large to fit in jump table");
 			for (size_t bi = 0; bi < bytesPerJumpTableTag; ++bi)
 			{
