@@ -49,7 +49,7 @@ function euler_test
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with "YulException: Variable var_utilisation_307 is 6 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_utilisation_307 is 6 slot(s) too deep inside the stack."
-        #ir-optimize-evm+yul      # Compilation fails with "YulException: Variable var_status_mpos is 3 too deep in the stack"
+        ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
         legacy-no-optimize
@@ -60,6 +60,11 @@ function euler_test
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$ref_type" "$ref" "$DIR"
+
+    # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
+    # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    sed -i "/expectError: 'JUNK_UPGRADE_TEST_FAILURE'/d" test/moduleUpgrade.js
 
     neutralize_package_lock
     neutralize_package_json_hooks
