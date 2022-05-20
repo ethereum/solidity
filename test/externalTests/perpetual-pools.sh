@@ -59,6 +59,12 @@ function perpetual_pools_test
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$ref_type" "$ref" "$DIR"
 
+    # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
+    # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    sed -i 's|\(it\)\(("Should not allow commits that are too large"\)|\1.skip\2|g' test/PoolCommitter/commit.spec.ts
+    sed -i 's|\(it\)\(("Should not allow for too many commitments (that bring amount over a user'\''s balance)"\)|\1.skip\2|g' test/PoolCommitter/commit.spec.ts
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
