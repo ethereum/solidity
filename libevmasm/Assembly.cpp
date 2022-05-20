@@ -578,9 +578,9 @@ LinkerObject const& Assembly::assemble() const
 		}
 		case JumpTablePushTag:
 		{
+			assertThrow(i.jumpTableTags().size() > 0, AssemblyException,
+				"At least one tag expected in jump table");
 			unsigned pushSize = (unsigned) i.jumpTableTags().size() * bytesPerJumpTableTag;
-			if (pushSize == 0)
-				pushSize = 1;
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(pushSize)));
 			if (i.jumpTableTags().size() > 0)
 			{

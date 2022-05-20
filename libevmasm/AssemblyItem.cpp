@@ -130,6 +130,7 @@ pair<bool, size_t> AssemblyItem::getJumpTableBaseTag() const
 void AssemblyItem::setJumpTableTags(std::vector<size_t> tags, bool isRelative, size_t baseTag)
 {
 	assertThrow(m_type == JumpTablePushTag, util::Exception, "");
+	assertThrow(tags.size() > 0, util::Exception, "");
 	m_jumpTableTags = tags;
 	u256 data = baseTag;
 	if (isRelative)
