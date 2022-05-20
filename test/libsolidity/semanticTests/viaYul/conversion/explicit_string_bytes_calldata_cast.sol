@@ -5,7 +5,5 @@ contract C {
 		return string(test);
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f(string): 0x20, 3, "123" -> 0x20, 3, "123"

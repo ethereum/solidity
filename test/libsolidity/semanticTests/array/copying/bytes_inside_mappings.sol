@@ -3,8 +3,6 @@ contract c {
     function copy(uint from, uint to) public returns (bool) { data[to] = data[from]; return true; }
     mapping(uint => bytes) data;
 }
-// ====
-// compileViaYul: also
 // ----
 // set(uint256): 1, 2 -> true
 // gas irOptimized: 110604

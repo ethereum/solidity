@@ -22,8 +22,6 @@ contract C {
         return data[0];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // fromMemory() -> 0x00
 // fromCalldata(bytes): 0x40, 0x60, 0x00, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> 0x00

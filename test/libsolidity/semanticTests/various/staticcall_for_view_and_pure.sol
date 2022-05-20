@@ -33,7 +33,6 @@ contract D {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // f() -> 0x1 # This should work, next should throw #
 // gas legacy: 103716

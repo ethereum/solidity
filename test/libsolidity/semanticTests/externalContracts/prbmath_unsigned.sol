@@ -46,8 +46,6 @@ contract test {
         assert(z1 == z2);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor()
 // gas irOptimized: 1780841

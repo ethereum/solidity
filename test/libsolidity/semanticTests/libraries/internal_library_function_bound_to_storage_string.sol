@@ -16,7 +16,5 @@ contract C {
         return (s.f(), s.g());
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test(string): 0x20, 3, "def" -> 0x40, 0x80, 3, "def", 3, "def"

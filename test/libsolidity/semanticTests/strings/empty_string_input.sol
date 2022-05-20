@@ -16,8 +16,6 @@ contract C {
         return (msg1, "", v);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0x20, 0
 // g(string): 0x20, 0, "" -> 0x20, 0

@@ -10,8 +10,6 @@ contract C {
         state = _state;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(), 2 wei: 3 ->
 // gas irOptimized: 107627

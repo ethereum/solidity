@@ -6,8 +6,6 @@ contract C {
     assembly { function f() -> x { x := 2 } r := f() }
   }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 1
 // g() -> 2

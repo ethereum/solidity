@@ -46,8 +46,6 @@ contract C {
         return e;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // getMinMax() -> 0, 255
 // intToEnum(uint8): 0 -> 0

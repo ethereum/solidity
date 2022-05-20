@@ -7,8 +7,6 @@ contract C {
         return x[i][j];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint256[],uint256): 0x40, 0, 0 -> FAILURE, hex"4e487b71", 0x32
 // f(uint256[],uint256): 0x40, 0, 1, 23 -> 23

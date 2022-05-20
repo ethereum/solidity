@@ -9,7 +9,5 @@ contract C
         return (sub(1, 2), sub(2));
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 1, 2

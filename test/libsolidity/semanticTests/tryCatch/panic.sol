@@ -22,7 +22,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // onlyPanic(bool,uint256,uint256): true, 7, 6 -> 1, 0x00
 // onlyPanic(bool,uint256,uint256): true, 6, 7 -> 0x00, 0x11

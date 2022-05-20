@@ -7,6 +7,5 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f(bytes32): "789" -> 32, 16, 8

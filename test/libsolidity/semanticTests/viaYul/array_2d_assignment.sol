@@ -8,7 +8,5 @@ contract C {
 		return b[1];
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint256): 42 -> 42

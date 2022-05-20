@@ -8,6 +8,5 @@ contract test {
 
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // answer() -> 1

@@ -7,8 +7,6 @@ contract C {
 		return a.double();
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // library: D
 // f(uint256): 9 -> 18

@@ -14,8 +14,6 @@ contract c {
         return true;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> true
 // gas irOptimized: 196541

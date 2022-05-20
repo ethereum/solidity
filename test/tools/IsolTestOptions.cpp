@@ -59,7 +59,6 @@ std::string editorPath()
 IsolTestOptions::IsolTestOptions():
 	CommonOptions(description)
 {
-	enforceViaYul = true;
 }
 
 void IsolTestOptions::addOptions()

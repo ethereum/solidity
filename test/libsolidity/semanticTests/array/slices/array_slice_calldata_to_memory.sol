@@ -21,8 +21,6 @@ contract C {
         return h1(b[start:end]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(int256[],uint256,uint256): 0x60, 1, 3, 4, 1, 2, 3, 4 -> 2
 // g(int256[],uint256,uint256): 0x60, 1, 3, 4, 1, 2, 3, 4 -> 0x20, 2, 2, 3

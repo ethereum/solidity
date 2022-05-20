@@ -14,8 +14,6 @@ contract test {
         return (a[key], b[key]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // set(uint8,uint8,uint8): 1, 21, 42 -> 0, 0
 // get(uint8): 1 -> 21, 42

@@ -25,8 +25,6 @@ contract C {
         return reenc ? this.f_reenc(a) : this.f(a);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // g(bool): false -> 23, 37, 71
 // g(bool): true -> 23, 37, 71

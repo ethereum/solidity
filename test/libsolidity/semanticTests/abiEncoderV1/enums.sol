@@ -7,6 +7,7 @@ contract C {
 }
 // ====
 // ABIEncoderV1Only: true
+// compileViaYul: false
 // ----
 // f(uint8): 0 -> 0
 // f(uint8): 1 -> 1

@@ -20,7 +20,6 @@ contract C {
 
 // ====
 // EVMVersion: >=constantinople
-// compileViaYul: also
 // ----
 // constructor(), 23 wei ->
 // gas legacy: 100517

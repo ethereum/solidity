@@ -19,8 +19,6 @@ contract C {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // test(bytes): 0x20, 0x80, 0x40, 0x60, 0, 0 -> false, false
 // test(bytes): 0x20, 0xC0, 0x40, 0x80, 1, 0x42, 1, 0x42 -> false, false

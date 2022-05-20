@@ -47,8 +47,6 @@ contract test {
         return d.toSlice().len();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor()
 // gas irOptimized: 691317

@@ -45,8 +45,6 @@ contract C {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // f0() -> 0x20, 0x0
 // f1() -> 0x20, 0x40, 0x1, 0x2

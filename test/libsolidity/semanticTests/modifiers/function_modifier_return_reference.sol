@@ -9,7 +9,5 @@ contract C {
     function f() public m1(x = 2) m2(y = 3) returns (uint x, uint y) {
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 2, 3

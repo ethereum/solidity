@@ -35,6 +35,5 @@ contract D is B, C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f() -> 15

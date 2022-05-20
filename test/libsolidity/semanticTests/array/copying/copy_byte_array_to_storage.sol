@@ -44,8 +44,6 @@ contract C {
         return 0xff;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0xff
 // gas irOptimized: 121123

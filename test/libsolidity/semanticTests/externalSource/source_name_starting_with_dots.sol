@@ -6,7 +6,5 @@
 import {A, B} from "_source_name_starting_with_dots/dir/contract.sol";
 contract Contract {
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor()

@@ -12,8 +12,6 @@ contract A {
         return true;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> false
 // testIt() -> FAILURE, hex"4e487b71", 0x32

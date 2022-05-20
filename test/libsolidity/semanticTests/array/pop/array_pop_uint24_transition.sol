@@ -16,8 +16,6 @@ contract c {
             data.pop();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 20, 10
 // gas irOptimized: 159169

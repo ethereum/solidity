@@ -8,6 +8,5 @@ contract CalldataTest {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // tester(bytes): 0x20, 0x08, "abcdefgh" -> "c"

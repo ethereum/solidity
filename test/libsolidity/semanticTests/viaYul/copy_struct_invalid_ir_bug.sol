@@ -19,8 +19,6 @@ contract C {
 		assert(externalCalled == 2);
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f() ->
 // gas irOptimized: 112992

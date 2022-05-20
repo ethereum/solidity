@@ -11,8 +11,6 @@ contract C {
         return x[3];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0
 // gas irOptimized: 135098

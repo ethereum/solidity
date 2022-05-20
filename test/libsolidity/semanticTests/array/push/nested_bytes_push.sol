@@ -11,8 +11,6 @@ contract C {
         assert(a[2][32] == "a");
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() ->
 // gas irOptimized: 179590

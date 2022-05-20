@@ -8,7 +8,6 @@ contract B is A {
   constructor() A() m1 m2 {  }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // constructor() ->

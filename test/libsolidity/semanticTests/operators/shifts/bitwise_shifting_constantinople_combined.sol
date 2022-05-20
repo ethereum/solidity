@@ -85,7 +85,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=constantinople
-// compileViaYul: also
 // ----
 // shl_zero(uint256): 0x00 -> 0x00
 // shl_zero(uint256): 0xffff -> 0xffff

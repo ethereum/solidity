@@ -25,7 +25,5 @@ contract C {
         return multi_slot_function(this.foo, this.foo)() + single_slot_function(5, 1);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 12

@@ -33,8 +33,6 @@ contract Main {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // getFlag() -> true
 // getName() -> "abc"

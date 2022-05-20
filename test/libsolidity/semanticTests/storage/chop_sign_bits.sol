@@ -19,8 +19,6 @@ contract Test {
         return z;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // x(uint256): 0 -> -1
 // x(uint256): 1 -> -2

@@ -10,8 +10,6 @@ contract C {
         return storageArray[a];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // getLength() -> 0
 // test(uint256): 42 ->

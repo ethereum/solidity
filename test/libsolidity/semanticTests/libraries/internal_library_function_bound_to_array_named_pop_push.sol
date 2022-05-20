@@ -13,7 +13,5 @@ contract C {
         input.pop();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() ->

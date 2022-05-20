@@ -13,7 +13,6 @@ contract test {
 
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // fixedBytesHex() -> "\xaa\xbb\x00\xff"
 // fixedBytes() -> "abc\x00\xff__"

@@ -19,7 +19,5 @@ contract C {
         return cr().f().g();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 11

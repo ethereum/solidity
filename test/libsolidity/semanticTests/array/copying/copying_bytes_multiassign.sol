@@ -18,7 +18,6 @@ contract sender {
 }
 // ====
 // compileToEwasm: false
-// compileViaYul: also
 // ----
 // (): 7 ->
 // gas irOptimized: 110954

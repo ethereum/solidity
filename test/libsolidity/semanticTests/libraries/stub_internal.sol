@@ -6,8 +6,6 @@ contract C {
         return L.f(v);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // g(uint256): 1 -> 1
 // g(uint256): 2 -> 4

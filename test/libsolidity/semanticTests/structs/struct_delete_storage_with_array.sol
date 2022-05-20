@@ -40,8 +40,6 @@ contract C {
         assert(s.b == 2);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() ->
 // gas irOptimized: 121619

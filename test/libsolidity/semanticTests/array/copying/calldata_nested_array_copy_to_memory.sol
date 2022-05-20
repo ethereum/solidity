@@ -8,7 +8,5 @@ contract Test {
         return shouldBug(weapon);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // killer(uint256[][2]): 0x20, 0x40, 0x40, 2, 1, 2 -> 0x20, 0x20, 0x40, 0xa0, 2, 1, 2, 2, 1, 2

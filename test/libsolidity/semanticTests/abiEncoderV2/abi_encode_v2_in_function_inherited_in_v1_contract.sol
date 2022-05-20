@@ -28,8 +28,6 @@ contract C is B {
         return foo(new A());
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 77
 // gas irOptimized: 119711

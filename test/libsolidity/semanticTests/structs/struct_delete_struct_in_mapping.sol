@@ -14,7 +14,5 @@ contract test {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // deleteIt() -> 0

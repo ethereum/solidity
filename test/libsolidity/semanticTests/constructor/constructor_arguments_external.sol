@@ -15,8 +15,6 @@ contract Main {
         return flag;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): "abc", true
 // gas irOptimized: 106683

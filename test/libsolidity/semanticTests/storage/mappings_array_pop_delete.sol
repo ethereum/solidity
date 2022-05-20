@@ -23,8 +23,6 @@ contract C {
 		return a.length;
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // n1(uint256,uint256): 42, 64 ->
 // map(uint256): 42 -> 64

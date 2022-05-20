@@ -10,7 +10,6 @@ contract A {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // data() -> 0
 // ()

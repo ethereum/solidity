@@ -10,8 +10,6 @@ contract C {
         return blockhash(blockNumber);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor()
 // gas irOptimized: 111584

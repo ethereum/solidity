@@ -46,7 +46,5 @@ contract CopyTest {
         return result;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // run() -> 0x20, 10, 0x42, 0x4200, 0x420000, 0x420001, 0x420002, 0x4201, 0x420100, 0x420101, 0x420102, 0x420103

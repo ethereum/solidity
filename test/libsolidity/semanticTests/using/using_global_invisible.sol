@@ -37,8 +37,6 @@ contract D {
         return c.f().inc().inc().dec().unwrap();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // library: "A":L
 // test() -> 3

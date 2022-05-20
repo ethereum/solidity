@@ -15,7 +15,5 @@ contract C {
         return input.at(1);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // secondItem() -> 0x22

@@ -5,6 +5,5 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f() -> 32, 5, left(0x123456789A)

@@ -16,8 +16,6 @@ contract C {
         assembly { slot := ptr.slot }
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // library: Lib
 // f() -> 123

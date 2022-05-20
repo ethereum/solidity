@@ -7,7 +7,5 @@ contract C {
         return (s.length, s[0], s[1], s[2]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(bytes8[]): 0x20, 3, "abcd", "bcde", "cdef" -> 3, "abcd", "bcde", "cdef"

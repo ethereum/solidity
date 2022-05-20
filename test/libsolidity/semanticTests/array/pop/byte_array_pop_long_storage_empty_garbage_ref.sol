@@ -13,8 +13,6 @@ contract c {
         }
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() ->
 // gas irOptimized: 142639

@@ -8,8 +8,6 @@ contract test {
         m2[k1][k2] = v;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // m1(uint256): 0 -> 0
 // m1(uint256): 0x01 -> 0

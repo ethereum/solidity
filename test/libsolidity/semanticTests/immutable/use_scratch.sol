@@ -13,8 +13,6 @@ contract C {
 		return (x+x,y);
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): 3 ->
 // gas irOptimized: 127454

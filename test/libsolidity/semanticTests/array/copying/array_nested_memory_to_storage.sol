@@ -36,8 +36,6 @@ contract Test {
         return a[0][0] + a[1][0] + a[2][1];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 24
 // gas irOptimized: 227133

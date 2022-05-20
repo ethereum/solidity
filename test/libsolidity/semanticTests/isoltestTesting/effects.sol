@@ -1,7 +1,5 @@
 contract SmokeTest {
 }
-// ====
-// compileViaYul: also
 // ----
 // isoltest_side_effects_test -> 0
 // isoltest_side_effects_test: 0x1234 -> 0x1234

@@ -12,7 +12,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f() -> 1, 2, 3
 // gas irOptimized: 132298

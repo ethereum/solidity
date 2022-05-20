@@ -7,6 +7,5 @@ contract C {
 }
 // ====
 // EVMVersion: >=istanbul
-// compileViaYul: also
 // ----
 // f() -> 1

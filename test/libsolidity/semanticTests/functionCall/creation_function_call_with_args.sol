@@ -13,8 +13,6 @@ contract D {
         return c.i();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): 2 ->
 // gas irOptimized: 200217

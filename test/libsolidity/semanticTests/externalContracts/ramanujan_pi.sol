@@ -31,8 +31,6 @@ contract test {
         ret = prb_scale(1).div(ret);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor()
 // gas irOptimized: 455866

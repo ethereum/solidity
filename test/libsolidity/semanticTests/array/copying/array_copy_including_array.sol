@@ -33,8 +33,6 @@ contract c {
         return (small.length, large.length);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 0x02000202
 // gas irOptimized: 4652048

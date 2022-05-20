@@ -13,8 +13,6 @@ contract C {
         d.deposit(_id);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor() ->
 // gas irOptimized: 173094

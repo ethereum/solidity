@@ -40,7 +40,6 @@ public:
 		std::string filename;
 		langutil::EVMVersion evmVersion;
 		std::vector<boost::filesystem::path> vmPaths;
-		bool enforceCompileViaYul = false;
 		bool enforceCompileToEwasm = false;
 		bool enforceGasCost = false;
 		u256 enforceGasCostMinValue;

@@ -38,8 +38,6 @@ contract test {
         return str.nstr.nestedMapping[index];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // getToDelete() -> 0
 // getTopValue() -> 0

@@ -6,7 +6,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // constructor() # This is the 1st block #
 // f() -> 0x1e # This is the 2nd block (each block is "15 seconds") #

@@ -15,8 +15,6 @@ contract c {
         y = data2[4];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 5, 4
 // gas irOptimized: 225954

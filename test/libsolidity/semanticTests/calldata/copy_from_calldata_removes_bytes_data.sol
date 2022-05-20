@@ -8,7 +8,6 @@ contract c {
 // ====
 // EVMVersion: >=byzantium
 // compileToEwasm: false
-// compileViaYul: also
 // ----
 // (): 1, 2, 3, 4, 5 ->
 // gas irOptimized: 155170

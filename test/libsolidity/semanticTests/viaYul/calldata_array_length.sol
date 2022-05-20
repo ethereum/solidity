@@ -12,8 +12,6 @@ contract C {
         return x.length;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint256[]): 0x20, 0 -> 0
 // f(uint256[]): 0x20, 1, 23 -> 1

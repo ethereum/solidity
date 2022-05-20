@@ -5,7 +5,6 @@ contract C {
 }
 // ====
 // revertStrings: debug
-// compileViaYul: also
 // ----
 // f(uint256[]): 0x20, 0 ->
 // f(uint256[]): 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 0x2b, "ABI decoding: invalid calldata a", "rray stride"

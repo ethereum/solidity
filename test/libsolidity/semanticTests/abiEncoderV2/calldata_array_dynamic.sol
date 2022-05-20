@@ -22,7 +22,6 @@ contract C {
 }
 // ====
 // EVMVersion: >homestead
-// compileViaYul: also
 // ----
 // f(uint256[]): 32, 3, 23, 42, 87 -> 32, 160, 32, 3, 23, 42, 87
 // g(uint256[]): 32, 3, 23, 42, 87 -> 32, 160, 32, 3, 23, 42, 87

@@ -29,7 +29,6 @@ contract Derived is Base, B, A {}
 
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // getViaB() -> 0
 // setViaA(uint256): 23 ->

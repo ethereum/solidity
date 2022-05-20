@@ -18,6 +18,5 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // test() -> FAILURE, hex"4e487b71", 0x21 # should throw #

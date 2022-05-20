@@ -32,8 +32,6 @@ contract C {
         return (["any", "any"], ["any", "any", "any"]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // r() -> true, false, true
 // s() -> 123, 456, 789

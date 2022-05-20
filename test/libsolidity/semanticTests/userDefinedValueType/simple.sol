@@ -7,8 +7,6 @@ contract C {
         c = MyInt.wrap(1);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0
 // g() -> 1, 1

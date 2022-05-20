@@ -11,7 +11,5 @@ contract c {
         l = data.length;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 1, 0

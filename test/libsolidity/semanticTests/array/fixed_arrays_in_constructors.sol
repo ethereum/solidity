@@ -7,8 +7,6 @@ contract Creator {
         ch = s[2];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): 1, 2, 3, 4 ->
 // gas irOptimized: 129013

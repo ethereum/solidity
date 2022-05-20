@@ -8,8 +8,6 @@ contract C {
         emit TestB(this.f2);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f1() ->
 // ~ emit TestA(function): #0x0fdd67305928fcac8d213d1e47bfa6165cd0b87bc27fc3050000000000000000

@@ -16,8 +16,6 @@ contract C {
 		return uint32(this.testFunction.selector);
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // testYul() -> 0xe16b4a9b
 // testSol() -> 0xe16b4a9b

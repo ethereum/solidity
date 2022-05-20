@@ -23,7 +23,6 @@ contract C {
 
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // revertStrings: debug
 // ----
 // constructor(), 1 ether ->

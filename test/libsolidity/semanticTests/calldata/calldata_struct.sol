@@ -16,7 +16,5 @@ contract C {
         return L.reverse(_s);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test(uint256,(uint256,uint256),uint256): 7, 66, 77, 4 -> 77, 66

@@ -20,8 +20,6 @@ contract ClientReceipt {
         return 4;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // deposit() -> 1
 // ~ emit Deposit()

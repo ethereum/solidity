@@ -13,8 +13,6 @@ contract C {
             require(storageArray[i] == i + 1);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test_indices(uint256): 1 ->
 // test_indices(uint256): 129 ->

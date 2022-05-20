@@ -18,8 +18,6 @@ contract C {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // testArray(uint256,uint256[],uint256): 7, 0x60, 4, 2, 66, 77 -> 77, 66
 // testSlice(uint256,uint256[],uint256): 7, 0x60, 4, 2, 66, 77 -> 77, 66

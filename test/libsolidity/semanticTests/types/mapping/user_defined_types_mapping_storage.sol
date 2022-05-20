@@ -20,8 +20,6 @@ contract C {
 	}
 }
 
-// ====
-// compileViaYul: also
 // ----
 // library: L
 // testAB() -> true

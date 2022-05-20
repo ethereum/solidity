@@ -3,6 +3,5 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // a() -> 0x4200

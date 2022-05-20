@@ -24,8 +24,6 @@ contract C {
 		array2d.push().push() = value;
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // l() -> 0
 // f(uint256,uint256): 42, 64 ->

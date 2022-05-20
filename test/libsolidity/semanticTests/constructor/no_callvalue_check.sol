@@ -15,8 +15,6 @@ contract C {
 		return true;
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f(), 2000 ether -> true
 // gas irOptimized: 120037

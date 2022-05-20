@@ -17,6 +17,5 @@ contract C is B, A {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // f() -> 0x01, 0x40, 0x00

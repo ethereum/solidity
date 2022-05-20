@@ -15,7 +15,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // constructor(), 20 wei
 // gas irOptimized: 212583
