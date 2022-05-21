@@ -71,7 +71,7 @@ set<size_t> JumpdestRemover::referencedTags(AssemblyItems const& _items, size_t 
 		}
 		case JumpTablePushTag:
 		{
-			for (size_t tag : item.jumpTableTags()) {
+			for (size_t tag: item.jumpTableTags()) {
 				ret.insert(tag);
 			}
 			break;

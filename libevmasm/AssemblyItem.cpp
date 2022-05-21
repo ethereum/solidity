@@ -297,7 +297,7 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	case JumpTablePushTag:
 	{
 		string tag_list = "";
-		for (size_t tag : m_jumpTableTags)
+		for (size_t tag: m_jumpTableTags)
 			tag_list += "_" + to_string(tag);
 		text = string("jump_table") + tag_list;
 		break;
@@ -381,7 +381,7 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	case JumpTablePushTag:
 	{
 		string tag_list = "";
-		for (size_t tag : _item.jumpTableTags())
+		for (size_t tag: _item.jumpTableTags())
 			tag_list += "_" + to_string(tag);
 		_out << " JumpTablePushTag " << tag_list;
 		break;

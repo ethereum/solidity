@@ -411,7 +411,7 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 	m_assembly.appendConstant(u256(0xffff));
 	// Jump offsets
 	m_assembly.appendJumpTablePush(labelTags, relativeToDefaultCase,
-	    relativeToDefaultCase ? defaultCaseLabel : 0);
+		relativeToDefaultCase ? defaultCaseLabel : 0);
 	// Subtract from minimum case value, if necessary, to get the value in range
 	if (needSubtract)
 	{
@@ -463,7 +463,8 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 	{
 		u256 caseVal = cases[i];
 		auto currentCase = caseMap.find(caseVal);
-		if (currentCase != caseMap.end()) {
+		if (currentCase != caseMap.end())
+		{
 			m_assembly.appendLabel(currentCase->second.second);
 			Case const* c = currentCase->second.first;
 			m_assembly.setSourceLocation(originLocationOf(*c));
@@ -484,7 +485,8 @@ void CodeTransform::operator()(Switch const& _switch)
 	int expressionHeight = m_assembly.stackHeight();
 	map<Case const*, AbstractAssembly::LabelID> caseBodies;
 
-	if (isSwitchEnumLike(_switch)) {
+	if (isSwitchEnumLike(_switch))
+	{
 		// We assume the default case comes before the other cases
 		handleEnumLikeSwitch(_switch, true);
 		m_assembly.appendInstruction(evmasm::Instruction::POP);
