@@ -344,18 +344,18 @@ bool CodeTransform::isSwitchEnumLike(Switch const& _switch)
 	// using codecopy
 	if (switchRange.has_value() && (switchRange.value().second - switchRange.value().first) >= 16)
 		return false;
-	
+
 	unsigned int numNonDefaultCases = 0;
 	for (Case const& c: _switch.cases)
 	{
 		if (c.value)
 			++numNonDefaultCases;
 	}
-	
+
 	// TODO: Replace this check with a gas cost comparison somewhere else
 	if (numNonDefaultCases < 3)
 		return false;
-	
+
 	return true;
 }
 
@@ -363,7 +363,7 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 	// Map case numbers to <case, block>
 	map<u256, pair<Case const*, AbstractAssembly::LabelID>> caseMap;
 	yulAssert(isSwitchEnumLike(_switch), "Switch not enum-like");
-	
+
 	optional<pair<u256, u256>> switchRange = getSwitchRange(_switch);
 	optional<Case const*> defaultCase;
 	for (Case const& c: _switch.cases)
@@ -379,7 +379,7 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 
 	// Make label for default case
 	AbstractAssembly::LabelID defaultCaseLabel = m_assembly.newLabelId();
-	
+
 	// Find label tags
 	std::vector<u256> cases;
 	std::vector<AbstractAssembly::LabelID> labelTags;
@@ -427,7 +427,7 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 	m_assembly.appendInstruction(evmasm::Instruction::SHL);
 	m_assembly.appendInstruction(evmasm::Instruction::SHR);
 	m_assembly.appendInstruction(evmasm::Instruction::AND);
-	
+
 	if (relativeToDefaultCase)
 	{
 		// Make a jump table relative to the default case. The default case address

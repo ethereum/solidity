@@ -740,7 +740,7 @@ LinkerObject const& Assembly::assemble() const
 			tagInfo.returns
 		};
 	}
-	
+
 	for (auto const& [location, jumpPair] : jumpTableRef)
 	{
 		auto const [baseTagInfo, tags] = jumpPair;
