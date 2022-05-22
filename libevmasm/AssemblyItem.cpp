@@ -82,6 +82,8 @@ pair<string, string> AssemblyItem::nameAndData() const
 			return {"PUSH [ErrorTag]", ""};
 		else
 			return {"PUSH [tag]", util::toString(data())};
+	case JumpTablePushTag:
+		return {"JUMPTABLEPUSHTAG [defaultTag]", util::toString(util::h256(data()))};
 	case PushSub:
 		return {"PUSH [$]", toString(util::h256(data()))};
 	case PushSubSize:
