@@ -3,241 +3,226 @@
 .. _ABI:
 
 **************************
-Contract ABI Specification
+合约ABI规范
 **************************
 
-Basic Design
+基本设计
 ============
 
-The Contract Application Binary Interface (ABI) is the standard way to interact with contracts in the Ethereum ecosystem, both
-from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
-as described in this specification. The encoding is not self describing and thus requires a schema in order to decode.
+合约应用二进制接口（ABI）是在以太坊生态系统中与合约交互的标准方式，
+包括从区块链外部和合约间的交互。数据根据其类型进行编码，如本规范中所述。
+编码不是自描述的，因此需要一种特定的概要（schema）来进行解码。
 
-We assume the interface functions of a contract are strongly typed, known at compilation time and static.
-We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
+我们假设合约的接口函数是强类型的，在编译时就知道，并且是静态的。
+我们假设所有合约在编译时都有它们所调用的任何合约的接口定义。
 
-This specification does not address contracts whose interface is dynamic or otherwise known only at run-time.
+本规范不涉及其接口是动态的或其他只有在运行时才知道的合约。
 
 .. _abi_function_selector:
 .. index:: selector
 
-Function Selector
+函数选择器
 =================
 
-The first four bytes of the call data for a function call specifies the function to be called. It is the
-first (left, high-order in big-endian) four bytes of the Keccak-256 hash of the signature of
-the function. The signature is defined as the canonical expression of the basic prototype without data
-location specifier, i.e.
-the function name with the parenthesised list of parameter types. Parameter types are split by a single
-comma - no spaces are used.
+一个函数调用数据的前四个字节指定了要调用的函数。它是函数签名的Keccak-256哈希值的前4字节（高位在左的大端序）。
+签名被定义为基本原型的典型表达，没有数据位置的指定，
+也就是带有括号的参数类型列表的函数名。参数类型由一个逗号分割 - 不使用空格。
 
-.. note::
-    The return type of a function is not part of this signature. In
-    :ref:`Solidity's function overloading <overload-function>` return types are not considered.
-    The reason is to keep function call resolution context-independent.
-    The :ref:`JSON description of the ABI<abi_json>` however contains both inputs and outputs.
+.. 注解::
+    一个函数的返回类型不是这个签名的一部分。在 :ref:`Solidity的函数重载 <overload-function>` 中，
+    返回类型不被考虑。原因是为了保持函数调用解析与上下文无关。
+    然而 :ref:`JSON描述的ABI <abi_json>` 却同时包含了输入和输出。
 
-Argument Encoding
+参数编码
 =================
 
-Starting from the fifth byte, the encoded arguments follow. This encoding is also used in
-other places, e.g. the return values and also event arguments are encoded in the same way,
-without the four bytes specifying the function.
+从第5字节开始是被编码的参数。这种编码也被用在其他地方，
+比如，返回值和事件的参数也会被用同样的方式进行编码，
+而用来指定函数的4个字节则不需要再进行编码。
 
-Types
+类型
 =====
 
-The following elementary types exist:
+以下是基础类型：
 
-- ``uint<M>``: unsigned integer type of ``M`` bits, ``0 < M <= 256``, ``M % 8 == 0``. e.g. ``uint32``, ``uint8``, ``uint256``.
+- ``uint<M>``： ``M`` 位的无符号整数， ``0 < M <= 256``， ``M % 8 == 0``。例如： ``uint32``， ``uint8``， ``uint256``。
 
-- ``int<M>``: two's complement signed integer type of ``M`` bits, ``0 < M <= 256``, ``M % 8 == 0``.
+- ``int<M>``： 以 2 的补码作为符号的 ``M`` 位整数， ``0 < M <= 256``， ``M % 8 == 0``。
 
-- ``address``: equivalent to ``uint160``, except for the assumed interpretation and language typing.
-  For computing the function selector, ``address`` is used.
+- ``address``： 除了字面上的意思和语言类型的区别以外，等价于 ``uint160``，
+  在计算和函数选择器中，通常使用 ``address``。
 
-- ``uint``, ``int``: synonyms for ``uint256``, ``int256`` respectively. For computing the function
-  selector, ``uint256`` and ``int256`` have to be used.
+- ``uint``， ``int``： ``uint256``， ``int256`` 各自的同义词.
+  在计算和函数选择器中，通常使用 ``uint256`` 和 ``int256``。
 
-- ``bool``: equivalent to ``uint8`` restricted to the values 0 and 1. For computing the function selector, ``bool`` is used.
+- ``bool``： 等价于 ``uint8``，取值限定为 0 或 1。在计算和函数选择器中，通常使用 ``bool``。
 
-- ``fixed<M>x<N>``: signed fixed-point decimal number of ``M`` bits, ``8 <= M <= 256``,
-  ``M % 8 == 0``, and ``0 < N <= 80``, which denotes the value ``v`` as ``v / (10 ** N)``.
+- ``fixed<M>x<N>``： ``M`` 位的有符号的固定小数位的十进制数字， ``8 <= M <= 256``，
+  ``M % 8 == 0``， 且 ``0 < N <= 80``， 其中值 ``v`` 是 ``v / (10 ** N)``。
 
-- ``ufixed<M>x<N>``: unsigned variant of ``fixed<M>x<N>``.
+- ``ufixed<M>x<N>``： 无符号的 ``fixed<M>x<N>``.
 
-- ``fixed``, ``ufixed``: synonyms for ``fixed128x18``, ``ufixed128x18`` respectively. For
-  computing the function selector, ``fixed128x18`` and ``ufixed128x18`` have to be used.
+- ``fixed``， ``ufixed``：  ``fixed128x18``， ``ufixed128x18`` 各自的同义词。
+  在计算和函数选择器中，通常使用 ``fixed128x18`` 和 ``ufixed128x18``。
 
-- ``bytes<M>``: binary type of ``M`` bytes, ``0 < M <= 32``.
+- ``bytes<M>``： ``M`` 字节的二进制类型， ``0 < M <= 32``。
 
-- ``function``: an address (20 bytes) followed by a function selector (4 bytes). Encoded identical to ``bytes24``.
+- ``function``： 一个地址（20 字节）之后紧跟一个函数选择器 （4 字节）。编码之后等价于 ``bytes24``。
 
-The following (fixed-size) array type exists:
+以下是定长数组类型：
 
-- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M >= 0``, of the given type.
+- ``<type>[M]``： 有 ``M`` 个元素的定长数组， ``M >= 0``，数组元素为给定类型。
 
-  .. note::
+  .. 注解::
 
-      While this ABI specification can express fixed-length arrays with zero elements, they're not supported by the compiler.
+      虽然这个ABI规范可以表达零元素的固定长度数组，但编译器不支持它们。
 
-The following non-fixed-size types exist:
+以下是非定长类型：
 
-- ``bytes``: dynamic sized byte sequence.
+- ``bytes``： 动态大小的字节序列。
 
-- ``string``: dynamic sized unicode string assumed to be UTF-8 encoded.
+- ``string``： 动态大小的 unicode 字符串，通常呈现为 UTF-8 编码。
 
-- ``<type>[]``: a variable-length array of elements of the given type.
+- ``<type>[]``： 元素为给定类型的变长数组。
 
-Types can be combined to a tuple by enclosing them inside parentheses, separated by commas:
+可以将若干类型放到一对括号中，用逗号分隔开，以此来构成一个元组（tuple）：
 
-- ``(T1,T2,...,Tn)``: tuple consisting of the types ``T1``, ..., ``Tn``, ``n >= 0``
+- ``(T1,T2,...,Tn)``： 由 ``T1``，...， ``Tn``， ``n >= 0`` 构成的 元组
 
-It is possible to form tuples of tuples, arrays of tuples and so on. It is also possible to form zero-tuples (where ``n == 0``).
+用元组构成元组，用元组构成数组等等也是可能的。另外也可以构成零元组（当 ``n == 0`` 时）。
 
-Mapping Solidity to ABI types
+将Solidity映射到ABI类型
 -----------------------------
 
-Solidity supports all the types presented above with the same names with the
-exception of tuples. On the other hand, some Solidity types are not supported
-by the ABI. The following table shows on the left column Solidity types that
-are not part of the ABI, and on the right column the ABI types that represent
-them.
+Solidity 支持上面介绍的除了元祖之外的所有同名类型。
+另一方面，一些 Solidity 类型不被 ABI 支持。
+下表在左栏显示了不属于ABI的Solidity类型，在右栏显示了代表它们的ABI类型。
 
-+-------------------------------+-----------------------------------------------------------------------------+
-|      Solidity                 |                                           ABI                               |
-+===============================+=============================================================================+
-|:ref:`address payable<address>`|``address``                                                                  |
-+-------------------------------+-----------------------------------------------------------------------------+
-|:ref:`contract<contracts>`     |``address``                                                                  |
-+-------------------------------+-----------------------------------------------------------------------------+
-|:ref:`enum<enums>`             |``uint8``                                                                    |
-+-------------------------------+-----------------------------------------------------------------------------+
-|:ref:`user defined value types |its underlying value type                                                    |
-|<user-defined-value-types>`    |                                                                             |
-+-------------------------------+-----------------------------------------------------------------------------+
-|:ref:`struct<structs>`         |``tuple``                                                                    |
-+-------------------------------+-----------------------------------------------------------------------------+
++---------------------------------+-------------------+
+|            Solidity             |        ABI        |
++=================================+===================+
+| :ref:`address payable<address>` | ``address``       |
++---------------------------------+-------------------+
+| :ref:`合约<contracts>`          | ``address``       |
++---------------------------------+-------------------+
+| :ref:`枚举<enums>`              | ``uint8``         |
++---------------------------------+-------------------+
+| :ref:`用户自定义类型            | 其基本值类型      |
+| <user-defined-value-types>`     |                   |
++---------------------------------+-------------------+
+| :ref:`结构体 <structs>`         | ``元组（tuple）`` |
++---------------------------------+-------------------+
 
-.. warning::
-    Before version ``0.8.0`` enums could have more than 256 members and were represented by the
-    smallest integer type just big enough to hold the value of any member.
+.. 警告::
+    在 ``0.8.0`` 版本之前，枚举可以有超过256个成员，并由最小的整数类型表示，其大小刚好可以容纳任何成员的值。
 
-Design Criteria for the Encoding
+编码的设计标准
 ================================
 
-The encoding is designed to have the following properties, which are especially useful if some arguments are nested arrays:
+编码被设计为具有以下属性，如果一些参数是嵌套的数组，这些属性特别有用：
 
-1. The number of reads necessary to access a value is at most the depth of the value
-   inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a
-   previous version of the ABI, the number of reads scaled linearly with the total number of dynamic
-   parameters in the worst case.
+1. 访问一个值所需的读取次数最多是参数数组结构内的值的深度，
+   即需要四次读取次数来检索 ``a_i[k][l][r]``。
+   在ABI的前一个版本中，在最坏的情况下，读取次数的数量与动态参数的总数成线性比例。
 
-2. The data of a variable or array element is not interleaved with other data and it is
-   relocatable, i.e. it only uses relative "addresses".
+2. 变量或数组元素的数据不与其他数据交错，它是可重定位的，即它只使用相对的 "地址"。
 
 
-Formal Specification of the Encoding
+编码的形式化规范
 ====================================
 
-We distinguish static and dynamic types. Static types are encoded in-place and dynamic types are
-encoded at a separately allocated location after the current block.
+我们区分了静态和动态类型。静态类型是直接编码的，
+而动态类型是在当前块之后的一个单独分配的位置进行编码。
 
-**Definition:** The following types are called "dynamic":
+**定义：** 以下类型被称为“动态”：
 
 * ``bytes``
 * ``string``
-* ``T[]`` for any ``T``
-* ``T[k]`` for any dynamic ``T`` and any ``k >= 0``
-* ``(T1,...,Tk)`` if ``Ti`` is dynamic for some ``1 <= i <= k``
+* 任意类型 ``T`` 的数组 ``T[]``
+* 任意动态类型 ``T`` 的定长数组 ``T[k]``，其中 ``k >= 0``
+* 由动态的 ``Ti`` （ ``1 <= i <= k`` ）构成的元组 ``(T1,...,Tk)``
 
-All other types are called "static".
+所有其他类型都被称为“静态”。
 
-**Definition:** ``len(a)`` is the number of bytes in a binary string ``a``.
-The type of ``len(a)`` is assumed to be ``uint256``.
+**定义：** ``len(a)`` 是一个二进制字符串 ``a`` 的字节长度。
+``len(a)`` 的类型被呈现为 ``uint256``。
 
-We define ``enc``, the actual encoding, as a mapping of values of the ABI types to binary strings such
-that ``len(enc(X))`` depends on the value of ``X`` if and only if the type of ``X`` is dynamic.
+我们把实际的编码 ``enc`` 定义为一个由ABI类型到二进制字符串的值的映射，
+因而，当且仅当 ``X`` 的类型是动态的， ``len(enc(X))`` 才会依赖于 ``X`` 的值。
 
-**Definition:** For any ABI value ``X``, we recursively define ``enc(X)``, depending
-on the type of ``X`` being
+**定义：** 对任意ABI值 ``X``，我们根据 ``X`` 的实际类型递归地定义 ``enc(X)``。
 
-- ``(T1,...,Tk)`` for ``k >= 0`` and any types ``T1``, ..., ``Tk``
+- ``(T1,...,Tk)`` 对于 ``k >= 0`` 且任意类型 ``T1``， ...， ``Tk``
 
   ``enc(X) = head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(k))``
 
-  where ``X = (X(1), ..., X(k))`` and
-  ``head`` and ``tail`` are defined for ``Ti`` as follows:
+  这里， ``X = (X(1), ..., X(k))`` 并且
+  ``head`` 和 ``tail`` 被定义为如下 ``Ti`` ：
 
-  if ``Ti`` is static:
+  如果 ``Ti`` 是静态类型：
 
-    ``head(X(i)) = enc(X(i))`` and ``tail(X(i)) = ""`` (the empty string)
+    ``head(X(i)) = enc(X(i))`` 和 ``tail(X(i)) = ""`` （空字符串）
 
-  otherwise, i.e. if ``Ti`` is dynamic:
+  否则，即 ``Ti`` 是动态类型时，它们被定义为：
 
     ``head(X(i)) = enc(len( head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
     ``tail(X(i)) = enc(X(i))``
 
-  Note that in the dynamic case, ``head(X(i))`` is well-defined since the lengths of
-  the head parts only depend on the types and not the values. The value of ``head(X(i))`` is the offset
-  of the beginning of ``tail(X(i))`` relative to the start of ``enc(X)``.
+  注意，在动态类型的情况下，由于 head 部分的长度仅取决于类型而非值，所以 ``head(X(i))`` 是定义明确的。
+  它的值是从 ``enc(X)`` 的开始算起的， ``tail(X(i))`` 的起始位在 ``head(X(i))`` 中的偏移量。
 
-- ``T[k]`` for any ``T`` and ``k``:
+- ``T[k]`` 对于任意 ``T`` 和 ``k``：
 
   ``enc(X) = enc((X[0], ..., X[k-1]))``
 
-  i.e. it is encoded as if it were a tuple with ``k`` elements
-  of the same type.
+  即，它就像是个由相同类型的 ``k`` 个元素组成的元组那样被编码的。
 
-- ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
+- ``T[]`` 当 ``X`` 有 ``k`` 个元素 （ ``k`` 的类型为 ``uint256``）：
 
   ``enc(X) = enc(k) enc([X[0], ..., X[k-1]])``
 
-  i.e. it is encoded as if it were an array of static size ``k``, prefixed with
-  the number of elements.
+  即，它就像是个由静态大小 ``k`` 的数组那样被编码的，且由元素的个数作为前缀。
 
-- ``bytes``, of length ``k`` (which is assumed to be of type ``uint256``):
+- 具有 ``k`` 字节长度的 ``bytes``， （假设其类型为 ``uint256``）：
 
-  ``enc(X) = enc(k) pad_right(X)``, i.e. the number of bytes is encoded as a
-  ``uint256`` followed by the actual value of ``X`` as a byte sequence, followed by
-  the minimum number of zero-bytes such that ``len(enc(X))`` is a multiple of 32.
+  ``enc(X) = enc(k) pad_right(X)``，即，字节数被编码为 ``uint256``，紧跟着实际的 ``X`` 的字节码序列，
+  再在前边（左边）补上可以使 ``len(enc(X))`` 成为 32 的倍数的最少数量的 0 值字节数据。
 
-- ``string``:
+- ``string``：
 
-  ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is UTF-8 encoded and this value is interpreted
-  as of ``bytes`` type and encoded further. Note that the length used in this subsequent
-  encoding is the number of bytes of the UTF-8 encoded string, not its number of characters.
+  ``enc(X) = enc(enc_utf8(X))``， 即 ``X`` 被 UTF-8 编码，且在后续编码中将这个值解释为 ``bytes`` 类型。
+  注意，在随后的编码中使用的长度是其 UTF-8 编码的字符串的字节数，而不是其字符数。
 
-- ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order
-  (left) side with zero-bytes such that the length is 32 bytes.
-- ``address``: as in the ``uint160`` case
-- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-order (left) side with ``0xff`` bytes for negative ``X`` and with zero-bytes for non-negative ``X`` such that the length is 32 bytes.
-- ``bool``: as in the ``uint8`` case, where ``1`` is used for ``true`` and ``0`` for ``false``
-- ``fixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``int256``.
-- ``fixed``: as in the ``fixed128x18`` case
-- ``ufixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``uint256``.
-- ``ufixed``: as in the ``ufixed128x18`` case
-- ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with trailing zero-bytes to a length of 32 bytes.
+- ``uint<M>``： ``enc(X)`` 是在 ``X`` 的大端序编码的高位（左侧）补充若干 0 值字节以使其长度成为 32 字节。
+- ``address``： 与 ``uint160`` 的情况相同。
+- ``int<M>``： ``enc(X)`` 是在 ``X`` 的大端序的 2 的补码编码的高位（左侧）添加若干字节数据以使其长度成为 32 字节；
+  对于负数，添加值为 ``0xff`` 的字节数据，对于正数，添加 0 值字节数据。
+- ``bool``： 与 ``uint8`` 的情况相同， ``1`` 用来表示 ``true``， ``0`` 表示 ``false``。
+- ``fixed<M>x<N>``： ``enc(X)`` 就是 ``enc(X * 10**N)``，其中 ``X * 10**N`` 可以理解为 ``int256``。
+- ``fixed``： 与 ``fixed128x18`` 的情况相同。
+- ``ufixed<M>x<N>``： ``enc(X)`` 就是 ``enc(X * 10**N)`` ，其中 ``X * 10**N`` 可以理解为 ``uint256``。
+- ``ufixed``： 与 ``ufixed128x18`` 的情况相同。
+- ``bytes<M>``： ``enc(X)`` 就是 ``X`` 的字节序列加上为使长度成为 32 字节而添加的若干 0 值字节。
 
-Note that for any ``X``, ``len(enc(X))`` is a multiple of 32.
+注意，对于任意的 ``X``， ``len(enc(X))`` 都是 32 的倍数。
 
-Function Selector and Argument Encoding
+函数选择器和参数编码
 =======================================
 
-All in all, a call to the function ``f`` with parameters ``a_1, ..., a_n`` is encoded as
+总而言之，对带有参数 ``a_1, ..., a_n`` 的函数 ``f`` 的调用被编码为：
 
   ``function_selector(f) enc((a_1, ..., a_n))``
 
-and the return values ``v_1, ..., v_k`` of ``f`` are encoded as
+``f`` 的返回值 ``v_1, ..., v_k`` 会被编码为：
 
   ``enc((v_1, ..., v_k))``
 
-i.e. the values are combined into a tuple and encoded.
+也就是说，返回值会被组合为一个元组（tuple）进行编码。
 
-Examples
+示例
 ========
 
-Given the contract:
+给定一个合约：
 
 .. code-block:: solidity
     :force:
@@ -252,88 +237,88 @@ Given the contract:
     }
 
 
-Thus for our ``Foo`` example if we wanted to call ``baz`` with the parameters ``69`` and
-``true``, we would pass 68 bytes total, which can be broken down into:
+因此，对于我们的例子 ``Foo``，如果我们想用 ``69`` 和 ``true`` 做参数调用 ``baz``，
+我们总共需要传送 68 字节，可以分解为：
 
-- ``0xcdcd77c0``: the Method ID. This is derived as the first 4 bytes of the Keccak hash of
-  the ASCII form of the signature ``baz(uint32,bool)``.
-- ``0x0000000000000000000000000000000000000000000000000000000000000045``: the first parameter,
-  a uint32 value ``69`` padded to 32 bytes
-- ``0x0000000000000000000000000000000000000000000000000000000000000001``: the second parameter - boolean
-  ``true``, padded to 32 bytes
+- ``0xcdcd77c0``： 方法ID。这源自ASCII格式的 ``baz(uint32,bool)`` 签名的 Keccak 哈希的前 4 字节。
+- ``0x0000000000000000000000000000000000000000000000000000000000000045``： 第一个参数，
+  一个被用 0 值字节补充到 32 字节的 uint32 值 ``69``。
+- ``0x0000000000000000000000000000000000000000000000000000000000000001``： 第二个参数，
+  一个被用 0 值字节补充到 32 字节的 boolean 值 ``true``。
 
-In total:
+合起来就是:
 
 .. code-block:: none
 
     0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001
 
-It returns a single ``bool``. If, for example, it were to return ``false``, its output would be
-the single byte array ``0x0000000000000000000000000000000000000000000000000000000000000000``, a single bool.
+它返回一个 ``bool``。比如它返回 ``false``，
+那么它的输出将是一个字节数组 ``0x0000000000000000000000000000000000000000000000000000000000000000``，
+一个 ``bool``值。
 
-If we wanted to call ``bar`` with the argument ``["abc", "def"]``, we would pass 68 bytes total, broken down into:
+如果我们想用 ``["abc", "def"]`` 做参数调用 ``bar``，我们总共需要传送 68 字节，可以分解为：
 
-- ``0xfce353f6``: the Method ID. This is derived from the signature ``bar(bytes3[2])``.
-- ``0x6162630000000000000000000000000000000000000000000000000000000000``: the first part of the first
-  parameter, a ``bytes3`` value ``"abc"`` (left-aligned).
-- ``0x6465660000000000000000000000000000000000000000000000000000000000``: the second part of the first
-  parameter, a ``bytes3`` value ``"def"`` (left-aligned).
+- ``0xfce353f6``： 方法ID。源自 ``bar(bytes3[2])`` 的签名。
+- ``0x6162630000000000000000000000000000000000000000000000000000000000``： 第一个参数的第一部分，
+  一个 ``bytes3`` 值 ``"abc"`` （左对齐）。
+- ``0x6465660000000000000000000000000000000000000000000000000000000000``： 第一个参数的第二部分，
+  一个 ``bytes3`` 值 ``"def"`` （左对齐）。
 
-In total:
+合起来就是:
 
 .. code-block:: none
 
     0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
 
-If we wanted to call ``sam`` with the arguments ``"dave"``, ``true`` and ``[1,2,3]``, we would
-pass 292 bytes total, broken down into:
+如果我们想用 ``"dave"``， ``true`` 和 ``[1,2,3]`` 作为参数调用 ``sam``，
+我们总共需要传送 292 字节，可以分解为：
 
-- ``0xa5643bf2``: the Method ID. This is derived from the signature ``sam(bytes,bool,uint256[])``. Note that ``uint`` is replaced with its canonical representation ``uint256``.
-- ``0x0000000000000000000000000000000000000000000000000000000000000060``: the location of the data part of the first parameter (dynamic type), measured in bytes from the start of the arguments block. In this case, ``0x60``.
-- ``0x0000000000000000000000000000000000000000000000000000000000000001``: the second parameter: boolean true.
-- ``0x00000000000000000000000000000000000000000000000000000000000000a0``: the location of the data part of the third parameter (dynamic type), measured in bytes. In this case, ``0xa0``.
-- ``0x0000000000000000000000000000000000000000000000000000000000000004``: the data part of the first argument, it starts with the length of the byte array in elements, in this case, 4.
-- ``0x6461766500000000000000000000000000000000000000000000000000000000``: the contents of the first argument: the UTF-8 (equal to ASCII in this case) encoding of ``"dave"``, padded on the right to 32 bytes.
-- ``0x0000000000000000000000000000000000000000000000000000000000000003``: the data part of the third argument, it starts with the length of the array in elements, in this case, 3.
-- ``0x0000000000000000000000000000000000000000000000000000000000000001``: the first entry of the third parameter.
-- ``0x0000000000000000000000000000000000000000000000000000000000000002``: the second entry of the third parameter.
-- ``0x0000000000000000000000000000000000000000000000000000000000000003``: the third entry of the third parameter.
+- ``0xa5643bf2``： 方法ID。这是从签名 ``sam(bytes,bool,uint256[])`` 中导出的。注意， ``uint`` 被替换为其典型代表 ``uint256``。
+- ``0x0000000000000000000000000000000000000000000000000000000000000060``： 第一个参数（动态类型）的数据部分的位置，即从参数编码块开始位置算起的字节数。在这里，是 ``0x60`` 。
+- ``0x0000000000000000000000000000000000000000000000000000000000000001``： 第二个参数：boolean 的 true。
+- ``0x00000000000000000000000000000000000000000000000000000000000000a0``： 第三个参数（动态类型）的数据部分的位置，由字节数计量。在这里，是 ``0xa0``。
+- ``0x0000000000000000000000000000000000000000000000000000000000000004``： 第一个参数的数据部分，以字节数组的元素个数作为开始，在这里，是 4。
+- ``0x6461766500000000000000000000000000000000000000000000000000000000``： 第一个参数的内容： ``"dave"`` 的 UTF-8 编码（在这里等同于 ASCII 编码），并在右侧（低位）用 0 值字节补充到 32 字节。
+- ``0x0000000000000000000000000000000000000000000000000000000000000003``： 第三个参数的数据部分，以数组的元素个数作为开始，在这里，是 3。
+- ``0x0000000000000000000000000000000000000000000000000000000000000001``： 第三个参数的第一个数组元素。
+- ``0x0000000000000000000000000000000000000000000000000000000000000002``： 第三个参数的第二个数组元素。
+- ``0x0000000000000000000000000000000000000000000000000000000000000003``： 第三个参数的第三个数组元素。
 
-In total:
+合起来就是:
 
 .. code-block:: none
 
     0xa5643bf20000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000464617665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
 
-Use of Dynamic Types
+动态类型的使用
 ====================
 
-A call to a function with the signature ``f(uint,uint32[],bytes10,bytes)`` with values
-``(0x123, [0x456, 0x789], "1234567890", "Hello, world!")`` is encoded in the following way:
+用值为 ``(0x123, [0x456, 0x789], "1234567890", "Hello, world!")`` 的签名参数调用
+函数 ``f(uint,uint32[],bytes10,bytes)``，其的编码方式如下：
 
-We take the first four bytes of ``sha3("f(uint256,uint32[],bytes10,bytes)")``, i.e. ``0x8be65246``.
-Then we encode the head parts of all four arguments. For the static types ``uint256`` and ``bytes10``,
-these are directly the values we want to pass, whereas for the dynamic types ``uint32[]`` and ``bytes``,
-we use the offset in bytes to the start of their data area, measured from the start of the value
-encoding (i.e. not counting the first four bytes containing the hash of the function signature). These are:
+取得 ``sha3("f(uint256,uint32[],bytes10,bytes)")`` 的前 4 字节，也就是 ``0x8be65246``。
+然后我们对所有 4 个参数的头部进行编码。 对静态类型 ``uint256`` 和 ``bytes10``，
+这些我们可以直接传递的值，对于动态类型 ``uint32[]`` 和 ``bytes``，
+我们使用的字节数偏移量是它们的数据区域的起始位置，
+由需编码的值的开始位置算起（也就是说，不计算包含了函数签名的前 4 字节），这就是：
 
-- ``0x0000000000000000000000000000000000000000000000000000000000000123`` (``0x123`` padded to 32 bytes)
-- ``0x0000000000000000000000000000000000000000000000000000000000000080`` (offset to start of data part of second parameter, 4*32 bytes, exactly the size of the head part)
-- ``0x3132333435363738393000000000000000000000000000000000000000000000`` (``"1234567890"`` padded to 32 bytes on the right)
-- ``0x00000000000000000000000000000000000000000000000000000000000000e0`` (offset to start of data part of fourth parameter = offset to start of data part of first dynamic parameter + size of data part of first dynamic parameter = 4\*32 + 3\*32 (see below))
+- ``0x0000000000000000000000000000000000000000000000000000000000000123`` （ ``0x123`` 补充到 32 字节）
+- ``0x0000000000000000000000000000000000000000000000000000000000000080`` （第二个参数的数据部分起始位置的偏移量，4*32 字节，正好是头部的大小）
+- ``0x3132333435363738393000000000000000000000000000000000000000000000`` （ ``"1234567890"`` 从右边补充到 32 字节）
+- ``0x00000000000000000000000000000000000000000000000000000000000000e0`` （第四个参数的数据部分起始位置的偏移量 = 第一个动态参数的数据部分起始位置的偏移量 + 第一个动态参数的数据部分的长度 = 4\*32 + 3\*32，参考后文）
 
-After this, the data part of the first dynamic argument, ``[0x456, 0x789]`` follows:
+在此之后，跟着第一个动态参数的数据部分， ``[0x456, 0x789]`` ：
 
-- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements of the array, 2)
-- ``0x0000000000000000000000000000000000000000000000000000000000000456`` (first element)
-- ``0x0000000000000000000000000000000000000000000000000000000000000789`` (second element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` （数组元素个数，2）
+- ``0x0000000000000000000000000000000000000000000000000000000000000456`` （第一个数组元素）
+- ``0x0000000000000000000000000000000000000000000000000000000000000789`` （第二个数组元素）
 
-Finally, we encode the data part of the second dynamic argument, ``"Hello, world!"``:
+最后，我们将第二个动态参数的数据部分 ``"Hello, world!"`` 进行编码：
 
-- ``0x000000000000000000000000000000000000000000000000000000000000000d`` (number of elements (bytes in this case): 13)
-- ``0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000`` (``"Hello, world!"`` padded to 32 bytes on the right)
+- ``0x000000000000000000000000000000000000000000000000000000000000000d`` （元素个数，在这里是字节数：13）
+- ``0x48656c6c6f2c20776f726c642100000000000000000000000000000000000000`` （ ``"Hello, world!"`` 从右边补充到 32 字节）
 
-All together, the encoding is (newline after function selector and each 32-bytes for clarity):
+最后，合并到一起的编码就是（为了清晰，在函数选择器和每 32 字节之后加了换行）：
 
 .. code-block:: none
 
@@ -348,172 +333,162 @@ All together, the encoding is (newline after function selector and each 32-bytes
       000000000000000000000000000000000000000000000000000000000000000d
       48656c6c6f2c20776f726c642100000000000000000000000000000000000000
 
-Let us apply the same principle to encode the data for a function with a signature ``g(uint[][],string[])``
-with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most atomic parts of the encoding:
+让我们使用相同的原理来对一个签名为 ``g(uint[][],string[])`` ，参数值为
+``([[1, 2], [3]], ["one", "two", "three"])`` 的函数来进行编码；但从最原子的部分开始：
 
-First we encode the length and data of the first embedded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
+首先我们将第一个根数组 ``[[1, 2], [3]]`` 的第一个嵌入的动态数组 ``[1, 2]`` 的长度和数据进行编码：
 
-- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first array, 2; the elements themselves are ``1`` and ``2``)
-- ``0x0000000000000000000000000000000000000000000000000000000000000001`` (first element)
-- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (second element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002``  (第一个数组中的元素数量 2；元素本身是 ``1`` 和 ``2``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000001``  (第一个元素)
+- ``0x0000000000000000000000000000000000000000000000000000000000000002``  (第二个元素)
 
-Then we encode the length and data of the second embedded dynamic array ``[3]`` of the first root array ``[[1, 2], [3]]``:
+然后我们对第一个根数组 ``[[1, 2], [3]]`` 的第二个嵌入式动态数组 ``[3]``` 的长度和数据进行编码：
 
-- ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
-- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
+- ``0x0000000000000000000000000000000000000000000000000000000000000001`` (第二个数组中的元素数量 1；元素数据是 ``3``)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003``  (第一个元素)
 
-Then we need to find the offsets ``a`` and ``b`` for their respective dynamic arrays ``[1, 2]`` and ``[3]``.
-To calculate the offsets we can take a look at the encoded data of the first root array ``[[1, 2], [3]]``
-enumerating each line in the encoding:
-
-.. code-block:: none
-
-    0 - a                                                                - offset of [1, 2]
-    1 - b                                                                - offset of [3]
-    2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
-    3 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
-    4 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
-    5 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
-    6 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
-
-Offset ``a`` points to the start of the content of the array ``[1, 2]`` which is line
-2 (64 bytes); thus ``a = 0x0000000000000000000000000000000000000000000000000000000000000040``.
-
-Offset ``b`` points to the start of the content of the array ``[3]`` which is line 5 (160 bytes);
-thus ``b = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
-
-
-Then we encode the embedded strings of the second root array:
-
-- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"one"``)
-- ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"one"``)
-- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"two"``)
-- ``0x74776f0000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"two"``)
-- ``0x0000000000000000000000000000000000000000000000000000000000000005`` (number of characters in word ``"three"``)
-- ``0x7468726565000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"three"``)
-
-In parallel to the first root array, since strings are dynamic elements we need to find their offsets ``c``, ``d`` and ``e``:
+然后我们需要为各自的动态数组 ``[1, 2]`` 和 ``[3]`` 找到偏移量 ``a`` 和 ``b``。
+为了计算偏移量，我们可以看一下第一个根数组的编码数据 ``[[1, 2], [3]]`` 在编码中枚举每一行。
 
 .. code-block:: none
 
-    0 - c                                                                - offset for "one"
-    1 - d                                                                - offset for "two"
-    2 - e                                                                - offset for "three"
-    3 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
-    4 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
-    5 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
-    6 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
-    7 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
-    8 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+    0 - a                                                                - [1, 2] 的偏移量
+    1 - b                                                                - [3] 的偏移量
+    2 - 0000000000000000000000000000000000000000000000000000000000000002 - [1, 2] 数组的计数
+    3 - 0000000000000000000000000000000000000000000000000000000000000001 - 1 的编码
+    4 - 0000000000000000000000000000000000000000000000000000000000000002 - 2 的编码
+    5 - 0000000000000000000000000000000000000000000000000000000000000001 - [3] 数组的计数
+    6 - 0000000000000000000000000000000000000000000000000000000000000003 - 3 的编码
 
-Offset ``c`` points to the start of the content of the string ``"one"`` which is line 3 (96 bytes);
-thus ``c = 0x0000000000000000000000000000000000000000000000000000000000000060``.
+偏移量 ``a`` 指向数组 ``[1, 2]`` 内容的开始位置，即第 2 行的开始（64 字节）；
+所以 ``a = 0x0000000000000000000000000000000000000000000000000000000000000040``。
 
-Offset ``d`` points to the start of the content of the string ``"two"`` which is line 5 (160 bytes);
-thus ``d = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
-
-Offset ``e`` points to the start of the content of the string ``"three"`` which is line 7 (224 bytes);
-thus ``e = 0x00000000000000000000000000000000000000000000000000000000000000e0``.
+偏移量 ``b`` 指向数组 ``[3]`` 内容的开始位置，即第 5 行的开始（160 字节）；
+所以 ``b = 0x00000000000000000000000000000000000000000000000000000000000000a0``。
 
 
-Note that the encodings of the embedded elements of the root arrays are not dependent on each other
-and have the same encodings for a function with a signature ``g(string[],uint[][])``.
+然后我们对第二个根数组的嵌入字符串进行编码：
 
-Then we encode the length of the first root array:
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (单词 ``"one"`` 中的字符个数)
+- ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (单词 ``"one"`` 的 utf8 编码)
+- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (单词 ``"two"`` 中的字符个数)
+- ``0x74776f0000000000000000000000000000000000000000000000000000000000`` (单词 ``"two"`` 的 utf8 编码)
+- ``0x0000000000000000000000000000000000000000000000000000000000000005`` (单词 ``"three"`` 中的字符个数)
+- ``0x7468726565000000000000000000000000000000000000000000000000000000`` (单词 ``"three"`` 的 utf8 编码)
 
-- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
+作为与第一个根数组的并列，因为字符串也属于动态元素，我们也需要找到它们的偏移量 ``c``, ``d`` 和 ``e``：
 
-Then we encode the length of the second root array:
-
-- ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
-
-Finally we find the offsets ``f`` and ``g`` for their respective root dynamic arrays ``[[1, 2], [3]]`` and
-``["one", "two", "three"]``, and assemble parts in the correct order:
 
 .. code-block:: none
 
-    0x2289b18c                                                            - function signature
-     0 - f                                                                - offset of [[1, 2], [3]]
-     1 - g                                                                - offset of ["one", "two", "three"]
-     2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [[1, 2], [3]]
-     3 - 0000000000000000000000000000000000000000000000000000000000000040 - offset of [1, 2]
-     4 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset of [3]
-     5 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
-     6 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
-     7 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
-     8 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
-     9 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
-    10 - 0000000000000000000000000000000000000000000000000000000000000003 - count for ["one", "two", "three"]
-    11 - 0000000000000000000000000000000000000000000000000000000000000060 - offset for "one"
-    12 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset for "two"
-    13 - 00000000000000000000000000000000000000000000000000000000000000e0 - offset for "three"
-    14 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
-    15 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
-    16 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
-    17 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
-    18 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
-    19 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+    0 - c                                                                - "one" 的偏移量
+    1 - d                                                                - "two" 的偏移量
+    2 - e                                                                - "three" 的偏移量
+    3 - 0000000000000000000000000000000000000000000000000000000000000003 - "one" 的字符计数
+    4 - 6f6e650000000000000000000000000000000000000000000000000000000000 - "one" 的编码
+    5 - 0000000000000000000000000000000000000000000000000000000000000003 - "two" 的字符计数
+    6 - 74776f0000000000000000000000000000000000000000000000000000000000 - "two" 的编码
+    7 - 0000000000000000000000000000000000000000000000000000000000000005 - "three" 的字符计数
+    8 - 7468726565000000000000000000000000000000000000000000000000000000 - "three" 的编码
 
-Offset ``f`` points to the start of the content of the array ``[[1, 2], [3]]`` which is line 2 (64 bytes);
-thus ``f = 0x0000000000000000000000000000000000000000000000000000000000000040``.
+偏移量 ``c`` 指向字符串 ``"one"`` 内容的开始位置，即第 3 行的开始（96 字节）；
+所以 ``c = 0x0000000000000000000000000000000000000000000000000000000000000060``。
 
-Offset ``g`` points to the start of the content of the array ``["one", "two", "three"]`` which is line 10 (320 bytes);
-thus ``g = 0x0000000000000000000000000000000000000000000000000000000000000140``.
+偏移量 ``d`` 指向字符串 ``"two"`` 内容的开始位置，即第 5 行的开始（160 字节）；
+所以 ``d = 0x00000000000000000000000000000000000000000000000000000000000000a0``。
+
+偏移量 ``e`` 指向字符串 ``"three"`` 内容的开始位置，即第 7 行的开始（224 字节）；
+所以 ``e = 0x00000000000000000000000000000000000000000000000000000000000000e0``。
+
+
+注意，根数组的嵌入元素的编码并不互相依赖，且具有对于函数签名 ``g(string[],uint[][])`` 所相同的编码。
+
+然后我们对第一个根数组的长度进行编码：
+
+- ``0x0000000000000000000000000000000000000000000000000000000000000002`` (第一个根数组的元素数量 2；这些元素本身是 ``[1, 2]`` 和 ``[3]``)
+
+而后我们对第二个根数组的长度进行编码：
+
+- ``0x0000000000000000000000000000000000000000000000000000000000000003``  (第二个根数组的元素数量 3；这些字符串本身是 ``"one"``， ``"two"`` 和 ``"three"``)
+
+最后，我们找到根动态数组元素 ``[[1, 2], [3]]`` 和 ``["one", "two", "three"]`` 的偏移量 ``f`` 和 ``g``。
+汇编数据的正确顺序如下：
+
+.. code-block:: none
+
+    0x2289b18c                                                            - 函数签名
+     0 - f                                                                - [[1, 2], [3]] 的偏移量
+     1 - g                                                                - ["one", "two", "three"] 的偏移量
+     2 - 0000000000000000000000000000000000000000000000000000000000000002 - [[1, 2], [3]] 的元素计数
+     3 - 0000000000000000000000000000000000000000000000000000000000000040 - [1, 2] 的偏移量
+     4 - 00000000000000000000000000000000000000000000000000000000000000a0 - [3] 的偏移量
+     5 - 0000000000000000000000000000000000000000000000000000000000000002 - [1, 2] 的元素计数
+     6 - 0000000000000000000000000000000000000000000000000000000000000001 - 1 的编码
+     7 - 0000000000000000000000000000000000000000000000000000000000000002 - 2 的编码
+     8 - 0000000000000000000000000000000000000000000000000000000000000001 - [3] 的元素计数
+     9 - 0000000000000000000000000000000000000000000000000000000000000003 - 3 的编码
+    10 - 0000000000000000000000000000000000000000000000000000000000000003 - ["one", "two", "three"] 的元素计数
+    11 - 0000000000000000000000000000000000000000000000000000000000000060 - 的偏移量"one"
+    12 - 00000000000000000000000000000000000000000000000000000000000000a0 - 的偏移量"two"
+    13 - 00000000000000000000000000000000000000000000000000000000000000e0 - 的偏移量"three"
+    14 - 0000000000000000000000000000000000000000000000000000000000000003 - "one" 的字符计数
+    15 - 6f6e650000000000000000000000000000000000000000000000000000000000 - "one" 的编码
+    16 - 0000000000000000000000000000000000000000000000000000000000000003 - "two" 的字符计数
+    17 - 74776f0000000000000000000000000000000000000000000000000000000000 - "two" 的编码
+    18 - 0000000000000000000000000000000000000000000000000000000000000005 - "three" 的字符计数
+    19 - 7468726565000000000000000000000000000000000000000000000000000000 - "three" 的编码
+
+偏移量 ``f`` 指向数组 ``[[1, 2], [3]]`` 内容的开始位置，即第 2 行的开始（64 字节）；
+所以 ``f = 0x0000000000000000000000000000000000000000000000000000000000000040``。
+
+偏移量 ``g`` 指向数组 ``["one", "two", "three"]`` 内容的开始位置，即第 10 行的开始（320 字节）；
+所以 ``g = 0x0000000000000000000000000000000000000000000000000000000000000140``。
 
 .. _abi_events:
 
-Events
+事件
 ======
 
-Events are an abstraction of the Ethereum logging/event-watching protocol. Log entries provide the contract's
-address, a series of up to four topics and some arbitrary length binary data. Events leverage the existing function
-ABI in order to interpret this (together with an interface spec) as a properly typed structure.
+事件是Ethereum日志/事件观察协议的一个抽象。日志条目提供了合约的地址，
+一系列最多四个主题和一些任意长度的二进制数据。
+事件利用现有的函数ABI，以便将其（连同接口规范）解释为一个正确的类型化结构。
 
-Given an event name and series of event parameters, we split them into two sub-series: those which are indexed and
-those which are not.
-Those which are indexed, which may number up to 3 (for non-anonymous events) or 4 (for anonymous ones), are used
-alongside the Keccak hash of the event signature to form the topics of the log entry.
-Those which are not indexed form the byte array of the event.
+给定一个事件名称和一系列的事件参数，我们把它们分成两个子系列：那些有索引的和那些没有索引的。
+那些被索引的参数，可能多达3个（对于非匿名事件）或4个（对于匿名事件），
+与事件签名的Keccak散列一起使用，形成日志条目的主题。
+那些没有索引的则构成事件的字节数组。
 
-In effect, a log entry using this ABI is described as:
+实际上，使用该ABI的日志条目被描述为:
 
-- ``address``: the address of the contract (intrinsically provided by Ethereum);
-- ``topics[0]``: ``keccak(EVENT_NAME+"("+EVENT_ARGS.map(canonical_type_of).join(",")+")")`` (``canonical_type_of``
-  is a function that simply returns the canonical type of a given argument, e.g. for ``uint indexed foo``, it would
-  return ``uint256``). This value is only present in ``topics[0]`` if the event is not declared as ``anonymous``;
-- ``topics[n]``: ``abi_encode(EVENT_INDEXED_ARGS[n - 1])`` if the event is not declared as ``anonymous``
-  or ``abi_encode(EVENT_INDEXED_ARGS[n])`` if it is (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that
-  are indexed);
-- ``data``: ABI encoding of ``EVENT_NON_INDEXED_ARGS`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS``
-  that are not indexed, ``abi_encode`` is the ABI encoding function used for returning a series of typed values
-  from a function, as described above).
+- ``address``： 合约的地址（由以太坊真正提供）;
+- ``topics[0]``： ``keccak(EVENT_NAME+"("+EVENT_ARGS.map(canonical_type_of).join(",")+")")``
+  ``canonical_type_of`` 是一个可以返回给定参数的权威类型的函数，例如，对 ``uint indexed foo`` 它会返回 ``uint256``）。
+  如果事件被声明为 ``anonymous``，那么 ``topics[0]`` 不会被生成；
+- ``topics[n]``： 如果事件没有被声明为 ``anonymous``， 则为 ``abi_encode(EVENT_INDEXED_ARGS[n - 1])``
+  或者如果它被声明为该类型，则为 ``abi_encode(EVENT_INDEXED_ARGS[n])``
+  （ ``EVENT_INDEXED_ARGS`` 是被索引的 ``EVENT_ARGS`` 的系列）;
+- ``data``： ``EVENT_NON_INDEXED_ARGS`` 的ABI编码
+  （ ``EVENT_NON_INDEXED_ARGS`` 是一系列没有索引的 ``EVENT_ARGS``， ``abi_encode`` 是ABI编码函数，
+  用于从一个函数返回一系列类型的值，如上所述）。
 
-For all types of length at most 32 bytes, the ``EVENT_INDEXED_ARGS`` array contains
-the value directly, padded or sign-extended (for signed integers) to 32 bytes, just as for regular ABI encoding.
-However, for all "complex" types or types of dynamic length, including all arrays, ``string``, ``bytes`` and structs,
-``EVENT_INDEXED_ARGS`` will contain the *Keccak hash* of a special in-place encoded value
-(see :ref:`indexed_event_encoding`), rather than the encoded value directly.
-This allows applications to efficiently query for values of dynamic-length types
-(by setting the hash of the encoded value as the topic), but leaves applications unable
-to decode indexed values they have not queried for. For dynamic-length types,
-application developers face a trade-off between fast search for predetermined values
-(if the argument is indexed) and legibility of arbitrary values (which requires that
-the arguments not be indexed). Developers may overcome this tradeoff and achieve both
-efficient search and arbitrary legibility by defining events with two arguments — one
-indexed, one not — intended to hold the same value.
+对于所有长度不超过32字节的类型， ``EVENT_INDEXED_ARGS`` 数组直接包含数值，填充或符号扩展（对于有符号整数）到32字节，
+就像常规ABI编码一样。然而，对于所有 "复杂 "类型或动态长度的类型，包括所有数组， ``string``， ``bytes`` 和结构，
+``EVENT_INDEXED_ARGS`` 将包含 *Keccak散列* 的特殊就地编码值（见:ref:`indexed_event_encoding`），
+而不是直接编码的值。这允许应用程序有效地查询动态长度类型的值（通过设置编码值的哈希值作为主题），
+但使应用程序无法解码他们没有查询到的索引值。对于动态长度类型，
+应用程序开发人员面临着对预定值的快速搜索（如果参数有索引）和任意值的可读性之间的权衡（这要求参数不被索引）。
+开发者可以通过定义具有两个参数的事件 -- 一个是索引的，一个是不索引的 -- 来克服这种权衡，实现高效搜索和任意可读性。
 
 .. _abi_errors:
 
-Errors
+错误
 ======
 
-In case of a failure inside a contract, the contract can use a special opcode to abort execution and revert
-all state changes. In addition to these effects, descriptive data can be returned to the caller.
-This descriptive data is the encoding of an error and its arguments in the same way as data for a function
-call.
+在合约内部发生故障的情况下，合约可以使用一个特殊的操作码来中止执行，并恢复所有的状态变化。
+除了这些效果之外，描述性数据可以返回给调用者。
+这种描述性数据是对一个错误及其参数的编码，其方式与函数调用的数据相同。
 
-As an example, let us consider the following contract whose ``transfer`` function always
-reverts with a custom error of "insufficient balance":
+作为一个例子，让我们考虑以下合约，它的 ``transfer`` 函数总是以 "余额不足" 的自定义错误返回。
 
 .. code-block:: solidity
 
@@ -527,82 +502,77 @@ reverts with a custom error of "insufficient balance":
         }
     }
 
-The return data would be encoded in the same way as the function call
-``InsufficientBalance(0, amount)`` to the function ``InsufficientBalance(uint256,uint256)``,
-i.e. ``0xcf479181``, ``uint256(0)``, ``uint256(amount)``.
+返回数据的编码方式与函数 ``InsufficientBalance(0, amount)``
+对函数 ``InsufficientBalance(uint256,uint256)`` 的调用方式相同。
+即 ``0xcf479181``， ``uint256(0)``， ``uint256(amount)``。
 
-The error selectors ``0x00000000`` and ``0xffffffff`` are reserved for future use.
+错误选择器 ``0x00000000`` 和 ``0xffffffff`` 是保留给将来使用的。
 
-.. warning::
-    Never trust error data.
-    The error data by default bubbles up through the chain of external calls, which
-    means that a contract may receive an error not defined in any of the contracts
-    it calls directly.
-    Furthermore, any contract can fake any error by returning data that matches
-    an error signature, even if the error is not defined anywhere.
+.. 警告::
+    永远不要相信错误数据。
+    默认情况下，错误数据通过外部调用在链向上冒泡产生，
+    这意味着一个合约可能会收到一个它直接调用的任何合约中没有定义的错误。
+    此外，任何合约都可以通过返回与错误签名相匹配的数据来伪造任何错误，即使该错误没有在任何地方定义。
 
 .. _abi_json:
 
 JSON
 ====
 
-The JSON format for a contract's interface is given by an array of function, event and error descriptions.
-A function description is a JSON object with the fields:
+合约接口的JSON格式是由一个函数，事件和错误描述的数组给出的。
+一个函数描述是一个带有字段的JSON对象：
 
-- ``type``: ``"function"``, ``"constructor"``, ``"receive"`` (the :ref:`"receive Ether" function <receive-ether-function>`) or ``"fallback"`` (the :ref:`"default" function <fallback-function>`);
-- ``name``: the name of the function;
-- ``inputs``: an array of objects, each of which contains:
+- ``type``： ``"function"``， ``"constructor"``， ``"receive"``（ :ref:`"接收以太币" 函数 <receive-ether-function>`） 或者 ``"fallback"`` （ :ref:`"默认" 函数 <fallback-function>`）；
+- ``name``： 函数名称；
+- ``inputs``： 数组对象，每个数组对象会包含：
 
-  * ``name``: the name of the parameter.
-  * ``type``: the canonical type of the parameter (more below).
-  * ``components``: used for tuple types (more below).
+  * ``name``： 参数名称；
+  * ``type``： 参数的权威类型（详见下文）
+  * ``components``： 供元组（tuple） 类型使用（详见下文）
 
-- ``outputs``: an array of objects similar to ``inputs``.
-- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read
-  blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain
-  state <view-functions>`), ``nonpayable`` (function does not accept Ether - the default) and ``payable`` (function accepts Ether).
+- ``outputs``： 一个类似于 ``inputs`` 的数组对象。
+- ``stateMutability``： 为下列值之一： ``pure`` （:ref:`指定为不读取区块链状态 <pure-functions>`），
+  ``view`` （:ref:`指定为不修改区块链状态 <view-functions>`），
+  ``nonpayable`` （函数不接受以太币 - 默认选项） 和 ``payable`` （函数可接收以太币）。
 
-Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
+Constructor 和 fallback 函数没有 ``name`` 或 ``outputs``。Fallback 函数也没有 ``inputs``。
 
-.. note::
-    Sending non-zero Ether to non-payable function will revert the transaction.
+.. 注解::
+    向不接收以太币函数发送非零的以太币将使交易回滚。
 
-.. note::
-    The state mutability ``nonpayable`` is reflected in Solidity by not specifying
-    a state mutability modifier at all.
+.. 注解::
+    在Solidity中，状态可变性 ``不可支付`` 是完全不指定状态可变性时的修饰语。
 
-An event description is a JSON object with fairly similar fields:
+一个事件描述是一个有极其相似字段的 JSON 对象：
 
-- ``type``: always ``"event"``
-- ``name``: the name of the event.
-- ``inputs``: an array of objects, each of which contains:
+- ``type``： 总是 ``"event"``
+- ``name``： 事件名称；
+- ``inputs``： 对象数组，每个数组对象会包含：
 
-  * ``name``: the name of the parameter.
-  * ``type``: the canonical type of the parameter (more below).
-  * ``components``: used for tuple types (more below).
-  * ``indexed``: ``true`` if the field is part of the log's topics, ``false`` if it one of the log's data segment.
+  * ``name``： 参数名称。
+  * ``type``： 参数的权威类型（相见下文）。
+  * ``components``： 供元组（tuple） 类型使用（详见下文）
+  * ``indexed``： 如果此字段是日志的一个主题，则为 ``true``， 否则为 ``false``。
 
-- ``anonymous``: ``true`` if the event was declared as ``anonymous``.
+- ``anonymous``： 如果事件被声明为 ``anonymous``，则为 ``true``。
 
-Errors look as follows:
+错误消息如下：
 
-- ``type``: always ``"error"``
-- ``name``: the name of the error.
-- ``inputs``: an array of objects, each of which contains:
+- ``type``： 总是 ``"error"``
+- ``name``： 错误名称；
+- ``inputs``： 对象数组，每个数组对象会包含：
 
-  * ``name``: the name of the parameter.
-  * ``type``: the canonical type of the parameter (more below).
-  * ``components``: used for tuple types (more below).
+  * ``name``： 参数名称。
+  * ``type``： 参数的权威类型（相见下文）。
+  * ``components``： 供元组（tuple） 类型使用（详见下文）。
 
-.. note::
-  There can be multiple errors with the same name and even with identical signature
-  in the JSON array, for example if the errors originate from different
-  files in the smart contract or are referenced from another smart contract.
-  For the ABI, only the name of the error itself is relevant and not where it is
-  defined.
+.. 注解::
+  在JSON数组中可能有多个具有相同名称的错误，甚至具有相同的签名，
+  例如，如果错误源自合约中的不同文件或从另一个合约引用。
+  对于ABI来说，只有错误本身的名称是相关的，而不是它的定义位置。
 
 
-For example,
+例如，
 
 .. code-block:: solidity
 
@@ -619,7 +589,7 @@ For example,
         bytes32 b;
     }
 
-would result in the JSON:
+可由如下 JSON 来表示：
 
 .. code-block:: json
 
@@ -642,21 +612,18 @@ would result in the JSON:
     "outputs": []
     }]
 
-Handling tuple types
+处理元组类型
 --------------------
 
-Despite that names are intentionally not part of the ABI encoding they do make a lot of sense to be included
-in the JSON to enable displaying it to the end user. The structure is nested in the following way:
+尽管名称被有意地不作为 ABI 编码的一部分，但将它们包含进JSON来显示给最终用户是非常合理的。其结构会按下列方式进行嵌套：
 
-An object with members ``name``, ``type`` and potentially ``components`` describes a typed variable.
-The canonical type is determined until a tuple type is reached and the string description up
-to that point is stored in ``type`` prefix with the word ``tuple``, i.e. it will be ``tuple`` followed by
-a sequence of ``[]`` and ``[k]`` with
-integers ``k``. The components of the tuple are then stored in the member ``components``,
-which is of array type and has the same structure as the top-level object except that
-``indexed`` is not allowed there.
+一个拥有 ``name``， ``type`` 和潜在的 ``components`` 成员的对象描述了某种类型的变量。
+直至到达一个元组（tuple） 类型且到那点的存储在 ``type`` 属性中的字符串以 ``tuple`` 为前缀，
+也就是说，在 ``tuple`` 之后紧跟一个 ``[]`` 或有整数 ``k`` 的 ``[k]``，才
+能确定一个元组。 元组的组件元素会被存储在成员 ``components`` 中，
+它是一个数组类型，且与顶级对象具有同样的结构，只是在这里不允许 ``已索引的（indexed）`` 数组元素。
 
-As an example, the code
+示例代码：
 
 .. code-block:: solidity
 
@@ -671,7 +638,7 @@ As an example, the code
         function g() public pure returns (S memory, T memory, uint) {}
     }
 
-would result in the JSON:
+可由如下 JSON 来表示：
 
 .. code-block:: json
 
@@ -733,29 +700,29 @@ would result in the JSON:
 
 .. _abi_packed_mode:
 
-Strict Encoding Mode
+严格的编码模式
 ====================
 
-Strict encoding mode is the mode that leads to exactly the same encoding as defined in the formal specification above.
-This means offsets have to be as small as possible while still not creating overlaps in the data areas and thus no gaps are
-allowed.
+严格的编码模式是指导致与上述正式规范中定义的编码完全相同的模式。
+这意味着偏移量必须尽可能小，同时还不能在数据区域产生重叠，
+因此不允许有间隙。
 
-Usually, ABI decoders are written in a straightforward way just following offset pointers, but some decoders
-might enforce strict mode. The Solidity ABI decoder currently does not enforce strict mode, but the encoder
-always creates data in strict mode.
+通常，ABI解码器是以直接的方式编写的，只是遵循偏移指针，
+但有些解码器可能会强制执行严格模式。
+Solidity ABI 解码器目前并不强制执行严格模式，但编码器总是以严格模式创建数据。
 
-Non-standard Packed Mode
+非标准打包模式
 ========================
 
-Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode where:
+通过 ``abi.encodePacked()``，Solidity支持一种非标准的打包模式，其中：
 
-- types shorter than 32 bytes are concatenated directly, without padding or sign extension
-- dynamic types are encoded in-place and without the length.
-- array elements are padded, but still encoded in-place
+- 短于32字节的类型直接连接，没有填充或符号扩展。
+- 动态类型是直接编码的，没有长度。
+- 数组元素被填充，但仍被是直接编码
 
-Furthermore, structs as well as nested arrays are not supported.
+此外，不支持结构以及嵌套数组。
 
-As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("Hello, world!")`` results in:
+例如，对 ``int16(-1), bytes1(0x42), uint16(0x03), string("Hello, world!")`` 进行编码将生成如下结果
 
 .. code-block:: none
 
@@ -763,63 +730,51 @@ As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("
       ^^^^                                 int16(-1)
           ^^                               bytes1(0x42)
             ^^^^                           uint16(0x03)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ 字符串（"Hello, world!"） 没有长度字段
 
-More specifically:
+更具体地说：
 
-- During the encoding, everything is encoded in-place. This means that there is
-  no distinction between head and tail, as in the ABI encoding, and the length
-  of an array is not encoded.
-- The direct arguments of ``abi.encodePacked`` are encoded without padding,
-  as long as they are not arrays (or ``string`` or ``bytes``).
-- The encoding of an array is the concatenation of the
-  encoding of its elements **with** padding.
-- Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded
-  without their length field.
-- The encoding of ``string`` or ``bytes`` does not apply padding at the end
-  unless it is part of an array or struct (then it is padded to a multiple of
-  32 bytes).
+- 在编码过程中，所有东西都是直接编码的。这意味着没有像ABI编码那样区分头和尾，也没有对数组的长度进行编码。
+- ``abi.encodePacked`` 的直接参数被编码，没有填充，
+  只要不是数组（或 ``string`` 或 ``bytes`` ）。
+- 一个数组的编码是其元素的编码 **与** 填充的连接。
+- 动态大小的类型，如 ``string``， ``bytes`` 或 ``uint[]``，在编码时没有长度字段。
+- ``string`` 或 ``bytes`` 的编码不会在末尾应用填充，
+  除非它是数组或结构的一部分（然后它被填充为32字节的倍数）。
 
-In general, the encoding is ambiguous as soon as there are two dynamically-sized elements,
-because of the missing length field.
+一般来说，只要有两个动态大小的元素，编码就会模糊不清，因为缺少长度字段。
 
-If padding is needed, explicit type conversions can be used: ``abi.encodePacked(uint16(0x12)) == hex"0012"``.
+如果需要填充，可以使用明确的类型转换： ``abi.encodePacked(uint16(0x12)) == hex"0012"``。
 
-Since packed encoding is not used when calling functions, there is no special support
-for prepending a function selector. Since the encoding is ambiguous, there is no decoding function.
+由于在调用函数时不使用打包编码，所以没有特别支持预留函数选择器。
+由于编码是模糊的，所以没有解码功能。
 
-.. warning::
+.. 警告::
 
-    If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
-    it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
-    vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
-    If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
-    sure to always use the same types and check that at most one of them is dynamic.
-    Unless there is a compelling reason, ``abi.encode`` should be preferred.
+    如果使用 ``keccak256(abi.encodePacked(a，b))`` 并且 ``a`` 和 ``b`` 都是动态类型，
+    那么通过将 ``a`` 的部分移动到 ``b`` 中，很容易在哈希值中产生冲突，反之亦然。
+    更具体地说， ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``。
+    如果你使用 ``abi.encodePacked`` 进行签名、认证或数据完整性，确保总是使用相同的类型，
+    并检查其中最多一个是动态的。除非有令人信服的理由，否则应首选 ``abi.encode``。
 
 
 .. _indexed_event_encoding:
 
-Encoding of Indexed Event Parameters
+索引事件参数的编码
 ====================================
 
-Indexed event parameters that are not value types, i.e. arrays and structs are not
-stored directly but instead a keccak256-hash of an encoding is stored. This encoding
-is defined as follows:
+不属于值类型的索引事件参数，即数组和结构，不直接存储，
+而是存储一个编码的keccak256-hash。这个编码的定义如下：
 
-- the encoding of a ``bytes`` and ``string`` value is just the string contents
-  without any padding or length prefix.
-- the encoding of a struct is the concatenation of the encoding of its members,
-  always padded to a multiple of 32 bytes (even ``bytes`` and ``string``).
-- the encoding of an array (both dynamically- and statically-sized) is
-  the concatenation of the encoding of its elements, always padded to a multiple
-  of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
+- ``bytes`` 和 ``string`` 值的编码只是字符串的内容，没有任何填充或长度前缀。
+- 结构的编码是其成员编码的串联，总是填充为32字节的倍数（甚至是 ``bytes`` 和 ``string``）。
+- 数组的编码（包括动态和静态大小）是其元素编码的连接，
+  总是填充为32字节的倍数（甚至是 ``bytes`` 和 ``string``），没有任何长度前缀。
 
-In the above, as usual, a negative number is padded by sign extension and not zero padded.
-``bytesNN`` types are padded on the right while ``uintNN`` / ``intNN`` are padded on the left.
+在上面，像往常一样，一个负数被填充符号扩展，而不是零填充。
+``bytesNN`` 类型被填充在右边，而 ``uintNN`` / ``intNN`` 被填充在左边。
 
-.. warning::
+.. 警告::
 
-    The encoding of a struct is ambiguous if it contains more than one dynamically-sized
-    array. Because of that, always re-check the event data and do not rely on the search result
-    based on the indexed parameters alone.
+    如果一个结构包含一个以上的动态大小的数组，那么它的编码是不明确的。
+    正因为如此，要经常重新检查事件数据，不要只依赖基于索引参数的搜索结果。
