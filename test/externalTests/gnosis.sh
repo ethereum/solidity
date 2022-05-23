@@ -36,7 +36,7 @@ function test_fn { npm test; }
 
 function gnosis_safe_test
 {
-    local repo="https://github.com/safe-global/safe-contracts.git"
+    local repo="https://github.com/gnosis/safe-contracts.git"
     local ref_type=branch
     local ref=main
     local config_file="hardhat.config.ts"
@@ -100,15 +100,15 @@ function gnosis_safe_test
 
     # With ethers.js 5.6.2 many tests for revert messages fail.
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
-    npm install ethers@5.6.1
+    #npm install ethers@5.6.1
 
     # Note that ethers@5.6.1 depends on @ethersproject/contracts@5.6.0 while the dependency on hardhat-deploy
     # pulls @ethersproject/contracts@5.6.1 (latest). Force 5.6.0 to avoid errors due to having two copies.
-    npm install @ethersproject/contracts@5.6.0
+    #npm install @ethersproject/contracts@5.6.0
 
-    # Hardhat 2.9.5 introduced a bug with handling padded arguments to getStorageAt().
-    # TODO: Remove when https://github.com/NomicFoundation/hardhat/issues/2709 is fixed.
-    npm install hardhat@2.9.4
+    # Workaround due to changed behavior of chainid in @ethereumjs/vm.
+    sed -i "s/chainId: 31337/chainId: 0/g" node_modules/hardhat/internal/core/config/default-config.js
+
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
