@@ -9,6 +9,7 @@ Compiler Features:
 
 Bugfixes:
  * ABI Encoder: When encoding an empty string coming from storage do not add a superfluous empty slot for data.
+ * Yul Optimizer: Do not remove ``returndatacopy`` in cases in which it might perform out-of-bounds reads that unconditionally revert as out-of-gas. Previously, any ``returndatacopy`` that wrote to memory that was never read from was removed without accounting for the out-of-bounds condition.
 
 
 ### 0.8.14 (2022-05-17)

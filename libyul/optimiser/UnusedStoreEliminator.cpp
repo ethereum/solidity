@@ -157,7 +157,25 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	yulAssert(isCandidateForRemoval == (isStorageWrite || (!m_ignoreMemory && isMemoryWrite)));
 	if (isCandidateForRemoval)
 	{
-		m_stores[YulString{}].insert({&_statement, State::Undecided});
+		State initialState = State::Undecided;
+		if (*instruction == Instruction::RETURNDATACOPY)
+		{
+			initialState = State::Used;
+			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
+			auto length = identifierNameIfSSA(funCall->arguments.at(2));
+			KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
+			if (length && startOffset)
+			{
+				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
+				if (
+					knowledge.knownToBeZero(*startOffset) &&
+					lengthCall &&
+					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
+				)
+					initialState = State::Undecided;
+			}
+		}
+		m_stores[YulString{}].insert({&_statement, initialState});
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
 		m_storeOperations[&_statement] = move(operations.front());
