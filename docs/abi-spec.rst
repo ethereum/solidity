@@ -308,7 +308,7 @@ In total:
 Use of Dynamic Types
 ====================
 
-A call to a function with the signature ``f(uint,uint32[],bytes10,bytes)`` with values
+A call to a function with the signature ``f(uint256,uint32[],bytes10,bytes)`` with values
 ``(0x123, [0x456, 0x789], "1234567890", "Hello, world!")`` is encoded in the following way:
 
 We take the first four bytes of ``sha3("f(uint256,uint32[],bytes10,bytes)")``, i.e. ``0x8be65246``.
@@ -348,7 +348,7 @@ All together, the encoding is (newline after function selector and each 32-bytes
       000000000000000000000000000000000000000000000000000000000000000d
       48656c6c6f2c20776f726c642100000000000000000000000000000000000000
 
-Let us apply the same principle to encode the data for a function with a signature ``g(uint[][],string[])``
+Let us apply the same principle to encode the data for a function with a signature ``g(uint256[][],string[])``
 with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most atomic parts of the encoding:
 
 First we encode the length and data of the first embedded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
@@ -417,7 +417,7 @@ thus ``e = 0x00000000000000000000000000000000000000000000000000000000000000e0``.
 
 
 Note that the encodings of the embedded elements of the root arrays are not dependent on each other
-and have the same encodings for a function with a signature ``g(string[],uint[][])``.
+and have the same encodings for a function with a signature ``g(string[],uint256[][])``.
 
 Then we encode the length of the first root array:
 
