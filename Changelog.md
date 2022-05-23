@@ -1,12 +1,12 @@
 ### 0.8.15 (unreleased)
 
 Language Features:
-* General: Add `E.selector` for a non-anonymous event `E` to access the 32-byte selector topic.
-* General: Errors and Events allow qualified access from other contracts.
+ * Add `E.selector` for a non-anonymous event `E` to access the 32-byte selector topic.
+ * Errors and Events allow qualified access from other contracts.
 
 
 Compiler Features:
-* LSP: Add rudimentary support for semantic highlighting.
+ * LSP: Add rudimentary support for semantic highlighting.
  * Yul Optimizer: Improve inlining heuristics for via IR code generation and pure Yul compilation.
 
 
