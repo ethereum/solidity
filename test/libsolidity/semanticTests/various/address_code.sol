@@ -16,7 +16,7 @@ contract C {
 // compileToEwasm: also
 // ----
 // constructor() ->
-// gas irOptimized: 192317
+// gas irOptimized: 193397
 // gas legacy: 240889
 // gas legacyOptimized: 155314
 // initCode() -> 0x20, 0

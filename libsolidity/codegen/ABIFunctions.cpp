@@ -699,7 +699,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 					case 0 {
 						// short byte array
 						mstore(pos, and(slotValue, not(0xff)))
-						ret := add(pos, <lengthPaddedShort>)
+						ret := add(pos, mul(<lengthPaddedShort>, iszero(iszero(length))))
 					}
 					case 1 {
 						// long byte array
