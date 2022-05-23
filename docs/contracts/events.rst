@@ -73,6 +73,16 @@ four indexed arguments rather than three.
     In particular, it is possible to "fake" the signature of another event
     using an anonymous event.
 
+Members of Events
+=================
+
+- ``event.selector``: For non-anonymous events, this is a ``bytes32`` value
+  containing the ``keccak256`` hash of the event signature, as used in the default topic.
+
+
+Example
+=======
+
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
