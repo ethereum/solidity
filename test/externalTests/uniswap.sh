@@ -59,6 +59,18 @@ function uniswap_test
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$ref_type" "$ref" "$DIR"
 
+    # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
+    # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
+    sed -i "s|it\(('underpay zero for one and exact in',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+    sed -i "s|it\(('pay in the wrong token zero for one and exact in',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+    sed -i "s|it\(('underpay zero for one and exact out',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+    sed -i "s|it\(('pay in the wrong token zero for one and exact out',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+    sed -i "s|it\(('underpay one for zero and exact in',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+    sed -i "s|it\(('pay in the wrong token one for zero and exact in',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+    sed -i "s|it\(('underpay one for zero and exact out',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+    sed -i "s|it\(('pay in the wrong token one for zero and exact out',\)|it.skip\1|g" test/UniswapV3Pool.spec.ts
+
     neutralize_package_json_hooks
     name_hardhat_default_export "$config_file" "$config_var"
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"

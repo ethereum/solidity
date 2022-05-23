@@ -89,6 +89,9 @@ function trident_test
     sed -i 's|IStrategy(0)|IStrategy(address(0))|g' contracts/flat/BentoBoxV1Flat.sol
     find contracts -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    sed -i 's|it\(("Reverts on direct deployment via factory"\)|it.skip\1|g' test/MasterDeployer.test.ts
+
     # @sushiswap/core package contains contracts that get built with 0.6.12 and fail our compiler
     # version check. It's not used by tests so we can remove it.
     rm -r node_modules/@sushiswap/core/

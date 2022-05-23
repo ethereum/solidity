@@ -75,6 +75,16 @@ function ens_test
     # In some cases Hardhat does not detect revert reasons properly via IR.
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
     sed -i "s|it\(('Does not allow wrapping a name you do not own',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    sed -i "s|it\(('can set fuses and then burn ability to burn fuses',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('can set fuses and burn canSetResolver and canSetTTL',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('Cannot be called if CANNOT_TRANSFER is burned\.',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('Cannot be called if CANNOT_SET_RESOLVER is burned\.\?',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('Cannot be called if CANNOT_SET_TTL is burned\.\?',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('Cannot be called if CREATE_SUBDOMAIN is burned and is a new subdomain',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('Cannot be called if REPLACE_SUBDOMAIN is burned and is an existing subdomain',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('Cannot be called if CANNOT_CREATE_SUBDOMAIN is burned and is a new subdomain',\)|it.skip\1|g" test/wrapper/NameWrapper.js
+    sed -i "s|it\(('Cannot be called if PARENT_CANNOT_CONTROL is burned and is an existing subdomain',\)|it.skip\1|g" test/wrapper/NameWrapper.js
 
     find . -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 

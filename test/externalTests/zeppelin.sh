@@ -19,6 +19,9 @@
 # (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
 
+# Disable shellcheck errors on quoted special chars like backticks. Too many false-positives.
+# shellcheck disable=SC2016
+
 set -e
 
 source scripts/common.sh
@@ -70,6 +73,34 @@ function zeppelin_test
     # In some cases Hardhat does not detect revert reasons properly via IR.
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
     sed -i "s|it(\('reverts if the current value is 0'\)|it.skip(\1|g" test/utils/Counters.test.js
+    sed -i "s|it(\('prevent unauthorized maintenance'\)|it.skip(\1|g" test/governance/TimelockController.test.js
+    sed -i "s|it(\('cannot cancel invalid operation'\)|it.skip(\1|g" test/governance/TimelockController.test.js
+    sed -i "s|it(\('reverts if block number >= current block'\)|it.skip(\1|g" test/governance/utils/Votes.test.js
+    sed -i "s|it(\('reverts if block number >= current block'\)|it.skip(\1|g" test/governance/utils/Votes.behavior.js
+    sed -i "s|it(\('cannot call onlyInitializable function outside the scope of an initializable function'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+    sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC20/presets/ERC20PresetMinterPauser.test.js
+    sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC1155/presets/ERC1155PresetMinterPauser.test.js
+    sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC20/presets/ERC20PresetMinterPauser.test.js
+    sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC1155/presets/ERC1155PresetMinterPauser.test.js
+    sed -i "s|it(\('reverts when decreasing the allowance'\)|it.skip(\1|g" test/token/ERC20/utils/SafeERC20.test.js
+    sed -i "s|it(\('reverts when decreasing the allowance to a negative value'\)|it.skip(\1|g" test/token/ERC20/utils/SafeERC20.test.js
+    sed -i "s|it(\('cannot be released before time limit'\)|it.skip(\1|g" test/token/ERC20/utils/TokenTimelock.test.js
+    sed -i "s|it(\('cannot be released just before time limit'\)|it.skip(\1|g" test/token/ERC20/utils/TokenTimelock.test.js
+    sed -i "s|it(\('reverts when sending non-zero amounts'\)|it.skip(\1|g" test/utils/Address.test.js
+    sed -i "s|it(\('reverts when sending more than the balance'\)|it.skip(\1|g" test/utils/Address.test.js
+    sed -i "s|it(\('reverts if block number >= current block'\)|it.skip(\1|g" test/utils/Checkpoints.test.js
+    sed -i "s|it(\('fails deploying a contract if the bytecode length is zero'\)|it.skip(\1|g" test/utils/Create2.test.js
+    sed -i "s|it(\('fails deploying a contract if factory contract does not have sufficient balance'\)|it.skip(\1|g" test/utils/Create2.test.js
+    sed -i "s|it(\('reverts on withdrawals'\)|it.skip(\1|g" test/utils/escrow/ConditionalEscrow.test.js
+    sed -i "s|it(\('does not allow beneficiary withdrawal'\)|it.skip(\1|g" test/utils/escrow/RefundEscrow.test.js
+    sed -i "s|it(\('rejects deposits'\)|it.skip(\1|g" test/utils/escrow/RefundEscrow.test.js
+    sed -i "s|it(\('does not allow 0xffffffff'\)|it.skip(\1|g" test/utils/introspection/ERC165Storage.test.js
+    sed -i "s|it(\('reverts when casting -1'\)|it.skip(\1|g" test/utils/math/SafeCast.test.js
+    sed -i 's|it(\(`reverts when downcasting 2^\${bits} (\${maxValue.addn(1)})`\)|it.skip(\1|g' test/utils/math/SafeCast.test.js
+    sed -i 's|it(\(`reverts when downcasting 2^\${bits} + 1 (\${maxValue.addn(2)})`\)|it.skip(\1|g' test/utils/math/SafeCast.test.js
+    sed -i 's|it(\(`reverts when casting [^`]\+`\)|it.skip(\1|g' test/utils/math/SafeCast.test.js
+    sed -i "s|it(\('missing value'\)|it.skip(\1|g" test/utils/structs/EnumerableMap.behavior.js
+
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
     sed -i "s|describe\(('Polygon-Child'\)|describe.skip\1|g" test/crosschain/CrossChainEnabled.test.js
 
