@@ -14,6 +14,6 @@ contract C {
 // compileToEwasm: also
 // ----
 // f() -> 1, 2, 3
-// gas irOptimized: 132298
+// gas irOptimized: 131933
 // gas legacy: 134619
 // gas legacyOptimized: 131940
