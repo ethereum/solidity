@@ -10,7 +10,7 @@ contract c {
 // compileToEwasm: false
 // ----
 // (): 1, 2, 3, 4, 5 ->
-// gas irOptimized: 155170
+// gas irOptimized: 155158
 // gas legacy: 155249
 // gas legacyOptimized: 155212
 // checkIfDataIsEmpty() -> false

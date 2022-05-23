@@ -434,76 +434,76 @@ object "D_27" {
             {
                 /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
                 let _1 := memoryguard(0x80)
-                mstore(64, _1)
+                let _2 := 64
+                mstore(_2, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _2 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_2)))
+                    let _3 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_3)))
                     {
-                        if callvalue() { revert(_2, _2) }
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
                         /// @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..."
-                        let _3 := datasize("C_2")
-                        let _4 := add(_1, _3)
-                        if or(gt(_4, 0xffffffffffffffff), lt(_4, _1)) { panic_error_0x41() }
-                        datacopy(_1, dataoffset("C_2"), _3)
-                        if iszero(create(/** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ _2, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _1, sub(_4, _1)))
+                        let _4 := datasize("C_2")
+                        let _5 := add(_1, _4)
+                        let _6 := 0xffffffffffffffff
+                        if or(gt(_5, _6), lt(_5, _1))
                         {
                             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
-                            let pos := mload(64)
-                            returndatacopy(pos, _2, returndatasize())
+                            mstore(_3, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(_3, 0x24)
+                        }
+                        /// @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..."
+                        datacopy(_1, dataoffset("C_2"), _4)
+                        if iszero(create(/** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ _3, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _1, sub(_5, _1)))
+                        {
+                            /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
+                            let pos := mload(_2)
+                            returndatacopy(pos, _3, returndatasize())
                             revert(pos, returndatasize())
                         }
-                        mstore(add(allocate_memory_array_string(), 32), "/*")
-                        let memPtr := allocate_memory_array_string_546()
-                        mstore(add(memPtr, 32), 0x2f2a2a204073726320303a39363a313635202022636f6e74726163742044207b)
-                        mstore(add(memPtr, 64), shl(200, 0x2e2e2e22202a2f))
-                        let memPos := mload(64)
-                        return(memPos, sub(abi_encode_string(memPos, memPtr), memPos))
+                        let memPtr := mload(_2)
+                        let newFreePtr := add(memPtr, _2)
+                        if or(gt(newFreePtr, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _6), /** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ lt(newFreePtr, memPtr))
+                        {
+                            mstore(_3, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(_3, 0x24)
+                        }
+                        mstore(_2, newFreePtr)
+                        mstore(memPtr, 2)
+                        let _7 := 32
+                        mstore(add(memPtr, _7), "/*")
+                        let memPtr_1 := mload(_2)
+                        let newFreePtr_1 := add(memPtr_1, 96)
+                        if or(gt(newFreePtr_1, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _6), /** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ lt(newFreePtr_1, memPtr_1))
+                        {
+                            mstore(_3, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(_3, 0x24)
+                        }
+                        mstore(_2, newFreePtr_1)
+                        mstore(memPtr_1, 39)
+                        mstore(add(memPtr_1, _7), 0x2f2a2a204073726320303a39363a313635202022636f6e74726163742044207b)
+                        mstore(add(memPtr_1, _2), shl(200, 0x2e2e2e22202a2f))
+                        let memPos := mload(_2)
+                        mstore(memPos, _7)
+                        let length := mload(memPtr_1)
+                        mstore(add(memPos, _7), length)
+                        let i := _3
+                        for { } lt(i, length) { i := add(i, _7) }
+                        {
+                            mstore(add(add(memPos, i), _2), mload(add(add(memPtr_1, i), _7)))
+                        }
+                        if gt(i, length)
+                        {
+                            mstore(add(add(memPos, length), _2), _3)
+                        }
+                        return(memPos, add(sub(add(memPos, and(add(length, 31), not(31))), memPos), _2))
                     }
                 }
                 revert(0, 0)
-            }
-            function abi_encode_string(headStart, value0) -> tail
-            {
-                let _1 := 32
-                mstore(headStart, _1)
-                let length := mload(value0)
-                mstore(add(headStart, _1), length)
-                let i := 0
-                for { } lt(i, length) { i := add(i, _1) }
-                {
-                    mstore(add(add(headStart, i), 64), mload(add(add(value0, i), _1)))
-                }
-                if gt(i, length)
-                {
-                    mstore(add(add(headStart, length), 64), 0)
-                }
-                tail := add(add(headStart, and(add(length, 31), not(31))), 64)
-            }
-            function panic_error_0x41()
-            {
-                mstore(0, shl(224, 0x4e487b71))
-                mstore(4, 0x41)
-                revert(0, 0x24)
-            }
-            function allocate_memory_array_string() -> memPtr
-            {
-                let memPtr_1 := mload(64)
-                let newFreePtr := add(memPtr_1, 64)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr_1)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-                memPtr := memPtr_1
-                mstore(memPtr_1, 2)
-            }
-            function allocate_memory_array_string_546() -> memPtr
-            {
-                let memPtr_1 := mload(64)
-                let newFreePtr := add(memPtr_1, 96)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr_1)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-                memPtr := memPtr_1
-                mstore(memPtr_1, 39)
             }
         }
         /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"

@@ -8,7 +8,7 @@
     let x := f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(2)))))))))))))))))))
 }
 // ====
-// EVMVersion: >homestead
+// EVMVersion: <=homestead
 // ----
 // step: fullInliner
 //

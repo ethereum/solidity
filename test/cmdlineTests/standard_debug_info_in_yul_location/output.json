@@ -625,20 +625,17 @@ object \"C_54\" {
                 revert(/** @src -1:-1:-1 */ 0, 0)
             }
             /// @src 0:79:435  \"contract C...\"
-            constructor_C(mload(_1))
-            let _2 := mload(64)
-            let _3 := datasize(\"C_54_deployed\")
-            codecopy(_2, dataoffset(\"C_54_deployed\"), _3)
-            setimmutable(_2, \"8\", mload(128))
-            return(_2, _3)
-        }
-        /// @ast-id 20 @src 0:182:230  \"constructor(int _init)...\"
-        function constructor_C(var_init)
-        {
+            let value := mload(_1)
             /// @src 0:154:156  \"42\"
             mstore(128, 0x2a)
             /// @src 0:79:435  \"contract C...\"
-            sstore(/** @src 0:210:226  \"stateVar = _init\" */ 0x00, /** @src 0:79:435  \"contract C...\" */ var_init)
+            sstore(/** @src -1:-1:-1 */ 0, /** @src 0:79:435  \"contract C...\" */ value)
+            let _2 := mload(64)
+            let _3 := datasize(\"C_54_deployed\")
+            codecopy(_2, dataoffset(\"C_54_deployed\"), _3)
+            setimmutable(_2, \"8\", mload(/** @src 0:154:156  \"42\" */ 128))
+            /// @src 0:79:435  \"contract C...\"
+            return(_2, _3)
         }
     }
     /// @use-src 0:\"C\"
@@ -646,117 +643,119 @@ object \"C_54\" {
         code {
             {
                 /// @src 0:79:435  \"contract C...\"
-                mstore(64, memoryguard(0x80))
+                let _1 := memoryguard(0x80)
+                let _2 := 64
+                mstore(_2, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    switch shr(224, calldataload(_1))
+                    let _3 := 0
+                    switch shr(224, calldataload(_3))
                     case 0x26121ff0 {
-                        if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
                         /// @src 0:297:305  \"immutVar\"
-                        let _2 := loadimmutable(\"8\")
+                        let _4 := loadimmutable(\"8\")
                         /// @src 0:79:435  \"contract C...\"
-                        if and(1, sgt(_2, sub(shl(255, 1), 42))) { panic_error_0x11() }
-                        let memPos := mload(64)
-                        mstore(memPos, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ _2))
+                        if and(1, sgt(_4, sub(shl(255, 1), 42)))
+                        {
+                            mstore(_3, shl(224, 0x4e487b71))
+                            mstore(4, 0x11)
+                            revert(_3, 0x24)
+                        }
+                        mstore(_1, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ _4))
+                        return(_1, 32)
+                    }
+                    case 0x793816ec {
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
+                        let _5 := sload(_3)
+                        let memPos := mload(_2)
+                        mstore(memPos, _5)
                         return(memPos, 32)
                     }
-                    case 0x793816ec { external_fun_stateVar() }
-                    case 0x9942ec6f { external_fun_f2() }
-                    case 0xa00b982b { external_fun_constVar() }
+                    case 0x9942ec6f {
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
+                        let _6 := sload(_3)
+                        if eq(_6, sub(shl(255, 1), 1))
+                        {
+                            mstore(_3, shl(224, 0x4e487b71))
+                            mstore(4, 0x11)
+                            revert(_3, 0x24)
+                        }
+                        let ret := add(_6, 1)
+                        sstore(_3, ret)
+                        /// @src 0:410:418  \"this.f()\"
+                        let _7 := /** @src 0:79:435  \"contract C...\" */ mload(_2)
+                        /// @src 0:410:418  \"this.f()\"
+                        mstore(_7, /** @src 0:79:435  \"contract C...\" */ shl(228, 0x026121ff))
+                        /// @src 0:410:418  \"this.f()\"
+                        let _8 := staticcall(gas(), /** @src 0:410:414  \"this\" */ address(), /** @src 0:410:418  \"this.f()\" */ _7, /** @src 0:79:435  \"contract C...\" */ 4, /** @src 0:410:418  \"this.f()\" */ _7, 32)
+                        if iszero(_8)
+                        {
+                            /// @src 0:79:435  \"contract C...\"
+                            let pos := mload(_2)
+                            returndatacopy(pos, _3, returndatasize())
+                            revert(pos, returndatasize())
+                        }
+                        /// @src 0:410:418  \"this.f()\"
+                        let expr := /** @src 0:79:435  \"contract C...\" */ _3
+                        /// @src 0:410:418  \"this.f()\"
+                        if _8
+                        {
+                            let _9 := 32
+                            if gt(_9, returndatasize()) { _9 := returndatasize() }
+                            /// @src 0:79:435  \"contract C...\"
+                            let newFreePtr := add(_7, and(add(_9, 31), not(31)))
+                            if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _7))
+                            {
+                                mstore(_3, shl(224, 0x4e487b71))
+                                mstore(4, 0x41)
+                                revert(_3, 0x24)
+                            }
+                            mstore(_2, newFreePtr)
+                            if slt(sub(/** @src 0:410:418  \"this.f()\" */ add(_7, _9), /** @src 0:79:435  \"contract C...\" */ _7), /** @src 0:410:418  \"this.f()\" */ 32)
+                            /// @src 0:79:435  \"contract C...\"
+                            { revert(_3, _3) }
+                            /// @src 0:410:418  \"this.f()\"
+                            expr := /** @src 0:79:435  \"contract C...\" */ mload(_7)
+                        }
+                        /// @src 0:399:418  \"stateVar + this.f()\"
+                        let expr_1 := checked_add_int256(ret, expr)
+                        /// @src 0:392:429  \"return stateVar + this.f() + immutVar\"
+                        let var := /** @src 0:399:429  \"stateVar + this.f() + immutVar\" */ checked_add_int256(expr_1, /** @src 0:421:429  \"immutVar\" */ loadimmutable(\"8\"))
+                        /// @src 0:79:435  \"contract C...\"
+                        let memPos_1 := mload(_2)
+                        mstore(memPos_1, var)
+                        return(memPos_1, /** @src 0:410:418  \"this.f()\" */ 32)
+                    }
+                    case /** @src 0:79:435  \"contract C...\" */ 0xa00b982b {
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
+                        let memPos_2 := mload(_2)
+                        mstore(memPos_2, /** @src 0:124:126  \"41\" */ 0x29)
+                        /// @src 0:79:435  \"contract C...\"
+                        return(memPos_2, 32)
+                    }
                 }
                 revert(0, 0)
-            }
-            function abi_encode_int256(headStart, value0) -> tail
-            {
-                tail := add(headStart, 32)
-                mstore(headStart, value0)
-            }
-            function external_fun_stateVar()
-            {
-                if callvalue() { revert(0, 0) }
-                if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
-                let _1 := sload(0)
-                let memPos := mload(64)
-                mstore(memPos, _1)
-                return(memPos, 32)
-            }
-            function external_fun_f2()
-            {
-                if callvalue() { revert(0, 0) }
-                let _1 := 0
-                if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                let _2 := sload(_1)
-                if eq(_2, sub(shl(255, 1), 1)) { panic_error_0x11() }
-                let ret := add(_2, 1)
-                sstore(_1, ret)
-                /// @src 0:410:418  \"this.f()\"
-                let _3 := /** @src 0:79:435  \"contract C...\" */ mload(64)
-                /// @src 0:410:418  \"this.f()\"
-                mstore(_3, /** @src 0:79:435  \"contract C...\" */ shl(228, 0x026121ff))
-                /// @src 0:410:418  \"this.f()\"
-                let _4 := staticcall(gas(), /** @src 0:410:414  \"this\" */ address(), /** @src 0:410:418  \"this.f()\" */ _3, /** @src 0:79:435  \"contract C...\" */ 4, /** @src 0:410:418  \"this.f()\" */ _3, 32)
-                if iszero(_4)
-                {
-                    /// @src 0:79:435  \"contract C...\"
-                    let pos := mload(64)
-                    returndatacopy(pos, _1, returndatasize())
-                    revert(pos, returndatasize())
-                }
-                /// @src 0:410:418  \"this.f()\"
-                let expr := /** @src 0:79:435  \"contract C...\" */ _1
-                /// @src 0:410:418  \"this.f()\"
-                if _4
-                {
-                    let _5 := 32
-                    if gt(_5, returndatasize()) { _5 := returndatasize() }
-                    /// @src 0:79:435  \"contract C...\"
-                    let newFreePtr := add(_3, and(add(_5, 31), not(31)))
-                    if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _3))
-                    {
-                        mstore(_1, shl(224, 0x4e487b71))
-                        mstore(4, 0x41)
-                        revert(_1, 0x24)
-                    }
-                    mstore(64, newFreePtr)
-                    /// @src 0:410:418  \"this.f()\"
-                    expr := abi_decode_int256_fromMemory(_3, add(_3, _5))
-                }
-                /// @src 0:399:418  \"stateVar + this.f()\"
-                let expr_1 := checked_add_int256(ret, expr)
-                /// @src 0:392:429  \"return stateVar + this.f() + immutVar\"
-                let var := /** @src 0:399:429  \"stateVar + this.f() + immutVar\" */ checked_add_int256(expr_1, /** @src 0:421:429  \"immutVar\" */ loadimmutable(\"8\"))
-                /// @src 0:79:435  \"contract C...\"
-                let memPos := mload(64)
-                return(memPos, sub(abi_encode_int256(memPos, var), memPos))
-            }
-            function external_fun_constVar()
-            {
-                if callvalue() { revert(0, 0) }
-                if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
-                let memPos := mload(64)
-                mstore(memPos, /** @src 0:124:126  \"41\" */ 0x29)
-                /// @src 0:79:435  \"contract C...\"
-                return(memPos, 32)
-            }
-            function panic_error_0x11()
-            {
-                mstore(0, shl(224, 0x4e487b71))
-                mstore(4, 0x11)
-                revert(0, 0x24)
             }
             function checked_add_int256(x, y) -> sum
             {
                 let _1 := slt(x, 0)
-                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x))) { panic_error_0x11() }
-                if and(_1, slt(y, sub(shl(255, 1), x))) { panic_error_0x11() }
+                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x)))
+                {
+                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(4, 0x11)
+                    revert(0, 0x24)
+                }
+                if and(_1, slt(y, sub(shl(255, 1), x)))
+                {
+                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(4, 0x11)
+                    revert(0, 0x24)
+                }
                 sum := add(x, y)
-            }
-            function abi_decode_int256_fromMemory(headStart, dataEnd) -> value0
-            {
-                if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }
-                value0 := mload(headStart)
             }
         }
         data \".metadata\" hex\"<BYTECODE REMOVED>\"
@@ -1457,26 +1456,23 @@ object \"D_72\" {
                 revert(/** @src -1:-1:-1 */ 0, 0)
             }
             /// @src 1:91:166  \"contract D is C(3)...\"
-            constructor_D(mload(_1))
-            let _2 := mload(64)
-            let _3 := datasize(\"D_72_deployed\")
-            codecopy(_2, dataoffset(\"D_72_deployed\"), _3)
-            setimmutable(_2, \"8\", mload(128))
-            return(_2, _3)
-        }
-        /// @ast-id 71 @src 1:113:164  \"constructor(int _init2)...\"
-        function constructor_D(var_init2)
-        {
+            let value := mload(_1)
             /// @src 0:154:156  \"42\"
             mstore(128, 0x2a)
             /// @src 1:91:166  \"contract D is C(3)...\"
-            if and(1, sgt(var_init2, sub(shl(255, 1), 4)))
+            if and(1, sgt(value, sub(shl(255, 1), 4)))
             {
-                mstore(0, shl(224, 0x4e487b71))
+                mstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
                 mstore(4, 0x11)
-                revert(0, 0x24)
+                revert(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
             }
-            sstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ var_init2))
+            sstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ value))
+            let _2 := mload(64)
+            let _3 := datasize(\"D_72_deployed\")
+            codecopy(_2, dataoffset(\"D_72_deployed\"), _3)
+            setimmutable(_2, \"8\", mload(/** @src 0:154:156  \"42\" */ 128))
+            /// @src 1:91:166  \"contract D is C(3)...\"
+            return(_2, _3)
         }
     }
     /// @use-src 0:\"C\", 1:\"D\"
@@ -1484,117 +1480,119 @@ object \"D_72\" {
         code {
             {
                 /// @src 1:91:166  \"contract D is C(3)...\"
-                mstore(64, memoryguard(0x80))
+                let _1 := memoryguard(0x80)
+                let _2 := 64
+                mstore(_2, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    switch shr(224, calldataload(_1))
+                    let _3 := 0
+                    switch shr(224, calldataload(_3))
                     case 0x26121ff0 {
-                        if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
                         /// @src 0:297:305  \"immutVar\"
-                        let _2 := loadimmutable(\"8\")
+                        let _4 := loadimmutable(\"8\")
                         /// @src 1:91:166  \"contract D is C(3)...\"
-                        if and(1, sgt(_2, sub(shl(255, 1), 42))) { panic_error_0x11() }
-                        let memPos := mload(64)
-                        mstore(memPos, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ _2))
+                        if and(1, sgt(_4, sub(shl(255, 1), 42)))
+                        {
+                            mstore(_3, shl(224, 0x4e487b71))
+                            mstore(4, 0x11)
+                            revert(_3, 0x24)
+                        }
+                        mstore(_1, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ _4))
+                        return(_1, 32)
+                    }
+                    case 0x793816ec {
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
+                        let _5 := sload(_3)
+                        let memPos := mload(_2)
+                        mstore(memPos, _5)
                         return(memPos, 32)
                     }
-                    case 0x793816ec { external_fun_stateVar() }
-                    case 0x9942ec6f { external_fun_f2() }
-                    case 0xa00b982b { external_fun_constVar() }
+                    case 0x9942ec6f {
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
+                        let _6 := sload(_3)
+                        if eq(_6, sub(shl(255, 1), 1))
+                        {
+                            mstore(_3, shl(224, 0x4e487b71))
+                            mstore(4, 0x11)
+                            revert(_3, 0x24)
+                        }
+                        let ret := add(_6, 1)
+                        sstore(_3, ret)
+                        /// @src 0:410:418  \"this.f()\"
+                        let _7 := /** @src 1:91:166  \"contract D is C(3)...\" */ mload(_2)
+                        /// @src 0:410:418  \"this.f()\"
+                        mstore(_7, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(228, 0x026121ff))
+                        /// @src 0:410:418  \"this.f()\"
+                        let _8 := staticcall(gas(), /** @src 0:410:414  \"this\" */ address(), /** @src 0:410:418  \"this.f()\" */ _7, /** @src 1:91:166  \"contract D is C(3)...\" */ 4, /** @src 0:410:418  \"this.f()\" */ _7, 32)
+                        if iszero(_8)
+                        {
+                            /// @src 1:91:166  \"contract D is C(3)...\"
+                            let pos := mload(_2)
+                            returndatacopy(pos, _3, returndatasize())
+                            revert(pos, returndatasize())
+                        }
+                        /// @src 0:410:418  \"this.f()\"
+                        let expr := /** @src 1:91:166  \"contract D is C(3)...\" */ _3
+                        /// @src 0:410:418  \"this.f()\"
+                        if _8
+                        {
+                            let _9 := 32
+                            if gt(_9, returndatasize()) { _9 := returndatasize() }
+                            /// @src 1:91:166  \"contract D is C(3)...\"
+                            let newFreePtr := add(_7, and(add(_9, 31), not(31)))
+                            if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _7))
+                            {
+                                mstore(_3, shl(224, 0x4e487b71))
+                                mstore(4, 0x41)
+                                revert(_3, 0x24)
+                            }
+                            mstore(_2, newFreePtr)
+                            if slt(sub(/** @src 0:410:418  \"this.f()\" */ add(_7, _9), /** @src 1:91:166  \"contract D is C(3)...\" */ _7), /** @src 0:410:418  \"this.f()\" */ 32)
+                            /// @src 1:91:166  \"contract D is C(3)...\"
+                            { revert(_3, _3) }
+                            /// @src 0:410:418  \"this.f()\"
+                            expr := /** @src 1:91:166  \"contract D is C(3)...\" */ mload(_7)
+                        }
+                        /// @src 0:399:418  \"stateVar + this.f()\"
+                        let expr_1 := checked_add_int256(ret, expr)
+                        /// @src 0:392:429  \"return stateVar + this.f() + immutVar\"
+                        let var := /** @src 0:399:429  \"stateVar + this.f() + immutVar\" */ checked_add_int256(expr_1, /** @src 0:421:429  \"immutVar\" */ loadimmutable(\"8\"))
+                        /// @src 1:91:166  \"contract D is C(3)...\"
+                        let memPos_1 := mload(_2)
+                        mstore(memPos_1, var)
+                        return(memPos_1, /** @src 0:410:418  \"this.f()\" */ 32)
+                    }
+                    case /** @src 1:91:166  \"contract D is C(3)...\" */ 0xa00b982b {
+                        if callvalue() { revert(_3, _3) }
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
+                        let memPos_2 := mload(_2)
+                        mstore(memPos_2, /** @src 0:124:126  \"41\" */ 0x29)
+                        /// @src 1:91:166  \"contract D is C(3)...\"
+                        return(memPos_2, 32)
+                    }
                 }
                 revert(0, 0)
-            }
-            function abi_encode_int256(headStart, value0) -> tail
-            {
-                tail := add(headStart, 32)
-                mstore(headStart, value0)
-            }
-            function external_fun_stateVar()
-            {
-                if callvalue() { revert(0, 0) }
-                if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
-                let _1 := sload(0)
-                let memPos := mload(64)
-                mstore(memPos, _1)
-                return(memPos, 32)
-            }
-            function external_fun_f2()
-            {
-                if callvalue() { revert(0, 0) }
-                let _1 := 0
-                if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                let _2 := sload(_1)
-                if eq(_2, sub(shl(255, 1), 1)) { panic_error_0x11() }
-                let ret := add(_2, 1)
-                sstore(_1, ret)
-                /// @src 0:410:418  \"this.f()\"
-                let _3 := /** @src 1:91:166  \"contract D is C(3)...\" */ mload(64)
-                /// @src 0:410:418  \"this.f()\"
-                mstore(_3, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(228, 0x026121ff))
-                /// @src 0:410:418  \"this.f()\"
-                let _4 := staticcall(gas(), /** @src 0:410:414  \"this\" */ address(), /** @src 0:410:418  \"this.f()\" */ _3, /** @src 1:91:166  \"contract D is C(3)...\" */ 4, /** @src 0:410:418  \"this.f()\" */ _3, 32)
-                if iszero(_4)
-                {
-                    /// @src 1:91:166  \"contract D is C(3)...\"
-                    let pos := mload(64)
-                    returndatacopy(pos, _1, returndatasize())
-                    revert(pos, returndatasize())
-                }
-                /// @src 0:410:418  \"this.f()\"
-                let expr := /** @src 1:91:166  \"contract D is C(3)...\" */ _1
-                /// @src 0:410:418  \"this.f()\"
-                if _4
-                {
-                    let _5 := 32
-                    if gt(_5, returndatasize()) { _5 := returndatasize() }
-                    /// @src 1:91:166  \"contract D is C(3)...\"
-                    let newFreePtr := add(_3, and(add(_5, 31), not(31)))
-                    if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _3))
-                    {
-                        mstore(_1, shl(224, 0x4e487b71))
-                        mstore(4, 0x41)
-                        revert(_1, 0x24)
-                    }
-                    mstore(64, newFreePtr)
-                    /// @src 0:410:418  \"this.f()\"
-                    expr := abi_decode_int256_fromMemory(_3, add(_3, _5))
-                }
-                /// @src 0:399:418  \"stateVar + this.f()\"
-                let expr_1 := checked_add_int256(ret, expr)
-                /// @src 0:392:429  \"return stateVar + this.f() + immutVar\"
-                let var := /** @src 0:399:429  \"stateVar + this.f() + immutVar\" */ checked_add_int256(expr_1, /** @src 0:421:429  \"immutVar\" */ loadimmutable(\"8\"))
-                /// @src 1:91:166  \"contract D is C(3)...\"
-                let memPos := mload(64)
-                return(memPos, sub(abi_encode_int256(memPos, var), memPos))
-            }
-            function external_fun_constVar()
-            {
-                if callvalue() { revert(0, 0) }
-                if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
-                let memPos := mload(64)
-                mstore(memPos, /** @src 0:124:126  \"41\" */ 0x29)
-                /// @src 1:91:166  \"contract D is C(3)...\"
-                return(memPos, 32)
-            }
-            function panic_error_0x11()
-            {
-                mstore(0, shl(224, 0x4e487b71))
-                mstore(4, 0x11)
-                revert(0, 0x24)
             }
             function checked_add_int256(x, y) -> sum
             {
                 let _1 := slt(x, 0)
-                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x))) { panic_error_0x11() }
-                if and(_1, slt(y, sub(shl(255, 1), x))) { panic_error_0x11() }
+                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x)))
+                {
+                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(4, 0x11)
+                    revert(0, 0x24)
+                }
+                if and(_1, slt(y, sub(shl(255, 1), x)))
+                {
+                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(4, 0x11)
+                    revert(0, 0x24)
+                }
                 sum := add(x, y)
-            }
-            function abi_decode_int256_fromMemory(headStart, dataEnd) -> value0
-            {
-                if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }
-                value0 := mload(headStart)
             }
         }
         data \".metadata\" hex\"<BYTECODE REMOVED>\"

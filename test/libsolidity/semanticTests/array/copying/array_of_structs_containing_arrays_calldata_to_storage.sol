@@ -23,4 +23,4 @@ contract C {
 // compileViaYul: true
 // ----
 // f((uint256[])[]): 0x20, 3, 0x60, 0x60, 0x60, 0x20, 3, 1, 2, 3 -> 3, 1
-// gas irOptimized: 328592
+// gas irOptimized: 327727
