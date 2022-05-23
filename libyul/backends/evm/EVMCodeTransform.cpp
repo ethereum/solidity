@@ -423,9 +423,22 @@ void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToD
 		// Get switch value
 		m_assembly.appendInstruction(evmasm::dupInstruction(3));
 	// Apply two-byte mask
-	m_assembly.appendConstant(u256(0x04));
-	m_assembly.appendInstruction(evmasm::Instruction::SHL);
-	m_assembly.appendInstruction(evmasm::Instruction::SHR);
+	if (m_dialect.evmVersion() >= langutil::EVMVersion::fromString("constantinople").value())
+	{
+		m_assembly.appendConstant(u256(0x04));
+		m_assembly.appendInstruction(evmasm::Instruction::SHL);
+		m_assembly.appendInstruction(evmasm::Instruction::SHR);
+	}
+	else
+	{
+		// Shift operators not present pre-Constantinople
+		m_assembly.appendConstant(16);
+		m_assembly.appendInstruction(evmasm::Instruction::MUL);
+		m_assembly.appendConstant(2);
+		m_assembly.appendInstruction(evmasm::Instruction::EXP);
+		m_assembly.appendInstruction(evmasm::swapInstruction(1));
+		m_assembly.appendInstruction(evmasm::Instruction::DIV);
+	}
 	m_assembly.appendInstruction(evmasm::Instruction::AND);
 
 	if (relativeToDefaultCase)
