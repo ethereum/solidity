@@ -159,6 +159,8 @@ set(sources
 	lsp/FileRepository.h
 	lsp/GotoDefinition.cpp
 	lsp/GotoDefinition.h
+	lsp/RenameSymbol.cpp
+	lsp/RenameSymbol.h
 	lsp/HandlerBase.cpp
 	lsp/HandlerBase.h
 	lsp/LanguageServer.cpp

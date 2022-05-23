@@ -26,6 +26,7 @@
 
 // LSP feature implementations
 #include <libsolidity/lsp/GotoDefinition.h>
+#include <libsolidity/lsp/RenameSymbol.h>
 #include <libsolidity/lsp/SemanticTokensBuilder.h>
 
 #include <liblangutil/SourceReferenceExtractor.h>
@@ -124,6 +125,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"textDocument/didOpen", bind(&LanguageServer::handleTextDocumentDidOpen, this, _2)},
 		{"textDocument/didChange", bind(&LanguageServer::handleTextDocumentDidChange, this, _2)},
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _2)},
+		{"textDocument/rename", RenameSymbol(*this) },
 		{"textDocument/implementation", GotoDefinition(*this) },
 		{"textDocument/semanticTokens/full", bind(&LanguageServer::semanticTokensFull, this, _1, _2)},
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2)},
@@ -314,6 +316,8 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	replyArgs["capabilities"]["semanticTokensProvider"]["legend"] = semanticTokensLegend();
 	replyArgs["capabilities"]["semanticTokensProvider"]["range"] = false;
 	replyArgs["capabilities"]["semanticTokensProvider"]["full"] = true; // XOR requests.full.delta = true
+	replyArgs["capabilities"]["renameProvider"] = true;
+
 
 	m_client.reply(_id, move(replyArgs));
 }
@@ -431,6 +435,7 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 
 	compileAndUpdateDiagnostics();
 }
+
 
 ASTNode const* LanguageServer::astNodeAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
 {

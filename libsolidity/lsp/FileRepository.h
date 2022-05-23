@@ -44,7 +44,6 @@ public:
 	/// Changes the source identified by the LSP client path _uri to _text.
 	void setSourceByUri(std::string const& _uri, std::string _text);
 
-	void addOrUpdateFile(boost::filesystem::path const& _path, frontend::SourceCode _source);
 	void setSourceUnits(StringMap _sources);
 	frontend::ReadCallback::Result readFile(std::string const& _kind, std::string const& _sourceUnitName);
 	frontend::ReadCallback::Callback reader()
