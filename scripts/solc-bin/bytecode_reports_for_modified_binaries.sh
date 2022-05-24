@@ -104,6 +104,9 @@ tmp_dir=$(mktemp -d -t bytecode-reports-XXXXXX)
 solcjs_dir="$tmp_dir/solcjs"
 script_dir="$solidity_dir/scripts"
 
+# Set locale to C to prevent it from affecting glob sort order.
+export LC_ALL=C
+
 cd "$tmp_dir"
 
 git clone https://github.com/ethereum/solc-js.git "$solcjs_dir"

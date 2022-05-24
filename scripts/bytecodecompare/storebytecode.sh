@@ -35,6 +35,9 @@ REPO_ROOT=$(pwd) # make it absolute
 
 BUILD_DIR="${1:-${REPO_ROOT}/build}"
 
+# Set locale to C to prevent it from affecting glob sort order.
+export LC_ALL=C
+
 echo "Compiling all test contracts into bytecode..."
 TMPDIR=$(mktemp -d)
 (

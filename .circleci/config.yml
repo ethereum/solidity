@@ -356,17 +356,9 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 10
 
-  - base_buildpack_focal_small: &base_buildpack_focal_small
+  - base_cimg_small: &base_cimg_small
       docker:
-        - image: buildpack-deps:focal
-      resource_class: small
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 2
-
-  - base_buildpack_latest_small: &base_buildpack_latest_small
-      docker:
-        - image: buildpack-deps:latest
+        - image: cimg/base:current
       resource_class: small
       environment:
         TERM: xterm
@@ -681,12 +673,14 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   chk_coding_style:
-    <<: *base_buildpack_focal_small
+    <<: *base_cimg_small
     steps:
       - checkout
       - run:
           name: Install shellcheck
-          command: apt -q update && apt install -y shellcheck
+          command: |
+            sudo apt -q update
+            sudo apt install -y shellcheck
       - run:
           name: Check for C++ coding style
           command: ./scripts/check_style.sh
@@ -708,12 +702,14 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   chk_pylint:
-    <<: *base_buildpack_focal_small
+    <<: *base_cimg_small
     steps:
       - checkout
       - run:
           name: Install pip
-          command: apt -q update && apt install -y python3-pip
+          command: |
+            sudo apt -q update
+            sudo apt install -y python3-pip
       - run:
           name: Install pylint and dependencies of the scripts that will be linted
           command: python3 -m pip install
@@ -732,12 +728,14 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   chk_antlr_grammar:
-    <<: *base_buildpack_focal_small
+    <<: *base_cimg_small
     steps:
       - checkout
       - run:
           name: Install Java
-          command: apt -q update && apt install -y openjdk-16-jdk
+          command: |
+            sudo apt -q update
+            sudo apt install -y openjdk-16-jdk
       - run:
           name: Run tests
           command: ./scripts/test_antlr_grammar.sh
@@ -759,14 +757,14 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   chk_proofs:
-    <<: *base_buildpack_latest_small
+    <<: *base_cimg_small
     steps:
       - checkout
       - run:
           name: Z3 python deps
           command: |
-            apt-get -qq update
-            apt-get -qy install python3-pip
+            sudo apt-get -qq update
+            sudo apt-get -qy install python3-pip
             pip3 install --user z3-solver
       - run: *run_proofs
       - gitter_notify_failure_unless_pr
@@ -1405,6 +1403,10 @@ jobs:
 
   b_bytecode_ubu:
     <<: *base_ubuntu2004_small
+    environment:
+      TERM: xterm
+      MAKEFLAGS: -j 2
+      LC_ALL: C
     steps:
       - checkout
       - attach_workspace:
@@ -1414,6 +1416,10 @@ jobs:
 
   b_bytecode_osx:
     <<: *base_osx
+    environment:
+      TERM: xterm
+      MAKEFLAGS: -j 5
+      LC_ALL: C
     steps:
       - checkout
       - attach_workspace:
@@ -1449,6 +1455,7 @@ jobs:
     <<: *base_node_small
     environment:
       SOLC_EMSCRIPTEN: "On"
+      LC_ALL: C
     steps:
       - checkout
       - attach_workspace:
