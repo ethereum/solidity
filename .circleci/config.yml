@@ -527,11 +527,6 @@ defaults:
       requires:
         - b_win
 
-  - workflow_win_release: &workflow_win_release
-      <<: *workflow_trigger_on_tags
-      requires:
-        - b_win_release
-
   # --------------------------------------------------------------------------
   # Parameterized Job Templates
 
@@ -1373,11 +1368,6 @@ jobs:
             - .\test\*\soltest.exe
       - gitter_notify_failure_unless_pr
 
-  b_win_release:
-    <<: *b_win
-    environment:
-      FORCE_RELEASE: ON
-
   t_win_soltest: &t_win_soltest
     <<: *base_win_powershell
     steps:
@@ -1404,9 +1394,6 @@ jobs:
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
       - gitter_notify_failure_unless_pr
-
-  t_win_release_soltest:
-    <<: *t_win_soltest
 
   b_bytecode_ubu:
     <<: *base_ubuntu2004_small
@@ -1639,9 +1626,7 @@ workflows:
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
-      - b_win_release: *workflow_trigger_on_tags
       - t_win_soltest: *workflow_win
-      - t_win_release_soltest: *workflow_win_release
 
       # Bytecode comparison:
       - b_bytecode_ubu:
@@ -1674,7 +1659,7 @@ workflows:
           requires:
             - b_ubu_static
             - b_osx
-            - b_win_release
+            - b_win
             - b_ems
 
   nightly:
