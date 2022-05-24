@@ -12,7 +12,7 @@ set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 
 # TODO: Investigate why this breaks some emscripten builds and
 # check whether this can be removed after updating the emscripten
-# versions used in the CI runs.
+# versions used in the CIL runs.
 if(EMSCRIPTEN)
     # Do not include all flags in CMAKE_CXX_FLAGS for emscripten,
     # but only use -std=c++17. Using all flags causes build failures
