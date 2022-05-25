@@ -65,10 +65,6 @@ function ens_test
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     yarn install
 
-    # With ethers.js 5.6.2 many tests for revert messages fail.
-    # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
-    yarn add ethers@5.6.1
-
     replace_version_pragmas
     neutralize_packaged_contracts
 

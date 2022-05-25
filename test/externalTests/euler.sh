@@ -78,10 +78,6 @@ function euler_test
     force_hardhat_unlimited_contract_size "$config_file"
     npm install
 
-    # With ethers.js 5.6.2 many tests for revert messages fail.
-    # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
-    npm install ethers@5.6.1
-
     replace_version_pragmas
     neutralize_packaged_contracts
 
