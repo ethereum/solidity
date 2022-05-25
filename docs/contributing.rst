@@ -245,7 +245,7 @@ It offers several options for failing tests:
 - ``skip``: Skips the execution of this particular test.
 - ``quit``: Quits ``isoltest``.
 
-All of these options apply to the current contract, expect ``quit`` which stops the entire testing process.
+All of these options apply to the current contract, except ``quit`` which stops the entire testing process.
 
 Automatically updating the test above changes it to
 
