@@ -94,6 +94,10 @@ function gnosis_safe_test
     npm install
     npm install hardhat-gas-reporter
 
+    # Typescript compilation fails with typescript >= 4.7:
+    # Error: Debug Failure. False expression: Non-string value passed to `ts.resolveTypeReferenceDirective`
+    npm install "typescript@<4.7.0"
+
     # With ethers.js 5.6.2 many tests for revert messages fail.
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
     npm install ethers@5.6.1
