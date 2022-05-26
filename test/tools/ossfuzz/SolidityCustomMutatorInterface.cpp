@@ -61,7 +61,7 @@ size_t SolidityCustomMutatorInterface::generate()
 {
 	string testCase = generator->generateTestProgram();
 	solAssert(
-		!testCase.empty() && data,
+		data,
 		"Solc custom mutator: Invalid mutant or memory pointer"
 	);
 	size_t mutantSize = min(testCase.size(), maxMutantSize - 1);
