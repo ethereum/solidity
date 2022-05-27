@@ -20,14 +20,19 @@
 #include <iostream>
 #include <test/Common.h>
 #include <test/EVMHost.h>
+#include <test/libsolidity/util/SoltestErrors.h>
 
 #include <libsolutil/Assertions.h>
+#include <libsolutil/StringUtils.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <range/v3/all.hpp>
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
+
+using namespace std;
 
 namespace solidity::test
 {
@@ -207,6 +212,41 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 	return true;
 }
 
+string CommonOptions::toString(vector<string> const& _selectedOptions) const
+{
+	if (_selectedOptions.empty())
+		return "";
+
+	auto boolToString = [](bool _value) -> string { return _value ? "true" : "false"; };
+	// Using std::map to avoid if-else/switch-case block
+	map<string, string> optionValueMap = {
+		{"evmVersion", evmVersion().name()},
+		{"optimize", boolToString(optimize)},
+		{"useABIEncoderV1", boolToString(useABIEncoderV1)},
+		{"batch", to_string(selectedBatch + 1) + "/" + to_string(batches)},
+		{"ewasm", boolToString(ewasm)},
+		{"enforceCompileToEwasm", boolToString(enforceCompileToEwasm)},
+		{"enforceGasTest", boolToString(enforceGasTest)},
+		{"enforceGasTestMinValue", enforceGasTestMinValue.str()},
+		{"disableSemanticTests", boolToString(disableSemanticTests)},
+		{"disableSMT", boolToString(disableSMT)},
+		{"showMessages", boolToString(showMessages)},
+		{"showMetadata", boolToString(showMetadata)}
+	};
+
+	soltestAssert(ranges::all_of(_selectedOptions, [&optionValueMap](string const& _option) { return optionValueMap.count(_option) > 0; }));
+
+	vector<string> optionsWithValues = _selectedOptions |
+		ranges::views::transform([&optionValueMap](string const& _option) { return _option + "=" + optionValueMap.at(_option); }) |
+		ranges::to<vector>();
+
+	return solidity::util::joinHumanReadable(optionsWithValues);
+}
+
+void CommonOptions::printSelectedOptions(ostream& _stream, string const& _linePrefix, vector<string> const& _selectedOptions) const
+{
+	_stream << _linePrefix << "Run Settings: " << toString(_selectedOptions) << endl;
+}
 
 langutil::EVMVersion CommonOptions::evmVersion() const
 {
