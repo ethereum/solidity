@@ -1238,6 +1238,8 @@ and optionally specify the :ref:`expected number of contract executions <optimiz
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
 
+.. _optimization-step-sequence:
+
 Optimization Step Sequence
 --------------------------
 

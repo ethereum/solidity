@@ -330,7 +330,7 @@ the ``--yul-optimizations`` option:
 The sequence inside ``[...]`` will be applied multiple times in a loop until the Yul code
 remains unchanged or until the maximum number of rounds (currently 12) has been reached.
 
-Available abbreviations are listed in the `Yul optimizer docs <yul.rst#optimization-step-sequence>`_.
+Available abbreviations are listed in the :ref:`Yul optimizer docs <optimization-step-sequence>`.
 
 Preprocessing
 -------------
