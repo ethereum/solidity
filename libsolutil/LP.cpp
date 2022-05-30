@@ -43,6 +43,8 @@
 #include <optional>
 #include <stack>
 
+//#define DEBUG
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
