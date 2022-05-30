@@ -232,7 +232,7 @@ string BooleanLPSolver::toString() const
 	return result;
 }
 
-void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, LetBinding> _letBindings)
+void BooleanLPSolver::addAssertion(Expression const& _expr, LetBindings _letBindings)
 {
 #ifdef DEBUG
 	cerr << "adding assertion" << endl;
@@ -242,9 +242,9 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, LetBindi
 	if (_expr.arguments.empty())
 	{
 		size_t varIndex = 0;
-		if (_letBindings.count(_expr.name))
+		if (_letBindings->count(_expr.name))
 		{
-			LetBinding binding = _letBindings.at(_expr.name);
+			LetBinding binding = _letBindings->at(_expr.name);
 			if (holds_alternative<smtutil::Expression>(binding))
 			{
 				addAssertion(std::get<smtutil::Expression>(binding), move(_letBindings));
@@ -276,7 +276,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, LetBindi
 				addBooleanEquality(*parseLiteral(_expr.arguments.at(1), _letBindings), _expr.arguments.at(0), _letBindings);
 			else
 			{
-				Literal newBoolean = *parseLiteral(declareInternalVariable(true), {});
+				Literal newBoolean = *parseLiteral(declareInternalVariable(true), make_shared<map<string, LetBinding>>());
 				addBooleanEquality(newBoolean, _expr.arguments.at(0), _letBindings);
 				addBooleanEquality(newBoolean, _expr.arguments.at(1), _letBindings);
 			}
@@ -382,7 +382,7 @@ void BooleanLPSolver::declareVariable(string const& _name, bool _boolean)
 	resizeAndSet(state().isBooleanVariable, index, _boolean);
 }
 
-void BooleanLPSolver::addLetBindings(Expression const& _let, map<string, LetBinding>& _letBindings)
+void BooleanLPSolver::addLetBindings(Expression const& _let, LetBindings& _letBindings)
 {
 	map<string, LetBinding> newBindings;
 	solAssert(_let.name == "let");
@@ -399,11 +399,12 @@ void BooleanLPSolver::addLetBindings(Expression const& _let, map<string, LetBind
 			addAssertion(var == binding.arguments.at(0), _letBindings);
 		}
 	}
+	_letBindings = make_shared<std::map<std::string, LetBinding>>(*_letBindings);
 	for (auto& [name, value]: newBindings)
-		_letBindings.insert({name, move(value)});
+		_letBindings->insert({name, move(value)});
 }
 
-optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr, map<string, LetBinding> _letBindings)
+optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr, LetBindings _letBindings)
 {
 	// TODO constanst true/false?
 
@@ -416,9 +417,9 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 	if (_expr.arguments.empty())
 	{
 		size_t varIndex = 0;
-		if (_letBindings.count(_expr.name))
+		if (_letBindings->count(_expr.name))
 		{
-			LetBinding binding = _letBindings.at(_expr.name);
+			LetBinding binding = _letBindings->at(_expr.name);
 			if (holds_alternative<smtutil::Expression>(binding))
 				return parseLiteral(std::get<smtutil::Expression>(binding), move(_letBindings));
 			else
@@ -494,7 +495,7 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 			gt.data *= -1;
 			Literal gtL{true, addConditionalConstraint(gt)};
 
-			Literal equalBoolean = *parseLiteral(declareInternalVariable(true), {});
+			Literal equalBoolean = *parseLiteral(declareInternalVariable(true), make_shared<map<string, LetBinding>>());
 			// a = or(x, y) <=> (-a \/ x \/ y) /\ (a \/ -x) /\ (a \/ -y)
 			state().clauses.emplace_back(Clause{vector<Literal>{negate(equalBoolean), ltL, gtL}});
 			state().clauses.emplace_back(Clause{vector<Literal>{equalBoolean, negate(ltL)}});
@@ -524,7 +525,7 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 		return ~_lit;
 }
 
-Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _expr, map<string, LetBinding> _letBindings)
+Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _expr, LetBindings _letBindings)
 {
 	if (_expr.sort->kind != Kind::Bool)
 		cerr << "expected bool: " << _expr.toString() << endl;
@@ -540,7 +541,7 @@ Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _exp
 	}
 }
 
-optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr, map<string, LetBinding> _letBindings)
+optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression const& _expr, LetBindings _letBindings)
 {
 	if (_expr.name == "let")
 	{
@@ -604,7 +605,7 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 		Expression result = declareInternalVariable(false);
 		addAssertion(!_expr.arguments.at(0) || (result == _expr.arguments.at(1)), _letBindings);
 		addAssertion(_expr.arguments.at(0) || (result == _expr.arguments.at(2)), _letBindings);
-		return parseLinearSum(result, {});
+		return parseLinearSum(result, make_shared<map<string, LetBinding>>());
 	}
 	else
 	{
@@ -625,7 +626,7 @@ bool BooleanLPSolver::isLiteral(smtutil::Expression const& _expr) const
 		_expr.name == "false";
 }
 
-optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression const& _expr, map<string, LetBinding> _letBindings) const
+optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression const& _expr, LetBindings _letBindings) const
 {
 	solAssert(_expr.arguments.empty(), "");
 	solAssert(!_expr.name.empty(), "");
@@ -639,9 +640,9 @@ optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression cons
 		return LinearExpression::constant(0);
 
 	size_t varIndex = 0;
-	if (_letBindings.count(_expr.name))
+	if (_letBindings->count(_expr.name))
 	{
-		LetBinding binding = _letBindings.at(_expr.name);
+		LetBinding binding = _letBindings->at(_expr.name);
 		if (holds_alternative<smtutil::Expression>(binding))
 			return parseFactor(std::get<smtutil::Expression>(binding), move(_letBindings));
 		else
@@ -723,7 +724,7 @@ size_t BooleanLPSolver::addConditionalConstraint(Constraint _constraint)
 	return index;
 }
 
-void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expression const& _right, map<string, LetBinding> _letBindings)
+void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expression const& _right, LetBindings _letBindings)
 {
 	solAssert(_right.sort->kind == Kind::Bool);
 	if (optional<Literal> right = parseLiteral(_right, _letBindings))

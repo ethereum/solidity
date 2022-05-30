@@ -298,7 +298,7 @@ public:
 	void addLowerBound(size_t _variable, RationalWithDelta _bound, std::optional<size_t> _reason = std::nullopt);
 	void addUpperBound(size_t _variable, RationalWithDelta _bound, std::optional<size_t> _reason = std::nullopt);
 
-	std::pair<LPResult, ReasonSet>check();
+	std::pair<LPResult, ReasonSet> check();
 
 	std::string toString() const;
 	std::map<std::string, rational> model() const;
