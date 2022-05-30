@@ -172,6 +172,9 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 			Clause conflictClause;
 			for (size_t constraintIndex: reasonSet)
 				conflictClause.emplace_back(Literal{false, constraintIndex});
+#ifdef DEBUG
+		cerr << "||||| conflict claus: " << toString(conflictClause) << endl;
+#endif
 			return conflictClause;
 		}
 		else
@@ -755,14 +758,17 @@ string BooleanLPSolver::toString(Clause const& _clause) const
 {
 	vector<string> literals;
 	for (Literal const& l: _clause)
+	{
+		string lit = l.positive ? "" : "!";
 		if (isBooleanVariable(l.variable))
-			literals.emplace_back((l.positive ? "" : "!") + variableName(l.variable));
+			lit += variableName(l.variable);
 		else
 		{
 			solAssert(isConditionalConstraint(l.variable));
-			solAssert(l.positive);
-			literals.emplace_back(toString(conditionalConstraint(l.variable)));
+			lit += toString(conditionalConstraint(l.variable));
 		}
+		literals.emplace_back(move(lit));
+	}
 	return joinHumanReadable(literals, "  \\/  ") + "\n";
 }
 
