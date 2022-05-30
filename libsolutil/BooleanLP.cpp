@@ -318,6 +318,12 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, map<string, LetBindi
 			literals.emplace_back(parseLiteralOrReturnEqualBoolean(arg, _letBindings));
 		state().clauses.emplace_back(Clause{move(literals)});
 	}
+	else if (_expr.name == "xor")
+	{
+		solAssert(_expr.arguments.size() == 2);
+		addAssertion(_expr.arguments.at(0) || _expr.arguments.at(1));
+		addAssertion(!_expr.arguments.at(0) || !_expr.arguments.at(1));
+	}
 	else if (_expr.name == "not")
 	{
 		solAssert(_expr.arguments.size() == 1);
