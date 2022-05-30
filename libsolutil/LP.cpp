@@ -231,7 +231,7 @@ void LPSolver::setVariableName(size_t _variable, string _name)
 	p.variables[p.varMapping.at(_variable)].name = move(_name);
 }
 
-void LPSolver::addLowerBound(size_t _variable, RationalWithDelta _bound)
+void LPSolver::addLowerBound(size_t _variable, RationalWithDelta _bound, optional<size_t> _reason)
 {
 	SubProblem& p = unsealForVariable(_variable);
 	size_t innerIndex = p.varMapping.at(_variable);
@@ -239,11 +239,12 @@ void LPSolver::addLowerBound(size_t _variable, RationalWithDelta _bound)
 	if (!var.bounds.lower || *var.bounds.lower < _bound)
 	{
 		var.bounds.lower = move(_bound);
+		var.bounds.lowerReason = move(_reason);
 		p.variablesPotentiallyOutOfBounds.insert(innerIndex);
 	}
 }
 
-void LPSolver::addUpperBound(size_t _variable, RationalWithDelta _bound)
+void LPSolver::addUpperBound(size_t _variable, RationalWithDelta _bound, optional<size_t> _reason)
 {
 	SubProblem& p = unsealForVariable(_variable);
 	size_t innerIndex = p.varMapping.at(_variable);
@@ -251,6 +252,7 @@ void LPSolver::addUpperBound(size_t _variable, RationalWithDelta _bound)
 	if (!var.bounds.upper || *var.bounds.upper > _bound)
 	{
 		var.bounds.upper = move(_bound);
+		var.bounds.upperReason = move(_reason);
 		p.variablesPotentiallyOutOfBounds.insert(innerIndex);
 	}
 }
@@ -305,6 +307,7 @@ LPSolver::SubProblem& LPSolver::unseal(size_t _problemIndex)
 		problem = make_shared<SubProblem>(*problem);
 	problem->sealed = false;
 	problem->result = nullopt;
+	problem->reasons.clear();
 	return *problem;
 }
 
@@ -345,7 +348,6 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 		combineInto.basicVariables.emplace(index + varShift, row + rowShift);
 	for (auto&& [outerIndex, innerIndex]: combineFrom.varMapping)
 		combineInto.varMapping.emplace(outerIndex, innerIndex + varShift);
-	combineInto.reasons += combineFrom.reasons;
 
 	for (auto& item: m_subProblemsPerVariable)
 		if (item.second == _combineFrom)
@@ -375,8 +377,6 @@ void LPSolver::addConstraintToSubProblem(
 	// together with the var.
 
 	SubProblem& problem = unseal(_subProblem);
-	if (_reason)
-		problem.reasons.insert(*_reason);
 
 	size_t numVariables = 0;
 	size_t latestVariableIndex = size_t(-1);
@@ -400,9 +400,9 @@ void LPSolver::addConstraintToSubProblem(
 			bound -= RationalWithDelta::delta();
 		bound /= factor;
 		if (factor > 0 || _constraint.kind == Constraint::EQUAL)
-			addUpperBound(latestVariableIndex, bound);
+			addUpperBound(latestVariableIndex, bound, move(_reason));
 		if (factor < 0 || _constraint.kind == Constraint::EQUAL)
-			addLowerBound(latestVariableIndex, bound);
+			addLowerBound(latestVariableIndex, bound, move(_reason));
 		return;
 	}
 
@@ -412,8 +412,12 @@ void LPSolver::addConstraintToSubProblem(
 	//problem.variables[slackIndex].name = "_s" + to_string(m_slackVariableCounter++);
 	problem.basicVariables[slackIndex] = problem.factors.size();
 	if (_constraint.kind == Constraint::EQUAL)
+	{
 		problem.variables[slackIndex].bounds.lower = _constraint.data[0];
+		problem.variables[slackIndex].bounds.lowerReason = _reason;
+	}
 	problem.variables[slackIndex].bounds.upper = _constraint.data[0];
+	problem.variables[slackIndex].bounds.upperReason = _reason;
 	if (_constraint.kind == Constraint::LESS_THAN)
 		*problem.variables[slackIndex].bounds.upper -= RationalWithDelta::delta();
 	// TODO it is a basic var, so we don't add it, unless we use this for basic vars.
@@ -511,7 +515,10 @@ LPResult LPSolver::SubProblem::check()
 				pivotAndUpdate(*bvi, *basicVar.bounds.lower, *replacementVar);
 			}
 			else
+			{
+				reasons = reasonsForUnsat(*bvi, true);
 				return LPResult::Infeasible;
+			}
 		}
 		else if (basicVar.bounds.upper && basicVar.value > *basicVar.bounds.upper)
 		{
@@ -523,7 +530,10 @@ LPResult LPSolver::SubProblem::check()
 				pivotAndUpdate(*bvi, *basicVar.bounds.upper, *replacementVar);
 			}
 			else
+			{
+				reasons = reasonsForUnsat(*bvi, false);
 				return LPResult::Infeasible;
+			}
 		}
 #ifdef DEBUG
 		cerr << "Fixed basic " << basicVar.name << endl;
@@ -594,7 +604,14 @@ bool LPSolver::SubProblem::correctNonbasic()
 	{
 		Variable& var = variables.at(i);
 		if (var.bounds.lower && var.bounds.upper && *var.bounds.lower > *var.bounds.upper)
+		{
+			reasons.clear();
+			if (var.bounds.lowerReason)
+				reasons.insert(*var.bounds.lowerReason);
+			if (var.bounds.upperReason)
+				reasons.insert(*var.bounds.upperReason);
 			return false;
+		}
 		if (basicVariables.count(i))
 		{
 			variablesPotentiallyOutOfBounds.insert(i);
@@ -658,6 +675,34 @@ optional<size_t> LPSolver::SubProblem::firstReplacementVar(
 			return i;
 	}
 	return nullopt;
+}
+
+set<size_t> LPSolver::SubProblem::reasonsForUnsat(
+	size_t _basicVarToReplace,
+	bool _increasing
+) const
+{
+	set<size_t> r;
+	if (_increasing && variables[_basicVarToReplace].bounds.lowerReason)
+		r.insert(*variables[_basicVarToReplace].bounds.lowerReason);
+	else if (!_increasing && variables[_basicVarToReplace].bounds.upperReason)
+		r.insert(*variables[_basicVarToReplace].bounds.upperReason);
+
+	LinearExpression const& basicVarEquation = factors[basicVariables.at(_basicVarToReplace)];
+	for (auto const& [i, factor]: basicVarEquation.enumerate())
+	{
+		if (i == _basicVarToReplace || !factor)
+			continue;
+		bool positive = factor > 0;
+		if (!_increasing)
+			positive = !positive;
+		Variable const& candidate = variables.at(i);
+		if (positive && candidate.bounds.upperReason)
+			r.insert(*candidate.bounds.upperReason);
+		if (!positive && candidate.bounds.lowerReason)
+			r.insert(*candidate.bounds.lowerReason);
+	}
+	return r;
 }
 
 void LPSolver::SubProblem::pivot(size_t _old, size_t _new)

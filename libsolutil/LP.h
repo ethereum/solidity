@@ -295,8 +295,8 @@ class LPSolver
 public:
 	void addConstraint(Constraint const& _constraint, std::optional<size_t> _reason = std::nullopt);
 	void setVariableName(size_t _variable, std::string _name);
-	void addLowerBound(size_t _variable, RationalWithDelta _bound);
-	void addUpperBound(size_t _variable, RationalWithDelta _bound);
+	void addLowerBound(size_t _variable, RationalWithDelta _bound, std::optional<size_t> _reason = std::nullopt);
+	void addUpperBound(size_t _variable, RationalWithDelta _bound, std::optional<size_t> _reason = std::nullopt);
 
 	std::pair<LPResult, ReasonSet>check();
 
@@ -308,6 +308,8 @@ private:
 	{
 		std::optional<RationalWithDelta> lower;
 		std::optional<RationalWithDelta> upper;
+		std::optional<size_t> lowerReason;
+		std::optional<size_t> upperReason;
 	};
 	struct Variable
 	{
@@ -338,6 +340,8 @@ private:
 		/// @returns the index of the first basic variable violating its bounds.
 		std::optional<size_t> firstConflictingBasicVariable() const;
 		std::optional<size_t> firstReplacementVar(size_t _basicVarToReplace, bool _increasing) const;
+		/// @returns the set of reasons in case "firstReplacementVar" failed.
+		std::set<size_t> reasonsForUnsat(size_t _basicVarToReplace, bool _increasing) const;
 
 		void pivot(size_t _old, size_t _new);
 		void pivotAndUpdate(size_t _oldBasicVar, RationalWithDelta const& _newValue, size_t _newBasicVar);
