@@ -227,8 +227,12 @@ int main(int argc, char** argv)
 
 	map<string, SortPointer> variableSorts;
 	BooleanLPSolver solver;
-	while (!inputToParse.empty())
+	while (true)
 	{
+		while (!inputToParse.empty() && isWhiteSpace(inputToParse.front()))
+			inputToParse = inputToParse.substr(1);
+		if (inputToParse.empty())
+			break;
 		//cout << line << endl;
 		SMTLib2Parser parser(inputToParse);
 		SMTLib2Expression expr = parser.parseExpression();
