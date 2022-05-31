@@ -390,10 +390,10 @@ defaults:
         shell: powershell.exe
         size: large
 
-  - base_win_cmd: &base_win_cmd
+  - base_win_bash: &base_win_bash
       executor:
         name: win/default
-        shell: cmd.exe
+        shell: bash.exe
 
   - base_osx: &base_osx
       macos:
@@ -1428,7 +1428,9 @@ jobs:
           label: "osx"
 
   b_bytecode_win:
-    <<: *base_win_cmd
+    <<: *base_win_bash
+    environment:
+      LC_ALL: C
     steps:
       # NOTE: For bytecode generation we need the input files to be byte-for-byte identical on all
       # platforms so line ending conversions must absolutely be disabled.
@@ -1436,10 +1438,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: build
-      - run: mkdir test-cases\
-      - run: cd test-cases\ && python ..\scripts\isolate_tests.py ..\test\
-      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface standard-json --report-file ..\bytecode-report-windows-json.txt
-      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface cli --report-file ..\bytecode-report-windows-cli.txt
+      - run: mkdir test-cases/
+      - run: cd test-cases/ && python ../scripts/isolate_tests.py ../test/
+      - run: cd test-cases/ && python ../scripts/bytecodecompare/prepare_report.py ../build/solc/Release/solc.exe --interface standard-json --report-file ../bytecode-report-windows-json.txt
+      - run: cd test-cases/ && python ../scripts/bytecodecompare/prepare_report.py ../build/solc/Release/solc.exe --interface cli --report-file ../bytecode-report-windows-cli.txt
       - store_artifacts:
           path: bytecode-report-windows-json.txt
       - store_artifacts:
