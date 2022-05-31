@@ -312,11 +312,16 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, LetBindings _letBind
 			addAssertion(arg, _letBindings);
 	else if (_expr.name == "or")
 	{
-		vector<Literal> literals;
-		// We could try to parse a full clause here instead.
-		for (auto const& arg: _expr.arguments)
-			literals.emplace_back(parseLiteralOrReturnEqualBoolean(arg, _letBindings));
-		state().clauses.emplace_back(Clause{move(literals)});
+		if (_expr.arguments.size() == 1)
+			addAssertion(_expr.arguments.front());
+		else
+		{
+			vector<Literal> literals;
+			// We could try to parse a full clause here instead.
+			for (auto const& arg: _expr.arguments)
+				literals.emplace_back(parseLiteralOrReturnEqualBoolean(arg, _letBindings));
+			state().clauses.emplace_back(Clause{move(literals)});
+		}
 	}
 	else if (_expr.name == "xor")
 	{
@@ -748,15 +753,17 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 	else
 	{
 		Literal a = parseLiteralOrReturnEqualBoolean(_right.arguments.at(0), _letBindings);
-		Literal b = parseLiteralOrReturnEqualBoolean(_right.arguments.at(1), _letBindings);
-		/*
-		if (isConditionalConstraint(a.variable) && isConditionalConstraint(b.variable))
+		Literal b;
+		if (_right.arguments.size() > 2)
 		{
-			// We cannot have more than one constraint per clause.
-			// TODO Why?
-			b = *parseLiteral(declareInternalVariable(true));
-			addBooleanEquality(b, _right.arguments.at(1));
-		}*/
+			solAssert(_right.name == "and" || _right.name == "or");
+			// Reduce "a and b and c and ..." to "a and (b and c and ...)"
+			smtutil::Expression rightSuffix = _right;
+			rightSuffix.arguments.erase(rightSuffix.arguments.begin());
+			b = parseLiteralOrReturnEqualBoolean(rightSuffix, _letBindings);
+		}
+		else
+			b = parseLiteralOrReturnEqualBoolean(_right.arguments.at(1), _letBindings);
 
 		if (_right.name == "and")
 		{
