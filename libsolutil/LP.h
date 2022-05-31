@@ -137,50 +137,6 @@ struct RationalWithDelta
 	rational m_delta;
 };
 
-/**
- * State used when solving an LP problem.
- */
-struct SolvingState
-{
-	/// Names of variables. The index zero should be left empty
-	/// because zero corresponds to constants.
-	std::vector<std::string> variableNames;
-	struct Bounds
-	{
-		std::optional<RationalWithDelta> lower;
-		std::optional<RationalWithDelta> upper;
-		bool operator<(Bounds const& _other) const { return make_pair(lower, upper) < make_pair(_other.lower, _other.upper); }
-		bool operator==(Bounds const& _other) const { return make_pair(lower, upper) == make_pair(_other.lower, _other.upper); }
-
-		// TODO this is currently not used
-
-		/// Set of literals the conjunction of which implies the lower bonud.
-		std::set<size_t> lowerReasons;
-		/// Set of literals the conjunction of which implies the upper bonud.
-		std::set<size_t> upperReasons;
-	};
-	/// Lower and upper bounds for variables (in the sense of >= / <=).
-	std::vector<Bounds> bounds;
-	std::vector<Constraint> constraints;
-	// For each bound and constraint, store an index of the literal
-	// that implies it.
-
-	std::set<size_t> reasons() const;
-
-	struct Compare
-	{
-		explicit Compare(bool _considerVariableNames = false): considerVariableNames(_considerVariableNames) {}
-		bool operator()(SolvingState const& _a, SolvingState const& _b) const;
-		bool considerVariableNames;
-	};
-
-	bool operator==(SolvingState const& _other) const noexcept {
-		return bounds == _other.bounds && constraints == _other.constraints;
-	}
-
-	std::string toString() const;
-};
-
 }
 
 template <class T>
@@ -211,18 +167,6 @@ struct std::hash<solidity::util::RationalWithDelta>
 };
 
 template<>
-struct std::hash<solidity::util::SolvingState::Bounds>
-{
-	std::size_t operator()(solidity::util::SolvingState::Bounds const& _bounds) const noexcept
-	{
-		std::size_t result = 0;
-		hashCombine(result, _bounds.lower);
-		hashCombine(result, _bounds.upper);
-		return result;
-	}
-};
-
-template<>
 struct std::hash<solidity::util::LinearExpression>
 {
 	std::size_t operator()(solidity::util::LinearExpression const& _linearExpression) const noexcept
@@ -243,18 +187,6 @@ struct std::hash<solidity::util::Constraint>
 		std::size_t result = 0;
 		hashCombine(result, _constraint.kind);
 		hashCombine(result, _constraint.data);
-		return result;
-	}
-};
-
-template<>
-struct std::hash<solidity::util::SolvingState>
-{
-	std::size_t operator()(solidity::util::SolvingState const& _solvingState) const noexcept
-	{
-		std::size_t result = 0;
-		hashCombineVector(result, _solvingState.bounds);
-		hashCombineVector(result, _solvingState.constraints);
 		return result;
 	}
 };

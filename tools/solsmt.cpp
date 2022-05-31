@@ -218,7 +218,7 @@ int main(int argc, char** argv)
 {
 	if (argc != 2)
 	{
-		cout << "Usage: solsmt <smtlib2 fil>" << endl;
+		cout << "Usage: solsmt <smtlib2 file>" << endl;
 		return -1;
 	}
 

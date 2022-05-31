@@ -77,6 +77,7 @@ string toString(rational const& _x)
 		return ::toString(_x.numerator()) + "/" + ::toString(_x.denominator());
 }
 
+/*
 string reasonToString(ReasonSet const& _reasons, size_t _minSize)
 {
 	auto reasonsAsStrings = _reasons | ranges::views::transform([](size_t _r) { return to_string(_r); });
@@ -85,6 +86,7 @@ string reasonToString(ReasonSet const& _reasons, size_t _minSize)
 		result.resize(_minSize, ' ');
 	return result;
 }
+*/
 
 }
 
@@ -130,73 +132,6 @@ string RationalWithDelta::toString() const
 			"d";
 	return result;
 }
-
-bool SolvingState::Compare::operator()(SolvingState const& _a, SolvingState const& _b) const
-{
-	if (!considerVariableNames || _a.variableNames == _b.variableNames)
-	{
-		if (_a.bounds == _b.bounds)
-			return _a.constraints < _b.constraints;
-		else
-			return _a.bounds < _b.bounds;
-	}
-	else
-		return _a.variableNames < _b.variableNames;
-}
-
-set<size_t> SolvingState::reasons() const
-{
-	set<size_t> ret;
-	for (Bounds const& b: bounds)
-		ret += b.lowerReasons + b.upperReasons;
-	return ret;
-}
-
-string SolvingState::toString() const
-{
-	size_t const reasonLength = 10;
-	string result;
-	for (Constraint const& constraint: constraints)
-	{
-		vector<string> line;
-		for (auto&& [index, multiplier]: constraint.data.enumerate())
-			if (index > 0 && multiplier != 0)
-			{
-				string mult =
-					multiplier == -1 ?
-					"-" :
-					multiplier == 1 ?
-					"" :
-					::toString(multiplier) + " ";
-				line.emplace_back(mult + variableNames.at(index));
-			}
-		result +=
-			joinHumanReadable(line, " + ") +
-			(
-				constraint.kind == Constraint::EQUAL ? "  = " :
-				constraint.kind == Constraint::LESS_OR_EQUAL ? " <= " :
-				" <  "
-			) +
-			::toString(constraint.data.front()) +
-			"\n";
-	}
-	result += "Bounds:\n";
-	for (auto&& [index, bounds]: bounds | ranges::views::enumerate)
-	{
-		if (!bounds.lower && !bounds.upper)
-			continue;
-		if (bounds.lower)
-			result +=
-				reasonToString(bounds.lowerReasons, reasonLength) +
-				bounds.lower->toString() + " <= ";
-		result += variableNames.at(index);
-		if (bounds.upper)
-			result += " <= "s + bounds.upper->toString() + " " + reasonToString(bounds.upperReasons, 0);
-		result += "\n";
-	}
-	return result;
-}
-
 
 void LPSolver::addConstraint(Constraint const& _constraint, optional<size_t> _reason)
 {
