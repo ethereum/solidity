@@ -734,7 +734,7 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 	solAssert(_right.sort->kind == Kind::Bool);
 	if (optional<Literal> right = parseLiteral(_right, _letBindings))
 	{
-		// includes: not, <=, <, >=, >, boolean variables.
+		// includes: not, <=, <, >=, >, =, boolean variables.
 		// a = b <=> (-a \/ b) /\ (a \/ -b)
 		Literal negLeft = negate(_left);
 		Literal negRight = negate(*right);
@@ -743,6 +743,8 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 	}
 	// TODO This parses twice
 	else if (_right.name == "=" && parseLinearSum(_right.arguments.at(0), _letBindings) && parseLinearSum(_right.arguments.at(1), _letBindings))
+	{
+		solAssert(false, "This should be covered by the case above");
 		// a = (x = y)  <=>  a = (x <= y && x >= y)
 		addBooleanEquality(
 			_left,
@@ -750,6 +752,29 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 			_right.arguments.at(1) <= _right.arguments.at(0),
 			move(_letBindings)
 		);
+	}
+	else if (_right.name == "ite")
+	{
+		solAssert(_right.arguments.size() == 3);
+		solAssert(
+			_right.arguments.at(0).sort->kind == Kind::Bool &&
+			_right.arguments.at(1).sort->kind == Kind::Bool &&
+			_right.arguments.at(2).sort->kind == Kind::Bool
+		);
+		// _left = (c ? x : y)
+		// c ? _left = x : _left = y
+		// c => _left = x  &&  !c => _left = y
+		// (-c || _left = x) && (c || _left = y)
+		// (-c || ((-_left || x) && (_left || -x))) && ...
+		// (-c || -_left || x) && (-c || _left || -x) && ...
+		Literal c = parseLiteralOrReturnEqualBoolean(_right.arguments.at(0), _letBindings);
+		Literal x = parseLiteralOrReturnEqualBoolean(_right.arguments.at(1), _letBindings);
+		Literal y = parseLiteralOrReturnEqualBoolean(_right.arguments.at(2), _letBindings);
+		state().clauses.emplace_back(Clause{vector<Literal>{negate(c), negate(_left), x}});
+		state().clauses.emplace_back(Clause{vector<Literal>{negate(c), _left, negate(x)}});
+		state().clauses.emplace_back(Clause{vector<Literal>{c, negate(_left), y}});
+		state().clauses.emplace_back(Clause{vector<Literal>{c, _left, negate(y)}});
+	}
 	else
 	{
 		Literal a = parseLiteralOrReturnEqualBoolean(_right.arguments.at(0), _letBindings);
@@ -792,15 +817,7 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 			state().clauses.emplace_back(Clause{vector<Literal>{negate(_left), a, negate(b)}});
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, negate(a), negate(b)}});
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, a, b}});
-		}/*
-		else if (_right.name == "ite")
-		{
-			// a = (c ? x : y)
-			// c ? a = x : a = y
-			// c => a = x  && !c => a = y
-			addAssertion(!_right.arguments.at(0) || (_left == _right.arguments.at(1)), _letBindings);
-			addAssertion(_right.arguments.at(0) || (_left == _right.arguments.at(2)), _letBindings);
-		}*/
+		}
 		else
 			solAssert(false, "Unsupported operation: " + _right.name);
 	}
