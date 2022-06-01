@@ -700,6 +700,7 @@ jobs:
             deepdiff
             colorama
             requests
+      - run: pylint --version
       - run:
           name: Linting Python Scripts
           command: ./scripts/pylint_all.py

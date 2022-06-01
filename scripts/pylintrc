@@ -17,7 +17,6 @@
 # TODO: What could be eliminated in future PRs: invalid-name, pointless-string-statement, redefined-outer-name.
 disable=
     bad-indentation,
-    bad-whitespace,
     duplicate-code,
     invalid-name,
     missing-docstring,
