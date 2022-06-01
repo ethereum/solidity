@@ -264,14 +264,14 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return constructor(args);
 		}
 
-		smtAssert(false, "");
+		smtAssert(false);
 	}
 	catch (z3::exception const& _e)
 	{
 		smtAssert(false, _e.msg());
 	}
 
-	smtAssert(false, "");
+	smtAssert(false);
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
 	throw exception();
@@ -382,7 +382,7 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 	)
 		return Expression(_expr.decl().name().str(), arguments, fromZ3Sort(_expr.get_sort()));
 
-	smtAssert(false, "");
+	smtAssert(false);
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
 	throw exception();
