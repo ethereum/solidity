@@ -779,6 +779,12 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, negate(a)}});
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, negate(b)}});
 		}
+		else if (_right.name == "=>")
+		{
+			solAssert(_right.arguments.size() == 2);
+			// a = (x => y) <=> a = or(-x, y)
+			addBooleanEquality(_left, !_right.arguments.at(0) || _right.arguments.at(1), move(_letBindings));
+		}
 		else if (_right.name == "=")
 		{
 			// l = eq(a, b) <=> (-l or -a or b) and (-l or a or -b) and (l or -a or -b) and (l or a or b)
