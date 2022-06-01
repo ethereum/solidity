@@ -844,6 +844,11 @@ void BooleanLPSolver::addBooleanEquality(Literal const& _left, smtutil::Expressi
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, negate(a), negate(b)}});
 			state().clauses.emplace_back(Clause{vector<Literal>{_left, a, b}});
 		}
+		else if (_right.name == "xor")
+		{
+			solAssert(_right.arguments.size() == 2);
+			addBooleanEquality(negate(_left), _right.arguments.at(0) == _right.arguments.at(1), move(_letBindings));
+		}
 		else
 			solAssert(false, "Unsupported operation: " + _right.name);
 	}
