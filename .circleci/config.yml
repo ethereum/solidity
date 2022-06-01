@@ -222,7 +222,7 @@ defaults:
             command: pip install --user deepdiff colorama
         - run:
             name: Executing solc LSP test suite
-            command: ./test/lsp.py ./build/solc/solc
+            command: ./test/lsp.py ./build/solc/solc --non-interactive
         - gitter_notify_failure_unless_pr
 
   - steps_build: &steps_build
@@ -1352,7 +1352,7 @@ jobs:
           command: Get-Content ./test/lsp.py
       - run:
           name: Executing solc LSP test suite
-          command: python ./test/lsp.py .\build\solc\Release\solc.exe
+          command: python ./test/lsp.py .\build\solc\Release\solc.exe --non-interactive
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
       - gitter_notify_failure_unless_pr

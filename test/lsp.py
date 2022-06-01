@@ -69,7 +69,7 @@ TEST_REGEXES = TestRegexesTuple(
     re.compile(R'^// -> (?P<method>[\w\/]+) {'),
     re.compile(R'(?P<tag>"@\w+")'),
     re.compile(R'(?P<tag>@\w+)'),
-    re.compile(R'// (?P<testname>\w+):[ ]?(?P<diagnostics>[\w @]*)'),
+    re.compile(R'// (?P<testname>\S+):([ ](?P<diagnostics>[\w @]*))?'),
     re.compile(R'(?P<tag>@\w+) (?P<code>\d\d\d\d)')
 )
 
@@ -86,7 +86,7 @@ def split_path(path):
     """
     Return the test name and the subdir path of the given path.
     """
-    sub_dir_separator = path.find("/")
+    sub_dir_separator = path.rfind("/")
 
     if sub_dir_separator == -1:
         return (path, None)
@@ -105,7 +105,8 @@ def count_index(lines, start=0):
 
 def tags_only(lines, start=0):
     """
-    Filter the lines for tag comments and report line number that tags refer to.
+    Filter the lines for tag comments and report the line number that the tags
+    _refer_ to (which is not the line they are on!).
     """
     n = start
     numCommentLines = 0
@@ -272,27 +273,34 @@ def create_cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Solidity LSP Test suite")
     parser.set_defaults(fail_fast=False)
     parser.add_argument(
-        "-f, --fail-fast",
+        "-f", "--fail-fast",
         dest="fail_fast",
         action="store_true",
         help="Terminates the running tests on first failure."
     )
+    parser.set_defaults(non_interactive=False)
+    parser.add_argument(
+        "-n", "--non-interactive",
+        dest="non_interactive",
+        action="store_true",
+        help="Prevent interactive queries and just fail instead."
+    )
     parser.set_defaults(trace_io=False)
     parser.add_argument(
-        "-T, --trace-io",
+        "-T", "--trace-io",
         dest="trace_io",
         action="store_true",
         help="Be more verbose by also printing assertions."
     )
     parser.set_defaults(print_assertions=False)
     parser.add_argument(
-        "-v, --print-assertions",
+        "-v", "--print-assertions",
         dest="print_assertions",
         action="store_true",
         help="Be more verbose by also printing assertions."
     )
     parser.add_argument(
-        "-t, --test-pattern",
+        "-t", "--test-pattern",
         dest="test_pattern",
         type=str,
         default="*",
@@ -405,11 +413,13 @@ class TestParser:
 
             testDiagnostics = []
 
-            for diagnosticMatch in TEST_REGEXES.diagnostic.finditer(fileDiagMatch.group("diagnostics")):
-                testDiagnostics.append(self.Diagnostic(
-                    diagnosticMatch.group("tag"),
-                    int(diagnosticMatch.group("code"))
-                ))
+            diagnostics_string = fileDiagMatch.group("diagnostics")
+            if diagnostics_string is not None:
+                for diagnosticMatch in TEST_REGEXES.diagnostic.finditer(diagnostics_string):
+                    testDiagnostics.append(self.Diagnostic(
+                        diagnosticMatch.group("tag"),
+                        int(diagnosticMatch.group("code"))
+                    ))
 
             diagnostics["tests"][fileDiagMatch.group("testname")] = testDiagnostics
 
@@ -537,11 +547,11 @@ class FileTestRunner:
             self.expected_diagnostics = next(self.parsed_testcases)
             assert isinstance(self.expected_diagnostics, TestParser.Diagnostics) is True
 
-            tests = self.expected_diagnostics.tests
+            expected_diagnostics_per_file = self.expected_diagnostics.tests
 
             # Add our own test diagnostics if they didn't exist
-            if self.test_name not in tests:
-                tests[self.test_name] = []
+            if self.test_name not in expected_diagnostics_per_file:
+                expected_diagnostics_per_file[self.test_name] = []
 
             published_diagnostics = \
                 self.suite.open_file_and_wait_for_diagnostics(self.solc, self.test_name, self.sub_dir)
@@ -551,25 +561,27 @@ class FileTestRunner:
                     raise Exception(
                         f"'{self.test_name}.sol' imported file outside of test directory: '{diagnostics['uri']}'"
                     )
-                self.open_tests.append(diagnostics["uri"].replace(self.suite.project_root_uri + "/", "")[:-len(".sol")])
+                self.open_tests.append(self.suite.normalizeUri(diagnostics["uri"]))
 
             self.suite.expect_equal(
                 len(published_diagnostics),
-                len(tests),
+                len(expected_diagnostics_per_file),
                 description="Amount of reports does not match!")
 
-            for diagnostics in published_diagnostics:
-                testname_and_subdir = diagnostics["uri"].replace(self.suite.project_root_uri + "/", "")[:-len(".sol")]
-                testname, sub_dir = split_path(testname_and_subdir)
+            for diagnostics_per_file in published_diagnostics:
+                testname, sub_dir = split_path(self.suite.normalizeUri(diagnostics_per_file['uri']))
 
-                expected_diagnostics = tests[testname]
+                # Clear all processed expectations so we can check at the end
+                # what's missing
+                expected_diagnostics = expected_diagnostics_per_file.pop(testname, {})
+
                 self.suite.expect_equal(
-                    len(diagnostics["diagnostics"]),
+                    len(diagnostics_per_file["diagnostics"]),
                     len(expected_diagnostics),
                     description="Unexpected amount of diagnostics"
                 )
                 markers = self.suite.get_file_tags(testname, sub_dir)
-                for actual_diagnostic in diagnostics["diagnostics"]:
+                for actual_diagnostic in diagnostics_per_file["diagnostics"]:
                     expected_diagnostic = next((diagnostic for diagnostic in
                         expected_diagnostics if actual_diagnostic['range'] ==
                         markers[diagnostic.marker]), None)
@@ -585,6 +597,12 @@ class FileTestRunner:
                         code=expected_diagnostic.code,
                         marker=markers[expected_diagnostic.marker]
                     )
+
+            if len(expected_diagnostics_per_file) > 0:
+                raise ExpectationFailed(
+                    f"Expected diagnostics but received none for {expected_diagnostics_per_file}",
+                    ExpectationFailed.Part.Diagnostics
+                )
 
         except Exception:
             self.close_all_open_files()
@@ -759,6 +777,7 @@ class SolidityLSPTestSuite: # {{{
         self.trace_io = args.trace_io
         self.test_pattern = args.test_pattern
         self.fail_fast = args.fail_fast
+        self.non_interactive = args.non_interactive
 
         print(f"{SGR_NOTICE}test pattern: {self.test_pattern}{SGR_RESET}")
 
@@ -773,6 +792,9 @@ class SolidityLSPTestSuite: # {{{
             if callable(getattr(SolidityLSPTestSuite, name)) and name.startswith("test_")
         ])
         filtered_tests = fnmatch.filter(all_tests, self.test_pattern)
+        if filtered_tests.count("generic") == 0:
+            filtered_tests.append("generic")
+
         for method_name in filtered_tests:
             test_fn = getattr(self, 'test_' + method_name)
             title: str = test_fn.__name__[5:]
@@ -889,22 +911,25 @@ class SolidityLSPTestSuite: # {{{
 
         return sorted(reports, key=lambda x: x['uri'])
 
+    def normalizeUri(self, uri):
+        return uri.replace(self.project_root_uri + "/", "")[:-len(".sol")]
+
     def fetch_and_format_diagnostics(self, solc: JsonRpcProcess, test, sub_dir=None):
         expectations = ""
 
         published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, test, sub_dir)
 
-        for diagnostics in published_diagnostics:
-            testname = diagnostics["uri"].replace(f"{self.project_root_uri}/{sub_dir}/", "")[:-len(".sol")]
+        for file_diagnostics in published_diagnostics:
+            testname, local_sub_dir = split_path(self.normalizeUri(file_diagnostics["uri"]))
 
             # Skip empty diagnostics within the same file
-            if len(diagnostics["diagnostics"]) == 0 and testname == test:
+            if len(file_diagnostics["diagnostics"]) == 0 and testname == test:
                 continue
 
             expectations += f"// {testname}:"
 
-            for diagnostic in diagnostics["diagnostics"]:
-                tag = self.find_tag_with_range(testname, sub_dir, diagnostic['range'])
+            for diagnostic in file_diagnostics["diagnostics"]:
+                tag = self.find_tag_with_range(testname, local_sub_dir, diagnostic['range'])
 
                 if tag is None:
                     raise Exception(f"No tag found for diagnostic range {diagnostic['range']}")
@@ -1121,6 +1146,11 @@ class SolidityLSPTestSuite: # {{{
         Asks the user how to proceed after an error.
         Returns True if the test/file should be ignored, otherwise False
         """
+
+        # Prevent user interaction when in non-interactive mode
+        if self.non_interactive:
+            return False
+
         while True:
             print("(u)pdate/(r)etry/(s)kip file?")
             user_response = getCharFromStdin()
@@ -1324,8 +1354,13 @@ class SolidityLSPTestSuite: # {{{
 
         for sub_dir in map(lambda filepath: filepath.name, sub_dirs):
             tests = map(
-                lambda filename: filename[:-len(".sol")],
+                lambda filename, sd=sub_dir: sd + "/" + filename[:-len(".sol")],
                 os.listdir(f"{self.project_root_dir}/{sub_dir}")
+            )
+
+            tests = map(
+                lambda path, sd=sub_dir: path[len(sd)+1:],
+                fnmatch.filter(tests, self.test_pattern)
             )
 
             print(f"Running tests in subdirectory '{sub_dir}'...")
