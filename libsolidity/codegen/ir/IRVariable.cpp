@@ -102,7 +102,7 @@ string IRVariable::name() const
 IRVariable IRVariable::tupleComponent(size_t _i) const
 {
 	solAssert(
-		m_type.category() == Type::Category::Tuple,
+		m_type.category() == Type::Category::Tuple || m_type.category() == Type::Category::InlineArray,
 		"Requested tuple component of non-tuple IR variable."
 	);
 	return part(IRNames::tupleComponent(_i));

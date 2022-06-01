@@ -1,4 +1,4 @@
-pragma abicoder               v2;
+pragma abicoder v2;
 
 contract C {
     function f() public pure returns(string[5] calldata) {
@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 6359: (122-147): Return argument type string memory[5] memory is not implicitly convertible to expected type (type of first return variable) string calldata[5] calldata.
+// TypeError 6359: (108-133): Return argument type inline_array(literal_string "h", literal_string "e", literal_string "l", literal_string "l", literal_string "o") is not implicitly convertible to expected type string calldata[5] calldata. Invalid conversion from literal_string "h" to string calldata.

@@ -73,6 +73,19 @@ Type const* closestType(Type const* _type, Type const* _targetType, bool _isShif
 		}
 		return TypeProvider::tuple(move(tempComponents));
 	}
+	else if (auto const* inlineArrayType = dynamic_cast<InlineArrayType const*>(_type))
+	{
+		Type const& targetBaseType = *dynamic_cast<ArrayType const&>(*_targetType).baseType();
+		Type const* resultBaseType = closestType(
+			inlineArrayType->componentsCommonMobileType(), &targetBaseType, _isShiftOp
+		);
+
+		return TypeProvider::array(
+			DataLocation::Memory,
+			resultBaseType,
+			inlineArrayType->components().size()
+		);
+	}
 	else
 		return _targetType->dataStoredIn(DataLocation::Storage) ? _type->mobileType() : _targetType;
 }
@@ -93,18 +106,21 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.value()->accept(*this);
 
-	if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
+	if (type->category() != Type::Category::InlineArray)
 	{
-		// reference type, only convert value to mobile type and do final conversion in storeValue.
-		auto mt = type->mobileType();
-		solAssert(mt, "");
-		utils().convertType(*type, *mt);
-		type = mt;
-	}
-	else
-	{
-		utils().convertType(*type, *_varDecl.annotation().type);
-		type = _varDecl.annotation().type;
+		if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
+		{
+			// reference type, only convert value to mobile type and do final conversion in storeValue.
+			auto mt = type->mobileType();
+			solAssert(mt, "");
+			utils().convertType(*type, *mt);
+			type = mt;
+		}
+		else
+		{
+			utils().convertType(*type, *_varDecl.annotation().type);
+			type = _varDecl.annotation().type;
+		}
 	}
 	if (_varDecl.immutable())
 		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
@@ -365,44 +381,25 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 
 bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 {
-	if (_tuple.isInlineArray())
-	{
-		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
-
-		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
-		utils().allocateMemory(max(u256(32u), arrayType.memoryDataSize()));
-		m_context << Instruction::DUP1;
-
-		for (auto const& component: _tuple.components())
+	vector<unique_ptr<LValue>> lvalues;
+	for (auto const& component: _tuple.components())
+		if (component)
 		{
-			acceptAndConvert(*component, *arrayType.baseType(), true);
-			utils().storeInMemoryDynamic(*arrayType.baseType(), true);
-		}
-
-		m_context << Instruction::POP;
-	}
-	else
-	{
-		vector<unique_ptr<LValue>> lvalues;
-		for (auto const& component: _tuple.components())
-			if (component)
+			component->accept(*this);
+			if (_tuple.annotation().willBeWrittenTo)
 			{
-				component->accept(*this);
-				if (_tuple.annotation().willBeWrittenTo)
-				{
-					solAssert(!!m_currentLValue, "");
-					lvalues.push_back(move(m_currentLValue));
-				}
+				solAssert(!!m_currentLValue, "");
+				lvalues.push_back(move(m_currentLValue));
 			}
-			else if (_tuple.annotation().willBeWrittenTo)
-				lvalues.push_back(unique_ptr<LValue>());
-		if (_tuple.annotation().willBeWrittenTo)
-		{
-			if (_tuple.components().size() == 1)
-				m_currentLValue = move(lvalues[0]);
-			else
-				m_currentLValue = make_unique<TupleObject>(m_context, move(lvalues));
 		}
+		else if (_tuple.annotation().willBeWrittenTo)
+			lvalues.push_back(unique_ptr<LValue>());
+	if (_tuple.annotation().willBeWrittenTo)
+	{
+		if (_tuple.components().size() == 1)
+			m_currentLValue = move(lvalues[0]);
+		else
+			m_currentLValue = make_unique<TupleObject>(m_context, move(lvalues));
 	}
 	return false;
 }
@@ -2125,6 +2122,27 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					ArrayUtils(m_context).accessCallDataArrayElement(arrayType);
 					break;
 			}
+			break;
+		}
+		case Type::Category::InlineArray:
+		{
+			InlineArrayType const& inlineArrayType = dynamic_cast<InlineArrayType const&>(baseType);
+			solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+			ArrayType const* arrayType = TypeProvider::array(DataLocation::Memory, inlineArrayType.componentsCommonMobileType(), inlineArrayType.components().size());
+
+			// stack layout: <source ref> (variably sized)
+			acceptAndConvert(_indexAccess.baseExpression(), *arrayType, true);
+			utils().moveIntoStack(inlineArrayType.sizeOnStack());
+			utils().popStackSlots(inlineArrayType.sizeOnStack());
+			// stack layout: <array_ref> [<length>]
+
+			acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
+			// stack layout: <array_ref> [<length>] <index>
+
+			ArrayUtils(m_context).accessIndex(*arrayType, true);
+			setLValue<MemoryItem>(_indexAccess, *arrayType->baseType());
+
 			break;
 		}
 		case Type::Category::FixedBytes:

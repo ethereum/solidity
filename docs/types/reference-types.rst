@@ -235,94 +235,60 @@ Array Literals
 ^^^^^^^^^^^^^^
 
 An array literal is a comma-separated list of one or more expressions, enclosed
-in square brackets (``[...]``). For example ``[1, a, f(3)]``. The type of the
-array literal is determined as follows:
-
-It is always a statically-sized memory array whose length is the
-number of expressions.
-
-The base type of the array is the type of the first expression on the list such that all
-other expressions can be implicitly converted to it. It is a type error
-if this is not possible.
-
-It is not enough that there is a type all the elements can be converted to. One of the elements
-has to be of that type.
-
-In the example below, the type of ``[1, 2, 3]`` is
-``uint8[3] memory``, because the type of each of these constants is ``uint8``. If
-you want the result to be a ``uint[3] memory`` type, you need to convert
-the first element to ``uint``.
+in square brackets (``[...]``). For example ``[1, a, f(3)]``. It can be converted to
+statically and dynamically-sized array if all it's expressions can be implicitly
+converted to the base type of the array. In example below, the conversion is impossible
+because ``-1`` cannot be implicitly converted to ``uint8``.
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity >=0.8.15 <0.9.0;
 
+    // This will not compile
     contract C {
         function f() public pure {
-            g([uint(1), 2, 3]);
+            // The next line creates a type error because int_const -1
+            // cannot be converted to uint8 memory.
+            g([1, -1]);
+        }
+        function g(uint8[] memory) public pure {
+            // ...
+        }
+    }
+
+For statically-sized arrays, conversion can be performed only if length of the array match
+the number of the expressions in the array literal. Therefore following is impossible:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.15 <0.9.0;
+
+    // This will not compile
+    contract C {
+        function f() public pure {
+            // The next line creates a type error because inline_array(int_const 1, int_const 1)
+            // cannot be converted to uint[3] memory.
+            g([1, 2]);
         }
         function g(uint[3] memory) public pure {
             // ...
         }
     }
 
-The array literal ``[1, -1]`` is invalid because the type of the first expression
-is ``uint8`` while the type of the second is ``int8`` and they cannot be implicitly
-converted to each other. To make it work, you can use ``[int8(1), -1]``, for example.
-
-Since fixed-size memory arrays of different type cannot be converted into each other
-(even if the base types can), you always have to specify a common base type explicitly
-if you want to use two-dimensional array literals:
+Array literals can be used also to initialize multi-dimesional arrays:
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
+    pragma solidity >=0.8.15 <0.9.0;
 
     contract C {
-        function f() public pure returns (uint24[2][4] memory) {
-            uint24[2][4] memory x = [[uint24(0x1), 1], [0xffffff, 2], [uint24(0xff), 3], [uint24(0xffff), 4]];
-            // The following does not work, because some of the inner arrays are not of the right type.
-            // uint[2][4] memory x = [[0x1, 1], [0xffffff, 2], [0xff, 3], [0xffff, 4]];
-            return x;
-        }
-    }
+        int256 [2][] a = [[1, 2], [3, 4], [5, 6]];
 
-Fixed size memory arrays cannot be assigned to dynamically-sized
-memory arrays, i.e. the following is not possible:
-
-.. code-block:: solidity
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
-
-    // This will not compile.
-    contract C {
-        function f() public {
-            // The next line creates a type error because uint[3] memory
-            // cannot be converted to uint[] memory.
-            uint[] memory x = [uint(1), 3, 4];
-        }
-    }
-
-It is planned to remove this restriction in the future, but it creates some
-complications because of how arrays are passed in the ABI.
-
-If you want to initialize dynamically-sized arrays, you have to assign the
-individual elements:
-
-.. code-block:: solidity
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.9.0;
-
-    contract C {
-        function f() public pure {
-            uint[] memory x = new uint[](3);
-            x[0] = 1;
-            x[1] = 3;
-            x[2] = 4;
+        function f() public pure returns (uint8[][] memory) {
+            return [[1], [2, 3], [4, 5]];
         }
     }
 
@@ -373,7 +339,7 @@ Array Members
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity >=0.8.15 <0.9.0;
 
     contract ArrayContract {
         uint[2**20] aLotOfIntegers;
@@ -456,9 +422,8 @@ Array Members
             // Dynamic memory arrays are created using `new`:
             uint[2][] memory arrayOfPairs = new uint[2][](size);
 
-            // Inline arrays are always statically-sized and if you only
-            // use literals, you have to provide at least one type.
-            arrayOfPairs[0] = [uint(1), 2];
+            // Static memory arrays can be set with inline array
+            arrayOfPairs[0] = [1, 2];
 
             // Create a dynamic byte array:
             bytes memory b = new bytes(200);

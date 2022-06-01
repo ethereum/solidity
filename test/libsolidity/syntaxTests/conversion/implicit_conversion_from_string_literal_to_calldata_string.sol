@@ -12,6 +12,6 @@ contract C {
     }
 }
 // ----
-// TypeError 6359: (85-92): Return argument type literal_string "hello" is not implicitly convertible to expected type (type of first return variable) string calldata.
-// TypeError 6359: (173-187): Return argument type literal_string "hello" is not implicitly convertible to expected type (type of first return variable) string calldata.
-// TypeError 6359: (267-282): Return argument type literal_string "hello" is not implicitly convertible to expected type (type of first return variable) bytes calldata.
+// TypeError 6359: (85-92): Return argument type literal_string "hello" is not implicitly convertible to expected type string calldata.
+// TypeError 6359: (173-187): Return argument type literal_string "hello" is not implicitly convertible to expected type string calldata.
+// TypeError 6359: (267-282): Return argument type literal_string "hello" is not implicitly convertible to expected type bytes calldata.

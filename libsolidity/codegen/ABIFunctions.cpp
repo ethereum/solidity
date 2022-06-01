@@ -29,6 +29,7 @@
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
+#include <range/v3/view/enumerate.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -286,6 +287,15 @@ string ABIFunctions::abiEncodingFunction(
 
 	if (_from.category() == Type::Category::StringLiteral)
 		return abiEncodingFunctionStringLiteral(_from, to, _options);
+	else if (_from.category() == Type::Category::InlineArray)
+	{
+		solAssert(_to.category() == Type::Category::Array);
+		return abiEncodingFunctionInlineArray(
+			dynamic_cast<InlineArrayType const&>(_from),
+			dynamic_cast<ArrayType const&>(_to),
+			_options);
+
+	}
 	else if (auto toArray = dynamic_cast<ArrayType const*>(&to))
 	{
 		ArrayType const* fromArray = nullptr;
@@ -628,6 +638,87 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		}
 		templ("nextArrayElement", m_utils.nextArrayElementFunction(_from));
 		return templ.render();
+	});
+}
+
+string ABIFunctions::abiEncodingFunctionInlineArray(
+	InlineArrayType const& _from,
+	ArrayType const& _to,
+	EncodingOptions const& _options
+)
+{
+	string functionName =
+		"abi_encode_" +
+		_from.identifier() +
+		"_to_" +
+		_to.identifier() +
+		_options.toFunctionNameSuffix();
+
+	return createFunction(functionName, [&]() {
+		bool dynamic = _to.isDynamicallyEncoded();
+		bool dynamicBase = _to.baseType()->isDynamicallyEncoded();
+		bool const usesTail = dynamicBase && !_options.dynamicInplace;
+		EncodingOptions subOptions(_options);
+		subOptions.encodeFunctionFromStack = true;
+		subOptions.padded = true;
+
+		vector<map<string, string>> memberSetValues;
+		unsigned stackItemIndex = 0;
+
+		for (auto const& type: _from.components())
+		{
+			memberSetValues.emplace_back();
+
+			memberSetValues.back()["setMember"] = Whiskers(R"(
+					<?usesTail>
+						mstore(pos, sub(tail, headStart))
+						tail := <encodeToMemoryFun>(<value>, tail)
+						pos := add(pos, 0x20)
+					<!usesTail>
+						pos := <encodeToMemoryFun>(<value>, pos)
+					</usesTail>
+			)")
+			("value", suffixedVariableNameList("var_", stackItemIndex, stackItemIndex + type->sizeOnStack()))
+			("usesTail", usesTail)
+			("encodeToMemoryFun", abiEncodeAndReturnUpdatedPosFunction(*type, *_to.baseType(), subOptions))
+			.render();
+
+			stackItemIndex += type->sizeOnStack();
+		}
+
+		return Whiskers(R"(
+			// <readableTypeNameFrom> -> <readableTypeNameTo>
+			function <functionName>(<values>, pos) <return> {
+				let length := <length>
+				pos := <storeLength>(pos, length)
+
+				<?usesTail>
+					let headStart := pos
+					let tail := add(pos, mul(length, 0x20))
+					<#member>
+						<setMember>
+					</member>
+					pos := tail
+				<!usesTail>
+					<#member>
+						<setMember>
+					</member>
+				</usesTail>
+
+				<assignEnd>
+			}
+		)")
+		("functionName", functionName)
+		("member", std::move(memberSetValues))
+		("length", to_string(_from.components().size()))
+		("readableTypeNameFrom", _from.toString(true))
+		("readableTypeNameTo", _to.toString(true))
+		("return", dynamic ? " -> end " : "")
+		("assignEnd", dynamic ? "end := pos" : "")
+		("storeLength", arrayStoreLengthForEncodingFunction(_to, _options))
+		("usesTail", usesTail)
+		("values", suffixedVariableNameList("var_", 0, _from.sizeOnStack()))
+		.render();
 	});
 }
 

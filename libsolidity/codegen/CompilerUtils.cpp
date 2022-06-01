@@ -32,6 +32,7 @@
 #include <libevmasm/Instruction.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StackTooDeepString.h>
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -462,6 +463,7 @@ void CompilerUtils::encodeToMemory(
 	// store memory start pointer
 	m_context << Instruction::DUP1;
 
+	ArrayUtils utils(m_context);
 	unsigned argSize = CompilerUtils::sizeOnStack(_givenTypes);
 	unsigned stackPos = 0; // advances through the argument values
 	unsigned dynPointers = 0; // number of dynamic head pointers on the stack
@@ -479,6 +481,14 @@ void CompilerUtils::encodeToMemory(
 				StackTooDeepError,
 				util::stackTooDeepString
 			);
+			stackPos += _givenTypes[i]->sizeOnStack();
+		}
+		else if (InlineArrayType const* inlineArrayType = dynamic_cast<InlineArrayType const*>(_givenTypes[i]))
+		{
+			ArrayType const* arrayType = dynamic_cast<ArrayType const*>(_targetTypes[i]);
+			unsigned const sourceStackPosition = argSize - stackPos + dynPointers - inlineArrayType->sizeOnStack() + 2;
+			utils.moveInlineArrayToMemory(*inlineArrayType, *arrayType, sourceStackPosition, _padToWordBoundaries);
+			argSize -= inlineArrayType->sizeOnStack();
 		}
 		else
 		{
@@ -520,8 +530,10 @@ void CompilerUtils::encodeToMemory(
 			}
 			else
 				storeInMemoryDynamic(*type, _padToWordBoundaries, needCleanup);
+			stackPos += _givenTypes[i]->sizeOnStack();
 		}
-		stackPos += _givenTypes[i]->sizeOnStack();
+
+
 	}
 
 	// now copy the dynamic part
@@ -545,7 +557,18 @@ void CompilerUtils::encodeToMemory(
 			m_context << dupInstruction(2 + dynPointers - thisDynPointer);
 			m_context << Instruction::MSTORE;
 			// stack: ... <end_of_mem>
-			if (_givenTypes[i]->category() == Type::Category::StringLiteral)
+			if (InlineArrayType const* inlineArrayType = dynamic_cast<InlineArrayType const*>(_givenTypes[i]))
+			{
+				ArrayType const* arrayType = dynamic_cast<ArrayType const*>(_targetTypes[i]);
+
+				m_context << u256(inlineArrayType->components().size());
+				storeInMemoryDynamic(*TypeProvider::uint256(), true);
+
+				unsigned const sourceStackPosition = argSize - stackPos + dynPointers - inlineArrayType->sizeOnStack() + 2;
+				utils.moveInlineArrayToMemory(*inlineArrayType, *arrayType, sourceStackPosition, _padToWordBoundaries);
+				argSize -= inlineArrayType->sizeOnStack();
+			}
+			else if (_givenTypes[i]->category() == Type::Category::StringLiteral)
 			{
 				auto const& strType = dynamic_cast<StringLiteralType const&>(*_givenTypes[i]);
 				auto const size = strType.value().size();
@@ -1114,6 +1137,62 @@ void CompilerUtils::convertType(
 		}
 		break;
 	}
+	case Type::Category::InlineArray:
+	{
+		InlineArrayType const& inlineArray = dynamic_cast<InlineArrayType const&>(_typeOnStack);
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(_targetType);
+
+		solAssert(arrayType.location() == DataLocation::Memory);
+
+		auto const& components = inlineArray.components();
+		m_context << u256(components.size());
+		// stack: <source ref> <length>
+		ArrayUtils(m_context).convertLengthToSize(arrayType, true);
+
+		// stack: <source ref> <size>
+		if (arrayType.isDynamicallySized())
+			m_context << u256(0x20) << Instruction::ADD;
+			// <size> = <size> + 0x20
+		allocateMemory();
+
+		// stack: <source ref> <mem start>
+		m_context << Instruction::DUP1;
+		// stack: <source ref> <mem start> <mem start>
+		if (arrayType.isDynamicallySized())
+		{
+			m_context << u256(components.size());
+			// stack: <source ref> <mem start> <mem start> <length>
+			storeInMemoryDynamic(*TypeProvider::uint256());
+			// memory[<mem start>] = <length>
+			// stack:  <source ref> <mem start> <mem data pos>
+		}
+
+		// stack:  <source ref> <mem start> <mem data pos>
+		m_context << u256(components.size() * arrayType.baseType()->memoryHeadSize()) << Instruction::ADD;
+		// stack:  <source ref> <mem start> <mem data end>
+		for (Type const* component: components | ranges::views::reverse)
+		{
+			// stack:  <source ref> <mem start> <component end>
+			m_context << u256(arrayType.memoryStride()) << Instruction::SWAP1 << Instruction::SUB;
+			// stack:  <source ref> <mem start> <component pos>
+			m_context << Instruction::DUP1;
+			// stack:  <source ref> <mem start> <component pos> <component pos>
+
+			unsigned const componentSize = component->sizeOnStack();
+			moveToStackTop(3, componentSize);
+			// stack:  <source ref> <mem start> <component pos> <component pos> <value>
+			convertType(*component, *arrayType.baseType());
+			// stack:  <source ref> <mem start> <component pos> <component pos> <converted value>
+			storeInMemoryDynamic(*arrayType.baseType());
+			// stack:  <source ref> <mem start> <component pos> <component end>
+			m_context << Instruction::POP;
+			// stack: <source ref> <mem start> <component pos>
+		}
+		// stack: <mem start> <mem data pos>
+		m_context << Instruction::POP;
+		// stack: <mem start>
+		break;
+	}
 	case Type::Category::ArraySlice:
 	{
 		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
@@ -1287,6 +1366,7 @@ void CompilerUtils::convertType(
 		}
 		break;
 	}
+
 	case Type::Category::Bool:
 		solAssert(_targetType == _typeOnStack, "Invalid conversion for bool.");
 		if (_cleanupNeeded)

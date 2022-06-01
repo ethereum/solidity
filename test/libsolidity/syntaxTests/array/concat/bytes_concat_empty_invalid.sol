@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 6359: (82-94): Return argument type function () pure returns (bytes memory) is not implicitly convertible to expected type (type of first return variable) bytes memory.
+// TypeError 6359: (82-94): Return argument type function () pure returns (bytes memory) is not implicitly convertible to expected type bytes memory.

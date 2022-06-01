@@ -50,7 +50,7 @@ contract C {
 // TypeError 9977: (797-798): Invalid type for argument in the string.concat function call. string type is required, but t_function_internal_nonpayable$__$returns$__$ provided.
 // TypeError 9977: (812-814): Invalid type for argument in the string.concat function call. string type is required, but t_tuple$__$ provided.
 // TypeError 9977: (828-834): Invalid type for argument in the string.concat function call. string type is required, but t_tuple$_t_rational_0_by_1_$_t_rational_0_by_1_$ provided.
-// TypeError 9977: (848-851): Invalid type for argument in the string.concat function call. string type is required, but t_array$_t_uint8_$1_memory_ptr provided.
+// TypeError 9977: (848-851): Invalid type for argument in the string.concat function call. string type is required, but t_inline_array$_t_rational_0_by_1_$ provided.
 // TypeError 9977: (865-871): Invalid type for argument in the string.concat function call. string type is required, but t_array$_t_uint8_$1_memory_ptr_slice provided.
 // TypeError 9977: (885-891): Invalid type for argument in the string.concat function call. string type is required, but t_uint8 provided.
 // TypeError 9977: (905-912): Invalid type for argument in the string.concat function call. string type is required, but t_contract$_C_$61 provided.

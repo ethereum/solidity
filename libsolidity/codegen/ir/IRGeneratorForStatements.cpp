@@ -47,6 +47,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/transform.hpp>
 
 using namespace std;
@@ -492,75 +493,49 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 {
 	setLocation(_tuple);
 
-	if (_tuple.isInlineArray())
+	bool willBeWrittenTo = _tuple.annotation().willBeWrittenTo;
+	if (willBeWrittenTo)
+		solAssert(!m_currentLValue);
+	if (!_tuple.isInlineArray() && _tuple.components().size() == 1)
 	{
-		auto const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
-		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
-		define(_tuple) <<
-			m_utils.allocateMemoryArrayFunction(arrayType) <<
-			"(" <<
-			_tuple.components().size() <<
-			")\n";
-
-		string mpos = IRVariable(_tuple).part("mpos").name();
-		Type const& baseType = *arrayType.baseType();
-		for (size_t i = 0; i < _tuple.components().size(); i++)
-		{
-			Expression const& component = *_tuple.components()[i];
-			component.accept(*this);
-			setLocation(_tuple);
-			IRVariable converted = convert(component, baseType);
-			appendCode() <<
-				m_utils.writeToMemoryFunction(baseType) <<
-				"(" <<
-				("add(" + mpos + ", " + to_string(i * arrayType.memoryStride()) + ")") <<
-				", " <<
-				converted.commaSeparatedList() <<
-				")\n";
-		}
+		solAssert(_tuple.components().front());
+		_tuple.components().front()->accept(*this);
+		setLocation(_tuple);
+		if (willBeWrittenTo)
+			solAssert(!!m_currentLValue);
+		else
+			define(_tuple, *_tuple.components().front());
 	}
 	else
 	{
-		bool willBeWrittenTo = _tuple.annotation().willBeWrittenTo;
-		if (willBeWrittenTo)
-			solAssert(!m_currentLValue);
-		if (_tuple.components().size() == 1)
-		{
-			solAssert(_tuple.components().front());
-			_tuple.components().front()->accept(*this);
-			setLocation(_tuple);
-			if (willBeWrittenTo)
-				solAssert(!!m_currentLValue);
-			else
-				define(_tuple, *_tuple.components().front());
-		}
-		else
-		{
-			vector<optional<IRLValue>> lvalues;
-			for (size_t i = 0; i < _tuple.components().size(); ++i)
-				if (auto const& component = _tuple.components()[i])
-				{
-					component->accept(*this);
-					setLocation(_tuple);
-					if (willBeWrittenTo)
-					{
-						solAssert(!!m_currentLValue);
-						lvalues.emplace_back(std::move(m_currentLValue));
-						m_currentLValue.reset();
-					}
-					else
-						define(IRVariable(_tuple).tupleComponent(i), *component);
-				}
-				else if (willBeWrittenTo)
-					lvalues.emplace_back();
+		vector<optional<IRLValue>> lvalues;
 
-			if (_tuple.annotation().willBeWrittenTo)
-				m_currentLValue.emplace(IRLValue{
-					*_tuple.annotation().type,
-					IRLValue::Tuple{std::move(lvalues)}
-				});
+		for (auto&& [index, component]: _tuple.components() | ranges::views::enumerate)
+		{
+			if (component)
+			{
+				component->accept(*this);
+				setLocation(_tuple);
+				if (willBeWrittenTo)
+				{
+					solAssert(!!m_currentLValue);
+					lvalues.emplace_back(std::move(m_currentLValue));
+					m_currentLValue.reset();
+				}
+				else
+					define(IRVariable(_tuple).tupleComponent(index), *component);
+			}
+			else if (willBeWrittenTo)
+				lvalues.emplace_back();
 		}
+
+		if (_tuple.annotation().willBeWrittenTo)
+			m_currentLValue.emplace(IRLValue{
+				*_tuple.annotation().type,
+				IRLValue::Tuple{std::move(lvalues)}
+			});
 	}
+
 	return false;
 }
 
@@ -2284,6 +2259,28 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 		}
 	}
+	else if (baseType.category() == Type::Category::InlineArray)
+	{
+		InlineArrayType const& inlineArrayType = dynamic_cast<InlineArrayType const&>(baseType);
+
+		ArrayType const* arrayType = TypeProvider::array(DataLocation::Memory, inlineArrayType.componentsCommonMobileType(), inlineArrayType.components().size());
+
+		IRVariable irArray = convert(IRVariable(_indexAccess.baseExpression()), *arrayType);
+
+		string const memAddress =
+			m_utils.memoryArrayIndexAccessFunction(*arrayType) +
+			"(" +
+			irArray.part("mpos").name() +
+			", " +
+			expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) +
+			")";
+
+		setLValue(_indexAccess, IRLValue{
+			*arrayType->baseType(),
+			IRLValue::Memory{memAddress}
+		});
+	}
+
 	else if (baseType.category() == Type::Category::FixedBytes)
 	{
 		auto const& fixedBytesType = dynamic_cast<FixedBytesType const&>(baseType);
@@ -2532,7 +2529,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	}
 
 	// NOTE: When the expected size of returndata is static, we pass that in to the call opcode and it gets copied automatically.
-    // When it's dynamic, we get zero from estimatedReturnSize() instead and then we need an explicit returndatacopy().
+	// When it's dynamic, we get zero from estimatedReturnSize() instead and then we need an explicit returndatacopy().
 	Whiskers templ(R"(
 		<?checkExtcodesize>
 			if iszero(extcodesize(<address>)) { <revertNoCode>() }

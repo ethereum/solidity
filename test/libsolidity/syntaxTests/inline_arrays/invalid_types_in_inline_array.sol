@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 6378: (66-83): Unable to deduce common type for array elements.
+// TypeError 9574: (47-83): Type inline_array(int_const 45, literal_string "foo", bool) is not implicitly convertible to expected type uint256[3] memory. Invalid conversion from literal_string "foo" to uint256.
