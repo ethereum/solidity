@@ -129,21 +129,14 @@ string_view command(SMTLib2Expression const& _expr)
 	return get<string_view>(items.front().data);
 }
 
-// TODO If we want to return rational here, we need smtutil::Expression to support rationals...
-u256 parseRational(string_view _atom)
-{
-	if (_atom.size() >= 3 && _atom.at(_atom.size() - 1) == '0' && _atom.at(_atom.size() - 2) == '.')
-		return parseRational(_atom.substr(0, _atom.size() - 2));
-	else
-		return u256(_atom);
-}
-
 smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<string, SortPointer> const& _variableSorts)
 {
 	return std::visit(GenericVisitor{
 		[&](string_view const& _atom) {
-			if (isDigit(_atom.front()) || _atom.front() == '.')
-				return Expression(parseRational(_atom).str(), {}, SortProvider::realSort);
+			if (_atom == "true" || _atom == "false")
+				return Expression(_atom == "true");
+			else if (isDigit(_atom.front()) || _atom.front() == '.')
+				return Expression(string(_atom), {}, SortProvider::realSort);
 			else
 				return Expression(string(_atom), {}, _variableSorts.at(string(_atom)));
 		},

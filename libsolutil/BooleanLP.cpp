@@ -411,8 +411,6 @@ void BooleanLPSolver::addLetBindings(Expression const& _let, LetBindings& _letBi
 
 optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr, LetBindings _letBindings)
 {
-	// TODO constanst true/false?
-
 	if (_expr.name == "let")
 	{
 		addLetBindings(_expr, _letBindings);
@@ -429,6 +427,11 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 				return parseLiteral(std::get<smtutil::Expression>(binding), move(_letBindings));
 			else
 				varIndex = std::get<size_t>(binding);
+		}
+		else if (_expr.name == "true" || _expr.name == "false")
+		{
+			// TODO handle this better
+			solAssert(false, "True/false literals not implemented");
 		}
 		else
 			varIndex = state().variables.at(_expr.name);
@@ -594,7 +597,7 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 		// This will result in nullopt unless one of them is a constant.
 		return parseLinearSum(_expr.arguments.at(0), _letBindings) * parseLinearSum(_expr.arguments.at(1), _letBindings);
 	}
-	else if (_expr.name == "/")
+	else if (_expr.name == "/" || _expr.name == "div")
 	{
 		solAssert(_expr.arguments.size() == 2);
 		optional<LinearExpression> left = parseLinearSum(_expr.arguments.at(0), _letBindings);
@@ -614,10 +617,33 @@ optional<LinearExpression> BooleanLPSolver::parseLinearSum(smtutil::Expression c
 	}
 	else
 	{
-		cerr << _expr.toString() << endl;
-		cerr << "Invalid operator " << _expr.name << endl;
+//		cerr << _expr.toString() << endl;
+//		cerr << "Invalid operator " << _expr.name << endl;
 		return std::nullopt;
 	}
+}
+
+namespace
+{
+bool isNumber(string const& _expr)
+{
+	return !_expr.empty() && (isDigit(_expr.front()) || _expr.front() == '.');
+}
+rational parseRational(string const& _atom)
+{
+	size_t decimal = _atom.find('.');
+	if (decimal == string::npos)
+		return rational(bigint(_atom));
+
+	unsigned shift = static_cast<unsigned>(_atom.size() - decimal - 1);
+	rational r(
+		bigint(string(_atom.substr(0, decimal)) + string(_atom.substr(decimal + 1))),
+		pow(bigint(10), shift)
+	);
+//	cerr << _atom << endl;
+//	cerr << r << endl;
+	return r;
+}
 }
 
 bool BooleanLPSolver::isLiteral(smtutil::Expression const& _expr) const
@@ -626,7 +652,7 @@ bool BooleanLPSolver::isLiteral(smtutil::Expression const& _expr) const
 		return false;
 	solAssert(!_expr.name.empty(), "");
 	return
-		('0' <= _expr.name[0] && _expr.name[0] <= '9') ||
+		isNumber(_expr.name) ||
 		_expr.name == "true" ||
 		_expr.name == "false";
 }
@@ -635,8 +661,8 @@ optional<LinearExpression> BooleanLPSolver::parseFactor(smtutil::Expression cons
 {
 	solAssert(_expr.arguments.empty(), "");
 	solAssert(!_expr.name.empty(), "");
-	if ('0' <= _expr.name[0] && _expr.name[0] <= '9')
-		return LinearExpression::constant(rational(bigint(_expr.name)));
+	if (isNumber(_expr.name))
+		return LinearExpression::constant(parseRational(_expr.name));
 	else if (_expr.name == "true")
 		// TODO do we want to do this?
 		return LinearExpression::constant(1);
