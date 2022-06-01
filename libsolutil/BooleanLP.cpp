@@ -241,6 +241,11 @@ void BooleanLPSolver::addAssertion(Expression const& _expr, LetBindings _letBind
 	solAssert(_expr.sort->kind == Kind::Bool);
 	if (_expr.arguments.empty())
 	{
+		if (_expr.name == "true")
+			return;
+		else if (_expr.name == "false")
+			solAssert(false, "Adding false as top-level assertion.");
+
 		size_t varIndex = 0;
 		if (_letBindings->count(_expr.name))
 		{
@@ -430,8 +435,16 @@ optional<Literal> BooleanLPSolver::parseLiteral(smtutil::Expression const& _expr
 		}
 		else if (_expr.name == "true" || _expr.name == "false")
 		{
-			// TODO handle this better
-			solAssert(false, "True/false literals not implemented");
+			// TODO handle this better, we can introduce some shortcuts if we propagate this up.
+			// Also we should maybe not create a new variable each time.
+
+			if (!state().trueConstant)
+			{
+				Expression var = declareInternalVariable(true);
+				addAssertion(var, make_shared<map<string, LetBinding>>());
+				state().trueConstant = parseLiteral(var, make_shared<map<string, LetBinding>>())->variable;
+			}
+			return Literal{_expr.name == "true", *state().trueConstant};
 		}
 		else
 			varIndex = state().variables.at(_expr.name);

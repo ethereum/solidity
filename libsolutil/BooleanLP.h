@@ -39,6 +39,8 @@ struct State
 	// Potential constraints, referenced through clauses
 	std::map<size_t, Constraint> conditionalConstraints;
 	std::vector<Clause> clauses;
+	/// The variable index of a bool variable that is always true.
+	std::optional<size_t> trueConstant;
 
 	struct Bounds
 	{
