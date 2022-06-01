@@ -20,6 +20,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/Exceptions.h>
 
 #ifdef HAVE_Z3_DLOPEN
 #include <libsmtutil/Z3Loader.h>
@@ -271,6 +272,9 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	}
 
 	smtAssert(false, "");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	throw exception();
 }
 
 Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
@@ -379,6 +383,9 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		return Expression(_expr.decl().name().str(), arguments, fromZ3Sort(_expr.get_sort()));
 
 	smtAssert(false, "");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	throw exception();
 }
 
 z3::sort Z3Interface::z3Sort(Sort const& _sort)

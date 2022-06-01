@@ -276,6 +276,9 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 		default:
 			assertThrow(false, solidity::util::Exception, "Invalid MetricAggregatorChoice value.");
 	}
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	throw exception();
 }
 
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
