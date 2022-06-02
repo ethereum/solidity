@@ -1960,7 +1960,11 @@ ASTPointer<Expression> Parser::parseLiteral()
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
 	case Token::Number:
+	{
+		nodeFactory.markEndPosition();
+		advance();
 		break;
+	}
 	case Token::StringLiteral:
 	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
@@ -1981,8 +1985,6 @@ ASTPointer<Expression> Parser::parseLiteral()
 		solAssert(false);
 		break;
 	}
-	nodeFactory.markEndPosition();
-	advance();
 
 	if (token == Token::Number && (
 		TokenTraits::isEtherSubdenomination(m_scanner->currentToken()) ||
