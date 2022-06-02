@@ -967,6 +967,49 @@ BOOST_AUTO_TEST_CASE(modifiers)
 	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges, expectedCreatedContractsAfterDeployment);
 }
 
+BOOST_AUTO_TEST_CASE(literal_suffixes)
+{
+	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
+		function free() pure {}
+		function intSuffix(uint) pure returns (uint) { free(); return 1; }
+		function strSuffix(string memory) pure returns (uint) {}
+
+		contract C {
+			modifier m(uint) virtual { _; }
+
+			constructor() m(1 intSuffix) { "a" strSuffix; }
+			function ext() external pure m("a" strSuffix) { 1 intSuffix; inr(); }
+			function inr() internal pure { 1 intSuffix; }
+		}
+	)"s);
+	tuple<CallGraphMap, CallGraphMap> graphs = collectGraphs(*compilerStack);
+
+	map<string, EdgeNames> expectedCreationEdges = {
+		{"C", {
+			{"Entry", "constructor of C"},
+			{"constructor of C", "modifier C.m"},
+			{"constructor of C", "function intSuffix(uint256)"},
+			{"constructor of C", "function strSuffix(string)"},
+			{"function intSuffix(uint256)", "function free()"},
+		}},
+	};
+
+	map<string, EdgeNames> expectedDeployedEdges = {
+		{"C", {
+			{"Entry", "function C.ext()"},
+			{"function C.ext()", "modifier C.m"},
+			{"function C.ext()", "function C.inr()"},
+			{"function C.ext()", "function strSuffix(string)"},
+			{"function C.ext()", "function intSuffix(uint256)"},
+			{"function C.inr()", "function intSuffix(uint256)"},
+			{"function intSuffix(uint256)", "function free()"},
+		}},
+	};
+
+	checkCallGraphExpectations(get<0>(graphs), expectedCreationEdges);
+	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges);
+}
+
 BOOST_AUTO_TEST_CASE(events)
 {
 	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
