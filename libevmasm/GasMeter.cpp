@@ -184,7 +184,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				if (*value)
 				{
 					// Note: msb() counts from 0 and throws on 0 as input.
-					unsigned const significantByteCount  = (boost::multiprecision::msb(*value) + 1 + 7) / 8;
+					unsigned const significantByteCount  = (unsigned)((boost::multiprecision::msb(*value) + 1 + 7) / 8);
 					gas += GasCosts::expByteGas(m_evmVersion) * significantByteCount;
 				}
 			}
