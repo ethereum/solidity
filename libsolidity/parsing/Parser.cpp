@@ -1637,7 +1637,7 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 			return parseExpressionStatement(_docString, nodeFactory.createNode<TupleExpression>(components, false));
 		}
 		default:
-			solAssert(false, "");
+			solAssert(false);
 		}
 	}
 	else
@@ -1650,17 +1650,19 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 		case LookAheadInfo::Expression:
 			return parseExpressionStatement(_docString, expressionFromIndexAccessStructure(iap));
 		default:
-			solAssert(false, "");
+			solAssert(false);
 		}
 	}
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	throw exception();
 }
 
 bool Parser::IndexAccessedPath::empty() const
 {
 	if (!indices.empty())
-	{
-		solAssert(!path.empty(), "");
-	}
+		solAssert(!path.empty());
+
 	return path.empty() && indices.empty();
 }
 

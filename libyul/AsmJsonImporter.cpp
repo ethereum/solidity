@@ -110,6 +110,9 @@ Statement AsmJsonImporter::createStatement(Json::Value const& _node)
 		return createBlock(_node);
 	else
 		yulAssert(false, "Invalid nodeType as statement");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	throw exception();
 }
 
 Expression AsmJsonImporter::createExpression(Json::Value const& _node)
@@ -129,6 +132,9 @@ Expression AsmJsonImporter::createExpression(Json::Value const& _node)
 		return createLiteral(_node);
 	else
 		yulAssert(false, "Invalid nodeType as expression");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	throw exception();
 }
 
 vector<Expression> AsmJsonImporter::createExpressionVector(Json::Value const& _array)
