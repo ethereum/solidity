@@ -49,16 +49,17 @@ object "Arraysum_34" {
                         {
                             /// @src 0:80:429  "contract Arraysum {..."
                             mstore(_2, _2)
-                            let _4 := sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i))
-                            if gt(var_sum, not(_4))
+                            let sum := add(var_sum, sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i)))
+                            if gt(var_sum, sum)
                             {
                                 mstore(_2, shl(224, 0x4e487b71))
                                 mstore(_1, 0x11)
                                 revert(_2, 0x24)
                             }
                             /// @src 0:407:423  "sum += values[i]"
-                            var_sum := /** @src 0:80:429  "contract Arraysum {..." */ add(var_sum, _4)
+                            var_sum := sum
                         }
+                        /// @src 0:80:429  "contract Arraysum {..."
                         let memPos := mload(64)
                         mstore(memPos, var_sum)
                         return(memPos, 32)

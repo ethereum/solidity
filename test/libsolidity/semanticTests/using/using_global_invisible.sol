@@ -40,4 +40,4 @@ contract D {
 // ----
 // library: "A":L
 // test() -> 3
-// gas legacy: 130369
+// gas legacy: 123521

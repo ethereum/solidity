@@ -615,25 +615,34 @@ string YulUtilFunctions::divide32CeilFunction()
 string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 {
 	string functionName = "checked_add_" + _type.identifier();
-	// TODO: Consider to add a special case for unsigned 256-bit integers
-	//       and use the following instead:
-	//       sum := add(x, y) if lt(sum, x) { <panic>() }
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> sum {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				<?signed>
-					// overflow, if x >= 0 and y > (maxValue - x)
-					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { <panic>() }
-					// underflow, if x < 0 and y < (minValue - x)
-					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { <panic>() }
-				<!signed>
-					// overflow, if x > (maxValue - y)
-					if gt(x, sub(<maxValue>, y)) { <panic>() }
-				</signed>
 				sum := add(x, y)
+				<?signed>
+					<?256bit>
+						// overflow, if x >= 0 and sum < y
+						// underflow, if x < 0 and sum >= y
+						if or(
+							and(iszero(slt(x, 0)), slt(sum, y)),
+							and(slt(x, 0), iszero(slt(sum, y)))
+						) { <panic>() }
+					<!256bit>
+						if or(
+							sgt(sum, <maxValue>),
+							slt(sum, <minValue>)
+						) { <panic>() }
+					</256bit>
+				<!signed>
+					<?256bit>
+						if gt(x, sum) { <panic>() }
+					<!256bit>
+						if gt(sum, <maxValue>) { <panic>() }
+					</256bit>
+				</signed>
 			}
 			)")
 			("functionName", functionName)
@@ -642,6 +651,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
+			("256bit", _type.numBits() == 256)
 			.render();
 	});
 }
@@ -795,15 +805,28 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> diff {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				<?signed>
-					// underflow, if y >= 0 and x < (minValue + y)
-					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { <panic>() }
-					// overflow, if y < 0 and x > (maxValue + y)
-					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { <panic>() }
-				<!signed>
-					if lt(x, y) { <panic>() }
-				</signed>
 				diff := sub(x, y)
+				<?signed>
+					<?256bit>
+						// underflow, if y >= 0 and diff > x
+						// overflow, if y < 0 and diff < x
+						if or(
+							and(iszero(slt(y, 0)), sgt(diff, x)),
+							and(slt(y, 0), slt(diff, x))
+						) { <panic>() }
+					<!256bit>
+						if or(
+							slt(diff, <minValue>),
+							sgt(diff, <maxValue>)
+						) { <panic>() }
+					</256bit>
+				<!signed>
+					<?256bit>
+						if gt(diff, x) { <panic>() }
+					<!256bit>
+						if gt(diff, <maxValue>) { <panic>() }
+					</256bit>
+				</signed>
 			}
 			)")
 			("functionName", functionName)
@@ -812,6 +835,7 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
+			("256bit", _type.numBits() == 256)
 			.render();
 	});
 }
