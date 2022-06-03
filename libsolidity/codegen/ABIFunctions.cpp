@@ -293,7 +293,8 @@ string ABIFunctions::abiEncodingFunction(
 		return abiEncodingFunctionInlineArray(
 			dynamic_cast<InlineArrayType const&>(_from),
 			dynamic_cast<ArrayType const&>(_to),
-			_options);
+			_options
+		);
 
 	}
 	else if (auto toArray = dynamic_cast<ArrayType const*>(&to))

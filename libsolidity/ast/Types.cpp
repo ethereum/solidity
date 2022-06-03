@@ -316,15 +316,6 @@ Type const* Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 		return encodingType;
 	Type const* baseType = encodingType;
 
-	if (auto const inlineArray = dynamic_cast<InlineArrayType const*>(baseType))
-	{
-		baseType = TypeProvider::array(
-			DataLocation::Memory,
-			inlineArray->componentsCommonMobileType(),
-			inlineArray->components().size()
-		);
-	}
-
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
 	{
 		baseType = arrayType->baseType();
@@ -2714,26 +2705,25 @@ BoolResult InlineArrayType::isImplicitlyConvertibleTo(Type const& _other) const
 
 	if (!arrayType || arrayType->isByteArrayOrString())
 		return BoolResult::err("Array literal can not be converted to byte array or string.");
-	else
+
+	if (!arrayType->isDynamicallySized() && arrayType->length() != components().size())
+		return BoolResult::err(
+			"Number of components in array literal (" + to_string(components().size()) + ") " +
+			"does not match array size (" + to_string(arrayType->length().convert_to<unsigned>()) + ")."
+		);
+
+	for (Type const* c: components())
 	{
-		if (!arrayType->isDynamicallySized() && arrayType->length() != components().size())
+		BoolResult result = c->isImplicitlyConvertibleTo(*arrayType->baseType());
+		if (!result)
 			return BoolResult::err(
-				"Number of components in array literal (" + to_string(components().size()) + ") " +
-				"does not match array size (" + to_string(arrayType->length().convert_to<unsigned>()) + ").");
-
-		for (Type const* c: components())
-		{
-			BoolResult result = c->isImplicitlyConvertibleTo(*arrayType->baseType());
-			if (!result)
-				if (!result)
-					return BoolResult::err(
-						"Invalid conversion from " + c->toString(false) +
-						" to " + arrayType->baseType()->toString(false) + "."
-						+ (result.message().empty() ? "" : " ") + result.message() );
-		}
-
-		return true;
+				"Invalid conversion from " + c->toString(false) +
+				" to " + arrayType->baseType()->toString(false) + "." +
+				(result.message().empty() ? "" : " ") + result.message()
+			);
 	}
+
+	return true;
 }
 
 string InlineArrayType::richIdentifier() const
@@ -2744,8 +2734,17 @@ string InlineArrayType::richIdentifier() const
 bool InlineArrayType::operator==(Type const& _other) const
 {
 	if (auto inlineArrayType = dynamic_cast<InlineArrayType const*>(&_other))
-		// TODO: raise issue - do not compare by pointer for tuple type
-		return components() == inlineArrayType->components();
+	{
+		std::vector<Type const*> const& otherComponents = inlineArrayType->components();
+		if (m_components.size() != otherComponents.size())
+			return false;
+
+		for (unsigned i = 0; i < m_components.size(); ++i)
+			if (!(*m_components[i] == *otherComponents[i]))
+				return false;
+
+		return true;
+	}
 	else
 		return false;
 }
@@ -2753,11 +2752,8 @@ bool InlineArrayType::operator==(Type const& _other) const
 string InlineArrayType::toString(bool _short) const
 {
 	vector<string> result;
-
 	for (auto const& t: components())
 		result.push_back(t->toString(_short));
-
-	// TODO joinHumanReadable - is it fine to have a space here?
 	return "inline_array(" + util::joinHumanReadable(result) + ")";
 }
 
@@ -2768,12 +2764,12 @@ u256 InlineArrayType::storageSize() const
 
 Type const* InlineArrayType::mobileType() const
 {
-	return TypeProvider::array(
-		DataLocation::Memory,
-		componentsCommonMobileType(),
-		components().size()
-	);
-}
+	Type const* baseType = componentsCommonMobileType();
+	return
+		baseType ?
+		TypeProvider::array(DataLocation::Memory, baseType, components().size()) :
+		nullptr;
+	}
 
 Type const* InlineArrayType::componentsCommonMobileType() const
 {

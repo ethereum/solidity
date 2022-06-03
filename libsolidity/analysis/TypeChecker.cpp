@@ -68,8 +68,10 @@ bool TypeChecker::typeSupportedByOldABIEncoder(Type const& _type, bool _isLibrar
 	}
 	if (_type.category() == Type::Category::InlineArray)
 	{
-		auto const& inlineArray = dynamic_cast<InlineArrayType const&>(_type);
-		return typeSupportedByOldABIEncoder(*inlineArray.mobileType(), _isLibraryCall);
+		auto const& mobileType = dynamic_cast<InlineArrayType const&>(_type).mobileType();
+		if (!mobileType)
+			return false;
+		return typeSupportedByOldABIEncoder(*mobileType, _isLibraryCall);
 	}
 	return true;
 }
@@ -1208,7 +1210,7 @@ void TypeChecker::endVisit(Return const& _return)
 					_return.expression()->location(),
 					"Return argument type " +
 					type(*_return.expression())->toString() +
-					" is not implicitly convertible to expected type " +
+					" is not implicitly convertible to expected type (type of first return variable) " +
 					TupleType(returnTypes).toString(false) + ".",
 					result.message()
 				);
@@ -3259,13 +3261,12 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	}
 	case Type::Category::InlineArray:
 	{
-		InlineArrayType const& actualType = dynamic_cast<InlineArrayType const&>(*baseType);
 		if (!index)
 			m_errorReporter.typeError(5093_error, _access.location(), "Index expression cannot be omitted.");
 		else
 			expectType(*index, *TypeProvider::uint256());
 
-		resultType = actualType.componentsCommonMobileType();
+		resultType = dynamic_cast<InlineArrayType const&>(*baseType).componentsCommonMobileType();
 		break;
 	}
 	case Type::Category::Mapping:
