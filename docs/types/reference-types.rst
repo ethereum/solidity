@@ -236,7 +236,7 @@ Array Literals
 
 An array literal is a comma-separated list of one or more expressions, enclosed
 in square brackets (``[...]``). For example ``[1, a, f(3)]``. It can be converted to
-statically and dynamically-sized array if all it's expressions can be implicitly
+statically and dynamically-sized array if all its expressions can be implicitly
 converted to the base type of the array. In example below, the conversion is impossible
 because ``-1`` cannot be implicitly converted to ``uint8``.
 
@@ -257,7 +257,7 @@ because ``-1`` cannot be implicitly converted to ``uint8``.
         }
     }
 
-For statically-sized arrays, conversion can be performed only if length of the array match
+A conversion into a statically-sized array can only be performed if the length of the array matches
 the number of the expressions in the array literal. Therefore following is impossible:
 
 .. code-block:: solidity
@@ -277,7 +277,7 @@ the number of the expressions in the array literal. Therefore following is impos
         }
     }
 
-Array literals can be used also to initialize multi-dimesional arrays:
+Array literals can also be used to initialize multi-dimensional arrays:
 
 .. code-block:: solidity
 
@@ -291,6 +291,12 @@ Array literals can be used also to initialize multi-dimesional arrays:
             return [[1], [2, 3], [4, 5]];
         }
     }
+
+.. note::
+    Until Solidity 0.8.14, array literals were always a statically-sized memory array whose length
+    was the number of expressions. The base type of the array was the type of the first expression
+    on the list such that all other expressions could be implicitly converted to it. It was a type
+    error if the conversion was not possible.
 
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
@@ -419,11 +425,14 @@ Array Members
         }
 
         function createMemoryArray(uint size) public pure returns (bytes memory) {
-            // Dynamic memory arrays are created using `new`:
-            uint[2][] memory arrayOfPairs = new uint[2][](size);
+            // Dynamically-sized memory arrays are created using `new`:
+            uint[2][] memory arrayOfPairs1 = new uint[2][](size);
 
-            // Static memory arrays can be set with inline array
-            arrayOfPairs[0] = [1, 2];
+            // Dynamically-sized memory arrays can be created with array literals as well:
+            uint[2][] memory arrayOfPairs2 = [[1, 2], [3, 4], [5, 6]];
+
+            require(arrayOfPairs1.length == arrayOfPairs2.length);
+            require(arrayOfPairs2[1][1] == 4);
 
             // Create a dynamic byte array:
             bytes memory b = new bytes(200);
