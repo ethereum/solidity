@@ -1,7 +1,7 @@
 contract C {
-  function f() {
-    uint x = 1 finney;
-  }
+    function f() public {
+        uint x = 1 finney;
+    }
 }
 // ----
-// ParserError 2314: (45-51): Expected ';' but got identifier
+// DeclarationError 7920: (58-64): Identifier not found or not unique.
