@@ -3,7 +3,8 @@
 Language Features:
  * Add `E.selector` for a non-anonymous event `E` to access the 32-byte selector topic.
  * Errors and Events allow qualified access from other contracts.
- * Array literals are convertible to both dynamically-sized and statically-sized arrays
+ * Array literals are convertible to both dynamically-sized and statically-sized arrays.
+ * String literals being part of an array literal can be implicitly converted into bytes.
 
 
 Compiler Features:
@@ -14,6 +15,7 @@ Compiler Features:
 Bugfixes:
  * ABI Encoder: When encoding an empty string coming from storage do not add a superfluous empty slot for data.
  * Yul Optimizer: Do not remove ``returndatacopy`` in cases in which it might perform out-of-bounds reads that unconditionally revert as out-of-gas. Previously, any ``returndatacopy`` that wrote to memory that was never read from was removed without accounting for the out-of-bounds condition.
+ * An array literal is validated to contains only UTF-8 valid sequences when converted into array of strings.
 
 
 ### 0.8.14 (2022-05-17)
