@@ -11,7 +11,28 @@ import requests
 class APIHelperError(Exception):
     pass
 
-class DataUnavailable(APIHelperError):
+class JobNotSuccessful(APIHelperError):
+    def __init__(self, name: str, status: str):
+        assert status != 'success'
+
+        self.name = name
+        self.status = status
+        self.job_finished = (status in ['failed', 'blocked'])
+
+        if status == 'not_running':
+            message = f"Job {name} has not started yet."
+        elif status == 'blocked':
+            message = f"Job {name} will not run because one of its dependencies failed."
+        elif status == 'running':
+            message = f"Job {name} is still running."
+        elif status == 'failed':
+            message = f"Job {name} failed."
+        else:
+            message = f"Job {name} did not finish successfully. Current status: {status}."
+
+        super().__init__(message)
+
+class JobMissing(APIHelperError):
     pass
 
 class InvalidResponse(APIHelperError):
@@ -145,13 +166,10 @@ class CircleCI:
     def job(self, workflow_id: str, name: str, require_success: bool = False) -> dict:
         jobs = self.jobs(workflow_id)
         if name not in jobs:
-            raise DataUnavailable(f"Job {name} is not present in the workflow.")
+            raise JobMissing(f"Job {name} is not present in the workflow.")
 
         if require_success and jobs[name]['status'] != 'success':
-            raise DataUnavailable(
-                f"Job {name} has failed or is still running. "
-                f"Current status: {jobs[name]['status']}."
-            )
+            raise JobNotSuccessful(name, jobs[name]['status'])
 
         return jobs[name]
 

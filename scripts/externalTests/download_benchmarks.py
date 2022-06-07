@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser, Namespace
+from enum import Enum, unique
 from pathlib import Path
 from typing import Mapping, Optional
 import sys
@@ -13,8 +14,16 @@ SCRIPTS_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from common.git_helpers import git_current_branch, git_commit_hash
-from common.rest_api_helpers import APIHelperError, CircleCI, Github, download_file
+from common.rest_api_helpers import APIHelperError, JobNotSuccessful, CircleCI, Github, download_file
 # pragma pylint: enable=import-error,wrong-import-position
+
+
+@unique
+class Status(Enum):
+    OK = 0            # Benchmarks downloaded successfully
+    ERROR = 1         # Error in the script, bad API response, unexpected data, etc.
+    NO_BENCHMARK = 2  # Benchmark collector job did not finish successfully and/or benchmark artifacts are missing.
+    PENDING = 3       # Benchmark collector job has not finished yet.
 
 
 def process_commandline() -> Namespace:
@@ -76,20 +85,24 @@ def download_benchmark_artifact(
     commit_hash: str,
     overwrite: bool,
     silent: bool = False
-):
+) -> bool:
     if not silent:
         print(f"Downloading artifact: {benchmark_name}-{branch}-{commit_hash[:8]}.json.")
 
     artifact_path = f'reports/externalTests/{benchmark_name}.json'
 
     if artifact_path not in artifacts:
-        raise RuntimeError(f"Missing artifact: {artifact_path}.")
+        if not silent:
+            print(f"Missing artifact: {artifact_path}.")
+        return False
 
     download_file(
         artifacts[artifact_path]['url'],
         Path(f'{benchmark_name}-{branch}-{commit_hash[:8]}.json'),
         overwrite,
     )
+
+    return True
 
 
 def download_benchmarks(
@@ -100,7 +113,7 @@ def download_benchmarks(
     overwrite: bool = False,
     debug_requests: bool = False,
     silent: bool = False,
-):
+) -> Status:
     github = Github('ethereum/solidity', debug_requests)
     circleci = CircleCI('ethereum/solidity', debug_requests)
 
@@ -141,32 +154,41 @@ def download_benchmarks(
 
     artifacts = circleci.artifacts(int(benchmark_collector_job['job_number']))
 
-    download_benchmark_artifact(artifacts, 'summarized-benchmarks', branch, actual_commit_hash, overwrite, silent)
-    download_benchmark_artifact(artifacts, 'all-benchmarks', branch, actual_commit_hash, overwrite, silent)
+    got_summary = download_benchmark_artifact(artifacts, 'summarized-benchmarks', branch, actual_commit_hash, overwrite, silent)
+    got_full = download_benchmark_artifact(artifacts, 'all-benchmarks', branch, actual_commit_hash, overwrite, silent)
+
+    return Status.OK if got_summary and got_full else Status.NO_BENCHMARK
 
 
 def main():
     try:
         options = process_commandline()
-        download_benchmarks(
+        return download_benchmarks(
             options.branch,
             options.pull_request_id,
             options.base_of_pr,
             options.ignore_commit_hash,
             options.overwrite,
             options.debug_requests,
-        )
-
-        return 0
+        ).value
+    except JobNotSuccessful as exception:
+        print(f"[ERROR] {exception}", file=sys.stderr)
+        if not exception.job_finished:
+            print("Please wait for the workflow to finish and try again.", file=sys.stderr)
+            return Status.PENDING.value
+        else:
+            print("Benchmarks from this run of the pipeline are not available.", file=sys.stderr)
+            return Status.NO_BENCHMARK.value
     except APIHelperError as exception:
         print(f"[ERROR] {exception}", file=sys.stderr)
-        return 1
+        return Status.ERROR.value
     except requests.exceptions.HTTPError as exception:
         print(f"[ERROR] {exception}", file=sys.stderr)
-        return 1
+        return Status.ERROR.value
     except RuntimeError as exception:
         print(f"[ERROR] {exception}", file=sys.stderr)
-        return 1
+        return Status.ERROR.value
+
 
 if __name__ == '__main__':
     sys.exit(main())

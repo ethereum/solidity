@@ -1257,12 +1257,17 @@ jobs:
               pr_id=$(echo "$CIRCLE_PULL_REQUEST" | sed 's|\(.*\)\/||')
               scripts_dir=../../../scripts
 
-              "${scripts_dir}/externalTests/download_benchmarks.py" --base-of-pr "$pr_id"
+              # Our main goal here is to provide new benchmarks, the diff is optional. When benchmarks from
+              # the previous run are not available for whatever reason, we still succeed and just skip the diff.
+              # download_benchmarks.py exits with status 2 in that case.
+              if "${scripts_dir}/externalTests/download_benchmarks.py" --base-of-pr "$pr_id" || [[ $? == 2 ]]; then
+                echo 'export SKIP_BENCHMARK_DIFF=true' >> $BASH_ENV
+              fi
             fi
       - run:
           name: Diff benchmarks
           command: |
-            if [[ $CIRCLE_PULL_REQUEST != "" ]]; then
+            if [[ $CIRCLE_PULL_REQUEST != "" && $SKIP_BENCHMARK_DIFF != "true" ]]; then
               cd reports/externalTests/
               mkdir diff/
               scripts_dir=../../scripts
