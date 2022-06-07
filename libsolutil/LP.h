@@ -139,58 +139,6 @@ struct RationalWithDelta
 
 }
 
-template <class T>
-inline void hashCombine(std::size_t& _seed, T const& _v)
-{
-	std::hash<T> hasher;
-	_seed ^= hasher(_v) + 0x9e3779b9 + (_seed << 6) + (_seed >> 2);
-}
-
-template <class T>
-inline void hashCombineVector(std::size_t& _seed, std::vector<T> const& _v)
-{
-	hashCombine(_seed, _v.size());
-	for (auto const& x: _v)
-		hashCombine(_seed, x);
-}
-
-template<>
-struct std::hash<solidity::util::RationalWithDelta>
-{
-	std::size_t operator()(solidity::util::RationalWithDelta const& _x) const noexcept
-	{
-		std::size_t result = 0;
-		hashCombine(result, _x.m_main);
-		hashCombine(result, _x.m_delta);
-		return result;
-	}
-};
-
-template<>
-struct std::hash<solidity::util::LinearExpression>
-{
-	std::size_t operator()(solidity::util::LinearExpression const& _linearExpression) const noexcept
-	{
-		std::size_t result = 0;
-		hashCombine(result, _linearExpression.size());
-		for (auto const& x: _linearExpression.enumerate())
-			hashCombine(result, x.second);
-		return result;
-	}
-};
-
-template<>
-struct std::hash<solidity::util::Constraint>
-{
-	std::size_t operator()(solidity::util::Constraint const& _constraint) const noexcept
-	{
-		std::size_t result = 0;
-		hashCombine(result, _constraint.kind);
-		hashCombine(result, _constraint.data);
-		return result;
-	}
-};
-
 
 namespace solidity::util
 {
