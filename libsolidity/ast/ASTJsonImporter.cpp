@@ -231,7 +231,7 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		astAssert(false, "Unknown type of ASTNode: " + nodeType);
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 // ============ functions to instantiate the AST-Nodes from Json-Nodes ==============
@@ -1078,7 +1078,7 @@ Visibility ASTJsonImporter::visibility(Json::Value const& _node)
 		astAssert(false, "Unknown visibility declaration");
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node)
@@ -1100,7 +1100,7 @@ VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node
 		astAssert(false, "Unknown location declaration");
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _node)
@@ -1136,7 +1136,7 @@ Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _no
 		astAssert(false, "Unknown subdenomination");
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 StateMutability ASTJsonImporter::stateMutability(Json::Value const& _node)
@@ -1156,7 +1156,7 @@ StateMutability ASTJsonImporter::stateMutability(Json::Value const& _node)
 		astAssert(false, "Unknown stateMutability");
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 }

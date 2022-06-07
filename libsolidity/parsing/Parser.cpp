@@ -1655,7 +1655,7 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	}
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 bool Parser::IndexAccessedPath::empty() const

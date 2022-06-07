@@ -292,7 +292,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 	smtAssert(false);
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
