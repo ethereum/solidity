@@ -485,6 +485,7 @@ void CompilerContext::appendInlineAssembly(
 		obj.code = parserResult;
 		obj.analysisInfo = make_shared<yul::AsmAnalysisInfo>(analysisInfo);
 
+		solAssert(!dialect.providesObjectAccess());
 		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
 
 		if (_system)

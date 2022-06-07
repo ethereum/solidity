@@ -1,5 +1,9 @@
 ### 0.8.15 (unreleased)
 
+Important Bugfixes:
+ * Yul Optimizer: Keep all memory side-effects of inline assembly blocks.
+
+
 Language Features:
  * Add `E.selector` for a non-anonymous event `E` to access the 32-byte selector topic.
  * Errors and Events allow qualified access from other contracts.
