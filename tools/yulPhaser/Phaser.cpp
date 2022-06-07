@@ -278,7 +278,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	}
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
