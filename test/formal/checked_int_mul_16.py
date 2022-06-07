@@ -1,7 +1,7 @@
-from opcodes import AND, DIV, GT, SDIV, SGT, SLT
+from opcodes import AND, SDIV, SGT, SLT, MUL, ISZERO, XOR, EQ
 from rule import Rule
 from util import BVSignedMax, BVSignedMin, BVSignedUpCast
-from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, Not, Or
+from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, Not
 
 """
 Overflow checked signed integer multiplication.
@@ -26,18 +26,22 @@ while type_bits <= n_bits:
 	# cast to full n_bits values
 	X = BVSignedUpCast(X_short, n_bits)
 	Y = BVSignedUpCast(Y_short, n_bits)
+	product = MUL(X, Y)
 
 	# Constants
 	maxValue = BVSignedMax(type_bits, n_bits)
 	minValue = BVSignedMin(type_bits, n_bits)
+	bitMask =  2**(type_bits-1)
 
 	# Overflow and underflow checks in YulUtilFunction::overflowCheckedIntMulFunction
-	overflow_check_1 = AND(AND(SGT(X, 0), SGT(Y, 0)), GT(X, DIV(maxValue, Y)))
-	underflow_check_1 = AND(AND(SGT(X, 0), SLT(Y, 0)), SLT(Y, SDIV(minValue, X)))
-	underflow_check_2 = AND(AND(SLT(X, 0), SGT(Y, 0)), SLT(X, SDIV(minValue, Y)))
-	overflow_check_2 = AND(AND(SLT(X, 0), SLT(Y, 0)), SLT(X, SDIV(maxValue, Y)))
+	if type_bits == n_bits:
+		overflow_check = AND(ISZERO(ISZERO(Y)), ISZERO(EQ(X, SDIV(product, Y))))
+		underflow_check = overflow_check
+	else:
+		overflow_check = AND(ISZERO(AND(XOR(X, Y),bitMask)), SGT(product, maxValue))
+		underflow_check = AND(EQ(AND(XOR(X, Y), bitMask), bitMask), SLT(product, minValue))
 
-	rule.check(actual_overflow, Or(overflow_check_1 != 0, overflow_check_2 != 0))
-	rule.check(actual_underflow, Or(underflow_check_1 != 0, underflow_check_2 != 0))
+	rule.check(actual_overflow, overflow_check != 0)
+	rule.check(actual_underflow, underflow_check != 0)
 
-	type_bits *= 2
+	type_bits += 4

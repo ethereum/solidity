@@ -48,6 +48,9 @@ def OR(x, y):
 def NOT(x):
 	return ~(x)
 
+def XOR(x, y):
+	return x ^ y
+
 def SHL(x, y):
 	return y << x
 

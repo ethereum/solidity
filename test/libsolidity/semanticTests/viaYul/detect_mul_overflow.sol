@@ -5,6 +5,9 @@ contract C {
     function g(uint8 a, uint8 b) public pure returns (uint8 x) {
         x = a * b;
     }
+    function h(uint16 a, uint16 b) public pure returns (uint16 x) {
+        x = a * b;
+    }
 }
 // ====
 // compileToEwasm: also
@@ -35,3 +38,4 @@ contract C {
 // g(uint8,uint8): 0x12, 0x0F -> FAILURE, hex"4e487b71", 0x11
 // g(uint8,uint8): 0xFF, 0 -> 0
 // g(uint8,uint8): 0, 0xFF -> 0
+// h(uint16,uint16): 928, 142 -> FAILURE, hex"4e487b71", 0x11

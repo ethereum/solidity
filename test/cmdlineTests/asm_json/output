@@ -1300,14 +1300,14 @@ EVM assembly:
         },
         {
           "begin": 1211,
-          "end": 1516,
+          "end": 1434,
           "name": "tag",
           "source": 1,
           "value": "10"
         },
         {
           "begin": 1211,
-          "end": 1516,
+          "end": 1434,
           "name": "JUMPDEST",
           "source": 1
         },
@@ -1423,159 +1423,146 @@ EVM assembly:
           "source": 1
         },
         {
-          "begin": 1458,
-          "end": 1459,
+          "begin": 1347,
+          "end": 1348,
           "name": "DUP3",
           "source": 1
         },
         {
-          "begin": 1390,
-          "end": 1456,
-          "name": "PUSH",
-          "source": 1,
-          "value": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-        },
-        {
-          "begin": 1386,
-          "end": 1460,
-          "name": "SUB",
-          "source": 1
-        },
-        {
-          "begin": 1383,
-          "end": 1384,
+          "begin": 1344,
+          "end": 1345,
           "name": "DUP3",
           "source": 1
         },
         {
-          "begin": 1380,
-          "end": 1461,
+          "begin": 1340,
+          "end": 1349,
+          "name": "ADD",
+          "source": 1
+        },
+        {
+          "begin": 1333,
+          "end": 1349,
+          "name": "SWAP1",
+          "source": 1
+        },
+        {
+          "begin": 1333,
+          "end": 1349,
+          "name": "POP",
+          "source": 1
+        },
+        {
+          "begin": 1400,
+          "end": 1403,
+          "name": "DUP1",
+          "source": 1
+        },
+        {
+          "begin": 1397,
+          "end": 1398,
+          "name": "DUP3",
+          "source": 1
+        },
+        {
+          "begin": 1394,
+          "end": 1404,
           "name": "GT",
           "source": 1
         },
         {
-          "begin": 1377,
-          "end": 1484,
+          "begin": 1391,
+          "end": 1427,
           "name": "ISZERO",
           "source": 1
         },
         {
-          "begin": 1377,
-          "end": 1484,
+          "begin": 1391,
+          "end": 1427,
           "name": "PUSH [tag]",
           "source": 1,
           "value": "37"
         },
         {
-          "begin": 1377,
-          "end": 1484,
+          "begin": 1391,
+          "end": 1427,
           "name": "JUMPI",
           "source": 1
         },
         {
-          "begin": 1464,
-          "end": 1482,
+          "begin": 1407,
+          "end": 1425,
           "name": "PUSH [tag]",
           "source": 1,
           "value": "38"
         },
         {
-          "begin": 1464,
-          "end": 1482,
+          "begin": 1407,
+          "end": 1425,
           "name": "PUSH [tag]",
           "source": 1,
           "value": "18"
         },
         {
-          "begin": 1464,
-          "end": 1482,
+          "begin": 1407,
+          "end": 1425,
           "jumpType": "[in]",
           "name": "JUMP",
           "source": 1
         },
         {
-          "begin": 1464,
-          "end": 1482,
+          "begin": 1407,
+          "end": 1425,
           "name": "tag",
           "source": 1,
           "value": "38"
         },
         {
-          "begin": 1464,
-          "end": 1482,
+          "begin": 1407,
+          "end": 1425,
           "name": "JUMPDEST",
           "source": 1
         },
         {
-          "begin": 1377,
-          "end": 1484,
+          "begin": 1391,
+          "end": 1427,
           "name": "tag",
           "source": 1,
           "value": "37"
         },
         {
-          "begin": 1377,
-          "end": 1484,
+          "begin": 1391,
+          "end": 1427,
           "name": "JUMPDEST",
           "source": 1
         },
         {
-          "begin": 1508,
-          "end": 1509,
-          "name": "DUP3",
-          "source": 1
-        },
-        {
-          "begin": 1505,
-          "end": 1506,
-          "name": "DUP3",
-          "source": 1
-        },
-        {
-          "begin": 1501,
-          "end": 1510,
-          "name": "ADD",
-          "source": 1
-        },
-        {
-          "begin": 1494,
-          "end": 1510,
-          "name": "SWAP1",
-          "source": 1
-        },
-        {
-          "begin": 1494,
-          "end": 1510,
-          "name": "POP",
-          "source": 1
-        },
-        {
           "begin": 1211,
-          "end": 1516,
+          "end": 1434,
           "name": "SWAP3",
           "source": 1
         },
         {
           "begin": 1211,
-          "end": 1516,
+          "end": 1434,
           "name": "SWAP2",
           "source": 1
         },
         {
           "begin": 1211,
-          "end": 1516,
+          "end": 1434,
           "name": "POP",
           "source": 1
         },
         {
           "begin": 1211,
-          "end": 1516,
+          "end": 1434,
           "name": "POP",
           "source": 1
         },
         {
           "begin": 1211,
-          "end": 1516,
+          "end": 1434,
           "jumpType": "[out]",
           "name": "JUMP",
           "source": 1

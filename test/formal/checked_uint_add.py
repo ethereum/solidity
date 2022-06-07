@@ -1,4 +1,4 @@
-from opcodes import GT, SUB
+from opcodes import GT, ADD
 from rule import Rule
 from util import BVUnsignedMax, BVUnsignedUpCast
 from z3 import BitVec, BVAddNoOverflow, Not
@@ -24,12 +24,16 @@ while type_bits <= n_bits:
 	# cast to full n_bits values
 	X = BVUnsignedUpCast(X_short, n_bits)
 	Y = BVUnsignedUpCast(Y_short, n_bits)
+	sum_ = ADD(X, Y)
 
 	# Constants
 	maxValue = BVUnsignedMax(type_bits, n_bits)
 
 	# Overflow check in YulUtilFunction::overflowCheckedIntAddFunction
-	overflow_check = GT(X, SUB(maxValue, Y))
+	if type_bits == n_bits:
+		overflow_check = GT(X, sum_)
+	else:
+		overflow_check = GT(sum_, maxValue)
 
 	rule.check(overflow_check != 0, actual_overflow)
 
