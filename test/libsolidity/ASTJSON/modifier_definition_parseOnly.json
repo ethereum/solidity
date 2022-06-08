@@ -99,6 +99,10 @@
               {
                 "id": 8,
                 "name": "M",
+                "nameLocations":
+                [
+                  "52:1:1"
+                ],
                 "nodeType": "IdentifierPath",
                 "src": "52:1:1"
               },

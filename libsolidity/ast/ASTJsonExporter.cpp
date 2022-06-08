@@ -294,8 +294,14 @@ bool ASTJsonExporter::visit(ContractDefinition const& _node)
 
 bool ASTJsonExporter::visit(IdentifierPath const& _node)
 {
+	Json::Value nameLocations = Json::arrayValue;
+
+	for (SourceLocation location: _node.pathLocations())
+		nameLocations.append(sourceLocationToString(location));
+
 	setJsonNode(_node, "IdentifierPath", {
 		make_pair("name", namePathToString(_node.path())),
+		make_pair("nameLocations", nameLocations),
 		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration))
 	});
 	return false;

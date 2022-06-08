@@ -23,6 +23,11 @@
           {
             "id": 2,
             "name": "NotExisting.X",
+            "nameLocations":
+            [
+              "55:11:1",
+              "67:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "55:13:1"
           },
@@ -58,6 +63,11 @@
             {
               "id": 4,
               "name": "NotExisting.SomeStruct",
+              "nameLocations":
+              [
+                "72:11:1",
+                "84:10:1"
+              ],
               "nodeType": "IdentifierPath",
               "src": "72:22:1"
             },
