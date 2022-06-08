@@ -1372,20 +1372,28 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		if (arguments.empty())
 		{
-			auto slotName = m_context.newYulVariable();
-			auto offsetName = m_context.newYulVariable();
-			appendCode() << "let " << slotName << ", " << offsetName << " := " <<
-				m_utils.storageArrayPushZeroFunction(*arrayType) <<
-				"(" << IRVariable(_functionCall.expression()).commaSeparatedList() << ")\n";
 			if (arrayType->isByteArrayOrString())
+			{
+				string arraySlot = IRVariable(_functionCall.expression()).commaSeparatedList();
+				string oldLength = m_context.newYulVariable();
+				appendCode() << "let " << oldLength << " := " <<
+					m_utils.storageBytesArrayPushZeroFunction(*arrayType) <<
+					"(" << arraySlot << ")\n";
 				setLValue(_functionCall, IRLValue{
 					*arrayType->baseType(),
 					IRLValue::StorageBytesElement{
-						slotName,
-						offsetName
+						arraySlot,
+						oldLength
 					}
 				});
+			}
 			else
+			{
+				auto slotName = m_context.newYulVariable();
+				auto offsetName = m_context.newYulVariable();
+				appendCode() << "let " << slotName << ", " << offsetName << " := " <<
+					m_utils.storageArrayPushZeroFunction(*arrayType) <<
+					"(" << IRVariable(_functionCall.expression()).commaSeparatedList() << ")\n";
 				setLValue(_functionCall, IRLValue{
 					*arrayType->baseType(),
 					IRLValue::Storage{
@@ -1393,6 +1401,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 						offsetName,
 					}
 				});
+			}
 		}
 		else
 		{

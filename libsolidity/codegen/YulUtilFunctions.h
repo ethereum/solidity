@@ -238,8 +238,14 @@ public:
 	std::string storageArrayPushFunction(ArrayType const& _type, Type const* _fromType = nullptr);
 
 	/// @returns the name of a function that pushes the base type's zero element to a storage array and returns storage slot and offset of the added element.
+	/// Cannot be used for bytes arrays.
 	/// signature: (array) -> slot, offset
 	std::string storageArrayPushZeroFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that pushes the base type's zero element to a storage bytes array and returns the old length of the array.
+	/// Can only used for bytes arrays.
+	/// signature: (array) -> oldLength
+	std::string storageBytesArrayPushZeroFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that will clear the storage area given
 	/// by the start and end (exclusive) parameters (slots).

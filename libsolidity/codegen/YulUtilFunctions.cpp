@@ -1624,33 +1624,45 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
+	solAssert(!_type.isByteArrayOrString(), "");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "Base type is not yet implemented.");
 
 	string functionName = "array_push_zero_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(array) -> slot, offset {
-				<?isBytes>
-					let data := sload(array)
-					let oldLen := <extractLength>(data)
-					<increaseBytesSize>(array, data, oldLen, add(oldLen, 1))
-					slot := array
-					offset := oldLen
-				<!isBytes>
-					let oldLen := <fetchLength>(array)
-					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
-					sstore(array, add(oldLen, 1))
-					slot, offset := <indexAccess>(array, oldLen)
-				</isBytes>
+				let oldLen := <fetchLength>(array)
+				if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
+				sstore(array, add(oldLen, 1))
+				slot, offset := <indexAccess>(array, oldLen)
 			})")
 			("functionName", functionName)
-			("isBytes", _type.isByteArrayOrString())
-			("increaseBytesSize", _type.isByteArrayOrString() ? increaseByteArraySizeFunction(_type) : "")
-			("extractLength", _type.isByteArrayOrString() ? extractByteArrayLengthFunction() : "")
 			("panic", panicFunction(PanicCode::ResourceError))
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
 			("maxArrayLength", (u256(1) << 64).str())
+			.render();
+	});
+}
+
+
+string YulUtilFunctions::storageBytesArrayPushZeroFunction(ArrayType const& _type)
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+	solAssert(_type.isDynamicallySized(), "");
+	solAssert(_type.isByteArrayOrString(), "");
+
+	string functionName = "byte_array_push_zero_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array) -> oldLen {
+				let data := sload(array)
+				oldLen := <extractLength>(data)
+				<increaseBytesSize>(array, data, oldLen, add(oldLen, 1))
+			})")
+			("functionName", functionName)
+			("increaseBytesSize", _type.isByteArrayOrString() ? increaseByteArraySizeFunction(_type) : "")
+			("extractLength", _type.isByteArrayOrString() ? extractByteArrayLengthFunction() : "")
 			.render();
 	});
 }
