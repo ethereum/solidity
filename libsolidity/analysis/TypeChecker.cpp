@@ -1842,7 +1842,7 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					_functionCall.location(),
 					ssl,
 					"Explicit type conversion not allowed from non-payable \"address\" to \"" +
-					resultType->toString() +
+					resultType->humanReadableName() +
 					"\", which has a payable fallback function."
 				);
 			}
@@ -1856,9 +1856,9 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					5030_error,
 					_functionCall.location(),
 					"Explicit type conversion not allowed from \"" +
-					argType->toString() +
+					argType->humanReadableName() +
 					"\" to \"" +
-					resultType->toString() +
+					resultType->humanReadableName() +
 					"\". To obtain the address of the contract of the function, " +
 					"you can use the .address member of the function."
 				);
@@ -1867,9 +1867,9 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					9640_error,
 					_functionCall.location(),
 					"Explicit type conversion not allowed from \"" +
-					argType->toString() +
+					argType->humanReadableName() +
 					"\" to \"" +
-					resultType->toString() +
+					resultType->humanReadableName() +
 					"\".",
 					result.message()
 				);
