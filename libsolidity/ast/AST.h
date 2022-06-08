@@ -587,10 +587,19 @@ private:
 class IdentifierPath: public ASTNode
 {
 public:
-	IdentifierPath(int64_t _id, SourceLocation const& _location, std::vector<ASTString> _path):
-		ASTNode(_id, _location), m_path(std::move(_path)) {}
+	IdentifierPath(
+		int64_t _id,
+		SourceLocation const& _location,
+		std::vector<ASTString> _path,
+		std::vector<SourceLocation> _pathLocations
+	):
+		ASTNode(_id, _location), m_path(std::move(_path)), m_pathLocations(std::move(_pathLocations))
+	{
+		solAssert(m_pathLocations.size() == m_path.size());
+	}
 
 	std::vector<ASTString> const& path() const { return m_path; }
+	std::vector<SourceLocation > const& pathLocations() const { return m_pathLocations; }
 	IdentifierPathAnnotation& annotation() const override
 	{
 		return initAnnotation<IdentifierPathAnnotation>();
@@ -600,6 +609,8 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 private:
 	std::vector<ASTString> m_path;
+	// Corresponding locations for m_path. Array has same length and indices as m_path.
+	std::vector<SourceLocation> m_pathLocations;
 };
 
 class InheritanceSpecifier: public ASTNode

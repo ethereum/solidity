@@ -325,6 +325,7 @@ ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value con
 	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
 
 	vector<ASTString> namePath;
+	vector<SourceLocation> namePathLocations;
 	vector<string> strs;
 	string nameString = member(_node, "name").asString();
 	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
@@ -334,7 +335,23 @@ ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value con
 		astAssert(!s.empty(), "Expected non-empty string for IdentifierPath element.");
 		namePath.emplace_back(s);
 	}
-	return createASTNode<IdentifierPath>(_node, namePath);
+
+	if (_node.isMember("nameLocations") && _node["nameLocations"].isArray())
+		for (auto const& val: _node["nameLocations"])
+			namePathLocations.emplace_back(langutil::parseSourceLocation(val.asString(), m_sourceNames));
+	else
+		namePathLocations.resize(namePath.size());
+
+	astAssert(
+		namePath.size() == namePathLocations.size(),
+		"SourceLocations don't match name paths."
+	);
+
+	return createASTNode<IdentifierPath>(
+		_node,
+		namePath,
+		namePathLocations
+	);
 }
 
 ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Json::Value const& _node)
