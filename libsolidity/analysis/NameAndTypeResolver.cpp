@@ -186,7 +186,17 @@ vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString c
 
 Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path) const
 {
+	if (auto declarations = pathFromCurrentScopeWithAllDeclarations(_path); !declarations.empty())
+		return declarations.back();
+
+	return nullptr;
+}
+
+std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAllDeclarations(std::vector<ASTString> const& _path) const
+{
 	solAssert(!_path.empty(), "");
+	vector<Declaration const*> pathDeclarations;
+
 	vector<Declaration const*> candidates = m_currentScope->resolveName(
 		_path.front(),
 		/* _recursive */ true,
@@ -197,13 +207,19 @@ Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> c
 	for (size_t i = 1; i < _path.size() && candidates.size() == 1; i++)
 	{
 		if (!m_scopes.count(candidates.front()))
-			return nullptr;
+			return {};
+
+		pathDeclarations.push_back(candidates.front());
+
 		candidates = m_scopes.at(candidates.front())->resolveName(_path[i], false);
 	}
 	if (candidates.size() == 1)
-		return candidates.front();
+	{
+		pathDeclarations.push_back(candidates.front());
+		return pathDeclarations;
+	}
 	else
-		return nullptr;
+		return {};
 }
 
 void NameAndTypeResolver::warnHomonymDeclarations() const
