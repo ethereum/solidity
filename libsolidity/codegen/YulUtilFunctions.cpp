@@ -1634,12 +1634,14 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 					let data := sload(array)
 					let oldLen := <extractLength>(data)
 					<increaseBytesSize>(array, data, oldLen, add(oldLen, 1))
+					slot := array
+					offset := oldLen
 				<!isBytes>
 					let oldLen := <fetchLength>(array)
 					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 					sstore(array, add(oldLen, 1))
+					slot, offset := <indexAccess>(array, oldLen)
 				</isBytes>
-				slot, offset := <indexAccess>(array, oldLen)
 			})")
 			("functionName", functionName)
 			("isBytes", _type.isByteArrayOrString())

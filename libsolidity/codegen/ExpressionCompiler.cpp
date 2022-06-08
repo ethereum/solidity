@@ -1046,12 +1046,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// stack: ArrayReference 1 newLength
 				m_context << Instruction::SUB;
 				// stack: ArrayReference (newLength-1)
-				ArrayUtils(m_context).accessIndex(*arrayType, false);
 
 				if (arrayType->isByteArrayOrString())
 					setLValue<StorageByteArrayElement>(_functionCall);
 				else
+				{
+					ArrayUtils(m_context).accessIndex(*arrayType, false);
 					setLValueToStorageItem(_functionCall);
+				}
 			}
 			else
 			{
@@ -1072,7 +1074,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// stack: argValue ArrayReference newLength
 				m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
 				// stack: argValue ArrayReference (newLength-1)
-				ArrayUtils(m_context).accessIndex(*arrayType, false);
+				if (!arrayType->isByteArrayOrString())
+					ArrayUtils(m_context).accessIndex(*arrayType, false);
 				// stack: argValue storageSlot slotOffset
 				utils().moveToStackTop(2, argType->sizeOnStack());
 				// stack: storageSlot slotOffset argValue
@@ -2108,14 +2111,16 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			switch (arrayType.location())
 			{
 				case DataLocation::Storage:
-					ArrayUtils(m_context).accessIndex(arrayType);
 					if (arrayType.isByteArrayOrString())
 					{
 						solAssert(!arrayType.isString(), "Index access to string is not allowed.");
 						setLValue<StorageByteArrayElement>(_indexAccess);
 					}
 					else
+					{
+						ArrayUtils(m_context).accessIndex(arrayType);
 						setLValueToStorageItem(_indexAccess);
+					}
 					break;
 				case DataLocation::Memory:
 					ArrayUtils(m_context).accessIndex(arrayType);

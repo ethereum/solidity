@@ -508,6 +508,8 @@ StorageByteArrayElement::StorageByteArrayElement(CompilerContext& _compilerConte
 
 void StorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove) const
 {
+	ArrayUtils(m_context).accessIndex(*TypeProvider::bytesStorage());
+
 	// stack: ref byte_number
 	if (_remove)
 		m_context << Instruction::SWAP1 << Instruction::SLOAD
@@ -520,6 +522,8 @@ void StorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove)
 
 void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, bool _move) const
 {
+	ArrayUtils(m_context).accessIndex(*TypeProvider::bytesStorage());
+
 	// stack: value ref byte_number
 	m_context << u256(31) << Instruction::SUB << u256(0x100) << Instruction::EXP;
 	// stack: value ref (1<<(8*(31-byte_number)))
@@ -540,6 +544,8 @@ void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, boo
 
 void StorageByteArrayElement::setToZero(SourceLocation const&, bool _removeReference) const
 {
+	ArrayUtils(m_context).accessIndex(*TypeProvider::bytesStorage());
+
 	// stack: ref byte_number
 	solAssert(_removeReference, "");
 	m_context << u256(31) << Instruction::SUB << u256(0x100) << Instruction::EXP;

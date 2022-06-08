@@ -40,6 +40,11 @@ struct IRLValue
 	{
 		VariableDeclaration const* variable = nullptr;
 	};
+	struct StorageBytesElement
+	{
+		std::string const baseref;
+		std::string const index;
+	};
 	struct Storage
 	{
 		std::string const slot;
@@ -64,7 +69,7 @@ struct IRLValue
 	{
 		std::vector<std::optional<IRLValue>> components;
 	};
-	std::variant<Stack, Immutable, Storage, Memory, Tuple> kind;
+	std::variant<Stack, Immutable, Storage, StorageBytesElement, Memory, Tuple> kind;
 };
 
 }

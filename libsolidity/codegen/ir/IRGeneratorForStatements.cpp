@@ -1377,13 +1377,22 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			appendCode() << "let " << slotName << ", " << offsetName << " := " <<
 				m_utils.storageArrayPushZeroFunction(*arrayType) <<
 				"(" << IRVariable(_functionCall.expression()).commaSeparatedList() << ")\n";
-			setLValue(_functionCall, IRLValue{
-				*arrayType->baseType(),
-				IRLValue::Storage{
-					slotName,
-					offsetName,
-				}
-			});
+			if (arrayType->isByteArrayOrString())
+				setLValue(_functionCall, IRLValue{
+					*arrayType->baseType(),
+					IRLValue::StorageBytesElement{
+						slotName,
+						offsetName
+					}
+				});
+			else
+				setLValue(_functionCall, IRLValue{
+					*arrayType->baseType(),
+					IRLValue::Storage{
+						slotName,
+						offsetName,
+					}
+				});
 		}
 		else
 		{
@@ -2220,24 +2229,33 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		{
 			case DataLocation::Storage:
 			{
-				string slot = m_context.newYulVariable();
-				string offset = m_context.newYulVariable();
+				if (arrayType.isByteArrayOrString())
+					setLValue(_indexAccess, IRLValue{
+						*_indexAccess.annotation().type,
+						IRLValue::StorageBytesElement{
+							IRVariable(_indexAccess.baseExpression()).part("slot").name(),
+							IRVariable(*_indexAccess.indexExpression()).name()
+						}
+					});
+				else
+				{
+					string slot = m_context.newYulVariable();
+					string offset = m_context.newYulVariable();
 
-				appendCode() << Whiskers(R"(
-					let <slot>, <offset> := <indexFunc>(<array>, <index>)
-				)")
-				("slot", slot)
-				("offset", offset)
-				("indexFunc", m_utils.storageArrayIndexAccessFunction(arrayType))
-				("array", IRVariable(_indexAccess.baseExpression()).part("slot").name())
-				("index", IRVariable(*_indexAccess.indexExpression()).name())
-				.render();
-
-				setLValue(_indexAccess, IRLValue{
-					*_indexAccess.annotation().type,
-					IRLValue::Storage{slot, offset}
-				});
-
+					appendCode() << Whiskers(R"(
+						let <slot>, <offset> := <indexFunc>(<array>, <index>)
+					)")
+					("slot", slot)
+					("offset", offset)
+					("indexFunc", m_utils.storageArrayIndexAccessFunction(arrayType))
+					("array", IRVariable(_indexAccess.baseExpression()).part("slot").name())
+					("index", IRVariable(*_indexAccess.indexExpression()).name())
+					.render();
+					setLValue(_indexAccess, IRLValue{
+						*_indexAccess.annotation().type,
+						IRLValue::Storage{slot, offset}
+					});
+				}
 				break;
 			}
 			case DataLocation::Memory:
@@ -2994,6 +3012,27 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 					")\n";
 
 			},
+			[&](IRLValue::StorageBytesElement const& _storage) {
+				string offset = m_context.newYulVariable();
+				string slot = m_context.newYulVariable();
+				appendCode() << Whiskers(R"(
+					let <slot>, <offset> := <indexFunc>(<array>, <index>)
+				)")
+				("slot", slot)
+				("offset", offset)
+				("indexFunc", m_utils.storageArrayIndexAccessFunction(*TypeProvider::bytesStorage()))
+				("array", _storage.baseref)
+				("index", _storage.index)
+				.render();
+				appendCode() <<
+					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type) <<
+					"(" <<
+					slot <<
+					", " <<
+					offset <<
+					_value.commaSeparatedListPrefixed() <<
+					")\n";
+			},
 			[&](IRLValue::Memory const& _memory) {
 				if (_lvalue.type.isValueType())
 				{
@@ -3083,6 +3122,26 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 					"(" <<
 					_storage.slot <<
 					")\n";
+		},
+		[&](IRLValue::StorageBytesElement const& _storage) {
+			string offset = m_context.newYulVariable();
+			string slot = m_context.newYulVariable();
+			appendCode() << Whiskers(R"(
+				let <slot>, <offset> := <indexFunc>(<array>, <index>)
+			)")
+			("slot", slot)
+			("offset", offset)
+			("indexFunc", m_utils.storageArrayIndexAccessFunction(*TypeProvider::bytesStorage()))
+			("array", _storage.baseref)
+			("index", _storage.index)
+			.render();
+			define(result) <<
+				m_utils.readFromStorageDynamic(_lvalue.type, true) <<
+				"(" <<
+				slot <<
+				", " <<
+				offset <<
+				")\n";
 		},
 		[&](IRLValue::Memory const& _memory) {
 			if (_lvalue.type.isValueType())

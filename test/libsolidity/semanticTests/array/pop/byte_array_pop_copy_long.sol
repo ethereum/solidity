@@ -11,5 +11,5 @@ contract c {
 // ----
 // test() -> 0x20, 29, 0x0303030303030303030303030303030303030303030303030303030303000000
 // gas irOptimized: 109341
-// gas legacy: 126728
-// gas legacyOptimized: 123444
+// gas legacy: 134884
+// gas legacyOptimized: 131171
