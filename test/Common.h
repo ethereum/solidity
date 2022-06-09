@@ -81,6 +81,12 @@ struct CommonOptions
 	// Throws a ConfigException on error
 	virtual void validate() const;
 
+	/// @returns string with a key=value list of the options separated by comma
+	/// Ex.: "evmVersion=london, optimize=true, useABIEncoderV1=false"
+	virtual std::string toString(std::vector<std::string> const& _selectedOptions) const;
+	/// Helper to print the value of settings used
+	virtual void printSelectedOptions(std::ostream& _stream, std::string const& _linePrefix, std::vector<std::string> const& _selectedOptions) const;
+
 	static CommonOptions const& get();
 	static void setSingleton(std::unique_ptr<CommonOptions const>&& _instance);
 

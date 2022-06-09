@@ -315,6 +315,14 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 				throw;
 		}
 	}
+
+	if (result != TestResult::Success)
+		solidity::test::CommonOptions::get().printSelectedOptions(
+			_stream,
+			_linePrefix,
+			{"evmVersion", "optimize", "useABIEncoderV1", "batch"}
+		);
+
 	return result;
 }
 
