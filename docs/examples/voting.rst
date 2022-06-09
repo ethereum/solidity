@@ -128,17 +128,17 @@ of votes.
                 // We found a loop in the delegation, not allowed.
                 require(to != msg.sender, "Found loop in delegation.");
             }
-            
+
             Voter storage delegate_ = voters[to];
 
             // Voters cannot delegate to accounts that cannot vote.
             require(delegate_.weight >= 1);
-            
+
             // Since `sender` is a reference, this
             // modifies `voters[msg.sender]`.
             sender.voted = true;
             sender.delegate = to;
-            
+
             if (delegate_.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes
