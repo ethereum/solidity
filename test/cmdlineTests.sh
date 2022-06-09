@@ -517,15 +517,16 @@ SOLTMPDIR=$(mktemp -d)
         opts=()
         # We expect errors if explicitly stated, or if imports
         # are used (in the style guide)
-        if grep -E "This will not compile|import \"" "$f" >/dev/null
+        if grep -E "// This will not compile" "$f" >/dev/null ||
+            sed -e 's|//.*||g' "$f" | grep -E "import \"" >/dev/null
         then
             opts=(--expect-errors)
         fi
-        if grep "This will report a warning" "$f" >/dev/null
+        if grep "// This will report a warning" "$f" >/dev/null
         then
             opts+=(--expect-warnings)
         fi
-        if grep "This may report a warning" "$f" >/dev/null
+        if grep "// This may report a warning" "$f" >/dev/null
         then
             opts+=(--ignore-warnings)
         fi
