@@ -1,23 +1,29 @@
-contract Test {
-	uint256 x;
-
-	function test() public returns (uint256) {
-		uint256 a = myGetX();
-		x = 5;
-		uint256 b = myGetX();
+contract C {
+	function f() external returns (uint256 x) {
 		assembly {
-			log0(0, 64)
+			mstore(0, 0x42)
 		}
-		return a + b + myGetX();
+		assembly {
+			x := mload(0)
+		}
 	}
-
-	function myGetX() internal view returns (uint256) {
+	function g() external returns (bool) {
+		uint initialFreeMemoryPointer;
 		assembly {
-			mstore(1, 0x123456789abcdef)
+			initialFreeMemoryPointer := mload(0x40)
 		}
-		return x;
+		assembly {
+			let ptr := mload(0x40)
+			mstore(0x40, add(ptr, 0x20))
+		}
+		uint finalFreeMemoryPointer;
+		assembly {
+			finalFreeMemoryPointer := mload(0x40)
+		}
+		assert(initialFreeMemoryPointer != finalFreeMemoryPointer);
+		return true;
 	}
 }
 // ----
-// test() -> 10
-// ~ emit <anonymous>: 0x0123456789abcd, 0xef00000000000000000000000000000000000000000000000000000000000000
+// f() -> 0x42
+// g() -> true
