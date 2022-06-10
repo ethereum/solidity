@@ -1614,13 +1614,16 @@
     },
     "0.8.13": {
         "bugs": [
+            "InlineAssemblyMemorySideEffects",
             "DataLocationChangeInInternalOverride",
             "NestedCallataArrayAbiReencodingSizeValidation"
         ],
         "released": "2022-03-16"
     },
     "0.8.14": {
-        "bugs": [],
+        "bugs": [
+            "InlineAssemblyMemorySideEffects"
+        ],
         "released": "2022-05-17"
     },
     "0.8.2": {
