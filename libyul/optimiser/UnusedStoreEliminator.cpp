@@ -31,6 +31,8 @@
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libsolutil/CommonData.h>
 
 #include <libevmasm/Instruction.h>
@@ -76,7 +78,13 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 		ignoreMemory
 	};
 	rse(_ast);
-	rse.changeUndecidedTo(State::Unused, Location::Memory);
+	if (
+		auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
+		evmDialect && evmDialect->providesObjectAccess()
+	)
+		rse.changeUndecidedTo(State::Unused, Location::Memory);
+	else
+		rse.changeUndecidedTo(State::Used, Location::Memory);
 	rse.changeUndecidedTo(State::Used, Location::Storage);
 	rse.scheduleUnusedForDeletion();
 
