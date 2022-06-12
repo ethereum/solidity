@@ -37,7 +37,10 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
+		// Reduce the complexity
+		// solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
+		cout << "00" << endl;
+		// there, doesn't that feel better ? 
 		return cli.run(argc, argv) ? 0 : 1;
 	}
 	catch (smtutil::SMTLogicError const& _exception)
