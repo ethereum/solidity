@@ -364,8 +364,9 @@ in memory is automatically considered memory-safe and does not need to be annota
     an assembly block as memory-safe, but violate one of the memory assumptions, this **will** lead to incorrect and
     undefined behaviour that cannot easily be discovered by testing.
 
+The annotation was introduced in version 0.8.13 and is not supported by older compilers.
 In case you are developing a library that is meant to be compatible across multiple versions
-of solidity, you can use a special comment to annotate an assembly block as memory-safe:
+of Solidity, you can use a special Natspec comment that has the same effect but is ignored in older versions:
 
 .. code-block:: solidity
 
