@@ -537,6 +537,18 @@ class TestParser:
         """
         return self.current_line_tuple is None
 
+class FileLoadStrategy(Enum):
+    Undefined = auto()
+    ProjectDirectory = auto()
+    DirectlyOpenedAndOnImport = auto()
+
+    def lsp_name(self):
+        if self == FileLoadStrategy.ProjectDirectory:
+            return 'project-directory'
+        elif self == FileLoadStrategy.DirectlyOpenedAndOnImport:
+            return 'directly-opened-and-on-import'
+        return None
+
 class FileTestRunner:
     """
     Runs all tests in a given file.
@@ -898,18 +910,27 @@ class SolidityLSPTestSuite: # {{{
 
         return min(max(self.test_counter.failed, self.assertion_counter.failed), 127)
 
-    def setup_lsp(self, lsp: JsonRpcProcess, expose_project_root=True):
+    def setup_lsp(
+        self,
+        lsp: JsonRpcProcess,
+        expose_project_root=True,
+        file_load_strategy: FileLoadStrategy=FileLoadStrategy.DirectlyOpenedAndOnImport,
+        project_root_subdir=None
+    ):
         """
         Prepares the solc LSP server by calling `initialize`,
         and `initialized` methods.
         """
+        project_root_uri_with_maybe_subdir = self.project_root_uri
+        if project_root_subdir is not None:
+            project_root_uri_with_maybe_subdir = self.project_root_uri + '/' + project_root_subdir
         params = {
             'processId': None,
-            'rootUri': self.project_root_uri,
+            'rootUri': project_root_uri_with_maybe_subdir,
             # Enable traces to receive the amount of expected diagnostics before
             # actually receiving them.
             'trace': 'messages',
-            'initializationOptions': {},
+            # 'initializationOptions': {},
             'capabilities': {
                 'textDocument': {
                     'publishDiagnostics': {'relatedInformation': True}
@@ -923,6 +944,9 @@ class SolidityLSPTestSuite: # {{{
                 }
             }
         }
+        if file_load_strategy != FileLoadStrategy.Undefined:
+            params['initializationOptions'] = {}
+            params['initializationOptions']['file-load-strategy'] = file_load_strategy.lsp_name()
         if not expose_project_root:
             params['rootUri'] = None
         lsp.call_method('initialize', params)
@@ -1058,6 +1082,14 @@ class SolidityLSPTestSuite: # {{{
             }
         )
         return self.wait_for_diagnostics(solc_process)
+
+    def expect_true(
+        self,
+        actual,
+        description="Expected True value",
+        part=ExpectationFailed.Part.Diagnostics
+    ) -> None:
+        self.expect_equal(actual, True, description, part)
 
     def expect_equal(
         self,
@@ -1295,6 +1327,38 @@ class SolidityLSPTestSuite: # {{{
     # }}}
 
     # {{{ actual tests
+    def test_analyze_all_project_files1(self, solc: JsonRpcProcess) -> None:
+        """
+        Tests the option (default) to analyze all .sol project files even when they have not been actively
+        opened yet. This is how other LSPs (at least for C++) work too and it makes cross-unit tasks
+        actually correct (e.g. symbolic rename, find all references, ...).
+
+        In this test, we simply open up a custom project and ensure we're receiving the diagnostics
+        for all existing files in that project (while having none of these files opened).
+        """
+        SUBDIR = 'analyze-full-project'
+        self.setup_lsp(
+            solc,
+            file_load_strategy=FileLoadStrategy.ProjectDirectory,
+            project_root_subdir=SUBDIR
+        )
+        published_diagnostics = self.wait_for_diagnostics(solc)
+        self.expect_equal(len(published_diagnostics), 3, "Diagnostic reports for 3 files")
+
+        # C.sol
+        report = published_diagnostics[0]
+        self.expect_equal(report['uri'], self.get_test_file_uri('C', SUBDIR), "Correct file URI")
+        self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
+
+        # D.sol
+        report = published_diagnostics[1]
+        self.expect_equal(report['uri'], self.get_test_file_uri('D', SUBDIR), "Correct file URI")
+        self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
+
+        # E.sol
+        report = published_diagnostics[2]
+        self.expect_equal(report['uri'], self.get_test_file_uri('E', SUBDIR), "Correct file URI")
+        self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
 
     def test_publish_diagnostics_errors_multiline(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)

@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/lsp/FileRepository.h>
+#include <libsolidity/lsp/Transport.h>
 #include <libsolidity/lsp/Utils.h>
 
 #include <libsolutil/StringUtils.h>
@@ -25,10 +26,13 @@
 #include <range/v3/algorithm/none_of.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/transform.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <regex>
 
 #include <boost/algorithm/string/predicate.hpp>
+
+#include <fmt/format.h>
 
 using namespace std;
 using namespace solidity;
@@ -84,6 +88,7 @@ string FileRepository::sourceUnitNameToUri(string const& _sourceUnitName) const
 
 string FileRepository::uriToSourceUnitName(string const& _path) const
 {
+	lspAssert(boost::algorithm::starts_with(_path, "file://"), ErrorCode::InternalError, "URI must start with file://");
 	return stripFileUriSchemePrefix(_path);
 }
 
@@ -92,6 +97,7 @@ void FileRepository::setSourceByUri(string const& _uri, string _source)
 	// This is needed for uris outside the base path. It can lead to collisions,
 	// but we need to mostly rewrite this in a future version anyway.
 	auto sourceUnitName = uriToSourceUnitName(_uri);
+	lspDebug(fmt::format("FileRepository.setSourceByUri({}): {}", _uri, _source));
 	m_sourceUnitNamesToUri.emplace(sourceUnitName, _uri);
 	m_sourceCodes[sourceUnitName] = std::move(_source);
 }

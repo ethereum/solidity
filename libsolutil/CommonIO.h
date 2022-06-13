@@ -48,46 +48,6 @@ inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 namespace util
 {
 
-namespace detail
-{
-
-template <typename Predicate>
-struct RecursiveFileCollector
-{
-	Predicate predicate;
-	std::vector<boost::filesystem::path> result {};
-
-	RecursiveFileCollector& operator()(boost::filesystem::path const& _directory)
-	{
-		if (!boost::filesystem::is_directory(_directory))
-			return *this;
-		auto iterator = boost::filesystem::directory_iterator(_directory);
-		auto const iteratorEnd = boost::filesystem::directory_iterator();
-
-		while (iterator != iteratorEnd)
-		{
-			if (boost::filesystem::is_directory(iterator->status()))
-				(*this)(iterator->path());
-
-			if (predicate(iterator->path()))
-				result.push_back(iterator->path());
-
-			++iterator;
-		}
-		return *this;
-	}
-};
-
-template <typename Predicate>
-RecursiveFileCollector(Predicate) -> RecursiveFileCollector<Predicate>;
-}
-
-template <typename Predicate>
-std::vector<boost::filesystem::path> findFilesRecursively(boost::filesystem::path const& _rootDirectory, Predicate _predicate)
-{
-	return detail::RecursiveFileCollector{_predicate}(_rootDirectory).result;
-}
-
 /// Retrieves and returns the contents of the given file as a std::string.
 /// If the file doesn't exist, it will throw a FileNotFound exception.
 /// If the file exists but is not a regular file, it will throw NotAFile exception.
