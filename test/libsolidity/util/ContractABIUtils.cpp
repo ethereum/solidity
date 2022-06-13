@@ -29,7 +29,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/range/algorithm_ext/for_each.hpp>
+#include <range/v3/view/zip.hpp>
 
 #include <fstream>
 #include <memory>
@@ -281,26 +281,16 @@ void ContractABIUtils::overwriteParameters(
 )
 {
 	using namespace placeholders;
-	boost::for_each(
-		_sourceParameters,
-		_targetParameters,
-		std::bind<void>(
-			[&](Parameter _a, Parameter& _b) -> void
+	for (auto&& [source, target]: ranges::views::zip(_sourceParameters, _targetParameters))
+		if (
+				source.abiType.size != target.abiType.size ||
+				source.abiType.type != target.abiType.type ||
+				source.abiType.fractionalDigits != target.abiType.fractionalDigits
+			)
 			{
-				if (
-					_a.abiType.size != _b.abiType.size ||
-					_a.abiType.type != _b.abiType.type ||
-					_a.abiType.fractionalDigits != _b.abiType.fractionalDigits
-				)
-				{
-					_errorReporter.warning("Type or size of parameter(s) does not match.");
-					_b = _a;
-				}
-			},
-			_1,
-			_2
-		)
-	);
+				_errorReporter.warning("Type or size of parameter(s) does not match.");
+				target = source;
+			}
 }
 
 solidity::frontend::test::ParameterList ContractABIUtils::preferredParameters(
