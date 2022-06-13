@@ -1,6 +1,7 @@
 ### 0.8.15 (unreleased)
 
 Important Bugfixes:
+ * Code Generation: Avoid writing dirty bytes to storage when copying ``bytes`` arrays.
  * Yul Optimizer: Keep all memory side-effects of inline assembly blocks.
 
 
