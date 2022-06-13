@@ -7,7 +7,7 @@
         "link": "https://blog.soliditylang.org/2022/06/15/inline-assembly-memory-side-effects-bug/",
         "introduced": "0.8.13",
         "fixed": "0.8.15",
-        "severity": "low/medium",
+        "severity": "medium",
         "conditions": {
             "yulOptimizer": true
         }
