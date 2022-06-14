@@ -3,7 +3,7 @@
         "uid": "SOL-2022-5",
         "name": "DirtyBytesArrayToStorage",
         "summary": "Copying ``bytes`` arrays from memory or calldata to storage may result in dirty storage values.",
-        "description": "Copying ``bytes`` arrays from memory or calldata to storage is done in chunks of 32 bytes. Thereby, dirty values in calldata or memory can be written to storage, which may then become observable after a ``.push()`` on the bytes array in storage.",
+        "description": "Copying ``bytes`` arrays from memory or calldata to storage is done in chunks of 32 bytes even if the length is not a multiple of 32. Thereby, extra bytes past the end of the array may be copied from calldata or memory to storage. These dirty bytes may then become observable after a ``.push()`` without arguments to the bytes array in storage, i.e. such a push will not result in a zero value at the end of the array as expected. This bug only affects the legacy code generation pipeline, the new code generation pipeline via IR is not affected.",
         "link": "https://blog.soliditylang.org/2022/06/15/dirty-bytes-array-to-storage-bug/",
         "introduced": "0.0.1",
         "fixed": "0.8.15",
