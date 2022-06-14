@@ -6,8 +6,7 @@ Cheatsheet
 
 Order of Precedence of Operators
 ================================
-
-:ref:`order`
+.. include:: types/operator-precedence-table.rst
 
 .. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
 
