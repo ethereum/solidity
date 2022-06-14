@@ -116,7 +116,7 @@ efficient code, for example:
         }
     }
 
-
+.. index:: selector; of a function
 
 Access to External Variables, Functions and Libraries
 -----------------------------------------------------
