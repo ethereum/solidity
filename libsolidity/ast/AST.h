@@ -2190,19 +2190,22 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> _expression,
-		ASTPointer<ASTString> _memberName
+		ASTPointer<ASTString> _memberName,
+		SourceLocation _memberLocation
 	):
-		Expression(_id, _location), m_expression(std::move(_expression)), m_memberName(std::move(_memberName)) {}
+		Expression(_id, _location), m_expression(std::move(_expression)), m_memberName(std::move(_memberName)), m_memberLocation(_memberLocation) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 	Expression const& expression() const { return *m_expression; }
 	ASTString const& memberName() const { return *m_memberName; }
+	SourceLocation const& memberLocation() const { return m_memberLocation; }
 
 	MemberAccessAnnotation& annotation() const override;
 
 private:
 	ASTPointer<Expression> m_expression;
 	ASTPointer<ASTString> m_memberName;
+	SourceLocation m_memberLocation;
 };
 
 /**

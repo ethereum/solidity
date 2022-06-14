@@ -1897,7 +1897,9 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 		{
 			advance();
 			nodeFactory.markEndPosition();
-			expression = nodeFactory.createNode<MemberAccess>(expression, expectIdentifierTokenOrAddress());
+			SourceLocation memberLocation = currentLocation();
+			ASTPointer<ASTString> memberName = expectIdentifierTokenOrAddress();
+			expression = nodeFactory.createNode<MemberAccess>(expression, memberName, memberLocation);
 			break;
 		}
 		case Token::LParen:
@@ -2335,7 +2337,8 @@ ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
 		Identifier const& identifier = dynamic_cast<Identifier const&>(*_iap.path[i]);
 		expression = nodeFactory.createNode<MemberAccess>(
 			expression,
-			make_shared<ASTString>(identifier.name())
+			make_shared<ASTString>(identifier.name()),
+			identifier.location()
 		);
 	}
 	for (auto const& index: _iap.indices)
