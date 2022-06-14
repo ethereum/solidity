@@ -109,8 +109,8 @@ function zeppelin_test
     sed -i "s|it(\('divide by 0'\)|it.skip(\1|g" test/utils/math/Math.test.js
     # CAUTION:: The following two sed commands depend on the order of occurrence of the relevant patterns in the mentioned files.
     # Could result in an error in the future.
-    sed -zi "s|it(\('deposit'\)|it.skip(\1|3" test/token/ERC20/extensions/ERC20TokenizedVault.test.js
-    sed -zi "s|it(\('withdraw'\)|it.skip(\1|3" test/token/ERC20/extensions/ERC20TokenizedVault.test.js
+    sed -zi "s|it(\('deposit'\)|it.skip(\1|3" test/token/ERC20/extensions/ERC4626.test.js
+    sed -zi "s|it(\('withdraw'\)|it.skip(\1|3" test/token/ERC20/extensions/ERC4626.test.js
 
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
     sed -i "s|describe\(('Polygon-Child'\)|describe.skip\1|g" test/crosschain/CrossChainEnabled.test.js
