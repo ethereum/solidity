@@ -1,4 +1,4 @@
-.. index:: ! error, revert, selector; of an error
+.. index:: ! error, revert, ! selector; of an error
 .. _errors:
 
 *******************************

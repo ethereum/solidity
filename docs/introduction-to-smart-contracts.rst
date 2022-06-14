@@ -548,7 +548,7 @@ these **create calls** and normal message calls is that the payload data is
 executed and the result stored as code and the caller / creator
 receives the address of the new contract on the stack.
 
-.. index:: selfdestruct, self-destruct, deactivate
+.. index:: ! selfdestruct, deactivate
 
 Deactivate and Self-destruct
 ============================
