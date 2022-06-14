@@ -65,6 +65,13 @@ void cleanUnreachable(CFG& _cfg)
 				_addChild(_jump.zero);
 				_addChild(_jump.nonZero);
 			},
+			[&](CFG::BasicBlock::Switch const& _switch) {
+				if (_switch.defaultCase != nullptr)
+					_addChild(_switch.defaultCase);
+				for (auto const& [caseValue, caseBlock]: _switch.cases)
+					_addChild(caseBlock);
+				_addChild(_switch.target);
+			},
 			[](CFG::BasicBlock::FunctionReturn const&) {},
 			[](CFG::BasicBlock::Terminated const&) {},
 			[](CFG::BasicBlock::MainExit const&) {}
@@ -73,9 +80,16 @@ void cleanUnreachable(CFG& _cfg)
 
 	// Remove all entries from unreachable nodes from the graph.
 	for (CFG::BasicBlock* node: reachabilityCheck.visited)
+	{
+		size_t sizeBefore = node->entries.size();
 		cxx20::erase_if(node->entries, [&](CFG::BasicBlock* entry) -> bool {
 			return !reachabilityCheck.visited.count(entry);
 		});
+		size_t sizeAfter = node->entries.size();
+		if (sizeAfter != sizeBefore)
+			std::cout << "Unreachable: " << sizeBefore << " -> " << sizeAfter << std::endl;
+	}
+	std::cout << "reachabilityCheck: Num nodes visited " << reachabilityCheck.visited.size() << std::endl;
 }
 
 /// Sets the ``recursive`` member to ``true`` for all recursive function calls.
@@ -104,6 +118,16 @@ void markRecursiveCalls(CFG& _cfg)
 				},
 				[&](CFG::BasicBlock::FunctionReturn const&) {},
 				[&](CFG::BasicBlock::Terminated const&)	{},
+				[&](CFG::BasicBlock::Switch const& _switch)
+				{
+					if (_switch.defaultCase != nullptr)
+						_addChild(_switch.defaultCase);
+					for (auto const& [caseValue, caseBlock]: _switch.cases)
+					{
+						_addChild(caseBlock);
+					}
+					_addChild(_switch.target);
+				},
 			}, _block->exit);
 		});
 		return calls;
@@ -161,7 +185,14 @@ void markStartsOfSubGraphs(CFG& _cfg)
 				},
 				[&](CFG::BasicBlock::FunctionReturn const&) {},
 				[&](CFG::BasicBlock::Terminated const&) { _u->isStartOfSubGraph = true; },
-				[&](CFG::BasicBlock::MainExit const&) { _u->isStartOfSubGraph = true; }
+				[&](CFG::BasicBlock::MainExit const&) { _u->isStartOfSubGraph = true; },
+				[&](CFG::BasicBlock::Switch const& _switch) {
+					if (_switch.defaultCase != nullptr)
+						children.emplace_back(_switch.defaultCase);
+					for (auto const& [caseValue, caseBlock]: _switch.cases)
+						children.emplace_back(caseBlock);
+					children.emplace_back(_switch.target);
+				},
 			}, _u->exit);
 			yulAssert(!util::contains(children, _u));
 
@@ -218,6 +249,7 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 	builder.m_currentBlock = result->entry;
 	builder(_block);
 
+	std::cout << "About to clean unreachable" << std::endl;
 	cleanUnreachable(*result);
 	markRecursiveCalls(*result);
 	markStartsOfSubGraphs(*result);
@@ -341,6 +373,47 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
 	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
+	auto switchBlock = m_currentBlock;
+	std::cout << "CFGB: Visiting switch expression" << std::endl;
+	StackSlot switchExpr = std::visit(*this, *_switch.expression);
+	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
+
+	optional<Case const*> defaultCase;
+	for (Case const& _case: _switch.cases)
+	{
+		if (!_case.value)
+			defaultCase = &_case;
+	}
+	CFG::BasicBlock* defaultCaseBlock = nullptr;
+	if (defaultCase.has_value())
+	{
+		std::cout << "Visiting default case" << std::endl;
+		defaultCaseBlock = &m_graph.makeBlock(debugDataOf(defaultCase.value()->body));
+		m_currentBlock = defaultCaseBlock;
+		(*this)(defaultCase.value()->body);
+	}
+
+	map<u256, CFG::BasicBlock*> cases;
+	for (Case const& _case: _switch.cases)
+	{
+		if (_case.value)
+		{
+			u256 caseVal = valueOfLiteral(*_case.value);
+			cases[caseVal] = &m_graph.makeBlock(debugDataOf(_case.body));
+	std::cout << "Visiting case value " << caseVal << std::endl;
+			m_currentBlock = cases[caseVal];
+			(*this)(_case.body);
+		}
+	}
+
+	m_currentBlock = switchBlock;
+	makeSwitch(debugDataOf(_switch), switchExpr, defaultCaseBlock,
+		cases, afterSwitch);
+	std::cout << "After switch creation " << std::endl;
+	m_currentBlock = &afterSwitch;
+
+	/*yulAssert(m_currentBlock, "");
+	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
 
 	auto ghostVariableId = m_graph.ghostVariables.size();
 	YulString ghostVariableName("GHOST[" + to_string(ghostVariableId) + "]");
@@ -394,7 +467,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		m_currentBlock = &caseBranch;
 	}
 	(*this)(switchCase.body);
-	jump(debugDataOf(switchCase.body), afterSwitch);
+	jump(debugDataOf(switchCase.body), afterSwitch);*/
 }
 
 void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
@@ -627,4 +700,28 @@ void ControlFlowGraphBuilder::jump(
 	m_currentBlock->exit = CFG::BasicBlock::Jump{move(_debugData), &_target, backwards};
 	_target.entries.emplace_back(m_currentBlock);
 	m_currentBlock = &_target;
+}
+
+void ControlFlowGraphBuilder::makeSwitch(
+	shared_ptr<DebugData const> _debugData,
+	StackSlot _switchExpr,
+	CFG::BasicBlock* defaultCase,
+	std::map<u256, CFG::BasicBlock*> cases,
+	CFG::BasicBlock& target
+)
+{
+	yulAssert(m_currentBlock, "");
+	m_currentBlock->exit = CFG::BasicBlock::Switch{
+		move(_debugData),
+		move(_switchExpr),
+		defaultCase,
+		cases,
+		&target
+	};
+	if (defaultCase != nullptr)
+		defaultCase->entries.emplace_back(m_currentBlock);
+	for (auto const& [caseVal, caseBlock]: cases)
+		caseBlock->entries.emplace_back(m_currentBlock);
+	target.entries.emplace_back(m_currentBlock);
+	m_currentBlock = nullptr;//&target;
 }

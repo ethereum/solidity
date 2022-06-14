@@ -497,7 +497,67 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			CFG::BuiltinCall const* builtinCall = get_if<CFG::BuiltinCall>(&_block.operations.back().operation);
 			yulAssert(builtinCall, "");
 			yulAssert(builtinCall->builtin.get().controlFlowSideEffects.terminatesOrReverts(), "");
-		}
+		},
+		[&](CFG::BasicBlock::Switch const& _switch)
+		{
+			// Create the shared entry layout of the jump targets, which is stored as exit layout of the current block.
+			//createStackLayout(debugDataOf(_switch), blockInfo.exitLayout);
+			createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.target).entryLayout);
+
+			std::cout << "In OptimizedEVMCodeTransform: creating switch statement" << std::endl;
+
+			// Assert that we have the correct condition on stack.
+			yulAssert(!m_stack.empty(), "");
+			//yulAssert(m_stack.back() == _switch.switchExpr, "");
+
+			/*if (_switch.defaultCase != nullptr)
+				(*this)(*_switch.defaultCase);
+			for (auto const& [caseVal, caseBlock]: _switch.cases)
+				(*this)(*caseBlock);
+			*/
+
+			(*this)(*_switch.target);
+
+			// TODO: Complete Switch CFG handling
+			/*
+			// Create labels for the targets, if not already present.
+			if (!m_blockLabels.count(_conditionalJump.nonZero))
+				m_blockLabels[_conditionalJump.nonZero] = m_assembly.newLabelId();
+			if (!m_blockLabels.count(_conditionalJump.zero))
+				m_blockLabels[_conditionalJump.zero] = m_assembly.newLabelId();
+
+			// Assert that we have the correct condition on stack.
+			yulAssert(!m_stack.empty(), "");
+			yulAssert(m_stack.back() == _conditionalJump.condition, "");
+
+			// Emit the conditional jump to the non-zero label and update the stored stack.
+			m_assembly.appendJumpToIf(m_blockLabels[_conditionalJump.nonZero]);
+			m_stack.pop_back();
+
+			// Assert that we have a valid stack for both jump targets.
+			assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_conditionalJump.nonZero).entryLayout);
+			assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_conditionalJump.zero).entryLayout);
+
+			{
+				// Restore the stack afterwards for the non-zero case below.
+				ScopeGuard stackRestore([storedStack = m_stack, this]() {
+					m_stack = move(storedStack);
+					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+				});
+
+				// If we have already generated the zero case, jump to it, otherwise generate it in place.
+				if (m_generated.count(_conditionalJump.zero))
+					m_assembly.appendJumpTo(m_blockLabels[_conditionalJump.zero]);
+				else
+					(*this)(*_conditionalJump.zero);
+			}
+			// Note that each block visit terminates control flow, so we cannot fall through from the zero case.
+
+			// Generate the non-zero block, if not done already.
+			if (!m_generated.count(_conditionalJump.nonZero))
+				(*this)(*_conditionalJump.nonZero);
+			*/
+		},
 	}, _block.exit);
 	// TODO: We could assert that the last emitted assembly item terminated or was an (unconditional) jump.
 	//       But currently AbstractAssembly does not allow peeking at the last emitted assembly item.

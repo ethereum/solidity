@@ -75,6 +75,13 @@ private:
 		CFG::BasicBlock& _target,
 		bool _backwards = false
 	);
+	void makeSwitch(
+		std::shared_ptr<DebugData const> _debugData,
+		StackSlot _switchExpr,
+		CFG::BasicBlock* defaultCase,
+		std::map<u256, CFG::BasicBlock*> cases,
+		CFG::BasicBlock& target
+	);
 	CFG& m_graph;
 	AsmAnalysisInfo const& m_info;
 	Dialect const& m_dialect;
