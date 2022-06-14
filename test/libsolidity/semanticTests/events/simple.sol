@@ -2,7 +2,7 @@ contract C {
     event E();
 }
 
-contract Test {
+contract Test is C {
     event E(uint256, uint256);
     function f() public {
         emit C.E();
