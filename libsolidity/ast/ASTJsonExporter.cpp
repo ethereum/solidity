@@ -889,6 +889,7 @@ bool ASTJsonExporter::visit(MemberAccess const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("memberName", _node.memberName()),
+		make_pair("memberLocation", Json::Value(sourceLocationToString(_node.memberLocation()))),
 		make_pair("expression", toJson(_node.expression())),
 		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration)),
 	};
