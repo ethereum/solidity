@@ -85,7 +85,7 @@ VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration cons
 	return rootDecl;
 }
 
-Expression const* resolveUnaryTuples(Expression const* _expr)
+Expression const* resolveOuterUnaryTuples(Expression const* _expr)
 {
 	while (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(_expr))
 		if (tupleExpression->components().size() == 1)

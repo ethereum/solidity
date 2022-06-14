@@ -618,7 +618,7 @@ bool ControlFlowBuilder::visit(VariableDeclarationStatement const& _variableDecl
 						solAssert(tupleExpression->components().size() > i, "");
 						expression = tupleExpression->components()[i].get();
 					}
-				expression = resolveUnaryTuples(expression);
+				expression = resolveOuterUnaryTuples(expression);
 				m_currentNode->variableOccurrences.emplace_back(
 					*var,
 					VariableOccurrence::Kind::Assignment,
