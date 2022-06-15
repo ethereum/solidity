@@ -1584,5 +1584,5 @@ workflows:
             - t_native_test_ext_prb_math
             - t_native_test_ext_elementfi
             - t_native_test_ext_brink
-            - t_native_test_ext_chainlink
+            #-t_native_test_ext_chainlink
             - t_native_test_ext_gp2
