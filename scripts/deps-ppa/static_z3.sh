@@ -27,7 +27,7 @@ email=builds@ethereum.org
 packagename=z3-static
 version=4.8.17
 
-DISTRIBUTIONS="focal impish jammy"
+DISTRIBUTIONS="focal impish jammy kinetic"
 
 for distribution in $DISTRIBUTIONS
 do

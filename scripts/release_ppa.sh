@@ -48,7 +48,7 @@ else
 fi
 
 is_release() {
-    [[ "${branch}" = "release" ]] || [[ "${branch}" =~ ^v[0-9]+(\.[0-9])*$ ]]
+    [[ "${branch}" =~ ^v[0-9]+(\.[0-9]+)*$ ]]
 }
 
 keyid=379F4801D622CDCF
@@ -57,7 +57,7 @@ packagename=solc
 
 static_build_distribution=impish
 
-DISTRIBUTIONS="focal impish jammy"
+DISTRIBUTIONS="focal impish jammy kinetic"
 
 if is_release
 then
