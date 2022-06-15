@@ -1,4 +1,4 @@
-### 0.8.15 (unreleased)
+### 0.8.15 (2022-06-15)
 
 Important Bugfixes:
  * Code Generation: Avoid writing dirty bytes to storage when copying ``bytes`` arrays.
