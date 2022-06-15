@@ -1716,6 +1716,10 @@
         ],
         "released": "2022-05-17"
     },
+    "0.8.15": {
+        "bugs": [],
+        "released": "2022-06-15"
+    },
     "0.8.2": {
         "bugs": [
             "DirtyBytesArrayToStorage",
