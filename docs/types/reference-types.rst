@@ -555,6 +555,7 @@ to long layout in storage<bytes-and-string>`.
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0 <0.9.0;
 
+    // This will report a warning
     contract C {
         bytes x = "012345678901234567890123456789";
 
