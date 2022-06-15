@@ -31,9 +31,9 @@
  - [ ] Create the ``prerelease.txt`` file: (``echo -n > prerelease.txt``).
  - [ ] Run ``scripts/create_source_tarball.sh`` while being on the tag to create the source tarball. This will create the tarball in a directory called ``upload``.
  - [ ] Take the tarball from the upload directory (its name should be ``solidity_x.x.x.tar.gz``, otherwise ``prerelease.txt`` was missing in the step before) and upload the source tarball to the release page.
- - [ ] Take the ``github-binaries.tar`` tarball from ``b_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to the release page.
+ - [ ] Take the ``github-binaries.tar`` tarball from ``c_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to the release page.
    Make sure it contains four binaries: ``solc-windows.exe``, ``solc-macos``, ``solc-static-linux`` and ``soljson.js``.
- - [ ] Take the ``solc-bin-binaries.tar`` tarball from ``b_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to solc-bin.
+ - [ ] Take the ``solc-bin-binaries.tar`` tarball from ``c_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to solc-bin.
  - [ ] Run ``./update --reuse-hashes`` in ``solc-bin`` and verify that the script has updated ``list.js``, ``list.txt`` and ``list.json`` files correctly and that symlinks to the new release have been added in ``solc-bin/wasm/`` and ``solc-bin/emscripten-wasm32/``.
  - [ ] Create a pull request in solc-bin and merge.
 
