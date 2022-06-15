@@ -839,13 +839,15 @@ jobs:
       MAKEFLAGS: -j 10
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
-      - checkout
-      - run: *run_build
-      - run:
-          name: strip binary
-          command: strip build/solc/solc
+      - run: |
+          mkdir -p build/solc/
+          curl https://binaries.soliditylang.org/linux-amd64/solc-linux-amd64-v0.8.14+commit.80d49f37 --output build/solc/solc
+          chmod +x build/solc/solc
       - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
       - gitter_notify_failure_unless_pr
 
   b_ubu_codecov:
