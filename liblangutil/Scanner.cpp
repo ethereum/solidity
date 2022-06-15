@@ -76,6 +76,7 @@ string to_string(ScannerError _errorCode)
 		case ScannerError::IllegalHexDigit: return "Hexadecimal digit missing or invalid.";
 		case ScannerError::IllegalCommentTerminator: return "Expected multi-line comment-terminator.";
 		case ScannerError::IllegalEscapeSequence: return "Invalid escape sequence.";
+		case ScannerError::UnicodeCharacterInNonUnicodeString: return "Invalid character in string. If you are trying to use Unicode characters, use a unicode\"...\" string literal.";
 		case ScannerError::IllegalCharacterInString: return "Invalid character in string.";
 		case ScannerError::IllegalStringEndQuote: return "Expected string end-quote.";
 		case ScannerError::IllegalNumberSeparator: return "Invalid use of number separator '_'.";
@@ -844,7 +845,11 @@ Token Scanner::scanString(bool const _isUnicode)
 			// We are using a manual range and not isprint() to avoid
 			// any potential complications with locale.
 			if (!_isUnicode && (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f))
-				return setError(ScannerError::IllegalCharacterInString);
+			{
+				if (m_kind == ScannerKind::Yul)
+					return setError(ScannerError::IllegalCharacterInString);
+				return setError(ScannerError::UnicodeCharacterInNonUnicodeString);
+			}
 			addLiteralChar(c);
 		}
 	}
