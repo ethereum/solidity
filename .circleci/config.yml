@@ -1529,10 +1529,10 @@ jobs:
 
             mkdir -p solc-bin/{linux-amd64,macosx-amd64,windows-amd64,bin}
 
-            mv github/solc-static-linux "solc-bin/linux-amd64/solc-linux-amd64-${full_version}"
-            mv github/solc-macos        "solc-bin/macosx-amd64/solc-macosx-amd64-${full_version}"
-            mv github/solc-windows.exe  "solc-bin/windows-amd64/solc-windows-amd64-${full_version}.exe"
-            mv github/soljson.js        "solc-bin/bin/soljson-${full_version}.js"
+            mv github/solc-static-linux "solc-bin/linux-amd64/solc-linux-amd64-v${full_version}"
+            mv github/solc-macos        "solc-bin/macosx-amd64/solc-macosx-amd64-v${full_version}"
+            mv github/solc-windows.exe  "solc-bin/windows-amd64/solc-windows-amd64-v${full_version}.exe"
+            mv github/soljson.js        "solc-bin/bin/soljson-v${full_version}.js"
 
             cd solc-bin/
             tar --create --file ../solc-bin-binaries.tar *
