@@ -1818,7 +1818,7 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 
 				for { let i := 0 } lt(i, length) {i := add(i, 1)} {
 					<?fromCalldata>
-						let <elementValues> :=
+						let <stackItems> :=
 						<?dynamicallyEncodedBase>
 							<accessCalldataTail>(value, srcPtr)
 						<!dynamicallyEncodedBase>
@@ -1827,14 +1827,14 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 					</fromCalldata>
 
 					<?fromMemory>
-						let <elementValues> := <readFromCalldataOrMemory>(srcPtr)
+						let <stackItems> := <readFromMemoryOrCalldata>(srcPtr)
 					</fromMemory>
 
 					<?fromStorage>
-						let <elementValues> := srcPtr
+						let <stackItems> := srcPtr
 					</fromStorage>
 
-					<updateStorageValue>(elementSlot, <elementValues>)
+					<updateStorageValue>(elementSlot, <stackItems>)
 
 					srcPtr := add(srcPtr, <srcStride>)
 
@@ -1862,9 +1862,9 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 		templ("arrayLength",arrayLengthFunction(_fromType));
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
 		if (fromMemory || (fromCalldata && _fromType.baseType()->isValueType()))
-			templ("readFromCalldataOrMemory", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
-		templ("elementValues", suffixedVariableNameList(
-			"elementValue_",
+			templ("readFromMemoryOrCalldata", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
+		templ("stackItems", suffixedVariableNameList(
+			"stackItem_",
 			0,
 			_fromType.baseType()->stackItems().size()
 		));
@@ -2004,13 +2004,13 @@ string YulUtilFunctions::copyValueArrayToStorageFunction(ArrayType const& _fromT
 						<?multipleItemsPerSlotDst>for { let j := 0 } lt(j, <itemsPerSlot>) { j := add(j, 1) } </multipleItemsPerSlotDst>
 						{
 							<?isFromStorage>
-							let <elementValues> := <convert>(
+							let <stackItems> := <convert>(
 								<extractFromSlot>(srcSlotValue, mul(<srcStride>, srcItemIndexInSlot))
 							)
 							<!isFromStorage>
-							let <elementValues> := <readFromCalldataOrMemory>(srcPtr)
+							let <stackItems> := <readFromMemoryOrCalldata>(srcPtr)
 							</isFromStorage>
-							let itemValue := <prepareStore>(<elementValues>)
+							let itemValue := <prepareStore>(<stackItems>)
 							dstSlotValue :=
 							<?multipleItemsPerSlotDst>
 								<updateByteSlice>(dstSlotValue, mul(<dstStride>, j), itemValue)
@@ -2035,13 +2035,13 @@ string YulUtilFunctions::copyValueArrayToStorageFunction(ArrayType const& _fromT
 						<!sameTypeFromStorage>
 							for { let j := 0 } lt(j, spill) { j := add(j, 1) } {
 								<?isFromStorage>
-								let <elementValues> := <convert>(
+								let <stackItems> := <convert>(
 									<extractFromSlot>(srcSlotValue, mul(<srcStride>, srcItemIndexInSlot))
 								)
 								<!isFromStorage>
-								let <elementValues> := <readFromCalldataOrMemory>(srcPtr)
+								let <stackItems> := <readFromMemoryOrCalldata>(srcPtr)
 								</isFromStorage>
-								let itemValue := <prepareStore>(<elementValues>)
+								let itemValue := <prepareStore>(<stackItems>)
 								dstSlotValue := <updateByteSlice>(dstSlotValue, mul(<dstStride>, j), itemValue)
 
 								<updateSrcPtr>
@@ -2063,12 +2063,12 @@ string YulUtilFunctions::copyValueArrayToStorageFunction(ArrayType const& _fromT
 		templ("panic", panicFunction(PanicCode::ResourceError));
 		templ("isFromDynamicCalldata", _fromType.isDynamicallySized() && fromCalldata);
 		templ("isFromStorage", fromStorage);
-		templ("readFromCalldataOrMemory", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
+		templ("readFromMemoryOrCalldata", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
 		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
 		templ("srcStride", to_string(_fromType.storageStride()));
-		templ("elementValues", suffixedVariableNameList(
-			"elementValue_",
+		templ("stackItems", suffixedVariableNameList(
+			"stackItem_",
 			0,
 			_fromType.baseType()->stackItems().size()
 		));
