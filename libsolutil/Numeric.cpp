@@ -31,7 +31,7 @@ bool solidity::fitsPrecisionBaseX(bigint const& _mantissa, double _log2OfBase, u
 
 	size_t const bitsMax = 4096;
 
-	unsigned mostSignificantMantissaBit = boost::multiprecision::msb(_mantissa);
+	size_t mostSignificantMantissaBit = static_cast<size_t>(boost::multiprecision::msb(_mantissa));
 	if (mostSignificantMantissaBit > bitsMax) // _mantissa >= 2 ^ 4096
 		return false;
 

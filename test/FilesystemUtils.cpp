@@ -20,6 +20,8 @@
 
 #include <test/libsolidity/util/SoltestErrors.h>
 
+#include <fstream>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::test;
