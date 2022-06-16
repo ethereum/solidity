@@ -596,7 +596,7 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 			[&](CFG::BasicBlock::Terminated const&) { },
 			[&](CFG::BasicBlock::Switch const& _switch)
 			{
-				/*Stack exitLayout = info.exitLayout;
+				Stack exitLayout = info.exitLayout;
 				// The last block must have produced the switch expression at the stack top.
 				yulAssert(!exitLayout.empty(), "");
 				yulAssert(exitLayout.back() == _switch.switchExpr, "");
@@ -629,7 +629,6 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 					caseInfo.entryLayout = fixJumpTargetEntry(caseInfo.entryLayout);
 					_addChild(caseBlock);
 				}
-				*/
 
 				if (_switch.defaultCase == nullptr)
 					_addChild(_switch.target);
