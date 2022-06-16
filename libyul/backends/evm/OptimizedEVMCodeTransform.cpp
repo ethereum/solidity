@@ -500,23 +500,89 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		},
 		[&](CFG::BasicBlock::Switch const& _switch)
 		{
-			// Create the shared entry layout of the jump targets, which is stored as exit layout of the current block.
-			//createStackLayout(debugDataOf(_switch), blockInfo.exitLayout);
-			createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.target).entryLayout);
-
 			std::cout << "In OptimizedEVMCodeTransform: creating switch statement" << std::endl;
+
+			// Create labels for the targets, if not already present.
+			if (_switch.defaultCase != nullptr && !m_blockLabels.count(_switch.defaultCase))
+				m_blockLabels[_switch.defaultCase] = m_assembly.newLabelId();
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+				if (!m_blockLabels.count(caseBlock))
+					m_blockLabels[caseBlock] = m_assembly.newLabelId();
+			if (!m_blockLabels.count(_switch.target))
+				m_blockLabels[_switch.target] = m_assembly.newLabelId();
 
 			// Assert that we have the correct condition on stack.
 			yulAssert(!m_stack.empty(), "");
-			//yulAssert(m_stack.back() == _switch.switchExpr, "");
-
+			yulAssert(m_stack.back() == _switch.switchExpr, "");
+			
+			std::cout << "Assertion passed" << std::endl;
+			
+			// TODO: Handle switch expression here
+			//m_stack.pop_back();
+			
 			/*if (_switch.defaultCase != nullptr)
 				(*this)(*_switch.defaultCase);
 			for (auto const& [caseVal, caseBlock]: _switch.cases)
 				(*this)(*caseBlock);
 			*/
-
-			(*this)(*_switch.target);
+			
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+			{
+				std::cout << "Adding case value " << caseValue << std::endl;
+				m_assembly.appendConstant(caseValue);
+				m_assembly.appendInstruction(evmasm::dupInstruction(2));
+				m_assembly.appendInstruction(evmasm::Instruction::EQ);
+				m_assembly.appendJumpToIf(m_blockLabels[caseBlock]);
+				std::cout << "Done adding case value " << caseValue << std::endl;
+			}
+			
+			if (_switch.defaultCase != nullptr)
+			{
+				std::cout << "Adding default case." << std::endl;
+				{
+					// Restore the stack afterwards for the non-zero case below.
+					ScopeGuard stackRestore([storedStack = m_stack, this]() {
+						m_stack = move(storedStack);
+						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+					});
+					m_assembly.appendInstruction(evmasm::Instruction::POP);
+					m_stack.pop_back();
+					createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
+					std::cout << "Checking default case..." << std::endl;
+					assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
+					(*this)(*_switch.defaultCase);
+				}
+			}
+			else
+				m_assembly.appendJumpTo(m_blockLabels[_switch.target]);
+			
+			std::cout << "Checking cases..." << std::endl;
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+			{
+				{
+					// Restore the stack afterwards for the non-zero case below.
+					ScopeGuard stackRestore([storedStack = m_stack, this]() {
+						m_stack = move(storedStack);
+						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+					});
+					m_assembly.appendInstruction(evmasm::Instruction::POP);
+					m_stack.pop_back();
+					std::cout << "Adding case block " << caseValue << std::endl;
+					createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(caseBlock).entryLayout);
+					assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(caseBlock).entryLayout);
+					(*this)(*caseBlock);
+				}
+			}
+			
+			/*if (_switch.defaultCase == nullptr)
+			{
+				std::cout << "Checking switch target..." << std::endl;
+				createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.target).entryLayout);
+				assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.target).entryLayout);
+				std::cout << "Adding switch target block" << std::endl;
+				(*this)(*_switch.target);
+				std::cout << "Done adding switch target block" << std::endl;
+			}*/
 
 			// TODO: Complete Switch CFG handling
 			/*
