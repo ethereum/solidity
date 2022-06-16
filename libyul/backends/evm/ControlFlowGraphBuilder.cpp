@@ -66,11 +66,12 @@ void cleanUnreachable(CFG& _cfg)
 				_addChild(_jump.nonZero);
 			},
 			[&](CFG::BasicBlock::Switch const& _switch) {
-				if (_switch.defaultCase != nullptr)
+				if (_switch.defaultCase == nullptr)
+					_addChild(_switch.target);
+				else
 					_addChild(_switch.defaultCase);
 				for (auto const& [caseValue, caseBlock]: _switch.cases)
 					_addChild(caseBlock);
-				_addChild(_switch.target);
 			},
 			[](CFG::BasicBlock::FunctionReturn const&) {},
 			[](CFG::BasicBlock::Terminated const&) {},
@@ -120,13 +121,14 @@ void markRecursiveCalls(CFG& _cfg)
 				[&](CFG::BasicBlock::Terminated const&)	{},
 				[&](CFG::BasicBlock::Switch const& _switch)
 				{
-					if (_switch.defaultCase != nullptr)
+					if (_switch.defaultCase == nullptr)
+						_addChild(_switch.target);
+					else
 						_addChild(_switch.defaultCase);
 					for (auto const& [caseValue, caseBlock]: _switch.cases)
 					{
 						_addChild(caseBlock);
 					}
-					_addChild(_switch.target);
 				},
 			}, _block->exit);
 		});
@@ -187,11 +189,12 @@ void markStartsOfSubGraphs(CFG& _cfg)
 				[&](CFG::BasicBlock::Terminated const&) { _u->isStartOfSubGraph = true; },
 				[&](CFG::BasicBlock::MainExit const&) { _u->isStartOfSubGraph = true; },
 				[&](CFG::BasicBlock::Switch const& _switch) {
-					if (_switch.defaultCase != nullptr)
+					if (_switch.defaultCase == nullptr)
+						children.emplace_back(_switch.target);
+					else
 						children.emplace_back(_switch.defaultCase);
 					for (auto const& [caseValue, caseBlock]: _switch.cases)
 						children.emplace_back(caseBlock);
-					children.emplace_back(_switch.target);
 				},
 			}, _u->exit);
 			yulAssert(!util::contains(children, _u));
@@ -391,6 +394,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		defaultCaseBlock = &m_graph.makeBlock(debugDataOf(defaultCase.value()->body));
 		m_currentBlock = defaultCaseBlock;
 		(*this)(defaultCase.value()->body);
+		jump(debugDataOf(defaultCase.value()->body), afterSwitch, false);
 	}
 
 	map<u256, CFG::BasicBlock*> cases;
@@ -400,9 +404,10 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		{
 			u256 caseVal = valueOfLiteral(*_case.value);
 			cases[caseVal] = &m_graph.makeBlock(debugDataOf(_case.body));
-	std::cout << "Visiting case value " << caseVal << std::endl;
+			std::cout << "Visiting case value " << caseVal << std::endl;
 			m_currentBlock = cases[caseVal];
 			(*this)(_case.body);
+			jump(debugDataOf(_case.body), afterSwitch, false);
 		}
 	}
 
@@ -718,10 +723,11 @@ void ControlFlowGraphBuilder::makeSwitch(
 		cases,
 		&target
 	};
-	if (defaultCase != nullptr)
+	if (defaultCase == nullptr)
+		target.entries.emplace_back(m_currentBlock);
+	else
 		defaultCase->entries.emplace_back(m_currentBlock);
 	for (auto const& [caseVal, caseBlock]: cases)
 		caseBlock->entries.emplace_back(m_currentBlock);
-	target.entries.emplace_back(m_currentBlock);
 	m_currentBlock = nullptr;//&target;
 }
