@@ -911,12 +911,26 @@ void CommandLineParser::processArgs()
 		// TODO: This should eventually contain all options.
 		{g_strErrorRecovery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strExperimentalViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
+		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerInvariants, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerSolvers, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerTimeout, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerContracts, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerTargets, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
 	};
 	vector<string> invalidOptionsForCurrentInputMode;
 	for (auto const& [optionName, inputModes]: validOptionInputModeCombinations)
 	{
-		if (m_args.count(optionName) > 0 && inputModes.count(m_options.input.mode) == 0)
+		if (
+			m_args.count(optionName) > 0 &&
+			inputModes.count(m_options.input.mode) == 0 &&
+			!m_args[optionName].defaulted()
+		)
 			invalidOptionsForCurrentInputMode.push_back(optionName);
 	}
 
