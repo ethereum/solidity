@@ -95,6 +95,24 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_sourceNames);
 }
 
+vector<SourceLocation> ASTJsonImporter::createSourceLocations(Json::Value const& _node, size_t _size) const
+{
+	vector<SourceLocation> locations;
+
+	if (_node.isMember("nameLocations") && _node["nameLocations"].isArray())
+		for (auto const& val: _node["nameLocations"])
+			locations.emplace_back(langutil::parseSourceLocation(val.asString(), m_sourceNames));
+	else
+		locations.resize(_size);
+
+	astAssert(
+		_size == locations.size(),
+		"SourceLocations don't match name paths."
+	);
+
+	return locations;
+}
+
 SourceLocation ASTJsonImporter::createNameSourceLocation(Json::Value const& _node)
 {
 	astAssert(member(_node, "nameLocation").isString(), "'nameLocation' must be a string");
@@ -325,7 +343,6 @@ ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value con
 	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
 
 	vector<ASTString> namePath;
-	vector<SourceLocation> namePathLocations;
 	vector<string> strs;
 	string nameString = member(_node, "name").asString();
 	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
@@ -336,21 +353,10 @@ ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value con
 		namePath.emplace_back(s);
 	}
 
-	if (_node.isMember("nameLocations") && _node["nameLocations"].isArray())
-		for (auto const& val: _node["nameLocations"])
-			namePathLocations.emplace_back(langutil::parseSourceLocation(val.asString(), m_sourceNames));
-	else
-		namePathLocations.resize(namePath.size());
-
-	astAssert(
-		namePath.size() == namePathLocations.size(),
-		"SourceLocations don't match name paths."
-	);
-
 	return createASTNode<IdentifierPath>(
 		_node,
 		namePath,
-		namePathLocations
+		createSourceLocations(_node, namePath.size())
 	);
 }
 
@@ -897,7 +903,8 @@ ASTPointer<FunctionCall> ASTJsonImporter::createFunctionCall(Json::Value const& 
 		_node,
 		convertJsonToASTNode<Expression>(member(_node, "expression")),
 		arguments,
-		names
+		names,
+		createSourceLocations(_node, names.size())
 	);
 }
 
