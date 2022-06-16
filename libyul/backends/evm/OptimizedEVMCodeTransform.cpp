@@ -545,8 +545,6 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 						m_stack = move(storedStack);
 						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 					});
-					m_assembly.appendInstruction(evmasm::Instruction::POP);
-					m_stack.pop_back();
 					createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
 					std::cout << "Checking default case..." << std::endl;
 					assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
@@ -554,7 +552,17 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 				}
 			}
 			else
-				m_assembly.appendJumpTo(m_blockLabels[_switch.target]);
+			{
+				ScopeGuard stackRestore([storedStack = m_stack, this]() {
+					m_stack = move(storedStack);
+					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+				});
+				m_assembly.appendInstruction(evmasm::Instruction::POP);
+				m_stack.pop_back();
+				createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.target).entryLayout);
+				assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.target).entryLayout);
+				(*this)(*_switch.target);
+			}
 			
 			std::cout << "Checking cases..." << std::endl;
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
@@ -565,8 +573,6 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 						m_stack = move(storedStack);
 						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 					});
-					m_assembly.appendInstruction(evmasm::Instruction::POP);
-					m_stack.pop_back();
 					std::cout << "Adding case block " << caseValue << std::endl;
 					createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(caseBlock).entryLayout);
 					assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(caseBlock).entryLayout);

@@ -601,7 +601,7 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 				yulAssert(!exitLayout.empty(), "");
 				yulAssert(exitLayout.back() == _switch.switchExpr, "");
 				// The switch expression is consumed by the switch.
-				exitLayout.pop_back();
+				//exitLayout.pop_back();
 
 				auto fixJumpTargetEntry = [&](Stack const& _originalEntryLayout) -> Stack {
 					Stack newEntryLayout = exitLayout;
