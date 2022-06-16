@@ -38,6 +38,7 @@
 #include <cctype>
 #include <vector>
 #include <regex>
+#include <tuple>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -1542,13 +1543,16 @@ ASTPointer<EmitStatement> Parser::parseEmitStatement(ASTPointer<ASTString> const
 	auto eventName = expressionFromIndexAccessStructure(iap);
 	expectToken(Token::LParen);
 
-	vector<ASTPointer<Expression>> arguments;
-	vector<ASTPointer<ASTString>> names;
-	std::tie(arguments, names) = parseFunctionCallArguments();
+	auto functionCallArguments = parseFunctionCallArguments();
 	eventCallNodeFactory.markEndPosition();
 	nodeFactory.markEndPosition();
 	expectToken(Token::RParen);
-	auto eventCall = eventCallNodeFactory.createNode<FunctionCall>(eventName, arguments, names);
+	auto eventCall = eventCallNodeFactory.createNode<FunctionCall>(
+		eventName,
+		functionCallArguments.arguments,
+		functionCallArguments.parameterNames,
+		functionCallArguments.parameterNameLocations
+	);
 	return nodeFactory.createNode<EmitStatement>(_docString, eventCall);
 }
 
@@ -1573,13 +1577,16 @@ ASTPointer<RevertStatement> Parser::parseRevertStatement(ASTPointer<ASTString> c
 	auto errorName = expressionFromIndexAccessStructure(iap);
 	expectToken(Token::LParen);
 
-	vector<ASTPointer<Expression>> arguments;
-	vector<ASTPointer<ASTString>> names;
-	std::tie(arguments, names) = parseFunctionCallArguments();
+	auto functionCallArguments = parseFunctionCallArguments();
 	errorCallNodeFactory.markEndPosition();
 	nodeFactory.markEndPosition();
 	expectToken(Token::RParen);
-	auto errorCall = errorCallNodeFactory.createNode<FunctionCall>(errorName, arguments, names);
+	auto errorCall = errorCallNodeFactory.createNode<FunctionCall>(
+		errorName,
+		functionCallArguments.arguments,
+		functionCallArguments.parameterNames,
+		functionCallArguments.parameterNameLocations
+	);
 	return nodeFactory.createNode<RevertStatement>(_docString, errorCall);
 }
 
@@ -1903,12 +1910,14 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 		case Token::LParen:
 		{
 			advance();
-			vector<ASTPointer<Expression>> arguments;
-			vector<ASTPointer<ASTString>> names;
-			std::tie(arguments, names) = parseFunctionCallArguments();
+			auto functionCallArguments = parseFunctionCallArguments();
 			nodeFactory.markEndPosition();
 			expectToken(Token::RParen);
-			expression = nodeFactory.createNode<FunctionCall>(expression, arguments, names);
+			expression = nodeFactory.createNode<FunctionCall>(
+				expression,
+				functionCallArguments.arguments,
+				functionCallArguments.parameterNames,
+				functionCallArguments.parameterNameLocations);
 			break;
 		}
 		case Token::LBrace:
@@ -1927,7 +1936,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 			nodeFactory.markEndPosition();
 			expectToken(Token::RBrace);
 
-			expression = nodeFactory.createNode<FunctionCallOptions>(expression, optionList.first, optionList.second);
+			expression = nodeFactory.createNode<FunctionCallOptions>(expression, optionList.arguments, optionList.parameterNames);
 			break;
 		}
 		default:
@@ -2071,10 +2080,11 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 	return arguments;
 }
 
-pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::parseFunctionCallArguments()
+Parser::FunctionCallArguments Parser::parseFunctionCallArguments()
 {
 	RecursionGuard recursionGuard(*this);
-	pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> ret;
+	FunctionCallArguments ret;
+
 	Token token = m_scanner->currentToken();
 	if (token == Token::LBrace)
 	{
@@ -2084,13 +2094,13 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 		expectToken(Token::RBrace);
 	}
 	else
-		ret.first = parseFunctionCallListArguments();
+		ret.arguments = parseFunctionCallListArguments();
 	return ret;
 }
 
-pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::parseNamedArguments()
+Parser::FunctionCallArguments Parser::parseNamedArguments()
 {
-	pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> ret;
+	FunctionCallArguments ret;
 
 	bool first = true;
 	while (m_scanner->currentToken() != Token::RBrace)
@@ -2098,9 +2108,15 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 		if (!first)
 			expectToken(Token::Comma);
 
-		ret.second.push_back(expectIdentifierToken());
+		auto identifierWithLocation = expectIdentifierWithLocation();
+
+		// Add name
+		ret.parameterNames.emplace_back(std::move(identifierWithLocation.first));
+		// Add location
+		ret.parameterNameLocations.emplace_back(std::move(identifierWithLocation.second));
+
 		expectToken(Token::Colon);
-		ret.first.push_back(parseExpression());
+		ret.arguments.emplace_back(parseExpression());
 
 		if (
 			m_scanner->currentToken() == Token::Comma &&

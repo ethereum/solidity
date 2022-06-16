@@ -2105,9 +2105,14 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<Expression> _expression,
 		std::vector<ASTPointer<Expression>> _arguments,
-		std::vector<ASTPointer<ASTString>> _names
+		std::vector<ASTPointer<ASTString>> _names,
+		std::vector<SourceLocation> _nameLocations
 	):
-		Expression(_id, _location), m_expression(std::move(_expression)), m_arguments(std::move(_arguments)), m_names(std::move(_names)) {}
+		Expression(_id, _location), m_expression(std::move(_expression)), m_arguments(std::move(_arguments)), m_names(std::move(_names)), m_nameLocations(std::move(_nameLocations))
+	{
+		solAssert(m_nameLocations.size() == m_names.size());
+	}
+
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -2120,6 +2125,7 @@ public:
 	/// in the order they were written.
 	/// If this is not a named call, this is empty.
 	std::vector<ASTPointer<ASTString>> const& names() const { return m_names; }
+	std::vector<SourceLocation> const& nameLocations() const { return m_nameLocations; }
 
 	FunctionCallAnnotation& annotation() const override;
 
@@ -2127,6 +2133,7 @@ private:
 	ASTPointer<Expression> m_expression;
 	std::vector<ASTPointer<Expression>> m_arguments;
 	std::vector<ASTPointer<ASTString>> m_names;
+	std::vector<SourceLocation> m_nameLocations;
 };
 
 /**

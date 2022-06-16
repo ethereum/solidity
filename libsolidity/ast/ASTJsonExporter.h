@@ -144,6 +144,7 @@ private:
 	/// Maps source location to an index, if source is valid and a mapping does exist, otherwise returns std::nullopt.
 	std::optional<size_t> sourceIndexFromLocation(langutil::SourceLocation const& _location) const;
 	std::string sourceLocationToString(langutil::SourceLocation const& _location) const;
+	Json::Value sourceLocationsToJson(std::vector<langutil::SourceLocation> const& _sourceLocations) const;
 	static std::string namePathToString(std::vector<ASTString> const& _namePath);
 	static Json::Value idOrNull(ASTNode const* _pt)
 	{

@@ -77,6 +77,14 @@ private:
 		std::vector<ASTPointer<ModifierInvocation>> modifiers;
 	};
 
+	/// Struct to share parsed function call arguments.
+	struct FunctionCallArguments
+	{
+		std::vector<ASTPointer<Expression>> arguments;
+		std::vector<ASTPointer<ASTString>> parameterNames;
+		std::vector<langutil::SourceLocation> parameterNameLocations;
+	};
+
 	///@{
 	///@name Parsing functions for the AST nodes
 	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
@@ -153,8 +161,9 @@ private:
 	);
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
-	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
-	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseNamedArguments();
+
+	FunctionCallArguments parseFunctionCallArguments();
+	FunctionCallArguments parseNamedArguments();
 	std::pair<ASTPointer<ASTString>, langutil::SourceLocation> expectIdentifierWithLocation();
 	///@}
 
