@@ -3214,6 +3214,13 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 			annotation.isPure = isPure;
 		}
+	if (
+		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
+		!annotation.isPure.set() &&
+		varDecl &&
+		varDecl->isConstant()
+	)
+		annotation.isPure = true;
 
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType))
 	{
