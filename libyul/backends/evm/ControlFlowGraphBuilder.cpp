@@ -376,9 +376,9 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
 	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
-	auto switchBlock = m_currentBlock;
 	std::cout << "CFGB: Visiting switch expression" << std::endl;
 	StackSlot switchExpr = std::visit(*this, *_switch.expression);
+	auto switchBlock = m_currentBlock;
 	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
 
 	optional<Case const*> defaultCase;
