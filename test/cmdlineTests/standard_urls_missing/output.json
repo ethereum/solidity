@@ -1,0 +1,26 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Cannot import url (\"standard_urls_missing/non-existent-contract-1.sol\"): File not found. Searched the following locations: \"\".",
+            "message": "Cannot import url (\"standard_urls_missing/non-existent-contract-1.sol\"): File not found. Searched the following locations: \"\".",
+            "severity": "error",
+            "type": "IOError"
+        },
+        {
+            "component": "general",
+            "formattedMessage": "Cannot import url (\"standard_urls_missing/non-existent-contract.sol\"): File not found. Searched the following locations: \"\".",
+            "message": "Cannot import url (\"standard_urls_missing/non-existent-contract.sol\"): File not found. Searched the following locations: \"\".",
+            "severity": "error",
+            "type": "IOError"
+        },
+        {
+            "component": "general",
+            "formattedMessage": "Cannot import url (\"standard_urls_missing/non-existent-contract-2.sol\"): File not found. Searched the following locations: \"\".",
+            "message": "Cannot import url (\"standard_urls_missing/non-existent-contract-2.sol\"): File not found. Searched the following locations: \"\".",
+            "severity": "error",
+            "type": "IOError"
+        }],
+    "sources": {}
+}

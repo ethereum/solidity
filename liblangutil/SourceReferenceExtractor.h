@@ -55,12 +55,12 @@ namespace SourceReferenceExtractor
 	struct Message
 	{
 		SourceReference primary;
-		std::string severity; // "Error", "Warning", "Info", ...
+		Error::Type type;
 		std::vector<SourceReference> secondary;
 		std::optional<ErrorId> errorId;
 	};
 
-	Message extract(CharStreamProvider const& _charStreamProvider, util::Exception const& _exception, std::string _severity);
+	Message extract(CharStreamProvider const& _charStreamProvider, util::Exception const& _exception, Error::Type _type);
 	Message extract(CharStreamProvider const& _charStreamProvider, Error const& _error);
 	SourceReference extract(CharStreamProvider const& _charStreamProvider, SourceLocation const* _location, std::string message = "");
 }

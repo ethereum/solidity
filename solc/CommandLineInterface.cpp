@@ -765,7 +765,7 @@ void CommandLineInterface::compile()
 	catch (CompilerError const& _exception)
 	{
 		m_hasOutput = true;
-		formatter.printExceptionInformation(_exception, "Compiler error");
+		formatter.printExceptionInformation(_exception, Error::Type::CompilerError);
 		solThrow(CommandLineExecutionError, "");
 	}
 	catch (Error const& _error)
@@ -778,7 +778,7 @@ void CommandLineInterface::compile()
 		else
 		{
 			m_hasOutput = true;
-			formatter.printExceptionInformation(_error, _error.typeName());
+			formatter.printExceptionInformation(_error, _error.type());
 			solThrow(CommandLineExecutionError, "");
 		}
 	}

@@ -61,7 +61,7 @@ void SyntaxTest::parseAndAnalyze()
 		}
 
 		m_errorList.emplace_back(SyntaxTestError{
-			error->typeName(),
+			Error::formatErrorType(error->type()),
 			error->errorId(),
 			errorMessage(*error),
 			name,

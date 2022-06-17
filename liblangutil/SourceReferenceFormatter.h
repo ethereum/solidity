@@ -51,22 +51,23 @@ public:
 
 	/// Prints source location if it is given.
 	void printSourceLocation(SourceReference const& _ref);
-	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
-	void printExceptionInformation(util::Exception const& _exception, std::string const& _severity);
+	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg, bool _printFullType=false);
+	void printExceptionInformation(util::Exception const& _exception, Error::Type _type, bool _printFullType=false);
 	void printErrorInformation(langutil::ErrorList const& _errors);
 	void printErrorInformation(Error const& _error);
 
 	static std::string formatExceptionInformation(
 		util::Exception const& _exception,
-		std::string const& _name,
+		Error::Type _type,
 		CharStreamProvider const& _charStreamProvider,
 		bool _colored = false,
-		bool _withErrorIds = false
+		bool _withErrorIds = false,
+		bool _printFullType = false
 	)
 	{
 		std::ostringstream errorOutput;
 		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
-		formatter.printExceptionInformation(_exception, _name);
+		formatter.printExceptionInformation(_exception, _type, _printFullType);
 		return errorOutput.str();
 	}
 
@@ -77,7 +78,7 @@ public:
 	{
 		return formatExceptionInformation(
 			_error,
-			Error::formatErrorSeverity(Error::errorSeverity(_error.type())),
+			_error.type(),
 			_charStreamProvider
 		);
 	}
@@ -87,7 +88,7 @@ public:
 private:
 	util::AnsiColorized normalColored() const;
 	util::AnsiColorized frameColored() const;
-	util::AnsiColorized errorColored(std::optional<langutil::Error::Severity> _severity) const;
+	util::AnsiColorized errorColored(langutil::Error::Severity _severity) const;
 	util::AnsiColorized messageColored() const;
 	util::AnsiColorized secondaryColored() const;
 	util::AnsiColorized highlightColored() const;

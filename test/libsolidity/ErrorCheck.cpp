@@ -71,7 +71,7 @@ string solidity::frontend::test::searchErrors(ErrorList const& _errors, vector<p
 				break;
 			}
 		if (!found)
-			return "Unexpected error: " + error->typeName() + ": " + msg;
+			return "Unexpected error: " + Error::formatErrorType(error->type()) + ": " + msg;
 	}
 	if (!expectations.empty())
 	{
