@@ -515,18 +515,8 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			// Assert that we have the correct condition on stack.
 			yulAssert(!m_stack.empty(), "");
 			yulAssert(m_stack.back() == _switch.switchExpr, "");
-			
 			std::cout << "Assertion passed" << std::endl;
-			
-			// TODO: Handle switch expression here
-			//m_stack.pop_back();
-			
-			/*if (_switch.defaultCase != nullptr)
-				(*this)(*_switch.defaultCase);
-			for (auto const& [caseVal, caseBlock]: _switch.cases)
-				(*this)(*caseBlock);
-			*/
-			
+
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 			{
 				std::cout << "Adding case value " << caseValue << std::endl;
@@ -536,7 +526,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 				m_assembly.appendJumpToIf(m_blockLabels[caseBlock]);
 				std::cout << "Done adding case value " << caseValue << std::endl;
 			}
-			
+
 			if (_switch.defaultCase != nullptr)
 			{
 				std::cout << "Adding default case." << std::endl;
@@ -564,7 +554,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 				assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.target).entryLayout);
 				(*this)(*_switch.target);
 			}
-			
+
 			std::cout << "Checking cases..." << std::endl;
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 			{
@@ -575,61 +565,9 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 					});
 					std::cout << "Adding case block " << caseValue << std::endl;
-					createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(caseBlock).entryLayout);
-					assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(caseBlock).entryLayout);
 					(*this)(*caseBlock);
 				}
 			}
-			
-			/*if (_switch.defaultCase == nullptr)
-			{
-				std::cout << "Checking switch target..." << std::endl;
-				createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.target).entryLayout);
-				assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.target).entryLayout);
-				std::cout << "Adding switch target block" << std::endl;
-				(*this)(*_switch.target);
-				std::cout << "Done adding switch target block" << std::endl;
-			}*/
-
-			// TODO: Complete Switch CFG handling
-			/*
-			// Create labels for the targets, if not already present.
-			if (!m_blockLabels.count(_conditionalJump.nonZero))
-				m_blockLabels[_conditionalJump.nonZero] = m_assembly.newLabelId();
-			if (!m_blockLabels.count(_conditionalJump.zero))
-				m_blockLabels[_conditionalJump.zero] = m_assembly.newLabelId();
-
-			// Assert that we have the correct condition on stack.
-			yulAssert(!m_stack.empty(), "");
-			yulAssert(m_stack.back() == _conditionalJump.condition, "");
-
-			// Emit the conditional jump to the non-zero label and update the stored stack.
-			m_assembly.appendJumpToIf(m_blockLabels[_conditionalJump.nonZero]);
-			m_stack.pop_back();
-
-			// Assert that we have a valid stack for both jump targets.
-			assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_conditionalJump.nonZero).entryLayout);
-			assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_conditionalJump.zero).entryLayout);
-
-			{
-				// Restore the stack afterwards for the non-zero case below.
-				ScopeGuard stackRestore([storedStack = m_stack, this]() {
-					m_stack = move(storedStack);
-					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
-				});
-
-				// If we have already generated the zero case, jump to it, otherwise generate it in place.
-				if (m_generated.count(_conditionalJump.zero))
-					m_assembly.appendJumpTo(m_blockLabels[_conditionalJump.zero]);
-				else
-					(*this)(*_conditionalJump.zero);
-			}
-			// Note that each block visit terminates control flow, so we cannot fall through from the zero case.
-
-			// Generate the non-zero block, if not done already.
-			if (!m_generated.count(_conditionalJump.nonZero))
-				(*this)(*_conditionalJump.nonZero);
-			*/
 		},
 	}, _block.exit);
 	// TODO: We could assert that the last emitted assembly item terminated or was an (unconditional) jump.

@@ -545,7 +545,6 @@ list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator:
 					_addChild(_switch.defaultCase);
 				for (auto const& [caseValue, caseBlock]: _switch.cases)
 					_addChild(caseBlock);
-				
 			},
 		}, _block->exit);
 	});
