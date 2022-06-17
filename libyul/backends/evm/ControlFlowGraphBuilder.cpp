@@ -79,15 +79,10 @@ void cleanUnreachable(CFG& _cfg)
 	// Remove all entries from unreachable nodes from the graph.
 	for (CFG::BasicBlock* node: reachabilityCheck.visited)
 	{
-		size_t sizeBefore = node->entries.size();
 		cxx20::erase_if(node->entries, [&](CFG::BasicBlock* entry) -> bool {
 			return !reachabilityCheck.visited.count(entry);
 		});
-		size_t sizeAfter = node->entries.size();
-		if (sizeAfter != sizeBefore)
-			std::cout << "Unreachable: " << sizeBefore << " -> " << sizeAfter << std::endl;
 	}
-	std::cout << "reachabilityCheck: Num nodes visited " << reachabilityCheck.visited.size() << std::endl;
 }
 
 /// Sets the ``recursive`` member to ``true`` for all recursive function calls.
@@ -243,7 +238,6 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 	builder.m_currentBlock = result->entry;
 	builder(_block);
 
-	std::cout << "About to clean unreachable" << std::endl;
 	cleanUnreachable(*result);
 	markRecursiveCalls(*result);
 	markStartsOfSubGraphs(*result);
@@ -367,7 +361,6 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
 	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
-	std::cout << "CFGB: Visiting switch expression" << std::endl;
 	StackSlot switchExpr = std::visit(*this, *_switch.expression);
 	auto switchBlock = m_currentBlock;
 	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
@@ -381,7 +374,6 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	CFG::BasicBlock* defaultCaseBlock = nullptr;
 	if (defaultCase.has_value())
 	{
-		std::cout << "Visiting default case" << std::endl;
 		defaultCaseBlock = &m_graph.makeBlock(debugDataOf(defaultCase.value()->body));
 		m_currentBlock = defaultCaseBlock;
 		(*this)(defaultCase.value()->body);
@@ -395,7 +387,6 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		{
 			u256 caseVal = valueOfLiteral(*_case.value);
 			cases[caseVal] = &m_graph.makeBlock(debugDataOf(_case.body));
-			std::cout << "Visiting case value " << caseVal << std::endl;
 			m_currentBlock = cases[caseVal];
 			(*this)(_case.body);
 			jump(debugDataOf(_case.body), afterSwitch, false);
@@ -405,7 +396,6 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	m_currentBlock = switchBlock;
 	makeSwitch(debugDataOf(_switch), switchExpr, defaultCaseBlock,
 		cases, afterSwitch);
-	std::cout << "After switch creation " << std::endl;
 	m_currentBlock = &afterSwitch;
 
 	/*yulAssert(m_currentBlock, "");

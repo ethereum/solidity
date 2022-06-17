@@ -513,7 +513,6 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			// Assert that we have the correct condition on stack.
 			yulAssert(!m_stack.empty(), "");
 			yulAssert(m_stack.back() == _switch.switchExpr, "");
-			std::cout << "Assertion passed" << std::endl;
 
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 			{
