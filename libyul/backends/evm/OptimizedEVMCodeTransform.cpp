@@ -500,7 +500,6 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		},
 		[&](CFG::BasicBlock::Switch const& _switch)
 		{
-			std::cout << "In OptimizedEVMCodeTransform: creating switch statement" << std::endl;
 			createStackLayout(debugDataOf(_switch), blockInfo.exitLayout);
 
 			// Create labels for the targets, if not already present.
@@ -516,15 +515,12 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 			{
-				std::cout << "Adding case value " << caseValue << std::endl;
 				m_assembly.appendConstant(caseValue);
 				m_assembly.appendInstruction(evmasm::dupInstruction(2));
 				m_assembly.appendInstruction(evmasm::Instruction::EQ);
 				m_assembly.appendJumpToIf(m_blockLabels[caseBlock]);
-				std::cout << "Done adding case value " << caseValue << std::endl;
 			}
 
-			std::cout << "Adding default case." << std::endl;
 			{
 				// Restore the stack afterwards for the non-zero case below.
 				ScopeGuard stackRestore([storedStack = m_stack, this]() {
@@ -534,7 +530,6 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 				(*this)(*_switch.defaultCase);
 			}
 
-			std::cout << "Checking cases..." << std::endl;
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 			{
 				{
@@ -543,7 +538,6 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 						m_stack = move(storedStack);
 						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 					});
-					std::cout << "Adding case block " << caseValue << std::endl;
 					(*this)(*caseBlock);
 				}
 			}
