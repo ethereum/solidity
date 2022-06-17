@@ -258,9 +258,9 @@ public:
 	/// signature (to_slot, from_ptr) ->
 	std::string copyByteArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
 
-	/// @returns the name of a function that will copy an array of value types from storage to storage.
-	/// signature (to_slot, from_slot) ->
-	std::string copyValueArrayStorageToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
+	/// @returns the name of a function that will copy an array of value types to storage.
+	/// signature (to_slot, from_ptr[, from_length]) ->
+	std::string copyValueArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
 
 	/// Returns the name of a function that will convert a given length to the
 	/// size in memory (number of storage slots or calldata/memory bytes) it
