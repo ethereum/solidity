@@ -531,9 +531,6 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 					m_stack = move(storedStack);
 					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 				});
-				createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
-				std::cout << "Checking default case..." << std::endl;
-				assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
 				(*this)(*_switch.defaultCase);
 			}
 
