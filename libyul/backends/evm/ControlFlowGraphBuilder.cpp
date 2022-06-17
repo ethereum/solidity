@@ -704,15 +704,10 @@ void ControlFlowGraphBuilder::makeSwitch(
 		cases,
 	};
 	if (defaultCase == nullptr)
-	{
 		target.entries.emplace_back(m_currentBlock);
-		m_currentBlock = &target;
-	}
 	else
-	{
 		defaultCase->entries.emplace_back(m_currentBlock);
-		m_currentBlock = nullptr;//&target;
-	}
 	for (auto const& [caseVal, caseBlock]: cases)
 		caseBlock->entries.emplace_back(m_currentBlock);
+	m_currentBlock = nullptr;//&target;
 }
