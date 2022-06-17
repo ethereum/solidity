@@ -125,7 +125,6 @@ private:
 						found |= (_switch.defaultCase == &_block);
 					for (auto const& [caseValue, caseBlock]: _switch.cases)
 						found |= (caseBlock == &_block);
-					found |= (_switch.target == &_block);
 					soltestAssert(found, "Switch: Invalid control flow graph.");
 				},
 				[&](auto const&)
