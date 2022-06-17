@@ -58,7 +58,10 @@ string TestFunctionCall::format(
 
 		if (m_call.kind == FunctionCall::Kind::Library)
 		{
-			stream << _linePrefix << newline << ws << "library:" << ws << m_call.signature;
+			stream << _linePrefix << newline << ws << "library:" << ws;
+			if (!m_call.libraryFile.empty())
+				stream << "\"" << m_call.libraryFile << "\":";
+			stream << m_call.signature;
 			return;
 		}
 
