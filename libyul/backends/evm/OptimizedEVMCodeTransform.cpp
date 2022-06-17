@@ -504,13 +504,11 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			createStackLayout(debugDataOf(_switch), blockInfo.exitLayout);
 
 			// Create labels for the targets, if not already present.
-			if (_switch.defaultCase != nullptr && !m_blockLabels.count(_switch.defaultCase))
+			if (!m_blockLabels.count(_switch.defaultCase))
 				m_blockLabels[_switch.defaultCase] = m_assembly.newLabelId();
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 				if (!m_blockLabels.count(caseBlock))
 					m_blockLabels[caseBlock] = m_assembly.newLabelId();
-			if (!m_blockLabels.count(_switch.target))
-				m_blockLabels[_switch.target] = m_assembly.newLabelId();
 
 			// Assert that we have the correct condition on stack.
 			yulAssert(!m_stack.empty(), "");
@@ -527,32 +525,17 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 				std::cout << "Done adding case value " << caseValue << std::endl;
 			}
 
-			if (_switch.defaultCase != nullptr)
+			std::cout << "Adding default case." << std::endl;
 			{
-				std::cout << "Adding default case." << std::endl;
-				{
-					// Restore the stack afterwards for the non-zero case below.
-					ScopeGuard stackRestore([storedStack = m_stack, this]() {
-						m_stack = move(storedStack);
-						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
-					});
-					createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
-					std::cout << "Checking default case..." << std::endl;
-					assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
-					(*this)(*_switch.defaultCase);
-				}
-			}
-			else
-			{
+				// Restore the stack afterwards for the non-zero case below.
 				ScopeGuard stackRestore([storedStack = m_stack, this]() {
 					m_stack = move(storedStack);
 					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 				});
-				m_assembly.appendInstruction(evmasm::Instruction::POP);
-				m_stack.pop_back();
-				createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.target).entryLayout);
-				assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.target).entryLayout);
-				(*this)(*_switch.target);
+				createStackLayout(debugDataOf(_switch), m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
+				std::cout << "Checking default case..." << std::endl;
+				assertLayoutCompatibility(m_stack, m_stackLayout.blockInfos.at(_switch.defaultCase).entryLayout);
+				(*this)(*_switch.defaultCase);
 			}
 
 			std::cout << "Checking cases..." << std::endl;

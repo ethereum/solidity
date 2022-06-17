@@ -196,9 +196,9 @@ struct CFG
 		{
 			std::shared_ptr<DebugData const> debugData;
 			StackSlot switchExpr;
+			// If there is no default case, this must point to the block after the switch
 			BasicBlock* defaultCase = nullptr;
 			std::map<u256, BasicBlock*> cases;
-			BasicBlock* target = nullptr;
 		};
 		std::shared_ptr<DebugData const> debugData;
 		std::vector<BasicBlock*> entries;

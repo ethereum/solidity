@@ -473,28 +473,15 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 		},
 		[&](CFG::BasicBlock::Switch const& _switch) -> std::optional<Stack>
 		{
-			size_t numToVisit = _switch.cases.size();
+			size_t numToVisit = _switch.cases.size() + 1;
 			size_t numVisited = std::accumulate(std::begin(_switch.cases), std::end(_switch.cases), (size_t) 0,
 				[&_visited](size_t const previous, auto const& _case)
 					{ return (previous + (_visited.count(_case.second) > 0 ? (size_t) 1 : (size_t) 0)); });
-			if (_switch.defaultCase == nullptr)
-			{
-				++numToVisit;
-				numVisited += (_visited.count(_switch.target) > 0) ? (size_t) 1 : (size_t) 0;
-			}
-			else
-			{
-				++numToVisit;
-				numVisited += (_visited.count(_switch.defaultCase) > 0 ? (size_t) 1 : (size_t) 0);
-			}
+			numVisited += (_visited.count(_switch.defaultCase) > 0 ? (size_t) 1 : (size_t) 0);
 			if (numToVisit == numVisited)
 			{
 				// If the current iteration has already visited all jump targets, start from its entry layout.
-				Stack stack;
-				if (_switch.defaultCase == nullptr)
-					stack = m_layout.blockInfos.at(_switch.target).entryLayout;
-				else
-					stack = m_layout.blockInfos.at(_switch.defaultCase).entryLayout;
+				Stack stack = m_layout.blockInfos.at(_switch.defaultCase).entryLayout;
 				for (auto const& [caseValue, _case]: _switch.cases)
 					stack = combineStack(stack, m_layout.blockInfos.at(_case).entryLayout);
 				// Additionally, the switch expression has to be at the stack top at exit.
@@ -502,12 +489,7 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 				return stack;
 			}
 			// If one of the jump targets has not been visited, stage it for visit and defer the current block.
-			if (_switch.defaultCase == nullptr)
-			{
-				if (_visited.count(_switch.target) == 0)
-					_toVisit.emplace_front(_switch.target);
-			}
-			else if (_visited.count(_switch.defaultCase) == 0)
+			if (_visited.count(_switch.defaultCase) == 0)
 				_toVisit.emplace_front(_switch.defaultCase);
 			for (auto const& [caseValue, _case]: _switch.cases)
 				if (_visited.count(_case) == 0)
@@ -539,10 +521,7 @@ list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator:
 			[&](CFG::BasicBlock::Switch const& _switch)
 			{
 				// TODO: Confirm that there are no backwards jumps here
-				if (_switch.defaultCase == nullptr)
-					_addChild(_switch.target);
-				else
-					_addChild(_switch.defaultCase);
+				_addChild(_switch.defaultCase);
 				for (auto const& [caseValue, caseBlock]: _switch.cases)
 					_addChild(caseBlock);
 			},
@@ -614,14 +593,9 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 					return newEntryLayout;
 				};
 
-				if (_switch.defaultCase == nullptr)
-					_addChild(_switch.target);
-				else
-				{
-					auto& defaultCaseInfo = m_layout.blockInfos.at(_switch.defaultCase);
-					defaultCaseInfo.entryLayout = fixJumpTargetEntry(defaultCaseInfo.entryLayout);
-					_addChild(_switch.defaultCase);
-				}
+				auto& defaultCaseInfo = m_layout.blockInfos.at(_switch.defaultCase);
+				defaultCaseInfo.entryLayout = fixJumpTargetEntry(defaultCaseInfo.entryLayout);
+				_addChild(_switch.defaultCase);
 				for (auto const& [caseValue, caseBlock]: _switch.cases)
 				{
 					auto& caseInfo = m_layout.blockInfos.at(caseBlock);
@@ -629,10 +603,7 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 					_addChild(caseBlock);
 				}
 
-				if (_switch.defaultCase == nullptr)
-					_addChild(_switch.target);
-				else
-					_addChild(_switch.defaultCase);
+				_addChild(_switch.defaultCase);
 				for (auto const& [caseValue, caseBlock]: _switch.cases)
 					_addChild(caseBlock);
 			}
@@ -773,16 +744,8 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 			[&](CFG::BasicBlock::Switch const& _switch)
 			{
 				std::vector<Stack> stacks;
-				if (_switch.defaultCase == nullptr)
-				{
-					_addChild(_switch.target);
-					stacks.push_back(m_layout.blockInfos.at(_switch.target).entryLayout);
-				}
-				else
-				{
-					_addChild(_switch.defaultCase);
-					stacks.push_back(m_layout.blockInfos.at(_switch.defaultCase).entryLayout);
-				}
+				_addChild(_switch.defaultCase);
+				stacks.push_back(m_layout.blockInfos.at(_switch.defaultCase).entryLayout);
 				for (auto const& [caseValue, caseBlock]: _switch.cases)
 				{
 					_addChild(caseBlock);
@@ -856,10 +819,7 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
 				[&](CFG::BasicBlock::Terminated const&) {},
 				[&](CFG::BasicBlock::Switch const& _switch)
 				{
-					if (_switch.defaultCase == nullptr)
-						_addChild(_switch.target);
-					else
-						_addChild(_switch.defaultCase);
+					_addChild(_switch.defaultCase);
 					for (auto const& [caseValue, caseBlock]: _switch.cases)
 						_addChild(caseBlock);
 				},
@@ -971,10 +931,7 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
 							blockInfo.entryLayout = entryLayout;
 						}
 					}*/
-				if (_switch.defaultCase == nullptr)
-					_addChild(_switch.target);
-				else
-					_addChild(_switch.defaultCase);
+				_addChild(_switch.defaultCase);
 				for (auto const& [caseValue, exit]: _switch.cases)
 					_addChild(exit);
 			}

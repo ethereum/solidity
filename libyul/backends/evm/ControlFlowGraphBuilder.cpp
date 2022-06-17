@@ -66,10 +66,7 @@ void cleanUnreachable(CFG& _cfg)
 				_addChild(_jump.nonZero);
 			},
 			[&](CFG::BasicBlock::Switch const& _switch) {
-				if (_switch.defaultCase == nullptr)
-					_addChild(_switch.target);
-				else
-					_addChild(_switch.defaultCase);
+				_addChild(_switch.defaultCase);
 				for (auto const& [caseValue, caseBlock]: _switch.cases)
 					_addChild(caseBlock);
 			},
@@ -121,10 +118,7 @@ void markRecursiveCalls(CFG& _cfg)
 				[&](CFG::BasicBlock::Terminated const&)	{},
 				[&](CFG::BasicBlock::Switch const& _switch)
 				{
-					if (_switch.defaultCase == nullptr)
-						_addChild(_switch.target);
-					else
-						_addChild(_switch.defaultCase);
+					_addChild(_switch.defaultCase);
 					for (auto const& [caseValue, caseBlock]: _switch.cases)
 					{
 						_addChild(caseBlock);
@@ -189,10 +183,7 @@ void markStartsOfSubGraphs(CFG& _cfg)
 				[&](CFG::BasicBlock::Terminated const&) { _u->isStartOfSubGraph = true; },
 				[&](CFG::BasicBlock::MainExit const&) { _u->isStartOfSubGraph = true; },
 				[&](CFG::BasicBlock::Switch const& _switch) {
-					if (_switch.defaultCase == nullptr)
-						children.emplace_back(_switch.target);
-					else
-						children.emplace_back(_switch.defaultCase);
+					children.emplace_back(_switch.defaultCase);
 					for (auto const& [caseValue, caseBlock]: _switch.cases)
 						children.emplace_back(caseBlock);
 				},
@@ -721,7 +712,6 @@ void ControlFlowGraphBuilder::makeSwitch(
 		move(_switchExpr),
 		defaultCase,
 		cases,
-		&target
 	};
 	if (defaultCase == nullptr)
 	{
