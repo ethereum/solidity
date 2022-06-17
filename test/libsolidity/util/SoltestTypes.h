@@ -268,6 +268,7 @@ struct FunctionValue
 struct FunctionCall
 {
 	/// Signature of the function call, e.g. `f(uint256, uint256)`.
+	/// For a library deployment, this contains the library name.
 	std::string signature;
 	/// Optional value that can be sent with the call.
 	/// Value is expressed in wei, smallest unit of ether
@@ -313,6 +314,8 @@ struct FunctionCall
 	std::vector<std::string> expectedSideEffects{};
 	/// A textual representation of the actual side-effect of the function call.
 	std::vector<std::string> actualSideEffects{};
+	/// File name of the library. Always empty, unless this is a library deployment call.
+	std::string libraryFile{};
 };
 
 using Builtin = std::function<std::optional<bytes>(FunctionCall const&)>;
