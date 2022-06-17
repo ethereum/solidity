@@ -700,7 +700,7 @@ void ControlFlowGraphBuilder::makeSwitch(
 	m_currentBlock->exit = CFG::BasicBlock::Switch{
 		move(_debugData),
 		move(_switchExpr),
-		defaultCase,
+		(defaultCase != nullptr) ? defaultCase : &target,
 		cases,
 	};
 	if (defaultCase == nullptr)
