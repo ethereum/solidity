@@ -602,10 +602,6 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 					caseInfo.entryLayout = fixJumpTargetEntry(caseInfo.entryLayout);
 					_addChild(caseBlock);
 				}
-
-				_addChild(_switch.defaultCase);
-				for (auto const& [caseValue, caseBlock]: _switch.cases)
-					_addChild(caseBlock);
 			}
 		}, _block->exit);
 	});
