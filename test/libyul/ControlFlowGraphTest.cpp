@@ -118,6 +118,16 @@ private:
 						"Invalid control flow graph."
 					);
 				},
+				[&](CFG::BasicBlock::Switch const& _switch)
+				{
+					bool found = false;
+					if (_switch.defaultCase != nullptr)
+						found |= (_switch.defaultCase == &_block);
+					for (auto const& [caseValue, caseBlock]: _switch.cases)
+						found |= (caseBlock == &_block);
+					found |= (_switch.target == &_block);
+					soltestAssert(found, "Switch: Invalid control flow graph.");
+				},
 				[&](auto const&)
 				{
 					soltestAssert(false, "Invalid control flow graph.");
@@ -178,7 +188,36 @@ private:
 			{
 				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"Terminated\"];\n";
 				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
-			}
+			},
+			[&](CFG::BasicBlock::Switch const& _switch)
+			{
+				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"{ ";
+				m_stream << stackSlotToString(_switch.switchExpr);
+				m_stream << "| { ";
+				std::string exitList = "";
+				if (_switch.defaultCase != nullptr)
+				   exitList = "<Default> Default ";
+				for (auto const& [caseValue, caseBlock]: _switch.cases)
+				{
+					if (exitList.length() > 0)
+						exitList += "| ";
+					exitList += "<" + caseValue.str() + "> " + caseValue.str() + " ";
+				}
+				m_stream << exitList;
+				m_stream << "}}\" shape=Mrecord];\n";
+
+				if (_switch.defaultCase != nullptr)
+				{
+					m_stream << "Block" << getBlockId(_block);
+					m_stream << "Exit:Default -> Block" << getBlockId(*_switch.defaultCase) << ";\n";
+				}
+				for (auto const& [caseValue, caseBlock]: _switch.cases)
+				{
+					m_stream << "Block" << getBlockId(_block);
+					m_stream << "Exit:" << caseValue << " -> Block" << getBlockId(*caseBlock) << ";\n";
+				}
+			},
 		}, _block.exit);
 		m_stream << "\n";
 	}
