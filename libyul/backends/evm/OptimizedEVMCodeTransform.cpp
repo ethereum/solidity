@@ -501,6 +501,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		[&](CFG::BasicBlock::Switch const& _switch)
 		{
 			std::cout << "In OptimizedEVMCodeTransform: creating switch statement" << std::endl;
+			createStackLayout(debugDataOf(_switch), blockInfo.exitLayout);
 
 			// Create labels for the targets, if not already present.
 			if (_switch.defaultCase != nullptr && !m_blockLabels.count(_switch.defaultCase))
