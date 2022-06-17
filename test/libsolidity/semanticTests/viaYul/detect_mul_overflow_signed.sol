@@ -8,6 +8,9 @@ contract C {
     function h(int16 a, int16 b) public pure returns (int16 x) {
         x = a * b;
     }
+    function i(int160 a, int160 b) public pure returns (int160 x) {
+        x = a * b;
+    }
 }
 // ====
 // compileToEwasm: also

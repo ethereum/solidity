@@ -8,8 +8,8 @@ Overflow checked unsigned integer multiplication.
 """
 
 # Approximation with 16-bit base types.
-n_bits = 16
-type_bits = 8
+n_bits = 8
+type_bits = 4
 
 while type_bits <= n_bits:
 
@@ -31,11 +31,11 @@ while type_bits <= n_bits:
 	maxValue = BVUnsignedMax(type_bits, n_bits)
 
 	# Overflow check in YulUtilFunction::overflowCheckedIntMulFunction
-	if type_bits == n_bits:
+	if type_bits > n_bits / 2:
 		overflow_check = AND(ISZERO(ISZERO(Y)), ISZERO(EQ(X, DIV(product, Y))))
 	else:
 		overflow_check = GT(product, maxValue)
 
 	rule.check(overflow_check != 0, actual_overflow)
 
-	type_bits += 4
+	type_bits += 2

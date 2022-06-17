@@ -39,3 +39,4 @@ contract C {
 // g(uint8,uint8): 0xFF, 0 -> 0
 // g(uint8,uint8): 0, 0xFF -> 0
 // h(uint16,uint16): 928, 142 -> FAILURE, hex"4e487b71", 0x11
+// g(uint8,uint8): 88, 6 -> FAILURE, hex"4e487b71", 0x11

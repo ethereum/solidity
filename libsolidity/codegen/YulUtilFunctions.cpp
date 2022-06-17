@@ -639,10 +639,8 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 					</256bit>
 				<!signed>
 					<?256bit>
-						// overflow, if x > sum
 						if gt(x, sum) { <panic>() }
 					<!256bit>
-						// overflow, if sum > maxValue
 						if gt(sum, <maxValue>) { <panic>() }
 					</256bit>
 				</signed>
@@ -687,23 +685,22 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 				y := <cleanupFunction>(y)
 				product := mul(x, y)
 				<?signed>
-					<?256bit>
+					<?gt128bit>
 						// overflow/underflow, if y != 0 and x != product / y
 						if and(iszero(iszero(y)), iszero(eq(x, sdiv(product, y)))) { <panic>() }
-					<!256bit>
+					<!gt128bit>
 						// overflow, if same signal and product > maxValue
 						if and(iszero(and(xor(x,y), <bitMask>)), sgt(product, <maxValue>)) { <panic>() }
 						// underflow, if different signal and product < minValue
 						if and(eq(and(xor(x,y), <bitMask>), <bitMask>), slt(product, <minValue>)) { <panic>() }
-					</256bit>
+					</gt128bit>
 				<!signed>
-					<?256bit>
-					// overflow, if y != 0 and x != (product / y)
-					if and(iszero(iszero(y)), iszero(eq(x, div(product, y)))) { <panic>() }
-					<!256bit>
-					// overflow, if product > maxValue
-					if gt(product, <maxValue>) { <panic>() }
-					</256bit>
+					<?gt128bit>
+						// overflow, if y != 0 and x != (product / y)
+						if and(iszero(iszero(y)), iszero(eq(x, div(product, y)))) { <panic>() }
+					<!gt128bit>
+						if gt(product, <maxValue>) { <panic>() }
+					</gt128bit>
 				</signed>
 			}
 			)")
@@ -713,7 +710,7 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
-			("256bit", _type.numBits() == 256)
+			("gt128bit", _type.numBits() > 128)
 			("bitMask", toCompactHexWithPrefix(u256(std::pow(2,255))))
 			.render();
 	});
@@ -745,19 +742,19 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
 				if iszero(y) { <panicDivZero>() }
+				r := <?signed>s</signed>div(x, y)
 				<?signed>
 				// overflow for minVal / -1
 				if and(
-					eq(x, <minVal>),
+					eq(x, <minValue>),
 					eq(y, sub(0, 1))
 				) { <panicOverflow>() }
 				</signed>
-				r := <?signed>s</signed>div(x, y)
 			}
 			)")
 			("functionName", functionName)
 			("signed", _type.isSigned())
-			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panicDivZero", panicFunction(PanicCode::DivisionByZero))
 			("panicOverflow", panicFunction(PanicCode::UnderOverflow))
@@ -831,10 +828,8 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 					</256bit>
 				<!signed>
 					<?256bit>
-						//underflow if diff > x
 						if gt(diff, x) { <panic>() }
 					<!256bit>
-						//underflow if diff > maxValue
 						if gt(diff, <maxValue>) { <panic>() }
 					</256bit>
 				</signed>

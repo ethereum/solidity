@@ -8,8 +8,8 @@ Overflow checked signed integer multiplication.
 """
 
 # Approximation with 16-bit base types.
-n_bits = 16
-type_bits = 8
+n_bits = 8
+type_bits = 4
 
 while type_bits <= n_bits:
 
@@ -34,7 +34,7 @@ while type_bits <= n_bits:
 	bitMask =  2**(type_bits-1)
 
 	# Overflow and underflow checks in YulUtilFunction::overflowCheckedIntMulFunction
-	if type_bits == n_bits:
+	if type_bits > n_bits / 2:
 		overflow_check = AND(ISZERO(ISZERO(Y)), ISZERO(EQ(X, SDIV(product, Y))))
 		underflow_check = overflow_check
 	else:
@@ -44,4 +44,4 @@ while type_bits <= n_bits:
 	rule.check(actual_overflow, overflow_check != 0)
 	rule.check(actual_underflow, underflow_check != 0)
 
-	type_bits += 4
+	type_bits += 2
