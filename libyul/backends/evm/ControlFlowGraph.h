@@ -192,6 +192,14 @@ struct CFG
 			CFG::FunctionInfo* info = nullptr;
 		};
 		struct Terminated {};
+		struct Switch
+		{
+			std::shared_ptr<DebugData const> debugData;
+			StackSlot switchExpr;
+			// If there is no default case, this must point to the block after the switch
+			BasicBlock* defaultCase = nullptr;
+			std::map<u256, BasicBlock*> cases;
+		};
 		std::shared_ptr<DebugData const> debugData;
 		std::vector<BasicBlock*> entries;
 		std::vector<Operation> operations;
@@ -203,7 +211,7 @@ struct CFG
 		bool needsCleanStack = false;
 		/// If the block starts a sub-graph and does not lead to a function return, we are free to add junk to it.
 		bool allowsJunk() const { return isStartOfSubGraph && !needsCleanStack; }
-		std::variant<MainExit, Jump, ConditionalJump, FunctionReturn, Terminated> exit = MainExit{};
+		std::variant<MainExit, Jump, ConditionalJump, FunctionReturn, Terminated, Switch> exit = MainExit{};
 	};
 
 	struct FunctionInfo

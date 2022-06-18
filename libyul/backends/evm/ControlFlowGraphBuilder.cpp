@@ -65,6 +65,11 @@ void cleanUnreachable(CFG& _cfg)
 				_addChild(_jump.zero);
 				_addChild(_jump.nonZero);
 			},
+			[&](CFG::BasicBlock::Switch const& _switch) {
+				_addChild(_switch.defaultCase);
+				for (auto const& [caseValue, caseBlock]: _switch.cases)
+					_addChild(caseBlock);
+			},
 			[](CFG::BasicBlock::FunctionReturn const&) {},
 			[](CFG::BasicBlock::Terminated const&) {},
 			[](CFG::BasicBlock::MainExit const&) {}
@@ -104,6 +109,14 @@ void markRecursiveCalls(CFG& _cfg)
 				},
 				[&](CFG::BasicBlock::FunctionReturn const&) {},
 				[&](CFG::BasicBlock::Terminated const&)	{},
+				[&](CFG::BasicBlock::Switch const& _switch)
+				{
+					_addChild(_switch.defaultCase);
+					for (auto const& [caseValue, caseBlock]: _switch.cases)
+					{
+						_addChild(caseBlock);
+					}
+				},
 			}, _block->exit);
 		});
 		return calls;
@@ -161,7 +174,12 @@ void markStartsOfSubGraphs(CFG& _cfg)
 				},
 				[&](CFG::BasicBlock::FunctionReturn const&) {},
 				[&](CFG::BasicBlock::Terminated const&) { _u->isStartOfSubGraph = true; },
-				[&](CFG::BasicBlock::MainExit const&) { _u->isStartOfSubGraph = true; }
+				[&](CFG::BasicBlock::MainExit const&) { _u->isStartOfSubGraph = true; },
+				[&](CFG::BasicBlock::Switch const& _switch) {
+					children.emplace_back(_switch.defaultCase);
+					for (auto const& [caseValue, caseBlock]: _switch.cases)
+						children.emplace_back(caseBlock);
+				},
 			}, _u->exit);
 			yulAssert(!util::contains(children, _u));
 
@@ -341,6 +359,45 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
 	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
+	StackSlot switchExpr = std::visit(*this, *_switch.expression);
+	auto switchBlock = m_currentBlock;
+	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
+
+	optional<Case const*> defaultCase;
+	for (Case const& _case: _switch.cases)
+	{
+		if (!_case.value)
+			defaultCase = &_case;
+	}
+	CFG::BasicBlock* defaultCaseBlock = nullptr;
+	if (defaultCase.has_value())
+	{
+		defaultCaseBlock = &m_graph.makeBlock(debugDataOf(defaultCase.value()->body));
+		m_currentBlock = defaultCaseBlock;
+		(*this)(defaultCase.value()->body);
+		jump(debugDataOf(defaultCase.value()->body), afterSwitch, false);
+	}
+
+	map<u256, CFG::BasicBlock*> cases;
+	for (Case const& _case: _switch.cases)
+	{
+		if (_case.value)
+		{
+			u256 caseVal = valueOfLiteral(*_case.value);
+			cases[caseVal] = &m_graph.makeBlock(debugDataOf(_case.body));
+			m_currentBlock = cases[caseVal];
+			(*this)(_case.body);
+			jump(debugDataOf(_case.body), afterSwitch, false);
+		}
+	}
+
+	m_currentBlock = switchBlock;
+	makeSwitch(debugDataOf(_switch), switchExpr, defaultCaseBlock,
+		cases, afterSwitch);
+	m_currentBlock = &afterSwitch;
+
+	/*yulAssert(m_currentBlock, "");
+	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
 
 	auto ghostVariableId = m_graph.ghostVariables.size();
 	YulString ghostVariableName("GHOST[" + to_string(ghostVariableId) + "]");
@@ -394,7 +451,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		m_currentBlock = &caseBranch;
 	}
 	(*this)(switchCase.body);
-	jump(debugDataOf(switchCase.body), afterSwitch);
+	jump(debugDataOf(switchCase.body), afterSwitch);*/
 }
 
 void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
@@ -627,4 +684,28 @@ void ControlFlowGraphBuilder::jump(
 	m_currentBlock->exit = CFG::BasicBlock::Jump{move(_debugData), &_target, backwards};
 	_target.entries.emplace_back(m_currentBlock);
 	m_currentBlock = &_target;
+}
+
+void ControlFlowGraphBuilder::makeSwitch(
+	shared_ptr<DebugData const> _debugData,
+	StackSlot _switchExpr,
+	CFG::BasicBlock* defaultCase,
+	std::map<u256, CFG::BasicBlock*> cases,
+	CFG::BasicBlock& target
+)
+{
+	yulAssert(m_currentBlock, "");
+	m_currentBlock->exit = CFG::BasicBlock::Switch{
+		move(_debugData),
+		move(_switchExpr),
+		(defaultCase != nullptr) ? defaultCase : &target,
+		cases,
+	};
+	if (defaultCase == nullptr)
+		target.entries.emplace_back(m_currentBlock);
+	else
+		defaultCase->entries.emplace_back(m_currentBlock);
+	for (auto const& [caseVal, caseBlock]: cases)
+		caseBlock->entries.emplace_back(m_currentBlock);
+	m_currentBlock = nullptr;//&target;
 }

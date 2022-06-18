@@ -497,7 +497,51 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			CFG::BuiltinCall const* builtinCall = get_if<CFG::BuiltinCall>(&_block.operations.back().operation);
 			yulAssert(builtinCall, "");
 			yulAssert(builtinCall->builtin.get().controlFlowSideEffects.terminatesOrReverts(), "");
-		}
+		},
+		[&](CFG::BasicBlock::Switch const& _switch)
+		{
+			createStackLayout(debugDataOf(_switch), blockInfo.exitLayout);
+
+			// Create labels for the targets, if not already present.
+			if (!m_blockLabels.count(_switch.defaultCase))
+				m_blockLabels[_switch.defaultCase] = m_assembly.newLabelId();
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+				if (!m_blockLabels.count(caseBlock))
+					m_blockLabels[caseBlock] = m_assembly.newLabelId();
+
+			// Assert that we have the correct condition on stack.
+			yulAssert(!m_stack.empty(), "");
+			yulAssert(m_stack.back() == _switch.switchExpr, "");
+
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+			{
+				m_assembly.appendConstant(caseValue);
+				m_assembly.appendInstruction(evmasm::dupInstruction(2));
+				m_assembly.appendInstruction(evmasm::Instruction::EQ);
+				m_assembly.appendJumpToIf(m_blockLabels[caseBlock]);
+			}
+
+			{
+				// Restore the stack afterwards for the non-zero case below.
+				ScopeGuard stackRestore([storedStack = m_stack, this]() {
+					m_stack = move(storedStack);
+					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+				});
+				(*this)(*_switch.defaultCase);
+			}
+
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+			{
+				{
+					// Restore the stack afterwards for the non-zero case below.
+					ScopeGuard stackRestore([storedStack = m_stack, this]() {
+						m_stack = move(storedStack);
+						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+					});
+					(*this)(*caseBlock);
+				}
+			}
+		},
 	}, _block.exit);
 	// TODO: We could assert that the last emitted assembly item terminated or was an (unconditional) jump.
 	//       But currently AbstractAssembly does not allow peeking at the last emitted assembly item.
