@@ -1,0 +1,40 @@
+#!/bin/bash
+
+NEWARGS=("$@")
+ARGLEN="${#NEWARGS[@]}"
+LASTARG=$(($ARGLEN-1))
+COMMANDSTR=("sudo" "docker" "run")
+
+echo -e "Args before processing len:${ARGLEN} ${NEWARGS[@]}";
+
+for i in "${!NEWARGS[@]}"
+do
+    if [[ "${NEWARGS[$i]}" == "--combined-json" ]]
+    then
+        echo -e "found --combined-json flag at $i\n"
+        NEXT=$(($i+1))
+        echo -e "what is next value? $NEXT  ${NEWARGS[$NEXT]}"
+        if [[ "${NEWARGS[$NEXT]}" == "abi" ]]
+        then
+            echo -e "following arg is abi \n"
+            NEWARGS[$NEXT]="json-abi"
+        fi
+    fi
+done
+
+# If last argumnent is a file path
+# mount it into the container as a volume
+# so solc can process in the container
+if [[ -e  ${NEWARGS[$LASTARG]} ]]
+then
+    echo -e "Last arg is a file ${NEWARGS[$LASTARG]}"
+    ARGPATH="${NEWARGS[$LASTARG]}"
+    FULLPATH=$(realpath $ARGPATH)
+    NEWARGS[$LASTARG]=$FULLPATH
+    COMMANDSTR+=("-v")
+    COMMANDSTR+=("${FULLPATH}:${FULLPATH}")
+fi
+COMMANDSTR+=("solidity-legacy")
+
+echo -e "FinalCommand: ${COMMANDSTR[@]} ${NEWARGS[@]}"
+eval "${COMMANDSTR[@]} ${NEWARGS[@]}"
