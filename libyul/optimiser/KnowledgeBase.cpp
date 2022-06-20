@@ -191,9 +191,9 @@ private:
 				return std::nullopt;
 			},
 			[&](Identifier const& _identifier) -> optional<SumExpression> {
-				if (m_expandedVariables.count(_identifier.name))
+				/*if (m_expandedVariables.count(_identifier.name))
 					return m_expandedVariables.at(_identifier.name);
-				else
+				else*/
 					return SumExpression::variable(_identifier.name);
 			},
 			[&](Literal const& _literal) -> optional<SumExpression> {
@@ -211,14 +211,22 @@ private:
 			if (assignedValue->value)
 				if (auto newValue = toSumExpression(*assignedValue->value))
 				{
-//					cout << " to " << newValue->toString() << endl;
-					// TODO this will be exponential.
-					// TODO Expand lazily only in the expression itself?
-					for (auto& [variable, value]: m_expandedVariables)
-						expandInExpression(value, _variable, *newValue);
 					expandInExpression(_currentExpression, _variable, *newValue);
-					m_expandedVariables[_variable] = move(*newValue);
-					return;
+
+					bool expanded = false;
+					do
+					{
+						expanded = false;
+						for (auto&& [var, value]: _currentExpression.coefficients)
+							if (m_expandedVariables.count(var))
+							{
+								expandInExpression(_currentExpression, var, m_expandedVariables[var]);
+								expanded = true;
+								break;
+							}
+					}
+					while (expanded);
+
 				}
 		m_expandedFailedVariables.insert(_variable);
 	}
