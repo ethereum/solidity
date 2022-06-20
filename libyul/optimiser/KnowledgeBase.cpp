@@ -147,9 +147,14 @@ private:
 		if (!value)
 			return nullopt;
 
-		while (true)
+		size_t iter = 0;
+		while (iter++ < 20)
 		{
-			cout << "current value: " << value->toString() << endl;
+			if (iter % 10 == 0)
+			{
+
+				//cout << "iter: " << iter << " current value: " << value->toString() << endl;
+			}
 			if (auto v = value->isConstant())
 				return *v;
 			// TODO this will depend on the sorting order of the variables. This is bad and needs to be fixed.
@@ -162,6 +167,10 @@ private:
 			m_variablesToExpand.pop();
 			expandVariable(var, *value);
 		}
+		if (auto v = value->isConstant())
+			return *v;
+		else
+			return nullopt;
 	}
 
 private:
@@ -195,14 +204,14 @@ private:
 
 	void expandVariable(YulString _variable, SumExpression& _currentExpression)
 	{
-		cout << "Expanding " << _variable.str() << endl;
+		//cout << "Expanding " << _variable.str() << endl;
 		if (m_expandedFailedVariables.count(_variable) || m_expandedVariables.count(_variable))
 			return;
 		if (auto assignedValue = m_variableValues(_variable))
 			if (assignedValue->value)
 				if (auto newValue = toSumExpression(*assignedValue->value))
 				{
-					cotu << " to " << newValue->str() << endl;
+//					cout << " to " << newValue->toString() << endl;
 					// TODO this will be exponential.
 					// TODO Expand lazily only in the expression itself?
 					for (auto& [variable, value]: m_expandedVariables)
