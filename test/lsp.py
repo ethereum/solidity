@@ -643,7 +643,7 @@ class FileTestRunner:
         finally:
             self.close_all_open_files()
 
-    def user_interaction_failed_method_test(self, testcase, actual, expected):
+    def user_interaction_failed_method_test(self, testcase, actual, expected) -> TestResult:
         actual_pretty = self.suite.replace_ranges_with_tags(actual, self.sub_dir)
 
         if expected is None:
@@ -653,6 +653,9 @@ class FileTestRunner:
                 self.suite.replace_ranges_with_tags(expected, self.sub_dir) + \
                 "\nbut got:\n" + actual_pretty
             )
+
+        if self.suite.non_interactive:
+            return self.TestResult.SuccessOrIgnored
 
         while True:
             print("(u)pdate/(r)etry/(i)gnore?")

@@ -274,7 +274,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	smtAssert(false);
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
@@ -385,7 +385,7 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 	smtAssert(false);
 
 	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
-	throw exception();
+	util::unreachable();
 }
 
 z3::sort Z3Interface::z3Sort(Sort const& _sort)
