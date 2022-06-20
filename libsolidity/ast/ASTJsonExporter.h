@@ -48,13 +48,13 @@ namespace solidity::frontend
 /**
  * Converter of the AST into JSON format
  */
-class ASTJsonConverter: public ASTConstVisitor
+class ASTJsonExporter: public ASTConstVisitor
 {
 public:
 	/// Create a converter to JSON for the given abstract syntax tree.
 	/// @a _stackState state of the compiler stack to avoid outputting incomplete data
 	/// @a _sourceIndices is used to abbreviate source names in source locations.
-	explicit ASTJsonConverter(
+	explicit ASTJsonExporter(
 		CompilerStack::State _stackState,
 		std::map<std::string, unsigned> _sourceIndices = std::map<std::string, unsigned>()
 	);

@@ -29,7 +29,7 @@
 #include "solidity/BuildInfo.h"
 
 #include <libsolidity/interface/Version.h>
-#include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonExporter.h>
 #include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -863,7 +863,7 @@ void CommandLineInterface::handleCombinedJSON()
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
-			ASTJsonConverter converter(m_compiler->state(), m_compiler->sourceIndices());
+			ASTJsonExporter converter(m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
 			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
 		}
@@ -893,7 +893,7 @@ void CommandLineInterface::handleAst()
 		{
 			stringstream data;
 			string postfix = "";
-			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first), m_options.formatting.json);
+			ASTJsonExporter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first), m_options.formatting.json);
 			postfix += "_json";
 			boost::filesystem::path path(sourceCode.first);
 			createFile(path.filename().string() + postfix + ".ast", data.str());
@@ -905,7 +905,7 @@ void CommandLineInterface::handleAst()
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
 			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first), m_options.formatting.json);
+			ASTJsonExporter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first), m_options.formatting.json);
 		}
 	}
 }

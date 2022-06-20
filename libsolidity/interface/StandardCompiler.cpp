@@ -24,7 +24,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/ImportRemapper.h>
 
-#include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonExporter.h>
 #include <libyul/YulStack.h>
 #include <libyul/Exceptions.h>
 #include <libyul/optimiser/Suite.h>
@@ -1254,7 +1254,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			Json::Value sourceResult = Json::objectValue;
 			sourceResult["id"] = sourceIndex++;
 			if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast", wildcardMatchesExperimental))
-				sourceResult["ast"] = ASTJsonConverter(compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
+				sourceResult["ast"] = ASTJsonExporter(compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
 			output["sources"][sourceName] = sourceResult;
 		}
 
