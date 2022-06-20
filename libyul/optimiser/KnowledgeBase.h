@@ -58,8 +58,7 @@ public:
 	std::optional<u256> valueIfKnownConstant(YulString _a);
 
 private:
-	Expression simplify(Expression _expression);
-	Expression simplifyRecursively(Expression _expression);
+	std::optional<u256> simplify(Expression _expression);
 
 	Dialect const& m_dialect;
 	std::function<AssignedValue const*(YulString)> m_variableValues;
