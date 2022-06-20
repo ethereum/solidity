@@ -1229,6 +1229,15 @@ bool TypeChecker::visit(ForStatement const& _forStatement)
 	return false;
 }
 
+bool TypeChecker::visit(Return const& _return)
+{
+	if (_return.expression() && _return.annotation().functionReturnParameters)
+		for (auto parameter: _return.annotation().functionReturnParameters->parameters())
+			if (parameter)
+				_return.expression()->annotation().resultExpectedTypes.push_back(parameter->type());
+	return true;
+}
+
 void TypeChecker::endVisit(Return const& _return)
 {
 	ParameterList const* params = _return.annotation().functionReturnParameters;
@@ -1342,9 +1351,13 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		return false;
 	}
 
+	vector<ASTPointer<VariableDeclaration>> const& variables = _statement.declarations();
+	for (auto const& variable: variables)
+		if (variable)
+			_statement.initialValue()->annotation().resultExpectedTypes.push_back(variable->type());
+
 	// Here we have an initial value and might have to derive some types before we can visit
 	// the variable declaration(s).
-
 	_statement.initialValue()->accept(*this);
 	TypePointers valueTypes;
 	if (auto tupleType = dynamic_cast<TupleType const*>(type(*_statement.initialValue())))
@@ -1352,7 +1365,6 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 	else
 		valueTypes = TypePointers{type(*_statement.initialValue())};
 
-	vector<ASTPointer<VariableDeclaration>> const& variables = _statement.declarations();
 	if (variables.empty())
 		// We already have an error for this in the SyntaxChecker.
 		solAssert(m_errorReporter.hasErrors(), "");
@@ -1645,6 +1657,13 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (!components[i])
 				m_errorReporter.fatalTypeError(8381_error, _tuple.location(), "Tuple component cannot be empty.");
 
+			if (TupleExpression const* componentTupleExpression = dynamic_cast<TupleExpression const*>(components[i].get());
+				componentTupleExpression && !_tuple.annotation().resultExpectedTypes.empty() && _tuple.isInlineArray())
+			{
+				solAssert(_tuple.annotation().resultExpectedTypes.size() == 1);
+				componentTupleExpression->annotation().resultExpectedTypes = {dynamic_cast<ArrayType const*>(_tuple.annotation().resultExpectedTypes.front())->baseType()};
+			}
+
 			components[i]->accept(*this);
 			types.push_back(type(*components[i]));
 
@@ -1664,6 +1683,26 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (_tuple.isInlineArray())
 			{
 				solAssert(!!types[i], "Inline array cannot have empty components");
+
+				if (_tuple.annotation().resultExpectedTypes.size())
+				{
+					solAssert(_tuple.annotation().resultExpectedTypes.size() == 1);
+					ArrayType const* toArray = dynamic_cast<ArrayType const*>(_tuple.annotation().resultExpectedTypes.front());
+					Type const* componentType = type(*components[i]);
+					BoolResult result = componentType->isImplicitlyConvertibleTo(*toArray->baseType());
+
+					if (!result)
+					{
+						std::string const errorMessage =
+							"Type " +
+							componentType->toString(false) +
+							" is not implicitly convertible to expected type " +
+							toArray->baseType()->toString(false) +
+							(result.message().empty() ? "." : ". " + result.message());
+
+						m_errorReporter.typeError(6069_error, components[i]->location(), errorMessage);
+					}
+				}
 
 				if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
 					m_errorReporter.fatalTypeError(9563_error, components[i]->location(), "Invalid mobile type.");
@@ -1694,7 +1733,13 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 					"Type " + inlineArrayType->toString(true) + " is only valid in storage."
 				);
 
-			_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
+			if (_tuple.annotation().resultExpectedTypes.size())
+			{
+				solAssert(_tuple.annotation().resultExpectedTypes.size() == 1);
+				_tuple.annotation().type = TypeProvider::withLocationIfReference(DataLocation::Memory, _tuple.annotation().resultExpectedTypes.front());
+			}
+			else
+				_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
 		}
 		else
 		{
@@ -3286,6 +3331,12 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 bool TypeChecker::visit(IndexAccess const& _access)
 {
 	_access.annotation().isConstant = false;
+
+	if (TupleExpression const* tuple = dynamic_cast<TupleExpression const*>(&_access.baseExpression()))
+		for (auto const& expectedType: _access.annotation().resultExpectedTypes)
+			_access.baseExpression().annotation().resultExpectedTypes.push_back(
+				TypeProvider::array(DataLocation::Memory, expectedType, tuple->components().size()));
+
 	_access.baseExpression().accept(*this);
 	Type const* baseType = type(_access.baseExpression());
 	Type const* resultType = nullptr;
@@ -3829,6 +3880,7 @@ Declaration const& TypeChecker::dereference(IdentifierPath const& _path) const
 
 bool TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
 {
+	_expression.annotation().resultExpectedTypes = { &_expectedType };
 	_expression.accept(*this);
 	BoolResult result = type(_expression)->isImplicitlyConvertibleTo(_expectedType);
 	if (!result)

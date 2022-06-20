@@ -495,7 +495,6 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 	if (_tuple.isInlineArray())
 	{
 		auto const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
-		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
 		define(_tuple) <<
 			m_utils.allocateMemoryArrayFunction(arrayType) <<
 			"(" <<
@@ -503,6 +502,19 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 			")\n";
 
 		string mpos = IRVariable(_tuple).part("mpos").name();
+
+		if (arrayType.isDynamicallySized())
+		{
+			appendCode() << "// dupa\n";
+			appendCode() <<
+				m_utils.writeToMemoryFunction(*TypeProvider::uint256()) <<
+				"(" <<
+				(mpos + ", " + to_string(_tuple.components().size())) <<
+				")\n";
+		}
+
+
+
 		Type const& baseType = *arrayType.baseType();
 		for (size_t i = 0; i < _tuple.components().size(); i++)
 		{
@@ -510,10 +522,15 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 			component.accept(*this);
 			setLocation(_tuple);
 			IRVariable converted = convert(component, baseType);
+
+			string position =
+				mpos + ", " + to_string(i * arrayType.memoryStride() +
+				(arrayType.isDynamicallySized() ? 32 : 0));
+
 			appendCode() <<
 				m_utils.writeToMemoryFunction(baseType) <<
 				"(" <<
-				("add(" + mpos + ", " + to_string(i * arrayType.memoryStride()) + ")") <<
+				("add(" + position + ")") <<
 				", " <<
 				converted.commaSeparatedList() <<
 				")\n";

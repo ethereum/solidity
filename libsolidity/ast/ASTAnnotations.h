@@ -287,6 +287,9 @@ struct ExpressionAnnotation: ASTAnnotation
 	/// Note that even the simplest expressions, like `(f)()`, result in an indirect call even if they consist of
 	/// values known at compilation time.
 	bool calledDirectly = false;
+
+	// Types that expression result is assigned to.
+	std::vector<Type const*> resultExpectedTypes;
 };
 
 struct IdentifierAnnotation: ExpressionAnnotation

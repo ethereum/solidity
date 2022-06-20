@@ -1,9 +1,7 @@
 contract C {
-    function externalDefault() external returns(uint) { return 11; }
     function externalView() external view returns(uint) { return 12; }
     function externalPure() external pure returns(uint) { return 13; }
 
-    function internalDefault() internal returns(uint) { return 21; }
     function internalView() internal view returns(uint) { return 22; }
     function internalPure() internal pure returns(uint) { return 23; }
 
@@ -41,9 +39,6 @@ contract C {
     }
 }
 // ----
-// TypeError 7407: (760-779): Type function () view external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (812-826): Type function () view returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
-// TypeError 7407: (1230-1249): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (1282-1296): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
-// TypeError 7407: (1688-1707): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (1737-1751): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
+// testViewToDefault() -> 12, 22
+// testPureToDefault() -> 13, 23
+// testPureToView() -> 13, 23

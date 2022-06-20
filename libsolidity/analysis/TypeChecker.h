@@ -144,6 +144,7 @@ private:
 	void endVisit(TryStatement const& _tryStatement) override;
 	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
+	bool visit(Return const& _return) override;
 	void endVisit(Return const& _return) override;
 	void endVisit(EmitStatement const& _emit) override;
 	void endVisit(RevertStatement const& _revert) override;
