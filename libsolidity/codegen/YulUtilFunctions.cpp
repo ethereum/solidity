@@ -684,28 +684,46 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> product {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
+				let product_raw := mul(x, y)
+				product := <cleanupFunction>(product_raw)
 				<?signed>
-					// overflow, if x > 0, y > 0 and x > (maxValue / y)
-					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { <panic>() }
-					// underflow, if x > 0, y < 0 and y < (minValue / x)
-					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { <panic>() }
-					// underflow, if x < 0, y > 0 and x < (minValue / y)
-					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { <panic>() }
-					// overflow, if x < 0, y < 0 and x < (maxValue / y)
-					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { <panic>() }
+					<?gt128bit>
+						<?256bit>
+							// special case
+							if and(slt(x, 0), eq(y, <minValue>)) { <panic>() }
+						</256bit>
+						// overflow, if x != 0 and y != product/x
+						if iszero(
+							or(
+								iszero(x),
+								eq(y, sdiv(product, x))
+							)
+						) { <panic>() }
+					<!gt128bit>
+						if iszero(eq(product, product_raw)) { <panic>() }
+					</gt128bit>
 				<!signed>
-					// overflow, if x != 0 and y > (maxValue / x)
-					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { <panic>() }
+					<?gt128bit>
+						// overflow, if x != 0 and y != product/x
+						if iszero(
+							or(
+								iszero(x),
+								eq(y, div(product, x))
+							)
+						) { <panic>() }
+					<!gt128bit>
+						if iszero(eq(product, product_raw)) { <panic>() }
+					</gt128bit>
 				</signed>
-				product := mul(x, y)
 			}
 			)")
 			("functionName", functionName)
 			("signed", _type.isSigned())
-			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
-			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("256bit", _type.numBits() == 256)
+			("gt128bit", _type.numBits() > 128)
 			.render();
 	});
 }
