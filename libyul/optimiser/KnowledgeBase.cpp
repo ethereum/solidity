@@ -28,6 +28,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
+#include <libsolutil/StringUtils.h>
 
 #include <libyul/AsmPrinter.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -71,7 +72,7 @@ struct SumExpression
 		else
 			return nullopt;
 	}
-	SumExpression operator+(SumExpression const& _other)
+	SumExpression operator+(SumExpression const& _other) const
 	{
 		SumExpression result = *this;
 		for (auto&& [var, value]: _other.coefficients)
@@ -89,6 +90,13 @@ struct SumExpression
 		for (auto&& [var, value]: coefficients)
 			result.coefficients[var] = value * _factor;
 		return result;
+	}
+	string toString() const
+	{
+		vector<string> result;
+		for (auto&& [var, value]: coefficients)
+			result.push_back(value.str() + " " + var.str());
+		return util::joinHumanReadable(result, " + ");
 	}
 
 	map<YulString, u256> coefficients;
@@ -141,6 +149,7 @@ private:
 
 		while (true)
 		{
+			cout << "current value: " << value->toString() << endl;
 			if (auto v = value->isConstant())
 				return *v;
 			// TODO this will depend on the sorting order of the variables. This is bad and needs to be fixed.
@@ -186,13 +195,16 @@ private:
 
 	void expandVariable(YulString _variable, SumExpression& _currentExpression)
 	{
+		cout << "Expanding " << _variable.str() << endl;
 		if (m_expandedFailedVariables.count(_variable) || m_expandedVariables.count(_variable))
 			return;
 		if (auto assignedValue = m_variableValues(_variable))
 			if (assignedValue->value)
 				if (auto newValue = toSumExpression(*assignedValue->value))
 				{
+					cotu << " to " << newValue->str() << endl;
 					// TODO this will be exponential.
+					// TODO Expand lazily only in the expression itself?
 					for (auto& [variable, value]: m_expandedVariables)
 						expandInExpression(value, _variable, *newValue);
 					expandInExpression(_currentExpression, _variable, *newValue);
