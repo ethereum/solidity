@@ -28,7 +28,7 @@ REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
 verify_input "$@"
 BINARY_TYPE="$1"
-BINARY_PATH="$2"
+BINARY_PATH="$(realpath "$2")"
 SELECTED_PRESETS="$3"
 
 function compile_fn { npm run compile; }
