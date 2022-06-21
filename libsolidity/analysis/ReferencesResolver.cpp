@@ -242,6 +242,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			// To support proper path resolution, we have to use pathFromCurrentScope.
 			solAssert(!util::contains(realName, '.'), "");
 	}
+
 	if (declarations.size() > 1)
 	{
 		m_errorReporter.declarationError(
@@ -275,8 +276,15 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			return;
 		}
 
-	m_yulAnnotation->externalReferences[&_identifier].suffix = move(suffix);
-	m_yulAnnotation->externalReferences[&_identifier].declaration = declarations.front();
+	auto& externalIdentifierInfo = m_yulAnnotation->externalReferences[&_identifier];
+
+	externalIdentifierInfo.sourceLocation = nativeLocationOf(_identifier);
+	// Exclude suffix in source location
+	if (!suffix.empty())
+		externalIdentifierInfo.sourceLocation.end -= static_cast<int>(suffix.size() + 1);
+
+	externalIdentifierInfo.declaration = declarations.front();
+	externalIdentifierInfo.suffix = move(suffix);
 }
 
 void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
