@@ -146,7 +146,7 @@ seen in the following example:
         function destroy() public virtual override { /* do cleanup 1 */ Destructible.destroy(); }
     }
 
-    contract Base2 is Destructible {
+    contract Base2 is Base1 {
         function destroy() public virtual override { /* do cleanup 2 */ Destructible.destroy(); }
     }
 
@@ -179,7 +179,7 @@ explicitly in the final override, but this function will bypass
     }
 
 
-    contract Base2 is Destructible {
+    contract Base2 is Base1 {
         function destroy() public virtual override { /* do cleanup 2 */ super.destroy(); }
     }
 
