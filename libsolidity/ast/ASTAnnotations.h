@@ -210,6 +210,8 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	struct ExternalIdentifierInfo
 	{
 		Declaration const* declaration = nullptr;
+		/// Location within the assembly block without suffix
+		langutil::SourceLocation sourceLocation;
 		/// Suffix used, one of "slot", "offset", "length", "address", "selector" or empty.
 		std::string suffix;
 		size_t valueSize = size_t(-1);
