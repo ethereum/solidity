@@ -1467,24 +1467,25 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	_conditional.trueExpression().accept(*this);
 	_conditional.falseExpression().accept(*this);
 
-	Type const* trueType = type(_conditional.trueExpression())->mobileType();
-	Type const* falseType = type(_conditional.falseExpression())->mobileType();
-
+	Type const* trueType =  type(_conditional.trueExpression());
+	Type const* falseType = type(_conditional.falseExpression());
+	Type const* trueMobileType = trueType->mobileType();
+	Type const* falseMobileType = falseType->mobileType();
 	Type const* commonType = nullptr;
 
-	if (!trueType)
-		m_errorReporter.typeError(9717_error, _conditional.trueExpression().location(), "Invalid mobile type in true expression.");
-	else
+	if (trueMobileType)
 		commonType = trueType;
-
-	if (!falseType)
-		m_errorReporter.typeError(3703_error, _conditional.falseExpression().location(), "Invalid mobile type in false expression.");
 	else
-		commonType = falseType;
+		m_errorReporter.typeError(9717_error, _conditional.trueExpression().location(), "Invalid mobile type in true expression.");
 
-	if (!trueType && !falseType)
+	if (falseMobileType)
+		commonType = falseType;
+	else
+		m_errorReporter.typeError(3703_error, _conditional.falseExpression().location(), "Invalid mobile type in false expression.");
+
+	if (!trueMobileType && !falseMobileType)
 		BOOST_THROW_EXCEPTION(FatalError());
-	else if (trueType && falseType)
+	else if (trueMobileType && falseMobileType)
 	{
 		commonType = Type::commonType(trueType, falseType);
 
@@ -1494,14 +1495,14 @@ bool TypeChecker::visit(Conditional const& _conditional)
 					1080_error,
 					_conditional.location(),
 					"True expression's type " +
-					trueType->humanReadableName() +
+					trueMobileType->humanReadableName() +
 					" does not match false expression's type " +
-					falseType->humanReadableName() +
+					falseMobileType->humanReadableName() +
 					"."
 					);
 			// even we can't find a common type, we have to set a type here,
 			// otherwise the upper statement will not be able to check the type.
-			commonType = trueType;
+			commonType = trueMobileType;
 		}
 	}
 
