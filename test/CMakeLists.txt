@@ -1,5 +1,5 @@
 set(sources
-    boostTest.cpp
+    soltest.cpp
     Common.cpp
     Common.h
     CommonSyntaxTest.cpp
