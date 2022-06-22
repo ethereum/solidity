@@ -6,6 +6,8 @@ Language Features:
 Compiler Features:
  * TypeChecker: Support using library constants in initializers of other constants.
  * Yul IR Code Generation: Improved copy routines for arrays with packed storage layout.
+ * Yul Optimizer: Add rule to convert `mod(mul(X, Y), A)` into `mulmod(X, Y, A)`, if `A` is a power of two.
+ * Yul Optimizer: Add rule to convert `mod(add(X, Y), A)` into `addmod(X, Y, A)`, if `A` is a power of two.
 
 
 Bugfixes:

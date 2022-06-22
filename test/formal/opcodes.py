@@ -1,4 +1,4 @@
-from z3 import BitVecVal, BV2Int, If, LShR, UDiv, ULT, UGT, URem
+from z3 import BitVecVal, BV2Int, If, LShR, UDiv, ULT, UGT, URem, ZeroExt, Extract
 
 def ADD(x, y):
 	return x + y
@@ -17,6 +17,12 @@ def SDIV(x, y):
 
 def MOD(x, y):
 	return If(y == 0, 0, URem(x, y))
+
+def MULMOD(x, y, m):
+	return If(m == 0, 0, Extract(x.size() - 1, 0, URem(ZeroExt(x.size(), x) * ZeroExt(x.size(), y), ZeroExt(m.size(), m))))
+
+def ADDMOD(x, y, m):
+	return If(m == 0, 0, Extract(x.size() - 1, 0, URem(ZeroExt(1, x) + ZeroExt(1, y), ZeroExt(1, m))))
 
 def SMOD(x, y):
 	return If(y == 0, 0, x % y)
