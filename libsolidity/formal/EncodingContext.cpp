@@ -61,7 +61,19 @@ bool EncodingContext::createVariable(frontend::VariableDeclaration const& _varDe
 {
 	solAssert(!knownVariable(_varDecl), "");
 	auto const& type = _varDecl.type();
-	auto result = newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *this);
+	unsigned varType;
+	if (_varDecl.isStateVariable())
+		varType = 0;
+	else if (_varDecl.isInputParameter())
+		varType = 1;
+	else if (_varDecl.isReturnParameter())
+		varType = 2;
+	else
+	{
+		solAssert(_varDecl.isLocalVariable());
+		varType = 3;
+	}
+	auto result = newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()) + "_" + to_string(varType), *this);
 	m_variables.emplace(&_varDecl, result.second);
 	return result.first;
 }

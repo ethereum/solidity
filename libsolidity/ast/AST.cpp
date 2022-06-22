@@ -685,6 +685,23 @@ bool VariableDeclaration::isLocalOrReturn() const
 	return isReturnParameter() || (isLocalVariable() && !isCallableOrCatchParameter());
 }
 
+bool VariableDeclaration::isInputParameter() const
+{
+	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
+
+	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
+		parameters = &funTypeName->parameterTypes();
+	else if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		parameters = &callable->parameters();
+
+	if (parameters)
+		for (auto const& variable: *parameters)
+			if (variable.get() == this)
+				return true;
+	return false;
+}
+
+
 bool VariableDeclaration::isReturnParameter() const
 {
 	vector<ASTPointer<VariableDeclaration>> const* returnParameters = nullptr;

@@ -1052,6 +1052,7 @@ public:
 	bool isCallableOrCatchParameter() const;
 	/// @returns true if this variable is a return parameter of a function.
 	bool isReturnParameter() const;
+	bool isInputParameter() const;
 	/// @returns true if this variable is a parameter of the success or failure clausse
 	/// of a try/catch statement.
 	bool isTryCatchParameter() const;
