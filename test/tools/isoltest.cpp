@@ -509,6 +509,11 @@ int main(int argc, char const *argv[])
 		cerr << exception.what() << endl;
 		return EXIT_FAILURE;
 	}
+	catch (solidity::test::ConfigException const& exception)
+	{
+		cerr << exception.what() << endl;
+		return EXIT_FAILURE;
+	}
 	catch (...)
 	{
 		cerr << "Unhandled exception caught." << endl;
