@@ -250,6 +250,9 @@ int main(int argc, char** argv)
 		string_view cmd = command(expr);
 		if (cmd == "set-info")
 			continue; // ignore
+		else if (cmd == "set-option")
+// TODO we sholud handle print-success
+			continue; // ignore
 		else if (cmd == "declare-fun")
 		{
 			solAssert(items.size() == 4);
