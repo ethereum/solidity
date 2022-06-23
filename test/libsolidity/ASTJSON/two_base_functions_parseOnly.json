@@ -111,6 +111,10 @@
           {
             "id": 11,
             "name": "A",
+            "nameLocations":
+            [
+              "114:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "114:1:1"
           },
@@ -123,6 +127,10 @@
           {
             "id": 13,
             "name": "B",
+            "nameLocations":
+            [
+              "117:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "117:1:1"
           },
@@ -163,12 +171,20 @@
               {
                 "id": 16,
                 "name": "A",
+                "nameLocations":
+                [
+                  "154:1:1"
+                ],
                 "nodeType": "IdentifierPath",
                 "src": "154:1:1"
               },
               {
                 "id": 17,
                 "name": "B",
+                "nameLocations":
+                [
+                  "157:1:1"
+                ],
                 "nodeType": "IdentifierPath",
                 "src": "157:1:1"
               }

@@ -86,6 +86,10 @@
           {
             "id": 6,
             "name": "A",
+            "nameLocations":
+            [
+              "72:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "referencedDeclaration": 5,
             "src": "72:1:1"
@@ -200,6 +204,10 @@
           {
             "id": 17,
             "name": "B",
+            "nameLocations":
+            [
+              "167:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "referencedDeclaration": 16,
             "src": "167:1:1"

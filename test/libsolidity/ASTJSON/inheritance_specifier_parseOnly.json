@@ -26,6 +26,10 @@
           {
             "id": 2,
             "name": "C1",
+            "nameLocations":
+            [
+              "30:2:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "30:2:1"
           },
