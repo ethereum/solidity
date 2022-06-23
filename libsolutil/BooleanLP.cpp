@@ -640,7 +640,10 @@ namespace
 {
 bool isNumber(string const& _expr)
 {
-	return !_expr.empty() && (isDigit(_expr.front()) || _expr.front() == '.');
+	for (char c: _expr)
+		if (!isDigit(c) && c != '.')
+			return false;
+	return true;
 }
 rational parseRational(string const& _atom)
 {

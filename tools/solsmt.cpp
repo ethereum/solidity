@@ -129,13 +129,24 @@ string_view command(SMTLib2Expression const& _expr)
 	return get<string_view>(items.front().data);
 }
 
+namespace
+{
+bool isNumber(string_view const& _expr)
+{
+	for (char c: _expr)
+		if (!isDigit(c) && c != '.')
+			return false;
+	return true;
+}
+}
+
 smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<string, SortPointer> const& _variableSorts)
 {
 	return std::visit(GenericVisitor{
 		[&](string_view const& _atom) {
 			if (_atom == "true" || _atom == "false")
 				return Expression(_atom == "true");
-			else if (isDigit(_atom.front()) || _atom.front() == '.')
+			else if (isNumber(_atom))
 				return Expression(string(_atom), {}, SortProvider::realSort);
 			else
 				return Expression(string(_atom), {}, _variableSorts.at(string(_atom)));
