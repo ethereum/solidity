@@ -270,6 +270,18 @@ int main(int argc, char** argv)
 			solAssert(items.size() == 2);
 			solver.addAssertion(toSMTUtilExpression(items[1], variableSorts));
 		}
+		else if (cmd == "push")
+		{
+			// TODO what is the meaning of the numeric argument?
+			solAssert(items.size() == 2);
+			solver.push();
+		}
+		else if (cmd == "pop")
+		{
+			// TODO what is the meaning of the numeric argument?
+			solAssert(items.size() == 2);
+			solver.pop();
+		}
 		else if (cmd == "set-logic")
 		{
 			// ignore - could check the actual logic.
