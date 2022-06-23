@@ -36,6 +36,7 @@ Bugfixes:
  * Common Subexpression Eliminator: Process assembly items in chunks with maximum size of 2000. It helps to avoid extremely time-consuming searches during code optimization.
  * Yul IR Code Generation: More robust cleanup in corner cases during memory to storage copies.
  * Yul Optimizer: Do not remove ``returndatacopy`` in cases in which it might perform out-of-bounds reads that unconditionally revert as out-of-gas. Previously, any ``returndatacopy`` that wrote to memory that was never read from was removed without accounting for the out-of-bounds condition.
+ * DocString Parser: Fix ICE caused by an immutable struct with mapping.
 
 
 ### 0.8.14 (2022-05-17)

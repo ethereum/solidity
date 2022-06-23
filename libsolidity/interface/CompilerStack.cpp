@@ -479,12 +479,6 @@ bool CompilerStack::analyze()
 			if (auto sourceAst = source->ast)
 				noErrors = contractLevelChecker.check(*sourceAst);
 
-		// Requires ContractLevelChecker
-		DocStringAnalyser docStringAnalyser(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))
-				noErrors = false;
-
 		// Now we run full type checks that go down to the expression level. This
 		// cannot be done earlier, because we need cross-contract types and information
 		// about whether a contract is abstract for the `new` expression.
@@ -496,6 +490,15 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
 				noErrors = false;
+
+		if (noErrors)
+		{
+			// Requires ContractLevelChecker and TypeChecker
+			DocStringAnalyser docStringAnalyser(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))
+					noErrors = false;
+		}
 
 		if (noErrors)
 		{
