@@ -231,7 +231,7 @@ inline std::string toLower(std::string _s)
 /// @return true if _c is a decimal digit character, false otherwise
 inline bool isDigit(char _c)
 {
-	return isdigit(_c, std::locale::classic());
+	return '0' <= _c && _c <= '9';
 }
 
 // Checks if character is printable using classic "C" locale

@@ -70,7 +70,7 @@ public:
 			}
 			if (token() == ')')
 				advance();
-			return {subExpressions};
+			return {move(subExpressions)};
 		}
 		else
 			return {parseToken()};
