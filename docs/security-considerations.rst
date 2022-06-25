@@ -98,7 +98,7 @@ as it uses ``call`` which forwards all remaining gas by default:
     }
 
 To avoid re-entrancy, you can use the Checks-Effects-Interactions pattern as
-outlined further below:
+demonstrated below:
 
 .. code-block:: solidity
 
@@ -116,10 +116,27 @@ outlined further below:
         }
     }
 
-Note that re-entrancy is not only an effect of Ether transfer but of any
-function call on another contract. Furthermore, you also have to take
-multi-contract situations into account. A called contract could modify the
-state of another contract you depend on.
+The Checks-Effects-Interactions pattern ensures that all code paths through a contract complete all required verification
+of supplied parameters before modifying contract state (Checks), then makes any changes to contract state (Effects),
+then only makes calls to functions in other contracts *after* all planned changes to contract state have been written to
+storage (Interactions). This is the only completely foolproof way to prevent *reentrancy attacks*, where a call to an
+external contract is able to double-spend an allowance, double-withdraw a balance, etc., by simply calling back to the
+original function before it has finalized its state.
+
+More completely, this pattern should be called Checks-Effects-Events-Interactions, because any events emitted by a
+function should contain only information that is consistent with the final state of the contract before any external calls
+are made. Therefore, all events should be emitted after state is completed and written to storage, but before calls
+are made to external contracts. Otherwise, it may be possible for an external contract to trick a 3rd party that is
+watching for events on the log into receiving incorrect information, by calling back to the original contract at an
+opportune time to further modify contract state before the final events are emitted.
+
+Note that reentrancy is an issue even if only sending Ether to another contract via a call to ``addr.call{value: ethValue}("")``
+with an empty payload, since the payable ``receive`` function can still make callbacks to the calling contract. Therefore
+you should require even sending Ether to only be performed in the "Interactions" stage.
+
+Also remember that you also have to take multi-contract situations into account. A called contract could modify the
+state of another contract you depend on, or call another contract that calls back to your contract. Only by following
+the Checks-Effects-Events-Interactions pattern can you protect your contract against this class of attacks.
 
 Gas Limit and Loops
 ===================
