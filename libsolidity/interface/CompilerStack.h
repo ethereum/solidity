@@ -491,7 +491,7 @@ private:
 	RevertStrings m_revertStrings = RevertStrings::Default;
 	State m_stopAfter = State::CompilationSuccessful;
 	bool m_viaIR = false;
-	bool m_stdlib = false;
+	bool m_stdlib = true;
 	langutil::EVMVersion m_evmVersion;
 	ModelCheckerSettings m_modelCheckerSettings;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
