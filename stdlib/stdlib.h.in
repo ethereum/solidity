@@ -1,0 +1,15 @@
+#pragma once
+
+#include <map>
+#include <string>
+
+#include "stdlib/precompiles.h"
+
+namespace solidity::stdlib
+{
+
+static std::map<std::string, std::string> sources = {
+	{ "std/precompiles.sol", precompiles },
+};
+
+} // namespace solidity::stdlib
