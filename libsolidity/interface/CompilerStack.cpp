@@ -433,7 +433,7 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		m_globalContext = make_shared<GlobalContext>();
+		m_globalContext = make_shared<GlobalContext>(false);
 		// We need to keep the same resolver during the whole process.
 		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
 		for (Source const* source: m_sourceOrder)

@@ -47,7 +47,9 @@ public:
 	GlobalContext(GlobalContext const&) = delete;
 	GlobalContext& operator=(GlobalContext const&) = delete;
 
-	GlobalContext();
+	/// Set the stdlib flag to true if globals should not be populated by features provided
+	/// in the stdlib.
+	GlobalContext(bool _stdlib);
 	void setCurrentContract(ContractDefinition const& _contract);
 	void resetCurrentContract() { m_currentContract = nullptr; }
 	MagicVariableDeclaration const* currentThis() const;
