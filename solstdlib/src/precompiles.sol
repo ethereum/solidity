@@ -28,17 +28,11 @@ function ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address
     mstore(add(input, 96), s)
 
     // Prepare output
-    let output := add(input, 128)
-    mstore(output, 0)
+    mstore(0, 0)
 
     // Call the precompile
-    let ret := staticcall(gas(), 1, input, 128, output, 32)
-    switch ret
-    case 1 { // Success
-      addr := mload(output)
-    }
-    default { // Failure
-      // Need to do anything?
-    }
+    let ret := staticcall(gas(), 1, input, 128, 0, 32)
+    if iszero(ret) { revert(0, 0) }
+    addr := mload(0)
   }
 }
