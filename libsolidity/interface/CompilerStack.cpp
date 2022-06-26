@@ -77,7 +77,7 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
 
-#include "stdlib.h"
+#include "solstdlib.h"
 
 #include <json/json.h>
 
@@ -350,7 +350,7 @@ bool CompilerStack::parse()
 	Parser parser{m_errorReporter, m_evmVersion, m_parserErrorRecovery};
 
 	if (m_stdlib) {
-		for (auto [name, content]: solidity::stdlib::sources) {
+		for (auto [name, content]: solidity::solstdlib::sources) {
 			m_sources[name].charStream = make_unique<CharStream>(content, name);
 		}
 	}

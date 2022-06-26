@@ -3,13 +3,13 @@
 #include <map>
 #include <string>
 
-#include "stdlib/precompiles.h"
+#include "solstdlib/precompiles.h"
 
-namespace solidity::stdlib
+namespace solidity::solstdlib
 {
 
 static std::map<std::string, std::string> sources = {
 	{ "std/precompiles.sol", precompiles },
 };
 
-} // namespace solidity::stdlib
+} // namespace solidity::solstdlib
