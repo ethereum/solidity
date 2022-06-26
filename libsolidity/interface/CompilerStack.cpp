@@ -218,6 +218,13 @@ void CompilerStack::setViaIR(bool _viaIR)
 	m_viaIR = _viaIR;
 }
 
+void CompilerStack::setStdlib(bool _stdlib)
+{
+	if (m_stackState >= ParsedAndImported)
+		solThrow(CompilerError, "Must set stdlib before parsing.");
+	m_stdlib = _stdlib;
+}
+
 void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 {
 	if (m_stackState >= ParsedAndImported)
@@ -340,6 +347,10 @@ bool CompilerStack::parse()
 
 	Parser parser{m_errorReporter, m_evmVersion, m_parserErrorRecovery};
 
+	if (m_stdlib) {
+		// TODO: fill out m_sources
+	}
+
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
 		sourcesToParse.push_back(s.first);
@@ -433,7 +444,7 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		m_globalContext = make_shared<GlobalContext>(false);
+		m_globalContext = make_shared<GlobalContext>(m_stdlib);
 		// We need to keep the same resolver during the whole process.
 		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
 		for (Source const* source: m_sourceOrder)

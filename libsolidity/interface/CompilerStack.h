@@ -169,6 +169,10 @@ public:
 	/// Must be set before parsing.
 	void setViaIR(bool _viaIR);
 
+	/// Sets the pipeline to use the stdlib or not.
+	/// Must be set before parsing.
+	void setStdlib(bool _stdlib);
+
 	/// Set the EVM version used before running compile.
 	/// When called without an argument it will revert to the default version.
 	/// Must be set before parsing.
@@ -487,6 +491,7 @@ private:
 	RevertStrings m_revertStrings = RevertStrings::Default;
 	State m_stopAfter = State::CompilationSuccessful;
 	bool m_viaIR = false;
+	bool m_stdlib = false;
 	langutil::EVMVersion m_evmVersion;
 	ModelCheckerSettings m_modelCheckerSettings;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
