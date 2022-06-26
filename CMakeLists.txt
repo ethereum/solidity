@@ -130,6 +130,7 @@ add_subdirectory(libevmasm)
 add_subdirectory(libyul)
 add_subdirectory(libsolidity)
 add_subdirectory(libsolc)
+add_subdirectory(stdlib)
 add_subdirectory(tools)
 
 if (NOT EMSCRIPTEN)
