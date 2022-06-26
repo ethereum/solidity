@@ -31,7 +31,6 @@ enum class ExperimentalFeature
 {
 	ABIEncoderV2, // new ABI encoder that makes use of Yul
 	SMTChecker,
-	Stdlib,
 	Test,
 	TestOnlyAnalysis
 };
@@ -47,7 +46,6 @@ static std::map<std::string, ExperimentalFeature> const ExperimentalFeatureNames
 {
 	{ "ABIEncoderV2", ExperimentalFeature::ABIEncoderV2 },
 	{ "SMTChecker", ExperimentalFeature::SMTChecker },
-	{ "stdlib", ExperimentalFeature::Stdlib },
 	{ "__test", ExperimentalFeature::Test },
 	{ "__testOnlyAnalysis", ExperimentalFeature::TestOnlyAnalysis },
 };
