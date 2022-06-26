@@ -77,6 +77,8 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
 
+#include "stdlib.h"
+
 #include <json/json.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -348,7 +350,9 @@ bool CompilerStack::parse()
 	Parser parser{m_errorReporter, m_evmVersion, m_parserErrorRecovery};
 
 	if (m_stdlib) {
-		// TODO: fill out m_sources
+		for (auto [name, content]: solidity::stdlib::sources) {
+			m_sources[name].charStream = make_unique<CharStream>(content, name);
+		}
 	}
 
 	vector<string> sourcesToParse;
