@@ -152,6 +152,64 @@ BOOST_AUTO_TEST_CASE(test_format_number_readable)
 			formatNumberReadable(frontend::IntegerType(256).maxValue()), "2**256 - 1");
 }
 
+BOOST_AUTO_TEST_CASE(test_format_number_readable_signed)
+{
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x8000000)), "-0x08 * 2**24");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x80000000)), "-0x80 * 2**24");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x800000000)), "-0x08 * 2**32");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x8000000000)), "-0x80 * 2**32");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x80000000000)), "-0x08 * 2**40");
+
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x7ffffff)), "-0x08 * 2**24 - 1");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x7fffffff)), "-0x80 * 2**24 - 1");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x7ffffffff)), "-0x08 * 2**32 - 1");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x7fffffffff)), "-0x80 * 2**32 - 1");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x7ffffffffff)), "-0x08 * 2**40 - 1");
+
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x88000000)), "-0x88 * 2**24");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x8888888888000000)), "-0x8888888888 * 2**24");
+
+	s256 b = 0;
+	for (int i = 0; i < 32; i++)
+	{
+		b <<= 8;
+		b |= 0x55;
+	}
+	b = b * (-1);
+
+	s256 c = (-1) * u2s((u256)FixedHash<32>(
+		fromHex("0x0bcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789")
+	));
+
+	s256 d = (-1) * u2s(
+		u256(0x5555555555555555) << 192 |
+		u256(0xFFFFffffFFFFffff) << 128 |
+		u256(0xFFFFffffFFFFffff) << 64 |
+		u256(0xFFFFffffFFFFffff)
+	);
+
+	BOOST_CHECK_EQUAL(formatNumberReadable(b, true), "-0x5555...{+56 more}...5555");
+	BOOST_CHECK_EQUAL(formatNumberReadable(c, true), "-0x0BCD...{+56 more}...6789");
+	BOOST_CHECK_EQUAL(formatNumberReadable(d, true), "-0x5555555555555556 * 2**192 - 1");
+
+	BOOST_CHECK_EQUAL(formatNumberReadable(s256(-1)), "-1");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0x10000)), "-65536");
+	BOOST_CHECK_EQUAL(formatNumberReadable((-1) * s256(0xFFFF)), "-65535");
+
+	BOOST_CHECK_EQUAL(
+		formatNumberReadable(
+			frontend::IntegerType(256, frontend::IntegerType::Modifier::Signed).minValue()
+		),
+		"-0x80 * 2**248"
+	);
+	BOOST_CHECK_EQUAL(
+		formatNumberReadable(
+			frontend::IntegerType(256, frontend::IntegerType::Modifier::Signed).maxValue()
+		),
+		"0x80 * 2**248 - 1"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
