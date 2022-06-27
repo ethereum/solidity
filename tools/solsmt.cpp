@@ -232,9 +232,12 @@ int main(int argc, char** argv)
 	string input = removeComments(readFileAsString(argv[1]));
 	string_view inputToParse = input;
 
+	bool printSuccess = false;
+//	bool produceModels = false;
 	map<string, SortPointer> variableSorts;
 	BooleanLPSolver solver;
-	while (true)
+	bool doExit = false;
+	while (!doExit)
 	{
 		while (!inputToParse.empty() && isWhiteSpace(inputToParse.front()))
 			inputToParse = inputToParse.substr(1);
@@ -252,10 +255,19 @@ int main(int argc, char** argv)
 		vector<SMTLib2Expression> const& items = get<vector<SMTLib2Expression>>(expr.data);
 		string_view cmd = command(expr);
 		if (cmd == "set-info")
-			continue; // ignore
+		{
+			// ignore
+		}
 		else if (cmd == "set-option")
-// TODO we sholud handle print-success
-			continue; // ignore
+		{
+			solAssert(items.size() >= 2);
+			string_view option = get<string_view>(items[1].data);
+			if (option == ":print-success")
+				printSuccess = (get<string_view>(items[2].data) == "true");
+//			else if (option == ":produce-models")
+//				produceModels = (get<string_view>(items[2].data) == "true");
+			// ignore the rest
+		}
 		else if (cmd == "declare-fun")
 		{
 			solAssert(items.size() == 4);
@@ -301,11 +313,15 @@ int main(int argc, char** argv)
 				cout << "unsat" << endl;
 			else
 				cout << "unknown" << endl;
+			// do not print "success"
+			continue;
 		}
 		else if (cmd == "exit")
-			return 0;
+			doExit = true;
 		else
 			solAssert(false, "Unknown instruction: " + string(cmd));
+		if (printSuccess)
+			cout << "success" << endl;
 	}
 
 	return 0;
