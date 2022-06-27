@@ -76,10 +76,7 @@ public:
 
 	void declareVariable(std::string const& _name, smtutil::SortPointer const& _sort) override;
 
-	void addAssertion(smtutil::Expression const& _expr) override
-	{
-		addAssertion(_expr, std::make_shared<std::map<std::string, LetBinding>>());
-	}
+	void addAssertion(smtutil::Expression const& _expr);
 
 	std::pair<smtutil::CheckResult, std::vector<std::string>>
 	check(std::vector<smtutil::Expression> const& _expressionsToEvaluate) override;
@@ -89,33 +86,28 @@ public:
 private:
 	using rational = boost::rational<bigint>;
 	using LetBinding = std::variant<size_t, smtutil::Expression>;
-	using LetBindings = std::shared_ptr<std::map<std::string, LetBinding>>;
-
-	void addAssertion(
-		smtutil::Expression const& _expr,
-		LetBindings _letBindings
-	);
 
 	smtutil::Expression declareInternalVariable(bool _boolean);
 	void declareVariable(std::string const& _name, bool _boolean);
 
-	/// Handles a "let" expression and adds the bindings to @a _letBindings.
-	void addLetBindings(smtutil::Expression const& _let, LetBindings& _letBindings);
+	/// Handles a "let" expression and adds the bindings to @a m_letBindings.
+	std::map<std::string, LetBinding> addLetBindings(smtutil::Expression const& _let);
+	void removeLetBindings(std::map<std::string, LetBinding> const& _toRemove);
 
 	/// Parses an expression of sort bool and returns a literal.
-	std::optional<Literal> parseLiteral(smtutil::Expression const& _expr, LetBindings _letBindings);
+	std::optional<Literal> parseLiteral(smtutil::Expression const& _expr);
 	Literal negate(Literal const& _lit);
 
-	Literal parseLiteralOrReturnEqualBoolean(smtutil::Expression const& _expr, LetBindings _letBindings);
+	Literal parseLiteralOrReturnEqualBoolean(smtutil::Expression const& _expr);
 
 	/// Parses the expression and expects a linear sum of variables.
 	/// Returns a vector with the first element being the constant and the
 	/// other elements the factors for the respective variables.
 	/// If the expression cannot be properly parsed or is not linear,
 	/// returns an empty vector.
-	std::optional<LinearExpression> parseLinearSum(smtutil::Expression const& _expression, LetBindings _letBindings);
+	std::optional<LinearExpression> parseLinearSum(smtutil::Expression const& _expression);
 	bool isLiteral(smtutil::Expression const& _expression) const;
-	std::optional<LinearExpression> parseFactor(smtutil::Expression const& _expression, LetBindings _letBindings) const;
+	std::optional<LinearExpression> parseFactor(smtutil::Expression const& _expression) const;
 
 	bool tryAddDirectBounds(Constraint const& _constraint);
 	void addUpperBound(size_t _index, RationalWithDelta _value);
@@ -123,7 +115,7 @@ private:
 
 	size_t addConditionalConstraint(Constraint _constraint);
 
-	void addBooleanEquality(Literal const& _left, smtutil::Expression const& _right, LetBindings _letBindings);
+	void addBooleanEquality(Literal const& _left, smtutil::Expression const& _right);
 
 	//std::string toString(std::vector<SolvingState::Bounds> const& _bounds) const;
 	std::string toString(Clause const& _clause) const;
@@ -142,6 +134,9 @@ private:
 
 	/// Stack of state, to allow for push()/pop().
 	std::vector<State> m_state{{State{}}};
+
+	/// Current let bindings - only valid/used while parsing a statement.
+	std::map<std::string, LetBinding> m_letBindings;
 };
 
 
