@@ -35,12 +35,12 @@ using namespace solidity::smtutil;
 
 struct SMTLib2Expression
 {
-	variant<string_view, vector<SMTLib2Expression>> data;
+	variant<string, vector<SMTLib2Expression>> data;
 
 	string toString() const
 	{
 		return std::visit(GenericVisitor{
-			[](string_view const& _sv) { return string{_sv}; },
+			[](string const& _sv) { return string{_sv}; },
 			[](vector<SMTLib2Expression> const& _subExpr) {
 				vector<string> formatted;
 				for (auto const& item: _subExpr)
@@ -54,7 +54,10 @@ struct SMTLib2Expression
 class SMTLib2Parser
 {
 public:
-	SMTLib2Parser(string_view const& _data): m_data(_data) {}
+	SMTLib2Parser(istream& _input):
+		m_input(_input),
+		m_token(static_cast<char>(m_input.get()))
+	{}
 
 	SMTLib2Expression parseExpression()
 	{
@@ -62,44 +65,52 @@ public:
 		if (token() == '(')
 		{
 			advance();
+			skipWhitespace();
 			vector<SMTLib2Expression> subExpressions;
 			while (token() != 0 && token() != ')')
 			{
 				subExpressions.emplace_back(parseExpression());
 				skipWhitespace();
 			}
-			if (token() == ')')
-				advance();
+			solAssert(token() == ')');
+			// simulate whitespace because we do not want to read the next token
+			// since it might block.
+			m_token = ' ';
 			return {move(subExpressions)};
 		}
 		else
 			return {parseToken()};
 	}
 
-	string_view remainingInput() const
+	bool isEOF()
 	{
-		return m_data.substr(m_pos);
+		skipWhitespace();
+		return m_input.eof();
 	}
 
 private:
-	string_view parseToken()
+	string parseToken()
 	{
+		string result;
+
 		skipWhitespace();
-		size_t start = m_pos;
 		bool isPipe = token() == '|';
-		while (m_pos < m_data.size())
+		if (isPipe)
+			advance();
+		while (token() != 0)
 		{
 			char c = token();
-			if (isPipe && (m_pos > start && c == '|'))
+			if (isPipe && c == '|')
 			{
 				advance();
 				break;
 			}
 			else if (!isPipe && (langutil::isWhiteSpace(c) || c == '(' || c == ')'))
 				break;
+			result.push_back(c);
 			advance();
 		}
-		return m_data.substr(start, m_pos - start);
+		return result;
 	}
 
 	void skipWhitespace()
@@ -108,30 +119,37 @@ private:
 			advance();
 	}
 
-	char token()
+	char token() const
 	{
-		return m_pos < m_data.size() ? m_data[m_pos] : 0;
+		return m_token;
 	}
-	void advance() { m_pos++;}
 
-	size_t m_pos = 0;
-	string_view const m_data;
+	void advance()
+	{
+		m_token = static_cast<char>(m_input.get());
+		if (token() == ';')
+			while (token() != '\n' && token() != 0)
+				m_token = static_cast<char>(m_input.get());
+	}
+
+	istream& m_input;
+	char m_token = 0;
 };
 
 namespace
 {
 
-string_view command(SMTLib2Expression const& _expr)
+string const& command(SMTLib2Expression const& _expr)
 {
 	vector<SMTLib2Expression> const& items = get<vector<SMTLib2Expression>>(_expr.data);
 	solAssert(!items.empty());
-	solAssert(holds_alternative<string_view>(items.front().data));
-	return get<string_view>(items.front().data);
+	solAssert(holds_alternative<string>(items.front().data));
+	return get<string>(items.front().data);
 }
 
 namespace
 {
-bool isNumber(string_view const& _expr)
+bool isNumber(string const& _expr)
 {
 	for (char c: _expr)
 		if (!isDigit(c) && c != '.')
@@ -143,18 +161,18 @@ bool isNumber(string_view const& _expr)
 smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<string, SortPointer>& _variableSorts)
 {
 	return std::visit(GenericVisitor{
-		[&](string_view const& _atom) {
+		[&](string const& _atom) {
 			if (_atom == "true" || _atom == "false")
 				return Expression(_atom == "true");
 			else if (isNumber(_atom))
-				return Expression(string(_atom), {}, SortProvider::realSort);
+				return Expression(_atom, {}, SortProvider::realSort);
 			else
-				return Expression(string(_atom), {}, _variableSorts.at(string(_atom)));
+				return Expression(_atom, {}, _variableSorts.at(_atom));
 		},
 		[&](vector<SMTLib2Expression> const& _subExpr) {
 			SortPointer sort;
 			vector<smtutil::Expression> arguments;
-			string_view op = get<string_view>(_subExpr.front().data);
+			string const& op = get<string>(_subExpr.front().data);
 			if (op == "let")
 			{
 				map<string, SortPointer> subSorts;
@@ -165,13 +183,13 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 				{
 					auto const& bindingElements = get<vector<SMTLib2Expression>>(binding.data);
 					solAssert(bindingElements.size() == 2);
-					string_view varName = get<string_view>(bindingElements.at(0).data);
+					string const& varName = get<string>(bindingElements.at(0).data);
 					Expression replacement = toSMTUtilExpression(bindingElements.at(1), _variableSorts);
 #ifdef DEBUG
 					cerr << "Binding " << varName << " to " << replacement.toString() << endl;
 #endif
-					subSorts[string(varName)] = replacement.sort;
-					arguments.emplace_back(Expression(string(varName), {move(replacement)}, replacement.sort));
+					subSorts[varName] = replacement.sort;
+					arguments.emplace_back(Expression(varName, {move(replacement)}, replacement.sort));
 				}
 				for (auto&& [name, value]: subSorts)
 					_variableSorts[name] = value;
@@ -190,70 +208,37 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 					SortProvider::boolSort :
 					arguments.back().sort;
 			}
-			return Expression(string(op), move(arguments), move(sort));
+			return Expression(op, move(arguments), move(sort));
 		}
 	}, _expr.data);
 }
 
-string removeComments(string _input)
+class SolSMT
 {
-	string result;
-	auto it = _input.begin();
-	auto end = _input.end();
-	while (it != end)
-	{
-		if (*it == ';')
-		{
-			while (it != end && *it != '\n')
-				++it;
-			if (it != end)
-				++it;
-		}
-		else
-		{
-			result.push_back(*it);
-			it++;
-		}
+public:
+	SolSMT(istream& _input): m_input(_input) {}
+	void run();
+private:
 
-	}
-	return result;
-}
+	istream& m_input;
+	bool m_doExit = false;
+	bool m_printSuccess = false;
+	map<string, SortPointer> m_variableSorts;
+	BooleanLPSolver m_solver;
+};
 
-}
-
-int main(int argc, char** argv)
+void SolSMT::run()
 {
-	if (argc != 2)
-	{
-		cout << "Usage: solsmt <smtlib2 file>" << endl;
-		return -1;
-	}
+	SMTLib2Parser parser(m_input);
 
-	string input = removeComments(readFileAsString(argv[1]));
-	string_view inputToParse = input;
-
-	bool printSuccess = false;
-//	bool produceModels = false;
-	map<string, SortPointer> variableSorts;
-	BooleanLPSolver solver;
-	bool doExit = false;
-	while (!doExit)
+	while (!m_doExit && !parser.isEOF())
 	{
-		while (!inputToParse.empty() && isWhiteSpace(inputToParse.front()))
-			inputToParse = inputToParse.substr(1);
-		if (inputToParse.empty())
-			break;
-		//cout << line << endl;
-		SMTLib2Parser parser(inputToParse);
 		SMTLib2Expression expr = parser.parseExpression();
-		auto newInputToParse = parser.remainingInput();
 #ifdef DEBUG
-		cerr << "got : " << string(inputToParse.begin(), newInputToParse.begin()) << endl;
 		cerr << " -> " << expr.toString() << endl;
 #endif
-		inputToParse = move(newInputToParse);
 		vector<SMTLib2Expression> const& items = get<vector<SMTLib2Expression>>(expr.data);
-		string_view cmd = command(expr);
+		string const& cmd = command(expr);
 		if (cmd == "set-info")
 		{
 			// ignore
@@ -261,23 +246,23 @@ int main(int argc, char** argv)
 		else if (cmd == "set-option")
 		{
 			solAssert(items.size() >= 2);
-			string_view option = get<string_view>(items[1].data);
+			string const& option = get<string>(items[1].data);
 			if (option == ":print-success")
-				printSuccess = (get<string_view>(items[2].data) == "true");
+				m_printSuccess = (get<string>(items[2].data) == "true");
 //			else if (option == ":produce-models")
-//				produceModels = (get<string_view>(items[2].data) == "true");
+//				produceModels = (get<string>(items[2].data) == "true");
 			// ignore the rest
 		}
 		else if (cmd == "declare-fun")
 		{
 			solAssert(items.size() == 4);
-			string variableName = string{get<string_view>(items[1].data)};
+			string variableName = string{get<string>(items[1].data)};
 			solAssert(get<vector<SMTLib2Expression>>(items[2].data).empty());
-			string_view type = get<string_view>(items[3].data);
+			string const& type = get<string>(items[3].data);
 			solAssert(type == "Real" || type == "Bool");
 			SortPointer sort = type == "Real" ? SortProvider::realSort : SortProvider::boolSort;
-			variableSorts[variableName] = sort;
-			solver.declareVariable(variableName, move(sort));
+			m_variableSorts[variableName] = sort;
+			m_solver.declareVariable(variableName, move(sort));
 		}
 		else if (cmd == "define-fun")
 		{
@@ -286,19 +271,19 @@ int main(int argc, char** argv)
 		else if (cmd == "assert")
 		{
 			solAssert(items.size() == 2);
-			solver.addAssertion(toSMTUtilExpression(items[1], variableSorts));
+			m_solver.addAssertion(toSMTUtilExpression(items[1], m_variableSorts));
 		}
 		else if (cmd == "push")
 		{
 			// TODO what is the meaning of the numeric argument?
 			solAssert(items.size() == 2);
-			solver.push();
+			m_solver.push();
 		}
 		else if (cmd == "pop")
 		{
 			// TODO what is the meaning of the numeric argument?
 			solAssert(items.size() == 2);
-			solver.pop();
+			m_solver.pop();
 		}
 		else if (cmd == "set-logic")
 		{
@@ -306,7 +291,7 @@ int main(int argc, char** argv)
 		}
 		else if (cmd == "check-sat")
 		{
-			auto&& [result, model] = solver.check({});
+			auto&& [result, model] = m_solver.check({});
 			if (result == CheckResult::SATISFIABLE)
 				cout << "sat" << endl;
 			else if (result == CheckResult::UNSATISFIABLE)
@@ -317,12 +302,28 @@ int main(int argc, char** argv)
 			continue;
 		}
 		else if (cmd == "exit")
-			doExit = true;
+			m_doExit = true;
 		else
 			solAssert(false, "Unknown instruction: " + string(cmd));
-		if (printSuccess)
+		if (m_printSuccess)
 			cout << "success" << endl;
 	}
+}
+
+}
+
+int main(int argc, char** argv)
+{
+	if (argc != 2 && argc != 1)
+	{
+		cout << "Usage: solsmt [<smtlib2 file>]" << endl;
+		return -1;
+	}
+
+	optional<ifstream> input;
+	if (argc == 2)
+		input = ifstream(argv[1]);
+	SolSMT{argc == 1 ? cin : *input}.run();
 
 	return 0;
 }
