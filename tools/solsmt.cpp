@@ -140,7 +140,7 @@ bool isNumber(string_view const& _expr)
 }
 }
 
-smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<string, SortPointer> const& _variableSorts)
+smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<string, SortPointer>& _variableSorts)
 {
 	return std::visit(GenericVisitor{
 		[&](string_view const& _atom) {
@@ -157,8 +157,7 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 			string_view op = get<string_view>(_subExpr.front().data);
 			if (op == "let")
 			{
-				// TODO would be good if we did not have to copy this here.
-				map<string, SortPointer> subSorts = _variableSorts;
+				map<string, SortPointer> subSorts;
 				solAssert(_subExpr.size() == 3);
 				// We change the nesting here:
 				// (let ((x1 t1) (x2 t2)) T) -> let(x1(t1), x2(t2), T)
@@ -174,7 +173,11 @@ smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr, map<stri
 					subSorts[string(varName)] = replacement.sort;
 					arguments.emplace_back(Expression(string(varName), {move(replacement)}, replacement.sort));
 				}
-				arguments.emplace_back(toSMTUtilExpression(_subExpr.at(2), subSorts));
+				for (auto&& [name, value]: subSorts)
+					_variableSorts[name] = value;
+				arguments.emplace_back(toSMTUtilExpression(_subExpr.at(2), _variableSorts));
+				for (auto const& var: subSorts)
+					_variableSorts.erase(var.first);
 				sort = arguments.back().sort;
 			}
 			else
