@@ -34,7 +34,7 @@ namespace solidity::langutil
 
 /**
  * A version specifier of the EVM we want to compile to.
- * Defaults to the latest version deployed on Ethereum mainnet at the time of compiler release.
+ * Defaults to the latest version deployed on Ethereum Mainnet at the time of compiler release.
  */
 class EVMVersion:
 	boost::less_than_comparable<EVMVersion>,

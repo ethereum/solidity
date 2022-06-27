@@ -1285,7 +1285,7 @@ void CompilerStack::assemble(
 			"Contract code size is "s +
 			to_string(compiledContract.runtimeObject.bytecode.size()) +
 			" bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
-			"This contract may not be deployable on mainnet. "
+			"This contract may not be deployable on Mainnet. "
 			"Consider enabling the optimizer (with a low \"runs\" value!), "
 			"turning off revert strings, or using libraries."
 		);
