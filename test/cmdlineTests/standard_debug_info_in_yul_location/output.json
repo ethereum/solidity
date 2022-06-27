@@ -354,13 +354,15 @@ object \"C_54\" {
             function checked_add_t_int256(x, y) -> sum {
                 x := cleanup_t_int256(x)
                 y := cleanup_t_int256(y)
-
-                // overflow, if x >= 0 and y > (maxValue - x)
-                if and(iszero(slt(x, 0)), sgt(y, sub(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, x))) { panic_error_0x11() }
-                // underflow, if x < 0 and y < (minValue - x)
-                if and(slt(x, 0), slt(y, sub(0x8000000000000000000000000000000000000000000000000000000000000000, x))) { panic_error_0x11() }
-
                 sum := add(x, y)
+
+                // overflow, if x >= 0 and sum < y
+                // underflow, if x < 0 and sum >= y
+                if or(
+                    and(iszero(slt(x, 0)), slt(sum, y)),
+                    and(slt(x, 0), iszero(slt(sum, y)))
+                ) { panic_error_0x11() }
+
             }
 
             /// @ast-id 30
@@ -656,13 +658,14 @@ object \"C_54\" {
                         /// @src 0:297:305  \"immutVar\"
                         let _4 := loadimmutable(\"8\")
                         /// @src 0:79:435  \"contract C...\"
-                        if and(1, sgt(_4, sub(shl(255, 1), 42)))
+                        let sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ _4)
+                        if and(1, slt(sum, _4))
                         {
                             mstore(_3, shl(224, 0x4e487b71))
                             mstore(4, 0x11)
                             revert(_3, 0x24)
                         }
-                        mstore(_1, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ _4))
+                        mstore(_1, sum)
                         return(_1, 32)
                     }
                     case 0x793816ec {
@@ -742,20 +745,15 @@ object \"C_54\" {
             }
             function checked_add_int256(x, y) -> sum
             {
-                let _1 := slt(x, 0)
-                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x)))
-                {
-                    mstore(0, shl(224, 0x4e487b71))
-                    mstore(4, 0x11)
-                    revert(0, 0x24)
-                }
-                if and(_1, slt(y, sub(shl(255, 1), x)))
-                {
-                    mstore(0, shl(224, 0x4e487b71))
-                    mstore(4, 0x11)
-                    revert(0, 0x24)
-                }
                 sum := add(x, y)
+                let _1 := slt(sum, y)
+                let _2 := slt(x, 0)
+                if or(and(iszero(_2), _1), and(_2, iszero(_1)))
+                {
+                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(4, 0x11)
+                    revert(0, 0x24)
+                }
             }
         }
         data \".metadata\" hex\"<BYTECODE REMOVED>\"
@@ -893,13 +891,15 @@ object \"D_72\" {
         function checked_add_t_int256(x, y) -> sum {
             x := cleanup_t_int256(x)
             y := cleanup_t_int256(y)
-
-            // overflow, if x >= 0 and y > (maxValue - x)
-            if and(iszero(slt(x, 0)), sgt(y, sub(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, x))) { panic_error_0x11() }
-            // underflow, if x < 0 and y < (minValue - x)
-            if and(slt(x, 0), slt(y, sub(0x8000000000000000000000000000000000000000000000000000000000000000, x))) { panic_error_0x11() }
-
             sum := add(x, y)
+
+            // overflow, if x >= 0 and sum < y
+            // underflow, if x < 0 and sum >= y
+            if or(
+                and(iszero(slt(x, 0)), slt(sum, y)),
+                and(slt(x, 0), iszero(slt(sum, y)))
+            ) { panic_error_0x11() }
+
         }
 
         function shift_left_0(value) -> newValue {
@@ -1185,13 +1185,15 @@ object \"D_72\" {
             function checked_add_t_int256(x, y) -> sum {
                 x := cleanup_t_int256(x)
                 y := cleanup_t_int256(y)
-
-                // overflow, if x >= 0 and y > (maxValue - x)
-                if and(iszero(slt(x, 0)), sgt(y, sub(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, x))) { panic_error_0x11() }
-                // underflow, if x < 0 and y < (minValue - x)
-                if and(slt(x, 0), slt(y, sub(0x8000000000000000000000000000000000000000000000000000000000000000, x))) { panic_error_0x11() }
-
                 sum := add(x, y)
+
+                // overflow, if x >= 0 and sum < y
+                // underflow, if x < 0 and sum >= y
+                if or(
+                    and(iszero(slt(x, 0)), slt(sum, y)),
+                    and(slt(x, 0), iszero(slt(sum, y)))
+                ) { panic_error_0x11() }
+
             }
 
             /// @ast-id 30
@@ -1460,13 +1462,14 @@ object \"D_72\" {
             /// @src 0:154:156  \"42\"
             mstore(128, 0x2a)
             /// @src 1:91:166  \"contract D is C(3)...\"
-            if and(1, sgt(value, sub(shl(255, 1), 4)))
+            let sum := add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ value)
+            if and(1, slt(sum, value))
             {
                 mstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
                 mstore(4, 0x11)
                 revert(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ 0x24)
             }
-            sstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ value))
+            sstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ sum)
             let _2 := mload(64)
             let _3 := datasize(\"D_72_deployed\")
             codecopy(_2, dataoffset(\"D_72_deployed\"), _3)
@@ -1493,13 +1496,14 @@ object \"D_72\" {
                         /// @src 0:297:305  \"immutVar\"
                         let _4 := loadimmutable(\"8\")
                         /// @src 1:91:166  \"contract D is C(3)...\"
-                        if and(1, sgt(_4, sub(shl(255, 1), 42)))
+                        let sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ _4)
+                        if and(1, slt(sum, _4))
                         {
                             mstore(_3, shl(224, 0x4e487b71))
                             mstore(4, 0x11)
                             revert(_3, 0x24)
                         }
-                        mstore(_1, add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ _4))
+                        mstore(_1, sum)
                         return(_1, 32)
                     }
                     case 0x793816ec {
@@ -1579,20 +1583,15 @@ object \"D_72\" {
             }
             function checked_add_int256(x, y) -> sum
             {
-                let _1 := slt(x, 0)
-                if and(iszero(_1), sgt(y, sub(sub(shl(255, 1), 1), x)))
-                {
-                    mstore(0, shl(224, 0x4e487b71))
-                    mstore(4, 0x11)
-                    revert(0, 0x24)
-                }
-                if and(_1, slt(y, sub(shl(255, 1), x)))
-                {
-                    mstore(0, shl(224, 0x4e487b71))
-                    mstore(4, 0x11)
-                    revert(0, 0x24)
-                }
                 sum := add(x, y)
+                let _1 := slt(sum, y)
+                let _2 := slt(x, 0)
+                if or(and(iszero(_2), _1), and(_2, iszero(_1)))
+                {
+                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(4, 0x11)
+                    revert(0, 0x24)
+                }
             }
         }
         data \".metadata\" hex\"<BYTECODE REMOVED>\"

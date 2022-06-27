@@ -120,9 +120,7 @@ sub_0: assembly {
       eq
       tag_14
       jumpi
-        /* \"C\":117:119  41 */
       0x01
-        /* \"C\":79:428  contract C... */
       add
       swap2
       dup3
@@ -312,54 +310,51 @@ sub_0: assembly {
       jumpi
         /* \"C\":290:298  immutVar */
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
-      sub(shl(0xff, 0x01), 0x2a)
         /* \"C\":117:119  41 */
+      dup1
+      0x29
+      add
+      swap1
       dup2
-      sgt
+      slt
       0x01
       and
       tag_14
       jumpi
         /* \"C\":79:428  contract C... */
       0x20
-        /* \"C\":117:119  41 */
       swap3
       pop
-      0x29
-      add
-        /* \"C\":79:428  contract C... */
       dup2
       mstore
       return
         /* \"C\":117:119  41 */
     tag_1:
+      swap2
+      swap1
+      swap2
       0x00
-      dup2
+      dup4
+      dup3
+      add
+      swap4
+      dup5
       slt
+      swap2
+      slt
+      swap1
       dup1
       iszero
-      sub(shl(0xff, 0x01), 0x01)
-      dup4
-      swap1
-      sub
-      dup5
-      sgt
-      and
-      tag_40
-      jumpi
-      shl(0xff, 0x01)
       dup3
-      swap1
-      sub
-      dup4
-      slt
       and
-      tag_40
+      swap2
+      iszero
+      and
+      or
+      tag_38
       jumpi
-      add
-      swap1
       jump\t// out
-    tag_40:
+    tag_38:
       mstore(0x00, shl(0xe0, 0x4e487b71))
       mstore(0x04, 0x11)
       revert(0x00, 0x24)
@@ -410,18 +405,19 @@ sub_0: assembly {
   mload
     /* \"C\":147:149  42 */
   mstore(0x80, 0x2a)
-  sub(shl(0xff, 0x01), 0x04)
     /* \"D\":91:166  contract D is C(3)... */
-  dup2
-  sgt
-  0x01
-  and
-  tag_7
-  jumpi
+  dup1
     /* \"D\":107:108  3 */
   0x03
     /* \"D\":91:166  contract D is C(3)... */
   add
+  swap1
+  dup2
+  slt
+  0x01
+  and
+  tag_7
+  jumpi
   0x00
   sstore
   mload(0x40)
@@ -503,9 +499,7 @@ sub_0: assembly {
       eq
       tag_14
       jumpi
-        /* \"C\":117:119  41 */
       0x01
-        /* \"D\":91:166  contract D is C(3)... */
       add
       swap2
       dup3
@@ -695,54 +689,51 @@ sub_0: assembly {
       jumpi
         /* \"C\":290:298  immutVar */
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
-      sub(shl(0xff, 0x01), 0x2a)
         /* \"C\":117:119  41 */
+      dup1
+      0x29
+      add
+      swap1
       dup2
-      sgt
+      slt
       0x01
       and
       tag_14
       jumpi
         /* \"D\":91:166  contract D is C(3)... */
       0x20
-        /* \"C\":117:119  41 */
       swap3
       pop
-      0x29
-      add
-        /* \"D\":91:166  contract D is C(3)... */
       dup2
       mstore
       return
         /* \"C\":117:119  41 */
     tag_1:
+      swap2
+      swap1
+      swap2
       0x00
-      dup2
+      dup4
+      dup3
+      add
+      swap4
+      dup5
       slt
+      swap2
+      slt
+      swap1
       dup1
       iszero
-      sub(shl(0xff, 0x01), 0x01)
-      dup4
-      swap1
-      sub
-      dup5
-      sgt
-      and
-      tag_40
-      jumpi
-      shl(0xff, 0x01)
       dup3
-      swap1
-      sub
-      dup4
-      slt
       and
-      tag_40
+      swap2
+      iszero
+      and
+      or
+      tag_38
       jumpi
-      add
-      swap1
       jump\t// out
-    tag_40:
+    tag_38:
       mstore(0x00, shl(0xe0, 0x4e487b71))
       mstore(0x04, 0x11)
       revert(0x00, 0x24)
