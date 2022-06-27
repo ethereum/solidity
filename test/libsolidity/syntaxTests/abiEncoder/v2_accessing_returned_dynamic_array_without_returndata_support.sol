@@ -10,4 +10,4 @@ contract C {
 // ====
 // EVMVersion: <byzantium
 // ----
-// TypeError 9574: (166-196): Type inaccessible dynamic type is not implicitly convertible to expected type uint256[] memory[] memory.
+// TypeError 9574: (166-196): Type inaccessible dynamic type is not implicitly convertible to expected type uint256[][] memory.

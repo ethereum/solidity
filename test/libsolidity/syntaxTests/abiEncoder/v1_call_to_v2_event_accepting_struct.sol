@@ -17,4 +17,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 2443: (B:94-104): The type of this parameter, struct L.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.
+// TypeError 2443: (B:94-104): The type of this parameter, struct L.Item memory, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

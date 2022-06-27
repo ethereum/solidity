@@ -1808,6 +1808,24 @@ string ArrayType::toString(bool _short) const
 	return ret;
 }
 
+string ArrayType::humanReadableName() const
+{
+	string ret;
+	if (isString())
+		ret = "string";
+	else if (isByteArrayOrString())
+		ret = "bytes";
+	else
+	{
+		ret = baseType()->toString(true) + "[";
+		if (!isDynamicallySized())
+			ret += length().str();
+		ret += "]";
+	}
+	ret += " " + stringForReferencePart();
+	return ret;
+}
+
 string ArrayType::canonicalName() const
 {
 	string ret;
@@ -1993,6 +2011,11 @@ bool ArraySliceType::operator==(Type const& _other) const
 string ArraySliceType::toString(bool _short) const
 {
 	return m_arrayType.toString(_short) + " slice";
+}
+
+string ArraySliceType::humanReadableName() const
+{
+	return m_arrayType.humanReadableName() + " slice";
 }
 
 Type const* ArraySliceType::mobileType() const
@@ -2666,6 +2689,17 @@ string TupleType::toString(bool _short) const
 	string str = "tuple(";
 	for (auto const& t: components())
 		str += (t ? t->toString(_short) : "") + ",";
+	str.pop_back();
+	return str + ")";
+}
+
+string TupleType::humanReadableName() const
+{
+	if (components().empty())
+		return "tuple()";
+	string str = "tuple(";
+	for (auto const& t: components())
+		str += (t ? t->humanReadableName() : "") + ",";
 	str.pop_back();
 	return str + ")";
 }

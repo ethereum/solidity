@@ -833,6 +833,7 @@ public:
 	bool nameable() const override { return true; }
 
 	std::string toString(bool _short) const override;
+	std::string humanReadableName() const override;
 	std::string canonicalName() const override;
 	std::string signatureInExternalFunction(bool _structsByName) const override;
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
@@ -897,6 +898,7 @@ public:
 	bool isDynamicallySized() const override { return true; }
 	bool isDynamicallyEncoded() const override { return true; }
 	std::string toString(bool _short) const override;
+	std::string humanReadableName() const override;
 	Type const* mobileType() const override;
 
 	BoolResult validForLocation(DataLocation _loc) const override { return m_arrayType.validForLocation(_loc); }
@@ -1177,7 +1179,8 @@ public:
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
-	std::string toString(bool) const override;
+	std::string toString(bool _short) const override;
+	std::string humanReadableName() const override;
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
 	bool hasSimpleZeroValueInMemory() const override { return false; }

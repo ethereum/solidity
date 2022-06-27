@@ -9,4 +9,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 4061: (161-172): Type struct Test.S2 is only valid in storage because it contains a (nested) mapping.
+// TypeError 4061: (161-172): Type struct Test.S2 memory is only valid in storage because it contains a (nested) mapping.
