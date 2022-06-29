@@ -158,6 +158,7 @@ void LPSolver::addConstraint(Constraint const& _constraint, optional<size_t> _re
 	//cerr << "Added constraint:\n" << toString() << endl;
 }
 
+#ifdef DEBUG
 void LPSolver::setVariableName(size_t _variable, string _name)
 {
 	// TODO it might be constly to do this before we know hich variables relate to which
@@ -165,6 +166,12 @@ void LPSolver::setVariableName(size_t _variable, string _name)
 	SubProblem& p = unsealForVariable(_variable);
 	p.variables[p.varMapping.at(_variable)].name = move(_name);
 }
+#else
+void LPSolver::setVariableName(size_t _variable, string)
+{
+	unsealForVariable(_variable);
+}
+#endif
 
 void LPSolver::addLowerBound(size_t _variable, RationalWithDelta _bound, optional<size_t> _reason)
 {
@@ -224,6 +231,7 @@ string LPSolver::toString() const
 map<string, rational> LPSolver::model() const
 {
 	map<string, rational> result;
+#ifdef DEBUG
 	for (auto const& problem: m_subProblems)
 		if (problem)
 			for (auto&& [outerIndex, innerIndex]: problem->varMapping)
@@ -231,6 +239,7 @@ map<string, rational> LPSolver::model() const
 				result[problem->variables[innerIndex].name] =
 					problem->variables[innerIndex].value.m_main +
 					problem->variables[innerIndex].value.m_delta / rational(100000);
+#endif
 	return result;
 }
 
@@ -481,6 +490,13 @@ LPResult LPSolver::SubProblem::check()
 
 string LPSolver::SubProblem::toString() const
 {
+	auto varName = [&](size_t _i) {
+#ifdef DEBUG
+		return variables[_i].name;
+#else
+		return "x" + to_string(_i);
+#endif
+	};
 	string resultString;
 	for (auto&& [i, v]: variables | ranges::views::enumerate)
 	{
@@ -488,7 +504,7 @@ string LPSolver::SubProblem::toString() const
 			resultString += v.bounds.lower->toString() + " <= ";
 		else
 			resultString += "       ";
-		resultString += v.name;
+		resultString += varName(i);
 		if (v.bounds.upper)
 			resultString += " <= " + v.bounds.upper->toString();
 		else
@@ -505,13 +521,13 @@ string LPSolver::SubProblem::toString() const
 			{
 				solAssert(f == -1);
 				solAssert(basicVarPrefix.empty());
-				basicVarPrefix = variables[i].name + " = ";
+				basicVarPrefix = varName(i) + " = ";
 			}
 			else if (f != 0)
 			{
 				string joiner = f < 0 ? " - " : f > 0 && !rowString.empty() ? " + " : " ";
 				string factor = f == 1 || f == -1 ? "" : ::toString(abs(f)) + " ";
-				string var = variables[i].name;
+				string var = varName(i);
 				rowString += joiner + factor + var;
 			}
 		}

@@ -193,7 +193,9 @@ private:
 	};
 	struct Variable
 	{
+#ifdef DEBUG
 		std::string name = {};
+#endif
 		RationalWithDelta value = {};
 		Bounds bounds = {};
 	};
