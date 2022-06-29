@@ -789,6 +789,18 @@ This includes private, internal and public functions of both contracts and libra
 functions.
 External function types, on the other hand, are only compatible with public and external contract
 functions.
+
+.. note::
+    External functions with ``calldata`` parameters are incompatible with external function types with ``calldata`` parameters.
+    They are compatible with the corresponding types with ``memory`` parameters instead.
+    For example, there is no function that can be pointed at by a value of type ``function (string calldata) external`` while
+    ``function (string memory) external`` can point at both ``function f(string memory) external {}`` and
+    ``function g(string calldata) external {}``.
+    This is because for both locations the arguments are passed to the function in the same way.
+    The caller cannot pass its calldata directly to an external function and always ABI-encodes the arguments into memory.
+    Marking the parameters as ``calldata`` only affects the implementation of the external function and is
+    meaningless in a function pointer on the caller's side.
+
 Libraries are excluded because they require a ``delegatecall`` and use :ref:`a different ABI
 convention for their selectors <library-selectors>`.
 Functions declared in interfaces do not have definitions so pointing at them does not make sense either.
