@@ -37,8 +37,8 @@ function test_fn { yarn test; }
 function ens_test
 {
     local repo="https://github.com/ensdomains/ens-contracts.git"
-    local ref_type=branch
-    local ref="master"
+    local ref_type=commit
+    local ref="083d29a2c50cd0a8307386abf8fadc217b256256"
     local config_file="hardhat.config.js"
 
     local compile_only_presets=(
