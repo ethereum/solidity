@@ -43,7 +43,7 @@ function elementfi_test
     local config_var=config
 
     local compile_only_presets=(
-        # ElementFi's test suite is hard-coded for mainnet forked via alchemy.io.
+        # ElementFi's test suite is hard-coded for Mainnet forked via alchemy.io.
         # Locally we can only compile.
         #ir-no-optimize           # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
@@ -87,7 +87,7 @@ function elementfi_test
     sed -i 's|bytes32(uint256(pool))|bytes32(uint256(uint160(pool)))|g' vault/PoolRegistry.sol
     popd
 
-    # The test suite uses forked mainnet and an expiration period that's too short.
+    # The test suite uses forked Mainnet and an expiration period that's too short.
     # TODO: Remove when https://github.com/element-fi/elf-contracts/issues/243 is fixed.
     sed -i 's|^\s*require(_expiration - block\.timestamp < _unitSeconds);\s*$||g' contracts/ConvergentCurvePool.sol
 
