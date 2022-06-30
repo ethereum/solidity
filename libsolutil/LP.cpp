@@ -582,10 +582,10 @@ void LPSolver::SubProblem::update(size_t _varIndex, RationalWithDelta const& _va
 {
 	RationalWithDelta delta = _value - variables[_varIndex].value;
 	variables[_varIndex].value = _value;
-	for (size_t j = 0; j < variables.size(); j++)
-		if (basicVariables.count(j) && factors[basicVariables.at(j)][_varIndex])
+	for (auto&& [j, row]: basicVariables)
+		if (factors[row][_varIndex])
 		{
-			variables[j].value += delta * factors[basicVariables.at(j)][_varIndex];
+			variables[j].value += delta * factors[row][_varIndex];
 			//variablesPotentiallyOutOfBounds.insert(j);
 		}
 
