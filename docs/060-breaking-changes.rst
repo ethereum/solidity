@@ -1,176 +1,158 @@
 ********************************
-Solidity v0.6.0 Breaking Changes
+Solidity 0.6.0 版本突破性变化
 ********************************
 
-This section highlights the main breaking changes introduced in Solidity
-version 0.6.0, along with the reasoning behind the changes and how to update
-affected code.
-For the full list check
-`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.6.0>`_.
+本节强调了 Solidity 0.6.0 版本中引入的主要突破性变化，以及这些变化背后的原因和如何更新受影响的代码。
+对于完整的列表，请查看 `版本更新日志 <https://github.com/ethereum/solidity/releases/tag/v0.6.0>`_。
 
 
-Changes the Compiler Might not Warn About
+编译器可能不会发出警告的变化
 =========================================
 
-This section lists changes where the behaviour of your code might
-change without the compiler telling you about it.
+本节列出了一些变化，在这些变化中，您的代码的行为可能会发生变化，而编译器不会告诉您。
 
-* The resulting type of an exponentiation is the type of the base. It used to be the smallest type
-  that can hold both the type of the base and the type of the exponent, as with symmetric
-  operations. Additionally, signed types are allowed for the base of the exponentiation.
+* 指数运算的结果类型是基数的类型。
+  就像对称运算一样，它曾经是可以同时容纳基数类型和指数类型的最小类型。
+  此外，指数化的基数允许是有符号的类型。
 
-
-Explicitness Requirements
+显性要求
 =========================
 
-This section lists changes where the code now needs to be more explicit,
-but the semantics do not change.
-For most of the topics the compiler will provide suggestions.
+这一节列出了代码现在需要更显式的更改，但是语义没有改变。
+对于大多数主题，编译器会提供建议。
 
-* Functions can now only be overridden when they are either marked with the
-  ``virtual`` keyword or defined in an interface. Functions without
-  implementation outside an interface have to be marked ``virtual``.
-  When overriding a function or modifier, the new keyword ``override``
-  must be used. When overriding a function or modifier defined in multiple
-  parallel bases, all bases must be listed in parentheses after the keyword
-  like so: ``override(Base1, Base2)``.
+* 现在，只有当函数被标记为 ``virtual`` 关键字或被定义在一个接口中时，才能被重载。
+  在接口之外没有实现的函数必须被标记为 ``virtual``。
+  当重载一个函数或修改器时，必须使用新的关键字 ``override``。
+  当重载一个定义在多个并行基类的函数或修改器时，所有基必须在关键字后面的括号中列出，
+  像这样： ``override(Base1, Base2)``。
 
-* Member-access to ``length`` of arrays is now always read-only, even for storage arrays. It is no
-  longer possible to resize storage arrays by assigning a new value to their length. Use ``push()``,
-  ``push(value)`` or ``pop()`` instead, or assign a full array, which will of course overwrite the existing content.
-  The reason behind this is to prevent storage collisions of gigantic
-  storage arrays.
+* 成员对数组的 ``length`` 的访问现在总是只读的，即使是存储数组。
+  不再可能通过给存储数组的长度分配一个新值来调整其大小。
+  使用 ``push()``， ``push(value)`` 或 ``pop()`` 代替，
+  或者分配一个完整的数组，当然这将覆盖现有内容。
+  这背后的原因是为了防止巨大的存储阵列的存储碰撞。
 
-* The new keyword ``abstract`` can be used to mark contracts as abstract. It has to be used
-  if a contract does not implement all its functions. Abstract contracts cannot be created using the ``new`` operator,
-  and it is not possible to generate bytecode for them during compilation.
+* 新的关键字 ``abstract`` 可以用来标记合约为抽象的。
+  如果一个合约没有实现它的所有功能，就必须使用这个关键字。抽象合约不能用 ``new`` 操作符创建，
+  在编译过程中也不可能为其生成字节码。
 
-* Libraries have to implement all their functions, not only the internal ones.
+* 库合约必须实现其所有功能，而不仅仅是内部功能。
 
-* The names of variables declared in inline assembly may no longer end in ``_slot`` or ``_offset``.
+* 在内联汇编中声明的变量名称不能再以 ``_slot`` 或 ``_offset`` 结尾。
 
-* Variable declarations in inline assembly may no longer shadow any declaration outside the inline assembly block.
-  If the name contains a dot, its prefix up to the dot may not conflict with any declaration outside the inline
-  assembly block.
+* 内联汇编中的变量声明不能再影射内联汇编块外的任何声明。
+  如果变量名称中包含一个点，那么它的前缀到点的部分不能与内联汇编块外的任何声明冲突。
 
-* State variable shadowing is now disallowed.  A derived contract can only
-  declare a state variable ``x``, if there is no visible state variable with
-  the same name in any of its bases.
+* 现在不允许状态变量阴影。 一个派生合约只能声明一个状态变量 ``x``，
+  如果在它的任何基础上没有相同名称的可见状态变量。
 
 
-Semantic and Syntactic Changes
+语义和语法变化
 ==============================
 
-This section lists changes where you have to modify your code
-and it does something else afterwards.
+这一部分列出了您必须修改您的代码，而之后它又做了一些别的事情的变化。
 
-* Conversions from external function types to ``address`` are now disallowed. Instead external
-  function types have a member called ``address``, similar to the existing ``selector`` member.
+* 现在不允许从外部函数类型转换为 ``address`` 类型。
+  相反，外部函数类型有一个叫做 ``address`` 的成员，类似于现有的 ``selector`` 成员。
 
-* The function ``push(value)`` for dynamic storage arrays does not return the new length anymore (it returns nothing).
+* 动态存储数组的函数 ``push(value)`` 不再返回新的长度（它什么也不返回）。
 
-* The unnamed function commonly referred to as "fallback function" was split up into a new
-  fallback function that is defined using the ``fallback`` keyword and a receive ether function
-  defined using the ``receive`` keyword.
+* 通常被称为 "回退函数" 的无名函数被拆分为一个新的回退函数，该函数使用 ``fallback`` 关键字定义，
+  并使用 ``receive`` 关键字定义一个接收以太的函数。
 
-  * If present, the receive ether function is called whenever the call data is empty (whether
-    or not ether is received). This function is implicitly ``payable``.
+  * 如果存在，每当调用数据为空时（无论是否收到以太），
+    都会调用接收以太函数 receive。此函数是隐式的 ``payable``。
 
-  * The new fallback function is called when no other function matches (if the receive ether
-    function does not exist then this includes calls with empty call data).
-    You can make this function ``payable`` or not. If it is not ``payable`` then transactions
-    not matching any other function which send value will revert. You should only need to
-    implement the new fallback function if you are following an upgrade or proxy pattern.
+  * 当没有其他函数匹配时，就会调用新的回退函数（如果接收以太的函数receive不存在，则包括调用数据为空的调用）。
+    您可以让这个函数是 ``payable`` 函数或不是。如果它不是 ``payable`` 函数，
+    那么不匹配任何其他发送价值的函数的交易将恢复。
+    只有在采用升级或代理模式时，才需要实现新的回退函数。
 
 
-New Features
+新功能
 ============
 
-This section lists things that were not possible prior to Solidity 0.6.0
-or were more difficult to achieve.
+本节列出了在Solidity 0.6.0之前不可能实现或很难实现的事情。
 
-* The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
-* ``struct`` and ``enum`` types can be declared at file level.
-* Array slices can be used for calldata arrays, for example ``abi.decode(msg.data[4:], (uint, uint))``
-  is a low-level way to decode the function call payload.
-* Natspec supports multiple return parameters in developer documentation, enforcing the same naming check as ``@param``.
-* Yul and Inline Assembly have a new statement called ``leave`` that exits the current function.
-* Conversions from ``address`` to ``address payable`` are now possible via ``payable(x)``, where
-  ``x`` must be of type ``address``.
+* :ref:`try/catch语句 <try-catch>` 允许您对失败的外部调用做出反应。
+* ``struct`` 和 ``enum`` 类型可以在文件级别声明。
+* 数组切片可以用于calldata数组，例如 ``abi.decode(msg.data[4:], (uint, uint))``
+  是对函数调用有效负载进行解码的低级方法。
+* Natspec在开发者文档中支持多个返回参数，执行与 ``@param`` 相同的命名检查。
+* Yul 和内联汇编有一个新的语句，叫做 ``leave``，可以退出当前函数。
+* 现在可以通过 ``payable(x)`` 将 ``address`` 转换为 ``address payable``，
+  其中 ``x`` 必须是 ``address`` 类型。
 
 
-Interface Changes
+接口变化
 =================
 
-This section lists changes that are unrelated to the language itself, but that have an effect on the interfaces of
-the compiler. These may change the way how you use the compiler on the command line, how you use its programmable
-interface, or how you analyze the output produced by it.
+本节列出与语言本身无关但对编译器接口有影响的更改。
+这些可能会改变您在命令行上使用编译器的方式，例如，您如何使用它的可编程接口，
+或者您如何分析它产生的输出。
 
-New Error Reporter
+新的错误报告器
 ~~~~~~~~~~~~~~~~~~
 
-A new error reporter was introduced, which aims at producing more accessible error messages on the command line.
-It is enabled by default, but passing ``--old-reporter`` falls back to the the deprecated old error reporter.
+引入一个新的错误报告器，其目的是在命令行上产生更易访问的错误消息。
+它在默认情况下是启用的，但是通过 ``--old-reporter`` 可以返回到弃用的旧错误报告器。
 
-Metadata Hash Options
+元数据哈希选项
 ~~~~~~~~~~~~~~~~~~~~~
 
-The compiler now appends the `IPFS <https://ipfs.io/>`_ hash of the metadata file to the end of the bytecode by default
-(for details, see documentation on :doc:`contract metadata <metadata>`). Before 0.6.0, the compiler appended the
-`Swarm <https://ethersphere.github.io/swarm-home/>`_ hash by default, and in order to still support this behaviour,
-the new command line option ``--metadata-hash`` was introduced. It allows you to select the hash to be produced and
-appended, by passing either ``ipfs`` or ``swarm`` as value to the ``--metadata-hash`` command line option.
-Passing the value ``none`` completely removes the hash.
+编译器现在默认将元数据文件的 `IPFS <https://ipfs.io/>`_ 哈希值附加到字节码的末尾
+（详见 :doc:`合约元数据 <metadata>` ） 文档。在0.6.0之前，
+编译器默认附加了 `Swarm <https://ethersphere.github.io/swarm-home/>`_ 哈希值，
+为了仍然支持这种行为，引入了新的命令行选项 ``--metadata-hash``。
+它允许您通过传递 ``--metadata-hash`` 命令行选项的 ``ipfs`` 或 ``swarm`` 值来选择要产生和附加的哈希。
+传递 ``none`` 则可以完全删除哈希。
 
-These changes can also be used via the :ref:`Standard JSON Interface<compiler-api>` and effect the metadata JSON generated by the compiler.
+这些变化也可以通过 :ref:`标准JSON接口 <compiler-api>` 使用，并影响编译器生成的元数据JSON。
 
-The recommended way to read the metadata is to read the last two bytes to determine the length of the CBOR encoding
-and perform a proper decoding on that data block as explained in the :ref:`metadata section<encoding-of-the-metadata-hash-in-the-bytecode>`.
+读取元数据的推荐方法是读取最后两个字节，以确定CBOR编码的长度，并对该数据块进行适当的解码，
+这在 :ref:`元数据部分 <encoding-of the-metadata-hash-the-bytecode>` 中有所解释。
 
-Yul Optimizer
+Yul 优化器
 ~~~~~~~~~~~~~
 
-Together with the legacy bytecode optimizer, the :doc:`Yul <yul>` optimizer is now enabled by default when you call the compiler
-with ``--optimize``. It can be disabled by calling the compiler with ``--no-optimize-yul``.
-This mostly affects code that uses ABI coder v2.
+与传统的字节码优化器一起，:doc:`Yul <yul>` 优化器现在在用 ``--optimize`` 参数调用编译器时默认启用。
+可以通过 ``--no-optimize-yul`` 参数在调用编译器时禁用它。这主要影响到使用ABI coder v2的代码。
 
-C API Changes
+C API 变化
 ~~~~~~~~~~~~~
 
-The client code that uses the C API of ``libsolc`` is now in control of the memory used by the compiler. To make
-this change consistent, ``solidity_free`` was renamed to ``solidity_reset``, the functions ``solidity_alloc`` and
-``solidity_free`` were added and ``solidity_compile`` now returns a string that must be explicitly freed via
-``solidity_free()``.
+使用 ``libsolc`` 的C API的客户端代码现在可以控制编译器使用的内存。
+为了使这一变化保持一致， ``solidity_free`` 被重新命名为 ``solidity_reset``，
+增加了函数 ``solidity_alloc`` 和 ``solidity_free``，
+``solidity_compile`` 现在返回一个必须通过 ``solidity_free()`` 显式释放的字符串。
 
 
-How to update your code
+如何更新您的代码
 =======================
 
-This section gives detailed instructions on how to update prior code for every breaking change.
+本节详细说明了如何为每一个突破性变化更新先前的代码。
 
-* Change ``address(f)`` to ``f.address`` for ``f`` being of external function type.
+* 将 ``address(f)``  改为 ``f.address``，因为 ``f`` 是外部函数类型。
 
-* Replace ``function () external [payable] { ... }`` by either ``receive() external payable { ... }``,
-  ``fallback() external [payable] { ... }`` or both. Prefer
-  using a ``receive`` function only, whenever possible.
+* 用 ``receive() external payable { ... }``， ``fallback() external [payable] { ... }``
+  或这两个函数一起来替换 ``function () external [payable] { ... }``。
+  只要有可能，最好只使用 ``receive`` 函数。
 
-* Change ``uint length = array.push(value)`` to ``array.push(value);``. The new length can be
-  accessed via ``array.length``.
+* 将 ``uint length = array.push(value)`` 改为 ``array.push(value);``。
+  新的长度可以通过 ``array.length`` 访问。
 
-* Change ``array.length++`` to ``array.push()`` to increase, and use ``pop()`` to decrease
-  the length of a storage array.
+* 将 ``array.length++`` 改为 ``array.push()`` 来增加数组长度，使用 ``pop()`` 来减少存储数组的长度。
 
-* For every named return parameter in a function's ``@dev`` documentation define a ``@return``
-  entry which contains the parameter's name as the first word. E.g. if you have function ``f()`` defined
-  like ``function f() public returns (uint value)`` and a ``@dev`` annotating it, document its return
-  parameters like so: ``@return value The return value.``. You can mix named and un-named return parameters
-  documentation so long as the notices are in the order they appear in the tuple return type.
+* 在一个函数的 ``@dev`` 文档中，为每个命名的返回参数定义一个 ``@return`` 条目，
+  将参数的名称作为第一个词。例如，
+  如果您有定义为 ``function f() public returns (uint value)`` 的函数 ``f()``，
+  并且有 ``@dev`` 注释，那么记录它的返回参数如下： ``@return value The return value.``。
+  您可以混合使用命名的和未命名的返回参数文档，只要这些声明是按照它们在元组返回类型中出现的顺序即可。
 
-* Choose unique identifiers for variable declarations in inline assembly that do not conflict
-  with declarations outside the inline assembly block.
+* 为内联汇编中的变量声明选择唯一的标识符，不与内联汇编块外的声明冲突。
 
-* Add ``virtual`` to every non-interface function you intend to override. Add ``virtual``
-  to all functions without implementation outside interfaces. For single inheritance, add
-  ``override`` to every overriding function. For multiple inheritance, add ``override(A, B, ..)``,
-  where you list all contracts that define the overridden function in the parentheses. When
-  multiple bases define the same function, the inheriting contract must override all conflicting functions.
+* 在每一个您打算重载的非接口函数上添加 ``virtual``。
+  在所有没有具体实现的接口之外的函数上添加 ``virtual``。
+  对于单继承，在每个重载的函数上添加 ``override``。对于多重继承，添加 ``override(A, B, ..)``，
+  在括号中列出所有定义了重载函数的合约。当多个基类定义同一个函数时，继承的合约必须重载所有冲突的函数。
