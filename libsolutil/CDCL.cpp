@@ -278,10 +278,10 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 
 void CDCL::addClause(Clause _clause)
 {
-	uint64_t max_var = (uint32_t)m_activity.size();
-	uint64_t new_max_var = 0;
+	uint64_t max_var = (uint64_t)m_activity.size();
+	uint64_t new_max_var = max_var;
 	for(auto const& l: _clause) {
-		new_max_var = std::max<uint64_t>(l.variable+1, max_var);
+		new_max_var = std::max<uint64_t>(l.variable+1, new_max_var);
 	}
 	int64_t to_add = (int64_t)new_max_var - (int64_t)max_var;
 	if (to_add > 0) {
