@@ -38,7 +38,7 @@ CDCL::CDCL(
 	m_theorySolver(_theorySolver),
 	m_backtrackNotify(_backtrackNotify),
 	m_variables(move(_variables)),
-	order(VarOrderLt(activity))
+	m_order(VarOrderLt(m_activity))
 {
 	for (Clause const& clause: _clauses)
 		addClause(clause);
@@ -243,7 +243,7 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 				else
 				{
 					//cout << "    adding " << toString(literal) << " @" << variableLevel << " to learnt clause." << endl;
-					vsids_bump_var_act((uint32_t)literal.variable);
+					vsidsBumpVarAct((uint32_t)literal.variable);
 					learntClause.push_back(literal);
 					backtrackLevel = max(backtrackLevel, variableLevel);
 				}
@@ -278,17 +278,17 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 
 void CDCL::addClause(Clause _clause)
 {
-	uint64_t max_var = (uint32_t)activity.size();
+	uint64_t max_var = (uint32_t)m_activity.size();
 	uint64_t new_max_var = 0;
 	for(auto const& l: _clause) {
 		new_max_var = std::max<uint64_t>(l.variable+1, max_var);
 	}
 	int64_t to_add = (int64_t)new_max_var - (int64_t)max_var;
 	if (to_add > 0) {
-		activity.insert(activity.end(), (uint64_t)to_add, 0.0);
+		m_activity.insert(m_activity.end(), (uint64_t)to_add, 0.0);
 	}
 	for(auto const& l: _clause) {
-		if (!order.inHeap((int)l.variable)) order.insert((int)l.variable);
+		if (!m_order.inHeap((int)l.variable)) m_order.insert((int)l.variable);
 	}
 
 	m_clauses.push_back(make_unique<Clause>(move(_clause)));
@@ -331,8 +331,8 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 		m_reason.erase(l);
 		// TODO maybe could do without.
 		m_levelForVariable.erase(l.variable);
-		if (!order.inHeap((int)l.variable)) {
-			order.insert((int)l.variable);
+		if (!m_order.inHeap((int)l.variable)) {
+			m_order.insert((int)l.variable);
 		}
 	}
 	m_decisionPoints.resize(_backtrackLevel);
@@ -344,8 +344,8 @@ void CDCL::cancelUntil(size_t _backtrackLevel)
 optional<size_t> CDCL::nextDecisionVariable()
 {
 	while(true) {
-		if (order.empty()) return nullopt;
-		size_t i = (size_t)order.removeMin();
+		if (m_order.empty()) return nullopt;
+		size_t i = (size_t)m_order.removeMin();
 		if (!m_assignments.count(i)) return i;
 	}
 	return nullopt;
