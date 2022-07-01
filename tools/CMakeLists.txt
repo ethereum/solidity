@@ -54,4 +54,4 @@ add_executable(satsolver satsolver-main.cpp)
 target_link_libraries(satsolver PUBLIC solidity range-v3 Boost::boost Boost::program_options)
 
 add_executable(solsmt solsmt.cpp)
-target_link_libraries(solsmt LINK_PRIVATE smtutil solutil range-v3 Boost::boost Boost::program_options)
+target_link_libraries(solsmt PRIVATE smtutil solutil range-v3 Boost::boost Boost::program_options)
