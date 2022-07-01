@@ -137,7 +137,7 @@ private:
 	{
 		m_var_inc_vsids *= (1.0 / m_var_decay);
 	}
-	void vsids_bump_var_act(const uint32_t var)
+	void vsidsBumpVarAct(const uint32_t var)
 	{
 		assert(m_activity.size() > var);
 		m_activity[var] += m_var_inc_vsids;

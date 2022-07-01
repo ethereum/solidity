@@ -243,7 +243,7 @@ std::pair<Clause, size_t> CDCL::analyze(Clause _conflictClause)
 				else
 				{
 					//cout << "    adding " << toString(literal) << " @" << variableLevel << " to learnt clause." << endl;
-					vsids_bump_var_act((uint32_t)literal.variable);
+					vsidsBumpVarAct((uint32_t)literal.variable);
 					learntClause.push_back(literal);
 					backtrackLevel = max(backtrackLevel, variableLevel);
 				}
