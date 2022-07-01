@@ -129,30 +129,30 @@ private:
 #endif
 
 	// Var activity
-	Heap<VarOrderLt> order;
-	std::vector<double> activity;
-	double var_inc_vsids = 1;
-	double var_decay = 0.95;
+	Heap<VarOrderLt> m_order;
+	std::vector<double> m_activity;
+	double m_var_inc_vsids = 1;
+	double m_var_decay = 0.95;
 	void vsids_decay_var_act()
 	{
-		var_inc_vsids *= (1.0 / var_decay);
+		m_var_inc_vsids *= (1.0 / m_var_decay);
 	}
-	void vsids_bump_var_act(uint32_t var)
+	void vsids_bump_var_act(const uint32_t var)
 	{
-		assert(activity.size() > var);
-		activity[var] += var_inc_vsids;
+		assert(m_activity.size() > var);
+		m_activity[var] += m_var_inc_vsids;
 
 		bool rescaled = false;
-		if (activity[var] > 1e100) {
+		if (m_activity[var] > 1e100) {
 			// Rescale
-			for (auto& a: activity) a *= 1e-100;
+			for (auto& a: m_activity) a *= 1e-100;
 			rescaled = true;
-			var_inc_vsids *= 1e-100;
+			m_var_inc_vsids *= 1e-100;
 		}
 
 		// Update order_heap with respect to new activity:
-		if (order.inHeap((int)var)) order.decrease((int)var);
-		if (rescaled) assert(order.heap_property());
+		if (m_order.inHeap((int)var)) m_order.decrease((int)var);
+		if (rescaled) assert(m_order.heap_property());
 	}
 
 	// TODO group those into a class
