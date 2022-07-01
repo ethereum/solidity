@@ -84,10 +84,12 @@ bool CDCL::solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& sol
 		if (conflictClause)
 		{
 			conflicts++;
+#ifdef DEBUG
 			m_sumConflicts++;
 			if (m_sumConflicts % 1000 == 999) {
 				cerr << "c confl: " << m_sumConflicts << std::endl;
 			}
+#endif
 			if (currentDecisionLevel() == 0)
 			{
 //				cout << "Unsatisfiable" << endl;

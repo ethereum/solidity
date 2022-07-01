@@ -266,7 +266,9 @@ void SolSMT::run()
 		}
 		else if (cmd == "define-fun")
 		{
+#ifdef DEBUG
 			cerr << "Ignoring 'define-fun'" << endl;
+#endif
 		}
 		else if (cmd == "assert")
 		{

@@ -124,7 +124,9 @@ private:
 	std::map<size_t, size_t> m_levelForVariable;
 	/// TODO wolud be good to not have to copy the clauses
 	std::map<Literal, Clause const*> m_reason;
+#ifdef DEBUG
 	uint64_t m_sumConflicts = 0;
+#endif
 
 	// Var activity
 	Heap<VarOrderLt> order;

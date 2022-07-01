@@ -306,7 +306,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 			else
 			{
 				cerr << _expr.toString() << endl;
-				cerr << "Expected linear arguments." << endl;
+				cerr << "; Expected linear arguments." << endl;
 				solAssert(false);
 			}
 		}
@@ -372,7 +372,7 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 	}
 	else
 	{
-		cerr << "Unknown operator " << _expr.name << endl;
+		cerr << "; Unknown operator " << _expr.name << endl;
 		solAssert(false);
 	}
 }
@@ -558,7 +558,7 @@ Literal BooleanLPSolver::negate(Literal const& _lit)
 Literal BooleanLPSolver::parseLiteralOrReturnEqualBoolean(Expression const& _expr)
 {
 	if (_expr.sort->kind != Kind::Bool)
-		cerr << "expected bool: " << _expr.toString() << endl;
+		cerr << "; expected bool: " << _expr.toString() << endl;
 	solAssert(_expr.sort->kind == Kind::Bool);
 	// TODO when can this fail?
 	if (optional<Literal> literal = parseLiteral(_expr))
