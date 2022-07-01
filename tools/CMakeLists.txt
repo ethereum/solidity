@@ -50,6 +50,7 @@ target_link_libraries(yul-phaser PRIVATE phaser)
 
 install(TARGETS yul-phaser DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
+
 add_executable(satsolver satsolver-main.cpp)
 target_link_libraries(satsolver PUBLIC solidity range-v3 Boost::boost Boost::program_options)
 
