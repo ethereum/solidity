@@ -26,6 +26,7 @@
 #include <libyul/Utilities.h>
 
 #include <libsolutil/Visitor.h>
+#include <libsolutil/StackTooDeepString.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -785,7 +786,8 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 			_varName.str() +
 			" is " +
 			to_string(heightDiff - limit) +
-			" slot(s) too deep inside the stack."
+			" slot(s) too deep inside the stack. " +
+			stackTooDeepString
 		);
 		m_assembly.markAsInvalid();
 		return _forSwap ? 2 : 1;
