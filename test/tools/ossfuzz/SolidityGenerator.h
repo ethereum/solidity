@@ -23,6 +23,7 @@
 #pragma once
 
 #include <test/tools/ossfuzz/Generators.h>
+#include <test/tools/ossfuzz/Types.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -31,6 +32,11 @@
 #include <set>
 #include <variant>
 
+#include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
+
 namespace solidity::test::fuzzer::mutator
 {
 /// Forward declarations
@@ -38,22 +44,25 @@ class SolidityGenerator;
 
 /// Type declarations
 #define SEMICOLON() ;
-#define FORWARDDECLAREGENERATORS(G) class G
-GENERATORLIST(FORWARDDECLAREGENERATORS, SEMICOLON(), SEMICOLON())
-#undef FORWARDDECLAREGENERATORS
+#define FORWARDDECLARE(G) class G
+GENERATORLIST(FORWARDDECLARE, SEMICOLON(), SEMICOLON())
+TYPELIST(FORWARDDECLARE, SEMICOLON(), SEMICOLON())
+#undef FORWARDDECLARE
 #undef SEMICOLON
 
 #define COMMA() ,
-using GeneratorPtr = std::variant<
-#define VARIANTOFSHARED(G) std::shared_ptr<G>
-GENERATORLIST(VARIANTOFSHARED, COMMA(), )
->;
-#undef VARIANTOFSHARED
 using Generator = std::variant<
 #define VARIANTOFGENERATOR(G) G
 GENERATORLIST(VARIANTOFGENERATOR, COMMA(), )
 >;
-#undef VARIANTOFGENERATOR
+using GeneratorPtr = std::variant<
+#define VARIANTOFSHARED(G) std::shared_ptr<G>
+GENERATORLIST(VARIANTOFSHARED, COMMA(), )
+>;
+using SolidityTypePtr = std::variant<
+TYPELIST(VARIANTOFSHARED, COMMA(), )
+>;
+#undef VARIANTOFSHARED
 #undef COMMA
 using RandomEngine = std::mt19937_64;
 using Distribution = std::uniform_int_distribution<size_t>;
@@ -68,57 +77,690 @@ struct UniformRandomDistribution
 	/// uniformly at random.
 	[[nodiscard]] size_t distributionOneToN(size_t _n) const
 	{
+		solAssert(_n > 0, "");
 		return Distribution(1, _n)(*randomEngine);
 	}
 	/// @returns true with a probability of 1/(@param _n), false otherwise.
-	/// @param _n must be non zero.
+	/// @param _n > 1.
 	[[nodiscard]] bool probable(size_t _n) const
 	{
-		solAssert(_n > 0, "");
+		solAssert(_n > 1, "");
 		return distributionOneToN(_n) == 1;
 	}
+	/// @returns true with a probability of 1 - 1/(@param _n),
+	/// false otherwise.
+	/// @param _n > 1.
+	[[nodiscard]] bool likely(size_t _n) const
+	{
+		solAssert(_n > 1, "");
+		return !probable(_n);
+	}
+	/// @returns a subset whose elements are of type @param T
+	/// created from the set @param _container using
+	/// uniform selection.
+	template <typename T>
+	std::set<T> subset(std::set<T> const& _container)
+	{
+		size_t s = _container.size();
+		solAssert(s > 1, "");
+		std::set<T> subContainer;
+		for (auto const& item: _container)
+			if (probable(s))
+				subContainer.insert(item);
+		return subContainer;
+	}
 	std::unique_ptr<RandomEngine> randomEngine;
+};
+
+class SolType
+{
+public:
+	virtual ~SolType() = default;
+	virtual std::string toString() = 0;
+};
+
+class IntegerType: public SolType
+{
+public:
+	enum class Bits: size_t
+	{
+		B8 = 1,
+		B16,
+		B24,
+		B32,
+		B40,
+		B48,
+		B56,
+		B64,
+		B72,
+		B80,
+		B88,
+		B96,
+		B104,
+		B112,
+		B120,
+		B128,
+		B136,
+		B144,
+		B152,
+		B160,
+		B168,
+		B176,
+		B184,
+		B192,
+		B200,
+		B208,
+		B216,
+		B224,
+		B232,
+		B240,
+		B248,
+		B256
+	};
+
+	IntegerType(
+		Bits _bits,
+		bool _signed
+	):
+		signedType(_signed),
+		numBits(static_cast<size_t>(_bits) * 8)
+	{}
+	bool operator==(IntegerType const& _rhs)
+	{
+		return this->signedType == _rhs.signedType &&
+			this->numBits == _rhs.numBits;
+	}
+	std::string toString() override
+	{
+		return (signedType ? "int" : "uint") + std::to_string(numBits);
+	}
+	bool signedType;
+	size_t numBits;
+};
+
+class BoolType: public SolType
+{
+public:
+	std::string toString() override
+	{
+		return "bool";
+	}
+	bool operator==(BoolType const&)
+	{
+		return true;
+	}
+};
+
+class AddressType: public SolType
+{
+public:
+	// TODO: Implement address payable
+	std::string toString() override
+	{
+		return "address";
+	}
+	bool operator==(AddressType const&)
+	{
+		return true;
+	}
+};
+
+class FixedBytesType: public SolType
+{
+public:
+	enum class Bytes: size_t
+	{
+		W1 = 1,
+		W2,
+		W3,
+		W4,
+		W5,
+		W6,
+		W7,
+		W8,
+		W9,
+		W10,
+		W11,
+		W12,
+		W13,
+		W14,
+		W15,
+		W16,
+		W17,
+		W18,
+		W19,
+		W20,
+		W21,
+		W22,
+		W23,
+		W24,
+		W25,
+		W26,
+		W27,
+		W28,
+		W29,
+		W30,
+		W31,
+		W32
+	};
+	FixedBytesType(Bytes _width): numBytes(static_cast<size_t>(_width))
+	{}
+
+	bool operator==(FixedBytesType const& _rhs)
+	{
+		return this->numBytes == _rhs.numBytes;
+	}
+	std::string toString() override
+	{
+		return "bytes" + std::to_string(numBytes);
+	}
+	size_t numBytes;
+};
+
+class BytesType: public SolType
+{
+public:
+	std::string toString() override
+	{
+		return "bytes memory";
+	}
+	bool operator==(BytesType const&)
+	{
+		return true;
+	}
+};
+
+class ContractType: public SolType
+{
+public:
+	ContractType(std::string _name): contractName(_name)
+	{}
+	std::string toString() override
+	{
+		return name();
+	}
+	std::string name() const
+	{
+		return contractName;
+	}
+	bool operator==(ContractType const& _rhs)
+	{
+		return _rhs.name() == this->name();
+	}
+	std::string contractName;
+};
+
+class FunctionType: public SolType
+{
+public:
+	FunctionType(bool _freeFunction)
+	{
+		freeFunction = _freeFunction;
+	}
+	~FunctionType() override
+	{
+		inputs.clear();
+		outputs.clear();
+	}
+
+	void addInput(SolidityTypePtr _input)
+	{
+		inputs.emplace_back(_input);
+	}
+
+	void addOutput(SolidityTypePtr _output)
+	{
+		outputs.emplace_back(_output);
+	}
+
+	bool functionScope()
+	{
+		return freeFunction;
+	}
+
+	std::string toString() override;
+	bool operator==(FunctionType const& _rhs)
+	{
+		if (_rhs.inputs.size() != this->inputs.size() || _rhs.outputs.size() != this->outputs.size())
+			return false;
+		if (!std::equal(_rhs.inputs.begin(), _rhs.inputs.end(), this->inputs.begin()) ||
+			!std::equal(_rhs.outputs.begin(), _rhs.outputs.end(), this->outputs.begin())
+		)
+			return false;
+		return true;
+	}
+
+	std::vector<SolidityTypePtr> inputs;
+	std::vector<SolidityTypePtr> outputs;
+	bool freeFunction;
+};
+
+/// Forward declaration
+struct TestState;
+struct FunctionState;
+
+struct SourceState
+{
+	explicit SourceState(
+		std::shared_ptr<UniformRandomDistribution> _urd,
+		std::string _sourceName
+	):
+		uRandDist(std::move(_urd)),
+		importedSources({}),
+		sourceName(_sourceName)
+	{}
+	void addFreeFunction(std::string& _functionName)
+	{
+		exports[std::make_shared<FunctionType>(true)] = _functionName;
+	}
+	void addFreeFunction(std::shared_ptr<FunctionState> _state)
+	{
+		freeFunctions.emplace(_state);
+	}
+	bool freeFunction(std::string const& _functionName)
+	{
+		return !(exports | ranges::views::filter([&_functionName](auto& _p) { return _p.second == _functionName; })).empty();
+	}
+	bool contractType()
+	{
+		return !(exports | ranges::views::filter([](auto& _i) {
+			return std::holds_alternative<std::shared_ptr<ContractType>>(_i.first);
+		})).empty();
+	}
+	std::string randomContract()
+	{
+		auto contracts = exports |
+			ranges::views::filter([](auto& _item) -> bool {
+				return std::holds_alternative<std::shared_ptr<ContractType>>(
+					_item.first
+				);
+			}) |
+			ranges::views::transform([](auto& _item) -> std::string {
+				return _item.second;
+			}) | ranges::to<std::vector<std::string>>;
+		return contracts[uRandDist->distributionOneToN(contracts.size()) - 1];
+	}
+	std::shared_ptr<ContractType> randomContractType()
+	{
+		auto contracts = exports |
+			ranges::views::filter([](auto& _item) -> bool {
+				return std::holds_alternative<std::shared_ptr<ContractType>>(_item.first);
+			}) |
+			ranges::views::transform([](auto& _item) -> std::shared_ptr<ContractType> {
+				return std::get<std::shared_ptr<ContractType>>(_item.first);
+			}) |
+			ranges::to<std::vector<std::shared_ptr<ContractType>>>;
+		return contracts[uRandDist->distributionOneToN(contracts.size()) - 1];
+	}
+	void addImportedSourcePath(std::string& _sourcePath)
+	{
+		importedSources.emplace(_sourcePath);
+	}
+	void resolveImports(std::map<SolidityTypePtr, std::string> _importedSymbols);
+	void mergeFunctionState(std::set<std::shared_ptr<FunctionState>> _importedFreeFunctions);
+
+	[[nodiscard]] bool sourcePathImported(std::string const& _sourcePath) const
+	{
+		return importedSources.count(_sourcePath);
+	}
+	~SourceState()
+	{
+		importedSources.clear();
+		freeFunctions.clear();
+		exports.clear();
+	}
+	/// Prints source state to @param _os.
+	void print(std::ostream& _os) const;
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	std::set<std::string> importedSources;
+	std::map<SolidityTypePtr, std::string> exports;
+	std::set<std::shared_ptr<FunctionState>> freeFunctions;
+	std::string sourceName;
+};
+
+struct BlockScope
+{
+	BlockScope() = default;
+	~BlockScope()
+	{
+		variables.clear();
+	}
+	std::vector<std::pair<SolidityTypePtr, std::string>> variables;
+};
+
+struct FunctionState
+{
+	enum class Params
+	{
+		INPUT,
+		OUTPUT
+	};
+	FunctionState(std::string _functionName, bool _freeFunction):
+		numInputs(0),
+		numOutpus(0),
+		numLocals(0),
+		name(_functionName)
+	{
+		type = std::make_shared<FunctionType>(_freeFunction);
+	}
+	~FunctionState()
+	{
+		inputs.clear();
+		outputs.clear();
+		scopes.clear();
+	}
+	void addInput(SolidityTypePtr _input)
+	{
+		inputs.emplace_back(_input, "i" + std::to_string(numInputs++));
+		type->addInput(_input);
+	}
+	void addOutput(SolidityTypePtr _output)
+	{
+		outputs.emplace_back(_output, "o" + std::to_string(numOutpus++));
+		type->addOutput(_output);
+	}
+	void addLocal(SolidityTypePtr _local)
+	{
+		scopes.back()->variables.emplace_back(_local, "l" + std::to_string(numLocals++));
+	}
+	std::string params(Params _p);
+
+	std::vector<std::pair<SolidityTypePtr, std::string>> inputs;
+	std::vector<std::pair<SolidityTypePtr, std::string>> outputs;
+	std::vector<std::shared_ptr<BlockScope>> scopes;
+	std::shared_ptr<FunctionType> type;
+	unsigned numInputs;
+	unsigned numOutpus;
+	unsigned numLocals;
+	std::string name;
+};
+
+struct ContractState
+{
+	explicit ContractState(
+		std::shared_ptr<UniformRandomDistribution> _urd,
+		std::string _contractName
+	):
+		uRandDist(std::move(_urd)),
+		name(_contractName)
+	{}
+	~ContractState()
+	{
+		functions.clear();
+	}
+	void addFunction(std::shared_ptr<FunctionState> _function)
+	{
+		functions.emplace(_function);
+	}
+
+	std::set<std::shared_ptr<FunctionState>> functions;
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	std::string name;
 };
 
 struct TestState
 {
 	explicit TestState(std::shared_ptr<UniformRandomDistribution> _urd):
-		sourceUnitPaths({}),
+		sourceUnitState({}),
+		contractState({}),
 		currentSourceUnitPath({}),
-		uRandDist(std::move(_urd))
+		currentContract({}),
+		currentFunction({}),
+		uRandDist(std::move(_urd)),
+		numSourceUnits(0),
+		numContracts(0),
+		numFunctions(0),
+		indentationLevel(0),
+		insideContract(false)
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
 	void addSourceUnit(std::string const& _path)
 	{
-		sourceUnitPaths.insert(_path);
+		sourceUnitState.emplace(_path, std::make_shared<SourceState>(uRandDist, _path));
 		currentSourceUnitPath = _path;
 	}
-	/// @returns true if @name sourceUnitPaths is empty,
+	/// Adds @param _name to @name contractState updates
+	/// @name currentContract.
+	void addContract(std::string const& _name)
+	{
+		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist, _name));
+		sourceUnitState[currentSourceUnitPath]->exports[
+			std::make_shared<ContractType>(_name)
+	    ] = _name;
+		currentContract = _name;
+	}
+	void addFunction(std::string const& _name, bool _freeFunction)
+	{
+		functionState.emplace(_name, std::make_shared<FunctionState>(_name, _freeFunction));
+		currentFunction = _name;
+	}
+	std::shared_ptr<FunctionState> currentFunctionState()
+	{
+		std::string function = currentFunctionName();
+		return functionState[function];
+	}
+	std::shared_ptr<SourceState> currentSourceState()
+	{
+		std::string currentSource = currentPath();
+		return sourceUnitState[currentSource];
+	}
+	std::shared_ptr<ContractState> currentContractState()
+	{
+		std::string contract = currentContractName();
+		return contractState[contract];
+	}
+	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
 	[[nodiscard]] bool empty() const
 	{
-		return sourceUnitPaths.empty();
+		return sourceUnitState.empty();
 	}
-	/// @returns the number of items in @name sourceUnitPaths.
+	/// Returns the number of items in @name sourceUnitPaths.
 	[[nodiscard]] size_t size() const
 	{
-		return sourceUnitPaths.size();
+		return sourceUnitState.size();
+	}
+	/// Returns a new source path name that is formed by concatenating
+	/// a static prefix @name m_sourceUnitNamePrefix, a monotonically
+	/// increasing counter starting from 0 and the postfix (extension)
+	/// ".sol".
+	[[nodiscard]] std::string newPath() const
+	{
+		return sourceUnitNamePrefix + std::to_string(numSourceUnits) + ".sol";
+	}
+	[[nodiscard]] std::string newContract() const
+	{
+		return contractPrefix + std::to_string(numContracts);
+	}
+	[[nodiscard]] std::string newFunction() const
+	{
+		return functionPrefix + std::to_string(numFunctions);
+	}
+	[[nodiscard]] std::string currentPath() const
+	{
+		solAssert(numSourceUnits > 0, "");
+		return currentSourceUnitPath;
+	}
+	std::string currentFunctionName() const
+	{
+		solAssert(numFunctions > 0, "");
+		return currentFunction;
+	}
+	std::string currentContractName() const
+	{
+		solAssert(numContracts > 0, "");
+		return currentContract;
+	}
+	/// Adds @param _path to list of source paths in global test
+	/// state and increments @name m_numSourceUnits.
+	void updateSourcePath(std::string const& _path)
+	{
+		addSourceUnit(_path);
+		numSourceUnits++;
+	}
+	/// Adds @param _contract to list of contracts in global test state and
+	/// increments @name numContracts
+	void updateContract(std::string const& _name)
+	{
+		addContract(_name);
+		numContracts++;
+	}
+	void updateFunction(std::string const& _name, bool _freeFunction)
+	{
+		addFunction(_name, _freeFunction);
+		numFunctions++;
+	}
+	void addSource()
+	{
+		std::string path = newPath();
+		updateSourcePath(path);
+	}
+	/// Increments indentation level globally.
+	void indent()
+	{
+		++indentationLevel;
+	}
+	/// Decrements indentation level globally.
+	void unindent()
+	{
+		--indentationLevel;
+	}
+	void enterContract()
+	{
+		insideContract = true;
+	}
+	void exitContract()
+	{
+		insideContract = false;
+	}
+	~TestState()
+	{
+		sourceUnitState.clear();
+		contractState.clear();
+		functionState.clear();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
-	/// @returns a randomly chosen path from @param _sourceUnitPaths.
+	/// Returns a randomly chosen path from @param _sourceUnitPaths.
 	[[nodiscard]] std::string randomPath(std::set<std::string> const& _sourceUnitPaths) const;
-	/// @returns a randomly chosen path from @name sourceUnitPaths.
+	[[nodiscard]] std::set<std::string> sourceUnitPaths() const;
+	/// Returns a randomly chosen path from @name sourceUnitPaths.
 	[[nodiscard]] std::string randomPath() const;
-	/// @returns a randomly chosen non current source unit path.
+	/// Returns a randomly chosen non current source unit path.
 	[[nodiscard]] std::string randomNonCurrentPath() const;
-	/// List of source paths in test input.
-	std::set<std::string> sourceUnitPaths;
+	/// Map of source name -> state
+	std::map<std::string, std::shared_ptr<SourceState>> sourceUnitState;
+	/// Map of contract name -> state
+	std::map<std::string, std::shared_ptr<ContractState>> contractState;
+	/// Map of function name -> state
+	std::map<std::string, std::shared_ptr<FunctionState>> functionState;
 	/// Source path being currently visited.
 	std::string currentSourceUnitPath;
+	/// Current contract
+	std::string currentContract;
+	/// Current function
+	std::string currentFunction;
 	/// Uniform random distribution.
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	/// Number of source units in test input
+	size_t numSourceUnits;
+	/// Number of contracts in test input
+	size_t numContracts;
+	/// Number of functions in test input
+	size_t numFunctions;
+	/// Indentation level
+	unsigned indentationLevel;
+	/// Contract scope
+	bool insideContract;
+	/// Source name prefix
+	std::string const sourceUnitNamePrefix = "su";
+	/// Contract name prefix
+	std::string const contractPrefix = "C";
+	/// Function name prefix
+	std::string const functionPrefix = "f";
+};
+
+struct TypeProvider
+{
+	TypeProvider(std::shared_ptr<TestState> _state): state(std::move(_state))
+	{}
+
+	enum class Type: size_t
+	{
+		INTEGER = 1,
+		BOOL,
+		FIXEDBYTES,
+		BYTES,
+		ADDRESS,
+		FUNCTION,
+		CONTRACT,
+		TYPEMAX
+	};
+
+	SolidityTypePtr type();
+	std::optional<SolidityTypePtr> type(SolidityTypePtr _typePtr);
+
+	Type randomTypeCategory()
+	{
+		return static_cast<Type>(state->uRandDist->distributionOneToN(static_cast<size_t>(Type::TYPEMAX) - 1));
+	}
+
+	std::shared_ptr<TestState> state;
+};
+
+struct TypeComparator
+{
+	template <typename T>
+	bool operator()(T _i1, T _i2)
+	{
+		return *_i1 == *_i2;
+	}
+	template <typename T1, typename T2>
+	bool operator()(T1 _i1, T2 _i2)
+	{
+		if (std::is_same_v<T1, T2>)
+			return this->template operator()(_i1, _i2);
+		return false;
+	}
+};
+
+struct LiteralGenerator
+{
+	explicit LiteralGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	{}
+	std::string operator()(std::shared_ptr<AddressType> const& _type);
+	std::string operator()(std::shared_ptr<BoolType> const& _type);
+	std::string operator()(std::shared_ptr<BytesType> const& _type);
+	std::string operator()(std::shared_ptr<ContractType> const& _type);
+	std::string operator()(std::shared_ptr<FixedBytesType> const& _type);
+	std::string operator()(std::shared_ptr<FunctionType> const& _type);
+	std::string operator()(std::shared_ptr<IntegerType> const& _type);
+
+	std::shared_ptr<TestState> state;
+};
+
+struct ExpressionGenerator
+{
+	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	{}
+
+	enum class LValueExpr: size_t
+	{
+		VARREF = 1,
+		TYPEMAX
+	};
+
+	std::optional<std::pair<SolidityTypePtr, std::string>> expression(
+		std::pair<SolidityTypePtr, std::string> _typeName
+	);
+	std::pair<SolidityTypePtr, std::string> literal(SolidityTypePtr _type);
+	std::optional<std::pair<SolidityTypePtr, std::string>> randomLValueExpression();
+	std::optional<std::pair<SolidityTypePtr, std::string>> lValueExpression(
+		std::pair<SolidityTypePtr, std::string> _typeName
+	);
+
+	std::shared_ptr<TestState> state;
 };
 
 struct GeneratorBase
@@ -128,8 +770,8 @@ struct GeneratorBase
 	std::shared_ptr<T> generator()
 	{
 		for (auto& g: generators)
-			if (std::holds_alternative<std::shared_ptr<T>>(g))
-				return std::get<std::shared_ptr<T>>(g);
+			if (std::holds_alternative<std::shared_ptr<T>>(g.first))
+				return std::get<std::shared_ptr<T>>(g.first);
 		solAssert(false, "");
 	}
 	/// @returns test fragment created by this generator.
@@ -138,6 +780,12 @@ struct GeneratorBase
 		std::string generatedCode = visit();
 		endVisit();
 		return generatedCode;
+	}
+	/// @returns current indentation as string. Each indentation level comprises
+	/// two whitespace characters.
+	std::string indentation()
+	{
+		return std::string(state->indentationLevel * 2, ' ');
 	}
 	/// @returns a string representing the generation of
 	/// the Solidity grammar element.
@@ -151,7 +799,7 @@ struct GeneratorBase
 	std::string visitChildren();
 	/// Adds generators for child grammar elements of
 	/// this grammar element.
-	void addGenerators(std::set<GeneratorPtr> _generators)
+	void addGenerators(std::set<std::pair<GeneratorPtr, unsigned>> _generators)
 	{
 		generators += _generators;
 	}
@@ -168,7 +816,7 @@ struct GeneratorBase
 	/// Shared pointer to the mutator instance
 	std::shared_ptr<SolidityGenerator> mutator;
 	/// Set of generators used by this generator.
-	std::set<GeneratorPtr> generators;
+	std::set<std::pair<GeneratorPtr, unsigned>> generators;
 	/// Shared ptr to global test state.
 	std::shared_ptr<TestState> state;
 	/// Uniform random distribution
@@ -179,8 +827,7 @@ class TestCaseGenerator: public GeneratorBase
 {
 public:
 	explicit TestCaseGenerator(std::shared_ptr<SolidityGenerator> _mutator):
-		GeneratorBase(std::move(_mutator)),
-		m_numSourceUnits(0)
+		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
 	std::string visit() override;
@@ -221,6 +868,9 @@ public:
 	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "Source unit generator"; }
+private:
+	static unsigned constexpr s_maxImports = 2;
+	static unsigned constexpr s_maxFreeFunctions = 2;
 };
 
 class PragmaGenerator: public GeneratorBase
@@ -231,6 +881,12 @@ public:
 	{}
 	std::string visit() override;
 	std::string name() override { return "Pragma generator"; }
+private:
+	static constexpr char const* s_preamble = R"(pragma solidity >= 0.0.0;)";
+	std::vector<std::string> const s_abiPragmas = {
+		R"(pragma abicoder v1;)",
+		R"(pragma abicoder v2;)"
+	};
 };
 
 class ImportGenerator: public GeneratorBase
@@ -241,15 +897,154 @@ public:
 	{}
 	std::string visit() override;
 	std::string name() override { return "Import generator"; }
+};
+
+class ContractGenerator: public GeneratorBase
+{
+public:
+	explicit ContractGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	void setup() override;
+	std::string visit() override;
+	std::string name() override { return "Contract generator"; }
 private:
-	/// Inverse probability with which a source unit
-	/// imports itself. Keeping this at 17 seems to
-	/// produce self imported source units with a
-	/// frequency small enough so that it does not
-	/// consume too many fuzzing cycles but large
-	/// enough so that the fuzzer generates self
-	/// import statements every once in a while.
-	static constexpr size_t s_selfImportInvProb = 17;
+	static unsigned constexpr s_maxFunctions = 4;
+};
+
+class FunctionGenerator: public GeneratorBase
+{
+public:
+	explicit FunctionGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator)),
+		m_freeFunction(true)
+	{}
+	std::string visit() override;
+	std::string name() override { return "Function generator"; }
+	void endVisit() override;
+	void setup() override;
+	/// Sets @name m_freeFunction to @param _freeFunction.
+	void scope(bool _freeFunction)
+	{
+		m_freeFunction = _freeFunction;
+	}
+private:
+	bool m_freeFunction;
+	static constexpr unsigned s_maxInputs = 4;
+	static constexpr unsigned s_maxOutputs = 4;
+	static constexpr unsigned s_maxStatements = 5;
+};
+
+class StatementGenerator: public GeneratorBase
+{
+public:
+	explicit StatementGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	void setup() override;
+	std::string visit() override;
+	std::string name() override { return "Statement generator"; }
+private:
+	static constexpr unsigned s_uncheckedBlockInvProb = 37;
+};
+
+class AssignmentStmtGenerator: public GeneratorBase
+{
+public:
+	enum class AssignOp: size_t
+	{
+		ASSIGN = 1,
+		ASSIGNBITOR,
+		ASSIGNBITXOR,
+		ASSIGNBITAND,
+		ASSIGNSHL,
+		ASSIGNSAR,
+		ASSIGNSHR,
+		ASSIGNADD,
+		ASSIGNSUB,
+		ASSIGNMUL,
+		ASSIGNDIV,
+		ASSIGNMOD,
+		ASSIGNMAX
+	};
+	explicit AssignmentStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override { return "Assignment statement generator"; }
+private:
+	AssignOp assignOp(SolidityTypePtr _type);
+	std::string assignOp(AssignOp _op);
+};
+
+class BlockStmtGenerator: public GeneratorBase
+{
+public:
+	explicit BlockStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator)),
+		m_nestingDepth(0),
+		m_unchecked(false),
+		m_inUnchecked(false)
+	{}
+	void endVisit() override
+	{
+		decrementNestingDepth();
+	}
+	void incrementNestingDepth()
+	{
+		++m_nestingDepth;
+	}
+	void decrementNestingDepth()
+	{
+		--m_nestingDepth;
+	}
+	void resetNestingDepth()
+	{
+		m_nestingDepth = 0;
+	}
+	bool nestingTooDeep()
+	{
+		return m_nestingDepth > s_maxNestingDepth;
+	}
+	void setup() override;
+	std::string visit() override;
+	std::string name() override { return "Block statement generator"; }
+	void unchecked(bool _unchecked)
+	{
+		m_unchecked = _unchecked;
+	}
+	bool unchecked()
+	{
+		return m_unchecked;
+	}
+	void resetInUnchecked()
+	{
+		m_inUnchecked = false;
+	}
+private:
+	size_t m_nestingDepth;
+	bool m_unchecked;
+	bool m_inUnchecked;
+	static constexpr unsigned s_maxStatements = 4;
+	static constexpr unsigned s_maxNestingDepth = 1;
+	static constexpr size_t s_uncheckedInvProb = 13;
+};
+
+class FunctionCallGenerator: public GeneratorBase
+{
+public:
+	FunctionCallGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override
+	{
+		return "Function call generator";
+	}
+private:
+	std::string lhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionReturnTypeNames);
+	std::optional<std::string> rhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionInputTypeNames);
+	std::string callStmt(std::shared_ptr<FunctionState> _callee);
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>

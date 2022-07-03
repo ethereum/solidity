@@ -35,6 +35,7 @@ if (OSSFUZZ)
             solc_ossfuzz.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
+            LiteralGeneratorUtil.cpp
             SolidityGenerator.cpp
             SolidityCustomMutatorInterface.cpp
     )
