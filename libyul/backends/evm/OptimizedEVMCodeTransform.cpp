@@ -513,13 +513,21 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			yulAssert(!m_stack.empty(), "");
 			yulAssert(m_stack.back() == _switch.switchExpr, "");
 
+			size_t casesLeft = _switch.cases.size();
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 			{
 				m_assembly.appendConstant(caseValue);
-				m_assembly.appendInstruction(evmasm::dupInstruction(2));
+				casesLeft--;
+				if (casesLeft > 0)
+					m_assembly.appendInstruction(evmasm::dupInstruction(2));
 				m_assembly.appendInstruction(evmasm::Instruction::EQ);
 				m_assembly.appendJumpToIf(m_blockLabels[caseBlock]);
 			}
+			Stack stackSwitchExpr = m_stack;
+			if (_switch.cases.size() > 0)
+				// Should always be true; pop switch expression
+				m_stack.pop_back();
+			Stack stackNoSwitchExpr = m_stack;
 
 			{
 				// Restore the stack afterwards for the non-zero case below.
@@ -530,6 +538,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 				(*this)(*_switch.defaultCase);
 			}
 
+			casesLeft = _switch.cases.size();
 			for (auto const& [caseValue, caseBlock]: _switch.cases)
 			{
 				{
@@ -538,6 +547,10 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 						m_stack = move(storedStack);
 						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 					});
+
+					casesLeft--;
+					m_stack = (casesLeft > 0 ? stackSwitchExpr : stackNoSwitchExpr);
+					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 					(*this)(*caseBlock);
 				}
 			}
