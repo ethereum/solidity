@@ -98,7 +98,7 @@ private:
 		void advance(unsigned n = 1)
 		{
 			solAssert(m_char != m_source.end(), "Cannot advance beyond end.");
-			m_char = std::next(m_char, n);
+			m_char = std::next(m_char, static_cast<int>(n));
 		}
 
 		/// Returns the current character or '\0' if at end of input.
