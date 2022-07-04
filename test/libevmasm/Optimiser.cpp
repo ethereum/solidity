@@ -141,7 +141,7 @@ namespace
 			ControlFlowGraph cfg(output);
 			AssemblyItems optItems;
 			for (BasicBlock const& block: cfg.optimisedBlocks())
-				copy(output.begin() + block.begin, output.begin() + block.end,
+				copy(output.begin() + static_cast<int>(block.begin), output.begin() + static_cast<int>(block.end),
 					 back_inserter(optItems));
 			output = move(optItems);
 		}

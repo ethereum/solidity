@@ -136,7 +136,7 @@ private:
 	}
 	bytes readBytes(unsigned length)
 	{
-		bytes ret{m_metadata.begin() + m_pos, m_metadata.begin() + m_pos + length};
+		bytes ret{m_metadata.begin() + static_cast<int>(m_pos), m_metadata.begin() + static_cast<int>(m_pos + length)};
 		m_pos += length;
 		return ret;
 	}
