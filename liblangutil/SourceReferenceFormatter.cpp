@@ -124,6 +124,9 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 
 	string_view text = _ref.text;
 
+	if (m_charStreamProvider.charStream(_ref.sourceName).isImportedFromAST())
+		return;
+
 	if (!_ref.multiline)
 	{
 		size_t const locationLength = static_cast<size_t>(_ref.endColumn - _ref.startColumn);
