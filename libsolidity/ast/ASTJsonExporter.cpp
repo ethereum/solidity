@@ -128,6 +128,16 @@ string ASTJsonExporter::sourceLocationToString(SourceLocation const& _location) 
 	return to_string(_location.start) + ":" + to_string(length) + ":" + (sourceIndexOpt.has_value() ? to_string(sourceIndexOpt.value()) : "-1");
 }
 
+Json::Value ASTJsonExporter::sourceLocationsToJson(vector<SourceLocation> const& _sourceLocations) const
+{
+	Json::Value locations = Json::arrayValue;
+
+	for (SourceLocation const& location: _sourceLocations)
+		locations.append(sourceLocationToString(location));
+
+	return locations;
+}
+
 string ASTJsonExporter::namePathToString(std::vector<ASTString> const& _namePath)
 {
 	return boost::algorithm::join(_namePath, ".");
@@ -843,6 +853,7 @@ bool ASTJsonExporter::visit(FunctionCall const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("expression", toJson(_node.expression())),
 		make_pair("names", std::move(names)),
+		make_pair("nameLocations", sourceLocationsToJson(_node.nameLocations())),
 		make_pair("arguments", toJson(_node.arguments())),
 		make_pair("tryCall", _node.annotation().tryCall)
 	};
