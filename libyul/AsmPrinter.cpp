@@ -278,7 +278,11 @@ string AsmPrinter::formatSourceLocation(
 	{
 		sourceIndex = to_string(_nameToSourceIndex.at(*_location.sourceName));
 
-		if (_debugInfoSelection.snippet && _soliditySourceProvider)
+		if (
+			_debugInfoSelection.snippet &&
+			_soliditySourceProvider &&
+			!_soliditySourceProvider->charStream(*_location.sourceName).isImportedFromAST()
+		)
 		{
 			solidityCodeSnippet = escapeAndQuoteString(
 				_soliditySourceProvider->charStream(*_location.sourceName).singleLineSnippet(_location)

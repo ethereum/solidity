@@ -404,7 +404,8 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 		source.ast = src.second;
 		source.charStream = make_shared<CharStream>(
 			util::jsonCompactPrint(m_sourceJsons[src.first]),
-			src.first
+			src.first,
+			true // imported from AST
 		);
 		m_sources[path] = move(source);
 	}
