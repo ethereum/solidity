@@ -335,7 +335,7 @@ public:
 		return members(_currentScope).memberType(_name);
 	}
 
-	virtual std::string toString(bool _short) const = 0;
+	virtual std::string toString(bool _withoutDataLocation) const = 0;
 	std::string toString() const { return toString(false); }
 	/// @returns the canonical name of this type for use in library function signatures.
 	virtual std::string canonicalName() const { return toString(true); }
@@ -428,7 +428,7 @@ public:
 
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 
 	u256 literalValue(Literal const* _literal) const override;
@@ -471,7 +471,7 @@ public:
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 
 	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
@@ -518,7 +518,7 @@ public:
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 
 	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
@@ -568,7 +568,7 @@ public:
 
 	bool canBeStored() const override { return false; }
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	u256 literalValue(Literal const* _literal) const override;
 	Type const* mobileType() const override;
 
@@ -832,7 +832,7 @@ public:
 	bool containsNestedMapping() const override { return m_baseType->containsNestedMapping(); }
 	bool nameable() const override { return true; }
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string humanReadableName() const override;
 	std::string canonicalName() const override;
 	std::string signatureInExternalFunction(bool _structsByName) const override;
@@ -897,7 +897,7 @@ public:
 	unsigned calldataEncodedTailSize() const override { return 32; }
 	bool isDynamicallySized() const override { return true; }
 	bool isDynamicallyEncoded() const override { return true; }
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string humanReadableName() const override;
 	Type const* mobileType() const override;
 
@@ -942,7 +942,7 @@ public:
 	bool leftAligned() const override { solAssert(!isSuper(), ""); return false; }
 	bool isValueType() const override { return !isSuper(); }
 	bool nameable() const override { return !isSuper(); }
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
@@ -1004,7 +1004,7 @@ public:
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override;
 	bool nameable() const override { return true; }
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 
@@ -1066,7 +1066,7 @@ public:
 	}
 	unsigned storageBytes() const override;
 	bool leftAligned() const override { return false; }
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
@@ -1153,7 +1153,7 @@ public:
 		return false;
 	}
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 	std::string signatureInExternalFunction(bool) const override { solAssert(false, ""); }
 
@@ -1179,7 +1179,7 @@ public:
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string humanReadableName() const override;
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
@@ -1383,7 +1383,7 @@ public:
 	TypeResult binaryOperatorResult(Token, Type const*) const override;
 	std::string canonicalName() const override;
 	std::string humanReadableName() const override;
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool canBeStored() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
 	u256 storageSize() const override;
@@ -1517,7 +1517,7 @@ public:
 
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 	bool containsNestedMapping() const override { return true; }
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
@@ -1558,7 +1558,7 @@ public:
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
-	std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
+	std::string toString(bool _withoutDataLocation) const override { return "type(" + m_actualType->toString(_withoutDataLocation) + ")"; }
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -1585,7 +1585,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 protected:
 	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }
 private:
@@ -1611,7 +1611,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 
 protected:
 	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }
@@ -1650,7 +1650,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
-	std::string toString(bool _short) const override;
+	std::string toString(bool _withoutDataLocation) const override;
 
 	Kind kind() const { return m_kind; }
 

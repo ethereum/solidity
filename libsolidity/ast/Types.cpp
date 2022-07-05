@@ -110,10 +110,10 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
-string toStringInParentheses(TypePointers const& _types, bool _short)
+string toStringInParentheses(TypePointers const& _types, bool _withoutDataLocation)
 {
 	return '(' + util::joinHumanReadable(
-		_types | ranges::views::transform([&](auto const* _type) { return _type->toString(_short); }),
+		_types | ranges::views::transform([&](auto const* _type) { return _type->toString(_withoutDataLocation); }),
 		","
 	) + ')';
 }
@@ -1789,7 +1789,7 @@ vector<tuple<string, Type const*>> ArrayType::makeStackItems() const
 	solAssert(false, "");
 }
 
-string ArrayType::toString(bool _short) const
+string ArrayType::toString(bool _withoutDataLocation) const
 {
 	string ret;
 	if (isString())
@@ -1798,12 +1798,12 @@ string ArrayType::toString(bool _short) const
 		ret = "bytes";
 	else
 	{
-		ret = baseType()->toString(_short) + "[";
+		ret = baseType()->toString(_withoutDataLocation) + "[";
 		if (!isDynamicallySized())
 			ret += length().str();
 		ret += "]";
 	}
-	if (!_short)
+	if (!_withoutDataLocation)
 		ret += " " + stringForReferencePart();
 	return ret;
 }
@@ -2008,9 +2008,9 @@ bool ArraySliceType::operator==(Type const& _other) const
 	return false;
 }
 
-string ArraySliceType::toString(bool _short) const
+string ArraySliceType::toString(bool _withoutDataLocation) const
 {
-	return m_arrayType.toString(_short) + " slice";
+	return m_arrayType.toString(_withoutDataLocation) + " slice";
 }
 
 string ArraySliceType::humanReadableName() const
@@ -2279,10 +2279,10 @@ bool StructType::containsNestedMapping() const
 	return m_struct.annotation().containsNestedMapping.value();
 }
 
-string StructType::toString(bool _short) const
+string StructType::toString(bool _withoutDataLocation) const
 {
 	string ret = "struct " + *m_struct.annotation().canonicalName;
-	if (!_short)
+	if (!_withoutDataLocation)
 		ret += " " + stringForReferencePart();
 	return ret;
 }
@@ -2634,7 +2634,7 @@ bool UserDefinedValueType::operator==(Type const& _other) const
 	return other.definition() == definition();
 }
 
-string UserDefinedValueType::toString(bool /* _short */) const
+string UserDefinedValueType::toString(bool /* _withoutDataLocation */) const
 {
 	return *definition().annotation().canonicalName;
 }
@@ -2682,13 +2682,13 @@ bool TupleType::operator==(Type const& _other) const
 		return false;
 }
 
-string TupleType::toString(bool _short) const
+string TupleType::toString(bool _withoutDataLocation) const
 {
 	if (components().empty())
 		return "tuple()";
 	string str = "tuple(";
 	for (auto const& t: components())
-		str += (t ? t->toString(_short) : "") + ",";
+		str += (t ? t->toString(_withoutDataLocation) : "") + ",";
 	str.pop_back();
 	return str + ")";
 }
@@ -3137,15 +3137,15 @@ string FunctionType::humanReadableName() const
 	switch (m_kind)
 	{
 	case Kind::Error:
-		return "error " + m_declaration->name() + toStringInParentheses(m_parameterTypes, /* _short */ true);
+		return "error " + m_declaration->name() + toStringInParentheses(m_parameterTypes, /* _withoutDataLocation */ true);
 	case Kind::Event:
-		return "event " + m_declaration->name() + toStringInParentheses(m_parameterTypes, /* _short */ true);
+		return "event " + m_declaration->name() + toStringInParentheses(m_parameterTypes, /* _withoutDataLocation */ true);
 	default:
-		return toString(/* _short */ false);
+		return toString(/* _withoutDataLocation */ false);
 	}
 }
 
-string FunctionType::toString(bool _short) const
+string FunctionType::toString(bool _withoutDataLocation) const
 {
 	string name = "function ";
 	if (m_kind == Kind::Declaration)
@@ -3156,7 +3156,7 @@ string FunctionType::toString(bool _short) const
 			name += *contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
-	name += toStringInParentheses(m_parameterTypes, _short);
+	name += toStringInParentheses(m_parameterTypes, _withoutDataLocation);
 	if (m_stateMutability != StateMutability::NonPayable)
 		name += " " + stateMutabilityToString(m_stateMutability);
 	if (m_kind == Kind::External)
@@ -3164,7 +3164,7 @@ string FunctionType::toString(bool _short) const
 	if (!m_returnParameterTypes.empty())
 	{
 		name += " returns ";
-		name += toStringInParentheses(m_returnParameterTypes, _short);
+		name += toStringInParentheses(m_returnParameterTypes, _withoutDataLocation);
 	}
 	return name;
 }
@@ -3756,9 +3756,9 @@ bool MappingType::operator==(Type const& _other) const
 	return *other.m_keyType == *m_keyType && *other.m_valueType == *m_valueType;
 }
 
-string MappingType::toString(bool _short) const
+string MappingType::toString(bool _withoutDataLocation) const
 {
-	return "mapping(" + keyType()->toString(_short) + " => " + valueType()->toString(_short) + ")";
+	return "mapping(" + keyType()->toString(_withoutDataLocation) + " => " + valueType()->toString(_withoutDataLocation) + ")";
 }
 
 string MappingType::canonicalName() const
@@ -3983,11 +3983,11 @@ bool ModifierType::operator==(Type const& _other) const
 	return true;
 }
 
-string ModifierType::toString(bool _short) const
+string ModifierType::toString(bool _withoutDataLocation) const
 {
 	string name = "modifier (";
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
-		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
+		name += (*it)->toString(_withoutDataLocation) + (it + 1 == m_parameterTypes.end() ? "" : ",");
 	return name + ")";
 }
 
@@ -4183,7 +4183,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 	return {};
 }
 
-string MagicType::toString(bool _short) const
+string MagicType::toString(bool _withoutDataLocation) const
 {
 	switch (m_kind)
 	{
@@ -4197,7 +4197,7 @@ string MagicType::toString(bool _short) const
 		return "abi";
 	case Kind::MetaType:
 		solAssert(m_typeArgument, "");
-		return "type(" + m_typeArgument->toString(_short) + ")";
+		return "type(" + m_typeArgument->toString(_withoutDataLocation) + ")";
 	}
 	solAssert(false, "Unknown kind of magic.");
 	return {};
