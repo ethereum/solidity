@@ -712,7 +712,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 		if (m_scanner->currentToken() == Token::RBrace)
 			break;
 		expectToken(Token::Comma);
-		if (m_scanner->currentToken() != Token::Identifier)
+		if (m_scanner->currentToken() != Token::Identifier && m_scanner->peekNextToken() != Token::RBrace)
 			fatalParserError(1612_error, "Expected identifier after ','");
 	}
 	if (members.empty())
@@ -2032,7 +2032,10 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
 					components.push_back(parseExpression());
 				else if (isArray)
-					parserError(4799_error, "Expected expression (inline array elements cannot be omitted).");
+					if (m_scanner->currentToken() == oppositeToken)
+						break;
+					else
+						parserError(4799_error, "Expected expression (inline array elements cannot be omitted).");
 				else
 					components.push_back(ASTPointer<Expression>());
 
