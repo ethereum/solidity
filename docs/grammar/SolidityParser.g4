@@ -102,7 +102,7 @@ namedArgument: name=identifier Colon value=expression;
  * Arguments when calling a function or a similar callable object.
  * The arguments are either given as comma separated list or as map of named arguments.
  */
-callArgumentList: LParen ((expression (Comma expression)*)? | LBrace (namedArgument (Comma namedArgument)*)? RBrace) RParen;
+callArgumentList: LParen ((expression (Comma expression)* Comma?)? | LBrace (namedArgument (Comma namedArgument)* Comma?)? RBrace) RParen;
 /**
  * Qualified name.
  */
@@ -120,7 +120,7 @@ visibility: Internal | External | Private | Public;
 /**
  * A list of parameters, such as function arguments or return values.
  */
-parameterList: parameters+=parameterDeclaration (Comma parameters+=parameterDeclaration)*;
+parameterList: parameters+=parameterDeclaration (Comma parameters+=parameterDeclaration)* Comma?;
 //@doc:inline
 parameterDeclaration: type=typeName location=dataLocation? name=identifier?;
 /**
@@ -150,7 +150,7 @@ stateMutability: Pure | View | Payable;
  * In cases where there are ambiguous declarations in several base contracts being overridden,
  * a complete list of base contracts has to be given.
  */
-overrideSpecifier: Override (LParen overrides+=identifierPath (Comma overrides+=identifierPath)* RParen)?;
+overrideSpecifier: Override (LParen overrides+=identifierPath (Comma overrides+=identifierPath)* Comma? RParen)?;
 /**
  * The definition of contract, library and interface functions.
  * Depending on the context in which the function is defined, further restrictions may apply,
@@ -249,7 +249,7 @@ structMember: type=typeName name=identifier Semicolon;
 /**
  * Definition of an enum. Can occur at top-level within a source unit or within a contract, library or interface.
  */
-enumDefinition:	Enum name=identifier LBrace enumValues+=identifier (Comma enumValues+=identifier)* RBrace;
+enumDefinition:	Enum name=identifier LBrace enumValues+=identifier (Comma enumValues+=identifier)* Comma? RBrace;
 /**
  * Definition of a user defined value type. Can occur at top-level within a source unit or within a contract, library or interface.
  */
@@ -295,7 +295,7 @@ eventParameter: type=typeName Indexed? name=identifier?;
  */
 eventDefinition:
 	Event name=identifier
-	LParen (parameters+=eventParameter (Comma parameters+=eventParameter)*)? RParen
+	LParen (parameters+=eventParameter (Comma parameters+=eventParameter)*)? Comma? RParen
 	Anonymous?
 	Semicolon;
 
@@ -308,14 +308,14 @@ errorParameter: type=typeName name=identifier?;
  */
 errorDefinition:
 	Error name=identifier
-	LParen (parameters+=errorParameter (Comma parameters+=errorParameter)*)? RParen
+	LParen (parameters+=errorParameter (Comma parameters+=errorParameter)*)? Comma? RParen
 	Semicolon;
 
 /**
  * Using directive to bind library functions and free functions to types.
  * Can occur within contracts and libraries and at the file level.
  */
-usingDirective: Using (identifierPath | (LBrace identifierPath (Comma identifierPath)* RBrace)) For (Mul | typeName) Global? Semicolon;
+usingDirective: Using (identifierPath | (LBrace identifierPath (Comma identifierPath)* Comma? RBrace)) For (Mul | typeName) Global? Semicolon;
 /**
  * A type name can be an elementary type, a function type, a mapping type, a user-defined type
  * (e.g. a contract or struct) or an array type.
@@ -349,7 +349,7 @@ expression:
 	expression LBrack index=expression? RBrack # IndexAccess
 	| expression LBrack start=expression? Colon end=expression? RBrack # IndexRangeAccess
 	| expression Period (identifier | Address) # MemberAccess
-	| expression LBrace (namedArgument (Comma namedArgument)*)? RBrace # FunctionCallOptions
+	| expression LBrace (namedArgument (Comma namedArgument)* Comma?)? RBrace # FunctionCallOptions
 	| expression callArgumentList # FunctionCall
 	| Payable callArgumentList # PayableConversion
 	| Type LParen typeName RParen # MetaType
@@ -384,7 +384,7 @@ tupleExpression: LParen (expression? ( Comma expression?)* ) RParen;
 /**
  * An inline array expression denotes a statically sized array of the common type of the contained expressions.
  */
-inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
+inlineArrayExpression: LBrack (expression ( Comma expression)* Comma?) RBrack;
 
 /**
  * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.

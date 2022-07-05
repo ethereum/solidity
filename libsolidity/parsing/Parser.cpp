@@ -490,6 +490,9 @@ ASTPointer<OverrideSpecifier> Parser::parseOverrideSpecifier()
 				break;
 
 			expectToken(Token::Comma);
+
+			if (currentToken() == Token::RParen)
+				break;
 		}
 
 		nodeFactory.markEndPosition();
@@ -977,6 +980,10 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 			functions.emplace_back(parseIdentifierPath());
 		}
 		while (m_scanner->currentToken() == Token::Comma);
+
+		if (currentToken() == Token::Comma)
+			advance();
+
 		expectToken(Token::RBrace);
 	}
 	else
