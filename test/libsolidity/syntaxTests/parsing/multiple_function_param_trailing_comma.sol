@@ -1,5 +1,5 @@
 contract test {
-	function(uint a, uint b,) {}
+	function Test(uint a, uint b,) public {}
 }
 // ----
-// ParserError 7591: (40-41): Unexpected trailing comma in parameter list.
+

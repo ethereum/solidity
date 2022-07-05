@@ -1207,7 +1207,10 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 		while (m_scanner->currentToken() != Token::RParen)
 		{
 			if (m_scanner->currentToken() == Token::Comma && m_scanner->peekNextToken() == Token::RParen)
-				fatalParserError(7591_error, "Unexpected trailing comma in parameter list.");
+			{
+				advance();
+				break;
+			}
 			expectToken(Token::Comma);
 			parameters.push_back(parseVariableDeclaration(options));
 		}
@@ -2125,7 +2128,6 @@ Parser::FunctionCallArguments Parser::parseNamedArguments()
 			m_scanner->peekNextToken() == Token::RBrace
 		)
 		{
-			parserError(2074_error, "Unexpected trailing comma.");
 			advance();
 		}
 
