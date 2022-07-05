@@ -46,7 +46,7 @@ path: NonEmptyStringLiteral;
 /**
  * List of aliases for symbols to be imported.
  */
-symbolAliases: LBrace aliases+=importAliases (Comma aliases+=importAliases)* RBrace;
+symbolAliases: LBrace aliases+=importAliases (Comma aliases+=importAliases)* Comma? RBrace;
 
 /**
  * Top-level definition of a contract.

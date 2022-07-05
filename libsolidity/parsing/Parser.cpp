@@ -277,6 +277,11 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 				symbolAliases.emplace_back(ImportDirective::SymbolAlias{move(id), move(alias), aliasLocation});
 				if (m_scanner->currentToken() != Token::Comma)
 					break;
+				else if (m_scanner->peekNextToken() == Token::RBrace)
+				{
+					advance();
+					break;
+				}
 				advance();
 			}
 			expectToken(Token::RBrace);
@@ -491,7 +496,7 @@ ASTPointer<OverrideSpecifier> Parser::parseOverrideSpecifier()
 
 			expectToken(Token::Comma);
 
-			if (currentToken() == Token::RParen)
+			if (m_scanner->currentToken() == Token::RParen)
 				break;
 		}
 
@@ -981,7 +986,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 		}
 		while (m_scanner->currentToken() == Token::Comma);
 
-		if (currentToken() == Token::Comma)
+		if (m_scanner->currentToken() == Token::Comma)
 			advance();
 
 		expectToken(Token::RBrace);
