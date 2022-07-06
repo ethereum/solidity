@@ -775,7 +775,7 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	setLocation(_binOp);
 
-	// TOOD make this nicer
+	// TODO: make this nicer
 	if (_binOp.annotation().userDefinedFunction)
 	{
 		_binOp.leftExpression().accept(*this);

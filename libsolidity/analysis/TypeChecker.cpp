@@ -1835,7 +1835,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			*userDefinedFunctionType->parameterTypes().at(0) ==
 			*userDefinedFunctionType->parameterTypes().at(1)
 		);
-		commonType = userDefinedFunctionType->parameterTypes().at(0);
+		commonType = userDefinedFunctionType->returnParameterTypes().at(0);
 	}
 
 	_operation.annotation().commonType = commonType;

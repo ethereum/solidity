@@ -990,7 +990,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 				};
 				if (!util::contains(overridable, operator_))
 					parserError(
-						1885_error,
+						4403_error,
 						("The operator " + string{TokenTraits::toString(operator_)} + " cannot be user-implemented. This is only possible for the following operators: ") +
 						util::joinHumanReadable(overridable | ranges::views::transform([](Token _t) { return string{TokenTraits::toString(_t)}; }))
 					);
