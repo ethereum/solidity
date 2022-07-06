@@ -672,6 +672,41 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 {
 	setLocation(_unaryOperation);
+
+	FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction;
+	if (function)
+	{
+		_unaryOperation.subExpression().accept(*this);
+		setLocation(_unaryOperation);
+
+		solAssert(function->isFree() || function->libraryFunction());
+
+		FunctionType const* functionType = _unaryOperation.userDefinedFunctionType();
+		solAssert(functionType);
+		functionType = dynamic_cast<FunctionType const&>(*functionType).withBoundFirstArgument();
+		solAssert(functionType);
+		solAssert(
+			functionType->parameterTypes().size() == 0,
+			"Unary operator definition is supposed to accept only the 'self' parameter."
+		);
+
+		string argument = expressionAsType(_unaryOperation.subExpression(), *functionType->selfType());
+		solAssert(!argument.empty());
+		solAssert(function->isImplemented());
+
+		solAssert(function->returnParameters().size() == 1);
+		solAssert(
+			*_unaryOperation.annotation().type == *function->returnParameters()[0]->type(),
+			"The return type of the operator definition is supposed to match the type of the expression."
+		);
+
+		define(_unaryOperation) <<
+			m_context.enqueueFunctionForCodeGeneration(*function) <<
+			("(" + argument + ")\n");
+
+		return false;
+	}
+
 	Type const& resultType = type(_unaryOperation);
 	Token const op = _unaryOperation.getOperator();
 
@@ -774,6 +809,43 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	setLocation(_binOp);
+
+	FunctionDefinition const* function = *_binOp.annotation().userDefinedFunction;
+	if (function)
+	{
+		_binOp.leftExpression().accept(*this);
+		_binOp.rightExpression().accept(*this);
+		setLocation(_binOp);
+
+		solAssert(function->isFree() || function->libraryFunction());
+
+		FunctionType const* functionType = _binOp.userDefinedFunctionType();
+		solAssert(functionType);
+		functionType = dynamic_cast<FunctionType const&>(*functionType).withBoundFirstArgument();
+		solAssert(functionType);
+		solAssert(
+			functionType->parameterTypes().size() == 1,
+			"Binary operator definition is supposed to accept only 'self' and one extra parameter."
+		);
+
+		string left = expressionAsType(_binOp.leftExpression(), *functionType->selfType());
+		string right = expressionAsType(_binOp.rightExpression(), *functionType->parameterTypes()[0]);
+		solAssert(!left.empty() && !right.empty());
+
+		solAssert(function->isImplemented());
+
+		solAssert(function->returnParameters().size() == 1);
+		solAssert(
+			*_binOp.annotation().type == *function->returnParameters()[0]->type(),
+			"The return type of the operator definition is supposed to match the type of the expression."
+		);
+
+		define(_binOp) <<
+			m_context.enqueueFunctionForCodeGeneration(*function) <<
+			("(" + left + ", " + right + ")\n");
+
+		return false;
+	}
 
 	solAssert(!!_binOp.annotation().commonType);
 	Type const* commonType = _binOp.annotation().commonType;

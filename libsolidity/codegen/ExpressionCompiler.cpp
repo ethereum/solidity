@@ -410,6 +410,38 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
+
+	FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction;
+	if (function)
+	{
+		solAssert(function->isFree() || function->libraryFunction());
+
+		FunctionType const* functionType = _unaryOperation.userDefinedFunctionType();
+		solAssert(functionType);
+
+		functionType = dynamic_cast<FunctionType const&>(*functionType).withBoundFirstArgument();
+		solAssert(functionType);
+		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+		acceptAndConvert(_unaryOperation.subExpression(), *functionType->selfType());
+
+		m_context << m_context.functionEntryLabel(*function).pushTag();
+		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+		m_context << returnLabel;
+
+		solAssert(
+			functionType->parameterTypes().size() == 0,
+			"Unary operator definition is supposed to accept only the 'self' parameter."
+		);
+
+		unsigned parameterSize = functionType->selfType()->sizeOnStack();
+		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
+
+		// callee adds return parameters, but removes arguments and return label
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+
+		return false;
+	}
+
 	Type const& type = *_unaryOperation.annotation().type;
 	if (type.category() == Type::Category::RationalNumber)
 	{
@@ -502,7 +534,39 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.leftExpression();
 	Expression const& rightExpression = _binaryOperation.rightExpression();
-	solAssert(!!_binaryOperation.annotation().commonType, "");
+	FunctionDefinition const* function = *_binaryOperation.annotation().userDefinedFunction;
+	if (function)
+	{
+		solAssert(function->isFree() || function->libraryFunction());
+
+		FunctionType const* functionType = _binaryOperation.userDefinedFunctionType();
+		solAssert(functionType);
+		functionType = dynamic_cast<FunctionType const&>(*functionType).withBoundFirstArgument();
+		solAssert(functionType);
+
+		solAssert(
+			functionType->parameterTypes().size() == 1,
+			"Binary operator definition is supposed to accept only 'self' and one extra parameter."
+		);
+		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+		acceptAndConvert(leftExpression, *functionType->selfType());
+		acceptAndConvert(rightExpression, *functionType->parameterTypes()[0]);
+
+		m_context << m_context.functionEntryLabel(*function).pushTag();
+		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+		m_context << returnLabel;
+
+		unsigned parameterSize =
+			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
+			functionType->selfType()->sizeOnStack();
+
+		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
+		// callee adds return parameters, but removes arguments and return label
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+		return false;
+	}
+
+	solAssert(!!_binaryOperation.annotation().commonType);
 	Type const* commonType = _binaryOperation.annotation().commonType;
 	Token const c_op = _binaryOperation.getOperator();
 
