@@ -22,6 +22,7 @@
  */
 
 #include <libsolidity/ast/ASTJsonImporter.h>
+#include <libsolidity/ast/UserDefinableOperators.h>
 
 #include <libyul/AsmJsonImporter.h>
 #include <libyul/AST.h>
@@ -397,15 +398,32 @@ ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Jso
 ASTPointer<UsingForDirective> ASTJsonImporter::createUsingForDirective(Json::Value const& _node)
 {
 	vector<ASTPointer<IdentifierPath>> functions;
+	vector<optional<Token>> operators;
 	if (_node.isMember("libraryName"))
+	{
+		astAssert(!_node["libraryName"].isArray());
+		astAssert(!_node["libraryName"]["operator"]);
 		functions.emplace_back(createIdentifierPath(_node["libraryName"]));
+		operators.emplace_back(nullopt);
+	}
 	else if (_node.isMember("functionList"))
 		for (Json::Value const& function: _node["functionList"])
+		{
 			functions.emplace_back(createIdentifierPath(function["function"]));
+			if (function.isMember("operator"))
+			{
+				Token const token = scanSingleToken(function["operator"]);
+				astAssert(util::contains(frontend::userDefinableOperators, token));
+				operators.emplace_back(token);
+			}
+			else
+				operators.emplace_back(nullopt);
+		}
 
 	return createASTNode<UsingForDirective>(
 		_node,
 		std::move(functions),
+		std::move(operators),
 		!_node.isMember("libraryName"),
 		_node["typeName"].isNull() ? nullptr  : convertJsonToASTNode<TypeName>(_node["typeName"]),
 		memberAsBool(_node, "global")

@@ -663,16 +663,19 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<ASTPointer<IdentifierPath>> _functionsOrLibrary,
+		std::vector<std::optional<Token>> _operators,
 		bool _usesBraces,
 		ASTPointer<TypeName> _typeName,
 		bool _global
 	):
 		ASTNode(_id, _location),
 		m_functionsOrLibrary(std::move(_functionsOrLibrary)),
+		m_operators(std::move(_operators)),
 		m_usesBraces(_usesBraces),
 		m_typeName(std::move(_typeName)),
 		m_global{_global}
 	{
+		solAssert(m_functionsOrLibrary.size() == m_operators.size());
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -683,12 +686,18 @@ public:
 
 	/// @returns a list of functions or the single library.
 	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functionsOrLibrary; }
+	std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> functionsAndOperators() const;
 	bool usesBraces() const { return m_usesBraces; }
 	bool global() const { return m_global; }
 
 private:
 	/// Either the single library or a list of functions.
 	std::vector<ASTPointer<IdentifierPath>> m_functionsOrLibrary;
+	/// Operators, the functions from @a m_functionsOrLibrary implement.
+	/// A token if the corresponding element in m_functionsOrLibrary
+	/// defines an operator, nullptr otherwise.
+	/// Note that this vector size must be equal to m_functionsOrLibrary size.
+	std::vector<std::optional<Token>> m_operators;
 	bool m_usesBraces;
 	ASTPointer<TypeName> m_typeName;
 	bool m_global = false;
@@ -2073,6 +2082,10 @@ public:
 	bool isPrefixOperation() const { return m_isPrefix; }
 	Expression const& subExpression() const { return *m_subExpression; }
 
+	FunctionType const* userDefinedFunctionType() const;
+
+	OperationAnnotation& annotation() const override;
+
 private:
 	Token m_operator;
 	ASTPointer<Expression> m_subExpression;
@@ -2103,6 +2116,8 @@ public:
 	Expression const& leftExpression() const { return *m_left; }
 	Expression const& rightExpression() const { return *m_right; }
 	Token getOperator() const { return m_operator; }
+
+	FunctionType const* userDefinedFunctionType() const;
 
 	BinaryOperationAnnotation& annotation() const override;
 
