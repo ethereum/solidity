@@ -23,6 +23,7 @@
 
 #include <libsolidity/parsing/Parser.h>
 
+#include <libsolidity/ast/UserDefinableOperators.h>
 #include <libsolidity/interface/Version.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
@@ -976,6 +977,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	expectToken(Token::Using);
 
 	vector<ASTPointer<IdentifierPath>> functions;
+	vector<optional<Token>> operators;
 	bool const usesBraces = m_scanner->currentToken() == Token::LBrace;
 	if (usesBraces)
 	{
@@ -983,12 +985,35 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 		{
 			advance();
 			functions.emplace_back(parseIdentifierPath());
+			if (m_scanner->currentToken() == Token::As)
+			{
+				advance();
+				Token operator_ = m_scanner->currentToken();
+				if (!util::contains(userDefinableOperators, operator_))
+				{
+					parserError(
+						4403_error,
+						fmt::format(
+							"Not a user-definable operator: {}. Only the following operators can be user-defined: {}",
+							(!m_scanner->currentLiteral().empty() ? m_scanner->currentLiteral() : string(TokenTraits::toString(operator_))),
+							util::joinHumanReadable(userDefinableOperators | ranges::views::transform([](Token _t) { return string{TokenTraits::toString(_t)}; }))
+						)
+					);
+				}
+				operators.emplace_back(operator_);
+				advance();
+			}
+			else
+				operators.emplace_back(nullopt);
 		}
 		while (m_scanner->currentToken() == Token::Comma);
 		expectToken(Token::RBrace);
 	}
 	else
+	{
 		functions.emplace_back(parseIdentifierPath());
+		operators.emplace_back(nullopt);
+	}
 
 	ASTPointer<TypeName> typeName;
 	expectToken(Token::For);
@@ -1004,7 +1029,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<UsingForDirective>(std::move(functions), usesBraces, typeName, global);
+	return nodeFactory.createNode<UsingForDirective>(std::move(functions), std::move(operators), usesBraces, typeName, global);
 }
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
