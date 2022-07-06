@@ -383,6 +383,38 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 
 }
 
+set<FunctionDefinition const*> Type::operatorDefinitions(
+	Token _token,
+	ASTNode const& _scope,
+	bool _unary
+) const
+{
+	if (!typeDefinition())
+		return {};
+
+	set<FunctionDefinition const*> matchingDefinitions;
+	for (UsingForDirective const* directive: usingForDirectivesForType(*this, _scope))
+		for (auto const& [identifierPath, operator_]: directive->functionsAndOperators())
+		{
+			if (operator_ != _token)
+				continue;
+
+			auto const& functionDefinition = dynamic_cast<FunctionDefinition const&>(
+				*identifierPath->annotation().referencedDeclaration
+			);
+			auto const* functionType = dynamic_cast<FunctionType const*>(
+				functionDefinition.libraryFunction() ? functionDefinition.typeViaContractName() : functionDefinition.type()
+			);
+			solAssert(functionType && !functionType->parameterTypes().empty());
+
+			size_t parameterCount = functionDefinition.parameterList().parameters().size();
+			if (*this == *functionType->parameterTypes().front() && (_unary ? parameterCount == 1 : parameterCount == 2))
+				matchingDefinitions.insert(&functionDefinition);
+		}
+
+	return matchingDefinitions;
+}
+
 MemberList::MemberMap Type::attachedFunctions(Type const& _type, ASTNode const& _scope)
 {
 	MemberList::MemberMap members;
@@ -405,8 +437,13 @@ MemberList::MemberMap Type::attachedFunctions(Type const& _type, ASTNode const& 
 	};
 
 	for (UsingForDirective const* ufd: usingForDirectivesForType(_type, _scope))
-		for (auto const& identifierPath: ufd->functionsOrLibrary())
+		for (auto const& [identifierPath, operator_]: ufd->functionsAndOperators())
 		{
+			if (operator_.has_value())
+				// Functions used to define operators are not automatically attached to the type.
+				// I.e. `using {f, f as +} for T` allows `T x; x.f()` but `using {f as +} for T` does not.
+				continue;
+
 			solAssert(identifierPath);
 			Declaration const* declaration = identifierPath->annotation().referencedDeclaration;
 			solAssert(declaration);

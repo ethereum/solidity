@@ -377,6 +377,21 @@ public:
 	/// Clears all internally cached values (if any).
 	virtual void clearCache() const;
 
+	/// Scans all "using for" directives in the @a _scope for functions implementing
+	/// the operator represented by @a _token. Returns the set of all definitions where the type
+	/// of the first argument matches this type object.
+	///
+	/// @note: If the AST has passed analysis without errors,
+	/// the function will find at most one definition for an operator.
+	///
+	/// @param _unary If true, only definitions that accept exactly one argument are included.
+	/// Otherwise only definitions that accept exactly two arguments.
+	std::set<FunctionDefinition const*> operatorDefinitions(
+		Token _token,
+		ASTNode const& _scope,
+		bool _unary
+	) const;
+
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
 	static MemberList::MemberMap attachedFunctions(Type const& _type, ASTNode const& _scope);
