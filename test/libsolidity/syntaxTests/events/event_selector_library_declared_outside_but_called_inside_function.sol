@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9582: (70-82): Member "selector" not found or not visible after argument-dependent lookup in function ().
+// TypeError 9582: (70-82): Member "selector" not found or not visible after argument-dependent lookup in event E().

@@ -143,10 +143,10 @@ string ASTJsonExporter::namePathToString(std::vector<ASTString> const& _namePath
 	return boost::algorithm::join(_namePath, ".");
 }
 
-Json::Value ASTJsonExporter::typePointerToJson(Type const* _tp, bool _short)
+Json::Value ASTJsonExporter::typePointerToJson(Type const* _tp, bool _withoutDataLocation)
 {
 	Json::Value typeDescriptions(Json::objectValue);
-	typeDescriptions["typeString"] = _tp ? Json::Value(_tp->toString(_short)) : Json::nullValue;
+	typeDescriptions["typeString"] = _tp ? Json::Value(_tp->toString(_withoutDataLocation)) : Json::nullValue;
 	typeDescriptions["typeIdentifier"] = _tp ? Json::Value(_tp->identifier()) : Json::nullValue;
 	return typeDescriptions;
 

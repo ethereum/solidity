@@ -214,7 +214,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 				arguments.front()->location(),
 				"The first argument to \"abi.decode\" must be implicitly convertible to "
 				"bytes memory or bytes calldata, but is of type " +
-				type(*arguments.front())->toString() +
+				type(*arguments.front())->humanReadableName() +
 				"."
 			);
 
@@ -258,7 +258,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 				m_errorReporter.typeError(
 					9611_error,
 					typeArgument->location(),
-					"Decoding type " + actualType->toString(false) + " not supported."
+					"Decoding type " + actualType->humanReadableName() + " not supported."
 				);
 
 			if (auto referenceType = dynamic_cast<ReferenceType const*>(actualType))
@@ -318,7 +318,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			arguments.front()->location(),
 			"Invalid type for argument in the function call. "
 			"An enum type, contract type or an integer type is required, but " +
-			type(*arguments.front())->toString(true) + " provided."
+			type(*arguments.front())->humanReadableName() + " provided."
 		);
 
 	return {TypeProvider::meta(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
@@ -367,9 +367,9 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 					(*arguments)[i]->location(),
 					"Invalid type for argument in constructor call. "
 					"Invalid implicit conversion from " +
-					type(*(*arguments)[i])->toString() +
+					type(*(*arguments)[i])->humanReadableName() +
 					" to " +
-					parameterTypes[i]->toString() +
+					parameterTypes[i]->humanReadableName() +
 					" requested.",
 					result.message()
 				);
@@ -623,7 +623,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				m_errorReporter.fatalTypeError(
 					4061_error,
 					_variable.location(),
-					"Type " + varType->toString(true) + " is only valid in storage because it contains a (nested) mapping."
+					"Type " + varType->humanReadableName() + " is only valid in storage because it contains a (nested) mapping."
 				);
 	}
 	else if (_variable.visibility() >= Visibility::Public)
@@ -634,7 +634,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			vector<string> unsupportedTypes;
 			for (auto const& param: getter.parameterTypes() + getter.returnParameterTypes())
 				if (!typeSupportedByOldABIEncoder(*param, false /* isLibrary */))
-					unsupportedTypes.emplace_back(param->toString());
+					unsupportedTypes.emplace_back(param->humanReadableName());
 			if (!unsupportedTypes.empty())
 				m_errorReporter.typeError(
 					2763_error,
@@ -776,9 +776,9 @@ void TypeChecker::visitManually(
 				arguments[i]->location(),
 				"Invalid type for argument in modifier invocation. "
 				"Invalid implicit conversion from " +
-				type(*arguments[i])->toString() +
+				type(*arguments[i])->humanReadableName() +
 				" to " +
-				type(*(*parameters)[i])->toString() +
+				type(*(*parameters)[i])->humanReadableName() +
 				" requested.",
 				result.message()
 			);
@@ -1115,9 +1115,9 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 					6509_error,
 					parameter->location(),
 					"Invalid type, expected " +
-					returnType->toString(false) +
+					returnType->humanReadableName() +
 					" but got " +
-					parameter->annotation().type->toString() +
+					parameter->annotation().type->humanReadableName() +
 					"."
 				);
 		}
@@ -1258,9 +1258,9 @@ void TypeChecker::endVisit(Return const& _return)
 					5992_error,
 					_return.expression()->location(),
 					"Return argument type " +
-					type(*_return.expression())->toString() +
+					type(*_return.expression())->humanReadableName() +
 					" is not implicitly convertible to expected type " +
-					TupleType(returnTypes).toString(false) + ".",
+					TupleType(returnTypes).humanReadableName() + ".",
 					result.message()
 				);
 		}
@@ -1276,9 +1276,9 @@ void TypeChecker::endVisit(Return const& _return)
 				6359_error,
 				_return.expression()->location(),
 				"Return argument type " +
-				type(*_return.expression())->toString() +
+				type(*_return.expression())->humanReadableName() +
 				" is not implicitly convertible to expected type (type of first return variable) " +
-				expected->toString() + ".",
+				expected->humanReadableName() + ".",
 				result.message()
 			);
 	}
@@ -1382,9 +1382,9 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		if (!result)
 		{
 			auto errorMsg = "Type " +
-				valueComponentType->toString() +
+				valueComponentType->humanReadableName() +
 				" is not implicitly convertible to expected type " +
-				var.annotation().type->toString();
+				var.annotation().type->humanReadableName();
 			if (
 				valueComponentType->category() == Type::Category::RationalNumber &&
 				dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
@@ -1403,7 +1403,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 						_statement.location(),
 						errorMsg +
 						". Try converting to type " +
-						valueComponentType->mobileType()->toString() +
+						valueComponentType->mobileType()->humanReadableName() +
 						" or use an explicit conversion."
 					);
 			}
@@ -1486,9 +1486,9 @@ bool TypeChecker::visit(Conditional const& _conditional)
 					1080_error,
 					_conditional.location(),
 					"True expression's type " +
-					trueType->toString() +
+					trueType->humanReadableName() +
 					" does not match false expression's type " +
-					falseType->toString() +
+					falseType->humanReadableName() +
 					"."
 					);
 			// even we can't find a common type, we have to set a type here,
@@ -1598,9 +1598,9 @@ bool TypeChecker::visit(Assignment const& _assignment)
 				"Operator " +
 				string(TokenTraits::toString(_assignment.assignmentOperator())) +
 				" not compatible with types " +
-				t->toString() +
+				t->humanReadableName() +
 				" and " +
-				type(_assignment.rightHandSide())->toString()
+				type(_assignment.rightHandSide())->humanReadableName()
 			);
 	}
 	return false;
@@ -1691,7 +1691,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				m_errorReporter.fatalTypeError(
 					1545_error,
 					_tuple.location(),
-					"Type " + inlineArrayType->toString(true) + " is only valid in storage."
+					"Type " + inlineArrayType->humanReadableName() + " is only valid in storage."
 				);
 
 			_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
@@ -1722,7 +1722,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	TypeResult result = type(_operation.subExpression())->unaryOperatorResult(op);
 	if (!result)
 	{
-		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->toString();
+		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName();
 		if (!result.message().empty())
 			description += ". " + result.message();
 		if (modifying)
@@ -1756,9 +1756,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			"Operator " +
 			string(TokenTraits::toString(_operation.getOperator())) +
 			" not compatible with types " +
-			leftType->toString() +
+			leftType->humanReadableName() +
 			" and " +
-			rightType->toString() +
+			rightType->humanReadableName() +
 			(!result.message().empty() ? ". " + result.message() : "")
 		);
 		commonType = leftType;
@@ -1800,9 +1800,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 				"The result type of the " +
 				operation +
 				" operation is equal to the type of the first operand (" +
-				commonType->toString() +
+				commonType->humanReadableName() +
 				") ignoring the (larger) type of the second operand (" +
-				rightType->toString() +
+				rightType->humanReadableName() +
 				") which might be unexpected. Silence this warning by either converting "
 				"the first or the second operand to the type of the other."
 			);
@@ -2183,7 +2183,7 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 			5511_error,
 			arguments.front()->location(),
 			"Expected first argument to be a function pointer, not \"" +
-			type(*arguments.front())->toString() +
+			type(*arguments.front())->humanReadableName() +
 			"\"."
 		);
 		return;
@@ -2272,9 +2272,9 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 				"Cannot implicitly convert component at position " +
 				to_string(i) +
 				" from \"" +
-				argType.toString() +
+				argType.humanReadableName() +
 				"\" to \"" +
-				externalFunctionType->parameterTypes()[i]->toString() +
+				externalFunctionType->parameterTypes()[i]->humanReadableName() +
 				"\"" +
 				(result.message().empty() ?  "." : ": " + result.message())
 			);
@@ -2334,7 +2334,7 @@ void TypeChecker::typeCheckBytesConcatFunction(
 				argument->location(),
 				"Invalid type for argument in the bytes.concat function call. "
 				"bytes or fixed bytes type is required, but " +
-				argumentType->toString(true) + " provided."
+				argumentType->humanReadableName() + " provided."
 			);
 	}
 }
@@ -2519,9 +2519,9 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				string msg =
 					"Invalid type for argument in function call. "
 					"Invalid implicit conversion from " +
-					type(*paramArgMap[i])->toString() +
+					type(*paramArgMap[i])->humanReadableName() +
 					" to " +
-					parameterTypes[i]->toString() +
+					parameterTypes[i]->humanReadableName() +
 					" requested.";
 				if (!result.message().empty())
 					msg += " " + result.message();
@@ -2583,7 +2583,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				m_errorReporter.typeError(
 					2443_error,
 					paramArgMap[i]->location(),
-					"The type of this parameter, " + parameterTypes[i]->toString(true) + ", "
+					"The type of this parameter, " + parameterTypes[i]->humanReadableName() + ", "
 					"is only supported in ABI coder v2. "
 					"Use \"pragma abicoder v2;\" to enable the feature."
 				);
@@ -2597,7 +2597,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				m_errorReporter.typeError(
 					2428_error,
 					_functionCall.location(),
-					"The type of return parameter " + toString(i + 1) + ", " + returnParameterTypes[i]->toString(true) + ", "
+					"The type of return parameter " + toString(i + 1) + ", " + returnParameterTypes[i]->humanReadableName() + ", "
 					"is only supported in ABI coder v2. "
 					"Use \"pragma abicoder v2;\" to enable the feature."
 				);
@@ -2896,7 +2896,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 					_functionCallOptions.location(),
 					kind == FunctionType::Kind::Creation ?
 						"Cannot set option \"value\", since the constructor of " +
-						expressionFunctionType->returnParameterTypes().front()->toString() +
+						expressionFunctionType->returnParameterTypes().front()->humanReadableName() +
 						" is not payable." :
 						"Cannot set option \"value\" on a non-payable function type."
 				);
@@ -3036,14 +3036,14 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					4994_error,
 					_memberAccess.location(),
 					"Member \"" + memberName + "\" is not available in " +
-					exprType->toString() +
+					exprType->humanReadableName() +
 					" outside of storage."
 				);
 		}
 
 		auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
 			string errorMsg = "Member \"" + memberName + "\" not found or not visible "
-				"after argument-dependent lookup in " + exprType->toString() + ".";
+				"after argument-dependent lookup in " + exprType->humanReadableName() + ".";
 
 			if (auto const* funType = dynamic_cast<FunctionType const*>(exprType))
 			{
@@ -3054,7 +3054,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					if (funType->kind() == FunctionType::Kind::Creation)
 						return {
 							8827_error,
-							"Constructor for " + t.front()->toString() + " must be payable for member \"value\" to be available."
+							"Constructor for " + t.front()->humanReadableName() + " must be payable for member \"value\" to be available."
 						};
 					else if (
 						funType->kind() == FunctionType::Kind::DelegateCall ||
@@ -3093,7 +3093,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 						"Expected address not-payable as members were not found"
 					);
 
-					return { 9862_error, "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->toString() + "\"." };
+					return { 9862_error, "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->humanReadableName() + "\"." };
 				}
 			}
 
@@ -3111,7 +3111,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			6675_error,
 			_memberAccess.location(),
 			"Member \"" + memberName + "\" not unique "
-			"after argument-dependent lookup in " + exprType->toString() +
+			"after argument-dependent lookup in " + exprType->humanReadableName() +
 			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".")
 		);
 
@@ -3125,7 +3125,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		solAssert(
 			!funType->bound() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
 			"Function \"" + memberName + "\" cannot be called on an object of type " +
-			exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
+			exprType->humanReadableName() + " (expected " + funType->selfType()->humanReadableName() + ")."
 		);
 
 		if (
@@ -3388,7 +3388,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		m_errorReporter.fatalTypeError(
 			2614_error,
 			_access.baseExpression().location(),
-			"Indexed expression has to be a type, mapping or array (is " + baseType->toString() + ")"
+			"Indexed expression has to be a type, mapping or array (is " + baseType->humanReadableName() + ")"
 		);
 	}
 	_access.annotation().type = resultType;
@@ -3543,7 +3543,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 						// Try to re-construct function definition
 						string description;
 						for (auto const& param: declaration->functionType(true)->parameterTypes())
-							description += (description.empty() ? "" : ", ") + param->toString(false);
+							description += (description.empty() ? "" : ", ") + param->humanReadableName();
 						description = "function " + _identifier.name() + "(" + description + ")";
 
 						ssl.append("Candidate: " + description, declaration->location());
@@ -3764,7 +3764,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				path->location(),
 				"The function \"" + joinHumanReadable(path->path(), ".") + "\" " +
 				"does not have any parameters, and therefore cannot be bound to the type \"" +
-				(normalizedType ? normalizedType->toString(true) : "*") + "\"."
+				(normalizedType ? normalizedType->humanReadableName() : "*") + "\"."
 			);
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const&>(*functionDefinition.type()).asBoundFunction();
@@ -3777,9 +3777,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				3100_error,
 				path->location(),
 				"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-				"cannot be bound to the type \"" + _usingFor.typeName()->annotation().type->toString() +
+				"cannot be bound to the type \"" + _usingFor.typeName()->annotation().type->humanReadableName() +
 				"\" because the type cannot be implicitly converted to the first argument" +
-				" of the function (\"" + functionType->selfType()->toString() + "\")" +
+				" of the function (\"" + functionType->selfType()->humanReadableName() + "\")" +
 				(
 					result.message().empty() ?
 					"." :
@@ -3834,9 +3834,9 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 	if (!result)
 	{
 		auto errorMsg = "Type " +
-			type(_expression)->toString() +
+			type(_expression)->humanReadableName() +
 			" is not implicitly convertible to expected type " +
-			_expectedType.toString();
+			_expectedType.humanReadableName();
 		if (
 			type(_expression)->category() == Type::Category::RationalNumber &&
 			dynamic_cast<RationalNumberType const*>(type(_expression))->isFractional() &&
@@ -3855,7 +3855,7 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 					_expression.location(),
 					errorMsg +
 					". Try converting to type " +
-					type(_expression)->mobileType()->toString() +
+					type(_expression)->mobileType()->humanReadableName() +
 					" or use an explicit conversion.",
 					result.message()
 				);
