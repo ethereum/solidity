@@ -64,17 +64,53 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 		case Token::And:
 		{
 			visitNode(_operation);
+			solAssert(*_operation.annotation().userDefinedFunction == nullptr);
 			appendControlFlow(_operation.leftExpression());
 
 			auto nodes = splitFlow<2>();
 			nodes[0] = createFlow(nodes[0], _operation.rightExpression());
 			mergeFlow(nodes, nodes[1]);
-
 			return false;
 		}
 		default:
-			return ASTConstVisitor::visit(_operation);
+		{
+			if (*_operation.annotation().userDefinedFunction != nullptr)
+			{
+				visitNode(_operation);
+				_operation.leftExpression().accept(*this);
+				_operation.rightExpression().accept(*this);
+
+				m_currentNode->functionDefinition = *_operation.annotation().userDefinedFunction;
+
+				auto nextNode = newLabel();
+
+				connect(m_currentNode, nextNode);
+				m_currentNode = nextNode;
+				return false;
+			}
+		}
 	}
+	return ASTConstVisitor::visit(_operation);
+}
+
+bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
+{
+	solAssert(!!m_currentNode);
+
+	if (*_operation.annotation().userDefinedFunction != nullptr)
+	{
+		visitNode(_operation);
+		_operation.subExpression().accept(*this);
+		m_currentNode->functionDefinition = *_operation.annotation().userDefinedFunction;
+
+		auto nextNode = newLabel();
+
+		connect(m_currentNode, nextNode);
+		m_currentNode = nextNode;
+		return false;
+	}
+
+	return ASTConstVisitor::visit(_operation);
 }
 
 bool ControlFlowBuilder::visit(Conditional const& _conditional)
