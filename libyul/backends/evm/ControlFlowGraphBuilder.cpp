@@ -361,99 +361,105 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
 	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
-	StackSlot switchExpr = std::visit(*this, *_switch.expression);
-	auto switchBlock = m_currentBlock;
-	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
+	
+	// TODO: Replace with 'can be used as a jump table' check
+	if (_switch.cases.size() > 1000)
+	{
+		// Generate as Switch CFG block (only used for jump tables)
+		StackSlot switchExpr = std::visit(*this, *_switch.expression);
+		auto switchBlock = m_currentBlock;
+		CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
 
-	optional<Case const*> defaultCase;
-	for (Case const& _case: _switch.cases)
-	{
-		if (!_case.value)
-			defaultCase = &_case;
-	}
-	CFG::BasicBlock* defaultCaseBlock = nullptr;
-	if (defaultCase.has_value())
-	{
-		defaultCaseBlock = &m_graph.makeBlock(debugDataOf(defaultCase.value()->body));
-		m_currentBlock = defaultCaseBlock;
-		(*this)(defaultCase.value()->body);
-		jump(debugDataOf(defaultCase.value()->body), afterSwitch, false);
-	}
-
-	map<u256, CFG::BasicBlock*> cases;
-	for (Case const& _case: _switch.cases)
-	{
-		if (_case.value)
+		optional<Case const*> defaultCase;
+		for (Case const& _case: _switch.cases)
 		{
-			u256 caseVal = valueOfLiteral(*_case.value);
-			cases[caseVal] = &m_graph.makeBlock(debugDataOf(_case.body));
-			m_currentBlock = cases[caseVal];
-			(*this)(_case.body);
-			jump(debugDataOf(_case.body), afterSwitch, false);
+			if (!_case.value)
+				defaultCase = &_case;
 		}
+		CFG::BasicBlock* defaultCaseBlock = nullptr;
+		if (defaultCase.has_value())
+		{
+			defaultCaseBlock = &m_graph.makeBlock(debugDataOf(defaultCase.value()->body));
+			m_currentBlock = defaultCaseBlock;
+			(*this)(defaultCase.value()->body);
+			jump(debugDataOf(defaultCase.value()->body), afterSwitch, false);
+		}
+
+		map<u256, CFG::BasicBlock*> cases;
+		for (Case const& _case: _switch.cases)
+		{
+			if (_case.value)
+			{
+				u256 caseVal = valueOfLiteral(*_case.value);
+				cases[caseVal] = &m_graph.makeBlock(debugDataOf(_case.body));
+				m_currentBlock = cases[caseVal];
+				(*this)(_case.body);
+				jump(debugDataOf(_case.body), afterSwitch, false);
+			}
+		}
+
+		m_currentBlock = switchBlock;
+		makeSwitch(debugDataOf(_switch), switchExpr, defaultCaseBlock,
+			cases, afterSwitch);
+		m_currentBlock = &afterSwitch;
 	}
-
-	m_currentBlock = switchBlock;
-	makeSwitch(debugDataOf(_switch), switchExpr, defaultCaseBlock,
-		cases, afterSwitch);
-	m_currentBlock = &afterSwitch;
-
-	/*yulAssert(m_currentBlock, "");
-	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
-
-	auto ghostVariableId = m_graph.ghostVariables.size();
-	YulString ghostVariableName("GHOST[" + to_string(ghostVariableId) + "]");
-	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulstring, ghostVariableName});
-
-	// Artificially generate:
-	// let <ghostVariable> := <switchExpression>
-	VariableSlot ghostVarSlot{ghostVar, debugDataOf(*_switch.expression)};
-	m_currentBlock->operations.emplace_back(CFG::Operation{
-		Stack{std::visit(*this, *_switch.expression)},
-		Stack{ghostVarSlot},
-		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
-	});
-
-	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction({});
-	yulAssert(equalityBuiltin, "");
-
-	// Artificially generate:
-	// eq(<literal>, <ghostVariable>)
-	auto makeValueCompare = [&](Case const& _case) {
-		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
-			debugDataOf(_case),
-			yul::Identifier{{}, "eq"_yulstring},
-			{*_case.value, Identifier{{}, ghostVariableName}}
-		});
-		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
-			Stack{ghostVarSlot, LiteralSlot{valueOfLiteral(*_case.value), debugDataOf(*_case.value)}},
-			Stack{TemporarySlot{ghostCall, 0}},
-			CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
-		});
-		return operation.output.front();
-	};
-	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
-	yulAssert(!_switch.cases.empty(), "");
-	for (auto const& switchCase: _switch.cases | ranges::views::drop_last(1))
+	else
 	{
-		yulAssert(switchCase.value, "");
-		auto& caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
-		auto& elseBranch = m_graph.makeBlock(debugDataOf(_switch));
-		makeConditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, elseBranch);
-		m_currentBlock = &caseBranch;
+		// Generate as series of case value comparisons
+		auto ghostVariableId = m_graph.ghostVariables.size();
+		YulString ghostVariableName("GHOST[" + to_string(ghostVariableId) + "]");
+		auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulstring, ghostVariableName});
+
+		// Artificially generate:
+		// let <ghostVariable> := <switchExpression>
+		VariableSlot ghostVarSlot{ghostVar, debugDataOf(*_switch.expression)};
+		m_currentBlock->operations.emplace_back(CFG::Operation{
+			Stack{std::visit(*this, *_switch.expression)},
+			Stack{ghostVarSlot},
+			CFG::Assignment{_switch.debugData, {ghostVarSlot}}
+		});
+
+		BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction({});
+		yulAssert(equalityBuiltin, "");
+
+		// Artificially generate:
+		// eq(<literal>, <ghostVariable>)
+		auto makeValueCompare = [&](Case const& _case) {
+			yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
+				debugDataOf(_case),
+				yul::Identifier{{}, "eq"_yulstring},
+				{*_case.value, Identifier{{}, ghostVariableName}}
+			});
+			CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
+				Stack{ghostVarSlot, LiteralSlot{valueOfLiteral(*_case.value), debugDataOf(*_case.value)}},
+				Stack{TemporarySlot{ghostCall, 0}},
+				CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
+			});
+			return operation.output.front();
+		};
+		CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
+		yulAssert(!_switch.cases.empty(), "");
+		for (auto const& switchCase: _switch.cases | ranges::views::drop_last(1))
+		{
+			yulAssert(switchCase.value, "");
+			auto& caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
+			auto& elseBranch = m_graph.makeBlock(debugDataOf(_switch));
+			makeConditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, elseBranch);
+			m_currentBlock = &caseBranch;
+			(*this)(switchCase.body);
+			jump(debugDataOf(switchCase.body), afterSwitch);
+			m_currentBlock = &elseBranch;
+		}
+		Case const& switchCase = _switch.cases.back();
+		if (switchCase.value)
+		{
+			CFG::BasicBlock& caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
+			makeConditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, afterSwitch);
+			m_currentBlock = &caseBranch;
+		}
 		(*this)(switchCase.body);
 		jump(debugDataOf(switchCase.body), afterSwitch);
-		m_currentBlock = &elseBranch;
 	}
-	Case const& switchCase = _switch.cases.back();
-	if (switchCase.value)
-	{
-		CFG::BasicBlock& caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
-		makeConditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, afterSwitch);
-		m_currentBlock = &caseBranch;
-	}
-	(*this)(switchCase.body);
-	jump(debugDataOf(switchCase.body), afterSwitch);*/
 }
 
 void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
