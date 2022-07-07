@@ -1733,7 +1733,8 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	// Check if the operator is built-in or user-defined.
 	FunctionDefinition const* userDefinedOperator = subExprType->userDefinedOperator(
 		_operation.getOperator(),
-		*currentDefinitionScope()
+		*currentDefinitionScope(),
+		true // _unaryOperation
 	);
 	_operation.annotation().userDefinedFunction = userDefinedOperator;
 	FunctionType const* userDefinedFunctionType = nullptr;
@@ -1791,7 +1792,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	// Check if the operator is built-in or user-defined.
 	FunctionDefinition const* userDefinedOperator = leftType->userDefinedOperator(
 		_operation.getOperator(),
-		*currentDefinitionScope()
+		*currentDefinitionScope(),
+		false // _unaryOperation
 	);
 	_operation.annotation().userDefinedFunction = userDefinedOperator;
 	FunctionType const* userDefinedFunctionType = nullptr;
@@ -3899,15 +3901,10 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				);
 				continue;
 			}
-			// "-" can be used as unary and binary operator.
-			bool isUnaryNegation = (
-				operator_ == Token::Sub &&
-				functionType->parameterTypesIncludingSelf().size() == 1
-			);
+
 			if (
 				(
-					(TokenTraits::isBinaryOp(*operator_) && !isUnaryNegation) ||
-					TokenTraits::isCompareOp(*operator_)
+					(TokenTraits::isBinaryOp(*operator_) && !TokenTraits::isUnaryOp(*operator_)) || TokenTraits::isCompareOp(*operator_)
 				) &&
 				(
 					functionType->parameterTypesIncludingSelf().size() != 2 ||

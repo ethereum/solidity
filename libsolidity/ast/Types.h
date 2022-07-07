@@ -377,7 +377,7 @@ public:
 	/// Clears all internally cached values (if any).
 	virtual void clearCache() const;
 
-	FunctionDefinition const* userDefinedOperator(Token _token, ASTNode const& _scope) const;
+	FunctionDefinition const* userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const;
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.

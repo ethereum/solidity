@@ -672,6 +672,34 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 {
 	setLocation(_unaryOperation);
+
+	if (_unaryOperation.annotation().userDefinedFunction)
+	{
+		_unaryOperation.subExpression().accept(*this);
+		setLocation(_unaryOperation);
+
+		// TODO extract from function call
+		FunctionDefinition const& function = *_unaryOperation.annotation().userDefinedFunction;
+		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
+			function.libraryFunction() ? function.typeViaContractName() : function.type()
+		);
+		solAssert(functionType);
+		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
+		solAssert(functionType);
+
+		// TODO virtual?
+
+		string parameter = expressionAsType(_unaryOperation.subExpression(), *functionType->selfType());
+		solAssert(!parameter.empty());
+		solAssert(function.isImplemented(), "");
+
+		define(_unaryOperation) <<
+			m_context.enqueueFunctionForCodeGeneration(function) <<
+			("(" + parameter + ")\n");
+
+		return false;
+	}
+
 	Type const& resultType = type(_unaryOperation);
 	Token const op = _unaryOperation.getOperator();
 

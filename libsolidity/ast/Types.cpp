@@ -384,7 +384,7 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 
 }
 
-FunctionDefinition const* Type::userDefinedOperator(Token _token, ASTNode const& _scope) const
+FunctionDefinition const* Type::userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const
 {
 	// Check if it is a user-defined type.
 	if (!typeDefinition())
@@ -405,8 +405,11 @@ FunctionDefinition const* Type::userDefinedOperator(Token _token, ASTNode const&
 			solAssert(functionType && !functionType->parameterTypes().empty());
 			// TODO does this work (data location)?
 			solAssert(isImplicitlyConvertibleTo(*functionType->parameterTypes().front()));
-			seenFunctions.insert(&function);
+			if ((_unaryOperation && function.parameterList().parameters().size() == 1) ||
+				(!_unaryOperation && function.parameterList().parameters().size() == 2))
+				seenFunctions.insert(&function);
 		}
+
 	// TODO proper error handling.
 	if (seenFunctions.size() == 1)
 		return *seenFunctions.begin();
