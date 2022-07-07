@@ -5,7 +5,7 @@ Operators
 
 Arithmetic and bit operators can be applied even if the two operands do not have the same type.
 For example, you can compute ``y = x + z``, where ``x`` is a ``uint8`` and ``z`` has
-the type ``int32``. In these cases, the following mechanism will be used to determine
+the type ``int16``. In these cases, the following mechanism will be used to determine
 the type in which the operation is computed (this is important in case of overflow)
 and the type of the operator's result:
 
