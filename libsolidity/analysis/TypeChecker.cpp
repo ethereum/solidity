@@ -3748,10 +3748,20 @@ void TypeChecker::endVisit(Literal const& _literal)
 		else
 		{
 			FunctionType const& functionType = dynamic_cast<FunctionType const&>(*declaration->type());
-			if (
-				dynamic_cast<RationalNumberType const*>(type) &&
-				dynamic_cast<RationalNumberType const*>(type)->isFractional()
-			)
+			auto const* rationalType = dynamic_cast<RationalNumberType const*>(type);
+
+			optional<string> parameterCountMessage;
+			if (functionType.parameterTypes().size() == 0)
+				parameterCountMessage = "Functions that take no arguments cannot be used as literal suffixes.";
+			else if (functionType.parameterTypes().size() >= 3)
+				parameterCountMessage = "Functions that take 3 or more arguments cannot be used as literal suffixes.";
+			else if (functionType.parameterTypes().size() == 2 && !rationalType->isFractional())
+				parameterCountMessage = "Functions that take 2 arguments can only be used as literal suffixes for fractional numbers.";
+
+			optional<string> parameterTypeMessage;
+			if (parameterCountMessage.has_value())
+				m_errorReporter.typeError(4778_error, _literal.location(), parameterCountMessage.value());
+			else if (functionType.parameterTypes().size() == 2)
 			{
 				auto&& [mantissa, exponent] = dynamic_cast<RationalNumberType const*>(type)->mantissaExponent();
 				solAssert((mantissa && exponent) || (!mantissa && !exponent));
@@ -3763,26 +3773,17 @@ void TypeChecker::endVisit(Literal const& _literal)
 						"that fit the range of parameters of the suffix function."
 					);
 				else if (
-					functionType.parameterTypes().size() != 2 ||
 					!mantissa->isImplicitlyConvertibleTo(*functionType.parameterTypes().at(0)) ||
 					!exponent->isImplicitlyConvertibleTo(*functionType.parameterTypes().at(1))
 				)
-					m_errorReporter.typeError(
-						4778_error,
-						_literal.location(),
-						"TODO Fractional number, types to do match."
-					);
+					// TODO: Is this triggered when the argument is out of range? Test.
+					parameterTypeMessage = "The type of the literal cannot be converted to the parameters of the suffix function.";
 			}
-			else
-				if (
-					functionType.parameterTypes().size() != 1 ||
-					!type->isImplicitlyConvertibleTo(*functionType.parameterTypes().front())
-				)
-					m_errorReporter.typeError(
-						8838_error,
-						_literal.location(),
-						"The type of the literal cannot be converted to the parameter of the suffix function."
-					);
+			else if (!type->isImplicitlyConvertibleTo(*functionType.parameterTypes().front()))
+				parameterTypeMessage = "The type of the literal cannot be converted to the parameter of the suffix function.";
+
+			if (parameterTypeMessage.has_value())
+				m_errorReporter.typeError(8838_error, _literal.location(), parameterTypeMessage.value());
 
 			isPure = functionType.isPure();
 			if (functionType.returnParameterTypes().size() == 1)
