@@ -23,7 +23,9 @@ if(NOT EMSCRIPTEN)
 	endif()
 endif()
 
-eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
+if(PEDANTIC)
+	eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
+endif()
 
 # Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
 eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity")
@@ -32,39 +34,45 @@ eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/
 # if the argument was not wrapped in a call.  This happens when moving a local
 # variable in a return statement when the variable is the same type as the
 # return type or using a move to create a new object from a temporary object.
-eth_add_cxx_compiler_flag_if_supported(-Wpessimizing-move)
+if(PEDANTIC)
+	eth_add_cxx_compiler_flag_if_supported(-Wpessimizing-move)
+endif()
 
 # -Wredundant-move warns when an implicit move would already be made, so the
 # std::move call is not needed, such as when moving a local variable in a return
 # that is different from the return type.
-eth_add_cxx_compiler_flag_if_supported(-Wredundant-move)
+if(PEDANTIC)
+	eth_add_cxx_compiler_flag_if_supported(-Wredundant-move)
+endif()
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
 	# enabled by -Wall.   Finally, treat at warnings-as-errors, which forces developers
 	# to fix warnings as they arise, so they don't accumulate "to be fixed later".
-	add_compile_options(-Wall)
-	add_compile_options(-Wextra)
-	add_compile_options(-Werror)
-	add_compile_options(-pedantic)
-	add_compile_options(-Wmissing-declarations)
-	add_compile_options(-Wno-unknown-pragmas)
-	add_compile_options(-Wimplicit-fallthrough)
-	add_compile_options(-Wsign-conversion)
-	add_compile_options(-Wconversion)
+	if(PEDANTIC)
+		add_compile_options(-Wall)
+		add_compile_options(-Wextra)
+		add_compile_options(-Werror)
+		add_compile_options(-pedantic)
+		add_compile_options(-Wmissing-declarations)
+		add_compile_options(-Wno-unknown-pragmas)
+		add_compile_options(-Wimplicit-fallthrough)
+		add_compile_options(-Wsign-conversion)
+		add_compile_options(-Wconversion)
 
-	check_cxx_compiler_flag(-Wextra-semi WEXTRA_SEMI)
-	if(WEXTRA_SEMI)
-		add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>)
+		check_cxx_compiler_flag(-Wextra-semi WEXTRA_SEMI)
+		if(WEXTRA_SEMI)
+			add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>)
+		endif()
+		eth_add_cxx_compiler_flag_if_supported(-Wfinal-dtor-non-final-class)
+		eth_add_cxx_compiler_flag_if_supported(-Wnewline-eof)
+		eth_add_cxx_compiler_flag_if_supported(-Wsuggest-destructor-override)
+		eth_add_cxx_compiler_flag_if_supported(-Wduplicated-cond)
+		eth_add_cxx_compiler_flag_if_supported(-Wduplicate-enum)
+		eth_add_cxx_compiler_flag_if_supported(-Wlogical-op)
+		eth_add_cxx_compiler_flag_if_supported(-Wno-unknown-attributes)
 	endif()
-	eth_add_cxx_compiler_flag_if_supported(-Wfinal-dtor-non-final-class)
-	eth_add_cxx_compiler_flag_if_supported(-Wnewline-eof)
-	eth_add_cxx_compiler_flag_if_supported(-Wsuggest-destructor-override)
-	eth_add_cxx_compiler_flag_if_supported(-Wduplicated-cond)
-	eth_add_cxx_compiler_flag_if_supported(-Wduplicate-enum)
-	eth_add_cxx_compiler_flag_if_supported(-Wlogical-op)
-	eth_add_cxx_compiler_flag_if_supported(-Wno-unknown-attributes)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
@@ -158,7 +166,9 @@ elseif (DEFINED MSVC)
 
 	add_compile_options(/MP)						# enable parallel compilation
 	add_compile_options(/EHsc)						# specify Exception Handling Model in msvc
-	add_compile_options(/WX)						# enable warnings-as-errors
+	if(PEDANTIC)
+		add_compile_options(/WX)					# enable warnings-as-errors
+	endif()
 	add_compile_options(/wd4068)					# disable unknown pragma warning (4068)
 	add_compile_options(/wd4996)					# disable unsafe function warning (4996)
 	add_compile_options(/wd4503)					# disable decorated name length exceeded, name was truncated (4503)

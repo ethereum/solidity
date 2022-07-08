@@ -35,6 +35,7 @@ endif()
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
+option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 
 # Setup cccache.
 include(EthCcache)
@@ -48,6 +49,9 @@ include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
 
 find_package(Threads)
 
+if(NOT PEDANTIC)
+  message(WARNING "-- Pedantic build flags turned off. Warnings will not make compilation fail. This is NOT recommended in development builds.")
+endif()
 # Figure out what compiler and system are we using
 include(EthCompilerSettings)
 
