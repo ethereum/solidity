@@ -195,7 +195,7 @@ void SemanticTokensBuilder::endVisit(frontend::StructuredDocumentation const& _d
 
 void SemanticTokensBuilder::endVisit(frontend::Identifier const& _identifier)
 {
-	lspDebug(fmt::format("Identifier: {}, {}..{} cat={}", _identifier.name(), _identifier.location().start, _identifier.location().end, _identifier.annotation().type->category()));
+	//lspDebug(fmt::format("Identifier: {}, {}..{} cat={}", _identifier.name(), _identifier.location().start, _identifier.location().end, _identifier.annotation().type->category()));
 
 	SemanticTokenModifiers modifiers = SemanticTokenModifiers::None;
 	if (_identifier.annotation().isConstant.set() && *_identifier.annotation().isConstant)

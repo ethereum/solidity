@@ -45,8 +45,8 @@ public:
 	/// from the JSON-RPC parameters.
 	std::pair<std::string, langutil::LineColumn> extractSourceUnitNameAndLineColumn(Json::Value const& _params) const;
 
-	langutil::CharStreamProvider const& charStreamProvider() const noexcept { return m_server.charStreamProvider(); }
-	FileRepository const& fileRepository() const noexcept { return m_server.fileRepository(); }
+	langutil::CharStreamProvider const& charStreamProvider() const noexcept { return m_server.compilerStack(); }
+	FileRepository& fileRepository() const noexcept { return m_server.fileRepository(); }
 	Transport& client() const noexcept { return m_server.client(); }
 
 protected:
