@@ -1851,7 +1851,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			userDefinedFunctionType->returnParameterTypes().size() == 1 &&
 			*userDefinedFunctionType->returnParameterTypes().front() == *_operation.annotation().type
 		);
-	else if (builtinResult && (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL))
+	else if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
 		string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
 		if (
