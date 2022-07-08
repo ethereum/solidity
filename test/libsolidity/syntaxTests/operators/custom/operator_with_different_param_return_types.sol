@@ -17,10 +17,9 @@ function mul(int128, int256) pure returns (Int) {
 }
 
 function div(Int, Int) pure returns (int256) {
-    return Int.wrap(3);
+    return 3;
 }
 // ----
 // TypeError 3100: (42-45): The function "sub" cannot be bound to the type "Int" because the type cannot be implicitly converted to the first argument of the function ("int128").
 // TypeError 3100: (56-59): The function "mul" cannot be bound to the type "Int" because the type cannot be implicitly converted to the first argument of the function ("int128").
 // TypeError 7743: (66-69): The function "div" needs to return exactly one value of type Int to be used for the operator /.
-// TypeError 6359: (365-376): Return argument type Int is not implicitly convertible to expected type (type of first return variable) int256.

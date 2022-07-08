@@ -23,8 +23,8 @@ function bitxor(Int, Int) pure returns (Int) {
 function bitnot(Int) pure returns (Int) {
     return w(13);
 }
-function add(Int x, Int) pure returns (int128) {
-    return uw(x) + 10;
+function add(Int x, Int) pure returns (Int) {
+    return w(uw(x) + 10);
 }
 function sub(Int, Int) pure returns (Int) {
     return w(15);
@@ -66,7 +66,7 @@ contract C {
     function test_bitand() public pure returns (Int) { return w(1) | w(2); }
     function test_bitxor() public pure returns (Int) { return w(1) ^ w(2); }
     function test_bitnot() public pure returns (Int) { return ~w(1); }
-    function test_add(int128 x) public pure returns (int128) { return w(x) + w(2); }
+    function test_add(int128 x) public pure returns (Int) { return w(x) + w(2); }
     function test_sub() public pure returns (Int) { return w(1) - w(2); }
     function test_unsub() public pure returns (Int) { return -w(1); }
     function test_mul() public pure returns (Int) { return w(1) * w(2); }

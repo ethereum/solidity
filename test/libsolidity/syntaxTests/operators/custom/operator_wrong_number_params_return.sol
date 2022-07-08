@@ -6,7 +6,7 @@ using {
     gt as >, lt as <
      } for Int;
 
-function add(Int, Int) pure returns (Int) {
+function add(Int) pure returns (Int) {
     return Int.wrap(0);
 }
 
@@ -31,9 +31,9 @@ function lt(Int, Int) pure returns (bool, Int) {
 }
 
 // ----
-// TypeError 1884: (43-46): The function "sub" needs to have two parameters of equal type to be used for the operator -.
-// TypeError 8112: (43-46): The function "sub" needs to have exactly one parameter to be used for the operator -.
+// TypeError 1884: (33-36): The function "add" needs to have two parameters of equal type to be used for the operator +.
+// TypeError 8112: (43-46): The function "sub" needs to have one or two parameters to be used for the operator -.
 // TypeError 1884: (57-60): The function "mul" needs to have two parameters of equal type to be used for the operator *.
 // TypeError 7743: (67-70): The function "div" needs to return exactly one value of type Int to be used for the operator /.
-// TypeError 7743: (81-83): The function "gt" needs to return exactly one value of type bool to be used for the operator >.
-// TypeError 7743: (90-92): The function "lt" needs to return exactly one value of type bool to be used for the operator <.
+// TypeError 7995: (81-83): The function "gt" needs to return exactly one value of type bool to be used for the operator >.
+// TypeError 7995: (90-92): The function "lt" needs to return exactly one value of type bool to be used for the operator <.

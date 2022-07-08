@@ -3904,7 +3904,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 
 			if (
 				(
-					(TokenTraits::isBinaryOp(*operator_) && !TokenTraits::isUnaryOp(*operator_)) || TokenTraits::isCompareOp(*operator_)
+					(TokenTraits::isBinaryOp(*operator_) && !TokenTraits::isUnaryOp(*operator_)) ||
+					*operator_ == Token::Add ||
+					TokenTraits::isCompareOp(*operator_)
 				) &&
 				(
 					functionType->parameterTypesIncludingSelf().size() != 2 ||
@@ -3920,33 +3922,57 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					TokenTraits::friendlyName(*operator_) +
 					"."
 				);
-			if (
-				(isUnaryNegation || (TokenTraits::isUnaryOp(*operator_) && *operator_ != Token::Add)) &&
+			else if (
+				!TokenTraits::isBinaryOp(*operator_) && TokenTraits::isUnaryOp(*operator_) &&
 				functionType->parameterTypesIncludingSelf().size() != 1
+			)
+					m_errorReporter.typeError(
+						1147_error,
+						path->location(),
+						"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+						"needs to have exactly one parameter to be used for the operator " +
+						TokenTraits::friendlyName(*operator_) +
+						"."
+					);
+			else if (
+				functionType->parameterTypesIncludingSelf().size() != 1 &&
+				functionType->parameterTypesIncludingSelf().size() != 2
 			)
 				m_errorReporter.typeError(
 					8112_error,
 					path->location(),
 					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-					"needs to have exactly one parameter to be used for the operator " +
+					"needs to have one or two parameters to be used for the operator " +
 					TokenTraits::friendlyName(*operator_) +
 					"."
 				);
-			Type const* expectedType =
-				TokenTraits::isCompareOp(*operator_) ?
-				dynamic_cast<Type const*>(TypeProvider::boolean()) :
-				functionType->parameterTypesIncludingSelf().at(0);
 
 			if (
-				functionType->returnParameterTypes().size() != 1 ||
-				*functionType->returnParameterTypes().front() != *expectedType
+				TokenTraits::isCompareOp(*operator_) &&
+				(functionType->returnParameterTypes().size() != 1 || *functionType->returnParameterTypes().front() != *TypeProvider::boolean())
+			)
+				m_errorReporter.typeError(
+					7995_error,
+					path->location(),
+					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+					"needs to return exactly one value of type bool" +
+					" to be used for the operator " +
+					TokenTraits::friendlyName(*operator_) +
+					"."
+				);
+			else if (
+				!TokenTraits::isCompareOp(*operator_) &&
+				(
+					functionType->returnParameterTypes().size() != 1 ||
+					*functionType->returnParameterTypes().front() != *functionType->parameterTypesIncludingSelf().front()
+				)
 			)
 				m_errorReporter.typeError(
 					7743_error,
 					path->location(),
 					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
 					"needs to return exactly one value of type " +
-					expectedType->toString(true) +
+					functionType->parameterTypesIncludingSelf().front()->humanReadableName() +
 					" to be used for the operator " +
 					TokenTraits::friendlyName(*operator_) +
 					"."
