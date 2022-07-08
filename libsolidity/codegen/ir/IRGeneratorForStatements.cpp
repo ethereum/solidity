@@ -680,14 +680,17 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 
 		// TODO extract from function call
 		FunctionDefinition const& function = *_unaryOperation.annotation().userDefinedFunction;
+		solAssert(
+			dynamic_cast<SourceUnit const*>(function.scope()),
+			"Only file-level functions and library functions can be bound to a user type operator."
+		);
+
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
 			function.libraryFunction() ? function.typeViaContractName() : function.type()
 		);
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
-
-		// TODO virtual?
 
 		string parameter = expressionAsType(_unaryOperation.subExpression(), *functionType->selfType());
 		solAssert(!parameter.empty());
@@ -812,14 +815,17 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 
 		// TODO extract from function call
 		FunctionDefinition const& function = *_binOp.annotation().userDefinedFunction;
+		solAssert(
+			dynamic_cast<SourceUnit const*>(function.scope()),
+			"Only file-level functions and library functions can be bound to a user type operator."
+		);
+
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
 			function.libraryFunction() ? function.typeViaContractName() : function.type()
 		);
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
-
-		// TODO virtual?
 
 		string left = expressionAsType(_binOp.leftExpression(), *functionType->selfType());
 		string right = expressionAsType(_binOp.rightExpression(), *functionType->parameterTypes().at(0));

@@ -422,10 +422,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		solAssert(functionType);
 		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
 		_unaryOperation.subExpression().accept(*this);
-		utils().pushCombinedFunctionEntryLabel(
-			function.resolveVirtual(m_context.mostDerivedContract()),
-			false
-		);
+		m_context << m_context.functionEntryLabel(function).pushTag();
 
 		unsigned parameterSize =
 			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
@@ -558,10 +555,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		acceptAndConvert(leftExpression, *functionType->selfType());
 		acceptAndConvert(rightExpression, *functionType->parameterTypes().at(0));
 
-		utils().pushCombinedFunctionEntryLabel(
-			function.resolveVirtual(m_context.mostDerivedContract()),
-			false
-		);
+		m_context << m_context.functionEntryLabel(function).pushTag();
 
 		unsigned parameterSize =
 			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
