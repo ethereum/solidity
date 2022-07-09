@@ -277,7 +277,7 @@ For more information, see the section on :ref:`address`.
 
 .. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
-    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
+    (this can always be forced by the caller) and it also fails if the sender runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
     Use a pattern where the recipient withdraws the money.
 
