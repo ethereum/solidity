@@ -1,59 +1,57 @@
 .. index:: style, coding style
 
 #############
-Style Guide
+风格指南
 #############
 
 ************
-Introduction
+概述
 ************
 
-This guide is intended to provide coding conventions for writing Solidity code.
-This guide should be thought of as an evolving document that will change over
-time as useful conventions are found and old conventions are rendered obsolete.
+本指南旨在为编写 Solidity 代码提供编码规范。
+这个指南应该被认为是一个不断发展的文件，随着有用的约定被发现和旧的约定被淘汰，它将随着时间而改变。
 
-Many projects will implement their own style guides.  In the event of
-conflicts, project specific style guides take precedence.
+许多项目会实施他们自己的编码风格指南。如遇冲突，应优先使用具体项目的风格指南。
 
-The structure and many of the recommendations within this style guide were
-taken from python's
-`pep8 style guide <https://www.python.org/dev/peps/pep-0008/>`_.
+本风格指南中的结构和许多建议是取自 python 的
+`pep8 风格指南 <https://www.python.org/dev/peps/pep-0008/>`_。
 
-The goal of this guide is *not* to be the right way or the best way to write
-Solidity code.  The goal of this guide is *consistency*.  A quote from python's
-`pep8 <https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_
-captures this concept well.
+本指南并 *不是* 以指导正确或最佳的 solidity 编码方式为目的。
+本指南的目的是保持代码的 *一致性* 。
+来自 python 的参考文档 `pep8 <https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_，
+很好地阐述了这个概念。
 
-.. note::
+.. 注解::
 
-    A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
+    风格指南是关于一致性的。重要的是与此风格指南保持一致，但项目中的一致性更重要。
+    一个模块或功能内的一致性是最重要的。
 
-    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
-
+    但最重要的是：**知道什么时候不一致** —— 有时风格指南不适用。如有疑问，请自行判断。
+    看看其他例子，并决定什么看起来最好，并应毫不犹豫地询问他人！
 
 ***********
-Code Layout
+代码结构
 ***********
 
 
-Indentation
+缩进
 ===========
 
-Use 4 spaces per indentation level.
+每个缩进级别使用4个空格。
 
-Tabs or Spaces
+制表符或空格
 ==============
 
-Spaces are the preferred indentation method.
+空格是首选的缩进方法。
 
-Mixing tabs and spaces should be avoided.
+应该避免混合使用制表符和空格。
 
-Blank Lines
+空行
 ===========
 
-Surround top level declarations in Solidity source with two blank lines.
+在 solidity 源码中合约声明之间留出两个空行。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -74,7 +72,7 @@ Yes:
         // ...
     }
 
-No:
+错误写法：
 
 .. code-block:: solidity
 
@@ -92,11 +90,11 @@ No:
         // ...
     }
 
-Within a contract surround function declarations with a single blank line.
+在一个合约中的函数声明之间留有一个空行。
 
-Blank lines may be omitted between groups of related one-liners (such as stub functions for an abstract contract)
+在相关联的各组单行语句之间可以省略空行。（例如抽象合约的 stub 函数）。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -119,7 +117,7 @@ Yes:
         }
     }
 
-No:
+错误写法：
 
 .. code-block:: solidity
 
@@ -143,22 +141,22 @@ No:
 
 .. _maximum_line_length:
 
-Maximum Line Length
+代码行的最大长度
 ===================
 
-Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ to a maximum of 79 (or 99)
-characters helps readers easily parse the code.
+基于 `PEP 8 建议 <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_，
+将代码行的字符长度控制在 79（或 99）字符来帮助读者阅读代码。
 
-Wrapped lines should conform to the following guidelines.
+折行时应该遵从以下指引。
 
-1. The first argument should not be attached to the opening parenthesis.
-2. One, and only one, indent should be used.
-3. Each argument should fall on its own line.
-4. The terminating element, :code:`);`, should be placed on the final line by itself.
+1. 第一个参数不应该紧跟在左括号后边
+2. 用一个，且只用一个缩进
+3. 每个函数应该单起一行
+4. 结束符号 :code:`);` 应该单独放在最后一行
 
-Function Calls
+函数调用
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -168,7 +166,7 @@ Yes:
         longArgument3
     );
 
-No:
+错误写法：
 
 .. code-block:: solidity
 
@@ -198,9 +196,9 @@ No:
         longArgument2,
         longArgument3);
 
-Assignment Statements
+赋值语句
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -211,7 +209,7 @@ Yes:
         argument4
     );
 
-No:
+错误写法：
 
 .. code-block:: solidity
 
@@ -220,9 +218,9 @@ No:
                                                                        argument3,
                                                                        argument4);
 
-Event Definitions and Event Emitters
+事件定义和事件发生
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -242,7 +240,7 @@ Yes:
         options
     );
 
-No:
+错误写法：
 
 .. code-block:: solidity
 
@@ -258,17 +256,17 @@ No:
                       amount,
                       options);
 
-Source File Encoding
+源文件编码格式
 ====================
 
-UTF-8 or ASCII encoding is preferred.
+首选 UTF-8 或 ASCII 编码。
 
-Imports
-=======
+Imports 规范
+==============
 
-Import statements should always be placed at the top of the file.
+Import 语句应始终放在文件的顶部。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -286,7 +284,7 @@ Yes:
         // ...
     }
 
-No:
+错误写法：
 
 .. code-block:: solidity
 
@@ -305,24 +303,24 @@ No:
         // ...
     }
 
-Order of Functions
+函数顺序
 ==================
 
-Ordering helps readers identify which functions they can call and to find the constructor and fallback definitions easier.
+排序有助于读者识别他们可以调用哪些函数，并更容易地找到构造函数和 fallback 函数的定义。
 
-Functions should be grouped according to their visibility and ordered:
+函数应根据其可见性和顺序进行分组：
 
-- constructor
-- receive function (if exists)
-- fallback function (if exists)
-- external
-- public
-- internal
-- private
+- 构造函数
+- receive 函数（如果存在）
+- fallback 函数（如果存在）
+- 外部函数
+- 公共函数
+- 内部函数
+- 私有函数
 
-Within a grouping, place the ``view`` and ``pure`` functions last.
+在一个分组中，把 ``view`` 和 ``pure`` 函数放在最后。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -360,7 +358,7 @@ Yes:
         // ...
     }
 
-No:
+错误写法：
 
 .. code-block:: solidity
 
@@ -392,48 +390,48 @@ No:
         // ...
     }
 
-Whitespace in Expressions
+表达式中的空格
 =========================
 
-Avoid extraneous whitespace in the following  situations:
+在以下情况下避免无关的空格：
 
-Immediately inside parenthesis, brackets or braces, with the exception of single line function declarations.
+除单行函数声明外，紧接着小括号，中括号或者大括号的内容应该避免使用空格。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
     spam(ham[1], Coin({name: "ham"}));
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
     spam( ham[ 1 ], Coin( { name: "ham" } ) );
 
-Exception:
+除外：
 
 .. code-block:: solidity
 
     function singleLine() public { spam(); }
 
-Immediately before a comma, semicolon:
+紧接在逗号，分号之前：
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
     function spam(uint i, Coin coin) public;
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
     function spam(uint i , Coin coin) public ;
 
-More than one space around an assignment or other operator to align with another:
+赋值或其他操作符两边多于一个的空格：
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -441,7 +439,7 @@ Yes:
     y = 2;
     longVariable = 3;
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -449,9 +447,9 @@ No:
     y            = 2;
     longVariable = 3;
 
-Don't include a whitespace in the receive and fallback functions:
+在receive和fallback函数中不要包含空格：
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -463,7 +461,7 @@ Yes:
         ...
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -476,18 +474,16 @@ No:
     }
 
 
-Control Structures
+控制结构
 ==================
 
-The braces denoting the body of a contract, library, functions and structs
-should:
+用大括号表示一个合约，库，函数和结构。 应该为：
 
-* open on the same line as the declaration
-* close on their own line at the same indentation level as the beginning of the
-  declaration.
-* The opening brace should be preceded by a single space.
+* 开括号与声明应在同一行。
+* 闭括号在与之前函数声明对应的开括号保持同一缩进级别上另起一行。
+* 开括号前应该有一个空格。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -501,7 +497,7 @@ Yes:
         }
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -516,15 +512,13 @@ No:
         }
     }
 
-The same recommendations apply to the control structures ``if``, ``else``, ``while``,
-and ``for``.
+对于控制结构  ``if``， ``else``， ``while``， 和 ``for`` 的实施建议与以上相同。
 
-Additionally there should be a single space between the control structures
-``if``, ``while``, and ``for`` and the parenthetic block representing the
-conditional, as well as a single space between the conditional parenthetic
-block and the opening brace.
+另外，诸如 ``if``， ``else``， ``while``， 和 ``for`` 这类的控制结构
+和条件表达式的块之间应该有一个单独的空格，
+同样的，条件表达式的块和开括号之间也应该有一个空格。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -536,7 +530,7 @@ Yes:
         ...
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -551,17 +545,16 @@ No:
     for (...) {
         ...;}
 
-For control structures whose body contains a single statement, omitting the
-braces is ok *if* the statement is contained on a single line.
+对于控制结构， *如果* 其主体内容只包含一行，则可以省略括号。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
     if (x < 10)
         x += 1;
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -571,11 +564,11 @@ No:
             value: 42
         }));
 
-For ``if`` blocks which have an ``else`` or ``else if`` clause, the ``else`` should be
-placed on the same line as the ``if``'s closing brace. This is an exception compared
-to the rules of other block-like structures.
+对于具有 ``else`` 或 ``else if`` 子句的 ``if`` 块，
+``else`` 应该是与 ``if`` 的闭大括号放在同一行上。
+这一规则区别于其他块状结构。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -593,7 +586,7 @@ Yes:
     else
         x -= 1;
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -604,18 +597,16 @@ No:
         x -= 1;
     }
 
-Function Declaration
+函数声明
 ====================
 
-For short function declarations, it is recommended for the opening brace of the
-function body to be kept on the same line as the function declaration.
+对于简短的函数声明，建议函数体的开括号与函数声明保持在同一行。
 
-The closing brace should be at the same indentation level as the function
-declaration.
+闭大括号应该与函数声明的缩进级别相同。
 
-The opening brace should be preceded by a single space.
+开大括号之前应该有一个空格。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -627,7 +618,7 @@ Yes:
         return x + 1;
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -647,15 +638,15 @@ No:
     function increment(uint x) public pure returns (uint) {
         return x + 1;}
 
-The modifier order for a function should be:
+一个函数的修饰符顺序应该是：
 
-1. Visibility
-2. Mutability
-3. Virtual
-4. Override
-5. Custom modifiers
+1. 可见性
+2. 可变性
+3. 虚拟性
+4. 覆盖性
+5. 自定义修饰符
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -667,7 +658,7 @@ Yes:
         selfdestruct(owner);
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -679,12 +670,10 @@ No:
         selfdestruct(owner);
     }
 
-For long function declarations, it is recommended to drop each argument onto
-its own line at the same indentation level as the function body.  The closing
-parenthesis and opening bracket should be placed on their own line as well at
-the same indentation level as the function declaration.
+对于长的函数声明，建议将每个参数放在自己的行中，与函数主体的缩进程度相同。
+闭小括号和开括号也应该放在自己的行中，与函数声明的缩进程度相同。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -701,7 +690,7 @@ Yes:
         doSomething();
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -729,10 +718,9 @@ No:
         doSomething();
     }
 
-If a long function declaration has modifiers, then each modifier should be
-dropped to its own line.
+如果一个长函数声明有修饰符，那么每个修饰符都应该被丢到独立的一行。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -758,7 +746,7 @@ Yes:
         doSomething();
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -784,9 +772,9 @@ No:
         doSomething();
     }
 
-Multiline output parameters and return statements should follow the same style recommended for wrapping long lines found in the :ref:`Maximum Line Length <maximum_line_length>` section.
+多行输出参数和返回值语句应该遵从 :ref:`代码行的最大长度 <maximum_line_length>` 一节的说明。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -811,7 +799,7 @@ Yes:
         );
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -832,11 +820,10 @@ No:
                 veryLongReturnArg1);
     }
 
-For constructor functions on inherited contracts whose bases require arguments,
-it is recommended to drop the base constructors onto new lines in the same
-manner as modifiers if the function declaration is long or hard to read.
+对于继承合约中需要参数的构造函数，如果函数声明很长或难以阅读，
+建议将基础构造函数像多个修饰符的风格那样，每个下沉到一个新行上书写。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -874,7 +861,7 @@ Yes:
         }
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -924,26 +911,24 @@ No:
     }
 
 
-When declaring short functions with a single statement, it is permissible to do it on a single line.
+当用单个语句声明简短函数时，允许在一行中完成。
 
-Permissible:
+允许：
 
 .. code-block:: solidity
 
     function shortFunction() public { doSomething(); }
 
-These guidelines for function declarations are intended to improve readability.
-Authors should use their best judgment as this guide does not try to cover all
-possible permutations for function declarations.
+这些函数声明的准则旨在提高可读性。
+因为本指南不会涵盖所有内容，作者应该自行作出最佳判断。
 
-Mappings
+映射
 ========
 
-In variable declarations, do not separate the keyword ``mapping`` from its
-type by a space. Do not separate any nested ``mapping`` keyword from its type by
-whitespace.
+在变量声明中，不要用空格将关键字 ``mapping`` 和其类型分开。
+不要用空格分隔任何嵌套的 ``mapping`` 关键词和其类型。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -952,7 +937,7 @@ Yes:
     mapping(uint => mapping(bool => Data[])) public data;
     mapping(uint => mapping(uint => s)) data;
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -961,47 +946,46 @@ No:
     mapping (uint => mapping (bool => Data[])) public data;
     mapping(uint => mapping (uint => s)) data;
 
-Variable Declarations
+变量声明
 =====================
 
-Declarations of array variables should not have a space between the type and
-the brackets.
+数组变量的声明在变量类型和括号之间不应该有空格。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
     uint[] x;
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
     uint [] x;
 
 
-Other Recommendations
+其他建议
 =====================
 
-* Strings should be quoted with double-quotes instead of single-quotes.
+* 字符串应该用双引号而不是单引号。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
     str = "foo";
     str = "Hamlet says, 'To be or not to be...'";
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
     str = 'bar';
     str = '"Be yourself; everyone else is already taken." -Oscar Wilde';
 
-* Surround operators with a single space on either side.
+* 操作符两边应该各有一个空格。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
     :force:
@@ -1011,7 +995,7 @@ Yes:
     x += 3 + 4;
     x |= y && z;
 
-No:
+错误写法:
 
 .. code-block:: solidity
     :force:
@@ -1021,12 +1005,11 @@ No:
     x += 3+4;
     x |= y&&z;
 
-* Operators with a higher priority than others can exclude surrounding
-  whitespace in order to denote precedence.  This is meant to allow for
-  improved readability for complex statements. You should always use the same
-  amount of whitespace on either side of an operator:
+* 为了表示优先级，高优先级操作符两边可以省略空格。
+  这样可以提高复杂语句的可读性。
+  您应该在操作符两边总是使用相同的空格数：
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -1034,7 +1017,7 @@ Yes:
     x = 2*y + 3*z;
     x = (a+b) * (a-b);
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -1043,84 +1026,83 @@ No:
     x +=1;
 
 ***************
-Order of Layout
+布局顺序
 ***************
 
-Layout contract elements in the following order:
+按以下顺序布置合约的元素：
 
-1. Pragma statements
-2. Import statements
-3. Interfaces
-4. Libraries
-5. Contracts
+1. Pragma 语句
+2. 导入语句
+3. 接口
+4. 库
+5. 合约
 
-Inside each contract, library or interface, use the following order:
+在每个合约，库或接口内，使用以下顺序：
 
-1. Type declarations
-2. State variables
-3. Events
-4. Modifiers
-5. Functions
+1. 类型声明
+2. 状态变量
+3. 事件
+4. 修饰符
+5. 函数
 
-.. note::
+.. 注解::
 
-    It might be clearer to declare types close to their use in events or state
-    variables.
+    在接近事件或状态变量的使用时，声明类型可能会更清楚。
 
 ******************
-Naming Conventions
+命名规范
 ******************
 
-Naming conventions are powerful when adopted and used broadly.  The use of
-different conventions can convey significant *meta* information that would
-otherwise not be immediately available.
+当完全采纳和使用命名规范时会产生强大的作用。
+当使用不同的规范时，则不会立即获取代码中传达的重要 *元* 信息。
 
-The naming recommendations given here are intended to improve the readability,
-and thus they are not rules, but rather guidelines to try and help convey the
-most information through the names of things.
+这里给出的命名建议旨在提高可读性，
+因此它们不是规则，而是透过名称来尝试和帮助传达最多的信息。
 
-Lastly, consistency within a codebase should always supersede any conventions
-outlined in this document.
+最后，基于代码库中的一致性，本文档中的任何规范总是可以被（代码库中的规范）取代。
 
 
-Naming Styles
+命名方式
 =============
 
-To avoid confusion, the following names will be used to refer to different
-naming styles.
+为了避免混淆，下面的名字用来指明不同的命名方式。
 
-* ``b`` (single lowercase letter)
-* ``B`` (single uppercase letter)
-* ``lowercase``
-* ``UPPERCASE``
-* ``UPPER_CASE_WITH_UNDERSCORES``
-* ``CapitalizedWords`` (or CapWords)
-* ``mixedCase`` (differs from CapitalizedWords by initial lowercase character!)
+* ``b`` （单个小写字母）
+* ``B`` （单个大写字母）
+* ``lowercase`` （小写）
+* ``UPPERCASE`` （大写）
+* ``UPPER_CASE_WITH_UNDERSCORES`` （大写和下划线）
+* ``CapitalizedWords`` （驼峰式，首字母大写）
+* ``mixedCase``  （混合式，与驼峰式的区别在于首字母小写！）
 
-.. note:: When using initialisms in CapWords, capitalize all the letters of the initialisms. Thus HTTPServerError is better than HttpServerError. When using initialisms in mixedCase, capitalize all the letters of the initialisms, except keep the first one lower case if it is the beginning of the name. Thus xmlHTTPRequest is better than XMLHTTPRequest.
+.. 注解::
+
+    当在驼峰式命名中使用缩写时，应该将缩写中的所有字母都大写。 因此 HTTPServerError 比 HttpServerError 好。
+    当在混合式命名中使用缩写时，除了第一个缩写中的字母小写（如果它是整个名称的开头的话）以外，
+    其他缩写中的字母均大写。 因此 xmlHTTPRequest 比 XMLHTTPRequest 更好。
 
 
-Names to Avoid
+应避免的名称
 ==============
 
-* ``l`` - Lowercase letter el
-* ``O`` - Uppercase letter oh
-* ``I`` - Uppercase letter eye
+* ``l`` - el的小写方式
+* ``O`` - oh的大写方式
+* ``I`` - eye的大写方式
 
-Never use any of these for single letter variable names.  They are often
-indistinguishable from the numerals one and zero.
+切勿将任何这些用于单个字母的变量名称。 他们经常难以与数字 1 和 0 区分开。
 
 
-Contract and Library Names
+合约和库名称
 ==========================
 
-* Contracts and libraries should be named using the CapWords style. Examples: ``SimpleToken``, ``SmartBank``, ``CertificateHashRepository``, ``Player``, ``Congress``, ``Owned``.
-* Contract and library names should also match their filenames.
-* If a contract file includes multiple contracts and/or libraries, then the filename should match the *core contract*. This is not recommended however if it can be avoided.
+* 合约和库名称应该使用驼峰式风格。比如： ``SimpleToken``， ``SmartBank``， ``CertificateHashRepository``， ``Player``， ``Congress``， ``Owned``.。
+* 合约和库的名称也应与它们的文件名相符。
+* 如果一个合约文件包括多个合约和/或库，那么文件名应该与 *核心合约* 相匹配。但是，如果可以避免的话，不建议这样做。
 
-As shown in the example below, if the contract name is ``Congress`` and the library name is ``Owned``, then their associated filenames should be ``Congress.sol`` and ``Owned.sol``.
+如下面的例子所示，如果合约名称是 ``Congress``，库名称是 ``Owned``，
+那么它们的相关文件名应该是 ``Congress.sol`` 和 ``Owned.sol``。
 
-Yes:
+正确写法：
 
 .. code-block:: solidity
 
@@ -1145,7 +1127,7 @@ Yes:
         }
     }
 
-and in ``Congress.sol``:
+在 ``Congress.sol`` 合约里：
 
 .. code-block:: solidity
 
@@ -1159,7 +1141,7 @@ and in ``Congress.sol``:
         //...
     }
 
-No:
+错误写法:
 
 .. code-block:: solidity
 
@@ -1184,7 +1166,7 @@ No:
         }
     }
 
-and in ``Congress.sol``:
+在 ``Congress.sol`` 合约里：
 
 .. code-block:: solidity
 
@@ -1199,65 +1181,66 @@ and in ``Congress.sol``:
         //...
     }
 
-Struct Names
+结构体名称
 ==========================
 
-Structs should be named using the CapWords style. Examples: ``MyCoin``, ``Position``, ``PositionXY``.
+结构体名称应该使用驼峰式风格。比如： ``MyCoin``， ``Position``， ``PositionXY``。
 
-
-Event Names
+事件名称
 ===========
 
-Events should be named using the CapWords style. Examples: ``Deposit``, ``Transfer``, ``Approval``, ``BeforeTransfer``, ``AfterTransfer``.
+事件名称应该使用驼峰式风格。
+比如： ``Deposit``， ``Transfer``， ``Approval``， ``BeforeTransfer``， ``AfterTransfer``。
 
-
-Function Names
+函数名称
 ==============
 
-Functions should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
+函数名称应该使用混合式命名风格。
+比如： ``getBalance``， ``transfer``， ``verifyOwner``， ``addMember``， ``changeOwner``。
 
 
-Function Argument Names
+函数参数命名
 =======================
 
-Function arguments should use mixedCase. Examples: ``initialSupply``, ``account``, ``recipientAddress``, ``senderAddress``, ``newOwner``.
+函数参数命名应该使用混合式命名风格。
+比如： ``initialSupply``， ``account``， ``recipientAddress``， ``senderAddress``， ``newOwner``。
 
-When writing library functions that operate on a custom struct, the struct
-should be the first argument and should always be named ``self``.
+在编写操作自定义结构的库函数时，
+这个结构体应该作为函数的第一个参数，并且应该始终命名为 ``self``。
 
 
-Local and State Variable Names
+局部变量和状态变量名称
 ==============================
 
-Use mixedCase. Examples: ``totalSupply``, ``remainingSupply``, ``balancesOf``, ``creatorAddress``, ``isPreSale``, ``tokenExchangeRate``.
+使用混合式命名风格。
+比如： ``totalSupply``， ``remainingSupply``， ``balancesOf``， ``creatorAddress``， ``isPreSale``， ``tokenExchangeRate``。
 
 
-Constants
+常量命名
 =========
 
-Constants should be named with all capital letters with underscores separating
-words. Examples: ``MAX_BLOCKS``, ``TOKEN_NAME``, ``TOKEN_TICKER``, ``CONTRACT_VERSION``.
+常量应该全都使用大写字母书写，并用下划线分割单词。
+比如： ``MAX_BLOCKS``， ``TOKEN_NAME``， ``TOKEN_TICKER``， ``CONTRACT_VERSION``。
 
 
-Modifier Names
+修饰符命名
 ==============
 
-Use mixedCase. Examples: ``onlyBy``, ``onlyAfter``, ``onlyDuringThePreSale``.
+使用混合式命名风格。比如： ``onlyBy``， ``onlyAfter``， ``onlyDuringThePreSale``。
 
 
-Enums
+枚举变量命名
 =====
 
-Enums, in the style of simple type declarations, should be named using the CapWords style. Examples: ``TokenGroup``, ``Frame``, ``HashStyle``, ``CharacterLocation``.
+在声明简单类型时，枚举应该使用驼峰式风格。
+比如： ``TokenGroup``， ``Frame``， ``HashStyle``， ``CharacterLocation``。
 
-
-Avoiding Naming Collisions
+避免命名冲突
 ==========================
 
 * ``singleTrailingUnderscore_``
 
-This convention is suggested when the desired name collides with that of a
-built-in or otherwise reserved name.
+当所起名称与内建或保留关键字相冲突时，建议照此惯例在名称后边添加下划线。
 
 .. _style_guide_natspec:
 
@@ -1265,38 +1248,37 @@ built-in or otherwise reserved name.
 NatSpec
 *******
 
-Solidity contracts can also contain NatSpec comments. They are written with a
-triple slash (``///``) or a double asterisk block (``/** ... */``) and
-they should be used directly above function declarations or statements.
+Solidity合约也可以包含NatSpec注释。
+它们用三重斜线（ ``///``）或双星号块（ ``/** ... */``）来写，
+它们应该直接用在函数声明或语句之上。
 
-For example, the contract from :ref:`a simple smart contract <simple-smart-contract>` with the comments
-added looks like the one below:
+例如，来自 :ref:`一个简单的智能合约 <simple-smart-contract>` 的合约在添加了注释后看起来就像下面这个：
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
 
-    /// @author The Solidity Team
-    /// @title A simple storage example
+    /// @author Solidity团队
+    /// @title 一个简单的存储例子
     contract SimpleStorage {
         uint storedData;
 
-        /// Store `x`.
-        /// @param x the new value to store
-        /// @dev stores the number in the state variable `storedData`
+        /// 存储 `x`。
+        /// @param x 要存储的新值
+        /// @dev 将数字存储在状态变量 `storedData` 中
         function set(uint x) public {
             storedData = x;
         }
 
-        /// Return the stored value.
-        /// @dev retrieves the value of the state variable `storedData`
-        /// @return the stored value
+        /// 返回存储的值。
+        /// @dev 检索状态变量 `storedData` 的值
+        /// @return 存储的值
         function get() public view returns (uint) {
             return storedData;
         }
     }
 
-It is recommended that Solidity contracts are fully annotated using :ref:`NatSpec <natspec>` for all public interfaces (everything in the ABI).
+建议 Solidity 合约使用 :ref:`NatSpec <natspec>` 对所有公共接口（ABI 中的一切）进行完全注释。
 
-Please see the section about :ref:`NatSpec <natspec>` for a detailed explanation.
+请参阅关于 :ref:`NatSpec <natspec>` 的部分，以获得详细解释。
