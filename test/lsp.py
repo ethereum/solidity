@@ -237,8 +237,10 @@ class JsonRpcProcess:
         self.process.stdin.write(rpc_message.encode("utf-8"))
         self.process.stdin.flush()
 
-    def call_method(self, method_name: str, params: Optional[dict]) -> Any:
+    def call_method(self, method_name: str, params: Optional[dict], expects_response: bool = True) -> Any:
         self.send_message(method_name, params)
+        if not expects_response:
+            return None
         return self.receive_message()
 
     def send_notification(self, name: str, params: Optional[dict] = None) -> None:
@@ -484,6 +486,8 @@ class TestParser:
             if self.at_end():
                 raise TestParserException(ret, "Request body not found")
 
+        if self.at_end():
+            return self.RequestAndResponse(**ret)
 
         # Parse response header
         if self.current_line().startswith(RESPONSE_START):
@@ -492,8 +496,6 @@ class TestParser:
                 raise TestParserException(ret, "Response header malformed")
             ret["response"] = self.current_line()[len(RESPONSE_START):] + "\n"
             ret["responseBegin"] = self.position()
-        else:
-            raise TestParserException(ret, "Response header not found")
 
         self.next_line()
 
@@ -568,7 +570,9 @@ class FileTestRunner:
 
             # Process diagnostics first
             self.expected_diagnostics = next(self.parsed_testcases)
-            assert isinstance(self.expected_diagnostics, TestParser.Diagnostics) is True
+            assert isinstance(self.expected_diagnostics, TestParser.Diagnostics)
+            if not self.expected_diagnostics.has_header:
+                return
 
             expected_diagnostics_per_file = self.expected_diagnostics.tests
 
@@ -723,7 +727,14 @@ class FileTestRunner:
         if 'textDocument' not in requestBodyJson:
             requestBodyJson['textDocument'] = { 'uri': self.suite.get_test_file_uri(self.test_name, self.sub_dir) }
 
-        actualResponseJson = self.solc.call_method(testcase.method, requestBodyJson)
+        actualResponseJson = self.solc.call_method(
+            testcase.method,
+            requestBodyJson,
+            expects_response=testcase.response is not None
+        )
+
+        if testcase.response is None:
+            return
 
         # simplify response
         if "result" in actualResponseJson:
@@ -1445,8 +1456,11 @@ class SolidityLSPTestSuite: # {{{
 
         for sub_dir in map(lambda filepath: filepath.name, sub_dirs):
             tests = map(
-                lambda filename, sd=sub_dir: sd + "/" + filename[:-len(".sol")],
-                os.listdir(f"{self.project_root_dir}/{sub_dir}")
+                lambda file_object, sd=sub_dir: sd + "/" + file_object.name[:-len(".sol")],
+                filter(
+                    lambda filepath: filepath.is_file() and filepath.name.endswith('.sol'),
+                    os.scandir(f"{self.project_root_dir}/{sub_dir}")
+                )
             )
 
             tests = map(
