@@ -215,6 +215,7 @@ struct CommandLineOptions
 
 	struct
 	{
+		CompilerStack::MetadataFormat format = CompilerStack::defaultMetadataFormat();
 		CompilerStack::MetadataHash hash = CompilerStack::MetadataHash::IPFS;
 		bool literalSources = false;
 	} metadata;

@@ -689,6 +689,7 @@ void CommandLineInterface::compile()
 	{
 		if (m_options.metadata.literalSources)
 			m_compiler->useMetadataLiteralSources(true);
+		m_compiler->setMetadataFormat(m_options.metadata.format);
 		m_compiler->setMetadataHash(m_options.metadata.hash);
 		if (m_options.modelChecker.initialize)
 			m_compiler->setModelCheckerSettings(m_options.modelChecker.settings);
