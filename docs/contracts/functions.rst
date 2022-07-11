@@ -79,7 +79,7 @@ Function parameters can be used as any other local variable and they can also be
   parameter. This functionality is possible if you enable the ABI coder v2
   by adding ``pragma abicoder v2;`` to your source file.
 
-  An :ref:`internal function<external-function-calls>` can accept a
+  An :ref:`internal function<internal-function-calls>` can accept a
   multi-dimensional array without enabling the feature.
 
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
