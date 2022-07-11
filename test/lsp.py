@@ -1381,6 +1381,34 @@ class SolidityLSPTestSuite: # {{{
         return markers
 
 
+    def test_custom_includes(self, solc: JsonRpcProcess) -> None:
+        self.setup_lsp(solc, expose_project_root=False)
+        solc.send_notification(
+            'workspace/didChangeConfiguration', {
+                'settings': {
+                    'include-paths': [
+                        f"{self.project_root_dir}/other-include-dir"
+                    ]
+                }
+            }
+        )
+        published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, 'include-paths/using-custom-includes')
+
+        self.expect_equal(len(published_diagnostics), 2, "Diagnostic reports for 2 files")
+
+        # test file
+        report = published_diagnostics[0]
+        self.expect_equal(report['uri'], self.get_test_file_uri('using-custom-includes', 'include-paths'))
+        diagnostics = report['diagnostics']
+        self.expect_equal(len(diagnostics), 0, "no diagnostics")
+
+        # imported file
+        report = published_diagnostics[1]
+        self.expect_equal(report['uri'], f"{self.project_root_uri}/other-include-dir/otherlib/otherlib.sol")
+        diagnostics = report['diagnostics']
+        self.expect_equal(len(diagnostics), 1, "no diagnostics")
+        self.expect_diagnostic(diagnostics[0], code=2018, lineNo=5, startEndColumns=(4, 62))
+
     def test_didChange_in_A_causing_error_in_B(self, solc: JsonRpcProcess) -> None:
         # Reusing another test but now change some file that generates an error in the other.
         self.test_textDocument_didOpen_with_relative_import(solc)
