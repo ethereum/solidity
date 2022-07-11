@@ -308,6 +308,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_revertStrings = RevertStrings::Default;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
+		m_metadataFormat = defaultMetadataFormat();
 		m_metadataHash = MetadataHash::IPFS;
 		m_stopAfter = State::CompilationSuccessful;
 	}
@@ -1547,6 +1548,9 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 
 	if (m_revertStrings != RevertStrings::Default)
 		meta["settings"]["debug"]["revertStrings"] = revertStringsToString(m_revertStrings);
+
+	if (m_metadataFormat == MetadataFormat::NoMetadata)
+		meta["settings"]["metadata"]["appendCBOR"] = false;
 
 	if (m_metadataLiteralSources)
 		meta["settings"]["metadata"]["useLiteralContent"] = true;
