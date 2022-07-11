@@ -25,7 +25,7 @@ object "Arraysum_34" {
                     if eq(0x81d73423, shr(224, calldataload(_2)))
                     {
                         if callvalue() { revert(_2, _2) }
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
+                        if slt(sub(calldatasize(), _1), _2) { revert(_2, _2) }
                         let var_sum := _2
                         /// @src 0:368:378  "uint i = 0"
                         let var_i := /** @src 0:80:429  "contract Arraysum {..." */ _2

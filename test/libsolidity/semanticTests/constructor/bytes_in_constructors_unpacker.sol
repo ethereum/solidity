@@ -8,7 +8,7 @@ contract Test {
 }
 // ----
 // constructor(): 7, 0x40, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz" ->
-// gas irOptimized: 273340
+// gas irOptimized: 272908
 // gas legacy: 317746
 // gas legacyOptimized: 262368
 // m_x() -> 7

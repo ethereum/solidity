@@ -20,7 +20,7 @@ contract sender {
 // compileToEwasm: false
 // ----
 // (): 7 ->
-// gas irOptimized: 110826
+// gas irOptimized: 110840
 // gas legacy: 111408
 // gas legacyOptimized: 111078
 // val() -> 0

@@ -60,10 +60,10 @@ contract C {
 // EVMVersion: >homestead
 // ----
 // test_bytes() ->
-// gas irOptimized: 367365
+// gas irOptimized: 367200
 // gas legacy: 416585
-// gas legacyOptimized: 322043
+// gas legacyOptimized: 324413
 // test_uint256() ->
-// gas irOptimized: 515982
+// gas irOptimized: 515871
 // gas legacy: 583100
-// gas legacyOptimized: 444161
+// gas legacyOptimized: 447845

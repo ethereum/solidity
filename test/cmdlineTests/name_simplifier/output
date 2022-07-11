@@ -26,7 +26,7 @@ object "C_59" {
                     {
                         if callvalue() { revert(_3, _3) }
                         let _4 := 32
-                        if slt(add(calldatasize(), not(3)), _4) { revert(_3, _3) }
+                        if slt(sub(calldatasize(), _2), _4) { revert(_3, _3) }
                         let offset := calldataload(_2)
                         let _5 := 0xffffffffffffffff
                         if gt(offset, _5) { revert(_3, _3) }

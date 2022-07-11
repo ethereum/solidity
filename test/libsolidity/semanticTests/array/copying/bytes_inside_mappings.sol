@@ -5,11 +5,11 @@ contract c {
 }
 // ----
 // set(uint256): 1, 2 -> true
-// gas irOptimized: 110576
+// gas irOptimized: 110581
 // gas legacy: 111333
 // gas legacyOptimized: 110750
 // set(uint256): 2, 2, 3, 4, 5 -> true
-// gas irOptimized: 177527
+// gas irOptimized: 177532
 // gas legacy: 178335
 // gas legacyOptimized: 177725
 // storageEmpty -> 0

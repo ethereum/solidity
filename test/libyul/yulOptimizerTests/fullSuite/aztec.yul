@@ -237,53 +237,57 @@
 //     {
 //         mstore(0x80, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
 //         mstore(0xa0, 8489654445897228341090914135473290831551238522473825886865492707826370766375)
-//         let notes := add(0x04, calldataload(0x04))
+//         let _1 := calldataload(0x04)
+//         let notes := add(0x04, _1)
+//         let _2 := 0x24
 //         let n := calldataload(notes)
-//         if gt(calldataload(0x24), n)
+//         let _3 := 0x44
+//         let challenge := mod(calldataload(_3), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//         if gt(calldataload(_2), n)
 //         {
 //             mstore(0x00, 404)
 //             revert(0x00, 0x20)
 //         }
-//         let kn := calldataload(add(calldatasize(), not(191)))
-//         let _1 := 0x2a0
-//         mstore(_1, caller())
+//         let kn := calldataload(sub(calldatasize(), 0xc0))
+//         let _4 := 0x2a0
+//         mstore(_4, caller())
 //         mstore(0x2c0, kn)
-//         mstore(0x2e0, calldataload(0x24))
-//         kn := mulmod(sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, kn), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//         mstore(0x2e0, calldataload(_2))
+//         kn := mulmod(sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, kn), challenge, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //         hashCommitments(notes, n)
 //         let b := add(0x300, shl(7, n))
 //         let i := 0
 //         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
-//             let noteIndex := add(add(calldataload(0x04), mul(i, 0xc0)), 0x24)
+//             let noteIndex := add(add(_1, mul(i, 0xc0)), _2)
 //             let k := 0
-//             let a := calldataload(add(add(calldataload(0x04), mul(i, 0xc0)), 0x44))
-//             let c := mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
-//             let _2 := add(i, 0x01)
-//             switch eq(_2, n)
+//             let a := calldataload(add(add(_1, mul(i, 0xc0)), _3))
+//             let c := challenge
+//             let _5 := add(i, 0x01)
+//             switch eq(_5, n)
 //             case 1 {
 //                 k := kn
-//                 if eq(calldataload(0x24), n)
+//                 if eq(calldataload(_2), n)
 //                 {
 //                     k := sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, kn)
 //                 }
 //             }
 //             case 0 { k := calldataload(noteIndex) }
 //             validateCommitment(noteIndex, k, a)
-//             switch gt(_2, calldataload(0x24))
+//             switch gt(_5, calldataload(_2))
 //             case 1 {
 //                 kn := addmod(kn, sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, k), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 let x := mod(mload(0), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 k := mulmod(k, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 a := mulmod(a, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
-//                 c := mulmod(mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//                 c := mulmod(challenge, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 mstore(0, keccak256(0, 0x20))
 //             }
 //             case 0 {
 //                 kn := addmod(kn, k, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //             }
-//             calldatacopy(0xe0, add(add(calldataload(0x04), mul(i, 0xc0)), 164), 0x40)
-//             calldatacopy(0x20, add(add(calldataload(0x04), mul(i, 0xc0)), 100), 0x40)
+//             calldatacopy(0xe0, add(add(_1, mul(i, 0xc0)), 164), 0x40)
+//             calldatacopy(0x20, add(add(_1, mul(i, 0xc0)), 100), 0x40)
 //             mstore(0x120, sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, c))
 //             mstore(0x60, k)
 //             mstore(0xc0, a)
@@ -292,19 +296,19 @@
 //             let result_2 := and(result_1, call(gas(), 7, 0, 0x80, 0x60, 0x160, 0x40))
 //             let result_3 := and(result_2, call(gas(), 6, 0, 0x120, 0x80, 0x160, 0x40))
 //             result := and(result_3, call(gas(), 6, 0, 0x160, 0x80, b, 0x40))
-//             if eq(i, calldataload(0x24))
+//             if eq(i, calldataload(_2))
 //             {
 //                 mstore(0x260, mload(0x20))
 //                 mstore(0x280, mload(0x40))
 //                 mstore(0x1e0, mload(0xe0))
 //                 mstore(0x200, sub(0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47, mload(0x100)))
 //             }
-//             if gt(i, calldataload(0x24))
+//             if gt(i, calldataload(_2))
 //             {
 //                 mstore(0x60, c)
-//                 let _3 := 0x220
-//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, _3, 0x40))
-//                 let result_5 := and(result_4, call(gas(), 6, 0, _3, 0x80, 0x260, 0x40))
+//                 let _6 := 0x220
+//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, _6, 0x40))
+//                 let result_5 := and(result_4, call(gas(), 6, 0, _6, 0x80, 0x260, 0x40))
 //                 result := and(result_5, call(gas(), 6, 0, 0x1a0, 0x80, 0x1e0, 0x40))
 //             }
 //             if iszero(result)
@@ -314,8 +318,8 @@
 //             }
 //             b := add(b, 0x40)
 //         }
-//         if lt(calldataload(0x24), n) { validatePairing() }
-//         if iszero(eq(mod(keccak256(_1, add(b, not(671))), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)))
+//         if lt(calldataload(_2), n) { validatePairing() }
+//         if iszero(eq(mod(keccak256(_4, sub(b, _4)), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), challenge))
 //         {
 //             mstore(0, 404)
 //             revert(0, 0x20)

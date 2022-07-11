@@ -193,7 +193,7 @@ object "C_6" {
                     if eq(0x26121ff0, shr(224, calldataload(_1)))
                     {
                         if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        if slt(sub(calldatasize(), 4), _1) { revert(_1, _1) }
                         return(memoryguard(0x80), _1)
                     }
                 }

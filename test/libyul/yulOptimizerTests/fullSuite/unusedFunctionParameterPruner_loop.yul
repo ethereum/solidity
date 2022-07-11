@@ -28,7 +28,7 @@
 //         let _1 := 0
 //         let a := calldataload(_1)
 //         let _2 := iszero(a)
-//         for { } iszero(b) { b := add(b, not(0)) }
+//         for { } iszero(b) { b := sub(b, 1) }
 //         {
 //             mstore(a, _1)
 //             if _2 { leave }

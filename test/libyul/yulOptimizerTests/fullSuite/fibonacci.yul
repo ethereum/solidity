@@ -41,7 +41,7 @@
 //         y := 1
 //         if gt(i, 2)
 //         {
-//             y := add(fib(add(i, not(0))), fib(add(i, not(1))))
+//             y := add(fib(sub(i, y)), fib(sub(i, 2)))
 //         }
 //     }
 // }

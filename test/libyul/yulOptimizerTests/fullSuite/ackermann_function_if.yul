@@ -42,10 +42,9 @@
 //         }
 //         if iszero(n)
 //         {
-//             ret := A(add(m, not(0)), 1)
+//             ret := A(sub(m, 1), 1)
 //             leave
 //         }
-//         let _1 := not(0)
-//         ret := A(add(m, _1), A(m, add(n, _1)))
+//         ret := A(sub(m, 1), A(m, sub(n, 1)))
 //     }
 // }

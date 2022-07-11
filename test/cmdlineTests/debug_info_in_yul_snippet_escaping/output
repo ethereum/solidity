@@ -442,7 +442,7 @@ object "D_27" {
                     if eq(0x26121ff0, shr(224, calldataload(_3)))
                     {
                         if callvalue() { revert(_3, _3) }
-                        if slt(add(calldatasize(), not(3)), _3) { revert(_3, _3) }
+                        if slt(sub(calldatasize(), 4), _3) { revert(_3, _3) }
                         /// @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..."
                         let _4 := datasize("C_2")
                         let _5 := add(_1, _4)

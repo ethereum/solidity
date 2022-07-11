@@ -125,7 +125,7 @@ sub_0: assembly {
     tag_3:
       jumpi(tag_7, callvalue)
       dup1
-      add(calldatasize, not(0x03))
+      sub(calldatasize, 0x04)
       slt
       tag_7
       jumpi
