@@ -95,7 +95,7 @@ public:
 
 private:
 	LiteralRematerialiser(Dialect const& _dialect):
-		DataFlowAnalyzer(_dialect)
+		DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore)
 	{}
 };
 
