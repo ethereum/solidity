@@ -587,7 +587,12 @@ public:
 	/// @returns true if the value is not an integer.
 	bool isFractional() const { return m_value.denominator() != 1; }
 
-	/// TODO document
+	// TODO: Update if it turns out we do need to support negative numbers here.
+	/// Tries to decompose a positive rational number into two positive integers - a mantissa and a
+	/// base-10 exponent, such that the number is equal to `mantissa * 10**-exponent`.
+	/// @returns Pair of non-null pointers representing the types of the literals corresponding to
+	/// mantissa and exponent if the resulting mantissa and exponent both fit in 256 bits.
+	/// A pair of null pointers otherwise.
 	std::pair<RationalNumberType const*, RationalNumberType const*> mantissaExponent() const;
 
 	/// @returns true if the value is negative.

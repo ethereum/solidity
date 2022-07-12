@@ -1224,27 +1224,29 @@ FixedPointType const* RationalNumberType::fixedPointType() const
 
 pair<RationalNumberType const*, RationalNumberType const*> RationalNumberType::mantissaExponent() const
 {
-	bool negative = (m_value < 0);
-	int exponent = 0;
-	rational value = abs(m_value); // We care about the sign later.
-	rational maxValue = negative ?
-		rational(bigint(1) << 255, 1):
-		rational((bigint(1) << 256) - 1, 1);
+	rational const maxUint = rational((bigint(1) << 256) - 1);
+	rational const minInt = -rational(bigint(1) << 255);
 
-	while (value.denominator() != 1)
+	bool negative = (m_value < 0);
+	rational const maxMantissa = (negative ? -minInt : maxUint);
+
+	int exponent = 0;
+	rational unsignedMantissa = abs(m_value);
+	while (unsignedMantissa.denominator() != 1)
 	{
-		value *= 10;
-		exponent--;
+		unsignedMantissa *= 10;
+		--exponent;
+
 		if (
-			value > rational((bigint(1) << 256) - 1) ||
-			value < rational(-(bigint(1) << 255)) ||
-			exponent < -255 // TODO sane vale?
+			unsignedMantissa > maxUint ||
+			unsignedMantissa < minInt ||
+			exponent < -255 // TODO: sane value?
 		)
 			return {nullptr, nullptr};
 	}
 
 	return {
-		TypeProvider::rationalNumber(value),
+		TypeProvider::rationalNumber(unsignedMantissa),
 		TypeProvider::rationalNumber(-exponent),
 	};
 }
