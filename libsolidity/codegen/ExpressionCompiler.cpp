@@ -411,18 +411,17 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
 
-	if (_unaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
 	{
-		FunctionDefinition const& function = *_unaryOperation.annotation().userDefinedFunction;
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function.libraryFunction() ? function.typeViaContractName() : function.type());
+			function->libraryFunction() ? function->typeViaContractName() : function->type());
 
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
 		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
 		_unaryOperation.subExpression().accept(*this);
-		m_context << m_context.functionEntryLabel(function).pushTag();
+		m_context << m_context.functionEntryLabel(*function).pushTag();
 
 		unsigned parameterSize =
 			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
@@ -540,12 +539,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.leftExpression();
 	Expression const& rightExpression = _binaryOperation.rightExpression();
-	if (_binaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function =_binaryOperation.annotation().userDefinedFunction)
 	{
-		// TODO extract from function call
-		FunctionDefinition const& function = *_binaryOperation.annotation().userDefinedFunction;
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function.libraryFunction() ? function.typeViaContractName() : function.type()
+			function->libraryFunction() ? function->typeViaContractName() : function->type()
 		);
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
@@ -555,7 +552,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		acceptAndConvert(leftExpression, *functionType->selfType());
 		acceptAndConvert(rightExpression, *functionType->parameterTypes().at(0));
 
-		m_context << m_context.functionEntryLabel(function).pushTag();
+		m_context << m_context.functionEntryLabel(*function).pushTag();
 
 		unsigned parameterSize =
 			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
