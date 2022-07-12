@@ -323,16 +323,23 @@ ViewPureChecker::MutabilityAndLocation const& ViewPureChecker::modifierMutabilit
 	return m_inferredMutability.at(&_modifier);
 }
 
+void ViewPureChecker::reportFunctionCallMutability(StateMutability _mutability, langutil::SourceLocation const& _location)
+{
+	// We only require "nonpayable" to call a payable function.
+	if (_mutability == StateMutability::Payable)
+		_mutability = StateMutability::NonPayable;
+	reportMutability(_mutability, _location);
+}
+
 void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 {
 	if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return;
 
-	StateMutability mutability = dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability();
-	// We only require "nonpayable" to call a payble function.
-	if (mutability == StateMutability::Payable)
-		mutability = StateMutability::NonPayable;
-	reportMutability(mutability, _functionCall.location());
+	reportFunctionCallMutability(
+		dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability(),
+		_functionCall.location()
+	);
 }
 
 bool ViewPureChecker::visit(MemberAccess const& _memberAccess)
