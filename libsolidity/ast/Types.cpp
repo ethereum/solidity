@@ -1230,18 +1230,15 @@ pair<RationalNumberType const*, RationalNumberType const*> RationalNumberType::m
 	bool negative = (m_value < 0);
 	rational const maxMantissa = (negative ? -minInt : maxUint);
 
-	int exponent = 0;
+	rational exponent = 0;
 	rational unsignedMantissa = abs(m_value);
 	while (unsignedMantissa.denominator() != 1)
 	{
 		unsignedMantissa *= 10;
 		--exponent;
 
-		if (
-			unsignedMantissa > maxUint ||
-			unsignedMantissa < minInt ||
-			exponent < -255 // TODO: sane value?
-		)
+		// FIXME: What happens when exponent in scientific notation is max uint?
+		if (unsignedMantissa > maxMantissa || exponent > maxUint)
 			return {nullptr, nullptr};
 	}
 
