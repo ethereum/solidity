@@ -54,6 +54,7 @@ using TypePointers = std::vector<Type const*>;
 using rational = boost::rational<bigint>;
 using TypeResult = util::Result<Type const*>;
 using BoolResult = util::Result<bool>;
+using FunctionDefinitionResult = util::Result<FunctionDefinition const*>;
 
 }
 
@@ -377,7 +378,7 @@ public:
 	/// Clears all internally cached values (if any).
 	virtual void clearCache() const;
 
-	FunctionDefinition const* userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const;
+	FunctionDefinitionResult userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const;
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.

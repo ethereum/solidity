@@ -384,9 +384,8 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 
 }
 
-FunctionDefinition const* Type::userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const
+FunctionDefinitionResult Type::userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const
 {
-	// Check if it is a user-defined type.
 	if (!typeDefinition())
 		return nullptr;
 
@@ -409,11 +408,12 @@ FunctionDefinition const* Type::userDefinedOperator(Token _token, ASTNode const&
 				seenFunctions.insert(&function);
 		}
 
-	// TODO proper error handling.
 	if (seenFunctions.size() == 1)
 		return *seenFunctions.begin();
+	else if (seenFunctions.size() == 0)
+		return FunctionDefinitionResult::err("A user-defined operator not found.");
 	else
-		return nullptr;
+		return FunctionDefinitionResult::err("A user-defined operator not unique.");
 }
 
 
