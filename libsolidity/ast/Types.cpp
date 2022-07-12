@@ -403,7 +403,6 @@ FunctionDefinition const* Type::userDefinedOperator(Token _token, ASTNode const&
 				function.libraryFunction() ? function.typeViaContractName() : function.type()
 			);
 			solAssert(functionType && !functionType->parameterTypes().empty());
-			// TODO does this work (data location)?
 			solAssert(isImplicitlyConvertibleTo(*functionType->parameterTypes().front()));
 			if ((_unaryOperation && function.parameterList().parameters().size() == 1) ||
 				(!_unaryOperation && function.parameterList().parameters().size() == 2))
