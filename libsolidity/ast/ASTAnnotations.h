@@ -314,7 +314,6 @@ struct MemberAccessAnnotation: ExpressionAnnotation
 
 struct OperationAnnotation: ExpressionAnnotation
 {
-	// TODO should this be more like "referencedDeclaration"?
 	FunctionDefinition const* userDefinedFunction = nullptr;
 };
 

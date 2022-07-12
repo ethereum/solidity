@@ -60,7 +60,6 @@ function geq(Int x, Int) pure returns (bool) {
     return uw(x) >= 10;
 }
 
-// TODO test that side-effects are executed properly.
 contract C {
     function test_bitor() public pure returns (Int) { return w(1) | w(2); }
     function test_bitand() public pure returns (Int) { return w(1) | w(2); }
