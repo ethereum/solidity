@@ -3755,8 +3755,8 @@ void TypeChecker::endVisit(Literal const& _literal)
 				parameterCountMessage = "Functions that take no arguments cannot be used as literal suffixes.";
 			else if (functionType.parameterTypes().size() >= 3)
 				parameterCountMessage = "Functions that take 3 or more arguments cannot be used as literal suffixes.";
-			else if (functionType.parameterTypes().size() == 2 && !rationalType->isFractional())
-				parameterCountMessage = "Functions that take 2 arguments can only be used as literal suffixes for fractional numbers.";
+			else if (functionType.parameterTypes().size() == 2 && !rationalType)
+				parameterCountMessage = "Functions that take 2 arguments can only be used as literal suffixes for rational numbers.";
 
 			optional<string> parameterTypeMessage;
 			if (parameterCountMessage.has_value())
