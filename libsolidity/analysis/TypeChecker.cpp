@@ -1812,7 +1812,6 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	Type const* commonType = leftType;
 
 	// Either the operator is user-defined or built-in.
-	// TODO For enums, we have compare operators. Should we disallow overriding them?
 	solAssert(!userDefinedOperator || !builtinResult);
 
 	if (!builtinResult && !userDefinedOperator)
@@ -3848,6 +3847,14 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 	}
 
 	solAssert(_usingFor.typeName()->annotation().type);
+
+	if (_usingFor.typeName()->annotation().type->category() == Type::Category::Enum)
+		m_errorReporter.typeError(
+			9921_error,
+			_usingFor.location(),
+			"The \"using\" directive cannot be used to attach functions to the enum type."
+		);
+
 	Type const* normalizedType = TypeProvider::withLocationIfReference(
 		DataLocation::Storage,
 		_usingFor.typeName()->annotation().type
