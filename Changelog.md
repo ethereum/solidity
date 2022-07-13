@@ -30,7 +30,8 @@ Compiler Features:
  * LSP: Add rudimentary support for semantic highlighting.
  * Type Checker: Warn about assignments involving multiple pushes to storage ``bytes`` that may invalidate references.
  * Yul Optimizer: Improve inlining heuristics for via IR code generation and pure Yul compilation.
-
+ * Language Server: Always add ``{project_root}/node_modules`` to include search paths.
+ * Language Server: Adds support for configuring ``include-paths`` JSON settings object that can be passed during LSP configuration stage.
 
 Bugfixes:
  * ABI Encoder: When encoding an empty string coming from storage do not add a superfluous empty slot for data.
