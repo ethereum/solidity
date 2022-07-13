@@ -48,7 +48,7 @@ CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	Dialect const& _dialect,
 	map<YulString, SideEffects> _functionSideEffects
 ):
-	DataFlowAnalyzer(_dialect, std::move(_functionSideEffects))
+	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {
 }
 

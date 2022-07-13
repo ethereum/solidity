@@ -81,12 +81,14 @@ struct AssignedValue
 class DataFlowAnalyzer: public ASTModifier
 {
 public:
+	enum class MemoryAndStorage { Analyze, Ignore };
 	/// @param _functionSideEffects
 	///            Side-effects of user-defined functions. Worst-case side-effects are assumed
 	///            if this is not provided or the function is not found.
 	///            The parameter is mostly used to determine movability of expressions.
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
+		MemoryAndStorage _analyzeStores,
 		std::map<YulString, SideEffects> _functionSideEffects = {}
 	);
 
@@ -189,6 +191,8 @@ private:
 protected:
 	KnowledgeBase m_knowledgeBase;
 
+	/// If true, analyzes memory and storage content via mload/mstore and sload/sstore.
+	bool m_analyzeStores = true;
 	YulString m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
 	YulString m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
 

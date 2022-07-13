@@ -43,7 +43,7 @@ Rematerialiser::Rematerialiser(
 	set<YulString> _varsToAlwaysRematerialize,
 	bool _onlySelectedVariables
 ):
-	DataFlowAnalyzer(_dialect),
+	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore),
 	m_referenceCounts(ReferencesCounter::countReferences(_ast)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
 	m_onlySelectedVariables(_onlySelectedVariables)
