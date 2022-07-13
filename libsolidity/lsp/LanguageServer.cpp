@@ -149,25 +149,28 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 {
 	m_settingsObject = _settings;
 	Json::Value jsonIncludePaths = _settings["include-paths"];
-	int typeFailureCount = 0;
 
-	if (jsonIncludePaths && jsonIncludePaths.isArray())
+	if (jsonIncludePaths)
 	{
-		vector<boost::filesystem::path> includePaths;
-		for (Json::Value const& jsonPath: jsonIncludePaths)
+		int typeFailureCount = 0;
+		if (jsonIncludePaths.isArray())
 		{
-			if (jsonPath.isString())
-				includePaths.emplace_back(boost::filesystem::path(jsonPath.asString()));
-			else
-				typeFailureCount++;
+			vector<boost::filesystem::path> includePaths;
+			for (Json::Value const& jsonPath: jsonIncludePaths)
+			{
+				if (jsonPath.isString())
+					includePaths.emplace_back(boost::filesystem::path(jsonPath.asString()));
+				else
+					typeFailureCount++;
+			}
+			m_fileRepository.setIncludePaths(move(includePaths));
 		}
-		m_fileRepository.setIncludePaths(move(includePaths));
-	}
-	else
-		++typeFailureCount;
+		else
+			++typeFailureCount;
 
-	if (typeFailureCount)
-		m_client.trace("Invalid JSON configuration passed. \"include-paths\" must be an array of strings.");
+		if (typeFailureCount)
+			m_client.trace("Invalid JSON configuration passed. \"include-paths\" must be an array of strings.");
+	}
 }
 
 void LanguageServer::compile()
