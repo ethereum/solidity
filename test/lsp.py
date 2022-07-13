@@ -906,7 +906,9 @@ class SolidityLSPTestSuite: # {{{
         params = {
             'processId': None,
             'rootUri': self.project_root_uri,
-            'trace': 'off',
+            # Enable traces to receive the amount of expected diagnostics before
+            # actually receiving them.
+            'trace': 'messages',
             'initializationOptions': {},
             'capabilities': {
                 'textDocument': {
@@ -925,9 +927,6 @@ class SolidityLSPTestSuite: # {{{
             params['rootUri'] = None
         lsp.call_method('initialize', params)
         lsp.send_notification('initialized')
-        # Enable traces to receive the amount of expected diagnostics before
-        # actually receiving them.
-        lsp.send_message("$/setTrace", { 'value': 'messages' })
 
     # {{{ helpers
     def get_test_file_path(self, test_case_name, sub_dir=None):

@@ -119,7 +119,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"exit", [this](auto, auto) { m_state = (m_state == State::ShutdownRequested ? State::ExitRequested : State::ExitWithoutShutdown); }},
 		{"initialize", bind(&LanguageServer::handleInitialize, this, _1, _2)},
 		{"initialized", [](auto, auto) {}},
-		{"$/setTrace", bind(&LanguageServer::setTrace, this, _2)},
+		{"$/setTrace", [this](auto, Json::Value const& args) { setTrace(args["value"]); }},
 		{"shutdown", [this](auto, auto) { m_state = State::ShutdownRequested; }},
 		{"textDocument/definition", GotoDefinition(*this) },
 		{"textDocument/didOpen", bind(&LanguageServer::handleTextDocumentDidOpen, this, _2)},
@@ -325,6 +325,9 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	else if (Json::Value rootPath = _args["rootPath"])
 		rootPath = rootPath.asString();
 
+	if (_args["trace"])
+		setTrace(_args["trace"]);
+
 	m_fileRepository = FileRepository(rootPath, {});
 	if (_args["initializationOptions"].isObject())
 		changeConfiguration(_args["initializationOptions"]);
@@ -340,7 +343,6 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	replyArgs["capabilities"]["semanticTokensProvider"]["range"] = false;
 	replyArgs["capabilities"]["semanticTokensProvider"]["full"] = true; // XOR requests.full.delta = true
 	replyArgs["capabilities"]["renameProvider"] = true;
-
 
 	m_client.reply(_id, move(replyArgs));
 }
@@ -372,11 +374,11 @@ void LanguageServer::handleWorkspaceDidChangeConfiguration(Json::Value const& _a
 
 void LanguageServer::setTrace(Json::Value const& _args)
 {
-	if (!_args["value"].isString())
+	if (!_args.isString())
 		// Simply ignore invalid parameter.
 		return;
 
-	string const stringValue = _args["value"].asString();
+	string const stringValue = _args.asString();
 	if (stringValue == "off")
 		m_client.setTrace(TraceValue::Off);
 	else if (stringValue == "messages")
