@@ -63,6 +63,7 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 		case Token::Or:
 		case Token::And:
 		{
+			visitNode(_operation);
 			solAssert(!_operation.annotation().userDefinedFunction);
 			visitNode(_operation);
 			appendControlFlow(_operation.leftExpression());
@@ -75,9 +76,10 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 		}
 		default:
 		{
-			bool result = ASTConstVisitor::visit(_operation);
+			visitNode(_operation);
 			if (_operation.annotation().userDefinedFunction)
 			{
+				visitNode(_operation);
 				solAssert(!m_currentNode->resolveFunctionCall(nullptr));
 				m_currentNode->functionCall = _operation.annotation().userDefinedFunction;
 
@@ -86,7 +88,7 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 				connect(m_currentNode, nextNode);
 				m_currentNode = nextNode;
 			}
-			return result;
+			return true;
 		}
 	}
 }
@@ -95,9 +97,9 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 {
 	solAssert(!!m_currentNode, "");
 
-	ASTConstVisitor::visit(_operation);
 	if (_operation.annotation().userDefinedFunction)
 	{
+		visitNode(_operation);
 		solAssert(!m_currentNode->resolveFunctionCall(nullptr));
 		m_currentNode->functionCall = _operation.annotation().userDefinedFunction;
 
@@ -105,7 +107,9 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 
 		connect(m_currentNode, nextNode);
 		m_currentNode = nextNode;
+		return true;
 	}
+
 	return false;
 }
 
