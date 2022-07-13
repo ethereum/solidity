@@ -74,13 +74,13 @@ Function parameters can be used as any other local variable and they can also be
 
 .. note::
 
-  An :ref:`external function<external-function-calls>` cannot accept a
-  multi-dimensional array as an input
-  parameter. This functionality is possible if you enable the ABI coder v2
-  by adding ``pragma abicoder v2;`` to your source file.
+  Until version 0.6.0 it was not possible to use a multi-dimensional array or a struct
+  as an input for an :ref:`external function<external-function-calls>`.
+  ``abicoder v2`` made it possible and it's been enabled by default since version 0.8.0
+  (before that you had to enable it with ``pragma abicoder v2;``).
 
   An :ref:`internal function<internal-function-calls>` can accept a
-  multi-dimensional array without enabling the feature.
+  multi-dimensional array or a struct without any restrictions.
 
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
 
