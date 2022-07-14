@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+pragma stdlib;
+
 function sha256(bytes memory input) returns (bytes32 ret) {
   assembly {
     let success := staticcall(gas(), 2, add(input, 32), mload(input), 0, 32)
