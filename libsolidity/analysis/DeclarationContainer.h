@@ -27,8 +27,26 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 
+#include <memory>
+
 namespace solidity::frontend
 {
+
+/**
+ * Settings for how the function DeclarationContainer::resolveName operates.
+ */
+struct ResolvingSettings
+{
+	/// if true and there are no matching declarations in the current container,
+	/// recursively searches the enclosing containers as well.
+	bool recursive = false;
+	/// if true, include invisible declaration in the results.
+	bool alsoInvisible = false;
+	/// if true, do not include declarations which can never actually be referenced using their
+	/// name alone (without being qualified with the name of scope in which they are declared).
+	bool onlyVisibleAsUnqualifiedNames = false;
+};
+
 
 /**
  * Container that stores mappings between names and declarations. It also contains a link to the
@@ -58,18 +76,8 @@ public:
 
 	/// Finds all declarations that in the current scope can be referred to using specified name.
 	/// @param _name the name to look for.
-	/// @param _recursive if true and there are no matching declarations in the current container,
-	///        recursively searches the enclosing containers as well.
-	/// @param _alsoInvisible if true, include invisible declaration in the results.
-	/// @param _onlyVisibleAsUnqualifiedNames if true, do not include declarations which can never
-	///        actually be referenced using their name alone (without being qualified with the name
-	///        of scope in which they are declared).
-	std::vector<Declaration const*> resolveName(
-		ASTString const& _name,
-		bool _recursive = false,
-		bool _alsoInvisible = false,
-		bool _onlyVisibleAsUnqualifiedNames = false
-	) const;
+	/// @param _settings see ResolvingSettings
+	std::vector<Declaration const*> resolveName(ASTString const& _name, ResolvingSettings _settings = ResolvingSettings{}) const;
 	ASTNode const* enclosingNode() const { return m_enclosingNode; }
 	DeclarationContainer const* enclosingContainer() const { return m_enclosingContainer; }
 	std::map<ASTString, std::vector<Declaration const*>> const& declarations() const { return m_declarations; }

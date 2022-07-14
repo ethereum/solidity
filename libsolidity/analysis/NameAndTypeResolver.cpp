@@ -83,7 +83,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 			if (!imp->symbolAliases().empty())
 				for (auto const& alias: imp->symbolAliases())
 				{
-					auto declarations = scope->second->resolveName(alias.symbol->name(), false);
+					auto declarations = scope->second->resolveName(alias.symbol->name());
 					if (declarations.empty())
 					{
 						m_errorReporter.declarationError(
@@ -176,12 +176,15 @@ vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _na
 	auto iterator = m_scopes.find(_scope);
 	if (iterator == end(m_scopes))
 		return vector<Declaration const*>({});
-	return iterator->second->resolveName(_name, false);
+	return iterator->second->resolveName(_name);
 }
 
 vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles) const
 {
-	return m_currentScope->resolveName(_name, true, _includeInvisibles);
+	ResolvingSettings settings;
+	settings.recursive = true;
+	settings.alsoInvisible = _includeInvisibles;
+	return m_currentScope->resolveName(_name, move(settings));
 }
 
 Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path) const
@@ -197,12 +200,11 @@ std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAll
 	solAssert(!_path.empty(), "");
 	vector<Declaration const*> pathDeclarations;
 
-	vector<Declaration const*> candidates = m_currentScope->resolveName(
-		_path.front(),
-		/* _recursive */ true,
-		/* _alsoInvisible */ false,
-		/* _onlyVisibleAsUnqualifiedNames */ true
-	);
+	ResolvingSettings settings;
+	settings.recursive = true;
+	settings.alsoInvisible = false;
+	settings.onlyVisibleAsUnqualifiedNames = true;
+	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), move(settings));
 
 	for (size_t i = 1; i < _path.size() && candidates.size() == 1; i++)
 	{
@@ -211,7 +213,7 @@ std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAll
 
 		pathDeclarations.push_back(candidates.front());
 
-		candidates = m_scopes.at(candidates.front())->resolveName(_path[i], false);
+		candidates = m_scopes.at(candidates.front())->resolveName(_path[i]);
 	}
 	if (candidates.size() == 1)
 	{
