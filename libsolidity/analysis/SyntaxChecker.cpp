@@ -72,6 +72,8 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 	}
 	if (!m_sourceUnit->annotation().useABICoderV2.set())
 		m_sourceUnit->annotation().useABICoderV2 = true;
+	if (!m_sourceUnit->annotation().useStdlib.set())
+		m_sourceUnit->annotation().useStdlib = false;
 	m_sourceUnit = nullptr;
 }
 
@@ -175,6 +177,19 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			// An unparsable version pragma is an unrecoverable fatal error in the parser.
 			solAssert(false);
 		}
+	}
+	else if (_pragma.literals()[0] == "stdlib")
+	{
+		solAssert(m_sourceUnit, "");
+		if (m_evmVersion < EVMVersion::constantinople())
+			m_errorReporter.syntaxError(
+				6634_error,
+				_pragma.location(),
+				"\"pragma stdlib\" requires Constantinople EVM version at the minimum (selected EVM version is " +
+				m_evmVersion.name() +
+				")."
+			);
+		m_sourceUnit->annotation().useStdlib = true;
 	}
 	else
 		m_errorReporter.syntaxError(4936_error, _pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");

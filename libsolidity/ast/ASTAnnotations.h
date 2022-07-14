@@ -97,6 +97,8 @@ struct SourceUnitAnnotation: ASTAnnotation
 	std::set<ExperimentalFeature> experimentalFeatures;
 	/// Using the new ABI coder. Set to `false` if using ABI coder v1.
 	util::SetOnce<bool> useABICoderV2;
+	/// Using the new standard library mechanism.
+	util::SetOnce<bool> useStdlib;
 };
 
 struct ScopableAnnotation

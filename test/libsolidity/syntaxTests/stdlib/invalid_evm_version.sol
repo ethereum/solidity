@@ -1,0 +1,4 @@
+pragma stdlib;
+// ====
+// EVMVersion: <constantinople
+// ----
