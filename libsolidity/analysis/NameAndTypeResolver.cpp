@@ -47,9 +47,8 @@ NameAndTypeResolver::NameAndTypeResolver(
 {
 	m_scopes[nullptr] = make_shared<DeclarationContainer>();
 	for (Declaration const* declaration: _globalContext.declarations())
-	{
 		solAssert(m_scopes[nullptr]->registerDeclaration(*declaration, false, false), "Unable to register global declaration.");
-	}
+	m_scopes[nullptr]->setStdlibIdentifiers(_globalContext.stdlibIdentifiers());
 }
 
 bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope)
@@ -573,7 +572,7 @@ bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
 {
 	if (!m_scopes[&_sourceUnit])
 		// By importing, it is possible that the container already exists.
-		m_scopes[&_sourceUnit] = make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get());
+		m_scopes[&_sourceUnit] = make_shared<DeclarationContainer>(&_sourceUnit, m_currentScope, m_scopes[m_currentScope].get());
 	return ASTVisitor::visit(_sourceUnit);
 }
 
@@ -587,7 +586,8 @@ bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
 	SourceUnit const* importee = _import.annotation().sourceUnit;
 	solAssert(!!importee, "");
 	if (!m_scopes[importee])
-		m_scopes[importee] = make_shared<DeclarationContainer>(nullptr, m_scopes[nullptr].get());
+		m_scopes[importee] = make_shared<DeclarationContainer>(importee, nullptr, m_scopes[nullptr].get());
+	// TODO here, m_selfNode inside the contanier does not point to the key of m_scopes (_import) - is that a problem?
 	m_scopes[&_import] = m_scopes[importee];
 	ASTVisitor::visit(_import);
 	return false; // Do not recurse into child nodes (Identifier for symbolAliases)
@@ -677,7 +677,7 @@ void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _subScope)
 	{
 		bool newlyAdded = m_scopes.emplace(
 			&_subScope,
-			make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get())
+			make_shared<DeclarationContainer>(&_subScope, m_currentScope, m_scopes[m_currentScope].get())
 		).second;
 		solAssert(newlyAdded, "Unable to add new scope.");
 	}

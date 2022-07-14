@@ -45,6 +45,9 @@ struct ResolvingSettings
 	/// if true, do not include declarations which can never actually be referenced using their
 	/// name alone (without being qualified with the name of scope in which they are declared).
 	bool onlyVisibleAsUnqualifiedNames = false;
+	/// If false, ignores symbols in the global scope that are part of the standard library
+	/// (this is set to false with "pragma stdlib").
+	bool autoPopulateStdlib = true;
 };
 
 
@@ -58,12 +61,17 @@ public:
 	using Homonyms = std::vector<std::pair<langutil::SourceLocation const*, std::vector<Declaration const*>>>;
 
 	DeclarationContainer() = default;
-	explicit DeclarationContainer(ASTNode const* _enclosingNode, DeclarationContainer* _enclosingContainer):
+	explicit DeclarationContainer(ASTNode const* _selfNode, ASTNode const* _enclosingNode, DeclarationContainer* _enclosingContainer):
+		m_selfNode(_selfNode),
 		m_enclosingNode(_enclosingNode),
 		m_enclosingContainer(_enclosingContainer)
 	{
 		if (_enclosingContainer)
 			_enclosingContainer->m_innerContainers.emplace_back(this);
+	}
+	void setStdlibIdentifiers(std::set<std::string> const& _stdlibIdentifiers)
+	{
+		m_stdlibIdentifiers = &_stdlibIdentifiers;
 	}
 	/// Registers the declaration in the scope unless its name is already declared or the name is empty.
 	/// @param _name the name to register, if nullptr the intrinsic name of @a _declaration is used.
@@ -100,11 +108,16 @@ public:
 	void populateHomonyms(std::back_insert_iterator<Homonyms> _it) const;
 
 private:
+	/// Disables autoPopulateStdlib in _settinsg if "pragma stdlib" is active in m_selfNode.
+	void updateSettingsBasedOnStdlibPragma(ResolvingSettings& _settings) const;
+
+	ASTNode const* m_selfNode = nullptr;
 	ASTNode const* m_enclosingNode = nullptr;
 	DeclarationContainer const* m_enclosingContainer = nullptr;
 	std::vector<DeclarationContainer const*> m_innerContainers;
 	std::map<ASTString, std::vector<Declaration const*>> m_declarations;
 	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;
+	std::set<std::string> const* m_stdlibIdentifiers = nullptr;
 	/// List of declarations (name and location) to check later for homonymity.
 	std::vector<std::pair<std::string, langutil::SourceLocation const*>> m_homonymCandidates;
 };

@@ -125,6 +125,16 @@ vector<Declaration const*> GlobalContext::declarations() const
 	return declarations;
 }
 
+set<string> const& GlobalContext::stdlibIdentifiers()
+{
+	set<string> static names{
+		"ecrecover",
+		"ripemd160",
+		"sha256"
+	};
+	return names;
+}
+
 MagicVariableDeclaration const* GlobalContext::currentThis() const
 {
 	if (!m_thisPointer[m_currentContract])

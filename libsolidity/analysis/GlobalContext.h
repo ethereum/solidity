@@ -28,6 +28,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <set>
 
 namespace solidity::frontend
 {
@@ -55,6 +56,9 @@ public:
 
 	/// @returns a vector of all implicit global declarations excluding "this".
 	std::vector<Declaration const*> declarations() const;
+	/// @returns the set of identifiers that are not present in the global scope
+	/// when the "pragma stdlib" is active.
+	static std::set<std::string> const& stdlibIdentifiers();
 
 private:
 	std::vector<std::shared_ptr<MagicVariableDeclaration const>> m_magicVariables;
