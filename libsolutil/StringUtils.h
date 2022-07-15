@@ -27,6 +27,8 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <limits>
 #include <locale>
@@ -101,110 +103,17 @@ std::string joinHumanReadablePrefixed
 		return _separator + joinHumanReadable(_list, _separator, _lastSeparator);
 }
 
-/// Same as @ref formatNumberReadable but only for unsigned numbers
-template <class T>
-inline std::string formatUnsignedNumberReadable (
-	T const& _value,
-	bool _useTruncation = false
-)
-{
-	static_assert(
-		std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed,
-		"only unsigned types or bigint supported"
-	); //bigint does not carry sign bit on shift
-
-	// smaller numbers return as decimal
-	if (_value <= 0x1000000)
-		return _value.str();
-
-	HexCase hexcase = HexCase::Mixed;
-	HexPrefix prefix = HexPrefix::Add;
-
-	// when multiple trailing zero bytes, format as N * 2**x
-	int i = 0;
-	T v = _value;
-	for (; (v & 0xff) == 0; v >>= 8)
-		++i;
-	if (i > 2)
-	{
-		// 0x100 yields 2**8 (N is 1 and redundant)
-		if (v == 1)
-			return "2**" + std::to_string(i * 8);
-		return toHex(toCompactBigEndian(v), prefix, hexcase) +
-			" * 2**" +
-			std::to_string(i * 8);
-	}
-
-	// when multiple trailing FF bytes, format as N * 2**x - 1
-	i = 0;
-	for (v = _value; (v & 0xff) == 0xff; v >>= 8)
-		++i;
-	if (i > 2)
-	{
-		// 0xFF yields 2**8 - 1 (v is 0 in that case)
-		if (v == 0)
-			return "2**" + std::to_string(i * 8) + " - 1";
-		return toHex(toCompactBigEndian(T(v + 1)), prefix, hexcase) +
-			" * 2**" + std::to_string(i * 8) +
-			" - 1";
-	}
-
-	std::string str = toHex(toCompactBigEndian(_value), prefix, hexcase);
-	if (_useTruncation)
-	{
-		// return as interior-truncated hex.
-		size_t len = str.size();
-
-		if (len < 24)
-			return str;
-
-		size_t const initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
-		size_t const finalChars = 4;
-		size_t numSkipped = len - initialChars - finalChars;
-
-		return str.substr(0, initialChars) +
-			"...{+" +
-			std::to_string(numSkipped) +
-			" more}..." +
-			str.substr(len-finalChars, len);
-	}
-
-	// otherwise, show whole value.
-	return str;
-}
-
 /// Formats large numbers to be easily readable by humans.
 /// Returns decimal representation for smaller numbers; hex for large numbers.
 /// "Special" numbers, powers-of-two and powers-of-two minus 1, are returned in
 /// formulaic form like 0x01 * 2**24 - 1.
-/// @a T can be any integer variable, will typically be u160, u256 or bigint.
+/// @a T can be any integer type, will typically be u160, u256 or bigint.
 /// @param _value to be formatted
 /// @param _useTruncation if true, internal truncation is also applied,
 /// like  0x5555...{+56 more}...5555
-/// @example formatNumberReadable((u256)0x7ffffff) = "0x08 * 2**24"
-/// @example formatNumberReadable(-57896044618658097711785492504343953926634992332820282019728792003956564819968) = -0x80 * 2**248
-template <class T>
-inline std::string formatNumberReadable(
-	T const& _value,
-	bool _useTruncation = false
-)
-{
-	static_assert(
-		std::numeric_limits<T>::is_integer,
-		"only integer numbers are supported"
-	);
-
-	if (_value >= 0)
-	{
-		bigint const _v = bigint(_value);
-		return formatUnsignedNumberReadable(_v, _useTruncation);
-	}
-	else
-	{
-		bigint const _abs_value = bigint(-1) * _value;
-		return "-" + formatUnsignedNumberReadable(_abs_value, _useTruncation);
-	}
-}
+/// @example formatNumberReadable((u256)0x7ffffff) = "2**27 - 1"
+/// @example formatNumberReadable(-57896044618658097711785492504343953926634992332820282019728792003956564819968) = -2**255
+std::string formatNumberReadable(bigint const& _value, bool _useTruncation = false);
 
 /// Safely converts an unsigned integer as string into an unsigned int type.
 ///
