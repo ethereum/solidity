@@ -323,6 +323,7 @@ Type const* Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 	if (_inLibraryCall && encodingType && encodingType->dataStoredIn(DataLocation::Storage))
 		return encodingType;
 	Type const* baseType = encodingType;
+
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
 	{
 		baseType = arrayType->baseType();
@@ -2739,6 +2740,101 @@ Type const* TupleType::mobileType() const
 	}
 	return TypeProvider::tuple(move(mobiles));
 }
+
+BoolResult InlineArrayType::isImplicitlyConvertibleTo(Type const& _other) const
+{
+	auto arrayType = dynamic_cast<ArrayType const*>(&_other);
+
+	if (!arrayType || arrayType->isByteArrayOrString())
+		return BoolResult::err("Array literal can not be converted to byte array or string.");
+
+	if (!arrayType->isDynamicallySized() && arrayType->length() != components().size())
+		return BoolResult::err(
+			"Number of components in array literal (" + to_string(components().size()) + ") " +
+			"does not match array size (" + to_string(arrayType->length().convert_to<unsigned>()) + ")."
+		);
+
+	for (Type const* c: components())
+	{
+		BoolResult result = c->isImplicitlyConvertibleTo(*arrayType->baseType());
+		if (!result)
+			return BoolResult::err(
+				"Invalid conversion from " + c->toString(false) +
+				" to " + arrayType->baseType()->toString(false) + "." +
+				(result.message().empty() ? "" : " ") + result.message()
+			);
+	}
+
+	return true;
+}
+
+string InlineArrayType::richIdentifier() const
+{
+	return "t_inline_array" + identifierList(components());
+}
+
+bool InlineArrayType::operator==(Type const& _other) const
+{
+	if (auto inlineArrayType = dynamic_cast<InlineArrayType const*>(&_other))
+	{
+		std::vector<Type const*> const& otherComponents = inlineArrayType->components();
+		if (m_components.size() != otherComponents.size())
+			return false;
+
+		for (unsigned i = 0; i < m_components.size(); ++i)
+			if (!(*m_components[i] == *otherComponents[i]))
+				return false;
+
+		return true;
+	}
+	else
+		return false;
+}
+
+string InlineArrayType::toString(bool _short) const
+{
+	vector<string> result;
+	for (auto const& t: components())
+		result.push_back(t->toString(_short));
+	return "inline_array(" + util::joinHumanReadable(result) + ")";
+}
+
+u256 InlineArrayType::storageSize() const
+{
+	solAssert(false, "Storage size of non-storable InlineArrayType type requested.");
+}
+
+Type const* InlineArrayType::mobileType() const
+{
+	Type const* baseType = componentsCommonMobileType();
+	return
+		baseType ?
+		TypeProvider::array(DataLocation::Memory, baseType, components().size()) :
+		nullptr;
+	}
+
+Type const* InlineArrayType::componentsCommonMobileType() const
+{
+	solAssert(!m_components.empty(), "Empty array literal");
+	Type const* commonType = nullptr;
+
+	for (Type const* type: m_components)
+		commonType =
+			commonType ?
+			Type::commonType(commonType, type->mobileType()) :
+			type->mobileType();
+
+	return TypeProvider::withLocationIfReference(DataLocation::Memory, commonType);
+}
+
+vector<tuple<string, Type const*>> InlineArrayType::makeStackItems() const
+{
+	vector<tuple<string, Type const*>> slots;
+	for (auto && [index, type]: components() | ranges::views::enumerate)
+		slots.emplace_back("component_" + std::to_string(index + 1), type);
+	return slots;
+}
+
 
 FunctionType::FunctionType(FunctionDefinition const& _function, Kind _kind):
 	m_kind(_kind),

@@ -126,7 +126,9 @@ done < <(
       grep -v -E 'license/license_hidden_unicode.sol' |
       grep -v -E 'license/license_unicode.sol' |
       # Skipping tests with 'something.address' as 'address' as the grammar fails on those
-      grep -v -E 'inlineAssembly/external_function_pointer_address.*.sol'
+      grep -v -E 'inlineAssembly/external_function_pointer_address.*.sol' |
+      # Skipping a test with an empty array as the grammar fails on it
+      grep -v -E 'array/inline_array_return_dynamic.sol'
 )
 
 YUL_FILES=()

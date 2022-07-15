@@ -1,9 +1,13 @@
 ### 0.8.17 (unreleased)
 
 Important Bugfixes:
+ * Array literals are convertible to both dynamically-sized and statically-sized arrays.
+ * String literals being part of an array literal can be implicitly converted into bytes.
 
 
 Language Features:
+ * Array literals are convertible to both dynamically-sized and statically-sized arrays.
+ * String literals being part of an array literal can be implicitly converted into bytes.
 
 
 Compiler Features:

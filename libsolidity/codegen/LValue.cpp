@@ -359,86 +359,100 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	}
 	else
 	{
-		solAssert(
-			_sourceType.category() == m_dataType->category(),
-			"Wrong type conversation for assignment."
-		);
-		if (m_dataType->category() == Type::Category::Array)
+		if (_sourceType.category() == Type::Category::InlineArray)
 		{
 			m_context << Instruction::POP; // remove byte offset
-			ArrayUtils(m_context).copyArrayToStorage(
+			ArrayUtils(m_context).moveInlineArrayToStorage(
 				dynamic_cast<ArrayType const&>(*m_dataType),
-				dynamic_cast<ArrayType const&>(_sourceType)
+				dynamic_cast<InlineArrayType const&>(_sourceType)
 			);
 			if (_move)
 				m_context << Instruction::POP;
 		}
-		else if (m_dataType->category() == Type::Category::Struct)
-		{
-			// stack layout: source_ref target_ref target_offset
-			// note that we have structs, so offset should be zero and are ignored
-			m_context << Instruction::POP;
-			auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
-			auto const& sourceType = dynamic_cast<StructType const&>(_sourceType);
-			solAssert(
-				structType.structDefinition() == sourceType.structDefinition(),
-				"Struct assignment with conversion."
-			);
-			solAssert(!structType.containsNestedMapping(), "");
-			if (sourceType.location() == DataLocation::CallData)
-			{
-				solAssert(sourceType.sizeOnStack() == 1, "");
-				solAssert(structType.sizeOnStack() == 1, "");
-				m_context << Instruction::DUP2 << Instruction::DUP2;
-				m_context.callYulFunction(m_context.utilFunctions().updateStorageValueFunction(sourceType, structType, 0), 2, 0);
-			}
-			else
-			{
-				for (auto const& member: structType.members(nullptr))
-				{
-					// assign each member that can live outside of storage
-					Type const* memberType = member.type;
-					solAssert(memberType->nameable(), "");
-					Type const* sourceMemberType = sourceType.memberType(member.name);
-					if (sourceType.location() == DataLocation::Storage)
-					{
-						// stack layout: source_ref target_ref
-						pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
-						m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
-						m_context << u256(offsets.second);
-						// stack: source_ref target_ref source_member_ref source_member_off
-						StorageItem(m_context, *sourceMemberType).retrieveValue(_location, true);
-						// stack: source_ref target_ref source_value...
-					}
-					else
-					{
-						solAssert(sourceType.location() == DataLocation::Memory, "");
-						// stack layout: source_ref target_ref
-						m_context << sourceType.memoryOffsetOfMember(member.name);
-						m_context << Instruction::DUP3 << Instruction::ADD;
-						MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
-						// stack layout: source_ref target_ref source_value...
-					}
-					unsigned stackSize = sourceMemberType->sizeOnStack();
-					pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
-					m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
-					m_context << u256(offsets.second);
-					// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
-					StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
-				}
-			}
-			// stack layout: source_ref target_ref
-			solAssert(sourceType.sizeOnStack() == 1, "Unexpected source size.");
-			if (_move)
-				utils.popStackSlots(2);
-			else
-				m_context << Instruction::SWAP1 << Instruction::POP;
-		}
 		else
-			BOOST_THROW_EXCEPTION(
-				InternalCompilerError()
-					<< errinfo_sourceLocation(_location)
-					<< util::errinfo_comment("Invalid non-value type for assignment."));
+		{
+			solAssert(
+				_sourceType.category() == m_dataType->category(),
+				"Wrong type conversation for assignment."
+			);
+
+			if (m_dataType->category() == Type::Category::Array)
+			{
+				m_context << Instruction::POP; // remove byte offset
+				ArrayUtils(m_context).copyArrayToStorage(
+					dynamic_cast<ArrayType const&>(*m_dataType),
+					dynamic_cast<ArrayType const&>(_sourceType)
+				);
+				if (_move)
+					m_context << Instruction::POP;
+			}
+			else if (m_dataType->category() == Type::Category::Struct)
+			{
+				// stack layout: source_ref target_ref target_offset
+				// note that we have structs, so offset should be zero and are ignored
+				m_context << Instruction::POP;
+				auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
+				auto const& sourceType = dynamic_cast<StructType const&>(_sourceType);
+				solAssert(
+					structType.structDefinition() == sourceType.structDefinition(),
+					"Struct assignment with conversion."
+				);
+				solAssert(!structType.containsNestedMapping(), "");
+				if (sourceType.location() == DataLocation::CallData)
+				{
+					solAssert(sourceType.sizeOnStack() == 1, "");
+					solAssert(structType.sizeOnStack() == 1, "");
+					m_context << Instruction::DUP2 << Instruction::DUP2;
+					m_context.callYulFunction(m_context.utilFunctions().updateStorageValueFunction(sourceType, structType, 0), 2, 0);
+				}
+				else
+				{
+					for (auto const& member: structType.members(nullptr))
+					{
+						// assign each member that can live outside of storage
+						Type const* memberType = member.type;
+						solAssert(memberType->nameable(), "");
+						Type const* sourceMemberType = sourceType.memberType(member.name);
+						if (sourceType.location() == DataLocation::Storage)
+						{
+							// stack layout: source_ref target_ref
+							pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
+							m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
+							m_context << u256(offsets.second);
+							// stack: source_ref target_ref source_member_ref source_member_off
+							StorageItem(m_context, *sourceMemberType).retrieveValue(_location, true);
+							// stack: source_ref target_ref source_value...
+						}
+						else
+						{
+							solAssert(sourceType.location() == DataLocation::Memory, "");
+							// stack layout: source_ref target_ref
+							m_context << sourceType.memoryOffsetOfMember(member.name);
+							m_context << Instruction::DUP3 << Instruction::ADD;
+							MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
+							// stack layout: source_ref target_ref source_value...
+						}
+						unsigned stackSize = sourceMemberType->sizeOnStack();
+						pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
+						m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
+						m_context << u256(offsets.second);
+						// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
+						StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
+					}
+				}
+				// stack layout: source_ref target_ref
+				solAssert(sourceType.sizeOnStack() == 1, "Unexpected source size.");
+				if (_move)
+					utils.popStackSlots(2);
+				else
+					m_context << Instruction::SWAP1 << Instruction::POP;
+			}
+			else
+				BOOST_THROW_EXCEPTION(
+					InternalCompilerError()
+						<< errinfo_sourceLocation(_location)
+						<< util::errinfo_comment("Invalid non-value type for assignment."));
+		}
 	}
 }
 

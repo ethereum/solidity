@@ -78,6 +78,10 @@ SortPointer smtSort(frontend::Type const& _type)
 			solAssert(stringLitType, "");
 			array = make_shared<ArraySort>(SortProvider::uintSort, SortProvider::uintSort);
 		}
+		else if (auto const* inlineArrayType = dynamic_cast<InlineArrayType const*>(&_type))
+		{
+			array = make_shared<ArraySort>(SortProvider::uintSort, smtSortAbstractFunction(*inlineArrayType->componentsCommonMobileType()));
+		}
 		else
 		{
 			frontend::ArrayType const* arrayType = nullptr;
@@ -93,8 +97,19 @@ SortPointer smtSort(frontend::Type const& _type)
 		}
 
 		string tupleName;
-		auto sliceArrayType = dynamic_cast<ArraySliceType const*>(&_type);
-		ArrayType const* arrayType = sliceArrayType ? &sliceArrayType->arrayType() : dynamic_cast<ArrayType const*>(&_type);
+
+		ArrayType const* arrayType = nullptr;
+		if (auto const* inlineArrayType = dynamic_cast<InlineArrayType const*>(&_type))
+			arrayType = TypeProvider::array(
+				DataLocation::Memory,
+				inlineArrayType->componentsCommonMobileType(),
+				inlineArrayType->components().size()
+			);
+		else if (auto const* sliceArrayType = dynamic_cast<ArraySliceType const*>(&_type))
+			arrayType = &sliceArrayType->arrayType();
+		else
+			arrayType = dynamic_cast<ArrayType const*>(&_type);
+
 		if (
 			(arrayType && arrayType->isByteArrayOrString()) ||
 			_type.category() == frontend::Type::Category::StringLiteral
@@ -371,7 +386,8 @@ bool isArray(frontend::Type const& _type)
 {
 	return _type.category() == frontend::Type::Category::Array ||
 		_type.category() == frontend::Type::Category::StringLiteral ||
-		_type.category() == frontend::Type::Category::ArraySlice;
+		_type.category() == frontend::Type::Category::ArraySlice ||
+		_type.category() == frontend::Type::Category::InlineArray;
 }
 
 bool isTuple(frontend::Type const& _type)
@@ -474,6 +490,11 @@ smtutil::Expression zeroValue(frontend::Type const* _type)
 				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(arrayType->baseType()));
 				if (!arrayType->isDynamicallySized())
 					length = bigint(arrayType->length());
+			}
+			else if (auto inlineArrayType = dynamic_cast<InlineArrayType const*>(_type))
+			{
+				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(inlineArrayType->componentsCommonMobileType()));
+				length = bigint(inlineArrayType->components().size());
 			}
 			else if (auto mappingType = dynamic_cast<MappingType const*>(_type))
 				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(mappingType->valueType()));

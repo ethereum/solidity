@@ -11,7 +11,6 @@ contract C {
         function () external returns(uint)[1] memory externalDefaultArray;
         function () internal returns(uint)[1] memory internalDefaultArray;
 
-        // This would work if we were assigning to storage rather than memory
         externalDefaultArray = [this.externalView];
         internalDefaultArray = [internalView];
 
@@ -22,7 +21,6 @@ contract C {
         function () external returns(uint)[1] memory externalDefaultArray;
         function () internal returns(uint)[1] memory internalDefaultArray;
 
-        // This would work if we were assigning to storage rather than memory
         externalDefaultArray = [this.externalPure];
         internalDefaultArray = [internalPure];
 
@@ -33,7 +31,6 @@ contract C {
         function () external returns(uint)[1] memory externalViewArray;
         function () internal returns(uint)[1] memory internalViewArray;
 
-        // This would work if we were assigning to storage rather than memory
         externalViewArray = [this.externalPure];
         internalViewArray = [internalPure];
 
@@ -41,9 +38,7 @@ contract C {
     }
 }
 // ----
-// TypeError 7407: (760-779): Type function () view external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (812-826): Type function () view returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
-// TypeError 7407: (1230-1249): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (1282-1296): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
-// TypeError 7407: (1688-1707): Type function () pure external returns (uint256)[1] memory is not implicitly convertible to expected type function () external returns (uint256)[1] memory.
-// TypeError 7407: (1737-1751): Type function () pure returns (uint256)[1] memory is not implicitly convertible to expected type function () returns (uint256)[1] memory.
+// Warning 2018: (17-81): Function state mutability can be restricted to pure
+// Warning 2018: (86-152): Function state mutability can be restricted to pure
+// Warning 2018: (229-293): Function state mutability can be restricted to pure
+// Warning 2018: (298-364): Function state mutability can be restricted to pure

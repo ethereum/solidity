@@ -190,6 +190,11 @@ private:
 		ArrayType const& _targetType,
 		EncodingOptions const& _options
 	);
+	std::string abiEncodingFunctionInlineArray(
+		InlineArrayType const& _givenType,
+		ArrayType const& _targetType,
+		EncodingOptions const& _options
+	);
 	std::string abiEncodingFunctionMemoryByteArray(
 		ArrayType const& _givenType,
 		ArrayType const& _targetType,

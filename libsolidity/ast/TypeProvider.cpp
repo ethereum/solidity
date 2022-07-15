@@ -407,6 +407,11 @@ TupleType const* TypeProvider::tuple(vector<Type const*> members)
 	return createAndGet<TupleType>(move(members));
 }
 
+InlineArrayType const* TypeProvider::inlineArray(vector<Type const*> _members)
+{
+	return createAndGet<InlineArrayType>(move(_members));
+}
+
 ReferenceType const* TypeProvider::withLocation(ReferenceType const* _type, DataLocation _location, bool _isPointer)
 {
 	if (_type->location() == _location && _type->isPointer() == _isPointer)

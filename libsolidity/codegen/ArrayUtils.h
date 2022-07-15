@@ -28,9 +28,11 @@
 namespace solidity::frontend
 {
 
-class CompilerContext;
-class Type;
 class ArrayType;
+class CompilerContext;
+class InlineArrayType;
+class StringLiteralType;
+class Type;
 
 /**
  * Class that provides code generation for handling arrays.
@@ -45,6 +47,16 @@ public:
 	/// Stack pre: source_reference [source_length] target_reference
 	/// Stack post: target_reference
 	void copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
+
+	/// Moves an inline array from the stack to the storage.
+	/// @param sourcePosition the stack offset of the source
+	/// Stack pre: source ... target_reference
+	/// Stack post: ... target_reference
+	void moveInlineArrayToStorage(
+		ArrayType const& _targetType,
+		InlineArrayType const& _sourceType,
+		unsigned _sourcePosition = 1) const;
+
 	/// Copies the data part of an array (which cannot be dynamically nested) from anywhere
 	/// to a given position in memory.
 	/// This always copies contained data as is (i.e. structs and fixed-size arrays are copied in
@@ -53,6 +65,17 @@ public:
 	/// Stack pre: memory_offset source_item
 	/// Stack post: memory_offest + length(padded)
 	void copyArrayToMemory(ArrayType const& _sourceType, bool _padToWordBoundaries = true) const;
+
+	/// Moves inline array from the stack to a given position in memory.
+	/// @param sourcePosition the stack offset of the source
+	/// Stack pre: source ... target_reference
+	/// Stack post: ... target_reference + length(padded)
+	void moveInlineArrayToMemory(
+		InlineArrayType const& _sourceType,
+		ArrayType const& _targetType,
+		unsigned _sourcePosition,
+		bool _padToWordBoundaries = true) const;
+
 	/// Clears the given dynamic or static array.
 	/// Stack pre: storage_ref storage_byte_offset
 	/// Stack post:
@@ -113,6 +136,29 @@ private:
 	/// @param byteOffsetPosition the stack offset of the storage byte offset
 	/// @param storageOffsetPosition the stack offset of the storage slot offset
 	void incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPosition, unsigned _storageOffsetPosition) const;
+
+	/// Copy a string literal to the storage.
+	/// @param sourcePosition the stack offset of the source
+	/// Stack pre: target_reference
+	/// Stack post: target_reference
+	void copyLiteralToStorage(StringLiteralType const& _sourceType) const;
+
+	/// Appends code that computes a storage position of the array element.
+	/// @param index array element index
+	/// @param byteSize array element size in bytes
+	/// Stack pre: slot
+	/// Stack post: target_slot byte_offset
+	void computeStoragePosition(unsigned _index, unsigned _byteSize) const;
+
+	/// Appends code that set to zero all elements in slot starting at offset.
+	/// Slot and offset are updated to show next slot.
+	/// @param type element type
+	/// @param byteOffsetPosition the stack offset of the storage byte offset
+	/// @param storageOffsetPosition the stack offset of the storage slot offset
+	/// Stack pre: ... slot offset ...
+	/// Stack post: ... slot offset ...
+	void clearLeftoversInSlot(Type const& _type, unsigned _byteOffsetPosition, unsigned _storageOffsetPosition) const;
+
 
 	CompilerContext& m_context;
 };
