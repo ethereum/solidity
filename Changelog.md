@@ -14,6 +14,7 @@ Bugfixes:
  * Commandline Interface: Disallow the following options outside of the compiler mode: ``--via-ir``,``--metadata-literal``, ``--metadata-hash``, ``--model-checker-show-unproved``, ``--model-checker-div-mod-no-slacks``, ``--model-checker-engine``, ``--model-checker-invariants``, ``--model-checker-solvers``, ``--model-checker-timeout``, ``--model-checker-contracts``, ``--model-checker-targets``.
  * Type Checker: Fix null dereference in `abi.encodeCall` type checking of free function.
  * Type Checker: Fix compiler crash when `abi.encodeCall` received a tuple expression instead of an inline tuple.
+ * Type Checker: Fix compiler crash on tuple assignments involving certain patterns with unary tuples on the left-hand side.
 
 
 ### 0.8.15 (2022-06-15)
