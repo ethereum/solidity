@@ -2195,14 +2195,28 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 	)
 	{
 		string msg = "Expected regular external function type, or external view on public function.";
-		if (externalFunctionType->kind() == FunctionType::Kind::Internal)
-			msg += " Provided internal function.";
-		else if (externalFunctionType->kind() == FunctionType::Kind::DelegateCall)
-			msg += " Cannot use library functions for abi.encodeCall.";
-		else if (externalFunctionType->kind() == FunctionType::Kind::Creation)
-			msg += " Provided creation function.";
-		else
-			msg += " Cannot use special function.";
+
+		switch (externalFunctionType->kind())
+		{
+			case FunctionType::Kind::Internal:
+				msg += " Provided internal function.";
+				break;
+			case FunctionType::Kind::DelegateCall:
+				msg += " Cannot use library functions for abi.encodeCall.";
+				break;
+			case FunctionType::Kind::Creation:
+				msg += " Provided creation function.";
+				break;
+			case FunctionType::Kind::Event:
+				msg += " Cannot use events for abi.encodeCall.";
+				break;
+			case FunctionType::Kind::Error:
+				msg += " Cannot use errors for abi.encodeCall.";
+				break;
+			default:
+				msg += " Cannot use special function.";
+		}
+
 		SecondarySourceLocation ssl{};
 
 		if (externalFunctionType->hasDeclaration())
@@ -2213,10 +2227,14 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 				externalFunctionType->declaration().scope() == m_currentContract
 			)
 				msg += " Did you forget to prefix \"this.\"?";
-			else if (util::contains(
-				m_currentContract->annotation().linearizedBaseContracts,
-				externalFunctionType->declaration().scope()
-			) && externalFunctionType->declaration().scope() != m_currentContract)
+			else if (
+				m_currentContract &&
+				externalFunctionType->declaration().scope() != m_currentContract &&
+				util::contains(
+					m_currentContract->annotation().linearizedBaseContracts,
+					externalFunctionType->declaration().scope()
+				)
+			)
 				msg += " Functions from base contracts have to be external.";
 		}
 
