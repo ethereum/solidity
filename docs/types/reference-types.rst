@@ -245,7 +245,7 @@ because ``-1`` cannot be implicitly converted to ``uint8``.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.16 <0.9.0;
+    pragma solidity >=0.8.17 <0.9.0;
 
     // This will not compile
     contract C {
@@ -265,7 +265,7 @@ the number of the expressions in the array literal. Therefore following is impos
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.16 <0.9.0;
+    pragma solidity >=0.8.17 <0.9.0;
 
     // This will not compile
     contract C {
@@ -284,7 +284,7 @@ Array literals can also be used to initialize multi-dimensional arrays:
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.16 <0.9.0;
+    pragma solidity >=0.8.17 <0.9.0;
 
     contract C {
         int256 [2][] a = [[1, 2], [3, 4], [5, 6]];
@@ -347,7 +347,7 @@ Array Members
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.8.16 <0.9.0;
+    pragma solidity >=0.8.17 <0.9.0;
 
     contract ArrayContract {
         uint[2**20] aLotOfIntegers;
