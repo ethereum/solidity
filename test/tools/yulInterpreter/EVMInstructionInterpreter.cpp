@@ -475,6 +475,8 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 			);
 		return 0;
 	}
+	else if (fun == "memoryguard")
+		return _evaluatedArguments.at(0);
 	else
 		yulAssert(false, "Unknown builtin: " + fun);
 	return 0;
