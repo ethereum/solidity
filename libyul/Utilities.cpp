@@ -148,3 +148,51 @@ bool SwitchCaseCompareByLiteralValue::operator()(Case const* _lhs, Case const* _
 	yulAssert(_lhs && _rhs, "");
 	return Less<Literal*>{}(_lhs->value.get(), _rhs->value.get());
 }
+
+std::optional<std::pair<u256, u256>> solidity::yul::getSwitchRange(Switch const& _switch)
+{
+	optional<u256> minCase;
+	optional<u256> maxCase;
+	for (Case const& c: _switch.cases)
+	{
+		if (c.value)
+		{
+			u256 literalVal = valueOfLiteral(*c.value);
+			if (!minCase.has_value() || !maxCase.has_value())
+			{
+				minCase = literalVal;
+				maxCase = literalVal;
+			}
+			if (literalVal < minCase)
+				minCase = literalVal;
+			if (literalVal > maxCase)
+				maxCase = literalVal;
+		}
+	}
+	if (minCase.has_value() && maxCase.has_value())
+		return make_optional(make_pair(minCase.value(), maxCase.value()));
+	return optional<pair<u256, u256>>();
+}
+
+bool solidity::yul::isSwitchEnumLike(Switch const& _switch)
+{
+	std::optional<std::pair<u256, u256>> switchRange = getSwitchRange(_switch);
+	// Accept any switch statement whose cases have a range <= 16
+	// TODO: Support enum switches with more than 16 possibilities
+	// using codecopy
+	if (switchRange.has_value() && (switchRange.value().second - switchRange.value().first) >= 16)
+		return false;
+
+	unsigned int numNonDefaultCases = 0;
+	for (Case const& c: _switch.cases)
+	{
+		if (c.value)
+			++numNonDefaultCases;
+	}
+
+	// TODO: Replace this check with a gas cost comparison somewhere else
+	if (numNonDefaultCases < 3)
+		return false;
+
+	return true;
+}
