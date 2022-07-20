@@ -487,6 +487,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::GASLIMIT:
 	case Instruction::STATICCALL:
 	case Instruction::SLOAD:
+	case Instruction::TLOAD:
 		return true;
 	default:
 		break;
@@ -506,6 +507,7 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::LOG2:
 	case Instruction::LOG3:
 	case Instruction::LOG4:
+	case Instruction::TSTORE:
 	case Instruction::CREATE:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
