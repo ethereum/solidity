@@ -361,9 +361,9 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
 	shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
-	
+
 	// TODO: Replace with 'can be used as a jump table' check
-	if (_switch.cases.size() > 1000)
+	if (_switch.cases.size() >= 3 && isSwitchEnumLike(_switch))
 	{
 		// Generate as Switch CFG block (only used for jump tables)
 		StackSlot switchExpr = std::visit(*this, *_switch.expression);
