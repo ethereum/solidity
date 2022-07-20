@@ -1,5 +1,5 @@
 ****************
-Language Grammar
+语法
 ****************
 
 .. a4:autogrammar:: SolidityParser

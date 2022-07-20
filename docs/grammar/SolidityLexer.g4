@@ -1,7 +1,7 @@
 lexer grammar SolidityLexer;
 
 /**
- * Keywords reserved for future use in Solidity.
+ * 为将来在Solidity中使用保留的关键字。
  */
 ReservedKeywords:
 	'after' | 'alias' | 'apply' | 'auto' | 'byte' | 'case' | 'copyof' | 'default' | 'define' | 'final'
@@ -29,16 +29,16 @@ Do: 'do';
 Else: 'else';
 Emit: 'emit';
 Enum: 'enum';
-Error: 'error'; // not a real keyword
-Revert: 'revert'; // not a real keyword
+Error: 'error'; // 不是真正的关键字
+Revert: 'revert'; // 不是真正的关键字
 Event: 'event';
 External: 'external';
 Fallback: 'fallback';
 False: 'false';
 Fixed: 'fixed' | ('fixed' [1-9][0-9]* 'x' [1-9][0-9]*);
-From: 'from'; // not a real keyword
+From: 'from'; // 不是真正的关键字
 /**
- * Bytes types of fixed length.
+ * 固定长度的字节类型。
  */
 FixedBytes:
 	'bytes1' | 'bytes2' | 'bytes3' | 'bytes4' | 'bytes5' | 'bytes6' | 'bytes7' | 'bytes8' |
@@ -73,8 +73,8 @@ Receive: 'receive';
 Return: 'return';
 Returns: 'returns';
 /**
- * Sized signed integer types.
- * int is an alias of int256.
+ * 有符号的整数类型。
+ * int是int256的一个别名。
  */
 SignedIntegerType:
 	'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' |
@@ -90,8 +90,8 @@ Type: 'type';
 Ufixed: 'ufixed' | ('ufixed' [1-9][0-9]+ 'x' [1-9][0-9]+);
 Unchecked: 'unchecked';
 /**
- * Sized unsigned integer types.
- * uint is an alias of uint256.
+ * 无符号整数类型。
+ * uint是uint256的一个别名。
  */
 UnsignedIntegerType:
 	'uint' | 'uint8' | 'uint16' | 'uint24' | 'uint32' | 'uint40' | 'uint48' | 'uint56' | 'uint64' |
@@ -161,18 +161,18 @@ DoubleQuote: '"';
 SingleQuote: '\'';
 
 /**
- * A non-empty quoted string literal restricted to printable characters.
+ * 一个非空的带引号的字符串字面量，限制为可打印的字符。
  */
 NonEmptyStringLiteral: '"' DoubleQuotedStringCharacter+ '"' | '\'' SingleQuotedStringCharacter+ '\'';
 /**
- * An empty string literal
+ * 一个空的字符串字面量
  */
 EmptyStringLiteral: '"' '"' | '\'' '\'';
 
-// Note that this will also be used for Yul string literals.
+// 请注意，这也将被用于Yul字符串字面量。
 //@doc:inline
 fragment DoubleQuotedStringCharacter: DoubleQuotedPrintable | EscapeSequence;
-// Note that this will also be used for Yul string literals.
+// 请注意，这也将被用于Yul字符串字面量。
 //@doc:inline
 fragment SingleQuotedStringCharacter: SingleQuotedPrintable | EscapeSequence;
 /**
@@ -180,13 +180,13 @@ fragment SingleQuotedStringCharacter: SingleQuotedPrintable | EscapeSequence;
  */
 fragment SingleQuotedPrintable: [\u0020-\u0026\u0028-\u005B\u005D-\u007E];
 /**
- * Any printable character except double quote or back slash.
+ * 除双引号或反斜线外的任何可打印的字符。
  */
 fragment DoubleQuotedPrintable: [\u0020-\u0021\u0023-\u005B\u005D-\u007E];
 /**
-  * Escape sequence.
-  * Apart from common single character escape sequences, line breaks can be escaped
-  * as well as four hex digit unicode escapes \\uXXXX and two digit hex escape sequences \\xXX are allowed.
+  * 转义序列。
+  * 除了常见的单字符转义序列外，还可以转义换行，
+  * 以及允许四个十六进制数字的unicode转义\\uXXXX和两个十六进制数字的转义序列\\xXX。
   */
 fragment EscapeSequence:
 	'\\' (
@@ -195,7 +195,7 @@ fragment EscapeSequence:
 		| 'x' HexCharacter HexCharacter
 	);
 /**
- * A single quoted string literal allowing arbitrary unicode characters.
+ * 单引号字符串字面量，允许任意的unicode字符。
  */
 UnicodeStringLiteral:
 	'unicode"' DoubleQuotedUnicodeStringCharacter* '"'
@@ -205,13 +205,13 @@ fragment DoubleQuotedUnicodeStringCharacter: ~["\r\n\\] | EscapeSequence;
 //@doc:inline
 fragment SingleQuotedUnicodeStringCharacter: ~['\r\n\\] | EscapeSequence;
 
-// Note that this will also be used for Yul hex string literals.
+// 注意，这也将用于Yul十六进制字符串字面量。
 /**
- * Hex strings need to consist of an even number of hex digits that may be grouped using underscores.
+ * 十六进制字符串需要包含偶数个十六进制数字，可以使用下划线分组。
  */
 HexString: 'hex' (('"' EvenHexDigits? '"') | ('\'' EvenHexDigits? '\''));
 /**
- * Hex numbers consist of a prefix and an arbitrary number of hex digits that may be delimited by underscores.
+ * 十六进制数字由前缀和可以用下划线分隔的任意数量的十六进制数字组成。
  */
 HexNumber: '0' 'x' HexDigits;
 //@doc:inline
@@ -222,9 +222,8 @@ fragment EvenHexDigits: HexCharacter HexCharacter ('_'? HexCharacter HexCharacte
 fragment HexCharacter: [0-9A-Fa-f];
 
 /**
- * A decimal number literal consists of decimal digits that may be delimited by underscores and
- * an optional positive or negative exponent.
- * If the digits contain a decimal point, the literal has fixed point type.
+ * 一个十进制数字的字面量由十进制数字组成，可以用下划线和一个可选的正负指数来分隔。
+ * 如果这些数字包含一个小数点，则该数字具有定点类型。
  */
 DecimalNumber: (DecimalDigits | (DecimalDigits? '.' DecimalDigits)) ([eE] '-'? DecimalDigits)?;
 //@doc:inline
@@ -232,8 +231,7 @@ fragment DecimalDigits: [0-9] ('_'? [0-9])* ;
 
 
 /**
- * An identifier in solidity has to start with a letter, a dollar-sign or an underscore and
- * may additionally contain numbers after the first symbol.
+ * solidity中的标识符必须以字母，美元符号或下划线开头，并且可以在第一个符号之后再包含数字。
  */
 Identifier: IdentifierStart IdentifierPart*;
 //@doc:inline
@@ -272,7 +270,7 @@ YulTrue: 'true';
 YulHex: 'hex';
 
 /**
- * Builtin functions in the EVM Yul dialect.
+ * EVM Yul语言的内置函数。
  */
 YulEVMBuiltin:
 	'stop' | 'add' | 'sub' | 'mul' | 'div' | 'sdiv' | 'mod' | 'smod' | 'exp' | 'not'
@@ -297,9 +295,8 @@ YulComma: ',';
 YulArrow: '->';
 
 /**
- * Yul identifiers consist of letters, dollar signs, underscores and numbers, but may not start with a number.
- * In inline assembly there cannot be dots in user-defined identifiers. Instead see yulPath for expressions
- * consisting of identifiers with dots.
+ * Yul标识符由字母，美元符号，下划线和数字组成，但不能以数字开头。
+ * 在内联程序中，用户定义的标识符中不能有圆点。相反，对于由带点的标识符组成的表达式，请参阅yulPath。
  */
 YulIdentifier: YulIdentifierStart YulIdentifierPart*;
 //@doc:inline
@@ -307,17 +304,17 @@ fragment YulIdentifierStart: [a-zA-Z$_];
 //@doc:inline
 fragment YulIdentifierPart: [a-zA-Z0-9$_];
 /**
- * Hex literals in Yul consist of a prefix and one or more hexadecimal digits.
+ * Yul中的十六进制字由一个前缀和一个或多个十六进制数字组成。
  */
 YulHexNumber: '0' 'x' [0-9a-fA-F]+;
 /**
- * Decimal literals in Yul may be zero or any sequence of decimal digits without leading zeroes.
+ * Yul中的小数字面量可以是零或任何不含前导零的小数位序列。
  */
 YulDecimalNumber: '0' | ([1-9] [0-9]*);
 /**
- * String literals in Yul consist of one or more double-quoted or single-quoted strings
- * that may contain escape sequences and printable characters except unescaped line breaks or
- * unescaped double-quotes or single-quotes, respectively.
+ * Yul中的字符串字面量由一个或多个双引号或单引号字符串组成，
+ * 这些字符串可能包含转义序列和可打印字符
+ * 未转义的换行符或未转义的双引号或单引号除外。
  */
 YulStringLiteral:
 	'"' DoubleQuotedStringCharacter* '"'
@@ -332,8 +329,8 @@ YulLINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN) ;
 mode PragmaMode;
 
 /**
- * Pragma token. Can contain any kind of symbol except a semicolon.
- * Note that currently the solidity parser only allows a subset of this.
+ * 编译指示令牌。可以包含除分号以外的任何类型的符号。
+ * 注意，目前solidity解析器只允许它的一个子集。
  */
 //@doc:name pragma-token
 //@doc:no-diagram
