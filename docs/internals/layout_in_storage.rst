@@ -127,16 +127,20 @@ The type of the value is ``uint256``, so it uses a single slot.
 ``bytes`` and ``string``
 ------------------------
 
-``bytes`` and ``string`` are encoded identically.
-In general, the encoding is similar to ``bytes1[]``, in the sense that there is a slot for the array length itself and
-a data area that is computed using a ``keccak256`` hash of that slot's position.
-However, for short values (shorter than 32 bytes) the array elements are stored together with the length in the same slot.
+``bytes`` and ``string`` are encoded identically. In general, the encoding is similar to ``bytes1[]`` in the
+ sense that the layout in storage depends on the ``.length``:
 
-In particular: if the data is at most ``31`` bytes long, the elements are stored
+- For short values (shorter than 32 bytes) the array elements are stored together with the length in the same slot.
+
+If the data is at most ``31`` bytes long, the elements are stored
 in the higher-order bytes (left aligned) and the lowest-order byte stores the value ``length * 2``.
-For byte arrays that store data which is ``32`` or more bytes long, the main slot ``p`` stores ``length * 2 + 1`` and the data is
-stored as usual in ``keccak256(p)``. This means that you can distinguish a short array from a long array
-by checking if the lowest bit is set: short (not set) and long (set).
+
+- For long values (more than 32 bytes), the length is stored in one slot (which position is defined as per the [storage layout rules](#layout-of-state-variables-in-storage)), while the array elements are stored in a separately allocated data area whose location is computed using a ``keccak256`` hash of that slot's position.
+
+For byte arrays that store data which is ``32`` bytes long or more, the main slot ``p`` stores ``length * 2 + 1`` and the data is
+stored as usual in ``keccak256(p)``. 
+
+This means that you can distinguish a short array from a long array by checking if the lowest bit is set: short (not set) and long (set).
 
 .. note::
   Handling invalidly encoded slots is currently not supported but may be added in the future.
