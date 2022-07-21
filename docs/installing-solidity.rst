@@ -13,9 +13,9 @@ Solidity 的版本遵循 `语义化版本原则 <https://semver.org>`_。此外�
 主版本（例如：0.x.y）的补丁级版本的发布不会包含重大更改。这意味着用 0.x.y 版本
 编译的代码可望用 0.x.z 版本编译，其中 z > y。
 
-除了发行版本外，我们还提供 **尝鲜开发版** （nightly development builds），
+除了发行版本外，我们还提供 **每日开发构建版本 （nightly development builds）** ，
 目的是使开发人员能够轻松地试用即将推出的功能并提供早期反馈。然而，请注意，
-虽然尝鲜版通常是很稳定的，但它们包含了来自开发分支的前沿代码，
+虽然每日开发构建版本通常是很稳定的，但它们包含了来自开发分支的前沿代码，
 并不保证总是有效的。尽管我们尽了最大努力，
 它们仍可能含有未记录的或重大的修改，这些修改不会成为实际发布版本的一部分。
 它们也不会用于生产。
@@ -113,7 +113,7 @@ Solidity 的二进制安装包可在 `solidity/releases <https://github.com/ethe
     sudo apt-get update
     sudo apt-get install solc
 
-您也可以使用以下命令安装尝鲜版：
+您也可以使用以下命令安装每日开发构建版本：
 
 .. code-block:: bash
 
@@ -169,9 +169,9 @@ macOS Packages
 如果您需要特定版本的 Solidity，您可以直接从 Github 上安装一个 Homebrew 列表。
 
 参见
-`solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
+`solidity.rb 在 Github 上的提交情况 <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
 
-复制您想要的版本的提交哈希值，然后在你的机器上检出该分支。
+复制您想要的版本的提交哈希值，然后在您的机器上检出该分支。
 
 .. code-block:: bash
 
@@ -184,14 +184,14 @@ macOS Packages
 .. code-block:: bash
 
     brew unlink solidity
-    # eg. Install 0.4.8
+    # 例如，安装 0.4.8
     brew install solidity.rb
 
 静态二进制文件
 ===============
 
 我们在 `solc-bin`_ 上维护了一个包含过去和现在编译器版本的静态构建的资源库，用于所有支持的平台。
-您也可以找到尝鲜版。
+您也可以找到每日开发构建版本。
 
 该资源库不仅是一个快速且简单的方法，让终端用户获得可以开箱即用的二进制文件，
 而且它对第三方工具也很友好：
@@ -204,9 +204,9 @@ macOS Packages
 - 我们努力争取高水平的向后兼容性。文件一旦被添加，在没有提供旧位置的链接/重定向的情况下，不会被删除或移动。
   它们也不会被修改，而且应始终与原始校验相匹配。唯一的例外是破损或无法使用的文件，
   如果保持原样，有可能造成更大的伤害。
-- 文件是通过 HTTP 和 HTTPS 提供的。只要你以安全的方式获得文件列表
+- 文件是通过 HTTP 和 HTTPS 提供的。只要您以安全的方式获得文件列表
   （通过 git、HTTPS、IPFS 或者只是在本地的缓存），并在下载后验证二进制文件的哈希值，
-  你就不必通过HTTPS获得二进制文件。
+  您就不必通过HTTPS获得二进制文件。
 
 在大多数情况下，同样的二进制文件可以在 `Github 上的 Solidity 发布页 <https://github.com/ethereum/solidity/releases>`_ 中找到。
 不同的是，我们一般不更新Github已发布的旧版本。这意味着如果命名规则改变，我们不会重新命名，
@@ -214,7 +214,7 @@ macOS Packages
 
 ``solc-bin`` 资源库包含几个顶级目录，每个目录代表一个平台。
 每个目录都包含一个 ``list.json`` 文件，列出可用的二进制文件。
-例如，在 ``emscripten-wasm32/list.json`` 中你会发现以下关于 0.7.4 版本的信息。
+例如，在 ``emscripten-wasm32/list.json`` 中您会发现以下关于 0.7.4 版本的信息。
 
 .. code-block:: json
 
@@ -244,7 +244,7 @@ macOS Packages
 - 您可以通过比较其keccak256哈希值来验证二进制文件的完整性
   ``0x300330ecd127756b824aa13e843cb1f43c473cb22eaf3750d5fb9c99279af8c3``。哈希值可以在命令行上
   使用 `sha3sum`_ 提供的 ``keccak256sum`` 工具
-  或在 JavaScript 中使用 `ethereumjs-util的keccak256()函数。`
+  或在 JavaScript 中使用 `ethereumjs-util 的 keccak256() 函数。`
 - 您也可以通过比较二进制文件的sha256哈希值来验证它的完整性
   ``0x2b55ed5fec4d9625b6c7b3ab1abd2b7fb7dd2a9c68543bf0323db2c7e2d55af2``。
 
@@ -252,7 +252,7 @@ macOS Packages
 
    由于高度的向后兼容性要求，版本库包含一些遗留元素，但您在编写新工具时应避免使用它们：
 
-   - 如果您想获得最佳的性能，请使用 ``emscripten-wasm32/``（有回退功能的 ``emscripten-asmjs/``）而不是 ``bin/``。
+   - 如果您想获得最佳的性能，请使用 ``emscripten-wasm32/`` （有回退功能的 ``emscripten-asmjs/``）而不是 ``bin/``。
      在 0.6.1 版本之前，我们只提供 asm.js 二进制文件。从 0.6.2 开始，我们改用 `WebAssembly builds`_，性能好得多。
      我们已经为wasm重建了旧版本，但原来的asm.js文件仍然在 ``bin/`` 下。
      新的文件必须放在一个单独的目录中，以避免名称冲突。
@@ -266,7 +266,7 @@ macOS Packages
 .. warning::
 
     二进制文件也可以在 https://ethereum.github.io/solc-bin/ 找到，
-    但这个页面在 0.7.2 版本发布后就停止了更新，不会收到任何平台的新版本或尝鲜版，
+    但这个页面在 0.7.2 版本发布后就停止了更新，不会收到任何平台的新版本或每日开发构建版本，
     也不提供新的目录结构，包括非 emscripten 的构建。
 
     如果您正在使用它，请切换到 https://binaries.soliditylang.org，它是一个直接的替代。
@@ -327,7 +327,7 @@ macOS Packages
     我们的SMT测试没有考虑到这些差异，很可能会在不同的版本中失败，而不是为其编写的版本。
     这并不意味着使用不同版本的构建是有问题的。如果将 ``-DSTRICT_Z3_VERSION=OFF`` 选项传递给CMake，
     您可以使用任何满足上表要求的版本进行构建。
-    然而，如果你这样做，请记得在 ``scripts/tests.sh`` 中传递 ``--no-smt`` 选项以跳过SMT测试。
+    然而，如果您这样做，请记得在 ``scripts/tests.sh`` 中传递 ``--no-smt`` 选项以跳过SMT测试。
 
 最小编译器版本
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -372,7 +372,7 @@ macOS Packages
 | `Boost`_ (1.77版本以上)           | C++ 库文件。           |
 +-----------------------------------+------------------------+
 
-如果您已经有一个 IDE 并且只需要编译器和库文件。你可以安装 Visual Studio 2019 构建工具。
+如果您已经有一个 IDE 并且只需要编译器和库文件。您可以安装 Visual Studio 2019 构建工具。
 
 Visual Studio 2019 同时提供IDE和必要的编译器和库。
 所以，如果您没有一个 IDE，并且想要开发 Solidity，
@@ -443,7 +443,7 @@ Solidity 项目使用 CMake 来配置构建。
 
 .. code-block:: bash
 
-    #note: this will install binaries solc and soltest at usr/local/bin
+    #注意：这将在 usr/local/bin 安装 solc 和 soltest 的二进制文件。
     ./scripts/build.sh
 
 .. warning::
@@ -491,13 +491,13 @@ Solidity 可以针对 SMT 解算器进行构建，如果它们在系统中被发
 
 .. code-block:: bash
 
-    # disables only Z3 SMT Solver.
+    # 只禁用Z3 SMT解算器。
     cmake .. -DUSE_Z3=OFF
 
-    # disables only CVC4 SMT Solver.
+    # 只禁用CVC4 SMT解算器。
     cmake .. -DUSE_CVC4=OFF
 
-    # disables both Z3 and CVC4
+    # 同时禁用Z3和CVC4
     cmake .. -DUSE_CVC4=OFF -DUSE_Z3=OFF
 
 版本号字符串详解
@@ -524,7 +524,7 @@ Solidity 版本名包含四部分：
 
 在版本发布之后，补丁版本号会增加，因为我们假定接下来只有补丁级别的变更。
 当变更被合并后，版本应该根据 Semver 和变更的重要程度来提升。
-最后，发行版本总是与当前尝鲜版本的版本号一致，但没有 ``prerelease`` 指示符。
+最后，发行版本总是与当前每日开发构建版本本的版本号一致，但没有 ``prerelease`` 指示符。
 
 
 示例:
