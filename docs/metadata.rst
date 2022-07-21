@@ -21,9 +21,12 @@ the :ref:`Standard JSON Interface<compiler-api>`.
 
 You have to publish the metadata file to IPFS, Swarm, or another service so
 that others can access it. You create the file by using the ``solc --metadata``
-command that generates a file called ``ContractName_meta.json``. It contains
-IPFS and Swarm references to the source code, so you have to upload all source
-files and the metadata file.
+command together with the ``--output-dir`` parameter. Without the parameter,
+it will only be written to standard out.
+It contains IPFS and Swarm references to the source code, so you have to
+upload all source files and the metadata file. For IPFS, The hash contained
+in the CID returned by ``ipfs add`` (not the direct sha2-256 hash of the file)
+shall match with the one contained in the bytecode.
 
 The metadata file has the following format. The example below is presented in a
 human-readable way. Properly formatted metadata should use quotes correctly,
