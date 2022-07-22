@@ -13,17 +13,17 @@ Solidity 是静态类型语言，支持继承，库和复杂的用户自定义�
 
 当开发智能合约时，您应该使用最新版本的Solidity。除某些特殊情况之外，只有最新版本才会收到
 `安全修复 <https://github.com/ethereum/solidity/security/policy#supported-versions>`_。
-此外，突破性的变化以及新功能会定期引入。
+此外，重大的变化以及新功能会定期引入。
 目前，我们使用 0.y.z 版本号 `来表明这种快速的变化 <https://semver.org/#spec-item-4>`_。
 
-.. 警告::
+.. warning::
 
   Solidity最近发布了0.8.x版本，该版本引入了许多重大更新。 清务必阅读 :doc:`完整列表 <080-breaking-changes>`。
 
 始终欢迎改进 Solidity 或此文档的想法,
 请阅读我们的 :doc:`贡献者指南 <contributing>` 以了解更多细节。
 
-.. 提示::
+.. note::
 
   您可以通过点击左下角的版本号弹出的菜单来选择首选的下载格式来下载该文档的 PDF、HTML 或 Epub 格式。
 
@@ -48,12 +48,12 @@ Solidity 是静态类型语言，支持继承，库和复杂的用户自定义�
 有多种方式来安装Solidity编译器,
 只需选择您喜欢的方式，并按照 :ref:`安装手册 <installing-solidity>` 上的步骤进行安装。
 
-.. 提示::
-  您可以使用 `Remix IDE <https://remix.ethereum.org>` 在浏览器中直接运行示例代码。
+.. note::
+  您可以使用 `Remix IDE <https://remix.ethereum.org>`_ 在浏览器中直接运行示例代码。
   Remix 是一个基于 Web 浏览器的 IDE，允许您编写，部署和管理 Solidity 智能合约，
   而无需在本地安装 Solidity。
 
-.. 警告::
+.. warning::
     因为软件是人编写的，就会有bug。在编写智能合约时，您应该遵循既定的软件开发最佳实践。
     这包括代码审查，测试，审计和正确性证明。
     智能合约用户有时比他们的作者对代码更有信心，
@@ -77,7 +77,7 @@ Solidity 是静态类型语言，支持继承，库和复杂的用户自定义�
 社区志愿者帮助将这些文件翻译成各种语言。
 它们有不同程度的完整性和最新性。但英文版本作为主要参考。
 
-.. 注解::
+.. note::
 
    我们最近建立了一个新的GitHub组织和翻译工作流程，以帮助简化社区工作。
    请参考 `翻译指南 <https://github.com/solidity-docs/translation-guide>`_，
