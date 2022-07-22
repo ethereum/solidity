@@ -1,0 +1,156 @@
+{
+  "absolutePath": "a",
+  "id": 16,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "body":
+      {
+        "id": 9,
+        "nodeType": "Block",
+        "src": "56:2:1",
+        "statements": []
+      },
+      "id": 10,
+      "implemented": true,
+      "kind": "freeFunction",
+      "modifiers": [],
+      "name": "str",
+      "nameLocation": "9:3:1",
+      "nodeType": "FunctionDefinition",
+      "parameters":
+      {
+        "id": 5,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 2,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "src": "13:6:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions": {},
+            "typeName":
+            {
+              "id": 1,
+              "name": "uint32",
+              "nodeType": "ElementaryTypeName",
+              "src": "13:6:1",
+              "typeDescriptions": {}
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": false,
+            "id": 4,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "src": "21:4:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions": {},
+            "typeName":
+            {
+              "id": 3,
+              "name": "uint",
+              "nodeType": "ElementaryTypeName",
+              "src": "21:4:1",
+              "typeDescriptions": {}
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "12:14:1"
+      },
+      "returnParameters":
+      {
+        "id": 8,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 7,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "src": "41:13:1",
+            "stateVariable": false,
+            "storageLocation": "memory",
+            "typeDescriptions": {},
+            "typeName":
+            {
+              "id": 6,
+              "name": "string",
+              "nodeType": "ElementaryTypeName",
+              "src": "41:6:1",
+              "typeDescriptions": {}
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "40:15:1"
+      },
+      "src": "0:58:1",
+      "stateMutability": "pure",
+      "virtual": false,
+      "visibility": "internal"
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 15,
+      "name": "C",
+      "nameLocation": "68:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "constant": false,
+          "id": 14,
+          "mutability": "mutable",
+          "name": "s",
+          "nameLocation": "83:1:1",
+          "nodeType": "VariableDeclaration",
+          "src": "76:26:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 11,
+            "name": "string",
+            "nodeType": "ElementaryTypeName",
+            "src": "76:6:1",
+            "typeDescriptions": {}
+          },
+          "value":
+          {
+            "hexValue": "3132332e3334355f373839",
+            "id": 13,
+            "kind": "number",
+            "nodeType": "Literal",
+            "src": "87:15:1",
+            "typeDescriptions": {},
+            "value": "123.345_789"
+          },
+          "visibility": "internal"
+        }
+      ],
+      "src": "59:46:1",
+      "usedErrors": []
+    }
+  ],
+  "src": "0:106:1"
+}

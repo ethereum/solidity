@@ -1,0 +1,219 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      15
+    ],
+    "str":
+    [
+      10
+    ]
+  },
+  "id": 16,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "body":
+      {
+        "id": 9,
+        "nodeType": "Block",
+        "src": "56:2:1",
+        "statements": []
+      },
+      "id": 10,
+      "implemented": true,
+      "kind": "freeFunction",
+      "modifiers": [],
+      "name": "str",
+      "nameLocation": "9:3:1",
+      "nodeType": "FunctionDefinition",
+      "parameters":
+      {
+        "id": 5,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 2,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "scope": 10,
+            "src": "13:6:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_uint32",
+              "typeString": "uint32"
+            },
+            "typeName":
+            {
+              "id": 1,
+              "name": "uint32",
+              "nodeType": "ElementaryTypeName",
+              "src": "13:6:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_uint32",
+                "typeString": "uint32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": false,
+            "id": 4,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "scope": 10,
+            "src": "21:4:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            },
+            "typeName":
+            {
+              "id": 3,
+              "name": "uint",
+              "nodeType": "ElementaryTypeName",
+              "src": "21:4:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "12:14:1"
+      },
+      "returnParameters":
+      {
+        "id": 8,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 7,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "scope": 10,
+            "src": "41:13:1",
+            "stateVariable": false,
+            "storageLocation": "memory",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_string_memory_ptr",
+              "typeString": "string"
+            },
+            "typeName":
+            {
+              "id": 6,
+              "name": "string",
+              "nodeType": "ElementaryTypeName",
+              "src": "41:6:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_string_storage_ptr",
+                "typeString": "string"
+              }
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "40:15:1"
+      },
+      "scope": 16,
+      "src": "0:58:1",
+      "stateMutability": "pure",
+      "virtual": false,
+      "visibility": "internal"
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "canonicalName": "C",
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 15,
+      "linearizedBaseContracts":
+      [
+        15
+      ],
+      "name": "C",
+      "nameLocation": "68:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "constant": false,
+          "id": 14,
+          "mutability": "mutable",
+          "name": "s",
+          "nameLocation": "83:1:1",
+          "nodeType": "VariableDeclaration",
+          "scope": 15,
+          "src": "76:26:1",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_string_storage",
+            "typeString": "string"
+          },
+          "typeName":
+          {
+            "id": 11,
+            "name": "string",
+            "nodeType": "ElementaryTypeName",
+            "src": "76:6:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_string_storage_ptr",
+              "typeString": "string"
+            }
+          },
+          "value":
+          {
+            "hexValue": "3132332e3334355f373839",
+            "id": 13,
+            "isConstant": false,
+            "isLValue": false,
+            "isPure": false,
+            "kind": "number",
+            "lValueRequested": false,
+            "nodeType": "Literal",
+            "src": "87:15:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_string_memory_ptr",
+              "typeString": "string memory"
+            },
+            "value": "123.345_789"
+          },
+          "visibility": "internal"
+        }
+      ],
+      "scope": 16,
+      "src": "59:46:1",
+      "usedErrors": []
+    }
+  ],
+  "src": "0:106:1"
+}
