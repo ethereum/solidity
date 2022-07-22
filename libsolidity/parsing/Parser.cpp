@@ -1951,11 +1951,11 @@ ASTPointer<Expression> Parser::parseLiteral()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
-	Token token = m_scanner->currentToken();
+	Token initialToken = m_scanner->currentToken();
 	ASTPointer<ASTString> value = make_shared<string>(m_scanner->currentLiteral());
 	Literal::Suffix suffix = Literal::SubDenomination::None;
 
-	switch (token)
+	switch (initialToken)
 	{
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
@@ -1969,8 +1969,7 @@ ASTPointer<Expression> Parser::parseLiteral()
 	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
 	{
-		Token firstToken = token;
-		while (m_scanner->peekNextToken() == firstToken)
+		while (m_scanner->peekNextToken() == initialToken)
 		{
 			advance();
 			*value += m_scanner->currentLiteral();
@@ -1986,7 +1985,7 @@ ASTPointer<Expression> Parser::parseLiteral()
 		break;
 	}
 
-	if (token == Token::Number && (
+	if (initialToken == Token::Number && (
 		TokenTraits::isEtherSubdenomination(m_scanner->currentToken()) ||
 		TokenTraits::isTimeSubdenomination(m_scanner->currentToken())
 	))
@@ -2001,7 +2000,7 @@ ASTPointer<Expression> Parser::parseLiteral()
 		nodeFactory.setEndPositionFromNode(identifierPath);
 		suffix = move(identifierPath);
 	}
-	return nodeFactory.createNode<Literal>(token, move(value), move(suffix));
+	return nodeFactory.createNode<Literal>(initialToken, move(value), move(suffix));
 }
 
 ASTPointer<Expression> Parser::parsePrimaryExpression()
