@@ -4,4 +4,4 @@ contract C {
     function suffix(uint x) public pure returns (uint) { return x; }
 }
 // ----
-// TypeError 4438: (26-37): The literal suffix needs to be a pre-defined suffix or a file-level function.
+// TypeError 4438: (26-37): The literal suffix needs to be a pre-defined suffix or a file-level pure function.

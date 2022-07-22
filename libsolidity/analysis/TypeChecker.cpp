@@ -3732,18 +3732,20 @@ void TypeChecker::endVisit(Literal const& _literal)
 
 	// TODO at this point 'type' needs to be stored for code generation.
 
-	bool isPure = true;
+	bool isCompileTimeConstant = true;
 	if (auto const* identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
 	{
 		Declaration const* declaration = (*identifierPath)->annotation().referencedDeclaration;
+		FunctionDefinition const* definition = dynamic_cast<FunctionDefinition const*>(declaration);
 		if (
-			!dynamic_cast<FunctionDefinition const*>(declaration) ||
-			!dynamic_cast<FunctionDefinition const*>(declaration)->isFree()
+			!definition ||
+			!definition->isFree() ||
+			definition->stateMutability() != StateMutability::Pure
 		)
 			m_errorReporter.typeError(
 				4438_error,
 				_literal.location(),
-				"The literal suffix needs to be a pre-defined suffix or a file-level function."
+				"The literal suffix needs to be a pre-defined suffix or a file-level pure function."
 			);
 		else
 		{
@@ -3785,7 +3787,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 			if (parameterTypeMessage.has_value())
 				m_errorReporter.typeError(8838_error, _literal.location(), parameterTypeMessage.value());
 
-			isPure = functionType.isPure();
+			isCompileTimeConstant = functionType.isPure();
 			if (functionType.returnParameterTypes().size() == 1)
 				type = functionType.returnParameterTypes().front();
 			else
@@ -3793,8 +3795,8 @@ void TypeChecker::endVisit(Literal const& _literal)
 		}
 	}
 
-	_literal.annotation().isPure = isPure;
 	_literal.annotation().type = type;
+	_literal.annotation().isPure = isCompileTimeConstant;
 	_literal.annotation().isLValue = false;
 	_literal.annotation().isConstant = false;
 }

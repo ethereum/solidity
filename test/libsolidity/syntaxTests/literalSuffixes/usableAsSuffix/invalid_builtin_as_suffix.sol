@@ -8,8 +8,8 @@ contract C {
     }
 }
 // ----
-// TypeError 4438: (52-71): The literal suffix needs to be a pre-defined suffix or a file-level function.
-// TypeError 4438: (81-92): The literal suffix needs to be a pre-defined suffix or a file-level function.
-// TypeError 4438: (102-113): The literal suffix needs to be a pre-defined suffix or a file-level function.
-// TypeError 4438: (123-178): The literal suffix needs to be a pre-defined suffix or a file-level function.
-// TypeError 4438: (188-197): The literal suffix needs to be a pre-defined suffix or a file-level function.
+// TypeError 4438: (52-71): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
+// TypeError 4438: (81-92): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
+// TypeError 4438: (102-113): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
+// TypeError 4438: (123-178): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
+// TypeError 4438: (188-197): The literal suffix needs to be a pre-defined suffix or a file-level pure function.

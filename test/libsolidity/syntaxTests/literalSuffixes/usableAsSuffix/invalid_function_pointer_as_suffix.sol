@@ -10,5 +10,5 @@ contract C {
     }
 }
 // ----
-// TypeError 4438: (236-249): The literal suffix needs to be a pre-defined suffix or a file-level function.
-// TypeError 4438: (259-274): The literal suffix needs to be a pre-defined suffix or a file-level function.
+// TypeError 4438: (236-249): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
+// TypeError 4438: (259-274): The literal suffix needs to be a pre-defined suffix or a file-level pure function.

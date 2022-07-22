@@ -10,6 +10,6 @@ contract C is B {
     function suffix(uint x) internal pure returns (uint) { return x; }
 }
 // ----
-// TypeError 4438: (127-138): The literal suffix needs to be a pre-defined suffix or a file-level function.
-// TypeError 4438: (153-175): The literal suffix needs to be a pre-defined suffix or a file-level function.
-// TypeError 4438: (190-203): The literal suffix needs to be a pre-defined suffix or a file-level function.
+// TypeError 4438: (127-138): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
+// TypeError 4438: (153-175): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
+// TypeError 4438: (190-203): The literal suffix needs to be a pre-defined suffix or a file-level pure function.
