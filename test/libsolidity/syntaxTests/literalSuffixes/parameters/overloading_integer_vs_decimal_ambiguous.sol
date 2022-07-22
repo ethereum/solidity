@@ -3,8 +3,8 @@ function suffix(uint, uint) pure returns (int) {}
 
 contract C {
     function f() public pure {
-        int a = 1 suffix; // TODO: Error should say it's ambiguous
+        int a = 1 suffix;
     }
 }
 // ----
-// TypeError 2144: (155-163): No matching declaration found after variable lookup.
+// TypeError 4487: (155-163): No unique declaration found after argument-dependent lookup.

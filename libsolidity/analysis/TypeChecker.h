@@ -164,6 +164,7 @@ private:
 	void endVisit(IdentifierPath const& _identifierPath) override;
 	void endVisit(UserDefinedTypeName const& _userDefinedTypeName) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
+	bool visit(Literal const& _literal) override;
 	void endVisit(Literal const& _literal) override;
 	void endVisit(UsingForDirective const& _usingForDirective) override;
 

@@ -1,21 +1,19 @@
-function uSuffix(uint8) pure returns (int) {}
-function uSuffix(uint16) pure returns (int) {}
+function uSuffix(uint8) pure returns (int8) {}
+function uSuffix(uint16) pure returns (int16) {}
 
-function iSuffix(int8) pure returns (int) {}
-function iSuffix(int16) pure returns (int) {}
+function iSuffix(int8) pure returns (int24) {}
+function iSuffix(int16) pure returns (int32) {}
 
-function iuSuffix(uint8) pure returns (int) {}
-function iuSuffix(int8) pure returns (int) {}
+function iuSuffix(uint8) pure returns (int40) {}
+function iuSuffix(int8) pure returns (int48) {}
 
 contract C {
-    int a = 1024 uSuffix;  // TODO: Should match only uint16
-    int b = 1024 iSuffix;  // TODO: Should match only int16
+    int16 a = 1024 uSuffix;
+    int32 b = 1024 iSuffix;
 
-    int c = -1024 uSuffix; // TODO: Should match only uint16
-    int d = -1024 iSuffix; // TODO: Should match only int16
+    int16 c = -1024 uSuffix;
+    int32 d = -1024 iSuffix;
 
-    int e = 255 iuSuffix;  // TODO: Should match only uint8
-    int f = -255 iuSuffix; // TODO: Should match only uint8
+    int40 e = 255 iuSuffix;
+    int40 f = -255 iuSuffix;
 }
-// ----
-// TypeError 2144: (305-317): No matching declaration found after variable lookup.

@@ -43,7 +43,7 @@ contract C {
 // TypeError 8838: (827-837): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (847-857): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (867-950): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 5503: (980-1064): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function.
+// TypeError 5503: (980-1064): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
 // TypeError 8838: (1095-1105): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (1115-1125): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (1135-1148): The type of the literal cannot be converted to the parameters of the suffix function.

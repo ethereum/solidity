@@ -2,7 +2,7 @@ function suffix(string memory) pure returns (uint) {}
 function suffix(bytes memory) pure returns (uint) {}
 
 contract C {
-    uint a = "abcd" suffix; // TODO: Error should say it's ambiguous
+    uint a = "abcd" suffix;
 }
 // ----
-// TypeError 2144: (134-147): No matching declaration found after variable lookup.
+// TypeError 4487: (134-147): No unique declaration found after argument-dependent lookup.

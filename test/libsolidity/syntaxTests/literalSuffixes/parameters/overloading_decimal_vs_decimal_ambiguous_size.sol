@@ -2,7 +2,7 @@ function uSuffix(uint8, uint) pure returns (uint) {}
 function uSuffix(uint16, uint) pure returns (uint) {}
 
 contract C {
-    uint a = 1.27 uSuffix; // TODO: Error should say it's ambiguous
+    uint a = 1.27 uSuffix;
 }
 // ----
-// TypeError 2144: (134-146): No matching declaration found after variable lookup.
+// TypeError 4487: (134-146): No unique declaration found after argument-dependent lookup.
