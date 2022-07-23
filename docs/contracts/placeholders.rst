@@ -2,9 +2,9 @@
 
 .. _placeholders:
 
-******************
+************************
 The Placeholder Operator
-******************
+************************
 
 In function modifiers, it is necessary to tell Solidity when you want the function affected by the modifier to be run. The placeholder (denoted by an underscore character followed by a semicolon `_;` is used to denote where the function being modified should be run within the modifier.
 
