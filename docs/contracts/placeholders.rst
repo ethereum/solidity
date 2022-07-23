@@ -1,4 +1,4 @@
-.. index:: ! function;placeholder
+.. index:: ! modifier;placeholder
 
 .. _placeholders:
 
