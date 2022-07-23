@@ -2,27 +2,24 @@
 
 .. _contract_structure:
 
-***********************
-Structure of a Contract
-***********************
+*********
+合约结构
+*********
 
-Contracts in Solidity are similar to classes in object-oriented languages.
-Each contract can contain declarations of :ref:`structure-state-variables`, :ref:`structure-functions`,
-:ref:`structure-function-modifiers`, :ref:`structure-events`, :ref:`structure-errors`, :ref:`structure-struct-types` and :ref:`structure-enum-types`.
-Furthermore, contracts can inherit from other contracts.
+在 Solidity 中，合约类似于面向对象编程语言中的类。
+每个合约中可以包含 :ref:`状态变量`、 :ref:`函数`、:ref:`函数修饰器`、:ref:`事件`、 :ref:`错误`、
+:ref:`结构类型` 和 :ref:`枚举类型` 的声明，且合约可以从其他合约继承。
 
-There are also special kinds of contracts called :ref:`libraries<libraries>` and :ref:`interfaces<interfaces>`.
+还有一些特殊种类的合同，叫做 :ref:`库合约 <libraries>` 和 :ref:`接口合约 <interfaces>`。
 
-The section about :ref:`contracts<contracts>` contains more details than this section,
-which serves to provide a quick overview.
+在关于 :ref:`合约 <contracts>` 的部分包含比本节更多的细节，它的作用是提供一个快速的概述。
 
 .. _structure-state-variables:
 
-State Variables
-===============
+状态变量
+==========
 
-State variables are variables whose values are permanently stored in contract
-storage.
+状态变量是指其值被永久地存储在合约存储中的变量。
 
 .. code-block:: solidity
 
@@ -30,22 +27,19 @@ storage.
     pragma solidity >=0.4.0 <0.9.0;
 
     contract SimpleStorage {
-        uint storedData; // State variable
+        uint storedData; // 状态变量
         // ...
     }
 
-See the :ref:`types` section for valid state variable types and
-:ref:`visibility-and-getters` for possible choices for
-visibility.
+有效的状态变量类型请参阅 :ref:`类型` 章节，对状态变量可见性的可能选择请参阅 :ref:`可见性和getter函数`。
 
 .. _structure-functions:
 
-Functions
-=========
+函数
+======
 
-Functions are the executable units of code. Functions are usually
-defined inside a contract, but they can also be defined outside of
-contracts.
+函数是代码的可执行单位。
+通常在合约内定义函数，但它们也可以被定义在合约之外。
 
 .. code-block:: solidity
 
@@ -53,33 +47,30 @@ contracts.
     pragma solidity >=0.7.1 <0.9.0;
 
     contract SimpleAuction {
-        function bid() public payable { // Function
+        function bid() public payable { // 函数
             // ...
         }
     }
 
-    // Helper function defined outside of a contract
+    // 定义在合约之外的辅助函数
     function helper(uint x) pure returns (uint) {
         return x * 2;
     }
 
-:ref:`function-calls` can happen internally or externally
-and have different levels of :ref:`visibility<visibility-and-getters>`
-towards other contracts. :ref:`Functions<functions>` accept :ref:`parameters and return variables<function-parameters-return-variables>` to pass parameters
-and values between them.
+:ref:`函数调用` 可以发生在内部或外部，
+并且对其他合约有不同程度的 :ref:`可见性 <visibility-and-getters>`。
+:ref:`函数 <functions>` 接受参数并返回变量，以便在它们之间传递参数和值。
 
 .. _structure-function-modifiers:
 
-Function Modifiers
-==================
+函数修饰器
+===========
 
-Function modifiers can be used to amend the semantics of functions in a declarative way
-(see :ref:`modifiers` in the contracts section).
+函数修饰器可以被用来以声明的方式修改函数的语义(见合约部分的 :ref:`修饰器`)。
 
-Overloading, that is, having the same modifier name with different parameters,
-is not possible.
+重载，也就是具有同一个修饰器的名字但有不同的参数，是不可能的。
 
-Like functions, modifiers can be :ref:`overridden <modifier-overriding>`.
+与函数一样，修饰器也可以被 :ref:`重载 <modifier-overriding>`。
 
 .. code-block:: solidity
 
@@ -89,7 +80,7 @@ Like functions, modifiers can be :ref:`overridden <modifier-overriding>`.
     contract Purchase {
         address public seller;
 
-        modifier onlySeller() { // Modifier
+        modifier onlySeller() { // 修饰器
             require(
                 msg.sender == seller,
                 "Only seller can call this."
@@ -97,17 +88,17 @@ Like functions, modifiers can be :ref:`overridden <modifier-overriding>`.
             _;
         }
 
-        function abort() public view onlySeller { // Modifier usage
+        function abort() public view onlySeller { // 修饰器的使用
             // ...
         }
     }
 
 .. _structure-events:
 
-Events
+事件
 ======
 
-Events are convenience interfaces with the EVM logging facilities.
+事件是能方便地调用以太坊虚拟机日志功能的接口。
 
 .. code-block:: solidity
 
@@ -115,35 +106,33 @@ Events are convenience interfaces with the EVM logging facilities.
     pragma solidity >=0.4.21 <0.9.0;
 
     contract SimpleAuction {
-        event HighestBidIncreased(address bidder, uint amount); // Event
+        event HighestBidIncreased(address bidder, uint amount); // 事件
 
         function bid() public payable {
             // ...
-            emit HighestBidIncreased(msg.sender, msg.value); // Triggering event
+            emit HighestBidIncreased(msg.sender, msg.value); // 触发事件
         }
     }
 
-See :ref:`events` in contracts section for information on how events are declared
-and can be used from within a dapp.
+有关如何声明事件和如何在 dapp 中使用事件的信息，参阅合约章节中的 :ref:`事件`。
 
 .. _structure-errors:
 
-Errors
+错误
 ======
 
-Errors allow you to define descriptive names and data for failure situations.
-Errors can be used in :ref:`revert statements <revert-statement>`.
-In comparison to string descriptions, errors are much cheaper and allow you
-to encode additional data. You can use NatSpec to describe the error to
-the user.
+错误(类型)允许您为失败情况定义描述性的名称和数据。
+错误(类型)可以在 :ref:`回滚声明 <revert-statement>` 中使用。
+与字符串描述相比，错误(类型)要便宜得多，并允许您对额外的数据进行编码。
+您可以使用 NatSpec 格式来向用户描述错误。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
 
-    /// Not enough funds for transfer. Requested `requested`,
-    /// but only `available` available.
+    /// 没有足够的资金用于转账。要求 `requested`。
+    /// 但只有 `available` 可用。
     error NotEnoughFunds(uint requested, uint available);
 
     contract Token {
@@ -158,15 +147,14 @@ the user.
         }
     }
 
-See :ref:`errors` in the contracts section for more information.
+更多信息请参阅合约章节中的 :ref:`错误`。
 
 .. _structure-struct-types:
 
-Struct Types
-=============
+结构类型
+==========
 
-Structs are custom defined types that can group several variables (see
-:ref:`structs` in types section).
+结构类型是可以将几个变量分组的自定义类型（参阅类型章节中的 :ref:`结构体`）。
 
 .. code-block:: solidity
 
@@ -174,7 +162,7 @@ Structs are custom defined types that can group several variables (see
     pragma solidity >=0.4.0 <0.9.0;
 
     contract Ballot {
-        struct Voter { // Struct
+        struct Voter { // 结构
             uint weight;
             bool voted;
             address delegate;
@@ -184,11 +172,10 @@ Structs are custom defined types that can group several variables (see
 
 .. _structure-enum-types:
 
-Enum Types
+枚举类型
 ==========
 
-Enums can be used to create custom types with a finite set of 'constant values' (see
-:ref:`enums` in types section).
+枚举可用来创建由一定数量的'常量值'构成的自定义类型（参阅类型章节中的 :ref:`枚举类型`）。
 
 .. code-block:: solidity
 
@@ -196,5 +183,5 @@ Enums can be used to create custom types with a finite set of 'constant values' 
     pragma solidity >=0.4.0 <0.9.0;
 
     contract Purchase {
-        enum State { Created, Locked, Inactive } // Enum
+        enum State { Created, Locked, Inactive } // 枚举
     }
