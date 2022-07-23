@@ -1,5 +1,5 @@
 ###################
-Solidity by Example
+Solidity 合约示例
 ###################
 
 .. include:: examples/voting.rst
