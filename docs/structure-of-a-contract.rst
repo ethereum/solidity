@@ -70,7 +70,7 @@
 
 重载，也就是具有同一个修饰器的名字但有不同的参数，是不可能的。
 
-与函数一样，修饰器也可以被 :ref:`重写 <modifier-overriding>`。
+与函数一样，修饰器也可以被 :ref:`重载 <modifier-overriding>`。
 
 .. code-block:: solidity
 
