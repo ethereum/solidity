@@ -28,7 +28,7 @@ Solidity编译器鼓励使用机器可读的 `SPDX 许可标识符 <https://spdx
 不存在于SPDX许可证列表中）与 ``UNLICENSED`` （授予所有人所有权利）不同。
 Solidity遵循 `npm 的推荐 <https://docs.npmjs.com/cli/v7/configuring-npm/package-json#license>`_。
 
-提供这个注释并不能使你摆脱与许可有关的其他义务，
+提供这个注释并不能使您摆脱与许可有关的其他义务，
 如必须在每个源文件中提到特定的许可头或原始版权人。
 
 编译器可以在文件的任何位置识别该注释，
@@ -48,7 +48,7 @@ Solidity遵循 `npm 的推荐 <https://docs.npmjs.com/cli/v7/configuring-npm/pac
 一个 pragma 指令始终是源文件的本地指令，
 所以如果您想在整个项目中使用pragma指令，
 您必须在您的所有文件中添加这个指令。
-如果你 :ref:`import<import>` 另一个文件，
+如果您 :ref:`import<import>` 另一个文件，
 该文件的pragma指令 *不会* 自动应用于导入文件。
 
 .. index:: ! pragma, version
@@ -93,7 +93,7 @@ ABI编码编译指示
 新的ABI编码器（v2）能够对任意的嵌套数组和结构进行编码和解码。
 它可能产生不太理想的代码，并且没有得到像旧编码器那样多的测试，
 但从 Solidity 0.6.0 起，它被认为是非实验性的。
-你仍然必须使用 ``pragma abicoder v2;`` 明确激活它。
+您仍然必须使用 ``pragma abicoder v2;`` 明确激活它。
 由于它将从Solidity 0.8.0 开始被默认激活，
 所以可以选择使用 ``pragma abicoder v1;`` 来选择旧的编码器。
 
@@ -149,7 +149,7 @@ SMT检查器
 为solc-js激活它。
 
 如果您使用 ``pragma experimental SMTChecker;``，
-那么你会得到额外的 :ref:`安全警告<formal_verification>`。
+那么您会得到额外的 :ref:`安全警告<formal_verification>`。
 这些警告是通过查询SMT求解器获得的。
 该组件还不支持Solidity语言的所有功能，可能会输出许多警告。
 如果它报告不支持的功能，那么分析可能不完全正确。
@@ -223,11 +223,11 @@ Solidity 编译器必须抽象出存储源文件的文件系统的细节。
 使用 :ref:`标准 JSON <compiler-api>` API，
 可以直接提供所有源文件的名称和内容作为编译器输入的一部分。
 在这种情况下，源单元的名称确实是任意的。
-然而，如果你想让编译器自动查找并将源代码加载到VFS中，
+然而，如果您想让编译器自动查找并将源代码加载到VFS中，
 您的源单元名称需要以一种结构化的方式，使 :ref:`回调引用 <import-callback>` 能够定位它们。
 当使用命令行编译器时，默认的回调引用只支持从主机文件系统加载源代码，
 这意味着您的源单元名称必须是路径。一些环境提供了自定义的回调，其用途更广。
-例如， `Remix IDE <https://remix.ethereum.org/>`_ 提供了一个可以让你
+例如， `Remix IDE <https://remix.ethereum.org/>`_ 提供了一个可以让您
 `从HTTP、IPFS和Swarm URL导入文件，或者直接引用NPM注册表中的包 <https://remix-ide.readthedocs.io/en/latest/import.html>`_。
 
 关于虚拟文件系统和编译器使用的路径解析逻辑的完整描述，请参见 :ref:`路径解析 <path-resolution>`。
