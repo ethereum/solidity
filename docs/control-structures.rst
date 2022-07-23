@@ -23,8 +23,7 @@ Parentheses can *not* be omitted for conditionals, but curly braces can be omitt
 around single-statement bodies.
 
 Note that there is no type conversion from non-boolean to boolean types as
-there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
-Solidity.
+there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid in Solidity.
 
 .. index:: ! function;call, function;internal, function;external
 
