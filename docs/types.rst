@@ -14,7 +14,7 @@ Solidity 提供了几种基本类型，可以用来组合出复杂类型。
 
 Solidity中不存在"未定义"或"空"值的概念，
 但新声明的变量总是有一个取决于其类型的 :ref:`默认值 <default-value>`。
-为了处理任何意外的值，您应该使用 :ref:`revert 函数 <assert-and-require>` 来回滚整个事务，
+为了处理任何意外的值，您应该使用 :ref:`revert 函数 <assert-and-require>` 来恢复整个事务，
 或者返回一个带有第二个 ``bool`` 值的元组来表示成功。
 
 
