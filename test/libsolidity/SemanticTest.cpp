@@ -53,7 +53,7 @@ SemanticTest::SemanticTest(
 	bool _enforceGasCost,
 	u256 _enforceGasCostMinValue
 ):
-	SolidityExecutionFramework(_evmVersion, _vmPaths),
+	SolidityExecutionFramework(_evmVersion, _vmPaths, false),
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),

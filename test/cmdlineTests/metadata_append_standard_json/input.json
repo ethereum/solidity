@@ -1,0 +1,28 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n\ncontract test {}"
+		}
+	},
+	"settings":
+	{
+		"viaIR": true,
+		"optimizer": {
+			"enabled": true
+		},
+		"metadata":
+		{
+			"appendCBOR": false
+		},
+		"outputSelection":
+		{
+			"A":
+			{
+				"test": ["evm.bytecode"]
+			}
+		}
+	}
+}
