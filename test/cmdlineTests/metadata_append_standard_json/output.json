@@ -1,0 +1,30 @@
+{
+    "contracts":
+    {
+        "A":
+        {
+            "test":
+            {
+                "evm":
+                {
+                    "bytecode":
+                    {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "608080604052346013576004908160198239f35b600080fdfe600080fd",
+                        "opcodes": "PUSH1 0x80 DUP1 PUSH1 0x40 MSTORE CALLVALUE PUSH1 0x13 JUMPI PUSH1 0x4 SWAP1 DUP2 PUSH1 0x19 DUP3 CODECOPY RETURN JUMPDEST PUSH1 0x0 DUP1 REVERT INVALID PUSH1 0x0 DUP1 REVERT ",
+                        "sourceMap": "60:16:0:-:0;;;;;;;;;;;;;;;;;"
+                    }
+                }
+            }
+        }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}
