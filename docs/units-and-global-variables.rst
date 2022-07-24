@@ -19,7 +19,7 @@
 
 单位后缀的唯一作用是乘以10的幂次方。
 
-.. 注解::
+.. note::
     0.7.0版本中删除了 ``finney`` 和 ``szabo`` 这两个单位。
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
@@ -40,7 +40,7 @@
 会造成不是每一年都等于365天，甚至不是每一天都有24小时，而且因为闰秒是无法预测的，
 所以需要借助外部的预言机（oracle，是一种链外数据服务，译者注）来对一个确定的日期代码库进行时间矫正。
 
-.. 注解::
+.. note::
     由于上述原因，在0.5.0版本中删除了后缀 ``years``。
 
 这些后缀单位不能应用于变量。例如，
@@ -83,17 +83,17 @@
 - ``tx.gasprice`` （ ``uint``）： 随消息发送的 wei 的数量
 - ``tx.origin`` （ ``address``）： 交易发起者（完全的调用链）
 
-.. 注解::
+.. note::
     对于每一个 **外部（external）** 函数调用，
     包括 ``msg.sender`` 和 ``msg.value`` 在内所有 ``msg`` 成员的值都会变化。
     这里包括对库函数的调用。
 
-.. 注解::
+.. note::
     当合约在链下而不是在区块中包含的交易的背景下计算时，
     您不应该认为 ``block.*`` 和 ``tx.*`` 是指任何特定区块或交易的值。
     这些值是由执行合约的EVM实现提供的，可以是任意的。
 
-.. 注解::
+.. note::
     不要依赖 ``block.timestamp`` 和 ``blockhash`` 产生随机数，除非您知道自己在做什么。
 
     时间戳和区块哈希在一定程度上都可能受到挖矿矿工影响。
@@ -103,19 +103,19 @@
     当前区块的时间戳必须严格大于最后一个区块的时间戳，
     但这里唯一能确保的只是它会是在权威链上的两个连续区块的时间戳之间的数值。
 
-.. 注解::
+.. note::
     基于可扩展因素，区块哈希不是对所有区块都有效。
     您仅仅可以访问最近 256 个区块的哈希，其余的哈希均为零。
 
-.. 注解::
+.. note::
     函数 ``blockhash`` 以前被称为 ``block.blockhash``，
     在0.4.22版本中被废弃，在0.5.0版本中被删除。
 
-.. 注解::
+.. note::
     函数 ``gasleft`` 的前身是 ``msg.gas``，
     在0.4.21版本中被弃用，在0.5.0版本中被删除。
 
-.. 注解::
+.. note::
     在0.7.0版本中，删除了别名 ``now``（用于 ``block.timestamp``）。
 
 .. index:: abi, encoding, packed
@@ -130,7 +130,7 @@ ABI编码和解码函数
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``： 相当于 ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
 - ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``： 对 ``函数指针`` 的调用进行ABI编码，参数在元组中找到。执行全面的类型检查，确保类型与函数签名相符。结果相当于 ``abi.encodeWithSelector(functionPointer.selector, (...))``。
 
-.. 注解::
+.. note::
     这些编码函数可用于制作外部函数调用的数据，而无需实际调用外部函数。
     此外， ``keccak256(abi.encodePacked(a, b))`` 是一种计算结构化数据的哈希值的方法
     （但是要注意有可能使用不同的函数参数类型会制作出一个 "哈希碰撞"）。
@@ -191,7 +191,7 @@ ABI编码和解码函数
 ``keccak256(bytes memory) returns (bytes32)``
     计算输入的 Keccak-256 哈希值。
 
-.. 注解::
+.. note::
 
     以前 ``keccak256`` 的别名叫 ``sha3`` ，在0.5.0版本中被删除。
 
@@ -214,7 +214,7 @@ ABI编码和解码函数
 
     更多细节，请阅读 `使用示例 <https://ethereum.stackexchange.com/questions/1777/workflow-on-signing-a-string-with-private-key-followed-by-signature-verificatio>`_.
 
-.. 警告::
+.. warning::
 
     如果您使用 ``ecrecover``，请注意，一个有效的签名可以变成另一个有效的签名，而不需要知道相应的私钥。
     在Homestead硬分叉中，这个问题对 _transaction_ 签名进行了修复
@@ -225,7 +225,7 @@ ABI编码和解码函数
     OpenZeppelin有一个 `ECDSA辅助库 <https://docs.openzeppelin.com/contracts/2.x/api/cryptography#ECDSA>`_，
     您可以用它作为 ``ecrecover`` 的包装，那样就没有这个问题。
 
-.. 注解::
+.. note::
 
     当在 *私有区块链* 上运行 ``sha256``， ``ripemd160`` 或 ``ecrecover`` 时，您可能会遇到超出gas（Out-of-Gas）的错误。这是因为这些功能是作为 "预编译合约" 实现的，只有在它们收到第一个消息后才真正存在（尽管它们的合约代码是硬编码的）。向不存在的合约发送消息的成本较高，因此执行时可能会遇到Out-of-Gas错误。这个问题的一个变通方法是，在您的实际合约中使用它们之前，先向每个合约发送Wei（例如1）。这在主网和测试网上都没有问题。
 
@@ -262,15 +262,15 @@ ABI编码和解码函数
 
 更多信息，请参见 :ref:`地址类型` 一节。
 
-.. 警告::
+.. warning::
     您应该尽可能避免在执行另一个合约函数时使用 ``.call()``，因为它绕过了类型检查、函数存在性检查和参数打包。
 
-.. 警告::
+.. warning::
     使用 ``send`` 有很多危险：如果调用栈深度已经达到 1024（这总是可以由调用者所强制指定），
     转账会失败；并且如果接收者用光了 gas，转账同样会失败。为了保证以太币转账安全，
     总是检查 ``send`` 的返回值，使用 ``transfer`` 或者下面更好的方式： 用接收者提款的模式。
 
-.. 警告::
+.. warning::
     由于EVM认为对一个不存在的合约的调用总是成功的，
     Solidity在执行外部调用时使用 ``extcodesize`` 操作码进行额外的检查。
     这确保了即将被调用的合约要么实际存在（它包含代码），要么就会产生一个异常。
@@ -279,20 +279,20 @@ ABI编码和解码函数
     （即 ``.call()``, ``.delegatecall()``, ``.staticcall()``, ``.send()`` 和 ``.transfer()``）
     **不包括** 这种检查，这使得它们在gas方面更便宜，但也更不安全。
 
-.. 注解::
+.. note::
    在0.5.0版本之前，Solidity允许地址成员被合约实例访问，例如 ``this.balance``。
    现在这被禁止了，必须做一个明确的地址转换。 ``address(this).balance``。
 
-.. 注解::
+.. note::
    如果状态变量是通过低级别的委托调用来访问的，那么两个合约的存储布局必须一致，
    以便被调用的合约能够正确地通过名称来访问调用合约的存储变量。
    当然，如果存储指针作为函数参数被传递的话，情况就不是这样了，就像高层库的情况一样。
 
-.. 注解::
+.. note::
     在0.5.0版本之前， ``.call``, ``.delegatecall`` 和 ``.staticcall`` 只返回成功状况，
     不返回数据。
 
-.. 注解::
+.. note::
     在0.5.0版本之前，有一个名为 ``callcode`` 的成员，其语义与 ``delegatecall`` 相似但略有不同。
 
 
@@ -314,7 +314,7 @@ ABI编码和解码函数
 
 此外，当前合约的所有函数都可以直接调用，包括当前函数。
 
-.. 注解::
+.. note::
     在0.5.0版本之前，有一个叫做 ``suicide`` 的函数，其语义与 ``selfdestruct`` 相同。
 
 .. index:: type, creationCode, runtimeCode
