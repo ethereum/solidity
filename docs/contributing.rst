@@ -2,7 +2,7 @@
 Contributing
 ############
 
-Help is always welcome and there are plenty of options how you can contribute to Solidity.
+Help is always welcome and there are plenty of options to contribute to Solidity.
 
 In particular, we appreciate support in the following areas:
 
@@ -22,7 +22,7 @@ To get started, you can try :ref:`building-from-source` in order to familiarize
 yourself with the components of Solidity and the build process. Also, it may be
 useful to become well-versed at writing smart-contracts in Solidity.
 
-Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project - in the issues, pull requests, or Gitter channels - you agree to abide by its terms.
+Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project — in the issues, pull requests, or Gitter channels — you agree to abide by its terms.
 
 Team Calls
 ==========
@@ -49,7 +49,7 @@ reporting issues, please mention the following details:
 * Actual vs. expected behaviour.
 
 Reducing the source code that caused the issue to a bare minimum is always
-very helpful and sometimes even clarifies a misunderstanding.
+very helpful, and sometimes even clarifies a misunderstanding.
 
 Workflow for Pull Requests
 ==========================
@@ -67,7 +67,7 @@ Additionally, if you are writing a new feature, please ensure you add appropriat
 test cases under ``test/`` (see below).
 
 However, if you are making a larger change, please consult with the `Solidity Development Gitter channel
-<https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above, this one is
+<https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above — this one is
 focused on compiler and language development instead of language usage) first.
 
 New features and bugfixes should be added to the ``Changelog.md`` file: please
@@ -91,10 +91,10 @@ dependencies (`evmone <https://github.com/ethereum/evmone/releases>`_,
 `libz3 <https://github.com/Z3Prover/z3>`_, and
 `libhera <https://github.com/ewasm/hera>`_).
 
-On macOS some of the testing scripts expect GNU coreutils to be installed.
+On macOS systems, some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.
 
-On Windows systems make sure that you have a privilege to create symlinks,
+On Windows systems, make sure that you have a privilege to create symlinks,
 otherwise several tests may fail.
 Administrators should have that privilege, but you may also
 `grant it to other users <https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/create-symbolic-links#policy-management>`_
@@ -117,7 +117,7 @@ The test system automatically tries to discover the location of
 the `evmone <https://github.com/ethereum/evmone/releases>`_ for running the semantic tests.
 
 The ``evmone`` library must be located in the ``deps`` or ``deps/lib`` directory relative to the
-current working directory, to its parent or its parent's parent. Alternatively an explicit location
+current working directory, to its parent or its parent's parent. Alternatively, an explicit location
 for the ``evmone`` shared object can be specified via the ``ETH_EVMONE`` environment variable.
 
 ``evmone`` is needed mainly for running semantic and gas tests.
@@ -292,7 +292,7 @@ Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compile
     cmake .. -DCMAKE_C_COMPILER=path/to/afl-gcc -DCMAKE_CXX_COMPILER=path/to/afl-g++
     make solfuzzer
 
-At this stage you should be able to see a message similar to the following:
+At this stage, you should be able to see a message similar to the following:
 
 .. code-block:: text
 
@@ -481,7 +481,7 @@ needed for documentation and checks for any problems such as broken links or syn
 Solidity Language Design
 ========================
 
-To actively get involved in the language design process and share your ideas concerning the future of Solidity,
+To actively get involved in the language design process and to share your ideas concerning the future of Solidity,
 please join the `Solidity forum <https://forum.soliditylang.org/>`_.
 
 The Solidity forum serves as the place to propose and discuss new language features and their implementation in
@@ -500,7 +500,7 @@ If you want to know where the team is standing in terms or implementing new feat
 Issues in the design backlog need further specification and will either be discussed in a language design call or in a regular team call. You can
 see the upcoming changes for the next breaking release by changing from the default branch (`develop`) to the `breaking branch <https://github.com/ethereum/solidity/tree/breaking>`_.
 
-For ad-hoc cases and questions you can reach out to us via the `Solidity-dev Gitter channel <https://gitter.im/ethereum/solidity-dev>`_, a
+For ad-hoc cases and questions, you can reach out to us via the `Solidity-dev Gitter channel <https://gitter.im/ethereum/solidity-dev>`_ — a
 dedicated chatroom for conversations around the Solidity compiler and language development.
 
 We are happy to hear your thoughts on how we can improve the language design process to be even more collaborative and transparent.
