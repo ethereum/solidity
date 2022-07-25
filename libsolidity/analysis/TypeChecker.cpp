@@ -2248,8 +2248,17 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 	auto const* tupleType = dynamic_cast<TupleType const*>(type(*arguments[1]));
 	if (tupleType)
 	{
-		auto const& argumentTuple = dynamic_cast<TupleExpression const&>(*arguments[1].get());
-		callArguments = decltype(callArguments){argumentTuple.components().begin(), argumentTuple.components().end()};
+		if (TupleExpression const* argumentTuple = dynamic_cast<TupleExpression const*>(arguments[1].get()))
+			callArguments = decltype(callArguments){argumentTuple->components().begin(), argumentTuple->components().end()};
+		else
+		{
+			m_errorReporter.typeError(
+				9062_error,
+				arguments[1]->location(),
+				"Expected an inline tuple, not an expression of a tuple type."
+			);
+			return;
+		}
 	}
 	else
 		callArguments.push_back(arguments[1]);
