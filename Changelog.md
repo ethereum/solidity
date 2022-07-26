@@ -83,6 +83,7 @@ Compiler Features:
  * Language Server: Implements goto-definition.
  * Peephole Optimizer: Optimize comparisons in front of conditional jumps and conditional jumps across a single unconditional jump.
  * Yul EVM Code Transform: Avoid unnecessary ``pop``s on terminating control flow.
+ * Yul IR Code Generation: When the result of an external call is statically-sized, ignore any returndata past the size expected by the compiler.
  * Yul Optimizer: Remove ``sstore`` and ``mstore`` operations that are never read from.
 
 
