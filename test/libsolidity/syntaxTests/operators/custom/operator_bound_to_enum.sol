@@ -10,4 +10,4 @@ function add(E, E) pure returns (E) {
 }
 
 // ----
-// TypeError 9921: (0-23): The "using" directive cannot be used to attach functions to the enum type.
+// TypeError 9921: (0-23): The "using" directive cannot be used to attach functions to enum types.

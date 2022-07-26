@@ -403,19 +403,22 @@ FunctionDefinitionResult Type::userDefinedOperator(Token _token, ASTNode const& 
 			);
 			solAssert(functionType && !functionType->parameterTypes().empty());
 			solAssert(isImplicitlyConvertibleTo(*functionType->parameterTypes().front()));
-			if ((_unaryOperation && function.parameterList().parameters().size() == 1) ||
-				(!_unaryOperation && function.parameterList().parameters().size() == 2))
+			if (
+				(_unaryOperation && function.parameterList().parameters().size() == 1) ||
+				(!_unaryOperation && function.parameterList().parameters().size() == 2)
+			)
 				seenFunctions.insert(&function);
 		}
 
 	if (seenFunctions.size() == 1)
 		return *seenFunctions.begin();
-	else if (seenFunctions.size() == 0)
-		return FunctionDefinitionResult::err("A user-defined operator not found.");
+	else if (!!typeDefinition() && seenFunctions.size() == 0)
+		return FunctionDefinitionResult::err("Operator has not been user-defined.");
+	else if (!!typeDefinition())
+		return FunctionDefinitionResult::err("Multiple user-defined functions provided for this operator.");
 	else
-		return FunctionDefinitionResult::err("A user-defined operator not unique.");
+		return nullptr;
 }
-
 
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _scope)
 {

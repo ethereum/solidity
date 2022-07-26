@@ -17,7 +17,6 @@ contract C {
         S storage s;
         get() + s;
     }
-
 }
 
 // ----
