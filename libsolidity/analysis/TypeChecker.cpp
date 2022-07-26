@@ -3750,6 +3750,9 @@ void TypeChecker::endVisit(Literal const& _literal)
 		else
 		{
 			FunctionType const& functionType = dynamic_cast<FunctionType const&>(*declaration->type());
+			solAssert(!functionType.takesArbitraryParameters());
+			solAssert(functionType.kind() == FunctionType::Kind::Internal);
+
 			auto const* rationalType = dynamic_cast<RationalNumberType const*>(type);
 
 			optional<string> parameterCountMessage;
