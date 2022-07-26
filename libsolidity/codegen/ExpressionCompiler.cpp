@@ -413,30 +413,27 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 
 	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
 	{
+		solAssert(function->isFree(), "Only free functions can be bound to a user type operator.");
+
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
 			function->libraryFunction() ? function->typeViaContractName() : function->type());
-
 		solAssert(functionType);
+
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
 		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
-		_unaryOperation.subExpression().accept(*this);
+		acceptAndConvert(_unaryOperation.subExpression(), *functionType->selfType());
+
 		m_context << m_context.functionEntryLabel(*function).pushTag();
-
-		unsigned parameterSize =
-			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
-			functionType->selfType()->sizeOnStack();
-
-		if (m_context.runtimeContext())
-			// We have a runtime context, so we need the creation part.
-			utils().rightShiftNumberOnStack(32);
-		else
-			// Extract the runtime part.
-			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
-
 		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
 		m_context << returnLabel;
 
+		solAssert(
+			functionType->parameterTypes().size() == 0,
+			"Functions with parameters other than self parameter cannot be bound to a user type unary operator."
+		);
+
+		unsigned parameterSize = functionType->selfType()->sizeOnStack();
 		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
 
 		// callee adds return parameters, but removes arguments and return label
@@ -444,8 +441,6 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 
 		return false;
 	}
-
-
 
 	Type const& type = *_unaryOperation.annotation().type;
 	if (type.category() == Type::Category::RationalNumber)
@@ -541,6 +536,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	Expression const& rightExpression = _binaryOperation.rightExpression();
 	if (FunctionDefinition const* function =_binaryOperation.annotation().userDefinedFunction)
 	{
+		solAssert(function->isFree(), "Only free function can be bound to a user type operator.");
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
 			function->libraryFunction() ? function->typeViaContractName() : function->type()
 		);
@@ -548,25 +544,21 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
 
+		solAssert(
+			functionType->parameterTypes().size() == 1,
+			"Only functions with one parameter other than self parameter can be bound to a user type binary operator."
+		);
 		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
 		acceptAndConvert(leftExpression, *functionType->selfType());
 		acceptAndConvert(rightExpression, *functionType->parameterTypes().at(0));
 
 		m_context << m_context.functionEntryLabel(*function).pushTag();
+		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+		m_context << returnLabel;
 
 		unsigned parameterSize =
 			CompilerUtils::sizeOnStack(functionType->parameterTypes()) +
 			functionType->selfType()->sizeOnStack();
-
-		if (m_context.runtimeContext())
-			// We have a runtime context, so we need the creation part.
-			utils().rightShiftNumberOnStack(32);
-		else
-			// Extract the runtime part.
-			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
-
-		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
-		m_context << returnLabel;
 
 		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
 		// callee adds return parameters, but removes arguments and return label

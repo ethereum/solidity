@@ -689,10 +689,22 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
+		solAssert(
+			functionType->parameterTypes().size() == 0,
+			"Functions with parameters other than self parameter cannot be bound to a user type unary operator."
+		);
 
 		string parameter = expressionAsType(_unaryOperation.subExpression(), *functionType->selfType());
 		solAssert(!parameter.empty());
 		solAssert(function->isImplemented(), "");
+
+		solAssert(
+			function->returnParameters().size() == 1,
+			"A function bound to the user type operator is supposed to return exactly one value."
+		);
+		solAssert(*_unaryOperation.annotation().type == *function->returnParameters().at(0)->type(),
+			"A return type of the bound function is supposed to be same as a operator type."
+		);
 
 		define(_unaryOperation) <<
 			m_context.enqueueFunctionForCodeGeneration(*function) <<
@@ -821,12 +833,24 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
+		solAssert(
+			functionType->parameterTypes().size() == 1,
+			"Only functions with one parameter other than self parameter can be bound to a user type binary operator."
+		);
 
 		string left = expressionAsType(_binOp.leftExpression(), *functionType->selfType());
 		string right = expressionAsType(_binOp.rightExpression(), *functionType->parameterTypes().at(0));
 		solAssert(!left.empty() && !right.empty());
 
 		solAssert(function->isImplemented(), "");
+
+		solAssert(
+			function->returnParameters().size() == 1,
+			"A function bound to the user type operator is supposed to return exactly one value."
+		);
+		solAssert(*_binOp.annotation().type == *function->returnParameters().at(0)->type(),
+			"A return type of the bound function is supposed to be same as a operator type."
+		);
 
 		define(_binOp) <<
 			m_context.enqueueFunctionForCodeGeneration(*function) <<

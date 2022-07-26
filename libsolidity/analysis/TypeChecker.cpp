@@ -3931,7 +3931,8 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					"."
 				);
 			else if (
-				!TokenTraits::isBinaryOp(*operator_) && TokenTraits::isUnaryOp(*operator_) &&
+				!TokenTraits::isBinaryOp(*operator_) &&
+				TokenTraits::isUnaryOp(*operator_) &&
 				functionType->parameterTypesIncludingSelf().size() != 1
 			)
 					m_errorReporter.typeError(

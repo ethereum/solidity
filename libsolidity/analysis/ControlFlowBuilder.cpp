@@ -61,6 +61,8 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 
 	switch (_operation.getOperator())
 	{
+		case Token::Conditional:
+			return true;
 		case Token::Or:
 		case Token::And:
 		{
@@ -71,7 +73,6 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 			auto nodes = splitFlow<2>();
 			nodes[0] = createFlow(nodes[0], _operation.rightExpression());
 			mergeFlow(nodes, nodes[1]);
-
 			return false;
 		}
 		default:
@@ -79,15 +80,17 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 			if (_operation.annotation().userDefinedFunction)
 			{
 				visitNode(_operation);
+				_operation.leftExpression().accept(*this);
+				_operation.rightExpression().accept(*this);
+
 				solAssert(!m_currentNode->resolveFunctionCall(nullptr));
 				m_currentNode->functionCall = _operation.annotation().userDefinedFunction;
-
 				auto nextNode = newLabel();
 
 				connect(m_currentNode, nextNode);
 				m_currentNode = nextNode;
 			}
-			return true;
+			return false;
 		}
 	}
 }
