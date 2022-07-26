@@ -29,17 +29,17 @@ Language Features:
 
 Compiler Features:
  * Language Server: Add rudimentary support for semantic highlighting.
+ * Language Server: Adds support for configuring ``include-paths`` JSON settings object that can be passed during LSP configuration stage.
+ * Language Server: Always add ``{project_root}/node_modules`` to include search paths.
  * Type Checker: Warn about assignments involving multiple pushes to storage ``bytes`` that may invalidate references.
  * Yul Optimizer: Improve inlining heuristics for via IR code generation and pure Yul compilation.
- * Language Server: Always add ``{project_root}/node_modules`` to include search paths.
- * Language Server: Adds support for configuring ``include-paths`` JSON settings object that can be passed during LSP configuration stage.
 
 Bugfixes:
  * ABI Encoder: When encoding an empty string coming from storage do not add a superfluous empty slot for data.
  * Common Subexpression Eliminator: Process assembly items in chunks with maximum size of 2000. It helps to avoid extremely time-consuming searches during code optimization.
+ * DocString Parser: Fix ICE caused by an immutable struct with mapping.
  * Yul IR Code Generation: More robust cleanup in corner cases during memory to storage copies.
  * Yul Optimizer: Do not remove ``returndatacopy`` in cases in which it might perform out-of-bounds reads that unconditionally revert as out-of-gas. Previously, any ``returndatacopy`` that wrote to memory that was never read from was removed without accounting for the out-of-bounds condition.
- * DocString Parser: Fix ICE caused by an immutable struct with mapping.
 
 
 ### 0.8.14 (2022-05-17)
