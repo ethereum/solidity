@@ -28,7 +28,7 @@ Language Features:
 
 
 Compiler Features:
- * LSP: Add rudimentary support for semantic highlighting.
+ * Language Server: Add rudimentary support for semantic highlighting.
  * Type Checker: Warn about assignments involving multiple pushes to storage ``bytes`` that may invalidate references.
  * Yul Optimizer: Improve inlining heuristics for via IR code generation and pure Yul compilation.
  * Language Server: Always add ``{project_root}/node_modules`` to include search paths.
@@ -81,7 +81,7 @@ Compiler Features:
  * Commandline Interface: Allow the use of ``--via-ir`` in place of ``--experimental-via-ir``.
  * Compilation via Yul IR is no longer marked as experimental.
  * JSON-AST: Added selector field for errors and events.
- * LSP: Implements goto-definition.
+ * Language Server: Implements goto-definition.
  * Peephole Optimizer: Optimize comparisons in front of conditional jumps and conditional jumps across a single unconditional jump.
  * Yul EVM Code Transform: Avoid unnecessary ``pop``s on terminating control flow.
  * Yul Optimizer: Remove ``sstore`` and ``mstore`` operations that are never read from.
