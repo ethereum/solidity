@@ -306,6 +306,15 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 10
 
+  - base_ubuntu2004_arm_large: &base_ubuntu2004_arm_large
+      <<: *base_ubuntu2004_arm_large
+      machine:
+        image: ubuntu-2004:2022.04.1
+      resource_class: arm.large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 5
+
   - base_buildpack_focal_small: &base_buildpack_focal_small
       docker:
         - image: buildpack-deps:focal
@@ -424,6 +433,7 @@ defaults:
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_static
+        - b_ubu_arm_static
 
   - workflow_archlinux: &workflow_archlinux
       <<: *workflow_trigger_on_tags
@@ -629,6 +639,17 @@ jobs:
       - persist_to_workspace: *artifacts_executables
       - gitter_notify_failure_unless_pr
 
+  b_ubu_arm: &b_ubu_arm
+    <<: *base_ubuntu2004_arm_large
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - store_artifacts: *artifact_solidity_upgrade
+      - store_artifacts: *artifact_yul_phaser
+      - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
+
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
     # Runs slightly faster on large and xlarge but we only run it nightly so efficiency matters more.
@@ -703,6 +724,25 @@ jobs:
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
+      - run: *run_build
+      - run:
+          name: strip binary
+          command: strip build/solc/solc
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+      - gitter_notify_failure_unless_pr
+
+  b_ubu_arm_static:
+    <<: *base_ubuntu2004_arm_large
+    environment:
+      TERM: xterm
+      MAKEFLAGS: -j 5
+      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
+    steps:
+      - checkout
+      - run:
+          name: "install dependencies"
+          command: sudo apt-get --quiet --assume-yes --no-install-recommends install libboost-all-dev z3 libz3-dev
       - run: *run_build
       - run:
           name: strip binary
@@ -908,6 +948,11 @@ jobs:
 
   t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2004
+    parallelism: 50
+    <<: *steps_soltest_all
+
+  t_ubu_arm_soltest_all: &t_ubu_arm_soltest_all
+    <<: *base_ubuntu2004_arm_large
     parallelism: 50
     <<: *steps_soltest_all
 
@@ -1315,11 +1360,14 @@ workflows:
 
       # Static build
       - b_ubu_static: *workflow_trigger_on_tags
+      - b_ubu_arm_static: *workflow_trigger_on_tags
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
+      - b_ubu_arm: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu2004
       - t_ubu_soltest_all: *workflow_ubuntu2004
+      - t_ubu_arm_soltest_all: *workflow_ubuntu2004
       - t_ubu_soltest_enforce_yul: *workflow_ubuntu2004
       - b_ubu_clang: *workflow_trigger_on_tags
       - t_ubu_clang_soltest: *workflow_ubuntu2004_clang
