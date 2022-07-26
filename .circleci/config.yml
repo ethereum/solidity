@@ -927,11 +927,14 @@ jobs:
     environment:
       TERM: xterm
       MAKEFLAGS: -j 5
+      # Build without Z3. We won't be running SMT tests on Arch because that requires a specific
+      # version of Z3 and the one with the official repos is often not the one we need.
+      USE_Z3: OFF
     steps:
       - run:
           name: Install build dependencies
           command: |
-            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake cvc4 git openssh tar
       - checkout
       - run: *run_build
       - store_artifacts: *artifacts_solc
@@ -1047,7 +1050,7 @@ jobs:
       TERM: xterm
       # For Archlinux we do not have prebuilt docker images and we would need to build evmone from source,
       # thus we forgo semantics tests to speed things up.
-      SOLTEST_FLAGS: --no-semantic-tests
+      SOLTEST_FLAGS: --no-semantic-tests --no-smt
     steps:
       - run:
           name: Install runtime dependencies
