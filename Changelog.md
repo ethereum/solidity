@@ -9,7 +9,6 @@ Compiler Features:
  * Yul Optimizer: Add rule to convert `mod(mul(X, Y), A)` into `mulmod(X, Y, A)`, if `A` is a power of two.
  * Yul Optimizer: Add rule to convert `mod(add(X, Y), A)` into `addmod(X, Y, A)`, if `A` is a power of two.
  * Code Generator: More efficient code for checked addition and subtraction.
- * Error Reporter: More readable and informative error/warning messages.
 
 Bugfixes:
  * Commandline Interface: Disallow the following options outside of the compiler mode: ``--via-ir``,``--metadata-literal``, ``--metadata-hash``, ``--model-checker-show-unproved``, ``--model-checker-div-mod-no-slacks``, ``--model-checker-engine``, ``--model-checker-invariants``, ``--model-checker-solvers``, ``--model-checker-timeout``, ``--model-checker-contracts``, ``--model-checker-targets``.
@@ -28,18 +27,18 @@ Language Features:
 
 
 Compiler Features:
- * LSP: Add rudimentary support for semantic highlighting.
+ * Language Server: Add rudimentary support for semantic highlighting.
+ * Language Server: Adds support for configuring ``include-paths`` JSON settings object that can be passed during LSP configuration stage.
+ * Language Server: Always add ``{project_root}/node_modules`` to include search paths.
  * Type Checker: Warn about assignments involving multiple pushes to storage ``bytes`` that may invalidate references.
  * Yul Optimizer: Improve inlining heuristics for via IR code generation and pure Yul compilation.
- * Language Server: Always add ``{project_root}/node_modules`` to include search paths.
- * Language Server: Adds support for configuring ``include-paths`` JSON settings object that can be passed during LSP configuration stage.
 
 Bugfixes:
  * ABI Encoder: When encoding an empty string coming from storage do not add a superfluous empty slot for data.
  * Common Subexpression Eliminator: Process assembly items in chunks with maximum size of 2000. It helps to avoid extremely time-consuming searches during code optimization.
+ * DocString Parser: Fix ICE caused by an immutable struct with mapping.
  * Yul IR Code Generation: More robust cleanup in corner cases during memory to storage copies.
  * Yul Optimizer: Do not remove ``returndatacopy`` in cases in which it might perform out-of-bounds reads that unconditionally revert as out-of-gas. Previously, any ``returndatacopy`` that wrote to memory that was never read from was removed without accounting for the out-of-bounds condition.
- * DocString Parser: Fix ICE caused by an immutable struct with mapping.
 
 
 ### 0.8.14 (2022-05-17)
@@ -81,9 +80,10 @@ Compiler Features:
  * Commandline Interface: Allow the use of ``--via-ir`` in place of ``--experimental-via-ir``.
  * Compilation via Yul IR is no longer marked as experimental.
  * JSON-AST: Added selector field for errors and events.
- * LSP: Implements goto-definition.
+ * Language Server: Implements goto-definition.
  * Peephole Optimizer: Optimize comparisons in front of conditional jumps and conditional jumps across a single unconditional jump.
  * Yul EVM Code Transform: Avoid unnecessary ``pop``s on terminating control flow.
+ * Yul IR Code Generation: When the result of an external call is statically-sized, ignore any returndata past the size expected by the compiler.
  * Yul Optimizer: Remove ``sstore`` and ``mstore`` operations that are never read from.
 
 
