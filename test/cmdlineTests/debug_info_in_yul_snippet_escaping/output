@@ -179,17 +179,13 @@ object "D_27" {
                 updated_pos := add(pos, 0x20)
             }
 
-            function copy_memory_to_memory(src, dst, length) {
+            function copy_memory_to_memory_with_cleanup(src, dst, length) {
                 let i := 0
                 for { } lt(i, length) { i := add(i, 32) }
                 {
                     mstore(add(dst, i), mload(add(src, i)))
                 }
-                if gt(i, length)
-                {
-                    // clear end
-                    mstore(add(dst, length), 0)
-                }
+                mstore(add(dst, length), 0)
             }
 
             function round_up_to_mul_of_32(value) -> result {
@@ -199,7 +195,7 @@ object "D_27" {
             function abi_encode_t_string_memory_ptr_to_t_string_memory_ptr_fromStack(value, pos) -> end {
                 let length := array_length_t_string_memory_ptr(value)
                 pos := array_storeLengthForEncoding_t_string_memory_ptr_fromStack(pos, length)
-                copy_memory_to_memory(add(value, 0x20), pos, length)
+                copy_memory_to_memory_with_cleanup(add(value, 0x20), pos, length)
                 end := add(pos, round_up_to_mul_of_32(length))
             }
 
@@ -496,10 +492,7 @@ object "D_27" {
                         {
                             mstore(add(add(memPos, i), _2), mload(add(add(memPtr_1, i), _7)))
                         }
-                        if gt(i, length)
-                        {
-                            mstore(add(add(memPos, length), _2), _3)
-                        }
+                        mstore(add(add(memPos, length), _2), _3)
                         return(memPos, add(sub(add(memPos, and(add(length, 31), not(31))), memPos), _2))
                     }
                 }

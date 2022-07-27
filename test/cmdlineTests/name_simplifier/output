@@ -114,10 +114,7 @@ object "C_59" {
                         {
                             mstore(add(add(memPos, i), _12), mload(add(add(memPtr_1, i), _4)))
                         }
-                        if gt(i, length)
-                        {
-                            mstore(add(add(memPos, length), _12), _3)
-                        }
+                        mstore(add(add(memPos, length), _12), _3)
                         return(memPos, add(sub(add(memPos, and(add(length, 31), _9)), memPos), _12))
                     }
                 }
