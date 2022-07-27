@@ -4,7 +4,7 @@ using {
     add as +, sub as -,
     mul as *, div as /,
     gt as >, lt as <
-     } for Int;
+} for Int;
 
 function add(Int) pure returns (Int) {
     return Int.wrap(0);

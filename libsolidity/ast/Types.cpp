@@ -59,6 +59,8 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
+using util::Result;
+
 namespace
 {
 
@@ -384,7 +386,7 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 
 }
 
-FunctionDefinitionResult Type::userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const
+Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const
 {
 	if (!typeDefinition())
 		return nullptr;
@@ -412,12 +414,10 @@ FunctionDefinitionResult Type::userDefinedOperator(Token _token, ASTNode const& 
 
 	if (seenFunctions.size() == 1)
 		return *seenFunctions.begin();
-	else if (!!typeDefinition() && seenFunctions.size() == 0)
-		return FunctionDefinitionResult::err("Operator has not been user-defined.");
-	else if (!!typeDefinition())
-		return FunctionDefinitionResult::err("Multiple user-defined functions provided for this operator.");
+	else if (seenFunctions.size() == 0)
+		return Result<FunctionDefinition const*>::err("No matching user-defined operator found.");
 	else
-		return nullptr;
+		return Result<FunctionDefinition const*>::err("Multiple user-defined functions provided for this operator.");
 }
 
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _scope)

@@ -2,7 +2,7 @@ type Int is int128;
 using {
     add as +, sub as -,
     mul as *, div as /
-     } for Int;
+} for Int;
 
 function add(Int, Int) pure returns (Int) {
     return Int.wrap(1);

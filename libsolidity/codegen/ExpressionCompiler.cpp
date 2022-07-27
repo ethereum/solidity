@@ -416,7 +416,8 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		solAssert(function->isFree(), "Only free functions can be bound to a user type operator.");
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function->libraryFunction() ? function->typeViaContractName() : function->type());
+			function->libraryFunction() ? function->typeViaContractName() : function->type()
+		);
 		solAssert(functionType);
 
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();

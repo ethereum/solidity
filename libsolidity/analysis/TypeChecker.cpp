@@ -1790,7 +1790,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	_operation.annotation().isConstant = false;
 
 	// Check if the operator is built-in or user-defined.
-	FunctionDefinitionResult userDefinedOperatorResult = leftType->userDefinedOperator(
+	Result<FunctionDefinition const*> userDefinedOperatorResult = leftType->userDefinedOperator(
 		_operation.getOperator(),
 		*currentDefinitionScope(),
 		false // _unaryOperation

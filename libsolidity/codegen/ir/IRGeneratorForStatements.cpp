@@ -694,21 +694,22 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 			"Functions with parameters other than self parameter cannot be bound to a user type unary operator."
 		);
 
-		string parameter = expressionAsType(_unaryOperation.subExpression(), *functionType->selfType());
-		solAssert(!parameter.empty());
+		string argument = expressionAsType(_unaryOperation.subExpression(), *functionType->selfType());
+		solAssert(!argument.empty());
 		solAssert(function->isImplemented(), "");
 
 		solAssert(
 			function->returnParameters().size() == 1,
 			"A function bound to the user type operator is supposed to return exactly one value."
 		);
-		solAssert(*_unaryOperation.annotation().type == *function->returnParameters().at(0)->type(),
+		solAssert(
+			*_unaryOperation.annotation().type == *function->returnParameters().at(0)->type(),
 			"A return type of the bound function is supposed to be same as a operator type."
 		);
 
 		define(_unaryOperation) <<
 			m_context.enqueueFunctionForCodeGeneration(*function) <<
-			("(" + parameter + ")\n");
+			("(" + argument + ")\n");
 
 		return false;
 	}

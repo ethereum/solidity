@@ -7,4 +7,4 @@ contract test {
   }
 }
 // ----
-// TypeError 2271: (79-85): Operator == not compatible with types struct test.s storage ref and struct test.s storage ref. Operator has not been user-defined.
+// TypeError 2271: (79-85): Operator == not compatible with types struct test.s storage ref and struct test.s storage ref. No matching user-defined operator found.
