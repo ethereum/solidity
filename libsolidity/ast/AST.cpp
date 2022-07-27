@@ -27,7 +27,9 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
+
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -938,6 +940,23 @@ IdentifierAnnotation& Identifier::annotation() const
 ASTString Literal::valueWithoutUnderscores() const
 {
 	return boost::erase_all_copy(value(), "_");
+}
+
+FunctionDefinition const* Literal::suffixFunction() const
+{
+	if (holds_alternative<SubDenomination>(m_suffix))
+		return nullptr;
+
+	Declaration const* referencedDeclaration = visit(util::GenericVisitor{
+		[&](ASTPointer<Identifier> const& _identifier) { return _identifier->annotation().referencedDeclaration; },
+		[&](ASTPointer<MemberAccess> const& _memberAccess) { return _memberAccess->annotation().referencedDeclaration; },
+		[&](SubDenomination) -> Declaration const* { solAssert(false); },
+	}, m_suffix);
+
+	solAssert(referencedDeclaration, "Literal suffix must have a definition.");
+	auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(referencedDeclaration);
+	solAssert(functionDefinition, "Non-denomination literal suffix must be a function.");
+	return functionDefinition;
 }
 
 bool Literal::isHexNumber() const

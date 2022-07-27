@@ -234,10 +234,8 @@ bool FunctionCallGraphBuilder::visit(NewExpression const& _newExpression)
 
 bool FunctionCallGraphBuilder::visit(Literal const& _literal)
 {
-	if (auto const* identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
-		functionReferenced(
-			dynamic_cast<FunctionDefinition const&>(*(*identifierPath)->annotation().referencedDeclaration)
-		);
+	if (_literal.suffixFunction())
+		functionReferenced(*_literal.suffixFunction());
 
 	return true;
 }

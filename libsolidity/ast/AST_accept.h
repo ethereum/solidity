@@ -27,6 +27,8 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <libsolutil/Visitor.h>
+
 namespace solidity::frontend
 {
 
@@ -1015,16 +1017,23 @@ void ElementaryTypeNameExpression::accept(ASTConstVisitor& _visitor) const
 void Literal::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-		if (auto identifierPath = std::get_if<ASTPointer<IdentifierPath>>(&m_suffix))
-			(*identifierPath)->accept(_visitor);
+		std::visit(solidity::util::GenericVisitor{
+			[&](ASTPointer<Identifier> const& _identifier) { _identifier->accept(_visitor); },
+			[&](ASTPointer<MemberAccess> const& _memberAccess) { _memberAccess->accept(_visitor); },
+			[&](SubDenomination) {},
+		}, m_suffix);
+
 	_visitor.endVisit(*this);
 }
 
 void Literal::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
-		if (auto identifierPath = std::get_if<ASTPointer<IdentifierPath>>(&m_suffix))
-			(*identifierPath)->accept(_visitor);
+		std::visit(solidity::util::GenericVisitor{
+			[&](ASTPointer<Identifier> const& _identifier) { _identifier->accept(_visitor); },
+			[&](ASTPointer<MemberAccess> const& _memberAccess) { _memberAccess->accept(_visitor); },
+			[&](SubDenomination) {},
+		}, m_suffix);
 	_visitor.endVisit(*this);
 }
 

@@ -4,4 +4,4 @@ contract C {
     function suffix(uint x) external pure returns (uint) { return x; }
 }
 // ----
-// DeclarationError 7920: (31-42): Identifier not found or not unique.
+// TypeError 4438: (26-42): The literal suffix needs to be a pre-defined suffix or a file-level pure function.

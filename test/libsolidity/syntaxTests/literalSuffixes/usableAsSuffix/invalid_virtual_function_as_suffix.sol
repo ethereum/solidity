@@ -8,4 +8,4 @@ contract C is B {
     function suffix(uint x) internal pure override returns (uint) { return x; }
 }
 // ----
-// DeclarationError 7920: (127-133): Identifier not found or not unique.
+// TypeError 4438: (122-133): The literal suffix needs to be a pre-defined suffix or a file-level pure function.

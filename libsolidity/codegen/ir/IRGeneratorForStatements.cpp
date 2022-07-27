@@ -2438,12 +2438,9 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 {
 	setLocation(_literal);
 
-	if (auto identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
+	if (_literal.suffixFunction())
 	{
-		FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(
-			*(*identifierPath)->annotation().referencedDeclaration
-		);
-		FunctionType const& functionType = *function.functionType(true);
+		FunctionType const& functionType = *_literal.suffixFunction()->functionType(true);
 
 		// TODO this is actually not always the right one.
 		auto type = TypeProvider::forLiteral(_literal);
@@ -2472,11 +2469,12 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 			// TODO what about string?
 		}
 		define(_literal) <<
-			m_context.enqueueFunctionForCodeGeneration(function) <<
+			m_context.enqueueFunctionForCodeGeneration(*_literal.suffixFunction()) <<
 			"(" + joinHumanReadable(args) + ")\n";
 	}
 	else
 	{
+		solAssert(holds_alternative<Literal::SubDenomination>(_literal.suffix()));
 		Type const& literalType = type(_literal);
 
 		switch (literalType.category())

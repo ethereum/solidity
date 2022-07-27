@@ -2271,12 +2271,9 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
 
-	if (auto identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
+	if (_literal.suffixDefinition())
 	{
-		FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(
-			*(*identifierPath)->annotation().referencedDeclaration
-		);
-		FunctionType const& functionType = *function.functionType(true);
+		FunctionType const& functionType = *_literal.suffixDefinition()->functionType(true);
 
 		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
 
@@ -2298,7 +2295,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 				m_context << type->literalValue(&_literal);
 			utils().convertType(*type, *functionType.parameterTypes().at(0));
 		}
-		m_context << m_context.functionEntryLabel(function).pushTag();
+		m_context << m_context.functionEntryLabel(*_literal.suffixDefinition()).pushTag();
 		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
 		m_context << returnLabel;
 
@@ -2311,6 +2308,8 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	}
 	else
 	{
+		solAssert(holds_alternative<Literal::SubDenomination>(_literal.suffix()));
+
 		Type const* type = _literal.annotation().type;
 
 

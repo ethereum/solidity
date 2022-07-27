@@ -35,10 +35,12 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+
 #include <cctype>
-#include <vector>
+#include <memory>
 #include <regex>
 #include <tuple>
+#include <vector>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -1996,9 +1998,31 @@ ASTPointer<Expression> Parser::parseLiteral()
 	}
 	else if (m_scanner->currentToken() == Token::Identifier)
 	{
-		auto identifierPath = parseIdentifierPath();
-		nodeFactory.setEndPositionFromNode(identifierPath);
-		suffix = move(identifierPath);
+		// TODO: Make sure locations are set correctly
+		ASTPointer<ASTString> suffixName = make_shared<ASTString>(m_scanner->currentLiteral());
+		nodeFactory.markEndPosition();
+		ASTPointer<Identifier> identifier = nodeFactory.createNode<Identifier>(suffixName);
+
+		advance();
+
+		if (m_scanner->currentToken() != Token::Period)
+			suffix = identifier;
+		else
+		{
+			ASTPointer<Expression> memberAccess = identifier;
+			do
+			{
+				// FIXME: This grabs the semicolon
+				advance();
+				nodeFactory.markEndPosition();
+				SourceLocation memberLocation = currentLocation();
+				ASTPointer<ASTString> memberName = expectIdentifierToken();
+				memberAccess = nodeFactory.createNode<MemberAccess>(memberAccess, move(memberName), move(memberLocation));
+			}
+			while (m_scanner->currentToken() == Token::Period);
+
+			suffix = dynamic_pointer_cast<MemberAccess>(memberAccess);
+		}
 	}
 	return nodeFactory.createNode<Literal>(initialToken, move(value), move(suffix));
 }

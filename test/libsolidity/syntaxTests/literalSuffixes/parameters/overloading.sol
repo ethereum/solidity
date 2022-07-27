@@ -10,4 +10,4 @@ contract C {
     int d = "a" suffix;                                        // TODO: Should match only string
 }
 // ----
-// DeclarationError 7920: (216-222): Identifier not found or not unique.
+// TypeError 2144: (214-222): No matching declaration found after variable lookup.

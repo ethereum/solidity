@@ -18,4 +18,4 @@ contract C {
     int f = -255 iuSuffix; // TODO: Should match only uint8
 }
 // ----
-// DeclarationError 7920: (310-317): Identifier not found or not unique.
+// TypeError 2144: (305-317): No matching declaration found after variable lookup.

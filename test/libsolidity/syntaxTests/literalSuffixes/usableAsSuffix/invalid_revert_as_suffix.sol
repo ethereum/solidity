@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 7920: (54-60): Identifier not found or not unique.
+// TypeError 2144: (52-60): No matching declaration found after variable lookup.

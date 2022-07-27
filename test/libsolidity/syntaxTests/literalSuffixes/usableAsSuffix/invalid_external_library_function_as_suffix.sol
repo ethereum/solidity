@@ -6,4 +6,4 @@ contract C {
     uint x = 1000 L.suffix;
 }
 // ----
-// DeclarationError 7920: (117-125): Identifier not found or not unique.
+// TypeError 4438: (112-125): The literal suffix needs to be a pre-defined suffix or a file-level pure function.

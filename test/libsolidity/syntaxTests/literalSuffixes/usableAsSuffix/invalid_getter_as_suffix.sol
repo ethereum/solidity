@@ -4,4 +4,4 @@ contract C {
     uint a = 1 this.g;
 }
 // ----
-// DeclarationError 7920: (48-54): Identifier not found or not unique.
+// TypeError 4438: (46-54): The literal suffix needs to be a pre-defined suffix or a file-level pure function.

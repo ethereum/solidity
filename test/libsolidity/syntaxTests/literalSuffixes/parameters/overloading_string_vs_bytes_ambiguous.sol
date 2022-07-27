@@ -2,7 +2,7 @@ function suffix(string memory) pure returns (uint) {}
 function suffix(bytes memory) pure returns (uint) {}
 
 contract C {
-    uint a = "abcd" suffix;
+    uint a = "abcd" suffix; // TODO: Error should say it's ambiguous
 }
 // ----
-// DeclarationError 7920: (141-147): Identifier not found or not unique.
+// TypeError 2144: (134-147): No matching declaration found after variable lookup.

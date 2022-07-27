@@ -3709,6 +3709,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 	}
 
 	Literal::SubDenomination const* subDenomination = get_if<Literal::SubDenomination>(&_literal.suffix());
+
 	if (_literal.isHexNumber() && subDenomination && *subDenomination != Literal::SubDenomination::None)
 		m_errorReporter.fatalTypeError(
 			5145_error,
@@ -3733,14 +3734,21 @@ void TypeChecker::endVisit(Literal const& _literal)
 	// TODO at this point 'type' needs to be stored for code generation.
 
 	bool isCompileTimeConstant = true;
-	if (auto const* identifierPath = get_if<ASTPointer<IdentifierPath>>(&_literal.suffix()))
+	if (!subDenomination)
 	{
-		Declaration const* declaration = (*identifierPath)->annotation().referencedDeclaration;
-		FunctionDefinition const* definition = dynamic_cast<FunctionDefinition const*>(declaration);
+		FunctionType const* suffixFunctionType = dynamic_cast<FunctionType const*>(std::visit(GenericVisitor{
+			[&](ASTPointer<Identifier> const& _identifier) { return _identifier->annotation().type; },
+			[&](ASTPointer<MemberAccess> const& _memberAccess) { return _memberAccess->annotation().type; },
+			[&](Literal::SubDenomination) -> Type const* { solAssert(false); },
+		}, _literal.suffix()));
+
 		if (
-			!definition ||
-			!definition->isFree() ||
-			definition->stateMutability() != StateMutability::Pure
+			!suffixFunctionType ||                                                          // Rejects variables
+			!suffixFunctionType->hasDeclaration() ||                                        // Rejects function pointers
+			!dynamic_cast<FunctionDefinition const*>(&suffixFunctionType->declaration()) || // Rejects events and errors
+			suffixFunctionType->bound() ||
+			!_literal.suffixFunction()->isFree() ||
+			_literal.suffixFunction()->stateMutability() != StateMutability::Pure
 		)
 			m_errorReporter.typeError(
 				4438_error,
@@ -3749,24 +3757,23 @@ void TypeChecker::endVisit(Literal const& _literal)
 			);
 		else
 		{
-			FunctionType const& functionType = dynamic_cast<FunctionType const&>(*declaration->type());
-			solAssert(!functionType.takesArbitraryParameters());
-			solAssert(functionType.kind() == FunctionType::Kind::Internal);
+			solAssert(!suffixFunctionType->takesArbitraryParameters());
+			solAssert(suffixFunctionType->kind() == FunctionType::Kind::Internal);
 
-			auto const* rationalType = dynamic_cast<RationalNumberType const*>(type);
+			auto const* literalRationalType = dynamic_cast<RationalNumberType const*>(type);
 
 			optional<string> parameterCountMessage;
-			if (functionType.parameterTypes().size() == 0)
+			if (suffixFunctionType->parameterTypes().size() == 0)
 				parameterCountMessage = "Functions that take no arguments cannot be used as literal suffixes.";
-			else if (functionType.parameterTypes().size() >= 3)
+			else if (suffixFunctionType->parameterTypes().size() >= 3)
 				parameterCountMessage = "Functions that take 3 or more arguments cannot be used as literal suffixes.";
-			else if (functionType.parameterTypes().size() == 2 && !rationalType)
+			else if (suffixFunctionType->parameterTypes().size() == 2 && !literalRationalType)
 				parameterCountMessage = "Functions that take 2 arguments can only be used as literal suffixes for rational numbers.";
 
 			optional<string> parameterTypeMessage;
 			if (parameterCountMessage.has_value())
 				m_errorReporter.typeError(4778_error, _literal.location(), parameterCountMessage.value());
-			else if (functionType.parameterTypes().size() == 2)
+			else if (suffixFunctionType->parameterTypes().size() == 2)
 			{
 				auto&& [mantissa, exponent] = dynamic_cast<RationalNumberType const*>(type)->mantissaExponent();
 				solAssert((mantissa && exponent) || (!mantissa && !exponent));
@@ -3778,25 +3785,27 @@ void TypeChecker::endVisit(Literal const& _literal)
 						"that fit the range of parameters of the suffix function."
 					);
 				else if (
-					!mantissa->isImplicitlyConvertibleTo(*functionType.parameterTypes().at(0)) ||
-					!exponent->isImplicitlyConvertibleTo(*functionType.parameterTypes().at(1))
+					!mantissa->isImplicitlyConvertibleTo(*suffixFunctionType->parameterTypes().at(0)) ||
+					!exponent->isImplicitlyConvertibleTo(*suffixFunctionType->parameterTypes().at(1))
 				)
 					// TODO: Is this triggered when the argument is out of range? Test.
 					parameterTypeMessage = "The type of the literal cannot be converted to the parameters of the suffix function.";
 			}
-			else if (!type->isImplicitlyConvertibleTo(*functionType.parameterTypes().front()))
+			else if (!type->isImplicitlyConvertibleTo(*suffixFunctionType->parameterTypes().front()))
 				parameterTypeMessage = "The type of the literal cannot be converted to the parameter of the suffix function.";
 
 			if (parameterTypeMessage.has_value())
 				m_errorReporter.typeError(8838_error, _literal.location(), parameterTypeMessage.value());
 
-			isCompileTimeConstant = functionType.isPure();
-			if (functionType.returnParameterTypes().size() == 1)
-				type = functionType.returnParameterTypes().front();
+			isCompileTimeConstant = suffixFunctionType->isPure();
+			if (suffixFunctionType->returnParameterTypes().size() == 1)
+				type = suffixFunctionType->returnParameterTypes().front();
 			else
-				type = TypeProvider::tuple(functionType.returnParameterTypes());
+				type = TypeProvider::tuple(suffixFunctionType->returnParameterTypes());
 		}
 	}
+	else
+		solAssert(holds_alternative<Literal::SubDenomination>(_literal.suffix()));
 
 	_literal.annotation().type = type;
 	_literal.annotation().isPure = isCompileTimeConstant;

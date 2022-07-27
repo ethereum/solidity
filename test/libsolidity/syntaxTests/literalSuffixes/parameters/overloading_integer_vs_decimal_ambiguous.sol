@@ -3,8 +3,8 @@ function suffix(uint, uint) pure returns (int) {}
 
 contract C {
     function f() public pure {
-        int a = 1 suffix;
+        int a = 1 suffix; // TODO: Error should say it's ambiguous
     }
 }
 // ----
-// DeclarationError 7920: (157-163): Identifier not found or not unique.
+// TypeError 2144: (155-163): No matching declaration found after variable lookup.

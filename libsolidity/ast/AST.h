@@ -2351,7 +2351,7 @@ public:
 		Week = static_cast<int>(Token::SubWeek),
 		Year = static_cast<int>(Token::SubYear)
 	};
-	using Suffix = std::variant<SubDenomination, ASTPointer<IdentifierPath>>;
+	using Suffix = std::variant<SubDenomination, ASTPointer<Identifier>, ASTPointer<MemberAccess>>;
 	Literal(
 		int64_t _id,
 		SourceLocation const& _location,
@@ -2371,6 +2371,9 @@ public:
 
 	//SubDenomination subDenomination() const { return m_suffix; }
 	Suffix const& suffix() const { return m_suffix; }
+	/// @returns Function definition associated with the suffix if the suffix is not a subdenomination.
+	///          nullptr otherwise.
+	FunctionDefinition const* suffixFunction() const;
 
 	/// @returns true if this is a number with a hex prefix.
 	bool isHexNumber() const;

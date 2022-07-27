@@ -5,4 +5,4 @@ contract C {
     int a = hex"abcd" suffix; // TODO: Should match only bytes
 }
 // ----
-// DeclarationError 7920: (141-147): Identifier not found or not unique.
+// TypeError 2144: (131-147): No matching declaration found after variable lookup.
