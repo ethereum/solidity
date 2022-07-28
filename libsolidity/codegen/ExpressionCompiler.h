@@ -90,7 +90,7 @@ private:
 	bool visit(IndexAccess const& _indexAccess) override;
 	bool visit(IndexRangeAccess const& _indexAccess) override;
 	void endVisit(Identifier const& _identifier) override;
-	void endVisit(Literal const& _literal) override;
+	bool visit(Literal const& _literal) override;
 
 	///@{
 	///@name Append code for various operator types
@@ -105,10 +105,17 @@ private:
 	/// @}
 
 	/// Appends code to call an internal function of the given type with the given arguments.
+	/// The function can handle function calls using the standard call syntax and as a literal suffix.
+	/// Note that both cases allow for a single literal argument but would handle it differently.
+	/// The suffix case would split it into mantissa/exponent if the function has two parameters while
+	/// the standard syntax case would not.
 	void appendInternalFunctionCall(
 		FunctionType const& _functionType,
 		Expression const& _callExpression,
-		std::vector<Expression const*> const& _arguments
+		std::variant<
+			std::reference_wrapper<std::vector<ASTPointer<Expression const>> const>,
+			std::reference_wrapper<Literal const>
+		> _arguments
 	);
 	/// Appends code to call a function of the given type with the given arguments.
 	/// @param _tryCall if true, this is the external call of a try statement. In that case,
