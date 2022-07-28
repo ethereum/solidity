@@ -40,6 +40,11 @@
 #include <libsolutil/StackTooDeepString.h>
 
 #include <boost/algorithm/string/replace.hpp>
+
+#include <range/v3/view/indirect.hpp>
+#include <range/v3/view/addressof.hpp>
+#include <range/v3/range/conversion.hpp>
+
 #include <numeric>
 #include <utility>
 
@@ -626,58 +631,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Internal:
 		{
-			// Calling convention: Caller pushes return address and arguments
-			// Callee removes them and pushes return values
-
-			evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
-			for (unsigned i = 0; i < arguments.size(); ++i)
-				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
-
-			{
-				bool shortcutTaken = false;
-				if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
-				{
-					solAssert(!function.bound(), "");
-					if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
-					{
-						// Do not directly visit the identifier, because this way, we can avoid
-						// the runtime entry label to be created at the creation time context.
-						CompilerContext::LocationSetter locationSetter2(m_context, *identifier);
-						solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
-						utils().pushCombinedFunctionEntryLabel(
-							functionDef->resolveVirtual(m_context.mostDerivedContract()),
-							false
-						);
-						shortcutTaken = true;
-					}
-				}
-
-				if (!shortcutTaken)
-					_functionCall.expression().accept(*this);
-			}
-
-			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
-			if (function.bound())
-			{
-				// stack: arg2, ..., argn, label, arg1
-				unsigned depth = parameterSize + 1;
-				utils().moveIntoStack(depth, function.selfType()->sizeOnStack());
-				parameterSize += function.selfType()->sizeOnStack();
-			}
-
-			if (m_context.runtimeContext())
-				// We have a runtime context, so we need the creation part.
-				utils().rightShiftNumberOnStack(32);
-			else
-				// Extract the runtime part.
-				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
-
-			m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
-			m_context << returnLabel;
-
-			unsigned returnParametersSize = CompilerUtils::sizeOnStack(function.returnParameterTypes());
-			// callee adds return parameters, but removes arguments and return label
-			m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+			appendInternalFunctionCall(
+				function,
+				_functionCall.expression(),
+				arguments | ranges::views::indirect | ranges::views::addressof | ranges::to<vector>()
+			);
 			break;
 		}
 		case FunctionType::Kind::BareCall:
@@ -2275,6 +2233,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	{
 		FunctionType const& functionType = *_literal.suffixDefinition()->functionType(true);
 
+
 		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
 
 		// TODO this is actually not always the right one.
@@ -2591,6 +2550,68 @@ void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type cons
 		), 2, 1);
 	else
 		m_context << Instruction::EXP;
+}
+
+void ExpressionCompiler::appendInternalFunctionCall(
+	FunctionType const& _functionType,
+	Expression const& _callExpression,
+	vector<Expression const*> const& _arguments
+)
+{
+	solAssert(_functionType.kind() == FunctionType::Kind::Internal);
+
+	// Calling convention: Caller pushes return address and arguments
+	// Callee removes them and pushes return values
+
+	evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+	for (unsigned i = 0; i < _arguments.size(); ++i)
+		acceptAndConvert(*_arguments[i], *_functionType.parameterTypes()[i]);
+
+	bool shortcutTaken = false;
+	if (auto const* identifier = dynamic_cast<Identifier const*>(&_callExpression))
+	{
+		solAssert(!_functionType.bound());
+
+		if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+		{
+			// Do not directly visit the identifier, because this way, we can avoid
+			// the runtime entry label to be created at the creation time context.
+			CompilerContext::LocationSetter locationSetter(m_context, *identifier);
+			solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
+			utils().pushCombinedFunctionEntryLabel(
+				functionDef->resolveVirtual(m_context.mostDerivedContract()),
+				false
+			);
+
+			shortcutTaken = true;
+		}
+	}
+
+	if (!shortcutTaken)
+		_callExpression.accept(*this);
+
+	unsigned parameterSize = CompilerUtils::sizeOnStack(_functionType.parameterTypes());
+	if (_functionType.bound())
+	{
+		// stack: arg2, ..., argn, label, arg1
+		unsigned depth = parameterSize + 1;
+		utils().moveIntoStack(depth, _functionType.selfType()->sizeOnStack());
+		parameterSize += _functionType.selfType()->sizeOnStack();
+	}
+
+	if (m_context.runtimeContext())
+		// We have a runtime context, so we need the creation part.
+		utils().rightShiftNumberOnStack(32);
+	else
+		// Extract the runtime part.
+		m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+
+	m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+	m_context << returnLabel;
+
+	unsigned returnParametersSize = CompilerUtils::sizeOnStack(_functionType.returnParameterTypes());
+	// callee adds return parameters, but removes arguments and return label
+	m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
 }
 
 void ExpressionCompiler::appendExternalFunctionCall(
