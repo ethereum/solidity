@@ -104,6 +104,12 @@ private:
 	void appendExpOperatorCode(Type const& _valueType, Type const& _exponentType);
 	/// @}
 
+	/// Appends code to call an internal function of the given type with the given arguments.
+	void appendInternalFunctionCall(
+		FunctionType const& _functionType,
+		Expression const& _callExpression,
+		std::vector<Expression const*> const& _arguments
+	);
 	/// Appends code to call a function of the given type with the given arguments.
 	/// @param _tryCall if true, this is the external call of a try statement. In that case,
 	///                 returns success flag on top of stack and does not revert on failure.
