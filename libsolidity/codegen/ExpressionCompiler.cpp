@@ -40,6 +40,11 @@
 #include <libsolutil/StackTooDeepString.h>
 
 #include <boost/algorithm/string/replace.hpp>
+
+#include <range/v3/view/indirect.hpp>
+#include <range/v3/view/addressof.hpp>
+#include <range/v3/range/conversion.hpp>
+
 #include <numeric>
 #include <utility>
 
@@ -693,36 +698,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Internal:
 		{
-			// Calling convention: Caller pushes return address and arguments
-			// Callee removes them and pushes return values
-
-			evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
-			for (unsigned i = 0; i < arguments.size(); ++i)
-				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
-			_functionCall.expression().accept(*this);
-
-			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
-			if (function.hasBoundFirstArgument())
-			{
-				// stack: arg2, ..., argn, label, arg1
-				unsigned depth = parameterSize + 1;
-				utils().moveIntoStack(depth, function.selfType()->sizeOnStack());
-				parameterSize += function.selfType()->sizeOnStack();
-			}
-
-			if (m_context.runtimeContext())
-				// We have a runtime context, so we need the creation part.
-				utils().rightShiftNumberOnStack(32);
-			else
-				// Extract the runtime part.
-				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
-
-			m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
-			m_context << returnLabel;
-
-			unsigned returnParametersSize = CompilerUtils::sizeOnStack(function.returnParameterTypes());
-			// callee adds return parameters, but removes arguments and return label
-			m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+			appendInternalFunctionCall(
+				function,
+				_functionCall.expression(),
+				arguments | ranges::views::indirect | ranges::views::addressof | ranges::to<vector>()
+			);
 			break;
 		}
 		case FunctionType::Kind::BareCall:
@@ -2612,6 +2592,46 @@ void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type cons
 		), 2, 1);
 	else
 		m_context << Instruction::EXP;
+}
+
+void ExpressionCompiler::appendInternalFunctionCall(
+	FunctionType const& _functionType,
+	Expression const& _callExpression,
+	vector<Expression const*> const& _arguments
+)
+{
+	solAssert(_functionType.kind() == FunctionType::Kind::Internal);
+
+	// Calling convention: Caller pushes return address and arguments
+	// Callee removes them and pushes return values
+
+	evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+	for (unsigned i = 0; i < _arguments.size(); ++i)
+		acceptAndConvert(*_arguments[i], *_functionType.parameterTypes()[i]);
+	_callExpression.accept(*this);
+
+	unsigned parameterSize = CompilerUtils::sizeOnStack(_functionType.parameterTypes());
+	if (_functionType.hasBoundFirstArgument())
+	{
+		// stack: arg2, ..., argn, label, arg1
+		unsigned depth = parameterSize + 1;
+		utils().moveIntoStack(depth, _functionType.selfType()->sizeOnStack());
+		parameterSize += _functionType.selfType()->sizeOnStack();
+	}
+
+	if (m_context.runtimeContext())
+		// We have a runtime context, so we need the creation part.
+		utils().rightShiftNumberOnStack(32);
+	else
+		// Extract the runtime part.
+		m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+
+	m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+	m_context << returnLabel;
+
+	unsigned returnParametersSize = CompilerUtils::sizeOnStack(_functionType.returnParameterTypes());
+	// callee adds return parameters, but removes arguments and return label
+	m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
 }
 
 void ExpressionCompiler::appendExternalFunctionCall(
