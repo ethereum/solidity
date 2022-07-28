@@ -933,7 +933,7 @@ OverrideChecker::OverrideProxyBySignatureMultiSet const& OverrideChecker::inheri
 		{
 			set<OverrideProxy, OverrideProxy::CompareBySignature> functionsInBase;
 			for (FunctionDefinition const* fun: base->definedFunctions())
-				if (!fun->isConstructor())
+				if (!fun->isConstructor() && fun->visibility() != Visibility::Private)
 					functionsInBase.emplace(OverrideProxy{fun});
 			for (VariableDeclaration const* var: base->stateVariables())
 				if (var->isPublic())
