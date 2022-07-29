@@ -21,6 +21,12 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/Visitor.h>
 
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm/copy.hpp>
+
+
+using namespace solidity::test::fuzzer;
 using namespace solidity::test::fuzzer::mutator;
 using namespace solidity::util;
 using namespace std;
@@ -36,15 +42,30 @@ string GeneratorBase::visitChildren()
 {
 	ostringstream os;
 	// Randomise visit order
-	vector<GeneratorPtr> randomisedChildren;
+	vector<std::pair<GeneratorPtr, unsigned>> randomisedChildren;
 	for (auto const& child: generators)
 		randomisedChildren.push_back(child);
 	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
-	for (auto child: randomisedChildren)
-		os << std::visit(GenericVisitor{
-			[&](auto const& _item) { return _item->generate(); }
-		}, child);
+	for (auto const& child: randomisedChildren)
+		if (uRandDist->likely(child.second + 1))
+			for (unsigned i = 0; i < uRandDist->distributionOneToN(child.second); i++)
+				os << std::visit(GenericVisitor{
+					[&](auto const& _item) { return _item->generate(); }
+				}, child.first);
 	return os.str();
+}
+
+void SourceState::print(std::ostream& _os) const
+{
+	for (auto const& import: importedSources)
+		_os << "Imports: " << import << std::endl;
+}
+
+set<string> TestState::sourceUnitPaths() const
+{
+	set<string> keys;
+	boost::copy(sourceUnitState | boost::adaptors::map_keys, std::inserter(keys, keys.begin()));
+	return keys;
 }
 
 string TestState::randomPath(set<string> const& _sourceUnitPaths) const
@@ -63,14 +84,17 @@ string TestState::randomPath(set<string> const& _sourceUnitPaths) const
 string TestState::randomPath() const
 {
 	solAssert(!empty(), "Solc custom mutator: Null test state");
-	return randomPath(sourceUnitPaths);
+	return randomPath(sourceUnitPaths());
 }
 
 void TestState::print(std::ostream& _os) const
 {
 	_os << "Printing test state" << std::endl;
-	for (auto const& item: sourceUnitPaths)
-		_os << "Source path: " << item << std::endl;
+	for (auto const& item: sourceUnitState)
+	{
+		_os << "Source path: " << item.first << std::endl;
+		item.second->print(_os);
+	}
 }
 
 string TestState::randomNonCurrentPath() const
@@ -82,9 +106,10 @@ string TestState::randomNonCurrentPath() const
 
 	set<string> filteredSourcePaths;
 	string currentPath = currentSourceUnitPath;
+	set<string> sourcePaths = sourceUnitPaths();
 	copy_if(
-		sourceUnitPaths.begin(),
-		sourceUnitPaths.end(),
+		sourcePaths.begin(),
+		sourcePaths.end(),
 		inserter(filteredSourcePaths, filteredSourcePaths.begin()),
 		[currentPath](string const& _item) {
 			return _item != currentPath;
@@ -96,52 +121,44 @@ string TestState::randomNonCurrentPath() const
 void TestCaseGenerator::setup()
 {
 	addGenerators({
-		mutator->generator<SourceUnitGenerator>()
+		{mutator->generator<SourceUnitGenerator>(), s_maxSourceUnits}
 	});
 }
 
 string TestCaseGenerator::visit()
 {
-	ostringstream os;
-	for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxSourceUnits); i++)
-	{
-		string sourcePath = path();
-		os << "\n"
-			<< "==== Source: "
-			<< sourcePath
-			<< " ===="
-	        << "\n";
-		updateSourcePath(sourcePath);
-		m_numSourceUnits++;
-		os << visitChildren();
-	}
-	return os.str();
+	return visitChildren();
 }
 
 void SourceUnitGenerator::setup()
 {
 	addGenerators({
-		mutator->generator<ImportGenerator>(),
-		mutator->generator<PragmaGenerator>()
+		{mutator->generator<ImportGenerator>(), s_maxImports},
+		{mutator->generator<PragmaGenerator>(), 1},
+		{mutator->generator<ContractGenerator>(), 1},
+		{mutator->generator<FunctionGenerator>(), s_maxFreeFunctions}
 	});
 }
 
 string SourceUnitGenerator::visit()
 {
-	return visitChildren();
+	state->addSource();
+	ostringstream os;
+	os << "\n"
+	   << "==== Source: "
+	   << state->currentPath()
+	   << " ===="
+	   << "\n";
+	os << visitChildren();
+	return os.str();
 }
 
 string PragmaGenerator::visit()
 {
-	static constexpr const char* preamble = R"(
-		pragma solidity >= 0.0.0;
-		pragma experimental SMTChecker;
-	)";
-	// Choose equally at random from coder v1 and v2
-	string abiPragma = "pragma abicoder v" +
-		to_string(uRandDist->distributionOneToN(2)) +
-		";\n";
-	return preamble + abiPragma;
+	set<string> pragmas = uRandDist->subset(s_genericPragmas);
+	// Choose either abicoder v1 or v2 but not both.
+	pragmas.insert(s_abiPragmas[uRandDist->distributionOneToN(s_abiPragmas.size()) - 1]);
+	return boost::algorithm::join(pragmas, "\n") + "\n";
 }
 
 string ImportGenerator::visit()
@@ -152,26 +169,186 @@ string ImportGenerator::visit()
 	 * Case 3: At least two source units defined
 	 */
 	ostringstream os;
-	// Self import with a small probability only if
-	// there is one source unit present in test.
-	if (state->size() == 1)
+	string importPath;
+	// Import a different source unit if at least
+	// two source units available.
+	if (state->size() > 1)
+		importPath = state->randomNonCurrentPath();
+	// Do not reimport already imported source unit
+	if (!importPath.empty() && !state->sourceUnitState[state->currentPath()]->sourcePathImported(importPath))
 	{
-		if (uRandDist->probable(s_selfImportInvProb))
-			os << "import "
-			   << "\""
-			   << state->randomPath()
-			   << "\";";
-	}
-	else
-	{
-		// Import a different source unit if at least
-		// two source units available.
 		os << "import "
-			<< "\""
-			<< state->randomNonCurrentPath()
-			<< "\";";
+		   << "\""
+		   << importPath
+		   << "\";\n";
+		state->sourceUnitState[state->currentPath()]->addImportedSourcePath(importPath);
+		state->sourceUnitState[state->currentPath()]->resolveImports(
+			state->sourceUnitState[importPath]->exports
+		);
 	}
 	return os.str();
+}
+
+void ContractGenerator::setup()
+{
+	addGenerators({
+		{mutator->generator<FunctionGenerator>(), s_maxFunctions}
+	});
+}
+
+string ContractGenerator::visit()
+{
+	ScopeGuard reset([&]() {
+		mutator->generator<FunctionGenerator>()->scope(true);
+		state->unindent();
+	});
+	auto set = [&]() {
+		state->indent();
+		mutator->generator<FunctionGenerator>()->scope(false);
+	};
+	ostringstream os;
+	string inheritance;
+	if (state->sourceUnitState[state->currentPath()]->contractType())
+		inheritance = state->sourceUnitState[state->currentPath()]->randomContract();
+	string name = state->newContract();
+	state->updateContract(name);
+	os << "contract " << name;
+	if (!inheritance.empty())
+		os << " is " << inheritance;
+	os << " {" << endl;
+	set();
+	os << visitChildren();
+	os << "}" << endl;
+	return os.str();
+}
+
+string FunctionType::toString()
+{
+	auto typeString = [](std::vector<SolidityTypePtr>& _types)
+	{
+		std::string sep;
+		std::string typeStr;
+		for (auto const& i: _types)
+		{
+			typeStr += sep + std::visit(GenericVisitor{
+						[&](auto const& _item) { return _item->toString(); }
+					}, i);
+			if (sep.empty())
+				sep = ",";
+		}
+		return typeStr;
+	};
+
+	std::string retString = std::string("function ") + "(" + typeString(inputs) + ")";
+	if (outputs.empty())
+		return retString + " external pure";
+	else
+		return retString + " external pure returns (" + typeString(outputs) +	")";
+}
+
+string FunctionState::params(Params _p)
+{
+	vector<string> params = (_p == Params::INPUT ? inputs : outputs) |
+		ranges::views::transform(
+		[](auto& _item) -> string
+		{
+			return visit(
+				GenericVisitor{[](auto const& _item) {
+					return _item->toString();
+				}}, _item.first) +
+				" " +
+				_item.second;
+		}) |
+		ranges::to<vector<string>>();
+	return "(" + boost::algorithm::join(params, ",") + ")";
+}
+
+string FunctionGenerator::visit()
+{
+	string visibility;
+	string name = state->newFunction();
+	state->updateFunction(name);
+	if (!m_freeFunction)
+		visibility = "external";
+
+	// Add I/O
+	if (uRandDist->likely(s_maxInputs + 1))
+		for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxInputs); i++)
+			state->currentFunctionState()->addInput(TypeProvider{state}.type());
+
+	if (uRandDist->likely(s_maxOutputs + 1))
+		for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxOutputs); i++)
+			state->currentFunctionState()->addOutput(TypeProvider{state}.type());
+
+	ostringstream function;
+	function << indentation(state->indentationLevel)
+		<< "function "
+		<< name
+		<< state->currentFunctionState()->params(FunctionState::Params::INPUT)
+		<< " "
+		<< visibility
+		<< " pure";
+	if (!state->currentFunctionState()->outputs.empty())
+		function << " returns"
+			<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT);
+	function << " {}\n";
+	return function.str();
+}
+
+optional<SolidityTypePtr> TypeProvider::type(SolidityTypePtr _type)
+{
+	vector<SolidityTypePtr> matchingTypes = state->currentFunctionState()->inputs |
+		ranges::views::filter([&_type](auto& _item) {
+			return _item.first == _type;
+		}) |
+		ranges::views::transform([](auto& _item) { return _item.first; }) |
+		ranges::to<vector<SolidityTypePtr>>();
+
+	if (matchingTypes.empty())
+		return nullopt;
+	else
+		return matchingTypes[state->uRandDist->distributionOneToN(matchingTypes.size()) - 1];
+}
+
+SolidityTypePtr TypeProvider::type()
+{
+	switch (randomTypeCategory())
+	{
+	case Type::INTEGER:
+	{
+		IntegerType::Bits b = static_cast<IntegerType::Bits>(
+			state->uRandDist->distributionOneToN(
+				static_cast<size_t>(IntegerType::Bits::B256)
+			)
+		);
+		// Choose signed/unsigned type with probability of 1/2 = 0.5
+		bool signedType = state->uRandDist->probable(2);
+		return make_shared<IntegerType>(b, signedType);
+	}
+	case Type::BOOL:
+		return make_shared<BoolType>();
+	case Type::FIXEDBYTES:
+	{
+		FixedBytesType::Bytes w = static_cast<FixedBytesType::Bytes>(
+			state->uRandDist->distributionOneToN(
+				static_cast<size_t>(FixedBytesType::Bytes::W32)
+			)
+		);
+		return make_shared<FixedBytesType>(w);
+	}
+	case Type::BYTES:
+		return make_shared<BytesType>();
+	case Type::ADDRESS:
+		return make_shared<AddressType>();
+	case Type::FUNCTION:
+		return make_shared<FunctionType>();
+	case Type::CONTRACT:
+		if (state->sourceUnitState[state->currentPath()]->contractType())
+			return state->sourceUnitState[state->currentPath()]->randomContractType();
+		return make_shared<BoolType>();
+	default:
+		solAssert(false, "");
+	}
 }
 
 template <typename T>
