@@ -404,10 +404,19 @@ Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNod
 				function.libraryFunction() ? function.typeViaContractName() : function.type()
 			);
 			solAssert(functionType && !functionType->parameterTypes().empty());
-			solAssert(isImplicitlyConvertibleTo(*functionType->parameterTypes().front()));
+
+			Type const* expectedReturnType =
+				TokenTraits::isCompareOp(_token) ?
+				TypeProvider::boolean() : functionType->parameterTypes().front();
+
 			if (
-				(_unaryOperation && function.parameterList().parameters().size() == 1) ||
-				(!_unaryOperation && function.parameterList().parameters().size() == 2)
+				isImplicitlyConvertibleTo(*functionType->parameterTypes().front()) &&
+				function.returnParameterList()->parameters().size() == 1 &&
+				function.returnParameterList()->parameters().front()->type()->isImplicitlyConvertibleTo(*expectedReturnType) &&
+				(
+					(_unaryOperation && function.parameterList().parameters().size() == 1) ||
+					(!_unaryOperation && function.parameterList().parameters().size() == 2)
+				)
 			)
 				seenFunctions.insert(&function);
 		}

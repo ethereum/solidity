@@ -1849,7 +1849,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	if (userDefinedOperatorResult)
 		solAssert(
 			userDefinedFunctionType->returnParameterTypes().size() == 1 &&
-			*userDefinedFunctionType->returnParameterTypes().front() == *_operation.annotation().type
+			*userDefinedFunctionType->returnParameterTypes().front() == *_operation.annotation().type,
+			"User defined operator has an invalid return parameter."
 		);
 	else if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
