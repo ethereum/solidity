@@ -80,6 +80,7 @@ std::map<std::string, Instruction> const dev::eth::c_instructions =
 	{ "TIMESTAMP", Instruction::TIMESTAMP },
 	{ "NUMBER", Instruction::NUMBER },
 	{ "DIFFICULTY", Instruction::DIFFICULTY },
+	{ "RANDOM", Instruction::DIFFICULTY },
 	{ "GASLIMIT", Instruction::GASLIMIT },
 	{ "CHAINID", Instruction::CHAINID },
 	{ "SELFBALANCE", Instruction::SELFBALANCE },
