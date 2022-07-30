@@ -135,6 +135,17 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 	m_currentFunction = nullptr;
 }
 
+bool StaticAnalyzer::visit(ForStatement const& _forStatement) {
+	if (auto var = dynamic_cast<VariableDeclarationStatement const*>(_forStatement.initializationExpression()))
+		if (!var->initialValue())
+			m_errorReporter.warning(
+				4716_error,
+				var->location(),
+				"Uninitialized variable in for-loop initialization expression."
+			);
+	return true;
+}
+
 bool StaticAnalyzer::visit(Identifier const& _identifier)
 {
 	if (m_currentFunction)

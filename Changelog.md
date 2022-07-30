@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Static Analyzer: Issue warning for uninitialized for-loop initialization expression.
  * TypeChecker: Support using library constants in initializers of other constants.
  * Yul IR Code Generation: Improved copy routines for arrays with packed storage layout.
  * Yul Optimizer: Add rule to convert `mod(mul(X, Y), A)` into `mulmod(X, Y, A)`, if `A` is a power of two.
