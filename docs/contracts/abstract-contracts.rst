@@ -3,15 +3,15 @@
 .. _abstract-contract:
 
 ******************
-Abstract Contracts
+抽象合约
 ******************
 
-Contracts need to be marked as abstract when at least one of their functions is not implemented.
-Contracts may be marked as abstract even though all functions are implemented.
+当合约中至少有一个功能没有被实现时，需要将其标记为抽象的。
+即使所有的功能都实现了，合约也可以被标记为抽象的。
 
-This can be done by using the ``abstract`` keyword as shown in the following example. Note that this contract needs to be
-defined as abstract, because the function ``utterance()`` was defined, but no implementation was
-provided (no implementation body ``{ }`` was given).
+这可以通过使用 ``abstract`` 关键字来实现，如下例所示。
+注意，这个合约需要被定义为抽象的，因为定义了函数 ``utterance()``，
+但没有提供实现（没有给出实现体 ``{ }``）。
 
 .. code-block:: solidity
 
@@ -22,8 +22,8 @@ provided (no implementation body ``{ }`` was given).
         function utterance() public virtual returns (bytes32);
     }
 
-Such abstract contracts can not be instantiated directly. This is also true, if an abstract contract itself does implement
-all defined functions. The usage of an abstract contract as a base class is shown in the following example:
+这样的抽象合约不能被直接实例化。如果一个抽象合约本身实现了所有定义的功能，这也是可以的。
+抽象合约作为基类的用法在下面的例子中显示：
 
 .. code-block:: solidity
 
@@ -38,32 +38,28 @@ all defined functions. The usage of an abstract contract as a base class is show
         function utterance() public pure override returns (bytes32) { return "miaow"; }
     }
 
-If a contract inherits from an abstract contract and does not implement all non-implemented
-functions by overriding, it needs to be marked as abstract as well.
+如果一个合约继承自一个抽象合约，并且没有通过重写实现所有未实现的函数，那么它也需要被标记为抽象的。
 
-Note that a function without implementation is different from
-a :ref:`Function Type <function_types>` even though their syntax looks very similar.
+注意，没有实现的函数与 :ref:`函数类型 <function_types>` 不同，尽管它们的语法看起来非常相似。
 
-Example of function without implementation (a function declaration):
+没有实现内容的函数的例子（一个函数声明）：
 
 .. code-block:: solidity
 
     function foo(address) external returns (address);
 
-Example of a declaration of a variable whose type is a function type:
+类型为函数类型的变量的声明实例：
 
 .. code-block:: solidity
 
     function(address) external returns (address) foo;
 
-Abstract contracts decouple the definition of a contract from its
-implementation providing better extensibility and self-documentation and
-facilitating patterns like the `Template method <https://en.wikipedia.org/wiki/Template_method_pattern>`_ and removing code duplication.
-Abstract contracts are useful in the same way that defining methods
-in an interface is useful. It is a way for the designer of the
-abstract contract to say "any child of mine must implement this method".
+抽象合约将合约的定义与它的实现解耦，提供了更好的可扩展性和自我记录，
+促进了像 `模板方法 <https://en.wikipedia.org/wiki/Template_method_pattern>`_ 这样的模式，
+并消除了代码的重复。抽象合约的作用与在接口中定义方法的作用相同。
+它是抽象合约的设计者说 "我的任何孩子都必须实现这个方法" 的一种方式。
 
-.. note::
 
-  Abstract contracts cannot override an implemented virtual function with an
-  unimplemented one.
+.. 注解::
+
+  抽象合约不能用一个未实现的virtual函数来重载一个已实现的virtual函数。

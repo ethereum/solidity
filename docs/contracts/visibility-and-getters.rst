@@ -1,67 +1,60 @@
 .. index:: ! visibility, external, public, private, internal
 
-.. |visibility-caveat| replace:: Making something ``private`` or ``internal`` only prevents other contracts from reading or modifying the information, but it will still be visible to the whole world outside of the blockchain.
+.. |visibility-caveat| replace:: 标记一些变量为 ``private`` 或 ``internal``，只能防止其他合约读取或修改信息，但它仍然会被区块链之外的整个世界看到。
 
 .. _visibility-and-getters:
 
 **********************
-Visibility and Getters
+可见性和 getter 函数
 **********************
 
-State Variable Visibility
-=========================
+状态变量的可见性
+=================
 
 ``public``
-    Public state variables differ from internal ones only in that the compiler automatically generates
-    :ref:`getter functions<getter-functions>` for them, which allows other contracts to read their values.
-    When used within the same contract, the external access (e.g. ``this.x``) invokes the getter
-    while internal access (e.g. ``x``) gets the variable value directly from storage.
-    Setter functions are not generated so other contracts cannot directly modify their values.
+    公开状态变量与内部变量的不同之处在于，编译器会自动为它们生成 :ref:`getter函数 <getter-functions>`，
+    从而允许其他合约读取它们的值。当在同一个合约中使用时，外部访问（例如 ``this.x``）会调用getter，
+    而内部访问（例如 ``x``）会直接从存储中获取变量值。
+    Setter函数没有被生成，所以其他合约不能直接修改其值。
 
 ``internal``
-    Internal state variables can only be accessed from within the contract they are defined in
-    and in derived contracts.
-    They cannot be accessed externally.
-    This is the default visibility level for state variables.
+    内部状态变量只能从它们所定义的合约和派生合约中访问。
+    它们不能被外部访问。
+    这是状态变量的默认可见性。
 
 ``private``
-    Private state variables are like internal ones but they are not visible in derived contracts.
+    私有状态变量就像内部变量一样，但它们在派生合约中是不可见的。
 
-.. warning::
+.. 警告::
     |visibility-caveat|
 
-Function Visibility
+函数的可见性
 ===================
 
-Solidity knows two kinds of function calls: external ones that do create an actual EVM message call and internal ones that do not.
-Furthermore, internal functions can be made inaccessible to derived contracts.
-This gives rise to four types of visibility for functions.
+Solidity 有两种函数调用：确实创建了实际 EVM 消息调用的外部函数和不创建 EVM 消息调用的内部函数。
+此外，派生合约可能无法访问内部函数。
+这就产生了四种类型的函数的可见性。
 
 ``external``
-    External functions are part of the contract interface,
-    which means they can be called from other contracts and
-    via transactions. An external function ``f`` cannot be called
-    internally (i.e. ``f()`` does not work, but ``this.f()`` works).
+    外部函数作为合约接口的一部分，意味着我们可以从其他合约和交易中调用。
+    一个外部函数 ``f`` 不能从内部调用
+    （即 ``f()`` 不起作用，但 ``this.f()`` 可以）。
 
 ``public``
-    Public functions are part of the contract interface
-    and can be either called internally or via message calls.
+    公开函数是合约接口的一部分，可以在内部或通过消息调用。
 
 ``internal``
-    Internal functions can only be accessed from within the current contract
-    or contracts deriving from it.
-    They cannot be accessed externally.
-    Since they are not exposed to the outside through the contract's ABI, they can take parameters of internal types like mappings or storage references.
+    内部函数只能从当前的合约或从它派生出来的合约中访问。
+    它们不能被外部访问。
+    由于它们没有通过合约的ABI暴露在外部，它们可以接受内部类型的参数，如映射或存储引用。
 
 ``private``
-    Private functions are like internal ones but they are not visible in derived contracts.
+    私有函数和内部函数一样，但它们在派生合约中是不可见的。
 
-.. warning::
+.. 警告::
     |visibility-caveat|
 
-The visibility specifier is given after the type for
-state variables and between parameter list and
-return parameter list for functions.
+在状态变量的类型之后，以及在函数的参数列表和返回参数列表之间，都会给出可见性指定符。
 
 .. code-block:: solidity
 
@@ -74,9 +67,8 @@ return parameter list for functions.
         uint public data;
     }
 
-In the following example, ``D``, can call ``c.getData()`` to retrieve the value of
-``data`` in state storage, but is not able to call ``f``. Contract ``E`` is derived from
-``C`` and, thus, can call ``compute``.
+在下面的例子中，合约 ``D``, 可以调用 ``c.getData()`` 来检索状态存储中 ``data`` 的值，
+但不能调用 ``f``。 合约 ``E`` 是从合约 ``C`` 派生出来的，因此可以调用 ``compute``。
 
 .. code-block:: solidity
 
@@ -92,36 +84,34 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
         function compute(uint a, uint b) internal pure returns (uint) { return a + b; }
     }
 
-    // This will not compile
+    // 这将不会编译
     contract D {
         function readData() public {
             C c = new C();
-            uint local = c.f(7); // error: member `f` is not visible
+            uint local = c.f(7); // 错误：成员 `f` 不可见
             c.setData(3);
             local = c.getData();
-            local = c.compute(3, 5); // error: member `compute` is not visible
+            local = c.compute(3, 5); // 错误：成员 `compute` 不可见
         }
     }
 
     contract E is C {
         function g() public {
             C c = new C();
-            uint val = compute(3, 5); // access to internal member (from derived to parent contract)
+            uint val = compute(3, 5); // 访问内部成员（从继承合约访问父合约成员）
         }
     }
 
 .. index:: ! getter;function, ! function;getter
 .. _getter-functions:
 
-Getter Functions
+Getter 函数
 ================
 
-The compiler automatically creates getter functions for
-all **public** state variables. For the contract given below, the compiler will
-generate a function called ``data`` that does not take any
-arguments and returns a ``uint``, the value of the state
-variable ``data``. State variables can be initialized
-when they are declared.
+编译器会自动为所有 **公开** 状态变量创建getter函数。
+对于下面给出的合约，编译器将生成一个名为 ``data`` 的函数，
+它没有任何输入参数，并返回一个 ``uint``，
+即状态变量 ``data`` 的值。状态变量在声明时可以被初始化。
 
 .. code-block:: solidity
 
@@ -139,10 +129,9 @@ when they are declared.
         }
     }
 
-The getter functions have external visibility. If the
-symbol is accessed internally (i.e. without ``this.``),
-it evaluates to a state variable.  If it is accessed externally
-(i.e. with ``this.``), it evaluates to a function.
+getter函数具有外部可见性。
+如果该符号被内部访问（即没有 ``this.``），它被评估为一个状态变量。
+如果它被外部访问（即有 ``this.``），它将被评价为一个函数。
 
 .. code-block:: solidity
 
@@ -152,17 +141,16 @@ it evaluates to a state variable.  If it is accessed externally
     contract C {
         uint public data;
         function x() public returns (uint) {
-            data = 3; // internal access
-            return this.data(); // external access
+            data = 3; // 内部访问
+            return this.data(); // 外部访问
         }
     }
 
-If you have a ``public`` state variable of array type, then you can only retrieve
-single elements of the array via the generated getter function. This mechanism
-exists to avoid high gas costs when returning an entire array. You can use
-arguments to specify which individual element to return, for example
-``myArray(0)``. If you want to return an entire array in one call, then you need
-to write a function, for example:
+如果您有一个数组类型的 ``public`` 状态变量，
+那么您只能通过生成的getter函数检索数组的单个元素。
+这种机制的存在是为了避免在返回整个数组时产生高额的气体成本。
+您可以使用参数来指定要返回的单个元素，例如 ``myArray(0)``。
+如果您想在一次调用中返回整个数组，那么您需要写一个函数，例如：
 
 .. code-block:: solidity
 
@@ -170,26 +158,26 @@ to write a function, for example:
     pragma solidity >=0.4.16 <0.9.0;
 
     contract arrayExample {
-        // public state variable
+        // 公开状态变量
         uint[] public myArray;
 
-        // Getter function generated by the compiler
+        // 编译器生成的getter函数
         /*
         function myArray(uint i) public view returns (uint) {
             return myArray[i];
         }
         */
 
-        // function that returns entire array
+        // 返回整个数组的函数
         function getArray() public view returns (uint[] memory) {
             return myArray;
         }
     }
 
-Now you can use ``getArray()`` to retrieve the entire array, instead of
-``myArray(i)``, which returns a single element per call.
+现在您可以使用 ``getArray()`` 来检索整个数组，
+而不是使用 ``myArray(i)``，它每次调用只返回一个元素。
 
-The next example is more complex:
+下一个例子稍微复杂一些：
 
 .. code-block:: solidity
 
@@ -208,9 +196,8 @@ The next example is more complex:
         mapping (uint => mapping(bool => Data[])) public data;
     }
 
-It generates a function of the following form. The mapping and arrays (with the
-exception of byte arrays) in the struct are omitted because there is no good way
-to select individual struct members or provide a key for the mapping:
+它生成了一个如下形式的函数。结构中的映射和数组（字节数组除外）被省略了，
+因为没有好的方法来选择单个结构成员或为映射提供一个键：
 
 .. code-block:: solidity
 

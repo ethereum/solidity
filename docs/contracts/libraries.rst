@@ -3,53 +3,40 @@
 .. _libraries:
 
 *********
-Libraries
+库合约
 *********
 
-Libraries are similar to contracts, but their purpose is that they are deployed
-only once at a specific address and their code is reused using the ``DELEGATECALL``
-(``CALLCODE`` until Homestead)
-feature of the EVM. This means that if library functions are called, their code
-is executed in the context of the calling contract, i.e. ``this`` points to the
-calling contract, and especially the storage from the calling contract can be
-accessed. As a library is an isolated piece of source code, it can only access
-state variables of the calling contract if they are explicitly supplied (it
-would have no way to name them, otherwise). Library functions can only be
-called directly (i.e. without the use of ``DELEGATECALL``) if they do not modify
-the state (i.e. if they are ``view`` or ``pure`` functions),
-because libraries are assumed to be stateless. In particular, it is
-not possible to destroy a library.
+库合约与普通合约类似，但是它们只需要在特定的地址部署一次，
+并且它们的代码可以通过 EVM 的 ``DELEGATECALL`` (Homestead 之前使用 ``CALLCODE`` 关键字)特性进行重用。
+这意味着如果库函数被调用，它的代码在调用合约的上下文中执行，
+即 ``this`` 指向调用合约，特别是可以访问调用合约的存储。
+因为每个库合约都是一段独立的代码，所以它仅能访问调用合约明确提供的状态变量（否则它就无法通过名字访问这些变量）。
+如果库函数不修改状态（也就是说，如果它们是 ``view`` 或者 ``pure`` 函数），
+它们可以通过直接调用来使用（即不使用 ``DELEGATECALL`` 关键字），
+这是因为我们假定库合约是无状态的。
+特别的是，销毁一个库合约是不可能的。
 
-.. note::
-    Until version 0.4.20, it was possible to destroy libraries by
-    circumventing Solidity's type system. Starting from that version,
-    libraries contain a :ref:`mechanism<call-protection>` that
-    disallows state-modifying functions
-    to be called directly (i.e. without ``DELEGATECALL``).
+.. 注解::
+    在0.4.20版本之前，有可能通过规避Solidity的类型系统来破坏库合约。
+    从该版本开始，库合约包含一个 :ref:`保护机制 <call-protection>`，
+    不允许直接调用修改状态的函数（即没有 ``DELEGATECALL`` ）。
 
-Libraries can be seen as implicit base contracts of the contracts that use them.
-They will not be explicitly visible in the inheritance hierarchy, but calls
-to library functions look just like calls to functions of explicit base
-contracts (using qualified access like ``L.f()``).
-Of course, calls to internal functions
-use the internal calling convention, which means that all internal types
-can be passed and types :ref:`stored in memory <data-location>` will be passed by reference and not copied.
-To realize this in the EVM, the code of internal library functions
-that are called from a contract
-and all functions called from therein will at compile time be included in the calling
-contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
+库合约可以看作是使用他们的合约的隐式的基类合约。
+虽然它们在继承关系中不会显式可见，但调用库函数与调用显式的基类合约十分类似
+（如果 ``L`` 是库合约的话，可以使用 ``L.f()`` 调用库函数）。
+当然，需要使用内部调用约定来调用内部函数，这意味着所有的内部类型都可以被传递，
+类型 :ref:`存储在内存 <data-location>` 将被引用传递而不是复制。
+为了在EVM中实现这一点，从合约中调用的内部库函数的代码和其中调用的所有函数将在编译时包含在调用合约中，
+并使用常规的 ``JUMP`` 调用，而不是 ``DELEGATECALL``。
 
-.. note::
-    The inheritance analogy breaks down when it comes to public functions.
-    Calling a public library function with ``L.f()`` results in an external call (``DELEGATECALL``
-    to be precise).
-    In contrast, ``A.f()`` is an internal call when ``A`` is a base contract of the current contract.
+.. 注解::
+    当涉及到公共函数时，继承的类比就失效了。
+    用 ``L.f()`` 调用公共库函数的结果是一个外部调用（准确地说，是 ``DELEGATECALL`` ）。
+    相反，当 ``A.f()`` 是当前合约的基类合约时， ``A.f()`` 是一个内部调用。
 
 .. index:: using for, set
 
-The following example illustrates how to use libraries (but using a manual method,
-be sure to check out :ref:`using for <using-for>` for a
-more advanced example to implement a set).
+下面的示例说明如何使用库（但也请务必看看 :ref:`using for <using-for>` 有一个实现 set 更好的例子）。
 
 .. code-block:: solidity
 
@@ -57,25 +44,22 @@ more advanced example to implement a set).
     pragma solidity >=0.6.0 <0.9.0;
 
 
-    // We define a new struct datatype that will be used to
-    // hold its data in the calling contract.
+    // 我们定义了一个新的结构体数据类型，用于在调用合约中保存数据。
     struct Data {
         mapping(uint => bool) flags;
     }
 
     library Set {
-        // Note that the first parameter is of type "storage
-        // reference" and thus only its storage address and not
-        // its contents is passed as part of the call.  This is a
-        // special feature of library functions.  It is idiomatic
-        // to call the first parameter `self`, if the function can
-        // be seen as a method of that object.
+        // 注意第一个参数是 “storage reference”类型，
+        // 因此在调用中参数传递的只是它的存储地址而不是内容。
+        // 这是库函数的一个特性。如果该函数可以被视为对象的方法，
+        // 则习惯称第一个参数为 `self` 。
         function insert(Data storage self, uint value)
             public
             returns (bool)
         {
             if (self.flags[value])
-                return false; // already there
+                return false; // 已经存在
             self.flags[value] = true;
             return true;
         }
@@ -85,7 +69,7 @@ more advanced example to implement a set).
             returns (bool)
         {
             if (!self.flags[value])
-                return false; // not there
+                return false; // 不存在
             self.flags[value] = false;
             return true;
         }
@@ -104,31 +88,23 @@ more advanced example to implement a set).
         Data knownValues;
 
         function register(uint value) public {
-            // The library functions can be called without a
-            // specific instance of the library, since the
-            // "instance" will be the current contract.
+            // 不需要库的特定实例就可以调用库函数，
+            // 因为当前合约就是 “instance”。
             require(Set.insert(knownValues, value));
         }
-        // In this contract, we can also directly access knownValues.flags, if we want.
+        // 如果我们愿意，我们也可以在这个合约中直接访问 knownValues.flags。
     }
 
-Of course, you do not have to follow this way to use
-libraries: they can also be used without defining struct
-data types. Functions also work without any storage
-reference parameters, and they can have multiple storage reference
-parameters and in any position.
+当然，您不必按照这种方式去使用库：它们也可以在不定义结构数据类型的情况下使用。
+函数也不需要任何存储引用参数，库可以出现在任何位置并且可以有多个存储引用参数。
 
-The calls to ``Set.contains``, ``Set.insert`` and ``Set.remove``
-are all compiled as calls (``DELEGATECALL``) to an external
-contract/library. If you use libraries, be aware that an
-actual external function call is performed.
-``msg.sender``, ``msg.value`` and ``this`` will retain their values
-in this call, though (prior to Homestead, because of the use of ``CALLCODE``, ``msg.sender`` and
-``msg.value`` changed, though).
+调用 ``Set.contains``， ``Set.insert`` 和 ``Set.remove`` 都被编译为对外部合约/库的调用（ ``DELEGATECALL`` ）。
+如果使用库，请注意实际执行的是外部函数调用。
+``msg.sender``， ``msg.value`` 和 ``this`` 在调用中将保留它们的值，
+（在 Homestead 之前，因为使用了 ``CALLCODE`` ，改变了 ``msg.sender`` 和 ``msg.value``)。
 
-The following example shows how to use :ref:`types stored in memory <data-location>` and
-internal functions in libraries in order to implement
-custom types without the overhead of external function calls:
+下面的例子显示了如何使用 :ref:`存储在内存中的类型 <data-location>` 和库合约中的内部函数，
+以实现自定义类型，而没有外部函数调用的开销：
 
 .. code-block:: solidity
     :force:
@@ -162,7 +138,7 @@ custom types without the overhead of external function calls:
                 }
             }
             if (carry > 0) {
-                // too bad, we have to add a limb
+                // 太差了，我们需要增加一个 limb
                 uint[] memory newLimbs = new uint[](r.limbs.length + 1);
                 uint i;
                 for (i = 0; i < r.limbs.length; ++i)
@@ -192,56 +168,52 @@ custom types without the overhead of external function calls:
         }
     }
 
-It is possible to obtain the address of a library by converting
-the library type to the ``address`` type, i.e. using ``address(LibraryName)``.
+通过将库合约的类型转换为 ``address`` 类型，即使用 ``address(LibraryName)``，可以获得一个库的地址。
 
-As the compiler does not know the address where the library will be deployed, the compiled hex code
-will contain placeholders of the form ``__$30bbc0abd4d6364515865950d3e0d10953$__``. The placeholder
-is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library
-name, which would be for example ``libraries/bigint.sol:BigInt`` if the library was stored in a file
-called ``bigint.sol`` in a ``libraries/`` directory. Such bytecode is incomplete and should not be
-deployed. Placeholders need to be replaced with actual addresses. You can do that by either passing
-them to the compiler when the library is being compiled or by using the linker to update an already
-compiled binary. See :ref:`library-linking` for information on how to use the commandline compiler
-for linking.
+由于编译器不知道库合约的部署地址，
+编译后的十六进制代码将包含 ``__$30bbc0abd4d6364515865950d3e0d10953$__`` 形式的占位符。
+占位符是完全等同于库合约名的keccak256哈希值的34个字符的前缀，例如 ``libraries/bigint.sol:BigInt``，
+如果该库存储在 ``libraries/`` 目录下一个名为 ``bigint.sol`` 的文件中。
+这样的字节码是不完整的，不应该被部署。占位符需要被替换成实际地址。
+您可以在编译库的时候把它们传递给编译器，或者用链接器来更新已经编译好的二进制文件。
+参见 :ref:`库合约-链接`，了解如何使用命令行编译器进行链接。
 
-In comparison to contracts, libraries are restricted in the following ways:
+与合约相比，库在以下方面受到限制：
 
-- they cannot have state variables
-- they cannot inherit nor be inherited
-- they cannot receive Ether
-- they cannot be destroyed
+- 它们不能有状态变量
+- 它们不能继承，也不能被继承
+- 它们不能接收以太
+- 它们不能被销毁
 
-(These might be lifted at a later point.)
+(这些可能会在以后的时间里被解除)。
 
 .. _library-selectors:
 .. index:: selector
 
-Function Signatures and Selectors in Libraries
+库合约中的函数签名和选择器
 ==============================================
 
-While external calls to public or external library functions are possible, the calling convention for such calls
-is considered to be internal to Solidity and not the same as specified for the regular :ref:`contract ABI<ABI>`.
-External library functions support more argument types than external contract functions, for example recursive structs
-and storage pointers. For that reason, the function signatures used to compute the 4-byte selector are computed
-following an internal naming schema and arguments of types not supported in the contract ABI use an internal encoding.
+虽然对公共或外部库函数的外部调用是可能的，但这种调用的调用惯例被认为是 Solidity 内部的，
+与常规 :ref:`合约 ABI <ABI>` 所指定的不一样。
+外部库函数比外部合约函数支持更多的参数类型，例如递归结构和存储指针。
+由于这个原因，用于计算4字节选择器的函数签名是按照内部命名模式计算的，
+合约ABI中不支持的类型的参数使用内部编码。
 
-The following identifiers are used for the types in the signatures:
+签名中的类型使用了以下标识符：
 
-- Value types, non-storage ``string`` and non-storage ``bytes`` use the same identifiers as in the contract ABI.
-- Non-storage array types follow the same convention as in the contract ABI, i.e. ``<type>[]`` for dynamic arrays and
-  ``<type>[M]`` for fixed-size arrays of ``M`` elements.
-- Non-storage structs are referred to by their fully qualified name, i.e. ``C.S`` for ``contract C { struct S { ... } }``.
-- Storage pointer mappings use ``mapping(<keyType> => <valueType>) storage`` where ``<keyType>`` and ``<valueType>`` are
-  the identifiers for the key and value types of the mapping, respectively.
-- Other storage pointer types use the type identifier of their corresponding non-storage type, but append a single space
-  followed by ``storage`` to it.
+- 值类型、非存储的 ``string`` 和非存储的 ``bytes`` 使用与合约ABI中相同的标识符。
+- 非存储数组类型遵循与合约ABI中相同的惯例，即 ``<type>[]`` 用于动态数组，
+  ``<type>[M]`` 用于 ``M`` 元素的固定大小数组。
+- 非存储结构体用其完全等同于的名称来指代，即 ``C.S`` 代表 ``contract C { struct S { ... } }``。
+- 存储指针映射使用 ``mapping(<keyType> => <valueType>) storage``，
+  其中 ``<keyType>`` 和 ``<valueType>`` 分别是映射的键和值类型的标识。
+- 其他存储指针类型使用其对应的非存储类型的类型标识符，但在其后面附加一个空格，即 ``storage``。
 
-The argument encoding is the same as for the regular contract ABI, except for storage pointers, which are encoded as a
-``uint256`` value referring to the storage slot to which they point.
+参数的编码与普通合约ABI相同，除了存储指针，
+它被编码为一个 ``uint256`` 值，指的是它们所指向的存储槽。
 
-Similarly to the contract ABI, the selector consists of the first four bytes of the Keccak256-hash of the signature.
-Its value can be obtained from Solidity using the ``.selector`` member as follows:
+与合约ABI类似，选择器由签名的Keccak256-hash的前四个字节组成。
+它的值可以通过使用 ``.selector`` 成员从 Solidity 获得，如下：
 
 .. code-block:: solidity
 
@@ -262,30 +234,21 @@ Its value can be obtained from Solidity using the ``.selector`` member as follow
 
 .. _call-protection:
 
-Call Protection For Libraries
+库的调用保护
 =============================
 
-As mentioned in the introduction, if a library's code is executed
-using a ``CALL`` instead of a ``DELEGATECALL`` or ``CALLCODE``,
-it will revert unless a ``view`` or ``pure`` function is called.
+正如介绍中提到的那样，如果库的代码是通过 ``CALL`` 来执行，
+而不是 ``DELEGATECALL`` 或者 ``CALLCODE``，
+那么执行的结果会被恢复， 除非是对 ``view`` 或者 ``pure`` 函数的调用。
 
-The EVM does not provide a direct way for a contract to detect
-whether it was called using ``CALL`` or not, but a contract
-can use the ``ADDRESS`` opcode to find out "where" it is
-currently running. The generated code compares this address
-to the address used at construction time to determine the mode
-of calling.
+EVM没有提供一个直接的方法让合约检测它是否被使用 ``CALL`` 调用，
+但是合约可以使用 ``ADDRESS`` 操作码来找出它当前运行的 "位置"。
+生成的代码将这个地址与构造时使用的地址进行比较，以确定调用的模式。
 
-More specifically, the runtime code of a library always starts
-with a push instruction, which is a zero of 20 bytes at
-compilation time. When the deploy code runs, this constant
-is replaced in memory by the current address and this
-modified code is stored in the contract. At runtime,
-this causes the deploy time address to be the first
-constant to be pushed onto the stack and the dispatcher
-code compares the current address against this constant
-for any non-view and non-pure function.
+更具体地说，一个库合约的运行时代码总是以 push 指令开始，
+在编译时它是一个20字节的零。
+当部署代码运行时，这个常数在内存中被当前地址所取代，这个修改后的代码被存储在合约中。
+在运行时，这导致部署时的地址成为第一个被推入堆栈的常数，
+对于任何 非-view 和 非-pure 函数，调度器代码会将当前地址与这个常数进行比较。
 
-This means that the actual code stored on chain for a library
-is different from the code reported by the compiler as
-``deployedBytecode``.
+这意味着一个存储在链上的库合约的实际代码，与编译器报告的 ``deployedBytecode`` 的代码不同。

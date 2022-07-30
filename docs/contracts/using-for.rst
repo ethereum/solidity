@@ -6,28 +6,18 @@
 Using For
 *********
 
-The directive ``using A for B;`` can be used to attach library
-functions (from the library ``A``) to any type (``B``)
-in the context of a contract.
-These functions will receive the object they are called on
-as their first parameter (like the ``self`` variable in Python).
+指令 ``use A for B;`` 可以用来将库函数（来自库 ``A``）附加到合约背景下的任何类型（ ``B``）。
+这些函数将接收它们被调用的对象作为其第一个参数（就像Python中的 ``self`` 变量）。
 
-The effect of ``using A for *;`` is that the functions from
-the library ``A`` are attached to *any* type.
+``using A for *;`` 的效果是，库合约 ``A`` 中的函数被附加在 *任意* 的类型上。
 
-In both situations, *all* functions in the library are attached,
-even those where the type of the first parameter does not
-match the type of the object. The type is checked at the
-point the function is called and function overload
-resolution is performed.
+在这两种情况下， *所有* 函数都会被附加一个参数，
+即使它们的第一个参数类型与对象的类型不匹配。 函数调用和重载解析时才会做类型检查。
 
-The ``using A for B;`` directive is active only within the current
-contract, including within all of its functions, and has no effect
-outside of the contract in which it is used. The directive
-may only be used inside a contract, not inside any of its functions.
+``using A for B;`` 指令只在当前的合约内有效，包括其所有的功能，在使用该指令的合约之外没有效果。
+该指令只能在合约内使用，不能在其任何函数内使用。
 
-Let us rewrite the set example from the
-:ref:`libraries` in this way:
+让我们用这种方式将 :ref:`库合约` 中的 set 例子重写:
 
 .. code-block:: solidity
 
@@ -35,7 +25,7 @@ Let us rewrite the set example from the
     pragma solidity >=0.6.0 <0.9.0;
 
 
-    // This is the same code as before, just without comments
+    // 这是和之前一样的代码，只是没有注释。
     struct Data { mapping(uint => bool) flags; }
 
     library Set {
@@ -44,7 +34,7 @@ Let us rewrite the set example from the
             returns (bool)
         {
             if (self.flags[value])
-                return false; // already there
+                return false; // 已经存在
             self.flags[value] = true;
             return true;
         }
@@ -54,7 +44,7 @@ Let us rewrite the set example from the
             returns (bool)
         {
             if (!self.flags[value])
-                return false; // not there
+                return false; // 不存在
             self.flags[value] = false;
             return true;
         }
@@ -70,19 +60,17 @@ Let us rewrite the set example from the
 
 
     contract C {
-        using Set for Data; // this is the crucial change
+        using Set for Data; // 这里是关键的修改
         Data knownValues;
 
         function register(uint value) public {
-            // Here, all variables of type Data have
-            // corresponding member functions.
-            // The following function call is identical to
-            // `Set.insert(knownValues, value)`
+            // 这里， Data 类型的所有变量都有与之相对应的成员函数。
+            // 下面的函数调用和 `Set.insert(knownValues, value)` 的效果完全相同。
             require(knownValues.insert(value));
         }
     }
 
-It is also possible to extend elementary types in that way:
+也可以像这样扩展基本类型:
 
 .. code-block:: solidity
 
@@ -110,7 +98,7 @@ It is also possible to extend elementary types in that way:
         }
 
         function replace(uint _old, uint _new) public {
-            // This performs the library function call
+            // 执行库函数调用
             uint index = data.indexOf(_old);
             if (index == type(uint).max)
                 data.push(_new);
@@ -119,8 +107,6 @@ It is also possible to extend elementary types in that way:
         }
     }
 
-Note that all external library calls are actual EVM function calls. This means that
-if you pass memory or value types, a copy will be performed, even in case of the
-``self`` variable. The only situation where no copy will be performed
-is when storage reference variables are used or when internal library
-functions are called.
+注意，所有的外部库调用实际都是EVM函数调用。
+这意味着，如果你传递内存或值类型，将进行拷贝，即使是在 ``self`` 变量的情况下。
+唯一不进行拷贝的情况是当使用存储引用变量或调用内部库函数时。

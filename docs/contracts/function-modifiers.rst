@@ -3,17 +3,15 @@
 .. _modifiers:
 
 ******************
-Function Modifiers
+函数修饰器
 ******************
 
-Modifiers can be used to change the behaviour of functions in a declarative way.
-For example,
-you can use a modifier to automatically check a condition prior to executing the function.
+函数修饰器可以用来以声明的方式改变函数的行为。
+例如，您可以使用修饰器在执行函数之前自动检查一个条件。
 
-Modifiers are
-inheritable properties of contracts and may be overridden by derived contracts, but only
-if they are marked ``virtual``. For details, please see
-:ref:`Modifier Overriding <modifier-overriding>`.
+修饰器是合约的可继承属性，可以被派生合约重载，
+但只有当它们被标记为 ``virtual`` 时，才能被重载。
+详情请见 :ref:`修饰器重载 <modifier-overriding>`。
 
 .. code-block:: solidity
 
@@ -24,13 +22,11 @@ if they are marked ``virtual``. For details, please see
         constructor() { owner = payable(msg.sender); }
         address payable owner;
 
-        // This contract only defines a modifier but does not use
-        // it: it will be used in derived contracts.
-        // The function body is inserted where the special symbol
-        // `_;` in the definition of a modifier appears.
-        // This means that if the owner calls this function, the
-        // function is executed and otherwise, an exception is
-        // thrown.
+        // 这个合约只定义了一个修饰器，但没有使用它：
+        // 它将在派生合约中使用。
+        // 修饰器所修饰的函数体会被插入到特殊符号 `_;` 的位置。
+        // 这意味着，如果所有者调用这个函数，这个函数就会被执行，
+        // 否则就会抛出一个异常。
         modifier onlyOwner {
             require(
                 msg.sender == owner,
@@ -41,17 +37,16 @@ if they are marked ``virtual``. For details, please see
     }
 
     contract destructible is owned {
-        // This contract inherits the `onlyOwner` modifier from
-        // `owned` and applies it to the `destroy` function, which
-        // causes that calls to `destroy` only have an effect if
-        // they are made by the stored owner.
+        // 这个合约从 `owned` 合约继承了 `onlyOwner` 修饰器，
+        // 并将其应用于 `destroy` 函数，
+        // 只有在合约里保存的 owner 调用 `destroy` 函数，才会生效。
         function destroy() public onlyOwner {
             selfdestruct(owner);
         }
     }
 
     contract priced {
-        // Modifiers can receive arguments:
+        // 修饰器可以接受参数：
         modifier costs(uint price) {
             if (msg.value >= price) {
                 _;
@@ -65,9 +60,8 @@ if they are marked ``virtual``. For details, please see
 
         constructor(uint initialPrice) { price = initialPrice; }
 
-        // It is important to also provide the
-        // `payable` keyword here, otherwise the function will
-        // automatically reject all Ether sent to it.
+        // 在这里也使用关键字 `payable` 非常重要，
+        // 否则函数会自动拒绝所有发送给它的以太币。
         function register() public payable costs(price) {
             registeredAddresses[msg.sender] = true;
         }
@@ -89,10 +83,8 @@ if they are marked ``virtual``. For details, please see
             locked = false;
         }
 
-        /// This function is protected by a mutex, which means that
-        /// reentrant calls from within `msg.sender.call` cannot call `f` again.
-        /// The `return 7` statement assigns 7 to the return value but still
-        /// executes the statement `locked = false` in the modifier.
+        /// 这个函数受互斥量保护，这意味着 `msg.sender.call` 中的重入调用不能再次调用  `f`。
+        /// `return 7` 语句指定返回值为 7，但修饰器中的语句 `locked = false` 仍会执行。
         function f() public noReentrancy returns (uint) {
             (bool success,) = msg.sender.call("");
             require(success);
@@ -100,34 +92,27 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-If you want to access a modifier ``m`` defined in a contract ``C``, you can use ``C.m`` to
-reference it without virtual lookup. It is only possible to use modifiers defined in the current
-contract or its base contracts. Modifiers can also be defined in libraries but their use is
-limited to functions of the same library.
+如果您想访问定义在合约 ``C`` 中的修饰器 ``m``，
+您可以使用 ``C.m`` 来引用它而不需要虚拟查询。
+只能使用定义在当前合约或其基础合约中的修饰器。
+修饰器也可以定义在库合约中，但其使用仅限于同一库合约的函数。
 
-Multiple modifiers are applied to a function by specifying them in a
-whitespace-separated list and are evaluated in the order presented.
+如果同一个函数有多个修饰器，它们之间以空格隔开，并按照所呈现的顺序进行评估运算。
 
-Modifiers cannot implicitly access or change the arguments and return values of functions they modify.
-Their values can only be passed to them explicitly at the point of invocation.
+修饰器不能隐式地访问或改变它们所修改的函数的参数和返回值。
+它们的值只能在调用的时候明确地传递给它们。
 
-Explicit returns from a modifier or function body only leave the current
-modifier or function body. Return variables are assigned and
-control flow continues after the ``_`` in the preceding modifier.
+修饰器或函数体的显式返回只离开当前修饰器或函数体。
+返回变量会被赋值，但整个执行逻辑会从前一个修饰器中定义的 ``_`` 之后继续执行。
 
 .. warning::
-    In an earlier version of Solidity, ``return`` statements in functions
-    having modifiers behaved differently.
+    在Solidity的早期版本中，具有修饰器的函数中的 ``return`` 语句会表现的不同。
 
-An explicit return from a modifier with ``return;`` does not affect the values returned by the function.
-The modifier can, however, choose not to execute the function body at all and in that case the return
-variables are set to their :ref:`default values<default-value>` just as if the function had an empty
-body.
+用 ``return;`` 从修饰器显式返回并不影响函数返回的值。
+然而，修饰器可以选择完全不执行函数主体，在这种情况下，
+返回变量被设置为 :ref:`默认值 <default-value>`，就像函数有一个空主体一样。
 
-The ``_`` symbol can appear in the modifier multiple times. Each occurrence is replaced with
-the function body.
+``_`` 符号可以在修饰器中多次出现。每次出现都会被替换成函数体。
 
-Arbitrary expressions are allowed for modifier arguments and in this context,
-all symbols visible from the function are visible in the modifier. Symbols
-introduced in the modifier are not visible in the function (as they might
-change by overriding).
+允许修饰器参数使用任意表达式，在这种情况下，所有从函数中可见的符号在修饰器中都是可见的。
+修饰器中引入的符号在函数中是不可见的（因为它们可能因重载而改变）。

@@ -1,40 +1,33 @@
 .. index:: ! inheritance, ! base class, ! contract;base, ! deriving
 
 ***********
-Inheritance
+继承
 ***********
 
-Solidity supports multiple inheritance including polymorphism.
+Solidity支持多重继承，包括多态性。
 
-Polymorphism means that a function call (internal and external)
-always executes the function of the same name (and parameter types)
-in the most derived contract in the inheritance hierarchy.
-This has to be explicitly enabled on each function in the
-hierarchy using the ``virtual`` and ``override`` keywords.
-See :ref:`Function Overriding <function-overriding>` for more details.
+多态性意味着函数调用（内部和外部）总是执行继承层次结构中最新继承的合约中的同名函数（和参数类型）。
+但必须使用 ``virtual`` 和 ``override`` 关键字在层次结构中的每个函数上明确启用。
+参见 :ref:`函数重载 <function-overriding>` 以了解更多细节。
 
-It is possible to call functions further up in the inheritance
-hierarchy internally by explicitly specifying the contract
-using ``ContractName.functionName()`` or using ``super.functionName()``
-if you want to call the function one level higher up in
-the flattened inheritance hierarchy (see below).
+通过使用 ``ContractName.functionName()`` 明确指定合约，
+可以在内部调用继承层次结构中更高的函数。
+或者如果您想在扁平化的继承层次中调用高一级的函数（见下文），
+可以使用 ``super.functionName()``。
 
-When a contract inherits from other contracts, only a single
-contract is created on the blockchain, and the code from all the base contracts
-is compiled into the created contract. This means that all internal calls
-to functions of base contracts also just use internal function calls
-(``super.f(..)`` will use JUMP and not a message call).
+当一个合约继承自其他合约时，在区块链上只创建一个单一的合约，
+所有基础合约的代码被编译到创建的合约中。
+这意味着对基础合约的所有内部函数的调用也只是使用内部函数调用
+（ ``super.f(..)`` 将使用 JUMP 而不是消息调用）。
 
-State variable shadowing is considered as an error.  A derived contract can
-only declare a state variable ``x``, if there is no visible state variable
-with the same name in any of its bases.
+状态变量的阴影被认为是一个错误。
+一个派生合约只能声明一个状态变量 ``x``，
+如果在它的任何基类中没有相同名称的可见状态变量。
 
-The general inheritance system is very similar to
-`Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
-especially concerning multiple inheritance, but there are also
-some :ref:`differences <multi-inheritance>`.
+总的来说，Solidity 的继承系统与 `Python的继承系统 <https://docs.python.org/3/tutorial/classes.html#inheritance>`_
+非常相似，特别是关于多重继承方面，但也有一些 :ref:`不同之处 <multi-inheritance>`。
 
-Details are given in the following example.
+详细情况见下面的例子。
 
 .. code-block:: solidity
 
@@ -48,23 +41,19 @@ Details are given in the following example.
     }
 
 
-    // Use `is` to derive from another contract. Derived
-    // contracts can access all non-private members including
-    // internal functions and state variables. These cannot be
-    // accessed externally via `this`, though.
+    // 使用 `is` 从另一个合约派生。派生合约可以访问所有非私有成员，
+    // 包括内部函数和状态变量，但无法通过 `this` 来外部访问。
     contract Destructible is Owned {
-        // The keyword `virtual` means that the function can change
-        // its behaviour in derived classes ("overriding").
+        // 关键字 `virtual` 意味着该函数可以在派生类中改变其行为（"重载"）。
         function destroy() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
 
-    // These abstract contracts are only provided to make the
-    // interface known to the compiler. Note the function
-    // without body. If a contract does not implement all
-    // functions it can only be used as an interface.
+    // 这些抽象合约仅用于给编译器提供接口。
+    // 注意函数没有函数体。
+    // 如果一个合约没有实现所有函数，则只能用作接口。
     abstract contract Config {
         function lookup(uint id) public virtual returns (address adr);
     }
@@ -76,55 +65,48 @@ Details are given in the following example.
     }
 
 
-    // Multiple inheritance is possible. Note that `owned` is
-    // also a base class of `Destructible`, yet there is only a single
-    // instance of `owned` (as for virtual inheritance in C++).
+    // 可以多重继承。请注意， `owned` 也是 `Destructible` 的基类，
+    // 但只有一个 `owned` 实例（就像 C++ 中的虚拟继承）。
     contract Named is Owned, Destructible {
         constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
         }
 
-        // Functions can be overridden by another function with the same name and
-        // the same number/types of inputs.  If the overriding function has different
-        // types of output parameters, that causes an error.
-        // Both local and message-based function calls take these overrides
-        // into account.
-        // If you want the function to override, you need to use the
-        // `override` keyword. You need to specify the `virtual` keyword again
-        // if you want this function to be overridden again.
+        // 函数可以被另一个具有相同名称和相同数量/类型输入的函数重载。
+        // 如果重载函数有不同类型的输出参数，会导致错误。
+        // 本地和基于消息的函数调用都会考虑这些重载。
+        // 如果您想重载这个函数，您需要使用 `override` 关键字。
+        // 如果您想让这个函数再次被重载，您需要再指定 `virtual` 关键字。
         function destroy() public virtual override {
             if (msg.sender == owner) {
                 Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
                 NameReg(config.lookup(1)).unregister();
-                // It is still possible to call a specific
-                // overridden function.
+                // 仍然可以调用特定的重载函数。
                 Destructible.destroy();
             }
         }
     }
 
 
-    // If a constructor takes an argument, it needs to be
-    // provided in the header or modifier-invocation-style at
-    // the constructor of the derived contract (see below).
+    // 如果构造函数接受参数，
+    // 则需要在声明（合约的构造函数）时提供，
+    // 或在派生合约的构造函数位置以修饰器调用风格提供（见下文）。
     contract PriceFeed is Owned, Destructible, Named("GoldFeed") {
         function updateInfo(uint newInfo) public {
             if (msg.sender == owner) info = newInfo;
         }
 
-        // Here, we only specify `override` and not `virtual`.
-        // This means that contracts deriving from `PriceFeed`
-        // cannot change the behaviour of `destroy` anymore.
+        // 在这里，我们只指定了 `override` 而没有 `virtual`。
+        // 这意味着从 `PriceFeed` 派生出来的合约不能再改变 `destroy` 的行为。
         function destroy() public override(Destructible, Named) { Named.destroy(); }
         function get() public view returns(uint r) { return info; }
 
         uint info;
     }
 
-Note that above, we call ``Destructible.destroy()`` to "forward" the
-destruction request. The way this is done is problematic, as
-seen in the following example:
+注意，在上面，我们调用 ``Destructible.destroy()`` 来 "转发" 销毁请求。
+这样做的方式是有问题的，从下面的例子中可以看出：
 
 .. code-block:: solidity
 
@@ -143,20 +125,19 @@ seen in the following example:
     }
 
     contract Base1 is Destructible {
-        function destroy() public virtual override { /* do cleanup 1 */ Destructible.destroy(); }
+        function destroy() public virtual override { /* 清除操作 1 */ Destructible.destroy(); }
     }
 
     contract Base2 is Destructible {
-        function destroy() public virtual override { /* do cleanup 2 */ Destructible.destroy(); }
+        function destroy() public virtual override { /* 清除操作 2 */ Destructible.destroy(); }
     }
 
     contract Final is Base1, Base2 {
         function destroy() public override(Base1, Base2) { Base2.destroy(); }
     }
 
-A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
-explicitly in the final override, but this function will bypass
-``Base1.destroy``. The way around this is to use ``super``:
+调用 ``Final.destroy()`` 时会调用最后的派生重载函数 ``Base2.destroy``，
+但是会绕过 ``Base1.destroy``， 解决这个问题的方法是使用 ``super``：
 
 .. code-block:: solidity
 
@@ -175,45 +156,40 @@ explicitly in the final override, but this function will bypass
     }
 
     contract Base1 is Destructible {
-        function destroy() public virtual override { /* do cleanup 1 */ super.destroy(); }
+        function destroy() public virtual override { /* 清除操作 1 */ super.destroy(); }
     }
 
 
     contract Base2 is Destructible {
-        function destroy() public virtual override { /* do cleanup 2 */ super.destroy(); }
+        function destroy() public virtual override { /* 清除操作 2 */ super.destroy(); }
     }
 
     contract Final is Base1, Base2 {
         function destroy() public override(Base1, Base2) { super.destroy(); }
     }
 
-If ``Base2`` calls a function of ``super``, it does not simply
-call this function on one of its base contracts.  Rather, it
-calls this function on the next base contract in the final
-inheritance graph, so it will call ``Base1.destroy()`` (note that
-the final inheritance sequence is -- starting with the most
-derived contract: Final, Base2, Base1, Destructible, owned).
-The actual function that is called when using super is
-not known in the context of the class where it is used,
-although its type is known. This is similar for ordinary
-virtual method lookup.
+如果 ``Base2`` 调用 ``super`` 的函数，它不会简单在其基类合约上调用该函数。
+相反，它在最终的继承关系图谱的上一个基类合约中调用这个函数，
+所以它会调用 ``Base1.destroy()``
+（注意最终的继承序列是——从最远派生合约开始：Final, Base2, Base1, Destructible, ownerd）。
+在类中使用 super 调用的实际函数在当前类的上下文中是未知的，尽管它的类型是已知的。
+这与普通的虚拟方法查找类似。
 
 .. index:: ! overriding;function
 
 .. _function-overriding:
 
-Function Overriding
+函数重载
 ===================
 
-Base functions can be overridden by inheriting contracts to change their
-behavior if they are marked as ``virtual``. The overriding function must then
-use the ``override`` keyword in the function header.
-The overriding function may only change the visibility of the overridden function from ``external`` to ``public``.
-The mutability may be changed to a more strict one following the order:
-``nonpayable`` can be overridden by ``view`` and ``pure``. ``view`` can be overridden by ``pure``.
-``payable`` is an exception and cannot be changed to any other mutability.
+如果基函数被标记为 ``virtual``，则可以通过继承合约来改变其行为。
+被重载的函数必须在函数头中使用 ``override`` 关键字。
+重载函数只能将被重载函数的可见性从 ``external`` 改为 ``public``。
+可变性可以按照以下顺序改变为更严格的可变性。
+``nonpayable`` 可以被 ``view`` 和 ``pure`` 重载。
+``view`` 可以被 ``pure`` 重写。 ``payable`` 是一个例外，不能被改变为任何其他可变性。
 
-The following example demonstrates changing mutability and visibility:
+下面的例子演示了改变函数可变性和可见性：
 
 .. code-block:: solidity
 
@@ -232,12 +208,10 @@ The following example demonstrates changing mutability and visibility:
         function foo() override public pure {}
     }
 
-For multiple inheritance, the most derived base contracts that define the same
-function must be specified explicitly after the ``override`` keyword.
-In other words, you have to specify all base contracts that define the same function
-and have not yet been overridden by another base contract (on some path through the inheritance graph).
-Additionally, if a contract inherits the same function from multiple (unrelated)
-bases, it has to explicitly override it:
+对于多重继承，必须在 ``override`` 关键字后明确指定定义同一函数的最多派生基类合约。
+换句话说，您必须指定所有定义同一函数的基类合约，
+并且还没有被另一个基类合约重载（在继承图的某个路径上）。
+此外，如果一个合约从多个（不相关的）基类合约上继承了同一个函数，必须明确地重载它。
 
 .. code-block:: solidity
 
@@ -256,15 +230,14 @@ bases, it has to explicitly override it:
 
     contract Inherited is Base1, Base2
     {
-        // Derives from multiple bases defining foo(), so we must explicitly
-        // override it
+        // 派生自多个定义 foo() 函数的基类合约，
+        // 所以我们必须明确地重载它
         function foo() public override(Base1, Base2) {}
     }
 
-An explicit override specifier is not required if
-the function is defined in a common base contract
-or if there is a unique function in a common base contract
-that already overrides all other functions.
+如果函数被定义在一个共同的基类合约中，
+或者在一个共同的基类合约中有一个独特的函数已经重载了所有其他的函数，
+则不需要明确的函数重载指定符。
 
 .. code-block:: solidity
 
@@ -274,45 +247,36 @@ that already overrides all other functions.
     contract A { function f() public pure{} }
     contract B is A {}
     contract C is A {}
-    // No explicit override required
+    // 无需明确的重载
     contract D is B, C {}
 
-More formally, it is not required to override a function (directly or
-indirectly) inherited from multiple bases if there is a base contract
-that is part of all override paths for the signature, and (1) that
-base implements the function and no paths from the current contract
-to the base mentions a function with that signature or (2) that base
-does not implement the function and there is at most one mention of
-the function in all paths from the current contract to that base.
+更准确地说，如果有一个基类合约是该签名的所有重载路径的一部分，
+并且（1）该基类合约实现了该函数，并且从当前合约到该基类合约的任何路径都没有提到具有该签名的函数，
+或者（2）该基类合约没有实现该函数，并且从当前合约到该基类合约的所有路径中最多只有一个提到该函数，
+那么就不需要重载从多个基类合约继承的函数（直接或间接）。
 
-In this sense, an override path for a signature is a path through
-the inheritance graph that starts at the contract under consideration
-and ends at a contract mentioning a function with that signature
-that does not override.
+在这个意义上，一个签名的重载路径是一条继承图的路径，
+它从所考虑的合约开始，到提到具有该签名的函数的合约结束，
+而该签名没有重载。
 
-If you do not mark a function that overrides as ``virtual``, derived
-contracts can no longer change the behaviour of that function.
+如果您不把一个重载的函数标记为 ``virtual``，派生合约就不能再改变该函数的行为。
 
-.. note::
+.. 注解::
 
-  Functions with the ``private`` visibility cannot be ``virtual``.
+  具有 ``private`` 可见性的函数不能是 ``virtual``。
 
-.. note::
+.. 注解::
 
-  Functions without implementation have to be marked ``virtual``
-  outside of interfaces. In interfaces, all functions are
-  automatically considered ``virtual``.
+  在接口合约之外，没有实现的函数必须被标记为 ``virtual``。
+  在接口合约中，所有的函数都被自动视为 ``virtual``。
 
-.. note::
+.. 注解::
 
-  Starting from Solidity 0.8.8, the ``override`` keyword is not
-  required when overriding an interface function, except for the
-  case where the function is defined in multiple bases.
+  从Solidity 0.8.8开始，当重载一个接口函数时，
+  不需要 ``override`` 关键字，除非该函数被定义在多个基础上。
 
 
-Public state variables can override external functions if the
-parameter and return types of the function matches the getter function
-of the variable:
+如果函数的参数和返回类型与变量的getter函数匹配，公共状态变量可以重载为外部函数。
 
 .. code-block:: solidity
 
@@ -329,22 +293,20 @@ of the variable:
         uint public override f;
     }
 
-.. note::
+.. 注解::
 
-  While public state variables can override external functions, they themselves cannot
-  be overridden.
+  虽然公共状态变量可以重载外部函数，但它们本身不能被重载。
 
 .. index:: ! overriding;modifier
 
 .. _modifier-overriding:
 
-Modifier Overriding
+修饰器重载
 ===================
 
-Function modifiers can override each other. This works in the same way as
-:ref:`function overriding <function-overriding>` (except that there is no overloading for modifiers). The
-``virtual`` keyword must be used on the overridden modifier
-and the ``override`` keyword must be used in the overriding modifier:
+函数修改器可以相互重载。
+这与 :ref:`函数重载 <function-overriding>` 的工作方式相同（除了对修改器没有重载）。
+``virtual`` 关键字必须用在被重载的修改器上， ``override`` 关键字必须用在重载的修改器上：
 
 .. code-block:: solidity
 
@@ -362,8 +324,7 @@ and the ``override`` keyword must be used in the overriding modifier:
     }
 
 
-In case of multiple inheritance, all direct base contracts must be specified
-explicitly:
+在多重继承的情况下，必须明确指定所有的直接基类合约。
 
 .. code-block:: solidity
 
@@ -391,27 +352,22 @@ explicitly:
 
 .. _constructor:
 
-Constructors
+构造函数
 ============
 
-A constructor is an optional function declared with the ``constructor`` keyword
-which is executed upon contract creation, and where you can run contract
-initialisation code.
+构造函数是一个用 ``constructor`` 关键字声明的可选函数，
+它在合约创建时被执行，您可以在这里运行合约初始化代码。
 
-Before the constructor code is executed, state variables are initialised to
-their specified value if you initialise them inline, or their :ref:`default value<default-value>` if you do not.
+在构造函数代码执行之前，如果您用内联编程的方式初始化状态变量，则将其初始化为指定的值；
+如果您不用内联编程的方式来初始化，则将其初始化为 :ref:`默认值 <default-value>`。
 
-After the constructor has run, the final code of the contract is deployed
-to the blockchain. The deployment of
-the code costs additional gas linear to the length of the code.
-This code includes all functions that are part of the public interface
-and all functions that are reachable from there through function calls.
-It does not include the constructor code or internal functions that are
-only called from the constructor.
+构造函数运行后，合约的最终代码被部署到区块链上。
+部署代码的gas花费与代码长度成线性关系。
+这段代码包括属于公共接口的所有函数，以及所有通过函数调用可以到达的函数。
+但不包括构造函数代码或只从构造函数中调用的内部函数。
 
-If there is no
-constructor, the contract will assume the default constructor, which is
-equivalent to ``constructor() {}``. For example:
+如果没有构造函数，合约将假定默认的构造函数，
+相当于 ``constructor() {}``。比如说：
 
 .. code-block:: solidity
 
@@ -430,27 +386,27 @@ equivalent to ``constructor() {}``. For example:
         constructor() {}
     }
 
-You can use internal parameters in a constructor (for example storage pointers). In this case,
-the contract has to be marked :ref:`abstract <abstract-contract>`, because these parameters
-cannot be assigned valid values from outside but only through the constructors of derived contracts.
+您可以在构造函数中使用内部参数（例如，存储指针）。
+在这种情况下，合约必须被标记为 :ref:`abstract <abstract-contract>`，
+因为这些参数不能从外部分配有效的值，只能通过派生合约的构造函数来赋值。
 
-.. warning ::
-    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract.
-    This syntax was deprecated and is not allowed anymore in version 0.5.0.
 
-.. warning ::
-    Prior to version 0.7.0, you had to specify the visibility of constructors as either
-    ``internal`` or ``public``.
+.. 警告 ::
+    在0.4.22版本之前，构造函数被定义为与合约同名的函数。
+    这种语法已被废弃，在0.5.0版本中不再允许。
+
+.. 警告 ::
+    在0.7.0版本之前，您必须指定构造函数的可见性为 ``internal`` 或 ``public``。
 
 
 .. index:: ! base;constructor
 
-Arguments for Base Constructors
+基本构造函数的参数
 ===============================
 
-The constructors of all the base contracts will be called following the
-linearization rules explained below. If the base constructors have arguments,
-derived contracts need to specify all of them. This can be done in two ways:
+所有基类合约的构造函数将按照下面解释的线性化规则被调用。
+如果基类合约构造函数有参数，派生合约需要指定所有的参数。
+这可以通过两种方式实现：
 
 .. code-block:: solidity
 
@@ -462,55 +418,46 @@ derived contracts need to specify all of them. This can be done in two ways:
         constructor(uint _x) { x = _x; }
     }
 
-    // Either directly specify in the inheritance list...
+    // 要么直接在继承列表中指定...
     contract Derived1 is Base(7) {
         constructor() {}
     }
 
-    // or through a "modifier" of the derived constructor.
+    // 或者通过派生构造函数的一个 "修改器"。
     contract Derived2 is Base {
         constructor(uint _y) Base(_y * _y) {}
     }
 
-One way is directly in the inheritance list (``is Base(7)``).  The other is in
-the way a modifier is invoked as part of
-the derived constructor (``Base(_y * _y)``). The first way to
-do it is more convenient if the constructor argument is a
-constant and defines the behaviour of the contract or
-describes it. The second way has to be used if the
-constructor arguments of the base depend on those of the
-derived contract. Arguments have to be given either in the
-inheritance list or in modifier-style in the derived constructor.
-Specifying arguments in both places is an error.
+一种方式是直接在继承列表中给出（ ``is Base(7)`` ）。
+另一种是通过修改器作为派生构造函数的一部分被调用的方式（ ``Base(_y * _y)`` ）。
+如果构造函数参数是一个常量，并且定义了合约的行为或描述了它，那么第一种方式更方便。
+如果基类合约的构造函数参数依赖于派生合约的参数，则必须使用第二种方式。
+参数必须在继承列表中或在派生构造函数中以修饰器的形式给出。
+在两个地方都指定参数是一个错误。
 
-If a derived contract does not specify the arguments to all of its base
-contracts' constructors, it will be abstract.
+如果一个派生合约没有指定其所有基类合约的构造函数的参数，它将是抽象的合约。
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 
 .. _multi-inheritance:
 
-Multiple Inheritance and Linearization
+多重继承与线性化
 ======================================
 
-Languages that allow multiple inheritance have to deal with
-several problems.  One is the `Diamond Problem <https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem>`_.
-Solidity is similar to Python in that it uses "`C3 Linearization <https://en.wikipedia.org/wiki/C3_linearization>`_"
-to force a specific order in the directed acyclic graph (DAG) of base classes. This
-results in the desirable property of monotonicity but
-disallows some inheritance graphs. Especially, the order in
-which the base classes are given in the ``is`` directive is
-important: You have to list the direct base contracts
-in the order from "most base-like" to "most derived".
-Note that this order is the reverse of the one used in Python.
+编程语言实现多重继承需要解决几个问题。
+一个问题是 `钻石问题 <https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem>`_ 。
+Solidity 借鉴了 Python 的方式并且使用 "`C3 线性化 <https://en.wikipedia.org/wiki/C3_linearization>`_"
+强制一个由基类构成的 DAG（有向无环图）保持一个特定的顺序。
+这最终实现我们所希望的唯一化的结果，但也使某些继承方式变为无效。
+尤其是，基类在 ``is`` 后面的顺序很重要。 在下面的代码中，
+您必须按照从 “最接近的基类”（most base-like）到 “最远的继承”（most derived）的顺序来指定所有的基类。
+注意，这个顺序与Python中使用的顺序相反。
 
-Another simplifying way to explain this is that when a function is called that
-is defined multiple times in different contracts, the given bases
-are searched from right to left (left to right in Python) in a depth-first manner,
-stopping at the first match. If a base contract has already been searched, it is skipped.
+另一种简化的解释方式是，当一个函数被调用时，
+它在不同的合约中被多次定义，给定的基类以深度优先的方式从右到左（Python中从左到右）进行搜索，
+在第一个匹配处停止。如果一个基类合约已经被搜索过了，它就被跳过。
 
-In the following code, Solidity will give the
-error "Linearization of inheritance graph impossible".
+在下面的代码中，Solidity 会给出 “Linearization of inheritance graph impossible” 这样的错误。
 
 .. code-block:: solidity
 
@@ -519,19 +466,18 @@ error "Linearization of inheritance graph impossible".
 
     contract X {}
     contract A is X {}
-    // This will not compile
+    // 这段代码不会编译
     contract C is A, X {}
 
-The reason for this is that ``C`` requests ``X`` to override ``A``
-(by specifying ``A, X`` in this order), but ``A`` itself
-requests to override ``X``, which is a contradiction that
-cannot be resolved.
+代码编译出错的原因是 ``C`` 要求 ``X`` 重写 ``A``
+（因为定义的顺序是 ``A, X`` ）， 但是 ``A`` 本身要求重写 ``X``，
+这是一种无法解决的冲突。
 
-Due to the fact that you have to explicitly override a function
-that is inherited from multiple bases without a unique override,
-C3 linearization is not too important in practice.
+由于您必须明确地重载一个从多个基类合约继承的函数，
+而没有唯一的重载，C3线性化在实践中不是太重要。
 
-One area where inheritance linearization is especially important and perhaps not as clear is when there are multiple constructors in the inheritance hierarchy. The constructors will always be executed in the linearized order, regardless of the order in which their arguments are provided in the inheriting contract's constructor.  For example:
+继承的线性化特别重要的一个领域是，当继承层次中存在多个构造函数时，也许不那么清楚。
+构造函数将总是按照线性化的顺序执行，而不管它们的参数在继承合约的构造函数中是以何种顺序提供的。 比如说：
 
 .. code-block:: solidity
 
@@ -546,7 +492,7 @@ One area where inheritance linearization is especially important and perhaps not
         constructor() {}
     }
 
-    // Constructors are executed in the following order:
+    // 构造函数按以下顺序执行：
     //  1 - Base1
     //  2 - Base2
     //  3 - Derived1
@@ -554,7 +500,7 @@ One area where inheritance linearization is especially important and perhaps not
         constructor() Base1() Base2() {}
     }
 
-    // Constructors are executed in the following order:
+    // 构造函数按以下顺序执行：
     //  1 - Base2
     //  2 - Base1
     //  3 - Derived2
@@ -562,7 +508,7 @@ One area where inheritance linearization is especially important and perhaps not
         constructor() Base2() Base1() {}
     }
 
-    // Constructors are still executed in the following order:
+    // 构造函数仍按以下顺序执行：
     //  1 - Base2
     //  2 - Base1
     //  3 - Derived3
@@ -571,12 +517,12 @@ One area where inheritance linearization is especially important and perhaps not
     }
 
 
-Inheriting Different Kinds of Members of the Same Name
+继承有相同名字的不同类型成员
 ======================================================
 
-It is an error when any of the following pairs in a contract have the same name due to inheritance:
-  - a function and a modifier
-  - a function and an event
-  - an event and a modifier
+由于继承的原因，当合约有以下任何一对具有相同的名称时，这是一个错误：
+  - 函数和修饰器
+  - 函数和事件
+  - 事件和修饰器
 
-As an exception, a state variable getter can override an external function.
+有一种例外情况，状态变量的 getter 可以重载一个外部函数。
