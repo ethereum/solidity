@@ -37,7 +37,7 @@
     }
 
     contract destructible is owned {
-        // 这个合约从 `owned` 合约继承了 `onlyOwner` 修饰符，
+        // 这个合约从 `owned` 合约继承了 `onlyOwner` 修饰器，
         // 并将其应用于 `destroy` 函数，
         // 只有在合约里保存的 owner 调用 `destroy` 函数，才会生效。
         function destroy() public onlyOwner {
@@ -106,7 +106,7 @@
 返回变量会被赋值，但整个执行逻辑会从前一个修饰器中定义的 ``_`` 之后继续执行。
 
 .. warning::
-    在Solidity的早期版本中，具有修饰符的函数中的 ``return`` 语句会表现的不同。
+    在Solidity的早期版本中，具有修饰器的函数中的 ``return`` 语句会表现的不同。
 
 用 ``return;`` 从修饰器显式返回并不影响函数返回的值。
 然而，修饰器可以选择完全不执行函数主体，在这种情况下，

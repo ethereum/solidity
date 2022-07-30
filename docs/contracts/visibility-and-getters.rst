@@ -18,7 +18,7 @@
     Setter函数没有被生成，所以其他合约不能直接修改其值。
 
 ``internal``
-    内部状态变量只能从它们所定义的合约中和派生合约中访问。
+    内部状态变量只能从它们所定义的合约和派生合约中访问。
     它们不能被外部访问。
     这是状态变量的默认可见性。
 
@@ -84,7 +84,7 @@ Solidity 有两种函数调用：确实创建了实际 EVM 消息调用的外部
         function compute(uint a, uint b) internal pure returns (uint) { return a + b; }
     }
 
-    // This will not compile
+    // 这将不会编译
     contract D {
         function readData() public {
             C c = new C();

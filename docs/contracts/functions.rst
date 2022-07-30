@@ -268,11 +268,11 @@ Pure 函数能够使用 ``revert()`` 和 ``require()`` 函数来恢复潜在的�
 这个函数不能有参数，不能返回任何东西，必须具有 ``external`` 的可见性和 ``payable`` 的状态可变性。
 它可以是虚拟的，可以重载，也可以有修饰器。
 
-接收（receive）函数是在调用合约时执行的，并带有空的 calldata。
+receive 函数是在调用合约时执行的，并带有空的 calldata。
 这是在纯以太传输（例如通过 ``.send()`` 或 ``.transfer()`` ）时执行的函数。
-如果不存在这样的函数，但存在一个可接收（payable修饰）的 :ref:`fallback函数 <fallback-function>`，
+如果不存在这样的函数，但存在一个 payable 类型的 :ref:`fallback函数 <fallback-function>`，
 这个fallback函数将在纯以太传输时被调用。
-如果既没有直接接收以太（receive函数），也没有可接收以太的备用函数，
+如果既没有直接接收以太（receive函数），也没有可接收以太的 fallback 函数，
 合约就不能通过常规交易接收以太，并抛出一个异常。
 
 在最坏的情况下， ``receive`` 函数只有2300个气体可用（例如当使用 ``send`` 或 ``transfer`` 时），
@@ -364,7 +364,7 @@ fallback函数总是接收数据，但为了同时接收以太，它必须被标
         uint x;
         // 所有发送到此合约的消息都会调用此函数（没有其他函数）。
         // 向该合约发送以太币将引起异常，
-        // 因为fallback函数没有 `payable` 修饰符。
+        // 因为fallback函数没有 `payable` 修饰器。
         fallback() external { x = 1; }
     }
 
