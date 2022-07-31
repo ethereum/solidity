@@ -1,13 +1,13 @@
 /**
- * Solidity is a statically typed, contract-oriented, high-level language for implementing smart contracts on the Ethereum platform.
+ * Solidity是一种静态类型的，面向合约的高级语言，用于在Ethereum平台上实现智能合约。
  */
 parser grammar SolidityParser;
 
 options { tokenVocab=SolidityLexer; }
 
 /**
- * On top level, Solidity allows pragmas, import directives, and
- * definitions of contracts, interfaces, libraries, structs, enums and constants.
+ * 在顶层，Solidity允许pragmas，导入语句，
+ * 以及合约，接口，库，结构，枚举和常量的定义。
  */
 sourceUnit: (
 	pragmaDirective
@@ -27,7 +27,7 @@ sourceUnit: (
 pragmaDirective: Pragma PragmaToken+ PragmaSemicolon;
 
 /**
- * Import directives import identifiers from different files.
+ * 导入指令 从不同的文件中导入标识符。
  */
 importDirective:
 	Import (
@@ -39,30 +39,30 @@ importDirective:
 //@doc:name aliases
 importAliases: symbol=identifier (As alias=identifier)?;
 /**
- * Path of a file to be imported.
+ * 要导入的文件的路径。
  */
 path: NonEmptyStringLiteral;
 /**
- * List of aliases for symbols to be imported.
+ * 要导入的符号的别名列表。
  */
 symbolAliases: LBrace aliases+=importAliases (Comma aliases+=importAliases)* RBrace;
 
 /**
- * Top-level definition of a contract.
+ * 合约的顶层定义。
  */
 contractDefinition:
 	Abstract? Contract name=identifier
 	inheritanceSpecifierList?
 	LBrace contractBodyElement* RBrace;
 /**
- * Top-level definition of an interface.
+ * 接口的顶层定义。
  */
 interfaceDefinition:
 	Interface name=identifier
 	inheritanceSpecifierList?
 	LBrace contractBodyElement* RBrace;
 /**
- * Top-level definition of a library.
+ * 一个库合约的顶层定义。
  */
 libraryDefinition: Library name=identifier LBrace contractBodyElement* RBrace;
 
@@ -71,16 +71,16 @@ inheritanceSpecifierList:
 	Is inheritanceSpecifiers+=inheritanceSpecifier
 	(Comma inheritanceSpecifiers+=inheritanceSpecifier)*?;
 /**
- * Inheritance specifier for contracts and interfaces.
- * Can optionally supply base constructor arguments.
+ * 合约和接口的继承指定器。
+ * 可以有选择地提供基本构造函数参数。
  */
 inheritanceSpecifier: name=identifierPath arguments=callArgumentList?;
 
 /**
- * Declarations that can be used in contracts, interfaces and libraries.
+ * 可以在合约，接口和库中使用的声明。
  *
- * Note that interfaces and libraries may not contain constructors, interfaces may not contain state variables
- * and libraries may not contain fallback, receive functions nor non-constant state variables.
+ * 注意，接口和库不能包含构造函数，接口不能包含状态变量，
+ * 库不能包含fallback，receive函数和非恒定状态变量。
  */
 contractBodyElement:
 	constructorDefinition
@@ -98,34 +98,33 @@ contractBodyElement:
 //@doc:inline
 namedArgument: name=identifier Colon value=expression;
 /**
- * Arguments when calling a function or a similar callable object.
- * The arguments are either given as comma separated list or as map of named arguments.
+ * 调用一个函数或类似的可调用对象时的参数。
+ * 参数要么以逗号分隔的列表形式给出，要么以命名参数的映射形式给出。
  */
 callArgumentList: LParen ((expression (Comma expression)*)? | LBrace (namedArgument (Comma namedArgument)*)? RBrace) RParen;
 /**
- * Qualified name.
+ * 合格的名称。
  */
 identifierPath: identifier (Period identifier)*;
 
 /**
- * Call to a modifier. If the modifier takes no arguments, the argument list can be skipped entirely
- * (including opening and closing parentheses).
+ * 对一个修改器的调用。如果修改器不需要参数，参数列表可以完全跳过（包括开头和结尾的括号）。
  */
 modifierInvocation: identifierPath callArgumentList?;
 /**
- * Visibility for functions and function types.
+ * 函数和函数类型的可见性。
  */
 visibility: Internal | External | Private | Public;
 /**
- * A list of parameters, such as function arguments or return values.
+ * 一个参数的列表，如函数参数或返回值。
  */
 parameterList: parameters+=parameterDeclaration (Comma parameters+=parameterDeclaration)*;
 //@doc:inline
 parameterDeclaration: type=typeName location=dataLocation? name=identifier?;
 /**
- * Definition of a constructor.
- * Must always supply an implementation.
- * Note that specifying internal or public visibility is deprecated.
+ * 一个构造函数的定义。
+ * 必须始终提供一个实现。
+ * 请注意，指定内部或公共可见性已被废弃。
  */
 constructorDefinition
 locals[boolean payableSet = false, boolean visibilitySet = false]
@@ -140,20 +139,20 @@ locals[boolean payableSet = false, boolean visibilitySet = false]
 	body=block;
 
 /**
- * State mutability for function types.
- * The default mutability 'non-payable' is assumed if no mutability is specified.
+ * 函数类型的状态可变性。
+ * 如果没有指定可变性，则假定默认的可变性为 “非payable“。
  */
 stateMutability: Pure | View | Payable;
 /**
- * An override specifier used for functions, modifiers or state variables.
- * In cases where there are ambiguous declarations in several base contracts being overridden,
- * a complete list of base contracts has to be given.
+ *一个用于函数，修改器或状态变量的重载指定符。
+ * 如果在被重载的几个基础合约中存在不明确的声明，
+ * 必须给出一个完整的基础合约清单。
  */
 overrideSpecifier: Override (LParen overrides+=identifierPath (Comma overrides+=identifierPath)* RParen)?;
 /**
- * The definition of contract, library and interface functions.
- * Depending on the context in which the function is defined, further restrictions may apply,
- * e.g. functions in interfaces have to be unimplemented, i.e. may not contain a body block.
+ * 合约，库和接口功能的定义。
+ * 根据定义函数的上下文，可能会有进一步的限制。
+ * 例如，接口中的函数必须是未实现的，也就是说，不能包含主体块。
  */
 functionDefinition
 locals[
@@ -175,9 +174,9 @@ locals[
 	(Returns LParen returnParameters=parameterList RParen)?
 	(Semicolon | body=block);
 /**
- * The definition of a modifier.
- * Note that within the body block of a modifier, the underscore cannot be used as identifier,
- * but is used as placeholder statement for the body of a function to which the modifier is applied.
+ * 修改器的定义。
+ * 注意，在修改器的主体块中，下划线不能作为标识符使用，
+ * 而是作为占位符语句，用于修改器所应用的函数主体。
  */
 modifierDefinition
 locals[
@@ -194,7 +193,7 @@ locals[
 	(Semicolon | body=block);
 
 /**
- * Definition of the special fallback function.
+ * 特殊的fallback函数的定义。
  */
 fallbackFunctionDefinition
 locals[
@@ -217,7 +216,7 @@ locals[
 	(Semicolon | body=block);
 
 /**
- * Definition of the special receive function.
+ * 特殊的receive函数的定义。
  */
 receiveFunctionDefinition
 locals[
@@ -238,25 +237,25 @@ locals[
 	(Semicolon | body=block);
 
 /**
- * Definition of a struct. Can occur at top-level within a source unit or within a contract, library or interface.
+ * 结构体的定义。可以出现在源代码单元的顶层，也可以出现在合约，库或接口中。
  */
 structDefinition: Struct name=identifier LBrace members=structMember+ RBrace;
 /**
- * The declaration of a named struct member.
+ * 一个命名的结构体成员的声明。
  */
 structMember: type=typeName name=identifier Semicolon;
 /**
- * Definition of an enum. Can occur at top-level within a source unit or within a contract, library or interface.
+ * 一个枚举的定义。可以出现在源代码单元的顶层，也可以出现在合约，库或接口中。
  */
 enumDefinition:	Enum name=identifier LBrace enumValues+=identifier (Comma enumValues+=identifier)* RBrace;
 /**
- * Definition of a user defined value type. Can occur at top-level within a source unit or within a contract, library or interface.
+ * 用户自定义的值类型的定义。可以出现在源代码单元的顶层，也可以出现在合约，库或接口中。
  */
 userDefinedValueTypeDefinition:
 	Type name=identifier Is elementaryTypeName[true] Semicolon;
 
 /**
- * The declaration of a state variable.
+ * 一个状态变量的声明。
  */
 stateVariableDeclaration
 locals [boolean constantnessSet = false, boolean visibilitySet = false, boolean overrideSpecifierSet = false]
@@ -275,7 +274,7 @@ locals [boolean constantnessSet = false, boolean visibilitySet = false, boolean 
 	Semicolon;
 
 /**
- * The declaration of a constant variable.
+ * 一个常量变量的声明。
  */
 constantVariableDeclaration
 :
@@ -286,11 +285,11 @@ constantVariableDeclaration
 	Semicolon;
 
 /**
- * Parameter of an event.
+ * 一个事件类型的参数。
  */
 eventParameter: type=typeName Indexed? name=identifier?;
 /**
- * Definition of an event. Can occur in contracts, libraries or interfaces.
+ * 一个事件类型的定义。可以发生在合约，库或接口中。
  */
 eventDefinition:
 	Event name=identifier
@@ -299,11 +298,11 @@ eventDefinition:
 	Semicolon;
 
 /**
- * Parameter of an error.
+ * 一个错误类型的参数。
  */
 errorParameter: type=typeName name=identifier?;
 /**
- * Definition of an error.
+ * 错误类型定义。
  */
 errorDefinition:
 	Error name=identifier
@@ -311,13 +310,13 @@ errorDefinition:
 	Semicolon;
 
 /**
- * Using directive to bind library functions to types.
- * Can occur within contracts and libraries.
+ * 使用指令将库函数与类型绑定。
+ * 可以在合约和库中出现。
  */
 usingDirective: Using identifierPath For (Mul | typeName) Semicolon;
 /**
- * A type name can be an elementary type, a function type, a mapping type, a user-defined type
- * (e.g. a contract or struct) or an array type.
+ * 一个类型名称可以是一个基本类型，一个函数类型，一个映射类型，
+ * 一个用户定义的类型（如合约类型或结构体类型）或一个数组类型。
  */
 typeName: elementaryTypeName[true] | functionTypeName | mappingType | identifierPath | typeName LBrack expression? RBrack;
 elementaryTypeName[boolean allowAddressPayable]: Address | {$allowAddressPayable}? Address Payable | Bool | String | Bytes | SignedIntegerType | UnsignedIntegerType | FixedBytes | Fixed | Ufixed;
@@ -332,17 +331,17 @@ locals [boolean visibilitySet = false, boolean mutabilitySet = false]
 	(Returns LParen returnParameters=parameterList RParen)?;
 
 /**
- * The declaration of a single variable.
+ * 单一变量的声明。
  */
 variableDeclaration: type=typeName location=dataLocation? name=identifier;
 dataLocation: Memory | Storage | Calldata;
 
 /**
- * Complex expression.
- * Can be an index access, an index range access, a member access, a function call (with optional function call options),
- * a type conversion, an unary or binary expression, a comparison or assignment, a ternary expression,
- * a new-expression (i.e. a contract creation or the allocation of a dynamic memory array),
- * a tuple, an inline array or a primary expression (i.e. an identifier, literal or type name).
+ * 复杂的表达式。
+ * 可以是一个索引访问，一个索引范围访问，一个成员访问，一个函数调用（有可选的函数调用选项），
+ * 一个类型转换，一个单数或双数表达式，一个比较或赋值，一个三元表达式，
+ * 一个新的表达式（即一个合约的创建或动态内存数组的分配），
+ * 一个元组，一个内联数组或一个主要表达式（即一个标识符，字面意思或类型名）。
  */
 expression:
 	expression LBrack index=expression? RBrack # IndexAccess
@@ -381,36 +380,36 @@ expression:
 assignOp: Assign | AssignBitOr | AssignBitXor | AssignBitAnd | AssignShl | AssignSar | AssignShr | AssignAdd | AssignSub | AssignMul | AssignDiv | AssignMod;
 tupleExpression: LParen (expression? ( Comma expression?)* ) RParen;
 /**
- * An inline array expression denotes a statically sized array of the common type of the contained expressions.
+ * 内联数组表达式表示一个静态大小的数组，它是所含表达式的共同类型。
  */
 inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 
 /**
- * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.
+ * 除了常规的非关键字标识符，一些关键字如 ‘from‘ 和 ‘error‘ 也可以作为标识符。
  */
 identifier: Identifier | From | Error | Revert;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 booleanLiteral: True | False;
 /**
- * A full string literal consists of either one or several consecutive quoted strings.
+ * 一个完整的字符串字面量由一个或几个连续的引号字符串组成。
  */
 stringLiteral: (NonEmptyStringLiteral | EmptyStringLiteral)+;
 /**
- * A full hex string literal that consists of either one or several consecutive hex strings.
+ * 一个完整的十六进制字符串字面量由一个或几个连续的十六进制字符串组成。
  */
 hexStringLiteral: HexString+;
 /**
- * A full unicode string literal that consists of either one or several consecutive unicode strings.
+ * 一个完整的unicode字符串字面量由一个或几个连续的unicode字符串组成。
  */
 unicodeStringLiteral: UnicodeStringLiteral+;
 
 /**
- * Number literals can be decimal or hexadecimal numbers with an optional unit.
+ * 数字字面量可以是带可选单位的十进制或十六进制数字。
  */
 numberLiteral: (DecimalNumber | HexNumber) NumberUnit?;
 /**
- * A curly-braced block of statements. Opens its own scope.
+ * 带花括号的语句块。可以打开自己的作用域。
  */
 block:
 	LBrace ( statement | uncheckedBlock )* RBrace;
@@ -436,53 +435,52 @@ statement:
 //@doc:inline
 simpleStatement: variableDeclarationStatement | expressionStatement;
 /**
- * If statement with optional else part.
+ * 带有可选的else部分的If语句。
  */
 ifStatement: If LParen expression RParen statement (Else statement)?;
 /**
- * For statement with optional init, condition and post-loop part.
+ * 带有可选的初始值，循环条件和循环语句部分的For语句。
  */
 forStatement: For LParen (simpleStatement | Semicolon) (expressionStatement | Semicolon) expression? RParen statement;
 whileStatement: While LParen expression RParen statement;
 doWhileStatement: Do statement While LParen expression RParen Semicolon;
 /**
- * A continue statement. Only allowed inside for, while or do-while loops.
+ * 一个continue语句。只允许在for、while或do-while循环中使用。
  */
 continueStatement: Continue Semicolon;
 /**
- * A break statement. Only allowed inside for, while or do-while loops.
+ * 一个break语句。只允许在for，while或do-while循环中使用。
  */
 breakStatement: Break Semicolon;
 /**
- * A try statement. The contained expression needs to be an external function call or a contract creation.
+ * 一个try语句。包含的表达式需要是一个外部函数调用或合约创建。
  */
 tryStatement: Try expression (Returns LParen returnParameters=parameterList RParen)? block catchClause+;
 /**
- * The catch clause of a try statement.
+ * Try语句的catch子句。
  */
 catchClause: Catch (identifier? LParen (arguments=parameterList) RParen)? block;
 
 returnStatement: Return expression? Semicolon;
 /**
- * An emit statement. The contained expression needs to refer to an event.
+ * 一个发射语句。包含的表达式需要引用一个事件。
  */
 emitStatement: Emit expression callArgumentList Semicolon;
 /**
- * A revert statement. The contained expression needs to refer to an error.
+ * 一个恢复语句。包含的表达式需要指向一个错误。
  */
 revertStatement: Revert expression callArgumentList Semicolon;
 /**
- * An inline assembly block.
- * The contents of an inline assembly block use a separate scanner/lexer, i.e. the set of keywords and
- * allowed identifiers is different inside an inline assembly block.
+ * 一个内联汇编代码块。
+ * 内联汇编块的内容使用一个单独的扫描器/读取器，也就是说，内联汇编块内的关键字和允许的标识符集是不同的。
  */
 assemblyStatement: Assembly AssemblyDialect? AssemblyLBrace yulStatement* YulRBrace;
 
 //@doc:inline
 variableDeclarationList: variableDeclarations+=variableDeclaration (Comma variableDeclarations+=variableDeclaration)*;
 /**
- * A tuple of variable names to be used in variable declarations.
- * May contain empty fields.
+ * 在变量声明中使用的变量名元组。
+ * 可能包含空字段。
  */
 variableDeclarationTuple:
 	LParen
@@ -490,23 +488,22 @@ variableDeclarationTuple:
 		(Comma (variableDeclarations+=variableDeclaration)?)*
 	RParen;
 /**
- * A variable declaration statement.
- * A single variable may be declared without initial value, whereas a tuple of variables can only be
- * declared with initial value.
+ * 一个变量的声明语句。
+ * 单个变量可以不带初始值声明，而变量的元组只能用初始值声明。
  */
 variableDeclarationStatement: ((variableDeclaration (Assign expression)?) | (variableDeclarationTuple Assign expression)) Semicolon;
 expressionStatement: expression Semicolon;
 
 mappingType: Mapping LParen key=mappingKeyType DoubleArrow value=typeName RParen;
 /**
- * Only elementary types or user defined types are viable as mapping keys.
+ * 只有基本类型或用户定义的类型可以作为映射类型的键值。
  */
 mappingKeyType: elementaryTypeName[false] | identifierPath;
 
 /**
- * A Yul statement within an inline assembly block.
- * continue and break statements are only valid within for loops.
- * leave statements are only valid within function bodies.
+ * 内联汇编块中的Yul语句。
+ * continue 和 break 语句只在for循环中有效。
+ * 离开语句只在函数体内有效。
  */
 yulStatement:
 	yulBlock
@@ -524,16 +521,16 @@ yulStatement:
 yulBlock: YulLBrace yulStatement* YulRBrace;
 
 /**
- * The declaration of one or more Yul variables with optional initial value.
- * If multiple variables are declared, only a function call is a valid initial value.
+ * 声明一个或多个具有可选的初始值的Yul变量。
+ * 如果声明了多个变量，只有一个函数调用是有效的初始值。
  */
 yulVariableDeclaration:
 	(YulLet variables+=YulIdentifier (YulAssign yulExpression)?)
 	| (YulLet variables+=YulIdentifier (YulComma variables+=YulIdentifier)* (YulAssign yulFunctionCall)?);
 
 /**
- * Any expression can be assigned to a single Yul variable, whereas
- * multi-assignments require a function call on the right-hand side.
+ * 任何表达式都可以分配给一个Yul变量，
+ * 而多分配则需要在右侧调用一个函数。
  */
 yulAssignment: yulPath YulAssign yulExpression | (yulPath (YulComma yulPath)+) YulAssign yulFunctionCall;
 
@@ -544,8 +541,8 @@ yulForStatement: YulFor init=yulBlock cond=yulExpression post=yulBlock body=yulB
 //@doc:inline
 yulSwitchCase: YulCase yulLiteral yulBlock;
 /**
- * A Yul switch statement can consist of only a default-case (deprecated) or
- * one or more non-default cases optionally followed by a default-case.
+ * Yul switch语句可以只包括一个默认情况（已废弃）
+ * 或一个或多个非默认情况，可选择紧跟一个默认情况。
  */
 yulSwitchStatement:
 	YulSwitch yulExpression
@@ -561,13 +558,12 @@ yulFunctionDefinition:
 	body=yulBlock;
 
 /**
- * While only identifiers without dots can be declared within inline assembly,
- * paths containing dots can refer to declarations outside the inline assembly block.
+ * 虽然只有不带点的标识符可以在内联汇编中声明，
+ * 但含有点的路径可以指内联汇编块之外的声明。
  */
 yulPath: YulIdentifier (YulPeriod (YulIdentifier | YulEVMBuiltin))*;
 /**
- * A call to a function with return values can only occur as right-hand side of an assignment or
- * a variable declaration.
+ * 对带有返回值的函数的调用只能作为赋值或变量声明的右侧出现。
  */
 yulFunctionCall: (YulIdentifier | YulEVMBuiltin) YulLParen (yulExpression (YulComma yulExpression)*)? YulRParen;
 yulBoolean: YulTrue | YulFalse;
