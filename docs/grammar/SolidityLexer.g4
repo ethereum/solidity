@@ -61,7 +61,7 @@ Memory: 'memory';
 Modifier: 'modifier';
 New: 'new';
 /**
- * Unit denomination for numbers.
+ * 数字的单位计价。
  */
 NumberUnit: 'wei' | 'gwei' | 'ether' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years';
 Override: 'override';
@@ -176,7 +176,7 @@ fragment DoubleQuotedStringCharacter: DoubleQuotedPrintable | EscapeSequence;
 //@doc:inline
 fragment SingleQuotedStringCharacter: SingleQuotedPrintable | EscapeSequence;
 /**
- * Any printable character except single quote or back slash.
+ * 除单引号或反斜线外的任何可打印字符。
  */
 fragment SingleQuotedPrintable: [\u0020-\u0026\u0028-\u005B\u005D-\u007E];
 /**
