@@ -190,7 +190,7 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 		m_errorReporter.fatalTypeError(
 			5172_error,
 			_typeName.location(),
-			"Name has to refer to a struct, enum or contract."
+			"Name has to refer to a user-defined value type, struct, enum or contract."
 		);
 	}
 }

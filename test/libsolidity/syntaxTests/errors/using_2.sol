@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5172: (91-92): Name has to refer to a struct, enum or contract.
+// TypeError 5172: (91-92): Name has to refer to a user-defined value type, struct, enum or contract.

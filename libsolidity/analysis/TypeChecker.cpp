@@ -3982,7 +3982,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					path->location(),
 					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
 					"needs to return exactly one value of type " +
-					functionType->parameterTypesIncludingSelf().front()->humanReadableName() +
+					functionType->parameterTypesIncludingSelf().front()->canonicalName() +
 					" to be used for the operator " +
 					TokenTraits::friendlyName(*operator_) +
 					"."

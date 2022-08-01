@@ -17,4 +17,4 @@ contract C {
 // Warning 2519: (249-268): This declaration shadows an existing declaration.
 // Warning 2519: (270-296): This declaration shadows an existing declaration.
 // Warning 2519: (317-330): This declaration shadows an existing declaration.
-// TypeError 5172: (124-134): Name has to refer to a struct, enum or contract.
+// TypeError 5172: (124-134): Name has to refer to a user-defined value type, struct, enum or contract.
