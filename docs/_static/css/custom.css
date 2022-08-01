@@ -6,6 +6,10 @@ pre {
     word-wrap: break-word;
 }
 
+.wy-nav-content {
+    max-width: unset;
+}
+
 .wy-table-responsive table td, .wy-table-responsive table th {
     white-space: normal;
 }
