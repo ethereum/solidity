@@ -15,4 +15,4 @@ contract C {
 
 // ----
 // TypeError 1147: (32-38): The function "bitnot" needs to have exactly one parameter to be used for the operator ~.
-// TypeError 4907: (186-198): Unary operator ~ cannot be applied to type Int
+// TypeError 4907: (186-198): Unary operator ~ cannot be applied to type Int. No matching user-defined operator found.

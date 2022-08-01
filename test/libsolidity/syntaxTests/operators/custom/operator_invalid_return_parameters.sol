@@ -44,6 +44,6 @@ function f() pure {
 // TypeError 7995: (90-92): The function "lt" needs to return exactly one value of type bool to be used for the operator <.
 // TypeError 2271: (492-517): Operator + not compatible with types Int and Int. No matching user-defined operator found.
 // TypeError 2271: (523-548): Operator / not compatible with types Int and Int. No matching user-defined operator found.
-// TypeError 4907: (554-566): Unary operator - cannot be applied to type Int
+// TypeError 4907: (554-566): Unary operator - cannot be applied to type Int. No matching user-defined operator found.
 // TypeError 2271: (572-597): Operator < not compatible with types Int and Int. No matching user-defined operator found.
 // TypeError 2271: (603-628): Operator > not compatible with types Int and Int. No matching user-defined operator found.

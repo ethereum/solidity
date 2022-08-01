@@ -1731,24 +1731,24 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 
 
 	// Check if the operator is built-in or user-defined.
-	FunctionDefinition const* userDefinedOperator = subExprType->userDefinedOperator(
+	Result<FunctionDefinition const*> userDefinedOperatorResult = subExprType->userDefinedOperator(
 		_operation.getOperator(),
 		*currentDefinitionScope(),
 		true // _unaryOperation
 	);
-	_operation.annotation().userDefinedFunction = userDefinedOperator;
+	_operation.annotation().userDefinedFunction = userDefinedOperatorResult;
 	FunctionType const* userDefinedFunctionType = nullptr;
-	if (userDefinedOperator)
+	if (userDefinedOperatorResult)
 		userDefinedFunctionType = &dynamic_cast<FunctionType const&>(
-			userDefinedOperator->libraryFunction() ?
-			*userDefinedOperator->typeViaContractName() :
-			*userDefinedOperator->type()
+			userDefinedOperatorResult.get()->libraryFunction() ?
+			*userDefinedOperatorResult.get()->typeViaContractName() :
+			*userDefinedOperatorResult.get()->type()
 		);
 
 	TypeResult builtinResult = subExprType->unaryOperatorResult(op);
 
-	solAssert(!builtinResult || !userDefinedOperator);
-	if (userDefinedOperator)
+	solAssert(!builtinResult || !userDefinedOperatorResult);
+	if (userDefinedOperatorResult)
 	{
 		solAssert(userDefinedFunctionType->parameterTypes().size() == 1);
 		solAssert(userDefinedFunctionType->returnParameterTypes().size() == 1);
@@ -1762,7 +1762,10 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		_operation.annotation().type = builtinResult;
 	else
 	{
-		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." + (!builtinResult.message().empty() ? " " + builtinResult.message() : "");
+		string description =
+			"Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." +
+			(!builtinResult.message().empty() ? " " + builtinResult.message() : "") +
+			(!userDefinedOperatorResult.message().empty() ? " " + userDefinedOperatorResult.message() : "");
 		if (modifying)
 			// Cannot just report the error, ignore the unary operator, and continue,
 			// because the sub-expression was already processed with requireLValue()
