@@ -1702,6 +1702,72 @@ BOOST_AUTO_TEST_CASE(using_for)
 	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges);
 }
 
+BOOST_AUTO_TEST_CASE(user_defined_binary_operator)
+{
+	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
+		type Int is int128;
+		using {add as +} for Int;
+
+		function add(Int, Int) returns (Int) {
+			return Int.wrap(0);
+		}
+
+		contract C {
+			function test() public {
+				Int.wrap(0) + Int.wrap(1);
+			}
+		}
+	)"s);
+	tuple<CallGraphMap, CallGraphMap> graphs = collectGraphs(*compilerStack);
+
+	map<string, EdgeNames> expectedCreationEdges = {
+		{"C", {}},
+	};
+
+	map<string, EdgeNames> expectedDeployedEdges = {
+		{"C", {
+			{"Entry", "function C.test()"},
+			{"function C.test()", "function add(Int,Int)"},
+		}},
+	};
+
+	checkCallGraphExpectations(get<0>(graphs), expectedCreationEdges);
+	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges);
+}
+
+BOOST_AUTO_TEST_CASE(user_defined_unary_operator)
+{
+	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
+		type Int is int128;
+		using {sub as -} for Int;
+
+		function sub(Int) returns (Int) {
+			return Int.wrap(0);
+		}
+
+		contract C {
+			function test() public {
+				-Int.wrap(1);
+			}
+		}
+	)"s);
+	tuple<CallGraphMap, CallGraphMap> graphs = collectGraphs(*compilerStack);
+
+	map<string, EdgeNames> expectedCreationEdges = {
+		{"C", {}},
+	};
+
+	map<string, EdgeNames> expectedDeployedEdges = {
+		{"C", {
+			{"Entry", "function C.test()"},
+			{"function C.test()", "function sub(Int)"},
+		}},
+	};
+
+	checkCallGraphExpectations(get<0>(graphs), expectedCreationEdges);
+	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges);
+}
+
 BOOST_AUTO_TEST_CASE(getters)
 {
 	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
