@@ -411,7 +411,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
 
-	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction)
 	{
 		solAssert(
 			function->isFree() || function->libraryFunction(),
@@ -538,7 +538,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.leftExpression();
 	Expression const& rightExpression = _binaryOperation.rightExpression();
-	if (FunctionDefinition const* function =_binaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = *_binaryOperation.annotation().userDefinedFunction)
 	{
 		solAssert(
 			function->isFree() || function->libraryFunction(),

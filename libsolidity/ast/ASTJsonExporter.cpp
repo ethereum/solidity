@@ -828,7 +828,7 @@ bool ASTJsonExporter::visit(UnaryOperation const& _node)
 		make_pair("operator", TokenTraits::toString(_node.getOperator())),
 		make_pair("subExpression", toJson(_node.subExpression()))
 	};
-	if (FunctionDefinition const* function = _node.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = *_node.annotation().userDefinedFunction)
 		attributes.emplace_back("function", nodeId(*function));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "UnaryOperation", std::move(attributes));
@@ -843,7 +843,7 @@ bool ASTJsonExporter::visit(BinaryOperation const& _node)
 		make_pair("rightExpression", toJson(_node.rightExpression())),
 		make_pair("commonType", typePointerToJson(_node.annotation().commonType)),
 	};
-	if (FunctionDefinition const* function = _node.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = *_node.annotation().userDefinedFunction)
 		attributes.emplace_back("function", nodeId(*function));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "BinaryOperation", std::move(attributes));

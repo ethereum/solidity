@@ -333,14 +333,14 @@ void ViewPureChecker::reportFunctionCallMutability(StateMutability _mutability, 
 
 void ViewPureChecker::endVisit(BinaryOperation const& _binaryOperation)
 {
-	if (_binaryOperation.annotation().userDefinedFunction)
-		reportFunctionCallMutability(_binaryOperation.annotation().userDefinedFunction->stateMutability(), _binaryOperation.location());
+	if (_binaryOperation.annotation().userDefinedFunction.set())
+		reportFunctionCallMutability((*_binaryOperation.annotation().userDefinedFunction)->stateMutability(), _binaryOperation.location());
 }
 
 void ViewPureChecker::endVisit(UnaryOperation const& _unaryOperation)
 {
-	if (_unaryOperation.annotation().userDefinedFunction)
-		reportFunctionCallMutability(_unaryOperation.annotation().userDefinedFunction->stateMutability(), _unaryOperation.location());
+	if (_unaryOperation.annotation().userDefinedFunction.set())
+		reportFunctionCallMutability((*_unaryOperation.annotation().userDefinedFunction)->stateMutability(), _unaryOperation.location());
 }
 
 void ViewPureChecker::endVisit(FunctionCall const& _functionCall)

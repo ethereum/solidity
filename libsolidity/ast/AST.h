@@ -688,14 +688,19 @@ public:
 
 	/// @returns a list of functions or the single library.
 	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functions; }
-	auto functionsAndOperators() const { return ranges::zip_view(m_functions, m_operators); }
+	//auto functionsAndOperators() const { return ranges::zip_view(m_functions, m_operators); }
+	ranges::zip_view<
+		ranges::ref_view<const std::vector<std::shared_ptr<solidity::frontend::IdentifierPath>>>,
+		ranges::ref_view<const std::vector<std::optional<solidity::langutil::Token>>>
+	>
+	functionsAndOperators() const { return ranges::zip_view(m_functions, m_operators); }
 	bool usesBraces() const { return m_usesBraces; }
 	bool global() const { return m_global; }
 
 private:
 	/// Either the single library or a list of functions.
 	std::vector<ASTPointer<IdentifierPath>> m_functions;
-	/// Operators, the functions are applied to.
+	/// Operators, the functions from @a m_functions implement.
 	std::vector<std::optional<Token>> m_operators;
 	bool m_usesBraces;
 	ASTPointer<TypeName> m_typeName;

@@ -206,14 +206,14 @@ bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 
 bool FunctionCallGraphBuilder::visit(BinaryOperation const& _binaryOperation)
 {
-	if (FunctionDefinition const* function = _binaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = *_binaryOperation.annotation().userDefinedFunction)
 		functionReferenced(*function, true /* called directly */);
 	return true;
 }
 
 bool FunctionCallGraphBuilder::visit(UnaryOperation const& _unaryOperation)
 {
-	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction)
 		functionReferenced(*function, true /* called directly */);
 	return true;
 }
