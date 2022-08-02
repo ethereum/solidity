@@ -344,7 +344,12 @@ bool ASTJsonExporter::visit(UsingForDirective const& _node)
 		attributes.emplace_back("functionList", std::move(functionList));
 	}
 	else
-		attributes.emplace_back("libraryName", toJson(*_node.functionsOrLibrary().front()));
+	{
+		solAssert(_node.functionsAndOperators().size() == 1);
+		auto const& functionAndOperator = _node.functionsAndOperators().front();
+		solAssert(!functionAndOperator.second.has_value());
+		attributes.emplace_back("libraryName", toJson(*(functionAndOperator.first)));
+	}
 	attributes.emplace_back("global", _node.global());
 
 	setJsonNode(_node, "UsingForDirective", std::move(attributes));
