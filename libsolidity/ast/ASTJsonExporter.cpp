@@ -337,7 +337,7 @@ bool ASTJsonExporter::visit(UsingForDirective const& _node)
 		{
 			Json::Value functionNode;
 			functionNode["function"] = toJson(*function);
-			if (op)
+			if (op.has_value())
 				functionNode["operator"] = string(TokenTraits::toString(*op));
 			functionList.append(move(functionNode));
 		}
@@ -828,8 +828,8 @@ bool ASTJsonExporter::visit(UnaryOperation const& _node)
 		make_pair("operator", TokenTraits::toString(_node.getOperator())),
 		make_pair("subExpression", toJson(_node.subExpression()))
 	};
-	if (FunctionDefinition const* function = _node.annotation().userDefinedFunction)
-		attributes.emplace_back("function", nodeId(*function));
+	if (FunctionDefinition const* referencedDeclaration = _node.annotation().userDefinedFunction)
+		attributes.emplace_back("function", nodeId(*referencedDeclaration));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "UnaryOperation", std::move(attributes));
 	return false;

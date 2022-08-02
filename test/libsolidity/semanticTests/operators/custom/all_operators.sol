@@ -79,8 +79,6 @@ contract C {
     function test_geq(int128 x) public pure returns (bool) { return w(x) >= w(2); }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // test_bitor() -> 10
 // test_bitand() -> 10

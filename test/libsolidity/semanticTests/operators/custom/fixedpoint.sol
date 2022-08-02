@@ -18,7 +18,5 @@ contract C {
         return value + value * percentage;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // applyInterest(int128,int128): 500000000000000000000, 100000000000000000 -> 550000000000000000000

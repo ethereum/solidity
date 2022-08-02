@@ -369,10 +369,9 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 		typeLocation = refType->location();
 
 	return usingForDirectives | ranges::views::filter([&](UsingForDirective const* _directive) -> bool {
-		// Convert both types to pointers for comparison to see if the `using for`
-		// directive applies.
-		// Further down, we check more detailed for each function if `_type` is
-		// convertible to the function parameter type.
+		// Convert both types to pointers for comparison to see if the `using for` directive applies.
+		// Note that at this point we don't yet know if the functions are actually usable with the type.
+		// `_type` may not be convertible to the function parameter type.
 		return
 			!_directive->typeName() ||
 			*TypeProvider::withLocationIfReference(typeLocation, &_type, true) ==
@@ -391,14 +390,14 @@ Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNod
 	if (!typeDefinition())
 		return nullptr;
 
-	set<FunctionDefinition const*> seenFunctions;
+	set<FunctionDefinition const*> matchingDefinitions;
 	for (UsingForDirective const* ufd: usingForDirectivesForType(*this, _scope))
-		for (auto const& [pathPointer, operator_]: ufd->functionsAndOperators())
+		for (auto const& [identifierPath, operator_]: ufd->functionsAndOperators())
 		{
 			if (operator_ != _token)
 				continue;
 			FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(
-				*pathPointer->annotation().referencedDeclaration
+				*identifierPath->annotation().referencedDeclaration
 			);
 			FunctionType const* functionType = dynamic_cast<FunctionType const*>(
 				function.libraryFunction() ? function.typeViaContractName() : function.type()
@@ -418,12 +417,12 @@ Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNod
 					(!_unaryOperation && function.parameterList().parameters().size() == 2)
 				)
 			)
-				seenFunctions.insert(&function);
+				matchingDefinitions.insert(&function);
 		}
 
-	if (seenFunctions.size() == 1)
-		return *seenFunctions.begin();
-	else if (seenFunctions.size() == 0)
+	if (matchingDefinitions.size() == 1)
+		return *matchingDefinitions.begin();
+	else if (matchingDefinitions.size() == 0)
 		return Result<FunctionDefinition const*>::err("No matching user-defined operator found.");
 	else
 		return Result<FunctionDefinition const*>::err("Multiple user-defined functions provided for this operator.");
@@ -453,7 +452,9 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 	for (UsingForDirective const* ufd: usingForDirectivesForType(_type, _scope))
 		for (auto const& [pathPointer, operator_]: ufd->functionsAndOperators())
 		{
-			if (operator_)
+			if (operator_.has_value())
+				// Functions used to define operators are not bound to the type.
+				// I.e. `using {f} for T` allows `T x; x.f()` but `using {f as +} for T` does not.
 				continue;
 
 			solAssert(pathPointer);
