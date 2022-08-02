@@ -225,7 +225,7 @@ Operators:
 .. note::
     The distinction between ``address`` and ``address payable`` was introduced with version 0.5.0.
     Also starting from that version, contracts do not derive from the address type, but can still be explicitly converted to
-    ``address`` or to ``address payable``, if they have a receive or payable fallback function.
+    ``address`` or to ``address payable``.
 
 .. _members-of-addresses:
 
@@ -349,13 +349,9 @@ Contract Types
 
 Every :ref:`contract<contracts>` defines its own type.
 You can implicitly convert contracts to contracts they inherit from.
-Contracts can be explicitly converted to and from the ``address`` type.
-
-Explicit conversion to and from the ``address payable`` type is only possible
-if the contract type has a receive or payable fallback function.  The conversion is still
-performed using ``address(x)``. If the contract type does not have a receive or payable
-fallback function, the conversion to ``address payable`` can be done using
-``payable(address(x))``.
+Contracts can be explicitly converted to and from the ``address`` type using ``address(x)``.
+Explicit conversion to and from the ``address payable`` can be done with ``payable(address(x))``, regardless 
+of whether the contract has a receive or a payable fallback function.
 You can find more information in the section about
 the :ref:`address type<address>`.
 
