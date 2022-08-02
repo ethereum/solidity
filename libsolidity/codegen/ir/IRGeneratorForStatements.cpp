@@ -673,7 +673,7 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 {
 	setLocation(_unaryOperation);
 
-	if (FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
 	{
 		_unaryOperation.subExpression().accept(*this);
 		setLocation(_unaryOperation);
@@ -817,7 +817,7 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	setLocation(_binOp);
 
-	if (FunctionDefinition const* function = *_binOp.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = _binOp.annotation().userDefinedFunction)
 	{
 		_binOp.leftExpression().accept(*this);
 		_binOp.rightExpression().accept(*this);

@@ -314,7 +314,7 @@ struct MemberAccessAnnotation: ExpressionAnnotation
 
 struct OperationAnnotation: ExpressionAnnotation
 {
-	util::SetOnce<FunctionDefinition const*> userDefinedFunction;
+	FunctionDefinition const* userDefinedFunction = nullptr;
 };
 
 struct BinaryOperationAnnotation: OperationAnnotation
