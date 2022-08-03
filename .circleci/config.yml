@@ -677,6 +677,19 @@ jobs:
           name: Install shellcheck
           command: apt -q update && apt install -y shellcheck
       - run:
+          name: Check for C++ coding style (clang-format)
+          command: |
+            set -ex
+            wget -O /usr/local/bin/clang-format https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-208096c1/clang-format-14_linux-amd64
+            chmod 0755 /usr/local/bin/clang-format
+            clang-format --version
+            find . \( -name '*.h' -o -name '*.cpp' \) -exec clang-format -i {} \;
+            if [[ `git diff | wc -l` -ne 0 ]]; then
+              echo Difference in coding style detected
+              git --no-pager diff --color=always
+              exit 1
+            fi
+      - run:
           name: Check for C++ coding style
           command: ./scripts/check_style.sh
       - run:
