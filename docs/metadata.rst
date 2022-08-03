@@ -22,9 +22,9 @@ the :ref:`Standard JSON Interface<compiler-api>`.
 You have to publish the metadata file to IPFS, Swarm, or another service so
 that others can access it. You create the file by using the ``solc --metadata``
 command together with the ``--output-dir`` parameter. Without the parameter,
-it will only be written to standard out.
-It contains IPFS and Swarm references to the source code, so you have to
-upload all source files and the metadata file. For IPFS, The hash contained
+the metadata will be written to standard output.
+The metadata contains IPFS and Swarm references to the source code, so you have to
+upload all source files in addition to the metadata file. For IPFS, the hash contained
 in the CID returned by ``ipfs add`` (not the direct sha2-256 hash of the file)
 shall match with the one contained in the bytecode.
 
