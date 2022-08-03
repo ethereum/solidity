@@ -404,14 +404,8 @@ Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNod
 			);
 			solAssert(functionType && !functionType->parameterTypes().empty());
 
-			Type const* expectedReturnType =
-				TokenTraits::isCompareOp(_token) ?
-				TypeProvider::boolean() : functionType->parameterTypes().front();
-
 			if (
 				isImplicitlyConvertibleTo(*functionType->parameterTypes().front()) &&
-				function.returnParameterList()->parameters().size() == 1 &&
-				function.returnParameterList()->parameters().front()->type()->isImplicitlyConvertibleTo(*expectedReturnType) &&
 				(
 					(_unaryOperation && function.parameterList().parameters().size() == 1) ||
 					(!_unaryOperation && function.parameterList().parameters().size() == 2)

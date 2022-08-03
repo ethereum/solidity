@@ -1750,13 +1750,37 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	solAssert(!builtinResult || !userDefinedOperatorResult);
 	if (userDefinedOperatorResult)
 	{
-		solAssert(userDefinedFunctionType->parameterTypes().size() == 1);
-		solAssert(userDefinedFunctionType->returnParameterTypes().size() == 1);
-		solAssert(
-			*userDefinedFunctionType->parameterTypes().at(0) ==
-			*userDefinedFunctionType->returnParameterTypes().at(0)
-		);
-		_operation.annotation().type = userDefinedFunctionType->returnParameterTypes().at(0);
+		if (userDefinedFunctionType->returnParameterTypes().size() != 1)
+		{
+			m_errorReporter.typeError(
+				3138_error,
+				_operation.location(),
+				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
+				" needs to return exactly one value."
+			);
+			_operation.annotation().type = subExprType;
+		}
+		else if (*userDefinedFunctionType->returnParameterTypes().front() != *userDefinedFunctionType->parameterTypes().front())
+		{
+			m_errorReporter.typeError(
+				7983_error,
+				_operation.location(),
+				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
+				" needs to return value of type " +
+				userDefinedFunctionType->parameterTypes().front()->humanReadableName() + "."
+			);
+			_operation.annotation().type = subExprType;
+		}
+		else
+		{
+			solAssert(userDefinedFunctionType->parameterTypes().size() == 1);
+			solAssert(
+				*userDefinedFunctionType->parameterTypes().at(0) ==
+				*userDefinedFunctionType->returnParameterTypes().at(0)
+			);
+			_operation.annotation().type = userDefinedFunctionType->returnParameterTypes().at(0);
+		}
+
 	}
 	else if (builtinResult)
 		_operation.annotation().type = builtinResult;
@@ -1840,7 +1864,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			*userDefinedFunctionType->parameterTypes().at(0) ==
 			*userDefinedFunctionType->parameterTypes().at(1)
 		);
-		commonType = userDefinedFunctionType->returnParameterTypes().at(0);
+		if (userDefinedFunctionType->returnParameterTypes().size() == 1)
+			commonType = userDefinedFunctionType->parameterTypes().at(0);
 	}
 
 	_operation.annotation().commonType = commonType;
@@ -1850,11 +1875,24 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		commonType;
 
 	if (userDefinedOperatorResult)
-		solAssert(
-			userDefinedFunctionType->returnParameterTypes().size() == 1 &&
-			*userDefinedFunctionType->returnParameterTypes().front() == *_operation.annotation().type,
-			"User defined operator has an invalid return parameter."
-		);
+	{
+		if (userDefinedFunctionType->returnParameterTypes().size() != 1)
+			m_errorReporter.typeError(
+				1208_error,
+				_operation.location(),
+				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
+				" needs to return exactly one value."
+			);
+
+		else if (*userDefinedFunctionType->returnParameterTypes().front() != *_operation.annotation().type)
+			m_errorReporter.typeError(
+				3841_error,
+				_operation.location(),
+				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
+				" needs to return value of type " +
+				_operation.annotation().type->humanReadableName() + "."
+			);
+	}
 	else if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
 		string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
