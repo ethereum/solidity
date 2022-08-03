@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 7366: (72-83): Operator += not compatible with types uint256 and tuple(int_const 1,int_const 1)
+// TypeError 7366: (72-83): Operator += not compatible with types uint256 and tuple(int_const 1,int_const 1).
