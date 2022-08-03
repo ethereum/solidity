@@ -1,3 +1,4 @@
+---
 # Formatting approximately used in Solidity's C++
 #
 # See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
@@ -7,35 +8,196 @@
 # behave similar to closing curly braces in a multi-line setting in that
 # they have to be on a line of their own at the same indentation level
 # as the opening part (aka "dangling parenthesis", see https://reviews.llvm.org/D33029).
+#
+# This .clang-format file requires(!) clang-format version 14 or higher
+# in order to support `AlignAfterOpenBracket: BlockIndent`.
 
 Language: Cpp
-BasedOnStyle: LLVM
+Standard: Latest
+BasedOnStyle: Google
 AccessModifierOffset: -4
-AlignAfterOpenBracket: AlwaysBreak
-AlignEscapedNewlinesLeft: true
+AlignAfterOpenBracket: BlockIndent
+AlignArrayOfStructures: None
+AlignConsecutiveMacros: None
+AlignConsecutiveAssignments: None
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: None
+AlignEscapedNewlines: Left
+# The old PR actually stated false (DontAlign), but seems like Align is correct.
+# i.e. having operators at EOL and the RHS on the next line.
+AlignOperands: Align
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortEnumsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: All
+AllowShortLambdasOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: Yes
+AttributeMacros: []
 BinPackArguments: false
 BinPackParameters: false
-BreakBeforeBinaryOperators: All
-BreakBeforeBraces: Allman
+BraceWrapping:
+    AfterCaseLabel: true
+    AfterClass: true
+    AfterControlStatement: Always
+    AfterEnum: true
+    AfterFunction: true
+    AfterNamespace: true
+    AfterStruct: true
+    AfterUnion: true
+    AfterExternBlock: true
+    BeforeCatch: true
+    BeforeElse: true
+    BeforeLambdaBody: true
+    BeforeWhile: false
+    IndentBraces: false
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: true
+BreakBeforeBinaryOperators: None
+BreakBeforeConceptDeclarations: true
+BreakBeforeBraces: Custom
+BreakBeforeInheritanceComma: false
+BreakInheritanceList: BeforeColon
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: AfterColon
+BreakStringLiterals: true
 ColumnLimit: 120
+# CommentPragmas: '^ IWYU pragma:'
+QualifierAlignment: Leave
+CompactNamespaces: false
+ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
+DeriveLineEnding: true
+DerivePointerAlignment: false
+DisableFormat: false
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
+ExperimentalAutoDetectBinPacking: false
+PackConstructorInitializers: BinPack
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+AllowAllConstructorInitializersOnNextLine: true
 FixNamespaceComments: false
-IndentWidth: 4
+ForEachMacros: []
+IfMacros: []
+IncludeBlocks: Regroup
+IncludeCategories:
+    - Regex:           '^<(libsolidity)/'
+      Priority:        10
+    - Regex:           '^<(libsolc)/'
+      Priority:        20
+    - Regex:           '^<(libevmasm)/'
+      Priority:        30
+    - Regex:           '^<(liblangutil)/'
+      Priority:        40
+    - Regex:           '^<(libsmtutil)/'
+      Priority:        50
+    - Regex:           '^<(libsolutil)/'
+      Priority:        60
+    - Regex:           '^<(libyul)/'
+      Priority:        70
+
+    - Regex:           '^<(json|boost|ranges-v3|fmt)/'
+      Priority:        80
+
+    # Usually C++ includes like <algorithm>
+    - Regex:           '^<[[:alnum:]_]+>'
+      Priority:        90
+    # Usually classical C / system headers, like <stdio.h>
+    - Regex:           '<[[:alnum:]_]+\.h>'
+      Priority:        95
+
+    - Regex:           '.*'
+      Priority:        2
+    - Regex:           '^".*'
+      Priority:        1
+IncludeIsMainRegex: '(Test)?$'
+IncludeIsMainSourceRegex: ''
+IndentAccessModifiers: false
+IndentCaseLabels: false
+IndentCaseBlocks: false
+IndentGotoLabels: true
+IndentPPDirectives: BeforeHash
+IndentExternBlock: AfterExternBlock
+IndentRequires:  false
+IndentWidth:     4
+IndentWrappedFunctionNames: false
+InsertTrailingCommas: None
 KeepEmptyLinesAtTheStartOfBlocks: false
+LambdaBodyIndentation: Signature
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+# Why is this 2 instead of 1 in the previous PR?
 MaxEmptyLinesToKeep: 2
-PenaltyBreakBeforeFirstCallParameter: 2000
+NamespaceIndentation: None
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakOpenParenthesis: 0
+PenaltyBreakString: 1000
+PenaltyBreakTemplateDeclaration: 10
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 10000
+PenaltyIndentedWhitespace: 0
 PointerAlignment: Left
+PPIndentWidth:   -1
+ReferenceAlignment: Pointer
+ReflowComments:  true
+RemoveBracesLLVM: false
+SeparateDefinitionBlocks: Leave
+ShortNamespaceLines: 1
+# Old PR stated false, but I'm sure we are sorting.
+SortIncludes:    CaseSensitive
+SortUsingDeclarations: true
 SpaceAfterCStyleCast: true
-SpaceAfterTemplateKeyword: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
 SpaceBeforeCtorInitializerColon: false
 SpaceBeforeInheritanceColon: false
 SpaceBeforeParens: ControlStatements
+SpaceBeforeParensOptions:
+    AfterControlStatements: true
+    AfterForeachMacros: true
+    AfterFunctionDefinitionName: false
+    AfterFunctionDeclarationName: false
+    AfterIfMacros:   true
+    AfterOverloadedOperator: false
+    BeforeNonEmptyParentheses: false
+SpaceAroundPointerQualifiers: Default
 SpaceBeforeRangeBasedForLoopColon: false
-TabWidth: 4
-UseTab: Always
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles:  Never
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInLineCommentPrefix:
+    Minimum:         1
+    Maximum:         -1
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceBeforeSquareBrackets: false
+BitFieldColonSpacing: Both
+StatementAttributeLikeMacros: []
+StatementMacros:
+    - solAssert
+TabWidth:        4
+UseCRLF:         false
+UseTab:          Always
+WhitespaceSensitiveMacros: []
+...
 
-# Local Variables:
-# mode: yaml
-# End:
