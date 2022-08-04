@@ -1,52 +1,33 @@
 .. index: variable cleanup
 
 *********************
-Cleaning Up Variables
+清理变量
 *********************
 
-When a value is shorter than 256 bit, in some cases the remaining bits
-must be cleaned.
-The Solidity compiler is designed to clean such remaining bits before any operations
-that might be adversely affected by the potential garbage in the remaining bits.
-For example, before writing a value to  memory, the remaining bits need
-to be cleared because the memory contents can be used for computing
-hashes or sent as the data of a message call.  Similarly, before
-storing a value in the storage, the remaining bits need to be cleaned
-because otherwise the garbled value can be observed.
+如果一个数值不足 256 位，那么在某些情况下，剩余的位必须被清理。
+Solidity 编译器被设计为在执行任何操作之前清除这些剩余位中可能会造成不利影响的潜在垃圾。
+例如，在将一个值写入内存之前，剩余的位需要被清除，因为内存的内容可以被用来计算哈希值或作为消息调用的数据发送。
+同样地，在将一个值保存到存储中之前，剩余的位需要被清理，否则就会看到被混淆的数值。
 
-Note that access via inline assembly is not considered such an operation:
-If you use inline assembly to access Solidity variables
-shorter than 256 bits, the compiler does not guarantee that
-the value is properly cleaned up.
+注意，通过内联汇编的访问不被认为是这种操作。
+如果您使用内联汇编来访问短于256位的Solidity变量，编译器不保证该值被正确清理。
 
-Moreover, we do not clean the bits if the immediately
-following operation is not affected.  For instance, since any non-zero
-value is considered ``true`` by ``JUMPI`` instruction, we do not clean
-the boolean values before they are used as the condition for
-``JUMPI``.
+此外，如果接下来的操作不受影响，我们就不清理这些位。
+例如，由于任何非零值都被 ``JUMPI`` 指令认为是 ``true``，
+所以在布尔值被用作 ``JUMPI`` 的条件之前，我们不对它们进行清理。
 
-In addition to the design principle above, the Solidity compiler
-cleans input data when it is loaded onto the stack.
+除了上面的设计原则外，Solidity编译器在输入数据被加载到堆栈时也会对其进行清理。
 
-Different types have different rules for cleaning up invalid values:
+不同的类型有不同的规则来清理无效的值：
 
-+---------------+---------------+-------------------+
-|Type           |Valid Values   |Invalid Values Mean|
-+===============+===============+===================+
-|enum of n      |0 until n - 1  |exception          |
-|members        |               |                   |
-+---------------+---------------+-------------------+
-|bool           |0 or 1         |1                  |
-+---------------+---------------+-------------------+
-|signed integers|sign-extended  |currently silently |
-|               |word           |wraps; in the      |
-|               |               |future exceptions  |
-|               |               |will be thrown     |
-|               |               |                   |
-|               |               |                   |
-+---------------+---------------+-------------------+
-|unsigned       |higher bits    |currently silently |
-|integers       |zeroed         |wraps; in the      |
-|               |               |future exceptions  |
-|               |               |will be thrown     |
-+---------------+---------------+-------------------+
++----------------+----------------+--------------------------------+
+|      类型      |    有效的值    |         无效的值会导致         |
++================+================+================================+
+| n 个成员的枚举 | 0 到 n - 1     | 异常报错（exception）          |
++----------------+----------------+--------------------------------+
+| 布尔           | 0 或 1         | 1                              |
++----------------+----------------+--------------------------------+
+| 有符号整数     | 以符号开头的字 | 目前会直接打包；未来会抛出异常 |
++----------------+----------------+--------------------------------+
+| 无符号整数     | 高位补 0       | 目前会直接打包；未来会抛出异常 |
++----------------+----------------+--------------------------------+
