@@ -35,10 +35,10 @@ that call them, similar to internal library functions.
 
 .. note::
     Functions defined outside a contract are still always executed
-    in the context of a contract. They still have access to the variable ``this``,
-    can call other contracts, send them Ether and destroy the contract that called them,
+    in the context of a contract.
+    They still can call other contracts, send them Ether and destroy the contract that called them,
     among other things. The main difference to functions defined inside a contract
-    is that free functions do not have direct access to storage variables and functions
+    is that free functions do not have direct access to the variable ``this``, storage variables and functions
     not in their scope.
 
 .. _function-parameters-return-variables:
