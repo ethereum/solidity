@@ -112,8 +112,9 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 	size_t storageByteAccesses = 0;
 	auto count = [&](TupleExpression const& _lhs, TupleType const& _rhs, auto _recurse) -> void {
 		TupleType const& lhsType = dynamic_cast<TupleType const&>(*type(_lhs));
+		TupleExpression const* lhsResolved = dynamic_cast<TupleExpression const*>(resolveOuterUnaryTuples(&_lhs));
 
-		if (lhsType.components().size() != _rhs.components().size())
+		if (lhsType.components().size() != _rhs.components().size() || lhsResolved->components().size() != _rhs.components().size())
 		{
 			solAssert(m_errorReporter.hasErrors(), "");
 			return;
@@ -134,7 +135,7 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 			{
 				if (bytesType && bytesType->numBytes() == 1)
 				{
-					if (FunctionCall const* lhsCall = dynamic_cast<FunctionCall const*>(resolveOuterUnaryTuples(_lhs.components().at(index).get())))
+					if (FunctionCall const* lhsCall = dynamic_cast<FunctionCall const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
 					{
 						FunctionType const& callType = dynamic_cast<FunctionType const&>(*type(lhsCall->expression()));
 						if (callType.kind() == FunctionType::Kind::ArrayPush)
@@ -147,7 +148,7 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 							}
 						}
 					}
-					else if (IndexAccess const* indexAccess = dynamic_cast<IndexAccess const*>(resolveOuterUnaryTuples(_lhs.components().at(index).get())))
+					else if (IndexAccess const* indexAccess = dynamic_cast<IndexAccess const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
 					{
 						if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
 							if (arrayType->isByteArray() && arrayType->dataStoredIn(DataLocation::Storage))
@@ -156,7 +157,7 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 				}
 			}
 			else if (TupleType const* tupleType = dynamic_cast<TupleType const*>(componentType))
-				if (auto const* lhsNested = dynamic_cast<TupleExpression const*>(_lhs.components().at(index).get()))
+				if (auto const* lhsNested = dynamic_cast<TupleExpression const*>(lhsResolved->components().at(index).get()))
 					if (auto const* rhsNestedType = dynamic_cast<TupleType const*>(_rhs.components().at(index)))
 						_recurse(
 							*lhsNested,
