@@ -1859,12 +1859,15 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		commonType = builtinResult.get();
 	else if (userDefinedOperatorResult)
 	{
-		solAssert(
-			userDefinedFunctionType->parameterTypes().size() == 2 &&
-			*userDefinedFunctionType->parameterTypes().at(0) ==
-			*userDefinedFunctionType->parameterTypes().at(1)
-		);
-		if (userDefinedFunctionType->returnParameterTypes().size() == 1)
+		if (userDefinedFunctionType->parameterTypes().size() != 2 ||
+			*userDefinedFunctionType->parameterTypes().at(0) != *userDefinedFunctionType->parameterTypes().at(1))
+			m_errorReporter.typeError(
+				5653_error,
+				_operation.location(),
+				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
+				" needs to have two parameters of equal type."
+			);
+		else if (userDefinedFunctionType->returnParameterTypes().size() == 1)
 			commonType = userDefinedFunctionType->parameterTypes().at(0);
 	}
 
