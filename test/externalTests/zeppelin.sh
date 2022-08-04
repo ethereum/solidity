@@ -121,6 +121,15 @@ function zeppelin_test
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
     sed -i "s|describe\(('Polygon-Child'\)|describe.skip\1|g" test/crosschain/CrossChainEnabled.test.js
     sed -i "s|it(\('revert with invalid multi proof #2'\)|it.skip(\1|g" test/utils/cryptography/MerkleProof.test.js
+    sed -i "s|describe(\('to a receiver contract that panics'\)|describe.skip(\1|g" test/token/ERC721/ERC721.behavior.js
+    sed -i "s|context(\('to a receiver contract that panics'\)|context.skip(\1|g" test/token/ERC721/ERC721.behavior.js
+    sed -i "s|describe(\('to a contract that does not implement the required function'\)|describe.skip(\1|g" test/token/ERC721/ERC721.behavior.js
+    sed -i "s|context(\('to a contract that does not implement the required function'\)|context.skip(\1|g" test/token/ERC721/ERC721.behavior.js
+    sed -i "s|it(\('reverts when the called function throws'\)|it.skip(\1|g" test/utils/Address.test.js
+    sed -i "s|it(\('reverts when function does not exist'\)|it.skip(\1|g" test/utils/Address.test.js
+    sed -i "s|it(\('reverting initialization'\)|it.skip(\1|g" test/proxy/beacon/BeaconProxy.test.js
+    sed -i "s|describe(\('reverting initialization'\)|describe.skip(\1|g" test/proxy/Proxy.behaviour.js
+    sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/security/ReentrancyGuard.test.js
 
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
