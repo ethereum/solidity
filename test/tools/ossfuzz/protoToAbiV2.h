@@ -390,6 +390,8 @@ private:
 	/// Contains typed parameter list to be passed to callee functions
 	std::ostringstream m_typedParamsExternal;
 	std::ostringstream m_typedParamsPublic;
+	/// Contains parameter list to be passed to callee functions
+	std::ostringstream m_untypedParamsExternal;
 	/// Contains type string to be passed to Isabelle API
 	std::ostringstream m_isabelleTypeString;
 	/// Contains values to be encoded in the format accepted
