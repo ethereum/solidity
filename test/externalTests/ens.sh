@@ -37,9 +37,10 @@ function test_fn { yarn test; }
 function ens_test
 {
     local repo="https://github.com/ensdomains/ens-contracts.git"
-    local ref_type=commit
-    local ref="083d29a2c50cd0a8307386abf8fadc217b256256"
-    local config_file="hardhat.config.js"
+    local ref_type=branch
+    local ref="master"
+    local config_file="hardhat.config.ts"
+    local config_var="config"
 
     local compile_only_presets=(
         legacy-no-optimize        # Compiles but tests fail to deploy GovernorCompatibilityBravo (code too large).
@@ -62,7 +63,7 @@ function ens_test
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
-    force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
+    force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     yarn install
 
     replace_version_pragmas
@@ -85,7 +86,7 @@ function ens_test
     find . -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 
     for preset in $SELECTED_PRESETS; do
-        hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
+        hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
         store_benchmark_report hardhat ens "$repo" "$preset"
     done
 }
