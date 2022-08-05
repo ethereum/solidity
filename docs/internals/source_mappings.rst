@@ -1,70 +1,52 @@
 .. index:: source mappings
 
 ***************
-Source Mappings
+源代码映射
 ***************
 
-As part of the AST output, the compiler provides the range of the source
-code that is represented by the respective node in the AST. This can be
-used for various purposes ranging from static analysis tools that report
-errors based on the AST and debugging tools that highlight local variables
-and their uses.
+作为AST输出的一部分，编译器提供了AST中相应节点所代表的源代码的范围。
+这可以用于各种目的，包括基于AST报告错误的静态分析工具和突出局部变量及其用途的调试工具。
 
-Furthermore, the compiler can also generate a mapping from the bytecode
-to the range in the source code that generated the instruction. This is again
-important for static analysis tools that operate on bytecode level and
-for displaying the current position in the source code inside a debugger
-or for breakpoint handling. This mapping also contains other information,
-like the jump type and the modifier depth (see below).
+此外，编译器还可以生成从字节码到生成该指令的源代码范围的映射。
+这对于在字节码层次上操作的静态分析工具和在调试器中显示源代码中的当前位置或断点处理来说，
+也是很重要的。这个映射还包含其他信息，如跳转类型和修改器深度（见下文）。
 
-Both kinds of source mappings use integer identifiers to refer to source files.
-The identifier of a source file is stored in
-``output['sources'][sourceName]['id']`` where ``output`` is the output of the
-standard-json compiler interface parsed as JSON.
-For some utility routines, the compiler generates "internal" source files
-that are not part of the original input but are referenced from the source
-mappings. These source files together with their identifiers can be
-obtained via ``output['contracts'][sourceName][contractName]['evm']['bytecode']['generatedSources']``.
+这两种源码映射都使用整数标识符来指代源码文件。源文件的标识符存储在 ``output['sources'][sourceName]['id']`` 中，
+其中 ``output`` 是标准json编译器接口的输出，被解析成JSON。
+对于一些实用程序，编译器会生成 "内部" 源文件，
+这些文件不是原始输入的一部分，而是从源映射中引用的。
+这些源文件及其标识符可以通过 ``output['contracts'][sourceName][contractName]['evm']['bytecode']['generatedSources']`` 获得。
 
-.. note ::
-    In the case of instructions that are not associated with any particular source file,
-    the source mapping assigns an integer identifier of ``-1``. This may happen for
-    bytecode sections stemming from compiler-generated inline assembly statements.
+.. 注解 ::
+    如果指令没有与任何特定的源文件相关联，源映射将分配一个整数标识符 ``-1``。
+    这可能发生在编译器生成的内联汇编语句所产生的字节码部分。
 
-The source mappings inside the AST use the following
-notation:
+AST内部的源映射使用以下符号：
 
 ``s:l:f``
 
-Where ``s`` is the byte-offset to the start of the range in the source file,
-``l`` is the length of the source range in bytes and ``f`` is the source
-index mentioned above.
+其中， ``s`` 是源代码文件中范围起始处的字节偏移量，
+``l`` 是以字节为单位的源代码范围的长度， ``f`` 是上述源代码索引。
 
-The encoding in the source mapping for the bytecode is more complicated:
-It is a list of ``s:l:f:j:m`` separated by ``;``. Each of these
-elements corresponds to an instruction, i.e. you cannot use the byte offset
-but have to use the instruction offset (push instructions are longer than a single byte).
-The fields ``s``, ``l`` and ``f`` are as above. ``j`` can be either
-``i``, ``o`` or ``-`` signifying whether a jump instruction goes into a
-function, returns from a function or is a regular jump as part of e.g. a loop.
-The last field, ``m``, is an integer that denotes the "modifier depth". This depth
-is increased whenever the placeholder statement (``_``) is entered in a modifier
-and decreased when it is left again. This allows debuggers to track tricky cases
-like the same modifier being used twice or multiple placeholder statements being
-used in a single modifier.
+源码映射中的字节码的编码更为复杂。它是一个由 ``s:l:f:j:m`` 组成的列表，用 ``;`` 分隔。
+这些元素中的每一个都对应着一条指令，也就是说，您不能使用字节偏移量，
+而必须使用指令偏移量（推送指令比单个字节长）。字段  ``s`` ， ``l`` 和 ``f`` 同上。
+``j`` 可以是 ``i``,  ``o`` 或 ``-``，表示跳转指令是进入一个函数，
+从一个函数返回，还是作为一个循环的一部分的普通跳转。
+最后一个字段， ``m``，是一个整数，表示 "修改器深度"。
+当占位符语句( ``_`` )进入修改器时，这个深度会增加，当它再次离开时，深度会减少。
+这使得调试器可以跟踪一些棘手的情况，如同一个修改器被使用两次，或在一个修改器中使用多个占位符语句。
 
-In order to compress these source mappings especially for bytecode, the
-following rules are used:
+为了压缩这些源码映射，特别是字节码的源码映射，使用了以下规则：
 
-- If a field is empty, the value of the preceding element is used.
-- If a ``:`` is missing, all following fields are considered empty.
+- 如果一个字段为空，则使用前一个元素的值。
+- 如果缺少 ``:`` ，以下所有字段都被认为是空的。
 
-This means the following source mappings represent the same information:
+这意味着下面的源码映射代表了相同的信息：
 
 ``1:2:1;1:9:1;2:1:2;2:1:2;2:1:2``
 
 ``1:2:1;:9;2:1:2;;``
 
-Important to note is that when the :ref:`verbatim <yul-verbatim>` builtin is used,
-the source mappings will be invalid: The builtin is considered a single
-instruction instead of potentially multiple.
+需要注意的是，当使用 :ref:`逐字（verbatim） <yul-verbatim>` 内建程序时，
+源码映射将是无效的。内建程序被认为是一条指令，而不是潜在的多条指令。
