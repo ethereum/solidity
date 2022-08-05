@@ -404,8 +404,16 @@ Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNod
 			);
 			solAssert(functionType && !functionType->parameterTypes().empty());
 
+			Type const* normalizedType = this;
+			if (auto const* referenceType = dynamic_cast<ReferenceType const*>(normalizedType))
+				normalizedType = TypeProvider::withLocationIfReference(referenceType->location(), normalizedType);
+
+			Type const* normalizedParameterType = functionType->parameterTypes().front();
+			if (auto const* referenceType = dynamic_cast<ReferenceType const*>(normalizedParameterType))
+				normalizedParameterType = TypeProvider::withLocationIfReference(referenceType->location(), normalizedParameterType);
+
 			if (
-				isImplicitlyConvertibleTo(*functionType->parameterTypes().front()) &&
+				*normalizedType == *normalizedParameterType &&
 				(
 					(_unaryOperation && function.parameterList().parameters().size() == 1) ||
 					(!_unaryOperation && function.parameterList().parameters().size() == 2)

@@ -1750,37 +1750,26 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	solAssert(!builtinResult || !userDefinedOperatorResult);
 	if (userDefinedOperatorResult)
 	{
-		if (userDefinedFunctionType->returnParameterTypes().size() != 1)
-		{
-			m_errorReporter.typeError(
-				3138_error,
-				_operation.location(),
-				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
-				" needs to return exactly one value."
-			);
-			_operation.annotation().type = subExprType;
-		}
-		else if (*userDefinedFunctionType->returnParameterTypes().front() != *userDefinedFunctionType->parameterTypes().front())
+		Type const* normalizedSubExprType = subExprType;
+		Type const* normalizedParameterType = userDefinedFunctionType->parameterTypes().front();
+
+		if (auto const* subExprReference = dynamic_cast<ReferenceType const*>(normalizedSubExprType))
+			normalizedSubExprType = TypeProvider::withLocationIfReference(subExprReference->location(), normalizedSubExprType);
+		if (auto const* parameterReferenceType = dynamic_cast<ReferenceType const*>(normalizedParameterType))
+			normalizedParameterType = TypeProvider::withLocationIfReference(parameterReferenceType->location(), normalizedParameterType);
+
+		if (*normalizedSubExprType != *normalizedParameterType)
 		{
 			m_errorReporter.typeError(
 				7983_error,
 				_operation.location(),
 				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
-				" needs to return value of type " +
+				" needs a value of type " +
 				userDefinedFunctionType->parameterTypes().front()->humanReadableName() + "."
 			);
-			_operation.annotation().type = subExprType;
-		}
-		else
-		{
-			solAssert(userDefinedFunctionType->parameterTypes().size() == 1);
-			solAssert(
-				*userDefinedFunctionType->parameterTypes().at(0) ==
-				*userDefinedFunctionType->returnParameterTypes().at(0)
-			);
-			_operation.annotation().type = userDefinedFunctionType->returnParameterTypes().at(0);
 		}
 
+		_operation.annotation().type = subExprType;
 	}
 	else if (builtinResult)
 		_operation.annotation().type = builtinResult;
@@ -1859,13 +1848,32 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		commonType = builtinResult.get();
 	else if (userDefinedOperatorResult)
 	{
-		if (userDefinedFunctionType->parameterTypes().size() != 2 ||
-			*userDefinedFunctionType->parameterTypes().at(0) != *userDefinedFunctionType->parameterTypes().at(1))
+		Type const* normalizedParameterType = userDefinedFunctionType->parameterTypes().at(0);
+		Type const* normalizedLeftType = leftType;
+		Type const* normalizedRightType = rightType;
+
+		if (auto const* parameterReference = dynamic_cast<ReferenceType const*>(normalizedParameterType))
+			normalizedParameterType = TypeProvider::withLocationIfReference(parameterReference->location(), normalizedParameterType);
+		if (auto const* leftReferenceType = dynamic_cast<ReferenceType const*>(normalizedLeftType))
+			normalizedLeftType = TypeProvider::withLocationIfReference(leftReferenceType->location(), normalizedLeftType);
+		if (auto const* rightReferenceType = dynamic_cast<ReferenceType const*>(normalizedRightType))
+			normalizedRightType = TypeProvider::withLocationIfReference(rightReferenceType->location(), normalizedRightType);
+
+		if (
+			userDefinedFunctionType->parameterTypes().size() != 2 ||
+			*normalizedLeftType != *normalizedParameterType ||
+			*normalizedRightType != *normalizedParameterType
+		)
 			m_errorReporter.typeError(
 				5653_error,
 				_operation.location(),
-				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
-				" needs to have two parameters of equal type."
+				"User defined operator " +
+				string(TokenTraits::toString(_operation.getOperator())) +
+				" not compatible with types " +
+				leftType->humanReadableName() +
+				" and " +
+				rightType->humanReadableName() +
+				"."
 			);
 		else if (userDefinedFunctionType->returnParameterTypes().size() == 1)
 			commonType = userDefinedFunctionType->parameterTypes().at(0);
@@ -1877,26 +1885,11 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		TypeProvider::boolean() :
 		commonType;
 
-	if (userDefinedOperatorResult)
-	{
-		if (userDefinedFunctionType->returnParameterTypes().size() != 1)
-			m_errorReporter.typeError(
-				1208_error,
-				_operation.location(),
-				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
-				" needs to return exactly one value."
-			);
 
-		else if (*userDefinedFunctionType->returnParameterTypes().front() != *_operation.annotation().type)
-			m_errorReporter.typeError(
-				3841_error,
-				_operation.location(),
-				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
-				" needs to return value of type " +
-				_operation.annotation().type->humanReadableName() + "."
-			);
-	}
-	else if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
+	if (
+		!userDefinedOperatorResult &&
+		(_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
+	)
 	{
 		string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
 		if (
@@ -3929,7 +3922,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		BoolResult result = normalizedType->isImplicitlyConvertibleTo(
 			*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->selfType())
 		);
-		if (!result)
+		if (!result && !operator_)
 			m_errorReporter.typeError(
 				3100_error,
 				path->location(),
@@ -3971,23 +3964,62 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					1884_error,
 					path->location(),
 					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-					"needs to have two parameters of equal type to be used for the operator " +
+					"needs to have two parameters of type " +
+					_usingFor.typeName()->annotation().type->canonicalName() +
+					" and the same data location to be used for the operator " +
 					TokenTraits::friendlyName(*operator_) +
 					"."
 				);
 			else if (
 				!TokenTraits::isBinaryOp(*operator_) &&
 				TokenTraits::isUnaryOp(*operator_) &&
-				functionType->parameterTypesIncludingSelf().size() != 1
+				(
+					functionType->parameterTypesIncludingSelf().size() != 1 ||
+					(
+						*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->parameterTypesIncludingSelf().front()) !=
+						*TypeProvider::withLocationIfReference(DataLocation::Storage, _usingFor.typeName()->annotation().type)
+					)
+				)
 			)
 					m_errorReporter.typeError(
 						1147_error,
 						path->location(),
 						"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-						"needs to have exactly one parameter to be used for the operator " +
+						"needs to have exactly one parameter of type " +
+						_usingFor.typeName()->annotation().type->canonicalName() +
+						" to be used for the operator " +
 						TokenTraits::friendlyName(*operator_) +
 						"."
 					);
+			else if (
+				(
+					functionType->parameterTypesIncludingSelf().size() == 2 &&
+					(
+						(*functionType->parameterTypesIncludingSelf().at(0) != *functionType->parameterTypesIncludingSelf().at(1)) ||
+						(
+							*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->parameterTypesIncludingSelf().at(0)) !=
+							*TypeProvider::withLocationIfReference(DataLocation::Storage, _usingFor.typeName()->annotation().type)
+						)
+					)
+				) ||
+				(
+					functionType->parameterTypesIncludingSelf().size() == 1 &&
+					(
+						*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->parameterTypesIncludingSelf().at(0)) !=
+						*TypeProvider::withLocationIfReference(DataLocation::Storage, _usingFor.typeName()->annotation().type)
+					)
+				)
+			)
+				m_errorReporter.typeError(
+					7617_error,
+					path->location(),
+					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+					"needs to have one or two parameters of type " +
+					_usingFor.typeName()->annotation().type->canonicalName() +
+					" and the same data location to be used for the operator " +
+					TokenTraits::friendlyName(*operator_) +
+					"."
+				);
 			else if (
 				functionType->parameterTypesIncludingSelf().size() != 1 &&
 				functionType->parameterTypesIncludingSelf().size() != 2
@@ -3996,7 +4028,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					8112_error,
 					path->location(),
 					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-					"needs to have one or two parameters to be used for the operator " +
+					"needs to have one or two parameters of type " +
+					_usingFor.typeName()->annotation().type->canonicalName() +
+					" and the same data location to be used for the operator " +
 					TokenTraits::friendlyName(*operator_) +
 					"."
 				);
@@ -4018,7 +4052,10 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				!TokenTraits::isCompareOp(*operator_) &&
 				(
 					functionType->returnParameterTypes().size() != 1 ||
-					*functionType->returnParameterTypes().front() != *functionType->parameterTypesIncludingSelf().front()
+					(
+						*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->returnParameterTypes().front()) !=
+						*TypeProvider::withLocationIfReference(DataLocation::Storage, _usingFor.typeName()->annotation().type)
+					)
 				)
 			)
 				m_errorReporter.typeError(
@@ -4026,7 +4063,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					path->location(),
 					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
 					"needs to return exactly one value of type " +
-					functionType->parameterTypesIncludingSelf().front()->canonicalName() +
+					_usingFor.typeName()->annotation().type->canonicalName() +
 					" to be used for the operator " +
 					TokenTraits::friendlyName(*operator_) +
 					"."

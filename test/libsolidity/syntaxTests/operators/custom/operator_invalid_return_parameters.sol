@@ -49,9 +49,3 @@ function f() pure {
 // TypeError 7743: (77-83): The function "bitnot" needs to return exactly one value of type Int to be used for the operator ~.
 // TypeError 7995: (94-96): The function "gt" needs to return exactly one value of type bool to be used for the operator >.
 // TypeError 7995: (107-109): The function "lt" needs to return exactly one value of type bool to be used for the operator <.
-// TypeError 3841: (571-596): User defined operator + needs to return value of type Int.
-// TypeError 1208: (602-627): User defined operator / needs to return exactly one value.
-// TypeError 3138: (633-645): User defined operator - needs to return exactly one value.
-// TypeError 7983: (651-663): User defined operator ~ needs to return value of type Int.
-// TypeError 1208: (669-694): User defined operator < needs to return exactly one value.
-// TypeError 3841: (700-725): User defined operator > needs to return value of type bool.
