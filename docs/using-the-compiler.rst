@@ -1,135 +1,134 @@
 ******************
-Using the Compiler
+使用编译器
 ******************
 
 .. index:: ! commandline compiler, compiler;commandline, ! solc
 
 .. _commandline-compiler:
 
-Using the Commandline Compiler
+使用命令行编译器
 ******************************
 
 .. note::
-    This section does not apply to :ref:`solcjs <solcjs>`, not even if it is used in commandline mode.
+    这一节并不适用于 :ref:`solcjs <solcjs>`， 即使在命令行模式下使用也不行。
 
-Basic Usage
+基本用法
 -----------
 
-One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
-Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
-If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast-compact-json --asm sourceFile.sol``.
+``solc`` 是 Solidity 仓库的构建目标之一, 它是 solidity 命令行编译器。
+使用 ``solc --help`` 可以为您提供所有选项的解释。编译器可以产生各种输出，
+从简单的二进制文件和抽象语法树(解析树)上的汇编到气体使用量的估计。
+如果您只想编译一个文件，您可以运行 ``solc --bin sourceFile.sol`` 来生成二进制文件。
+如果您想通过 ``solc`` 获得一些更高级的输出信息，
+可以通过 ``solc -o outputDirectory --bin --ast-compact-json --asm sourceFile.sol`` 命令
+将所有的输出都保存到单独的文件中。
 
-Optimizer Options
+优化器选项
 -----------------
 
-Before you deploy your contract, activate the optimizer when compiling using ``solc --optimize --bin sourceFile.sol``.
-By default, the optimizer will optimize the contract assuming it is called 200 times across its lifetime
-(more specifically, it assumes each opcode is executed around 200 times).
-If you want the initial contract deployment to be cheaper and the later function executions to be more expensive,
-set it to ``--optimize-runs=1``. If you expect many transactions and do not care for higher deployment cost and
-output size, set ``--optimize-runs`` to a high number.
-This parameter has effects on the following (this might change in the future):
+在您部署合约之前，在编译时使用 ``solc --optimize --bin sourceFile.sol`` 激活优化器。
+默认情况下，优化器将假设合约在其生命周期内被调用200次（更确切地说，它假设每个操作码被执行200次左右）。
+如果您想让最初的合约部署更便宜，而后来的函数执行更昂贵，请设置为 ``--optimize-runs=1``。
+如果您期望有很多交易，并且不在乎更高的部署成本和输出大小，那么把 ``--optimize-runs`` 设置成一个高的数字。
+这个参数对以下方面有影响（将来可能会改变）：
 
-- the size of the binary search in the function dispatch routine
-- the way constants like large numbers or strings are stored
+- 函数调度程序中二进制搜索的大小
+- 像大数字或字符串等常量的存储方式
 
 .. index:: allowed paths, --allow-paths, base path, --base-path, include paths, --include-path
 
-Base Path and Import Remapping
+基本路径和导入重映射
 ------------------------------
 
-The commandline compiler will automatically read imported files from the filesystem, but
-it is also possible to provide :ref:`path redirects <import-remapping>` using ``prefix=path`` in the following way:
+命令行编译器将自动从文件系统中读取导入的文件，但同时，
+它也支持通过如下方式，用 ``prefix=path`` 选项将 :ref:`路径重定向 <import-remapping>`：
 
 .. code-block:: bash
 
     solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ file.sol
 
-This essentially instructs the compiler to search for anything starting with
-``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin``.
+这实质上是指示编译器在 ``/usr/local/lib/dapp-bin`` 下搜索
+所有以 ``github.com/ethereum/dapp-bin/`` 开头的文件。
 
-When accessing the filesystem to search for imports, :ref:`paths that do not start with ./
-or ../ <direct-imports>` are treated as relative to the directories specified using
-``--base-path`` and ``--include-path`` options (or the current working directory if base path is not specified).
-Furthermore, the part of the path added via these options will not appear in the contract metadata.
+当访问文件系统搜索导入文件时，:ref:`不以./或../ <direct-imports> 开头的路径` 被视为
+相对于使用 ``--base-path`` 和 ``--include-path`` 选项指定的目录（如果没有指定基本路径，则是当前工作目录）。
+此外，通过这些选项添加的路径部分将不会出现在合约元数据中。
 
-For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
-Directories of source files specified on the command line and target paths of
-remappings are automatically allowed to be accessed by the file reader, but everything
-else is rejected by default.
-Additional paths (and their subdirectories) can be allowed via the
-``--allow-paths /sample/path,/another/sample/path`` switch.
-Everything inside the path specified via ``--base-path`` is always allowed.
+出于安全考虑，编译器 :ref:`对它可以访问的目录有一些限制 <allowed-paths>`。
+在命令行中指定的源文件的目录和重映射的目标路径被自动允许被文件阅读器访问，
+但其他的都是默认为拒绝的。
+通过 ``--allow-paths /sample/path,/another/sample/path`` 语句可以允许额外的路径（和它们的子目录）。
+通过 ``--base-path`` 指定的路径内的所有内容都是允许的。
 
-The above is only a simplification of how the compiler handles import paths.
-For a detailed explanation with examples and discussion of corner cases please refer to the section on
-:ref:`path resolution <path-resolution>`.
+以上只是对编译器如何处理导入路径的一个简化。
+关于详细的解释，包括例子和边缘情况的讨论，请参考 :ref:`路径解析 <path-resolution>` 一节。
 
 .. index:: ! linker, ! --link, ! --libraries
 .. _library-linking:
 
-Library Linking
+库链接
 ---------------
 
-If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__``. These are placeholders for the actual library addresses.
-The placeholder is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library name.
-The bytecode file will also contain lines of the form ``// <placeholder> -> <fq library name>`` at the end to help
-identify which libraries the placeholders represent. Note that the fully qualified library name
-is the path of its source file and the library name separated by ``:``.
-You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
+如果您的合约使用 :ref:`库合约 <libraries>`，
+您会注意到字节码中含有 ``__$53aea86b7d70b31448b230b20ae141a537$__`` 形式的字符串。
+这些是实际库的地址的占位符。此占位符是完全限定库名的keccak256散列的十六进制编码的34个字符前缀。
+字节码文件也将包含形式为 ``// <placeholder> -> <fq library name>`` 的代码行，以帮助识别占位符代表的库。
+注意，完全限定的库名是其源文件的路径和用 ``:`` 分隔的库名。
+您可以使用 ``solc`` 作为链接器，意味着您将在这些地方插入库的地址：
 
-Either add ``--libraries "file.sol:Math=0x1234567890123456789012345678901234567890 file.sol:Heap=0xabCD567890123456789012345678901234567890"`` to your command to provide an address for each library (use commas or spaces as separators) or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
+要么在您的命令中加入
+``--libraries "file.sol:Math=0x1234567890123456789012345678901234567890 file.sol:Heap=0xabCD567890123456789012345678901234567890"``，
+为每个库提供一个地址（用逗号或空格作为分隔符），要么将字符串存储在一个文件中（每行一个库），
+用 ``-libraries fileName`` 运行 ``solc``。
 
 .. note::
-    Starting Solidity 0.8.1 accepts ``=`` as separator between library and address, and ``:`` as a separator is deprecated. It will be removed in the future. Currently ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD567890123456789012345678901234567890"`` will work too.
+    从Solidity 0.8.1 开始，接受 ``=`` 作为库和地址之间的分隔符，而 ``:`` 作为分隔符已被废弃。
+    它将在未来被删除。目前 ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD56789012345678901234567890"`` 也可以工作。
 
 .. index:: --standard-json, --base-path
 
-If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses. The process will always terminate in a "success" state and report any errors via the JSON output.
-The option ``--base-path`` is also processed in standard-json mode.
+如果调用 ``solc`` 时有 ``--standard-json`` 选项，它将在标准输入中期待一个JSON输入（如下所述），
+并在标准输出中返回一个JSON输出。这是对更复杂的，特别是自动化使用时的推荐接口。
+该进程将始终以 “成功” 状态终止，并通过JSON输出来报告任何错误。
+选项 ``--base-path`` 也以标准JSON模式处理。
 
-If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__$53aea86b7d70b31448b230b20ae141a537$__``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
+如果调用 ``solc`` 时带有 ``--link`` 选项，所有输入文件都被编译成格式为 ``__$53aea86b7d70b31448b230b20ae141a537$__``
+形式的未链接的二进制文件（十六进制编码），并被本地链接（如果从标准输入（stdin）读取输入，则被写到标准输出（stdout））。
+在这种情况下，除了 ``--libraries`` 以外的所有选项都被忽略（包括 ``-o`` ）。
 
 .. warning::
-    Manually linking libraries on the generated bytecode is discouraged because it does not update
-    contract metadata. Since metadata contains a list of libraries specified at the time of
-    compilation and bytecode contains a metadata hash, you will get different binaries, depending
-    on when linking is performed.
+    不推荐在生成的字节码上手动链接库文件，因为它不会更新合约元数据。
+    由于元数据包含在编译时指定的库的列表，而字节码包含元数据哈希，
+    您将得到不同的二进制文件，并且这取决于何时进行链接。
 
-    You should ask the compiler to link the libraries at the time a contract is compiled by either
-    using the ``--libraries`` option of ``solc`` or the ``libraries`` key if you use the
-    standard-JSON interface to the compiler.
+    您应该在编译合约时请求编译器链接库文件，方法是使用 ``solc`` 的 ``--libraries`` 选项
+    或 ``libraries`` 键（如果您使用编译器的标准JSON接口）。
 
 .. note::
-    The library placeholder used to be the fully qualified name of the library itself
-    instead of the hash of it. This format is still supported by ``solc --link`` but
-    the compiler will no longer output it. This change was made to reduce
-    the likelihood of a collision between libraries, since only the first 36 characters
-    of the fully qualified library name could be used.
+    库的占位符曾经是库本身的完全限定名称，而不是它的哈希值。
+    这种格式仍然被 ``solc --link`` 支持，但编译器将不再输出它。
+    这一改变是为了减少库之间发生碰撞的可能性，因为只有完全限定的库名的前36个字符可以被使用。
 
 .. _evm-version:
 .. index:: ! EVM version, compile target
 
-Setting the EVM Version to Target
+将EVM版本设置为目标版本
 *********************************
 
-When you compile your contract code you can specify the Ethereum virtual machine
-version to compile for to avoid particular features or behaviours.
+当您编译您的合约代码时，您可以指定以太坊虚拟机版本来编译，以避免特定的功能或行为。
 
 .. warning::
 
-   Compiling for the wrong EVM version can result in wrong, strange and failing
-   behaviour. Please ensure, especially if running a private chain, that you
-   use matching EVM versions.
+   在错误的EVM版本进行编译会导致错误，奇怪和失败的行为。
+   请确保，特别是在运行一个私有链的情况下，您使用匹配的EVM版本。
 
-On the command line, you can select the EVM version as follows:
+在命令行中，您可以选择EVM的版本，如下所示：
 
 .. code-block:: shell
 
   solc --evm-version <VERSION> contract.sol
 
-In the :ref:`standard JSON interface <compiler-api>`, use the ``"evmVersion"``
-key in the ``"settings"`` field:
+在 :ref:`标准 JSON 接口 <compiler-api>` 中，使用 ``"settings"`` 字段中的键 ``"evmVersion"``。
 
 .. code-block:: javascript
 
@@ -141,322 +140,302 @@ key in the ``"settings"`` field:
       }
     }
 
-Target Options
+EVM版本选项
 --------------
 
-Below is a list of target EVM versions and the compiler-relevant changes introduced
-at each version. Backward compatibility is not guaranteed between each version.
+以下是一个EVM版本的列表，以及每个版本中引入的编译器相关变化。
+每个版本之间不保证向后兼容。
 
 - ``homestead``
-   - (oldest version)
+   - （最老的版本）
 - ``tangerineWhistle``
-   - Gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
-   - All gas sent by default for external calls, previously a certain amount had to be retained.
+   - 访问其他账户的gas成本增加，与gas估算和优化器有关。
+   - 对于外部调用，所有gas都是默认发送的，以前必须保留一定的数量。
 - ``spuriousDragon``
-   - Gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
+   - ``exp`` 操作码的gas成本增加，与gas估计和优化器有关。
 - ``byzantium``
-   - Opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
-   - The ``staticcall`` opcode is used when calling non-library view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
-   - It is possible to access dynamic data returned from function calls.
-   - ``revert`` opcode introduced, which means that ``revert()`` will not waste gas.
+   - 在汇编中可使用操作码 ``returndatacopy``， ``returndatasize`` 和 ``staticcall``。
+   - ``staticcall`` 操作码在调用非库合约 view 或 pure 函数时使用，它可以防止函数在EVM级别修改状态，也就是说，甚至适用于您使用无效的类型转换时。
+   - 可以访问从函数调用返回的动态数据。
+   - 引入了 ``revert`` 操作码，这意味着 ``revert`` 将不会浪费gas。
 - ``constantinople``
-   - Opcodes ``create2`, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
-   - Shifting operators use shifting opcodes and thus need less gas.
+   - 在汇编中可使用操作码 ``create2``, ``extcodehash``, ``shl``, ``shr`` 和 ``sar``。
+   - 移位运算符使用移位运算码，因此需要的gas较少。
 - ``petersburg``
-   - The compiler behaves the same way as with constantinople.
+   - 编译器的行为与 constantinople 版本的行为相同。
 - ``istanbul``
-   - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
+   - 在汇编中可使用操作码 ``chainid`` 和 ``selfbalance``。
 - ``berlin``
-   - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
-     compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
-     the optimizer.
+   - ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` 和 ``SELFDESTRUCT`` 的gas成本增加。
+     编译器假设这类操作的gas成本是固定的。这与gas估计和优化器有关。
 - ``london`` (**default**)
-   - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
+   - 区块的基本费用（ `EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ 和 `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_ ）
+     可以通过全局的 ``block.basefee`` 或内联汇编中的 ``basefee()`` 访问。
 
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
 
-Compiler Input and Output JSON Description
+编译器输入和输出JSON说明
 ******************************************
 
-The recommended way to interface with the Solidity compiler especially for
-more complex and automated setups is the so-called JSON-input-output interface.
-The same interface is provided by all distributions of the compiler.
+推荐的与Solidity编译器连接的方式，特别是对于更复杂和自动化的设置，是所谓的JSON输入输出接口。
+编译器的所有发行版都提供相同的接口。
 
-The fields are generally subject to change,
-some are optional (as noted), but we try to only make backwards compatible changes.
+这些字段一般都会有变化，有些是可选的（如前所述），但我们尽量只做向后兼容的改动。
 
-The compiler API expects a JSON formatted input and outputs the compilation result in a JSON formatted output.
-The standard error output is not used and the process will always terminate in a "success" state, even
-if there were errors. Errors are always reported as part of the JSON output.
+编译器API期望JSON格式的输入，并将编译结果输出为JSON格式的输出。
+不使用标准错误输出，进程将始终以 “成功” 状态终止，即使存在错误。错误总是作为JSON输出的一部分报告。
 
-The following subsections describe the format through an example.
-Comments are of course not permitted and used here only for explanatory purposes.
+以下各小节通过一个例子来描述该格式。
+当然，注释是不允许的，在此仅用于解释。
 
-Input Description
+输入说明
 -----------------
 
 .. code-block:: javascript
 
     {
-      // Required: Source code language. Currently supported are "Solidity" and "Yul".
+      // 必选：源代码语言。目前支持的是 “Solidity“ 和 “Yul“。
       "language": "Solidity",
-      // Required
+      // 必选
       "sources":
       {
-        // The keys here are the "global" names of the source files,
-        // imports can use other files via remappings (see below).
+        // 这里的键值是源文件的 “全局“ 名称，
+        // 导入文件可以通过重映射使用其他文件（见下文）。
         "myFile.sol":
         {
-          // Optional: keccak256 hash of the source file
-          // It is used to verify the retrieved content if imported via URLs.
+          // 可选： 源文件的kaccak256哈希值
+          // 如果通过URL导入，它用于验证检索的内容。
           "keccak256": "0x123...",
-          // Required (unless "content" is used, see below): URL(s) to the source file.
-          // URL(s) should be imported in this order and the result checked against the
-          // keccak256 hash (if available). If the hash doesn't match or none of the
-          // URL(s) result in success, an error should be raised.
-          // Using the commandline interface only filesystem paths are supported.
-          // With the JavaScript interface the URL will be passed to the user-supplied
-          // read callback, so any URL supported by the callback can be used.
+          // 必选（除非声明了 "content" 字段，参见下文）: 指向源文件的URL。
+          // 应按此顺序导入URL，并根据keccak256哈希值检查结果（如果有的话）。
+          // 如果哈希值不匹配，或者没有一个URL(s)的结果是成功的，就应该产生一个错误。
+          // 使用命令行界面只支持文件系统路径。
+          // 通过JavaScript接口，URL将被传递给用户提供的读取回调，因此可以使用回调支持的任何URL。
           "urls":
           [
             "bzzr://56ab...",
             "ipfs://Qma...",
             "/tmp/path/to/file.sol"
-            // If files are used, their directories should be added to the command line via
-            // `--allow-paths <path>`.
+            // 如果使用文件，其目录应通过 `--allow-paths <path>` 添加到命令行中。
           ]
         },
         "destructible":
         {
-          // Optional: keccak256 hash of the source file
+          // 可选：源文件的keccak256哈希值
           "keccak256": "0x234...",
-          // Required (unless "urls" is used): literal contents of the source file
+          // 必选：（除非使用 “urls“）：源文件的字面内容
           "content": "contract destructible is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
         }
       },
-      // Optional
+      // 可选
       "settings":
       {
-        // Optional: Stop compilation after the given stage. Currently only "parsing" is valid here
+        // 可选： 在给定的阶段后停止编译。目前这里只有 “parsing” 有效。
         "stopAfter": "parsing",
-        // Optional: Sorted list of remappings
+        // 可选： 经过排序的重映射列表
         "remappings": [ ":g=/dir" ],
-        // Optional: Optimizer settings
+        // 可选： 优化器设置
         "optimizer": {
-          // Disabled by default.
-          // NOTE: enabled=false still leaves some optimizations on. See comments below.
-          // WARNING: Before version 0.8.6 omitting the 'enabled' key was not equivalent to setting
-          // it to false and would actually disable all the optimizations.
+          // 默认情况下是禁用的。
+          // 注意：enabled=false 仍然保留了一些优化功能。见下面的注解。
+          // 警告：在0.8.6版本之前，省略 “enabled“ 键并不等同于将其设置为false，
+          // 实际上会禁用所有优化。
           "enabled": true,
-          // Optimize for how many times you intend to run the code.
-          // Lower values will optimize more for initial deployment cost, higher
-          // values will optimize more for high-frequency usage.
+          // 根据您打算运行代码的次数进行优化。
+          // 较低的值将更多地针对初始部署成本进行优化，
+          // 较高的值将更多地针对高频使用进行优化。
           "runs": 200,
-          // Switch optimizer components on or off in detail.
-          // The "enabled" switch above provides two defaults which can be
-          // tweaked here. If "details" is given, "enabled" can be omitted.
+          // 打开或关闭优化器组件的细节。
+          // 上面的 “enabled“ 开关提供了两个默认值，
+          // 可以在这里进行调整。如果给出了 “details“，“enabled“ 可以省略。
           "details": {
-            // The peephole optimizer is always on if no details are given,
-            // use details to switch it off.
+            // 如果没有给出 details，窥视孔优化器总是打开的，使用 details 来关闭它。
             "peephole": true,
-            // The inliner is always on if no details are given,
-            // use details to switch it off.
+            // 如果没有给出 details，内联器总是打开的，
+            // 使用 details来关闭它。
             "inliner": true,
-            // The unused jumpdest remover is always on if no details are given,
-            // use details to switch it off.
+            // 如果没有给出 details，未使用的跳板移除器总是打开的，
+            // 使用 details来关闭它。
             "jumpdestRemover": true,
-            // Sometimes re-orders literals in commutative operations.
+            // 在换元运算中，有时会对字词重新排序。
             "orderLiterals": false,
-            // Removes duplicate code blocks
+            // 移除重复的代码块
             "deduplicate": false,
-            // Common subexpression elimination, this is the most complicated step but
-            // can also provide the largest gain.
+            // 常见的子表达式消除，这是最复杂的步骤，但也能提供最大的收益。
             "cse": false,
-            // Optimize representation of literal numbers and strings in code.
+            // 优化代码中字面数字和字符串的表示。
             "constantOptimizer": false,
-            // The new Yul optimizer. Mostly operates on the code of ABI coder v2
-            // and inline assembly.
-            // It is activated together with the global optimizer setting
-            // and can be deactivated here.
-            // Before Solidity 0.6.0 it had to be activated through this switch.
+            // 新的Yul优化器。主要在ABI coder v2 和 内联汇编的代码上运行。
+            // 它与全局优化器设置一起被激活，并且可以在这里停用。
+            // 在 Solidity 0.6.0 之前，它必须通过这个开关激活。
             "yul": false,
-            // Tuning options for the Yul optimizer.
+            // Yul优化器的调优选项。
             "yulDetails": {
-              // Improve allocation of stack slots for variables, can free up stack slots early.
-              // Activated by default if the Yul optimizer is activated.
+              // 改善变量的堆栈槽的分配，可以提前释放堆栈槽。
+              // 如果Yul优化器被激活，则默认激活。
               "stackAllocation": true,
-              // Select optimization steps to be applied.
-              // Optional, the optimizer will use the default sequence if omitted.
+              // 选择要应用的优化步骤。
+              // 可选, 如果省略，优化器将使用默认序列。
               "optimizerSteps": "dhfoDgvulfnTUtnIf..."
             }
           }
         },
-        // Version of the EVM to compile for.
-        // Affects type checking and code generation. Can be homestead,
+        // 编译EVM的版本。
+        // 影响到类型检查和代码生成。版本可以是 homestead,
         // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
         "evmVersion": "byzantium",
-        // Optional: Change compilation pipeline to go through the Yul intermediate representation.
-        // This is a highly EXPERIMENTAL feature, not to be used for production. This is false by default.
+        // 可选：改变编译管道以通过Yul的中间表示法。
+        // 这是一个高度试验性的功能，不能用于生产。这在默认情况下是假的。
         "viaIR": true,
-        // Optional: Debugging settings
+        // 可选： 调试设置
         "debug": {
-          // How to treat revert (and require) reason strings. Settings are
-          // "default", "strip", "debug" and "verboseDebug".
-          // "default" does not inject compiler-generated revert strings and keeps user-supplied ones.
-          // "strip" removes all revert strings (if possible, i.e. if literals are used) keeping side-effects
-          // "debug" injects strings for compiler-generated internal reverts, implemented for ABI encoders V1 and V2 for now.
-          // "verboseDebug" even appends further information to user-supplied revert strings (not yet implemented)
+          // 如何处理 revert（和require）的原因字符串。设置是
+          // "default", "strip", "debug" 和 "verboseDebug"。
+          // "default" 不注入编译器生成的revert字符串，而是保留用户提供的字符串。
+          // "strip" 删除所有的revert字符串（如果可能的话，即如果使用了字面意义），以保持副作用。
+          // "debug" 为编译器生成的内部revert注入字符串，目前为ABI编码器V1和V2实现。
+          // "verboseDebug" 甚至将进一步的信息附加到用户提供的revert字符串中（尚未实现）。
           "revertStrings": "default",
-          // Optional: How much extra debug information to include in comments in the produced EVM
-          // assembly and Yul code. Available components are:
-          // - `location`: Annotations of the form `@src <index>:<start>:<end>` indicating the
-          //    location of the corresponding element in the original Solidity file, where:
-          //     - `<index>` is the file index matching the `@use-src` annotation,
-          //     - `<start>` is the index of the first byte at that location,
-          //     - `<end>` is the index of the first byte after that location.
-          // - `snippet`: A single-line code snippet from the location indicated by `@src`.
-          //     The snippet is quoted and follows the corresponding `@src` annotation.
-          // - `*`: Wildcard value that can be used to request everything.
+          // 可选：在产生的EVM汇编和Yul代码的注释中包括多少额外的调试信息。可用的组件是：
+          // - `location`: `@src <index>:<start>:<end>` 形式的注解，
+          //   表明原始 Solidity 文件中相应元素的位置，其中：
+          //     - `<index>` 是与 `@us-src` 注释相匹配的文件索引。
+          //     - `<start>` 是该位置的第一个字节的索引。
+          //     - `<end>` 是该位置后第一个字节的索引。
+          // - `snippet`: 来自 `@src` 所示位置的单行代码片断。
+          //     该片段有引号，并跟随相应的 `@src` 注释。
+          // - `*`: 通配符值，可用于请求所有的东西。
           "debugInfo": ["location", "snippet"]
         },
-        // Metadata settings (optional)
+        // 元数据设置 (可选)
         "metadata": {
-          // Use only literal content and not URLs (false by default)
+          // 只使用字面内容，不使用URL（默认为false）。
           "useLiteralContent": true,
-          // Use the given hash method for the metadata hash that is appended to the bytecode.
-          // The metadata hash can be removed from the bytecode via option "none".
-          // The other options are "ipfs" and "bzzr1".
-          // If the option is omitted, "ipfs" is used by default.
+          // 对附加在字节码上的元数据哈希值使用给定的哈希值方法。
+          // 元数据哈希可以通过选项 "none "从字节码中删除。
+          // 其他选项是 "ipfs" 和 "bzzr1"。
+          // 如果省略该选项，默认使用 "ipfs"。
           "bytecodeHash": "ipfs"
         },
-        // Addresses of the libraries. If not all libraries are given here,
-        // it can result in unlinked objects whose output data is different.
+        // 库的地址。如果这里没有给出所有的库，
+        // 可能会导致未链接的对象，其输出数据是不同的。
         "libraries": {
-          // The top level key is the the name of the source file where the library is used.
-          // If remappings are used, this source file should match the global path
-          // after remappings were applied.
-          // If this key is an empty string, that refers to a global level.
+          // 顶层键是使用该库的源文件的名称。
+          // 如果使用了重映射，这个源文件应该与应用重映射后的全局路径一致。
+          // 如果这个键是一个空字符串，那就是指一个全局水平。
           "myFile.sol": {
             "MyLib": "0x123123..."
           }
         },
-        // The following can be used to select desired outputs based
-        // on file and contract names.
-        // If this field is omitted, then the compiler loads and does type checking,
-        // but will not generate any outputs apart from errors.
-        // The first level key is the file name and the second level key is the contract name.
-        // An empty contract name is used for outputs that are not tied to a contract
-        // but to the whole source file like the AST.
-        // A star as contract name refers to all contracts in the file.
-        // Similarly, a star as a file name matches all files.
-        // To select all outputs the compiler can possibly generate, use
-        // "outputSelection: { "*": { "*": [ "*" ], "": [ "*" ] } }"
-        // but note that this might slow down the compilation process needlessly.
+        // 以下可用于根据文件和合约名称选择所需的输出。
+        // 如果这个字段被省略，那么编译器就会加载并进行类型检查，但除了错误之外不会产生任何输出。
+        // 第一层键是文件名，第二层键是合约名。
+        // 一个空的合约名称用于不与合约绑定而是与整个源文件绑定的输出，如AST。
+        // 以星号作为合约名称是指文件中的所有合约。
+        // 同样地，以星形作为文件名可以匹配所有文件。
+        // 要选择编译器可能产生的所有输出，
+        // 使用 "outputSelection"。{ "*": { "*": [ "*" ], "": [ "*" ] } }"，
+        // 但要注意，这可能会不必要地减慢编译过程。
         //
-        // The available output types are as follows:
+        // 可用的输出类型如下：
         //
-        // File level (needs empty string as contract name):
-        //   ast - AST of all source files
+        // 文件级别（需要空字符串作为合约名称）：
+        //   ast - 所有源文件的AST
         //
-        // Contract level (needs the contract name or "*"):
+        // 合约级别（需要合约名称或 "*"）：
         //   abi - ABI
-        //   devdoc - Developer documentation (natspec)
-        //   userdoc - User documentation (natspec)
-        //   metadata - Metadata
-        //   ir - Yul intermediate representation of the code before optimization
-        //   irOptimized - Intermediate representation after optimization
-        //   storageLayout - Slots, offsets and types of the contract's state variables.
-        //   evm.assembly - New assembly format
-        //   evm.legacyAssembly - Old-style assembly format in JSON
-        //   evm.bytecode.functionDebugData - Debugging information at function level
-        //   evm.bytecode.object - Bytecode object
-        //   evm.bytecode.opcodes - Opcodes list
-        //   evm.bytecode.sourceMap - Source mapping (useful for debugging)
-        //   evm.bytecode.linkReferences - Link references (if unlinked object)
-        //   evm.bytecode.generatedSources - Sources generated by the compiler
-        //   evm.deployedBytecode* - Deployed bytecode (has all the options that evm.bytecode has)
-        //   evm.deployedBytecode.immutableReferences - Map from AST ids to bytecode ranges that reference immutables
-        //   evm.methodIdentifiers - The list of function hashes
-        //   evm.gasEstimates - Function gas estimates
-        //   ewasm.wast - Ewasm in WebAssembly S-expressions format
-        //   ewasm.wasm - Ewasm in WebAssembly binary format
+        //   devdoc - 开发者文档（Natspec格式）
+        //   userdoc - 用户文档（Natspec格式）
+        //   metadata - 元数据
+        //   ir - 优化代码前的Yul中间表示法
+        //   irOptimized - 优化后的中间表现
+        //   storageLayout - 合约的状态变量的槽位、偏移量和类型
+        //   evm.assembly - 新的汇编格式
+        //   evm.legacyAssembly - JSON中的旧式汇编格式
+        //   evm.bytecode.functionDebugData - 在函数层面的调试信息
+        //   evm.bytecode.object - 字节码对象
+        //   evm.bytecode.opcodes - 操作码列表
+        //   evm.bytecode.sourceMap - 源码映射（对调试有用）
+        //   evm.bytecode.linkReferences - 链接引用（如果是未链接的对象）
+        //   evm.bytecode.generatedSources - 由编译器生成的源码
+        //   evm.deployedBytecode* - 部署的字节码（拥有evm.bytecode的所有选项）。
+        //   evm.deployedBytecode.immutableReferences - 从AST id到引用不可变的字节码范围的映射
+        //   evm.methodIdentifiers - 函数哈希值的列表
+        //   evm.gasEstimates - 函数gas估计
+        //   ewasm.wast - WebAssembly S-expressions格式的Ewasm
+        //   ewasm.wasm - WebAssembly二进制格式的Ewasm
         //
-        // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
-        // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
+        // 注意，使用 `evm`， `evm.bytecode`， `ewasm` 等将选择该输出的每个目标部分。
+        // 此外，`*` 可以作为通配符来请求所有东西。
         //
         "outputSelection": {
           "*": {
             "*": [
-              "metadata", "evm.bytecode" // Enable the metadata and bytecode outputs of every single contract.
-              , "evm.bytecode.sourceMap" // Enable the source map output of every single contract.
+              "metadata", "evm.bytecode" // 启用每个合约的元数据和字节码输出。
+              , "evm.bytecode.sourceMap" // 启用每个合约的源码映射输出。
             ],
             "": [
-              "ast" // Enable the AST output of every single file.
+              "ast" // 启用每个文件的AST输出。
             ]
           },
-          // Enable the abi and opcodes output of MyContract defined in file def.
+          // 启用文件def中定义的MyContract的abi和opcodes输出。
           "def": {
             "MyContract": [ "abi", "evm.bytecode.opcodes" ]
           }
         },
-        // The modelChecker object is experimental and subject to changes.
+        // modelChecker对象是实验性的，可能会有变化。
         "modelChecker":
         {
-          // Chose which contracts should be analyzed as the deployed one.
+          // 选择哪些合约应作为部署的合约进行分析。
           "contracts":
           {
             "source1.sol": ["contract1"],
             "source2.sol": ["contract2", "contract3"]
           },
-          // Choose whether division and modulo operations should be replaced by
-          // multiplication with slack variables. Default is `true`.
-          // Using `false` here is recommended if you are using the CHC engine
-          // and not using Spacer as the Horn solver (using Eldarica, for example).
-          // See the Formal Verification section for a more detailed explanation of this option.
+          // 选择除法和模数操作是否应该用松弛变量的乘法来代替。默认为 `true`。
+          // 如果您使用CHC引擎而不使用Spacer作为Horn求解器（例如使用Eldarica），建议在这里使用 `false`。
+          // 关于这个选项的更详细解释，请参见形式化验证部分。
           "divModWithSlacks": true,
-          // Choose which model checker engine to use: all (default), bmc, chc, none.
+          // 选择要使用的模型检查器引擎：所有（默认）， bmc， chc， 无。
           "engine": "chc",
-          // Choose which types of invariants should be reported to the user: contract, reentrancy.
+          // 选择哪些类型的不变性应该报告给用户：合约，重入。
           "invariants": ["contract", "reentrancy"],
-          // Choose whether to output all unproved targets. The default is `false`.
+          // 选择是否输出所有未验证的目标。默认为 `false`。
           "showUnproved": true,
-          // Choose which solvers should be used, if available.
-          // See the Formal Verification section for the solvers description.
+          // 如果有的话，选择应该使用哪些求解器。
+          // 关于求解器的描述，见形式验证部分。
           "solvers": ["cvc4", "smtlib2", "z3"],
-          // Choose which targets should be checked: constantCondition,
-          // underflow, overflow, divByZero, balance, assert, popEmptyArray, outOfBounds.
-          // If the option is not given all targets are checked by default,
-          // except underflow/overflow for Solidity >=0.8.7.
-          // See the Formal Verification section for the targets description.
+          // 选择哪些目标应该被检查：常数条件，下溢，溢出，除以零，余额，断言，弹出空数组，界外。
+          // 如果没有给出该选项，所有目标都被默认检查，除了 Solidity >=0.8.7 的下溢/溢出。
+          // 目标描述见形式化验证部分。
           "targets": ["underflow", "overflow", "assert"],
-          // Timeout for each SMT query in milliseconds.
-          // If this option is not given, the SMTChecker will use a deterministic
-          // resource limit by default.
-          // A given timeout of 0 means no resource/time restrictions for any query.
+          // 每个SMT查询的超时时间，以毫秒为单位。
+          // 如果没有给出这个选项，SMTChecker将默认使用确定性的资源限制。
+          // 给定超时为0意味着任何查询都没有资源/时间限制。
           "timeout": 20000
         }
       }
     }
 
 
-Output Description
+输出描述
 ------------------
 
 .. code-block:: javascript
 
     {
-      // Optional: not present if no errors/warnings/infos were encountered
+      // 可选：如果没有遇到错误/警告/消息，则不存在。
       "errors": [
         {
-          // Optional: Location within the source file.
+          // 可选：在源文件中的位置。
           "sourceLocation": {
             "file": "sourceFile.sol",
             "start": 0,
             "end": 100
           },
-          // Optional: Further locations (e.g. places of conflicting declarations)
+          // 可选：更多的位置（如有冲突的声明的地方）。
           "secondarySourceLocations": [
             {
               "file": "sourceFile.sol",
@@ -465,92 +444,91 @@ Output Description
               "message": "Other declaration is here:"
             }
           ],
-          // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc.
-          // See below for complete list of types.
+          // 强制：错误类型，如 “TypeError“， “InternalCompilerError“， “Exception” 等等。
+          // 完整的类型清单见下文。
           "type": "TypeError",
-          // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
+          // 强制：发生错误的组件，例如“general”，“ewasm”等
           "component": "general",
-          // Mandatory ("error", "warning" or "info", but please note that this may be extended in the future)
+          // 强制：错误的严重级别（“error”，“warning” 或 “info”，但请注意，这可能在未来被扩展。）
           "severity": "error",
-          // Optional: unique code for the cause of the error
+          // 可选：错误原因的唯一代码
           "errorCode": "3141",
-          // Mandatory
+          // 强制
           "message": "Invalid keyword",
-          // Optional: the message formatted with source location
+          // 可选：带错误源位置的格式化消息
           "formattedMessage": "sourceFile.sol:100: Invalid keyword"
         }
       ],
-      // This contains the file-level outputs.
-      // It can be limited/filtered by the outputSelection settings.
+      // 这包含文件级的输出。
+      // 它可以通过outputSelection设置进行限制/过滤。
       "sources": {
         "sourceFile.sol": {
-          // Identifier of the source (used in source maps)
+          // 标识符（用于源码映射）
           "id": 1,
-          // The AST object
+          // AST对象
           "ast": {}
         }
       },
-      // This contains the contract-level outputs.
-      // It can be limited/filtered by the outputSelection settings.
+      // 这里包含了合约级别的输出。
+      // 它可以通过outputSelection设置进行限制/过滤。
       "contracts": {
         "sourceFile.sol": {
-          // If the language used has no contract names, this field should equal to an empty string.
+          // 如果使用的语言没有合约名称，则该字段应该留空。
           "ContractName": {
-            // The Ethereum Contract ABI. If empty, it is represented as an empty array.
-            // See https://docs.soliditylang.org/en/develop/abi-spec.html
+            // 以太坊合约的应用二进制接口（ABI）。如果为空，则表示为空数组。
+            // 请参阅 https://docs.soliditylang.org/en/develop/abi-spec.html
             "abi": [],
-            // See the Metadata Output documentation (serialised JSON string)
+            // 请参阅元数据输出文档（序列化的JSON字符串）
             "metadata": "{/* ... */}",
-            // User documentation (natspec)
+            // 用户文档（natspec）
             "userdoc": {},
-            // Developer documentation (natspec)
+            // 开发人员文档（natspec）
             "devdoc": {},
-            // Intermediate representation (string)
+            // 中间表示形式 (string)
             "ir": "",
-            // See the Storage Layout documentation.
+            // 请参阅 "存储布局" 文档。
             "storageLayout": {"storage": [/* ... */], "types": {/* ... */} },
-            // EVM-related outputs
+            // EVM相关输出
             "evm": {
-              // Assembly (string)
+              // 汇编 (string)
               "assembly": "",
-              // Old-style assembly (object)
+              // 旧风格的汇编 (object)
               "legacyAssembly": {},
-              // Bytecode and related details.
+              // 字节码和相关细节
               "bytecode": {
-                // Debugging data at the level of functions.
+                // 在函数层面上调试数据。
                 "functionDebugData": {
-                  // Now follows a set of functions including compiler-internal and
-                  // user-defined function. The set does not have to be complete.
-                  "@mint_13": { // Internal name of the function
-                    "entryPoint": 128, // Byte offset into the bytecode where the function starts (optional)
-                    "id": 13, // AST ID of the function definition or null for compiler-internal functions (optional)
-                    "parameterSlots": 2, // Number of EVM stack slots for the function parameters (optional)
-                    "returnSlots": 1 // Number of EVM stack slots for the return values (optional)
+                  // 接下来是一组函数，包括编译器内部的和用户定义的函数。
+                  // 这组函数不一定是完整的。
+                  "@mint_13": { // 函数的内部名称
+                    "entryPoint": 128, // 函数开始所在字节码的字节偏移量（可选）
+                    "id": 13, // 函数定义的AST ID，或者对于编译器内部的函数为空（可选）
+                    "parameterSlots": 2, // 函数参数的EVM堆栈槽的数量（可选）
+                    "returnSlots": 1 // 返回值的EVM堆栈槽的数量（可选）
                   }
                 },
-                // The bytecode as a hex string.
+                // 作为十六进制字符串的字节码。
                 "object": "00fe",
-                // Opcodes list (string)
+                // 操作码列表（字符串）
                 "opcodes": "",
-                // The source mapping as a string. See the source mapping definition.
+                // 作为一个字符串的源映射。参见源映射的定义。
                 "sourceMap": "",
-                // Array of sources generated by the compiler. Currently only
-                // contains a single Yul file.
+                // 由编译器生成的源文件的数组。目前只包含一个Yul文件。
                 "generatedSources": [{
                   // Yul AST
                   "ast": {/* ... */},
-                  // Source file in its text form (may contain comments)
+                  // 文本形式的源文件（可能包含注释）。
                   "contents":"{ function abi_decode(start, end) -> data { data := calldataload(start) } }",
-                  // Source file ID, used for source references, same "namespace" as the Solidity source files
+                  // 源文件ID，用于源引用，与Solidity源文件相同的 "命名空间"。
                   "id": 2,
                   "language": "Yul",
                   "name": "#utility.yul"
                 }],
-                // If given, this is an unlinked object.
+                // 如果给定，这就是一个非链接的对象。
                 "linkReferences": {
                   "libraryFile.sol": {
-                    // Byte offsets into the bytecode.
-                    // Linking replaces the 20 bytes located there.
+                    // 在字节码中的字节偏移量。
+                    // 链接取代了位于那里的20个字节。
                     "Library1": [
                       { "start": 0, "length": 20 },
                       { "start": 200, "length": 20 }
@@ -559,18 +537,18 @@ Output Description
                 }
               },
               "deployedBytecode": {
-                /* ..., */ // The same layout as above.
+                /* ..., */ // 与上述布局相同。
                 "immutableReferences": {
-                  // There are two references to the immutable with AST ID 3, both 32 bytes long. One is
-                  // at bytecode offset 42, the other at bytecode offset 80.
+                  // 有两个对AST ID为3的不可变的引用，都是32字节长。
+                  // 一个在字节码偏移量42，另一个在字节码偏移量80。
                   "3": [{ "start": 42, "length": 32 }, { "start": 80, "length": 32 }]
                 }
               },
-              // The list of function hashes
+              // 函数哈希值的列表
               "methodIdentifiers": {
                 "delegate(address)": "5c19a95c"
               },
-              // Function gas estimates
+              // 函数gas估计
               "gasEstimates": {
                 "creation": {
                   "codeDepositCost": "420000",
@@ -585,11 +563,11 @@ Output Description
                 }
               }
             },
-            // Ewasm related outputs
+            // Ewasm相关的输出
             "ewasm": {
-              // S-expressions format
+              // S-expressions格式
               "wast": "",
-              // Binary format (hex string)
+              // 二进制格式（十六进制字符串）
               "wasm": ""
             }
           }
@@ -598,172 +576,160 @@ Output Description
     }
 
 
-Error Types
+错误类型
 ~~~~~~~~~~~
 
-1. ``JSONError``: JSON input doesn't conform to the required format, e.g. input is not a JSON object, the language is not supported, etc.
-2. ``IOError``: IO and import processing errors, such as unresolvable URL or hash mismatch in supplied sources.
-3. ``ParserError``: Source code doesn't conform to the language rules.
-4. ``DocstringParsingError``: The NatSpec tags in the comment block cannot be parsed.
-5. ``SyntaxError``: Syntactical error, such as ``continue`` is used outside of a ``for`` loop.
-6. ``DeclarationError``: Invalid, unresolvable or clashing identifier names. e.g. ``Identifier not found``
-7. ``TypeError``: Error within the type system, such as invalid type conversions, invalid assignments, etc.
-8. ``UnimplementedFeatureError``: Feature is not supported by the compiler, but is expected to be supported in future versions.
-9. ``InternalCompilerError``: Internal bug triggered in the compiler - this should be reported as an issue.
-10. ``Exception``: Unknown failure during compilation - this should be reported as an issue.
-11. ``CompilerError``: Invalid use of the compiler stack - this should be reported as an issue.
-12. ``FatalError``: Fatal error not processed correctly - this should be reported as an issue.
-13. ``Warning``: A warning, which didn't stop the compilation, but should be addressed if possible.
-14. ``Info``: Information that the compiler thinks the user might find useful, but is not dangerous and does not necessarily need to be addressed.
+1. ``JSONError``： JSON输入不符合所需格式，例如，输入不是JSON对象，不支持的语言等。
+2. ``IOError``： IO和导入处理错误，例如，在提供的源里包含无法解析的URL或哈希值不匹配。
+3. ``ParserError``： 源代码不符合语言规则。
+4. ``DocstringParsingError``： 注释块中的NatSpec标签无法解析。
+5. ``SyntaxError``： 语法错误，例如 ``continue`` 在 ``for`` 循环外部使用。
+6. ``DeclarationError``： 无效的，无法解析的或冲突的标识符名称 比如 ``Identifier not found``
+7. ``TypeError``： 类型系统内的错误，例如无效类型转换，无效赋值等。
+8. ``UnimplementedFeatureError``： 当前编译器不支持该功能，但预计将在未来的版本中支持。
+9. ``InternalCompilerError``： 在编译器中触发的内部错误——应将此报告为一个issue。
+10. ``Exception``： 编译期间的未知失败——应将此报告为一个issue。
+11. ``CompilerError``： 编译器堆栈的无效使用——应将此报告为一个issue。
+12. ``FatalError``： 未正确处理致命错误——应将此报告为一个issue。
+13. ``Warning``： 警告，不会停止编译，但应尽可能处理。
+14. ``Info``： 编译器认为用户可能会在其中发现有用的信息，并不危险，也不一定需要处理。
 
 
 .. _compiler-tools:
 
-Compiler Tools
+编译器工具
 **************
 
-solidity-upgrade
+Solidity-升级
 ----------------
 
-``solidity-upgrade`` can help you to semi-automatically upgrade your contracts
-to breaking language changes. While it does not and cannot implement all
-required changes for every breaking release, it still supports the ones, that
-would need plenty of repetitive manual adjustments otherwise.
+``solidity-upgrade`` 可以帮助您半自动地升级您的合约，以适应语言的变化。
+虽然它没有也不可能为每一个中断的版本实现所有需要的变化，
+但它仍然支持那些需要大量重复性手工调整的版本。
 
 .. note::
 
-    ``solidity-upgrade`` carries out a large part of the work, but your
-    contracts will most likely need further manual adjustments. We recommend
-    using a version control system for your files. This helps reviewing and
-    eventually rolling back the changes made.
+    ``solidity-upgrade`` 在很大程度上进行了工作，但您的合约很可能需要进一步的手工调整。
+    我们建议为您的文件使用一个版本控制系统。这有助于审查和最终回滚所做的修改。
 
 .. warning::
 
-    ``solidity-upgrade`` is not considered to be complete or free from bugs, so
-    please use with care.
+    ``solidity-upgrade`` 并不被认为是完整的或没有漏洞的，所以请谨慎使用。
 
-How it Works
+它是如何工作的
 ~~~~~~~~~~~~
 
-You can pass (a) Solidity source file(s) to ``solidity-upgrade [files]``. If
-these make use of ``import`` statement which refer to files outside the
-current source file's directory, you need to specify directories that
-are allowed to read and import files from, by passing
-``--allow-paths [directory]``. You can ignore missing files by passing
-``--ignore-missing``.
+您可以将 （一个或多个）Solidity 源文件传递给 ``solidity-upgrade [files]``。
+如果这些文件使用了 ``import`` 语句，指的是当前源文件目录以外的文件，
+您需要通过 ``--allow-paths [directory]`` 来指定允许读取和导入文件的目录。
+您可以通过传递 ``--ignore-missing`` 来忽略丢失的文件。
 
-``solidity-upgrade`` is based on ``libsolidity`` and can parse, compile and
-analyse your source files, and might find applicable source upgrades in them.
+``solidity-upgrade`` 是基于 ``libsolidity`` 的，
+可以解析，编译和分析您的源文件，并可能在其中找到适用的源升级。
 
-Source upgrades are considered to be small textual changes to your source code.
-They are applied to an in-memory representation of the source files
-given. The corresponding source file is updated by default, but you can pass
-``--dry-run`` to simulate to whole upgrade process without writing to any file.
+源码升级被认为是对您的源代码的轻微的文字修改。
+它们被应用于在内存中表示的给定源文件。默认情况下，相应的源文件会被更新，
+但您可以通过 ``--dry-run`` 来模拟整个升级过程，而不写到任何文件中。
 
-The upgrade process itself has two phases. In the first phase source files are
-parsed, and since it is not possible to upgrade source code on that level,
-errors are collected and can be logged by passing ``--verbose``. No source
-upgrades available at this point.
+升级过程本身有两个阶段。在第一阶段，源文件被解析，
+由于不可能在这个层面上升级源代码。错误被收集起来，
+可以通过 ``--verbose`` 来记录。
+没有源代码在这一点上可以升级。
 
-In the second phase, all sources are compiled and all activated upgrade analysis
-modules are run alongside compilation. By default, all available modules are
-activated. Please read the documentation on
-:ref:`available modules <upgrade-modules>` for further details.
+在第二阶段，所有的源代码都被编译，
+所有激活的升级分析模块都与编译同时运行。默认情况下，所有可用的模块都被激活。
+请阅读 :ref:`可用的模块 <upgrade-modules>` 的文档以了解更多细节。
 
 
-This can result in compilation errors that may
-be fixed by source upgrades. If no errors occur, no source upgrades are being
-reported and you're done.
-If errors occur and some upgrade module reported a source upgrade, the first
-reported one gets applied and compilation is triggered again for all given
-source files. The previous step is repeated as long as source upgrades are
-reported. If errors still occur, you can log them by passing ``--verbose``.
-If no errors occur, your contracts are up to date and can be compiled with
-the latest version of the compiler.
+这可能会导致编译错误，而这些错误可能会被源码升级所修复。
+如果没有错误发生，就没有报告源码升级，您就完成了。
+如果发生错误，并且一些升级模块报告了源码升级，
+那么第一个报告的源码就会被应用，并且对所有给定的源码文件再次触发编译。
+只要报告了源码升级，就会重复上一步。
+如果仍然发生错误，您可以通过 ``--verbose`` 来记录它们。
+如果没有错误发生，您的合约是最新的，可以用最新版本的编译器进行编译。
 
 .. _upgrade-modules:
 
-Available Upgrade Modules
+可用的升级模块
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+----------------------------+---------+--------------------------------------------------+
-| Module                     | Version | Description                                      |
-+============================+=========+==================================================+
-| ``constructor``            | 0.5.0   | Constructors must now be defined using the       |
-|                            |         | ``constructor`` keyword.                         |
-+----------------------------+---------+--------------------------------------------------+
-| ``visibility``             | 0.5.0   | Explicit function visibility is now mandatory,   |
-|                            |         | defaults to ``public``.                          |
-+----------------------------+---------+--------------------------------------------------+
-| ``abstract``               | 0.6.0   | The keyword ``abstract`` has to be used if a     |
-|                            |         | contract does not implement all its functions.   |
-+----------------------------+---------+--------------------------------------------------+
-| ``virtual``                | 0.6.0   | Functions without implementation outside an      |
-|                            |         | interface have to be marked ``virtual``.         |
-+----------------------------+---------+--------------------------------------------------+
-| ``override``               | 0.6.0   | When overriding a function or modifier, the new  |
-|                            |         | keyword ``override`` must be used.               |
-+----------------------------+---------+--------------------------------------------------+
-| ``dotsyntax``              | 0.7.0   | The following syntax is deprecated:              |
-|                            |         | ``f.gas(...)()``, ``f.value(...)()`` and         |
-|                            |         | ``(new C).value(...)()``. Replace these calls by |
-|                            |         | ``f{gas: ..., value: ...}()`` and                |
-|                            |         | ``(new C){value: ...}()``.                       |
-+----------------------------+---------+--------------------------------------------------+
-| ``now``                    | 0.7.0   | The ``now`` keyword is deprecated. Use           |
-|                            |         | ``block.timestamp`` instead.                     |
-+----------------------------+---------+--------------------------------------------------+
-| ``constructor-visibility`` | 0.7.0   | Removes visibility of constructors.              |
-|                            |         |                                                  |
-+----------------------------+---------+--------------------------------------------------+
++----------------------------+-------+--------------------------------------------+
+|            模块            | 版本  |                    说明                    |
++============================+=======+============================================+
+| ``constructor``            | 0.5.0 | 现在必须使用 ``constructor`` 关键字        |
+|                            |       | 来定义构造器。                             |
++----------------------------+-------+--------------------------------------------+
+| ``visibility``             | 0.5.0 | 明确的函数可见性现在是强制的，             |
+|                            |       | 默认为 ``public``。                        |
++----------------------------+-------+--------------------------------------------+
+| ``abstract``               | 0.6.0 | 如果一个合约没有实现其所有的功能，         |
+|                            |       | 就必须使用关键字 ``abstract``。            |
++----------------------------+-------+--------------------------------------------+
+| ``virtual``                | 0.6.0 | 在接口之外没有实现的函数                   |
+|                            |       | 必须被标记为 ``virtual``。                 |
++----------------------------+-------+--------------------------------------------+
+| ``override``               | 0.6.0 | 当覆盖一个函数或修改器时，                 |
+|                            |       | 必须使用新的关键字 ``override``。          |
++----------------------------+-------+--------------------------------------------+
+| ``dotsyntax``              | 0.7.0 | 以下语法已被弃用：                         |
+|                            |       | ``f.gas(...)()``， ``f.value(...)()`` 和   |
+|                            |       | ``(new C).value(...)()``。                 |
+|                            |       | 用 ``f{gas: ...， value: ...}()`` 和       |
+|                            |       | ``(new C){value: ...}()`` 来替代这些方法。 |
++----------------------------+-------+--------------------------------------------+
+| ``now``                    | 0.7.0 | ``now`` 关键字已被弃用。 Use               |
+|                            |       | 使用 ``block.timestamp`` 代替。            |
++----------------------------+-------+--------------------------------------------+
+| ``constructor-visibility`` | 0.7.0 | 移除构造函数的可见性。                     |
+|                            |       |                                            |
++----------------------------+-------+--------------------------------------------+
 
-Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
-:doc:`0.6.0 release notes <060-breaking-changes>`,
-:doc:`0.7.0 release notes <070-breaking-changes>` and :doc:`0.8.0 release notes <080-breaking-changes>` for further details.
+更多详情，请参阅 :doc:`0.5.0 版本说明 <050-breaking-changes>`,
+:doc:`0.6.0 版本说明 <060-breaking-changes>`,
+:doc:`0.7.0 版本说明 <070-breaking-changes>` 和 :doc:`0.8.0 版本说明 <080-breaking-changes>`。
 
-Synopsis
+简介
 ~~~~~~~~
 
 .. code-block:: none
 
-    Usage: solidity-upgrade [options] contract.sol
+    用法： solidity-upgrade [options] contract.sol
 
-    Allowed options:
-        --help               Show help message and exit.
-        --version            Show version and exit.
+    允许的选项：
+        --help               显示帮助信息并退出。
+        --version            显示版本并退出。
         --allow-paths path(s)
-                             Allow a given path for imports. A list of paths can be
-                             supplied by separating them with a comma.
-        --ignore-missing     Ignore missing files.
-        --modules module(s)  Only activate a specific upgrade module. A list of
-                             modules can be supplied by separating them with a comma.
-        --dry-run            Apply changes in-memory only and don't write to input
-                             file.
-        --verbose            Print logs, errors and changes. Shortens output of
-                             upgrade patches.
-        --unsafe             Accept *unsafe* changes.
+                             允许导入一个给定的路径。
+                             可以通过用逗号分隔来提供一个路径列表。
+        --ignore-missing     忽略缺失的文件。
+        --modules module(s)  只激活一个特定的升级模块。
+                             可以用逗号隔开提供一个模块的列表。
+        --dry-run            只在内存中应用变化，不写到输入文件。
+        --verbose            打印日志、错误和变化。缩短了升级补丁的输出。
+        --unsafe             接受 *不安全* 的修改。
 
 
 
-Bug Reports / Feature Requests
+错误报告/功能请求
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you found a bug or if you have a feature request, please
-`file an issue <https://github.com/ethereum/solidity/issues/new/choose>`_ on Github.
+如果您发现了一个错误，或者您有一个功能请求，请
+`在Github上提交一个问题 <https://github.com/ethereum/solidity/issues/new/choose>`_。
 
 
-Example
+示例
 ~~~~~~~
 
-Assume that you have the following contract in ``Source.sol``:
+假设您在 ``Source.sol`` 里有以下合约：
 
 .. code-block:: Solidity
 
     pragma solidity >=0.6.0 <0.6.4;
-    // This will not compile after 0.7.0
+    // 这在0.7.0之后将无法编译。
     // SPDX-License-Identifier: GPL-3.0
     contract C {
-        // FIXME: remove constructor visibility and make the contract abstract
+        // FIXME: 移除构造函数的可见性，并使合约成为 abstract 合约
         constructor() internal {}
     }
 
@@ -771,7 +737,7 @@ Assume that you have the following contract in ``Source.sol``:
         uint time;
 
         function f() public payable {
-            // FIXME: change now to block.timestamp
+            // FIXME: 将 now 改成 block.timestamp
             time = now;
         }
     }
@@ -779,44 +745,43 @@ Assume that you have the following contract in ``Source.sol``:
     contract E {
         D d;
 
-        // FIXME: remove constructor visibility
+        // FIXME: 移除构造函数的可见性
         constructor() public {}
 
         function g() public {
-            // FIXME: change .value(5) =>  {value: 5}
+            // FIXME: 将 .value(5) 改成  {value: 5}
             d.f.value(5)();
         }
     }
 
 
 
-Required Changes
+必要的改变
 ^^^^^^^^^^^^^^^^
 
-The above contract will not compile starting from 0.7.0. To bring the contract up to date with the
-current Solidity version, the following upgrade modules have to be executed:
-``constructor-visibility``, ``now`` and ``dotsyntax``. Please read the documentation on
-:ref:`available modules <upgrade-modules>` for further details.
+上述合约从0.7.0开始将不会被编译。为了使合约与当前的 Solidity 版本保持一致，
+必须执行以下升级模块。 ``constructor-visibility``， ``now`` 和 ``dotsyntax``。
+请阅读 :ref:`可用的模块 <upgrade-modules>` 的文件以了解更多细节。
 
 
-Running the Upgrade
+
+运行升级
 ^^^^^^^^^^^^^^^^^^^
 
-It is recommended to explicitly specify the upgrade modules by using ``--modules`` argument.
+建议通过使用 ``--modules`` 参数明确指定升级模块。
 
 .. code-block:: bash
 
     solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
 
-The command above applies all changes as shown below. Please review them carefully (the pragmas will
-have to be updated manually.)
+上面的命令应用了如下所示的所有变化。请仔细查看（pragma必须手动更新）。
 
 .. code-block:: Solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
     abstract contract C {
-        // FIXME: remove constructor visibility and make the contract abstract
+        // FIXME: 移除构造函数的可见性，并使合约成为 abstract 合约
         constructor() {}
     }
 
@@ -824,7 +789,7 @@ have to be updated manually.)
         uint time;
 
         function f() public payable {
-            // FIXME: change now to block.timestamp
+            // FIXME: 将 now 改成 block.timestamp
             time = block.timestamp;
         }
     }
@@ -832,11 +797,11 @@ have to be updated manually.)
     contract E {
         D d;
 
-        // FIXME: remove constructor visibility
+        // FIXME: 移除构造函数的可见性
         constructor() {}
 
         function g() public {
-            // FIXME: change .value(5) =>  {value: 5}
+            // FIXME: 将 .value(5) 改成  {value: 5}
             d.f{value: 5}();
         }
     }
