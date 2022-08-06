@@ -239,7 +239,7 @@
 
 自动定时过渡是由修饰器 ``timedTransitions`` 处理的，它应该用于所有函数。
 
-.. 注解::
+.. note::
     **修饰器的顺序非常重要**.
     如果 atStage 和 timedTransitions 要一起使用，
     请确保在 timedTransitions 之后声明 atStage，
@@ -247,7 +247,7 @@
 
 最后， 修饰器 ``transitionNext`` 能够用来在函数执行结束时自动转换到下一个阶段。
 
-.. 注解::
+.. note::
     **修饰器可以被忽略**.
     这只适用于0.4.0版本之前的Solidity：
     由于修饰器是通过简单地替换代码而不是使用函数调用来应用的，
