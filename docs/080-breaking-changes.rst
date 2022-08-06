@@ -133,7 +133,7 @@ Solidity v0.8.0 突破性变化
   ``storage-layout`` 现在是子对象。在0.8.0之前，它们曾被序列化为字符串。
 
 * “传统AST“ 已被删除（ ``--ast-json`` 在命令行界面， ``legacyAST`` 用于标准JSON）。
-  使用 “紧凑型AST“（ ``--ast-compact-json`` 参数. ``AST``）作为替代。
+  使用 “紧凑型AST”（ ``--ast-compact-json`` 参数. ``AST``）作为替代。
 
 * 旧的错误报告器（ ``--old-reporter`` ）已经被删除。
 
