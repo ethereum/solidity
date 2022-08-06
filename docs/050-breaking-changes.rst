@@ -6,7 +6,7 @@ Solidity v0.5.0 突破性变化
 以及这些变化背后的原因和如何更新受影响的代码。
 对于完整的列表，请查看 `版本更新日志 <https://github.com/ethereum/solidity/releases/tag/v0.5.0>`_。
 
-.. 注解::
+.. note::
    用 Solidity v0.5.0 编译的合约仍然可以与合约甚至用旧版本编译的库对接，
    而无需重新编译或重新部署。
    将接口更改为包含数据位置，可见性和可变性说明符就足够了。
@@ -461,7 +461,7 @@ Old version:
         }
     }
 
-    // 我们可以定义一个库，将``address``类型明确转换为``address payable``类型，作为一种变通方法。
+    // 我们可以定义一个库，将 ``address`` 类型明确转换为 ``address payable`` 类型，作为一种变通方法。
     library AddressMakePayable {
         function makePayable(address x) internal pure returns (address payable) {
             return address(uint160(x));
