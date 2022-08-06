@@ -122,7 +122,7 @@ Solidity包括不同类型的测试，其中大部分捆绑在
 通过导出 ``SMT_FLAGS=--no-smt`` 来禁用SMT测试。
 这些测试是 ``libsolidity/smtCheckerTests`` 和 ``libsolidity/smtCheckerTestsJSON``。
 
-.. 注解 ::
+.. note::
 
     要获得Soltest运行的所有单元测试的列表，请运行 ``./build/test/soltest --list_content=HRF``。
 
@@ -143,13 +143,13 @@ Solidity包括不同类型的测试，其中大部分捆绑在
 - `run_test (-t) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/run_test.html>`_ 来运行特定的测试案例，以及
 - `report-level (-r) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/report_level.html>`_ 给出一个更详细的报告。
 
-.. 注解 ::
+..  note::
 
     那些在Windows环境下使用的人，想在没有libz3的情况下运行上述基本集，可以使用Git Bash，
     使用命令为： ``./build/test/Release/soltest.exe -- --no-smt``。
     如果您在普通的命令提示符下运行，使用 ``.\build\test\Release\soltest.exe -- --no-smt``。
 
-如果您想使用GDB进行调试，确保您的构建方式与 "通常" 不同。
+如果您想使用GDB进行调试，确保您的构建方式与 “通常” 不同。
 例如，您可以在您的 ``build`` 文件夹中运行以下命令：
 
 .. code-block:: bash
@@ -221,7 +221,7 @@ CI运行额外的测试（包括 ``solc-js`` 和测试第三方Solidity框架）
 
 它为失败的测试提供了几种选择：
 
-- ``edit``：  ``isoltest`` 试图在一个编辑器中打开合约，以便您可以调整它。它或者使用命令行上给出的编辑器（如 ``isoltest --editor /path/to/editor``），或者在环境变量 ``EDITOR`` 中，或者只是 ``/usr/bin/editor``（按这个顺序）。
+- ``edit``：  ``isoltest`` 试图在一个编辑器中打开合约，以便您可以调整它。它或者使用命令行上给出的编辑器（如 ``isoltest --editor /path/to/editor``），或者在环境变量 ``EDITOR`` 中，或者只是 ``/usr/bin/editor`` （按这个顺序）。
 - ``update``： 更新测试中的合约。这将会移除包含了不匹配异常的注解，或者增加缺失的预想结果。然后测试会重新开始。
 - ``skip``： 跳过这一特定测试的执行。
 - ``quit``： 退出 ``isoltest``。
@@ -245,7 +245,7 @@ CI运行额外的测试（包括 ``solc-js`` 和测试第三方Solidity框架）
     syntaxTests/double_stateVariable_declaration.sol: OK
 
 
-.. 注解::
+.. note::
 
     为合约文件选择一个能解释其测试内容的名字，例如： ``double_variable_declaration.sol``。
     不要把一个以上的合约放在一个文件中，除非您在测试继承或跨合约的调用。
@@ -267,7 +267,7 @@ Fuzzing 是一种测试技术，它可以通过运行多少不等的随机输入
 .. code-block:: bash
 
     cd build
-    # if needed
+    # 如果需要的话
     make clean
     cmake .. -DCMAKE_C_COMPILER=path/to/afl-gcc -DCMAKE_CXX_COMPILER=path/to/afl-g++
     make solfuzzer
@@ -287,7 +287,7 @@ Fuzzing 是一种测试技术，它可以通过运行多少不等的随机输入
 
 .. code-block:: bash
 
-    # if previously failed
+    # 如果之前失败了
     make clean
     cmake .. -DCMAKE_C_COMPILER=path/to/afl-clang -DCMAKE_CXX_COMPILER=path/to/afl-clang++
     make solfuzzer
@@ -382,7 +382,7 @@ Whiskers 系统
 * `英式英语拼写 <https://en.oxforddictionaries.com/spelling/british-and-spelling>`_
 
 
-.. 注解::
+.. note::
 
     虽然官方的 Solidity 文档是用英语写的，但也有社区贡献的其他语言的 :ref:`翻译` 可用。
     请参考 `翻译指南 <https://github.com/solidity-docs/translation-guide>`_ 以了解如何为社区翻译作出贡献。
