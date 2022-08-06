@@ -55,10 +55,10 @@ conditions
     如果没有给出条件，则假定该错误存在。
 check
     这个字段包含不同的检查，报告智能合约是否包含错误。
-    第一种类型的检查是Javascript正则表达式，如果存在该错误，将与源代码（“source-regex“）进行匹配。
+    第一种类型的检查是Javascript正则表达式，如果存在该错误，将与源代码（“source-regex”）进行匹配。
     如果没有匹配，那么该漏洞很可能不存在。如果有一个匹配，则该错误可能存在。
     为了提高准确性，检查应该在剥离注释后应用于源代码。
-    第二种类型的检查是在Solidity程序的紧凑AST上检查的模式（“ast-compact-json path“）。
+    第二种类型的检查是在Solidity程序的紧凑AST上检查的模式（“ast-compact-json path”）。
     指定的搜索查询是一个 `JsonPath <https://github.com/json-path/JsonPath>`_ 表达式。
     如果Solidity AST中至少有一个路径与该查询相匹配，则该错误可能存在。
 
