@@ -21,7 +21,7 @@
 来自 python 的参考文档 `pep8 <https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_，
 很好地阐述了这个概念。
 
-.. 注解::
+.. note::
 
     风格指南是关于一致性的。重要的是与此风格指南保持一致，但项目中的一致性更重要。
     一个模块或功能内的一致性是最重要的。
@@ -339,22 +339,22 @@ Import 语句应始终放在文件的顶部。
             // ...
         }
 
-        // External functions
+        // 外部函数
         // ...
 
-        // External functions that are view
+        // 是 view 修饰的外部函数
         // ...
 
-        // External functions that are pure
+        // 是 pure 修饰的外部函数
         // ...
 
-        // Public functions
+        // 公共函数
         // ...
 
-        // Internal functions
+        // 内部函数
         // ...
 
-        // Private functions
+        // 私有函数
         // ...
     }
 
@@ -366,7 +366,7 @@ Import 语句应始终放在文件的顶部。
     pragma solidity >=0.7.0 <0.9.0;
     contract A {
 
-        // External functions
+        // 外部函数
         // ...
 
         fallback() external {
@@ -376,17 +376,17 @@ Import 语句应始终放在文件的顶部。
             // ...
         }
 
-        // Private functions
+        // 私有函数
         // ...
 
-        // Public functions
+        // 公共函数
         // ...
 
         constructor() {
             // ...
         }
 
-        // Internal functions
+        // 内部函数
         // ...
     }
 
@@ -829,7 +829,7 @@ Import 语句应始终放在文件的顶部。
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
-    // Base contracts just to make this compile
+    // 基础合约，为了使这段代码能被编译
     contract B {
         constructor(uint) {
         }
@@ -856,7 +856,7 @@ Import 语句应始终放在文件的顶部。
             C(param2, param3)
             D(param4)
         {
-            // do something with param5
+            // 用参数 param5 做一些事情
             x = param5;
         }
     }
@@ -868,7 +868,7 @@ Import 语句应始终放在文件的顶部。
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
 
-    // Base contracts just to make this compile
+    // 基础合约，为了使这段代码能被编译
     contract B {
         constructor(uint) {
         }
@@ -1045,7 +1045,7 @@ Import 语句应始终放在文件的顶部。
 4. 修饰符
 5. 函数
 
-.. 注解::
+.. note::
 
     在接近事件或状态变量的使用时，声明类型可能会更清楚。
 
@@ -1075,7 +1075,7 @@ Import 语句应始终放在文件的顶部。
 * ``CapitalizedWords`` （驼峰式，首字母大写）
 * ``mixedCase``  （混合式，与驼峰式的区别在于首字母小写！）
 
-.. 注解::
+.. note::
 
     当在驼峰式命名中使用缩写时，应该将缩写中的所有字母都大写。 因此 HTTPServerError 比 HttpServerError 好。
     当在混合式命名中使用缩写时，除了第一个缩写中的字母小写（如果它是整个名称的开头的话）以外，
