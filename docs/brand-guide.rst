@@ -1,86 +1,75 @@
 ####################
-Solidity Brand Guide
+Solidity 品牌指南
 ####################
 
-This brand guide features information on Solidity's brand policy and
-logo usage guidelines.
+该品牌指南的特点是关于Solidity的品牌政策和标志使用指南的信息。
 
-The Solidity Brand
+Solidity品牌
 ==================
 
-The Solidity programming language is an open-source, community project
-governed by a core team. The core team is sponsored by the `Ethereum
-Foundation <https://ethereum.foundation/>`_.
+Solidity编程语言是一个开源的社区项目，由一个核心团队管理。
+该核心团队由 `以太坊基金会 <https://ethereum.foundation/>`_ 赞助。
 
-This document aims to provide information about how to best use the
-Solidity brand name and logo.
+本文件旨在提供有关如何最好地使用 Solidity 品牌名称和标识的信息。
 
-We encourage you to read this document carefully before using the
-brand name or the logo. Your cooperation is highly appreciated!
+我们鼓励您在使用该品牌名称或标志之前仔细阅读本文件。我们非常感谢您的合作!
 
-Solidity Brand Name
+Solidity 品牌名称
 ===================
 
-"Solidity" should be used to refer to the Solidity programming language
-solely.
+“Solidity” 应该只用来指Solidity编程语言。
 
-Please do not use "Solidity":
+请不要按以下方式使用 “Solidity”：
 
-- To refer to any other programming language.
+- 指的是任何其他编程语言。
 
-- In a way that is misleading or may imply association of unrelated
-  modules, tools, documentation, or other resources with the Solidity
-  programming language.
+- 以一种误导性的方式，或可能暗示不相关的模块，工具，文档
+  或其他资源与 Solidity 编程语言的关联。
 
-- In ways that confuse the community as to whether the Solidity
-  programming language is open-source and free to use.
+- 在方式上，混淆了社区对Solidity编程语言是否开源和免费使用的看法。
 
-Solidity Logo License
+Solidity标志许可
 =====================
 
 .. image:: https://i.creativecommons.org/l/by/4.0/88x31.png
   :width: 88
   :alt: Creative Commons License
 
-The Solidity logo is distributed and licensed under a `Creative Commons
-Attribution 4.0 International License <https://creativecommons.org/licenses/by/4.0/>`_.
+Solidity标志是在
+`创意共享署名4.0国际许可协议 <https://creativecommons.org/licenses/by/4.0/>`_ 下发布和许可的。
 
-This is the most permissive Creative Commons license and allows reuse
-and modifications for any purpose.
+这是最宽松的知识共享协议，允许为任何目的进行再利用和修改。
 
-You are free to:
+您可以自由选择以下方式：
 
-- **Share** — Copy and redistribute the material in any medium or format.
+- **分享** - 以任何媒介或形式复制和重新分发材料。
 
-- **Adapt** — Remix, transform, and build upon the material for any
-  purpose, even commercially.
+- **修改** - 为任何目的，甚至为商业目的，对材料进行混音，改造和构建。
 
-Under the following terms:
+根据以下条款：
 
-- **Attribution** — You must give appropriate credit, provide a link to
-  the license, and indicate if changes were made. You may do so in any
-  reasonable manner, but not in any way that suggests that the Solidity
-  core team endorses you or your use.
+- **署名** - 您必须给予适当的信用，提供到许可证的链接，并说明是否进行了修改。
+  您可以以任何合理的方式这样做，但不能以任何方式暗示 Solidity 核心团队认可您或您的使用。
 
-When using the Solidity logo, please respect the Solidity logo guidelines.
+在使用Solidity标识时，请尊重Solidity标识指南。
 
-Solidity Logo Guidelines
+Solidity标志指南
 ========================
 
 .. image:: logo.svg
   :width: 256
 
-*(Right click on the logo to download it.)*
+*（右键点击标识即可下载。）*
 
-Please do not:
+请不要这样做：
 
-- Change the ratio of the logo (do not stretch it or cut it).
+- 改变标志的比例（不要拉伸或切割）。
 
-- Change the colors of the logo, unless it is absolutely necessary.
+- 改变标志的颜色，除非是绝对必要。
 
-Credits
+信用
 =======
 
-This document was, in parts, derived from the `Python Software
-Foundation Trademark Usage Policy <https://www.python.org/psf/trademarks/>`_
-and the `Rust Media Guide <https://www.rust-lang.org/policies/media-guide>`_.
+本文件部分内容来自于
+`Python软件基金会商标使用政策 <https://www.python.org/psf/trademarks/>`_
+和 `Rust媒介指南 <https://www.rust-lang.org/policies/media-guide>`_ 。
