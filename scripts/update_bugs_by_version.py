@@ -8,7 +8,6 @@
 
 import json
 import re
-import sys
 from pathlib import Path
 
 def comp(version_string):
@@ -35,7 +34,9 @@ for key, value in versions.items():
             continue
         value['bugs'] += [bug['name']]
 
-new_contents = json.dumps(versions, sort_keys=True, indent=4, separators=(',', ': '))
-old_contents = (root_path / 'docs/bugs_by_version.json').read_text(encoding='utf8')
-(root_path / 'docs/bugs_by_version.json').write_text(new_contents, encoding='utf8')
-sys.exit(old_contents != new_contents)
+(root_path / 'docs/bugs_by_version.json').write_text(json.dumps(
+    versions,
+    sort_keys=True,
+    indent=4,
+    separators=(',', ': ')
+), encoding='utf8')
