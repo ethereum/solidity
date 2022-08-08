@@ -3,7 +3,6 @@
 ### Requirements
  - [ ] Lauchpad (Ubuntu One) account
  - [ ] gnupg key (has to be version 1, gpg2 won't work) for `your-name@ethereum.org` created and uploaded
- - [ ] Readthedocs account, access to the Solidity project
  - [ ] Write access to https://github.com/ethereum/homebrew-ethereum
 
 ### Documentation check
@@ -50,10 +49,6 @@
  - [ ] Run ``scripts/release_ppa.sh v$VERSION`` to create the PPA release (you need the relevant openssl key).
  - [ ] Wait for the ``~ethereum/ubuntu/ethereum-static`` PPA build to be finished and published for *all platforms*. SERIOUSLY: DO NOT PROCEED EARLIER!!! *After* the static builds are *published*, copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty``, ``Xenial`` and ``Bionic`` while selecting ``Copy existing binaries``.
 
-### Documentation
- - [ ] Build the new version on https://readthedocs.org/projects/solidity/ (select `latest` at the bottom of the page and click `BUILD`).
- - [ ] In the admin panel, select `Versions` in the menu and set the default version to the released one.
-
 ### Release solc-js
  - [ ] Wait until solc-bin was properly deployed. You can test this via remix - a test run through remix is advisable anyway.
  - [ ] Increment the version number, create a pull request for that, merge it after tests succeeded.
@@ -62,6 +57,8 @@
  - [ ] Create a tag using ``git tag --annotate v$VERSION`` and push it with ``git push --tags``.
 
 ### Post-release
+ - [ ] Make sure the documentation for the new release has been published successfully.
+       Go to https://readthedocs.org/projects/solidity/ and verify that the new version is listed, works and is marked as default.
  - [ ] Publish the blog post.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
  - [ ] Announce on Twitter, including links to the release and the blog post.
