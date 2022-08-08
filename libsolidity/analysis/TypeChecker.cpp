@@ -1750,25 +1750,6 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	solAssert(!builtinResult || !userDefinedOperatorResult);
 	if (userDefinedOperatorResult)
 	{
-		Type const* normalizedSubExprType = subExprType;
-		Type const* normalizedParameterType = userDefinedFunctionType->parameterTypes().front();
-
-		if (auto const* subExprReference = dynamic_cast<ReferenceType const*>(normalizedSubExprType))
-			normalizedSubExprType = TypeProvider::withLocationIfReference(subExprReference->location(), normalizedSubExprType);
-		if (auto const* parameterReferenceType = dynamic_cast<ReferenceType const*>(normalizedParameterType))
-			normalizedParameterType = TypeProvider::withLocationIfReference(parameterReferenceType->location(), normalizedParameterType);
-
-		if (*normalizedSubExprType != *normalizedParameterType)
-		{
-			m_errorReporter.typeError(
-				7983_error,
-				_operation.location(),
-				"User defined operator " + string(TokenTraits::toString(_operation.getOperator())) +
-				" needs a value of type " +
-				userDefinedFunctionType->parameterTypes().front()->humanReadableName() + "."
-			);
-		}
-
 		_operation.annotation().type = subExprType;
 	}
 	else if (builtinResult)
