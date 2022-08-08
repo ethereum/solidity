@@ -21,11 +21,13 @@
  - [ ] Copy the changelog into the release blog post.
 
 ### Create the Release
- - [ ] Create Github release page: https://github.com/ethereum/solidity/releases/new
- - [ ] On the release page, select the ``develop`` branch as new target and set tag to the new version (e.g. `v0.8.5`) (make sure you only `SAVE DRAFT` instead of `PUBLISH RELEASE` before the actual release)
- - [ ] Thank voluntary contributors in the Github release page (use ``git shortlog -s -n -e v0.5.3..origin/develop``).
+ - [ ] Create a [release on github](https://github.com/ethereum/solidity/releases/new).
+       Set the target to the ``develop`` branch and the tag to the new version, e.g. `v0.8.5`.
+       Include the following warning: ``**The release is still in progress and the binaries may not yet be available from all sources.**``.
+       Don't publish it yet - click the ``Save draft`` button instead.
+ - [ ] Thank voluntary contributors in the Github release notes (use ``git shortlog -s -n -e v0.5.3..origin/develop``).
  - [ ] Check that all tests on the latest commit in ``develop`` are green.
- - [ ] Click the `PUBLISH RELEASE` button on the release page, creating the tag.
+ - [ ] Click the `Publish release` button on the release page, creating the tag.
  - [ ] Wait for the CI runs on the tag itself.
 
 ### Upload Release Artifacts and Publish Binaries
@@ -62,6 +64,7 @@
 ### Post-release
  - [ ] Make sure the documentation for the new release has been published successfully.
        Go to https://readthedocs.org/projects/solidity/ and verify that the new version is listed, works and is marked as default.
+ - [ ] Remove "still in progress" warning from the release notes.
  - [ ] Publish the blog posts.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
  - [ ] Announce on Twitter, including links to the release and the blog post.
