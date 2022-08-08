@@ -3943,7 +3943,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				m_errorReporter.typeError(
 					5332_error,
 					path->location(),
-					"Operators can only be implemented for user-defined types and not for contracts."
+					"Operators can only be implemented for user-defined value types and structs."
 				);
 				continue;
 			}
