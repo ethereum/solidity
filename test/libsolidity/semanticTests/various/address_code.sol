@@ -16,9 +16,9 @@ contract C {
 // compileToEwasm: also
 // ----
 // constructor() ->
-// gas irOptimized: 177507
-// gas legacy: 249207
-// gas legacyOptimized: 157489
+// gas irOptimized: 175791
+// gas legacy: 247263
+// gas legacyOptimized: 155977
 // initCode() -> 0x20, 0
 // f() -> true
 // g() -> 0

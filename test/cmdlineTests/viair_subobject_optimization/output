@@ -132,17 +132,18 @@ sub_0: assembly {
         /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
       dataSize(sub_0)
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
+      swap2
       not(0x1f)
       swap1
       dup2
       0x3f
-      dup3
+      dup6
       add
       and
-      dup5
+      dup2
       add
       swap3
-      dup5
+      dup2
       dup5
       lt
       0xffffffffffffffff
@@ -151,61 +152,61 @@ sub_0: assembly {
       or
       tag_9
       jumpi
-      swap3
+      swap1
       swap2
-      dup5
       0x40
       swap4
       dup5
       mstore
         /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
-      dup3
-      dup2
-      mstore
-      0x20
-      swap3
-      dataOffset(sub_0)
       dup5
       dup4
+      mstore
+      0x20
+      swap5
+      dataOffset(sub_0)
+      dup7
+      dup6
       add
       codecopy
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
       dup4
       mload
       swap5
-      dup4
-      dup7
-      swap5
       dup6
-      mstore
-      dup3
-      mload
       swap3
-      dup4
+      dup2
+      dup5
+      mstore
+      dup5
+      mload
+      swap2
       dup3
-      dup8
+      dup2
+      dup7
       add
       mstore
-      dup3
-      swap2
+      dup2
+      swap6
     tag_11:
-      dup5
       dup4
+      dup8
       lt
       tag_12
       jumpi
       pop
       pop
-      swap1
+      dup4
+      swap5
+      pop
+      dup6
       dup3
       0x1f
-      swap4
-      swap3
-      gt
-      tag_14
-      jumpi
-    tag_15:
-      pop
+      swap5
+      swap6
+      add
+      add
+      mstore
       add
       and
       dup2
@@ -214,35 +215,26 @@ sub_0: assembly {
       add
       swap1
       return
-    tag_14:
-      dup6
-      dup3
-      dup7
-      add
-      add
-      mstore
-      dup7
-      jump(tag_15)
     tag_12:
+      dup7
       dup2
-      dup4
       add
-      dup2
+      dup3
       add
       mload
       dup10
-      dup5
+      dup9
       add
       dup10
       add
       mstore
-      dup9
-      swap7
-      pop
-      swap2
-      dup3
+      swap6
+      dup2
       add
-      swap2
+      swap6
+      dup9
+      swap6
+      pop
       jump(tag_11)
     tag_9:
       shl(0xe0, 0x4e487b71)
