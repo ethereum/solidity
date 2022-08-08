@@ -3,22 +3,20 @@
 Important Bugfixes:
  * Code Generation: Fix data corruption that affected ABI-encoding of calldata values represented by tuples: structs at any nesting level; argument lists of external functions, events and errors; return value lists of external functions. The 32 leading bytes of the first dynamically-encoded value in the tuple would get zeroed when the last component contained a statically-encoded array.
 
-Language Features:
-
 
 Compiler Features:
  * Code Generator: More efficient code for checked addition and subtraction.
  * TypeChecker: Support using library constants in initializers of other constants.
  * Yul IR Code Generation: Improved copy routines for arrays with packed storage layout.
- * Yul Optimizer: Add rule to convert `mod(add(X, Y), A)` into `addmod(X, Y, A)`, if `A` is a power of two.
- * Yul Optimizer: Add rule to convert `mod(mul(X, Y), A)` into `mulmod(X, Y, A)`, if `A` is a power of two.
+ * Yul Optimizer: Add rule to convert ``mod(add(X, Y), A)`` into ``addmod(X, Y, A)``, if ``A`` is a power of two.
+ * Yul Optimizer: Add rule to convert ``mod(mul(X, Y), A)`` into ``mulmod(X, Y, A)``, if ``A`` is a power of two.
 
 
 Bugfixes:
  * Commandline Interface: Disallow the following options outside of the compiler mode: ``--via-ir``,``--metadata-literal``, ``--metadata-hash``, ``--model-checker-show-unproved``, ``--model-checker-div-mod-no-slacks``, ``--model-checker-engine``, ``--model-checker-invariants``, ``--model-checker-solvers``, ``--model-checker-timeout``, ``--model-checker-contracts``, ``--model-checker-targets``.
  * Type Checker: Fix compiler crash on tuple assignments involving certain patterns with unary tuples on the left-hand side.
- * Type Checker: Fix compiler crash when `abi.encodeCall` received a tuple expression instead of an inline tuple.
- * Type Checker: Fix null dereference in `abi.encodeCall` type checking of free function.
+ * Type Checker: Fix compiler crash when ``abi.encodeCall`` received a tuple expression instead of an inline tuple.
+ * Type Checker: Fix null dereference in ``abi.encodeCall`` type checking of free function.
 
 
 ### 0.8.15 (2022-06-15)
