@@ -1,4 +1,4 @@
-### 0.8.16 (unreleased)
+### 0.8.16 (2022-08-08)
 
 Important Bugfixes:
  * Code Generation: Fix data corruption that affected ABI-encoding of calldata values represented by tuples: structs at any nesting level; argument lists of external functions, events and errors; return value lists of external functions. The 32 leading bytes of the first dynamically-encoded value in the tuple would get zeroed when the last component contained a statically-encoded array.
