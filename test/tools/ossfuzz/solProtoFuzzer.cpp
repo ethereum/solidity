@@ -79,13 +79,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		methodName
 	);
 	auto minimalResult = evmoneUtil.compileDeployAndExecute();
-	if (minimalResult.has_value())
-	{
-		solAssert(minimalResult->status_code != EVMC_REVERT, "Sol proto fuzzer: Evmone reverted.");
-		if (minimalResult->status_code == EVMC_SUCCESS)
+	solAssert(minimalResult.status_code != EVMC_REVERT, "Sol proto fuzzer: Evmone reverted.");
+	if (minimalResult.status_code == EVMC_SUCCESS)
 		solAssert(
-			EvmoneUtility::zeroWord(minimalResult->output_data, minimalResult->output_size),
+			EvmoneUtility::zeroWord(minimalResult.output_data, minimalResult.output_size),
 			"Proto solc fuzzer: Output incorrect"
 		);
-	}
 }
