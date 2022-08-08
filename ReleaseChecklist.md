@@ -14,7 +14,7 @@
 ### Changelog
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice.
  - [ ] Create a commit on a new branch that updates the ``Changelog`` to include a release date.
- - [ ] Run ``./scripts/tests.sh`` to update the bug list.
+ - [ ] Run ``scripts/update_bugs_by_version.py`` to regenerate ``bugs_by_version.json`` from the changelog and ``bugs.json``.
  - [ ] Create a pull request and wait for the tests, merge it.
 
 ### Create the Release
