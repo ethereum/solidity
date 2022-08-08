@@ -426,6 +426,10 @@ void ProtoConverter::appendTypedParamsExternal(
 		("type", qualifiedTypeString)
 		("varName", _varName)
 		.render();
+	m_untypedParamsExternal << Whiskers(R"(<delimiter><varName>)")
+		("delimiter", delimiterToString(_delimiter))
+		("varName", _varName)
+		.render();
 }
 
 // Adds the qualifier "memory" to non-value parameter of an external function.
@@ -671,7 +675,11 @@ string ProtoConverter::calldataHelperFunctions()
 		return 0;
 	}
 
-	function coder_calldata_external(<parameters_calldata>) external pure returns (uint) {
+	function coder_calldata_external(<parameters_calldata>) external view returns (uint) {
+		return this.coder_calldata_external_indirection(<untyped_parameters>);
+	}
+
+	function coder_calldata_external_indirection(<parameters_calldata>) external pure returns (uint) {
 <equality_checks>
 		return 0;
 	}
@@ -679,6 +687,7 @@ string ProtoConverter::calldataHelperFunctions()
 	("parameters_memory", typedParametersAsString(CalleeType::PUBLIC))
 	("equality_checks", equalityChecksAsString())
 	("parameters_calldata", typedParametersAsString(CalleeType::EXTERNAL))
+	("untyped_parameters", m_untypedParamsExternal.str())
 	.render();
 
 	return calldataHelperFuncs.str();

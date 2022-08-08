@@ -66,9 +66,16 @@ DEFINE_PROTO_FUZZER(Contract const& _input)
 		// We don't care about EVM One failures other than EVMC_REVERT
 		solAssert(result->status_code != EVMC_REVERT, "Proto ABIv2 fuzzer: EVM One reverted");
 		if (result->status_code == EVMC_SUCCESS)
-			solAssert(
-				EvmoneUtility::zeroWord(result->output_data, result->output_size),
-				"Proto ABIv2 fuzzer: ABIv2 coding failure found"
-			);
+			if (!EvmoneUtility::zeroWord(result->output_data, result->output_size))
+			{
+				solidity::bytes resultAsBytes;
+				for (size_t i = 0; i < result->output_size; i++)
+					resultAsBytes.push_back(result->output_data[i]);
+				cout << solidity::util::toHex(resultAsBytes) << endl;
+				solAssert(
+					false,
+					"Proto ABIv2 fuzzer: ABIv2 coding failure found"
+				);
+			}
 	}
 }
