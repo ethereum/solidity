@@ -38,4 +38,6 @@ function bitor(S storage, S storage) pure returns (S memory) {
 // TypeError 7617: (71-74): The function "sub" needs to have one or two parameters of type Int and the same data location to be used for the operator -.
 // TypeError 7743: (71-74): The function "sub" needs to return exactly one value of type Int to be used for the operator -.
 // TypeError 1884: (85-88): The function "mul" needs to have two parameters of type Int and the same data location to be used for the operator *.
+// TypeError 3605: (85-88): The function "mul" needs to have parameters and return value of the same type to be used for the operator *.
 // TypeError 7743: (95-98): The function "div" needs to return exactly one value of type Int to be used for the operator /.
+// TypeError 3605: (128-133): The function "bitor" needs to have parameters and return value of the same type to be used for the operator |.

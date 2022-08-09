@@ -4029,26 +4029,35 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					TokenTraits::friendlyName(*operator_) +
 					"."
 				);
-			else if (
-				!TokenTraits::isCompareOp(*operator_) &&
-				(
+			else if (!TokenTraits::isCompareOp(*operator_))
+			{
+				if (
 					functionType->returnParameterTypes().size() != 1 ||
 					(
 						*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->returnParameterTypes().front()) !=
 						*TypeProvider::withLocationIfReference(DataLocation::Storage, _usingFor.typeName()->annotation().type)
 					)
 				)
-			)
-				m_errorReporter.typeError(
-					7743_error,
-					path->location(),
-					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-					"needs to return exactly one value of type " +
-					_usingFor.typeName()->annotation().type->canonicalName() +
-					" to be used for the operator " +
-					TokenTraits::friendlyName(*operator_) +
-					"."
-				);
+					m_errorReporter.typeError(
+						7743_error,
+						path->location(),
+						"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+						"needs to return exactly one value of type " +
+						_usingFor.typeName()->annotation().type->canonicalName() +
+						" to be used for the operator " +
+						TokenTraits::friendlyName(*operator_) +
+						"."
+					);
+				else if (*functionType->returnParameterTypes().front() != *functionType->parameterTypesIncludingSelf().front())
+					m_errorReporter.typeError(
+						3605_error,
+						path->location(),
+						"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
+						"needs to have parameters and return value of the same type to be used for the operator " +
+						TokenTraits::friendlyName(*operator_) +
+						"."
+					);
+			}
 		}
 	}
 }

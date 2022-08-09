@@ -62,6 +62,7 @@ function test(S calldata s) pure {
 // TypeError 7743: (54-57): The function "div" needs to return exactly one value of type S to be used for the operator /.
 // TypeError 7743: (68-71): The function "mod" needs to return exactly one value of type S to be used for the operator %.
 // TypeError 7617: (82-87): The function "unsub" needs to have one or two parameters of type S and the same data location to be used for the operator -.
+// TypeError 3605: (82-87): The function "unsub" needs to have parameters and return value of the same type to be used for the operator -.
 // TypeError 7743: (98-104): The function "bitnot" needs to return exactly one value of type S to be used for the operator ~.
 // TypeError 2271: (758-763): Operator * not compatible with types struct S calldata and struct S calldata. No matching user-defined operator found.
 // TypeError 4907: (791-793): Unary operator - cannot be applied to type struct S calldata. No matching user-defined operator found.
