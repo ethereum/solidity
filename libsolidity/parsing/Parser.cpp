@@ -980,7 +980,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 			{
 				advance();
 				Token operator_ = m_scanner->currentToken();
-				vector<Token> overridable = {
+				vector<Token> overridableOperators = {
 					// Potential future additions: <<, >>, **, !
 					Token::BitOr, Token::BitAnd, Token::BitXor,
 					Token::Add, Token::Sub, Token::Mul, Token::Div, Token::Mod,
@@ -988,7 +988,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 					Token::LessThan, Token::GreaterThan, Token::LessThanOrEqual, Token::GreaterThanOrEqual,
 					Token::BitNot
 				};
-				if (!util::contains(overridable, operator_))
+				if (!util::contains(overridableOperators, operator_))
 				{
 					parserError(
 						4403_error,
@@ -996,7 +996,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 							"The operator " + (TokenTraits::toString(operator_) ? string(TokenTraits::toString(operator_)) + " " : "")
 							+ "cannot be user-implemented. This is only possible for the following operators: "
 						) +
-						util::joinHumanReadable(overridable | ranges::views::transform([](Token _t) { return string{TokenTraits::toString(_t)}; }))
+						util::joinHumanReadable(overridableOperators | ranges::views::transform([](Token _t) { return string{TokenTraits::toString(_t)}; }))
 					);
 				}
 				operators.emplace_back(operator_);
