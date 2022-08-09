@@ -1,11 +1,13 @@
-commit_hash.txt
-prerelease.txt
+/commit_hash.txt
+/prerelease.txt
 
 # Compiled Object files
 *.slo
 *.lo
 *.o
 *.obj
+*.pyc
+__pycache__
 
 # Precompiled Headers
 *.gch
@@ -15,9 +17,6 @@ prerelease.txt
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
 
 # Compiled Static libraries
 *.lai
@@ -33,14 +32,9 @@ prerelease.txt
 # Build directory
 /build*
 emscripten_build/
-docs/_build
-docs/_static/robots.txt
-__pycache__
-docs/utils/*.pyc
-/deps/downloads/
-deps/install
-deps/cache
-cmake-build-*/
+/docs/_build
+/docs/_static/robots.txt
+/deps
 
 # vim stuff
 [._]*.sw[a-p]
@@ -50,17 +44,14 @@ cmake-build-*/
 *~
 
 # IDE files
-.idea
-.vscode
-browse.VC.db
-CMakeLists.txt.user
+/.idea/
+/.vscode/
+/browse.VC.db
+/CMakeLists.txt.user
 /CMakeSettings.json
 /.vs
 /.cproject
 /.project
-
-# place to put local temporary files
-tmp
 
 # OS specific local files
 .DS_Store
