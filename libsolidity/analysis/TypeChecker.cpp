@@ -166,8 +166,15 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 						);
 		}
 	};
+
+	TupleExpression const* lhsTupleExpression = dynamic_cast<TupleExpression const*>(&_assignment.leftHandSide());
+	if (!lhsTupleExpression)
+	{
+		solAssert(m_errorReporter.hasErrors());
+		return;
+	}
 	count(
-		dynamic_cast<TupleExpression const&>(_assignment.leftHandSide()),
+		*lhsTupleExpression,
 		dynamic_cast<TupleType const&>(*type(_assignment.rightHandSide())),
 		count
 	);

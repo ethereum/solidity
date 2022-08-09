@@ -10,6 +10,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Type Checker: Fix internal compiler error on tuple assignments with invalid left-hand side.
 
 
 ### 0.8.16 (2022-08-08)
