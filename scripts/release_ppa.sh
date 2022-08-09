@@ -9,13 +9,18 @@
 ## If the given branch is "release", the resulting package will be uploaded to
 ## ethereum/ethereum PPA, or ethereum/ethereum-dev PPA otherwise.
 ##
-## The gnupg key for "builds@ethereum.org" has to be present in order to sign
-## the package.
-##
 ## It will clone the Solidity git from github, determine the version,
 ## create a source archive and push it to the ubuntu ppa servers.
 ##
-## This requires the following entries in /etc/dput.cf:
+## To interact with launchpad, you need to set the variables $LAUNCHPAD_EMAIL
+## and $LAUNCHPAD_KEYID in the file .release_ppa_auth in the root directory of
+## the project to your launchpad email and pgp keyid.
+## This could for example look like this:
+##
+##  LAUNCHPAD_EMAIL=your-launchpad-email@ethereum.org
+##  LAUNCHPAD_KEYID=123ABCFFFFFFFF
+##
+## Additionally the following entries in /etc/dput.cf are required:
 ##
 ##  [ethereum-dev]
 ##  fqdn			= ppa.launchpad.net
@@ -34,11 +39,17 @@
 ##  method			= ftp
 ##  incoming		= ~ethereum/ethereum-static
 ##  login			= anonymous
-
 ##
 ##############################################################################
 
-set -ev
+set -e
+
+
+REPO_ROOT="$(dirname "$0")/.."
+
+# for the "fail" function
+# shellcheck source=scripts/common.sh
+source "${REPO_ROOT}/scripts/common.sh"
 
 if [ -z "$1" ]
 then
@@ -51,17 +62,39 @@ is_release() {
     [[ "${branch}" =~ ^v[0-9]+(\.[0-9]+)*$ ]]
 }
 
-keyid=379F4801D622CDCF
-email=builds@ethereum.org
+# source keyid and email from .release_ppa_auth
+if [[ -e .release_ppa_auth ]]
+then
+    # shellcheck source=/dev/null
+    source "${REPO_ROOT}/.release_ppa_auth"
+fi
+
+[[ "$LAUNCHPAD_KEYID" != "" && "$LAUNCHPAD_EMAIL" != "" ]] || \
+    fail "Error: Couldn't find variables \$LAUNCHPAD_KEYID or \$LAUNCHPAD_EMAIL in sourced file .release_ppa_auth (check top comment in $0 for more information)."
+
 packagename=solc
 
+# This needs to be a still active release
 static_build_distribution=impish
 
 DISTRIBUTIONS="focal impish jammy kinetic"
 
+function checkDputEntries {
+    local pattern="$1"
+    grep "${pattern}" /etc/dput.cf --quiet || \
+        fail "Error: Missing ${pattern//\\/} section in /etc/dput.cf (check top comment in ${0} for more information)."
+}
+
 if is_release
 then
     DISTRIBUTIONS="$DISTRIBUTIONS STATIC"
+
+    # Sanity checks
+    checkDputEntries "\[ethereum\]"
+    checkDputEntries "\[ethereum-static\]"
+else
+    # Sanity check
+    checkDputEntries "\[ethereum-dev\]"
 fi
 
 for distribution in $DISTRIBUTIONS
@@ -245,7 +278,7 @@ chmod +x debian/rules
 
 versionsuffix=0ubuntu1~${distribution}
 # bump version / add entry to changelog
-EMAIL="$email" dch -v "1:${debversion}-${versionsuffix}" "git build of ${commithash}"
+EMAIL="$LAUNCHPAD_EMAIL" dch -v "1:${debversion}-${versionsuffix}" "git build of ${commithash}"
 
 
 # build source package
@@ -287,7 +320,7 @@ fi
 )
 
 # sign the package
-debsign --re-sign -k "${keyid}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
+debsign --re-sign -k "${LAUNCHPAD_KEYID}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
 
 # upload
 dput "${pparepo}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
