@@ -8,7 +8,7 @@ contract C {
         abi.encodePacked(2 uintUintSuffix);
         abi.encodeWithSelector(0x12345678, 3 uintUintSuffix);
         abi.encodeWithSignature("f()", 4 uintUintSuffix);
-        //abi.encodeCall(this.g, 5 uintUintSuffix); // TODO: Causes an ICE
+        abi.encodeCall(this.g, 5 uintUintSuffix);
     }
 }
 // ----
@@ -16,3 +16,4 @@ contract C {
 // TypeError 2056: (218-234): This type cannot be encoded.
 // TypeError 2056: (280-296): This type cannot be encoded.
 // TypeError 2056: (338-354): This type cannot be encoded.
+// TypeError 9062: (388-404): Expected an inline tuple, not an expression of a tuple type.
