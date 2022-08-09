@@ -69,6 +69,8 @@ template<typename ShuffleOperations>
 concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceOffset, size_t targetOffset, size_t depth) {
 	// Returns true, iff the current slot at sourceOffset in source layout is a suitable slot at targetOffset.
 	{ ops.isCompatible(sourceOffset, targetOffset) } -> std::convertible_to<bool>;
+	// Returns true, iff the slots at the given source offset is junk.
+	{ ops.sourceIsJunk(sourceOffset) } -> std::convertible_to<bool>;
 	// Returns true, iff the slots at the two given source offsets are identical.
 	{ ops.sourceIsSame(sourceOffset, sourceOffset) } -> std::convertible_to<bool>;
 	// Returns a positive integer n, if the slot at the given source offset needs n more copies.
@@ -186,6 +188,12 @@ private:
 	{
 		std::list<size_t> toVisit{_targetOffset};
 		std::set<size_t> visited;
+
+		if (_ops.targetIsArbitrary(_targetOffset))
+		{
+			_ops.pushOrDupTarget(_targetOffset);
+			return true;
+		}
 
 		while (!toVisit.empty())
 		{
@@ -314,6 +322,22 @@ private:
 		// If we still need more slots, produce a suitable one.
 		if (ops.sourceSize() < ops.targetSize())
 		{
+			// If we do not need the current top and pushing another slot would make a position we need to fix unreachable,
+			// pop the current top.
+			if (
+				ops.sourceSize() >= 16 &&
+				(ops.sourceMultiplicity(sourceTop) < 0 || ops.sourceIsJunk(sourceTop))
+			)
+			{
+				for (size_t sourceOffset = 0; sourceOffset < ops.sourceSize() - 16; ++sourceOffset)
+					if (!ops.isCompatible(sourceOffset, sourceOffset))
+					{
+						ops.pop();
+						return true;
+					}
+			}
+
+
 			if (!dupDeepSlotIfRequired(ops))
 				yulAssert(bringUpTargetSlot(ops, ops.sourceSize()), "");
 			return true;
@@ -430,6 +454,10 @@ void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _sw
 		bool sourceIsSame(size_t _lhs, size_t _rhs) { return currentStack.at(_lhs) == currentStack.at(_rhs); }
 		int sourceMultiplicity(size_t _offset) { return multiplicity.at(currentStack.at(_offset)); }
 		int targetMultiplicity(size_t _offset) { return multiplicity.at(targetStack.at(_offset)); }
+		bool sourceIsJunk(size_t offset)
+		{
+			return std::holds_alternative<JunkSlot>(currentStack.at(offset));
+		}
 		bool targetIsArbitrary(size_t offset)
 		{
 			return offset < targetStack.size() && std::holds_alternative<JunkSlot>(targetStack.at(offset));

@@ -206,6 +206,13 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 					}, layout.at(_source))
 				);
 		}
+		bool sourceIsJunk(size_t offset)
+		{
+			return std::visit(util::GenericVisitor{
+				[&](PreviousSlot const&) { return false; },
+				[&](StackSlot const& _slot) { return std::holds_alternative<JunkSlot>(_slot); },
+			}, layout.at(offset));
+		}
 		bool sourceIsSame(size_t _lhs, size_t _rhs)
 		{
 			return std::visit(util::GenericVisitor{
