@@ -13,7 +13,7 @@ The Contract Application Binary Interface (ABI) is the standard way to interact 
 from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
 as described in this specification. The encoding is not self describing and thus requires a schema in order to decode.
 
-We assume the interface functions of a contract are strongly typed, known at compilation time and static.
+We assume that the interface functions of a contract are strongly typed, known at compilation time and static.
 We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
 This specification does not address contracts whose interface is dynamic or otherwise known only at run-time.
@@ -29,7 +29,7 @@ first (left, high-order in big-endian) four bytes of the Keccak-256 hash of the 
 the function. The signature is defined as the canonical expression of the basic prototype without data
 location specifier, i.e.
 the function name with the parenthesised list of parameter types. Parameter types are split by a single
-comma - no spaces are used.
+comma — no spaces are used.
 
 .. note::
     The return type of a function is not part of this signature. In
@@ -133,7 +133,7 @@ The encoding is designed to have the following properties, which are especially 
    previous version of the ABI, the number of reads scaled linearly with the total number of dynamic
    parameters in the worst case.
 
-2. The data of a variable or array element is not interleaved with other data and it is
+2. The data of a variable or an array element is not interleaved with other data and it is
    relocatable, i.e. it only uses relative "addresses".
 
 
@@ -252,7 +252,7 @@ Given the contract:
     }
 
 
-Thus for our ``Foo`` example if we wanted to call ``baz`` with the parameters ``69`` and
+Thus, for our ``Foo`` example if we wanted to call ``baz`` with the parameters ``69`` and
 ``true``, we would pass 68 bytes total, which can be broken down into:
 
 - ``0xcdcd77c0``: the Method ID. This is derived as the first 4 bytes of the Keccak hash of
@@ -597,7 +597,7 @@ Errors look as follows:
 
 .. note::
   There can be multiple errors with the same name and even with identical signature
-  in the JSON array, for example if the errors originate from different
+  in the JSON array; for example, if the errors originate from different
   files in the smart contract or are referenced from another smart contract.
   For the ABI, only the name of the error itself is relevant and not where it is
   defined.
@@ -646,7 +646,7 @@ would result in the JSON:
 Handling tuple types
 --------------------
 
-Despite that names are intentionally not part of the ABI encoding they do make a lot of sense to be included
+Despite the fact that names are intentionally not part of the ABI encoding, they do make a lot of sense to be included
 in the JSON to enable displaying it to the end user. The structure is nested in the following way:
 
 An object with members ``name``, ``type`` and potentially ``components`` describes a typed variable.
@@ -654,7 +654,7 @@ The canonical type is determined until a tuple type is reached and the string de
 to that point is stored in ``type`` prefix with the word ``tuple``, i.e. it will be ``tuple`` followed by
 a sequence of ``[]`` and ``[k]`` with
 integers ``k``. The components of the tuple are then stored in the member ``components``,
-which is of array type and has the same structure as the top-level object except that
+which is of an array type and has the same structure as the top-level object except that
 ``indexed`` is not allowed there.
 
 As an example, the code
@@ -738,10 +738,10 @@ Strict Encoding Mode
 ====================
 
 Strict encoding mode is the mode that leads to exactly the same encoding as defined in the formal specification above.
-This means offsets have to be as small as possible while still not creating overlaps in the data areas and thus no gaps are
+This means that offsets have to be as small as possible while still not creating overlaps in the data areas, and thus no gaps are
 allowed.
 
-Usually, ABI decoders are written in a straightforward way just following offset pointers, but some decoders
+Usually, ABI decoders are written in a straightforward way by just following offset pointers, but some decoders
 might enforce strict mode. The Solidity ABI decoder currently does not enforce strict mode, but the encoder
 always creates data in strict mode.
 
@@ -777,7 +777,7 @@ More specifically:
   encoding of its elements **with** padding.
 - Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded
   without their length field.
-- The encoding of ``string`` or ``bytes`` does not apply padding at the end
+- The encoding of ``string`` or ``bytes`` does not apply padding at the end,
   unless it is part of an array or struct (then it is padded to a multiple of
   32 bytes).
 
@@ -805,7 +805,7 @@ Encoding of Indexed Event Parameters
 ====================================
 
 Indexed event parameters that are not value types, i.e. arrays and structs are not
-stored directly but instead a keccak256-hash of an encoding is stored. This encoding
+stored directly but instead a Keccak-256 hash of an encoding is stored. This encoding
 is defined as follows:
 
 - the encoding of a ``bytes`` and ``string`` value is just the string contents
