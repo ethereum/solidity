@@ -6,27 +6,35 @@
 Using For
 *********
 
-The directive ``using A for B;`` can be used to attach
-functions (``A``) as member functions to any type (``B``).
-These functions will receive the object they are called on
-as their first parameter (like the ``self`` variable in Python).
+The directive ``using A for B;`` can be used to bind functions (``A``)
+as operators to user-defined value types and structs or as member functions
+to any type (``B``). The member functions receive the object they are called
+on as their first parameter (like the ``self`` variable in Python).
+The operator functions receive operands as parameters.
 
 It is valid either at file level or inside a contract,
 at contract level.
 
 The first part, ``A``, can be one of:
 
-- a list of file-level or library functions (``using {f, g, h, L.t} for uint;``) -
-  only those functions will be attached to the type.
+- a list of file-level or library internal functions (``using {f, g, h, L.t} for uint;``) -
+  only those functions will be bound to the type as member functions,
 - the name of a library (``using L for uint;``) -
-  all functions (both public and internal ones) of the library are attached to the type
+  all functions (both public and internal ones) of the library are bound to the type
+  as member functions,
+- a list of assignments of file-level or internal library functions to operators
+  (``using {f as +, g as -} for T;``) - the functions will be bound to the type (``T``)
+  as operators. Following binary operators are allowed to be used on the list: ``|``,
+  ``^``, ``&``, ``+``, ``-``, ``*``, ``/``, ``%``, ``==``, ``!=``, ``<``, ``>``, ``<=``,
+  ``>=``, ``<<``, ``>>``, ``**``. Allowed unary operators are: ``~``, ``!``, ``-``.
+  If an operator can be both binary and unary, it is allowed to have each variant specified
+  on the list (``using {sub as -, unsub as -} for T``).
 
 At file level, the second part, ``B``, has to be an explicit type (without data location specifier).
-Inside contracts, you can also use ``using L for *;``,
-which has the effect that all functions of the library ``L``
-are attached to *all* types.
+Inside contracts, you can also use ``using L for *;``, which has the effect that all functions
+of the library ``L`` are bound to *all* types.
 
-If you specify a library, *all* functions in the library are attached,
+If you specify a library, *all* functions in the library are bound,
 even those where the type of the first parameter does not
 match the type of the object. The type is checked at the
 point the function is called and function overload
@@ -37,6 +45,13 @@ then the type (``uint``) has to be implicitly convertible to the
 first parameter of each of these functions. This check is
 performed even if none of these functions are called.
 
+If you define an operator for a user-defined type (``using {f as +} for T``), then
+the type (``T``), types of function parameters and the type of the function return value
+have to be the same. The type (``T``) does not include data location.
+But, data location of the function parameters and function return value must be
+the same. There is an exception for comparison operators for which, the return value
+type is always ``bool``.
+
 The ``using A for B;`` directive is active only within the current
 scope (either the contract or the current module/source unit),
 including within all of its functions, and has no effect
@@ -45,7 +60,7 @@ outside of the contract or module in which it is used.
 When the directive is used at file level and applied to a
 user-defined type which was defined at file level in the same file,
 the word ``global`` can be added at the end. This will have the
-effect that the functions are attached to the type everywhere
+effect that the functions and operators are bound to the type everywhere
 the type is available (including other files), not only in the
 scope of the using statement.
 
@@ -59,8 +74,8 @@ instead of library functions.
     pragma solidity ^0.8.13;
 
     struct Data { mapping(uint => bool) flags; }
-    // Now we attach functions to the type.
-    // The attached functions can be used throughout the rest of the module.
+    // Now we bind functions to the type.
+    // The bound functions can be used throughout the rest of the module.
     // If you import the module, you have to
     // repeat the using directive there, for example as
     //   import "flags.sol" as Flags;
@@ -149,3 +164,38 @@ if you pass memory or value types, a copy will be performed, even in case of the
 ``self`` variable. The only situation where no copy will be performed
 is when storage reference variables are used or when internal library
 functions are called.
+
+Another example shows how to define a custom operator for a user-defined type:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.18;
+
+    type UFixed16x2 is uint16;
+
+    using {
+        add as +,
+        div as /
+    } for UFixed16x2;
+
+    uint32 constant SCALE = 100;
+
+    function add(UFixed16x2 a, UFixed16x2 b) pure returns (UFixed16x2) {
+        return UFixed16x2.wrap(UFixed16x2.unwrap(a) + UFixed16x2.unwrap(b));
+    }
+
+    function div(UFixed16x2 a, UFixed16x2 b) pure returns (UFixed16x2) {
+        uint32 a32 = UFixed16x2.unwrap(a);
+        uint32 b32 = UFixed16x2.unwrap(b);
+        uint32 result32 = a32 * SCALE / b32;
+        require(result32 <= type(uint16).max, "Divide overflow");
+        return UFixed16x2.wrap(uint16(a32 * SCALE / b32));
+    }
+
+
+    contract Math {
+        function avg(UFixed16x2 a, UFixed16x2 b) public pure returns (UFixed16x2) {
+            return (a + b) / UFixed16x2.wrap(200);
+        }
+    }

@@ -62,7 +62,7 @@ function geq(Int x, Int) pure returns (bool) {
 
 contract C {
     function test_bitor() public pure returns (Int) { return w(1) | w(2); }
-    function test_bitand() public pure returns (Int) { return w(1) | w(2); }
+    function test_bitand() public pure returns (Int) { return w(1) & w(2); }
     function test_bitxor() public pure returns (Int) { return w(1) ^ w(2); }
     function test_bitnot() public pure returns (Int) { return ~w(1); }
     function test_add(int128 x) public pure returns (Int) { return w(x) + w(2); }
@@ -81,7 +81,7 @@ contract C {
 
 // ----
 // test_bitor() -> 10
-// test_bitand() -> 10
+// test_bitand() -> 11
 // test_bitxor() -> 12
 // test_bitnot() -> 13
 // test_add(int128): 4 -> 14
