@@ -16,10 +16,11 @@ at contract level.
 
 The first part, ``A``, can be one of:
 
-- a list of file-level or library functions (``using {f, g, h, L.t} for uint;``) -
-  only those functions will be attached to the type as member functions
-- the name of a library (``using L for uint;``) -
-  all functions (both public and internal ones) of the library are attached to the type.
+- A list of file-level or library functions (``using {f, g, h, L.t} for uint;``) -
+  only those functions will be attached to the type as member functions.
+  Note that private library functions can only be specified when ``using for`` is inside the library.
+- The name of a library (``using L for uint;``) -
+  all non-private functions of the library are attached to the type.
 
 At file level, the second part, ``B``, has to be an explicit type (without data location specifier).
 Inside contracts, you can also use ``using L for *;``,
