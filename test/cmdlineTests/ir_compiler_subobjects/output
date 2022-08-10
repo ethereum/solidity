@@ -71,7 +71,7 @@ object "D_16" {
                             returndatacopy(pos, _2, returndatasize())
                             revert(pos, returndatasize())
                         }
-                        return(mload(64), _2)
+                        return(_2, _2)
                     }
                 }
                 revert(0, 0)

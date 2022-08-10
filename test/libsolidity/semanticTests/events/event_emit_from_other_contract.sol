@@ -15,7 +15,7 @@ contract C {
 }
 // ----
 // constructor() ->
-// gas irOptimized: 167934
+// gas irOptimized: 166854
 // gas legacy: 250376
 // gas legacyOptimized: 174522
 // deposit(bytes32), 18 wei: 0x1234 ->
