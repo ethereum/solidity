@@ -75,9 +75,9 @@ fi
 packagename=solc
 
 # This needs to be a still active release
-static_build_distribution=impish
+static_build_distribution=focal
 
-DISTRIBUTIONS="focal impish jammy kinetic"
+DISTRIBUTIONS="focal jammy kinetic"
 
 function checkDputEntries {
     local pattern="$1"
