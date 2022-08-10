@@ -5,15 +5,15 @@ contract C {
     uint[2] n;
 
     function f_memory(uint[][] calldata a) public returns (uint[][] memory) {
-	return a;
+        return a;
     }
 
     function f_encode(uint[][] calldata a) public returns (bytes memory) {
-	return abi.encode(a);
+        return abi.encode(a);
     }
 
     function f_which(uint[][] calldata a, uint which) public returns (uint[] memory) {
-	return a[which];
+        return a[which];
     }
 }
 

@@ -13,13 +13,13 @@ contract C {
     }
 
     function f_which(uint[] calldata a, uint[2] calldata b, uint which) public returns (bytes memory) {
-	return abi.encode(a[which], b[1]);
+        return abi.encode(a[which], b[1]);
     }
 
     function f_storage(uint[] calldata a, uint[2] calldata b ) public returns (bytes memory) {
         s = a;
         n = b;
-	return abi.encode(s);
+        return abi.encode(s);
     }
 }
 
