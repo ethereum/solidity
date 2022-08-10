@@ -287,6 +287,9 @@ Input Description
             "cse": false,
             // Optimize representation of literal numbers and strings in code.
             "constantOptimizer": false,
+            // Use unchecked arithmetic when incrementing the counter of for loops
+            // under certain circumstances. It is always on if no details are given.
+            "simpleCounterForLoopUncheckedIncrement": true,
             // The new Yul optimizer. Mostly operates on the code of ABI coder v2
             // and inline assembly.
             // It is activated together with the global optimizer setting

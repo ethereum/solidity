@@ -72,6 +72,7 @@ struct OptimiserSettings
 		OptimiserSettings s = none();
 		s.runJumpdestRemover = true;
 		s.runPeephole = true;
+		s.simpleCounterForLoopUncheckedIncrement = true;
 		return s;
 	}
 	/// Standard optimisations.
@@ -85,6 +86,7 @@ struct OptimiserSettings
 		s.runDeduplicate = true;
 		s.runCSE = true;
 		s.runConstantOptimiser = true;
+		s.simpleCounterForLoopUncheckedIncrement = true;
 		s.runYulOptimiser = true;
 		s.optimizeStackAllocation = true;
 		return s;
@@ -117,10 +119,16 @@ struct OptimiserSettings
 			runDeduplicate == _other.runDeduplicate &&
 			runCSE == _other.runCSE &&
 			runConstantOptimiser == _other.runConstantOptimiser &&
+			simpleCounterForLoopUncheckedIncrement == _other.simpleCounterForLoopUncheckedIncrement &&
 			optimizeStackAllocation == _other.optimizeStackAllocation &&
 			runYulOptimiser == _other.runYulOptimiser &&
 			yulOptimiserSteps == _other.yulOptimiserSteps &&
 			expectedExecutionsPerDeployment == _other.expectedExecutionsPerDeployment;
+	}
+
+	bool operator!=(OptimiserSettings const& _other) const
+	{
+		return !(*this == _other);
 	}
 
 	/// Move literals to the right of commutative binary operators during code generation.
@@ -140,8 +148,10 @@ struct OptimiserSettings
 	/// size/cost-trade-off.
 	bool runConstantOptimiser = false;
 	/// Perform more efficient stack allocation for variables during code generation from Yul to bytecode.
-	bool optimizeStackAllocation = false;
+	bool simpleCounterForLoopUncheckedIncrement = false;
 	/// Yul optimiser with default settings. Will only run on certain parts of the code for now.
+	bool optimizeStackAllocation = false;
+	/// Allow unchecked arithmetic when incrementing the counter of certain kinds of 'for' loop
 	bool runYulOptimiser = false;
 	/// Sequence of optimisation steps to be performed by Yul optimiser.
 	/// Note that there are some hard-coded steps in the optimiser and you cannot disable
