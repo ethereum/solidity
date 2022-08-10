@@ -253,6 +253,7 @@
                   "nodeType": "VariableDeclarationStatement",
                   "src": "117:10:1"
                 },
+                "isSimpleCounterLoop": true,
                 "loopExpression":
                 {
                   "expression":
