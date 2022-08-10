@@ -1162,7 +1162,7 @@ An example Yul Object is shown below:
         code {
             function allocate(size) -> ptr {
                 ptr := mload(0x40)
-                if iszero(ptr) { ptr := 0x60 }
+                if iszero(ptr) { ptr := 0x80 }
                 mstore(0x40, add(ptr, size))
             }
 
