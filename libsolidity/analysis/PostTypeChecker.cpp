@@ -130,6 +130,17 @@ void PostTypeChecker::endVisit(ModifierInvocation const& _modifierInvocation)
 	callEndVisit(_modifierInvocation);
 }
 
+
+bool PostTypeChecker::visit(ForStatement const& _forStatement)
+{
+	return callVisit(_forStatement);
+}
+
+void PostTypeChecker::endVisit(ForStatement const& _forStatement)
+{
+	callEndVisit(_forStatement);
+}
+
 namespace
 {
 struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
@@ -422,6 +433,59 @@ struct ReservedErrorSelector: public PostTypeChecker::Checker
 	}
 };
 
+class LValueChecker: public ASTConstVisitor
+{
+public:
+	LValueChecker(Identifier const& _identifier): m_declaration(_identifier.annotation().referencedDeclaration) {}
+	bool willBeWrittenTo() const { return m_willBeWrittenTo; }
+	void endVisit(Identifier const& _identifier) override
+	{
+		if (
+			_identifier.annotation().referencedDeclaration == m_declaration &&
+			_identifier.annotation().willBeWrittenTo
+		)
+			m_willBeWrittenTo = true;
+	}
+private:
+	Declaration const* m_declaration;
+	bool m_willBeWrittenTo = false;
+};
+
+struct SimpleCounterForLoopChecker: public PostTypeChecker::Checker
+{
+	SimpleCounterForLoopChecker(ErrorReporter& _errorReporter): Checker(_errorReporter) {}
+	bool visit(ForStatement const& _forStatement) override
+	{
+		_forStatement.annotation().isSimpleCounterLoop = isSimpleCounterLoop(_forStatement);
+		return true;
+	}
+	bool isSimpleCounterLoop(ForStatement const& _forStatement) const
+	{
+		auto const* cond = dynamic_cast<BinaryOperation const*>(_forStatement.condition());
+		if (!cond || cond->getOperator() != Token::LessThan)
+			return false;
+		if (!_forStatement.loopExpression())
+			return false;
+
+		auto const* post = dynamic_cast<UnaryOperation const*>(&_forStatement.loopExpression()->expression());
+		if (!post || post->getOperator() != Token::Inc)
+			return false;
+
+		auto const* lhsIdentifier = dynamic_cast<Identifier const*>(&cond->leftExpression());
+		auto const* lhsType = dynamic_cast<IntegerType const*>(cond->leftExpression().annotation().type);
+		auto const *commonType = dynamic_cast<IntegerType const*>(cond->annotation().commonType);
+
+		if (lhsIdentifier && lhsType && commonType && *lhsType == *commonType)
+		{
+			LValueChecker lValueChecker{*lhsIdentifier};
+			_forStatement.body().accept(lValueChecker);
+			if (!lValueChecker.willBeWrittenTo())
+				return true;
+		}
+		return false;
+	}
+};
+
 }
 
 
@@ -433,4 +497,5 @@ PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_err
 	m_checkers.push_back(make_shared<EventOutsideEmitErrorOutsideRevertChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<ReservedErrorSelector>(_errorReporter));
+	m_checkers.push_back(make_shared<SimpleCounterForLoopChecker>(_errorReporter));
 }

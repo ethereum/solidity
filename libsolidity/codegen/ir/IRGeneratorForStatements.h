@@ -235,7 +235,8 @@ private:
 		Expression const* _conditionExpression,
 		Statement const*  _initExpression = nullptr,
 		ExpressionStatement const* _loopExpression = nullptr,
-		bool _isDoWhile = false
+		bool _isDoWhile = false,
+		bool _isSimpleCounterLoop = false
 	);
 
 	static Type const& type(Expression const& _expression);

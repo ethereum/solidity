@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Remove redundant overflow checks in specific for loops.
 
 
 Bugfixes:

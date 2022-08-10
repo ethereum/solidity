@@ -618,7 +618,9 @@ bool IRGeneratorForStatements::visit(ForStatement const& _forStatement)
 		_forStatement.body(),
 		_forStatement.condition(),
 		_forStatement.initializationExpression(),
-		_forStatement.loopExpression()
+		_forStatement.loopExpression(),
+		false,
+		*_forStatement.annotation().isSimpleCounterLoop
 	);
 
 	return false;
@@ -3139,7 +3141,8 @@ void IRGeneratorForStatements::generateLoop(
 	Expression const* _conditionExpression,
 	Statement const*  _initExpression,
 	ExpressionStatement const* _loopExpression,
-	bool _isDoWhile
+	bool _isDoWhile,
+	bool _isSimpleCounterLoop
 )
 {
 	string firstRun;
@@ -3156,7 +3159,13 @@ void IRGeneratorForStatements::generateLoop(
 		_initExpression->accept(*this);
 	appendCode() << "} 1 {\n";
 	if (_loopExpression)
+	{
+		Arithmetic previousArithmetic = m_context.arithmetic();
+		if (_isSimpleCounterLoop)
+			m_context.setArithmetic(Arithmetic::Wrapping);
 		_loopExpression->accept(*this);
+		m_context.setArithmetic(previousArithmetic);
+	}
 	appendCode() << "}\n";
 	appendCode() << "{\n";
 
