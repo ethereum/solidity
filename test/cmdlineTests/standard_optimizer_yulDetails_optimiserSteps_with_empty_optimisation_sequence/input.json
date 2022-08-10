@@ -1,0 +1,16 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_with_cleanup_sequence/in.sol"]}
+    },
+    "settings": {
+        "optimizer": {
+            "details": {
+                "yul": true,
+                "yulDetails": {
+                    "optimizerSteps": ":dhfoDgvulfnTUtnIf\n[    xarrscLM\n]\njmuljuljul VcTOcul jmul"
+                }
+            }
+        }
+    }
+}

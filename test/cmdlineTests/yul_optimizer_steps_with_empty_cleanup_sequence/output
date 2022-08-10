@@ -1,0 +1,24 @@
+Optimized IR:
+/// @use-src 0:"yul_optimizer_steps_with_empty_cleanup_sequence/input.sol"
+object "C_8" {
+    code {
+        {
+            /// @src 0:80:221  "contract C {..."
+            mstore(64, memoryguard(0x80))
+            /// @src 0:129:213  "assembly (\"memory-safe\") {..."
+            let usr$a := 0
+            revert(0, usr$a)
+        }
+    }
+    /// @use-src 0:"yul_optimizer_steps_with_empty_cleanup_sequence/input.sol"
+    object "C_8_deployed" {
+        code {
+            {
+                /// @src 0:80:221  "contract C {..."
+                mstore(64, memoryguard(0x80))
+                revert(0, 0)
+            }
+        }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}

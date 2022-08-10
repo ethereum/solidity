@@ -1,0 +1,42 @@
+Optimized IR:
+/// @use-src 0:"yul_optimizer_steps_with_empty_sequences/input.sol"
+object "C_7" {
+    code {
+        {
+            /// @src 0:80:115  "contract C..."
+            mstore(64, memoryguard(0x80))
+            if callvalue()
+            {
+                revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+            }
+            constructor_C()
+            let _1 := allocate_unbounded()
+            codecopy(_1, dataoffset("C_7_deployed"), datasize("C_7_deployed"))
+            return(_1, datasize("C_7_deployed"))
+        }
+        function allocate_unbounded() -> memPtr
+        { memPtr := mload(64) }
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+        { revert(0, 0) }
+        /// @ast-id 6 @src 0:97:113  "constructor() {}"
+        function constructor_C()
+        { }
+    }
+    /// @use-src 0:"yul_optimizer_steps_with_empty_sequences/input.sol"
+    object "C_7_deployed" {
+        code {
+            {
+                /// @src 0:80:115  "contract C..."
+                mstore(64, memoryguard(0x80))
+                revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            }
+            function shift_right_unsigned(value) -> newValue
+            { newValue := shr(224, value) }
+            function allocate_unbounded() -> memPtr
+            { memPtr := mload(64) }
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            { revert(0, 0) }
+        }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}

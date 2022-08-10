@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Too many colon delimiters",
+            "message": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Too many colon delimiters",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

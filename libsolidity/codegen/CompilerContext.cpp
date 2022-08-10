@@ -547,6 +547,7 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 		_object,
 		_optimiserSettings.optimizeStackAllocation,
 		_optimiserSettings.yulOptimiserSteps,
+		_optimiserSettings.yulOptimiserCleanupSteps,
 		isCreation? nullopt : make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
 		_externalIdentifiers
 	);

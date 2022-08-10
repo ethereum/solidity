@@ -93,6 +93,7 @@ void OptimiserSuite::run(
 	Object& _object,
 	bool _optimizeStackAllocation,
 	string_view _optimisationSequence,
+	string_view _optimisationCleanupSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers
 )
@@ -139,7 +140,10 @@ void OptimiserSuite::run(
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
 		);
-	suite.runSequence("fDnTOc g", ast);
+
+	// Run the user supplied (otherwise default) clean up sequence
+	suite.runSequence(_optimisationCleanupSequence, ast);
+	suite.runSequence("g", ast);
 
 	if (evmDialect)
 	{
@@ -296,6 +300,7 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 {
 	int8_t nestingLevel = 0;
+	int8_t colonDelimiters = 0;
 	for (char abbreviation: _stepAbbreviations)
 		switch (abbreviation)
 		{
@@ -309,6 +314,10 @@ void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 		case ']':
 			nestingLevel--;
 			assertThrow(nestingLevel >= 0, OptimizerException, "Unbalanced brackets");
+			break;
+		case ':':
+			assertThrow(nestingLevel == 0, OptimizerException, "Cleanup delimiter may only be placed at nesting level zero");
+			assertThrow(++colonDelimiters <=1, OptimizerException, "Too many colon delimiters");
 			break;
 		default:
 		{

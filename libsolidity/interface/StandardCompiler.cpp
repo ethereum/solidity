@@ -472,7 +472,7 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 	return {};
 }
 
-std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, string& _setting)
+std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, string& _optimiserSetting, string& _cleanupSetting)
 {
 	if (_details.isMember(_name))
 	{
@@ -490,7 +490,12 @@ std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details
 				);
 			}
 
-			_setting = _details[_name].asString();
+			std::string const fullSequence = _details[_name].asString();
+			auto const delimiterPos = fullSequence.find(":");
+			_optimiserSetting = fullSequence.substr(0, delimiterPos);
+
+			if (delimiterPos != string::npos)
+				_cleanupSetting = fullSequence.substr(delimiterPos + 1);
 		}
 		else
 			return formatFatalError("JSONError", "\"settings.optimizer.details." + _name + "\" must be a string");
@@ -616,7 +621,7 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 				return *result;
 			if (auto error = checkOptimizerDetail(details["yulDetails"], "stackAllocation", settings.optimizeStackAllocation))
 				return *error;
-			if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps))
+			if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps, settings.yulOptimiserCleanupSteps))
 				return *error;
 		}
 	}
