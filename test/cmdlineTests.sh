@@ -355,7 +355,7 @@ function test_via_ir_equivalence()
 
     for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
         bin_output_two_stage+=$(
-	    msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
+        msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
                 sed '/^Binary representation:$/d' |
                 sed '/^=======/d'
         )
@@ -375,8 +375,13 @@ function test_via_ir_equivalence()
 
 ## RUN
 
-echo "Checking that the bug list is up to date..."
-"$REPO_ROOT"/scripts/update_bugs_by_version.py
+SOLTMPDIR=$(mktemp -d)
+printTask "Checking that the bug list is up to date..."
+cp "${REPO_ROOT}/docs/bugs_by_version.json" "${SOLTMPDIR}/original_bugs_by_version.json"
+"${REPO_ROOT}/scripts/update_bugs_by_version.py"
+diff --unified "${SOLTMPDIR}/original_bugs_by_version.json" "${REPO_ROOT}/docs/bugs_by_version.json" || \
+    fail "The bug list in bugs_by_version.json was out of date and has been updated. Please investigate and submit a bugfix if necessary."
+rm -r "$SOLTMPDIR"
 
 printTask "Testing unknown options..."
 (
