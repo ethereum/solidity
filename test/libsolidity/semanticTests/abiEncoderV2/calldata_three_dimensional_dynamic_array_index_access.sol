@@ -25,7 +25,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // revertStrings: debug
 // ----
 // f(uint256[][],uint256,uint256): 0x60, 0, 0, 2, 0x40, 0x80, 1, 7, 1, 8 -> 0x20, 0x20, 7

@@ -19,7 +19,6 @@ contract C {
 }
 // ====
 // revertStrings: debug
-// compileViaYul: also
 // ----
 // f(uint256[][]): 0x20, 1, 0x20, 0 -> 0x20, 0x80, 0x20, 1, 0x20, 0
 // f(uint256[][]): 0x20, 1, 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access stride"
