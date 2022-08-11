@@ -1,9 +1,15 @@
 ## Checklist for making a release:
 
 ### Requirements
- - [ ] Lauchpad (Ubuntu One) account
- - [ ] gnupg key (has to be version 1, gpg2 won't work) for ``your-name@ethereum.org`` created and uploaded
- - [ ] Write access to https://github.com/ethereum/homebrew-ethereum
+ - [ ] Github account with access to [solidity](https://github.com/ethereum/solidity), [solc-js](https://github.com/ethereum/solc-js),
+       [solc-bin](https://github.com/ethereum/solc-bin), [homebrew-ethereum](https://github.com/ethereum/homebrew-ethereum),
+       [solidity-blog](https://github.com/ethereum/solidity-blog) and [solidity-portal](https://github.com/ethereum/solidity-portal) repositories.
+ - [ ] DockerHub account with push rights to the [``solc`` image](https://hub.docker.com/r/ethereum/solc).
+ - [ ] Lauchpad (Ubuntu One) account with a membership in the ["Ethereum" team](https://launchpad.net/~ethereum) and
+       a gnupg key for your email in the ``ethereum.org`` domain (has to be version 1, gpg2 won't work).
+ - [ ] [npm Registry](https://www.npmjs.com) account added as a collaborator for the [``solc`` package](https://www.npmjs.com/package/solc).
+ - [ ] Access to the [solidity_lang Twitter account](https://twitter.com/solidity_lang).
+ - [ ] [Reddit](https://www.reddit.com) account that is at least 10 days old with a minimum of 20 comment karma (``/r/ethereum`` requirements).
 
 ### Blog Post
  - [ ] Create a post on [solidity-blog](https://github.com/ethereum/solidity-blog) in the ``Releases`` category and explain some of the new features or concepts.
