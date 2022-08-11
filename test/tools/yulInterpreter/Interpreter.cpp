@@ -72,6 +72,34 @@ void InterpreterState::dumpTraceAndState(ostream& _out, bool _disableMemoryTrace
 	}
 	_out << "Storage dump:" << endl;
 	dumpStorage(_out);
+
+	if (!calldata.empty())
+	{
+		_out << "Calldata dump:";
+
+		for (size_t offset = 0; offset < calldata.size(); ++offset)
+			if (calldata[offset] != 0)
+			{
+				if (offset % 32 == 0)
+					_out <<
+						std::endl <<
+						"  " <<
+						std::uppercase <<
+						std::hex <<
+						std::setfill(' ') <<
+						std::setw(4) <<
+						offset <<
+						": ";
+
+				_out <<
+					std::hex <<
+					std::setw(2) <<
+					std::setfill('0') <<
+					static_cast<int>(calldata[offset]);
+			}
+
+		_out << endl;
+	}
 }
 
 void Interpreter::run(
