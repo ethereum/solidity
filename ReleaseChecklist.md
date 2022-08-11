@@ -25,7 +25,7 @@
        Set the target to the ``develop`` branch and the tag to the new version, e.g. ``v0.8.5``.
        Include the following warning: ``**The release is still in progress and the binaries may not yet be available from all sources.**``.
        Don't publish it yet - click the ``Save draft`` button instead.
- - [ ] Thank voluntary contributors in the Github release notes (use ``git shortlog -s -n -e v0.5.3..origin/develop``).
+ - [ ] Thank voluntary contributors in the Github release notes (use ``git shortlog --summary --email v0.5.3..origin/develop``).
  - [ ] Check that all tests on the latest commit in ``develop`` are green.
  - [ ] Click the ``Publish release`` button on the release page, creating the tag.
  - [ ] Wait for the CI runs on the tag itself.
