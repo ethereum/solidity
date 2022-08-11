@@ -24,6 +24,8 @@
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/CommonData.h>
 
@@ -44,6 +46,10 @@ class InterpreterTerminatedGeneric: public util::Exception
 };
 
 class ExplicitlyTerminated: public InterpreterTerminatedGeneric
+{
+};
+
+class ExplicitlyTerminatedWithReturn: public ExplicitlyTerminated
 {
 };
 
@@ -108,6 +114,15 @@ struct InterpreterState
 	void dumpTraceAndState(std::ostream& _out, bool _disableMemoryTrace) const;
 	/// Prints non-zero storage to @param _out.
 	void dumpStorage(std::ostream& _out) const;
+
+	bytes readMemory(u256 const& _offset, u256 const& _size)
+	{
+		yulAssert(_size <= 0xffff, "Too large read.");
+		bytes data(size_t(_size), uint8_t(0));
+		for (size_t i = 0; i < data.size(); ++i)
+			data[i] = memory[_offset + i];
+		return data;
+	}
 };
 
 /**
@@ -135,6 +150,7 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Block const& _ast,
+		bool _disableExternalCalls,
 		bool _disableMemoryTracing
 	);
 
@@ -142,6 +158,7 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
+		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
 		std::map<YulString, u256> _variables = {}
 	):
@@ -149,6 +166,7 @@ public:
 		m_state(_state),
 		m_variables(std::move(_variables)),
 		m_scope(&_scope),
+		m_disableExternalCalls(_disableExternalCalls),
 		m_disableMemoryTrace(_disableMemoryTracing)
 	{
 	}
@@ -165,6 +183,7 @@ public:
 	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
+	bytes returnData() const { return m_state.returndata; }
 	std::vector<std::string> const& trace() const { return m_state.trace; }
 
 	u256 valueOfVariable(YulString _name) const { return m_variables.at(_name); }
@@ -187,6 +206,7 @@ private:
 	/// Values of variables.
 	std::map<YulString, u256> m_variables;
 	Scope* m_scope;
+	bool m_disableExternalCalls;
 	bool m_disableMemoryTrace;
 };
 
@@ -201,12 +221,14 @@ public:
 		Dialect const& _dialect,
 		Scope& _scope,
 		std::map<YulString, u256> const& _variables,
+		bool _disableExternalCalls,
 		bool _disableMemoryTrace
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
 		m_scope(_scope),
+		m_disableExternalCalls(_disableExternalCalls),
 		m_disableMemoryTrace(_disableMemoryTrace)
 	{}
 
@@ -220,6 +242,29 @@ public:
 	std::vector<u256> values() const { return m_values; }
 
 private:
+	void runExternalCall(evmasm::Instruction _instruction);
+	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulString, u256> _variables = {}) const
+	{
+		return std::make_unique<Interpreter>(
+			m_state,
+			m_dialect,
+			m_scope,
+			m_disableExternalCalls,
+			m_disableMemoryTrace,
+			std::move(_variables)
+		);
+	}
+	virtual std::unique_ptr<Interpreter> makeInterpreterNew(InterpreterState& _state, Scope& _scope) const
+	{
+		return std::make_unique<Interpreter>(
+			_state,
+			m_dialect,
+			_scope,
+			m_disableExternalCalls,
+			m_disableMemoryTrace
+		);
+	}
+
 	void setValue(u256 _value);
 
 	/// Evaluates the given expression from right to left and
@@ -243,6 +288,7 @@ private:
 	std::vector<u256> m_values;
 	/// Current expression nesting level
 	unsigned m_nestingLevel = 0;
+	bool m_disableExternalCalls;
 	/// Flag to disable memory tracing
 	bool m_disableMemoryTrace;
 };

@@ -78,11 +78,12 @@ void Interpreter::run(
 	InterpreterState& _state,
 	Dialect const& _dialect,
 	Block const& _ast,
+	bool _disableExternalCalls,
 	bool _disableMemoryTrace
 )
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope, _disableMemoryTrace}(_ast);
+	Interpreter{_state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
 }
 
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
@@ -217,14 +218,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -288,7 +289,17 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
 			EVMInstructionInterpreter interpreter(m_state, m_disableMemoryTrace);
-			setValue(interpreter.evalBuiltin(*fun, _funCall.arguments, values()));
+
+			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, values());
+
+			if (
+				!m_disableExternalCalls &&
+				fun->instruction &&
+				evmasm::isCallInstruction(*fun->instruction)
+			)
+				runExternalCall(*fun->instruction);
+
+			setValue(value);
 			return;
 		}
 	}
@@ -316,13 +327,13 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 		variables[fun->returnVariables.at(i).name] = 0;
 
 	m_state.controlFlowState = ControlFlowState::Default;
-	Interpreter interpreter(m_state, m_dialect, *scope, m_disableMemoryTrace, std::move(variables));
-	interpreter(fun->body);
+	unique_ptr<Interpreter> interpreter = makeInterpreterCopy(std::move(variables));
+	(*interpreter)(fun->body);
 	m_state.controlFlowState = ControlFlowState::Default;
 
 	m_values.clear();
 	for (auto const& retVar: fun->returnVariables)
-		m_values.emplace_back(interpreter.valueOfVariable(retVar.name));
+		m_values.emplace_back(interpreter->valueOfVariable(retVar.name));
 }
 
 u256 ExpressionEvaluator::value() const
@@ -378,5 +389,88 @@ void ExpressionEvaluator::incrementStep()
 	{
 		m_state.trace.emplace_back("Maximum expression nesting level reached.");
 		BOOST_THROW_EXCEPTION(ExpressionNestingLimitReached());
+	}
+}
+
+void ExpressionEvaluator::runExternalCall(evmasm::Instruction _instruction)
+{
+	u256 memOutOffset = 0;
+	u256 memOutSize = 0;
+	u256 callvalue = 0;
+	u256 memInOffset = 0;
+	u256 memInSize = 0;
+
+	// Setup memOut* values
+	if (
+		_instruction == evmasm::Instruction::CALL ||
+		_instruction == evmasm::Instruction::CALLCODE
+	)
+	{
+		memOutOffset = values()[5];
+		memOutSize = values()[6];
+		callvalue = values()[2];
+		memInOffset = values()[3];
+		memInSize = values()[4];
+	}
+	else if (
+		_instruction == evmasm::Instruction::DELEGATECALL ||
+		_instruction == evmasm::Instruction::STATICCALL
+	)
+	{
+		memOutOffset = values()[4];
+		memOutSize = values()[5];
+		memInOffset = values()[2];
+		memInSize = values()[3];
+	}
+	else
+		yulAssert(false);
+
+	// Don't execute external call if it isn't our own address
+	if (values()[1] != util::h160::Arith(m_state.address))
+		return;
+
+	Scope tmpScope;
+	InterpreterState tmpState;
+	tmpState.calldata = m_state.readMemory(memInOffset, memInSize);
+	tmpState.callvalue = callvalue;
+
+	// Create new interpreter for the called contract
+	unique_ptr<Interpreter> newInterpreter = makeInterpreterNew(tmpState, tmpScope);
+
+	Scope* abstractRootScope = &m_scope;
+	Scope* fileScope = nullptr;
+	Block const* ast = nullptr;
+
+	// Find file scope
+	while (abstractRootScope->parent)
+	{
+		fileScope = abstractRootScope;
+		abstractRootScope = abstractRootScope->parent;
+	}
+
+	// Get AST for file scope
+	for (auto&& [block, scope]: abstractRootScope->subScopes)
+		if (scope.get() == fileScope)
+		{
+			ast = block;
+			break;
+		}
+
+	yulAssert(ast);
+
+	try
+	{
+		(*newInterpreter)(*ast);
+	}
+	catch (ExplicitlyTerminatedWithReturn const&)
+	{
+		// Copy return data to our memory
+		copyZeroExtended(
+			m_state.memory,
+			newInterpreter->returnData(),
+			memOutOffset.convert_to<size_t>(),
+			0,
+			memOutSize.convert_to<size_t>()
+		);
 	}
 }

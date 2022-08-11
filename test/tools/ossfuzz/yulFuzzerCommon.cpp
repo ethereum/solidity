@@ -53,7 +53,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	TerminationReason reason = TerminationReason::None;
 	try
 	{
-		Interpreter::run(state, _dialect, *_ast, _disableMemoryTracing);
+		Interpreter::run(state, _dialect, *_ast, true, _disableMemoryTracing);
 	}
 	catch (StepLimitReached const&)
 	{

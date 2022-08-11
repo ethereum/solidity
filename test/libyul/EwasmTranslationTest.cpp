@@ -112,6 +112,7 @@ string EwasmTranslationTest::interpret()
 			state,
 			WasmDialect{},
 			*m_object->code,
+			/*disableExternalCalls=*/true,
 			/*disableMemoryTracing=*/false
 		);
 	}
