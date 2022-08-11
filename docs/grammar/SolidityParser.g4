@@ -504,7 +504,7 @@ variableDeclarationTuple:
 variableDeclarationStatement: ((variableDeclaration (Assign expression)?) | (variableDeclarationTuple Assign expression)) Semicolon;
 expressionStatement: expression Semicolon;
 
-mappingType: Mapping LParen key=mappingKeyType DoubleArrow value=typeName RParen;
+mappingType: Mapping LParen key=mappingKeyType name=identifier? DoubleArrow value=typeName name=identifier? RParen;
 /**
  * Only elementary types or user defined types are viable as mapping keys.
  */
