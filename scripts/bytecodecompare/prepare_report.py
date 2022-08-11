@@ -150,7 +150,8 @@ def parse_standard_json_output(source_file_name: Path, standard_json_output: str
     file_report = FileReport(file_name=source_file_name, contract_reports=[])
     for file_name, file_results in sorted(decoded_json_output['contracts'].items()):
         for contract_name, contract_results in sorted(file_results.items()):
-            assert file_report.contract_reports is not None
+            if file_report.contract_reports is None:
+                raise AssertionError
             file_report.contract_reports.append(ContractReport(
                 contract_name=contract_name,
                 file_name=Path(file_name),
@@ -166,7 +167,8 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
     # content of matched groups in between. It also never omits the empty elements so the number of
     # list items is predictable (3 per match + the text before the first match)
     output_segments = re.split(CONTRACT_SEPARATOR_PATTERN, cli_output)
-    assert len(output_segments) % 3 == 1
+    if len(output_segments) % 3 != 1:
+        raise AssertionError
 
     if len(output_segments) == 1:
         return FileReport(file_name=source_file_name, contract_reports=None)
@@ -176,7 +178,8 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
         bytecode_match = re.search(BYTECODE_REGEX, contract_output)
         metadata_match = re.search(METADATA_REGEX, contract_output)
 
-        assert file_report.contract_reports is not None
+        if file_report.contract_reports is None:
+            raise AssertionError
         file_report.contract_reports.append(ContractReport(
             contract_name=contract_name.strip(),
             file_name=Path(file_name.strip()) if file_name is not None else None,
@@ -215,7 +218,8 @@ def prepare_compiler_input(
         command_line = [str(compiler_path), '--standard-json']
         compiler_input = json.dumps(json_input)
     else:
-        assert interface == CompilerInterface.CLI
+        if interface != CompilerInterface.CLI:
+            raise AssertionError
 
         compiler_options = [str(source_file_name), '--bin']
         if metadata_option_supported:
@@ -289,8 +293,10 @@ def run_compiler(
 
         return parse_standard_json_output(Path(source_file_name), process.stdout)
     else:
-        assert interface == CompilerInterface.CLI
-        assert tmp_dir is not None
+        if interface != CompilerInterface.CLI:
+            raise AssertionError
+        if tmp_dir is None:
+            raise AssertionError
 
         (command_line, compiler_input) = prepare_compiler_input(
             compiler_path.absolute(),
