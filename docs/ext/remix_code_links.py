@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def insert_node_before(child, new_sibling):
-    assert child in child.parent.children
+    if child not in child.parent.children:
+        raise AssertionError
 
     for position, node in enumerate(child.parent.children):
         if node == child:
@@ -47,11 +48,13 @@ def insert_remix_link(app, doctree, solidity_version):
         return
 
     for literal_block_node in doctree.traverse(docutils.nodes.literal_block):
-        assert 'language' in literal_block_node.attributes
-        language = literal_block_node.attributes['language'].lower()
+        if 'language' not in literal_block_node.attributes:
+            raise AssertionError        
+            language = literal_block_node.attributes['language'].lower()
         if language in ['solidity', 'yul']:
             text_nodes = list(literal_block_node.traverse(docutils.nodes.Text))
-            assert len(text_nodes) == 1
+            if len(text_nodes) != 1:
+                raise AssertionError
 
             remix_url = remix_code_url(text_nodes[0], language, solidity_version)
             url_length = len(remix_url.encode('utf-8'))
