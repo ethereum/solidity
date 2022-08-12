@@ -32,6 +32,9 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/reverse.hpp>
+
+#include <numeric>
 
 using namespace std;
 using namespace solidity;
@@ -3884,10 +3887,17 @@ string YulUtilFunctions::inlineArrayConversionFunction(InlineArrayType const& _f
 		_to.identifier();
 
 	vector<map<string, string>> memberSetValues;
-	unsigned stackItemIndex = 0;
+	unsigned stackItemIndex = std::accumulate(
+			_from.components().begin(),
+			_from.components().end(),
+			0u,
+			[](unsigned sum, Type const* component) {return sum + component->sizeOnStack();}
+		);
 
-	for (auto&& [index, type]: _from.components() | ranges::views::enumerate)
+	for (auto&& [index, type]: _from.components() | ranges::views::enumerate | ranges::views::reverse)
 	{
+		stackItemIndex -= type->sizeOnStack();
+
 		memberSetValues.emplace_back();
 		memberSetValues.back()["setMember"] = Whiskers(R"(
 			let <memberValues> := <conversionFunction>(<value>)
@@ -3899,8 +3909,6 @@ string YulUtilFunctions::inlineArrayConversionFunction(InlineArrayType const& _f
 		("conversionFunction", conversionFunction(*type, *_to.baseType()))
 		("writeToMemory", writeToMemoryFunction(*_to.baseType()))
 		.render();
-
-		stackItemIndex += type->sizeOnStack();
 	}
 
 	return m_functionCollector.createFunction(functionName, [&]() {
