@@ -329,10 +329,14 @@ the ``--yul-optimizations`` option:
 
 .. code-block:: bash
 
-    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul'
+    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul:fDnTOc'
 
 The sequence inside ``[...]`` will be applied multiple times in a loop until the Yul code
 remains unchanged or until the maximum number of rounds (currently 12) has been reached.
+
+The colon delimiter ``:`` is used to supply a custom clean up sequence in order to replace the
+default (``fDnTOc``) one, which is run after the stack compressor when using the legacy EVM
+code transform.
 
 Available abbreviations are listed in the :ref:`Yul optimizer docs <optimization-step-sequence>`.
 

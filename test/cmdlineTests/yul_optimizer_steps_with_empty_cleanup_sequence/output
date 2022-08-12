@@ -3,9 +3,9 @@ Optimized IR:
 object "C_8" {
     code {
         {
-            /// @src 0:80:221  "contract C {..."
+            /// @src 0:80:314  "contract C {..."
             mstore(64, memoryguard(0x80))
-            /// @src 0:129:213  "assembly (\"memory-safe\") {..."
+            /// @src 0:129:306  "assembly (\"memory-safe\") {..."
             let usr$a := 0
             revert(0, usr$a)
         }
@@ -14,7 +14,7 @@ object "C_8" {
     object "C_8_deployed" {
         code {
             {
-                /// @src 0:80:221  "contract C {..."
+                /// @src 0:80:314  "contract C {..."
                 mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }

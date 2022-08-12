@@ -7,6 +7,7 @@ contract C {
         assembly ("memory-safe") {
             let a := 0
             revert(0, a)
+            // Without the cleanup sequence this will not be simplified to ``revert(a, a)``.
         }
     }
 }

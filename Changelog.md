@@ -4,7 +4,7 @@ Language Features:
 
 
 Compiler Features:
-
+* Yul Optimizer: Allow replacing the previously hard-coded cleanup sequence by specifying custom steps after a colon delimiter (`:`) in the sequence string.
 
 Bugfixes:
 
@@ -21,7 +21,7 @@ Compiler Features:
  * Yul Optimizer: Simplify the starting offset of zero-length operations to zero.
 
 
-Bugfixes:
+Bugfixes:`````
  * Type Checker: Fix internal compiler error on tuple assignments with invalid left-hand side.
  * Yul IR Code Generation: Fix internal compiler error when accessing the ``.slot`` member of a mapping through a storage reference in inline assembly.
 

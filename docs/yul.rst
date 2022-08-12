@@ -1250,7 +1250,7 @@ You can override this sequence and supply your own using the ``--yul-optimizatio
 
 .. code-block:: sh
 
-    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul'
+    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul:fDnTOc'
 
 The order of steps is significant and affects the quality of the output.
 Moreover, applying a step may uncover new optimization opportunities for others that were already
@@ -1258,6 +1258,12 @@ applied so repeating steps is often beneficial.
 By enclosing part of the sequence in square brackets (``[]``) you tell the optimizer to repeatedly
 apply that part until it no longer improves the size of the resulting assembly.
 You can use brackets multiple times in a single sequence but they cannot be nested.
+
+The colon delimiter (``:``) in the example is used to specify a custom cleanup sequence, which is run after
+the main part of the sequence before the delimiter (and, when using the legacy EVM code transform,
+only *after* the stack compressor). If no such delimiter is present, the default cleanup sequence (``fDnTOc``)
+is run after the supplied sequence.
+
 
 The following optimization steps are available:
 
