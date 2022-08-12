@@ -42,6 +42,6 @@ contract c {
 // test2(uint256[][2]): 0x20, 0x40, 0x40, 2, 23, 42 -> 2, 65
 // gas irOptimized: 157567
 // test3(uint256[2][]): 0x20, 2, 23, 42, 23, 42 -> 2, 65
-// gas irOptimized: 134633
+// gas irOptimized: 134644
 // test4(uint256[2][2]): 23, 42, 23, 42 -> 65
 // gas irOptimized: 111271

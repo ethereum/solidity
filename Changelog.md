@@ -7,6 +7,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: More efficient overflow checks for multiplication.
 
 
 Bugfixes:
