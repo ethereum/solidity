@@ -36,7 +36,7 @@ static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
 DEFINE_PROTO_FUZZER(Contract const& _contract)
 {
-	ProtoConverter converter;
+	ProtoConverter converter(_contract.seed());
 	string contractSource = converter.contractToString(_contract);
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
@@ -69,14 +69,11 @@ DEFINE_PROTO_FUZZER(Contract const& _contract)
 			{}
 		);
 		auto result = evmoneUtil.compileDeployAndExecute(encodedData);
-		if (result.has_value())
-		{
-			solAssert(result->status_code != EVMC_REVERT, "Proto ABIv2 fuzzer: EVM One reverted.");
-			if (result->status_code == EVMC_SUCCESS)
-				solAssert(
-					EvmoneUtility::zeroWord(result->output_data, result->output_size),
-					"Proto ABIv2 fuzzer: ABIv2 coding failure found."
-				);
-		}
+		solAssert(result.status_code != EVMC_REVERT, "Proto ABIv2 fuzzer: EVM One reverted.");
+		if (result.status_code == EVMC_SUCCESS)
+			solAssert(
+				EvmoneUtility::zeroWord(result.output_data, result.output_size),
+				"Proto ABIv2 fuzzer: ABIv2 coding failure found."
+			);
 	}
 }
