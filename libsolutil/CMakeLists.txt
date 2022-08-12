@@ -32,6 +32,7 @@ set(sources
 	Numeric.cpp
 	Numeric.h
 	picosha2.h
+	LinearExpression.cpp
 	LinearExpression.h
 	Result.h
 	SetOnce.h

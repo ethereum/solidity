@@ -185,4 +185,41 @@ private:
 	std::vector<rational> factors;
 };
 
+class SparseMatrix
+{
+public:
+	struct Entry
+	{
+		rational value;
+		// TOOD make it 32 bit as well
+		size_t row;
+		size_t col;
+		// TODO maybe better to use 32-bit indices instead of 64-bit pointers
+		Entry* prev_in_row;
+		Entry* next_in_row;
+		Entry* prev_in_col;
+		Entry* next_in_col;
+	};
+	/// @returns (i, v) for all non-zero v in the column _column
+	void enumerateColumn(size_t _column) const;
+	/// @returns (i, v) for all non-zero v in the row _row
+	void enumerateRow(size_t _row) const;
+	void multiplyRowByFactor(size_t _row, rational const& _factor);
+	void addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational const& _factor);
+	rational entry(size_t _row, size_t _column) const;
+
+	void appendRow(LinearExpression const& _entries);
+
+private:
+
+	void remove(Entry& _entry);
+	Entry* appendToRow(size_t _row, size_t _column, rational _value);
+
+	std::vector<std::unique_ptr<Entry>> m_elements;
+	std::vector<Entry*> m_row_start;
+	std::vector<Entry*> m_col_start;
+	std::vector<Entry*> m_row_end;
+	std::vector<Entry*> m_col_end;
+};
+
 }
