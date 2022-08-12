@@ -237,10 +237,16 @@ Array Literals
 ^^^^^^^^^^^^^^
 
 An array literal is a comma-separated list of one or more expressions, enclosed
-in square brackets (``[...]``). For example ``[1, a, f(3)]``. It can be converted to
-statically and dynamically-sized array if all its expressions can be implicitly
-converted to the base type of the array. In the example below, the conversion is impossible
-because ``-1`` cannot be implicitly converted to ``uint8``.
+in square brackets (``[...]``). For example ``[1, a, f(3)]``. It's type is always
+a statically-sized memory array whose length is the number of expressions.
+The base type of the array is determined on the types of the all expressions and
+it is the smallest type that can hold all of them.
+
+
+An array literl can be converted to statically and dynamically-sized array if all
+its expressions can be implicitly converted to the base type of the array. In the
+example below, the conversion is impossible because ``-1`` cannot be implicitly
+converted to ``uint8``.
 
 .. code-block:: solidity
 
