@@ -17,8 +17,6 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
-#include <libsolutil/LP.h>
-
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
@@ -214,6 +212,8 @@ private:
 
 	void remove(Entry& _entry);
 	Entry* appendToRow(size_t _row, size_t _column, rational _value);
+	Entry* prependInRow(Entry& _successor, size_t _column, rational _value);
+	void adjustColumnProperties(Entry& _entry);
 
 	std::vector<std::unique_ptr<Entry>> m_elements;
 	std::vector<Entry*> m_row_start;

@@ -29,6 +29,7 @@
 namespace solidity::util
 {
 
+using rational = boost::rational<bigint>;
 using Model = std::map<std::string, rational>;
 using ReasonSet = std::set<size_t>;
 

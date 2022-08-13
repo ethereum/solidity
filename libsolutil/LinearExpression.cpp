@@ -18,7 +18,8 @@
 
 #include <libsolutil/LinearExpression.h>
 
-using solidity::util;
+using namespace solidity::util;
+using namespace std;
 
 void SparseMatrix::multiplyRowByFactor(size_t _row, rational const& _factor)
 {
@@ -53,9 +54,9 @@ void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, ration
 			}
 		}
 		else if (!target)
-			target = appendToRow(_targetRow, source->col, _factor * source->value);
-		else if (target->col > source->col)
-			target = prependInRow(target, source->col, _factor * source->value);
+			target = appendToRow(_targetRow, source->col, _factor * source->value)->next_in_row;
+		else
+			target = prependInRow(*target, source->col, _factor * source->value)->next_in_row;
 
 		source = source->next_in_row;
 	}
@@ -64,20 +65,17 @@ void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, ration
 
 void SparseMatrix::appendRow(LinearExpression const& _entries)
 {
-	Entry* prev = nullptr;
-	m_row_start.push(nullptr);
-	m_row_end.push(nullptr);
+	m_row_start.push_back(nullptr);
+	m_row_end.push_back(nullptr);
 	size_t row_nr = m_row_start.size() - 1;
 	for (auto&& [i, v]: _entries.enumerate()) {
 		if (!v)
 			continue;
-		prev = appendToRow(row_nr, i, move(v));
-
-		prev = curr;
+		appendToRow(row_nr, i, move(v));
 	}
 }
 
-void SparseMatrix::remove(Entry& _e)
+void SparseMatrix::remove(SparseMatrix::Entry& _e)
 {
 	if (_e.prev_in_row)
 		_e.prev_in_row->next_in_row = _e.next_in_row;
@@ -97,28 +95,82 @@ void SparseMatrix::remove(Entry& _e)
 		m_col_end[_e.col] = _e.prev_in_col;
 }
 
-void SparseMatrix::appendToRow(size_t _row, size_t _column, rational _value)
+SparseMatrix::Entry* SparseMatrix::appendToRow(size_t _row, size_t _column, rational _value)
 {
-	m_elements.emplace(make_unique<Element>(
+	// TODO could be combined with prependInRow
+	// with successor being nullptr
+	m_elements.emplace_back(make_unique<Entry>(Entry{
 		move(_value),
 		_row,
 		_column,
 		m_row_end[_row],
 		nullptr,
-		m_column_end[i],
+		nullptr,
 		nullptr
-	));
-	Entry const* e = m_elements.back().get();
+	}));
+	Entry* e = m_elements.back().get();
 	if (m_row_end[_row])
 		m_row_end[_row]->next_in_row = e;
+	m_row_end[_row] = e;
+
 	if (!m_row_start[_row])
 		m_row_start[_row] = e;
-	if (i >= m_col_start.size())
-		m_col_start.resize(i + 1);
-	if (!m_col_start[i])
-		m_col_start[i] = e;
-	if (i >= m_col_end.size())
-		m_col_end.resize(i + 1);
-	if (!m_col_end[i])
-		m_col_end[i] = e;
+
+	adjustColumnProperties(*e);
+	return e;
+}
+
+SparseMatrix::Entry* SparseMatrix::prependInRow(Entry& _successor, size_t _column, rational _value)
+{
+	size_t row = _successor.row;
+	m_elements.emplace_back(make_unique<Entry>(Entry{
+		move(_value),
+		row,
+		_column,
+		_successor.prev_in_row,
+		&_successor,
+		nullptr,
+		nullptr
+	}));
+	Entry* e = m_elements.back().get();
+	_successor.prev_in_row = e;
+	if (m_row_start[row] == &_successor)
+		m_row_start[row] = e;
+
+	adjustColumnProperties(*e);
+	return e;
+}
+
+void SparseMatrix::adjustColumnProperties(Entry& _entry)
+{
+	size_t column = _entry.col;
+
+	if (column >= m_col_start.size())
+	{
+		m_col_start.resize(column + 1);
+		m_col_end.resize(column + 1);
+	}
+	Entry* c = nullptr;
+	if (m_col_end[column] && m_col_end[column]->row > _entry.row)
+	{
+		c = m_col_start[column];
+		// TODO could choose to search from end
+		while (c && c->row < _entry.row)
+			c = c->next_in_col;
+	}
+	_entry.next_in_col = c;
+	if (c)
+	{
+		_entry.prev_in_col = c->prev_in_col;
+		c->prev_in_col = &_entry;
+	}
+	else
+	{
+		_entry.prev_in_col = m_col_end[column];
+		m_col_end[column] = &_entry;
+	}
+	if (_entry.prev_in_col)
+		_entry.prev_in_col->next_in_col = &_entry;
+	else
+		m_col_start[column] = &_entry;
 }
