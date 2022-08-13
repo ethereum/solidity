@@ -85,8 +85,10 @@ Data locations are not only relevant for persistency of data, but also for the s
             // The following does not work; it would need to create a new temporary /
             // unnamed array in storage, but storage is "statically" allocated:
             // y = memoryArray;
-            // This does not work either, since it would "reset" the pointer, but there
-            // is no sensible location it could point to.
+            // Similarly, "delete y" is not valid, as assignments to local variables
+            // referencing storage objects can only be made from existing storage objects.
+            // It would "reset" the pointer, but there is no sensible location it could point to.
+            // For more details see the documentation of the "delete" operator.
             // delete y;
             g(x); // calls g, handing over a reference to x
             h(x); // calls h and creates an independent, temporary copy in memory
