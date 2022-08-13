@@ -72,16 +72,6 @@ with two integers, you would use something like the following:
 
 Function parameters can be used as any other local variable and they can also be assigned to.
 
-.. note::
-
-  Until version 0.6.0 it was not possible to use a multi-dimensional array or a struct
-  as an input for an :ref:`external function<external-function-calls>`.
-  ``abicoder v2`` made it possible and it's been enabled by default since version 0.8.0
-  (before that you had to enable it with ``pragma abicoder v2;``).
-
-  An :ref:`internal function<internal-function-calls>` can accept a
-  multi-dimensional array or a struct without any restrictions.
-
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
 
 Return Variables
@@ -139,12 +129,16 @@ If you use an early ``return`` to leave a function that has return variables,
 you must provide return values together with the return statement.
 
 .. note::
-    You cannot return some types from non-internal functions, notably
-    multi-dimensional dynamic arrays and structs. If you enable the
-    ABI coder v2 by adding ``pragma abicoder v2;``
-    to your source file then more types are available, but
-    ``mapping`` types are still limited to inside a single contract and you
-    cannot transfer them.
+    You cannot return some types from non-internal functions.
+    This includes the types listed below and any composite types that recursively contain them:
+
+    - mappings,
+    - internal function types,
+    - reference types with location set to ``storage``,
+    - multi-dimensional arrays (applies only to :ref:`ABI coder v1 <abi_coder>`),
+    - structs (applies only to :ref:`ABI coder v1 <abi_coder>`).
+
+    This restriction does not apply to library functions because of their different :ref:`internal ABI <library-selectors>`.
 
 .. _multi-return:
 
