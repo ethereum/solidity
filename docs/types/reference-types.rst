@@ -379,8 +379,10 @@ Array Members
         uint[2**20] aLotOfIntegers;
         // Note that the following is not a pair of dynamic arrays but a
         // dynamic array of pairs (i.e. of fixed size arrays of length two).
-        // Because of that, T[] is always a dynamic array of T, even if T
-        // itself is an array.
+        // In Solidity, T[k] and T[] are always arrays with elements of type T,
+        // even if T itself is an array.
+        // Because of that, bool[2][] is a dynamic array of elements
+        // that are bool[2]. This is different from other languages, like C.
         // Data location for all state variables is storage.
         bool[2][] pairsOfFlags;
 
