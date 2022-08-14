@@ -37,8 +37,6 @@
 
 #include <boost/algorithm/string/join.hpp>
 
-#include <range/v3/algorithm/sort.hpp>
-
 #include <utility>
 #include <vector>
 #include <algorithm>
@@ -629,7 +627,7 @@ bool ASTJsonExporter::visit(InlineAssembly const& _node)
 
 	Json::Value externalReferencesJson = Json::arrayValue;
 
-	ranges::sort(externalReferences);
+	std::sort(externalReferences.begin(), externalReferences.end());
 	for (Json::Value& it: externalReferences | ranges::views::values)
 		externalReferencesJson.append(std::move(it));
 
