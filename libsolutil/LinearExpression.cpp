@@ -53,10 +53,7 @@ void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, ration
 				target = next;
 			}
 		}
-		else if (!target)
-			target = appendToRow(_targetRow, source->col, _factor * source->value)->next_in_row;
-		else
-			target = prependInRow(*target, source->col, _factor * source->value)->next_in_row;
+		target = prependInRow(target, _targetRow, source->col, _factor * source->value)->next_in_row;
 
 		source = source->next_in_row;
 	}
@@ -95,47 +92,32 @@ void SparseMatrix::remove(SparseMatrix::Entry& _e)
 		m_col_end[_e.col] = _e.prev_in_col;
 }
 
-SparseMatrix::Entry* SparseMatrix::appendToRow(size_t _row, size_t _column, rational _value)
+SparseMatrix::Entry* SparseMatrix::prependInRow(Entry* _successor, size_t _row, size_t _column, rational _value)
 {
-	// TODO could be combined with prependInRow
-	// with successor being nullptr
 	m_elements.emplace_back(make_unique<Entry>(Entry{
 		move(_value),
 		_row,
 		_column,
-		m_row_end[_row],
 		nullptr,
+		_successor,
 		nullptr,
 		nullptr
 	}));
 	Entry* e = m_elements.back().get();
-	if (m_row_end[_row])
-		m_row_end[_row]->next_in_row = e;
-	m_row_end[_row] = e;
-
-	if (!m_row_start[_row])
+	if (_successor)
+	{
+		e->prev_in_row = _successor->prev_in_row;
+		_successor->prev_in_row = e;
+	}
+	else
+	{
+		e->prev_in_row = m_row_end[_row];
+		m_row_end[_row] = e;
+	}
+	if (e->prev_in_row)
+		e->prev_in_row->next_in_row = e;
+	else
 		m_row_start[_row] = e;
-
-	adjustColumnProperties(*e);
-	return e;
-}
-
-SparseMatrix::Entry* SparseMatrix::prependInRow(Entry& _successor, size_t _column, rational _value)
-{
-	size_t row = _successor.row;
-	m_elements.emplace_back(make_unique<Entry>(Entry{
-		move(_value),
-		row,
-		_column,
-		_successor.prev_in_row,
-		&_successor,
-		nullptr,
-		nullptr
-	}));
-	Entry* e = m_elements.back().get();
-	_successor.prev_in_row = e;
-	if (m_row_start[row] == &_successor)
-		m_row_start[row] = e;
 
 	adjustColumnProperties(*e);
 	return e;

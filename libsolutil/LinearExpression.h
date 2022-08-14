@@ -211,8 +211,7 @@ public:
 private:
 
 	void remove(Entry& _entry);
-	Entry* appendToRow(size_t _row, size_t _column, rational _value);
-	Entry* prependInRow(Entry& _successor, size_t _column, rational _value);
+	Entry* prependInRow(Entry* _successor, size_t _row, size_t _column, rational _value);
 	void adjustColumnProperties(Entry& _entry);
 
 	std::vector<std::unique_ptr<Entry>> m_elements;
