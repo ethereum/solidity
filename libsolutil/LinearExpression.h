@@ -1,4 +1,4 @@
-/*
+﻿/*
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify
@@ -183,6 +183,7 @@ private:
 	std::vector<rational> factors;
 };
 
+
 class SparseMatrix
 {
 public:
@@ -198,19 +199,64 @@ public:
 		Entry* prev_in_col;
 		Entry* next_in_col;
 	};
+	struct SparseMatrixIterator
+	{
+		using iterator_category = std::forward_iterator_tag;
+		using difference_type   = std::ptrdiff_t;
+		using value_type        = Entry;
+		using pointer           = Entry*;
+		using reference         = Entry&;
+
+		SparseMatrixIterator(pointer _ptr, bool _isRow): m_ptr(_ptr), m_isRow(_isRow) {}
+
+		reference operator*() const { return *m_ptr; }
+		pointer operator->() { return m_ptr; }
+		SparseMatrixIterator& operator++()
+		{
+			m_ptr = m_isRow ? m_ptr->next_in_row : m_pt->next_in_col;
+			return *this;
+		}
+		SparseMatrixIterator operator++(int) { SparseMatrixIterator tmp = *this; ++(*this); return tmp; }
+		friend bool operator==(SparseMatrixIterator const& _a, SparseMatrixIterator const& _b)
+		{
+			return _a.m_ptr == _b.m_ptr && _a.m_isRow == _b.m_isRow;
+		}
+		friend bool operator!=(SparseMatrixIterator const& _a, SparseMatrixIterator const& _b)
+		{
+			return _a.m_ptr != _b.m_ptr || _a.m_isRow != _b.m_isRow;
+		}
+
+	private:
+		Entry* m_ptr;
+		bool m_isRow;
+	};
+	struct IteratorCombiner
+	{
+		size_t m_RowOrColumn;
+		bool m_isRow;
+		SparseMatrix& m_matrix;
+		SparseMatrixIterator begin();
+		SparseMatrixIterator end();
+	};
+
+	size_t rows() const { return m_row_start.size(); }
+	size_t columns() const { return m_col_start.size(); }
+
 	/// @returns (i, v) for all non-zero v in the column _column
-	void enumerateColumn(size_t _column) const;
+	void enumerateColumn(size_t _column);
 	/// @returns (i, v) for all non-zero v in the row _row
-	void enumerateRow(size_t _row) const;
+	void enumerateRow(size_t _row);
 	void multiplyRowByFactor(size_t _row, rational const& _factor);
 	void addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational const& _factor);
 	rational entry(size_t _row, size_t _column) const;
+	void insert(size_t _row, size_t _column, rational _value);
 
 	void appendRow(LinearExpression const& _entries);
 
 private:
 
 	void remove(Entry& _entry);
+	/// Prepends a new entry before the given element or at end of row if nullptr.
 	Entry* prependInRow(Entry* _successor, size_t _row, size_t _column, rational _value);
 	void adjustColumnProperties(Entry& _entry);
 

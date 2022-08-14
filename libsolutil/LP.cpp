@@ -273,6 +273,13 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 	SubProblem const& combineFrom = *m_subProblems[_combineFrom];
 
 	size_t varShift = combineInto.variables.size();
+#ifdef SPARSE
+	size_t rowShift = combineInto.factors.rows();
+
+	for (size_t row = 0; row < combineFrom.factors.rows(); row++)
+		for (auto&& [col, v]: combineFrom.factors.iterateRow(row))
+			combineinto.factors.insert(row + rowShift, col + colShift, move(v));
+#else
 	size_t rowShift = combineInto.factors.size();
 	size_t newRowLength = combineInto.variables.size() + combineFrom.variables.size();
 	for (LinearExpression& row: combineInto.factors)
@@ -285,6 +292,7 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 			shiftedRow[varShift + index] = f;
 		combineInto.factors.emplace_back(move(shiftedRow));
 	}
+#endif
 	combineInto.variables += combineFrom.variables;
 	for (auto const& index: combineFrom.variablesPotentiallyOutOfBounds)
 		combineInto.variablesPotentiallyOutOfBounds.insert(index + varShift);

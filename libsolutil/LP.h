@@ -17,6 +17,9 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+// use sparse matrices
+#define SPARSE 1
+
 #include <libsolutil/Numeric.h>
 #include <libsolutil/LinearExpression.h>
 
@@ -205,7 +208,11 @@ private:
 		/// Set to true on "check". Needs a copy for adding a constraint or bound if set to true.
 		bool sealed = false;
 		std::optional<LPResult> result = std::nullopt;
+#ifdef SPARSE
+		SparseMatrix factors;
+#else
 		std::vector<LinearExpression> factors;
+#endif
 		std::vector<Variable> variables;
 		std::set<size_t> variablesPotentiallyOutOfBounds;
 		/// Variable index to constraint it controls.

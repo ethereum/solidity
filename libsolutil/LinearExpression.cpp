@@ -21,6 +21,37 @@
 using namespace solidity::util;
 using namespace std;
 
+SparseMatrix::SparseMatrixIterator SparseMatrix::IteratorCombiner::begin()
+{
+	return SparseMatrixIterator(
+		m_isRow ? m_matrix.m_row_start[m_RowOrColumn] : m_matrix.m_col_start[m_RowOrColumn],
+		m_isRow
+	);
+}
+
+SparseMatrix::SparseMatrixIterator SparseMatrix::IteratorCombiner::end()
+{
+	return SparseMatrixIterator(nullptr, m_isRow);
+}
+
+SparseMatrix::IteratorCombiner SparseMatrix::enumerateColumn(size_t _column)
+{
+	return IteratorCombiner{
+		_column,
+		false,
+		*this
+	};
+}
+
+SparseMatrix::IteratorCombiner SparseMatrix::enumerateRow(size_t _row)
+{
+	return IteratorCombiner{
+		_row,
+		true,
+		*this
+	};
+}
+
 void SparseMatrix::multiplyRowByFactor(size_t _row, rational const& _factor)
 {
 	Entry* e = m_row_start[_row];
@@ -68,7 +99,7 @@ void SparseMatrix::appendRow(LinearExpression const& _entries)
 	for (auto&& [i, v]: _entries.enumerate()) {
 		if (!v)
 			continue;
-		appendToRow(row_nr, i, move(v));
+		prependInRow(nullptr, row_nr, i, move(v));
 	}
 }
 
