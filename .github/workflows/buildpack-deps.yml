@@ -37,6 +37,6 @@ jobs:
 
       - name: comment PR
         if: "env.DOCKER_IMAGE"
-        uses: aarlt/comment-on-pr@v1.2.0
+        uses: unsplash/comment-on-pr@b5610c6125a7197eaec80072ea35ef53e1fc6035 #v1.3.1
         with:
           msg: "`${{ env.DOCKER_IMAGE }} ${{ env.DOCKER_REPO_DIGEST }}`."
