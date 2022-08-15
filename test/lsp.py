@@ -915,6 +915,7 @@ class SolidityLSPTestSuite: # {{{
         lsp: JsonRpcProcess,
         expose_project_root=True,
         file_load_strategy: FileLoadStrategy=FileLoadStrategy.DirectlyOpenedAndOnImport,
+        custom_include_paths: list[str] = [],
         project_root_subdir=None
     ):
         """
@@ -944,11 +945,19 @@ class SolidityLSPTestSuite: # {{{
                 }
             }
         }
+
         if file_load_strategy != FileLoadStrategy.Undefined:
             params['initializationOptions'] = {}
             params['initializationOptions']['file-load-strategy'] = file_load_strategy.lsp_name()
+
+        if len(custom_include_paths) != 0:
+            if params['initializationOptions'] is None:
+                params['initializationOptions'] = {}
+            params['initializationOptions']['include-paths'] = custom_include_paths
+
         if not expose_project_root:
             params['rootUri'] = None
+
         lsp.call_method('initialize', params)
         lsp.send_notification('initialized')
 
@@ -1383,6 +1392,40 @@ class SolidityLSPTestSuite: # {{{
             self.expect_true(report['uri'] in EXPECTED_URIS, "Correct file URI")
             self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
 
+    def test_analyze_all_project_files3(self, solc: JsonRpcProcess) -> None:
+        """
+        Same as first test on that matter but with deeper nesting levels.
+        """
+        SUBDIR = 'include-paths-nested-2'
+        EXPECTED_FILES = [
+            "A/B/C/foo",
+            "A/B/foo",
+            "A/foo",
+            "foo",
+        ]
+        IMPLICITLY_LOADED_FILE_COUNT = 1
+        EXPECTED_URIS = [self.get_test_file_uri(x, SUBDIR) for x in EXPECTED_FILES]
+        self.setup_lsp(
+            solc,
+            file_load_strategy=FileLoadStrategy.ProjectDirectory,
+            project_root_subdir=SUBDIR,
+            custom_include_paths=[f"{self.project_root_dir}/other-include-dir"]
+        )
+        published_diagnostics = self.wait_for_diagnostics(solc)
+        self.expect_equal(len(published_diagnostics), len(EXPECTED_FILES) + IMPLICITLY_LOADED_FILE_COUNT, "Test number of files analyzed.")
+
+        # All but the last report should be from expected files
+        for report in published_diagnostics[:-IMPLICITLY_LOADED_FILE_COUNT]:
+            self.expect_true(report['uri'] in EXPECTED_URIS, "Correct file URI")
+            self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
+
+        # Check last report (should be the custom imported lib).
+        # This file is analyzed because it was imported via "A/B/C/foo.sol".
+        report = published_diagnostics[len(EXPECTED_URIS)]
+        self.expect_equal(report['uri'], f"{self.project_root_uri}/other-include-dir/otherlib/second.sol", "Correct file URI")
+        self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
+
+
     def test_publish_diagnostics_errors_multiline(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
         TEST_NAME = 'publish_diagnostics_3'
@@ -1469,6 +1512,43 @@ class SolidityLSPTestSuite: # {{{
 
     def test_custom_includes(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc, expose_project_root=False)
+        solc.send_notification(
+            'workspace/didChangeConfiguration', {
+                'settings': {
+                    'include-paths': [
+                        f"{self.project_root_dir}/other-include-dir"
+                    ]
+                }
+            }
+        )
+        published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, 'include-paths/using-custom-includes')
+
+        self.expect_equal(len(published_diagnostics), 2, "Diagnostic reports for 2 files")
+
+        # test file
+        report = published_diagnostics[0]
+        self.expect_equal(report['uri'], self.get_test_file_uri('using-custom-includes', 'include-paths'))
+        diagnostics = report['diagnostics']
+        self.expect_equal(len(diagnostics), 0, "no diagnostics")
+
+        # imported file
+        report = published_diagnostics[1]
+        self.expect_equal(report['uri'], f"{self.project_root_uri}/other-include-dir/otherlib/otherlib.sol")
+        diagnostics = report['diagnostics']
+        self.expect_equal(len(diagnostics), 1, "no diagnostics")
+        self.expect_diagnostic(diagnostics[0], code=2018, lineNo=5, startEndColumns=(4, 62))
+
+    def test_custom_includes_with_full_project(self, solc: JsonRpcProcess) -> None:
+        """
+        Tests loading all all project files while having custom include directories configured.
+        In such a scenario, all project files should be analyzed and those being included via search path
+        but not those include files that are not directly nor indirectly included.
+        """
+        self.setup_lsp(
+            solc,
+            expose_project_root=True,
+            project_root_subdir=''
+        )
         solc.send_notification(
             'workspace/didChangeConfiguration', {
                 'settings': {
