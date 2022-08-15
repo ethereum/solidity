@@ -9,11 +9,41 @@
 #endif
 
 #include "assets/JetBrainsMono-Regular.ttf.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "project/Manager.h"
+#include "project/Project.h"
+#include "solc/CommandLineParser.h"
+#include "solidity/BuildInfo.h"
+#include "ui/CommandLineOptions.h"
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <iostream>
+#include <memory>
+#include <vector>
+
+std::string createTooltipString(std::string const& string)
+{
+	std::string result;
+	size_t length;
+	for (auto && ch : string)
+	{
+		result += ch;
+		++length;
+		if (length > 100)
+		{
+			result += "\n       ";
+			length = 0;
+		}
+	}
+	return boost::trim_copy(result);
+}
 
 int main(int argc, char* argv[])
 {
-	(void)argc;
-	(void)argv;
+	(void) argc;
+	(void) argv;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
 	{
@@ -74,12 +104,26 @@ int main(int argc, char* argv[])
 
 	// Load Fonts
 	auto font_data = new uint8_t[sizeof(solidity::ui::assets::JetBrainsMono_Regular_ttf)];
-	memcpy(font_data, solidity::ui::assets::JetBrainsMono_Regular_ttf, sizeof(solidity::ui::assets::JetBrainsMono_Regular_ttf));
+	memcpy(
+		font_data,
+		solidity::ui::assets::JetBrainsMono_Regular_ttf,
+		sizeof(solidity::ui::assets::JetBrainsMono_Regular_ttf));
 	// ownership of font_data will be transferred imgui
-	io.Fonts->AddFontFromMemoryTTF(font_data, sizeof(font_data), 16 * ImGui::GetPlatformIO().Monitors.begin()->DpiScale);
+	io.Fonts
+		->AddFontFromMemoryTTF(font_data, sizeof(font_data), 16 * ImGui::GetPlatformIO().Monitors.begin()->DpiScale);
 
 	// #2b2b2b
 	ImVec4 clear_color = ImVec4(0.169f, 0.169f, 0.169f, 1.00f);
+	// ImVec4 inactive_color = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
+
+	char solc_parameters[512];
+	memset(solc_parameters, 0, sizeof(solc_parameters));
+	char search_term[128];
+	memset(search_term, 0, sizeof(search_term));
+
+	std::string projectManagerConfig = boost::filesystem::current_path().generic_string() + "/solidity-ui.json";
+	solidity::ui::project::Manager& projectManager = solidity::ui::project::Manager::Instance();
+	projectManager.load(projectManagerConfig);
 
 	// Main loop
 	bool done = false;
@@ -109,6 +153,122 @@ int main(int argc, char* argv[])
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 
+		bool running = !done;
+		ImGui::Begin(
+			"solidity-ui",
+			&running,
+			ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
+				| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings
+				| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
+		ImGui::SetWindowPos(ImVec2{0, 0});
+		ImGui::SetWindowSize(io.DisplaySize);
+
+		if (ImGui::BeginMainMenuBar())
+		{
+			if (ImGui::BeginMenu("Solidity UI"))
+			{
+				ImGui::Separator();
+				ImGui::Text("Load Project");
+				ImGui::Text(" > via CLI");
+				ImGui::Text("   $ solc ");
+				ImGui::SameLine();
+				if (ImGui::InputTextWithHint(
+						"##0",
+						"<command line parameters>",
+						(char*) &solc_parameters,
+						sizeof(solc_parameters),
+						ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+				{
+					memset(search_term, 0, sizeof(search_term));
+					projectManager.openProject(std::string(solc_parameters));
+				}
+				if (ImGui::BeginMenu(" > from Testcases"))
+				{
+					projectManager.testcases().renderMenuItems();
+					ImGui::EndMenu();
+				}
+				ImGui::Separator();
+				if (!projectManager.history().empty())
+				{
+					ImGui::Text("Project History");
+					ImGui::Text("          ");
+					ImGui::SameLine();
+					ImGui::InputTextWithHint(
+						"##1",
+						"<enter text to search history>",
+						search_term,
+						sizeof(search_term),
+						ImGuiInputTextFlags_AutoSelectAll);
+				}
+				std::string search(search_term);
+				solidity::ui::project::Manager::ProjectCache cache = projectManager.history(5, search);
+				for (auto& project: cache)
+				{
+					std::string project_simplified{project};
+					boost::replace_all(
+						project_simplified, CMAKE_SOURCE_DIR "/test/libsolidity/semanticTests/", "${semanticTests}/");
+					boost::replace_all(
+						project_simplified, CMAKE_SOURCE_DIR "/test/libsolidity/semanticTests", "${semanticTests}");
+					if (search.empty())
+					{
+						if (project_simplified.length() > 32)
+							project_simplified
+								= "[..]"
+								  + project_simplified
+										.substr(project_simplified.length() - 32, project_simplified.length());
+					}
+					if (ImGui::MenuItem((" $ solc " + project_simplified).c_str(), nullptr))
+					{
+						memset(search_term, 0, sizeof(search_term));
+						projectManager.openProject(project);
+					}
+					if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+						ImGui::SetTooltip("%s", createTooltipString(" $ solc " + project).c_str());
+				}
+				if (!projectManager.history().empty())
+				{
+					if (ImGui::BeginMenu("   Full Project History"))
+					{
+						for (auto& project: projectManager.history())
+						{
+							std::string project_simplified{project};
+							boost::replace_all(
+								project_simplified,
+								CMAKE_SOURCE_DIR "/test/libsolidity/semanticTests",
+								"${semanticTests}");
+							if (project_simplified.length() > 64)
+								project_simplified
+									= "[..]"
+									  + project_simplified
+										  .substr(project_simplified.length() - 64, project_simplified.length());
+							if (ImGui::MenuItem((" $ solc " + project_simplified).c_str(), nullptr))
+								projectManager.openProject(project);
+							if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+								ImGui::SetTooltip("%s", createTooltipString(" $ solc " + project).c_str());
+						}
+						ImGui::EndMenu();
+					}
+					ImGui::Separator();
+				}
+				if (ImGui::MenuItem("Exit"))
+				{
+					done = true;
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndMainMenuBar();
+		}
+		ImGui::End();
+
+		projectManager.render();
+
+		if (ImGui::BeginMainMenuBar())
+		{
+			if (ImGui::BeginMenu("v" ETH_PROJECT_VERSION "-" SOL_VERSION_PRERELEASE "+" SOL_VERSION_BUILDINFO, false))
+				ImGui::EndMenu();
+			ImGui::EndMainMenuBar();
+		}
+
 		// Rendering
 		ImGui::Render();
 		glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
@@ -127,6 +287,8 @@ int main(int argc, char* argv[])
 	SDL_GL_DeleteContext(gl_context);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+
+	projectManager.save(projectManagerConfig);
 
 	return 0;
 }

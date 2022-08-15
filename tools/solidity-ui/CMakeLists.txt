@@ -23,11 +23,21 @@ endforeach()
 set(sources
         ${SOLIDITY_UI_ASSETS_HEADERS}
         main.cpp
+        ui/CommandLineOptions.h
+        project/Project.cpp
+        project/Project.h
+        project/Manager.cpp
+        project/Manager.h
+        project/Testcases.cpp
+        project/Testcases.h
+        project/Editor.cpp
+        project/Editor.h
+        3rd/json.hpp
         )
 add_executable(solidity-ui ${sources})
 target_link_libraries(solidity-ui PRIVATE solcli SYSTEM imgui zep imgui_memory_editor implot)
 target_compile_definitions(solidity-ui PUBLIC CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
-target_include_directories(solidity-ui PUBLIC ${CMAKE_BINARY_DIR}/tools/solidity-ui)
+target_include_directories(solidity-ui PUBLIC ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/tools/solidity-ui ${CMAKE_SOURCE_DIR})
 
 
 include(GNUInstallDirs)
