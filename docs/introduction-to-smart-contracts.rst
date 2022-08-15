@@ -507,7 +507,7 @@ depth limit of a little less than 1000 in practice.
 .. index:: delegatecall, library
 
 Delegatecall and Libraries
-=====================================
+==========================
 
 There exists a special variant of a message call, named **delegatecall**
 which is identical to a message call apart from the fact that
