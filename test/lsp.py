@@ -1360,6 +1360,29 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri('E', SUBDIR), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
 
+    def test_analyze_all_project_files2(self, solc: JsonRpcProcess) -> None:
+        """
+        Same as first test on that matter but with deeper nesting levels.
+        """
+        SUBDIR = 'include-paths-nested'
+        EXPECTED_FILES = [
+            "A/B/C/foo",
+            "A/B/foo",
+            "A/foo",
+            "foo",
+        ]
+        EXPECTED_URIS = [self.get_test_file_uri(x, SUBDIR) for x in EXPECTED_FILES]
+        self.setup_lsp(
+            solc,
+            file_load_strategy=FileLoadStrategy.ProjectDirectory,
+            project_root_subdir=SUBDIR
+        )
+        published_diagnostics = self.wait_for_diagnostics(solc)
+        self.expect_equal(len(published_diagnostics), len(EXPECTED_FILES), "Test number of files analyzed.")
+        for report in published_diagnostics:
+            self.expect_true(report['uri'] in EXPECTED_URIS, "Correct file URI")
+            self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
+
     def test_publish_diagnostics_errors_multiline(self, solc: JsonRpcProcess) -> None:
         self.setup_lsp(solc)
         TEST_NAME = 'publish_diagnostics_3'
