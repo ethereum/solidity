@@ -224,7 +224,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 			break;
 		}
 
-	return (size < (aggressiveInlining ? 8 : 6) || (constantArg && size < (aggressiveInlining ? 16 : 12)));
+	return (size < (aggressiveInlining ? 8u : 6u) || (constantArg && size < (aggressiveInlining ? 16u : 12u)));
 }
 
 void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _callSite)
