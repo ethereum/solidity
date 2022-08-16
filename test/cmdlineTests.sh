@@ -311,7 +311,7 @@ function test_solc_assembly_output
 function test_via_ir_equivalence()
 {
     SOLTMPDIR=$(mktemp -d)
-    pushd "$SOLTMPDIR"
+    pushd "$SOLTMPDIR" > /dev/null
 
     (( $# <= 2 )) || fail "This function accepts at most two arguments."
 
@@ -369,7 +369,7 @@ function test_via_ir_equivalence()
 
     diff_values "$bin_output_two_stage" "$bin_output_via_ir" --ignore-space-change --ignore-blank-lines
 
-    popd
+    popd > /dev/null
     rm -r "$SOLTMPDIR"
 }
 
