@@ -4,7 +4,7 @@
 NatSpec Format
 ##############
 
-Solidity contracts can use a special form of comments to provide rich
+Solidity contracts can use a special form of comments to provide a rich
 documentation for functions, return variables and more. This special form is
 named the Ethereum Natural Language Specification Format (NatSpec).
 
