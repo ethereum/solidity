@@ -686,8 +686,16 @@ bool CompilerStack::compile(State _stopAfter)
 		string const evmSourceName = m_evmAssemblyJson.begin()->first;
 		Json::Value const evmJson = m_evmAssemblyJson.begin()->second;
 
-		evmasm::Assembly::OptimiserSettings optimiserSettings =
-			evmasm::Assembly::OptimiserSettings::translateSettings(m_optimiserSettings, m_evmVersion);
+		// todo: remove code duplication.
+		evmasm::Assembly::OptimiserSettings optimiserSettings{false,  false, false, false, false, false, m_evmVersion, 0};
+		optimiserSettings.runInliner = m_optimiserSettings.runInliner;
+		optimiserSettings.runJumpdestRemover = m_optimiserSettings.runJumpdestRemover;
+		optimiserSettings.runPeephole = m_optimiserSettings.runPeephole;
+		optimiserSettings.runDeduplicate = m_optimiserSettings.runDeduplicate;
+		optimiserSettings.runCSE = m_optimiserSettings.runCSE;
+		optimiserSettings.runConstantOptimiser = m_optimiserSettings.runConstantOptimiser;
+		optimiserSettings.expectedExecutionsPerDeployment = m_optimiserSettings.expectedExecutionsPerDeployment;
+		optimiserSettings.evmVersion = m_evmVersion;
 
 		m_contracts[evmSourceName].evmAssembly = evmasm::Assembly::loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName]);
 		if (m_optimiserSettings.enabled)
