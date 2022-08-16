@@ -173,10 +173,9 @@ private:
 		{
 			solAssert(suffix == "slot" || suffix == "offset");
 			solAssert(varDecl->isLocalVariable());
+			solAssert(!varDecl->type()->isValueType());
 			if (suffix == "slot")
 				value = IRVariable{*varDecl}.part("slot").name();
-			else if (varDecl->type()->isValueType())
-				value = IRVariable{*varDecl}.part("offset").name();
 			else
 			{
 				solAssert(!IRVariable{*varDecl}.hasPart("offset"));

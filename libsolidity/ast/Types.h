@@ -1528,6 +1528,8 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	bool nameable() const override { return true; }
 
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
+
 	Type const* keyType() const { return m_keyType; }
 	Type const* valueType() const { return m_valueType; }
 
