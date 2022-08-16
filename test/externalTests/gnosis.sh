@@ -106,6 +106,11 @@ function gnosis_safe_test
     # pulls @ethersproject/contracts@5.6.1 (latest). Force 5.6.0 to avoid errors due to having two copies.
     npm install @ethersproject/contracts@5.6.0
 
+    # 2.1.1 started causing failures in safe-contracts external tests after a contract address check was introduced
+    # in https://github.com/NomicFoundation/hardhat/pull/2916, and so to avoid errors, the package is now pegged.
+    # TODO: Remove when https://github.com/safe-global/safe-contracts/issues/436 is resolved.
+    npm install @nomiclabs/hardhat-ethers@2.1.0
+
     # Hardhat 2.9.5 introduced a bug with handling padded arguments to getStorageAt().
     # TODO: Remove when https://github.com/NomicFoundation/hardhat/issues/2709 is fixed.
     npm install hardhat@2.9.4
