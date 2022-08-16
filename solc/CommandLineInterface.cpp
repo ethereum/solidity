@@ -89,6 +89,17 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
+namespace
+{
+
+std::vector<frontend::InputMode> ValidInputModes{
+	frontend::InputMode::Compiler,
+	frontend::InputMode::CompilerWithASTImport,
+	frontend::InputMode::CompilerWithEvmAssemblyJsonImport
+};
+
+} // anonymous namespace
+
 namespace solidity::frontend
 {
 
@@ -161,11 +172,7 @@ static bool coloredOutput(CommandLineOptions const& _options)
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (m_options.compiler.outputs.binary)
 	{
@@ -191,11 +198,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode));
@@ -209,11 +212,7 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 
 void CommandLineInterface::handleIR(string const& _contractName)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.ir)
 		return;
@@ -229,11 +228,7 @@ void CommandLineInterface::handleIR(string const& _contractName)
 
 void CommandLineInterface::handleIROptimized(string const& _contractName)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.irOptimized)
 		return;
@@ -249,11 +244,7 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 
 void CommandLineInterface::handleEwasm(string const& _contractName)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.ewasm)
 		return;
@@ -276,11 +267,7 @@ void CommandLineInterface::handleEwasm(string const& _contractName)
 
 void CommandLineInterface::handleBytecode(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (m_options.compiler.outputs.opcodes)
 		handleOpcode(_contract);
@@ -290,11 +277,7 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 
 void CommandLineInterface::handleSignatureHashes(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.signatureHashes)
 		return;
@@ -326,11 +309,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 
 void CommandLineInterface::handleMetadata(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.metadata)
 		return;
@@ -344,11 +323,7 @@ void CommandLineInterface::handleMetadata(string const& _contract)
 
 void CommandLineInterface::handleABI(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.abi)
 		return;
@@ -362,11 +337,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 
 void CommandLineInterface::handleStorageLayout(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.storageLayout)
 		return;
@@ -380,11 +351,7 @@ void CommandLineInterface::handleStorageLayout(string const& _contract)
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	bool enabled = false;
 	std::string suffix;
@@ -427,11 +394,7 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 
 void CommandLineInterface::handleGasEstimation(string const& _contract)
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	Json::Value estimates = m_compiler->gasEstimates(_contract);
 	sout() << "Gas estimation:" << endl;
@@ -475,11 +438,7 @@ void CommandLineInterface::readInputFiles()
 {
 	solAssert(!m_standardJsonInput.has_value());
 
-	if (
-		m_options.input.mode == InputMode::Help ||
-		m_options.input.mode == InputMode::License ||
-		m_options.input.mode == InputMode::Version
-	)
+	if (any_of(m_options.input.mode, {InputMode::Help, InputMode::License, InputMode::Version}))
 		return;
 
 	m_fileReader.setBasePath(m_options.input.basePath);
@@ -747,11 +706,7 @@ void CommandLineInterface::printLicense()
 
 void CommandLineInterface::compile()
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	m_compiler = make_unique<CompilerStack>(m_fileReader.reader());
 
@@ -869,11 +824,7 @@ void CommandLineInterface::compile()
 
 void CommandLineInterface::handleCombinedJSON()
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.combinedJsonRequests.has_value())
 		return;
@@ -965,11 +916,7 @@ void CommandLineInterface::handleCombinedJSON()
 
 void CommandLineInterface::handleAst()
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	if (!m_options.compiler.outputs.astCompactJson)
 		return;
@@ -1194,7 +1141,7 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 				serr() << "No binary representation found." << endl;
 		}
 
-		solAssert(_targetMachine == yul::YulStack::Machine::Ewasm || _targetMachine == yul::YulStack::Machine::EVM);
+		solAssert(any_of(_targetMachine, {yul::YulStack::Machine::Ewasm, yul::YulStack::Machine::EVM}));
 		if (
 			(_targetMachine == yul::YulStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
 			(_targetMachine == yul::YulStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
@@ -1211,11 +1158,7 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 
 void CommandLineInterface::outputCompilationResults()
 {
-	solAssert(
-		m_options.input.mode == InputMode::Compiler ||
-		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::CompilerWithEvmAssemblyJsonImport
-	);
+	solAssert(any_of(m_options.input.mode, ValidInputModes));
 
 	handleCombinedJSON();
 

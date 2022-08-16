@@ -294,4 +294,19 @@ private:
 	boost::program_options::variables_map m_args;
 };
 
+template<typename T>
+bool any_of(T& _what, std::vector<T> _elements)
+{
+	for (auto const& element: _elements)
+		if (_what == element)
+			return true;
+	return false;
+}
+
+template<typename T>
+bool none_of(T& _what, std::vector<T> _elements)
+{
+	return !any_of(_what, _elements);
+}
+
 }
