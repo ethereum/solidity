@@ -572,21 +572,6 @@ void CompilerContext::updateSourceLocation()
 	m_asm->setSourceLocation(m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->location());
 }
 
-evmasm::Assembly::OptimiserSettings CompilerContext::translateOptimiserSettings(OptimiserSettings const& _settings)
-{
-	// Constructing it this way so that we notice changes in the fields.
-	evmasm::Assembly::OptimiserSettings asmSettings{false,  false, false, false, false, false, m_evmVersion, 0};
-	asmSettings.runInliner = _settings.runInliner;
-	asmSettings.runJumpdestRemover = _settings.runJumpdestRemover;
-	asmSettings.runPeephole = _settings.runPeephole;
-	asmSettings.runDeduplicate = _settings.runDeduplicate;
-	asmSettings.runCSE = _settings.runCSE;
-	asmSettings.runConstantOptimiser = _settings.runConstantOptimiser;
-	asmSettings.expectedExecutionsPerDeployment = _settings.expectedExecutionsPerDeployment;
-	asmSettings.evmVersion = m_evmVersion;
-	return asmSettings;
-}
-
 evmasm::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
 	Declaration const& _declaration,
 	CompilerContext& _context
