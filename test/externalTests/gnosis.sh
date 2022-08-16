@@ -87,6 +87,12 @@ function gnosis_safe_test
     sed -i "s|it\(('can only be called from Safe itself'\)|it.skip\1|g" test/libraries/Migration.spec.ts
     sed -i "s|it\(('should enforce delegatecall to MultiSend'\)|it.skip\1|g" test/libraries/MultiSend.spec.ts
 
+    sed -i "s|it\(('is not called when setting initially'\)|it.skip\1|g" test/core/GnosisSafe.GuardManager.spec.ts
+    sed -i "s|it\(('is called when removed'\)|it.skip\1|g" test/core/GnosisSafe.GuardManager.spec.ts
+    sed -i "s|it\(('reverts if the pre hook of the guard reverts'\)|it.skip\1|g" test/core/GnosisSafe.GuardManager.spec.ts
+    sed -i "s|it\(('reverts if the post hook of the guard reverts'\)|it.skip\1|g" test/core/GnosisSafe.GuardManager.spec.ts
+
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
