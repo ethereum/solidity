@@ -168,20 +168,20 @@ public:
 
 	bool isCreation() const { return m_creation; }
 
-	/// Set the source list.
+	/// Set the source name list.
 	void setSources(std::vector<std::shared_ptr<std::string const>> _sources)
 	{
 		m_sources = std::move(_sources);
 	}
 
-	/// Set the source list from simple vector<string>.
+	/// Set the source name list from simple vector<string>.
 	void setSources(std::vector<std::string> const& _sources)
 	{
 		for (auto const& item: _sources)
 			m_sources.emplace_back(std::make_shared<std::string>(item));
 	}
 
-	/// @returns List of sources.
+	/// @returns List of source names.
 	std::vector<std::shared_ptr<std::string const>> sources() const& { return m_sources; }
 
 protected:
@@ -197,8 +197,8 @@ protected:
 
 	/// Creates an AssemblyItem from a given JSON representation.
 	/// @param _json JSON representation of an assembly item
-	/// @returns AssemblyItem from a given JSON representation.
-	AssemblyItem loadItemFromJSON(Json::Value const& _json);
+	/// @returns AssemblyItem of _json argument.
+	AssemblyItem createAssemblyItemFromJSON(Json::Value const& _json);
 
 private:
 	bool m_invalid = false;

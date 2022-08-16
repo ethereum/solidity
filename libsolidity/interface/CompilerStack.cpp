@@ -423,7 +423,7 @@ void CompilerStack::importEvmAssemblyJson(std::map<std::string, Json::Value> con
 	if (m_stackState != Empty)
 		solThrow(CompilerError, "Must call importEvmAssemblyJson only before the SourcesSet state.");
 
-	Json::Value const& jsonValue = _sources.begin()->second;
+	Json::Value jsonValue = _sources.begin()->second;
 	if (jsonValue.isMember("sourceList"))
 		for (auto const& item: jsonValue["sourceList"])
 		{
@@ -432,7 +432,7 @@ void CompilerStack::importEvmAssemblyJson(std::map<std::string, Json::Value> con
 			m_sources.emplace(std::make_pair(item.asString(), source));
 			m_sourceOrder.push_back(&m_sources[item.asString()]);
 		}
-	m_evmAssemblyJson[_sources.begin()->first] = jsonValue;
+	m_evmAssemblyJson[_sources.begin()->first] = std::move(jsonValue);
 	m_importedSources = true;
 	m_stackState = SourcesSet;
 }

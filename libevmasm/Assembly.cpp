@@ -79,7 +79,7 @@ void Assembly::addAssemblyItemsFromJSON(Json::Value const& _code)
 	solAssert(m_items.empty(), "");
 	solAssert(_code.isArray(), "");
 	for (auto const& jsonItem: _code)
-		m_items.emplace_back(loadItemFromJSON(jsonItem));
+		m_items.emplace_back(createAssemblyItemFromJSON(jsonItem));
 
 	for (auto current = m_items.begin(); current != m_items.end(); ++current)
 	{
@@ -96,7 +96,7 @@ void Assembly::addAssemblyItemsFromJSON(Json::Value const& _code)
 	}
 }
 
-AssemblyItem Assembly::loadItemFromJSON(Json::Value const& _json)
+AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json)
 {
 	std::string name = _json["name"].isString() ? _json["name"].asString() : "";
 	int begin = _json["begin"].isInt() ? _json["begin"].asInt() : -1;
