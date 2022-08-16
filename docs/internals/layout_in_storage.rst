@@ -153,7 +153,7 @@ the :ref:`standard JSON interface <compiler-api>`.  The output is a JSON object 
 element has the following form:
 
 
-.. code::
+.. code-block:: json
 
 
     {
@@ -181,7 +181,7 @@ The given ``type``, in this case ``t_uint256`` represents an element in
 ``types``, which has the form:
 
 
-.. code::
+.. code-block:: json
 
     {
         "encoding": "inplace",
@@ -238,7 +238,7 @@ value and reference types, types that are encoded packed, and nested types.
         bytes b1;
     }
 
-.. code:: json
+.. code-block:: json
 
     {
       "storage": [
