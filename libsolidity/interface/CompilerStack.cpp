@@ -410,7 +410,7 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 		m_sources[path] = std::move(source);
 	}
 	m_stackState = ParsedAndImported;
-	m_importedSources = true;
+	m_importedSourceType = ImportedSourceType::SolidityAST;
 
 	storeContractDefinitions();
 }
@@ -418,11 +418,12 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 void CompilerStack::importEvmAssemblyJson(std::map<std::string, Json::Value> const& _sources)
 {
 	solAssert(_sources.size() == 1, "");
-	solAssert(m_sources.empty(), "");
+	solAssert(m_sourceJsons.empty(), "");
 	solAssert(m_sourceOrder.empty(), "");
 	if (m_stackState != Empty)
 		solThrow(CompilerError, "Must call importEvmAssemblyJson only before the SourcesSet state.");
 
+	m_sourceJsons = _sources;
 	Json::Value jsonValue = _sources.begin()->second;
 	if (jsonValue.isMember("sourceList"))
 		for (auto const& item: jsonValue["sourceList"])
@@ -432,8 +433,8 @@ void CompilerStack::importEvmAssemblyJson(std::map<std::string, Json::Value> con
 			m_sources.emplace(std::make_pair(item.asString(), source));
 			m_sourceOrder.push_back(&m_sources[item.asString()]);
 		}
-	m_evmAssemblyJson[_sources.begin()->first] = std::move(jsonValue);
-	m_importedSources = true;
+	m_sourceJsons[_sources.begin()->first] = std::move(jsonValue);
+	m_importedSourceType = ImportedSourceType::EvmAssemblyJson;
 	m_stackState = SourcesSet;
 }
 
@@ -626,7 +627,7 @@ bool CompilerStack::parseAndAnalyze(State _stopAfter)
 {
 	m_stopAfter = _stopAfter;
 
-	if (!m_evmAssemblyJson.empty())
+	if (m_importedSourceType == ImportedSourceType::EvmAssemblyJson)
 		return true;
 
 	bool success = parse();
@@ -678,13 +679,12 @@ bool CompilerStack::compile(State _stopAfter)
 	// Only compile contracts individually which have been requested.
 	map<ContractDefinition const*, shared_ptr<Compiler const>> otherCompilers;
 
-	if (!m_evmAssemblyJson.empty())
+	if (m_importedSourceType == ImportedSourceType::EvmAssemblyJson)
 	{
-		solAssert(m_importedSources, "");
-		solAssert(m_evmAssemblyJson.size() == 1, "");
+		solAssert(m_sourceJsons.size() == 1, "");
 
-		string const evmSourceName = m_evmAssemblyJson.begin()->first;
-		Json::Value const evmJson = m_evmAssemblyJson.begin()->second;
+		string const evmSourceName = m_sourceJsons.begin()->first;
+		Json::Value const evmJson = m_sourceJsons.begin()->second;
 
 		// todo: remove code duplication.
 		evmasm::Assembly::OptimiserSettings optimiserSettings{false,  false, false, false, false, false, m_evmVersion, 0};
@@ -697,7 +697,7 @@ bool CompilerStack::compile(State _stopAfter)
 		optimiserSettings.expectedExecutionsPerDeployment = m_optimiserSettings.expectedExecutionsPerDeployment;
 		optimiserSettings.evmVersion = m_evmVersion;
 
-		m_contracts[evmSourceName].evmAssembly = evmasm::Assembly::loadFromAssemblyJSON(m_evmAssemblyJson[evmSourceName]);
+		m_contracts[evmSourceName].evmAssembly = evmasm::Assembly::loadFromAssemblyJSON(m_sourceJsons[evmSourceName]);
 		if (m_optimiserSettings.enabled)
 			m_contracts[evmSourceName].evmAssembly->optimise(optimiserSettings);
 		m_contracts[evmSourceName].object = m_contracts[evmSourceName].evmAssembly->assemble();
@@ -991,21 +991,15 @@ vector<string> CompilerStack::sourceNames() const
 	return names;
 }
 
-map<string, unsigned> CompilerStack::sourceIndices(bool _includeInternalSources /* = true */) const
+map<string, unsigned> CompilerStack::sourceIndices() const
 {
 	map<string, unsigned> indices;
 	unsigned index = 0;
-	if (m_evmAssemblyJson.empty())
-	{
-		for (auto const& s: m_sources)
+	for (auto const& s: m_sources)
+		if (s.first != CompilerContext::yulUtilityFileName())
 			indices[s.first] = index++;
-		solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
-		if (_includeInternalSources)
-			indices[CompilerContext::yulUtilityFileName()] = index++;
-	}
-	else
-		for (auto const& s: m_sourceOrder)
-			indices[s->charStream->source()] = index++;
+	if (indices.find(CompilerContext::yulUtilityFileName()) == indices.end())
+		indices[CompilerContext::yulUtilityFileName()] = index++;
 	return indices;
 }
 
@@ -1543,7 +1537,22 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 {
 	Json::Value meta{Json::objectValue};
 	meta["version"] = 1;
-	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
+	string sourceType;
+	switch (m_importedSourceType)
+	{
+	case ImportedSourceType::None:
+		sourceType = "Solidity";
+		break;
+	case ImportedSourceType::SolidityAST:
+		sourceType = "SolidityAST";
+		break;
+	case ImportedSourceType::EvmAssemblyJson:
+		sourceType = "EvmAssemblyJson";
+		break;
+	default:
+		solAssert(false);
+	}
+	meta["language"] = sourceType;
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	/// All the source files (including self), which should be included in the metadata.

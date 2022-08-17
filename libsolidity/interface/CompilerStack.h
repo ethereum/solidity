@@ -117,6 +117,12 @@ public:
 		None
 	};
 
+	enum class ImportedSourceType {
+		None,
+		SolidityAST,
+		EvmAssemblyJson
+	};
+
 	/// Creates a new compiler stack.
 	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
@@ -244,7 +250,7 @@ public:
 
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
-	std::map<std::string, unsigned> sourceIndices(bool _includeInternalSources = true) const;
+	std::map<std::string, unsigned> sourceIndices() const;
 
 	/// @returns the previously used character stream, useful for counting lines during error reporting.
 	langutil::CharStream const& charStream(std::string const& _sourceName) const override;
@@ -502,7 +508,6 @@ private:
 	std::map<std::string const, Source> m_sources;
 	// if imported, store AST-JSONS for each filename
 	std::map<std::string, Json::Value> m_sourceJsons;
-	std::map<std::string, Json::Value> m_evmAssemblyJson;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;
@@ -516,7 +521,7 @@ private:
 	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
-	bool m_importedSources = false;
+	ImportedSourceType m_importedSourceType = ImportedSourceType::None;
 	/// Whether or not there has been an error during processing.
 	/// If this is true, the stack will refuse to generate code.
 	bool m_hasError = false;
