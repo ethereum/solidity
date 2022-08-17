@@ -3829,7 +3829,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 
 			optional<string> parameterTypeMessage;
 			if (parameterCountMessage.has_value())
-				m_errorReporter.typeError(4778_error, _literal.location(), parameterCountMessage.value());
+				m_errorReporter.typeError(9128_error, _literal.location(), parameterCountMessage.value());
 			else if (suffixFunctionType->parameterTypes().size() == 2)
 			{
 				solAssert(literalRationalType);
@@ -3854,8 +3854,13 @@ void TypeChecker::endVisit(Literal const& _literal)
 			if (suffixFunctionType->returnParameterTypes().size() == 1)
 				_literal.annotation().type = suffixFunctionType->returnParameterTypes().front();
 			else
-				_literal.annotation().type = TypeProvider::tuple(suffixFunctionType->returnParameterTypes());
-
+			{
+				m_errorReporter.typeError(
+					7848_error,
+					_literal.location(),
+					"Function must return exactly one value to be used as literal suffix."
+				);
+			}
 			isCompileTimeConstant = suffixFunctionType->isPure();
 		}
 	}
