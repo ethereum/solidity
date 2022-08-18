@@ -81,6 +81,10 @@ struct helper;
 		{                                                                                                 \
 			return _input[_name].CHECK_TYPE();                                                            \
 		}                                                                                                 \
+		static TYPE get(Json::Value const& _input, std::string const& _name)                              \
+		{                                                                                                 \
+			return _input[_name].CONVERT_TYPE();                                                          \
+		}                                                                                                 \
 		static TYPE getOrDefault(Json::Value const& _input, std::string const& _name, TYPE _default = {}) \
 		{                                                                                                 \
 			TYPE result = _default;                                                                       \
@@ -112,6 +116,12 @@ bool ofTypeIfExists(Json::Value const& _input, std::string const& _name)
 	if (_input.isMember(_name))
 		return ofType<T>(_input, _name);
 	return true;
+}
+
+template<typename T>
+T get(Json::Value const& _input, std::string const& _name)
+{
+	return detail::helper<T>::get(_input, _name);
 }
 
 template<typename T>

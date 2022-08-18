@@ -286,6 +286,29 @@ BOOST_AUTO_TEST_CASE(json_getOrDefault)
 	BOOST_CHECK(getOrDefault<std::string>(json, "no_string", "ERROR") == "ERROR");
 }
 
+BOOST_AUTO_TEST_CASE(json_get)
+{
+	Json::Value json;
+
+	json["float"] = 3.1f;
+	json["double"] = 3.1;
+	json["int"] = 2;
+	json["int64"] = Json::Int64{0x4000000000000000};
+	json["uint64"] = Json::UInt64{0x5000000000000000};
+	json["string"] = "Hello World!";
+
+	BOOST_CHECK(get<float>(json, "float") == 3.1f);
+	BOOST_CHECK(get<double>(json, "double") == 3.1);
+	BOOST_CHECK(get<int>(json, "int") == 2);
+	BOOST_CHECK(get<Json::Int>(json, "int") == 2);
+	BOOST_CHECK(get<Json::UInt>(json, "int") == 2);
+	BOOST_CHECK(get<Json::Int64>(json, "int") == 2);
+	BOOST_CHECK(get<Json::Int64>(json, "int64") == 0x4000000000000000);
+	BOOST_CHECK(get<Json::UInt64>(json, "int64") == 0x4000000000000000);
+	BOOST_CHECK(get<Json::UInt64>(json, "uint64") == 0x5000000000000000);
+	BOOST_CHECK(get<std::string>(json, "string") == "Hello World!");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
