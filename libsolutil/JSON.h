@@ -67,4 +67,57 @@ std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format);
 /// \return \c true if the document was successfully parsed, \c false if an error occurred.
 bool jsonParseStrict(std::string const& _input, Json::Value& _json, std::string* _errs = nullptr);
 
+namespace detail
+{
+
+template<typename T>
+struct helper;
+
+#define DEFINE_HELPER(TYPE, CHECK_TYPE, CONVERT_TYPE)                                                     \
+	template<>                                                                                            \
+	struct helper<TYPE>                                                                                   \
+	{                                                                                                     \
+		static bool ofType(Json::Value const& _input, std::string const& _name)                           \
+		{                                                                                                 \
+			return _input[_name].CHECK_TYPE();                                                            \
+		}                                                                                                 \
+		static TYPE getOrDefault(Json::Value const& _input, std::string const& _name, TYPE _default = {}) \
+		{                                                                                                 \
+			TYPE result = _default;                                                                       \
+			if (helper::ofType(_input, _name))                                                            \
+				result = _input[_name].CONVERT_TYPE();                                                    \
+			return result;                                                                                \
+		}                                                                                                 \
+	};
+
+DEFINE_HELPER(float, isDouble, asFloat)
+DEFINE_HELPER(double, isDouble, asDouble)
+DEFINE_HELPER(std::string, isString, asString)
+DEFINE_HELPER(Json::Int, isInt, asInt)
+DEFINE_HELPER(Json::Int64, isInt64, asInt64)
+DEFINE_HELPER(Json::UInt, isUInt, asUInt)
+DEFINE_HELPER(Json::UInt64, isUInt64, asUInt64)
+
+} // namespace detail
+
+template<typename T>
+bool ofType(Json::Value const& _input, std::string const& _name)
+{
+	return detail::helper<T>::ofType(_input, _name);
 }
+
+template<typename T>
+bool ofTypeIfExists(Json::Value const& _input, std::string const& _name)
+{
+	if (_input.isMember(_name))
+		return ofType<T>(_input, _name);
+	return true;
+}
+
+template<typename T>
+T getOrDefault(Json::Value const& _input, std::string const& _name, T _default = {})
+{
+	return detail::helper<T>::getOrDefault(_input, _name, _default);
+}
+
+} // namespace solidity::util

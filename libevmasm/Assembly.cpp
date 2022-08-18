@@ -34,7 +34,7 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
 
-#include <json/json.h>
+#include <libsolutil/JSON.h>
 
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/enumerate.hpp>
@@ -98,14 +98,23 @@ void Assembly::addAssemblyItemsFromJSON(Json::Value const& _code)
 
 AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json)
 {
-	std::string name = _json["name"].isString() ? _json["name"].asString() : "";
-	int begin = _json["begin"].isInt() ? _json["begin"].asInt() : -1;
-	int end = _json["end"].isInt() ?  _json["end"].asInt() : -1;
-	int srcIndex = _json["source"].isInt() ? _json["source"].asInt() : -1;
-	size_t modifierDepth = _json["modifierDepth"].isInt() ? static_cast<size_t>(_json["modifierDepth"].asInt()) : 0;
-	std::string value = _json["value"].isString() ? _json["value"].asString() : "";
-	std::string jumpType = _json["jumpType"].isString() ? _json["jumpType"].asString() : "";
-	solAssert(!name.empty(), "");
+	solAssert(ofType<std::string>(_json, "name"));
+	solAssert(ofType<int>(_json, "begin"));
+	solAssert(ofType<int>(_json, "end"));
+	solAssert(ofType<int>(_json, "source"));
+	solAssert(ofTypeIfExists<std::string>(_json, "value"));
+	solAssert(ofTypeIfExists<int>(_json, "modifierDepth"));
+	solAssert(ofTypeIfExists<std::string>(_json, "jumpType"));
+
+	std::string name = getOrDefault<std::string>(_json, "name", "");
+	solAssert(!name.empty());
+
+	int begin = getOrDefault<int>(_json, "begin", -1);
+	int end = getOrDefault<int>(_json, "end", -1);
+	int srcIndex = getOrDefault<int>(_json, "source", -1);
+	size_t modifierDepth = static_cast<size_t>(getOrDefault<int>(_json, "modifierDepth", 0));
+	std::string value = getOrDefault<std::string>(_json, "value", "");
+	std::string jumpType = getOrDefault<std::string>(_json, "jumpType", "");
 
 	SourceLocation location;
 	location.start = begin;
