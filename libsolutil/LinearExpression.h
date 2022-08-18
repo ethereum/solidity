@@ -247,11 +247,9 @@ public:
 	/// @returns Entry for all non-zero v in the row _row
 	IteratorCombiner iterateRow(size_t _row);
 	void multiplyRowByFactor(size_t _row, rational const& _factor);
-	void addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational const& _factor);
+	void addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational _factor);
 	Entry& entry(size_t _row, size_t _column);
-	/// Inserts the value at the row/rolumn.
-	/// Assumes the entry does not exist yet.
-	void insert(size_t _row, size_t _column, rational _value);
+	void remove(Entry& _entry);
 
 	void appendRow(LinearExpression const& _entries);
 
@@ -260,7 +258,6 @@ private:
 	/// @returns the entry at the row/column if it exists or its successor in the row.
 	Entry* entryOrSuccessorInRow(size_t _row, size_t _column);
 
-	void remove(Entry& _entry);
 	/// Prepends a new entry before the given element or at end of row if nullptr.
 	Entry* prependInRow(Entry* _successor, size_t _row, size_t _column, rational _value);
 	void adjustColumnProperties(Entry& _entry);

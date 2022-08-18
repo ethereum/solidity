@@ -19,6 +19,7 @@
 
 // use sparse matrices
 #define SPARSE 1
+#define DEBUG
 
 #include <libsolutil/Numeric.h>
 #include <libsolutil/LinearExpression.h>

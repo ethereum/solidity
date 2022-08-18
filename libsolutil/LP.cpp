@@ -51,6 +51,7 @@ using namespace solidity::util;
 
 using rational = boost::rational<bigint>;
 
+#define DEBUG
 
 namespace
 {
@@ -279,7 +280,7 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 
 	for (size_t row = 0; row < combineFrom.factors.rows(); row++)
 		for (auto&& entry: combineFrom.factors.iterateRow(row))
-			combineInto.factors.insert(entry.row + rowShift, entry.col + colShift, move(entry.value));
+			combineInto.factors.entry(entry.row + rowShift, entry.col + colShift).value = move(entry.value);
 #else
 	size_t rowShift = combineInto.factors.size();
 	size_t newRowLength = combineInto.variables.size() + combineFrom.variables.size();
@@ -362,7 +363,9 @@ void LPSolver::addConstraintToSubProblem(
 	// Introduce the slack variable.
 	size_t slackIndex = addNewVariableToSubProblem(_subProblem);
 	// Name is only needed for printing
-	//problem.variables[slackIndex].name = "_s" + to_string(m_slackVariableCounter++);
+#ifdef DEBUG
+	problem.variables[slackIndex].name = "_s" + to_string(m_slackVariableCounter++);
+#endif
 #ifdef SPARSE
 	problem.basicVariables[slackIndex] = problem.factors.rows();
 #else
@@ -398,8 +401,7 @@ void LPSolver::addConstraintToSubProblem(
 					row,
 					entry
 				);
-				// TODO could remove
-				problem.factors.entry(row, innerIndex).value = 0;
+				problem.factors.remove(problem.factors.entry(row, innerIndex));
 			}
 		}
 	for (auto const& [outerIndex, entry]: _constraint.data.enumerateTail())
@@ -407,7 +409,12 @@ void LPSolver::addConstraintToSubProblem(
 		{
 			size_t innerIndex = problem.varMapping.at(outerIndex);
 			if (!problem.basicVariables.count(innerIndex))
-				problem.factors.entry(row, innerIndex).value += entry;
+			{
+				SparseMatrix::Entry& e = problem.factors.entry(row, innerIndex);
+				e.value += entry;
+				if (!e.value)
+					problem.factors.remove(e);
+			}
 			valueForSlack += problem.variables[innerIndex].value * entry;
 		}
 
@@ -506,6 +513,7 @@ LPResult LPSolver::SubProblem::check()
 			{
 #ifdef DEBUG
 				cerr << "Replacing by " << variables[*replacementVar].name << endl;
+				cerr << "Setting basic var to to " << basicVar.bounds.lower->m_main << endl;
 #endif
 
 				pivotAndUpdate(*bvi, *basicVar.bounds.lower, *replacementVar);
@@ -575,6 +583,7 @@ string LPSolver::SubProblem::toString() const
 		for (auto&& entry: const_cast<SparseMatrix&>(factors).iterateRow(rowIndex))
 		{
 			rational const& f = entry.value;
+			solAssert(!!f);
 			size_t i = entry.col;
 #else
 		for (auto&& [i, f]: row.enumerate())
@@ -755,9 +764,14 @@ void LPSolver::SubProblem::pivot(size_t _old, size_t _new)
 	if (pivot != -1)
 		factors.multiplyRowByFactor(pivotRow, rational{-1} / pivot);
 
-	for (auto&& entry: factors.iterateColumn(_new))
+	for (auto it = factors.iterateColumn(_new).begin(); it != factors.iterateColumn(_new).end(); )
+	{
+		SparseMatrix::Entry& entry = *it;
+		// Increment becasue "addMultipleOfRow" might invalidate the iterator
+		++it;
 		if (entry.row != pivotRow)
 			factors.addMultipleOfRow(pivotRow, entry.row, entry.value);
+	}
 #else
 	LinearExpression& pivotRowData = factors[pivotRow];
 
@@ -794,7 +808,7 @@ void LPSolver::SubProblem::pivotAndUpdate(
 )
 {
 #ifdef SPARSE
-	RationalWithDelta theta = (_newValue - variables[_oldBasicVar].value) / factors.entry(_oldBasicVar, _newBasicVar).value;
+	RationalWithDelta theta = (_newValue - variables[_oldBasicVar].value) / factors.entry(basicVariables[_oldBasicVar], _newBasicVar).value;
 #else
 	RationalWithDelta theta = (_newValue - variables[_oldBasicVar].value) / factors[basicVariables[_oldBasicVar]][_newBasicVar];
 #endif

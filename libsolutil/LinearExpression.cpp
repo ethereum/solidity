@@ -71,13 +71,10 @@ void SparseMatrix::multiplyRowByFactor(size_t _row, rational const& _factor)
 	}
 }
 
-void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational const& _factor)
+void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational const _factor)
 {
-	if (_targetRow >= m_row_start.size())
-	{
-		m_row_start.resize(_targetRow + 1);
-		m_row_end.resize(_targetRow + 1);
-	}
+	ensureSize(_targetRow, 0);
+	solAssert(_sourceRow != _targetRow);
 	Entry* source = m_row_start[_sourceRow];
 	Entry* target = m_row_start[_targetRow];
 
@@ -94,8 +91,13 @@ void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, ration
 				remove(*target);
 				target = next;
 			}
+			else
+				target = target->next_in_row;
 		}
-		target = prependInRow(target, _targetRow, source->col, _factor * source->value)->next_in_row;
+		else if (rational newValue = _factor * source->value)
+			target = prependInRow(target, _targetRow, source->col, newValue)->next_in_row;
+		else if (target)
+			target = target->next_in_row;
 
 		source = source->next_in_row;
 	}
@@ -111,18 +113,35 @@ SparseMatrix::Entry& SparseMatrix::entry(size_t _row, size_t _column)
 		return *prependInRow(successor, _row, _column, {});
 }
 
-void SparseMatrix::insert(size_t _row, size_t _column, rational _value)
+void SparseMatrix::remove(SparseMatrix::Entry& _e)
 {
-	ensureSize(_row, _column);
-	prependInRow(entryOrSuccessorInRow(_row, _column), _row, _column, move(_value));
+	// TODO this does not deallocate the entry.
+	// At some point we should perform cleanup
+	// and swap entries in the vector
+	if (_e.prev_in_row)
+		_e.prev_in_row->next_in_row = _e.next_in_row;
+	else
+		m_row_start[_e.row] = _e.next_in_row;
+	if (_e.next_in_row)
+		_e.next_in_row->prev_in_row = _e.prev_in_row;
+	else
+		m_row_end[_e.row] = _e.prev_in_row;
+	if (_e.prev_in_col)
+		_e.prev_in_col->next_in_col = _e.next_in_col;
+	else
+		m_col_start[_e.col] = _e.next_in_col;
+	if (_e.next_in_col)
+		_e.next_in_col->prev_in_col = _e.prev_in_col;
+	else
+		m_col_end[_e.col] = _e.prev_in_col;
 }
 
 void SparseMatrix::appendRow(LinearExpression const& _entries)
 {
-	m_row_start.push_back(nullptr);
-	m_row_end.push_back(nullptr);
-	size_t row_nr = m_row_start.size() - 1;
-	for (auto&& [i, v]: _entries.enumerate()) {
+	size_t row_nr = rows();
+	ensureSize(row_nr, 0);
+	for (auto&& [i, v]: _entries.enumerate())
+	{
 		if (!v)
 			continue;
 		prependInRow(nullptr, row_nr, i, move(v));
@@ -154,26 +173,6 @@ SparseMatrix::Entry* SparseMatrix::entryOrSuccessorInRow(size_t _row, size_t _co
 			successor = successor->next_in_row;
 	}
 	return successor;
-}
-
-void SparseMatrix::remove(SparseMatrix::Entry& _e)
-{
-	if (_e.prev_in_row)
-		_e.prev_in_row->next_in_row = _e.next_in_row;
-	else
-		m_row_start[_e.row] = _e.next_in_row;
-	if (_e.next_in_row)
-		_e.next_in_row->prev_in_row = _e.prev_in_row;
-	else
-		m_row_end[_e.row] = _e.prev_in_row;
-	if (_e.prev_in_col)
-		_e.prev_in_col->next_in_col = _e.next_in_col;
-	else
-		m_col_start[_e.col] = _e.next_in_col;
-	if (_e.next_in_col)
-		_e.next_in_col->prev_in_col = _e.prev_in_col;
-	else
-		m_col_end[_e.col] = _e.prev_in_col;
 }
 
 SparseMatrix::Entry* SparseMatrix::prependInRow(Entry* _successor, size_t _row, size_t _column, rational _value)
@@ -211,11 +210,7 @@ void SparseMatrix::adjustColumnProperties(Entry& _entry)
 {
 	size_t column = _entry.col;
 
-	if (column >= m_col_start.size())
-	{
-		m_col_start.resize(column + 1);
-		m_col_end.resize(column + 1);
-	}
+	solAssert(column < m_col_start.size());
 	Entry* c = nullptr;
 	if (m_col_end[column] && m_col_end[column]->row > _entry.row)
 	{
