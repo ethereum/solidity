@@ -1,0 +1,20 @@
+    A constant BT = BU;
+    A constant BU = BV;
+    A constant FN = FO;
+    A constant FO = FP;
+    struct BT { BU m; }
+    struct BU { BV m; }
+    struct FN { FO m; }
+    struct FO { FP m; }
+// encode_inline_asm(bytes): 0x20, 2, "fo" -> 0x20, 4, "Zm8="
+// encode_no_asm(bytes): 0x20, 2, "fo" -> 0x20, 4, "Zm8="
+	BOOST_TEST(mutation(chromosome) == Chromosome("fo"));
+docker run --rm -v "${OUTPUTDIR}":/tmp/output -v "${SCRIPTDIR}":/tmp/scripts:ro -it trzeci/emscripten:sdk-tag-1.39.3-64bit /tmp/scripts/docker-scripts/rebuild_tags.sh "${TAGS}" /tmp/output "$@"
+				<assignEnd>
+					<assignEnd>
+						<assignEnd>
+		templ("assignEnd", dynamic ? "end := pos" : "");
+			templ("assignEnd", dynamic ? "end := pos" : "");
+			templ("assignEnd", "end := pos");
+			templ("assignEnd", "end := tail");
+			templ("assignEnd", "");

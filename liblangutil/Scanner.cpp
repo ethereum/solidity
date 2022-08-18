@@ -425,7 +425,7 @@ Token Scanner::scanMultiLineDocComment()
 
 	while (!isSourcePastEndOfInput())
 	{
-		//handle newlines in multline comments
+		// handle newlines in multiline comments
 		if (atEndOfLine())
 		{
 			skipWhitespace();

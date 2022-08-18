@@ -714,10 +714,10 @@ BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_noninterfering_store_in_be
 		Instruction::MSTORE, // m[12] = DUP1
 		Instruction::DUP12,
 		u256(12 + 32),
-		Instruction::MSTORE, // does not destoy memory knowledge
+		Instruction::MSTORE, // does not destroy memory knowledge
 		Instruction::DUP13,
 		u256(128 - 32),
-		Instruction::MSTORE, // does not destoy memory knowledge
+		Instruction::MSTORE, // does not destroy memory knowledge
 		u256(0x20),
 		u256(12),
 		Instruction::KECCAK256 // keccak256(m[12..(12+32)])
