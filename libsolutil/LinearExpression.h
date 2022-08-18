@@ -213,7 +213,7 @@ public:
 		pointer operator->() { return m_ptr; }
 		SparseMatrixIterator& operator++()
 		{
-			m_ptr = m_isRow ? m_ptr->next_in_row : m_pt->next_in_col;
+			m_ptr = m_isRow ? m_ptr->next_in_row : m_ptr->next_in_col;
 			return *this;
 		}
 		SparseMatrixIterator operator++(int) { SparseMatrixIterator tmp = *this; ++(*this); return tmp; }
@@ -232,7 +232,7 @@ public:
 	};
 	struct IteratorCombiner
 	{
-		size_t m_RowOrColumn;
+		size_t m_rowOrColumn;
 		bool m_isRow;
 		SparseMatrix& m_matrix;
 		SparseMatrixIterator begin();
@@ -242,25 +242,30 @@ public:
 	size_t rows() const { return m_row_start.size(); }
 	size_t columns() const { return m_col_start.size(); }
 
-	/// @returns (i, v) for all non-zero v in the column _column
-	void enumerateColumn(size_t _column);
-	/// @returns (i, v) for all non-zero v in the row _row
-	void enumerateRow(size_t _row);
+	/// @returns Entry for all non-zero v in the column _column
+	IteratorCombiner iterateColumn(size_t _column);
+	/// @returns Entry for all non-zero v in the row _row
+	IteratorCombiner iterateRow(size_t _row);
 	void multiplyRowByFactor(size_t _row, rational const& _factor);
 	void addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational const& _factor);
-	rational entry(size_t _row, size_t _column) const;
+	Entry& entry(size_t _row, size_t _column);
+	/// Inserts the value at the row/rolumn.
+	/// Assumes the entry does not exist yet.
 	void insert(size_t _row, size_t _column, rational _value);
 
 	void appendRow(LinearExpression const& _entries);
 
 private:
+	/// @returns the entry at the row/column if it exists or its successor in the row.
+	Entry* entryOrSuccessorInRow(size_t _row, size_t _column);
 
 	void remove(Entry& _entry);
 	/// Prepends a new entry before the given element or at end of row if nullptr.
 	Entry* prependInRow(Entry* _successor, size_t _row, size_t _column, rational _value);
 	void adjustColumnProperties(Entry& _entry);
 
-	std::vector<std::unique_ptr<Entry>> m_elements;
+	// TODO unique_ptr?
+	std::vector<std::shared_ptr<Entry>> m_elements;
 	std::vector<Entry*> m_row_start;
 	std::vector<Entry*> m_col_start;
 	std::vector<Entry*> m_row_end;

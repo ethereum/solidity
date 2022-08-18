@@ -23,10 +23,16 @@ using namespace std;
 
 SparseMatrix::SparseMatrixIterator SparseMatrix::IteratorCombiner::begin()
 {
-	return SparseMatrixIterator(
-		m_isRow ? m_matrix.m_row_start[m_RowOrColumn] : m_matrix.m_col_start[m_RowOrColumn],
-		m_isRow
-	);
+	if (
+		(m_isRow && m_rowOrColumn >= m_matrix.m_row_start.size()) ||
+		(!m_isRow && m_rowOrColumn >= m_matrix.m_col_start.size())
+	)
+		return SparseMatrixIterator(nullptr, m_isRow);
+	else
+		return SparseMatrixIterator(
+			m_isRow ? m_matrix.m_row_start[m_rowOrColumn] : m_matrix.m_col_start[m_rowOrColumn],
+			m_isRow
+		);
 }
 
 SparseMatrix::SparseMatrixIterator SparseMatrix::IteratorCombiner::end()
@@ -34,7 +40,7 @@ SparseMatrix::SparseMatrixIterator SparseMatrix::IteratorCombiner::end()
 	return SparseMatrixIterator(nullptr, m_isRow);
 }
 
-SparseMatrix::IteratorCombiner SparseMatrix::enumerateColumn(size_t _column)
+SparseMatrix::IteratorCombiner SparseMatrix::iterateColumn(size_t _column)
 {
 	return IteratorCombiner{
 		_column,
@@ -43,7 +49,7 @@ SparseMatrix::IteratorCombiner SparseMatrix::enumerateColumn(size_t _column)
 	};
 }
 
-SparseMatrix::IteratorCombiner SparseMatrix::enumerateRow(size_t _row)
+SparseMatrix::IteratorCombiner SparseMatrix::iterateRow(size_t _row)
 {
 	return IteratorCombiner{
 		_row,
@@ -67,6 +73,11 @@ void SparseMatrix::multiplyRowByFactor(size_t _row, rational const& _factor)
 
 void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, rational const& _factor)
 {
+	if (_targetRow >= m_row_start.size())
+	{
+		m_row_start.resize(_targetRow + 1);
+		m_row_end.resize(_targetRow + 1);
+	}
 	Entry* source = m_row_start[_sourceRow];
 	Entry* target = m_row_start[_targetRow];
 
@@ -90,6 +101,30 @@ void SparseMatrix::addMultipleOfRow(size_t _sourceRow, size_t _targetRow, ration
 	}
 }
 
+SparseMatrix::Entry& SparseMatrix::entry(size_t _row, size_t _column)
+{
+	Entry* successor = entryOrSuccessorInRow(_row, _column);
+	if (successor && successor->col == _column)
+		return *successor;
+	else
+		return *prependInRow(successor, _row, _column, {});
+}
+
+void SparseMatrix::insert(size_t _row, size_t _column, rational _value)
+{
+	if (_column >= m_col_start.size())
+	{
+		m_col_start.resize(_column + 1);
+		m_col_end.resize(_column + 1);
+	}
+	if (_row >= m_row_start.size())
+	{
+		m_row_start.resize(_row + 1);
+		m_row_end.resize(_row + 1);
+	}
+
+	prependInRow(entryOrSuccessorInRow(_row, _column), _row, _column, move(_value));
+}
 
 void SparseMatrix::appendRow(LinearExpression const& _entries)
 {
@@ -101,6 +136,19 @@ void SparseMatrix::appendRow(LinearExpression const& _entries)
 			continue;
 		prependInRow(nullptr, row_nr, i, move(v));
 	}
+}
+
+SparseMatrix::Entry* SparseMatrix::entryOrSuccessorInRow(size_t _row, size_t _column)
+{
+	Entry* successor = nullptr;
+	if (m_row_end[_row] && m_row_end[_row]->col >= _column)
+	{
+		successor = m_row_start[_row];
+		// TODO could choose to search from end
+		while (successor && successor->col < _column)
+			successor = successor->next_in_row;
+	}
+	return successor;
 }
 
 void SparseMatrix::remove(SparseMatrix::Entry& _e)

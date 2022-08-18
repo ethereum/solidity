@@ -270,15 +270,16 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 	//cerr << "Combining\n" << m_subProblems.at(_combineFrom)->toString();
 	//cerr << "\ninto\n" << m_subProblems.at(_combineInto)->toString();
 	SubProblem& combineInto = unseal(_combineInto);
-	SubProblem const& combineFrom = *m_subProblems[_combineFrom];
+	SubProblem& combineFrom = *m_subProblems[_combineFrom];
 
 	size_t varShift = combineInto.variables.size();
 #ifdef SPARSE
 	size_t rowShift = combineInto.factors.rows();
+	size_t colShift = combineInto.factors.columns();
 
 	for (size_t row = 0; row < combineFrom.factors.rows(); row++)
-		for (auto&& [col, v]: combineFrom.factors.iterateRow(row))
-			combineinto.factors.insert(row + rowShift, col + colShift, move(v));
+		for (auto&& entry: combineFrom.factors.iterateRow(row))
+			combineInto.factors.insert(entry.row + rowShift, entry.col + colShift, move(entry.value));
 #else
 	size_t rowShift = combineInto.factors.size();
 	size_t newRowLength = combineInto.variables.size() + combineFrom.variables.size();
@@ -362,7 +363,11 @@ void LPSolver::addConstraintToSubProblem(
 	size_t slackIndex = addNewVariableToSubProblem(_subProblem);
 	// Name is only needed for printing
 	//problem.variables[slackIndex].name = "_s" + to_string(m_slackVariableCounter++);
+#ifdef SPARSE
+	problem.basicVariables[slackIndex] = problem.factors.rows();
+#else
 	problem.basicVariables[slackIndex] = problem.factors.size();
+#endif
 	if (_constraint.kind == Constraint::EQUAL)
 	{
 		problem.variables[slackIndex].bounds.lower = _constraint.data[0];
@@ -375,6 +380,41 @@ void LPSolver::addConstraintToSubProblem(
 	// TODO it is a basic var, so we don't add it, unless we use this for basic vars.
 	//problem.variablesPotentiallyOutOfBounds.insert(slackIndex);
 
+#ifdef SPARSE
+	// Compress the constraint, i.e. turn outer variable indices into
+	// inner variable indices.
+	RationalWithDelta valueForSlack;
+	size_t row = problem.factors.rows();
+	// First, handle the basic variables.
+	LinearExpression basicVarNullifier;
+	for (auto const& [outerIndex, entry]: _constraint.data.enumerateTail())
+		if (entry)
+		{
+			size_t innerIndex = problem.varMapping.at(outerIndex);
+			if (problem.basicVariables.count(innerIndex))
+			{
+				problem.factors.addMultipleOfRow(
+					problem.basicVariables[innerIndex],
+					row,
+					entry
+				);
+				// TODO could remove
+				problem.factors.entry(row, innerIndex).value = 0;
+			}
+		}
+	for (auto const& [outerIndex, entry]: _constraint.data.enumerateTail())
+		if (entry)
+		{
+			size_t innerIndex = problem.varMapping.at(outerIndex);
+			if (!problem.basicVariables.count(innerIndex))
+				problem.factors.entry(row, innerIndex).value += entry;
+			valueForSlack += problem.variables[innerIndex].value * entry;
+		}
+
+	problem.factors.entry(row, slackIndex).value = -1;
+
+	problem.basicVariables[slackIndex] = row;
+#else
 	// Compress the constraint, i.e. turn outer variable indices into
 	// inner variable indices.
 	RationalWithDelta valueForSlack;
@@ -399,7 +439,9 @@ void LPSolver::addConstraintToSubProblem(
 
 	compressedConstraint[slackIndex] = -1;
 	problem.factors.emplace_back(move(compressedConstraint));
+
 	problem.basicVariables[slackIndex] = problem.factors.size() - 1;
+#endif
 	problem.variables[slackIndex].value = valueForSlack;
 }
 
@@ -414,8 +456,10 @@ size_t LPSolver::addNewVariableToSubProblem(size_t _subProblem)
 {
 	SubProblem& problem = unseal(_subProblem);
 	size_t index = problem.variables.size();
+#ifndef SPARSE
 	for (LinearExpression& c: problem.factors)
 		c.resize(index + 1);
+#endif
 	problem.variables.emplace_back();
 	return index;
 }
@@ -519,12 +563,23 @@ string LPSolver::SubProblem::toString() const
 			resultString += "       ";
 		resultString += "   := " + v.value.toString() + "\n";
 	}
+#ifdef SPARSE
+	for (size_t rowIndex = 0; rowIndex < factors.rows(); rowIndex++)
+#else
 	for (auto&& [rowIndex, row]: factors | ranges::views::enumerate)
+#endif
 	{
 		string basicVarPrefix;
 		string rowString;
+#ifdef SPARSE
+		for (auto&& entry: const_cast<SparseMatrix&>(factors).iterateRow(rowIndex))
+		{
+			rational const& f = entry.value;
+			size_t i = entry.col;
+#else
 		for (auto&& [i, f]: row.enumerate())
 		{
+#endif
 			if (basicVariables.count(i) && basicVariables.at(i) == rowIndex)
 			{
 				solAssert(f == -1);
@@ -590,13 +645,24 @@ void LPSolver::SubProblem::update(size_t _varIndex, RationalWithDelta const& _va
 {
 	RationalWithDelta delta = _value - variables[_varIndex].value;
 	variables[_varIndex].value = _value;
+#ifdef SPARSE
+	// TODO can we store that?
+	map<size_t, size_t> basicVarForRow = invertMap(basicVariables);
+	for (auto&& entry: factors.iterateColumn(_varIndex))
+		if (entry.value && basicVarForRow.count(entry.row))
+		{
+			size_t j = basicVarForRow[entry.row];
+			variables[j].value += delta * entry.value;
+			//variablesPotentiallyOutOfBounds.insert(j);
+		}
+#else
 	for (auto&& [j, row]: basicVariables)
 		if (factors[row][_varIndex])
 		{
 			variables[j].value += delta * factors[row][_varIndex];
 			//variablesPotentiallyOutOfBounds.insert(j);
 		}
-
+#endif
 }
 
 optional<size_t> LPSolver::SubProblem::firstConflictingBasicVariable() const
@@ -619,9 +685,16 @@ optional<size_t> LPSolver::SubProblem::firstReplacementVar(
 	bool _increasing
 ) const
 {
+#ifdef SPARSE
+	for (auto&& entry: const_cast<SparseMatrix&>(factors).iterateRow(basicVariables.at(_basicVarToReplace)))
+	{
+		size_t i = entry.col;
+		rational const& factor = entry.value;
+#else
 	LinearExpression const& basicVarEquation = factors[basicVariables.at(_basicVarToReplace)];
 	for (auto const& [i, factor]: basicVarEquation.enumerate())
 	{
+#endif
 		if (i == _basicVarToReplace || !factor)
 			continue;
 		bool positive = factor > 0;
@@ -647,9 +720,16 @@ set<size_t> LPSolver::SubProblem::reasonsForUnsat(
 	else if (!_increasing && variables[_basicVarToReplace].bounds.upperReason)
 		r.insert(*variables[_basicVarToReplace].bounds.upperReason);
 
+#ifdef SPARSE
+	for (auto&& entry: const_cast<SparseMatrix&>(factors).iterateRow(basicVariables.at(_basicVarToReplace)))
+	{
+		size_t i = entry.col;
+		rational const& factor = entry.value;
+#else
 	LinearExpression const& basicVarEquation = factors[basicVariables.at(_basicVarToReplace)];
 	for (auto const& [i, factor]: basicVarEquation.enumerate())
 	{
+#endif
 		if (i == _basicVarToReplace || !factor)
 			continue;
 		bool positive = factor > 0;
@@ -669,6 +749,16 @@ void LPSolver::SubProblem::pivot(size_t _old, size_t _new)
 	// Transform pivotRow such that the coefficient for _new is -1
 	// Then use that to set all other coefficients for _new to zero.
 	size_t pivotRow = basicVariables[_old];
+#ifdef SPARSE
+	rational pivot = factors.entry(pivotRow, _new).value;
+	solAssert(pivot != 0, "");
+	if (pivot != -1)
+		factors.multiplyRowByFactor(pivotRow, rational{-1} / pivot);
+
+	for (auto&& entry: factors.iterateColumn(_new))
+		if (entry.row != pivotRow)
+			factors.addMultipleOfRow(pivotRow, entry.row, entry.value);
+#else
 	LinearExpression& pivotRowData = factors[pivotRow];
 
 	rational pivot = pivotRowData[_new];
@@ -691,6 +781,7 @@ void LPSolver::SubProblem::pivot(size_t _old, size_t _new)
 	for (size_t i = 0; i < factors.size(); ++i)
 		if (i != pivotRow)
 			subtractMultipleOfPivotRow(factors[i]);
+#endif
 
 	basicVariables.erase(_old);
 	basicVariables[_new] = pivotRow;
@@ -702,14 +793,30 @@ void LPSolver::SubProblem::pivotAndUpdate(
 	size_t _newBasicVar
 )
 {
+#ifdef SPARSE
+	RationalWithDelta theta = (_newValue - variables[_oldBasicVar].value) / factors.entry(_oldBasicVar, _newBasicVar).value;
+#else
 	RationalWithDelta theta = (_newValue - variables[_oldBasicVar].value) / factors[basicVariables[_oldBasicVar]][_newBasicVar];
+#endif
 
 	variables[_oldBasicVar].value = _newValue;
 	variables[_newBasicVar].value += theta;
 
+#ifdef SPARSE
+	// TODO can we store that?
+	map<size_t, size_t> basicVarForRow = invertMap(basicVariables);
+	for (auto&& entry: factors.iterateColumn(_newBasicVar))
+		if (basicVarForRow.count(entry.row))
+		{
+			size_t i = basicVarForRow[entry.row];
+			if (i != _oldBasicVar)
+				variables[i].value += theta * entry.value;
+		}
+#else
 	for (auto const& [i, row]: basicVariables)
 		if (i != _oldBasicVar && factors[row][_newBasicVar])
 			variables[i].value += theta * factors[row][_newBasicVar];
+#endif
 
 	pivot(_oldBasicVar, _newBasicVar);
 }
