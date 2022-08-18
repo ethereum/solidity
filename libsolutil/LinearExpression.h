@@ -256,6 +256,7 @@ public:
 	void appendRow(LinearExpression const& _entries);
 
 private:
+	void ensureSize(size_t _row, size_t _column);
 	/// @returns the entry at the row/column if it exists or its successor in the row.
 	Entry* entryOrSuccessorInRow(size_t _row, size_t _column);
 
