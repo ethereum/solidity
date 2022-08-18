@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(trailing_dot_in_numbers)
 
 BOOST_AUTO_TEST_CASE(leading_underscore_decimal_is_identifier)
 {
-	// Actual error is cought by SyntaxChecker.
+	// Actual error is caught by SyntaxChecker.
 	CharStream stream("_1.2", "");
 	Scanner scanner(stream);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(leading_underscore_decimal_is_identifier)
 
 BOOST_AUTO_TEST_CASE(leading_underscore_decimal_after_dot_illegal)
 {
-	// Actual error is cought by SyntaxChecker.
+	// Actual error is caught by SyntaxChecker.
 	TestScanner scanner("1._2");
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(leading_underscore_decimal_after_dot_illegal)
 
 BOOST_AUTO_TEST_CASE(leading_underscore_exp_are_identifier)
 {
-	// Actual error is cought by SyntaxChecker.
+	// Actual error is caught by SyntaxChecker.
 	CharStream stream("_1e2", "");
 	Scanner scanner(stream);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(leading_underscore_exp_are_identifier)
 
 BOOST_AUTO_TEST_CASE(leading_underscore_exp_after_e_illegal)
 {
-	// Actual error is cought by SyntaxChecker.
+	// Actual error is caught by SyntaxChecker.
 	CharStream stream("1e_2", "");
 	Scanner scanner(stream);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(leading_underscore_hex_illegal)
 
 BOOST_AUTO_TEST_CASE(fixed_number_invalid_underscore_front)
 {
-	// Actual error is cought by SyntaxChecker.
+	// Actual error is caught by SyntaxChecker.
 	CharStream stream("12._1234_1234", "");
 	Scanner scanner(stream);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(fixed_number_invalid_underscore_front)
 
 BOOST_AUTO_TEST_CASE(number_literals_with_trailing_underscore_at_eos)
 {
-	// Actual error is cought by SyntaxChecker.
+	// Actual error is caught by SyntaxChecker.
 	TestScanner scanner("0x123_");
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);

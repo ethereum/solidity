@@ -206,7 +206,7 @@ inline std::string formatNumberReadable(
 	}
 }
 
-/// Safely converts an usigned integer as string into an unsigned int type.
+/// Safely converts an unsigned integer as string into an unsigned int type.
 ///
 /// @return the converted number or nullopt in case of an failure (including if it would not fit).
 inline std::optional<unsigned> toUnsignedInt(std::string const& _value)

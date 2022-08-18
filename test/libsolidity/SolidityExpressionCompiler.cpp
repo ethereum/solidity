@@ -168,7 +168,7 @@ bytes compileFirstExpression(
 				));
 
 			context.appendMissingLowLevelFunctions();
-			// NOTE: We intentionally disable optimisations for utility functions to simplfy the tests
+			// NOTE: We intentionally disable optimisations for utility functions to simplify the tests
 			context.appendYulUtilityFunctions({});
 			BOOST_REQUIRE(context.appendYulUtilityFunctionsRan());
 
