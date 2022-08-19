@@ -224,34 +224,6 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(CommandLineOptions_any_of)
-{
-	std::vector<InputMode> help_license{InputMode::Help, InputMode::License};
-	CommandLineOptions help = parseCommandLine({"solc", "--help"});
-	CommandLineOptions license = parseCommandLine({"solc", "--license"});
-	CommandLineOptions version = parseCommandLine({"solc", "--version"});
-	BOOST_TEST(any_of(help.input.mode, {InputMode::Help, InputMode::License}));
-	BOOST_TEST(any_of(license.input.mode, {InputMode::Help, InputMode::License}));
-	BOOST_TEST(any_of(help.input.mode, help_license));
-	BOOST_TEST(any_of(license.input.mode, help_license));
-	BOOST_TEST(!any_of(version.input.mode, help_license));
-	BOOST_TEST(any_of(version.input.mode, {InputMode::Version}));
-}
-
-BOOST_AUTO_TEST_CASE(CommandLineOptions_none_of)
-{
-	std::vector<InputMode> help_license{InputMode::Help, InputMode::License};
-	CommandLineOptions help = parseCommandLine({"solc", "--help"});
-	CommandLineOptions license = parseCommandLine({"solc", "--license"});
-	CommandLineOptions version = parseCommandLine({"solc", "--version"});
-	BOOST_TEST(!none_of(help.input.mode, {InputMode::Help, InputMode::License}));
-	BOOST_TEST(!none_of(license.input.mode, {InputMode::Help, InputMode::License}));
-	BOOST_TEST(!none_of(help.input.mode, help_license));
-	BOOST_TEST(!none_of(license.input.mode, help_license));
-	BOOST_TEST(none_of(version.input.mode, help_license));
-	BOOST_TEST(!none_of(version.input.mode, {InputMode::Version}));
-}
-
 BOOST_AUTO_TEST_CASE(via_ir_options)
 {
 	BOOST_TEST(!parseCommandLine({"solc", "contract.sol"}).output.viaIR);
