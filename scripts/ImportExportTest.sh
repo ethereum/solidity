@@ -53,7 +53,7 @@ if [[ "$(find . -maxdepth 0 -type d -empty)" == "" ]]; then
     fail "Test directory not empty. Skipping!"
 fi
 
-function Ast_ImportExportEquivalence
+function ast_import_export_equivalence
 {
     local sol_file="$1"
     local input_files="$2"
@@ -84,7 +84,7 @@ function Ast_ImportExportEquivalence
     rm -f stderr.txt
 }
 
-function JsonEvmAsm_ImportExportEquivalence
+function json_evm_asm_import_export_equivalence
 {
     local sol_file="$1"
     local input_files="$2"
@@ -111,106 +111,94 @@ function JsonEvmAsm_ImportExportEquivalence
         done
 
         assembly=$(cat expected.asm.json)
-        if [ "$assembly" != "" ] && [ "$assembly" != "null" ]
+        [[ $assembly != "" && $assembly != "null" ]] || continue
+
+        if ! "${SOLC}" --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json --json-indent 4 --import-asm-json expected.asm.json > obtained.json 2> obtained.error
         then
-            if ! "${SOLC}" --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --pretty-json --json-indent 4 --import-asm-json expected.asm.json > obtained.json 2> obtained.error
-            then
-                printError
-                printError "$sol_file"
-                cat obtained.error >&2
-                FAILED=$((FAILED + 1))
-                return 0
-            fi
+            printError
+            printError "$sol_file"
+            cat obtained.error >&2
+            FAILED=$((FAILED + 1))
+            return 0
+        fi
 
-            for output in "${outputs[@]}"
+        for output in "${outputs[@]}"
+        do
+            for obtained_contract in $(jq '.contracts | keys | .[]' obtained.json  2> /dev/null)
             do
-                for obtained_contract in $(jq '.contracts | keys | .[]' obtained.json  2> /dev/null)
-                do
-                    jq --raw-output ".contracts.${obtained_contract}.\"${output}\"" obtained.json > "obtained.${output}.json"
-                    if ! diff_files "expected.${output}.json" "obtained.${output}.json"
-                    then
-                        _TESTED=
-                        FAILED=$((FAILED + 1))
-                        return 0
-                    fi
-                done
+                jq --raw-output ".contracts.${obtained_contract}.\"${output}\"" obtained.json > "obtained.${output}.json"
+                if ! diff_files "expected.${output}.json" "obtained.${output}.json"
+                then
+                    _TESTED=
+                    FAILED=$((FAILED + 1))
+                    return 0
+                fi
             done
+        done
 
-            # direct export via --asm-json, if imported with --import-asm-json.
-            if ! "${SOLC}" --asm-json --import-asm-json expected.asm.json --pretty-json --json-indent 4 | tail -n+4 > obtained_direct_import_export.json 2> obtained_direct_import_export.error
-            then
-                printError
-                printError "$sol_file"
-                cat obtained_direct_import_export.error >&2
-                FAILED=$((FAILED + 1))
-                return 0
-            fi
+        # direct export via --asm-json, if imported with --import-asm-json.
+        if ! "${SOLC}" --asm-json --import-asm-json expected.asm.json --pretty-json --json-indent 4 | tail -n+4 > obtained_direct_import_export.json 2> obtained_direct_import_export.error
+        then
+            printError
+            printError "$sol_file"
+            cat obtained_direct_import_export.error >&2
+            FAILED=$((FAILED + 1))
+            return 0
+        fi
 
-            # reformat jsons using jq.
-            jq . expected.asm.json > expected.asm.json.pretty
-            jq . obtained_direct_import_export.json > obtained_direct_import_export.json.pretty
-            if ! diff_files expected.asm.json.pretty obtained_direct_import_export.json.pretty
-            then
-                _TESTED=
-                FAILED=$((FAILED + 1))
-                return 0
-            fi
+        # reformat jsons using jq.
+        jq . expected.asm.json > expected.asm.json.pretty
+        jq . obtained_direct_import_export.json > obtained_direct_import_export.json.pretty
+        if ! diff_files expected.asm.json.pretty obtained_direct_import_export.json.pretty
+        then
+            _TESTED=
+            FAILED=$((FAILED + 1))
+            return 0
         fi
     done
 
-    if [ -n "${_TESTED}" ]
+    if [[ $_TESTED == "" ]]
     then
         TESTED=$((TESTED + 1))
     fi
 }
 
-# function tests whether exporting and importing again leaves the JSON ast unchanged
+# function tests whether exporting and importing again is equivalent.
 # Results are recorded by adding to FAILED or UNCOMPILABLE.
-# Also, in case of a mismatch a diff and the respective ASTs are printed
+# Also, in case of a mismatch a diff is printed
 # Expected parameters:
 # $1 name of the file to be exported and imported
 # $2 any files needed to do so that might be in parent directories
 function testImportExportEquivalence {
     local sol_file="$1"
     local input_files="$2"
-    if $SOLC --bin "${input_files}" > /dev/null 2>&1
+    if "$SOLC" --bin "${input_files}" > /dev/null 2>&1
     then
-        ! [[ -e stderr.txt ]] || { fail "stderr.txt already exists. Refusing to overwrite."; }
-
-        if [[ $IMPORT_TEST_TYPE == "ast" ]]
-        then
-            Ast_ImportExportEquivalence "${sol_file}" "${input_files}"
-        elif [[ $IMPORT_TEST_TYPE == "evm-assembly" ]]
-        then
-            JsonEvmAsm_ImportExportEquivalence "${sol_file}" "${input_files}"
-        else
-            fail "Unknown import test type. Aborting."
-        fi
+        ! [[ -e stderr.txt ]] || fail "stderr.txt already exists. Refusing to overwrite."
+        case "$IMPORT_TEST_TYPE" in
+          ast) ast_import_export_equivalence "${sol_file}" "${input_files}" ;;
+          evm-assembly) json_evm_asm_import_export_equivalence "${sol_file}" "${input_files}" ;;
+          *) fail "Unknown import test type. Aborting." ;;
+        esac
     else
         UNCOMPILABLE=$((UNCOMPILABLE + 1))
     fi
 }
 
 WORKINGDIR=$PWD
-NSOURCES=0
 
 command_available "${SOLC}" --version
 command_available jq --version
 
-# for solfile in $(find $DEV_DIR -name *.sol)
+case "$IMPORT_TEST_TYPE" in
+    ast) TEST_DIRS=("${SYNTAXTESTS_DIR}" "${ASTJSONTESTS_DIR}") ;;
+    evm-assembly) TEST_DIRS=("${SYNTAXTESTS_DIR}" "${SEMANTICTESTS_DIR}") ;;
+    *) fail "Unknown import test type. Aborting. Please specify ${0} [ast|evm-assembly]." ;;
+esac
+
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
 # bug. Since the test involves a malformed path, there is no point in running
-# AST tests on it. See https://github.com/boostorg/filesystem/issues/176
-if [[ $IMPORT_TEST_TYPE == "ast" ]]
-then
-    TEST_DIRS=("${SYNTAXTESTS_DIR}" "${ASTJSONTESTS_DIR}")
-elif [[ $IMPORT_TEST_TYPE == "evm-assembly" ]]
-then
-    TEST_DIRS=("${SYNTAXTESTS_DIR}" "${SEMANTICTESTS_DIR}")
-else
-    fail "Unknown import test type. Aborting. Please specify ${0} [ast|evm-assembly]."
-fi
-
+# tests on it. See https://github.com/boostorg/filesystem/issues/176
 IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
 
 NSOURCES="$(echo "$IMPORT_TEST_FILES" | wc -l)"
@@ -227,13 +215,11 @@ do
     OUTPUT=$("$SPLITSOURCES" "$solfile")
     SPLITSOURCES_RC=$?
     set -e
-    if [ ${SPLITSOURCES_RC} == 0 ]
+    if [[ ${SPLITSOURCES_RC} == 0 ]]
     then
-        OIFS=${IFS}
         IFS=' ' read -ra OUTPUT_ARRAY <<< "${OUTPUT}"
-        IFS=${OIFS}
         NSOURCES=$((NSOURCES - 1 + ${#OUTPUT_ARRAY[@]}))
-        testImportExportEquivalence "$solfile" "${OUTPUT[@]}"
+        testImportExportEquivalence "$solfile" "${OUTPUT_ARRAY[@]}"
     elif [ ${SPLITSOURCES_RC} == 1 ]
     then
         testImportExportEquivalence "$solfile" "$solfile"
@@ -242,17 +228,12 @@ do
         # The script will exit with return code 2, if an UnicodeDecodeError occurred.
         # This is the case if e.g. some tests are using invalid utf-8 sequences. We will ignore
         # these errors, but print the actual output of the script.
-        echo >&2
-        printError "\n${OUTPUT[*]}\n"
-        echo >&2
+        printError "\n\n${OUTPUT}\n\n"
         testImportExportEquivalence "$solfile" "$solfile"
     else
         # All other return codes will be treated as critical errors. The script will exit.
-        echo >&2
-        printError "\nGot unexpected return code ${SPLITSOURCES_RC} from ${SPLITSOURCES}. Aborting."
-        echo >&2
-        printError "\n${OUTPUT[*]}\n"
-        echo >&2
+        printError "\n\nGot unexpected return code ${SPLITSOURCES_RC} from ${SPLITSOURCES}. Aborting."
+        printError "\n\n${OUTPUT}\n\n"
 
         cd "$WORKINGDIR"
         # Delete temporary files
