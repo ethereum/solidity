@@ -279,8 +279,6 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 			solAssert(settings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
 	}
 
-	settings.enabled = optimizer.enabled;
-
 	return settings;
 }
 

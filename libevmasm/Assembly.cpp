@@ -109,16 +109,14 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json)
 	std::string name = getOrDefault<std::string>(_json, "name", "");
 	solAssert(!name.empty());
 
-	int begin = get<int>(_json, "begin");
-	int end = get<int>(_json, "end");
+	SourceLocation location;
+	location.start = get<int>(_json, "begin");
+	location.end = get<int>(_json, "end");
 	int srcIndex = get<int>(_json, "source");
 	size_t modifierDepth = static_cast<size_t>(getOrDefault<int>(_json, "modifierDepth", 0));
 	std::string value = getOrDefault<std::string>(_json, "value", "");
 	std::string jumpType = getOrDefault<std::string>(_json, "jumpType", "");
 
-	SourceLocation location;
-	location.start = begin;
-	location.end = end;
 
 	auto updateUsedTags = [&](u256 const& data) {
 		m_usedTags = max(m_usedTags, static_cast<unsigned>(data) + 1);
@@ -142,10 +140,9 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json)
 
 	AssemblyItem result(0);
 
-	if (c_instructions.find(name) != c_instructions.end())
+	if (c_instructions.count(name))
 	{
 		AssemblyItem item{c_instructions.at(name), location};
-		item.m_modifierDepth = modifierDepth;
 		if (!jumpType.empty())
 			item.setJumpType(jumpType);
 		result = item;
@@ -154,42 +151,42 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json)
 	{
 		if (name == "PUSH")
 		{
-			AssemblyItem item{AssemblyItemType::Push, u256("0x" + value), location};
+			AssemblyItem item{AssemblyItemType::Push, u256("0x" + value)};
 			if (!jumpType.empty())
 				item.setJumpType(jumpType);
 			result = item;
 		}
 		else if (name == "PUSH [ErrorTag]")
-			result = {AssemblyItemType::PushTag, 0, location};
+			result = {AssemblyItemType::PushTag, 0};
 		else if (name == "PUSH [tag]")
-			result = {AssemblyItemType::PushTag, updateUsedTags(u256(value)), location};
+			result = {AssemblyItemType::PushTag, updateUsedTags(u256(value))};
 		else if (name == "PUSH [$]")
-			result = {AssemblyItemType::PushSub, u256("0x" + value), location};
+			result = {AssemblyItemType::PushSub, u256("0x" + value)};
 		else if (name == "PUSH #[$]")
-			result = {AssemblyItemType::PushSubSize, u256("0x" + value), location};
+			result = {AssemblyItemType::PushSubSize, u256("0x" + value)};
 		else if (name == "PUSHSIZE")
-			result = {AssemblyItemType::PushProgramSize, 0, location};
+			result = {AssemblyItemType::PushProgramSize, 0};
 		else if (name == "PUSHLIB")
-			result = {AssemblyItemType::PushLibraryAddress, libraryHash(value), location};
+			result = {AssemblyItemType::PushLibraryAddress, libraryHash(value)};
 		else if (name == "PUSHDEPLOYADDRESS")
-			result = {AssemblyItemType::PushDeployTimeAddress, 0, location};
+			result = {AssemblyItemType::PushDeployTimeAddress, 0};
 		else if (name == "PUSHIMMUTABLE")
-			result = {AssemblyItemType::PushImmutable, immutableHash(value), location};
+			result = {AssemblyItemType::PushImmutable, immutableHash(value)};
 		else if (name == "ASSIGNIMMUTABLE")
-			result = {AssemblyItemType::AssignImmutable, immutableHash(value), location};
+			result = {AssemblyItemType::AssignImmutable, immutableHash(value)};
 		else if (name == "tag")
-			result = {AssemblyItemType::Tag, updateUsedTags(u256(value)), location};
+			result = {AssemblyItemType::Tag, updateUsedTags(u256(value))};
 		else if (name == "PUSH data")
-			result = {AssemblyItemType::PushData, u256("0x" + value), location};
+			result = {AssemblyItemType::PushData, u256("0x" + value)};
 		else if (name == "VERBATIM")
 		{
 			AssemblyItem item(fromHex(value), 0, 0);
-			item.setLocation(location);
 			result = item;
 		}
 		else
 			assertThrow(false, InvalidOpcode, "");
 	}
+	result.setLocation(location);
 	result.m_modifierDepth = modifierDepth;
 	return result;
 }
