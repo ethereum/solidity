@@ -38,7 +38,7 @@ SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 SOLC=${SOLIDITY_BUILD_DIR}/solc/solc
 SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
 
-# shellcheck disable=SC1090,SC1091
+# shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 
 SYNTAXTESTS_DIR="${REPO_ROOT}/test/libsolidity/syntaxTests"
