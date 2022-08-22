@@ -276,11 +276,10 @@ void LPSolver::combineSubProblems(size_t _combineInto, size_t _combineFrom)
 	size_t varShift = combineInto.variables.size();
 #ifdef SPARSE
 	size_t rowShift = combineInto.factors.rows();
-	size_t colShift = combineInto.factors.columns();
 
 	for (size_t row = 0; row < combineFrom.factors.rows(); row++)
 		for (auto&& entry: combineFrom.factors.iterateRow(row))
-			combineInto.factors.entry(entry.row + rowShift, entry.col + colShift).value = move(entry.value);
+			combineInto.factors.entry(entry.row + rowShift, entry.col + varShift).value = move(entry.value);
 #else
 	size_t rowShift = combineInto.factors.size();
 	size_t newRowLength = combineInto.variables.size() + combineFrom.variables.size();
