@@ -40,6 +40,14 @@ SparseMatrix::SparseMatrixIterator SparseMatrix::IteratorCombiner::end()
 	return SparseMatrixIterator(nullptr, m_isRow);
 }
 
+SparseMatrix::SparseMatrix(SparseMatrix const& _other)
+{
+	ensureSize(_other.rows(), _other.columns());
+	for (size_t row = 0; row < _other.rows(); row++)
+		for (auto&& entry: const_cast<SparseMatrix&>(_other).iterateRow(row))
+			prependInRow(nullptr, row, entry.col, entry.value);
+}
+
 SparseMatrix::IteratorCombiner SparseMatrix::iterateColumn(size_t _column)
 {
 	return IteratorCombiner{

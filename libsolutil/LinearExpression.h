@@ -239,6 +239,12 @@ public:
 		SparseMatrixIterator end();
 	};
 
+	SparseMatrix() = default;
+	SparseMatrix(SparseMatrix const&);
+	SparseMatrix(SparseMatrix&&) = default;
+	SparseMatrix& operator=(SparseMatrix const& _other) { *this = SparseMatrix(_other); return *this; }
+	SparseMatrix& operator=(SparseMatrix&&) = default;
+
 	size_t rows() const { return m_row_start.size(); }
 	size_t columns() const { return m_col_start.size(); }
 
