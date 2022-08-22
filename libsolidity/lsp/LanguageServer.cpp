@@ -18,6 +18,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/lsp/LanguageServer.h>
@@ -151,7 +152,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"textDocument/semanticTokens/full", bind(&LanguageServer::semanticTokensFull, this, _1, _2)},
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2)},
 	},
-	m_fileRepository("/" /* basePath */, {} /* no search paths */),
+	m_fileRepository("/" /* basePath */, {} /* no search paths */, {} /* no remappings */),
 	m_compilerStack{m_fileRepository.reader()}
 {
 }
@@ -212,6 +213,40 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 		if (typeFailureCount)
 			m_client.trace("Invalid JSON configuration passed. \"include-paths\" must be an array of strings.");
 	}
+
+	Json::Value jsonRemappings = _settings["remappings"];
+
+	if (jsonRemappings)
+	{
+		bool typeFailures = false;
+		if (jsonRemappings.isArray())
+		{
+			vector<frontend::ImportRemapper::Remapping> remappings;
+			for (Json::Value const& jsonPath: jsonRemappings)
+			{
+				if (
+					jsonPath.isObject() &&
+					jsonPath.get("context", "").isString() &&
+					jsonPath.get("prefix", "").isString() &&
+					jsonPath.get("target", "").isString()
+				)
+					remappings.emplace_back(ImportRemapper::Remapping{
+						jsonPath.get("context", "").asString(),
+						jsonPath.get("prefix", "").asString(),
+						jsonPath.get("target", "").asString(),
+					});
+				else
+					typeFailures = true;
+			}
+			m_fileRepository.setRemappings(std::move(remappings));
+		}
+		else
+			typeFailures = true;
+
+		if (typeFailures)
+			m_client.trace("Invalid JSON configuration passed. \"remappings\" should be of form [{\"context\":\"\", \"prefix\":\"foo\", \"target\":\"bar\"}].");
+
+	}
 }
 
 vector<boost::filesystem::path> LanguageServer::allSolidityFilesFromProject() const
@@ -237,7 +272,7 @@ void LanguageServer::compile()
 	// For files that are not open, we have to take changes on disk into account,
 	// so we just remove all non-open files.
 
-	FileRepository oldRepository(m_fileRepository.basePath(), m_fileRepository.includePaths());
+	FileRepository oldRepository(m_fileRepository.basePath(), m_fileRepository.includePaths(), m_fileRepository.remappings());
 	swap(oldRepository, m_fileRepository);
 
 	// Load all solidity files from project.
@@ -261,6 +296,7 @@ void LanguageServer::compile()
 	// TODO: optimize! do not recompile if nothing has changed (file(s) not flagged dirty).
 
 	m_compilerStack.reset(false);
+	m_compilerStack.setRemappings(m_fileRepository.remappings());
 	m_compilerStack.setSources(m_fileRepository.sourceUnits());
 	m_compilerStack.compile(CompilerStack::State::AnalysisPerformed);
 }
@@ -404,7 +440,7 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	if (_args["trace"])
 		setTrace(_args["trace"]);
 
-	m_fileRepository = FileRepository(rootPath, {});
+	m_fileRepository = FileRepository(rootPath, {}, {});
 	if (_args["initializationOptions"].isObject())
 		changeConfiguration(_args["initializationOptions"]);
 

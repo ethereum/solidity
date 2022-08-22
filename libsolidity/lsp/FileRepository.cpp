@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/lsp/Transport.h>
 #include <libsolidity/lsp/Utils.h>
@@ -43,15 +44,21 @@ using solidity::util::readFileAsString;
 using solidity::util::joinHumanReadable;
 using solidity::util::Result;
 
-FileRepository::FileRepository(boost::filesystem::path _basePath, std::vector<boost::filesystem::path> _includePaths):
+FileRepository::FileRepository(boost::filesystem::path _basePath, std::vector<boost::filesystem::path> _includePaths, vector<frontend::ImportRemapper::Remapping> _remappings):
 	m_basePath(std::move(_basePath)),
-	m_includePaths(std::move(_includePaths))
+	m_includePaths(std::move(_includePaths)),
+	m_remappings(std::move(_remappings))
 {
 }
 
 void FileRepository::setIncludePaths(std::vector<boost::filesystem::path> _paths)
 {
 	m_includePaths = std::move(_paths);
+}
+
+void FileRepository::setRemappings(vector<frontend::ImportRemapper::Remapping> _remappings)
+{
+	m_remappings = std::move(_remappings);
 }
 
 string FileRepository::sourceUnitNameToUri(string const& _sourceUnitName) const

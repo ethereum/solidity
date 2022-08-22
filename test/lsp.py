@@ -1085,6 +1085,13 @@ class SolidityLSPTestSuite: # {{{
         )
         return self.wait_for_diagnostics(solc_process)
 
+    def expect_report(self, published_diagnostics, uri):
+        for report in published_diagnostics:
+            if report['uri'] == uri:
+                return report
+        self.expect_true(False, f"expected ${uri} in published_diagnostics")
+        return None
+
     def expect_true(
         self,
         actual,
@@ -1530,6 +1537,70 @@ class SolidityLSPTestSuite: # {{{
         # imported file
         report = published_diagnostics[1]
         self.expect_equal(report['uri'], f"{self.project_root_uri}/other-include-dir/otherlib/otherlib.sol")
+        diagnostics = report['diagnostics']
+        self.expect_equal(len(diagnostics), 1, "no diagnostics")
+        self.expect_diagnostic(diagnostics[0], code=2018, lineNo=5, startEndColumns=(4, 62))
+
+    def test_remapping_wrong_paramateres(self, solc: JsonRpcProcess) -> None:
+        self.setup_lsp(solc, expose_project_root=False)
+        solc.send_notification(
+            'workspace/didChangeConfiguration', {
+                'settings': {
+                    'remappings': [
+                        {
+                            'context': False,
+                            'prefix': 1,
+                            'target': f"{self.project_root_dir}/other-include-dir/otherlib/"
+                        }
+                    ]
+                }
+            }
+        )
+
+        response = solc.receive_message()
+        self.expect_equal(response["method"], "$/logTrace")
+
+        if not response["params"]["message"].startswith("Invalid JSON configuration passed."):
+            raise Exception("Expected JSON error.")
+
+    def test_remapping(self, solc: JsonRpcProcess) -> None:
+        self.setup_lsp(solc, expose_project_root=False)
+        solc.send_notification(
+            'workspace/didChangeConfiguration', {
+                'settings': {
+                    'remappings': [
+                        {
+                            'context': '',
+                            'prefix': '@other/',
+                            'target': f"{self.project_root_dir}/other-include-dir/otherlib/"
+                        }
+                    ]
+                }
+            }
+        )
+
+        # test file
+        file_with_remapped_import_uri = 'file:///remapped-include.sol'
+        solc.send_message('textDocument/didOpen', {
+            'textDocument': {
+                'uri': file_with_remapped_import_uri,
+                'languageId': 'Solidity',
+                'version': 1,
+                'text': ''.join([
+                    '// SPDX-License-Identifier: UNLICENSED\n',
+                    'pragma solidity >=0.8.0;\n',
+                    'import "@other/otherlib.sol";\n',
+                ])
+            }
+        })
+        published_diagnostics = self.wait_for_diagnostics(solc)
+        self.expect_equal(len(published_diagnostics), 2, "expected reports for two files")
+
+        report = self.expect_report(published_diagnostics, file_with_remapped_import_uri)
+        diagnostics = report['diagnostics']
+        self.expect_equal(len(diagnostics), 0, "no diagnostics")
+
+        report = self.expect_report(published_diagnostics, f"{self.project_root_uri}/other-include-dir/otherlib/otherlib.sol")
         diagnostics = report['diagnostics']
         self.expect_equal(len(diagnostics), 1, "no diagnostics")
         self.expect_diagnostic(diagnostics[0], code=2018, lineNo=5, startEndColumns=(4, 62))

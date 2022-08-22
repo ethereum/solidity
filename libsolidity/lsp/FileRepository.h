@@ -18,6 +18,7 @@
 #pragma once
 
 #include <libsolidity/interface/FileReader.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libsolutil/Result.h>
 
 #include <string>
@@ -29,10 +30,13 @@ namespace solidity::lsp
 class FileRepository
 {
 public:
-	FileRepository(boost::filesystem::path _basePath, std::vector<boost::filesystem::path> _includePaths);
+	FileRepository(boost::filesystem::path _basePath, std::vector<boost::filesystem::path> _includePaths, std::vector<frontend::ImportRemapper::Remapping> _remappings);
 
 	std::vector<boost::filesystem::path> const& includePaths() const noexcept { return m_includePaths; }
 	void setIncludePaths(std::vector<boost::filesystem::path> _paths);
+
+	std::vector<frontend::ImportRemapper::Remapping> const& remappings() const noexcept { return m_remappings; }
+	void setRemappings(std::vector<frontend::ImportRemapper::Remapping> _remappings);
 
 	boost::filesystem::path const& basePath() const { return m_basePath; }
 
@@ -63,6 +67,9 @@ private:
 
 	/// Additional directories used for resolving relative paths in imports.
 	std::vector<boost::filesystem::path> m_includePaths;
+
+	/// Remappings of imports.
+	std::vector<frontend::ImportRemapper::Remapping> m_remappings;
 
 	/// Mapping of source unit names to their URIs as understood by the client.
 	StringMap m_sourceUnitNamesToUri;
