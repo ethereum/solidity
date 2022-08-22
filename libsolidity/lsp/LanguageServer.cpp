@@ -207,8 +207,13 @@ vector<boost::filesystem::path> LanguageServer::allSolidityFilesFromProject() co
 
 	auto directoryIterator = fs::recursive_directory_iterator(m_fileRepository.basePath(), fs::symlink_option::recurse);
 	for (fs::directory_entry const& dirEntry: directoryIterator)
-		if (dirEntry.path().extension() == ".sol")
-			collectedPaths.push_back(dirEntry.path());
+	{
+		if (
+			dirEntry.status().type() == fs::file_type::regular_file &&
+			dirEntry.path().extension() == ".sol"
+		)
+		collectedPaths.push_back(dirEntry.path());
+	}
 
 	return collectedPaths;
 }
