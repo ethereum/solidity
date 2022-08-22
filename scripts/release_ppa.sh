@@ -47,7 +47,6 @@ set -e
 
 REPO_ROOT="$(dirname "$0")/.."
 
-# for the "fail" function
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 
@@ -62,15 +61,7 @@ is_release() {
     [[ "${branch}" =~ ^v[0-9]+(\.[0-9]+)*$ ]]
 }
 
-# source keyid and email from .release_ppa_auth
-if [[ -e .release_ppa_auth ]]
-then
-    # shellcheck source=/dev/null
-    source "${REPO_ROOT}/.release_ppa_auth"
-fi
-
-[[ "$LAUNCHPAD_KEYID" != "" && "$LAUNCHPAD_EMAIL" != "" ]] || \
-    fail "Error: Couldn't find variables \$LAUNCHPAD_KEYID or \$LAUNCHPAD_EMAIL in sourced file .release_ppa_auth (check top comment in $0 for more information)."
+sourcePPAConfig
 
 packagename=solc
 
@@ -78,12 +69,6 @@ packagename=solc
 static_build_distribution=focal
 
 DISTRIBUTIONS="focal jammy kinetic"
-
-function checkDputEntries {
-    local pattern="$1"
-    grep "${pattern}" /etc/dput.cf --quiet || \
-        fail "Error: Missing ${pattern//\\/} section in /etc/dput.cf (check top comment in ${0} for more information)."
-}
 
 if is_release
 then
