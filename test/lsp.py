@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # pragma pylint: disable=too-many-lines
 # test line 1
+from __future__ import annotations # See: https://github.com/PyCQA/pylint/issues/3320
 import argparse
 import fnmatch
 import functools
@@ -422,7 +423,7 @@ class TestParser:
             self.next_line()
 
 
-    def parseDiagnostics(self) -> Diagnostics:
+    def parseDiagnostics(self) -> TestParser.Diagnostics:
         """
         Parse diagnostic expectations specified in the file.
         Returns a named tuple instance of "Diagnostics"
@@ -454,7 +455,7 @@ class TestParser:
         return self.Diagnostics(**diagnostics)
 
 
-    def parseRequestAndResponse(self) -> RequestAndResponse:
+    def parseRequestAndResponse(self) -> TestParser.RequestAndResponse:
         RESPONSE_START = "// <- "
         REQUEST_END = "// }"
         COMMENT_PREFIX = "// "
@@ -915,7 +916,7 @@ class SolidityLSPTestSuite: # {{{
         lsp: JsonRpcProcess,
         expose_project_root=True,
         file_load_strategy: FileLoadStrategy=FileLoadStrategy.DirectlyOpenedAndOnImport,
-        custom_include_paths: list[str] = [],
+        custom_include_paths: list[str] = None,
         project_root_subdir=None
     ):
         """
@@ -950,7 +951,7 @@ class SolidityLSPTestSuite: # {{{
             params['initializationOptions'] = {}
             params['initializationOptions']['file-load-strategy'] = file_load_strategy.lsp_name()
 
-        if len(custom_include_paths) != 0:
+        if custom_include_paths is not None and len(custom_include_paths) != 0:
             if params['initializationOptions'] is None:
                 params['initializationOptions'] = {}
             params['initializationOptions']['include-paths'] = custom_include_paths
@@ -1412,7 +1413,11 @@ class SolidityLSPTestSuite: # {{{
             custom_include_paths=[f"{self.project_root_dir}/other-include-dir"]
         )
         published_diagnostics = self.wait_for_diagnostics(solc)
-        self.expect_equal(len(published_diagnostics), len(EXPECTED_FILES) + IMPLICITLY_LOADED_FILE_COUNT, "Test number of files analyzed.")
+        self.expect_equal(
+            len(published_diagnostics),
+            len(EXPECTED_FILES) + IMPLICITLY_LOADED_FILE_COUNT,
+            "Test number of files analyzed."
+        )
 
         # All but the last report should be from expected files
         for report in published_diagnostics[:-IMPLICITLY_LOADED_FILE_COUNT]:
