@@ -1639,7 +1639,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		if (components.size() == 1)
 			_tuple.annotation().type = type(*components[0]);
 		else
-			_tuple.annotation().type = TypeProvider::tuple(move(types));
+			_tuple.annotation().type = TypeProvider::tuple(std::move(types));
 		// If some of the components are not LValues, the error is reported above.
 		_tuple.annotation().isLValue = true;
 		_tuple.annotation().isPure = false;
@@ -1710,7 +1710,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (components.size() == 1)
 				_tuple.annotation().type = type(*components[0]);
 			else
-				_tuple.annotation().type = TypeProvider::tuple(move(types));
+				_tuple.annotation().type = TypeProvider::tuple(std::move(types));
 		}
 
 		_tuple.annotation().isLValue = false;
@@ -2811,8 +2811,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 
 		funcCallAnno.type = returnTypes.size() == 1 ?
-			move(returnTypes.front()) :
-			TypeProvider::tuple(move(returnTypes));
+			std::move(returnTypes.front()) :
+			TypeProvider::tuple(std::move(returnTypes));
 
 		break;
 	}

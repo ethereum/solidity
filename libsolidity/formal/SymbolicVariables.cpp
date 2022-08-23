@@ -38,7 +38,7 @@ SymbolicVariable::SymbolicVariable(
 ):
 	m_type(_type),
 	m_originalType(_originalType),
-	m_uniqueName(move(_uniqueName)),
+	m_uniqueName(std::move(_uniqueName)),
 	m_context(_context),
 	m_ssa(make_unique<SSAVariable>())
 {
@@ -52,8 +52,8 @@ SymbolicVariable::SymbolicVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	m_sort(move(_sort)),
-	m_uniqueName(move(_uniqueName)),
+	m_sort(std::move(_sort)),
+	m_uniqueName(std::move(_uniqueName)),
 	m_context(_context),
 	m_ssa(make_unique<SSAVariable>())
 {
@@ -108,7 +108,7 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(_type, _type, move(_uniqueName), _context)
+	SymbolicVariable(_type, _type, std::move(_uniqueName), _context)
 {
 	solAssert(m_type->category() == frontend::Type::Category::Bool, "");
 }
@@ -119,7 +119,7 @@ SymbolicIntVariable::SymbolicIntVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(_type, _originalType, move(_uniqueName), _context)
+	SymbolicVariable(_type, _originalType, std::move(_uniqueName), _context)
 {
 	solAssert(isNumber(*m_type), "");
 }
@@ -128,7 +128,7 @@ SymbolicAddressVariable::SymbolicAddressVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicIntVariable(TypeProvider::uint(160), TypeProvider::uint(160), move(_uniqueName), _context)
+	SymbolicIntVariable(TypeProvider::uint(160), TypeProvider::uint(160), std::move(_uniqueName), _context)
 {
 }
 
@@ -138,7 +138,7 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicIntVariable(TypeProvider::uint(_numBytes * 8), _originalType, move(_uniqueName), _context)
+	SymbolicIntVariable(TypeProvider::uint(_numBytes * 8), _originalType, std::move(_uniqueName), _context)
 {
 }
 
@@ -147,7 +147,7 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(_type, _type, move(_uniqueName), _context),
+	SymbolicVariable(_type, _type, std::move(_uniqueName), _context),
 	m_declaration(m_context.newVariable(currentName(), m_sort))
 {
 	solAssert(m_type->category() == frontend::Type::Category::Function, "");
@@ -158,7 +158,7 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(move(_sort), move(_uniqueName), _context),
+	SymbolicVariable(std::move(_sort), std::move(_uniqueName), _context),
 	m_declaration(m_context.newVariable(currentName(), m_sort))
 {
 	solAssert(m_sort->kind == Kind::Function, "");
@@ -219,7 +219,7 @@ SymbolicEnumVariable::SymbolicEnumVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(_type, _type, move(_uniqueName), _context)
+	SymbolicVariable(_type, _type, std::move(_uniqueName), _context)
 {
 	solAssert(isEnum(*m_type), "");
 }
@@ -229,7 +229,7 @@ SymbolicTupleVariable::SymbolicTupleVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(_type, _type, move(_uniqueName), _context)
+	SymbolicVariable(_type, _type, std::move(_uniqueName), _context)
 {
 	solAssert(isTuple(*m_type), "");
 }
@@ -239,7 +239,7 @@ SymbolicTupleVariable::SymbolicTupleVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(move(_sort), move(_uniqueName), _context)
+	SymbolicVariable(std::move(_sort), std::move(_uniqueName), _context)
 {
 	solAssert(m_sort->kind == Kind::Tuple, "");
 }
@@ -288,7 +288,7 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(_type, _originalType, move(_uniqueName), _context),
+	SymbolicVariable(_type, _originalType, std::move(_uniqueName), _context),
 	m_pair(
 		smtSort(*_type),
 		m_uniqueName + "_length_pair",
@@ -303,7 +303,7 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(move(_sort), move(_uniqueName), _context),
+	SymbolicVariable(std::move(_sort), std::move(_uniqueName), _context),
 	m_pair(
 		std::make_shared<TupleSort>(
 			"array_length_pair",
@@ -346,7 +346,7 @@ SymbolicStructVariable::SymbolicStructVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicVariable(_type, _type, move(_uniqueName), _context)
+	SymbolicVariable(_type, _type, std::move(_uniqueName), _context)
 {
 	solAssert(isNonRecursiveStruct(*m_type), "");
 	auto const* structType = dynamic_cast<StructType const*>(_type);

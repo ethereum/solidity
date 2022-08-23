@@ -91,5 +91,5 @@ string test::stripPreReleaseWarning(string const& _stderrContent)
 	};
 
 	string output = regex_replace(_stderrContent, preReleaseWarningRegex, "");
-	return regex_replace(move(output), noOutputRegex, "");
+	return regex_replace(std::move(output), noOutputRegex, "");
 }

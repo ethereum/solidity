@@ -58,7 +58,7 @@ void GasTest::parseExpectations(std::istream& _stream)
 		{
 			string kind = line.substr(3, line.length() - 4);
 			boost::trim(kind);
-			currentKind = &m_expectations[move(kind)];
+			currentKind = &m_expectations[std::move(kind)];
 		}
 		else if (!currentKind)
 			BOOST_THROW_EXCEPTION(runtime_error("No function kind specified. Expected \"creation:\", \"external:\" or \"internal:\"."));

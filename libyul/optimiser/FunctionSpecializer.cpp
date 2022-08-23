@@ -65,7 +65,7 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 
 	if (ranges::any_of(arguments, [](auto& _a) { return _a.has_value(); }))
 	{
-		YulString oldName = move(_f.functionName.name);
+		YulString oldName = std::move(_f.functionName.name);
 		auto newName = m_nameDispenser.newName(oldName);
 
 		m_oldToNewMap[oldName].emplace_back(make_pair(newName, arguments));
@@ -106,12 +106,12 @@ FunctionDefinition FunctionSpecializer::specialize(
 				VariableDeclaration{
 					_f.debugData,
 					vector<TypedName>{newFunction.parameters[index]},
-					make_unique<Expression>(move(*argument))
+					make_unique<Expression>(std::move(*argument))
 				}
 			);
 
 	newFunction.body.statements =
-		move(missingVariableDeclarations) + move(newFunction.body.statements);
+		std::move(missingVariableDeclarations) + std::move(newFunction.body.statements);
 
 	// Only take those indices that cannot be specialized, i.e., whose value is `nullopt`.
 	newFunction.parameters =
@@ -120,7 +120,7 @@ FunctionDefinition FunctionSpecializer::specialize(
 			applyMap(_arguments, [&](auto const& _v) { return !_v; })
 		);
 
-	newFunction.name = move(_newName);
+	newFunction.name = std::move(_newName);
 
 	return newFunction;
 }
@@ -146,10 +146,10 @@ void FunctionSpecializer::run(OptimiserStepContext& _context, Block& _ast)
 					f.m_oldToNewMap.at(functionDefinition.name),
 					[&](auto& _p) -> Statement
 					{
-						return f.specialize(functionDefinition, move(_p.first), move(_p.second));
+						return f.specialize(functionDefinition, std::move(_p.first), std::move(_p.second));
 					}
 				);
-				return move(out) + make_vector<Statement>(move(functionDefinition));
+				return std::move(out) + make_vector<Statement>(std::move(functionDefinition));
 			}
 		}
 

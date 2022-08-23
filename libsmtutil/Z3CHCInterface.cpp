@@ -101,7 +101,7 @@ tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCInterface::que
 		{
 			result = CheckResult::UNSATISFIABLE;
 			auto invariants = m_z3Interface->fromZ3Expr(m_solver.get_answer());
-			return {result, move(invariants), {}};
+			return {result, std::move(invariants), {}};
 		}
 		case z3::check_result::unknown:
 		{

@@ -244,8 +244,8 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			bigint newGas = gasNeeded(newRoutine);
 			if (newGas < bestGas)
 			{
-				bestGas = move(newGas);
-				routine = move(newRoutine);
+				bestGas = std::move(newGas);
+				routine = std::move(newRoutine);
 			}
 		}
 		return routine;

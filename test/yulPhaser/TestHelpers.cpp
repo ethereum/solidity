@@ -30,7 +30,7 @@ using namespace solidity::phaser::test;
 
 function<Mutation> phaser::test::wholeChromosomeReplacement(Chromosome _newChromosome)
 {
-	return [_newChromosome = move(_newChromosome)](Chromosome const&) { return _newChromosome; };
+	return [_newChromosome = std::move(_newChromosome)](Chromosome const&) { return _newChromosome; };
 }
 
 function<Mutation> phaser::test::geneSubstitution(size_t _geneIndex, string _geneValue)

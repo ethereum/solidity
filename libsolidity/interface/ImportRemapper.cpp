@@ -35,7 +35,7 @@ void ImportRemapper::setRemappings(vector<Remapping> _remappings)
 {
 	for (auto const& remapping: _remappings)
 		solAssert(!remapping.prefix.empty(), "");
-	m_remappings = move(_remappings);
+	m_remappings = std::move(_remappings);
 }
 
 SourceUnitName ImportRemapper::apply(ImportPath const& _path, string const& _context) const

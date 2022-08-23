@@ -77,7 +77,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 		return filtered;
 	};
 	if (m_modelCheckerSettings.invariants.invariants.empty())
-		m_expectations = removeInv(move(m_expectations));
+		m_expectations = removeInv(std::move(m_expectations));
 
 	auto const& ignoreInv = m_reader.stringSetting("SMTIgnoreInv", "yes");
 	if (ignoreInv == "no")

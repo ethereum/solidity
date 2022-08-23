@@ -197,7 +197,7 @@ string AsmPrinter::operator()(ForLoop const& _forLoop)
 		delim = ' ';
 	return
 		locationComment +
-		("for " + move(pre) + delim + move(condition) + delim + move(post) + "\n") +
+		("for " + std::move(pre) + delim + std::move(condition) + delim + std::move(post) + "\n") +
 		(*this)(_forLoop.body);
 }
 

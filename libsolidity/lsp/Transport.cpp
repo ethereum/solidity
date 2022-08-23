@@ -67,7 +67,7 @@ optional<Json::Value> Transport::receive()
 		return nullopt;
 	}
 
-	return {move(jsonMessage)};
+	return {std::move(jsonMessage)};
 }
 
 void Transport::trace(std::string _message, Json::Value _extra)
@@ -76,9 +76,9 @@ void Transport::trace(std::string _message, Json::Value _extra)
 	{
 		Json::Value params;
 		if (_extra.isObject())
-			params = move(_extra);
-		params["message"] = move(_message);
-		notify("$/logTrace", move(params));
+			params = std::move(_extra);
+		params["message"] = std::move(_message);
+		notify("$/logTrace", std::move(params));
 	}
 }
 
@@ -101,30 +101,30 @@ optional<map<string, string>> Transport::parseHeaders()
 		if (!headers.emplace(boost::trim_copy(name), boost::trim_copy(value)).second)
 			return nullopt;
 	}
-	return {move(headers)};
+	return {std::move(headers)};
 }
 
 void Transport::notify(string _method, Json::Value _message)
 {
 	Json::Value json;
-	json["method"] = move(_method);
-	json["params"] = move(_message);
-	send(move(json));
+	json["method"] = std::move(_method);
+	json["params"] = std::move(_message);
+	send(std::move(json));
 }
 
 void Transport::reply(MessageID _id, Json::Value _message)
 {
 	Json::Value json;
-	json["result"] = move(_message);
-	send(move(json), _id);
+	json["result"] = std::move(_message);
+	send(std::move(json), _id);
 }
 
 void Transport::error(MessageID _id, ErrorCode _code, string _message)
 {
 	Json::Value json;
 	json["error"]["code"] = static_cast<int>(_code);
-	json["error"]["message"] = move(_message);
-	send(move(json), _id);
+	json["error"]["message"] = std::move(_message);
+	send(std::move(json), _id);
 }
 
 void Transport::send(Json::Value _json, MessageID _id)

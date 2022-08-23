@@ -37,7 +37,7 @@ using namespace solidity::util;
 NameDispenser::NameDispenser(Dialect const& _dialect, Block const& _ast, set<YulString> _reservedNames):
 	NameDispenser(_dialect, NameCollector(_ast).names() + _reservedNames)
 {
-	m_reservedNames = move(_reservedNames);
+	m_reservedNames = std::move(_reservedNames);
 }
 
 NameDispenser::NameDispenser(Dialect const& _dialect, set<YulString> _usedNames):

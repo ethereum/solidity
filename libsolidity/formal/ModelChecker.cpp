@@ -38,7 +38,7 @@ ModelChecker::ModelChecker(
 	ReadCallback::Callback const& _smtCallback
 ):
 	m_errorReporter(_errorReporter),
-	m_settings(move(_settings)),
+	m_settings(std::move(_settings)),
 	m_context(),
 	m_bmc(m_context, m_uniqueErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
 	m_chc(m_context, m_uniqueErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)

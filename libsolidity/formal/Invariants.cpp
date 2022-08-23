@@ -55,9 +55,9 @@ map<Predicate const*, set<string>> collectInvariants(
 				auto arg0 = _expr->arguments.at(0);
 				auto arg1 = _expr->arguments.at(1);
 				if (starts_with(arg0.name, t))
-					equalities.insert({arg0.name, {arg0, move(arg1)}});
+					equalities.insert({arg0.name, {arg0, std::move(arg1)}});
 				else if (starts_with(arg1.name, t))
-					equalities.insert({arg1.name, {arg1, move(arg0)}});
+					equalities.insert({arg1.name, {arg1, std::move(arg0)}});
 			}
 		for (auto const& arg: _expr->arguments)
 			_addChild(&arg);

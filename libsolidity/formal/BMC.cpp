@@ -76,7 +76,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 
 	SMTEncoder::resetSourceAnalysis();
 
-	m_solvedTargets = move(_solvedTargets);
+	m_solvedTargets = std::move(_solvedTargets);
 	m_context.setSolver(m_interface.get());
 	m_context.reset();
 	m_context.setAssertionAccumulation(true);
@@ -686,7 +686,7 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 				expressionName = m_charStreamProvider.charStream(*uf->location().sourceName).text(
 					uf->location()
 				);
-			expressionNames.push_back(move(expressionName));
+			expressionNames.push_back(std::move(expressionName));
 		}
 
 	return {expressionsToEvaluate, expressionNames};
@@ -888,7 +888,7 @@ void BMC::addVerificationTarget(
 	if (_type == VerificationTargetType::ConstantCondition)
 		checkVerificationTarget(target);
 	else
-		m_verificationTargets.emplace_back(move(target));
+		m_verificationTargets.emplace_back(std::move(target));
 }
 
 /// Solving.
@@ -964,7 +964,7 @@ void BMC::checkCondition(
 			message.str(),
 			SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
 			.append(SMTEncoder::callStackMessage(_callStack))
-			.append(move(secondaryLocation))
+			.append(std::move(secondaryLocation))
 		);
 		break;
 	}

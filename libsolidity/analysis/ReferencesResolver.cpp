@@ -276,7 +276,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			return;
 		}
 
-	m_yulAnnotation->externalReferences[&_identifier].suffix = move(suffix);
+	m_yulAnnotation->externalReferences[&_identifier].suffix = std::move(suffix);
 	m_yulAnnotation->externalReferences[&_identifier].declaration = declarations.front();
 }
 

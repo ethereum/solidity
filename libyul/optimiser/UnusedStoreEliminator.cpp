@@ -186,7 +186,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 		m_stores[YulString{}].insert({&_statement, initialState});
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
-		m_storeOperations[&_statement] = move(operations.front());
+		m_storeOperations[&_statement] = std::move(operations.front());
 	}
 }
 

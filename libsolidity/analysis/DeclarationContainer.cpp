@@ -210,7 +210,7 @@ void DeclarationContainer::populateHomonyms(back_insert_iterator<Homonyms> _it) 
 		ResolvingSettings settings;
 		settings.recursive = true;
 		settings.alsoInvisible = true;
-		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, move(settings));
+		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, std::move(settings));
 		if (!declarations.empty())
 			_it = make_pair(location, declarations);
 	}

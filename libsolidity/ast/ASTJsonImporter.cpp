@@ -299,7 +299,7 @@ ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value c
 		path,
 		unitAlias,
 		createNameSourceLocation(_node),
-		move(symbolAliases)
+		std::move(symbolAliases)
 	);
 
 	astAssert(_node["absolutePath"].isString(), "Expected 'absolutePath' to be a string!");
@@ -391,7 +391,7 @@ ASTPointer<UsingForDirective> ASTJsonImporter::createUsingForDirective(Json::Val
 
 	return createASTNode<UsingForDirective>(
 		_node,
-		move(functions),
+		std::move(functions),
 		!_node.isMember("libraryName"),
 		_node["typeName"].isNull() ? nullptr  : convertJsonToASTNode<TypeName>(_node["typeName"]),
 		memberAsBool(_node, "global")
@@ -686,7 +686,7 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value con
 		_node,
 		nullOrASTString(_node, "documentation"),
 		dialect,
-		move(flags),
+		std::move(flags),
 		operations
 	);
 }

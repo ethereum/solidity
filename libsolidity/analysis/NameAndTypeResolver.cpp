@@ -184,7 +184,7 @@ vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString c
 	ResolvingSettings settings;
 	settings.recursive = true;
 	settings.alsoInvisible = _includeInvisibles;
-	return m_currentScope->resolveName(_name, move(settings));
+	return m_currentScope->resolveName(_name, std::move(settings));
 }
 
 Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path) const
@@ -204,7 +204,7 @@ std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAll
 	settings.recursive = true;
 	settings.alsoInvisible = false;
 	settings.onlyVisibleAsUnqualifiedNames = true;
-	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), move(settings));
+	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), std::move(settings));
 
 	for (size_t i = 1; i < _path.size() && candidates.size() == 1; i++)
 	{

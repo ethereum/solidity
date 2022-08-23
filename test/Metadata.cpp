@@ -162,7 +162,7 @@ std::optional<map<string, string>> parseCBORMetadata(bytes const& _metadata)
 		{
 			string key = parser.readKey();
 			string value = parser.readValue();
-			ret[move(key)] = move(value);
+			ret[std::move(key)] = std::move(value);
 		}
 		return ret;
 	}

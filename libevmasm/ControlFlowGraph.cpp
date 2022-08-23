@@ -236,12 +236,12 @@ void ControlFlowGraph::gatherKnowledge()
 		item.state = _state->copy();
 		item.blocksSeen = _currentItem.blocksSeen;
 		item.blocksSeen.insert(_currentItem.blockId);
-		workQueue.push_back(move(item));
+		workQueue.push_back(std::move(item));
 	};
 
 	while (!workQueue.empty())
 	{
-		WorkQueueItem item = move(workQueue.back());
+		WorkQueueItem item = std::move(workQueue.back());
 		workQueue.pop_back();
 		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
 		assertThrow(!!item.blockId, OptimizerException, "");

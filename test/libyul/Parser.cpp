@@ -65,7 +65,7 @@ shared_ptr<Block> parse(string const& _source, Dialect const& _dialect, ErrorRep
 		auto parserResult = yul::Parser(
 			errorReporter,
 			_dialect,
-			move(indicesToSourceNames)
+			std::move(indicesToSourceNames)
 		).parse(stream);
 		if (parserResult)
 		{

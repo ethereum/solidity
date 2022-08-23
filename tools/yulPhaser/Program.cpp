@@ -102,7 +102,7 @@ variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 
 void Program::optimise(vector<string> const& _optimisationSteps)
 {
-	m_ast = applyOptimisationSteps(m_dialect, m_nameDispenser, move(m_ast), _optimisationSteps);
+	m_ast = applyOptimisationSteps(m_dialect, m_nameDispenser, std::move(m_ast), _optimisationSteps);
 }
 
 ostream& phaser::operator<<(ostream& _stream, Program const& _program)
@@ -153,7 +153,7 @@ variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _diale
 	// to refactor ObjectParser and Object to use unique_ptr instead).
 	auto astCopy = make_unique<Block>(get<Block>(ASTCopier{}(*selectedObject->code)));
 
-	return variant<unique_ptr<Block>, ErrorList>(move(astCopy));
+	return variant<unique_ptr<Block>, ErrorList>(std::move(astCopy));
 }
 
 variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect const& _dialect, Block const& _ast)
@@ -168,7 +168,7 @@ variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect cons
 		return errors;
 
 	assert(errorReporter.errors().empty());
-	return variant<unique_ptr<AsmAnalysisInfo>, ErrorList>(move(analysisInfo));
+	return variant<unique_ptr<AsmAnalysisInfo>, ErrorList>(std::move(analysisInfo));
 }
 
 unique_ptr<Block> Program::disambiguateAST(

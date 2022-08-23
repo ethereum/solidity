@@ -43,7 +43,7 @@ Chromosome Chromosome::makeRandom(size_t _length)
 	for (size_t i = 0; i < _length; ++i)
 		steps.push_back(randomOptimisationStep());
 
-	return Chromosome(move(steps));
+	return Chromosome(std::move(steps));
 }
 
 ostream& phaser::operator<<(ostream& _stream, Chromosome const& _chromosome)
