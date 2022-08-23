@@ -267,7 +267,7 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 
 	if (optimizer.yulSteps.has_value())
 	{
-		std::string const fullSequence = optimizer.yulSteps.value();
+		string const fullSequence = optimizer.yulSteps.value();
 		auto const delimiterPos = fullSequence.find(":");
 		settings.yulOptimiserSteps = fullSequence.substr(0, delimiterPos);
 

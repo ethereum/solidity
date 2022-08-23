@@ -141,7 +141,7 @@ void OptimiserSuite::run(
 			stackCompressorMaxIterations
 		);
 
-	// Run the user supplied (otherwise default) clean up sequence
+	// Run the user-supplied clean up sequence
 	suite.runSequence(_optimisationCleanupSequence, ast);
 	suite.runSequence("g", ast);
 
@@ -316,8 +316,9 @@ void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 			assertThrow(nestingLevel >= 0, OptimizerException, "Unbalanced brackets");
 			break;
 		case ':':
-			assertThrow(nestingLevel == 0, OptimizerException, "Cleanup delimiter may only be placed at nesting level zero");
-			assertThrow(++colonDelimiters <=1, OptimizerException, "Too many colon delimiters");
+			++colonDelimiters;
+			assertThrow(nestingLevel == 0, OptimizerException, "Cleanup sequence delimiter cannot be placed inside the brackets");
+			assertThrow(colonDelimiters <=1, OptimizerException, "Too many cleanup sequence delimiters");
 			break;
 		default:
 		{

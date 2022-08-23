@@ -1245,24 +1245,25 @@ In Solidity mode, the Yul optimizer is activated together with the regular optim
 Optimization Step Sequence
 --------------------------
 
-By default the Yul optimizer applies its predefined sequence of optimization steps to the generated assembly.
-You can override this sequence and supply your own using the ``--yul-optimizations`` option:
+By default the optimizer applies its predefined sequence of optimization steps to
+the generated assembly. You can override this sequence and supply your own using
+the ``--yul-optimizations`` option:
 
-.. code-block:: sh
+.. code-block:: bash
 
     solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul:fDnTOc'
 
-The order of steps is significant and affects the quality of the output.
-Moreover, applying a step may uncover new optimization opportunities for others that were already
-applied so repeating steps is often beneficial.
-By enclosing part of the sequence in square brackets (``[]``) you tell the optimizer to repeatedly
-apply that part until it no longer improves the size of the resulting assembly.
-You can use brackets multiple times in a single sequence but they cannot be nested.
+The sequence inside ``[...]`` will be applied multiple times in a loop until the Yul code
+remains unchanged or until the maximum number of rounds (currently 12) has been reached.
 
-The colon delimiter (``:``) in the example is used to specify a custom cleanup sequence, which is run after
-the main part of the sequence before the delimiter (and, when using the legacy EVM code transform,
-only *after* the stack compressor). If no such delimiter is present, the default cleanup sequence (``fDnTOc``)
-is run after the supplied sequence.
+An important thing to note, is that there are hardcoded sequences that are run before and after the
+user-supplied sequence, or the default sequence if one was not supplied by the user.
+
+The cleanup sequence delimiter ``:`` is optional, and is used to supply a custom cleanup sequence
+in order to replace the default one. If omitted, the optimizer will simply apply the default cleanup
+sequence. In addition, the delimiter may be placed at the beginning of the user-supplied sequence,
+which will be treated as an empty optimization sequence, whereas conversely, if placed at the end of
+the sequence, will be treated as an empty cleanup sequence.
 
 
 The following optimization steps are available:

@@ -148,10 +148,9 @@ struct OptimiserSettings
 	/// them just by setting this to an empty string. Set @a runYulOptimiser to false if you want
 	/// no optimisations.
 	std::string yulOptimiserSteps = DefaultYulOptimiserSteps;
-	/// Sequence of clean up optimisation steps after the above (default or user supplied) set of
-	/// optimisation steps is completed. Note that if the string is left empty, there will still
-	/// be hard-coded optimisation steps that will run regardless. Set @a runYulOptimiser to false
-	/// if you want no optimisations.
+	/// Sequence of clean-up optimisation steps after yulOptimiserSteps is run. Note that if the string
+	/// is left empty, there will still be hard-coded optimisation steps that will run regardless.
+	/// Set @a runYulOptimiser to false if you want no optimisations.
 	std::string yulOptimiserCleanupSteps = DefaultYulOptimiserCleanupSteps;
 	/// This specifies an estimate on how often each opcode in this assembly will be executed,
 	/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.

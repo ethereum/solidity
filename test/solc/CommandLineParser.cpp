@@ -426,6 +426,58 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 		}
 }
 
+BOOST_AUTO_TEST_CASE(default_optimiser_sequence)
+{
+	auto const& commandLineOptions = parseCommandLine({"solc", "contract.sol", "--optimize"});
+	BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserSteps, OptimiserSettings::DefaultYulOptimiserSteps);
+	BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserCleanupSteps, OptimiserSettings::DefaultYulOptimiserCleanupSteps);
+}
+
+BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
+{
+	vector<string> validSequenceInputs {
+		":", 						// Empty optimizaiton sequence and empty cleanup sequence
+		":fDn", 					// Empty optimization sequence and specified cleanup sequence
+		"dhfoDgvulfnTUtnIf:", 		// Specified optimizaiton sequence and empty cleanup sequence
+		"dhfoDgvulfnTUtnIf:fDn", 	// Specified optimization sequence and cleanup sequence
+		"dhfo[Dgvulfn]TUtnIf:f[D]n" // Specified and nested optimization and cleanup sequence
+	};
+
+	vector<tuple<string, string>> expectedParsedSequences {
+		{ "", "" },
+		{ "", "fDn"},
+		{ "dhfoDgvulfnTUtnIf", ""},
+		{ "dhfoDgvulfnTUtnIf", "fDn"},
+		{ "dhfo[Dgvulfn]TUtnIf", "f[D]n"}
+	};
+
+	BOOST_CHECK_EQUAL(validSequenceInputs.size(), expectedParsedSequences.size());
+
+	for (size_t i = 0; i < validSequenceInputs.size(); ++i)
+	{
+		auto const& commandLineOptions = parseCommandLine({"solc", "contract.sol", "--optimize", "--yul-optimizations=" + validSequenceInputs[i]});
+		auto const& [expectedYulOptimiserSteps, expectedYulCleanupSteps] = expectedParsedSequences[i];
+		BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserSteps, expectedYulOptimiserSteps);
+		BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserCleanupSteps, expectedYulCleanupSteps);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(invalid_nested_cleanup_sequence_delimiter)
+{
+	vector<string> commandLine {"solc", "contract.sol", "--optimize", "--yul-optimizations=dhfoDgvulfnTUt[nIf:fd]N"};
+	string expectedMessage = "Invalid optimizer step sequence in --yul-optimizations: Cleanup sequence delimiter cannot be placed inside the brackets";
+	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+}
+
+BOOST_AUTO_TEST_CASE(too_many_cleanup_sequence_delimiters)
+{
+	vector<string> commandLine {"solc", "contract.sol", "--optimize", "--yul-optimizations=dhfoDgvulfnTU:tnIf:fdN"};
+	string expectedMessage = "Invalid optimizer step sequence in --yul-optimizations: Too many cleanup sequence delimiters";
+	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::frontend::test

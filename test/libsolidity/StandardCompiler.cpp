@@ -1244,10 +1244,11 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	BOOST_CHECK(optimizer["details"]["yulDetails"].isObject());
 	BOOST_CHECK(
 		util::convertContainer<set<string>>(optimizer["details"]["yulDetails"].getMemberNames()) ==
-		(set<string>{"stackAllocation", "optimizerSteps"})
+		(set<string>{"stackAllocation", "optimizerSteps", "optimizerCleanupSteps"})
 	);
 	BOOST_CHECK(optimizer["details"]["yulDetails"]["stackAllocation"].asBool() == true);
 	BOOST_CHECK(optimizer["details"]["yulDetails"]["optimizerSteps"].asString() == OptimiserSettings::DefaultYulOptimiserSteps);
+	BOOST_CHECK(optimizer["details"]["yulDetails"]["optimizerCleanupSteps"].asString() == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
 	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 9);
 	BOOST_CHECK(optimizer["runs"].asUInt() == 600);
 }

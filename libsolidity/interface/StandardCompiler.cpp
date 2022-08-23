@@ -490,7 +490,7 @@ std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details
 				);
 			}
 
-			std::string const fullSequence = _details[_name].asString();
+			string const fullSequence = _details[_name].asString();
 			auto const delimiterPos = fullSequence.find(":");
 			_optimiserSetting = fullSequence.substr(0, delimiterPos);
 

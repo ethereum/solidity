@@ -1540,6 +1540,7 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 			details["yulDetails"] = Json::objectValue;
 			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
 			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps;
+			details["yulDetails"]["optimizerCleanupSteps"] = m_optimiserSettings.yulOptimiserCleanupSteps;
 		}
 
 		meta["settings"]["optimizer"]["details"] = std::move(details);

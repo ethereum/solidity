@@ -3,8 +3,8 @@
     [
         {
             "component": "general",
-            "formattedMessage": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Cleanup delimiter may only be placed at nesting level zero",
-            "message": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Cleanup delimiter may only be placed at nesting level zero",
+            "formattedMessage": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Cleanup sequence delimiter cannot be placed inside the brackets",
+            "message": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Cleanup sequence delimiter cannot be placed inside the brackets",
             "severity": "error",
             "type": "JSONError"
         }
