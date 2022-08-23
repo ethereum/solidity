@@ -152,6 +152,13 @@ private:
 		Expression const& _referencingExpression
 	);
 
+	/// Appends code to call an internal function with the given arguments.
+	/// All involved expressions have already been visited.
+	void appendInternalFunctionCall(
+		FunctionCall const& _functionCall,
+		FunctionType const& _functionType,
+		std::vector<Expression const *> const& _arguments
+	);
 	/// Appends code to call an external function with the given arguments.
 	/// All involved expressions have already been visited.
 	void appendExternalFunctionCall(
