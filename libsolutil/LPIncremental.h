@@ -17,12 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
-// use sparse matrices
-#define SPARSE 1
-//#define DEBUG
-#define LPIncremental 1
-
-#ifndef LPIncremental
+//#define DEBUG 1
 
 #include <libsolutil/Numeric.h>
 #include <libsolutil/LinearExpression.h>
@@ -159,32 +154,18 @@ enum class LPResult
 	Infeasible ///< System does not have any solution.
 };
 
-/**
- * LP solver for rational problems, based on "A Fast Linear-Arithmetic Solver for DPLL(T)*"
- * by Dutertre and Moura.
- *
- * Does not solve integer problems!
- *
- * Tries to split incoming bounds and constraints into unrelated sub-problems.
- * Maintains lower/upper bounds for all variables.
- * Adds one slack variable per constraint and stores all constraints as "= 0" equations.
- * Splits variables into basic and non-basic. For each row there is exactly one
- * basic variable that has a factor of -1.
- * The equations are satisfied at all times and non-basic variables are always within their bounds.
- * Non-basic variables might violate their bounds.
- * It attempts to resolve these violations in turn, swapping a basic variables with a non-basic
- * variables that can still move in the required direction.
- *
- * It is perfectly fine to add new bounds, variable or constraints after a call to "check".
- * The solver can be copied at low cost and it uses a "copy on write" mechanism for the sub-problems.
- */
 class LPSolver
 {
 public:
-	void addConstraint(Constraint const& _constraint, std::optional<size_t> _reason = std::nullopt);
+	void addConstraint(Constraint const& _constraint);
+	void addLowerBound(size_t _variable, RationalWithDelta _bound);
+	void addUpperBound(size_t _variable, RationalWithDelta _bound);
+	/// Add the conditional constraint but do not activate it yet.
+	void addConditionalConstraint(Constraint const& _constraint, size_t _reason);
+	void activateConstraint(size_t _reason);
+	void setTrailSize(size_t _trailSize);
+
 	void setVariableName(size_t _variable, std::string _name);
-	void addLowerBound(size_t _variable, RationalWithDelta _bound, std::optional<size_t> _reason = std::nullopt);
-	void addUpperBound(size_t _variable, RationalWithDelta _bound, std::optional<size_t> _reason = std::nullopt);
 
 	std::pair<LPResult, ReasonSet> check();
 
@@ -196,8 +177,6 @@ private:
 	{
 		std::optional<RationalWithDelta> lower;
 		std::optional<RationalWithDelta> upper;
-		std::optional<size_t> lowerReason;
-		std::optional<size_t> upperReason;
 	};
 	struct Variable
 	{
@@ -206,58 +185,57 @@ private:
 #endif
 		RationalWithDelta value = {};
 		Bounds bounds = {};
-	};
-	struct SubProblem
-	{
-		/// Set to true on "check". Needs a copy for adding a constraint or bound if set to true.
-		bool sealed = false;
-		std::optional<LPResult> result = std::nullopt;
-#ifdef SPARSE
-		SparseMatrix factors;
-#else
-		std::vector<LinearExpression> factors;
-#endif
-		std::vector<Variable> variables;
-		std::set<size_t> variablesPotentiallyOutOfBounds;
-		/// Variable index to constraint it controls.
-		std::map<size_t, size_t> basicVariables;
-		/// Maps outer indices to inner indices.
-		std::map<size_t, size_t> varMapping = {};
-		std::set<size_t> reasons;
-
-		LPResult check();
-		std::string toString() const;
-	private:
-		bool correctNonbasic();
-		/// Set value of non-basic variable.
-		void update(size_t _varIndex, RationalWithDelta const& _value);
-		/// @returns the index of the first basic variable violating its bounds.
-		std::optional<size_t> firstConflictingBasicVariable() const;
-		std::optional<size_t> firstReplacementVar(size_t _basicVarToReplace, bool _increasing) const;
-		/// @returns the set of reasons in case "firstReplacementVar" failed.
-		std::set<size_t> reasonsForUnsat(size_t _basicVarToReplace, bool _increasing) const;
-
-		void pivot(size_t _old, size_t _new);
-		void pivotAndUpdate(size_t _oldBasicVar, RationalWithDelta const& _newValue, size_t _newBasicVar);
+		std::optional<size_t> lowerReason;
+		std::optional<size_t> upperReason;
 	};
 
+	/// Consumes a constraint and returns a controlling variable (can be a new slack
+	/// but does not need to) and corresponding bounds.
+	/// If it adds a slack variable, updates the factors and properly sets the value
+	/// for the slack variable (which will be a new basic variable).
+	std::pair<size_t, Bounds> constraintIntoVariableBounds(Constraint const& _constraint);
+	void addBounds(size_t _variable, Bounds _bounds);
+	std::set<size_t> collectReasonsForVariable(size_t _variable);
 
-	SubProblem& unseal(size_t _problem);
-	/// Unseals the problem for the given variable or creates a new one.
-	SubProblem& unsealForVariable(size_t _outerIndex);
-	void combineSubProblems(size_t _combineInto, size_t _combineFrom);
-	void addConstraintToSubProblem(size_t _subProblem, Constraint const& _constraint, std::optional<size_t> _reason);
-	void addOuterVariableToSubProblem(size_t _subProblem, size_t _outerIndex);
-	size_t addNewVariableToSubProblem(size_t _subProblem);
+	bool correctNonbasic();
+	/// Set value of non-basic variable.
+	void update(size_t _varIndex, RationalWithDelta const& _value);
+	/// @returns the index of the first basic variable violating its bounds.
+	std::optional<size_t> firstConflictingBasicVariable() const;
+	std::optional<size_t> firstReplacementVar(size_t _basicVarToReplace, bool _increasing) const;
+	/// @returns the set of reasons in case "firstReplacementVar" failed.
+	std::set<size_t> reasonsForUnsat(size_t _basicVarToReplace, bool _increasing) const;
 
-	/// These use "copy on write".
-	std::vector<std::shared_ptr<SubProblem>> m_subProblems;
-	/// Maps outer indices to sub problems.
-	std::map<size_t, size_t> m_subProblemsPerVariable;
+	void pivot(size_t _old, size_t _new);
+	void pivotAndUpdate(size_t _oldBasicVar, RationalWithDelta const& _newValue, size_t _newBasicVar);
+
+	void addOuterVariable(size_t _outerIndex);
+	/// Adds a new outer variable if it is not known yet and returns the inner index in any case.
+	size_t maybeAddOuterVariable(size_t _outerIndex);
+	size_t addNewVariable();
+
 	/// Counter to enable unique names for the slack variables.
 	size_t m_slackVariableCounter = 0;
+	std::optional<LPResult> result = std::nullopt;
+	size_t trailSize = 0;
+	SparseMatrix factors;
+	std::vector<Variable> variables;
+	/// Stack of (trail size, variable index, bounds, lower reason, upper reason).
+	std::vector<std::tuple<size_t, size_t, Bounds, std::optional<size_t>, std::optional<size_t>>> storedBounds;
+	/// Last known satisfying values for variables.
+	std::vector<RationalWithDelta> previousGoodValues;
+	std::set<size_t> variablesPotentiallyOutOfBounds;
+	/// Variable index to constraint it controls.
+	std::map<size_t, size_t> basicVariables;
+	/// Maps outer indices to inner indices.
+	std::map<size_t, size_t> varMapping = {};
+	/// Mapping from reason (constraint ID) to variable it controls and bounds for it.
+	/// A variable can be controlled by multiple constraints.
+	/// TODO do we want to store the reverse mapping?
+	std::map<size_t, std::pair<size_t, Bounds>> reasonToBounds;
+	std::set<size_t> reasons;
+
 
 };
 
 }
-#endif

@@ -267,7 +267,8 @@ BOOST_AUTO_TEST_CASE(magic_square_3)
 		solver.addAssertion(1 <= var && var <= 9);
 	for (size_t i = 0; i < 9; i++)
 		for (size_t j = i + 1; j < 9; j++)
-			solver.addAssertion(vars[i] != vars[j]);
+			//solver.addAssertion(vars[i] != vars[j]);
+			solver.addAssertion(vars[i] <= vars[j] - 1 || vars[i] >= vars[j] + 1);
 	for (size_t i = 0; i < 3; i++)
 		solver.addAssertion(vars[i] + vars[i + 3] + vars[i + 6] == sum);
 	for (size_t i = 0; i < 9; i += 3)
@@ -292,7 +293,7 @@ BOOST_AUTO_TEST_CASE(magic_square_4)
 		solver.addAssertion(1 <= var && var <= 16);
 	for (size_t i = 0; i < 16; i++)
 		for (size_t j = i + 1; j < 16; j++)
-			solver.addAssertion(vars[i] != vars[j]);
+			solver.addAssertion(vars[i] <= vars[j] - 1 || vars[i] >= vars[j] + 1);
 	for (size_t i = 0; i < 4; i++)
 		solver.addAssertion(vars[i] + vars[i + 4] + vars[i + 8] + vars[i + 12] == sum);
 	for (size_t i = 0; i < 16; i += 4)

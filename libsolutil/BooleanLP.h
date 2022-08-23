@@ -19,7 +19,13 @@
 
 #include <libsmtutil/SolverInterface.h>
 
+#define LPIncremental 1
+
+#if LPIncremental
+#include <libsolutil/LPIncremental.h>
+#else
 #include <libsolutil/LP.h>
+#endif
 #include <libsolutil/CDCL.h>
 
 #include <boost/rational.hpp>

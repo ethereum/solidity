@@ -24,7 +24,12 @@
 
 #include <libsolutil/LinearExpression.h>
 #include <libsolutil/CDCL.h>
+
+#if LPIncremental
+#include <libsolutil/LPIncremental.h>
+#else
 #include <libsolutil/LP.h>
+#endif
 
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/transform.hpp>
@@ -47,6 +52,7 @@ using namespace solidity::smtutil;
 using rational = boost::rational<bigint>;
 
 //#define DEBUG
+
 
 namespace
 {
@@ -120,12 +126,16 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	std::vector<std::string> booleanVariables;
 	std::vector<Clause> clauses = state().clauses;
 
+#if LPIncremental
+	LPSolver lpSolver;
+#else
 	// TODO we start building up a new set of solver
 	// for each query, but we should also keep some
 	// kind of cache across queries.
 	std::vector<std::pair<size_t, LPSolver>> lpSolvers;
 	lpSolvers.emplace_back(0, LPSolver{});
 	LPSolver& lpSolver = lpSolvers.back().second;
+#endif
 
 	for (auto&& [index, bound]: state().bounds)
 	{
@@ -136,6 +146,10 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	}
 	for (Constraint const& c: state().fixedConstraints)
 		lpSolver.addConstraint(c);
+#if LPIncremental
+	for (auto&& [index, constraint]: state().conditionalConstraints)
+		lpSolver.addConditionalConstraint(constraint, index);
+#endif
 
 	// TODO this way, it will result in a lot of gaps in both sets of variables.
 	// should we compress them and store a mapping?
@@ -146,6 +160,9 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 		else
 			lpSolver.setVariableName(index, name);
 
+#ifdef DEBUG
+	cerr << "Performing preliminary check." << endl;
+#endif
 	if (lpSolver.check().first == LPResult::Infeasible)
 	{
 #ifdef DEBUG
@@ -156,17 +173,32 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 
 	auto theorySolver = [&](size_t _trailSize, map<size_t, bool> const& _newBooleanAssignment) -> optional<Clause>
 	{
+#if LPIncremental
+		lpSolver.setTrailSize(_trailSize);
+#else
 		lpSolvers.emplace_back(_trailSize, LPSolver(lpSolvers.back().second));
+#endif
 
 		for (auto&& [constraintIndex, value]: _newBooleanAssignment)
 		{
 			if (!value || !state().conditionalConstraints.count(constraintIndex))
 				continue;
+#if LPIncremental
+			lpSolver.activateConstraint(constraintIndex);
+#else
 			// "reason" is already stored for those constraints.
 			Constraint const& constraint = state().conditionalConstraints.at(constraintIndex);
 			lpSolvers.back().second.addConstraint(constraint, constraintIndex);
+#endif
 		}
+#ifdef DEBUG
+	cerr << "Performing incremental check." << endl;
+#endif
+#if LPIncremental
+		auto&& [result, reasonSet] = lpSolver.check();
+#else
 		auto&& [result, reasonSet] = lpSolvers.back().second.check();
+#endif
 		// We can only really use the result "infeasible". Everything else should be "sat".
 		if (result == LPResult::Infeasible)
 		{
@@ -184,8 +216,12 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	};
 	auto backtrackNotify = [&](size_t _trailSize)
 	{
+#if LPIncremental
+		lpSolver.setTrailSize(_trailSize);
+#else
 		while (lpSolvers.back().first > _trailSize)
 			lpSolvers.pop_back();
+#endif
 	};
 
 	auto optionalModel = CDCL{move(booleanVariables), clauses, theorySolver, backtrackNotify}.solve();

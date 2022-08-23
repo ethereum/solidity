@@ -18,6 +18,8 @@
 
 #include <libsolutil/LP.h>
 
+#ifndef LPIncremental
+
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/StringUtils.h>
@@ -51,7 +53,7 @@ using namespace solidity::util;
 
 using rational = boost::rational<bigint>;
 
-#define DEBUG
+//#define DEBUG
 
 namespace
 {
@@ -833,3 +835,5 @@ void LPSolver::SubProblem::pivotAndUpdate(
 
 	pivot(_oldBasicVar, _newBasicVar);
 }
+
+#endif

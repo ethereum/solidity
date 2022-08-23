@@ -29,6 +29,8 @@ set(sources
 	LEB128.h
 	LP.cpp
 	LP.h
+	LPIncremental.cpp
+	LPIncremental.h
 	Numeric.cpp
 	Numeric.h
 	picosha2.h

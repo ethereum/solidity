@@ -16,7 +16,13 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#define LPIncremental 1
+
+#if LPIncremental
+#include <libsolutil/LPIncremental.h>
+#else
 #include <libsolutil/LP.h>
+#endif
 #include <libsolutil/LinearExpression.h>
 #include <libsolutil/CommonIO.h>
 #include <libsmtutil/Sorts.h>
@@ -24,6 +30,8 @@
 #include <test/Common.h>
 
 #include <boost/test/unit_test.hpp>
+
+#if 0
 
 using namespace std;
 using namespace solidity::smtutil;
@@ -496,3 +504,4 @@ BOOST_AUTO_TEST_CASE(fuzzer2)
 BOOST_AUTO_TEST_SUITE_END()
 
 }
+#endif
