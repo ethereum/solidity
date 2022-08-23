@@ -47,7 +47,10 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/view/indirect.hpp>
+#include <range/v3/view/addressof.hpp>
 #include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -996,42 +999,13 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		solAssert(false, "Attempted to generate code for calling a function definition.");
 		break;
 	case FunctionType::Kind::Internal:
-	{
-		FunctionDefinition const* functionDef = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
-
-		solAssert(!functionType->takesArbitraryParameters());
-
-		vector<string> args;
-		if (functionType->hasBoundFirstArgument())
-			args += IRVariable(_functionCall.expression()).part("self").stackSlots();
-
-		for (size_t i = 0; i < arguments.size(); ++i)
-			args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
-
-		if (functionDef)
-		{
-			solAssert(functionDef->isImplemented());
-
-			define(_functionCall) <<
-				m_context.enqueueFunctionForCodeGeneration(*functionDef) <<
-				"(" <<
-				joinHumanReadable(args) <<
-				")\n";
-		}
-		else
-		{
-			YulArity arity = YulArity::fromType(*functionType);
-			m_context.internalFunctionCalledThroughDispatch(arity);
-
-			define(_functionCall) <<
-				IRNames::internalDispatch(arity) <<
-				"(" <<
-				IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
-				joinHumanReadablePrefixed(args) <<
-				")\n";
-		}
+		solAssert(functionType);
+		appendInternalFunctionCall(
+			_functionCall,
+			*functionType,
+			arguments | ranges::views::indirect | ranges::views::addressof | ranges::to<vector>
+		);
 		break;
-	}
 	case FunctionType::Kind::External:
 	case FunctionType::Kind::DelegateCall:
 		appendExternalFunctionCall(_functionCall, arguments);
@@ -2534,6 +2508,55 @@ void IRGeneratorForStatements::handleVariableReference(
 		});
 	else
 		solAssert(false, "Invalid variable kind.");
+}
+
+void IRGeneratorForStatements::appendInternalFunctionCall(
+	FunctionCall const& _functionCall,
+	FunctionType const& _functionType,
+	vector<Expression const*> const& _arguments
+)
+{
+	solAssert(!_functionType.takesArbitraryParameters());
+
+	FunctionDefinition const *functionDefinition = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
+	Expression const* identifierOrMemberAccess = &_functionCall.expression();
+
+	vector<string> convertedArguments;
+	if (_functionType.hasBoundFirstArgument())
+		convertedArguments += IRVariable(*identifierOrMemberAccess).part("self").stackSlots();
+
+	TypePointers parameterTypes = _functionType.parameterTypes();
+	for (size_t i = 0; i < _arguments.size(); ++i)
+		convertedArguments += convert(*_arguments[i], *parameterTypes[i]).stackSlots();
+
+	if (functionDefinition)
+	{
+		solAssert(functionDefinition->isImplemented());
+		if (_functionType.hasBoundFirstArgument())
+			solAssert(_functionType == *functionDefinition->functionType(true /* _internal */)->withBoundFirstArgument());
+		else
+			solAssert(_functionType == *functionDefinition->functionType(true /* _internal */));
+
+		define(_functionCall) <<
+			m_context.enqueueFunctionForCodeGeneration(*functionDefinition) <<
+			"(" <<
+			joinHumanReadable(convertedArguments) <<
+			")\n";
+	}
+	else
+	{
+		solAssert(identifierOrMemberAccess);
+
+		YulArity arity = YulArity::fromType(_functionType);
+		m_context.internalFunctionCalledThroughDispatch(arity);
+
+		define(_functionCall) <<
+			IRNames::internalDispatch(arity) <<
+			"(" <<
+			IRVariable(*identifierOrMemberAccess).part("functionIdentifier").name() <<
+			joinHumanReadablePrefixed(convertedArguments) <<
+			")\n";
+	}
 }
 
 void IRGeneratorForStatements::appendExternalFunctionCall(
