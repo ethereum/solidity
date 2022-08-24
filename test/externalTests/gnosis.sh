@@ -31,8 +31,8 @@ BINARY_TYPE="$1"
 BINARY_PATH="$(realpath "$2")"
 SELECTED_PRESETS="$3"
 
-function compile_fn { npm run build; }
-function test_fn { npm test; }
+function compile_fn { npx npm run build; }
+function test_fn { npx npm test; }
 
 function gnosis_safe_test
 {
@@ -87,33 +87,44 @@ function gnosis_safe_test
     sed -i "s|it\(('can only be called from Safe itself'\)|it.skip\1|g" test/libraries/Migration.spec.ts
     sed -i "s|it\(('should enforce delegatecall to MultiSend'\)|it.skip\1|g" test/libraries/MultiSend.spec.ts
 
+    # Force nested abstract-provider dependencies to be at version 5.6.0. Version 5.7.0 of @ethersproject/abstract-provider
+    # introduced a new field in FeeData, which causes clashes unless all dependency packages of abstract-provider are pegged
+    # to the same version. As we've already had to peg @ethersproject/contracts to 5.6.0 earlier, we are doing so now with
+    # @ethersproject/abstract-provider as well.
+    jq '.overrides."@ethersproject/abstract-provider"="5.6.0" |
+        .overrides."@ethersproject/abstract-signer@5.6.0"
+                  ."@ethersproject/abstract-provider"="5.6.0"' package.json > package.json.tmp
+    mv package.json.tmp package.json
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
-    npm install
-    npm install hardhat-gas-reporter
+    # npm@8.3.0+ is required for `overrides` support
+    npm install npm@>8.3.0
+    npx npm install
+    npx npm install hardhat-gas-reporter
 
     # Typescript compilation fails with typescript >= 4.7:
     # Error: Debug Failure. False expression: Non-string value passed to `ts.resolveTypeReferenceDirective`
-    npm install "typescript@<4.7.0"
+    npx npm install "typescript@<4.7.0"
 
     # With ethers.js 5.6.2 many tests for revert messages fail.
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
-    npm install ethers@5.6.1
+    npx npm install ethers@5.6.1
 
     # Note that ethers@5.6.1 depends on @ethersproject/contracts@5.6.0 while the dependency on hardhat-deploy
     # pulls @ethersproject/contracts@5.6.1 (latest). Force 5.6.0 to avoid errors due to having two copies.
-    npm install @ethersproject/contracts@5.6.0
+    npx npm install @ethersproject/contracts@5.6.0
 
     # 2.1.1 started causing failures in safe-contracts external tests after a contract address check was introduced
     # in https://github.com/NomicFoundation/hardhat/pull/2916, and so to avoid errors, the package is now pegged.
     # TODO: Remove when https://github.com/safe-global/safe-contracts/issues/436 is resolved.
-    npm install @nomiclabs/hardhat-ethers@2.1.0
+    npx npm install @nomiclabs/hardhat-ethers@2.1.0
 
     # Hardhat 2.9.5 introduced a bug with handling padded arguments to getStorageAt().
     # TODO: Remove when https://github.com/NomicFoundation/hardhat/issues/2709 is fixed.
-    npm install hardhat@2.9.4
+    npx npm install hardhat@2.9.4
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"
