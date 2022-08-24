@@ -58,14 +58,15 @@ namespace fs = boost::filesystem;
 namespace
 {
 
-bool resolvesToRegularFile(boost::filesystem::path _path)
+bool resolvesToRegularFile(boost::filesystem::path _path, int maxRecursionDepth = 10)
 {
 	fs::file_status fileStatus = fs::status(_path);
 
-	while (fileStatus.type() == fs::file_type::symlink_file)
+	while (fileStatus.type() == fs::file_type::symlink_file && maxRecursionDepth > 0)
 	{
 		_path = boost::filesystem::read_symlink(_path);
 		fileStatus = fs::status(_path);
+		maxRecursionDepth--;
 	}
 
 	return fileStatus.type() == fs::file_type::regular_file;
