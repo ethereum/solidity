@@ -32,6 +32,7 @@
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/CharStream.h>
 
+#include <libsolutil/CommonIO.h>
 #include <libsolutil/Visitor.h>
 #include <libsolutil/JSON.h>
 
@@ -42,6 +43,8 @@
 #include <ostream>
 #include <string>
 
+#include <fmt/format.h>
+
 using namespace std;
 using namespace std::string_literals;
 using namespace std::placeholders;
@@ -50,8 +53,24 @@ using namespace solidity::lsp;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
+namespace fs = boost::filesystem;
+
 namespace
 {
+
+bool resolvesToRegularFile(boost::filesystem::path _path, int maxRecursionDepth = 10)
+{
+	fs::file_status fileStatus = fs::status(_path);
+
+	while (fileStatus.type() == fs::file_type::symlink_file && maxRecursionDepth > 0)
+	{
+		_path = boost::filesystem::read_symlink(_path);
+		fileStatus = fs::status(_path);
+		maxRecursionDepth--;
+	}
+
+	return fileStatus.type() == fs::file_type::regular_file;
+}
 
 int toDiagnosticSeverity(Error::Type _errorType)
 {
@@ -118,7 +137,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"cancelRequest", [](auto, auto) {/*nothing for now as we are synchronous */}},
 		{"exit", [this](auto, auto) { m_state = (m_state == State::ShutdownRequested ? State::ExitRequested : State::ExitWithoutShutdown); }},
 		{"initialize", bind(&LanguageServer::handleInitialize, this, _1, _2)},
-		{"initialized", [](auto, auto) {}},
+		{"initialized", bind(&LanguageServer::handleInitialized, this, _1, _2)},
 		{"$/setTrace", [this](auto, Json::Value const& args) { setTrace(args["value"]); }},
 		{"shutdown", [this](auto, auto) { m_state = State::ShutdownRequested; }},
 		{"textDocument/definition", GotoDefinition(*this) },
@@ -147,6 +166,26 @@ Json::Value LanguageServer::toJson(SourceLocation const& _location)
 
 void LanguageServer::changeConfiguration(Json::Value const& _settings)
 {
+	// The settings item: "file-load-strategy" (enum) defaults to "project-directory" if not (or not correctly) set.
+	// It can be overridden during client's handshake or at runtime, as usual.
+	//
+	// If this value is set to "project-directory" (default), all .sol files located inside the project directory or reachable through symbolic links will be subject to operations.
+	//
+	// Operations include compiler analysis, but also finding all symbolic references or symbolic renaming.
+	//
+	// If this value is set to "directly-opened-and-on-import", then only currently directly opened files and
+	// those files being imported directly or indirectly will be included in operations.
+	if (_settings["file-load-strategy"])
+	{
+		auto const text = _settings["file-load-strategy"].asString();
+		if (text == "project-directory")
+			m_fileLoadStrategy = FileLoadStrategy::ProjectDirectory;
+		else if (text == "directly-opened-and-on-import")
+			m_fileLoadStrategy = FileLoadStrategy::DirectlyOpenedAndOnImported;
+		else
+			lspAssert(false, ErrorCode::InvalidParams, "Invalid file load strategy: " + text);
+	}
+
 	m_settingsObject = _settings;
 	Json::Value jsonIncludePaths = _settings["include-paths"];
 
@@ -173,6 +212,24 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 	}
 }
 
+vector<boost::filesystem::path> LanguageServer::allSolidityFilesFromProject() const
+{
+	vector<fs::path> collectedPaths{};
+
+	// We explicitly decided against including all files from include paths but leave the possibility
+	// open for a future PR to enable such a feature to be optionally enabled (default disabled).
+
+	auto directoryIterator = fs::recursive_directory_iterator(m_fileRepository.basePath(), fs::symlink_option::recurse);
+	for (fs::directory_entry const& dirEntry: directoryIterator)
+		if (
+			dirEntry.path().extension() == ".sol" &&
+			(dirEntry.status().type() == fs::file_type::regular_file || resolvesToRegularFile(dirEntry.path()))
+		)
+			collectedPaths.push_back(dirEntry.path());
+
+	return collectedPaths;
+}
+
 void LanguageServer::compile()
 {
 	// For files that are not open, we have to take changes on disk into account,
@@ -181,6 +238,18 @@ void LanguageServer::compile()
 	FileRepository oldRepository(m_fileRepository.basePath(), m_fileRepository.includePaths());
 	swap(oldRepository, m_fileRepository);
 
+	// Load all solidity files from project.
+	if (m_fileLoadStrategy == FileLoadStrategy::ProjectDirectory)
+		for (auto const& projectFile: allSolidityFilesFromProject())
+		{
+			lspDebug(fmt::format("adding project file: {}", projectFile.generic_string()));
+			m_fileRepository.setSourceByUri(
+				m_fileRepository.sourceUnitNameToUri(projectFile.generic_string()),
+				util::readFileAsString(projectFile)
+			);
+		}
+
+	// Overwrite all files as opened by the client, including the ones which might potentially have changes.
 	for (string const& fileName: m_openFiles)
 		m_fileRepository.setSourceByUri(
 			fileName,
@@ -269,6 +338,7 @@ bool LanguageServer::run()
 			{
 				string const methodName = (*jsonMessage)["method"].asString();
 				id = (*jsonMessage)["id"];
+				lspDebug(fmt::format("received method call: {}", methodName));
 
 				if (auto handler = util::valueOrDefault(m_handlers, methodName))
 					handler(id, (*jsonMessage)["params"]);
@@ -277,6 +347,10 @@ bool LanguageServer::run()
 			}
 			else
 				m_client.error({}, ErrorCode::ParseError, "\"method\" has to be a string.");
+		}
+		catch (Json::Exception const&)
+		{
+			m_client.error(id, ErrorCode::InvalidParams, "JSON object access error. Most likely due to a badly formatted JSON request message."s);
 		}
 		catch (RequestError const& error)
 		{
@@ -345,6 +419,12 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	replyArgs["capabilities"]["renameProvider"] = true;
 
 	m_client.reply(_id, move(replyArgs));
+}
+
+void LanguageServer::handleInitialized(MessageID, Json::Value const&)
+{
+	if (m_fileLoadStrategy == FileLoadStrategy::ProjectDirectory)
+		compileAndUpdateDiagnostics();
 }
 
 void LanguageServer::semanticTokensFull(MessageID _id, Json::Value const& _args)

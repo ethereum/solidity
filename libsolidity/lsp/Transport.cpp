@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/Transport.h>
+#include <libsolidity/lsp/Utils.h>
 
 #include <libsolutil/JSON.h>
 #include <libsolutil/Visitor.h>
@@ -205,11 +206,13 @@ std::string StdioTransport::getline()
 {
 	std::string line;
 	std::getline(std::cin, line);
+	lspDebug(fmt::format("Received: {}", line));
 	return line;
 }
 
 void StdioTransport::writeBytes(std::string_view _data)
 {
+	lspDebug(fmt::format("Sending: {}", _data));
 	auto const bytesWritten = fwrite(_data.data(), 1, _data.size(), stdout);
 	solAssert(bytesWritten == _data.size());
 }
