@@ -13,7 +13,7 @@
 在某个操作之后发送资金的推荐方式是使用取回（withdrawal）模式。
 尽管在某个操作之后，最直接地发送以太币方法是一个 ``transfer`` 调用，
 但这并不推荐,因为这会引入一个潜在的安全风险。
-您可能需要参考 :ref:`安全考虑` 来获取更多信息。
+您可能需要参考 :ref:`security_considerations` 来获取更多信息。
 
 下面是一个合约中实际提款模式的例子，其目标是向合约发送最多的钱，
 以成为 “首富”，其灵感来自于 `King of the Ether <https://www.kingoftheether.com/>`_。

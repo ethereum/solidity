@@ -1230,7 +1230,7 @@ Import 语句应始终放在文件的顶部。
 
 
 枚举变量命名
-=====
+============
 
 在声明简单类型时，枚举应该使用驼峰式风格。
 比如： ``TokenGroup``， ``Frame``， ``HashStyle``， ``CharacterLocation``。

@@ -114,11 +114,11 @@
 - ``this`` （当前合约的类型）： 当前合约，可明确转换为 ``address`` 或 ``address payable``。
 - ``super``： 继承层次中高一级的合约
 - ``selfdestruct(address payable recipient)``： 销毁当前合约，将其资金发送到给定的地址。
-- ``<address>.balance`` (``uint256``)： :ref:`地址类型` 的余额，以 Wei 为单位
-- ``<address>.code`` (``bytes memory``)： 在 :ref:`地址类型` 的代码（可以是空的）。
-- ``<address>.codehash`` (``bytes32``)： :ref:`地址类型` 的代码哈希值。
-- ``<address payable>.send(uint256 amount) returns (bool)``： 向 :ref:`地址类型` 发送给定数量的 Wei，失败时返回 ``false``
-- ``<address payable>.transfer(uint256 amount)``： 向 :ref:`地址类型` 发送给定数量的 Wei，失败时会把错误抛出（throw）
+- ``<address>.balance`` (``uint256``)： :ref:`address` 的余额，以 Wei 为单位
+- ``<address>.code`` (``bytes memory``)： 在 :ref:`address` 的代码（可以是空的）。
+- ``<address>.codehash`` (``bytes32``)： :ref:`address` 的代码哈希值。
+- ``<address payable>.send(uint256 amount) returns (bool)``： 向 :ref:`address` 发送给定数量的 Wei，失败时返回 ``false``
+- ``<address payable>.transfer(uint256 amount)``： 向 :ref:`address` 发送给定数量的 Wei，失败时会把错误抛出（throw）
 - ``type(C).name`` (``string``)： 合约的名称
 - ``type(C).creationCode`` (``bytes memory``)： 给定合约的创建字节码，参见 :ref:`类型信息 <meta-type>`。
 - ``type(C).runtimeCode`` (``bytes memory``)： 给定合约的运行时字节码，参见 :ref:`类型信息 <meta-type>`。

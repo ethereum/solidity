@@ -168,6 +168,8 @@ Solidity意义上的合约是代码（其 *函数*）和数据（其 *状态*）
 使用 `web3.js <https://github.com/ethereum/web3.js/>`_ 来创建 ``Coin`` 合约对象。
 然后在任何用户界面调用上面自动生成的 ``balances`` 函数：
 
+.. code-block:: javascript
+
     Coin.Sent().watch({}, '', function(error, result) {
         if (!error) {
             console.log("Coin transfer: " + result.args.amount +
@@ -197,7 +199,7 @@ Solidity意义上的合约是代码（其 *函数*）和数据（其 *状态*）
 交易将被恢复。对于函数 ``send`` 中的语句 ``balances[receiver] += amount;`` 也是如此。
 
 :ref:`错误（Errors） <errors>` 允许您向调用者提供更多关于一个条件或操作失败原因的信息。
-错误与 :ref:`恢复状态 <revert statement>` 一起使用。 ``revert`` 语句无条件地中止和恢复所有的变化，
+错误与 :ref:`恢复状态 <revert-statement>` 一起使用。 ``revert`` 语句无条件地中止和恢复所有的变化，
 类似于 ``require`` 函数，但它也允许您提供错误的名称和额外的数据，
 这些数据将提供给调用者（并最终提供给前端应用程序或区块资源管理器），以便更容易调试失败或做出反应。
 

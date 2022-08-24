@@ -21,7 +21,7 @@ Constant 和 Immutable 状态变量
 对于这些值，要保留32个字节，即使它们可以装入更少的字节。由于这个原因，常量值有时会比不可变的值更便宜。
 
 目前，并非所有的常量和不可变量的类型都已实现。
-唯一支持的类型是 :ref:`字符串类型 <strings>`（仅用于常量）和 :ref:`值类型 <value-types>`。
+唯一支持的类型是 :ref:`字符串类型 <strings>` （仅用于常量）和 :ref:`值类型 <value-types>`。
 
 .. code-block:: solidity
 

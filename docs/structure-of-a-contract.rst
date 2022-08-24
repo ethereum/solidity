@@ -7,8 +7,10 @@
 *********
 
 在 Solidity 中，合约类似于面向对象编程语言中的类。
-每个合约中可以包含 :ref:`状态变量`、 :ref:`函数`、:ref:`函数修饰器`、:ref:`事件`、 :ref:`错误`、
-:ref:`结构类型` 和 :ref:`枚举类型` 的声明，且合约可以从其他合约继承。
+每个合约中可以包含 :ref:`structure-state-variables`， :ref:`structure-functions`，
+:ref:`structure-function-modifiers`， :ref:`structure-events`，
+:ref:`structure-errors`， :ref:`structure-struct-types`
+和 :ref:`structure-enum-types` 的声明，且合约可以从其他合约继承。
 
 还有一些特殊种类的合同，叫做 :ref:`库合约 <libraries>` 和 :ref:`接口合约 <interfaces>`。
 
@@ -31,7 +33,8 @@
         // ...
     }
 
-有效的状态变量类型请参阅 :ref:`类型` 章节，对状态变量可见性的可能选择请参阅 :ref:`可见性和getter函数`。
+有效的状态变量类型请参阅 :ref:`types` 章节，
+对状态变量可见性的可能选择请参阅 :ref:`visibility-and-getters`。
 
 .. _structure-functions:
 
@@ -57,7 +60,7 @@
         return x * 2;
     }
 
-:ref:`函数调用` 可以发生在内部或外部，
+:ref:`function-calls` 可以发生在内部或外部，
 并且对其他合约有不同程度的 :ref:`可见性 <visibility-and-getters>`。
 :ref:`函数 <functions>` 接受参数并返回变量，以便在它们之间传递参数和值。
 
@@ -66,7 +69,7 @@
 函数修饰器
 ===========
 
-函数修饰器可以被用来以声明的方式修改函数的语义(见合约部分的 :ref:`修饰器`)。
+函数修饰器可以被用来以声明的方式修改函数的语义(见合约部分的 :ref:`modifiers`)。
 
 重载，也就是具有同一个修饰器的名字但有不同的参数，是不可能的。
 
@@ -114,7 +117,7 @@
         }
     }
 
-有关如何声明事件和如何在 dapp 中使用事件的信息，参阅合约章节中的 :ref:`事件`。
+有关如何声明事件和如何在 dapp 中使用事件的信息，参阅合约章节中的 :ref:`events`。
 
 .. _structure-errors:
 
@@ -147,14 +150,14 @@
         }
     }
 
-更多信息请参阅合约章节中的 :ref:`错误`。
+更多信息请参阅合约章节中的 :ref:`errors`。
 
 .. _structure-struct-types:
 
 结构类型
 ==========
 
-结构类型是可以将几个变量分组的自定义类型（参阅类型章节中的 :ref:`结构体`）。
+结构类型是可以将几个变量分组的自定义类型（参阅类型章节中的 :ref:`structs`）。
 
 .. code-block:: solidity
 
@@ -175,7 +178,7 @@
 枚举类型
 ==========
 
-枚举可用来创建由一定数量的'常量值'构成的自定义类型（参阅类型章节中的 :ref:`枚举类型`）。
+枚举可用来创建由一定数量的'常量值'构成的自定义类型（参阅类型章节中的 :ref:`enums`）。
 
 .. code-block:: solidity
 

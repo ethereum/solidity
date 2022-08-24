@@ -146,7 +146,7 @@ gas 限制和循环
      更好的办法是，使用接收者可以提取以太币的模式来编写您的合约。
   3. 发送以太也可能失败，因为接收合约的执行需要超过分配的 gas 值
      （确切地说，是使用了 :ref:`require <assert-and-require>`， :ref:`assert <assert-and-require>`，
-     :ref:`revert <assert and-require>` 或者因为操作太昂贵）- 它 “耗尽了 gas“（OOG）。
+     :ref:`revert <assert-and-require>` 或者因为操作太昂贵）- 它 “耗尽了 gas“（OOG）。
      如果您使用 ``transfer`` 或 ``send``，并带有返回值检查，这可能为接收者提供一种手段来阻止发送合约的进展。
      同样，这里的最佳做法是使用 :ref:`"提款" 模式而不是 "发送"模式 <withdrawal_pattern>`。
 

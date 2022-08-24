@@ -237,19 +237,19 @@ ABI编码和解码函数
 ---------------
 
 ``<address>.balance`` （ ``uint256`` ）
-    以 Wei 为单位的 :ref:`地址类型` 的余额。
+    以 Wei 为单位的 :ref:`address` 的余额。
 
 ``<address>.code`` （ ``bytes memory`` ）
-    在 :ref:`地址类型` 的代码（可以是空的）。
+    在 :ref:`address` 的代码（可以是空的）。
 
 ``<address>.codehash`` （ ``bytes32`` ）
-    :ref:`地址类型` 的代码哈希值
+    :ref:`address` 的代码哈希值
 
 ``<address payable>.transfer(uint256 amount)``
-    向 :ref:`地址类型` 发送数量为 amount 的 Wei，失败时抛出异常，发送 2300 gas 的矿工费，不可调节。
+    向 :ref:`address` 发送数量为 amount 的 Wei，失败时抛出异常，发送 2300 gas 的矿工费，不可调节。
 
 ``<address payable>.send(uint256 amount) returns (bool)``
-    向 :ref:`地址类型` 发送数量为 amount 的 Wei，失败时返回 ``false`` 2300 gas 的矿工费用，不可调节。
+    向 :ref:`address` 发送数量为 amount 的 Wei，失败时返回 ``false`` 2300 gas 的矿工费用，不可调节。
 
 ``<address>.call(bytes memory) returns (bool, bytes memory)``
     用给定的数据发出低级别的 ``CALL``，返回是否成功的结果和数据，发送所有可用 gas，可调节。
@@ -260,7 +260,7 @@ ABI编码和解码函数
 ``<address>.staticcall(bytes memory) returns (bool, bytes memory)``
     用给定的数据发出低级别的 ``STATICCALL``，返回是否成功的结果和数据，发送所有可用 gas，可调节。
 
-更多信息，请参见 :ref:`地址类型` 一节。
+更多信息，请参见 :ref:`address` 一节。
 
 .. warning::
     您应该尽可能避免在执行另一个合约函数时使用 ``.call()``，因为它绕过了类型检查、函数存在性检查和参数打包。
@@ -302,10 +302,10 @@ ABI编码和解码函数
 ----------
 
 ``this`` （当前合约类型）
-    当前合约，可以明确转换为 :ref:`地址类型`
+    当前合约，可以明确转换为 :ref:`address`
 
 ``selfdestruct(address payable recipient)``
-    销毁当前合约，将其资金发送到给定的 :ref:`地址类型` 并结束执行。
+    销毁当前合约，将其资金发送到给定的 :ref:`address` 并结束执行。
     注意， ``selfdestruct`` 有一些从EVM继承的特殊性：
 
     - 接收合约的接收函数不会被执行。

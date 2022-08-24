@@ -111,7 +111,7 @@ Solidity 0.6.0 版本突破性变化
 这些变化也可以通过 :ref:`标准JSON接口 <compiler-api>` 使用，并影响编译器生成的元数据JSON。
 
 读取元数据的推荐方法是读取最后两个字节，以确定CBOR编码的长度，并对该数据块进行适当的解码，
-这在 :ref:`元数据部分 <encoding-of the-metadata-hash-the-bytecode>` 中有所解释。
+这在 :ref:`元数据部分 <encoding-of-the-metadata-hash-in-the-bytecode>` 中有所解释。
 
 Yul 优化器
 ~~~~~~~~~~~~~

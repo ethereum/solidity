@@ -21,7 +21,7 @@ Solidity事件在EVM的日志功能之上给出了一个抽象。
 
 您可以最多给三个参数添加 ``indexed`` 属性，将它们添加到一个特殊的数据结构中，
 称为 :ref:`"topics" <abi_events>`，而不是日志的数据部分。
-一个topic只能容纳一个字（32字节），所以如果您为一个索引参数使用 :ref:`引用类型 <reference types>`，
+一个topic只能容纳一个字（32字节），所以如果您为一个索引参数使用 :ref:`引用类型 <reference-types>`，
 该值的Keccak-256哈希值将被存储为一个topic中。
 
 所有没有 ``indexed`` 属性的参数都会被 :ref:`ABI 编码 <ABI>` 到日志的数据部分。

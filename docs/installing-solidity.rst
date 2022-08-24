@@ -45,7 +45,7 @@ npm / Node.js
 
 使用 ``npm`` 可以便捷地安装 ``solcjs`` ，它一个 Solidity 编译器。
 但该 `solcjs` 程序的功能比本页下面描述的访问编译器的方法要少。
-在 :ref:`使用命令行编译器` 一章中，我们假定您使用的是全功能的编译器: ``solc``。
+在 :ref:`commandline-compiler` 一章中，我们假定您使用的是全功能的编译器: ``solc``。
 ``solcjs`` 的用法在它自己的 `代码仓库 <https://github.com/ethereum/solc-js>`_ 中记录。
 
 注意: `solc-js` 项目是通过使用 Emscripten 从 C++ 版的 `solc` 衍生出来的，

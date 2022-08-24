@@ -17,13 +17,13 @@
   `Solidity Gitter Chat <https://gitter.im/ethereum/solidity>`_ 上回答其他用户的问题。
 * 通过在 `Solidity论坛 <https://forum.soliditylang.org/>`_ 上提出语言修改或新功能并提供反馈，参与语言设计过程。
 
-为了开始参与，您可以尝试 :ref:`从源文件开始构建`，以熟悉 Solidity 的组件和构建过程。
+为了开始参与，您可以尝试 :ref:`building-from-source`，以熟悉 Solidity 的组件和构建过程。
 此外，精通在 Solidity 中编写智能合约可能是有用的。
 
 请注意，本项目发布时有一个 `贡献者行为准则 <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_。通过参与这个项目--在问题、拉动请求或Gitter频道-您同意遵守其条款。
 
 团队电话会议
-==========
+============
 
 如果您有问题或拉动请求要讨论，或有兴趣听听团队和贡献者正在做什么，您可以加入我们的公共团队电话会议：
 
@@ -343,7 +343,7 @@ fuzzer 会将导致失败的源文件创建在 ``/tmp/fuzzer_reports`` 中。
 您可以使用 ``scripts/uniqueErrors.sh`` 工具来那些独特的错误。
 
 Whiskers 系统
-========
+=============
 
 *Whiskers* 是一个类似于 `Mustache <https://mustache.github.io>`_ 的字符串模板化系统。
 它被编译器用在不同的地方，以帮助代码的可读性，从而帮助代码的可维护性和可验证性。
@@ -384,7 +384,7 @@ Whiskers 系统
 
 .. note::
 
-    虽然官方的 Solidity 文档是用英语写的，但也有社区贡献的其他语言的 :ref:`翻译` 可用。
+    虽然官方的 Solidity 文档是用英语写的，但也有社区贡献的其他语言的 :ref:`translations` 可用。
     请参考 `翻译指南 <https://github.com/solidity-docs/translation-guide>`_ 以了解如何为社区翻译作出贡献。
 
 标题的大小写

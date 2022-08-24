@@ -195,7 +195,7 @@
 
 只有 ``address`` 类型和合约类型的表达式可以通过 ``payable(...)`` 显式转换为 ``address payable`` 类型。
 对于合约类型，只有在合约可以接收以太的情况下才允许这种转换，也就是说，
-合约要么有一个 :ref:`receive <receive-ether function>` 函数，要么有一个 payable 类型的 fallback 的函数。
+合约要么有一个 :ref:`receive <receive-ether-function>` 函数，要么有一个 payable 类型的 fallback 的函数。
 请注意， ``payable(0)`` 是有效的，是这个规则的例外。
 
 .. note::
@@ -224,7 +224,7 @@
 地址类型成员变量
 ^^^^^^^^^^^^^^^^^^^^
 
-快速参考，请见 :ref:`地址相关`。
+快速参考，请见 :ref:`address_related`。
 
 * ``balance`` 和 ``transfer``
 
@@ -242,8 +242,8 @@
 ``transfer`` 功能在失败后会被还原。
 
 .. note::
-    如果 ``x`` 是一个合约地址，它的代码（更具体地说：它的 :ref:`接收以太币函数`，如果有的话，
-    或者它的 :ref:`fallback 函数`，如果有的话）将与 ``transfer`` 调用一起执行（这是EVM的一个特性，无法阻止）。
+    如果 ``x`` 是一个合约地址，它的代码（更具体地说：它的 :ref:`receive-ether-function`，如果有的话，
+    或者它的 :ref:`fallback-function`，如果有的话）将与 ``transfer`` 调用一起执行（这是EVM的一个特性，无法阻止）。
     如果执行过程中耗尽了气体或出现了任何故障，以太币的转移将被还原，当前的合约将以异常的方式停止。
 
 * ``send``
@@ -403,9 +403,9 @@ Send是 ``transfer`` 的低级对应部分。如果执行失败，当前的合�
 ------------
 
 ``bytes``:
-    变长字节数组，参见 :ref:`数组`。它并不是值类型！
+    变长字节数组，参见 :ref:`arrays`。它并不是值类型！
 ``string``:
-    变长 UTF-8 编码字符串类型，参见 :ref:`数组`。并不是值类型！
+    变长 UTF-8 编码字符串类型，参见 :ref:`arrays`。并不是值类型！
 
 .. index:: address, literal;address
 
@@ -747,7 +747,7 @@ Unicode 字面常数
   外部（或公共）函数曾经有额外的成员 ``.gas(uint)`` 和 ``.value(uint)``。
   这些在Solidity 0.6.2中被废弃，并在Solidity 0.7.0中被移除。取而代之的是
   使用 ``{gas: ...}`` 和 ``{value: ...}`` 来分别指定发送到函数的气体量或以太（wei为单位）量。
-  参见 :ref:`外部函数调用 <external- function-calls>` 以获得更多信息。
+  参见 :ref:`外部函数调用 <external-function-calls>` 以获得更多信息。
 
 以下例子展示如何使用这些成员：
 

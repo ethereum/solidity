@@ -8,7 +8,7 @@
 
 可以在合约内部和外部定义函数。
 
-合约之外的函数，也称为 "自由函数"，总是隐含着 ``internal`` 的 :ref:`可见性 <visibility and-getters>`。
+合约之外的函数，也称为 "自由函数"，总是隐含着 ``internal`` 的 :ref:`可见性 <visibility-and-getters>`。
 它们的代码包含在所有调用它们的合约中，类似于内部库函数。
 
 .. code-block:: solidity
@@ -103,7 +103,7 @@
 并且在它们被（重新）赋值之前拥有这个值。
 
 您可以明确地赋值给返回变量，然后像上面那样结束函数，
-或者您可以用 ``return`` 语句直接提供返回值（单个或 :ref:`多个返回值 <multi return>`）。
+或者您可以用 ``return`` 语句直接提供返回值（单个或 :ref:`多个返回值 <multi-return>`）。
 
 .. code-block:: solidity
 
@@ -134,7 +134,7 @@
 
 当一个函数有多个返回类型时，语句 ``return (v0, v1, ..., vn)`` 可以用来返回多个值。
 声明的数量必须与返回变量的数量相同，并且它们的类型必须匹配，
-有可能是经过 :ref:`隐式转换 <types conversion-elementary-types>`。
+有可能是经过 :ref:`隐式转换 <types-conversion-elementary-types>`。
 
 .. _state-mutability:
 
@@ -338,12 +338,12 @@ fallback函数总是接收数据，但为了同时接收以太，它必须被标
 
 在最坏的情况下，如果一个可接收以太的fallback函数也被用来代替接收功能，
 那么它只有2300气体是可用的
-（参见 :ref:`接收以太函数 <receive ether-function>` 对这一含义的简要描述）。
+（参见 :ref:`接收以太函数 <receive-ether-function>` 对这一含义的简要描述）。
 
 像任何函数一样，只要有足够的气体传递给它，fallback函数就可以执行复杂的操作。
 
 .. warning::
-    如果没有 :ref:`receive 函数 <receive ether-function>` 的存在，
+    如果没有 :ref:`receive 函数 <receive-ether-function>` 的存在，
     一个标记为 ``payable`` 的fallback函数也会在普通的以太传输时执行。
     如果您已经定义了一个 payable 类型的 fallback 函数，
     我们仍建议您也定义一个 receive 函数接收以太，以区分以太传输和接口混淆的情况。

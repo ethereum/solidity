@@ -122,7 +122,7 @@
 指向内存的局部变量是指内存中变量的地址，而不是值本身。
 这样的变量也可以被赋值，但请注意，赋值只会改变指针而不是数据，
 尊重 Solidity 的内存管理是您的责任。
-参见 :ref:`Solidity的的惯例 <conventions-in solidity>`。
+参见 :ref:`Solidity的的惯例 <conventions-in-solidity>`。
 
 同样地，引用静态大小的calldata数组或calldata结构的局部变量会指向calldata中变量的地址，
 而不是值本身。变量也可以被分配一个新的偏移量，但是请注意，
