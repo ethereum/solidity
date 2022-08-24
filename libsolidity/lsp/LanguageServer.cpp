@@ -53,8 +53,23 @@ using namespace solidity::lsp;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
+namespace fs = boost::filesystem;
+
 namespace
 {
+
+bool resolvesToRegularFile(boost::filesystem::path _path)
+{
+	fs::file_status fileStatus = fs::status(_path);
+
+	while (fileStatus.type() == fs::file_type::symlink_file)
+	{
+		_path = boost::filesystem::read_symlink(_path);
+		fileStatus = fs::status(_path);
+	}
+
+	return fileStatus.type() == fs::file_type::regular_file;
+}
 
 int toDiagnosticSeverity(Error::Type _errorType)
 {
@@ -198,22 +213,18 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 
 vector<boost::filesystem::path> LanguageServer::allSolidityFilesFromProject() const
 {
-	namespace fs = boost::filesystem;
-
-	std::vector<fs::path> collectedPaths{};
+	vector<fs::path> collectedPaths{};
 
 	// We explicitly decided against including all files from include paths but leave the possibility
 	// open for a future PR to enable such a feature to be optionally enabled (default disabled).
 
 	auto directoryIterator = fs::recursive_directory_iterator(m_fileRepository.basePath(), fs::symlink_option::recurse);
 	for (fs::directory_entry const& dirEntry: directoryIterator)
-	{
 		if (
-			dirEntry.status().type() == fs::file_type::regular_file &&
-			dirEntry.path().extension() == ".sol"
+			dirEntry.path().extension() == ".sol" &&
+			(dirEntry.status().type() == fs::file_type::regular_file || resolvesToRegularFile(dirEntry.path()))
 		)
-		collectedPaths.push_back(dirEntry.path());
-	}
+			collectedPaths.push_back(dirEntry.path());
 
 	return collectedPaths;
 }

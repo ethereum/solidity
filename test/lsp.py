@@ -539,16 +539,9 @@ class TestParser:
         return self.current_line_tuple is None
 
 class FileLoadStrategy(Enum):
-    Undefined = auto()
-    ProjectDirectory = auto()
-    DirectlyOpenedAndOnImport = auto()
-
-    def lsp_name(self):
-        if self == FileLoadStrategy.ProjectDirectory:
-            return 'project-directory'
-        elif self == FileLoadStrategy.DirectlyOpenedAndOnImport:
-            return 'directly-opened-and-on-import'
-        return None
+    Undefined = None
+    ProjectDirectory = 'project-directory'
+    DirectlyOpenedAndOnImport =  'directly-opened-and-on-import'
 
 class FileTestRunner:
     """
@@ -932,7 +925,6 @@ class SolidityLSPTestSuite: # {{{
             # Enable traces to receive the amount of expected diagnostics before
             # actually receiving them.
             'trace': 'messages',
-            # 'initializationOptions': {},
             'capabilities': {
                 'textDocument': {
                     'publishDiagnostics': {'relatedInformation': True}
@@ -949,7 +941,7 @@ class SolidityLSPTestSuite: # {{{
 
         if file_load_strategy != FileLoadStrategy.Undefined:
             params['initializationOptions'] = {}
-            params['initializationOptions']['file-load-strategy'] = file_load_strategy.lsp_name()
+            params['initializationOptions']['file-load-strategy'] = file_load_strategy.value
 
         if custom_include_paths is not None and len(custom_include_paths) != 0:
             if params['initializationOptions'] is None:
@@ -1337,7 +1329,7 @@ class SolidityLSPTestSuite: # {{{
     # }}}
 
     # {{{ actual tests
-    def test_analyze_all_project_files1(self, solc: JsonRpcProcess) -> None:
+    def test_analyze_all_project_files_flat(self, solc: JsonRpcProcess) -> None:
         """
         Tests the option (default) to analyze all .sol project files even when they have not been actively
         opened yet. This is how other LSPs (at least for C++) work too and it makes cross-unit tasks
@@ -1370,18 +1362,18 @@ class SolidityLSPTestSuite: # {{{
         self.expect_equal(report['uri'], self.get_test_file_uri('E', SUBDIR), "Correct file URI")
         self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
 
-    def test_analyze_all_project_files2(self, solc: JsonRpcProcess) -> None:
+    def test_analyze_all_project_files_nested(self, solc: JsonRpcProcess) -> None:
         """
         Same as first test on that matter but with deeper nesting levels.
         """
         SUBDIR = 'include-paths-nested'
-        EXPECTED_FILES = [
+        EXPECTED_FILES = {
             "A/B/C/foo",
             "A/B/foo",
             "A/foo",
             "foo",
-        ]
-        EXPECTED_URIS = [self.get_test_file_uri(x, SUBDIR) for x in EXPECTED_FILES]
+        }
+        EXPECTED_URIS = {self.get_test_file_uri(x, SUBDIR) for x in EXPECTED_FILES}
         self.setup_lsp(
             solc,
             file_load_strategy=FileLoadStrategy.ProjectDirectory,
@@ -1389,23 +1381,22 @@ class SolidityLSPTestSuite: # {{{
         )
         published_diagnostics = self.wait_for_diagnostics(solc)
         self.expect_equal(len(published_diagnostics), len(EXPECTED_FILES), "Test number of files analyzed.")
-        for report in published_diagnostics:
-            self.expect_true(report['uri'] in EXPECTED_URIS, "Correct file URI")
-            self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
+        self.expect_equal({report['uri'] for report in published_diagnostics}, EXPECTED_URIS)
+        self.expect_equal([len(report['diagnostics']) for report in published_diagnostics], [0] * len(EXPECTED_URIS))
 
-    def test_analyze_all_project_files3(self, solc: JsonRpcProcess) -> None:
+    def test_analyze_all_project_files_nested_with_include_paths(self, solc: JsonRpcProcess) -> None:
         """
         Same as first test on that matter but with deeper nesting levels.
         """
         SUBDIR = 'include-paths-nested-2'
-        EXPECTED_FILES = [
+        EXPECTED_FILES = {
             "A/B/C/foo",
             "A/B/foo",
             "A/foo",
             "foo",
-        ]
+        }
         IMPLICITLY_LOADED_FILE_COUNT = 1
-        EXPECTED_URIS = [self.get_test_file_uri(x, SUBDIR) for x in EXPECTED_FILES]
+        EXPECTED_URIS = {self.get_test_file_uri(x, SUBDIR) for x in EXPECTED_FILES}
         self.setup_lsp(
             solc,
             file_load_strategy=FileLoadStrategy.ProjectDirectory,
@@ -1426,9 +1417,9 @@ class SolidityLSPTestSuite: # {{{
 
         # Check last report (should be the custom imported lib).
         # This file is analyzed because it was imported via "A/B/C/foo.sol".
-        report = published_diagnostics[len(EXPECTED_URIS)]
-        self.expect_equal(report['uri'], f"{self.project_root_uri}/other-include-dir/otherlib/second.sol", "Correct file URI")
-        self.expect_equal(len(report['diagnostics']), 0, "no diagnostics")
+        last_report = published_diagnostics[len(EXPECTED_URIS)]
+        self.expect_equal(last_report['uri'], self.get_test_file_uri('second', 'other-include-dir/otherlib'), "Correct file URI")
+        self.expect_equal(len(last_report['diagnostics']), 0, "no diagnostics")
 
 
     def test_publish_diagnostics_errors_multiline(self, solc: JsonRpcProcess) -> None:
@@ -1545,7 +1536,7 @@ class SolidityLSPTestSuite: # {{{
 
     def test_custom_includes_with_full_project(self, solc: JsonRpcProcess) -> None:
         """
-        Tests loading all all project files while having custom include directories configured.
+        Tests loading all project files while having custom include directories configured.
         In such a scenario, all project files should be analyzed and those being included via search path
         but not those include files that are not directly nor indirectly included.
         """
@@ -1577,7 +1568,7 @@ class SolidityLSPTestSuite: # {{{
         report = published_diagnostics[1]
         self.expect_equal(report['uri'], f"{self.project_root_uri}/other-include-dir/otherlib/otherlib.sol")
         diagnostics = report['diagnostics']
-        self.expect_equal(len(diagnostics), 1, "no diagnostics")
+        self.expect_equal(len(diagnostics), 1)
         self.expect_diagnostic(diagnostics[0], code=2018, lineNo=5, startEndColumns=(4, 62))
 
     def test_didChange_in_A_causing_error_in_B(self, solc: JsonRpcProcess) -> None:
