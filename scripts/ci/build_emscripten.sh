@@ -62,11 +62,12 @@ then
 	echo -n "$CIRCLE_SHA1" >commit_hash.txt
 fi
 
-# Disable warnings for unqualified "move()" calls, introduced and enabled by
+# Disable warnings for unqualified `move()` calls, introduced and enabled by
 # default in clang-16 which is what the emscripten docker image uses.
 # Additionally, disable the warning for unknown warnings here, as this script is
 # also used with earlier clang versions.
-CMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call -Wno-unknown-warning-option"
+# TODO: This can be removed if and when all usages of `move()` in our codebase use the `std::` qualifier.
+CMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call"
 
 
 mkdir -p "$BUILD_DIR"
