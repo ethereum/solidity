@@ -12,6 +12,7 @@ if ( -not (Test-Path "$PSScriptRoot\..\deps\boost") ) {
   }
   tar -xf cmake.zip
   mv cmake-3.27.4-windows-x86_64 "$PSScriptRoot\..\deps\cmake"
+  Remove-Item cmake.zip
 
   # FIXME: The default user agent results in Artifactory treating Invoke-WebRequest as a browser
   # and serving it a page that requires JavaScript.
@@ -20,9 +21,11 @@ if ( -not (Test-Path "$PSScriptRoot\..\deps\boost") ) {
     throw 'Downloaded Boost source package has wrong checksum.'
   }
   tar -xf boost.zip
+  Remove-Item boost.zip
   cd boost_1_83_0
   .\bootstrap.bat
   .\b2 -j4 -d0 link=static runtime-link=static variant=release threading=multi address-model=64 --with-filesystem --with-system --with-program_options --with-test --prefix="$PSScriptRoot\..\deps\boost" install
   if ( -not $? ) { throw "Error building boost." }
   cd ..
+  Remove-Item -LiteralPath .\boost_1_83_0 -Force -Recurse
 }
