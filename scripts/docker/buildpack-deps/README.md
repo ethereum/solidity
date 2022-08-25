@@ -35,3 +35,5 @@ These scripts `scripts/ci/build.sh` and `scripts/ci/build_ossfuzz.sh` are also u
 If the tests passed successfully, the docker image will get tagged by the version defined within the corresponding `Dockerfile`.
 Finally, a comment will be added to the PR that contains the full repository, version and repository digest
 of the freshly created docker image.
+
+The files `.circleci/config.yml` and `scripts/build_emscripten.sh` need to be updated with the new hash posted in the comment.
