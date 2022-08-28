@@ -289,8 +289,8 @@ perform additional memory optimizations, if it can rely on certain assumptions a
 
 While we recommend to always respect Solidity's memory model, inline assembly allows you to use memory
 in an incompatible way. Therefore, moving stack variables to memory and additional memory optimizations are,
-by default, disabled in the presence of any inline assembly block that contains a memory operation or assigns
-to Solidity variables in memory.
+by default, globally disabled in the presence of any inline assembly block that contains a memory operation
+or assigns to Solidity variables in memory.
 
 However, you can specifically annotate an assembly block to indicate that it in fact respects Solidity's memory
 model as follows:
