@@ -109,11 +109,11 @@ void BooleanLPSolver::declareVariable(string const& _name, SortPointer const& _s
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const&)
 {
-#ifdef DEBUG
+//#ifdef DEBUG
 	cerr << "Solving boolean constraint system" << endl;
 	cerr << toString() << endl;
 	cerr << "--------------" << endl;
-#endif
+//#endif
 
 	if (state().infeasible)
 	{
@@ -156,7 +156,15 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 	// Is it even a problem if the indices overlap?
 	for (auto&& [name, index]: state().variables)
 		if (state().isBooleanVariable.at(index) || isConditionalConstraint(index))
-			resizeAndSet(booleanVariables, index, name);
+		{
+			string innerName = name;
+			if (isConditionalConstraint(index))
+			{
+				innerName = toString(state().conditionalConstraints.at(index));
+				cerr << " - set name to " << innerName << endl;
+			}
+			resizeAndSet(booleanVariables, index, innerName);
+		}
 		else
 			lpSolver.setVariableName(index, name);
 
@@ -221,6 +229,15 @@ pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> cons
 #else
 		while (lpSolvers.back().first > _trailSize)
 			lpSolvers.pop_back();
+#endif
+	};
+
+	auto constraintIndication = [&](size_t _variable)
+	{
+#if LPIncremental
+		lpSolver.recommendedPolarity(_variable);
+#else
+		return std::nullopt;
 #endif
 	};
 

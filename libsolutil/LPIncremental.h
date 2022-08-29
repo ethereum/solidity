@@ -167,6 +167,8 @@ public:
 
 	void setVariableName(size_t _variable, std::string _name);
 
+	std::optional<bool> recommendedPolarity(size_t _reason) const;
+
 	std::pair<LPResult, ReasonSet> check();
 
 	std::string toString() const;

@@ -60,7 +60,8 @@ public:
 		std::vector<std::string> _variables,
 		std::vector<Clause> const& _clauses,
 		std::function<std::optional<Clause>(size_t, std::map<size_t, bool> const&)> _theorySolver = {},
-		std::function<void(size_t)> _backtrackNotify = {}
+		std::function<void(size_t)> _backtrackNotify = {},
+		std::function<std::optional<bool>(size_t)> _constraintIndication = {}
 	);
 
 	std::optional<Model> solve();
@@ -105,6 +106,7 @@ private:
 	/// or a conflict clause, i.e. a clauses that is false in the theory with the given assignments.
 	std::function<std::optional<Clause>(size_t, std::map<size_t, bool>)> m_theorySolver;
 	std::function<void(size_t)> m_backtrackNotify;
+	std::function<std::optional<bool>(size_t)> m_constraintIndication;
 
 	std::vector<std::string> m_variables;
 	/// includes the learnt clauses

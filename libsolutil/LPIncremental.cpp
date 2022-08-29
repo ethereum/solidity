@@ -263,7 +263,15 @@ void LPSolver::setVariableName(size_t, string)
 }
 #endif
 
+optional<bool> LPSolver::recommendedPolarity(size_t _reason) const
+{
+	if (!reasonToBounds.count(_reason))
+		return {};
+	return {};
+//	TODO: We cannot actually have a negative polarity for a reason / constraint!
+//	We can recommend not to activate it, though...
 
+}
 
 pair<LPResult, ReasonSet> LPSolver::check()
 {

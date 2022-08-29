@@ -33,10 +33,12 @@ CDCL::CDCL(
 	vector<string> _variables,
 	vector<Clause> const& _clauses,
 	std::function<std::optional<Clause>(size_t, std::map<size_t, bool> const&)> _theorySolver,
-	std::function<void(size_t)> _backtrackNotify
+	std::function<void(size_t)> _backtrackNotify,
+	std::function<std::optional<bool>(size_t)> _constraintIndication
 ):
 	m_theorySolver(_theorySolver),
 	m_backtrackNotify(_backtrackNotify),
+	m_constraintIndication(_constraintIndication),
 	m_variables(move(_variables)),
 	m_order(VarOrderLt(m_activity))
 {
@@ -114,16 +116,24 @@ bool CDCL::solve_loop(const uint32_t max_conflicts, CDCL::Model& model, int& sol
 		{
 			if (auto variable = nextDecisionVariable())
 			{
-// 				cout << "c Level " << currentDecisionLevel() << " - ";
-// 				cout << ((m_assignments.size() * 100) / m_variables.size()) << "% of variables assigned." << endl;
+				cerr << "c Level " << currentDecisionLevel() << " - ";
+				cerr << ((m_assignments.size() * 100) / m_variables.size()) << "% of variables assigned." << endl;
 				m_decisionPoints.emplace_back(m_assignmentTrail.size());
-//				cout << "Deciding on " << m_variables.at(*variable) << " @" << currentDecisionLevel() << endl;
+				cerr << "Deciding on " << m_variables.at(*variable) << " @" << currentDecisionLevel() << endl;
 
-				// Polarity caching below
-				bool positive = false;
-				auto const& found = m_assignments_cache.find(*variable);
-				if (found != m_assignments_cache.end()) positive = found->second;
-				enqueue(Literal{positive, *variable}, nullptr);
+				optional<bool> guess;
+				if (m_constraintIndication)
+					guess = m_constraintIndication(*variable);
+
+				if (!guess)
+				{
+					// Polarity caching below
+					bool positive = false;
+					auto const& found = m_assignments_cache.find(*variable);
+					if (found != m_assignments_cache.end()) positive = found->second;
+					guess = positive;
+				}
+				enqueue(Literal{*guess, *variable}, nullptr);
 			}
 			else
 			{
