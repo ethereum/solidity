@@ -18,3 +18,4 @@ docker run --rm -v "${OUTPUTDIR}":/tmp/output -v "${SCRIPTDIR}":/tmp/scripts:ro 
 			templ("assignEnd", "end := pos");
 			templ("assignEnd", "end := tail");
 			templ("assignEnd", "");
+		("assignEnd", dynamic ? "end := pos" : "")
