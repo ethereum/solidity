@@ -97,7 +97,7 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 
 bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 {
-	solAssert(!!m_currentNode, "");
+	solAssert(!!m_currentNode);
 
 	if (_operation.annotation().userDefinedFunction)
 	{
@@ -112,7 +112,7 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 		return true;
 	}
 
-	return false;
+	return ASTConstVisitor::visit(_operation);
 }
 
 bool ControlFlowBuilder::visit(Conditional const& _conditional)

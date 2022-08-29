@@ -29,8 +29,8 @@ using namespace solidity::frontend;
 FunctionDefinition const* CFGNode::resolveFunctionCall(ContractDefinition const* _mostDerivedContract) const
 {
 	return std::visit(GenericVisitor{
-		[=](FunctionCall const* _funCall) { return _funCall ? ASTNode::resolveFunctionCall(*_funCall, _mostDerivedContract) : nullptr; },
-		[](FunctionDefinition const* _funDef) { return _funDef; }
+		[=](FunctionCall const* _call) { return _call ? ASTNode::resolveFunctionCall(*_call, _mostDerivedContract) : nullptr; },
+		[](FunctionDefinition const* _definition) { return _definition; }
 	}, functionCall);
 }
 

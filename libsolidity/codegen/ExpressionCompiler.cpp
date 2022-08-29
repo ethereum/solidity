@@ -573,7 +573,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		return false;
 	}
 
-	solAssert(!!_binaryOperation.annotation().commonType, "");
+	solAssert(!!_binaryOperation.annotation().commonType);
 	Type const* commonType = _binaryOperation.annotation().commonType;
 	Token const c_op = _binaryOperation.getOperator();
 

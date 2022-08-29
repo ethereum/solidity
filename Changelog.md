@@ -5,7 +5,7 @@ Language Features:
 
 Compiler Features:
 * Yul Optimizer: Allow replacing the previously hard-coded cleanup sequence by specifying custom steps after a colon delimiter (``:``) in the sequence string.
- * Allow user-defined operators via ``using {f as +} for Typename;``.
+ * Allow defining custom operators for user-defined value types and structs via ``using {f as +} for Typename;`` syntax.
 
 
 Bugfixes:

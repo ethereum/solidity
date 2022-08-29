@@ -980,7 +980,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 			{
 				advance();
 				Token operator_ = m_scanner->currentToken();
-				vector<Token> overridableOperators = {
+				vector<Token> static const overridableOperators = {
 					// Potential future additions: <<, >>, **, !
 					Token::BitOr, Token::BitAnd, Token::BitXor,
 					Token::Add, Token::Sub, Token::Mul, Token::Div, Token::Mod,
