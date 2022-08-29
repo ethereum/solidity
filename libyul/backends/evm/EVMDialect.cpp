@@ -82,7 +82,8 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 		_assembly.appendInstruction(_instruction);
 	};
 
-	return {f.name, move(f)};
+	YulString name = f.name;
+	return {name, move(f)};
 }
 
 pair<YulString, BuiltinFunctionForEVM> createFunction(
