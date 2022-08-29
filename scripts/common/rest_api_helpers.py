@@ -48,7 +48,7 @@ def query_api(url: str, params: Mapping[str, str], debug_requests=False) -> dict
         if len(params) > 0:
             print(f'QUERY: {params}')
 
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=60)
     response.raise_for_status()
 
     if debug_requests:
@@ -67,7 +67,7 @@ def download_file(url: str, target_path: Path, overwrite=False):
     if not overwrite and target_path.exists():
         raise FileAlreadyExists(f"Refusing to overwrite existing file: '{target_path}'.")
 
-    with requests.get(url, stream=True) as request:
+    with requests.get(url, stream=True, timeout=60) as request:
         with open(target_path, 'wb') as target_file:
             shutil.copyfileobj(request.raw, target_file)
 
