@@ -450,7 +450,7 @@ FunctionType const* TypeProvider::function(
 )
 {
 	// Can only use this constructor for "arbitraryParameters".
-	solAssert(!_options.valueSet && !_options.gasSet && !_options.saltSet && !_options.bound);
+	solAssert(!_options.valueSet && !_options.gasSet && !_options.saltSet && !_options.boundToType);
 	return createAndGet<FunctionType>(
 		_parameterTypes,
 		_returnParameterTypes,

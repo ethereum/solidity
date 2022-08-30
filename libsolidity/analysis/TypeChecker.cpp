@@ -3246,7 +3246,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto funType = dynamic_cast<FunctionType const*>(annotation.type))
 	{
 		solAssert(
-			!funType->bound() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
+			!funType->boundToType() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
 			"Function \"" + memberName + "\" cannot be called on an object of type " +
 			exprType->humanReadableName() + " (expected " + funType->selfType()->humanReadableName() + ")."
 		);
@@ -3273,7 +3273,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				"Storage arrays with nested mappings do not support .push(<arg>)."
 			);
 
-		if (!funType->bound())
+		if (!funType->boundToType())
 			if (auto typeType = dynamic_cast<TypeType const*>(exprType))
 			{
 				auto contractType = dynamic_cast<ContractType const*>(typeType->actualType());

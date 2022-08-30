@@ -321,7 +321,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					_sourceType.isImplicitlyConvertibleTo(*m_dataType),
 					"function item stored but target is not implicitly convertible to source"
 				);
-				solAssert(!fun->bound(), "");
+				solAssert(!fun->boundToType(), "");
 				if (fun->kind() == FunctionType::Kind::External)
 				{
 					solAssert(fun->sizeOnStack() == 2, "");

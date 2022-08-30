@@ -683,7 +683,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	else
 	{
 		FunctionType const& function = *functionType;
-		if (function.bound())
+		if (function.boundToType())
 			solAssert(
 				function.kind() == FunctionType::Kind::DelegateCall ||
 				function.kind() == FunctionType::Kind::Internal ||
@@ -708,7 +708,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				bool shortcutTaken = false;
 				if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 				{
-					solAssert(!function.bound(), "");
+					solAssert(!function.boundToType(), "");
 					if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
 					{
 						// Do not directly visit the identifier, because this way, we can avoid
@@ -728,7 +728,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 
 			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
-			if (function.bound())
+			if (function.boundToType())
 			{
 				// stack: arg2, ..., argn, label, arg1
 				unsigned depth = parameterSize + 1;
@@ -977,7 +977,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 								argumentType &&
 								functionType->kind() == FunctionType::Kind::External &&
 								argumentType->kind() == FunctionType::Kind::External &&
-								!argumentType->bound(),
+								!argumentType->boundToType(),
 								""
 							);
 
@@ -1100,7 +1100,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::ArrayPush:
 		{
-			solAssert(function.bound(), "");
+			solAssert(function.boundToType(), "");
 			_functionCall.expression().accept(*this);
 
 			if (function.parameterTypes().size() == 0)
@@ -1166,7 +1166,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ArrayPop:
 		{
 			_functionCall.expression().accept(*this);
-			solAssert(function.bound(), "");
+			solAssert(function.boundToType(), "");
 			solAssert(function.parameterTypes().empty(), "");
 			ArrayType const* arrayType = dynamic_cast<ArrayType const*>(function.selfType());
 			solAssert(arrayType && arrayType->dataStoredIn(DataLocation::Storage), "");
@@ -1550,7 +1550,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	// Check whether the member is a bound function.
 	ASTString const& member = _memberAccess.memberName();
 	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
-		if (funType->bound())
+		if (funType->boundToType())
 		{
 			acceptAndConvert(_memberAccess.expression(), *funType->selfType(), true);
 			if (funType->kind() == FunctionType::Kind::Internal)
@@ -2641,14 +2641,14 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// function identifier [unless bare]
 	// contract address
 
-	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
+	unsigned selfSize = _functionType.boundToType() ? _functionType.selfType()->sizeOnStack() : 0;
 	unsigned gasValueSize = (_functionType.gasSet() ? 1u : 0u) + (_functionType.valueSet() ? 1u : 0u);
 	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
 
 	// move self object to top
-	if (_functionType.bound())
+	if (_functionType.boundToType())
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
 	auto funKind = _functionType.kind();
@@ -2676,7 +2676,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Evaluate arguments.
 	TypePointers argumentTypes;
 	TypePointers parameterTypes = _functionType.parameterTypes();
-	if (_functionType.bound())
+	if (_functionType.boundToType())
 	{
 		argumentTypes.push_back(_functionType.selfType());
 		parameterTypes.insert(parameterTypes.begin(), _functionType.selfType());
