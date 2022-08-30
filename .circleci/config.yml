@@ -1087,6 +1087,9 @@ jobs:
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
+      # The high parallelism in this job is causing the SMT tests to run out of memory,
+      # so disabling for now.
+      SOLTEST_FLAGS: --no-smt
     <<: *steps_soltest
 
   t_ubu_release_soltest_all: &t_ubu_release_soltest_all
