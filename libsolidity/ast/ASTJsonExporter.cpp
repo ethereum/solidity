@@ -336,15 +336,15 @@ bool ASTJsonExporter::visit(UsingForDirective const& _node)
 		{
 			Json::Value functionNode;
 			functionNode["function"] = toJson(*function);
-			functionList.append(move(functionNode));
+			functionList.append(std::move(functionNode));
 		}
-		attributes.emplace_back("functionList", move(functionList));
+		attributes.emplace_back("functionList", std::move(functionList));
 	}
 	else
 		attributes.emplace_back("libraryName", toJson(*_node.functionsOrLibrary().front()));
 	attributes.emplace_back("global", _node.global());
 
-	setJsonNode(_node, "UsingForDirective", move(attributes));
+	setJsonNode(_node, "UsingForDirective", std::move(attributes));
 
 	return false;
 }
@@ -518,7 +518,7 @@ bool ASTJsonExporter::visit(ModifierInvocation const& _node)
 		else if (dynamic_cast<ContractDefinition const*>(declaration))
 			attributes.emplace_back("kind", "baseConstructorSpecifier");
 	}
-	setJsonNode(_node, "ModifierInvocation", move(attributes));
+	setJsonNode(_node, "ModifierInvocation", std::move(attributes));
 	return false;
 }
 
@@ -645,9 +645,9 @@ bool ASTJsonExporter::visit(InlineAssembly const& _node)
 				flags.append(*flag);
 			else
 				flags.append(Json::nullValue);
-		attributes.emplace_back(make_pair("flags", move(flags)));
+		attributes.emplace_back(make_pair("flags", std::move(flags)));
 	}
-	setJsonNode(_node, "InlineAssembly", move(attributes));
+	setJsonNode(_node, "InlineAssembly", std::move(attributes));
 
 	return false;
 }

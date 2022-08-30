@@ -122,7 +122,7 @@ tuple<optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _so
 	ErrorReporter reporter(errors);
 	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion::berlin());
 	ObjectParser objectParser{reporter, dialect};
-	CharStream stream(move(source), "");
+	CharStream stream(std::move(source), "");
 	auto object = objectParser.parse(make_shared<Scanner>(stream), false);
 	BOOST_REQUIRE(object && object->debugData);
 	return {object->debugData->sourceNames, std::move(errors)};

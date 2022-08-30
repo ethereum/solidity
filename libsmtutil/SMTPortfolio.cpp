@@ -41,7 +41,7 @@ SMTPortfolio::SMTPortfolio(
 	SolverInterface(_queryTimeout)
 {
 	if (_enabledSolvers.smtlib2)
-		m_solvers.emplace_back(make_unique<SMTLib2Interface>(move(_smtlib2Responses), move(_smtCallback), m_queryTimeout));
+		m_solvers.emplace_back(make_unique<SMTLib2Interface>(std::move(_smtlib2Responses), std::move(_smtCallback), m_queryTimeout));
 #ifdef HAVE_Z3
 	if (_enabledSolvers.z3 && Z3Interface::available())
 		m_solvers.emplace_back(make_unique<Z3Interface>(m_queryTimeout));

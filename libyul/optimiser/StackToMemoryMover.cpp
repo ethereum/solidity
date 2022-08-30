@@ -50,7 +50,7 @@ vector<Statement> generateMemoryStore(
 		Identifier{_debugData, memoryStoreFunction->name},
 		{
 			Literal{_debugData, LiteralKind::Number, _mpos, {}},
-			move(_value)
+			std::move(_value)
 		}
 	}});
 	return result;
@@ -95,7 +95,7 @@ void StackToMemoryMover::run(
 		)
 	);
 	stackToMemoryMover(_block);
-	_block.statements += move(stackToMemoryMover.m_newFunctionDefinitions);
+	_block.statements += std::move(stackToMemoryMover.m_newFunctionDefinitions);
 }
 
 StackToMemoryMover::StackToMemoryMover(
@@ -106,7 +106,7 @@ StackToMemoryMover::StackToMemoryMover(
 m_context(_context),
 m_memoryOffsetTracker(_memoryOffsetTracker),
 m_nameDispenser(_context.dispenser),
-m_functionReturnVariables(move(_functionReturnVariables))
+m_functionReturnVariables(std::move(_functionReturnVariables))
 {
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
 	yulAssert(
@@ -156,7 +156,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 			newFunctionName,
 			stackParameters,
 			{},
-			move(_functionDefinition.body)
+			std::move(_functionDefinition.body)
 		});
 		// Generate new names for the arguments to maintain disambiguation.
 		std::map<YulString, YulString> newArgumentNames;
@@ -165,7 +165,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 		for (auto& parameter: _functionDefinition.parameters)
 			parameter.name = util::valueOrDefault(newArgumentNames, parameter.name, parameter.name);
 		// Replace original function by a call to the new function and an assignment to the return variable from memory.
-		_functionDefinition.body = Block{_functionDefinition.debugData, move(memoryVariableInits)};
+		_functionDefinition.body = Block{_functionDefinition.debugData, std::move(memoryVariableInits)};
 		_functionDefinition.body.statements.emplace_back(ExpressionStatement{
 			_functionDefinition.debugData,
 			FunctionCall{
@@ -189,7 +189,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 	}
 
 	if (!memoryVariableInits.empty())
-		_functionDefinition.body.statements = move(memoryVariableInits) + move(_functionDefinition.body.statements);
+		_functionDefinition.body.statements = std::move(memoryVariableInits) + std::move(_functionDefinition.body.statements);
 
 	_functionDefinition.returnVariables = _functionDefinition.returnVariables | ranges::views::filter(
 		not_fn(m_memoryOffsetTracker)
@@ -214,7 +214,7 @@ void StackToMemoryMover::operator()(Block& _block)
 					m_context.dialect,
 					debugData,
 					*offset,
-					_stmt.value ? *move(_stmt.value) : Literal{debugData, LiteralKind::Number, "0"_yulstring, {}}
+					_stmt.value ? *std::move(_stmt.value) : Literal{debugData, LiteralKind::Number, "0"_yulstring, {}}
 				);
 			else
 				return {};
@@ -245,7 +245,7 @@ void StackToMemoryMover::operator()(Block& _block)
 
 		vector<Statement> memoryAssignments;
 		vector<Statement> variableAssignments;
-		VariableDeclaration tempDecl{debugData, {}, move(_stmt.value)};
+		VariableDeclaration tempDecl{debugData, {}, std::move(_stmt.value)};
 
 		yulAssert(rhsMemorySlots.size() == _lhsVars.size(), "");
 		for (auto&& [lhsVar, rhsSlot]: ranges::views::zip(_lhsVars, rhsMemorySlots))
@@ -265,26 +265,26 @@ void StackToMemoryMover::operator()(Block& _block)
 					m_context.dialect,
 					_stmt.debugData,
 					*offset,
-					move(*rhs)
+					std::move(*rhs)
 				);
 			else
 				variableAssignments.emplace_back(StatementType{
 					debugData,
-					{ move(lhsVar) },
-					move(rhs)
+					{ std::move(lhsVar) },
+					std::move(rhs)
 				});
 		}
 
 		vector<Statement> result;
 		if (tempDecl.variables.empty())
-			result.emplace_back(ExpressionStatement{debugData, *move(tempDecl.value)});
+			result.emplace_back(ExpressionStatement{debugData, *std::move(tempDecl.value)});
 		else
-			result.emplace_back(move(tempDecl));
+			result.emplace_back(std::move(tempDecl));
 		reverse(memoryAssignments.begin(), memoryAssignments.end());
-		result += move(memoryAssignments);
+		result += std::move(memoryAssignments);
 		reverse(variableAssignments.begin(), variableAssignments.end());
-		result += move(variableAssignments);
-		return OptionalStatements{move(result)};
+		result += std::move(variableAssignments);
+		return OptionalStatements{std::move(result)};
 	};
 
 	util::iterateReplacing(

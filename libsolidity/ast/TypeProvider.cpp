@@ -404,7 +404,7 @@ TupleType const* TypeProvider::tuple(vector<Type const*> members)
 	if (members.empty())
 		return &m_emptyTuple;
 
-	return createAndGet<TupleType>(move(members));
+	return createAndGet<TupleType>(std::move(members));
 }
 
 ReferenceType const* TypeProvider::withLocation(ReferenceType const* _type, DataLocation _location, bool _isPointer)

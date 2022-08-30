@@ -61,7 +61,7 @@ CallGraph FunctionCallGraphBuilder::buildCreationGraph(ContractDefinition const&
 	builder.m_currentNode = CallGraph::SpecialNode::Entry;
 	builder.processQueue();
 
-	return move(builder.m_graph);
+	return std::move(builder.m_graph);
 }
 
 CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
@@ -109,7 +109,7 @@ CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
 	builder.m_currentNode = CallGraph::SpecialNode::Entry;
 	builder.processQueue();
 
-	return move(builder.m_graph);
+	return std::move(builder.m_graph);
 }
 
 bool FunctionCallGraphBuilder::visit(FunctionCall const& _functionCall)

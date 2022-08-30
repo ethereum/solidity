@@ -44,7 +44,7 @@ CHCSmtLib2Interface::CHCSmtLib2Interface(
 ):
 	CHCSolverInterface(_queryTimeout),
 	m_smtlib2(make_unique<SMTLib2Interface>(_queryResponses, _smtCallback, m_queryTimeout)),
-	m_queryResponses(move(_queryResponses)),
+	m_queryResponses(std::move(_queryResponses)),
 	m_smtCallback(_smtCallback)
 {
 	reset();
@@ -195,7 +195,7 @@ void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const
 
 void CHCSmtLib2Interface::write(string _data)
 {
-	m_accumulatedOutput += move(_data) + "\n";
+	m_accumulatedOutput += std::move(_data) + "\n";
 }
 
 string CHCSmtLib2Interface::querySolver(string const& _input)

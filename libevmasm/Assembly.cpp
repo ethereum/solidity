@@ -52,7 +52,7 @@ AssemblyItem const& Assembly::append(AssemblyItem _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += static_cast<int>(_i.deposit());
-	m_items.emplace_back(move(_i));
+	m_items.emplace_back(std::move(_i));
 	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
 	m_items.back().m_modifierDepth = m_currentModifierDepth;
@@ -254,7 +254,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 		if (!data.empty())
 			jsonItem["value"] = data;
 		jsonItem["source"] = sourceIndex;
-		code.append(move(jsonItem));
+		code.append(std::move(jsonItem));
 
 		if (item.type() == AssemblyItemType::Tag)
 		{
@@ -265,7 +265,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 			jumpdest["source"] = sourceIndex;
 			if (item.m_modifierDepth != 0)
 				jumpdest["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
-			code.append(move(jumpdest));
+			code.append(std::move(jumpdest));
 		}
 	}
 	if (_includeSourceList)
@@ -464,7 +464,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 			}
 			if (optimisedItems.size() < m_items.size())
 			{
-				m_items = move(optimisedItems);
+				m_items = std::move(optimisedItems);
 				count++;
 			}
 		}
@@ -478,7 +478,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 			*this
 		);
 
-	m_tagReplacements = move(tagReplacements);
+	m_tagReplacements = std::move(tagReplacements);
 	return *m_tagReplacements;
 }
 

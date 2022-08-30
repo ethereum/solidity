@@ -111,7 +111,7 @@ void NameSimplifier::findSimplification(YulString const& _name)
 	{
 		YulString newName{name};
 		m_context.dispenser.markUsed(newName);
-		m_translations[_name] = move(newName);
+		m_translations[_name] = std::move(newName);
 	}
 }
 

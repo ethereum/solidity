@@ -1422,7 +1422,7 @@ vector<smtutil::Expression> CHC::currentStateVariables(ContractDefinition const&
 smtutil::Expression CHC::currentEqualInitialVarsConstraints(vector<VariableDeclaration const*> const& _vars) const
 {
 	return fold(_vars, smtutil::Expression(true), [this](auto&& _conj, auto _var) {
-		return move(_conj) && currentValue(*_var) == m_context.variable(*_var)->valueAtIndex(0);
+		return std::move(_conj) && currentValue(*_var) == m_context.variable(*_var)->valueAtIndex(0);
 	});
 }
 
@@ -1566,7 +1566,7 @@ tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::query
 			tie(resultNoOpt, invariantNoOpt, cexNoOpt) = m_interface->query(_query);
 
 			if (resultNoOpt == CheckResult::SATISFIABLE)
-				cex = move(cexNoOpt);
+				cex = std::move(cexNoOpt);
 
 			spacer->setSpacerOptions(true);
 		}
@@ -1817,7 +1817,7 @@ void CHC::checkAndReportTarget(
 			predicates.insert(pred);
 		map<Predicate const*, set<string>> invariants = collectInvariants(invariant, predicates, m_settings.invariants);
 		for (auto pred: invariants | ranges::views::keys)
-			m_invariants[pred] += move(invariants.at(pred));
+			m_invariants[pred] += std::move(invariants.at(pred));
 	}
 	else if (result == CheckResult::SATISFIABLE)
 	{

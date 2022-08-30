@@ -62,7 +62,7 @@ string FileRepository::sourceUnitNameToUri(string const& _sourceUnitName) const
 		if (!regex_search(inputPath, windowsDriveLetterPath))
 			return inputPath;
 		else
-			return "/" + move(inputPath);
+			return "/" + std::move(inputPath);
 	};
 
 	if (m_sourceUnitNamesToUri.count(_sourceUnitName))
@@ -124,7 +124,7 @@ Result<boost::filesystem::path> FileRepository::tryResolvePath(std::string const
 		boost::filesystem::path canonicalPath = boost::filesystem::path(prefix) / boost::filesystem::path(_strippedSourceUnitName);
 
 		if (boost::filesystem::exists(canonicalPath))
-			candidates.push_back(move(canonicalPath));
+			candidates.push_back(std::move(canonicalPath));
 	}
 
 	if (candidates.empty())
@@ -169,7 +169,7 @@ frontend::ReadCallback::Result FileRepository::readFile(string const& _kind, str
 		auto contents = readFileAsString(resolvedPath.get());
 		solAssert(m_sourceCodes.count(_sourceUnitName) == 0, "");
 		m_sourceCodes[_sourceUnitName] = contents;
-		return ReadCallback::Result{true, move(contents)};
+		return ReadCallback::Result{true, std::move(contents)};
 	}
 	catch (std::exception const& _exception)
 	{

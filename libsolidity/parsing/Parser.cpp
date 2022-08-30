@@ -274,7 +274,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 					expectToken(Token::As);
 					tie(alias, aliasLocation) = expectIdentifierWithLocation();
 				}
-				symbolAliases.emplace_back(ImportDirective::SymbolAlias{move(id), move(alias), aliasLocation});
+				symbolAliases.emplace_back(ImportDirective::SymbolAlias{std::move(id), std::move(alias), aliasLocation});
 				if (m_scanner->currentToken() != Token::Comma)
 					break;
 				advance();
@@ -302,7 +302,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 		fatalParserError(6326_error, "Import path cannot be empty.");
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<ImportDirective>(path, unitAlias, unitAliasLocation, move(symbolAliases));
+	return nodeFactory.createNode<ImportDirective>(path, unitAlias, unitAliasLocation, std::move(symbolAliases));
 }
 
 std::pair<ContractKind, bool> Parser::parseContractKind()
@@ -496,7 +496,7 @@ ASTPointer<OverrideSpecifier> Parser::parseOverrideSpecifier()
 		expectToken(Token::RParen);
 	}
 
-	return nodeFactory.createNode<OverrideSpecifier>(move(overrides));
+	return nodeFactory.createNode<OverrideSpecifier>(std::move(overrides));
 }
 
 StateMutability Parser::parseStateMutability()
@@ -686,7 +686,7 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
-	return nodeFactory.createNode<StructDefinition>(move(name), move(nameLocation), move(members));
+	return nodeFactory.createNode<StructDefinition>(std::move(name), std::move(nameLocation), std::move(members));
 }
 
 ASTPointer<EnumValue> Parser::parseEnumValue()
@@ -918,7 +918,7 @@ pair<ASTPointer<ASTString>, SourceLocation> Parser::expectIdentifierWithLocation
 	SourceLocation nameLocation = currentLocation();
 	ASTPointer<ASTString> name = expectIdentifierToken();
 
-	return {move(name), move(nameLocation)};
+	return {std::move(name), std::move(nameLocation)};
 }
 
 ASTPointer<EventDefinition> Parser::parseEventDefinition()
@@ -957,7 +957,7 @@ ASTPointer<ErrorDefinition> Parser::parseErrorDefinition()
 	ASTPointer<ParameterList> parameters = parseParameterList({});
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<ErrorDefinition>(name, move(nameLocation), documentation, parameters);
+	return nodeFactory.createNode<ErrorDefinition>(name, std::move(nameLocation), documentation, parameters);
 }
 
 ASTPointer<UsingForDirective> Parser::parseUsingDirective()
@@ -996,7 +996,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<UsingForDirective>(move(functions), usesBraces, typeName, global);
+	return nodeFactory.createNode<UsingForDirective>(std::move(functions), usesBraces, typeName, global);
 }
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
@@ -1014,7 +1014,7 @@ ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
 	}
 	else
 		nodeFactory.setEndPositionFromNode(name);
-	return nodeFactory.createNode<ModifierInvocation>(name, move(arguments));
+	return nodeFactory.createNode<ModifierInvocation>(name, std::move(arguments));
 }
 
 ASTPointer<Identifier> Parser::parseIdentifier()
@@ -1052,7 +1052,7 @@ ASTPointer<UserDefinedValueTypeDefinition> Parser::parseUserDefinedValueTypeDefi
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<UserDefinedValueTypeDefinition>(
 		name,
-		move(nameLocation),
+		std::move(nameLocation),
 		typeName
 	);
 }
@@ -1377,7 +1377,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		BOOST_THROW_EXCEPTION(FatalError());
 
 	location.end = nativeLocationOf(*block).end;
-	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, move(flags), block);
+	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, std::move(flags), block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)
@@ -1710,9 +1710,9 @@ pair<Parser::LookAheadInfo, Parser::IndexAccessedPath> Parser::tryParseIndexAcce
 	IndexAccessedPath iap = parseIndexAccessedPath();
 
 	if (m_scanner->currentToken() == Token::Identifier || TokenTraits::isLocationSpecifier(m_scanner->currentToken()))
-		return make_pair(LookAheadInfo::VariableDeclaration, move(iap));
+		return make_pair(LookAheadInfo::VariableDeclaration, std::move(iap));
 	else
-		return make_pair(LookAheadInfo::Expression, move(iap));
+		return make_pair(LookAheadInfo::Expression, std::move(iap));
 }
 
 ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStatement(

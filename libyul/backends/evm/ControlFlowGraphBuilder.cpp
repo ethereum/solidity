@@ -532,7 +532,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 				return TemporarySlot{_call, _i};
 			}) | ranges::to<Stack>,
 			// operation
-			move(builtinCall)
+			std::move(builtinCall)
 		}).output;
 	}
 	else
@@ -607,8 +607,8 @@ void ControlFlowGraphBuilder::makeConditionalJump(
 {
 	yulAssert(m_currentBlock, "");
 	m_currentBlock->exit = CFG::BasicBlock::ConditionalJump{
-		move(_debugData),
-		move(_condition),
+		std::move(_debugData),
+		std::move(_condition),
 		&_nonZero,
 		&_zero
 	};
@@ -624,7 +624,7 @@ void ControlFlowGraphBuilder::jump(
 )
 {
 	yulAssert(m_currentBlock, "");
-	m_currentBlock->exit = CFG::BasicBlock::Jump{move(_debugData), &_target, backwards};
+	m_currentBlock->exit = CFG::BasicBlock::Jump{std::move(_debugData), &_target, backwards};
 	_target.entries.emplace_back(m_currentBlock);
 	m_currentBlock = &_target;
 }

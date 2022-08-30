@@ -383,7 +383,7 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 			}
 		).second;
 		builtinFunction.isMSize = true;
-		function = make_shared<BuiltinFunctionForEVM const>(move(builtinFunction));
+		function = make_shared<BuiltinFunctionForEVM const>(std::move(builtinFunction));
 	}
 	return function.get();
 }

@@ -121,7 +121,7 @@ void IRGenerationContext::addStateVariable(
 	unsigned _byteOffset
 )
 {
-	m_stateVariables[&_declaration] = make_pair(move(_storageOffset), _byteOffset);
+	m_stateVariables[&_declaration] = make_pair(std::move(_storageOffset), _byteOffset);
 }
 
 string IRGenerationContext::newYulVariable()
@@ -137,12 +137,12 @@ void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _intern
 		for (auto function: functions)
 			enqueueFunctionForCodeGeneration(*function);
 
-	m_internalDispatchMap = move(_internalDispatch);
+	m_internalDispatchMap = std::move(_internalDispatch);
 }
 
 InternalDispatchMap IRGenerationContext::consumeInternalDispatchMap()
 {
-	InternalDispatchMap internalDispatch = move(m_internalDispatchMap);
+	InternalDispatchMap internalDispatch = std::move(m_internalDispatchMap);
 	m_internalDispatchMap.clear();
 	return internalDispatch;
 }

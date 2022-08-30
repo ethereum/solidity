@@ -557,7 +557,7 @@ TupleObject::TupleObject(
 	CompilerContext& _compilerContext,
 	std::vector<std::unique_ptr<LValue>>&& _lvalues
 ):
-	LValue(_compilerContext), m_lvalues(move(_lvalues))
+	LValue(_compilerContext), m_lvalues(std::move(_lvalues))
 {
 }
 

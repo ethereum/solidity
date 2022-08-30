@@ -176,7 +176,7 @@ void eliminateVariables(
 		varsToEliminate += chooseVarsToEliminate(candidates[functionName], static_cast<size_t>(numVariables));
 	}
 
-	Rematerialiser::run(_dialect, _ast, move(varsToEliminate));
+	Rematerialiser::run(_dialect, _ast, std::move(varsToEliminate));
 	// Do not remove functions.
 	set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
 	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);

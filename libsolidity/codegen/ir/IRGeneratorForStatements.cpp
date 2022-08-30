@@ -827,17 +827,17 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 				expr = "iszero(" + expr + ")";
 		}
 		else if (op == Token::Equal)
-			expr = "eq(" + move(args) + ")";
+			expr = "eq(" + std::move(args) + ")";
 		else if (op == Token::NotEqual)
-			expr = "iszero(eq(" + move(args) + "))";
+			expr = "iszero(eq(" + std::move(args) + "))";
 		else if (op == Token::GreaterThanOrEqual)
-			expr = "iszero(" + string(isSigned ? "slt(" : "lt(") + move(args) + "))";
+			expr = "iszero(" + string(isSigned ? "slt(" : "lt(") + std::move(args) + "))";
 		else if (op == Token::LessThanOrEqual)
-			expr = "iszero(" + string(isSigned ? "sgt(" : "gt(") + move(args) + "))";
+			expr = "iszero(" + string(isSigned ? "sgt(" : "gt(") + std::move(args) + "))";
 		else if (op == Token::GreaterThan)
-			expr = (isSigned ? "sgt(" : "gt(") + move(args) + ")";
+			expr = (isSigned ? "sgt(" : "gt(") + std::move(args) + ")";
 		else if (op == Token::LessThan)
-			expr = (isSigned ? "slt(" : "lt(") + move(args) + ")";
+			expr = (isSigned ? "slt(" : "lt(") + std::move(args) + ")";
 		else
 			solAssert(false, "Unknown comparison operator.");
 		define(_binOp) << expr << "\n";
@@ -1109,7 +1109,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			messageArgumentType
 		);
 
-		appendCode() << move(requireOrAssertFunction) << "(" << IRVariable(*arguments[0]).name();
+		appendCode() << std::move(requireOrAssertFunction) << "(" << IRVariable(*arguments[0]).name();
 		if (messageArgumentType && messageArgumentType->sizeOnStack() > 0)
 			appendCode() << ", " << IRVariable(*arguments[1]).commaSeparatedList();
 		appendCode() << ")\n";

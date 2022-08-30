@@ -86,6 +86,6 @@ pair<bool, ArraySlicePredicate::SliceData const&> ArraySlicePredicate::create(So
 
 	return {false, m_slicePredicates[tupleName] = {
 		{&slice, &header, &loop},
-		{move(rule1), move(rule2), move(rule3), move(rule4)}
+		{std::move(rule1), std::move(rule2), std::move(rule3), std::move(rule4)}
 	}};
 }

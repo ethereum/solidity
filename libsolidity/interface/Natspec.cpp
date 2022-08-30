@@ -92,7 +92,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 		{
 			Json::Value errorDoc{Json::objectValue};
 			errorDoc["notice"] = value;
-			doc["errors"][error->functionType(true)->externalSignature()].append(move(errorDoc));
+			doc["errors"][error->functionType(true)->externalSignature()].append(std::move(errorDoc));
 		}
 	}
 
@@ -140,10 +140,10 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			);
 
 			if (!jsonReturn.empty())
-				method["returns"] = move(jsonReturn);
+				method["returns"] = std::move(jsonReturn);
 
 			if (!method.empty())
-				doc["methods"][it.second->externalSignature()] = move(method);
+				doc["methods"][it.second->externalSignature()] = std::move(method);
 		}
 	}
 
@@ -230,7 +230,7 @@ Json::Value Natspec::extractCustomDoc(multimap<string, DocTag> const& _tags)
 		return Json::nullValue;
 	Json::Value result{Json::objectValue};
 	for (auto& [tag, value]: concatenated)
-		result[tag] = move(value);
+		result[tag] = std::move(value);
 	return result;
 }
 

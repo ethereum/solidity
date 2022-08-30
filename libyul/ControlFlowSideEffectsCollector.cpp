@@ -92,7 +92,7 @@ void ControlFlowBuilder::operator()(FunctionDefinition const& _function)
 
 	m_currentNode->successors.emplace_back(flow.exit);
 
-	m_functionFlows[&_function] = move(flow);
+	m_functionFlows[&_function] = std::move(flow);
 
 	m_leave = nullptr;
 }

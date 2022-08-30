@@ -71,7 +71,7 @@ Type const* closestType(Type const* _type, Type const* _targetType, bool _isShif
 				solAssert(tempComponents[i], "");
 			}
 		}
-		return TypeProvider::tuple(move(tempComponents));
+		return TypeProvider::tuple(std::move(tempComponents));
 	}
 	else
 		return _targetType->dataStoredIn(DataLocation::Storage) ? _type->mobileType() : _targetType;
@@ -391,7 +391,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 				if (_tuple.annotation().willBeWrittenTo)
 				{
 					solAssert(!!m_currentLValue, "");
-					lvalues.push_back(move(m_currentLValue));
+					lvalues.push_back(std::move(m_currentLValue));
 				}
 			}
 			else if (_tuple.annotation().willBeWrittenTo)
@@ -399,9 +399,9 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 		if (_tuple.annotation().willBeWrittenTo)
 		{
 			if (_tuple.components().size() == 1)
-				m_currentLValue = move(lvalues[0]);
+				m_currentLValue = std::move(lvalues[0]);
 			else
-				m_currentLValue = make_unique<TupleObject>(m_context, move(lvalues));
+				m_currentLValue = make_unique<TupleObject>(m_context, std::move(lvalues));
 		}
 	}
 	return false;

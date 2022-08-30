@@ -252,7 +252,7 @@ vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _require
 		result +=
 			(*annotation().creationCallGraph)->usedErrors +
 			(*annotation().deployedCallGraph)->usedErrors;
-	return util::convertContainer<vector<ErrorDefinition const*>>(move(result));
+	return util::convertContainer<vector<ErrorDefinition const*>>(std::move(result));
 }
 
 vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const

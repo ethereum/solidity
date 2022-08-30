@@ -403,7 +403,7 @@ Json::Value collectEVMObject(
 	if (_runtimeObject && _artifactRequested("immutableReferences"))
 		output["immutableReferences"] = formatImmutableReferences(_object.immutableReferences);
 	if (_artifactRequested("generatedSources"))
-		output["generatedSources"] = move(_generatedSources);
+		output["generatedSources"] = std::move(_generatedSources);
 	return output;
 }
 
@@ -966,7 +966,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			if (sourceContracts[source].empty())
 				return formatFatalError("JSONError", "Source contracts must be a non-empty array.");
 		}
-		ret.modelCheckerSettings.contracts = {move(sourceContracts)};
+		ret.modelCheckerSettings.contracts = {std::move(sourceContracts)};
 	}
 
 	if (modelCheckerSettings.isMember("divModNoSlacks"))
@@ -1076,7 +1076,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.setViaIR(_inputsAndSettings.viaIR);
 	compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);
 	compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
-	compilerStack.setRemappings(move(_inputsAndSettings.remappings));
+	compilerStack.setRemappings(std::move(_inputsAndSettings.remappings));
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
 	compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
 	if (_inputsAndSettings.debugInfoSelection.has_value())
@@ -1582,7 +1582,7 @@ Json::Value StandardCompiler::formatFunctionDebugData(
 			fun["entryPoint"] = Json::nullValue;
 		fun["parameterSlots"] = Json::UInt64(info.params);
 		fun["returnSlots"] = Json::UInt64(info.returns);
-		ret[name] = move(fun);
+		ret[name] = std::move(fun);
 	}
 
 	return ret;

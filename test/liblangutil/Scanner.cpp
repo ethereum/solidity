@@ -150,11 +150,11 @@ struct TestScanner
 {
 	unique_ptr<CharStream> stream;
 	unique_ptr<Scanner> scanner;
-	explicit TestScanner(string _text) { reset(move(_text)); }
+	explicit TestScanner(string _text) { reset(std::move(_text)); }
 
 	void reset(std::string _text)
 	{
-		stream = make_unique<CharStream>(move(_text), "");
+		stream = make_unique<CharStream>(std::move(_text), "");
 		scanner = make_unique<Scanner>(*stream);
 	}
 
