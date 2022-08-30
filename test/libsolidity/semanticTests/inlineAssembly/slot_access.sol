@@ -25,8 +25,6 @@ contract C {
         return data().a;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // get() -> 0
 // mappingAccess(uint256): 1 -> 0, 0

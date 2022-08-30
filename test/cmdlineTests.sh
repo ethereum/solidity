@@ -311,7 +311,7 @@ function test_solc_assembly_output
 function test_via_ir_equivalence()
 {
     SOLTMPDIR=$(mktemp -d)
-    pushd "$SOLTMPDIR"
+    pushd "$SOLTMPDIR" > /dev/null
 
     (( $# <= 2 )) || fail "This function accepts at most two arguments."
 
@@ -355,7 +355,7 @@ function test_via_ir_equivalence()
 
     for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
         bin_output_two_stage+=$(
-	    msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
+        msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
                 sed '/^Binary representation:$/d' |
                 sed '/^=======/d'
         )
@@ -369,14 +369,19 @@ function test_via_ir_equivalence()
 
     diff_values "$bin_output_two_stage" "$bin_output_via_ir" --ignore-space-change --ignore-blank-lines
 
-    popd
+    popd > /dev/null
     rm -r "$SOLTMPDIR"
 }
 
 ## RUN
 
-echo "Checking that the bug list is up to date..."
-"$REPO_ROOT"/scripts/update_bugs_by_version.py
+SOLTMPDIR=$(mktemp -d)
+printTask "Checking that the bug list is up to date..."
+cp "${REPO_ROOT}/docs/bugs_by_version.json" "${SOLTMPDIR}/original_bugs_by_version.json"
+"${REPO_ROOT}/scripts/update_bugs_by_version.py"
+diff --unified "${SOLTMPDIR}/original_bugs_by_version.json" "${REPO_ROOT}/docs/bugs_by_version.json" || \
+    fail "The bug list in bugs_by_version.json was out of date and has been updated. Please investigate and submit a bugfix if necessary."
+rm -r "$SOLTMPDIR"
 
 printTask "Testing unknown options..."
 (
@@ -517,15 +522,16 @@ SOLTMPDIR=$(mktemp -d)
         opts=()
         # We expect errors if explicitly stated, or if imports
         # are used (in the style guide)
-        if grep -E "This will not compile|import \"" "$f" >/dev/null
+        if grep -E "// This will not compile" "$f" >/dev/null ||
+            sed -e 's|//.*||g' "$f" | grep -E "import \"" >/dev/null
         then
             opts=(--expect-errors)
         fi
-        if grep "This will report a warning" "$f" >/dev/null
+        if grep "// This will report a warning" "$f" >/dev/null
         then
             opts+=(--expect-warnings)
         fi
-        if grep "This may report a warning" "$f" >/dev/null
+        if grep "// This may report a warning" "$f" >/dev/null
         then
             opts+=(--ignore-warnings)
         fi

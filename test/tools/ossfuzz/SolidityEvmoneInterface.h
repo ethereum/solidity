@@ -122,7 +122,7 @@ public:
 	/// and executing test configuration.
 	/// @param _isabelleData contains encoding data to be passed to the
 	/// isabelle test entry point.
-	std::optional<evmc::result> compileDeployAndExecute(std::string _isabelleData = {});
+	evmc::result compileDeployAndExecute(std::string _isabelleData = {});
 	/// Compares the contents of the memory address pointed to
 	/// by `_result` of `_length` bytes to u256 zero.
 	/// @returns true if `_result` is zero, false

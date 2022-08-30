@@ -5,6 +5,5 @@ contract test {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // run(bool,uint256): true, 0xcd -> 0xcd, true, 0

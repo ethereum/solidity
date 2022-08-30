@@ -20,8 +20,6 @@ contract C {
         return 1;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 1
 // storageEmpty -> 1

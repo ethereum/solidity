@@ -11,8 +11,6 @@ contract C {
         return rows[n][k - 1];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint256,uint256): 3, 1 -> 1
 // f(uint256,uint256): 9, 5 -> 70

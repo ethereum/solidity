@@ -38,11 +38,9 @@ contract Main {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // constructor(), 22 wei ->
-// gas irOptimized: 277680
+// gas irOptimized: 268544
 // gas legacy: 402045
 // gas legacyOptimized: 266772
 // getFlag() -> true

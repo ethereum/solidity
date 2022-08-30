@@ -31,6 +31,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libevmasm/Instruction.h>
 #include <libsolutil/Whiskers.h>
+#include <libsolutil/StackTooDeepString.h>
 
 using namespace std;
 using namespace solidity;
@@ -476,7 +477,7 @@ void CompilerUtils::encodeToMemory(
 			assertThrow(
 				(argSize + dynPointers) < 16,
 				StackTooDeepError,
-				"Stack too deep, try using fewer variables."
+				util::stackTooDeepString
 			);
 		}
 		else
@@ -537,7 +538,7 @@ void CompilerUtils::encodeToMemory(
 			assertThrow(
 				(2 + dynPointers) <= 16,
 				StackTooDeepError,
-				"Stack too deep(" + to_string(2 + dynPointers) + "), try using fewer variables."
+				util::stackTooDeepString
 			);
 			m_context << dupInstruction(2 + dynPointers) << Instruction::DUP2;
 			m_context << Instruction::SUB;
@@ -1418,7 +1419,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_variable.location()) <<
-			util::errinfo_comment("Stack too deep, try removing local variables.")
+			util::errinfo_comment(util::stackTooDeepString)
 		);
 	for (unsigned i = 0; i < size; ++i)
 		m_context << swapInstruction(stackPosition - size + 1) << Instruction::POP;
@@ -1429,7 +1430,7 @@ void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 	assertThrow(
 		_stackDepth <= 16,
 		StackTooDeepError,
-		"Stack too deep, try removing local variables."
+		util::stackTooDeepString
 	);
 	for (unsigned i = 0; i < _itemSize; ++i)
 		m_context << dupInstruction(_stackDepth);
@@ -1455,7 +1456,7 @@ void CompilerUtils::rotateStackUp(unsigned _items)
 	assertThrow(
 		_items - 1 <= 16,
 		StackTooDeepError,
-		"Stack too deep, try removing local variables."
+		util::stackTooDeepString
 	);
 	for (unsigned i = 1; i < _items; ++i)
 		m_context << swapInstruction(_items - i);
@@ -1466,7 +1467,7 @@ void CompilerUtils::rotateStackDown(unsigned _items)
 	assertThrow(
 		_items - 1 <= 16,
 		StackTooDeepError,
-		"Stack too deep, try removing local variables."
+		util::stackTooDeepString
 	);
 	for (unsigned i = 1; i < _items; ++i)
 		m_context << swapInstruction(i);

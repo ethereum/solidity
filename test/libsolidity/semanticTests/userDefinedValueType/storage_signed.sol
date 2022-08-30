@@ -23,8 +23,6 @@ contract C {
         assembly { x := st }
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // a() -> -2
 // direct() -> -2

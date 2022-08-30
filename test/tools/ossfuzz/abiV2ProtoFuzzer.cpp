@@ -35,7 +35,7 @@ static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
 DEFINE_PROTO_FUZZER(Contract const& _input)
 {
-	string contract_source = ProtoConverter{}.contractToString(_input);
+	string contract_source = ProtoConverter{_input.seed()}.contractToString(_input);
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -61,14 +61,18 @@ DEFINE_PROTO_FUZZER(Contract const& _input)
 	);
 	// Invoke test function
 	auto result = evmoneUtil.compileDeployAndExecute();
-	if (result.has_value())
-	{
-		// We don't care about EVM One failures other than EVMC_REVERT
-		solAssert(result->status_code != EVMC_REVERT, "Proto ABIv2 fuzzer: EVM One reverted");
-		if (result->status_code == EVMC_SUCCESS)
+	// We don't care about EVM One failures other than EVMC_REVERT
+	solAssert(result.status_code != EVMC_REVERT, "Proto ABIv2 fuzzer: EVM One reverted");
+	if (result.status_code == EVMC_SUCCESS)
+		if (!EvmoneUtility::zeroWord(result.output_data, result.output_size))
+		{
+			solidity::bytes res;
+			for (size_t i = 0; i < result.output_size; i++)
+				res.push_back(result.output_data[i]);
+			cout << solidity::util::toHex(res) << endl;
 			solAssert(
-				EvmoneUtility::zeroWord(result->output_data, result->output_size),
+				false,
 				"Proto ABIv2 fuzzer: ABIv2 coding failure found"
 			);
-	}
+		}
 }

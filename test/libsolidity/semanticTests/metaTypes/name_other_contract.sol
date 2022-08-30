@@ -23,7 +23,6 @@ contract Test is C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // c() -> 0x20, 1, "C"

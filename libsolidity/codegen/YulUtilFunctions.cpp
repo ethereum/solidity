@@ -80,20 +80,25 @@ string YulUtilFunctions::splitExternalFunctionIdFunction()
 	});
 }
 
-string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
+string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata, bool _cleanup)
 {
-	string functionName = "copy_" + string(_fromCalldata ? "calldata" : "memory") + "_to_memory";
+	string functionName =
+		"copy_"s +
+		(_fromCalldata ? "calldata"s : "memory"s) +
+		"_to_memory"s +
+		(_cleanup ? "_with_cleanup"s : ""s);
+
 	return m_functionCollector.createFunction(functionName, [&]() {
 		if (_fromCalldata)
 		{
 			return Whiskers(R"(
 				function <functionName>(src, dst, length) {
 					calldatacopy(dst, src, length)
-					// clear end
-					mstore(add(dst, length), 0)
+					<?cleanup>mstore(add(dst, length), 0)</cleanup>
 				}
 			)")
 			("functionName", functionName)
+			("cleanup", _cleanup)
 			.render();
 		}
 		else
@@ -105,14 +110,11 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 					{
 						mstore(add(dst, i), mload(add(src, i)))
 					}
-					if gt(i, length)
-					{
-						// clear end
-						mstore(add(dst, length), 0)
-					}
+					<?cleanup>mstore(add(dst, length), 0)</cleanup>
 				}
 			)")
 			("functionName", functionName)
+			("cleanup", _cleanup)
 			.render();
 		}
 	});
@@ -615,25 +617,34 @@ string YulUtilFunctions::divide32CeilFunction()
 string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 {
 	string functionName = "checked_add_" + _type.identifier();
-	// TODO: Consider to add a special case for unsigned 256-bit integers
-	//       and use the following instead:
-	//       sum := add(x, y) if lt(sum, x) { <panic>() }
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> sum {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				<?signed>
-					// overflow, if x >= 0 and y > (maxValue - x)
-					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { <panic>() }
-					// underflow, if x < 0 and y < (minValue - x)
-					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { <panic>() }
-				<!signed>
-					// overflow, if x > (maxValue - y)
-					if gt(x, sub(<maxValue>, y)) { <panic>() }
-				</signed>
 				sum := add(x, y)
+				<?signed>
+					<?256bit>
+						// overflow, if x >= 0 and sum < y
+						// underflow, if x < 0 and sum >= y
+						if or(
+							and(iszero(slt(x, 0)), slt(sum, y)),
+							and(slt(x, 0), iszero(slt(sum, y)))
+						) { <panic>() }
+					<!256bit>
+						if or(
+							sgt(sum, <maxValue>),
+							slt(sum, <minValue>)
+						) { <panic>() }
+					</256bit>
+				<!signed>
+					<?256bit>
+						if gt(x, sum) { <panic>() }
+					<!256bit>
+						if gt(sum, <maxValue>) { <panic>() }
+					</256bit>
+				</signed>
 			}
 			)")
 			("functionName", functionName)
@@ -642,6 +653,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
+			("256bit", _type.numBits() == 256)
 			.render();
 	});
 }
@@ -672,28 +684,46 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> product {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
+				let product_raw := mul(x, y)
+				product := <cleanupFunction>(product_raw)
 				<?signed>
-					// overflow, if x > 0, y > 0 and x > (maxValue / y)
-					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { <panic>() }
-					// underflow, if x > 0, y < 0 and y < (minValue / x)
-					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { <panic>() }
-					// underflow, if x < 0, y > 0 and x < (minValue / y)
-					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { <panic>() }
-					// overflow, if x < 0, y < 0 and x < (maxValue / y)
-					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { <panic>() }
+					<?gt128bit>
+						<?256bit>
+							// special case
+							if and(slt(x, 0), eq(y, <minValue>)) { <panic>() }
+						</256bit>
+						// overflow, if x != 0 and y != product/x
+						if iszero(
+							or(
+								iszero(x),
+								eq(y, sdiv(product, x))
+							)
+						) { <panic>() }
+					<!gt128bit>
+						if iszero(eq(product, product_raw)) { <panic>() }
+					</gt128bit>
 				<!signed>
-					// overflow, if x != 0 and y > (maxValue / x)
-					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { <panic>() }
+					<?gt128bit>
+						// overflow, if x != 0 and y != product/x
+						if iszero(
+							or(
+								iszero(x),
+								eq(y, div(product, x))
+							)
+						) { <panic>() }
+					<!gt128bit>
+						if iszero(eq(product, product_raw)) { <panic>() }
+					</gt128bit>
 				</signed>
-				product := mul(x, y)
 			}
 			)")
 			("functionName", functionName)
 			("signed", _type.isSigned())
-			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
-			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("256bit", _type.numBits() == 256)
+			("gt128bit", _type.numBits() > 128)
 			.render();
 	});
 }
@@ -795,15 +825,28 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> diff {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				<?signed>
-					// underflow, if y >= 0 and x < (minValue + y)
-					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { <panic>() }
-					// overflow, if y < 0 and x > (maxValue + y)
-					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { <panic>() }
-				<!signed>
-					if lt(x, y) { <panic>() }
-				</signed>
 				diff := sub(x, y)
+				<?signed>
+					<?256bit>
+						// underflow, if y >= 0 and diff > x
+						// overflow, if y < 0 and diff < x
+						if or(
+							and(iszero(slt(y, 0)), sgt(diff, x)),
+							and(slt(y, 0), slt(diff, x))
+						) { <panic>() }
+					<!256bit>
+						if or(
+							slt(diff, <minValue>),
+							sgt(diff, <maxValue>)
+						) { <panic>() }
+					</256bit>
+				<!signed>
+					<?256bit>
+						if gt(diff, x) { <panic>() }
+					<!256bit>
+						if gt(diff, <maxValue>) { <panic>() }
+					</256bit>
+				</signed>
 			}
 			)")
 			("functionName", functionName)
@@ -812,6 +855,7 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
+			("256bit", _type.numBits() == 256)
 			.render();
 	});
 }
@@ -1797,8 +1841,11 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 
 	if (_fromType.isByteArrayOrString())
 		return copyByteArrayToStorageFunction(_fromType, _toType);
-	if (_fromType.dataStoredIn(DataLocation::Storage) && _toType.baseType()->isValueType())
-		return copyValueArrayStorageToStorageFunction(_fromType, _toType);
+	if (_toType.baseType()->isValueType())
+		return copyValueArrayToStorageFunction(_fromType, _toType);
+
+	solAssert(_toType.storageStride() == 32);
+	solAssert(!_fromType.baseType()->isValueType());
 
 	string functionName = "copy_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
 	return m_functionCollector.createFunction(functionName, [&](){
@@ -1812,43 +1859,30 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 				let srcPtr := <srcDataLocation>(value)
 
 				let elementSlot := <dstDataLocation>(slot)
-				let elementOffset := 0
 
 				for { let i := 0 } lt(i, length) {i := add(i, 1)} {
 					<?fromCalldata>
-						let <elementValues> :=
+						let <stackItems> :=
 						<?dynamicallyEncodedBase>
 							<accessCalldataTail>(value, srcPtr)
 						<!dynamicallyEncodedBase>
 							srcPtr
 						</dynamicallyEncodedBase>
-
-						<?isValueType>
-							<elementValues> := <readFromCalldataOrMemory>(<elementValues>)
-						</isValueType>
 					</fromCalldata>
 
 					<?fromMemory>
-						let <elementValues> := <readFromCalldataOrMemory>(srcPtr)
+						let <stackItems> := <readFromMemoryOrCalldata>(srcPtr)
 					</fromMemory>
 
 					<?fromStorage>
-						let <elementValues> := srcPtr
+						let <stackItems> := srcPtr
 					</fromStorage>
 
-					<updateStorageValue>(elementSlot, elementOffset, <elementValues>)
+					<updateStorageValue>(elementSlot, <stackItems>)
 
 					srcPtr := add(srcPtr, <srcStride>)
 
-					<?multipleItemsPerSlot>
-						elementOffset := add(elementOffset, <storageStride>)
-						if gt(elementOffset, sub(32, <storageStride>)) {
-							elementOffset := 0
-							elementSlot := add(elementSlot, 1)
-						}
-					<!multipleItemsPerSlot>
-						elementSlot := add(elementSlot, <storageSize>)
-					</multipleItemsPerSlot>
+					elementSlot := add(elementSlot, <storageSize>)
 				}
 			}
 		)");
@@ -1870,16 +1904,15 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 		}
 		templ("resizeArray", resizeArrayFunction(_toType));
 		templ("arrayLength",arrayLengthFunction(_fromType));
-		templ("isValueType", _fromType.baseType()->isValueType());
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
 		if (fromMemory || (fromCalldata && _fromType.baseType()->isValueType()))
-			templ("readFromCalldataOrMemory", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
-		templ("elementValues", suffixedVariableNameList(
-			"elementValue_",
+			templ("readFromMemoryOrCalldata", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
+		templ("stackItems", suffixedVariableNameList(
+			"stackItem_",
 			0,
 			_fromType.baseType()->stackItems().size()
 		));
-		templ("updateStorageValue", updateStorageValueFunction(*_fromType.baseType(), *_toType.baseType()));
+		templ("updateStorageValue", updateStorageValueFunction(*_fromType.baseType(), *_toType.baseType(), 0));
 		templ("srcStride",
 			fromCalldata ?
 			to_string(_fromType.calldataStride()) :
@@ -1887,8 +1920,6 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 				to_string(_fromType.memoryStride()) :
 				formatNumber(_fromType.baseType()->storageSize())
 		);
-		templ("multipleItemsPerSlot", _toType.storageStride() <= 16);
-		templ("storageStride", to_string(_toType.storageStride()));
 		templ("storageSize", _toType.baseType()->storageSize().str());
 
 		return templ.render();
@@ -1973,8 +2004,7 @@ string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromTy
 	});
 }
 
-
-string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
+string YulUtilFunctions::copyValueArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
 {
 	solAssert(_fromType.baseType()->isValueType(), "");
 	solAssert(_toType.baseType()->isValueType(), "");
@@ -1982,7 +2012,6 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 
 	solAssert(!_fromType.isByteArrayOrString(), "");
 	solAssert(!_toType.isByteArrayOrString(), "");
-	solAssert(_fromType.dataStoredIn(DataLocation::Storage), "");
 	solAssert(_toType.dataStoredIn(DataLocation::Storage), "");
 
 	solAssert(_fromType.storageStride() <= _toType.storageStride(), "");
@@ -1991,32 +2020,41 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 	string functionName = "copy_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
 	return m_functionCollector.createFunction(functionName, [&](){
 		Whiskers templ(R"(
-			function <functionName>(dst, src) {
+			function <functionName>(dst, src<?isFromDynamicCalldata>, len</isFromDynamicCalldata>) {
+				<?isFromStorage>
 				if eq(dst, src) { leave }
-				let length := <arrayLength>(src)
+				</isFromStorage>
+				let length := <arrayLength>(src<?isFromDynamicCalldata>, len</isFromDynamicCalldata>)
 				// Make sure array length is sane
 				if gt(length, 0xffffffffffffffff) { <panic>() }
 				<resizeArray>(dst, length)
 
-				let srcSlot := <srcDataLocation>(src)
+				let srcPtr := <srcDataLocation>(src)
 				let dstSlot := <dstDataLocation>(dst)
 
 				let fullSlots := div(length, <itemsPerSlot>)
 
-				let srcSlotValue := sload(srcSlot)
+				<?isFromStorage>
+				let srcSlotValue := sload(srcPtr)
 				let srcItemIndexInSlot := 0
+				</isFromStorage>
+
 				for { let i := 0 } lt(i, fullSlots) { i := add(i, 1) } {
 					let dstSlotValue := 0
-					<?sameType>
+					<?sameTypeFromStorage>
 						dstSlotValue := <maskFull>(srcSlotValue)
-						<updateSrcSlotValue>
-					<!sameType>
+						<updateSrcPtr>
+					<!sameTypeFromStorage>
 						<?multipleItemsPerSlotDst>for { let j := 0 } lt(j, <itemsPerSlot>) { j := add(j, 1) } </multipleItemsPerSlotDst>
 						{
-							let itemValue := <convert>(
+							<?isFromStorage>
+							let <stackItems> := <convert>(
 								<extractFromSlot>(srcSlotValue, mul(<srcStride>, srcItemIndexInSlot))
 							)
-							itemValue := <prepareStore>(itemValue)
+							<!isFromStorage>
+							let <stackItems> := <readFromMemoryOrCalldata>(srcPtr)
+							</isFromStorage>
+							let itemValue := <prepareStore>(<stackItems>)
 							dstSlotValue :=
 							<?multipleItemsPerSlotDst>
 								<updateByteSlice>(dstSlotValue, mul(<dstStride>, j), itemValue)
@@ -2024,9 +2062,9 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 								itemValue
 							</multipleItemsPerSlotDst>
 
-							<updateSrcSlotValue>
+							<updateSrcPtr>
 						}
-					</sameType>
+					</sameTypeFromStorage>
 
 					sstore(add(dstSlot, i), dstSlotValue)
 				}
@@ -2035,20 +2073,24 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 					let spill := sub(length, mul(fullSlots, <itemsPerSlot>))
 					if gt(spill, 0) {
 						let dstSlotValue := 0
-						<?sameType>
+						<?sameTypeFromStorage>
 							dstSlotValue := <maskBytes>(srcSlotValue, mul(spill, <srcStride>))
-							<updateSrcSlotValue>
-						<!sameType>
+							<updateSrcPtr>
+						<!sameTypeFromStorage>
 							for { let j := 0 } lt(j, spill) { j := add(j, 1) } {
-								let itemValue := <convert>(
+								<?isFromStorage>
+								let <stackItems> := <convert>(
 									<extractFromSlot>(srcSlotValue, mul(<srcStride>, srcItemIndexInSlot))
 								)
-								itemValue := <prepareStore>(itemValue)
+								<!isFromStorage>
+								let <stackItems> := <readFromMemoryOrCalldata>(srcPtr)
+								</isFromStorage>
+								let itemValue := <prepareStore>(<stackItems>)
 								dstSlotValue := <updateByteSlice>(dstSlotValue, mul(<dstStride>, j), itemValue)
 
-								<updateSrcSlotValue>
+								<updateSrcPtr>
 							}
-						</sameType>
+						</sameTypeFromStorage>
 						sstore(add(dstSlot, fullSlots), dstSlotValue)
 					}
 				</multipleItemsPerSlotDst>
@@ -2056,26 +2098,37 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 		)");
 		if (_fromType.dataStoredIn(DataLocation::Storage))
 			solAssert(!_fromType.isValueType(), "");
+
+		bool fromCalldata = _fromType.dataStoredIn(DataLocation::CallData);
+		bool fromStorage = _fromType.dataStoredIn(DataLocation::Storage);
 		templ("functionName", functionName);
 		templ("resizeArray", resizeArrayFunction(_toType));
 		templ("arrayLength", arrayLengthFunction(_fromType));
 		templ("panic", panicFunction(PanicCode::ResourceError));
+		templ("isFromDynamicCalldata", _fromType.isDynamicallySized() && fromCalldata);
+		templ("isFromStorage", fromStorage);
+		templ("readFromMemoryOrCalldata", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
 		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
 		templ("srcStride", to_string(_fromType.storageStride()));
+		templ("stackItems", suffixedVariableNameList(
+			"stackItem_",
+			0,
+			_fromType.baseType()->stackItems().size()
+		));
 		unsigned itemsPerSlot = 32 / _toType.storageStride();
 		templ("itemsPerSlot", to_string(itemsPerSlot));
 		templ("multipleItemsPerSlotDst", itemsPerSlot > 1);
-		bool sameType = *_fromType.baseType() == *_toType.baseType();
+		bool sameTypeFromStorage = fromStorage && (*_fromType.baseType() == *_toType.baseType());
 		if (auto functionType = dynamic_cast<FunctionType const*>(_fromType.baseType()))
 		{
 			solAssert(functionType->equalExcludingStateMutability(
 				dynamic_cast<FunctionType const&>(*_toType.baseType())
 			));
-			sameType = true;
+			sameTypeFromStorage = fromStorage;
 		}
-		templ("sameType", sameType);
-		if (sameType)
+		templ("sameTypeFromStorage", sameTypeFromStorage);
+		if (sameTypeFromStorage)
 		{
 			templ("maskFull", maskLowerOrderBytesFunction(itemsPerSlot * _toType.storageStride()));
 			templ("maskBytes", maskLowerOrderBytesFunctionDynamic());
@@ -2088,24 +2141,32 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 			templ("convert", conversionFunction(*_fromType.baseType(), *_toType.baseType()));
 			templ("prepareStore", prepareStoreFunction(*_toType.baseType()));
 		}
-		templ("updateSrcSlotValue", Whiskers(R"(
-			<?srcReadMultiPerSlot>
-				srcItemIndexInSlot := add(srcItemIndexInSlot, 1)
-				if eq(srcItemIndexInSlot, <srcItemsPerSlot>) {
-					// here we are done with this slot, we need to read next one
-					srcSlot := add(srcSlot, 1)
-					srcSlotValue := sload(srcSlot)
-					srcItemIndexInSlot := 0
-				}
-			<!srcReadMultiPerSlot>
-				srcSlot := add(srcSlot, 1)
-				srcSlotValue := sload(srcSlot)
-			</srcReadMultiPerSlot>
-			)")
-			("srcReadMultiPerSlot", !sameType && _fromType.storageStride() <= 16)
-			("srcItemsPerSlot", to_string(32 / _fromType.storageStride()))
-			.render()
-		);
+		if (fromStorage)
+			templ("updateSrcPtr", Whiskers(R"(
+				<?srcReadMultiPerSlot>
+					srcItemIndexInSlot := add(srcItemIndexInSlot, 1)
+					if eq(srcItemIndexInSlot, <srcItemsPerSlot>) {
+						// here we are done with this slot, we need to read next one
+						srcPtr := add(srcPtr, 1)
+						srcSlotValue := sload(srcPtr)
+						srcItemIndexInSlot := 0
+					}
+				<!srcReadMultiPerSlot>
+					srcPtr := add(srcPtr, 1)
+					srcSlotValue := sload(srcPtr)
+				</srcReadMultiPerSlot>
+				)")
+				("srcReadMultiPerSlot", !sameTypeFromStorage && _fromType.storageStride() <= 16)
+				("srcItemsPerSlot", to_string(32 / _fromType.storageStride()))
+				.render()
+			);
+		else
+			templ("updateSrcPtr", Whiskers(R"(
+					srcPtr := add(srcPtr, <srcStride>)
+				)")
+				("srcStride", fromCalldata ? to_string(_fromType.calldataStride()) : to_string(_fromType.memoryStride()))
+				.render()
+			);
 
 		return templ.render();
 	});

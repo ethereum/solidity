@@ -44,47 +44,54 @@ using namespace solidity::yul;
 
 DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
+	MemoryAndStorage _analyzeStores,
 	map<YulString, SideEffects> _functionSideEffects
 ):
 	m_dialect(_dialect),
 	m_functionSideEffects(std::move(_functionSideEffects)),
-	m_knowledgeBase(_dialect, [this](YulString _var) { return variableValue(_var); })
+	m_knowledgeBase(_dialect, [this](YulString _var) { return variableValue(_var); }),
+	m_analyzeStores(_analyzeStores == MemoryAndStorage::Analyze)
 {
-	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
-		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-	if (auto const* builtin = _dialect.memoryLoadFunction(YulString{}))
-		m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-	if (auto const* builtin = _dialect.storageStoreFunction(YulString{}))
-		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
-	if (auto const* builtin = _dialect.storageLoadFunction(YulString{}))
-		m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
+	if (m_analyzeStores)
+	{
+		if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
+			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
+		if (auto const* builtin = _dialect.memoryLoadFunction(YulString{}))
+			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
+		if (auto const* builtin = _dialect.storageStoreFunction(YulString{}))
+			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
+		if (auto const* builtin = _dialect.storageLoadFunction(YulString{}))
+			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
+	}
 }
 
 void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 {
-	if (auto vars = isSimpleStore(StoreLoadLocation::Storage, _statement))
+	if (m_analyzeStores)
 	{
-		ASTModifier::operator()(_statement);
-		cxx20::erase_if(m_state.storage, mapTuple([&](auto&& key, auto&& value) {
-			return
-				!m_knowledgeBase.knownToBeDifferent(vars->first, key) &&
-				!m_knowledgeBase.knownToBeEqual(vars->second, value);
-		}));
-		m_state.storage[vars->first] = vars->second;
+		if (auto vars = isSimpleStore(StoreLoadLocation::Storage, _statement))
+		{
+			ASTModifier::operator()(_statement);
+			cxx20::erase_if(m_state.storage, mapTuple([&](auto&& key, auto&& value) {
+				return
+					!m_knowledgeBase.knownToBeDifferent(vars->first, key) &&
+					!m_knowledgeBase.knownToBeEqual(vars->second, value);
+			}));
+			m_state.storage[vars->first] = vars->second;
+			return;
+		}
+		else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, _statement))
+		{
+			ASTModifier::operator()(_statement);
+			cxx20::erase_if(m_state.memory, mapTuple([&](auto&& key, auto&& /* value */) {
+				return !m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, key);
+			}));
+			m_state.memory[vars->first] = vars->second;
+			return;
+		}
 	}
-	else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, _statement))
-	{
-		ASTModifier::operator()(_statement);
-		cxx20::erase_if(m_state.memory, mapTuple([&](auto&& key, auto&& /* value */) {
-			return !m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, key);
-		}));
-		m_state.memory[vars->first] = vars->second;
-	}
-	else
-	{
-		clearKnowledgeIfInvalidated(_statement.expression);
-		ASTModifier::operator()(_statement);
-	}
+	clearKnowledgeIfInvalidated(_statement.expression);
+	ASTModifier::operator()(_statement);
 }
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
@@ -346,6 +353,8 @@ void DataFlowAnalyzer::assignValue(YulString _variable, Expression const* _value
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 {
+	if (!m_analyzeStores)
+		return;
 	SideEffectsCollector sideEffects(m_dialect, _block, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_state.storage.clear();
@@ -355,6 +364,8 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 {
+	if (!m_analyzeStores)
+		return;
 	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_state.storage.clear();
@@ -367,6 +378,8 @@ void DataFlowAnalyzer::joinKnowledge(
 	unordered_map<YulString, YulString> const& _olderMemory
 )
 {
+	if (!m_analyzeStores)
+		return;
 	joinKnowledgeHelper(m_state.storage, _olderStorage);
 	joinKnowledgeHelper(m_state.memory, _olderMemory);
 }
@@ -398,7 +411,7 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 	return false;
 }
 
-optional<u256> DataFlowAnalyzer::valueOfIdentifier(YulString const& _name)
+optional<u256> DataFlowAnalyzer::valueOfIdentifier(YulString const& _name) const
 {
 	if (AssignedValue const* value = variableValue(_name))
 		if (Literal const* literal = get_if<Literal>(value->value))

@@ -42,8 +42,6 @@ contract C {
         return this.g128(x);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f8(int256): 0 -> 0
 // ggg8(int8): 0 -> 0 # test validation as well as sanity check #

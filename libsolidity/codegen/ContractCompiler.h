@@ -36,7 +36,7 @@ namespace solidity::frontend
 
 /**
  * Code generator at the contract level. Can be used to generate code for exactly one contract
- * either either in "runtime mode" or "creation mode".
+ * either in "runtime mode" or "creation mode".
  */
 class ContractCompiler: private ASTConstVisitor
 {

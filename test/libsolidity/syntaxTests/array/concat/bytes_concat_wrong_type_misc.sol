@@ -32,9 +32,9 @@ contract C {
 // TypeError 8015: (438-440): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but address payable provided.
 // TypeError 8015: (442-446): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but function () external provided.
 // TypeError 8015: (448-452): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but function () provided.
-// TypeError 8015: (454-462): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but uint256[] provided.
-// TypeError 8015: (464-471): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but uint256[2] provided.
+// TypeError 8015: (454-462): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but uint256[] memory provided.
+// TypeError 8015: (464-471): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but uint256[2] memory provided.
 // TypeError 8015: (473-474): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but contract C provided.
-// TypeError 8015: (476-477): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but struct C.S provided.
+// TypeError 8015: (476-477): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but struct C.S memory provided.
 // TypeError 8015: (479-480): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but enum C.E provided.
 // TypeError 8015: (482-483): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but mapping(uint256 => enum C.E) provided.

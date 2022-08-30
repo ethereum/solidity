@@ -16,7 +16,5 @@ contract C {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // test(uint256): 5 -> 10

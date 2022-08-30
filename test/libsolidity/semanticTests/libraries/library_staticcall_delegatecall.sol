@@ -13,8 +13,6 @@ contract Test {
         return Lib.x();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // library: Lib
 // f() -> 1

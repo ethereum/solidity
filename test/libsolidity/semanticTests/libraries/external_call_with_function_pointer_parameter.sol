@@ -19,8 +19,6 @@ contract C {
         return L.run(this.double, _value);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // library: L
 // g(uint256): 4 -> 16

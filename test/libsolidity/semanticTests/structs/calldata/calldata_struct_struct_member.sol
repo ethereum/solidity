@@ -22,7 +22,5 @@ contract C {
         c = s1.c;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f((uint256,(uint64,uint64),uint256)): 42, 1, 2, 23 -> 42, 1, 2, 23

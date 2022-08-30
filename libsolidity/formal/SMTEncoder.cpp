@@ -2977,7 +2977,7 @@ set<FunctionDefinition const*, ASTNode::CompareByID> const& SMTEncoder::contract
 					resolvedFunctions.insert(baseFunction);
 			}
 		}
-		m_contractFunctions.emplace(&_contract, move(resolvedFunctions));
+		m_contractFunctions.emplace(&_contract, std::move(resolvedFunctions));
 	}
 	return m_contractFunctions.at(&_contract);
 }
@@ -2991,7 +2991,7 @@ set<FunctionDefinition const*, ASTNode::CompareByID> const& SMTEncoder::contract
 			for (auto const* baseFun: base->definedFunctions())
 				allFunctions.insert(baseFun);
 
-		m_contractFunctionsWithoutVirtual.emplace(&_contract, move(allFunctions));
+		m_contractFunctionsWithoutVirtual.emplace(&_contract, std::move(allFunctions));
 
 	}
 	return m_contractFunctionsWithoutVirtual.at(&_contract);

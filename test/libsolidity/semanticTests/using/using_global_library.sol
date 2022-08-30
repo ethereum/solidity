@@ -20,8 +20,6 @@ contract C {
 
 import {T} from "A";
 
-// ====
-// compileViaYul: also
 // ----
 // library: "A":L
 // f() -> 2, 1

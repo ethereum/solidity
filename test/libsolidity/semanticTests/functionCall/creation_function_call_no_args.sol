@@ -9,8 +9,6 @@ contract D {
         return new C().i();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 2
 // gas legacy: 101599

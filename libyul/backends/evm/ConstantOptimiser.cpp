@@ -130,7 +130,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 
 	if (numberEncodingSize(~_value) < numberEncodingSize(_value))
 		// Negated is shorter to represent
-		routine = min(move(routine), represent("not"_yulstring, findRepresentation(~_value)));
+		routine = min(std::move(routine), represent("not"_yulstring, findRepresentation(~_value)));
 
 	// Decompose value into a * 2**k + b where abs(b) << 2**k
 	for (unsigned bits = 255; bits > 8 && m_maxSteps > 0; --bits)
@@ -171,10 +171,10 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 
 		if (m_maxSteps > 0)
 			m_maxSteps--;
-		routine = min(move(routine), move(newRoutine));
+		routine = min(std::move(routine), std::move(newRoutine));
 	}
 	yulAssert(MiniEVMInterpreter{m_dialect}.eval(*routine.expression) == _value, "Invalid expression generated.");
-	return m_cache[_value] = move(routine);
+	return m_cache[_value] = std::move(routine);
 }
 
 Representation RepresentationFinder::represent(u256 const& _value) const

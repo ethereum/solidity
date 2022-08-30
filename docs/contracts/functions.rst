@@ -35,10 +35,10 @@ that call them, similar to internal library functions.
 
 .. note::
     Functions defined outside a contract are still always executed
-    in the context of a contract. They still have access to the variable ``this``,
-    can call other contracts, send them Ether and destroy the contract that called them,
+    in the context of a contract.
+    They still can call other contracts, send them Ether and destroy the contract that called them,
     among other things. The main difference to functions defined inside a contract
-    is that free functions do not have direct access to storage variables and functions
+    is that free functions do not have direct access to the variable ``this``, storage variables and functions
     not in their scope.
 
 .. _function-parameters-return-variables:
@@ -71,16 +71,6 @@ with two integers, you would use something like the following:
     }
 
 Function parameters can be used as any other local variable and they can also be assigned to.
-
-.. note::
-
-  An :ref:`external function<external-function-calls>` cannot accept a
-  multi-dimensional array as an input
-  parameter. This functionality is possible if you enable the ABI coder v2
-  by adding ``pragma abicoder v2;`` to your source file.
-
-  An :ref:`internal function<external-function-calls>` can accept a
-  multi-dimensional array without enabling the feature.
 
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
 
@@ -139,12 +129,16 @@ If you use an early ``return`` to leave a function that has return variables,
 you must provide return values together with the return statement.
 
 .. note::
-    You cannot return some types from non-internal functions, notably
-    multi-dimensional dynamic arrays and structs. If you enable the
-    ABI coder v2 by adding ``pragma abicoder v2;``
-    to your source file then more types are available, but
-    ``mapping`` types are still limited to inside a single contract and you
-    cannot transfer them.
+    You cannot return some types from non-internal functions.
+    This includes the types listed below and any composite types that recursively contain them:
+
+    - mappings,
+    - internal function types,
+    - reference types with location set to ``storage``,
+    - multi-dimensional arrays (applies only to :ref:`ABI coder v1 <abi_coder>`),
+    - structs (applies only to :ref:`ABI coder v1 <abi_coder>`).
+
+    This restriction does not apply to library functions because of their different :ref:`internal ABI <library-selectors>`.
 
 .. _multi-return:
 

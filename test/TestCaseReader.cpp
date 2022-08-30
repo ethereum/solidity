@@ -194,7 +194,7 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 	}
 	// Register the last source as the main one
 	sources[currentSourceName] = currentSource;
-	return {{move(sources), move(externalSources), move(currentSourceName)}, lineNumber};
+	return {{std::move(sources), std::move(externalSources), std::move(currentSourceName)}, lineNumber};
 }
 
 string TestCaseReader::parseSimpleExpectations(istream& _file)

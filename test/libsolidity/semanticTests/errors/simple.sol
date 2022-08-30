@@ -5,7 +5,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // f() -> FAILURE, hex"85208890", 2, 7

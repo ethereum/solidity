@@ -32,16 +32,20 @@
 # apparently this currently breaks due to conflicting compatibility headers.
 # Using $(em-config CACHE)/sysroot/usr seems to work, though, and still has cmake find the
 # dependencies automatically.
-FROM emscripten/emsdk:2.0.33 AS base
-LABEL version="11"
+FROM emscripten/emsdk:3.1.19 AS base
+LABEL version="13"
 
 ADD emscripten.jam /usr/src
-RUN set -ex; \
-	cd /usr/src; \
-	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.17 --depth 1 ; \
-	cd z3; \
-	mkdir build; \
-	cd build; \
+RUN set -ex && \
+	\
+	apt-get update && \
+	apt-get install lz4 --no-install-recommends && \
+	\
+	cd /usr/src && \
+	git clone https://github.com/Z3Prover/z3.git -b z3-4.11.0 --depth 1 && \
+	cd z3 && \
+	mkdir build && \
+	cd build && \
 	emcmake cmake \
 		-DCMAKE_INSTALL_PREFIX=$(em-config CACHE)/sysroot/usr \
 		-DCMAKE_BUILD_TYPE=MinSizeRel \
@@ -51,21 +55,22 @@ RUN set -ex; \
 		-DZ3_BUILD_EXECUTABLE=OFF \
 		-DZ3_SINGLE_THREADED=ON \
 		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0" \
-		..; \
-	make ; make install; \
-	rm -r /usr/src/z3; \
-	cd /usr/src; \
-
-	wget -q 'https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.bz2' -O boost.tar.bz2; \
-	test "$(sha256sum boost.tar.bz2)" = "953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb  boost.tar.bz2"; \
-	tar -xf boost.tar.bz2; \
-	rm boost.tar.bz2; \
-	cd boost_1_75_0; \
-	mv ../emscripten.jam .; \
-	./bootstrap.sh; \
-	echo "using emscripten : : em++ ;" >> project-config.jam ; \
+		.. && \
+	make && \
+	make install && \
+	rm -r /usr/src/z3 && \
+	cd /usr/src && \
+	\
+	wget -q 'https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.bz2' -O boost.tar.bz2 && \
+	test "$(sha256sum boost.tar.bz2)" = "953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb  boost.tar.bz2" && \
+	tar -xf boost.tar.bz2 && \
+	rm boost.tar.bz2 && \
+	cd boost_1_75_0 && \
+	mv ../emscripten.jam . && \
+	./bootstrap.sh && \
+	echo "using emscripten : : em++ ;" >> project-config.jam && \
 	./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
 		--with-system --with-filesystem --with-test --with-program_options \
 		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
-	       --prefix=$(em-config CACHE)/sysroot/usr install; \
+	       --prefix=$(em-config CACHE)/sysroot/usr install && \
 	rm -r /usr/src/boost_1_75_0

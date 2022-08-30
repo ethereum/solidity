@@ -2,8 +2,6 @@ contract Test {
     bytes x;
     function set(bytes memory _a) public { x = _a; }
 }
-// ====
-// compileViaYul: also
 // ----
 // set(bytes): 0x20, 3, "abc"
 // storageEmpty -> 0

@@ -3,7 +3,5 @@ contract C {
         return string(c);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(bytes): 0x20, 3, "abc" -> 0x20, 3, "abc"

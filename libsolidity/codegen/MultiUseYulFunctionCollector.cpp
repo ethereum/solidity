@@ -33,7 +33,7 @@ using namespace solidity::util;
 
 string MultiUseYulFunctionCollector::requestedFunctions()
 {
-	string result = move(m_code);
+	string result = std::move(m_code);
 	m_code.clear();
 	m_requestedFunctions.clear();
 	return result;
@@ -47,7 +47,7 @@ string MultiUseYulFunctionCollector::createFunction(string const& _name, functio
 		string fun = _creator();
 		solAssert(!fun.empty(), "");
 		solAssert(fun.find("function " + _name + "(") != string::npos, "Function not properly named.");
-		m_code += move(fun);
+		m_code += std::move(fun);
 	}
 	return _name;
 }

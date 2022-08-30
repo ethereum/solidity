@@ -68,7 +68,7 @@ Population Population::makeRandom(
 	for (size_t i = 0; i < _size; ++i)
 		chromosomes.push_back(Chromosome::makeRandom(_chromosomeLengthGenerator()));
 
-	return Population(move(_fitnessMetric), move(chromosomes));
+	return Population(std::move(_fitnessMetric), std::move(chromosomes));
 }
 
 Population Population::makeRandom(
@@ -79,7 +79,7 @@ Population Population::makeRandom(
 )
 {
 	return makeRandom(
-		move(_fitnessMetric),
+		std::move(_fitnessMetric),
 		_size,
 		std::bind(uniformChromosomeLength, _minChromosomeLength, _maxChromosomeLength)
 	);
@@ -112,7 +112,7 @@ Population Population::crossover(PairSelection const& _selection, function<Cross
 			m_individuals[i].chromosome,
 			m_individuals[j].chromosome
 		);
-		crossedIndividuals.emplace_back(move(childChromosome), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(std::move(childChromosome), *m_fitnessMetric);
 	}
 
 	return Population(m_fitnessMetric, crossedIndividuals);
@@ -132,8 +132,8 @@ tuple<Population, Population> Population::symmetricCrossoverWithRemainder(
 			m_individuals[i].chromosome,
 			m_individuals[j].chromosome
 		);
-		crossedIndividuals.emplace_back(move(get<0>(children)), *m_fitnessMetric);
-		crossedIndividuals.emplace_back(move(get<1>(children)), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(std::move(get<0>(children)), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(std::move(get<1>(children)), *m_fitnessMetric);
 		indexSelected[i] = true;
 		indexSelected[j] = true;
 	}
@@ -159,7 +159,7 @@ Population operator+(Population _a, Population _b)
 	assert(_a.m_fitnessMetric == _b.m_fitnessMetric);
 
 	using ::operator+; // Import the std::vector concat operator from CommonData.h
-	return Population(_a.m_fitnessMetric, move(_a.m_individuals) + move(_b.m_individuals));
+	return Population(_a.m_fitnessMetric, std::move(_a.m_individuals) + std::move(_b.m_individuals));
 }
 
 }
@@ -193,7 +193,7 @@ vector<Individual> Population::chromosomesToIndividuals(
 {
 	vector<Individual> individuals;
 	for (auto& chromosome: _chromosomes)
-		individuals.emplace_back(move(chromosome), _fitnessMetric);
+		individuals.emplace_back(std::move(chromosome), _fitnessMetric);
 
 	return individuals;
 }

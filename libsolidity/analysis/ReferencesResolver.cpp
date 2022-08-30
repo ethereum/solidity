@@ -173,14 +173,15 @@ void ReferencesResolver::endVisit(ModifierDefinition const&)
 
 void ReferencesResolver::endVisit(IdentifierPath const& _path)
 {
-	Declaration const* declaration = m_resolver.pathFromCurrentScope(_path.path());
-	if (!declaration)
+	std::vector<Declaration const*> declarations = m_resolver.pathFromCurrentScopeWithAllDeclarations(_path.path());
+	if (declarations.empty())
 	{
 		m_errorReporter.fatalDeclarationError(7920_error, _path.location(), "Identifier not found or not unique.");
 		return;
 	}
 
-	_path.annotation().referencedDeclaration = declaration;
+	_path.annotation().referencedDeclaration = declarations.back();
+	_path.annotation().pathDeclarations = std::move(declarations);
 }
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
@@ -275,7 +276,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			return;
 		}
 
-	m_yulAnnotation->externalReferences[&_identifier].suffix = move(suffix);
+	m_yulAnnotation->externalReferences[&_identifier].suffix = std::move(suffix);
 	m_yulAnnotation->externalReferences[&_identifier].declaration = declarations.front();
 }
 

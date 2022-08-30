@@ -49,6 +49,7 @@
                 "typeDescriptions": {}
               },
               "id": 10,
+              "memberLocation": "57:1:1",
               "memberName": "X",
               "nodeType": "MemberAccess",
               "src": "55:3:1",
@@ -99,6 +100,10 @@
               {
                 "id": 5,
                 "name": "A",
+                "nameLocations":
+                [
+                  "43:1:1"
+                ],
                 "nodeType": "IdentifierPath",
                 "src": "43:1:1"
               },

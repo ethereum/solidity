@@ -75,6 +75,7 @@ do
         "--color_output=no"
         "--show_progress=yes"
         "--logger=JUNIT,error,test_results/$(get_logfile_basename "$((CPUs * CIRCLE_NODE_INDEX + run))").xml"
+        "--logger=HRF,error,stdout"
         "${BOOST_TEST_ARGS[@]}"
     )
     SOLTEST_ARGS=("--evm-version=$EVM" "${SOLTEST_FLAGS[@]}")

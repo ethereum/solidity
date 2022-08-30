@@ -10,8 +10,6 @@ contract C is A {
     constructor() A(m) {
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // m(uint256): 1 -> 0
 // m(uint256): 5 -> 20

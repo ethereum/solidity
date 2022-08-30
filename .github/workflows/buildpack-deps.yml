@@ -37,6 +37,9 @@ jobs:
 
       - name: comment PR
         if: "env.DOCKER_IMAGE"
-        uses: aarlt/comment-on-pr@v1.2.0
+        # NOTE: Can't update to v1.3.1 due to an error: `/entrypoint.sh:5:in 'require_relative': cannot load such file -- /lib/github (LoadError)`
+        uses: unsplash/comment-on-pr@ffe8f97ccc63ce12c3c23c6885b169db67958d3b #v1.3.0
         with:
           msg: "`${{ env.DOCKER_IMAGE }} ${{ env.DOCKER_REPO_DIGEST }}`."
+          check_for_duplicate_msg: false
+

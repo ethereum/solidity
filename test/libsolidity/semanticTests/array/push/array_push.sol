@@ -14,10 +14,8 @@ contract c {
         z = data[2];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 5, 4, 3, 3
-// gas irOptimized: 111317
+// gas irOptimized: 111448
 // gas legacy: 111838
 // gas legacyOptimized: 111128

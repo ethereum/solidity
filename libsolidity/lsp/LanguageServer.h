@@ -33,7 +33,25 @@
 namespace solidity::lsp
 {
 
+class RenameSymbol;
 enum class ErrorCode;
+
+/**
+ * Enum to mandate what files to take into consideration for source code analysis.
+ */
+enum class FileLoadStrategy
+{
+	/// Takes only those files into consideration that are explicitly opened and those
+	/// that have been directly or indirectly imported.
+	DirectlyOpenedAndOnImported = 0,
+
+	/// Takes all Solidity (.sol) files within the project root into account.
+	/// Symbolic links will be followed, even if they lead outside of the project directory
+	/// (`--allowed-paths` is currently ignored by the LSP).
+	///
+	/// This resembles the closest what other LSPs should be doing already.
+	ProjectDirectory = 1,
+};
 
 /**
  * Solidity Language Server, managing one LSP client.
@@ -60,25 +78,31 @@ public:
 	FileRepository& fileRepository() noexcept { return m_fileRepository; }
 	Transport& client() noexcept { return m_client; }
 	frontend::ASTNode const* astNodeAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos);
-	langutil::CharStreamProvider const& charStreamProvider() const noexcept { return m_compilerStack; }
+	frontend::CompilerStack const& compilerStack() const noexcept { return m_compilerStack; }
 
 private:
 	/// Checks if the server is initialized (to be used by messages that need it to be initialized).
 	/// Reports an error and returns false if not.
 	void requireServerInitialized();
 	void handleInitialize(MessageID _id, Json::Value const& _args);
+	void handleInitialized(MessageID _id, Json::Value const& _args);
 	void handleWorkspaceDidChangeConfiguration(Json::Value const& _args);
 	void setTrace(Json::Value const& _args);
 	void handleTextDocumentDidOpen(Json::Value const& _args);
 	void handleTextDocumentDidChange(Json::Value const& _args);
 	void handleTextDocumentDidClose(Json::Value const& _args);
+	void handleRename(Json::Value const& _args);
 	void handleGotoDefinition(MessageID _id, Json::Value const& _args);
+	void semanticTokensFull(MessageID _id, Json::Value const& _args);
 
 	/// Invoked when the server user-supplied configuration changes (initiated by the client).
 	void changeConfiguration(Json::Value const&);
 
 	/// Compile everything until after analysis phase.
 	void compile();
+
+	std::vector<boost::filesystem::path> allSolidityFilesFromProject() const;
+
 	using MessageHandler = std::function<void(MessageID, Json::Value const&)>;
 
 	Json::Value toRange(langutil::SourceLocation const& _location);
@@ -97,6 +121,7 @@ private:
 	/// Set of source unit names for which we sent diagnostics to the client in the last iteration.
 	std::set<std::string> m_nonemptyDiagnostics;
 	FileRepository m_fileRepository;
+	FileLoadStrategy m_fileLoadStrategy = FileLoadStrategy::ProjectDirectory;
 
 	frontend::CompilerStack m_compilerStack;
 

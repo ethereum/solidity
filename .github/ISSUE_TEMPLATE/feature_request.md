@@ -10,6 +10,8 @@ name: Feature Request
     - [Solidity chat](https://gitter.im/ethereum/solidity)
     - [Stack Overflow](https://ethereum.stackexchange.com/)
 - Ensure the issue isn't already reported (check `feature` and `language design` labels).
+- If you feel uncertain about your feature request, perhaps it's better to open a language design or feedback forum thread via the issue selector, or by going to the forum directly.
+    - [Solidity forum](https://forum.soliditylang.org/)
 
 *Delete the above section and the instructions in the sections below before submitting*
 -->

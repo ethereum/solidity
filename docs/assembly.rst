@@ -8,7 +8,7 @@ Inline Assembly
 
 
 You can interleave Solidity statements with inline assembly in a language close
-to the one of the Ethereum virtual machine. This gives you more fine-grained control,
+to the one of the Ethereum Virtual Machine. This gives you more fine-grained control,
 which is especially useful when you are enhancing the language by writing libraries.
 
 The language used for inline assembly in Solidity is called :ref:`Yul <yul>`
@@ -108,7 +108,7 @@ efficient code, for example:
                 for
                     { let end := add(dataElementLocation, mul(len, 0x20)) }
                     lt(dataElementLocation, end)
-                    { data := add(dataElementLocation, 0x20) }
+                    { dataElementLocation := add(dataElementLocation, 0x20) }
                 {
                     sum := add(sum, mload(dataElementLocation))
                 }
@@ -116,7 +116,7 @@ efficient code, for example:
         }
     }
 
-
+.. index:: selector; of a function
 
 Access to External Variables, Functions and Libraries
 -----------------------------------------------------
@@ -126,15 +126,15 @@ You can access Solidity variables and other identifiers by using their name.
 Local variables of value type are directly usable in inline assembly.
 They can both be read and assigned to.
 
-Local variables that refer to memory evaluate to the address of the variable in memory not the value itself.
+Local variables that refer to memory evaluate to the address of the variable in memory, not the value itself.
 Such variables can also be assigned to, but note that an assignment will only change the pointer and not the data
 and that it is your responsibility to respect Solidity's memory management.
 See :ref:`Conventions in Solidity <conventions-in-solidity>`.
 
 Similarly, local variables that refer to statically-sized calldata arrays or calldata structs
 evaluate to the address of the variable in calldata, not the value itself.
-The variable can also be assigned a new offset, but note that no validation to ensure that
-the variable will not point beyond ``calldatasize()`` is performed.
+The variable can also be assigned a new offset, but note that no validation is performed to ensure that
+the variable will not point beyond ``calldatasize()``.
 
 For external function pointers the address and the function selector can be
 accessed using ``x.address`` and ``x.selector``.
@@ -205,7 +205,7 @@ Local Solidity variables are available for assignments, for example:
     ``assembly { signextend(<num_bytes_of_x_minus_one>, x) }``
 
 
-Since Solidity 0.6.0 the name of a inline assembly variable may not
+Since Solidity 0.6.0, the name of a inline assembly variable may not
 shadow any declaration visible in the scope of the inline assembly block
 (including variable, contract and function declarations).
 
@@ -253,7 +253,7 @@ starting from where this pointer points at and update it.
 There is no guarantee that the memory has not been used before and thus
 you cannot assume that its contents are zero bytes.
 There is no built-in mechanism to release or free allocated memory.
-Here is an assembly snippet you can use for allocating memory that follows the process outlined above
+Here is an assembly snippet you can use for allocating memory that follows the process outlined above:
 
 .. code-block:: yul
 
@@ -276,7 +276,7 @@ first slot of the array and followed by the array elements.
 
 .. warning::
     Statically-sized memory arrays do not have a length field, but it might be added later
-    to allow better convertibility between statically- and dynamically-sized arrays, so
+    to allow better convertibility between statically and dynamically-sized arrays; so,
     do not rely on this.
 
 Memory Safety
@@ -289,8 +289,8 @@ perform additional memory optimizations, if it can rely on certain assumptions a
 
 While we recommend to always respect Solidity's memory model, inline assembly allows you to use memory
 in an incompatible way. Therefore, moving stack variables to memory and additional memory optimizations are,
-by default, disabled in the presence of any inline assembly block that contains a memory operation or assigns
-to solidity variables in memory.
+by default, globally disabled in the presence of any inline assembly block that contains a memory operation
+or assigns to Solidity variables in memory.
 
 However, you can specifically annotate an assembly block to indicate that it in fact respects Solidity's memory
 model as follows:
@@ -346,7 +346,7 @@ If the memory operations use a length of zero, it is also fine to just use any o
     }
 
 Note that not only memory operations in inline assembly itself can be memory-unsafe, but also assignments to
-solidity variables of reference type in memory. For example the following is not memory-safe:
+Solidity variables of reference type in memory. For example the following is not memory-safe:
 
 .. code-block:: solidity
 
@@ -356,7 +356,7 @@ solidity variables of reference type in memory. For example the following is not
     }
     x[0x20] = 0x42;
 
-Inline assembly that neither involves any operations that access memory nor assigns to any solidity variables
+Inline assembly that neither involves any operations that access memory nor assigns to any Solidity variables
 in memory is automatically considered memory-safe and does not need to be annotated.
 
 .. warning::
@@ -365,7 +365,7 @@ in memory is automatically considered memory-safe and does not need to be annota
     undefined behaviour that cannot easily be discovered by testing.
 
 In case you are developing a library that is meant to be compatible across multiple versions
-of solidity, you can use a special comment to annotate an assembly block as memory-safe:
+of Solidity, you can use a special comment to annotate an assembly block as memory-safe:
 
 .. code-block:: solidity
 
@@ -374,5 +374,5 @@ of solidity, you can use a special comment to annotate an assembly block as memo
         ...
     }
 
-Note that we will disallow the annotation via comment in a future breaking release, so if you are not concerned with
+Note that we will disallow the annotation via comment in a future breaking release; so, if you are not concerned with
 backwards-compatibility with older compiler versions, prefer using the dialect string.

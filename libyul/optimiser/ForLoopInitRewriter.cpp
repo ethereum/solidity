@@ -40,7 +40,7 @@ void ForLoopInitRewriter::operator()(Block& _block)
 				(*this)(forLoop.post);
 				vector<Statement> rewrite;
 				swap(rewrite, forLoop.pre.statements);
-				rewrite.emplace_back(move(forLoop));
+				rewrite.emplace_back(std::move(forLoop));
 				return { std::move(rewrite) };
 			}
 			else

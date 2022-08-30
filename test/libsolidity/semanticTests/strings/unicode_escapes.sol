@@ -17,7 +17,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // oneByteUTF8() -> 0x20, 7, "aaa$aaa"
 // twoBytesUTF8() -> 0x20, 8, "aaa\xc2\xa2aaa"

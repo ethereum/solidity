@@ -8,8 +8,6 @@ contract C {
         return storageArray.length;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // set_get_length(uint256): 0 -> 0
 // set_get_length(uint256): 1 -> 0
@@ -19,11 +17,11 @@ contract C {
 // gas legacy: 85822
 // gas legacyOptimized: 83608
 // set_get_length(uint256): 0xFF -> 0
-// gas irOptimized: 821875
+// gas irOptimized: 821872
 // gas legacy: 810327
 // gas legacyOptimized: 786258
 // set_get_length(uint256): 0xFFF -> 0
-// gas irOptimized: 12841087
+// gas irOptimized: 12841084
 // gas legacy: 12649059
 // gas legacyOptimized: 12267870
 // set_get_length(uint256): 0xFFFF -> FAILURE # Out-of-gas #

@@ -13,7 +13,6 @@ contract C {
 }
 // ====
 // compileToEwasm: false
-// compileViaYul: also
 // ----
 // library: D
 // f() -> 3

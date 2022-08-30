@@ -7,7 +7,6 @@ contract C {
     function h(S calldata s) external pure returns (uint r) { s.x; r = 3; }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // f((function)): "01234567890123456789abcd" -> 1

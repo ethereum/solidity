@@ -10,7 +10,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // called() -> 0x00

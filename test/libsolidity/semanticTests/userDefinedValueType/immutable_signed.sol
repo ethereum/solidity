@@ -14,8 +14,6 @@ contract C {
     }
     function g() internal pure returns (uint) { return 2; }
 }
-// ====
-// compileViaYul: also
 // ----
 // direct() -> -2, 0x6162000000000000000000000000000000000000000000000000000000000000
 // viaasm() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x6162000000000000000000000000000000000000000000000000000000000000

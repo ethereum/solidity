@@ -26,8 +26,6 @@ contract test {
         nestedValue = str.nstr.nestedValue;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // getToDelete() -> 0
 // getTopValue() -> 0

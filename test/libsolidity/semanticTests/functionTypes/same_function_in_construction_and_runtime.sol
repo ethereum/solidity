@@ -15,7 +15,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // runtime(uint256): 3 -> 6
 // initial() -> 4

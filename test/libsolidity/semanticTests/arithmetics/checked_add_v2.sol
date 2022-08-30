@@ -4,8 +4,6 @@ contract C {
         return a + b;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint16,uint16): 65534, 0 -> 0xfffe
 // f(uint16,uint16): 65536, 0 -> FAILURE

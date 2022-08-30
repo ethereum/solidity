@@ -25,11 +25,9 @@ contract C {
 		return (a, (new A()).f(), (new B()).f());
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 3, 7, 5
-// gas irOptimized: 126136
+// gas irOptimized: 126044
 // gas legacy: 151334
 // gas legacyOptimized: 125166
 // x() -> 7

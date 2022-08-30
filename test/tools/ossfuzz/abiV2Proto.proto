@@ -92,6 +92,7 @@ message Contract {
     required VarDecl state_vars = 1;
     required TestFunction testfunction = 2;
     required Test test = 3;
+    required uint32 seed = 4;
 }
 
 package solidity.test.abiv2fuzzer;

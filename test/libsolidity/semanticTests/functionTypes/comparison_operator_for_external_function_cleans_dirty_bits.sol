@@ -11,7 +11,6 @@ contract C {
   }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=constantinople
 // ----
 // comparison_operators_for_external_function_pointers_with_dirty_bits() -> true

@@ -27,12 +27,10 @@ contract test {
         data.recursive[4].z = 9;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // check() -> false
 // set() ->
-// gas irOptimized: 134411
+// gas irOptimized: 134436
 // gas legacy: 135277
 // gas legacyOptimized: 134064
 // check() -> true

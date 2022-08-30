@@ -11,14 +11,12 @@ contract c {
     }
     function fullClear() public { delete dynamic; }
 }
-// ====
-// compileViaYul: also
 // ----
 // storageEmpty -> 1
 // fill() ->
-// gas irOptimized: 519884
-// gas legacy: 521710
-// gas legacyOptimized: 516922
+// gas irOptimized: 519487
+// gas legacy: 521584
+// gas legacyOptimized: 517027
 // storageEmpty -> 0
 // halfClear() ->
 // storageEmpty -> 0

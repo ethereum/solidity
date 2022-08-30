@@ -19,9 +19,8 @@ contract A {
 }
 // ====
 // EVMVersion: >=constantinople
-// compileViaYul: also
 // ----
 // f(), 10 ether -> 3007, 3008, 3009
-// gas irOptimized: 271831
-// gas legacy: 422501
-// gas legacyOptimized: 287472
+// gas irOptimized: 255997
+// gas legacy: 387712
+// gas legacyOptimized: 283266

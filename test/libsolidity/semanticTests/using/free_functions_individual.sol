@@ -21,8 +21,6 @@ function zero(uint) pure returns (uint) {
 }
 
 
-// ====
-// compileViaYul: also
 // ----
 // f(uint256): 10 -> 10
 // g(uint256): 10 -> 0

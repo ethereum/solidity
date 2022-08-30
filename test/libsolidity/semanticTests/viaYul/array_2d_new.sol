@@ -6,7 +6,5 @@ contract C {
 		return a[0][0] = n;
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint256): 42 -> 42

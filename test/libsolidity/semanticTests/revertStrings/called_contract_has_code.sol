@@ -7,7 +7,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // revertStrings: debug
 // ----
 // g() -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"

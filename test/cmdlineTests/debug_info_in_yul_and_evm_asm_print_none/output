@@ -182,7 +182,7 @@ object "C_6" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        return(memoryguard(0x80), _1)
+                        return(_1, _1)
                     }
                 }
                 revert(0, 0)

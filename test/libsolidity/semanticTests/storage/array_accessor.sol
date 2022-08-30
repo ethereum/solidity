@@ -22,8 +22,6 @@ contract test {
         multiple_map[2][1][2].finalArray[3] = 5;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // data(uint256): 0 -> 8
 // data(uint256): 8 -> FAILURE

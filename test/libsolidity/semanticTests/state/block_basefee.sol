@@ -10,7 +10,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=london
-// compileViaYul: also
 // ----
 // f() -> 7
 // g() -> 7

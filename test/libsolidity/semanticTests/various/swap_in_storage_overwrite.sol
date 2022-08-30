@@ -25,12 +25,11 @@ contract c {
 
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // x() -> 0, 0
 // y() -> 0, 0
 // set() ->
-// gas irOptimized: 109713
+// gas irOptimized: 109691
 // gas legacy: 109732
 // gas legacyOptimized: 109682
 // x() -> 1, 2

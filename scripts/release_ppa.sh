@@ -9,13 +9,18 @@
 ## If the given branch is "release", the resulting package will be uploaded to
 ## ethereum/ethereum PPA, or ethereum/ethereum-dev PPA otherwise.
 ##
-## The gnupg key for "builds@ethereum.org" has to be present in order to sign
-## the package.
-##
 ## It will clone the Solidity git from github, determine the version,
 ## create a source archive and push it to the ubuntu ppa servers.
 ##
-## This requires the following entries in /etc/dput.cf:
+## To interact with launchpad, you need to set the variables $LAUNCHPAD_EMAIL
+## and $LAUNCHPAD_KEYID in the file .release_ppa_auth in the root directory of
+## the project to your launchpad email and pgp keyid.
+## This could for example look like this:
+##
+##  LAUNCHPAD_EMAIL=your-launchpad-email@ethereum.org
+##  LAUNCHPAD_KEYID=123ABCFFFFFFFF
+##
+## Additionally the following entries in /etc/dput.cf are required:
 ##
 ##  [ethereum-dev]
 ##  fqdn			= ppa.launchpad.net
@@ -34,11 +39,16 @@
 ##  method			= ftp
 ##  incoming		= ~ethereum/ethereum-static
 ##  login			= anonymous
-
 ##
 ##############################################################################
 
-set -ev
+set -e
+
+
+REPO_ROOT="$(dirname "$0")/.."
+
+# shellcheck source=scripts/common.sh
+source "${REPO_ROOT}/scripts/common.sh"
 
 if [ -z "$1" ]
 then
@@ -48,20 +58,28 @@ else
 fi
 
 is_release() {
-    [[ "${branch}" = "release" ]] || [[ "${branch}" =~ ^v[0-9]+(\.[0-9])*$ ]]
+    [[ "${branch}" =~ ^v[0-9]+(\.[0-9]+)*$ ]]
 }
 
-keyid=379F4801D622CDCF
-email=builds@ethereum.org
+sourcePPAConfig
+
 packagename=solc
 
-static_build_distribution=impish
+# This needs to be a still active release
+static_build_distribution=focal
 
-DISTRIBUTIONS="focal impish jammy"
+DISTRIBUTIONS="focal jammy kinetic"
 
 if is_release
 then
     DISTRIBUTIONS="$DISTRIBUTIONS STATIC"
+
+    # Sanity checks
+    checkDputEntries "\[ethereum\]"
+    checkDputEntries "\[ethereum-static\]"
+else
+    # Sanity check
+    checkDputEntries "\[ethereum-dev\]"
 fi
 
 for distribution in $DISTRIBUTIONS
@@ -108,7 +126,7 @@ mv solidity solc
 # Fetch dependencies
 mkdir -p ./solc/deps/downloads/ 2>/dev/null || true
 wget -O ./solc/deps/downloads/jsoncpp-1.9.3.tar.gz https://github.com/open-source-parsers/jsoncpp/archive/1.9.3.tar.gz
-wget -O ./solc/deps/downloads/range-v3-0.11.0.tar.gz https://github.com/ericniebler/range-v3/archive/0.11.0.tar.gz
+wget -O ./solc/deps/downloads/range-v3-0.12.0.tar.gz https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz
 wget -O ./solc/deps/downloads/fmt-8.0.1.tar.gz https://github.com/fmtlib/fmt/archive/8.0.1.tar.gz
 
 # Determine version
@@ -245,7 +263,7 @@ chmod +x debian/rules
 
 versionsuffix=0ubuntu1~${distribution}
 # bump version / add entry to changelog
-EMAIL="$email" dch -v "1:${debversion}-${versionsuffix}" "git build of ${commithash}"
+EMAIL="$LAUNCHPAD_EMAIL" dch -v "1:${debversion}-${versionsuffix}" "git build of ${commithash}"
 
 
 # build source package
@@ -287,7 +305,7 @@ fi
 )
 
 # sign the package
-debsign --re-sign -k "${keyid}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
+debsign --re-sign -k "${LAUNCHPAD_KEYID}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
 
 # upload
 dput "${pparepo}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"

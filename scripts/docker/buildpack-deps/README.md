@@ -18,18 +18,22 @@ located in `develop`.
 ### Build, Test & Push
 
 Note that the whole workflow - including all defined strategies (image variants) - will be triggered,
-even if only a single Dockerfile was change. The full workflow will only gets executed, if the corresponding
+even if only a single Dockerfile was changed. The full workflow will only get executed, if the corresponding
 Dockerfile was changed. The execution of workflows of unchanged Dockerfiles will not continue and just return success.
 See `scripts/ci/docker_upgrade.sh`.
 
 If the version check was successful, the docker image will be built using the Dockerfile located in
 `scripts/docker/buildpack-deps/Dockerfile.*`.
 
-The resulting docker image will be tested by executing
-the corresponding `scripts/ci/buildpack-deps_test_*` scripts. These scripts are normally symlinked to `scripts/ci/build.sh`,
-except for the `buildpack-deps-ubuntu1604.clang.ossfuzz` docker image, that is symlinked to `scripts/ci/build_ossfuzz.sh`.
+The resulting docker image will be tested by executing the corresponding `scripts/ci/buildpack-deps_test_*` scripts.
+Some of these scripts are symlinked to `scripts/ci/build.sh`, except the following two:
+ * `buildpack-deps-ubuntu1604.clang.ossfuzz` => `scripts/ci/build_ossfuzz.sh`
+ * `buildpack-deps_test_emscripten.sh` => `scripts/ci/build_emscripten.sh`
+
 These scripts `scripts/ci/build.sh` and `scripts/ci/build_ossfuzz.sh` are also used by CircleCI, see `.circleci/config.yml`.
 
 If the tests passed successfully, the docker image will get tagged by the version defined within the corresponding `Dockerfile`.
 Finally, a comment will be added to the PR that contains the full repository, version and repository digest
 of the freshly created docker image.
+
+The files `.circleci/config.yml` and `scripts/build_emscripten.sh` need to be updated with the new hash posted in the comment.

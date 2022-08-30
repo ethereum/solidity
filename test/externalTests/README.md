@@ -79,7 +79,7 @@ The above is the workflow to use when the update is straightforward and looks sa
 fine to just modify the branches directly. If this is not the case, it is recommended to first perform the
 operation on copies of these version-specific branches and test them by creating PRs on `develop` and
 `breaking` to see if tests pass. The PRs should just modify project scripts in `test/externalScripts/`
-to use the updated copies of the branches and can be discarded aferwards without being merged.
+to use the updated copies of the branches and can be discarded afterwards without being merged.
 
 #### Changes needed after a breaking release of the compiler
 When a non-backwards-compatible version becomes the most recent release, `breaking` branch

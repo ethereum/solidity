@@ -88,11 +88,11 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
     diff_kinds = [Diff.Minus, Diff.Plus]
     codegen_kinds = [Kind.IrOptimized, Kind.LegacyOptimized, Kind.Legacy]
     return tuple(
-        sum([
+        sum(
             val
             for (diff_kind, codegen_kind, val) in out
             if diff_kind == _diff_kind and codegen_kind == _codegen_kind
-        ])
+        )
         for _diff_kind in diff_kinds
         for _codegen_kind in codegen_kinds
     )

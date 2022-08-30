@@ -39,12 +39,10 @@ contract c {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // getLengths() -> 0, 0
 // setLengths(uint256,uint256): 48, 49 ->
-// gas irOptimized: 111295
+// gas irOptimized: 111448
 // gas legacy: 108571
 // gas legacyOptimized: 100417
 // getLengths() -> 48, 49

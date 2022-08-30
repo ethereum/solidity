@@ -12,7 +12,5 @@ contract C {
         return input.at(1);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // secondChar() -> 98

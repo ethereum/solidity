@@ -85,4 +85,14 @@ VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration cons
 	return rootDecl;
 }
 
+Expression const* resolveOuterUnaryTuples(Expression const* _expr)
+{
+	while (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(_expr))
+		if (tupleExpression->components().size() == 1)
+			_expr = tupleExpression->components().front().get();
+		else
+			break;
+	return _expr;
+}
+
 }

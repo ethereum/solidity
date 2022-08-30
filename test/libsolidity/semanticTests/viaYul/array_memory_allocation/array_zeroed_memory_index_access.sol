@@ -13,8 +13,6 @@ contract C {
 		return x[a];
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // set(string,uint256,uint256): 0x60, 5, 0, 32, "01234567890123456789012345678901" -> 0
 // set(string,uint256,uint256): 0x60, 5, 1, 32, "01234567890123456789012345678901" -> 0

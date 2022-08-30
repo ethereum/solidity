@@ -15,11 +15,9 @@ contract Main {
         return flag;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): "abc", true
-// gas irOptimized: 106683
+// gas irOptimized: 106546
 // gas legacy: 145838
 // gas legacyOptimized: 104017
 // getFlag() -> true

@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
+#include <libsolidity/ast/ASTUtils.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -617,11 +618,7 @@ bool ControlFlowBuilder::visit(VariableDeclarationStatement const& _variableDecl
 						solAssert(tupleExpression->components().size() > i, "");
 						expression = tupleExpression->components()[i].get();
 					}
-				while (auto tupleExpression = dynamic_cast<TupleExpression const*>(expression))
-					if (tupleExpression->components().size() == 1)
-						expression = tupleExpression->components().front().get();
-					else
-						break;
+				expression = resolveOuterUnaryTuples(expression);
 				m_currentNode->variableOccurrences.emplace_back(
 					*var,
 					VariableOccurrence::Kind::Assignment,

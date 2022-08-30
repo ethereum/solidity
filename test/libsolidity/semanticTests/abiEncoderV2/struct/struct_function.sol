@@ -10,7 +10,5 @@ contract C {
     }
     function g() public returns (uint) { return 7; }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 7, 3

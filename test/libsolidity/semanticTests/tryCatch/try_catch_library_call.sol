@@ -37,7 +37,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // library: L
 // f(bool): true -> 8, 0x40, 0

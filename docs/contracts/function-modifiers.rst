@@ -111,6 +111,12 @@ whitespace-separated list and are evaluated in the order presented.
 Modifiers cannot implicitly access or change the arguments and return values of functions they modify.
 Their values can only be passed to them explicitly at the point of invocation.
 
+In function modifiers, it is necessary to specify when you want the function to which the modifier is
+applied to be run. The placeholder statement (denoted by a single underscore character ``_``) is used to
+denote where the body of the function being modified should be inserted. Note that the
+placeholder operator is different from using underscores as leading or trailing characters in variable
+names, which is a stylistic choice.
+
 Explicit returns from a modifier or function body only leave the current
 modifier or function body. Return variables are assigned and
 control flow continues after the ``_`` in the preceding modifier.

@@ -11,7 +11,5 @@ contract C {
         return ptr();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // g() -> 66

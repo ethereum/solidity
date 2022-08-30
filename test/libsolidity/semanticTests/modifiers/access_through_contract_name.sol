@@ -13,7 +13,6 @@ contract C is A {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // x() -> 7

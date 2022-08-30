@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9611: (92-101): Decoding type uint256[] memory[3] memory not supported.
+// TypeError 9611: (92-101): Decoding type uint256[][3] memory not supported.

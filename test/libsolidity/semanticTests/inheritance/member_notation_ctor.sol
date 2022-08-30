@@ -18,8 +18,6 @@ contract A {
 	}
 }
 
-// ====
-// compileViaYul: also
 // ----
 // g(int256): -1 -> -1
 // gas legacy: 103494

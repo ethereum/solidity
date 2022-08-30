@@ -47,7 +47,7 @@ private:
 		Dialect const& _dialect,
 		std::map<YulString, SideEffects> _functionSideEffects
 	):
-		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects))
+		DataFlowAnalyzer(_dialect, MemoryAndStorage::Analyze, std::move(_functionSideEffects))
 	{}
 
 protected:

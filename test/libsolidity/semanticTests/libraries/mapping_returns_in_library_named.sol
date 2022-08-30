@@ -24,7 +24,6 @@ contract Test {
 }
 // ====
 // compileToEwasm: false
-// compileViaYul: also
 // ----
 // library: Lib
 // f() -> 0, 0x2a, 0, 0, 0x15, 0x54

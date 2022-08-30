@@ -81,6 +81,7 @@ enum class ScannerError
 	IllegalHexDigit,
 	IllegalCommentTerminator,
 	IllegalEscapeSequence,
+	UnicodeCharacterInNonUnicodeString,
 	IllegalCharacterInString,
 	IllegalStringEndQuote,
 	IllegalNumberSeparator,
@@ -159,6 +160,8 @@ public:
 	std::string const& currentCommentLiteral() const { return m_skippedComments[Current].literal; }
 	/// Called by the parser during FunctionDefinition parsing to clear the current comment
 	void clearCurrentCommentLiteral() { m_skippedComments[Current].literal.clear(); }
+
+	ScannerKind scannerKind() const { return m_kind; }
 
 	///@}
 

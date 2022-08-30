@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4061: (47-77): Type mapping(uint256 => uint256)[] is only valid in storage because it contains a (nested) mapping.
+// TypeError 4061: (47-77): Type mapping(uint256 => uint256)[] memory is only valid in storage because it contains a (nested) mapping.

@@ -11,8 +11,6 @@ contract C {
 		d = c;
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // a() -> 1
 // b() -> 1

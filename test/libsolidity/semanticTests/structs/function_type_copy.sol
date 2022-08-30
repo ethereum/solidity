@@ -39,6 +39,5 @@ contract Test {
 }
 // ====
 // EVMVersion: >homestead
-// compileViaYul: also
 // ----
 // test() -> true

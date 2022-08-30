@@ -129,14 +129,16 @@ of votes.
                 require(to != msg.sender, "Found loop in delegation.");
             }
 
-            // Since `sender` is a reference, this
-            // modifies `voters[msg.sender].voted`
             Voter storage delegate_ = voters[to];
 
             // Voters cannot delegate to accounts that cannot vote.
             require(delegate_.weight >= 1);
+
+            // Since `sender` is a reference, this
+            // modifies `voters[msg.sender]`.
             sender.voted = true;
             sender.delegate = to;
+
             if (delegate_.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes
@@ -191,5 +193,8 @@ of votes.
 Possible Improvements
 =====================
 
-Currently, many transactions are needed to assign the rights
-to vote to all participants. Can you think of a better way?
+Currently, many transactions are needed to
+assign the rights to vote to all participants.
+Moreover, if two or more proposals have the same
+number of votes, ``winningProposal()`` is not able
+to register a tie. Can you think of a way to fix these issues?

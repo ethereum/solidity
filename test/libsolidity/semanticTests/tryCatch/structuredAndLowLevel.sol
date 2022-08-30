@@ -18,7 +18,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // f(bool): true -> 1, 2, 96, 7, "success"
 // f(bool): false -> 99, 0, 96, 82, "message longer than 32 bytes 32 ", "bytes 32 bytes 32 bytes 32 bytes", " 32 bytes 32 bytes"

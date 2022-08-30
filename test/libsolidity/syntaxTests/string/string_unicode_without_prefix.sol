@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// ParserError 8936: (86-88): Invalid character in string.
+// ParserError 8936: (86-88): Invalid character in string. If you are trying to use Unicode characters, use a unicode"..." string literal.

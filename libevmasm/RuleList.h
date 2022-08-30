@@ -275,17 +275,40 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4_5(
 
 template <class Pattern>
 std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
+	bool _forYulOptimizer,
 	Pattern A,
 	Pattern B,
 	Pattern,
 	Pattern X,
-	Pattern
+	Pattern Y
 )
 {
 	using Word = typename Pattern::Word;
 	using Builtins = typename Pattern::Builtins;
 
 	std::vector<SimplificationRule<Pattern>> rules;
+
+	// The libevmasm optimizer does not support rules resulting in opcodes with more than two arguments.
+	if (_forYulOptimizer)
+	{
+		// Replace MOD(MUL(X, Y), A) with MULMOD(X, Y, A) iff A=2**N
+		rules.push_back({
+			Builtins::MOD(Builtins::MUL(X, Y), A),
+			[=]() -> Pattern { return Builtins::MULMOD(X, Y, A); },
+			[=] {
+				return A.d() > 0 && ((A.d() & (A.d() - 1)) == 0);
+			}
+		});
+
+		// Replace MOD(ADD(X, Y), A) with ADDMOD(X, Y, A) iff A=2**N
+		rules.push_back({
+			Builtins::MOD(Builtins::ADD(X, Y), A),
+			[=]() -> Pattern { return Builtins::ADDMOD(X, Y, A); },
+			[=] {
+				return A.d() > 0 && ((A.d() & (A.d() - 1)) == 0);
+			}
+		});
+	}
 
 	// Replace MOD X, <power-of-two> with AND X, <power-of-two> - 1
 	for (size_t i = 0; i < Pattern::WordSize; ++i)
@@ -798,7 +821,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	rules += simplificationRuleListPart3(A, B, C, W, X);
 	rules += simplificationRuleListPart4(A, B, C, W, X);
 	rules += simplificationRuleListPart4_5(A, B, C, W, X);
-	rules += simplificationRuleListPart5(A, B, C, W, X);
+	rules += simplificationRuleListPart5(_evmVersion.has_value(), A, B, C, W, X);
 	rules += simplificationRuleListPart6(A, B, C, W, X);
 	rules += simplificationRuleListPart7(A, B, C, W, X);
 	rules += simplificationRuleListPart8(A, B, C, W, X);

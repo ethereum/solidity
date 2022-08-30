@@ -31,12 +31,11 @@ contract test {
 //
 // ====
 // EVMVersion: >=constantinople
-// compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 443542
-// gas legacy: 765640
-// gas legacyOptimized: 541810
+// gas irOptimized: 438376
+// gas legacy: 750723
+// gas legacyOptimized: 536620
 // encode_inline_asm(bytes): 0x20, 0 -> 0x20, 0
 // encode_inline_asm(bytes): 0x20, 1, "f" -> 0x20, 4, "Zg=="
 // encode_inline_asm(bytes): 0x20, 2, "fo" -> 0x20, 4, "Zm8="
@@ -52,10 +51,10 @@ contract test {
 // encode_no_asm(bytes): 0x20, 5, "fooba" -> 0x20, 8, "Zm9vYmE="
 // encode_no_asm(bytes): 0x20, 6, "foobar" -> 0x20, 8, "Zm9vYmFy"
 // encode_inline_asm_large()
-// gas irOptimized: 1385042
-// gas legacy: 1652033
-// gas legacyOptimized: 1201033
+// gas irOptimized: 1387039
+// gas legacy: 1688033
+// gas legacyOptimized: 1205033
 // encode_no_asm_large()
-// gas irOptimized: 3335099
-// gas legacy: 4777077
-// gas legacyOptimized: 2890077
+// gas irOptimized: 3316107
+// gas legacy: 4765077
+// gas legacyOptimized: 2908077

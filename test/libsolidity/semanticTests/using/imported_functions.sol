@@ -12,8 +12,6 @@ contract C {
 using {A.inc, f} for uint;
 import {inc as f} from "A";
 import "A" as A;
-// ====
-// compileViaYul: also
 // ----
 // f(uint256): 5 -> 12
 // f(uint256): 10 -> 0x16

@@ -32,7 +32,6 @@ contract D {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: <byzantium
 // ----
 // f() -> 0x1

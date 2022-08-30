@@ -26,6 +26,10 @@
           {
             "id": 2,
             "name": "A",
+            "nameLocations":
+            [
+              "29:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "29:1:1"
           },
@@ -53,6 +57,10 @@
           {
             "id": 5,
             "name": "B",
+            "nameLocations":
+            [
+              "49:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "49:1:1"
           },
@@ -80,6 +88,10 @@
           {
             "id": 8,
             "name": "C",
+            "nameLocations":
+            [
+              "69:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "69:1:1"
           },
@@ -107,6 +119,10 @@
           {
             "id": 11,
             "name": "D",
+            "nameLocations":
+            [
+              "89:1:1"
+            ],
             "nodeType": "IdentifierPath",
             "src": "89:1:1"
           },

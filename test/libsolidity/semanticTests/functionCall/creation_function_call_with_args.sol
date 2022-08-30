@@ -13,11 +13,9 @@ contract D {
         return c.i();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): 2 ->
-// gas irOptimized: 200217
+// gas irOptimized: 195258
 // gas legacy: 245842
 // gas legacyOptimized: 195676
 // f() -> 2

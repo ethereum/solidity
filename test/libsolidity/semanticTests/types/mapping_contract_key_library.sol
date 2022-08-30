@@ -16,8 +16,6 @@ contract test {
         L.set(table, k, v);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // library: L
 // get(address): 0 -> 0

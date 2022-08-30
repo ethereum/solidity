@@ -18,10 +18,9 @@ contract A {
 }
 // ====
 // EVMVersion: >=constantinople
-// compileViaYul: also
 // ----
 // different_salt() -> true
 // same_salt() -> true
-// gas irOptimized: 98438898
+// gas irOptimized: 98438900
 // gas legacy: 98439116
 // gas legacyOptimized: 98438970

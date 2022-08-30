@@ -14,11 +14,9 @@ contract ClientReceipt {
         return other.getAddress();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(), 2000 wei ->
-// gas irOptimized: 183544
+// gas irOptimized: 173106
 // gas legacy: 235195
 // gas legacyOptimized: 176766
 // balance -> 1500

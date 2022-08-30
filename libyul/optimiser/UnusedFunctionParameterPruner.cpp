@@ -118,7 +118,7 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 				originalFunction.returnVariables =
 					filter(originalFunction.returnVariables, used.second);
 
-				return make_vector<Statement>(move(originalFunction), move(linkingFunction));
+				return make_vector<Statement>(std::move(originalFunction), std::move(linkingFunction));
 			}
 		}
 

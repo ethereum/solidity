@@ -6,7 +6,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // constructor()
 // f() -> 2

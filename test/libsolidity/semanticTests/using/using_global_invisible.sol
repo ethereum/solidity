@@ -37,9 +37,7 @@ contract D {
         return c.f().inc().inc().dec().unwrap();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // library: "A":L
 // test() -> 3
-// gas legacy: 130369
+// gas legacy: 123521

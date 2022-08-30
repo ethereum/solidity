@@ -9,7 +9,6 @@ contract B is A {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // constructor() ->
 // gas irOptimized: 121557

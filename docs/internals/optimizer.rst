@@ -330,7 +330,7 @@ the ``--yul-optimizations`` option:
 The sequence inside ``[...]`` will be applied multiple times in a loop until the Yul code
 remains unchanged or until the maximum number of rounds (currently 12) has been reached.
 
-Available abbreviations are listed in the `Yul optimizer docs <yul.rst#optimization-step-sequence>`_.
+Available abbreviations are listed in the :ref:`Yul optimizer docs <optimization-step-sequence>`.
 
 Preprocessing
 -------------
@@ -683,7 +683,7 @@ Conflicting values are resolved in the following way:
 
 - "unused", "undecided" -> "undecided"
 - "unused", "used" -> "used"
-- "undecided, "used" -> "used"
+- "undecided", "used" -> "used"
 
 For for-loops, the condition, body and post-part are visited twice, taking
 the joining control-flow at the condition into account.

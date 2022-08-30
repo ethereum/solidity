@@ -90,7 +90,7 @@ string TextTransform::run(wasm::Module const& _module)
 	ret += "\n";
 	for (auto const& f: _module.functions)
 		ret += transform(f) + "\n";
-	return move(ret) + ")\n";
+	return std::move(ret) + ")\n";
 }
 
 string TextTransform::operator()(wasm::Literal const& _literal)
@@ -159,7 +159,7 @@ string TextTransform::operator()(wasm::If const& _if)
 string TextTransform::operator()(wasm::Loop const& _loop)
 {
 	string label = _loop.labelName.empty() ? "" : " $" + _loop.labelName;
-	return "(loop" + move(label) + "\n" + indented(joinTransformed(_loop.statements, '\n')) + ")\n";
+	return "(loop" + std::move(label) + "\n" + indented(joinTransformed(_loop.statements, '\n')) + ")\n";
 }
 
 string TextTransform::operator()(wasm::Branch const& _branch)
@@ -180,7 +180,7 @@ string TextTransform::operator()(wasm::Return const&)
 string TextTransform::operator()(wasm::Block const& _block)
 {
 	string label = _block.labelName.empty() ? "" : " $" + _block.labelName;
-	return "(block" + move(label) + "\n" + indented(joinTransformed(_block.statements, '\n')) + "\n)\n";
+	return "(block" + std::move(label) + "\n" + indented(joinTransformed(_block.statements, '\n')) + "\n)\n";
 }
 
 string TextTransform::indented(string const& _in)
@@ -230,7 +230,7 @@ string TextTransform::joinTransformed(vector<wasm::Expression> const& _expressio
 		string t = visit(e);
 		if (!t.empty() && !ret.empty() && ret.back() != '\n')
 			ret += _separator;
-		ret += move(t);
+		ret += std::move(t);
 	}
 	return ret;
 }

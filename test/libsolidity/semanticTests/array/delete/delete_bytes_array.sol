@@ -30,8 +30,6 @@ contract C {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0
 // g() -> 0

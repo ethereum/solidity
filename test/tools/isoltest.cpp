@@ -160,7 +160,6 @@ TestTool::Result TestTool::process()
 				m_path.string(),
 				m_options.evmVersion(),
 				m_options.vmPaths,
-				m_options.enforceViaYul,
 				m_options.enforceCompileToEwasm,
 				m_options.enforceGasTest,
 				m_options.enforceGasTestMinValue
@@ -506,6 +505,11 @@ int main(int argc, char const *argv[])
 		return EXIT_FAILURE;
 	}
 	catch (std::runtime_error const& exception)
+	{
+		cerr << exception.what() << endl;
+		return EXIT_FAILURE;
+	}
+	catch (solidity::test::ConfigException const& exception)
 	{
 		cerr << exception.what() << endl;
 		return EXIT_FAILURE;

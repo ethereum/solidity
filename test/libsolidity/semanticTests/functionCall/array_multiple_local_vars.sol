@@ -24,7 +24,6 @@ contract test {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f(uint256[]): 32, 3, 1000, 1, 2 -> 3
 // f(uint256[]): 32, 3, 100, 500, 300 -> 600

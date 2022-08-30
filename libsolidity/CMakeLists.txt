@@ -53,8 +53,8 @@ set(sources
 	ast/ASTAnnotations.h
 	ast/ASTEnums.h
 	ast/ASTForward.h
-	ast/ASTJsonConverter.cpp
-	ast/ASTJsonConverter.h
+	ast/ASTJsonExporter.cpp
+	ast/ASTJsonExporter.h
 	ast/ASTUtils.cpp
 	ast/ASTUtils.h
 	ast/ASTJsonImporter.cpp
@@ -159,10 +159,14 @@ set(sources
 	lsp/FileRepository.h
 	lsp/GotoDefinition.cpp
 	lsp/GotoDefinition.h
+	lsp/RenameSymbol.cpp
+	lsp/RenameSymbol.h
 	lsp/HandlerBase.cpp
 	lsp/HandlerBase.h
 	lsp/LanguageServer.cpp
 	lsp/LanguageServer.h
+	lsp/SemanticTokensBuilder.cpp
+	lsp/SemanticTokensBuilder.h
 	lsp/Transport.cpp
 	lsp/Transport.h
 	lsp/Utils.cpp

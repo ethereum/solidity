@@ -13,7 +13,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // f() -> 0x40, 0x8, 0x3, "abc"
 // g() -> 0x40, 0x80, 0x3, "abc", 0x3, "def"

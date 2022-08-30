@@ -3,8 +3,6 @@ contract c {
     function del() public returns (bool) { delete data; return true; }
     bytes data;
 }
-// ====
-// compileViaYul: also
 // ----
 // (): 7 ->
 // storageEmpty -> 0

@@ -21,7 +21,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.8.15")
+set(PROJECT_VERSION "0.8.17")
 # OSX target needed in order to support std::visit
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
@@ -35,6 +35,7 @@ endif()
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
+option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 
 # Setup cccache.
 include(EthCcache)
@@ -48,6 +49,9 @@ include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
 
 find_package(Threads)
 
+if(NOT PEDANTIC)
+  message(WARNING "-- Pedantic build flags turned off. Warnings will not make compilation fail. This is NOT recommended in development builds.")
+endif()
 # Figure out what compiler and system are we using
 include(EthCompilerSettings)
 
@@ -65,7 +69,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 
 include(EthOptions)
 configure_project(TESTS)
-set(LATEST_Z3_VERSION "4.8.17")
+set(LATEST_Z3_VERSION "4.11.0")
 set(MINIMUM_Z3_VERSION "4.8.0")
 find_package(Z3)
 if (${Z3_FOUND})

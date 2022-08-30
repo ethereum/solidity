@@ -15,8 +15,6 @@ contract C {
         return 16;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 16
 // gas legacy: 103488

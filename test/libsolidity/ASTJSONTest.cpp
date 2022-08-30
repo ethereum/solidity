@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonExporter.h>
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
@@ -249,7 +249,7 @@ bool ASTJSONTest::runTest(
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		ostringstream result;
-		ASTJsonConverter(_compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first), JsonFormat{ JsonFormat::Pretty });
+		ASTJsonExporter(_compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first), JsonFormat{ JsonFormat::Pretty });
 		_variant.result += result.str();
 		if (i != m_sources.size() - 1)
 			_variant.result += ",";

@@ -101,17 +101,9 @@ std::string joinHumanReadablePrefixed
 		return _separator + joinHumanReadable(_list, _separator, _lastSeparator);
 }
 
-/// Formats large numbers to be easily readable by humans.
-/// Returns decimal representation for smaller numbers; hex for large numbers.
-/// "Special" numbers, powers-of-two and powers-of-two minus 1, are returned in
-/// formulaic form like 0x01 * 2**24 - 1.
-/// @a T will typically by unsigned, u160, u256 or bigint.
-/// @param _value to be formatted
-/// @param _useTruncation if true, internal truncation is also applied,
-/// like  0x5555...{+56 more}...5555
-/// @example formatNumber((u256)0x7ffffff)
+/// Same as @ref formatNumberReadable but only for unsigned numbers
 template <class T>
-inline std::string formatNumberReadable(
+inline std::string formatUnsignedNumberReadable (
 	T const& _value,
 	bool _useTruncation = false
 )
@@ -181,7 +173,40 @@ inline std::string formatNumberReadable(
 	return str;
 }
 
-/// Safely converts an usigned integer as string into an unsigned int type.
+/// Formats large numbers to be easily readable by humans.
+/// Returns decimal representation for smaller numbers; hex for large numbers.
+/// "Special" numbers, powers-of-two and powers-of-two minus 1, are returned in
+/// formulaic form like 0x01 * 2**24 - 1.
+/// @a T can be any integer variable, will typically be u160, u256 or bigint.
+/// @param _value to be formatted
+/// @param _useTruncation if true, internal truncation is also applied,
+/// like  0x5555...{+56 more}...5555
+/// @example formatNumberReadable((u256)0x7ffffff) = "0x08 * 2**24"
+/// @example formatNumberReadable(-57896044618658097711785492504343953926634992332820282019728792003956564819968) = -0x80 * 2**248
+template <class T>
+inline std::string formatNumberReadable(
+	T const& _value,
+	bool _useTruncation = false
+)
+{
+	static_assert(
+		std::numeric_limits<T>::is_integer,
+		"only integer numbers are supported"
+	);
+
+	if (_value >= 0)
+	{
+		bigint const _v = bigint(_value);
+		return formatUnsignedNumberReadable(_v, _useTruncation);
+	}
+	else
+	{
+		bigint const _abs_value = bigint(-1) * _value;
+		return "-" + formatUnsignedNumberReadable(_abs_value, _useTruncation);
+	}
+}
+
+/// Safely converts an unsigned integer as string into an unsigned int type.
 ///
 /// @return the converted number or nullopt in case of an failure (including if it would not fit).
 inline std::optional<unsigned> toUnsignedInt(std::string const& _value)

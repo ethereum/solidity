@@ -11,8 +11,6 @@ contract C {
         return h(bytes.concat(a, b));
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(bytes,bytes): 0x40, 0x80, 32, "abcdabcdabcdabcdabcdabcdabcdabcd", 5, "bcdef" -> 0x1106e19b6f06d1cce71c2d816754f83dfa5b95df958c5cbf12b7c472320c427c
 // g(bytes,bytes): 0x40, 0x80, 32, "abcdabcdabcdabcdabcdabcdabcdabcd", 5, "bcdef" -> 37

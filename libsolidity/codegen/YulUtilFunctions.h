@@ -73,8 +73,9 @@ public:
 
 	/// @returns a function that copies raw bytes of dynamic length from calldata
 	/// or memory to memory.
-	/// Pads with zeros and might write more than exactly length.
-	std::string copyToMemoryFunction(bool _fromCalldata);
+	/// @params _cleanup If true, pads with zeros up to the 32 byte boundary after the specified length
+	/// signature: (src, dst, length) ->
+	std::string copyToMemoryFunction(bool _fromCalldata, bool _cleanup);
 
 	/// @returns the name of a function that copies a string literal to memory
 	/// and returns a pointer to the memory area containing the string literal.
@@ -232,8 +233,8 @@ public:
 	std::string storageArrayPopFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that pushes an element to a storage array
-/// @param _fromType represents the type of the element being pushed.
-/// If _fromType is ReferenceType the function will perform deep copy.
+	/// @param _fromType represents the type of the element being pushed.
+	/// If _fromType is ReferenceType the function will perform deep copy.
 	/// signature: (array, value)
 	std::string storageArrayPushFunction(ArrayType const& _type, Type const* _fromType = nullptr);
 
@@ -258,9 +259,9 @@ public:
 	/// signature (to_slot, from_ptr) ->
 	std::string copyByteArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
 
-	/// @returns the name of a function that will copy an array of value types from storage to storage.
-	/// signature (to_slot, from_slot) ->
-	std::string copyValueArrayStorageToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
+	/// @returns the name of a function that will copy an array of value types to storage.
+	/// signature (to_slot, from_ptr[, from_length]) ->
+	std::string copyValueArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
 
 	/// Returns the name of a function that will convert a given length to the
 	/// size in memory (number of storage slots or calldata/memory bytes) it
@@ -530,7 +531,7 @@ public:
 	std::string externalFunctionPointersEqualFunction();
 
 private:
-/// @returns the name of a function that copies a struct from calldata or memory to storage
+	/// @returns the name of a function that copies a struct from calldata or memory to storage
 	/// signature: (slot, value) ->
 	std::string copyStructToStorageFunction(StructType const& _from, StructType const& _to);
 

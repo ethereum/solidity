@@ -21,10 +21,8 @@ contract CopyTest {
         return (memoryTree.children.length, memoryTree.children[0].children.length, memoryTree.children[1].children.length);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // run() -> 2, 23, 42
-// gas irOptimized: 194003
+// gas irOptimized: 193756
 // gas legacy: 186016
 // gas legacyOptimized: 184668

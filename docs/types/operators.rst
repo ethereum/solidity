@@ -5,7 +5,7 @@ Operators
 
 Arithmetic and bit operators can be applied even if the two operands do not have the same type.
 For example, you can compute ``y = x + z``, where ``x`` is a ``uint8`` and ``z`` has
-the type ``int32``. In these cases, the following mechanism will be used to determine
+the type ``uint32``. In these cases, the following mechanism will be used to determine
 the type in which the operation is computed (this is important in case of overflow)
 and the type of the operator's result:
 
@@ -18,7 +18,9 @@ and the type of the operator's result:
 In case one of the operands is a :ref:`literal number <rational_literals>` it is first converted to its
 "mobile type", which is the smallest type that can hold the value
 (unsigned types of the same bit-width are considered "smaller" than the signed types).
-If both are literal numbers, the operation is computed with arbitrary precision.
+If both are literal numbers, the operation is computed with effectively unlimited precision in
+that the expression is evaluated to whatever precision is necessary so that none is lost
+when the result is used with a non-literal type.
 
 The operator's result type is the same as the type the operation is performed in,
 except for comparison operators where the result is always ``bool``.
@@ -108,3 +110,11 @@ value it referred to previously.
             assert(y.length == 0);
         }
     }
+
+.. index:: ! operator; precedence
+.. _order:
+
+Order of Precedence of Operators
+--------------------------------
+
+.. include:: types/operator-precedence-table.rst

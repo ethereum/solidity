@@ -116,7 +116,7 @@ multimap<string, DocTag> DocStringParser::parse()
 			currPos = nlPos + 1;
 		}
 	}
-	return move(m_docTags);
+	return std::move(m_docTags);
 }
 
 DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, bool _appending)

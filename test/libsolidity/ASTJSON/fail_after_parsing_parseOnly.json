@@ -65,6 +65,10 @@
                 {
                   "id": 4,
                   "name": "S",
+                  "nameLocations":
+                  [
+                    "50:1:1"
+                  ],
                   "nodeType": "IdentifierPath",
                   "src": "50:1:1"
                 },
@@ -114,6 +118,10 @@
                       {
                         "id": 13,
                         "name": "error",
+                        "nameLocations":
+                        [
+                          "95:5:1"
+                        ],
                         "nodeType": "IdentifierPath",
                         "src": "95:5:1"
                       },
@@ -141,6 +149,7 @@
                     "typeDescriptions": {}
                   },
                   "id": 18,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "117:3:1",
@@ -251,6 +260,10 @@
                   {
                     "id": 8,
                     "name": "E",
+                    "nameLocations":
+                    [
+                      "72:1:1"
+                    ],
                     "nodeType": "IdentifierPath",
                     "src": "72:1:1"
                   },

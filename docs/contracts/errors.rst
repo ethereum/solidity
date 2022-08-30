@@ -1,5 +1,4 @@
-.. index:: ! error, revert
-
+.. index:: ! error, revert, ! selector; of an error
 .. _errors:
 
 *******************************
@@ -80,3 +79,8 @@ of the built-in type ``Panic(uint256)``.
     by default. This means that an inner call
     can "forge" revert data that looks like it could have come from the
     contract that called it.
+
+Members of Errors
+=================
+
+- ``error.selector``: A ``bytes4`` value containing the error selector.

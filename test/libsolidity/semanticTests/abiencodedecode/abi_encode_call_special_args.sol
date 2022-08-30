@@ -36,8 +36,6 @@ contract C {
 		assert(keccak256(fSignatureFromLiteralUint()) == keccak256(fPointerUint()));
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // assertConsistentSelectors() ->
 // fSignatureFromLiteralNoArgs() -> 0x20, 0x04, 12200448252684243758085936796735499259670113115893304444050964496075123064832
