@@ -46,7 +46,7 @@ test::OptionsReaderAndMessages test::parseCommandLineAndReadInputFiles(
 {
 	vector<char const*> argv = makeArgv(_commandLine);
 	stringstream sin(_standardInputContent), sout, serr;
-	CommandLineInterface cli(sin, sout, serr);
+	CommandLineInterface cli(sin, sout, serr, false);
 	bool success = cli.parseArguments(static_cast<int>(_commandLine.size()), argv.data());
 	cli.readInputFiles();
 
@@ -67,7 +67,7 @@ test::OptionsReaderAndMessages test::runCLI(
 {
 	vector<char const*> argv = makeArgv(_commandLine);
 	stringstream sin(_standardInputContent), sout, serr;
-	CommandLineInterface cli(sin, sout, serr);
+	CommandLineInterface cli(sin, sout, serr, false);
 	bool success = cli.run(static_cast<int>(_commandLine.size()), argv.data());
 
 	return {

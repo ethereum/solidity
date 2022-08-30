@@ -43,11 +43,13 @@ public:
 		std::istream& _sin,
 		std::ostream& _sout,
 		std::ostream& _serr,
+		bool _tty = true,
 		CommandLineOptions const& _options = CommandLineOptions{}
 	):
 		m_sin(_sin),
 		m_sout(_sout),
 		m_serr(_serr),
+		m_tty{_tty},
 		m_options(_options)
 	{}
 
@@ -79,6 +81,7 @@ public:
 	std::optional<std::string> const& standardJsonInput() const { return m_standardJsonInput; }
 
 private:
+	void printLogo();
 	void printVersion();
 	void printLicense();
 	void compile();
@@ -136,6 +139,7 @@ private:
 	std::istream& m_sin;
 	std::ostream& m_sout;
 	std::ostream& m_serr;
+	bool m_tty;
 	bool m_hasOutput = false;
 	FileReader m_fileReader;
 	std::optional<std::string> m_standardJsonInput;

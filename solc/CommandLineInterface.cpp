@@ -625,17 +625,39 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 	return true;
 }
 
+void CommandLineInterface::printLogo()
+{
+	if (!m_tty)
+		return;
+
+	// Simply print out the logo (with white background) onto stdout.
+	// The format is Sixel, which is part of the VT340 standard, is using DCS (device control string)
+	// to submit the data through stdout.
+	// Non-supporting terminals will simply ignore the DCS sequence, resulting into a no-op.
+	//
+	// The logo was converted from the docs/logo.svg using:
+	//     inkscape -w 128 -h 128 docs/logo.svg -o solc/logo.png
+	//     img2sixel solc/logo.png solc/logo.sixel
+	// Since the DCS payload consists exclusively of ASCII printable characters, I decided to embedd it
+	// as a string directly.
+	auto constexpr sixelGraphics = "\033Pq\"1;1;128;128#0;2;97;97;97#1;2;94;94;94#2;2;28;28;28#3;2;22;22;22#4;2;69;69;69#5;2;53;53;53#6;2;9;9;9#7;2;35;35;35#8;2;44;44;44#9;2;16;16;16#10;2;38;38;38#11;2;60;60;60#12;2;91;91;91#13;2;82;82;82#14;2;31;31;31#15;2;72;72;72#16;2;47;47;47#17;2;19;19;19#18;2;66;66;66#19;2;50;50;50#20;2;78;78;78#0!128~-!128~-!128~-!128~-!47~^FB@#3E]!20}]EA#0@BN!49~$#13!47?_#1G\?\?!25@?C#5_$#9!48?_G?G_#2!20?_G#4?A#11G#12O$#8!48?O#6o{o#10!22?_wwo$#5!49?C#2A#7!23?OC#8C-#0!44~^F@#14@#2!22?O?A#13!6?@#0BN^!45~$#16!44?_#6_w}!5~}w_#7!14?_#10o{!6~{o#18O#1_$#17!45?O!8?CO#14!15?G#16!7?A#8G_$#11!45?G#3C!6?@BN!14~NF@#15!7?C$!46?A-#0!41~NB#7A#9@!11?@#3BF^!7~NB#7A#11!12?@#0@F^!42~$#17!41?_#6o{}!11~}{o#10!8?_w{!12~}w_#4_$#18!41?O#2G#12@#17!14?G_#14!7?O#2C@#13!13?A#8O$#13!42?C#19!40?C#20G-#0!37~^F@#5@#3!19?@F^^F@#8!19?@#11A?_$#13!37?_G#6O[!19^[O#8?_#10OW]!18^][O#13O$#9!38?_g!20_ag_#19?!24_$#14!38?O#1A#17A#2!23?GA#1!20?@#0BN!39~$#8!39?C#7!25?C@#5!20?G$#12!87?C-#0!38~{o#10O#3!18?_#8O#0o{!65~$#2!38?@#17BN!18~^NB#2@$#11!38?A#14C#13_#12!19?_#7C#4A$#15!39?G#13!21?G-#0!41~{w_#7_#10!11?_#0_w}!16~^!51~$#1!41?A#17@F^!11~^F@#5@#20!16?_$#16!41?@#3A#2G#14!13?G#2A$#11!42?C#18O#20!13?O#18C-#0!44~}wo!7?ow}!15~^FB???BN!48~$#13!44?@C#5G#11_!6?G#1C#13@!15?_!5?C#14_$#17!45?@FN!5~NB@!17?_o{}{o#20O$#8!45?A#2?O!5?O#3C#19A#1!17?G???@#8G$#4!53?_#16!19?O#3G#2A@#5A$#11!74?C#18@-#0!48~{o_o{!16~NF@!9?BF^!44~$#14!48?@#13GO?A#1!16?O#17_w}!7~{o_#13_$#15!48?A#17BFB#7@#5!16?_#2O!9?A#3G#12G$#10!49?C#3G#8C#11!18?G#14C#10@#18!7?@#11C#16O$#12!51?G#15!19?A-#0!66~NB#8A#10!14?@#0@FN!41~$#2!66?_#17o{!14~}w_#1O$#18!66?O#13C@#2!15?C#3O#5_$#7!67?G#15!16?A#11G-#0!38~!25NF@#11@#8!21?A#0B!39~$#4!38?_#16!24O?C#13!22?@#5_$#19!38?O#10!23_#14_O#17gK!21NKO$#3!63?_?A#14!22?G$#13!63?G#6O!23o#20C$#1!64?A-#0!39~{o#1_#2!17?_G#14A#6???@BN!16~^NB#17@$#8!39?@??_#7!16?O#3o{~~~{w_#9!16?_#10O#0o{!40~$#20!39?A#10BN^!16~NF@#17???A#9CO#12!17?_#2C#18A$#13!40?G#11O#13!44?G$#19!40?C-#0!42~}w_#5_#3!10?_w{!9~}wo#9_#7!9?_#0_w}!43~$#18!42?@#10@F^!10~NB#7@#17!9?@C#3!12?G#11C#19@$#8!43?A#13O#2!11?O?A#6!10?BN^!9~^F@$#15!43?C#16G#14!12?C#15!24?O#17A-#0!45~}wo#20_#14???_G#2C@#6!16?@F^~~~NB#1C#13@$#12!45?@#10@BN~~~^F@#17!17?AG_???OC#8A$#1!46?C#8CO#3!4?ow}!16~{o#18!4?_#0ow}!46~$#11!46?A#4G#7!6?A#5!24?G#9@-#0!49~{!27w{!50~$#13!49?A#10B@#9!23?@#6B#2@$#19!49?@#5C#3C!23FE#8C#13A$#2!51?A-#0!128~-!128~-!128~-!128B\033\\"sv;
+	sout() << sixelGraphics;
+}
+
 void CommandLineInterface::processInput()
 {
 	switch (m_options.input.mode)
 	{
 	case InputMode::Help:
+		printLogo();
 		CommandLineParser::printHelp(sout());
 		break;
 	case InputMode::License:
+		printLogo();
 		printLicense();
 		break;
 	case InputMode::Version:
+		printLogo();
 		printVersion();
 		break;
 	case InputMode::StandardJson:

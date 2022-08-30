@@ -37,7 +37,8 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
+		bool const tty = isatty(STDOUT_FILENO);
+		solidity::frontend::CommandLineInterface cli(cin, cout, cerr, tty);
 		return cli.run(argc, argv) ? 0 : 1;
 	}
 	catch (smtutil::SMTLogicError const& _exception)
