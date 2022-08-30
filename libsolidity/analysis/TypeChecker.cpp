@@ -3872,7 +3872,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		m_errorReporter.typeError(
 			9921_error,
 			_usingFor.location(),
-			"The \"using\" directive cannot be used to attach functions to enum types."
+			"The \"using\" directive cannot be used to bind functions to enum types."
 		);
 
 	Type const* normalizedType = TypeProvider::withLocationIfReference(
