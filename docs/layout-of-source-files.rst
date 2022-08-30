@@ -105,7 +105,7 @@ arrays and structs. Apart from supporting more types, it involves more extensive
 validation and safety checks, which may result in higher gas costs, but also heightened
 security. It is considered
 non-experimental as of Solidity 0.6.0 and it is enabled by default starting
-with Solidity 0.8.0. There old coder can still be selected using ``pragma abicoder v1;``.
+with Solidity 0.8.0. The old ABI coder can still be selected using ``pragma abicoder v1;``.
 
 The set of types supported by the new encoder is a strict superset of
 the ones supported by the old one. Contracts that use it can interact with ones
