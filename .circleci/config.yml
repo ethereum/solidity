@@ -9,20 +9,20 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-13
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:aa64242ecba4f040a839eadfaf20e8489cf93d1cb96ab90df2b240cdbbfe7f7c"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-14
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d1ef23849db4c5462b248d89c111da4009b153cbd5002cb8755b0580312be581"
   ubuntu-2004-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-13
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:caaf8d42aaf07397d1540e570f096a4fb1ef11fda7da3f1141d8852ec8322a9e"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-14
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:beb8c91998ec0df99a488900b3723a06f1122f0954fc73786b6c53fd73a6408d"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-18
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:048002d71a1f86f83dedb79dd057760b752256c75646ba5ad5c1bbe92e1695aa"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-19
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:8c9bf1813c261d781f4c65fceed2dfb3ecf5be9ecf49bddbd250b570a7f3baea"
   emscripten-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:emscripten-12
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:65a82268792a5a2ee85ad432baf04a056c3a4006941ab3a4416eb1a0614883f3"
+    # solbuildpackpusher/solidity-buildpack-deps:emscripten-13
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:f1c13f3450d1f2e53ea18ac1ac1a17e932573cb9a5ccd0fd9ef6dd44f6402fa9"
   evm-version:
     type: string
     default: london
@@ -1087,6 +1087,9 @@ jobs:
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
+      # The high parallelism in this job is causing the SMT tests to run out of memory,
+      # so disabling for now.
+      SOLTEST_FLAGS: --no-smt
     <<: *steps_soltest
 
   t_ubu_release_soltest_all: &t_ubu_release_soltest_all
