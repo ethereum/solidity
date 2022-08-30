@@ -683,7 +683,7 @@ Conflicting values are resolved in the following way:
 
 - "unused", "undecided" -> "undecided"
 - "unused", "used" -> "used"
-- "undecided, "used" -> "used"
+- "undecided", "used" -> "used"
 
 For for-loops, the condition, body and post-part are visited twice, taking
 the joining control-flow at the condition into account.
