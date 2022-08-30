@@ -644,10 +644,9 @@ private:
 /**
  * Using for directive:
  *
- * 1. `using LibraryName for T` attaches all functions from the library `LibraryName` to the type `T`
+ * 1. `using LibraryName for T` attaches all functions from the library `LibraryName` to the type `T`.
  * 2. `using LibraryName for *` attaches to all types.
- * 3. `using {f1, f2, ..., fn} for T` attaches the functions `f1`, `f2`, ...,
- *     `fn`, respectively to `T`.
+ * 3. `using {f1, f2, ..., fn} for T` attaches the functions `f1`, `f2`, ..., `fn`, respectively to `T`.
  *
  * For version 3, T has to be implicitly convertible to the first parameter type of
  * all functions, and this is checked at the point of the using statement. For versions 1 and

@@ -3120,12 +3120,12 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 	vector<ASTPointer<Expression const>> arguments = _funCall.sortedArguments();
 	auto functionParams = funDef->parameters();
 	unsigned firstParam = 0;
-	if (funType->bound())
+	if (funType->hasBoundFirstArgument())
 	{
 		calledExpr = innermostTuple(*calledExpr);
-		auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
-		solAssert(boundFunction, "");
-		args.push_back(expr(boundFunction->expression(), functionParams.front()->type()));
+		auto const& attachedFunction = dynamic_cast<MemberAccess const*>(calledExpr);
+		solAssert(attachedFunction, "");
+		args.push_back(expr(attachedFunction->expression(), functionParams.front()->type()));
 		firstParam = 1;
 	}
 

@@ -17,16 +17,16 @@ at contract level.
 The first part, ``A``, can be one of:
 
 - a list of file-level or library functions (``using {f, g, h, L.t} for uint;``) -
-  only those functions will be attached to the type.
+  only those functions will be attached to the type as member functions
 - the name of a library (``using L for uint;``) -
-  all functions (both public and internal ones) of the library are attached to the type
+  all functions (both public and internal ones) of the library are attached to the type.
 
 At file level, the second part, ``B``, has to be an explicit type (without data location specifier).
 Inside contracts, you can also use ``using L for *;``,
 which has the effect that all functions of the library ``L``
 are attached to *all* types.
 
-If you specify a library, *all* functions in the library are attached,
+If you specify a library, *all* functions in the library get attached,
 even those where the type of the first parameter does not
 match the type of the object. The type is checked at the
 point the function is called and function overload

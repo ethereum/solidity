@@ -401,7 +401,7 @@ protected:
 	void createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
 
 	/// @returns the symbolic arguments for a function call,
-	/// taking into account bound functions and
+	/// taking into account attached functions and
 	/// type conversion.
 	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
 

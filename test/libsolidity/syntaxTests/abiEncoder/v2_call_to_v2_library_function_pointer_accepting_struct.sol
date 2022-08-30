@@ -22,4 +22,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 9574: (B:269-313): Type function (struct L.Item memory) is not implicitly convertible to expected type function (struct L.Item memory) external. Special functions can not be converted to function types.
+// TypeError 9574: (B:269-313): Type function (struct L.Item memory) is not implicitly convertible to expected type function (struct L.Item memory) external. Special functions cannot be converted to function types.

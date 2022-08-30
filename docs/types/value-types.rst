@@ -664,7 +664,7 @@ introduced type and ``V`` has to be a built-in value type (the "underlying type"
 ``C.wrap`` is used to convert from the underlying type to the custom type. Similarly, the
 function ``C.unwrap`` is used to convert from the custom type to the underlying type.
 
-The type ``C`` does not have any operators or bound member functions. In particular, even the
+The type ``C`` does not have any operators or attached member functions. In particular, even the
 operator ``==`` is not defined. Explicit and implicit conversions to and from other types are
 disallowed.
 

@@ -10,5 +10,5 @@ contract C {
     using {id} for S;
 }
 // ----
-// TypeError 3100: (112-114): The function "id" cannot be bound to the type "uint256" because the type cannot be implicitly converted to the first argument of the function ("uint16").
-// TypeError 3100: (140-142): The function "id" cannot be bound to the type "struct S" because the type cannot be implicitly converted to the first argument of the function ("uint16").
+// TypeError 3100: (112-114): The function "id" cannot be attached to the type "uint256" because the type cannot be implicitly converted to the first argument of the function ("uint16").
+// TypeError 3100: (140-142): The function "id" cannot be attached to the type "struct S" because the type cannot be implicitly converted to the first argument of the function ("uint16").
