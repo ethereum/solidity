@@ -811,6 +811,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 					case Token::CallData:
 						location = VariableDeclaration::Location::CallData;
 						break;
+					case Token::Code:
+						solUnimplemented("Code keyword as a data location specifier has not been implemented yet.");
+						break;
 					default:
 						solAssert(false, "Unknown data location.");
 					}

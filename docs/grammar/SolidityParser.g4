@@ -336,7 +336,7 @@ locals [boolean visibilitySet = false, boolean mutabilitySet = false]
  * The declaration of a single variable.
  */
 variableDeclaration: type=typeName location=dataLocation? name=identifier;
-dataLocation: Memory | Storage | Calldata;
+dataLocation: Memory | Storage | Calldata | Code;
 
 /**
  * Complex expression.
