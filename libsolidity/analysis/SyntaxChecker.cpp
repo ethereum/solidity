@@ -496,3 +496,11 @@ bool SyntaxChecker::visit(StructDefinition const& _struct)
 
 	return true;
 }
+
+bool SyntaxChecker::visit(VariableDeclaration const& _node)
+{
+	if (_node.referenceLocation() == VariableDeclaration::Location::Code)
+		m_errorReporter.syntaxError(2397_error, _node.location(), "Usage of \"code\" as a data location is not yet supported.");
+
+	return true;
+}

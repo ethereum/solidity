@@ -18,6 +18,7 @@ Bool: 'bool';
 Break: 'break';
 Bytes: 'bytes';
 Calldata: 'calldata';
+Code: 'code';
 Catch: 'catch';
 Constant: 'constant';
 Constructor: 'constructor';

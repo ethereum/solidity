@@ -336,7 +336,7 @@ locals [boolean visibilitySet = false, boolean mutabilitySet = false]
  * The declaration of a single variable.
  */
 variableDeclaration: type=typeName location=dataLocation? name=identifier;
-dataLocation: Memory | Storage | Calldata;
+dataLocation: Memory | Storage | Calldata | Code;
 
 /**
  * Complex expression.
@@ -348,7 +348,7 @@ dataLocation: Memory | Storage | Calldata;
 expression:
 	expression LBrack index=expression? RBrack # IndexAccess
 	| expression LBrack start=expression? Colon end=expression? RBrack # IndexRangeAccess
-	| expression Period (identifier | Address) # MemberAccess
+	| expression Period (identifier | Address | Code) # MemberAccess
 	| expression LBrace (namedArgument (Comma namedArgument)*)? RBrace # FunctionCallOptions
 	| expression callArgumentList # FunctionCall
 	| Payable callArgumentList # PayableConversion

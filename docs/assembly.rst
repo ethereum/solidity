@@ -45,19 +45,19 @@ Solidity language without a compiler change.
     pragma solidity >=0.4.16 <0.9.0;
 
     library GetCode {
-        function at(address addr) public view returns (bytes memory code) {
+        function at(address addr) public view returns (bytes memory codeObject) {
             assembly {
-                // retrieve the size of the code, this needs assembly
+                // retrieve the size of the codeObject, this needs assembly
                 let size := extcodesize(addr)
                 // allocate output byte array - this could also be done without assembly
-                // by using code = new bytes(size)
-                code := mload(0x40)
+                // by using codeObject = new bytes(size)
+                codeObject := mload(0x40)
                 // new "memory end" including padding
-                mstore(0x40, add(code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+                mstore(0x40, add(codeObject, and(add(add(size, 0x20), 0x1f), not(0x1f))))
                 // store length in memory
-                mstore(code, size)
-                // actually retrieve the code, this needs assembly
-                extcodecopy(addr, add(code, 0x20), 0, size)
+                mstore(codeObject, size)
+                // actually retrieve the codeObject, this needs assembly
+                extcodecopy(addr, add(codeObject, 0x20), 0, size)
             }
         }
     }

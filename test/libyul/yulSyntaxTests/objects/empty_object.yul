@@ -1,4 +1,4 @@
 object "A" {
 }
 // ----
-// ParserError 4846: (13-14): Expected keyword "code".
+// ParserError 2314: (13-14): Expected 'code' but got '}'

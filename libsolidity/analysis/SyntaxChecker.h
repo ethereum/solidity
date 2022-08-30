@@ -97,6 +97,8 @@ private:
 	bool visit(StructDefinition const& _struct) override;
 	bool visit(Literal const& _literal) override;
 
+	bool visit(VariableDeclaration const& _node) override;
+
 	langutil::ErrorReporter& m_errorReporter;
 
 	bool m_useYulOptimizer = false;

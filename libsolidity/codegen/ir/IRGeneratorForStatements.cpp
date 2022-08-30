@@ -2282,6 +2282,9 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 					define(_indexAccess) << indexAccessFunctionCall << "\n";
 				break;
 			}
+			case DataLocation::Code:
+				solUnimplemented("\"code\" as data location is not yet implemented");
+				break;
 		}
 	}
 	else if (baseType.category() == Type::Category::FixedBytes)

@@ -109,10 +109,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 
 shared_ptr<Block> ObjectParser::parseCode(optional<SourceNameMap> _sourceNames)
 {
-	if (currentToken() != Token::Identifier || currentLiteral() != "code")
-		fatalParserError(4846_error, "Expected keyword \"code\".");
-	advance();
-
+	expectToken(Token::Code);
 	return parseBlock(std::move(_sourceNames));
 }
 

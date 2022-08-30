@@ -2467,6 +2467,9 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 			templ("advance", toCompactHexWithPrefix(size));
 			break;
 		}
+		case DataLocation::Code:
+			solUnimplemented("\"code\" as data location is not yet implemented");
+			break;
 		}
 		return templ.render();
 	});

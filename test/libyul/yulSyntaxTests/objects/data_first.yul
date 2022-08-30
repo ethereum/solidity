@@ -3,4 +3,4 @@ object "A" {
   code {}
 }
 // ----
-// ParserError 4846: (15-19): Expected keyword "code".
+// ParserError 2314: (15-19): Expected 'code' but got identifier

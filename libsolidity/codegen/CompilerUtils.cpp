@@ -1111,6 +1111,9 @@ void CompilerUtils::convertType(
 				"Invalid conversion to calldata type."
 			);
 			break;
+		case DataLocation::Code:
+			solUnimplemented("\"code\" as data location is not yet implemented");
+			break;
 		}
 		break;
 	}
@@ -1231,11 +1234,17 @@ void CompilerUtils::convertType(
 			case DataLocation::Memory:
 				// nothing to do
 				break;
+			case DataLocation::Code:
+				solUnimplemented("\"code\" as data location is not yet implemented");
+				break;
 			}
 			break;
 		case DataLocation::CallData:
 			solAssert(_typeOnStack == _targetType);
 			// nothing to do
+			break;
+		case DataLocation::Code:
+			solUnimplemented("\"code\" as data location is not yet implemented");
 			break;
 		}
 		break;

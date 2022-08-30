@@ -34,6 +34,7 @@ InaccessibleDynamicType const TypeProvider::m_inaccessibleDynamic{};
 unique_ptr<ArrayType> TypeProvider::m_bytesStorage;
 unique_ptr<ArrayType> TypeProvider::m_bytesMemory;
 unique_ptr<ArrayType> TypeProvider::m_bytesCalldata;
+unique_ptr<ArrayType> TypeProvider::m_bytesCode;
 unique_ptr<ArrayType> TypeProvider::m_stringStorage;
 unique_ptr<ArrayType> TypeProvider::m_stringMemory;
 
@@ -181,6 +182,7 @@ void TypeProvider::reset()
 	clearCache(m_bytesStorage);
 	clearCache(m_bytesMemory);
 	clearCache(m_bytesCalldata);
+	clearCache(m_bytesCode);
 	clearCache(m_stringStorage);
 	clearCache(m_stringMemory);
 	clearCache(m_emptyTuple);
@@ -281,6 +283,8 @@ Type const* TypeProvider::fromElementaryTypeName(string const& _name)
 				location = DataLocation::CallData;
 			else if (nameParts[1] == "memory")
 				location = DataLocation::Memory;
+			else if (nameParts[1] == "code")
+				location = DataLocation::Code;
 			else
 				solAssert(false, "Unknown data location: " + nameParts[1]);
 		}
@@ -323,6 +327,15 @@ ArrayType const* TypeProvider::bytesCalldata()
 	if (!m_bytesCalldata)
 		m_bytesCalldata = make_unique<ArrayType>(DataLocation::CallData, false);
 	return m_bytesCalldata.get();
+}
+
+ArrayType const* TypeProvider::bytesCode()
+{
+	solUnimplemented("\"code\" as data location not yet implemented.");
+	// TODO :: Remove this Assert when implementing DataLocation::Code
+	if (!m_bytesCode)
+		m_bytesCode = make_unique<ArrayType>(DataLocation::Code, false);
+	return m_bytesCode.get();
 }
 
 ArrayType const* TypeProvider::stringStorage()

@@ -3,18 +3,18 @@ contract C {
         require(b, "failure");
         return x - y;
     }
-    function onlyPanic(bool b, uint x, uint y) public returns (uint r, uint code) {
+    function onlyPanic(bool b, uint x, uint y) public returns (uint r, uint codeObject) {
         try this.uf(b, x, y) returns (uint b) {
             r = b;
         } catch Panic(uint c) {
-            code = c;
+            codeObject = c;
         }
     }
-    function panicAndError(bool b, uint x, uint y) public returns (uint r, uint code, string memory msg_) {
+    function panicAndError(bool b, uint x, uint y) public returns (uint r, uint codeObject, string memory msg_) {
         try this.uf(b, x, y) returns (uint b) {
             r = b;
         } catch Panic(uint c) {
-            code = c;
+            codeObject = c;
         } catch Error(string memory _errmsg) {
             msg_ = _errmsg;
         }

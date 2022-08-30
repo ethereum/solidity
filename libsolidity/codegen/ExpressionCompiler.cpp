@@ -1978,6 +1978,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case DataLocation::Memory:
 					m_context << Instruction::MLOAD;
 					break;
+				case DataLocation::Code:
+					solUnimplemented("\"code\" as data location is not yet implemented");
+					break;
 				}
 		}
 		else if (member == "push" || member == "pop")
@@ -2123,6 +2126,9 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					break;
 				case DataLocation::CallData:
 					ArrayUtils(m_context).accessCallDataArrayElement(arrayType);
+					break;
+				case DataLocation::Code:
+					solUnimplemented("\"code\" as data location is not yet implemented");
 					break;
 			}
 			break;

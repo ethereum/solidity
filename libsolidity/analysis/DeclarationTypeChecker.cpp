@@ -364,6 +364,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 				case Location::Memory: return "\"memory\"";
 				case Location::Storage: return "\"storage\"";
 				case Location::CallData: return "\"calldata\"";
+				case Location::Code: return "\"code\"";
 				case Location::Unspecified: return "none";
 			}
 			return {};
@@ -432,6 +433,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 				break;
 			case Location::CallData:
 				typeLoc = DataLocation::CallData;
+				break;
+			case Location::Code:
+				typeLoc = DataLocation::Code;
 				break;
 			case Location::Unspecified:
 				solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");

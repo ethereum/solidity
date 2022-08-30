@@ -812,6 +812,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 					case Token::CallData:
 						location = VariableDeclaration::Location::CallData;
 						break;
+					case Token::Code:
+						location = VariableDeclaration::Location::Code;
+						break;
 					default:
 						solAssert(false, "Unknown data location.");
 					}
@@ -1025,12 +1028,12 @@ ASTPointer<Identifier> Parser::parseIdentifier()
 	return nodeFactory.createNode<Identifier>(expectIdentifierToken());
 }
 
-ASTPointer<Identifier> Parser::parseIdentifierOrAddress()
+ASTPointer<Identifier> Parser::parseIdentifierOrAddressOrCode()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<Identifier>(expectIdentifierTokenOrAddress());
+	return nodeFactory.createNode<Identifier>(expectIdentifierTokenOrAddressOrCode());
 }
 
 ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
@@ -1905,7 +1908,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 			advance();
 			nodeFactory.markEndPosition();
 			SourceLocation memberLocation = currentLocation();
-			ASTPointer<ASTString> memberName = expectIdentifierTokenOrAddress();
+			ASTPointer<ASTString> memberName = expectIdentifierTokenOrAddressOrCode();
 			expression = nodeFactory.createNode<MemberAccess>(expression, std::move(memberName), std::move(memberLocation));
 			break;
 		}
@@ -2252,7 +2255,7 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 		while (m_scanner->currentToken() == Token::Period)
 		{
 			advance();
-			iap.path.push_back(parseIdentifierOrAddress());
+			iap.path.push_back(parseIdentifierOrAddressOrCode());
 		}
 	}
 	else
@@ -2382,12 +2385,17 @@ ASTPointer<ASTString> Parser::expectIdentifierToken()
 	return getLiteralAndAdvance();
 }
 
-ASTPointer<ASTString> Parser::expectIdentifierTokenOrAddress()
+ASTPointer<ASTString> Parser::expectIdentifierTokenOrAddressOrCode()
 {
 	ASTPointer<ASTString> result;
 	if (m_scanner->currentToken() == Token::Address)
 	{
 		result = make_shared<ASTString>("address");
+		advance();
+	}
+	else if (m_scanner->currentToken() == Token::Code)
+	{
+		result = make_shared<ASTString>("code");
 		advance();
 	}
 	else

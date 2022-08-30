@@ -1022,6 +1022,9 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType, unsigned _stackDept
 			if (_arrayType.isByteArrayOrString())
 				m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
 			break;
+		case DataLocation::Code:
+			solUnimplemented("\"code\" as data location is not yet implemented");
+			break;
 		}
 	}
 }
@@ -1048,6 +1051,9 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 	// stack: <base_ref> <index>
 	switch (location)
 	{
+	case DataLocation::Code:
+		solUnimplemented("\"code\" as data location is not yet implemented");
+		break;
 	case DataLocation::Memory:
 		// stack: <base_ref> <index>
 		if (!_arrayType.isByteArrayOrString())

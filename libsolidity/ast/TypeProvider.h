@@ -57,7 +57,7 @@ public:
 	static Type const* fromElementaryTypeName(ElementaryTypeNameToken const& _type, std::optional<StateMutability> _stateMutability = {});
 
 	/// Converts a given elementary type name with optional data location
-	/// suffix " storage", " calldata" or " memory" to a type pointer. If suffix not given, defaults to " storage".
+	/// suffix " storage", " calldata", "code" or " memory" to a type pointer. If suffix not given, defaults to " storage".
 	static Type const* fromElementaryTypeName(std::string const& _name);
 
 	/// @returns boolean type.
@@ -69,6 +69,7 @@ public:
 	static ArrayType const* bytesStorage();
 	static ArrayType const* bytesMemory();
 	static ArrayType const* bytesCalldata();
+	static ArrayType const* bytesCode();
 	static ArrayType const* stringStorage();
 	static ArrayType const* stringMemory();
 
@@ -217,6 +218,7 @@ private:
 	static std::unique_ptr<ArrayType> m_bytesStorage;
 	static std::unique_ptr<ArrayType> m_bytesMemory;
 	static std::unique_ptr<ArrayType> m_bytesCalldata;
+	static std::unique_ptr<ArrayType> m_bytesCode;
 	static std::unique_ptr<ArrayType> m_stringStorage;
 	static std::unique_ptr<ArrayType> m_stringMemory;
 

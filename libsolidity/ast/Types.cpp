@@ -1505,6 +1505,9 @@ TypeResult ReferenceType::unaryOperatorResult(Token _operator) const
 		return TypeProvider::emptyTuple();
 	case DataLocation::Storage:
 		return isPointer() ? nullptr : TypeProvider::emptyTuple();
+	case DataLocation::Code:
+		solUnimplemented("\"code\" as data location is not yet implemented");
+		break;
 	}
 	return nullptr;
 }
@@ -1532,6 +1535,8 @@ string ReferenceType::stringForReferencePart() const
 		return "calldata";
 	case DataLocation::Memory:
 		return "memory";
+	case DataLocation::Code:
+		return "code";
 	}
 	solAssert(false, "");
 	return "";
@@ -1550,6 +1555,9 @@ string ReferenceType::identifierLocationSuffix() const
 		break;
 	case DataLocation::CallData:
 		id += "_calldata";
+		break;
+	case DataLocation::Code:
+		id += "_code";
 		break;
 	}
 	if (isPointer())
@@ -1709,6 +1717,9 @@ BoolResult ArrayType::validForLocation(DataLocation _loc) const
 			if (storageSizeUpperBound() >= bigint(1) << 256)
 				return BoolResult::err("Type too large for storage.");
 			break;
+		case DataLocation::Code:
+			solUnimplemented("\"code\" as a data location is not yet implemented");
+			break;
 	}
 	return true;
 }
@@ -1789,6 +1800,9 @@ vector<tuple<string, Type const*>> ArrayType::makeStackItems() const
 		case DataLocation::Storage:
 			// byte offset inside storage value is omitted
 			return {std::make_tuple("slot", TypeProvider::uint256())};
+		case DataLocation::Code:
+			solUnimplemented("\"code\" as a data location is not yet implemented");
+			break;
 	}
 	solAssert(false, "");
 }
@@ -2529,6 +2543,9 @@ vector<tuple<string, Type const*>> StructType::makeStackItems() const
 			return {std::make_tuple("mpos", TypeProvider::uint256())};
 		case DataLocation::Storage:
 			return {std::make_tuple("slot", TypeProvider::uint256())};
+		case DataLocation::Code:
+			solUnimplemented("\"code\" as a data location is not yet implemented");
+			break;
 	}
 	solAssert(false, "");
 }
