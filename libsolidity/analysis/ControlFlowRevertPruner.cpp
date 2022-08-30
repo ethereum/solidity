@@ -81,7 +81,7 @@ void ControlFlowRevertPruner::findRevertStates()
 				if (_node == functionFlow.exit)
 					foundExit = true;
 
-				auto const* resolvedFunction = _node->resolveFunctionCall(item.contract);
+				auto const* resolvedFunction = _node->functionDefinition;;
 				if (resolvedFunction && resolvedFunction->isImplemented())
 				{
 					CFG::FunctionContractTuple calledFunctionTuple{
@@ -131,7 +131,7 @@ void ControlFlowRevertPruner::modifyFunctionFlows()
 		FunctionFlow const& functionFlow = m_cfg.functionFlow(*item.first.function, item.first.contract);
 		solidity::util::BreadthFirstSearch<CFGNode*>{{functionFlow.entry}}.run(
 			[&](CFGNode* _node, auto&& _addChild) {
-				auto const* resolvedFunction = _node->resolveFunctionCall(item.first.contract);
+				auto const* resolvedFunction = _node->functionDefinition;
 				if (resolvedFunction && resolvedFunction->isImplemented())
 					switch (m_functions.at({findScopeContract(*resolvedFunction, item.first.contract), resolvedFunction}))
 					{

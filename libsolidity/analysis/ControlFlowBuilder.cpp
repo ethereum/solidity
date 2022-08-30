@@ -81,8 +81,8 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 				_operation.leftExpression().accept(*this);
 				_operation.rightExpression().accept(*this);
 
-				solAssert(!m_currentNode->resolveFunctionCall(nullptr));
-				m_currentNode->functionCall = _operation.annotation().userDefinedFunction;
+				m_currentNode->functionDefinition = _operation.annotation().userDefinedFunction;
+
 				auto nextNode = newLabel();
 
 				connect(m_currentNode, nextNode);
@@ -102,8 +102,7 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 	if (_operation.annotation().userDefinedFunction)
 	{
 		visitNode(_operation);
-		solAssert(!m_currentNode->resolveFunctionCall(nullptr));
-		m_currentNode->functionCall = _operation.annotation().userDefinedFunction;
+		m_currentNode->functionDefinition = _operation.annotation().userDefinedFunction;
 
 		auto nextNode = newLabel();
 
@@ -338,8 +337,7 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 				_functionCall.expression().accept(*this);
 				ASTNode::listAccept(_functionCall.arguments(), *this);
 
-				solAssert(!m_currentNode->resolveFunctionCall(nullptr));
-				m_currentNode->functionCall = &_functionCall;
+				m_currentNode->functionDefinition = ASTNode::resolveFunctionCall(_functionCall, m_contract);
 
 				auto nextNode = newLabel();
 

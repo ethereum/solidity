@@ -26,13 +26,7 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
-FunctionDefinition const* CFGNode::resolveFunctionCall(ContractDefinition const* _mostDerivedContract) const
-{
-	return std::visit(GenericVisitor{
-		[=](FunctionCall const* _call) { return _call ? ASTNode::resolveFunctionCall(*_call, _mostDerivedContract) : nullptr; },
-		[](FunctionDefinition const* _definition) { return _definition; }
-	}, functionCall);
-}
+
 
 bool CFG::constructFlow(ASTNode const& _astRoot)
 {
