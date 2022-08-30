@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// TypeError 2271: (61-78): Operator ** not compatible with types int_const 42 and fixed128x18. Exponent is fractional.
+// TypeError 2271: (61-78): Binary operator ** not compatible with types int_const 42 and fixed128x18. Exponent is fractional.

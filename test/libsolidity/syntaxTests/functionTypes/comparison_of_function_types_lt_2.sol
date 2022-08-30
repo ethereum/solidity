@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (73-78): Operator < not compatible with types function () returns (bool) and function () returns (bool).
+// TypeError 2271: (73-78): Binary operator < not compatible with types function () returns (bool) and function () returns (bool).

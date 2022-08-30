@@ -8,5 +8,5 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (193-259): Operator == not compatible with types function () external and function () external.
-// TypeError 2271: (277-351): Operator == not compatible with types function () external and function () external.
+// TypeError 2271: (193-259): Binary operator == not compatible with types function () external and function () external.
+// TypeError 2271: (277-351): Binary operator == not compatible with types function () external and function () external.

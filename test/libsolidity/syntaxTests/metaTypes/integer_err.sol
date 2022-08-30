@@ -12,4 +12,4 @@ contract Test {
 // ----
 // TypeError 9574: (59-89): Type int256 is not implicitly convertible to expected type uint8.
 // TypeError 9574: (99-127): Type int256 is not implicitly convertible to expected type uint256.
-// TypeError 2271: (142-169): Operator == not compatible with types int256 and int_const 1157...(70 digits omitted)...9935.
+// TypeError 2271: (142-169): Binary operator == not compatible with types int256 and int_const 1157...(70 digits omitted)...9935.

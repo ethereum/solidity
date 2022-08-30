@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (73-88): Operator > not compatible with types function () external returns (bool) and function () external returns (bool).
+// TypeError 2271: (73-88): Binary operator > not compatible with types function () external returns (bool) and function () external returns (bool).

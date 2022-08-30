@@ -27,4 +27,4 @@ contract C {
 }
 
 // ----
-// TypeError 2271: (s3.sol:81-106): Operator + not compatible with types Int and Int. No matching user-defined operator found.
+// TypeError 2271: (s3.sol:81-106): Binary operator + not compatible with types Int and Int. No matching user-defined operator found.

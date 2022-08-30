@@ -31,4 +31,4 @@ contract D is B {
 }
 
 // ----
-// TypeError 2271: (542-567): Operator + not compatible with types Int and Int. No matching user-defined operator found.
+// TypeError 2271: (542-567): Binary operator + not compatible with types Int and Int. No matching user-defined operator found.

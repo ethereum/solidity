@@ -7,5 +7,5 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (89-95): Operator >> not compatible with types int256 and int256.
-// TypeError 2271: (179-193): Operator >> not compatible with types int256 and int256.
+// TypeError 2271: (89-95): Binary operator >> not compatible with types int256 and int256.
+// TypeError 2271: (179-193): Binary operator >> not compatible with types int256 and int256.

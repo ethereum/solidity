@@ -21,4 +21,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (s2.sol:184-209): Operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.
+// TypeError 2271: (s2.sol:184-209): Binary operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.

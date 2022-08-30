@@ -19,4 +19,4 @@ contract C {
 }
 
 // ----
-// TypeError 2271: (281-306): Operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.
+// TypeError 2271: (281-306): Binary operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.

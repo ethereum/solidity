@@ -1815,7 +1815,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		m_errorReporter.typeError(
 			2271_error,
 			_operation.location(),
-			"Operator " +
+			"Binary operator " +
 			string(TokenTraits::toString(_operation.getOperator())) +
 			" not compatible with types " +
 			leftType->humanReadableName() +
@@ -1848,7 +1848,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			m_errorReporter.typeError(
 				5653_error,
 				_operation.location(),
-				"User defined operator " +
+				"User defined binary operator " +
 				string(TokenTraits::toString(_operation.getOperator())) +
 				" not compatible with types " +
 				leftType->humanReadableName() +

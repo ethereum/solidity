@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// TypeError 2271: (60-69): Operator ** not compatible with types int_const 2 and rational_const -11 / 5.
+// TypeError 2271: (60-69): Binary operator ** not compatible with types int_const 2 and rational_const -11 / 5.

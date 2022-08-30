@@ -21,6 +21,6 @@ contract C {
 // ----
 // TypeError 9574: (249-333): Type function (uint256) external is not implicitly convertible to expected type function () external.
 // TypeError 9574: (343-427): Type function (bool) external is not implicitly convertible to expected type function () external.
-// TypeError 2271: (458-522): Operator == not compatible with types function (uint256) external and function () external.
-// TypeError 2271: (538-602): Operator == not compatible with types function (bool) external and function () external.
-// TypeError 2271: (726-786): Operator != not compatible with types function (bool) external and function (uint256) external.
+// TypeError 2271: (458-522): Binary operator == not compatible with types function (uint256) external and function () external.
+// TypeError 2271: (538-602): Binary operator == not compatible with types function (bool) external and function () external.
+// TypeError 2271: (726-786): Binary operator != not compatible with types function (bool) external and function (uint256) external.

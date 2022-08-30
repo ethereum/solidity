@@ -14,4 +14,4 @@ function test() {
     Int.wrap(0) + Int.wrap(1);
 }
 // ----
-// TypeError 2271: (213-238): Operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.
+// TypeError 2271: (213-238): Binary operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.
