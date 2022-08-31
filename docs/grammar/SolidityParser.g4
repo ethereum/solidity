@@ -314,7 +314,7 @@ errorDefinition:
 /**
  * User type operators.
  */
-userOp: Add | Sub | Mul | Div | Mod | BitAnd | BitOr | BitXor | BitNot | Equal | NotEqual | LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual;
+userOp: Add | Sub | Mul | Div | Mod | BitAnd | BitOr | BitXor | BitNot | Equal | NotEqual | LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual | Shl | Sar | Exp | Not;
 
 /**
  * Using directive to bind library functions and free functions to types.

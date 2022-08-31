@@ -2,7 +2,8 @@ type Int is int128;
 using {
     bitor as |, bitand as &, bitxor as ^, bitnot as ~,
     add as +, sub as -, unsub as -, mul as *, div as /, mod as %,
-    eq as ==, noteq as !=, lt as <, gt as >, leq as <=, geq as >=
+    eq as ==, noteq as !=, lt as <, gt as >, leq as <=, geq as >=,
+    shl as <<, sar as >>, exp as **, not as !
 } for Int;
 
 function uw(Int x) pure returns (int128) {
@@ -59,6 +60,18 @@ function leq(Int x, Int) pure returns (bool) {
 function geq(Int x, Int) pure returns (bool) {
     return uw(x) >= 10;
 }
+function shl(Int, Int) pure returns (Int) {
+    return w(20);
+}
+function sar(Int, Int) pure returns (Int) {
+    return w(21);
+}
+function exp(Int, Int) pure returns (Int) {
+    return w(22);
+}
+function not(Int) pure returns (Int) {
+    return w(23);
+}
 
 contract C {
     function test_bitor() public pure returns (Int) { return w(1) | w(2); }
@@ -77,6 +90,10 @@ contract C {
     function test_gt(int128 x) public pure returns (bool) { return w(x) > w(2); }
     function test_leq(int128 x) public pure returns (bool) { return w(x) <= w(2); }
     function test_geq(int128 x) public pure returns (bool) { return w(x) >= w(2); }
+    function test_shl() public pure returns (Int) { return w(1) << w(2); }
+    function test_sar() public pure returns (Int) { return w(1) >> w(2); }
+    function test_exp() public pure returns (Int) { return w(1) ** w(2); }
+    function test_not() public pure returns (Int) { return !w(1); }
 }
 
 // ----
@@ -103,3 +120,7 @@ contract C {
 // test_leq(int128): 11 -> false
 // test_geq(int128): 10 -> true
 // test_geq(int128): 9 -> false
+// test_shl() -> 20
+// test_sar() -> 21
+// test_exp() -> 22
+// test_not() -> 23
