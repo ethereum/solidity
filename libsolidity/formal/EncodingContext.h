@@ -63,7 +63,7 @@ public:
 	smtutil::Expression newVariable(std::string _name, smtutil::SortPointer _sort)
 	{
 		solAssert(m_solver, "");
-		return m_solver->newVariable(move(_name), move(_sort));
+		return m_solver->newVariable(std::move(_name), std::move(_sort));
 	}
 
 	struct IdCompare

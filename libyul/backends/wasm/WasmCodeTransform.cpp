@@ -68,7 +68,7 @@ wasm::Expression WasmCodeTransform::generateMultiAssignment(
 )
 {
 	yulAssert(!_variableNames.empty(), "");
-	wasm::LocalAssignment assignment{move(_variableNames.front()), std::move(_firstValue)};
+	wasm::LocalAssignment assignment{std::move(_variableNames.front()), std::move(_firstValue)};
 
 	if (_variableNames.size() == 1)
 		return { std::move(assignment) };
@@ -80,10 +80,10 @@ wasm::Expression WasmCodeTransform::generateMultiAssignment(
 	yulAssert(allocatedIndices.size() == _variableNames.size() - 1, "");
 
 	wasm::Block block;
-	block.statements.emplace_back(move(assignment));
+	block.statements.emplace_back(std::move(assignment));
 	for (size_t i = 1; i < _variableNames.size(); ++i)
 		block.statements.emplace_back(wasm::LocalAssignment{
-			move(_variableNames.at(i)),
+			std::move(_variableNames.at(i)),
 			make_unique<wasm::Expression>(wasm::GlobalVariable{m_globalVariables.at(allocatedIndices[i - 1]).variableName})
 		});
 	return { std::move(block) };
@@ -99,7 +99,7 @@ wasm::Expression WasmCodeTransform::operator()(yul::VariableDeclaration const& _
 	}
 
 	if (_varDecl.value)
-		return generateMultiAssignment(move(variableNames), visit(*_varDecl.value));
+		return generateMultiAssignment(std::move(variableNames), visit(*_varDecl.value));
 	else
 		return wasm::BuiltinCall{"nop", {}};
 }
@@ -109,7 +109,7 @@ wasm::Expression WasmCodeTransform::operator()(yul::Assignment const& _assignmen
 	vector<string> variableNames;
 	for (auto const& var: _assignment.variableNames)
 		variableNames.emplace_back(var.name.str());
-	return generateMultiAssignment(move(variableNames), visit(*_assignment.value));
+	return generateMultiAssignment(std::move(variableNames), visit(*_assignment.value));
 }
 
 wasm::Expression WasmCodeTransform::operator()(yul::ExpressionStatement const& _statement)
@@ -134,7 +134,7 @@ void WasmCodeTransform::importBuiltinFunction(BuiltinFunction const* _builtin, s
 		};
 		for (auto const& param: _builtin->parameters)
 			imp.paramTypes.emplace_back(translatedType(param));
-		m_functionsToImport[internalName] = move(imp);
+		m_functionsToImport[internalName] = std::move(imp);
 	}
 }
 
@@ -199,7 +199,7 @@ wasm::Expression WasmCodeTransform::operator()(yul::If const& _if)
 	else
 		yulAssert(false, "Invalid condition type");
 
-	return wasm::If{make_unique<wasm::Expression>(move(condition)), visit(_if.body.statements), {}};
+	return wasm::If{make_unique<wasm::Expression>(std::move(condition)), visit(_if.body.statements), {}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(yul::Switch const& _switch)
@@ -224,7 +224,7 @@ wasm::Expression WasmCodeTransform::operator()(yul::Switch const& _switch)
 				visitReturnByValue(*c.value)
 			)};
 			wasm::If ifStmnt{
-				make_unique<wasm::Expression>(move(comparison)),
+				make_unique<wasm::Expression>(std::move(comparison)),
 				visit(c.body.statements),
 				{}
 			};
@@ -234,7 +234,7 @@ wasm::Expression WasmCodeTransform::operator()(yul::Switch const& _switch)
 				ifStmnt.elseStatements = make_unique<vector<wasm::Expression>>();
 				nextBlock = ifStmnt.elseStatements.get();
 			}
-			currentBlock->emplace_back(move(ifStmnt));
+			currentBlock->emplace_back(std::move(ifStmnt));
 			currentBlock = nextBlock;
 		}
 		else
@@ -275,8 +275,8 @@ wasm::Expression WasmCodeTransform::operator()(yul::ForLoop const& _for)
 	loop.statements += visit(_for.post.statements);
 	loop.statements.emplace_back(wasm::Branch{wasm::Label{loop.labelName}});
 
-	statements += make_vector<wasm::Expression>(move(loop));
-	return wasm::Block{breakLabel, move(statements)};
+	statements += make_vector<wasm::Expression>(std::move(loop));
+	return wasm::Block{breakLabel, std::move(statements)};
 }
 
 wasm::Expression WasmCodeTransform::operator()(yul::Break const&)

@@ -20,4 +20,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (254-267): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, owner = 0x0\ny = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0, owner = 0x0\nC.g(1)\n    C.f() -- internal call
+// Warning 1218: (254-267): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (254-267): CHC: Assertion violation might happen here.
+// Warning 4661: (254-267): BMC: Assertion violation happens here.

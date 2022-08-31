@@ -92,7 +92,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 
 	Object ret;
 	ret.name = _object.name;
-	ret.code = make_shared<Block>(move(ast));
+	ret.code = make_shared<Block>(std::move(ast));
 	ret.debugData = _object.debugData;
 	ret.analysisInfo = make_shared<AsmAnalysisInfo>();
 

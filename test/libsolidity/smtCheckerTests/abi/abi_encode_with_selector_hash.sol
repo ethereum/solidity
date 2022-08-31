@@ -13,11 +13,8 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
 // Warning 2072: (161-176): Unused local variable.
-// Warning 1218: (379-417): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (436-474): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (379-417): CHC: Assertion violation might happen here.
-// Warning 6328: (436-474): CHC: Assertion violation might happen here.
-// Warning 4661: (379-417): BMC: Assertion violation happens here.
-// Warning 4661: (436-474): BMC: Assertion violation happens here.
+// Warning 6328: (379-417): CHC: Assertion violation happens here.
+// Warning 6328: (436-474): CHC: Assertion violation happens here.

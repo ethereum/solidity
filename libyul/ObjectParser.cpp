@@ -88,7 +88,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 
 	expectToken(Token::LBrace);
 
-	ret->code = parseCode(move(sourceNameMapping));
+	ret->code = parseCode(std::move(sourceNameMapping));
 
 	while (currentToken() != Token::RBrace)
 	{
@@ -113,7 +113,7 @@ shared_ptr<Block> ObjectParser::parseCode(optional<SourceNameMap> _sourceNames)
 		fatalParserError(4846_error, "Expected keyword \"code\".");
 	advance();
 
-	return parseBlock(move(_sourceNames));
+	return parseBlock(std::move(_sourceNames));
 }
 
 optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
@@ -156,7 +156,7 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 
 		Token const next = scanner.next();
 		if (next == Token::EOS)
-			return {move(sourceNames)};
+			return {std::move(sourceNames)};
 		if (next != Token::Comma)
 			break;
 		scanner.next();
@@ -172,7 +172,7 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 
 shared_ptr<Block> ObjectParser::parseBlock(optional<SourceNameMap> _sourceNames)
 {
-	Parser parser(m_errorReporter, m_dialect, move(_sourceNames));
+	Parser parser(m_errorReporter, m_dialect, std::move(_sourceNames));
 	shared_ptr<Block> block = parser.parseInline(m_scanner);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;

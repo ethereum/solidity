@@ -202,7 +202,7 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 				else
 					typeFailureCount++;
 			}
-			m_fileRepository.setIncludePaths(move(includePaths));
+			m_fileRepository.setIncludePaths(std::move(includePaths));
 		}
 		else
 			++typeFailureCount;
@@ -289,7 +289,7 @@ void LanguageServer::compileAndUpdateDiagnostics()
 		string message = error->typeName() + ":";
 		if (string const* comment = error->comment())
 			message += " " + *comment;
-		jsonDiag["message"] = move(message);
+		jsonDiag["message"] = std::move(message);
 		jsonDiag["range"] = toRange(*location);
 
 		if (auto const* secondary = error->secondarySourceLocation())
@@ -318,8 +318,8 @@ void LanguageServer::compileAndUpdateDiagnostics()
 		params["uri"] = m_fileRepository.sourceUnitNameToUri(sourceUnitName);
 		if (!diagnostics.empty())
 			m_nonemptyDiagnostics.insert(sourceUnitName);
-		params["diagnostics"] = move(diagnostics);
-		m_client.notify("textDocument/publishDiagnostics", move(params));
+		params["diagnostics"] = std::move(diagnostics);
+		m_client.notify("textDocument/publishDiagnostics", std::move(params));
 	}
 }
 
@@ -418,7 +418,7 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	replyArgs["capabilities"]["semanticTokensProvider"]["full"] = true; // XOR requests.full.delta = true
 	replyArgs["capabilities"]["renameProvider"] = true;
 
-	m_client.reply(_id, move(replyArgs));
+	m_client.reply(_id, std::move(replyArgs));
 }
 
 void LanguageServer::handleInitialized(MessageID, Json::Value const&)
@@ -480,7 +480,7 @@ void LanguageServer::handleTextDocumentDidOpen(Json::Value const& _args)
 	string text = _args["textDocument"]["text"].asString();
 	string uri = _args["textDocument"]["uri"].asString();
 	m_openFiles.insert(uri);
-	m_fileRepository.setSourceByUri(uri, move(text));
+	m_fileRepository.setSourceByUri(uri, std::move(text));
 	compileAndUpdateDiagnostics();
 }
 
@@ -516,10 +516,10 @@ void LanguageServer::handleTextDocumentDidChange(Json::Value const& _args)
 			);
 
 			string buffer = m_fileRepository.sourceUnits().at(sourceUnitName);
-			buffer.replace(static_cast<size_t>(change->start), static_cast<size_t>(change->end - change->start), move(text));
-			text = move(buffer);
+			buffer.replace(static_cast<size_t>(change->start), static_cast<size_t>(change->end - change->start), std::move(text));
+			text = std::move(buffer);
 		}
-		m_fileRepository.setSourceByUri(uri, move(text));
+		m_fileRepository.setSourceByUri(uri, std::move(text));
 	}
 
 	compileAndUpdateDiagnostics();

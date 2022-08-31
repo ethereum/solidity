@@ -245,10 +245,10 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 
 		string errorMessage(it, line.end());
 		expectations.emplace_back(SyntaxTestError{
-			move(errorType),
-			move(errorId),
-			move(errorMessage),
-			move(sourceName),
+			std::move(errorType),
+			std::move(errorId),
+			std::move(errorMessage),
+			std::move(sourceName),
 			locationStart,
 			locationEnd
 		});

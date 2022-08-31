@@ -88,7 +88,7 @@ void Parser::updateLocationEndFrom(
 			DebugData updatedDebugData = *_debugData;
 			updatedDebugData.nativeLocation.end = _location.end;
 			updatedDebugData.originLocation.end = _location.end;
-			_debugData = make_shared<DebugData const>(move(updatedDebugData));
+			_debugData = make_shared<DebugData const>(std::move(updatedDebugData));
 			break;
 		}
 		case UseSourceLocationFrom::LocationOverride:
@@ -98,7 +98,7 @@ void Parser::updateLocationEndFrom(
 		{
 			DebugData updatedDebugData = *_debugData;
 			updatedDebugData.nativeLocation.end = _location.end;
-			_debugData = make_shared<DebugData const>(move(updatedDebugData));
+			_debugData = make_shared<DebugData const>(std::move(updatedDebugData));
 			break;
 		}
 	}
@@ -246,7 +246,7 @@ optional<pair<string_view, SourceLocation>> Parser::parseSrcComment(
 	{
 		shared_ptr<string const> sourceName = m_sourceNames->at(static_cast<unsigned>(sourceIndex.value()));
 		solAssert(sourceName, "");
-		return {{tail, SourceLocation{start.value(), end.value(), move(sourceName)}}};
+		return {{tail, SourceLocation{start.value(), end.value(), std::move(sourceName)}}};
 	}
 	return {{tail, SourceLocation{}}};
 }
@@ -313,7 +313,7 @@ Statement Parser::parseStatement()
 		_if.condition = make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
 		updateLocationEndFrom(_if.debugData, nativeLocationOf(_if.body));
-		return Statement{move(_if)};
+		return Statement{std::move(_if)};
 	}
 	case Token::Switch:
 	{
@@ -331,7 +331,7 @@ Statement Parser::parseStatement()
 		if (_switch.cases.empty())
 			fatalParserError(2418_error, "Switch statement without any cases.");
 		updateLocationEndFrom(_switch.debugData, nativeLocationOf(_switch.cases.back().body));
-		return Statement{move(_switch)};
+		return Statement{std::move(_switch)};
 	}
 	case Token::For:
 		return parseForLoop();
@@ -371,7 +371,7 @@ Statement Parser::parseStatement()
 	case Token::LParen:
 	{
 		Expression expr = parseCall(std::move(elementary));
-		return ExpressionStatement{debugDataOf(expr), move(expr)};
+		return ExpressionStatement{debugDataOf(expr), std::move(expr)};
 	}
 	case Token::Comma:
 	case Token::AssemblyAssign:
@@ -414,7 +414,7 @@ Statement Parser::parseStatement()
 		assignment.value = make_unique<Expression>(parseExpression());
 		updateLocationEndFrom(assignment.debugData, nativeLocationOf(*assignment.value));
 
-		return Statement{move(assignment)};
+		return Statement{std::move(assignment)};
 	}
 	default:
 		fatalParserError(6913_error, "Call or assignment expected.");
@@ -485,11 +485,11 @@ Expression Parser::parseExpression()
 					nativeLocationOf(_identifier),
 					"Builtin function \"" + _identifier.name.str() + "\" must be called."
 				);
-			return move(_identifier);
+			return std::move(_identifier);
 		},
 		[&](Literal& _literal) -> Expression
 		{
-			return move(_literal);
+			return std::move(_literal);
 		}
 	}, operation);
 }

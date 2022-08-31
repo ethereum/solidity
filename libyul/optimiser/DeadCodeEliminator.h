@@ -63,7 +63,7 @@ private:
 	DeadCodeEliminator(
 		Dialect const& _dialect,
 		std::map<YulString, ControlFlowSideEffects> _sideEffects
-	): m_dialect(_dialect), m_functionSideEffects(move(_sideEffects)) {}
+	): m_dialect(_dialect), m_functionSideEffects(std::move(_sideEffects)) {}
 
 	Dialect const& m_dialect;
 	std::map<YulString, ControlFlowSideEffects> m_functionSideEffects;

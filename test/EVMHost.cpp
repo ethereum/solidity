@@ -50,7 +50,7 @@ evmc::VM& EVMHost::getVM(string const& _path)
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
 			if (vm.get_capabilities() & (EVMC_CAPABILITY_EVM1 | EVMC_CAPABILITY_EWASM))
-				vms[_path] = make_unique<evmc::VM>(evmc::VM(move(vm)));
+				vms[_path] = make_unique<evmc::VM>(evmc::VM(std::move(vm)));
 			else
 				cerr << "VM loaded neither supports EVM1 nor EWASM" << endl;
 		}

@@ -89,7 +89,7 @@ optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
 Expression KnowledgeBase::simplify(Expression _expression)
 {
 	m_counter = 0;
-	return simplifyRecursively(move(_expression));
+	return simplifyRecursively(std::move(_expression));
 }
 
 Expression KnowledgeBase::simplifyRecursively(Expression _expression)

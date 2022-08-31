@@ -252,7 +252,7 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 		map<int, Id> shiftedStack;
 		for (auto const& stackElement: m_stackElements)
 			shiftedStack[stackElement.first - stackDiff] = stackElement.second;
-		m_stackElements = move(shiftedStack);
+		m_stackElements = std::move(shiftedStack);
 		m_stackHeight = _other.m_stackHeight;
 	}
 
@@ -333,7 +333,7 @@ KnownState::StoreOperation KnownState::storeInStorage(
 	for (auto const& storageItem: m_storageContent)
 		if (m_expressionClasses->knownToBeDifferent(storageItem.first, _slot) || storageItem.second == _value)
 			storageContents.insert(storageItem);
-	m_storageContent = move(storageContents);
+	m_storageContent = std::move(storageContents);
 
 	AssemblyItem item(Instruction::SSTORE, _location);
 	Id id = m_expressionClasses->find(item, {_slot, _value}, true, m_sequenceNumber);
@@ -365,7 +365,7 @@ KnownState::StoreOperation KnownState::storeInMemory(Id _slot, Id _value, Source
 	for (auto const& memoryItem: m_memoryContent)
 		if (m_expressionClasses->knownToBeDifferentBy32(memoryItem.first, _slot))
 			memoryContents.insert(memoryItem);
-	m_memoryContent = move(memoryContents);
+	m_memoryContent = std::move(memoryContents);
 
 	AssemblyItem item(Instruction::MSTORE, _location);
 	Id id = m_expressionClasses->find(item, {_slot, _value}, true, m_sequenceNumber);

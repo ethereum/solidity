@@ -65,7 +65,7 @@ map<YulString, vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator:
 	stackTooDeepErrors[YulString{}] = reportStackTooDeep(_cfg, YulString{});
 	for (auto const& function: _cfg.functions)
 		if (auto errors = reportStackTooDeep(_cfg, function->name); !errors.empty())
-			stackTooDeepErrors[function->name] = move(errors);
+			stackTooDeepErrors[function->name] = std::move(errors);
 	return stackTooDeepErrors;
 }
 
@@ -324,8 +324,8 @@ Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::Ba
 		Stack newStack = propagateStackThroughOperation(stack, operation, _aggressiveStackCompression);
 		if (!_aggressiveStackCompression && !findStackTooDeep(newStack, stack).empty())
 			// If we had stack errors, run again with aggressive stack compression.
-			return propagateStackThroughBlock(move(_exitStack), _block, true);
-		stack = move(newStack);
+			return propagateStackThroughBlock(std::move(_exitStack), _block, true);
+		stack = std::move(newStack);
 	}
 
 	return stack;
@@ -715,13 +715,13 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
 		util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{_entry}};
 		breadthFirstSearch.run([&](CFG::BasicBlock const* _block, auto _addChild) {
 			auto& blockInfo = m_layout.blockInfos.at(_block);
-			blockInfo.entryLayout = Stack{_numJunk, JunkSlot{}} + move(blockInfo.entryLayout);
+			blockInfo.entryLayout = Stack{_numJunk, JunkSlot{}} + std::move(blockInfo.entryLayout);
 			for (auto const& operation: _block->operations)
 			{
 				auto& operationEntryLayout = m_layout.operationEntryLayout.at(&operation);
-				operationEntryLayout = Stack{_numJunk, JunkSlot{}} + move(operationEntryLayout);
+				operationEntryLayout = Stack{_numJunk, JunkSlot{}} + std::move(operationEntryLayout);
 			}
-			blockInfo.exitLayout = Stack{_numJunk, JunkSlot{}} + move(blockInfo.exitLayout);
+			blockInfo.exitLayout = Stack{_numJunk, JunkSlot{}} + std::move(blockInfo.exitLayout);
 
 			std::visit(util::GenericVisitor{
 				[&](CFG::BasicBlock::MainExit const&) {},

@@ -52,7 +52,7 @@ protected:
 
 	Program optimisedProgram(Program _program, string _abbreviatedOptimisationSteps) const
 	{
-		Program result = move(_program);
+		Program result = std::move(_program);
 		result.optimise(Chromosome::genesToSteps(_abbreviatedOptimisationSteps));
 		return result;
 	}

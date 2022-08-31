@@ -358,7 +358,7 @@ public:
 	):
 		Declaration(_id, _location, _unitAlias, std::move(_unitAliasLocation)),
 		m_path(std::move(_path)),
-		m_symbolAliases(move(_symbolAliases))
+		m_symbolAliases(std::move(_symbolAliases))
 	{ }
 
 	void accept(ASTVisitor& _visitor) override;
@@ -1503,7 +1503,7 @@ public:
 	):
 		Statement(_id, _location, _docString),
 		m_dialect(_dialect),
-		m_flags(move(_flags)),
+		m_flags(std::move(_flags)),
 		m_operations(std::move(_operations))
 	{}
 	void accept(ASTVisitor& _visitor) override;

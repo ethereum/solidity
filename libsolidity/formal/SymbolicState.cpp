@@ -32,8 +32,8 @@ BlockchainVariable::BlockchainVariable(
 	map<string, smtutil::SortPointer> _members,
 	EncodingContext& _context
 ):
-	m_name(move(_name)),
-	m_members(move(_members)),
+	m_name(std::move(_name)),
+	m_members(std::move(_members)),
 	m_context(_context)
 {
 	vector<string> members;
@@ -94,12 +94,12 @@ smtutil::Expression SymbolicState::balance() const
 
 smtutil::Expression SymbolicState::balance(smtutil::Expression _address) const
 {
-	return smtutil::Expression::select(balances(), move(_address));
+	return smtutil::Expression::select(balances(), std::move(_address));
 }
 
 smtutil::Expression SymbolicState::blockhash(smtutil::Expression _blockNumber) const
 {
-	return smtutil::Expression::select(m_tx.member("blockhash"), move(_blockNumber));
+	return smtutil::Expression::select(m_tx.member("blockhash"), std::move(_blockNumber));
 }
 
 void SymbolicState::newBalances()
@@ -114,13 +114,13 @@ void SymbolicState::transfer(smtutil::Expression _from, smtutil::Expression _to,
 {
 	unsigned indexBefore = m_state.index();
 	addBalance(_from, 0 - _value);
-	addBalance(_to, move(_value));
+	addBalance(_to, std::move(_value));
 	unsigned indexAfter = m_state.index();
 	solAssert(indexAfter > indexBefore, "");
 	m_state.newVar();
 	/// Do not apply the transfer operation if _from == _to.
 	auto newState = smtutil::Expression::ite(
-		move(_from) == move(_to),
+		std::move(_from) == std::move(_to),
 		m_state.value(indexBefore),
 		m_state.value(indexAfter)
 	);
@@ -132,7 +132,7 @@ void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression
 	auto newBalances = smtutil::Expression::store(
 		balances(),
 		_address,
-		balance(_address) + move(_value)
+		balance(_address) + std::move(_value)
 	);
 	m_state.assignMember("balances", newBalances);
 }
@@ -322,7 +322,7 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 		functions[name] = functionSort;
 	}
 
-	m_abi = make_unique<BlockchainVariable>("abi", move(functions), m_context);
+	m_abi = make_unique<BlockchainVariable>("abi", std::move(functions), m_context);
 }
 
 smtutil::Expression SymbolicState::abiFunction(frontend::FunctionCall const* _funCall)

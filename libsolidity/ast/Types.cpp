@@ -125,7 +125,7 @@ MemberList::Member::Member(Declaration const* _declaration, Type const* _type):
 {}
 
 MemberList::Member::Member(Declaration const* _declaration, Type const* _type, string _name):
-	name(move(_name)),
+	name(std::move(_name)),
 	type(_type),
 	declaration(_declaration)
 {
@@ -305,7 +305,7 @@ MemberList const& Type::members(ASTNode const* _currentScope) const
 		MemberList::MemberMap members = nativeMembers(_currentScope);
 		if (_currentScope)
 			members += boundFunctions(*this, *_currentScope);
-		m_members[_currentScope] = make_unique<MemberList>(move(members));
+		m_members[_currentScope] = make_unique<MemberList>(std::move(members));
 	}
 	return *m_members[_currentScope];
 }
@@ -2737,7 +2737,7 @@ Type const* TupleType::mobileType() const
 		else
 			mobiles.push_back(nullptr);
 	}
-	return TypeProvider::tuple(move(mobiles));
+	return TypeProvider::tuple(std::move(mobiles));
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, Kind _kind):

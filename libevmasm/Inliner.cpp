@@ -257,7 +257,7 @@ void Inliner::optimise()
 						if (auto exitItem = shouldInline(*tag, nextItem, *inlinableBlock))
 						{
 							newItems += inlinableBlock->items | ranges::views::drop_last(1);
-							newItems.emplace_back(move(*exitItem));
+							newItems.emplace_back(std::move(*exitItem));
 
 							// We are removing one push tag to the block we inline.
 							--inlinableBlock->pushTagCount;
@@ -277,5 +277,5 @@ void Inliner::optimise()
 		newItems.emplace_back(item);
 	}
 
-	m_items = move(newItems);
+	m_items = std::move(newItems);
 }

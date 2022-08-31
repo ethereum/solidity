@@ -44,7 +44,7 @@ function<Mutation> phaser::geneRandomisation(double _chance)
 				gene
 			);
 
-		return Chromosome(move(genes));
+		return Chromosome(std::move(genes));
 	};
 }
 
@@ -57,7 +57,7 @@ function<Mutation> phaser::geneDeletion(double _chance)
 			if (!SimulationRNG::bernoulliTrial(_chance))
 				genes.push_back(gene);
 
-		return Chromosome(move(genes));
+		return Chromosome(std::move(genes));
 	};
 }
 
@@ -77,7 +77,7 @@ function<Mutation> phaser::geneAddition(double _chance)
 				genes.push_back(Chromosome::randomGene());
 		}
 
-		return Chromosome(move(genes));
+		return Chromosome(std::move(genes));
 	};
 }
 
@@ -102,7 +102,7 @@ function<Mutation> phaser::mutationSequence(vector<function<Mutation>> _mutation
 	{
 		Chromosome mutatedChromosome = _chromosome;
 		for (size_t i = 0; i < _mutations.size(); ++i)
-			mutatedChromosome = _mutations[i](move(mutatedChromosome));
+			mutatedChromosome = _mutations[i](std::move(mutatedChromosome));
 
 		return mutatedChromosome;
 	};

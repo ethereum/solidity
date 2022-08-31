@@ -40,7 +40,7 @@ void UnusedStoreBase::operator()(If const& _if)
 	TrackedStores skipBranch{m_stores};
 	(*this)(_if.body);
 
-	merge(m_stores, move(skipBranch));
+	merge(m_stores, std::move(skipBranch));
 }
 
 void UnusedStoreBase::operator()(Switch const& _switch)
@@ -56,17 +56,17 @@ void UnusedStoreBase::operator()(Switch const& _switch)
 		if (!c.value)
 			hasDefault = true;
 		(*this)(c.body);
-		branches.emplace_back(move(m_stores));
+		branches.emplace_back(std::move(m_stores));
 		m_stores = preState;
 	}
 
 	if (hasDefault)
 	{
-		m_stores = move(branches.back());
+		m_stores = std::move(branches.back());
 		branches.pop_back();
 	}
 	for (auto& branch: branches)
-		merge(m_stores, move(branch));
+		merge(m_stores, std::move(branch));
 }
 
 void UnusedStoreBase::operator()(FunctionDefinition const& _functionDefinition)
@@ -97,7 +97,7 @@ void UnusedStoreBase::operator()(ForLoop const& _forLoop)
 	TrackedStores zeroRuns{m_stores};
 
 	(*this)(_forLoop.body);
-	merge(m_stores, move(m_forLoopInfo.pendingContinueStmts));
+	merge(m_stores, std::move(m_forLoopInfo.pendingContinueStmts));
 	m_forLoopInfo.pendingContinueStmts = {};
 	(*this)(_forLoop.post);
 
@@ -110,50 +110,50 @@ void UnusedStoreBase::operator()(ForLoop const& _forLoop)
 
 		(*this)(_forLoop.body);
 
-		merge(m_stores, move(m_forLoopInfo.pendingContinueStmts));
+		merge(m_stores, std::move(m_forLoopInfo.pendingContinueStmts));
 		m_forLoopInfo.pendingContinueStmts.clear();
 		(*this)(_forLoop.post);
 
 		visit(*_forLoop.condition);
 		// Order of merging does not matter because "max" is commutative and associative.
-		merge(m_stores, move(oneRun));
+		merge(m_stores, std::move(oneRun));
 	}
 	else
 		// Shortcut to avoid horrible runtime.
 		shortcutNestedLoop(zeroRuns);
 
 	// Order of merging does not matter because "max" is commutative and associative.
-	merge(m_stores, move(zeroRuns));
-	merge(m_stores, move(m_forLoopInfo.pendingBreakStmts));
+	merge(m_stores, std::move(zeroRuns));
+	merge(m_stores, std::move(m_forLoopInfo.pendingBreakStmts));
 	m_forLoopInfo.pendingBreakStmts.clear();
 }
 
 void UnusedStoreBase::operator()(Break const&)
 {
-	m_forLoopInfo.pendingBreakStmts.emplace_back(move(m_stores));
+	m_forLoopInfo.pendingBreakStmts.emplace_back(std::move(m_stores));
 	m_stores.clear();
 }
 
 void UnusedStoreBase::operator()(Continue const&)
 {
-	m_forLoopInfo.pendingContinueStmts.emplace_back(move(m_stores));
+	m_forLoopInfo.pendingContinueStmts.emplace_back(std::move(m_stores));
 	m_stores.clear();
 }
 
 void UnusedStoreBase::merge(TrackedStores& _target, TrackedStores&& _other)
 {
-	util::joinMap(_target, move(_other), [](
+	util::joinMap(_target, std::move(_other), [](
 		map<Statement const*, State>& _assignmentHere,
 		map<Statement const*, State>&& _assignmentThere
 	)
 	{
-		return util::joinMap(_assignmentHere, move(_assignmentThere), State::join);
+		return util::joinMap(_assignmentHere, std::move(_assignmentThere), State::join);
 	});
 }
 
 void UnusedStoreBase::merge(TrackedStores& _target, vector<TrackedStores>&& _source)
 {
 	for (TrackedStores& ts: _source)
-		merge(_target, move(ts));
+		merge(_target, std::move(ts));
 	_source.clear();
 }

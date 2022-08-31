@@ -239,8 +239,8 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 		{
 			for (size_t i = 0; i < _programs.size(); ++i)
 				metrics.push_back(make_unique<ProgramSize>(
-					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
-					move(_programCaches[i]),
+					_programCaches[i] != nullptr ? optional<Program>{} : std::move(_programs[i]),
+					std::move(_programCaches[i]),
 					_weights,
 					_options.chromosomeRepetitions
 				));
@@ -251,8 +251,8 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 		{
 			for (size_t i = 0; i < _programs.size(); ++i)
 				metrics.push_back(make_unique<RelativeProgramSize>(
-					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
-					move(_programCaches[i]),
+					_programCaches[i] != nullptr ? optional<Program>{} : std::move(_programs[i]),
+					std::move(_programCaches[i]),
 					_options.relativeMetricScale,
 					_weights,
 					_options.chromosomeRepetitions
@@ -266,13 +266,13 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	switch (_options.metricAggregator)
 	{
 		case MetricAggregatorChoice::Average:
-			return make_unique<FitnessMetricAverage>(move(metrics));
+			return make_unique<FitnessMetricAverage>(std::move(metrics));
 		case MetricAggregatorChoice::Sum:
-			return make_unique<FitnessMetricSum>(move(metrics));
+			return make_unique<FitnessMetricSum>(std::move(metrics));
 		case MetricAggregatorChoice::Maximum:
-			return make_unique<FitnessMetricMaximum>(move(metrics));
+			return make_unique<FitnessMetricMaximum>(std::move(metrics));
 		case MetricAggregatorChoice::Minimum:
-			return make_unique<FitnessMetricMinimum>(move(metrics));
+			return make_unique<FitnessMetricMinimum>(std::move(metrics));
 		default:
 			assertThrow(false, solidity::util::Exception, "Invalid MetricAggregatorChoice value.");
 	}
@@ -309,7 +309,7 @@ Population PopulationFactory::build(
 	for (size_t populationSize: _options.randomPopulation)
 		combinedSize += populationSize;
 
-	population = move(population) + buildRandom(
+	population = std::move(population) + buildRandom(
 		combinedSize,
 		_options.minChromosomeLength,
 		_options.maxChromosomeLength,
@@ -317,7 +317,7 @@ Population PopulationFactory::build(
 	);
 
 	for (string const& populationFilePath: _options.populationFromFile)
-		population = move(population) + buildFromFile(populationFilePath, _fitnessMetric);
+		population = std::move(population) + buildFromFile(populationFilePath, _fitnessMetric);
 
 	return population;
 }
@@ -331,7 +331,7 @@ Population PopulationFactory::buildFromStrings(
 	for (string const& geneSequence: _geneSequences)
 		chromosomes.emplace_back(geneSequence);
 
-	return Population(move(_fitnessMetric), move(chromosomes));
+	return Population(std::move(_fitnessMetric), std::move(chromosomes));
 }
 
 Population PopulationFactory::buildRandom(
@@ -342,7 +342,7 @@ Population PopulationFactory::buildRandom(
 )
 {
 	return Population::makeRandom(
-		move(_fitnessMetric),
+		std::move(_fitnessMetric),
 		_populationSize,
 		_minChromosomeLength,
 		_maxChromosomeLength
@@ -354,7 +354,7 @@ Population PopulationFactory::buildFromFile(
 	shared_ptr<FitnessMetric> _fitnessMetric
 )
 {
-	return buildFromStrings(readLinesFromFile(_filePath), move(_fitnessMetric));
+	return buildFromStrings(readLinesFromFile(_filePath), std::move(_fitnessMetric));
 }
 
 ProgramCacheFactory::Options ProgramCacheFactory::Options::fromCommandLine(po::variables_map const& _arguments)
@@ -371,7 +371,7 @@ vector<shared_ptr<ProgramCache>> ProgramCacheFactory::build(
 {
 	vector<shared_ptr<ProgramCache>> programCaches;
 	for (Program& program: _programs)
-		programCaches.push_back(_options.programCacheEnabled ? make_shared<ProgramCache>(move(program)) : nullptr);
+		programCaches.push_back(_options.programCacheEnabled ? make_shared<ProgramCache>(std::move(program)) : nullptr);
 
 	return programCaches;
 }
@@ -400,7 +400,7 @@ vector<Program> ProgramFactory::build(Options const& _options)
 		}
 
 		get<Program>(programOrErrors).optimise(Chromosome(_options.prefix).optimisationSteps());
-		inputPrograms.push_back(move(get<Program>(programOrErrors)));
+		inputPrograms.push_back(std::move(get<Program>(programOrErrors)));
 	}
 
 	return inputPrograms;
@@ -823,12 +823,12 @@ void Phaser::runPhaser(po::variables_map const& _arguments)
 		programCaches,
 		codeWeights
 	);
-	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
+	Population population = PopulationFactory::build(populationOptions, std::move(fitnessMetric));
 
 	if (_arguments["mode"].as<PhaserMode>() == PhaserMode::RunAlgorithm)
-		runAlgorithm(_arguments, move(population), move(programCaches));
+		runAlgorithm(_arguments, std::move(population), std::move(programCaches));
 	else
-		printOptimisedProgramsOrASTs(_arguments, population, move(programs), _arguments["mode"].as<PhaserMode>());
+		printOptimisedProgramsOrASTs(_arguments, population, std::move(programs), _arguments["mode"].as<PhaserMode>());
 }
 
 void Phaser::runAlgorithm(
@@ -844,7 +844,7 @@ void Phaser::runAlgorithm(
 		_population.individuals().size()
 	);
 
-	AlgorithmRunner algorithmRunner(move(_population), move(_programCaches), buildAlgorithmRunnerOptions(_arguments), cout);
+	AlgorithmRunner algorithmRunner(std::move(_population), std::move(_programCaches), buildAlgorithmRunnerOptions(_arguments), cout);
 	algorithmRunner.run(*geneticAlgorithm);
 }
 

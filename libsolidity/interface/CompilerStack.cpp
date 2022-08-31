@@ -208,7 +208,7 @@ void CompilerStack::setRemappings(vector<ImportRemapper::Remapping> _remappings)
 		solThrow(CompilerError, "Must set remappings before parsing.");
 	for (auto const& remapping: _remappings)
 		solAssert(!remapping.prefix.empty(), "");
-	m_importRemapper.setRemappings(move(_remappings));
+	m_importRemapper.setRemappings(std::move(_remappings));
 }
 
 void CompilerStack::setViaIR(bool _viaIR)
@@ -407,7 +407,7 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 			src.first,
 			true // imported from AST
 		);
-		m_sources[path] = move(source);
+		m_sources[path] = std::move(source);
 	}
 	m_stackState = ParsedAndImported;
 	m_importedSources = true;
@@ -793,7 +793,7 @@ Json::Value CompilerStack::generatedSources(string const& _contractName, bool _r
 				sources[0]["name"] = sourceName;
 				sources[0]["id"] = sourceIndex;
 				sources[0]["language"] = "Yul";
-				sources[0]["contents"] = move(source);
+				sources[0]["contents"] = std::move(source);
 
 			}
 		}

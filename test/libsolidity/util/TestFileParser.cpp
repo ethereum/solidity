@@ -178,7 +178,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						accept(Token::Newline, true);
 						call.expectedSideEffects = parseFunctionCallSideEffects();
 
-						calls.emplace_back(move(call));
+						calls.emplace_back(std::move(call));
 					}
 				}
 				catch (TestParserError const& _e)
