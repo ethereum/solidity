@@ -63,6 +63,7 @@ set(sources
 	ast/CallGraph.cpp
 	ast/CallGraph.h
 	ast/ExperimentalFeatures.h
+	ast/OverridableOperators.h
 	ast/Types.cpp
 	ast/Types.h
 	ast/TypeProvider.cpp

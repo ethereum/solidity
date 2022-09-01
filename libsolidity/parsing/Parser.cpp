@@ -23,6 +23,7 @@
 
 #include <libsolidity/parsing/Parser.h>
 
+#include <libsolidity/ast/OverridableOperators.h>
 #include <libsolidity/interface/Version.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
@@ -980,13 +981,6 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 			{
 				advance();
 				Token operator_ = m_scanner->currentToken();
-				vector<Token> static const overridableOperators = {
-					Token::BitOr, Token::BitAnd, Token::BitXor,
-					Token::Add, Token::Sub, Token::Mul, Token::Div, Token::Mod,
-					Token::Equal, Token::NotEqual,
-					Token::LessThan, Token::GreaterThan, Token::LessThanOrEqual, Token::GreaterThanOrEqual,
-					Token::BitNot, Token::SHL, Token::SAR, Token::Exp, Token::Not
-				};
 				if (!util::contains(overridableOperators, operator_))
 				{
 					parserError(

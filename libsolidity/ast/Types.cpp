@@ -25,6 +25,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/ast/OverridableOperators.h>
 
 #include <libsolidity/analysis/ConstantEvaluator.h>
 
@@ -387,7 +388,7 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 
 Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const
 {
-	if (!typeDefinition())
+	if (!typeDefinition() || !util::contains(overridableOperators, _token))
 		return nullptr;
 
 	set<FunctionDefinition const*> matchingDefinitions;
