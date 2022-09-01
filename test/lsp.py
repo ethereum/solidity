@@ -948,6 +948,11 @@ class SolidityLSPTestSuite: # {{{
                 params['initializationOptions'] = {}
             params['initializationOptions']['include-paths'] = custom_include_paths
 
+        if self.trace_io:
+            if params['initializationOptions'] is None:
+                params['initializationOptions'] = {}
+            params['initializationOptions']['trace-log-file'] = "solc.log"
+
         if not expose_project_root:
             params['rootUri'] = None
 

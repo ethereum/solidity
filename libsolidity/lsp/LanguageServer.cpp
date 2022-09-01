@@ -186,6 +186,16 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 			lspAssert(false, ErrorCode::InvalidParams, "Invalid file load strategy: " + text);
 	}
 
+	if (auto traceLogFileNode = _settings["trace-log-file"])
+	{
+		if (traceLogFileNode.isString())
+			m_client.setTraceLogFile(boost::filesystem::path(_settings["trace-log-file"].asString()));
+		if (traceLogFileNode.isNull())
+			m_client.setTraceLogFile(nullopt);
+		else
+			lspAssert(false, ErrorCode::InvalidParams, "Invalid trace-log-file value. Must be a path to a file.");
+	}
+
 	m_settingsObject = _settings;
 	Json::Value jsonIncludePaths = _settings["include-paths"];
 

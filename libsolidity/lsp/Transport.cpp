@@ -27,6 +27,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -58,6 +59,12 @@ optional<Json::Value> Transport::receive()
 
 	string const data = readBytes(stoul(headers->at("content-length")));
 
+	if (m_traceLogFilePath)
+	{
+		ofstream traceLogger(m_traceLogFilePath.value().generic_string(), ios::app);
+		traceLogger << "Received: " << data << endl;
+	}
+
 	Json::Value jsonMessage;
 	string jsonParsingErrors;
 	solidity::util::jsonParseStrict(data, jsonMessage, &jsonParsingErrors);
@@ -70,7 +77,7 @@ optional<Json::Value> Transport::receive()
 	return {std::move(jsonMessage)};
 }
 
-void Transport::trace(std::string _message, Json::Value _extra)
+void Transport::trace(string _message, Json::Value _extra)
 {
 	if (m_logTrace != TraceValue::Off)
 	{
@@ -80,6 +87,11 @@ void Transport::trace(std::string _message, Json::Value _extra)
 		params["message"] = std::move(_message);
 		notify("$/logTrace", std::move(params));
 	}
+}
+
+void Transport::setTraceLogFile(std::optional<boost::filesystem::path> _pathToLogFile)
+{
+	m_traceLogFilePath = std::move(_pathToLogFile);
 }
 
 optional<map<string, string>> Transport::parseHeaders()
@@ -136,6 +148,12 @@ void Transport::send(Json::Value _json, MessageID _id)
 
 	// Trailing CRLF only for easier readability.
 	string const jsonString = solidity::util::jsonCompactPrint(_json);
+
+	if (m_traceLogFilePath)
+	{
+		ofstream traceLogger(m_traceLogFilePath.value().generic_string(), ios::app);
+		traceLogger << "Sending: " << jsonString << endl;
+	}
 
 	writeBytes(fmt::format("Content-Length: {}\r\n\r\n", jsonString.size()));
 	writeBytes(jsonString);

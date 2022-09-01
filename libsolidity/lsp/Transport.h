@@ -21,6 +21,8 @@
 
 #include <json/value.h>
 
+#include <boost/filesystem/path.hpp>
+
 #include <functional>
 #include <iosfwd>
 #include <map>
@@ -103,8 +105,13 @@ public:
 	TraceValue traceValue() const noexcept { return m_logTrace; }
 	void setTrace(TraceValue _value) noexcept { m_logTrace = _value; }
 
+	/// Sets path to a local log file (in addition to reporting the trace log to the client)
+	/// to be written to if trace value is set to verbose.
+	void setTraceLogFile(std::optional<boost::filesystem::path> _pathToLogfile);
+
 private:
 	TraceValue m_logTrace = TraceValue::Off;
+	std::optional<boost::filesystem::path> m_traceLogFilePath;
 
 protected:
 	/// Reads from the transport and parses the headers until the beginning
