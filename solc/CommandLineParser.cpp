@@ -309,7 +309,7 @@ void CommandLineParser::parseInputPathsAndRemappings()
 					m_options.input.allowedDirectories.insert(remappingDir.empty() ? "." : remappingDir);
 				}
 
-				m_options.input.remappings.emplace_back(move(remapping.value()));
+				m_options.input.remappings.emplace_back(std::move(remapping.value()));
 			}
 			else if (positionalArg == "-")
 				m_options.input.addStdin = true;
@@ -1218,7 +1218,7 @@ void CommandLineParser::processArgs()
 		optional<ModelCheckerContracts> contracts = ModelCheckerContracts::fromString(contractsStr);
 		if (!contracts)
 			solThrow(CommandLineValidationError, "Invalid option for --" + g_strModelCheckerContracts + ": " + contractsStr);
-		m_options.modelChecker.settings.contracts = move(*contracts);
+		m_options.modelChecker.settings.contracts = std::move(*contracts);
 	}
 
 	if (m_args.count(g_strModelCheckerDivModNoSlacks))

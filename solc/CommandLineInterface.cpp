@@ -498,11 +498,11 @@ void CommandLineInterface::readInputFiles()
 		if (m_options.input.mode == InputMode::StandardJson)
 		{
 			solAssert(!m_standardJsonInput.has_value(), "");
-			m_standardJsonInput = move(fileContent);
+			m_standardJsonInput = std::move(fileContent);
 		}
 		else
 		{
-			m_fileReader.addOrUpdateFile(infile, move(fileContent));
+			m_fileReader.addOrUpdateFile(infile, std::move(fileContent));
 			m_fileReader.allowDirectory(boost::filesystem::canonical(infile).remove_filename());
 		}
 	}
@@ -546,7 +546,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 			astAssert(ast["sources"][src].isMember(astKey), "astkey is not member");
 			astAssert(ast["sources"][src][astKey]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
 			astAssert(sourceJsons.count(src) == 0, "All sources must have unique names");
-			sourceJsons.emplace(src, move(ast["sources"][src][astKey]));
+			sourceJsons.emplace(src, std::move(ast["sources"][src][astKey]));
 			tmpSources[src] = util::jsonCompactPrint(ast);
 		}
 	}
@@ -643,7 +643,7 @@ void CommandLineInterface::processInput()
 		solAssert(m_standardJsonInput.has_value(), "");
 
 		StandardCompiler compiler(m_fileReader.reader(), m_options.formatting.json);
-		sout() << compiler.compile(move(m_standardJsonInput.value())) << endl;
+		sout() << compiler.compile(std::move(m_standardJsonInput.value())) << endl;
 		m_standardJsonInput.reset();
 		break;
 	}
@@ -977,7 +977,7 @@ void CommandLineInterface::link()
 		while (!src.second.empty() && *prev(src.second.end()) == '\n')
 			src.second.resize(src.second.size() - 1);
 	}
-	m_fileReader.setSourceUnits(move(sourceCodes));
+	m_fileReader.setSourceUnits(std::move(sourceCodes));
 }
 
 void CommandLineInterface::writeLinkedFiles()
