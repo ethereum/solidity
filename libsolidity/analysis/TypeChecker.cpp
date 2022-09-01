@@ -1736,7 +1736,8 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		*currentDefinitionScope(),
 		true // _unaryOperation
 	);
-	_operation.annotation().userDefinedFunction = userDefinedOperatorResult;
+	if (userDefinedOperatorResult)
+		_operation.annotation().userDefinedFunction = userDefinedOperatorResult;
 	FunctionType const* userDefinedFunctionType = nullptr;
 	if (userDefinedOperatorResult)
 		userDefinedFunctionType = &dynamic_cast<FunctionType const&>(
@@ -1792,7 +1793,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		*currentDefinitionScope(),
 		false // _unaryOperation
 	);
-	_operation.annotation().userDefinedFunction = userDefinedOperatorResult;
+	if (userDefinedOperatorResult)
+		_operation.annotation().userDefinedFunction = userDefinedOperatorResult;
 	FunctionType const* userDefinedFunctionType = nullptr;
 	if (userDefinedOperatorResult)
 		userDefinedFunctionType = &dynamic_cast<FunctionType const&>(

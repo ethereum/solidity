@@ -411,8 +411,10 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
 
-	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
+	if (_unaryOperation.annotation().userDefinedFunction.set())
 	{
+		FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction;
+		solAssert(function);
 		solAssert(
 			function->isFree() || function->libraryFunction(),
 			"Only file-level functions and library functions can be bound to a user type operator."
@@ -538,8 +540,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.leftExpression();
 	Expression const& rightExpression = _binaryOperation.rightExpression();
-	if (FunctionDefinition const* function =_binaryOperation.annotation().userDefinedFunction)
+	if (_binaryOperation.annotation().userDefinedFunction.set())
 	{
+		FunctionDefinition const* function = *_binaryOperation.annotation().userDefinedFunction;
+		solAssert(function);
 		solAssert(
 			function->isFree() || function->libraryFunction(),
 			"Only file-level functions and library functions can be bound to a user type operator."
