@@ -144,9 +144,7 @@ bool DeclarationContainer::registerDeclaration(
 
 vector<Declaration const*> DeclarationContainer::resolveName(
 	ASTString const& _name,
-	bool _recursive,
-	bool _alsoInvisible,
-	bool _onlyVisibleAsUnqualifiedNames
+	ResolvingSettings _settings
 ) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
@@ -154,22 +152,22 @@ vector<Declaration const*> DeclarationContainer::resolveName(
 
 	if (m_declarations.count(_name))
 	{
-		if (_onlyVisibleAsUnqualifiedNames)
+		if (_settings.onlyVisibleAsUnqualifiedNames)
 			result += m_declarations.at(_name) | ranges::views::filter(&Declaration::isVisibleAsUnqualifiedName) | ranges::to_vector;
 		else
 			result += m_declarations.at(_name);
 	}
 
-	if (_alsoInvisible && m_invisibleDeclarations.count(_name))
+	if (_settings.alsoInvisible && m_invisibleDeclarations.count(_name))
 	{
-		if (_onlyVisibleAsUnqualifiedNames)
+		if (_settings.onlyVisibleAsUnqualifiedNames)
 			result += m_invisibleDeclarations.at(_name) | ranges::views::filter(&Declaration::isVisibleAsUnqualifiedName) | ranges::to_vector;
 		else
 			result += m_invisibleDeclarations.at(_name);
 	}
 
-	if (result.empty() && _recursive && m_enclosingContainer)
-		result = m_enclosingContainer->resolveName(_name, true, _alsoInvisible, _onlyVisibleAsUnqualifiedNames);
+	if (result.empty() && _settings.recursive && m_enclosingContainer)
+		result = m_enclosingContainer->resolveName(_name, _settings);
 
 	return result;
 }
@@ -209,7 +207,10 @@ void DeclarationContainer::populateHomonyms(back_insert_iterator<Homonyms> _it) 
 
 	for (auto [name, location]: m_homonymCandidates)
 	{
-		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, true, true);
+		ResolvingSettings settings;
+		settings.recursive = true;
+		settings.alsoInvisible = true;
+		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, std::move(settings));
 		if (!declarations.empty())
 			_it = make_pair(location, declarations);
 	}

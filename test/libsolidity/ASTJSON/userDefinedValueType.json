@@ -103,6 +103,10 @@
                   {
                     "id": 7,
                     "name": "MyAddress",
+                    "nameLocations":
+                    [
+                      "67:9:1"
+                    ],
                     "nodeType": "IdentifierPath",
                     "referencedDeclaration": 2,
                     "src": "67:9:1"
@@ -153,6 +157,10 @@
                   {
                     "id": 11,
                     "name": "MyUInt",
+                    "nameLocations":
+                    [
+                      "84:6:1"
+                    ],
                     "nodeType": "IdentifierPath",
                     "referencedDeclaration": 4,
                     "src": "84:6:1"
@@ -287,6 +295,10 @@
               {
                 "id": 21,
                 "name": "MyAddress",
+                "nameLocations":
+                [
+                  "177:9:1"
+                ],
                 "nodeType": "IdentifierPath",
                 "referencedDeclaration": 18,
                 "src": "177:9:1"
@@ -314,6 +326,10 @@
               {
                 "id": 23,
                 "name": "MyUInt",
+                "nameLocations":
+                [
+                  "190:6:1"
+                ],
                 "nodeType": "IdentifierPath",
                 "referencedDeclaration": 20,
                 "src": "190:6:1"

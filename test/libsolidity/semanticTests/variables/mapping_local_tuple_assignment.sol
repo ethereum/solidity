@@ -12,7 +12,5 @@ contract test {
         return (m1[1], m1[2], m2[1], m2[2]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 42, 0, 0, 21

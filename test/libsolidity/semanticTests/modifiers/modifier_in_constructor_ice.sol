@@ -2,7 +2,6 @@
 contract A { modifier m1{_;} }
 contract B is A { constructor() A() m1{} }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // constructor() ->

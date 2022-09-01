@@ -21,11 +21,9 @@ contract c {
         delete inner;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 1, 2, 3
-// gas irOptimized: 2271044
+// gas irOptimized: 2280147
 // gas legacy: 2273434
-// gas legacyOptimized: 2261820
+// gas legacyOptimized: 2261844
 // storageEmpty -> 1

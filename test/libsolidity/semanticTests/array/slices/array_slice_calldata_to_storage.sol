@@ -10,7 +10,5 @@ contract C {
         return s[0];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(int256[],uint256,uint256): 0x60, 1, 3, 4, 1, 2, 3, 4 -> 2

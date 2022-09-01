@@ -6,4 +6,4 @@ contract C
     }
 }
 // ----
-// TypeError 9767: (59-64): Unary operator -- cannot be applied to type tuple(,)
+// TypeError 9767: (59-64): Unary operator -- cannot be applied to type tuple(,).

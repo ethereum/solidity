@@ -18,8 +18,6 @@ contract C is A {
 		return m[a].m[b];
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // getM(uint256,uint256): 0, 0 -> 0
 // getM(uint256,uint256): 1, 5 -> 0x10

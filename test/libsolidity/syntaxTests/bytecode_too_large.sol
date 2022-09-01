@@ -9,4 +9,4 @@ contract test {
 // ====
 // EVMVersion: >byzantium
 // ----
-// Warning 5574: (21-27154): Contract code size is 27199 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+// Warning 5574: (21-27154): Contract code size is 27192 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.

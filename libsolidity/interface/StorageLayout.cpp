@@ -40,8 +40,8 @@ Json::Value StorageLayout::generate(ContractDefinition const& _contractDef)
 		variables.append(generate(*var, slot, offset));
 
 	Json::Value layout;
-	layout["storage"] = move(variables);
-	layout["types"] = move(m_types);
+	layout["storage"] = std::move(variables);
+	layout["types"] = std::move(m_types);
 	return layout;
 }
 
@@ -81,7 +81,7 @@ void StorageLayout::generate(Type const* _type)
 			auto const& offsets = structType->storageOffsetsOfMember(member->name());
 			members.append(generate(*member, offsets.first, offsets.second));
 		}
-		typeInfo["members"] = move(members);
+		typeInfo["members"] = std::move(members);
 		typeInfo["encoding"] = "inplace";
 	}
 	else if (auto mappingType = dynamic_cast<MappingType const*>(_type))

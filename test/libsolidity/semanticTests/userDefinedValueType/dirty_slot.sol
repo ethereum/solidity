@@ -20,8 +20,6 @@ contract C {
         return MyBytes2.unwrap(b)[index];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // a() -> 13
 // b() -> 0x0401000000000000000000000000000000000000000000000000000000000000

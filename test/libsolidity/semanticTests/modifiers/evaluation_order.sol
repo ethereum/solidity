@@ -16,7 +16,5 @@ contract D is A, B, C {
 
     function f(uint y) internal returns (uint) { x.push(y); return 0; }
 }
-// ====
-// compileViaYul: also
 // ----
 // query() -> 0x20, 7, 4, 2, 6, 1, 3, 5, 7

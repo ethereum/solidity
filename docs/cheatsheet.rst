@@ -2,70 +2,11 @@
 Cheatsheet
 **********
 
-.. index:: precedence
-
-.. _order:
+.. index:: operator; precedence
 
 Order of Precedence of Operators
 ================================
-
-The following is the order of precedence for operators, listed in order of evaluation.
-
-+------------+-------------------------------------+--------------------------------------------+
-| Precedence | Description                         | Operator                                   |
-+============+=====================================+============================================+
-| *1*        | Postfix increment and decrement     | ``++``, ``--``                             |
-+            +-------------------------------------+--------------------------------------------+
-|            | New expression                      | ``new <typename>``                         |
-+            +-------------------------------------+--------------------------------------------+
-|            | Array subscripting                  | ``<array>[<index>]``                       |
-+            +-------------------------------------+--------------------------------------------+
-|            | Member access                       | ``<object>.<member>``                      |
-+            +-------------------------------------+--------------------------------------------+
-|            | Function-like call                  | ``<func>(<args...>)``                      |
-+            +-------------------------------------+--------------------------------------------+
-|            | Parentheses                         | ``(<statement>)``                          |
-+------------+-------------------------------------+--------------------------------------------+
-| *2*        | Prefix increment and decrement      | ``++``, ``--``                             |
-+            +-------------------------------------+--------------------------------------------+
-|            | Unary minus                         | ``-``                                      |
-+            +-------------------------------------+--------------------------------------------+
-|            | Unary operations                    | ``delete``                                 |
-+            +-------------------------------------+--------------------------------------------+
-|            | Logical NOT                         | ``!``                                      |
-+            +-------------------------------------+--------------------------------------------+
-|            | Bitwise NOT                         | ``~``                                      |
-+------------+-------------------------------------+--------------------------------------------+
-| *3*        | Exponentiation                      | ``**``                                     |
-+------------+-------------------------------------+--------------------------------------------+
-| *4*        | Multiplication, division and modulo | ``*``, ``/``, ``%``                        |
-+------------+-------------------------------------+--------------------------------------------+
-| *5*        | Addition and subtraction            | ``+``, ``-``                               |
-+------------+-------------------------------------+--------------------------------------------+
-| *6*        | Bitwise shift operators             | ``<<``, ``>>``                             |
-+------------+-------------------------------------+--------------------------------------------+
-| *7*        | Bitwise AND                         | ``&``                                      |
-+------------+-------------------------------------+--------------------------------------------+
-| *8*        | Bitwise XOR                         | ``^``                                      |
-+------------+-------------------------------------+--------------------------------------------+
-| *9*        | Bitwise OR                          | ``|``                                      |
-+------------+-------------------------------------+--------------------------------------------+
-| *10*       | Inequality operators                | ``<``, ``>``, ``<=``, ``>=``               |
-+------------+-------------------------------------+--------------------------------------------+
-| *11*       | Equality operators                  | ``==``, ``!=``                             |
-+------------+-------------------------------------+--------------------------------------------+
-| *12*       | Logical AND                         | ``&&``                                     |
-+------------+-------------------------------------+--------------------------------------------+
-| *13*       | Logical OR                          | ``||``                                     |
-+------------+-------------------------------------+--------------------------------------------+
-| *14*       | Ternary operator                    | ``<conditional> ? <if-true> : <if-false>`` |
-+            +-------------------------------------+--------------------------------------------+
-|            | Assignment operators                | ``=``, ``|=``, ``^=``, ``&=``, ``<<=``,    |
-|            |                                     | ``>>=``, ``+=``, ``-=``, ``*=``, ``/=``,   |
-|            |                                     | ``%=``                                     |
-+------------+-------------------------------------+--------------------------------------------+
-| *15*       | Comma operator                      | ``,``                                      |
-+------------+-------------------------------------+--------------------------------------------+
+.. include:: types/operator-precedence-table.rst
 
 .. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
 
@@ -135,35 +76,6 @@ Global Variables
 - ``type(T).min`` (``T``): the minimum value representable by the integer type ``T``, see :ref:`Type Information<meta-type>`.
 - ``type(T).max`` (``T``): the maximum value representable by the integer type ``T``, see :ref:`Type Information<meta-type>`.
 
-.. note::
-    When contracts are evaluated off-chain rather than in context of a transaction included in a
-    block, you should not assume that ``block.*`` and ``tx.*`` refer to values from any specific
-    block or transaction. These values are provided by the EVM implementation that executes the
-    contract and can be arbitrary.
-
-.. note::
-    Do not rely on ``block.timestamp`` or ``blockhash`` as a source of randomness,
-    unless you know what you are doing.
-
-    Both the timestamp and the block hash can be influenced by miners to some degree.
-    Bad actors in the mining community can for example run a casino payout function on a chosen hash
-    and just retry a different hash if they did not receive any money.
-
-    The current block timestamp must be strictly larger than the timestamp of the last block,
-    but the only guarantee is that it will be somewhere between the timestamps of two
-    consecutive blocks in the canonical chain.
-
-.. note::
-    The block hashes are not available for all blocks for scalability reasons.
-    You can only access the hashes of the most recent 256 blocks, all other
-    values will be zero.
-
-.. note::
-    In version 0.5.0, the following aliases were removed: ``suicide`` as alias for ``selfdestruct``,
-    ``msg.gas`` as alias for ``gasleft``, ``block.blockhash`` as alias for ``blockhash`` and
-    ``sha3`` as alias for ``keccak256``.
-.. note::
-    In version 0.7.0, the alias ``now`` (for ``block.timestamp``) was removed.
 
 .. index:: visibility, public, private, external, internal
 
@@ -200,13 +112,3 @@ Modifiers
 - ``override``: States that this function, modifier or public state variable changes
   the behaviour of a function or modifier in a base contract.
 
-Reserved Keywords
-=================
-
-These keywords are reserved in Solidity. They might become part of the syntax in the future:
-
-``after``, ``alias``, ``apply``, ``auto``, ``byte``, ``case``, ``copyof``, ``default``,
-``define``, ``final``, ``implements``, ``in``, ``inline``, ``let``, ``macro``, ``match``,
-``mutable``, ``null``, ``of``, ``partial``, ``promise``, ``reference``, ``relocatable``,
-``sealed``, ``sizeof``, ``static``, ``supports``, ``switch``, ``typedef``, ``typeof``,
-``var``.

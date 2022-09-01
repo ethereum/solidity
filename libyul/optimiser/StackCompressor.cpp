@@ -56,7 +56,7 @@ namespace
 class RematCandidateSelector: public DataFlowAnalyzer
 {
 public:
-	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore) {}
 
 	/// @returns a map from function name to rematerialisation costs to a vector of variables to rematerialise
 	/// and variables that occur in their expression.
@@ -176,7 +176,7 @@ void eliminateVariables(
 		varsToEliminate += chooseVarsToEliminate(candidates[functionName], static_cast<size_t>(numVariables));
 	}
 
-	Rematerialiser::run(_dialect, _ast, move(varsToEliminate));
+	Rematerialiser::run(_dialect, _ast, std::move(varsToEliminate));
 	// Do not remove functions.
 	set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
 	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);

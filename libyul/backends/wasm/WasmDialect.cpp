@@ -269,7 +269,7 @@ void WasmDialect::addFunction(
 	vector<optional<LiteralKind>> _literalArguments
 )
 {
-	YulString name{move(_name)};
+	YulString name{std::move(_name)};
 	BuiltinFunction& f = m_functions[name];
 	f.name = name;
 	f.parameters = std::move(_params);

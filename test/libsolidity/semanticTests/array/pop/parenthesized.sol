@@ -6,7 +6,5 @@ contract C {
     return data.length;
   }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0

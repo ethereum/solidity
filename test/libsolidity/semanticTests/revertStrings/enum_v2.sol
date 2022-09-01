@@ -7,7 +7,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // revertStrings: debug
 // ----
 // f(uint8[]): 0x20, 2, 3, 3 -> FAILURE

@@ -48,7 +48,6 @@ contract C is Base {
 }
 
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
 // ----
 // test() -> 11116

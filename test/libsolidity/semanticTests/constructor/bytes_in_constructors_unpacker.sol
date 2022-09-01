@@ -6,12 +6,10 @@ contract Test {
         m_s = s;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): 7, 0x40, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz" ->
-// gas irOptimized: 283829
-// gas legacy: 309607
-// gas legacyOptimized: 260566
+// gas irOptimized: 270118
+// gas legacy: 315616
+// gas legacyOptimized: 260686
 // m_x() -> 7
 // m_s() -> 0x20, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz"

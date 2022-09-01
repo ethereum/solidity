@@ -8,8 +8,6 @@ contract C {
     }
 }
 contract D is C(2, 1) {}
-// ====
-// compileViaYul: also
 // ----
 // i() -> 2
 // k() -> 1

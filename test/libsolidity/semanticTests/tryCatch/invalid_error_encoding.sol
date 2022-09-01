@@ -149,7 +149,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // f1() -> 2
 // f1a() -> 2

@@ -7,7 +7,5 @@ contract C {
         b = (MyInt).unwrap((MyInt).wrap(10));
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 5, 10

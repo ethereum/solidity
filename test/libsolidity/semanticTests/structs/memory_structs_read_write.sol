@@ -51,7 +51,6 @@ contract Test {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // testInit() -> 0, 0, 0, 0, true

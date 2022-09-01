@@ -12,8 +12,6 @@ contract C {
     function f() public returns (bytes memory) { return address(new A()).code; }
     function g() public returns (uint) { return address(new A()).code.length; }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0x20, 0x20, 0x48aa5566000000
 // g() -> 0x20

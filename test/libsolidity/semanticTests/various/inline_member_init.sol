@@ -16,6 +16,5 @@ contract test {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // get() -> 5, 6, 8

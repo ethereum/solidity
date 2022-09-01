@@ -107,15 +107,15 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 							string libraryName;
 							if (accept(Token::String))
 							{
-								libraryName = m_scanner.currentLiteral();
+								call.libraryFile = m_scanner.currentLiteral();
 								expect(Token::String);
 								expect(Token::Colon);
-								libraryName += ':' + m_scanner.currentLiteral();
+								libraryName += m_scanner.currentLiteral();
 								expect(Token::Identifier);
 							}
 							else if (accept(Token::Colon, true))
 							{
-								libraryName = ':' + m_scanner.currentLiteral();
+								libraryName = m_scanner.currentLiteral();
 								expect(Token::Identifier);
 							}
 							else
@@ -178,7 +178,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						accept(Token::Newline, true);
 						call.expectedSideEffects = parseFunctionCallSideEffects();
 
-						calls.emplace_back(move(call));
+						calls.emplace_back(std::move(call));
 					}
 				}
 				catch (TestParserError const& _e)

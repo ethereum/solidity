@@ -11,15 +11,69 @@ Breaking changes:
  * View Pure Checker: Mark ``returndatasize`` and ``returndatacopy`` as view to disallow them in inline assembly blocks in pure functions.
 
 
-### 0.8.15 (unreleased)
+### 0.8.17 (unreleased)
+
+Important Bugfixes:
+
 
 Language Features:
 
 
 Compiler Features:
+ * Code Generator: More efficient overflow checks for multiplication.
+ * Yul Optimizer: Simplify the starting offset of zero-length operations to zero.
+ * Language Server: Analyze all files in a project by default (can be customized by setting ``'file-load-strategy'`` to ``'directly-opened-and-on-import'`` in LSP settings object).
 
 
 Bugfixes:
+ * Type Checker: Fix internal compiler error on tuple assignments with invalid left-hand side.
+
+
+### 0.8.16 (2022-08-08)
+
+Important Bugfixes:
+ * Code Generation: Fix data corruption that affected ABI-encoding of calldata values represented by tuples: structs at any nesting level; argument lists of external functions, events and errors; return value lists of external functions. The 32 leading bytes of the first dynamically-encoded value in the tuple would get zeroed when the last component contained a statically-encoded array.
+
+
+Compiler Features:
+ * Code Generator: More efficient code for checked addition and subtraction.
+ * TypeChecker: Support using library constants in initializers of other constants.
+ * Yul IR Code Generation: Improved copy routines for arrays with packed storage layout.
+ * Yul Optimizer: Add rule to convert ``mod(add(X, Y), A)`` into ``addmod(X, Y, A)``, if ``A`` is a power of two.
+ * Yul Optimizer: Add rule to convert ``mod(mul(X, Y), A)`` into ``mulmod(X, Y, A)``, if ``A`` is a power of two.
+
+
+Bugfixes:
+ * Commandline Interface: Disallow the following options outside of the compiler mode: ``--via-ir``,``--metadata-literal``, ``--metadata-hash``, ``--model-checker-show-unproved``, ``--model-checker-div-mod-no-slacks``, ``--model-checker-engine``, ``--model-checker-invariants``, ``--model-checker-solvers``, ``--model-checker-timeout``, ``--model-checker-contracts``, ``--model-checker-targets``.
+ * Type Checker: Fix compiler crash on tuple assignments involving certain patterns with unary tuples on the left-hand side.
+ * Type Checker: Fix compiler crash when ``abi.encodeCall`` received a tuple expression instead of an inline tuple.
+ * Type Checker: Fix null dereference in ``abi.encodeCall`` type checking of free function.
+
+
+### 0.8.15 (2022-06-15)
+
+Important Bugfixes:
+ * Code Generation: Avoid writing dirty bytes to storage when copying ``bytes`` arrays.
+ * Yul Optimizer: Keep all memory side-effects of inline assembly blocks.
+
+
+Language Features:
+ * Add `E.selector` for a non-anonymous event `E` to access the 32-byte selector topic.
+
+
+Compiler Features:
+ * Language Server: Add rudimentary support for semantic highlighting.
+ * Language Server: Adds support for configuring ``include-paths`` JSON settings object that can be passed during LSP configuration stage.
+ * Language Server: Always add ``{project_root}/node_modules`` to include search paths.
+ * Type Checker: Warn about assignments involving multiple pushes to storage ``bytes`` that may invalidate references.
+ * Yul Optimizer: Improve inlining heuristics for via IR code generation and pure Yul compilation.
+
+Bugfixes:
+ * ABI Encoder: When encoding an empty string coming from storage do not add a superfluous empty slot for data.
+ * Common Subexpression Eliminator: Process assembly items in chunks with maximum size of 2000. It helps to avoid extremely time-consuming searches during code optimization.
+ * DocString Parser: Fix ICE caused by an immutable struct with mapping.
+ * Yul IR Code Generation: More robust cleanup in corner cases during memory to storage copies.
+ * Yul Optimizer: Do not remove ``returndatacopy`` in cases in which it might perform out-of-bounds reads that unconditionally revert as out-of-gas. Previously, any ``returndatacopy`` that wrote to memory that was never read from was removed without accounting for the out-of-bounds condition.
 
 
 ### 0.8.14 (2022-05-17)
@@ -61,9 +115,10 @@ Compiler Features:
  * Commandline Interface: Allow the use of ``--via-ir`` in place of ``--experimental-via-ir``.
  * Compilation via Yul IR is no longer marked as experimental.
  * JSON-AST: Added selector field for errors and events.
- * LSP: Implements goto-definition.
+ * Language Server: Implements goto-definition.
  * Peephole Optimizer: Optimize comparisons in front of conditional jumps and conditional jumps across a single unconditional jump.
  * Yul EVM Code Transform: Avoid unnecessary ``pop``s on terminating control flow.
+ * Yul IR Code Generation: When the result of an external call is statically-sized, ignore any returndata past the size expected by the compiler.
  * Yul Optimizer: Remove ``sstore`` and ``mstore`` operations that are never read from.
 
 

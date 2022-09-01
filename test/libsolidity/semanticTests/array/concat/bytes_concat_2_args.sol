@@ -3,8 +3,6 @@ contract C {
         return bytes.concat(a, b);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(bytes,bytes): 0x40, 0x80, 32, "abcdabcdabcdabcdabcdabcdabcdabcd", 5, "bcdef" -> 0x20, 37, "abcdabcdabcdabcdabcdabcdabcdabcd", "bcdef"
 //

@@ -211,5 +211,5 @@ void EncodingContext::addAssertion(smtutil::Expression const& _expr)
 	if (m_assertions.empty())
 		m_assertions.push_back(_expr);
 	else
-		m_assertions.back() = _expr && move(m_assertions.back());
+		m_assertions.back() = _expr && std::move(m_assertions.back());
 }

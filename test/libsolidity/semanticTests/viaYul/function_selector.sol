@@ -7,7 +7,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // f() -> left(0x26121ff0)

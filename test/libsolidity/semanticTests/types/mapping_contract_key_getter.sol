@@ -8,8 +8,6 @@ contract test {
         return this.table(k);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // table(address): 0 -> 0
 // table(address): 0x01 -> 0

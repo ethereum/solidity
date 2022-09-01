@@ -16,7 +16,6 @@ contract Test {
 
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // hello_world() -> left(0xc6be8b58)
 // hello_world_with_event() -> left(0xc6be8b58)

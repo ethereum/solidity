@@ -11,7 +11,6 @@ contract B is A {
 
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // f() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000001"

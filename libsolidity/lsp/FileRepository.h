@@ -18,6 +18,7 @@
 #pragma once
 
 #include <libsolidity/interface/FileReader.h>
+#include <libsolutil/Result.h>
 
 #include <string>
 #include <map>
@@ -28,7 +29,10 @@ namespace solidity::lsp
 class FileRepository
 {
 public:
-	explicit FileRepository(boost::filesystem::path _basePath);
+	FileRepository(boost::filesystem::path _basePath, std::vector<boost::filesystem::path> _includePaths);
+
+	std::vector<boost::filesystem::path> const& includePaths() const noexcept { return m_includePaths; }
+	void setIncludePaths(std::vector<boost::filesystem::path> _paths);
 
 	boost::filesystem::path const& basePath() const { return m_basePath; }
 
@@ -44,13 +48,14 @@ public:
 	/// Changes the source identified by the LSP client path _uri to _text.
 	void setSourceByUri(std::string const& _uri, std::string _text);
 
-	void addOrUpdateFile(boost::filesystem::path const& _path, frontend::SourceCode _source);
 	void setSourceUnits(StringMap _sources);
 	frontend::ReadCallback::Result readFile(std::string const& _kind, std::string const& _sourceUnitName);
 	frontend::ReadCallback::Callback reader()
 	{
 		return [this](std::string const& _kind, std::string const& _path) { return readFile(_kind, _path); };
 	}
+
+	util::Result<boost::filesystem::path> tryResolvePath(std::string const& _sourceUnitName) const;
 
 private:
 	/// Base path without URI scheme.

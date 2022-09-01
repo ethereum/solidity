@@ -26,6 +26,7 @@
 #include <libyul/Utilities.h>
 
 #include <libsolutil/Visitor.h>
+#include <libsolutil/StackTooDeepString.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -63,9 +64,9 @@ CodeTransform::CodeTransform(
 	m_builtinContext(_builtinContext),
 	m_allowStackOpt(_allowStackOpt),
 	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
-	m_identifierAccessCodeGen(move(_identifierAccessCodeGen)),
-	m_context(move(_context)),
-	m_delayedReturnVariables(move(_delayedReturnVariables)),
+	m_identifierAccessCodeGen(std::move(_identifierAccessCodeGen)),
+	m_context(std::move(_context)),
+	m_delayedReturnVariables(std::move(_delayedReturnVariables)),
 	m_functionExitLabel(_functionExitLabel)
 {
 	if (!m_context)
@@ -405,11 +406,11 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	if (!m_allowStackOpt)
 		subTransform.setupReturnVariablesAndFunctionExit();
 
-	subTransform.m_assignedNamedLabels = move(m_assignedNamedLabels);
+	subTransform.m_assignedNamedLabels = std::move(m_assignedNamedLabels);
 
 	subTransform(_function.body);
 
-	m_assignedNamedLabels = move(subTransform.m_assignedNamedLabels);
+	m_assignedNamedLabels = std::move(subTransform.m_assignedNamedLabels);
 
 	m_assembly.setSourceLocation(originLocationOf(_function));
 	if (!subTransform.m_stackErrors.empty())
@@ -785,7 +786,8 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 			_varName.str() +
 			" is " +
 			to_string(heightDiff - limit) +
-			" slot(s) too deep inside the stack."
+			" slot(s) too deep inside the stack. " +
+			stackTooDeepString
 		);
 		m_assembly.markAsInvalid();
 		return _forSwap ? 2 : 1;

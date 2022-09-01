@@ -13,12 +13,10 @@ contract C {
 		return (x+x,y);
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor(): 3 ->
-// gas irOptimized: 127454
-// gas legacy: 209361
-// gas legacyOptimized: 139324
+// gas irOptimized: 125477
+// gas legacy: 202011
+// gas legacyOptimized: 139552
 // f() -> 84, 23
 // m(uint256): 3 -> 7

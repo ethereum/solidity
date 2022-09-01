@@ -19,6 +19,7 @@
 #include <libsmtutil/CVC4Interface.h>
 
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/Exceptions.h>
 
 #include <cvc4/util/bitvector.h>
 
@@ -277,7 +278,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::APPLY_CONSTRUCTOR, c, arguments);
 		}
 
-		smtAssert(false, "");
+		smtAssert(false);
 	}
 	catch (CVC4::TypeCheckingException const& _e)
 	{
@@ -288,7 +289,10 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		smtAssert(false, _e.what());
 	}
 
-	smtAssert(false, "");
+	smtAssert(false);
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	util::unreachable();
 }
 
 CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)

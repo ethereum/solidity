@@ -239,12 +239,12 @@ static map<string, uint8_t> const builtins = {
 bytes prefixSize(bytes _data)
 {
 	size_t size = _data.size();
-	return lebEncode(size) + move(_data);
+	return lebEncode(size) + std::move(_data);
 }
 
 bytes makeSection(Section _section, bytes _data)
 {
-	return toBytes(_section) + prefixSize(move(_data));
+	return toBytes(_section) + prefixSize(std::move(_data));
 }
 
 /// This is a kind of run-length-encoding of local types.
@@ -306,7 +306,7 @@ bytes BinaryTransform::run(Module const& _module)
 		// TODO should we prefix and / or shorten the name?
 		bytes data = BinaryTransform::run(module);
 		size_t const length = data.size();
-		ret += customSection(name, move(data));
+		ret += customSection(name, std::move(data));
 		// Skip all the previous sections and the size field of this current custom section.
 		size_t const offset = ret.size() - length;
 		subModulePosAndSize[name] = {offset, length};
@@ -321,10 +321,10 @@ bytes BinaryTransform::run(Module const& _module)
 	}
 
 	BinaryTransform bt(
-		move(globalIDs),
-		move(functionIDs),
-		move(functionTypes),
-		move(subModulePosAndSize)
+		std::move(globalIDs),
+		std::move(functionIDs),
+		std::move(functionTypes),
+		std::move(subModulePosAndSize)
 	);
 
 	ret += bt.codeSection(_module.functions);
@@ -378,7 +378,7 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
 	// NOTE: the dialect ensures we have the right amount of arguments
 	bytes args = visit(_call.arguments);
-	bytes ret = move(args) + toBytes(builtins.at(_call.functionName));
+	bytes ret = std::move(args) + toBytes(builtins.at(_call.functionName));
 	if (
 		_call.functionName.find(".load") != string::npos ||
 		_call.functionName.find(".store") != string::npos
@@ -500,7 +500,7 @@ bytes BinaryTransform::operator()(FunctionDefinition const& _function)
 
 	yulAssert(m_labels.empty(), "Stray labels.");
 
-	return prefixSize(move(ret));
+	return prefixSize(std::move(ret));
 }
 
 BinaryTransform::Type BinaryTransform::typeOf(FunctionImport const& _import)
@@ -602,7 +602,7 @@ bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> co
 		index++;
 	}
 
-	return makeSection(Section::TYPE, lebEncode(index) + move(result));
+	return makeSection(Section::TYPE, lebEncode(index) + std::move(result));
 }
 
 bytes BinaryTransform::importSection(
@@ -620,7 +620,7 @@ bytes BinaryTransform::importSection(
 			toBytes(importKind) +
 			lebEncode(_functionTypes.at(import.internalName));
 	}
-	return makeSection(Section::IMPORT, move(result));
+	return makeSection(Section::IMPORT, std::move(result));
 }
 
 bytes BinaryTransform::functionSection(
@@ -631,7 +631,7 @@ bytes BinaryTransform::functionSection(
 	bytes result = lebEncode(_functions.size());
 	for (auto const& fun: _functions)
 		result += lebEncode(_functionTypes.at(fun.name));
-	return makeSection(Section::FUNCTION, move(result));
+	return makeSection(Section::FUNCTION, std::move(result));
 }
 
 bytes BinaryTransform::memorySection()
@@ -639,7 +639,7 @@ bytes BinaryTransform::memorySection()
 	bytes result = lebEncode(1);
 	result.push_back(static_cast<uint8_t>(LimitsKind::Min));
 	result.push_back(1); // initial length
-	return makeSection(Section::MEMORY, move(result));
+	return makeSection(Section::MEMORY, std::move(result));
 }
 
 bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> const& _globals)
@@ -656,7 +656,7 @@ bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> con
 			toBytes(Opcode::End);
 	}
 
-	return makeSection(Section::GLOBAL, move(result));
+	return makeSection(Section::GLOBAL, std::move(result));
 }
 
 bytes BinaryTransform::exportSection(map<string, size_t> const& _functionIDs)
@@ -666,13 +666,13 @@ bytes BinaryTransform::exportSection(map<string, size_t> const& _functionIDs)
 	result += encodeName("memory") + toBytes(Export::Memory) + lebEncode(0);
 	if (hasMain)
 		result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functionIDs.at("main"));
-	return makeSection(Section::EXPORT, move(result));
+	return makeSection(Section::EXPORT, std::move(result));
 }
 
 bytes BinaryTransform::customSection(string const& _name, bytes _data)
 {
-	bytes result = encodeName(_name) + move(_data);
-	return makeSection(Section::CUSTOM, move(result));
+	bytes result = encodeName(_name) + std::move(_data);
+	return makeSection(Section::CUSTOM, std::move(result));
 }
 
 bytes BinaryTransform::codeSection(vector<wasm::FunctionDefinition> const& _functions)
@@ -680,7 +680,7 @@ bytes BinaryTransform::codeSection(vector<wasm::FunctionDefinition> const& _func
 	bytes result = lebEncode(_functions.size());
 	for (FunctionDefinition const& fun: _functions)
 		result += (*this)(fun);
-	return makeSection(Section::CODE, move(result));
+	return makeSection(Section::CODE, std::move(result));
 }
 
 bytes BinaryTransform::visit(vector<Expression> const& _expressions)

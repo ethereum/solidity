@@ -542,7 +542,7 @@ General Information)").c_str(),
 		(
 			(g_strOutputDir + ",o").c_str(),
 			po::value<string>()->value_name("path"),
-			"If given, creates one file per component and contract/file at the specified directory."
+			"If given, creates one file per output component and contract/file at the specified directory."
 		)
 		(
 			g_strOverwrite.c_str(),
@@ -695,7 +695,7 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
+		(CompilerOutputs::componentName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose IPFS hash is stored on-chain.")
 		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables.")
 	;
 	desc.add(outputComponents);
@@ -888,12 +888,26 @@ void CommandLineParser::processArgs()
 		// TODO: This should eventually contain all options.
 		{g_strErrorRecovery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strExperimentalViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
+		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerInvariants, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerSolvers, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerTimeout, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerContracts, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerTargets, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
 	};
 	vector<string> invalidOptionsForCurrentInputMode;
 	for (auto const& [optionName, inputModes]: validOptionInputModeCombinations)
 	{
-		if (m_args.count(optionName) > 0 && inputModes.count(m_options.input.mode) == 0)
+		if (
+			m_args.count(optionName) > 0 &&
+			inputModes.count(m_options.input.mode) == 0 &&
+			!m_args[optionName].defaulted()
+		)
 			invalidOptionsForCurrentInputMode.push_back(optionName);
 	}
 

@@ -45,7 +45,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // revertStrings: debug
 // ----
 // f(bytes): 0x20, 32, "abcdabcdabcdabcdabcdabcdabcdabcd" -> 0x20, 37, "abcdabcdabcdabcdabcdabcdabcdabcd", "bcdef"

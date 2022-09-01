@@ -44,13 +44,13 @@ void GotoDefinition::operator()(MessageID _id, Json::Value const& _args)
 		// Handles all expressions that can have one or more declaration annotation.
 		if (auto const* declaration = referencedDeclaration(expression))
 			if (auto location = declarationLocation(declaration))
-				locations.emplace_back(move(location.value()));
+				locations.emplace_back(std::move(location.value()));
 	}
 	else if (auto const* identifierPath = dynamic_cast<IdentifierPath const*>(sourceNode))
 	{
 		if (auto const* declaration = identifierPath->annotation().referencedDeclaration)
 			if (auto location = declarationLocation(declaration))
-				locations.emplace_back(move(location.value()));
+				locations.emplace_back(std::move(location.value()));
 	}
 	else if (auto const* importDirective = dynamic_cast<ImportDirective const*>(sourceNode))
 	{

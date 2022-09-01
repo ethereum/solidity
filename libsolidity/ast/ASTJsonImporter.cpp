@@ -95,6 +95,20 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_sourceNames);
 }
 
+optional<vector<SourceLocation>> ASTJsonImporter::createSourceLocations(Json::Value const& _node) const
+{
+	vector<SourceLocation> locations;
+
+	if (_node.isMember("nameLocations") && _node["nameLocations"].isArray())
+	{
+		for (auto const& val: _node["nameLocations"])
+			locations.emplace_back(langutil::parseSourceLocation(val.asString(), m_sourceNames));
+		return locations;
+	}
+
+	return nullopt;
+}
+
 SourceLocation ASTJsonImporter::createNameSourceLocation(Json::Value const& _node)
 {
 	astAssert(member(_node, "nameLocation").isString(), "'nameLocation' must be a string");
@@ -229,6 +243,9 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createDocumentation(_json);
 	else
 		astAssert(false, "Unknown type of ASTNode: " + nodeType);
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	util::unreachable();
 }
 
 // ============ functions to instantiate the AST-Nodes from Json-Nodes ==============
@@ -282,7 +299,7 @@ ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value c
 		path,
 		unitAlias,
 		createNameSourceLocation(_node),
-		move(symbolAliases)
+		std::move(symbolAliases)
 	);
 
 	astAssert(_node["absolutePath"].isString(), "Expected 'absolutePath' to be a string!");
@@ -322,6 +339,7 @@ ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value con
 	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
 
 	vector<ASTString> namePath;
+	vector<SourceLocation> namePathLocations;
 	vector<string> strs;
 	string nameString = member(_node, "name").asString();
 	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
@@ -331,7 +349,23 @@ ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value con
 		astAssert(!s.empty(), "Expected non-empty string for IdentifierPath element.");
 		namePath.emplace_back(s);
 	}
-	return createASTNode<IdentifierPath>(_node, namePath);
+
+	if (_node.isMember("nameLocations") && _node["nameLocations"].isArray())
+		for (auto const& val: _node["nameLocations"])
+			namePathLocations.emplace_back(langutil::parseSourceLocation(val.asString(), m_sourceNames));
+	else
+		namePathLocations.resize(namePath.size());
+
+	astAssert(
+		namePath.size() == namePathLocations.size(),
+		"SourceLocations don't match name paths."
+	);
+
+	return createASTNode<IdentifierPath>(
+		_node,
+		namePath,
+		namePathLocations
+	);
 }
 
 ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Json::Value const& _node)
@@ -357,7 +391,7 @@ ASTPointer<UsingForDirective> ASTJsonImporter::createUsingForDirective(Json::Val
 
 	return createASTNode<UsingForDirective>(
 		_node,
-		move(functions),
+		std::move(functions),
 		!_node.isMember("libraryName"),
 		_node["typeName"].isNull() ? nullptr  : convertJsonToASTNode<TypeName>(_node["typeName"]),
 		memberAsBool(_node, "global")
@@ -652,7 +686,7 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value con
 		_node,
 		nullOrASTString(_node, "documentation"),
 		dialect,
-		move(flags),
+		std::move(flags),
 		operations
 	);
 }
@@ -873,11 +907,17 @@ ASTPointer<FunctionCall> ASTJsonImporter::createFunctionCall(Json::Value const& 
 		astAssert(name.isString(), "Expected 'names' members to be strings!");
 		names.push_back(make_shared<ASTString>(name.asString()));
 	}
+
+	optional<vector<SourceLocation>> sourceLocations = createSourceLocations(_node);
+
 	return createASTNode<FunctionCall>(
 		_node,
 		convertJsonToASTNode<Expression>(member(_node, "expression")),
 		arguments,
-		names
+		names,
+		sourceLocations ?
+			*sourceLocations :
+			vector<SourceLocation>(names.size())
 	);
 }
 
@@ -911,10 +951,15 @@ ASTPointer<NewExpression> ASTJsonImporter::createNewExpression(Json::Value const
 
 ASTPointer<MemberAccess> ASTJsonImporter::createMemberAccess(Json::Value const&  _node)
 {
+	SourceLocation memberLocation;
+	if (member(_node, "memberLocation").isString())
+		memberLocation = solidity::langutil::parseSourceLocation(_node["memberLocation"].asString(), m_sourceNames);
+
 	return createASTNode<MemberAccess>(
 		_node,
 		convertJsonToASTNode<Expression>(member(_node, "expression")),
-		memberAsASTString(_node, "memberName")
+		memberAsASTString(_node, "memberName"),
+		std::move(memberLocation)
 	);
 }
 
@@ -1073,6 +1118,9 @@ Visibility ASTJsonImporter::visibility(Json::Value const& _node)
 		return Visibility::External;
 	else
 		astAssert(false, "Unknown visibility declaration");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	util::unreachable();
 }
 
 VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node)
@@ -1092,6 +1140,9 @@ VariableDeclaration::Location ASTJsonImporter::location(Json::Value const& _node
 		return VariableDeclaration::Location::CallData;
 	else
 		astAssert(false, "Unknown location declaration");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	util::unreachable();
 }
 
 Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _node)
@@ -1125,6 +1176,9 @@ Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _no
 		return Literal::SubDenomination::Year;
 	else
 		astAssert(false, "Unknown subdenomination");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	util::unreachable();
 }
 
 StateMutability ASTJsonImporter::stateMutability(Json::Value const& _node)
@@ -1142,6 +1196,9 @@ StateMutability ASTJsonImporter::stateMutability(Json::Value const& _node)
 		return StateMutability::Payable;
 	else
 		astAssert(false, "Unknown stateMutability");
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	util::unreachable();
 }
 
 }

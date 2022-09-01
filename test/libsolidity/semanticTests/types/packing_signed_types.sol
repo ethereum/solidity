@@ -6,6 +6,5 @@ contract test {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // run() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa

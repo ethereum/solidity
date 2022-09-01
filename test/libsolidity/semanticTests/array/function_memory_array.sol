@@ -32,7 +32,6 @@ contract C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // test(uint256,uint256): 10, 0 -> 11
 // test(uint256,uint256): 10, 1 -> 12

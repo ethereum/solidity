@@ -20,14 +20,12 @@ contract c {
         return data1.data[i];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // storageEmpty -> 1
 // set(uint256,bytes,uint256): 12, 0x60, 13, 33, "12345678901234567890123456789012", "3" -> true
-// gas irOptimized: 133728
-// gas legacy: 134433
-// gas legacyOptimized: 133876
+// gas irOptimized: 133599
+// gas legacy: 134654
+// gas legacyOptimized: 133882
 // test(uint256): 32 -> "3"
 // storageEmpty -> 0
 // copy() -> true

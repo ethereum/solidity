@@ -1,4 +1,4 @@
-from opcodes import LT
+from opcodes import SUB, GT
 from rule import Rule
 from util import BVUnsignedMax, BVUnsignedUpCast
 from z3 import BVSubNoUnderflow, BitVec, Not
@@ -24,13 +24,17 @@ while type_bits <= n_bits:
 	# cast to full n_bits values
 	X = BVUnsignedUpCast(X_short, n_bits)
 	Y = BVUnsignedUpCast(Y_short, n_bits)
+	diff = SUB(X, Y)
 
 	# Constants
 	maxValue = BVUnsignedMax(type_bits, n_bits)
 
 	# Overflow check in YulUtilFunction::overflowCheckedIntSubFunction
-	overflow_check = LT(X, Y)
+	if type_bits == 256:
+		overflow_check = GT(diff, X)
+	else:
+		overflow_check = GT(diff, maxValue)
+
+	type_bits += 8
 
 	rule.check(overflow_check != 0, actual_overflow)
-
-	type_bits *= 2

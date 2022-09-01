@@ -15,10 +15,8 @@ contract C {
         return (m[0][0], m[0][3], m[1][1], m[1][4], m[2][0], m[3][2], m[3][3]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 1, 2, 3, 4, 5, 6, 7
-// gas irOptimized: 207781
+// gas irOptimized: 205985
 // gas legacy: 212313
 // gas legacyOptimized: 211462

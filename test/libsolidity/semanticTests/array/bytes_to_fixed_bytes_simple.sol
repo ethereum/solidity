@@ -18,8 +18,6 @@ contract C {
         return bytes8(c[1:9]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // fromMemory(bytes): 0x20, 16, "abcdefghabcdefgh" -> "abcdefghabcdefgh"
 // fromCalldata(bytes): 0x20, 16, "abcdefghabcdefgh" -> "abcdefghabcdefgh"

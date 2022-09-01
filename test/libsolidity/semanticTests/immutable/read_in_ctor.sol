@@ -11,7 +11,5 @@ contract A {
 		return x;
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // readX() -> 3

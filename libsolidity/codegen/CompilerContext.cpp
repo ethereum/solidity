@@ -43,6 +43,7 @@
 
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/FunctionSelector.h>
+#include <libsolutil/StackTooDeepString.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
@@ -198,7 +199,7 @@ void CompilerContext::appendYulUtilityFunctions(OptimiserSettings const& _optimi
 	if (!code.empty())
 	{
 		appendInlineAssembly(
-			yul::reindent("{\n" + move(code) + "\n}"),
+			yul::reindent("{\n" + std::move(code) + "\n}"),
 			{},
 			m_externallyUsedYulFunctions,
 			true,
@@ -422,7 +423,7 @@ void CompilerContext::appendInlineAssembly(
 			BOOST_THROW_EXCEPTION(
 				StackTooDeepError() <<
 				errinfo_sourceLocation(nativeLocationOf(_identifier)) <<
-				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
+				util::errinfo_comment(util::stackTooDeepString)
 			);
 		if (_context == yul::IdentifierContext::RValue)
 			_assembly.appendInstruction(dupInstruction(static_cast<unsigned>(stackDiff)));
@@ -484,6 +485,7 @@ void CompilerContext::appendInlineAssembly(
 		obj.code = parserResult;
 		obj.analysisInfo = make_shared<yul::AsmAnalysisInfo>(analysisInfo);
 
+		solAssert(!dialect.providesObjectAccess());
 		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
 
 		if (_system)

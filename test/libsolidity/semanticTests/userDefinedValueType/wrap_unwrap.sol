@@ -5,7 +5,5 @@ contract C {
         MyAddress.unwrap;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() ->

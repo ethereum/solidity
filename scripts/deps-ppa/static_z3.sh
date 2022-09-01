@@ -3,9 +3,6 @@
 ## This is used to package .deb packages and upload them to the launchpad
 ## ppa servers for building.
 ##
-## The gnupg key for "builds@ethereum.org" has to be present in order to sign
-## the package.
-##
 ## It will clone the Z3 git from github on the specified version tag,
 ## create a source archive and push it to the ubuntu ppa servers.
 ##
@@ -16,18 +13,35 @@
 ##  method			= ftp
 ##  incoming		= ~ethereum/cpp-build-deps
 ##  login			= anonymous
-
+##
+## To interact with launchpad, you need to set the variables $LAUNCHPAD_EMAIL
+## and $LAUNCHPAD_KEYID in the file .release_ppa_auth in the root directory of
+## the project to your launchpad email and pgp keyid.
+## This could for example look like this:
+##
+##  LAUNCHPAD_EMAIL=your-launchpad-email@ethereum.org
+##  LAUNCHPAD_KEYID=123ABCFFFFFFFF
 ##
 ##############################################################################
 
-set -ev
+set -e
 
-keyid=70D110489D66E2F6
-email=builds@ethereum.org
 packagename=z3-static
-version=4.8.17
+version="$1"
 
-DISTRIBUTIONS="focal impish jammy"
+REPO_ROOT="$(dirname "$0")/../.."
+
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/scripts/common.sh"
+
+[[ $version != "" ]] || fail "Usage: $0 <version-without-leading-v>"
+
+sourcePPAConfig
+
+# Sanity check
+checkDputEntries "\[cpp-build-deps\]"
+
+DISTRIBUTIONS="focal jammy kinetic"
 
 for distribution in $DISTRIBUTIONS
 do
@@ -40,7 +54,7 @@ pparepo=cpp-build-deps
 ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/${pparepo}/+files
 
 # Fetch source
-git clone --branch z3-${version} https://github.com/Z3Prover/z3.git
+git clone --branch "z3-${version}" https://github.com/Z3Prover/z3.git
 cd z3
 
 debversion="${version}"
@@ -50,11 +64,11 @@ CMAKE_OPTIONS="-DZ3_BUILD_LIBZ3_SHARED=OFF -DCMAKE_BUILD_TYPE=Release"
 # gzip will create different tars all the time and we are not allowed
 # to upload the same file twice with different contents, so we only
 # create it once.
-if [ ! -e /tmp/${packagename}_${debversion}.orig.tar.gz ]
+if [ ! -e "/tmp/${packagename}_${debversion}.orig.tar.gz" ]
 then
-    tar --exclude .git -czf /tmp/${packagename}_${debversion}.orig.tar.gz .
+    tar --exclude .git -czf "/tmp/${packagename}_${debversion}.orig.tar.gz" .
 fi
-cp /tmp/${packagename}_${debversion}.orig.tar.gz ../
+cp "/tmp/${packagename}_${debversion}.orig.tar.gz" ../
 
 # Create debian package information
 
@@ -209,7 +223,7 @@ echo "3.0 (quilt)" > debian/source/format
 chmod +x debian/rules
 
 versionsuffix=1ubuntu0~${distribution}
-EMAIL="$email" dch -v "1:${debversion}-${versionsuffix}" "build of ${version}"
+EMAIL="$LAUNCHPAD_EMAIL" dch -v "1:${debversion}-${versionsuffix}" "build of ${version}"
 
 # build source package
 # If packages is rejected because original source is already present, add
@@ -226,26 +240,26 @@ cd ..
 orig="${packagename}_${debversion}.orig.tar.gz"
 # shellcheck disable=SC2012
 orig_size=$(ls -l "$orig" | cut -d ' ' -f 5)
-orig_sha1=$(sha1sum $orig | cut -d ' ' -f 1)
-orig_sha256=$(sha256sum $orig | cut -d ' ' -f 1)
-orig_md5=$(md5sum $orig | cut -d ' ' -f 1)
+orig_sha1=$(sha1sum "$orig" | cut -d ' ' -f 1)
+orig_sha256=$(sha256sum "$orig" | cut -d ' ' -f 1)
+orig_md5=$(md5sum "$orig" | cut -d ' ' -f 1)
 
-if wget --quiet -O $orig-tmp "$ppafilesurl/$orig"
+if wget --quiet -O "$orig-tmp" "$ppafilesurl/$orig"
 then
     echo "[WARN] Original tarball found in Ubuntu archive, using it instead"
-    mv $orig-tmp $orig
+    mv "${orig}-tmp" "$orig"
     # shellcheck disable=SC2012
     new_size=$(ls -l ./*.orig.tar.gz | cut -d ' ' -f 5)
-    new_sha1=$(sha1sum $orig | cut -d ' ' -f 1)
-    new_sha256=$(sha256sum $orig | cut -d ' ' -f 1)
-    new_md5=$(md5sum $orig | cut -d ' ' -f 1)
+    new_sha1=$(sha1sum "$orig" | cut -d ' ' -f 1)
+    new_sha256=$(sha256sum "$orig" | cut -d ' ' -f 1)
+    new_md5=$(md5sum "$orig" | cut -d ' ' -f 1)
     sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" ./*.dsc
     sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" ./*.changes
 fi
 )
 
 # sign the package
-debsign --re-sign -k "${keyid}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
+debsign --re-sign -k "${LAUNCHPAD_KEYID}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
 
 # upload
 dput "${pparepo}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"

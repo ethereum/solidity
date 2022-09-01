@@ -64,7 +64,7 @@ protected:
 	Program optimisedProgram(Program _program) const
 	{
 		[[maybe_unused]] size_t originalSize = _program.codeSize(m_weights);
-		Program result = move(_program);
+		Program result = std::move(_program);
 		result.optimise(m_chromosome.optimisationSteps());
 
 		// Make sure that the program and the chromosome we have chosen are suitable for the test

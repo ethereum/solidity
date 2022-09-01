@@ -12,9 +12,9 @@ set(RANGE_V3_INCLUDE_DIR "${prefix}/include")
 ExternalProject_Add(range-v3-project
     PREFIX "${prefix}"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
-    DOWNLOAD_NAME range-v3-0.11.0.tar.gz
-    URL https://github.com/ericniebler/range-v3/archive/0.11.0.tar.gz
-    URL_HASH SHA256=376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c
+    DOWNLOAD_NAME range-v3-0.12.0.tar.gz
+    URL https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz
+    URL_HASH SHA256=015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb
     CMAKE_COMMAND ${RANGE_V3_CMAKE_COMMAND}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}

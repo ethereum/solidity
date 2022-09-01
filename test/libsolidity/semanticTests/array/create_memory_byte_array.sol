@@ -6,7 +6,5 @@ contract C {
         return (x[34]);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> "A"

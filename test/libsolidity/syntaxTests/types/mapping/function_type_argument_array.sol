@@ -3,4 +3,4 @@ contract test {
     }
 }
 // ----
-// TypeError 4061: (31-64): Type mapping(uint256 => uint256)[2] is only valid in storage because it contains a (nested) mapping.
+// TypeError 4061: (31-64): Type mapping(uint256 => uint256)[2] memory is only valid in storage because it contains a (nested) mapping.

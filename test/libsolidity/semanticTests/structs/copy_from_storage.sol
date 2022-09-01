@@ -18,7 +18,5 @@ contract C {
         return sMemory;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 0x20, 1, 13

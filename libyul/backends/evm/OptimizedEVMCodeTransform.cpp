@@ -61,7 +61,7 @@ vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 	optimizedCodeTransform(*dfg->entry);
 	for (Scope::Function const* function: dfg->functions)
 		optimizedCodeTransform(dfg->functionInfo.at(function));
-	return move(optimizedCodeTransform.m_stackErrors);
+	return std::move(optimizedCodeTransform.m_stackErrors);
 }
 
 void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
@@ -459,7 +459,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			{
 				// Restore the stack afterwards for the non-zero case below.
 				ScopeGuard stackRestore([storedStack = m_stack, this]() {
-					m_stack = move(storedStack);
+					m_stack = std::move(storedStack);
 					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 				});
 

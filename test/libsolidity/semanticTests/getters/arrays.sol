@@ -5,8 +5,6 @@ contract C {
         a[1].push(4);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // a(uint256,uint256): 0, 0 -> FAILURE
 // a(uint256,uint256): 1, 0 -> 3

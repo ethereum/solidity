@@ -51,7 +51,10 @@ public:
 	void visit(Expression& _expression) override;
 
 private:
-	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	explicit ExpressionSimplifier(Dialect const& _dialect):
+		DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore)
+	{}
+	bool knownToBeZero(Expression const& _expression) const;
 };
 
 }

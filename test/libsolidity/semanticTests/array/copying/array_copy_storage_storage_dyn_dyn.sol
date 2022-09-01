@@ -12,12 +12,10 @@ contract c {
         len = data2.length; if (index < len) val = data2[index];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // setData1(uint256,uint256,uint256): 10, 5, 4 ->
 // copyStorageStorage() ->
-// gas irOptimized: 111387
+// gas irOptimized: 111368
 // gas legacy: 109278
 // gas legacyOptimized: 109268
 // getData2(uint256): 5 -> 10, 4

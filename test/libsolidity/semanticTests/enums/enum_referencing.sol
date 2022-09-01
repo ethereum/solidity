@@ -28,7 +28,6 @@ contract C is I {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: false
 // ----
 // library: L

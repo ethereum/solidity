@@ -3,7 +3,5 @@ contract C {
 		t = bytes(s);
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f(string): 32, 5, "Hello" -> 32, 5, "Hello"

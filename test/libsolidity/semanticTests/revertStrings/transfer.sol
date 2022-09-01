@@ -19,7 +19,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // revertStrings: debug
 // ----
 // (), 10 wei ->

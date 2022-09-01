@@ -8,7 +8,5 @@ contract test {
         data[7].d = true;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // data(uint256): 7 -> 1, 2, true

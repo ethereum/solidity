@@ -236,7 +236,7 @@ struct CFG
 
 	BasicBlock& makeBlock(std::shared_ptr<DebugData const> _debugData)
 	{
-		return blocks.emplace_back(BasicBlock{move(_debugData), {}, {}});
+		return blocks.emplace_back(BasicBlock{std::move(_debugData), {}, {}});
 	}
 };
 

@@ -19,8 +19,6 @@ contract C {
         delete x;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // x() -> 0
 // y() -> 0

@@ -70,6 +70,7 @@
               "isLValue": false,
               "isPure": true,
               "lValueRequested": false,
+              "memberLocation": "57:1:1",
               "memberName": "X",
               "nodeType": "MemberAccess",
               "referencedDeclaration": 1,
@@ -131,6 +132,10 @@
               {
                 "id": 5,
                 "name": "A",
+                "nameLocations":
+                [
+                  "43:1:1"
+                ],
                 "nodeType": "IdentifierPath",
                 "referencedDeclaration": 3,
                 "src": "43:1:1"

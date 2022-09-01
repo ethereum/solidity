@@ -43,11 +43,9 @@ contract C {
             internalArray0[2] == internalArray1[2];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // copyExternalStorageArrayOfFunctionType() -> true
-// gas irOptimized: 104659
+// gas irOptimized: 104615
 // gas legacy: 108722
 // gas legacyOptimized: 102438
 // copyInternalArrayOfFunctionType() -> true

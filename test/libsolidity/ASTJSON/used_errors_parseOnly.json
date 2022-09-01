@@ -40,6 +40,7 @@
                 "typeDescriptions": {}
               },
               "id": 6,
+              "nameLocations": [],
               "names": [],
               "nodeType": "FunctionCall",
               "src": "38:3:1",
@@ -125,6 +126,7 @@
                     "typeDescriptions": {}
                   },
                   "id": 15,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "99:3:1",

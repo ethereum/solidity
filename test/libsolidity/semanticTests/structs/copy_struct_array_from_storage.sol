@@ -85,10 +85,9 @@ contract Test {
 }
 // ====
 // EVMVersion: >homestead
-// compileViaYul: also
 // ----
 // test1() -> true
-// gas irOptimized: 150533
+// gas irOptimized: 150163
 // gas legacy: 150266
 // gas legacyOptimized: 149875
 // test2() -> true

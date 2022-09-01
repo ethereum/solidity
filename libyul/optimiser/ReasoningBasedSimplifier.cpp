@@ -71,7 +71,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	{
 		Literal trueCondition = m_dialect.trueLiteral();
 		trueCondition.debugData = debugDataOf(*_if.condition);
-		_if.condition = make_unique<yul::Expression>(move(trueCondition));
+		_if.condition = make_unique<yul::Expression>(std::move(trueCondition));
 	}
 	else
 	{
@@ -83,7 +83,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 		{
 			Literal falseCondition = m_dialect.zeroLiteralForType(m_dialect.boolType);
 			falseCondition.debugData = debugDataOf(*_if.condition);
-			_if.condition = make_unique<yul::Expression>(move(falseCondition));
+			_if.condition = make_unique<yul::Expression>(std::move(falseCondition));
 			_if.body = yul::Block{};
 			// Nothing left to be done.
 			return;

@@ -1,5 +1,5 @@
 {
-	function f(a) -> b {
+    function f(a) -> b {
         let x := mload(a)
         b := sload(x)
     }
@@ -7,6 +7,8 @@
     // the global context gets too big.
     let x := f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(2)))))))))))))))))))
 }
+// ====
+// EVMVersion: >homestead
 // ----
 // step: fullInliner
 //

@@ -9,7 +9,5 @@ contract c {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // foo() -> true

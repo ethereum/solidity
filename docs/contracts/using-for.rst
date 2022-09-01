@@ -87,7 +87,6 @@ instead of library functions.
     }
 
     function contains(Data storage self, uint value)
-        public
         view
         returns (bool)
     {

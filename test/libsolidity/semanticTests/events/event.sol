@@ -14,8 +14,6 @@ contract ClientReceipt {
         }
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // deposit(bytes32,bool), 18 wei: 0x1234, true ->
 // ~ emit Deposit(address,bytes32,uint256): #0x1212121212121212121212121212120000000012, #0x1234, 0x12

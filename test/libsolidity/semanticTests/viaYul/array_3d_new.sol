@@ -10,7 +10,5 @@ contract C {
 		return a[1][1][1] = n;
 	}
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint256): 42 -> 42

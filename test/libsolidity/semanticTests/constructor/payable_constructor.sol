@@ -4,6 +4,5 @@ contract C {
 
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // constructor(), 27 wei ->

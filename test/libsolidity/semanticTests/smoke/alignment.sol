@@ -18,8 +18,6 @@ contract D {
         return (stateBool, stateDecimal, stateBytes);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // stateBool() -> true
 // stateBool() -> right(true)

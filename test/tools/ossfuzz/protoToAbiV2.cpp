@@ -416,14 +416,9 @@ void ProtoConverter::appendTypedParamsExternal(
     Delimiter _delimiter
 )
 {
-	std::string qualifiedTypeString = (
-		_isValueType ?
-		_typeString :
-		_typeString + " calldata"
-	);
-	m_typedParamsExternal << Whiskers(R"(<delimiter><type> <varName>)")
+	m_externalParamsRep.push_back({_delimiter, _isValueType, _typeString, _varName});
+	m_untypedParamsExternal << Whiskers(R"(<delimiter><varName>)")
 		("delimiter", delimiterToString(_delimiter))
-		("type", qualifiedTypeString)
 		("varName", _varName)
 		.render();
 }
@@ -471,7 +466,25 @@ std::string ProtoConverter::typedParametersAsString(CalleeType _calleeType)
 	case CalleeType::PUBLIC:
 		return m_typedParamsPublic.str();
 	case CalleeType::EXTERNAL:
-		return m_typedParamsExternal.str();
+	{
+		ostringstream typedParamsExternal;
+		for (auto const& i: m_externalParamsRep)
+		{
+			Delimiter del = get<0>(i);
+			bool valueType = get<1>(i);
+			string typeString = get<2>(i);
+			string varName = get<3>(i);
+			bool isCalldata = randomBool(/*probability=*/0.5);
+			string location = (isCalldata ? "calldata" : "memory");
+			string qualifiedTypeString = (valueType ? typeString : typeString + " " + location);
+			typedParamsExternal << Whiskers(R"(<delimiter><type> <varName>)")
+				("delimiter", delimiterToString(del))
+				("type", qualifiedTypeString)
+				("varName", varName)
+				.render();
+		}
+		return typedParamsExternal.str();
+	}
 	}
 }
 
@@ -662,6 +675,33 @@ string ProtoConverter::calldataHelperFunctions()
 		return 0;
 	})";
 
+	/// These are indirections to test memory-calldata codings more robustly.
+	stringstream indirections;
+	unsigned numIndirections = randomNumberOneToN(s_maxIndirections);
+	for (unsigned i = 1; i <= numIndirections; i++)
+	{
+		bool finalIndirection = i == numIndirections;
+		string mutability = (finalIndirection ? "pure" : "view");
+		indirections << Whiskers(R"(
+	function coder_calldata_external_i<N>(<parameters>) external <mutability> returns (uint) {
+<?finalIndirection>
+<equality_checks>
+		return 0;
+<!finalIndirection>
+		return this.coder_calldata_external_i<NPlusOne>(<untyped_parameters>);
+</finalIndirection>
+	}
+		)")
+		("N", to_string(i))
+		("parameters", typedParametersAsString(CalleeType::EXTERNAL))
+		("mutability", mutability)
+		("finalIndirection", finalIndirection)
+		("equality_checks", equalityChecksAsString())
+		("NPlusOne", to_string(i + 1))
+		("untyped_parameters", m_untypedParamsExternal.str())
+		.render();
+	}
+
 	// These are callee functions that encode from storage, decode to
 	// memory/calldata and check if decoded value matches storage value
 	// return true on successful match, false otherwise
@@ -671,14 +711,16 @@ string ProtoConverter::calldataHelperFunctions()
 		return 0;
 	}
 
-	function coder_calldata_external(<parameters_calldata>) external pure returns (uint) {
-<equality_checks>
-		return 0;
+	function coder_calldata_external(<parameters_calldata>) external view returns (uint) {
+		return this.coder_calldata_external_i1(<untyped_parameters>);
 	}
+<indirections>
 	)")
 	("parameters_memory", typedParametersAsString(CalleeType::PUBLIC))
 	("equality_checks", equalityChecksAsString())
 	("parameters_calldata", typedParametersAsString(CalleeType::EXTERNAL))
+	("untyped_parameters", m_untypedParamsExternal.str())
+	("indirections", indirections.str())
 	.render();
 
 	return calldataHelperFuncs.str();

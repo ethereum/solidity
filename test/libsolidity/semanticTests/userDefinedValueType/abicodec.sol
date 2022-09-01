@@ -30,7 +30,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
 // ----
 // g() -> true

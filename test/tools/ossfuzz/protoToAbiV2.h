@@ -15,6 +15,7 @@
 #include <boost/variant.hpp>
 
 #include <ostream>
+#include <random>
 #include <sstream>
 
 /**
@@ -134,13 +135,16 @@
 
 namespace solidity::test::abiv2fuzzer
 {
+using RandomEngine = std::mt19937_64;
+using Distribution = std::uniform_int_distribution<unsigned>;
+using Bernoulli = std::bernoulli_distribution;
 
 /// Converts a protobuf input into a Solidity program that tests
 /// abi coding.
 class ProtoConverter
 {
 public:
-	ProtoConverter():
+	ProtoConverter(unsigned _seed):
 		m_isStateVar(true),
 		m_counter(0),
 		m_varCounter(0),
@@ -148,7 +152,9 @@ public:
 		m_isLastDynParamRightPadded(false),
 		m_structCounter(0),
 		m_numStructsAdded(0)
-	{}
+	{
+		m_random = std::make_unique<RandomEngine>(_seed);
+	}
 
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -172,6 +178,13 @@ private:
 		PUBLIC,
 		EXTERNAL
 	};
+
+	/// Each external parameter representation contains the following:
+	/// - Delimiter prefix
+	/// - Boolean that is true if value type, false otherwise
+	/// - String representation of type
+	/// - Parameter name
+	using ParameterPack = std::tuple<Delimiter, bool, std::string, std::string>;
 
 	/// Visitors for various Protobuf types
 	/// Visit top-level contract specification
@@ -381,6 +394,16 @@ private:
 
 	/// Convert delimter to a comma or null string.
 	static std::string delimiterToString(Delimiter _delimiter, bool _space = true);
+	/// Generates number in the range [1, @param _n] uniformly at random.
+	unsigned randomNumberOneToN(unsigned _n)
+	{
+		return Distribution(1, _n)(*m_random);
+	}
+	/// Generates boolean that has a bernoulli distribution defined by @param _p.
+	bool randomBool(double _p)
+	{
+		return Bernoulli{_p}(*m_random);
+	}
 
 	/// Contains the test program
 	std::ostringstream m_output;
@@ -388,8 +411,9 @@ private:
 	/// checks to be encoded in the test program
 	std::ostringstream m_checks;
 	/// Contains typed parameter list to be passed to callee functions
-	std::ostringstream m_typedParamsExternal;
 	std::ostringstream m_typedParamsPublic;
+	/// Contains parameter list to be passed to callee functions
+	std::ostringstream m_untypedParamsExternal;
 	/// Contains type string to be passed to Isabelle API
 	std::ostringstream m_isabelleTypeString;
 	/// Contains values to be encoded in the format accepted
@@ -416,10 +440,16 @@ private:
 	unsigned m_numStructsAdded;
 	/// Enum stating abiv2 coder to be tested
 	Contract_Test m_test;
+	/// Representation of external parameters
+	std::vector<ParameterPack> m_externalParamsRep;
+	/// Random number generator
+	std::unique_ptr<RandomEngine> m_random;
 	/// Prefixes for declared and parameterized variable names
 	static auto constexpr s_localVarNamePrefix = "lv_";
 	static auto constexpr s_stateVarNamePrefix = "sv_";
 	static auto constexpr s_paramNamePrefix = "p_";
+	/// Maximum number of indirections to test calldata coding
+	static unsigned constexpr s_maxIndirections = 5;
 };
 
 /// Visitor interface for Solidity protobuf types.

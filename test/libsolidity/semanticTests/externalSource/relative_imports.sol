@@ -8,7 +8,5 @@
 import {A, B, C, D, G, H, Contract} from "_relative_imports/dir/contract.sol";
 contract CC {
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor()

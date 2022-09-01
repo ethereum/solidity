@@ -215,7 +215,7 @@ In comparison to contracts, libraries are restricted in the following ways:
 (These might be lifted at a later point.)
 
 .. _library-selectors:
-.. index:: selector
+.. index:: ! selector; of a library function
 
 Function Signatures and Selectors in Libraries
 ==============================================

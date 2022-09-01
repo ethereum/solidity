@@ -36,8 +36,6 @@ contract C is B {
         return (x, y);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // test() -> 5, 10
 // gas irOptimized: 87337

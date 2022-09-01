@@ -15,6 +15,5 @@ contract D is M.C {
 }
 // ====
 // compileToEwasm: also
-// compileViaYul: also
 // ----
 // g() -> 61337

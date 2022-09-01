@@ -132,7 +132,7 @@ public:
 	/// @returns true if the knowledge about the state of both objects is (known to be) equal.
 	bool operator==(KnownState const& _other) const;
 
-	/// Retrieves the current equivalence class fo the given stack element (or generates a new
+	/// Retrieves the current equivalence class for the given stack element (or generates a new
 	/// one if it does not exist yet).
 	Id stackElement(int _stackHeight, langutil::SourceLocation const& _location);
 	/// @returns the stackElement relative to the current stack height.

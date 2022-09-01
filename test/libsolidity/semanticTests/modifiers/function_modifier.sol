@@ -9,7 +9,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // getOne() -> 0

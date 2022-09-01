@@ -4,7 +4,6 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // f(), 1 ether -> 1000000000000000000

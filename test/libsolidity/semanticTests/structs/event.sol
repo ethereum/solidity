@@ -10,8 +10,6 @@ contract C {
         L.o();
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // library: L
 // f() ->

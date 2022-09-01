@@ -28,7 +28,5 @@ contract Flow {
     }
 }
 
-// ====
-// compileViaYul: also
 // ----
 // f() -> 1, 2

@@ -11,7 +11,5 @@ contract C {
         return a.add(b);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // foo(uint256,uint256): 8, 42 -> 50

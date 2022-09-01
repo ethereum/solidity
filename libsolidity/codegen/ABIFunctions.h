@@ -243,7 +243,7 @@ private:
 	std::string abiDecodingFunctionArray(ArrayType const& _type, bool _fromMemory);
 	/// Part of @a abiDecodingFunction for calldata array types.
 	std::string abiDecodingFunctionCalldataArray(ArrayType const& _type);
-	/// Part of @a abiDecodingFunctionArrayWithAvailableLength
+	/// Part of @a abiDecodingFunctionArrayAvailableLength
 	std::string abiDecodingFunctionByteArrayAvailableLength(ArrayType const& _type, bool _fromMemory);
 	/// Part of @a abiDecodingFunction for calldata struct types.
 	std::string abiDecodingFunctionCalldataStruct(StructType const& _type);

@@ -9,6 +9,6 @@ contract C {
     }
 }
 // ----
-// TypeError 8015: (233-236): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but uint8[] provided.
-// TypeError 8015: (248-249): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but bytes1[] provided.
-// TypeError 8015: (251-253): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but string provided.
+// TypeError 8015: (233-236): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but uint8[] memory provided.
+// TypeError 8015: (248-249): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but bytes1[] memory provided.
+// TypeError 8015: (251-253): Invalid type for argument in the bytes.concat function call. bytes or fixed bytes type is required, but string calldata provided.

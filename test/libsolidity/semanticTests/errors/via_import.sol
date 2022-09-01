@@ -18,7 +18,6 @@ contract C {
   }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // x() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000001"

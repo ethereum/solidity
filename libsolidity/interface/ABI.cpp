@@ -134,7 +134,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 				formatType(p->name(), *type, *p->annotation().type, false)
 			);
 		}
-		abi.emplace(move(errorJson));
+		abi.emplace(std::move(errorJson));
 	}
 
 	Json::Value abiJson{Json::arrayValue};

@@ -6,8 +6,6 @@ contract C {
         emit E(S(x));
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // createEvent(uint256): 42 ->
 // ~ emit E((uint256)): 0x2a

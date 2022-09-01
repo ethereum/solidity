@@ -8,8 +8,6 @@ contract C {
 
     bytes savedData;
 }
-// ====
-// compileViaYul: also
 // ----
 // save() -> 24 # empty copy loop #
 // save(): "abcdefg" -> 24

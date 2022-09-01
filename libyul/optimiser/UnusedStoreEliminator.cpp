@@ -31,6 +31,8 @@
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libsolutil/CommonData.h>
 
 #include <libevmasm/Instruction.h>
@@ -76,7 +78,13 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 		ignoreMemory
 	};
 	rse(_ast);
-	rse.changeUndecidedTo(State::Unused, Location::Memory);
+	if (
+		auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
+		evmDialect && evmDialect->providesObjectAccess()
+	)
+		rse.changeUndecidedTo(State::Unused, Location::Memory);
+	else
+		rse.changeUndecidedTo(State::Used, Location::Memory);
 	rse.changeUndecidedTo(State::Used, Location::Storage);
 	rse.scheduleUnusedForDeletion();
 
@@ -157,10 +165,28 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	yulAssert(isCandidateForRemoval == (isStorageWrite || (!m_ignoreMemory && isMemoryWrite)));
 	if (isCandidateForRemoval)
 	{
-		m_stores[YulString{}].insert({&_statement, State::Undecided});
+		State initialState = State::Undecided;
+		if (*instruction == Instruction::RETURNDATACOPY)
+		{
+			initialState = State::Used;
+			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
+			auto length = identifierNameIfSSA(funCall->arguments.at(2));
+			KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
+			if (length && startOffset)
+			{
+				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
+				if (
+					knowledge.knownToBeZero(*startOffset) &&
+					lengthCall &&
+					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
+				)
+					initialState = State::Undecided;
+			}
+		}
+		m_stores[YulString{}].insert({&_statement, initialState});
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
-		m_storeOperations[&_statement] = move(operations.front());
+		m_storeOperations[&_statement] = std::move(operations.front());
 	}
 }
 

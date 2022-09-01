@@ -85,6 +85,7 @@
                         }
                       },
                       "id": 10,
+                      "nameLocations": [],
                       "names": [],
                       "nodeType": "FunctionCall",
                       "src": "60:14:1",
@@ -108,6 +109,7 @@
                     }
                   },
                   "id": 11,
+                  "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "53:22:1",

@@ -10,10 +10,8 @@ contract C {
         return s[0][0];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f(uint120[]): 0x20, 3, 1, 2, 3 -> 1
-// gas irOptimized: 113256
+// gas irOptimized: 112832
 // gas legacy: 113686
 // gas legacyOptimized: 113499

@@ -12,5 +12,6 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
-// Warning 6328: (203-244): CHC: Assertion violation happens here.
+// Warning 6328: (203-244): CHC: Assertion violation happens here.\nCounterexample:\nb = [0x0, 0x0]\nlength = 2\n\nTransaction trace:\nC.constructor()\nState: b = []\nC.f()

@@ -56,7 +56,7 @@ string takeOverAllocation(char const* _data)
 	for (auto iter = begin(solidityAllocations); iter != end(solidityAllocations); ++iter)
 		if (iter->data() == _data)
 		{
-			string chunk = move(*iter);
+			string chunk = std::move(*iter);
 			solidityAllocations.erase(iter);
 			return chunk;
 		}
@@ -109,7 +109,7 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, vo
 string compile(string _input, CStyleReadFileCallback _readCallback, void* _readContext)
 {
 	StandardCompiler compiler(wrapReadCallback(_readCallback, _readContext));
-	return compiler.compile(move(_input));
+	return compiler.compile(std::move(_input));
 }
 
 }

@@ -36,8 +36,6 @@ contract C {
         return true;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // testRuntime() -> true
 // gas legacy: 101579

@@ -18,8 +18,6 @@ contract test {
         inner.recursive[0].z = inner.recursive[1].z + 1;
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // check() -> false
 // set() ->

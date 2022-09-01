@@ -10,11 +10,9 @@ contract C {
         return blockhash(blockNumber);
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 111584
+// gas irOptimized: 110504
 // gas legacy: 155081
 // gas legacyOptimized: 107997
 // genesisHash() -> 0x3737373737373737373737373737373737373737373737373737373737373737

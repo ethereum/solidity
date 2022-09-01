@@ -50,13 +50,13 @@ Predicate const* Predicate::create(
 	vector<ScopeOpener const*> _scopeStack
 )
 {
-	smt::SymbolicFunctionVariable predicate{_sort, move(_name), _context};
+	smt::SymbolicFunctionVariable predicate{_sort, std::move(_name), _context};
 	string functorName = predicate.currentName();
 	solAssert(!m_predicates.count(functorName), "");
 	return &m_predicates.emplace(
 		std::piecewise_construct,
 		std::forward_as_tuple(functorName),
-		std::forward_as_tuple(move(predicate), _type, _node, _contractContext, move(_scopeStack))
+		std::forward_as_tuple(std::move(predicate), _type, _node, _contractContext, std::move(_scopeStack))
 	).first->second;
 }
 
@@ -67,7 +67,7 @@ Predicate::Predicate(
 	ContractDefinition const* _contractContext,
 	vector<ScopeOpener const*> _scopeStack
 ):
-	m_predicate(move(_predicate)),
+	m_predicate(std::move(_predicate)),
 	m_type(_type),
 	m_node(_node),
 	m_contractContext(_contractContext),

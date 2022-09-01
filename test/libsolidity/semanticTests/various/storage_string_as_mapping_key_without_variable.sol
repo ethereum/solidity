@@ -6,7 +6,5 @@ contract Test {
         return data["abc"];
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // f() -> 2

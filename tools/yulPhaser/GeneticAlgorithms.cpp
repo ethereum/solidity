@@ -71,7 +71,7 @@ Population RandomAlgorithm::runNextRound(Population _population)
 	size_t replacementCount = _population.individuals().size() - elitePopulation.individuals().size();
 
 	return
-		move(elitePopulation) +
+		std::move(elitePopulation) +
 		Population::makeRandom(
 			_population.fitnessMetric(),
 			replacementCount,

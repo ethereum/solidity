@@ -25,3 +25,18 @@ def BVSignedMax(type_bits, n_bits):
 def BVSignedMin(type_bits, n_bits):
 	assert type_bits <= n_bits
 	return BitVecVal(-(1 << (type_bits - 1)), n_bits)
+
+def BVSignedCleanupFunction(x, type_bits):
+	assert x.size() >= type_bits
+	sign_mask = BitVecVal(1, x.size()) << (type_bits - 1)
+	bit_mask = (BitVecVal(1, x.size()) << type_bits) - 1
+	return If(
+		x & sign_mask == 0,
+		x & bit_mask,
+		x | ~bit_mask
+	)
+
+def BVUnsignedCleanupFunction(x, type_bits):
+	assert x.size() >= type_bits
+	bit_mask = (BitVecVal(1, x.size()) << type_bits) - 1
+	return x & bit_mask

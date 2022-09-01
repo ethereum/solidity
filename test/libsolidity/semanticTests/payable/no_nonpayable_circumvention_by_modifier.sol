@@ -10,7 +10,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
 // ----
 // f(), 27 wei -> FAILURE

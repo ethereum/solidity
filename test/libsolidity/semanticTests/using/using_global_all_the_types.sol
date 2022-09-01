@@ -32,7 +32,5 @@ contract C {
 
 import {E, S, T} from "A";
 
-// ====
-// compileViaYul: also
 // ----
 // f() -> 1, 7, 9

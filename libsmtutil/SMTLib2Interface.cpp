@@ -45,8 +45,8 @@ SMTLib2Interface::SMTLib2Interface(
 	optional<unsigned> _queryTimeout
 ):
 	SolverInterface(_queryTimeout),
-	m_queryResponses(move(_queryResponses)),
-	m_smtCallback(move(_smtCallback))
+	m_queryResponses(std::move(_queryResponses)),
+	m_smtCallback(std::move(_smtCallback))
 {
 	reset();
 }
@@ -264,7 +264,7 @@ string SMTLib2Interface::toSmtLibSort(vector<SortPointer> const& _sorts)
 void SMTLib2Interface::write(string _data)
 {
 	smtAssert(!m_accumulatedOutput.empty(), "");
-	m_accumulatedOutput.back() += move(_data) + "\n";
+	m_accumulatedOutput.back() += std::move(_data) + "\n";
 }
 
 string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _expressionsToEvaluate)

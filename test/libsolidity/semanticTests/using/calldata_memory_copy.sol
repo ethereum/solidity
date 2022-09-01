@@ -13,7 +13,5 @@ function sum(uint[] memory arr) returns (uint result) {
 
 using {sum} for uint[];
 
-// ====
-// compileViaYul: also
 // ----
 // f(uint256[]): 0x20, 3, 1, 2, 8 -> 11

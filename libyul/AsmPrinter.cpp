@@ -197,7 +197,7 @@ string AsmPrinter::operator()(ForLoop const& _forLoop)
 		delim = ' ';
 	return
 		locationComment +
-		("for " + move(pre) + delim + move(condition) + delim + move(post) + "\n") +
+		("for " + std::move(pre) + delim + std::move(condition) + delim + std::move(post) + "\n") +
 		(*this)(_forLoop.body);
 }
 
@@ -278,7 +278,11 @@ string AsmPrinter::formatSourceLocation(
 	{
 		sourceIndex = to_string(_nameToSourceIndex.at(*_location.sourceName));
 
-		if (_debugInfoSelection.snippet && _soliditySourceProvider)
+		if (
+			_debugInfoSelection.snippet &&
+			_soliditySourceProvider &&
+			!_soliditySourceProvider->charStream(*_location.sourceName).isImportedFromAST()
+		)
 		{
 			solidityCodeSnippet = escapeAndQuoteString(
 				_soliditySourceProvider->charStream(*_location.sourceName).singleLineSnippet(_location)

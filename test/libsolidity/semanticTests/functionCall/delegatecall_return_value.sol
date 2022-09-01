@@ -23,7 +23,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileViaYul: also
 // ----
 // get() -> 0x00
 // assert0_delegated() -> 0x01, 0x40, 0x0

@@ -12,8 +12,6 @@ contract C {
         return (a == keccak256(s), sc == keccak256(s));
     }
 }
-// ====
-// compileViaYul: also
 // ----
 // short() -> true
 // long() -> true, true
