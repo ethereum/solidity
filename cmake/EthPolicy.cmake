@@ -25,4 +25,11 @@ macro (eth_policy)
 	if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 		cmake_policy(SET CMP0135 NEW)
 	endif()
+
+	if(POLICY CMP0115)
+		# Require explicit extensions for source files, do not guess.
+		# The extra calls to GetFileAttributesW significantly slow down cmake on Windows.
+		# https://gitlab.kitware.com/cmake/cmake/-/issues/23154
+		cmake_policy(SET CMP0115 NEW)
+	endif()
 endmacro()
