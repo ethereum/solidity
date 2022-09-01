@@ -452,15 +452,15 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 	};
 
 	for (UsingForDirective const* ufd: usingForDirectivesForType(_type, _scope))
-		for (auto const& [pathPointer, operator_]: ufd->functionsAndOperators())
+		for (auto const& [identifierPath, operator_]: ufd->functionsAndOperators())
 		{
 			if (operator_.has_value())
 				// Functions used to define operators are not bound to the type.
 				// I.e. `using {f} for T` allows `T x; x.f()` but `using {f as +} for T` does not.
 				continue;
 
-			solAssert(pathPointer);
-			Declaration const* declaration = pathPointer->annotation().referencedDeclaration;
+			solAssert(identifierPath);
+			Declaration const* declaration = identifierPath->annotation().referencedDeclaration;
 			solAssert(declaration);
 
 			if (ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(declaration))
@@ -476,7 +476,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 			else
 				addFunction(
 					dynamic_cast<FunctionDefinition const&>(*declaration),
-					pathPointer->path().back()
+					identifierPath->path().back()
 				);
 		}
 

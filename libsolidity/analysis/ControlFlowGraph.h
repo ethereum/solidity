@@ -29,7 +29,6 @@
 #include <stack>
 #include <utility>
 #include <vector>
-#include <variant>
 
 namespace solidity::frontend
 {
