@@ -38,7 +38,6 @@
 #include <json/json.h>
 
 #include <range/v3/view/subrange.hpp>
-#include <range/v3/view/zip.hpp>
 #include <range/v3/view/map.hpp>
 
 #include <memory>
@@ -692,7 +691,7 @@ public:
 
 	/// @returns a list of functions or the single library.
 	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functionsOrLibrary; }
-	auto functionsAndOperators() const { return ranges::zip_view(m_functionsOrLibrary, m_operators); }
+	std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> functionsAndOperators() const;
 	bool usesBraces() const { return m_usesBraces; }
 	bool global() const { return m_global; }
 

@@ -345,10 +345,10 @@ bool ASTJsonExporter::visit(UsingForDirective const& _node)
 	}
 	else
 	{
+		auto const& functionAndOperators = _node.functionsAndOperators();
 		solAssert(_node.functionsAndOperators().size() == 1);
-		auto const& functionAndOperator = _node.functionsAndOperators().front();
-		solAssert(!functionAndOperator.second.has_value());
-		attributes.emplace_back("libraryName", toJson(*(functionAndOperator.first)));
+		solAssert(!functionAndOperators.front().second.has_value());
+		attributes.emplace_back("libraryName", toJson(*(functionAndOperators.front().first)));
 	}
 	attributes.emplace_back("global", _node.global());
 

@@ -30,7 +30,9 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/tail.hpp>
+#include <range/v3/view/zip.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -365,6 +367,11 @@ Type const* UserDefinedValueTypeDefinition::type() const
 TypeDeclarationAnnotation& UserDefinedValueTypeDefinition::annotation() const
 {
 	return initAnnotation<TypeDeclarationAnnotation>();
+}
+
+std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingForDirective::functionsAndOperators() const
+{
+	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<vector>;
 }
 
 Type const* StructDefinition::type() const
