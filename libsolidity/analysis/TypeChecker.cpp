@@ -3910,7 +3910,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				3100_error,
 				path->location(),
 				"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-				"cannot be bound to the type \"" + _usingFor.typeName()->annotation().type->humanReadableName() +
+				"cannot be bound to the type \"" + _usingFor.typeName()->annotation().type->canonicalName() +
 				"\" because the type cannot be implicitly converted to the first argument" +
 				" of the function (\"" + functionType->selfType()->humanReadableName() + "\")" +
 				(
