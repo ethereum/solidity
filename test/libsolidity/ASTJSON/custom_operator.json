@@ -1,0 +1,583 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      40
+    ],
+    "UInt":
+    [
+      2
+    ],
+    "add":
+    [
+      24
+    ]
+  },
+  "id": 41,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "canonicalName": "UInt",
+      "id": 2,
+      "name": "UInt",
+      "nameLocation": "5:4:1",
+      "nodeType": "UserDefinedValueTypeDefinition",
+      "src": "0:19:1",
+      "underlyingType":
+      {
+        "id": 1,
+        "name": "uint8",
+        "nodeType": "ElementaryTypeName",
+        "src": "13:5:1",
+        "typeDescriptions":
+        {
+          "typeIdentifier": "t_uint8",
+          "typeString": "uint8"
+        }
+      }
+    },
+    {
+      "functionList":
+      [
+        {
+          "function":
+          {
+            "id": 3,
+            "name": "add",
+            "nameLocations":
+            [
+              "27:3:1"
+            ],
+            "nodeType": "IdentifierPath",
+            "referencedDeclaration": 24,
+            "src": "27:3:1"
+          },
+          "operator": "+"
+        }
+      ],
+      "global": false,
+      "id": 6,
+      "nodeType": "UsingForDirective",
+      "src": "20:26:1",
+      "typeName":
+      {
+        "id": 5,
+        "nodeType": "UserDefinedTypeName",
+        "pathNode":
+        {
+          "id": 4,
+          "name": "UInt",
+          "nameLocations":
+          [
+            "41:4:1"
+          ],
+          "nodeType": "IdentifierPath",
+          "referencedDeclaration": 2,
+          "src": "41:4:1"
+        },
+        "referencedDeclaration": 2,
+        "src": "41:4:1",
+        "typeDescriptions":
+        {
+          "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+          "typeString": "UInt"
+        }
+      }
+    },
+    {
+      "body":
+      {
+        "id": 23,
+        "nodeType": "Block",
+        "src": "92:28:1",
+        "statements":
+        [
+          {
+            "expression":
+            {
+              "arguments":
+              [
+                {
+                  "hexValue": "30",
+                  "id": 20,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "number",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "115:1:1",
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_rational_0_by_1",
+                    "typeString": "int_const 0"
+                  },
+                  "value": "0"
+                }
+              ],
+              "expression":
+              {
+                "argumentTypes":
+                [
+                  {
+                    "typeIdentifier": "t_rational_0_by_1",
+                    "typeString": "int_const 0"
+                  }
+                ],
+                "expression":
+                {
+                  "id": 18,
+                  "name": "UInt",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 2,
+                  "src": "105:4:1",
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_type$_t_userDefinedValueType$_UInt_$2_$",
+                    "typeString": "type(UInt)"
+                  }
+                },
+                "id": 19,
+                "isConstant": false,
+                "isLValue": false,
+                "isPure": true,
+                "lValueRequested": false,
+                "memberLocation": "110:4:1",
+                "memberName": "wrap",
+                "nodeType": "MemberAccess",
+                "src": "105:9:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_function_wrap_pure$_t_uint8_$returns$_t_userDefinedValueType$_UInt_$2_$",
+                  "typeString": "function (uint8) pure returns (UInt)"
+                }
+              },
+              "id": 21,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "nameLocations": [],
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "105:12:1",
+              "tryCall": false,
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                "typeString": "UInt"
+              }
+            },
+            "functionReturnParameters": 17,
+            "id": 22,
+            "nodeType": "Return",
+            "src": "98:19:1"
+          }
+        ]
+      },
+      "id": 24,
+      "implemented": true,
+      "kind": "freeFunction",
+      "modifiers": [],
+      "name": "add",
+      "nameLocation": "56:3:1",
+      "nodeType": "FunctionDefinition",
+      "parameters":
+      {
+        "id": 13,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 9,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "scope": 24,
+            "src": "60:4:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+              "typeString": "UInt"
+            },
+            "typeName":
+            {
+              "id": 8,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 7,
+                "name": "UInt",
+                "nameLocations":
+                [
+                  "60:4:1"
+                ],
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 2,
+                "src": "60:4:1"
+              },
+              "referencedDeclaration": 2,
+              "src": "60:4:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                "typeString": "UInt"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": false,
+            "id": 12,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "scope": 24,
+            "src": "66:4:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+              "typeString": "UInt"
+            },
+            "typeName":
+            {
+              "id": 11,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 10,
+                "name": "UInt",
+                "nameLocations":
+                [
+                  "66:4:1"
+                ],
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 2,
+                "src": "66:4:1"
+              },
+              "referencedDeclaration": 2,
+              "src": "66:4:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                "typeString": "UInt"
+              }
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "59:12:1"
+      },
+      "returnParameters":
+      {
+        "id": 17,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 16,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "scope": 24,
+            "src": "86:4:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+              "typeString": "UInt"
+            },
+            "typeName":
+            {
+              "id": 15,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 14,
+                "name": "UInt",
+                "nameLocations":
+                [
+                  "86:4:1"
+                ],
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 2,
+                "src": "86:4:1"
+              },
+              "referencedDeclaration": 2,
+              "src": "86:4:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                "typeString": "UInt"
+              }
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "85:6:1"
+      },
+      "scope": 41,
+      "src": "47:73:1",
+      "stateMutability": "pure",
+      "virtual": false,
+      "visibility": "internal"
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "canonicalName": "C",
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 40,
+      "linearizedBaseContracts":
+      [
+        40
+      ],
+      "name": "C",
+      "nameLocation": "130:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 38,
+            "nodeType": "Block",
+            "src": "163:44:1",
+            "statements":
+            [
+              {
+                "expression":
+                {
+                  "commonType":
+                  {
+                    "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                    "typeString": "UInt"
+                  },
+                  "function": 24,
+                  "id": 36,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": false,
+                  "lValueRequested": false,
+                  "leftExpression":
+                  {
+                    "arguments":
+                    [
+                      {
+                        "hexValue": "30",
+                        "id": 30,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "number",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "183:1:1",
+                        "typeDescriptions":
+                        {
+                          "typeIdentifier": "t_rational_0_by_1",
+                          "typeString": "int_const 0"
+                        },
+                        "value": "0"
+                      }
+                    ],
+                    "expression":
+                    {
+                      "argumentTypes":
+                      [
+                        {
+                          "typeIdentifier": "t_rational_0_by_1",
+                          "typeString": "int_const 0"
+                        }
+                      ],
+                      "expression":
+                      {
+                        "id": 27,
+                        "name": "UInt",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 2,
+                        "src": "173:4:1",
+                        "typeDescriptions":
+                        {
+                          "typeIdentifier": "t_type$_t_userDefinedValueType$_UInt_$2_$",
+                          "typeString": "type(UInt)"
+                        }
+                      },
+                      "id": 29,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "lValueRequested": false,
+                      "memberLocation": "178:4:1",
+                      "memberName": "wrap",
+                      "nodeType": "MemberAccess",
+                      "src": "173:9:1",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": "t_function_wrap_pure$_t_uint8_$returns$_t_userDefinedValueType$_UInt_$2_$",
+                        "typeString": "function (uint8) pure returns (UInt)"
+                      }
+                    },
+                    "id": 31,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": true,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "173:12:1",
+                    "tryCall": false,
+                    "typeDescriptions":
+                    {
+                      "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                      "typeString": "UInt"
+                    }
+                  },
+                  "nodeType": "BinaryOperation",
+                  "operator": "+",
+                  "rightExpression":
+                  {
+                    "arguments":
+                    [
+                      {
+                        "hexValue": "31",
+                        "id": 34,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "number",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "198:1:1",
+                        "typeDescriptions":
+                        {
+                          "typeIdentifier": "t_rational_1_by_1",
+                          "typeString": "int_const 1"
+                        },
+                        "value": "1"
+                      }
+                    ],
+                    "expression":
+                    {
+                      "argumentTypes":
+                      [
+                        {
+                          "typeIdentifier": "t_rational_1_by_1",
+                          "typeString": "int_const 1"
+                        }
+                      ],
+                      "expression":
+                      {
+                        "id": 32,
+                        "name": "UInt",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 2,
+                        "src": "188:4:1",
+                        "typeDescriptions":
+                        {
+                          "typeIdentifier": "t_type$_t_userDefinedValueType$_UInt_$2_$",
+                          "typeString": "type(UInt)"
+                        }
+                      },
+                      "id": 33,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "lValueRequested": false,
+                      "memberLocation": "193:4:1",
+                      "memberName": "wrap",
+                      "nodeType": "MemberAccess",
+                      "src": "188:9:1",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": "t_function_wrap_pure$_t_uint8_$returns$_t_userDefinedValueType$_UInt_$2_$",
+                        "typeString": "function (uint8) pure returns (UInt)"
+                      }
+                    },
+                    "id": 35,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": true,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "188:12:1",
+                    "tryCall": false,
+                    "typeDescriptions":
+                    {
+                      "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                      "typeString": "UInt"
+                    }
+                  },
+                  "src": "173:27:1",
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_userDefinedValueType$_UInt_$2",
+                    "typeString": "UInt"
+                  }
+                },
+                "id": 37,
+                "nodeType": "ExpressionStatement",
+                "src": "173:27:1"
+              }
+            ]
+          },
+          "functionSelector": "26121ff0",
+          "id": 39,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "f",
+          "nameLocation": "147:1:1",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 25,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "148:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 26,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "163:0:1"
+          },
+          "scope": 40,
+          "src": "138:69:1",
+          "stateMutability": "pure",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "scope": 41,
+      "src": "121:88:1",
+      "usedErrors": []
+    }
+  ],
+  "src": "0:210:1"
+}

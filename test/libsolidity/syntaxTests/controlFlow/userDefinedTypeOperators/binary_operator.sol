@@ -1,25 +1,18 @@
-struct S { bool f; }
+struct S { Z z; }
+struct Z { int x; }
 
-using {add as +} for S;
+using {addS as +} for S;
+using {addZ as +} for Z;
 
-function add(S storage _s, S storage) pure returns (S storage) {
-    return _s;
-    _s.f = true;
-}
+function addS(S memory, S memory) pure returns (S memory) {}
+function addZ(Z memory, Z memory) pure returns (Z memory) { revert(); }
 
 contract C {
-    function get() private returns (S storage) {
-	S storage s;
-        return s;
-    }
-
-    function f() public {
-        S storage s;
-        get() + s;
+    function f() public pure {
+        S(Z(1)) + S(Z(2) + Z(3));
+        S(Z(4)) + S(Z(5)); // Unreachable
     }
 }
 
 // ----
-// Warning 5740: (131-142): Unreachable code.
-// TypeError 3464: (238-239): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-// TypeError 3464: (311-312): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// Warning 5740: (310-327): Unreachable code.

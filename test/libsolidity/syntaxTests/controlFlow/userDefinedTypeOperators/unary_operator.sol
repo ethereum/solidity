@@ -1,15 +1,18 @@
-struct S { int f; }
+struct S { Z z; }
+struct Z { int x; }
 
-using {sub as -} for S;
+using {unsubS as -} for S;
+using {unsubZ as -} for Z;
 
-function sub(S storage x) pure returns (S storage) { return x; }
+function unsubS(S memory) pure returns (S memory) {}
+function unsubZ(Z memory) pure returns (Z memory) { revert(); }
 
 contract C {
-    function f() public {
-        S storage y;
-        -y;
+    function f() public pure {
+        -S(-Z(1));
+        -S(Z(2)); // Unreachable
     }
 }
 
 // ----
-// TypeError 3464: (181-182): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// Warning 5740: (283-291): Unreachable code.
