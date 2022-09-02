@@ -3798,7 +3798,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				path->location(),
 				"The function \"" + joinHumanReadable(path->path(), ".") + "\" " +
 				"does not have any parameters, and therefore cannot be bound to the type \"" +
-				(normalizedType ? normalizedType->humanReadableName() : "*") + "\"."
+				(normalizedType ? normalizedType->toString(true /* withoutDataLocation */) : "*") + "\"."
 			);
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const&>(*functionDefinition.type()).asBoundFunction();
@@ -3811,7 +3811,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				3100_error,
 				path->location(),
 				"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-				"cannot be bound to the type \"" + _usingFor.typeName()->annotation().type->humanReadableName() +
+				"cannot be bound to the type \"" + _usingFor.typeName()->annotation().type->toString(true /* withoutDataLocation */) +
 				"\" because the type cannot be implicitly converted to the first argument" +
 				" of the function (\"" + functionType->selfType()->humanReadableName() + "\")" +
 				(
