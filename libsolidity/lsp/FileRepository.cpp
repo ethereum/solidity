@@ -73,23 +73,23 @@ string FileRepository::sourceUnitNameToUri(string const& _sourceUnitName) const
 	else if (_sourceUnitName.find("file://") == 0)
 		return _sourceUnitName;
 	else if (regex_search(_sourceUnitName, windowsDriveLetterPath))
-		return "file:///" + _sourceUnitName;
+		return "file:///" + util::encodeURI(_sourceUnitName);
 	else if (
 		auto const resolvedPath = tryResolvePath(_sourceUnitName);
 		resolvedPath.message().empty()
 	)
-		return "file://" + ensurePathIsUnixLike(resolvedPath.get().generic_string());
+		return "file://" + util::encodeURI(ensurePathIsUnixLike(resolvedPath.get().generic_string()));
 	else if (m_basePath.generic_string() != "/")
-		return "file://" + m_basePath.generic_string() + "/" + _sourceUnitName;
+		return "file://" + util::encodeURI(m_basePath.generic_string() + "/" + _sourceUnitName);
 	else
 		// Avoid double-/ in case base-path itself is simply a UNIX root filesystem root.
-		return "file:///" + _sourceUnitName;
+		return "file:///" + util::encodeURI(_sourceUnitName);
 }
 
 string FileRepository::uriToSourceUnitName(string const& _path) const
 {
 	lspRequire(boost::algorithm::starts_with(_path, "file://"), ErrorCode::InternalError, "URI must start with file://");
-	return stripFileUriSchemePrefix(_path);
+	return stripFileUriSchemePrefix(util::decodeURI(_path));
 }
 
 void FileRepository::setSourceByUri(string const& _uri, string _source)

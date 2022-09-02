@@ -25,8 +25,10 @@
 #include <libsolutil/StringUtils.h>
 #include <string>
 #include <vector>
+#include <fmt/format.h>
 
 using namespace std;
+using namespace std::string_view_literals;
 using namespace solidity::util;
 
 bool solidity::util::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance, size_t _lenThreshold)
@@ -113,3 +115,50 @@ string solidity::util::suffixedVariableNameList(string const& _baseName, size_t 
 	}
 	return result;
 }
+
+string solidity::util::decodeURI(string const& _uri)
+{
+	string decodedString;
+	for (size_t i = 0; i < _uri.size(); ++i)
+	{
+		char const ch = _uri[i];
+		if (ch != '%')
+			decodedString.push_back(ch);
+		else if (i + 2 < _uri.size())
+		{
+			char const buf[3] = { _uri[i + 1], _uri[i + 2], '\0' };
+			char* end = nullptr;
+			auto const numericValue = std::strtol(buf, &end, 16);
+			if (end == buf + 2)
+			{
+				decodedString.push_back(static_cast<char>(numericValue));
+				i += 2;
+			}
+		}
+	}
+	return decodedString;
+}
+
+string solidity::util::encodeURI(string const& _uri)
+{
+	string encodedString;
+	for (char const ch: _uri)
+	{
+		// see https://en.wikipedia.org/wiki/Percent-encoding#Types_of_URI_characters
+		static auto constexpr allowedCharacters = string_view(
+			// unreserved characters
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"abcdefghijklmnopqrstuvwxyz"
+			"0123456789"
+			"-_.~"
+			// reserved characters (special meaning depending on URI component)
+			"/:"
+		);
+		if (allowedCharacters.find(ch) != string_view::npos)
+			encodedString += ch;
+		else
+			encodedString += fmt::format("%{:02X}", static_cast<unsigned>(ch));
+	}
+	return encodedString;
+}
+

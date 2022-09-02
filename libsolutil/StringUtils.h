@@ -50,6 +50,13 @@ std::string quotedAlternativesList(std::vector<std::string> const& suggestions);
 /// If @a _startSuffix == @a _endSuffix, the empty string is returned.
 std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
 
+/// Decodes a URI with respect to %XX notation.
+/// No URI-validity verification is performed but simply the URI decoded into non-escaping characters.
+std::string decodeURI(std::string const& _uri);
+
+/// Encodes a string into a URI conform notation.
+std::string encodeURI(std::string const& _uri);
+
 /// Joins collection of strings into one string with separators between, last separator can be different.
 /// @param _list collection of strings to join
 /// @param _separator defaults to ", "

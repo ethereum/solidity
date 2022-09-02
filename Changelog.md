@@ -9,6 +9,7 @@ Compiler Features:
 * Standard JSON: Add a boolean field `settings.metadata.appendCBOR` that skips CBOR metadata from getting appended at the end of the bytecode.
 * Yul Optimizer: Allow replacing the previously hard-coded cleanup sequence by specifying custom steps after a colon delimiter (``:``) in the sequence string.
 * Language Server: Add basic document hover support.
+* Language Server: Fixes URL decoding of incoming file names.
 
 
 Bugfixes:
@@ -23,6 +24,7 @@ Important Bugfixes:
 
 Compiler Features:
  * Code Generator: More efficient overflow checks for multiplication.
+ * Yul Optimizer: Simplify the starting offset of zero-length operations to zero.
  * Language Server: Analyze all files in a project by default (can be customized by setting ``'file-load-strategy'`` to ``'directly-opened-and-on-import'`` in LSP settings object).
  * Yul Optimizer: Simplify the starting offset of zero-length operations to zero.
 

@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 import traceback
+import urllib.parse
 from collections import namedtuple
 from copy import deepcopy
 from enum import Enum, auto
@@ -358,6 +359,10 @@ def extendEnd(marker, amount=1):
     newMarker["end"]["character"] += amount
     return newMarker
 
+# Convenience method to intuitively decode a URI.
+def decodeURI(text: str) -> str:
+    return urllib.parse.unquote(text)
+
 class TestParserException(Exception):
     def __init__(self, incompleteResult, msg: str):
         self.result = incompleteResult
@@ -590,11 +595,11 @@ class FileTestRunner:
                 self.suite.open_file_and_wait_for_diagnostics(self.solc, self.test_name, self.sub_dir)
 
             for diagnostics in published_diagnostics:
-                if not diagnostics["uri"].startswith(self.suite.project_root_uri + "/"):
+                if not decodeURI(decodeURI(diagnostics["uri"])).startswith(self.suite.project_root_uri + "/"):
                     raise Exception(
                         f"'{self.test_name}.sol' imported file outside of test directory: '{diagnostics['uri']}'"
                     )
-                self.open_tests.append(self.suite.normalizeUri(diagnostics["uri"]))
+                self.open_tests.append(self.suite.normalizeUri(decodeURI(diagnostics["uri"])))
 
             self.suite.expect_equal(
                 len(published_diagnostics),
@@ -747,7 +752,9 @@ class FileTestRunner:
             if isinstance(actualResponseJson["result"], list):
                 for result in actualResponseJson["result"]:
                     if "uri" in result:
-                        result["uri"] = result["uri"].replace(self.suite.project_root_uri + "/" + self.sub_dir + "/", "")
+                        result["uri"] = decodeURI(result["uri"]).replace(
+                            self.suite.project_root_uri + "/" + self.sub_dir + "/", ""
+                        )
 
             elif isinstance(actualResponseJson["result"], dict):
                 if "changes" in actualResponseJson["result"]:
@@ -813,7 +820,7 @@ class FileTestRunner:
             # Needs to be done before the loop or it might be called only after
             # we found "range" or "position"
             if "uri" in data:
-                markers = self.suite.get_test_tags(data["uri"][:-len(".sol")], self.sub_dir)
+                markers = self.suite.get_test_tags(decodeURI(data["uri"])[:-len(".sol")], self.sub_dir)
 
             for key, val in data.items():
                 if key == "range":
@@ -1020,7 +1027,7 @@ class SolidityLSPTestSuite: # {{{
         published_diagnostics = self.open_file_and_wait_for_diagnostics(solc, test, sub_dir)
 
         for file_diagnostics in published_diagnostics:
-            testname, local_sub_dir = split_path(self.normalizeUri(file_diagnostics["uri"]))
+            testname, local_sub_dir = split_path(self.normalizeUri(decodeURI(file_diagnostics["uri"])))
 
             # Skip empty diagnostics within the same file
             if len(file_diagnostics["diagnostics"]) == 0 and testname == test:
@@ -1242,7 +1249,7 @@ class SolidityLSPTestSuite: # {{{
         for item in recursive_iter(content):
             if "uri" in item and "range" in item:
                 try:
-                    markers = self.get_test_tags(item["uri"][:-len(".sol")], sub_dir)
+                    markers = self.get_test_tags(decodeURI(item["uri"])[:-len(".sol")], sub_dir)
                     replace_range(item, markers)
                 except FileNotFoundError:
                     # Skip over errors as this is user provided input that can

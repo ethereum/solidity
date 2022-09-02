@@ -396,7 +396,7 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 			ErrorCode::InvalidParams,
 			"rootUri only supports file URI scheme."
 		);
-		rootPath = stripFileUriSchemePrefix(rootPath);
+		rootPath = stripFileUriSchemePrefix(util::decodeURI(rootPath));
 	}
 	else if (Json::Value rootPath = _args["rootPath"])
 		rootPath = rootPath.asString();
@@ -432,11 +432,11 @@ void LanguageServer::handleInitialized(MessageID, Json::Value const&)
 
 void LanguageServer::semanticTokensFull(MessageID _id, Json::Value const& _args)
 {
-	auto uri = _args["textDocument"]["uri"];
+	auto uri = _args["textDocument"]["uri"].asString();
 
 	compile();
 
-	auto const sourceName = m_fileRepository.uriToSourceUnitName(uri.as<string>());
+	auto const sourceName = m_fileRepository.uriToSourceUnitName(uri);
 	SourceUnit const& ast = m_compilerStack.ast(sourceName);
 	m_compilerStack.charStream(sourceName);
 	Json::Value data = SemanticTokensBuilder().build(ast, m_compilerStack.charStream(sourceName));
