@@ -69,6 +69,8 @@ function gp2_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     npm install
 
+    npm install hardhat@2.10.2
+
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
     rm -r node_modules/@gnosis.pm/safe-contracts/build/
 
