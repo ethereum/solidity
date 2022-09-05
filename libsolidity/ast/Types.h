@@ -607,7 +607,8 @@ public:
 	/// base-10 exponent, such that the number is equal to `mantissa * 10**-exponent`.
 	/// @returns Pair of non-null pointers representing the types of the literals corresponding to
 	/// mantissa and exponent if the resulting mantissa and exponent both fit in 256 bits.
-	/// A pair of null pointers otherwise.
+	/// If either of these values does not fit in 256 bits, its value in the pair is null.
+	/// Otherwise, Pair of null pointers.
 	std::pair<RationalNumberType const*, RationalNumberType const*> mantissaExponent() const;
 
 	/// @returns true if the value is negative.

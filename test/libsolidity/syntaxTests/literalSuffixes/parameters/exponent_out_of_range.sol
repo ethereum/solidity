@@ -19,10 +19,10 @@ contract C {
     }
 }
 // ----
-// TypeError 5503: (338-347): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (357-367): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (377-388): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (399-480): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (502-584): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (605-688): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
+// TypeError 5503: (338-347): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
+// TypeError 5503: (357-367): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
+// TypeError 5503: (377-388): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
+// TypeError 5503: (399-480): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
+// TypeError 5503: (502-584): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
+// TypeError 5503: (605-688): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
 // TypeError 8838: (748-757): The type of the literal cannot be converted to the parameters of the suffix function.

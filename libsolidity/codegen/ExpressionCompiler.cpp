@@ -2664,6 +2664,7 @@ void ExpressionCompiler::appendInternalFunctionCall(
 				assert(rationalNumberType);
 
 				auto&& [mantissa, exponent] = rationalNumberType->mantissaExponent();
+				solAssert(mantissa && exponent);
 				m_context << mantissa->literalValue(nullptr);
 				utils().convertType(*mantissa, *parameterTypes.at(0));
 				m_context << exponent->literalValue(nullptr);

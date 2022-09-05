@@ -49,6 +49,8 @@
 #include <range/v3/view/zip.hpp>
 #include <range/v3/algorithm/any_of.hpp>
 
+#include <fmt/format.h>
+
 #include <memory>
 #include <vector>
 
@@ -3961,14 +3963,29 @@ bool TypeChecker::visit(Literal const& _literal)
 	if (_literal.isSuffixed() && !_literal.hasSubDenomination() && literalRationalType)
 	{
 		auto&& [mantissa, exponent] = literalRationalType->mantissaExponent();
-		solAssert((mantissa && exponent) || (!mantissa && !exponent));
-		if (!mantissa)
+
+		if (!mantissa || !exponent)
+		{
+			string mantissaOrExponentErrorMessage;
+
+			if (!mantissa && !exponent)
+				mantissaOrExponentErrorMessage = "Mantissa and exponent are";
+			else if (!exponent)
+				mantissaOrExponentErrorMessage = "Exponent is";
+			else
+				mantissaOrExponentErrorMessage = "Mantissa is";
+
 			m_errorReporter.typeError(
 				5503_error,
 				_literal.location(),
-				"This fractional number cannot be decomposed into a mantissa and decimal exponent "
-				"that fit the range of parameters of any possible suffix function."
+				fmt::format(
+					"This fractional number cannot be decomposed into a mantissa and decimal exponent "
+					"that fit the range of parameters of any possible suffix function. "
+					"{} out of range of the largest supported integer type.",
+					mantissaOrExponentErrorMessage
+				)
 			);
+		}
 	}
 
 	// NOTE: For suffixed literals this is not the final type yet. We will update it in endVisit()

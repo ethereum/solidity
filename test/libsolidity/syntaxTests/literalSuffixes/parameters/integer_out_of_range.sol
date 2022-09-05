@@ -21,5 +21,5 @@ contract C {
 // TypeError 8838: (396-405): The type of the literal cannot be converted to the parameter of the suffix function.
 // TypeError 8838: (415-424): The type of the literal cannot be converted to the parameter of the suffix function.
 // TypeError 8838: (434-516): The type of the literal cannot be converted to the parameter of the suffix function.
-// TypeError 5503: (536-619): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
+// TypeError 5503: (536-619): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
 // TypeError 8838: (536-619): The type of the literal cannot be converted to the parameter of the suffix function.

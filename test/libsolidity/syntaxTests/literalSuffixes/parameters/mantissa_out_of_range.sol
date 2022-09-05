@@ -37,16 +37,16 @@ contract C {
 // TypeError 8838: (591-600): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (610-619): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (629-711): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 5503: (731-814): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
+// TypeError 5503: (731-814): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
 // TypeError 8838: (835-842): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (852-859): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (869-879): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (889-899): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (909-992): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 5503: (1022-1106): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
+// TypeError 5503: (1022-1106): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
 // TypeError 8838: (1137-1147): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (1157-1167): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (1177-1190): The type of the literal cannot be converted to the parameters of the suffix function.
 // TypeError 8838: (1200-1213): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 5503: (1223-1309): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (1339-1426): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
+// TypeError 5503: (1223-1309): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
+// TypeError 5503: (1339-1426): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. Mantissa is out of range of the largest supported integer type.
