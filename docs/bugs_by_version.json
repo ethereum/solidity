@@ -1737,6 +1737,7 @@
     },
     "0.8.13": {
         "bugs": [
+            "StorageWriteRemovalBeforeConditionalTermination",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "InlineAssemblyMemorySideEffects",
@@ -1747,6 +1748,7 @@
     },
     "0.8.14": {
         "bugs": [
+            "StorageWriteRemovalBeforeConditionalTermination",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "InlineAssemblyMemorySideEffects"
@@ -1755,12 +1757,15 @@
     },
     "0.8.15": {
         "bugs": [
+            "StorageWriteRemovalBeforeConditionalTermination",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup"
         ],
         "released": "2022-06-15"
     },
     "0.8.16": {
-        "bugs": [],
+        "bugs": [
+            "StorageWriteRemovalBeforeConditionalTermination"
+        ],
         "released": "2022-08-08"
     },
     "0.8.2": {

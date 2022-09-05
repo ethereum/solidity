@@ -1,6 +1,7 @@
 ### 0.8.17 (unreleased)
 
 Important Bugfixes:
+ * Yul Optimizer: Prevent the incorrect removal of storage writes before calls to Yul functions that conditionally terminate the external EVM call.
 
 
 Language Features:
