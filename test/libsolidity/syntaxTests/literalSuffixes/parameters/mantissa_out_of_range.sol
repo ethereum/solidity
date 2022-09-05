@@ -1,3 +1,4 @@
+function mi8eu8(int8 m, uint8 e) pure suffix returns (uint) {}
 function s8(int8 m, uint e) pure suffix returns (uint) {}
 function u8(uint8 m, uint e) pure suffix returns (uint) {}
 function s16(int16 m, uint e) pure suffix returns (uint) {}
@@ -7,8 +8,6 @@ function u256(uint m, uint e) pure suffix returns (uint) {}
 
 contract C {
     function max() public pure {
-        // TODO: For all of these the error should be that the mantissa or exponent is out of range.
-        // Best if we can tell which of them.
         128 s8;
         256 u8;
         32768 s16;
@@ -27,26 +26,29 @@ contract C {
         256_000 u8;
         32768_000 s16;
         65536_000 u16;
-        57896044618658097711785492504343953926634992332820282019728792003956564819968_000 s256; // 2**255 * 10**-76
-        115792089237316195423570985008687907853269984665640564039457584007913129639936_000 u256; // 2**256 * 10**-77
+        57896044618658097711785492504343953926634992332820282019728792003956564819968_000 s256; // 2**255 * 10**3
+        115792089237316195423570985008687907853269984665640564039457584007913129639936_000 u256; // 2**256 * 10**3
+
+        128e-256 mi8eu8;
     }
 }
 // ----
-// TypeError 8838: (559-565): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (575-581): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (591-600): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (610-619): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (629-711): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 5503: (731-814): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 8838: (835-842): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (852-859): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (869-879): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (889-899): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (909-992): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 5503: (1022-1106): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 8838: (1137-1147): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (1157-1167): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (1177-1190): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 8838: (1200-1213): The type of the literal cannot be converted to the parameters of the suffix function.
-// TypeError 5503: (1223-1309): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (1339-1426): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
+// TypeError 8838: (475-481): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int8.
+// TypeError 8838: (491-497): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type uint8.
+// TypeError 8838: (507-516): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int16.
+// TypeError 8838: (526-535): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type uint16.
+// TypeError 8838: (545-627): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int256.
+// TypeError 8838: (647-730): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (751-758): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int8.
+// TypeError 8838: (768-775): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type uint8.
+// TypeError 8838: (785-795): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int16.
+// TypeError 8838: (805-815): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type uint16.
+// TypeError 8838: (825-908): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int256.
+// TypeError 8838: (938-1022): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (1053-1063): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int8.
+// TypeError 8838: (1073-1083): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type uint8.
+// TypeError 8838: (1093-1106): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int16.
+// TypeError 8838: (1116-1129): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type uint16.
+// TypeError 8838: (1139-1225): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (1253-1340): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (1369-1384): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int8. The exponent is out of range of type uint8.

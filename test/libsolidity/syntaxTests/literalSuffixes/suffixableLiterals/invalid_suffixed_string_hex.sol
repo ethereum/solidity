@@ -4,4 +4,4 @@ contract C {
     string x = hex"abcd" suffix;
 }
 // ----
-// TypeError 8838: (120-136): The type of the literal cannot be converted to the parameter of the suffix function.
+// TypeError 8838: (120-136): The literal cannot be converted to type string accepted by the suffix function.

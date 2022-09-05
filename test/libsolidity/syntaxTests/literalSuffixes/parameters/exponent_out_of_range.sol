@@ -1,3 +1,4 @@
+function mi8eu8(int8 m, uint8 e) pure suffix returns (uint) {}
 function u8(uint m, uint8 e) pure suffix returns (uint) {}
 function u16(uint m, uint16 e) pure suffix returns (uint) {}
 function u256(uint m, uint e) pure suffix returns (uint) {}
@@ -16,13 +17,15 @@ contract C {
 
     function max() public pure {
         1e-256 u8;
+        128e-256 mi8eu8;
     }
 }
 // ----
-// TypeError 5503: (338-347): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (357-367): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (377-388): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (399-480): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (502-584): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 5503: (605-688): This fractional number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function.
-// TypeError 8838: (748-757): The type of the literal cannot be converted to the parameters of the suffix function.
+// TypeError 8838: (401-410): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (420-430): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (440-451): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (462-543): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (565-647): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (668-751): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of any possible suffix function. The mantissa is out of range of the largest supported integer type.
+// TypeError 8838: (811-820): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The exponent is out of range of type uint8.
+// TypeError 8838: (830-845): This number cannot be decomposed into a mantissa and decimal exponent that fit the range of parameters of the suffix function. The mantissa is out of range of type int8. The exponent is out of range of type uint8.
