@@ -48,8 +48,8 @@
  - [ ] Create a pull request in solc-bin and merge.
 
 ### Homebrew and MacOS
- - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in https://github.com/Homebrew/homebrew-core/blob/master/Formula/solidity.rb
- - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb
+ - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in the [``solidity`` formula in Homebrew core repository](https://github.com/Homebrew/homebrew-core/blob/master/Formula/solidity.rb).
+ - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in [our custom ``solidity`` Homebrew formula](https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb).
 
 ### Docker
  - [ ] Run ``./scripts/docker_deploy_manual.sh v$VERSION``.
@@ -74,7 +74,7 @@
 
 ### Post-release
  - [ ] Make sure the documentation for the new release has been published successfully.
-       Go to https://readthedocs.org/projects/solidity/ and verify that the new version is listed, works and is marked as default.
+       Go to the [documentation status page at ReadTheDocs](https://readthedocs.org/projects/solidity/) and verify that the new version is listed, works and is marked as default.
  - [ ] Remove "still in progress" warning from the release notes.
  - [ ] Publish the blog posts.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
