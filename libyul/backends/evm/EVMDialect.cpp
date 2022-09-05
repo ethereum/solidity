@@ -83,7 +83,7 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	};
 
 	YulString name = f.name;
-	return {name, move(f)};
+	return {name, std::move(f)};
 }
 
 pair<YulString, BuiltinFunctionForEVM> createFunction(

@@ -54,6 +54,8 @@ FORMATERROR=$(
     preparedGrep "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" | grep -E -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
     # right-aligned reference pointer star (needs to exclude return and comments)
     preparedGrep "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" | grep -E -v -e "return [*]" -e "^* [*]" -e "^*//.*"
+    # unqualified move check, i.e. make sure that std::move() is used instead of move()
+    preparedGrep "move\(.+\)" | grep -v "std::move" | grep -E "[^a-z]move"
 ) | grep -E -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/" || true
 )
 
