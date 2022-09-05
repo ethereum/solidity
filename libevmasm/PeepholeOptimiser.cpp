@@ -428,6 +428,36 @@ struct TruthyAnd: SimplePeepholeOptimizerMethod<TruthyAnd>
 	}
 };
 
+// if(a == true) -> if(a) and if(a == false) -> if(!a)
+struct StaticBooleanComparison: SimplePeepholeOptimizerMethod<StaticBooleanComparison>{
+	static bool applySimple(
+		AssemblyItem const& _push,
+		AssemblyItem const& _iszero,
+		AssemblyItem const& _iszero1,
+		AssemblyItem const& _dupN,
+		AssemblyItem const& _iszero2,
+		AssemblyItem const& _iszero3,
+		AssemblyItem const& _sub,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if(
+			_push.type() == Push && _push.data() == 1 &&
+			_iszero == Instruction::ISZERO &&
+			_iszero1 == Instruction::ISZERO &&
+			SemanticInformation::isDupInstruction(_dupN) &&
+			_iszero2 == Instruction::ISZERO &&
+			_iszero3 == Instruction::ISZERO &&
+			_sub == Instruction::SUB
+		){  
+			*_out = AssemblyItem(dupInstruction(getDupNumber(_dupN.instruction()) - 1));
+			*_out = _iszero;
+			return true;
+		} 
+		return false;
+	}
+};
+
 /// Removes everything after a JUMP (or similar) until the next JUMPDEST.
 struct UnreachableCode
 {
@@ -488,7 +518,7 @@ bool PeepholeOptimiser::optimise()
 	while (state.i < m_items.size())
 		applyMethods(
 			state,
-			PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
+			StaticBooleanComparison(), PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
 			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
 			TagConjunctions(), TruthyAnd(), Identity()
 		);
