@@ -3789,6 +3789,11 @@ TypeResult MappingType::interfaceType(bool _inLibrary) const
 	return this;
 }
 
+std::vector<std::tuple<std::string, Type const*>> MappingType::makeStackItems() const
+{
+	return {std::make_tuple("slot", TypeProvider::uint256())};
+}
+
 string TypeType::richIdentifier() const
 {
 	return "t_type" + identifierList(actualType());
