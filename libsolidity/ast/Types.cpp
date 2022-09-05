@@ -1292,6 +1292,42 @@ FixedPointType const* RationalNumberType::fixedPointType() const
 	);
 }
 
+pair<RationalNumberType const*, RationalNumberType const*> RationalNumberType::fractionalDecomposition() const
+{
+	rational const maxUint = rational((bigint(1) << 256) - 1);
+	rational const minInt = -rational(bigint(1) << 255);
+
+	bool negative = (m_value < 0);
+	rational const maxMantissa = (negative ? -minInt : maxUint);
+
+	rational negatedExponent = 0;
+	rational unsignedMantissa = abs(m_value);
+
+	if (unsignedMantissa > maxMantissa)
+		return {nullptr, TypeProvider::rationalNumber(0)};
+
+	while (unsignedMantissa.denominator() != 1)
+	{
+		unsignedMantissa *= 10;
+		++negatedExponent;
+
+		// NOTE: Technically RationalNumberType::isValidLiteral() should not allow an exponent so
+		// large we cannot store it in 4096 bits. For some reason it does not validate numbers not
+		// in scientific notation though. See https://github.com/ethereum/solidity/issues/14100
+		if (negatedExponent > maxUint && unsignedMantissa > maxMantissa)
+			return {nullptr, nullptr};
+		if (negatedExponent > maxUint)
+			return {TypeProvider::rationalNumber(unsignedMantissa), nullptr};
+		if (unsignedMantissa > maxMantissa)
+			return {nullptr, TypeProvider::rationalNumber(negatedExponent)};
+	}
+
+	return {
+		TypeProvider::rationalNumber(unsignedMantissa),
+		TypeProvider::rationalNumber(negatedExponent),
+	};
+}
+
 StringLiteralType::StringLiteralType(Literal const& _literal):
 	m_value(_literal.value())
 {

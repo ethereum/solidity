@@ -48,6 +48,8 @@
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/zip.hpp>
 
+#include <fmt/format.h>
+
 #include <memory>
 #include <vector>
 
@@ -2192,8 +2194,177 @@ void TypeChecker::typeCheckFunctionCall(
 			"\"staticcall\" is not supported by the VM version."
 		);
 
-	// Perform standard function call type checking
-	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+	if (_functionCall.isSuffixCall())
+		typeCheckSuffixFunctionCall(_functionCall, _functionType);
+	else
+		// Perform standard function call type checking
+		typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+}
+
+/// Performs type checks on function calls performed via the suffix syntax.
+void TypeChecker::typeCheckSuffixFunctionCall(
+	FunctionCall const& _functionCall,
+	FunctionTypePointer _functionType
+)
+{
+	solAssert(_functionType);
+	solAssert(_functionCall.isSuffixCall());
+
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
+	solAssert(arguments.size() == 1 && arguments[0]);
+
+	auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
+	solAssert(literal);
+
+	Type const* literalType = type(*literal);
+	solAssert(literalType);
+
+	if (
+		_functionType->hasBoundFirstArgument() ||
+		!_functionType->hasDeclaration() ||                                        // Rejects function pointers, builtins, types and probably more
+		!dynamic_cast<FunctionDefinition const*>(&_functionType->declaration()) || // Rejects events and errors
+		!dynamic_cast<FunctionDefinition const*>(&_functionType->declaration())->usableAsSuffix()
+	)
+	{
+		auto suffixDefinitionLocation = SecondarySourceLocation{};
+		if (
+			_functionType->hasDeclaration() &&
+			dynamic_cast<Declaration const*>(&_functionType->declaration())
+		)
+			suffixDefinitionLocation.append(
+				"Suffix defined here:",
+				dynamic_cast<Declaration const*>(&_functionType->declaration())->location()
+			);
+
+		m_errorReporter.typeError(
+			4438_error,
+			_functionCall.expression().location(),
+			suffixDefinitionLocation,
+			"The literal suffix must be either a subdenomination or a file-level suffix function."
+		);
+	}
+	else
+	{
+		auto const* suffixDefinition = dynamic_cast<FunctionDefinition const*>(&_functionType->declaration());
+		solAssert(suffixDefinition);
+		solAssert(!suffixDefinition->virtualSemantics());
+		solAssert(!_functionType->takesArbitraryParameters());
+		solAssert(_functionType->kind() == FunctionType::Kind::Internal);
+
+		auto const* literalRationalType = dynamic_cast<RationalNumberType const*>(literalType);
+
+		optional<string> parameterTypeMessage;
+		if (_functionType->parameterTypes().size() == 2)
+		{
+			if (!literalRationalType)
+				m_errorReporter.typeError(
+					2505_error,
+					_functionCall.expression().location(),
+					SecondarySourceLocation().append(
+						"Suffix function defined here:",
+						dynamic_cast<FunctionDefinition const*>(&_functionType->declaration())->parameterList().location()
+					),
+					"Functions that take 2 arguments can only be used as literal suffixes for rational numbers."
+				);
+			else if (
+				dynamic_cast<IntegerType const*>(_functionType->parameterTypes()[0]) &&
+				dynamic_cast<IntegerType const*>(_functionType->parameterTypes()[1])
+			)
+			{
+				auto&& [mantissa, exponent] = literalRationalType->fractionalDecomposition();
+				if (!mantissa || !exponent)
+				{
+					string mantissaOrExponentErrorMessage;
+					if (!mantissa && !exponent)
+						mantissaOrExponentErrorMessage = "The mantissa and the exponent are";
+					else if (!exponent)
+						mantissaOrExponentErrorMessage = "The exponent is";
+					else
+						mantissaOrExponentErrorMessage = "The mantissa is";
+
+					parameterTypeMessage = fmt::format(
+						"This number cannot be decomposed into a mantissa and decimal exponent "
+						"that fit the range of parameters of any possible suffix function. "
+						"{} out of range of the largest supported integer type.",
+						mantissaOrExponentErrorMessage
+					);
+				}
+				else
+				{
+					vector<string> mantissaOrExponentErrorMessages;
+					if (!mantissa->isImplicitlyConvertibleTo(*_functionType->parameterTypes()[0]))
+						mantissaOrExponentErrorMessages.emplace_back(
+							fmt::format(
+								"The mantissa is out of range of type {}.",
+								_functionType->parameterTypes()[0]->toString(true)
+							)
+						);
+					if (!exponent->isImplicitlyConvertibleTo(*_functionType->parameterTypes()[1]))
+						mantissaOrExponentErrorMessages.emplace_back(
+							fmt::format(
+								"The exponent is out of range of type {}.",
+								_functionType->parameterTypes()[1]->toString(true)
+							)
+						);
+
+					if (!mantissaOrExponentErrorMessages.empty())
+						parameterTypeMessage =
+							"This number cannot be decomposed into a mantissa and decimal exponent "
+							"that fit the range of parameters of the suffix function. " +
+							joinHumanReadable(mantissaOrExponentErrorMessages, " ");
+				}
+			}
+			else
+				// visit(FunctionDefinition) should have spotted if any of the parameters is not IntegerType
+				solAssert(m_errorReporter.hasErrors());
+		}
+		else if (_functionType->parameterTypes().size() == 1)
+		{
+			if (!literalType->isImplicitlyConvertibleTo(*_functionType->parameterTypes()[0]))
+			{
+				string errorReason;
+				string literalDescription;
+
+				if (literalRationalType)
+					literalDescription = "The number";
+				else if (dynamic_cast<AddressType const*>(literalType))
+					// Address literals and hex numbers are not easy to distinguish without counting the digits.
+					// The user may not even realize we see it as an address. Let's point that out in the message for clarity.
+					literalDescription = "The address";
+				else
+					literalDescription = "The literal";
+
+				if (
+					dynamic_cast<IntegerType const*>(_functionType->parameterTypes()[0]) &&
+					literalRationalType &&
+					!literalRationalType->isFractional()
+				)
+					errorReason = "is out of range of";
+				else
+					errorReason = "cannot be converted to";
+
+				parameterTypeMessage = fmt::format(
+					"{} {} type {} accepted by the suffix function.",
+					literalDescription,
+					errorReason,
+					_functionType->parameterTypes()[0]->toString(true)
+				);
+			}
+		}
+		else
+			solAssert(m_errorReporter.hasErrors());
+
+		if (parameterTypeMessage.has_value())
+			m_errorReporter.typeError(
+				8838_error,
+				literal->location(),
+				SecondarySourceLocation().append(
+					"Suffix function defined here:",
+					dynamic_cast<FunctionDefinition const*>(&_functionType->declaration())->parameterList().location()
+				),
+				parameterTypeMessage.value()
+			);
+	}
 }
 
 void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
@@ -2916,7 +3087,13 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		Type const* actualType = dynamic_cast<TypeType const&>(*expressionType).actualType();
 		solAssert(!!actualType, "");
 
-		if (actualType->category() == Type::Category::Struct)
+		if (_functionCall.isSuffixCall())
+			m_errorReporter.fatalTypeError(
+				6469_error,
+				_functionCall.location(),
+				"Type cannot be used as a literal suffix."
+			);
+		else if (actualType->category() == Type::Category::Struct)
 		{
 			if (actualType->containsNestedMapping())
 				m_errorReporter.fatalTypeError(
@@ -2948,7 +3125,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		m_errorReporter.fatalTypeError(
 			5704_error,
 			_functionCall.location(),
-			capitalized(Type::categoryName(expressionType->category())) + " is not callable."
+			capitalized(Type::categoryName(expressionType->category())) +
+			(_functionCall.isSuffixCall() ? " cannot be used as a literal suffix." : " is not callable.")
 		);
 		// Unreachable, because fatalTypeError throws. We don't set kind, but that's okay because the switch below
 		// is never reached. And, even if it was, SetOnce would trigger an assertion violation and not UB.
