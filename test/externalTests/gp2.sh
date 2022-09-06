@@ -69,6 +69,8 @@ function gp2_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     npm install
 
+    # New hardhat release breaks GP2 tests, and since GP2 repository has been archived, we are pinning hardhat
+    # to the previous stable version. See https://github.com/ethereum/solidity/pull/13485
     npm install hardhat@2.10.2
 
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
