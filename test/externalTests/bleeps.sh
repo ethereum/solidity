@@ -86,6 +86,10 @@ function bleeps_test
     npm install npm-run-all
     npm install
 
+    # Causes a test failure with hardhat 2.11.0 (latest at the moment of writing this)
+    # TODO: Remove when https://github.com/wighawag/bleeps/issues/4 is resolved
+    npm install hardhat@2.10.2
+
     # TODO: Bleeps depends on OpenZeppelin 4.3.2, which is affected by
     # https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3293.
     # Forcing OZ >= 4.6.0 fixes this but it also causes a lot of unrelated compilation errors.
