@@ -66,6 +66,10 @@ function yield_liquidator_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     npm install
 
+    # 2.11.0 Hardhat release breaks contract compilation.
+    # TODO: remove when https://github.com/yieldprotocol/yield-liquidator-v2/issues/34 is addressed.
+    npm install hardhat@2.10.2
+
     replace_version_pragmas
     neutralize_packaged_contracts
 
