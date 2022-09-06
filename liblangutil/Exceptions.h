@@ -37,6 +37,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include <variant>
 
 namespace solidity::langutil
 {
@@ -228,6 +229,13 @@ public:
 		}
 	}
 
+	static constexpr Severity errorSeverityOrType(std::variant<Error::Type, Error::Severity> _typeOrSeverity)
+	{
+		if (std::holds_alternative<Error::Type>(_typeOrSeverity))
+			return errorSeverity(std::get<Error::Type>(_typeOrSeverity));
+		return std::get<Error::Severity>(_typeOrSeverity);
+	}
+
 	static bool isError(Severity _severity)
 	{
 		return _severity == Severity::Error;
@@ -280,6 +288,13 @@ public:
 		case Type::Info: return "Info";
 		}
 		util::unreachable();
+	}
+
+	static std::string formatTypeOrSeverity(std::variant<Error::Type, Error::Severity> _typeOrSeverity)
+	{
+		if (std::holds_alternative<Error::Type>(_typeOrSeverity))
+			return formatErrorType(std::get<Error::Type>(_typeOrSeverity));
+		return formatErrorSeverity(std::get<Error::Severity>(_typeOrSeverity));
 	}
 
 	static std::string formatErrorSeverityLowercase(Severity _severity)
