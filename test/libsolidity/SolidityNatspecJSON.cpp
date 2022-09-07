@@ -475,9 +475,11 @@ BOOST_AUTO_TEST_CASE(event)
 		"events":
 		{
 			"Transfer(address,address,uint256)":
-			{
-				"notice": "This event is emitted when a transfer occurs."
-			}
+			[
+				{
+					"notice": "This event is emitted when a transfer occurs."
+				}
+			]
 		},
 		"methods": {}
 	}
@@ -529,9 +531,11 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 		"events":
 		{
 			"Transfer(address,address,uint256)":
-			{
-				"notice": "This event is emitted when a transfer occurs."
-			}
+			[
+				{
+					"notice": "This event is emitted when a transfer occurs."
+				}
+			]
 		},
 		"methods": {}
 	}
