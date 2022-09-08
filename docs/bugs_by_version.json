@@ -1768,6 +1768,10 @@
         ],
         "released": "2022-08-08"
     },
+    "0.8.17": {
+        "bugs": [],
+        "released": "2022-09-08"
+    },
     "0.8.2": {
         "bugs": [
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
