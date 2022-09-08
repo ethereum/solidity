@@ -1,0 +1,26 @@
+name: Check stale issues and pull requests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v5
+        with:
+          debug-only: true
+          repo-token: ${{ secrets.PROJECT_BOARD_AUTOMATION }}
+          stale-issue-message: 'This issue is stale because it has been open for 30 days with no activity. It will be closed in 7 days unless the stale label is removed.'
+          stale-issue-label: stale
+          stale-pr-message: 'This pull request is stale because it has been open for 30 days with no activity. It will be closed in 7 days unless the stale label is removed.'
+          stale-pr-label: stale
+          days-before-stale: 30
+          days-before-close: 7
+          remove-stale-when-updated: true
+          exempt-issue-labels: 'keep'
+          exempt-draft-pr: true
+          operations-per-run: 60
+
