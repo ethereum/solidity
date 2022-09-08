@@ -1,7 +1,7 @@
 ## Checklist for making a release:
 
 ### Requirements
- - [ ] Github account with access to [solidity](https://github.com/ethereum/solidity), [solc-js](https://github.com/ethereum/solc-js),
+ - [ ] GitHub account with access to [solidity](https://github.com/ethereum/solidity), [solc-js](https://github.com/ethereum/solc-js),
        [solc-bin](https://github.com/ethereum/solc-bin), [homebrew-ethereum](https://github.com/ethereum/homebrew-ethereum),
        [solidity-blog](https://github.com/ethereum/solidity-blog) and [solidity-portal](https://github.com/ethereum/solidity-portal) repositories.
  - [ ] DockerHub account with push rights to the [``solc`` image](https://hub.docker.com/r/ethereum/solc).
@@ -27,11 +27,11 @@
  - [ ] Copy the changelog into the release blog post.
 
 ### Create the Release
- - [ ] Create a [release on github](https://github.com/ethereum/solidity/releases/new).
+ - [ ] Create a [release on GitHub](https://github.com/ethereum/solidity/releases/new).
        Set the target to the ``develop`` branch and the tag to the new version, e.g. ``v0.8.5``.
        Include the following warning: ``**The release is still in progress and the binaries may not yet be available from all sources.**``.
        Don't publish it yet - click the ``Save draft`` button instead.
- - [ ] Thank voluntary contributors in the Github release notes (use ``git shortlog --summary --email v0.5.3..origin/develop``).
+ - [ ] Thank voluntary contributors in the GitHub release notes (use ``git shortlog --summary --email v0.5.3..origin/develop``).
  - [ ] Check that all tests on the latest commit in ``develop`` are green.
  - [ ] Click the ``Publish release`` button on the release page, creating the tag.
  - [ ] Wait for the CI runs on the tag itself.
