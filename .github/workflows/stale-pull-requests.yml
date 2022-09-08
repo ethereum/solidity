@@ -1,0 +1,39 @@
+name: Check stale pull requests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'
+
+permissions:
+  issues: read
+  pull-requests: write
+
+env:
+  BEFORE_STALE: 14
+  BEFORE_CLOSE: 7
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v5
+        with:
+          debug-only: true
+          # disable issues
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          stale-pr-message: |
+            This pull request is stale because it has been open for ${{ env.BEFORE_STALE }} days with no activity.
+            It will be closed in ${{ env.BEFORE_CLOSE }} days unless the `stale` label is removed.
+          close-pr-message: |
+            This pull request was closed due to a lack of activity for ${{ env.BEFORE_CLOSE }} days after it was stale.
+          stale-pr-label: stale
+          close-pr-label: closed-due-inactivity
+          days-before-pr-stale: ${{ env.BEFORE_STALE }}
+          days-before-pr-close: ${{ env.BEFORE_CLOSE }}
+          exempt-pr-labels: 'external contribution'
+          exempt-draft-pr: true
+          exempt-all-milestones: true
+          remove-stale-when-updated: true
+          operations-per-run: 60
