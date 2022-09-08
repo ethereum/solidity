@@ -684,7 +684,7 @@ Types that are not yet supported are abstracted by a single 256-bit unsigned
 integer, where their unsupported operations are ignored.
 
 For more details on how the SMT encoding works internally, see the paper
-`SMT-based Verification of Solidity Smart Contracts <https://github.com/leonardoalt/text/blob/master/solidity_isola_2018/main.pdf>`_.
+`SMT-based Verification of Solidity Smart Contracts <https://github.com/chriseth/solidity_isola/blob/master/main.pdf>`_.
 
 Function Calls
 ==============
