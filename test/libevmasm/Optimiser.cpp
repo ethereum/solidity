@@ -975,6 +975,70 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 	BOOST_CHECK_EQUAL(pushTags.size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(peephole_truthy_equal_comparison)
+{
+	AssemblyItems items{
+		Instruction::ISZERO,
+		Instruction::ISZERO,
+		AssemblyItem(Push, 1),
+		Instruction::EQ,
+	};
+	AssemblyItems expectation{};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(peephole_truthy_inequal_comparison)
+{
+	AssemblyItems items{
+		Instruction::ISZERO,
+		Instruction::ISZERO,
+		AssemblyItem(Push, 1),
+		Instruction::SUB,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	AssemblyItems expectation{
+		Instruction::ISZERO,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(peephole_reverse_truthy_inequal_comparison)
+{
+	AssemblyItems items{
+		AssemblyItem(Push, 1),
+		Instruction::SWAP1,
+		Instruction::ISZERO,
+		Instruction::ISZERO,
+		Instruction::SUB,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	AssemblyItems expectation{
+		Instruction::ISZERO,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
 BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 {
 	AssemblyItems items{

@@ -428,6 +428,92 @@ struct TruthyAnd: SimplePeepholeOptimizerMethod<TruthyAnd>
 	}
 };
 
+// if(a == true) -> if (a)
+struct TruthyEqualComparison: SimplePeepholeOptimizerMethod<TruthyEqualComparison>{
+	static bool applySimple(
+		AssemblyItem const& _iszero,
+		AssemblyItem const& _iszero1,
+		AssemblyItem const& _push1,
+		AssemblyItem const& _eq,
+		std::back_insert_iterator<AssemblyItems>
+	)
+	{
+		if (
+			_iszero == Instruction::ISZERO &&
+			_iszero1 == Instruction::ISZERO &&
+			_push1.type() == Push && _push1.data() == 1 &&
+			_eq == Instruction::EQ
+		)
+		{
+			return true;
+		} else
+			return false;
+	}
+};
+
+// if(a != true) -> if(!a)
+struct TruthyInequalComparison: SimplePeepholeOptimizerMethod<TruthyInequalComparison>{
+	static bool applySimple(
+		AssemblyItem const& _iszero,
+		AssemblyItem const& _iszero1,
+		AssemblyItem const& _push1,
+		AssemblyItem const& _sub,
+		AssemblyItem const& _pushTag,
+		AssemblyItem const& _jumpi,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_iszero == Instruction::ISZERO &&
+			_iszero1 == Instruction::ISZERO &&
+			_push1.type() == Push && _push1.data() == 1 &&
+			_sub == Instruction::SUB &&
+			_pushTag.type() == PushTag &&
+			_jumpi == Instruction::JUMPI
+		)
+		{
+			*_out = _iszero;
+			*_out = _pushTag;
+			*_out = _jumpi;
+			return true;
+		} else
+			return false;
+	}
+};
+
+// if(true != a) -> if(!a)
+struct ReverseTruthyInequalComparison: SimplePeepholeOptimizerMethod<ReverseTruthyInequalComparison>{
+	static bool applySimple(
+		AssemblyItem const& _push1,
+		AssemblyItem const& _swap1,
+		AssemblyItem const& _iszero,
+		AssemblyItem const& _iszero1,
+		AssemblyItem const& _sub,
+		AssemblyItem const& _pushTag,
+		AssemblyItem const& _jumpi,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_push1.type() == Push && _push1.data() == 1 &&
+			SemanticInformation::isSwapInstruction(_swap1) &&
+			getSwapNumber(_swap1.instruction()) == 1 &&
+			_iszero == Instruction::ISZERO &&
+			_iszero1 == Instruction::ISZERO &&
+			_sub == Instruction::SUB &&
+			_pushTag.type() == PushTag &&
+			_jumpi == Instruction::JUMPI
+		)
+		{
+			*_out = _iszero;
+			*_out = _pushTag;
+			*_out = _jumpi;
+			return true;
+		} else
+			return false;
+	}
+};
+
 /// Removes everything after a JUMP (or similar) until the next JUMPDEST.
 struct UnreachableCode
 {
@@ -488,7 +574,7 @@ bool PeepholeOptimiser::optimise()
 	while (state.i < m_items.size())
 		applyMethods(
 			state,
-			PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
+			TruthyEqualComparison(), TruthyInequalComparison(), ReverseTruthyInequalComparison(), PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
 			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
 			TagConjunctions(), TruthyAnd(), Identity()
 		);
