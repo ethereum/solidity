@@ -1,20 +1,23 @@
-### 0.8.17 (unreleased)
+### 0.8.17 (2022-09-08)
 
 Important Bugfixes:
  * Yul Optimizer: Prevent the incorrect removal of storage writes before calls to Yul functions that conditionally terminate the external EVM call.
 
 
-Language Features:
-
-
 Compiler Features:
  * Code Generator: More efficient overflow checks for multiplication.
- * Yul Optimizer: Simplify the starting offset of zero-length operations to zero.
  * Language Server: Analyze all files in a project by default (can be customized by setting ``'file-load-strategy'`` to ``'directly-opened-and-on-import'`` in LSP settings object).
+ * Yul Optimizer: Simplify the starting offset of zero-length operations to zero.
 
 
 Bugfixes:
  * Type Checker: Fix internal compiler error on tuple assignments with invalid left-hand side.
+ * Yul IR Code Generation: Fix internal compiler error when accessing the ``.slot`` member of a mapping through a storage reference in inline assembly.
+
+
+Build System:
+ * Allow disabling pedantic warnings and do not treat warnings as errors during compiler build when ``-DPEDANTIC=OFF`` flag is passed to CMake.
+ * Update emscripten to version 3.1.19.
 
 
 ### 0.8.16 (2022-08-08)
