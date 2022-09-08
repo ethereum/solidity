@@ -19,6 +19,7 @@
  - [ ] Run ``make linkcheck`` from within ``docs/`` and fix any broken links it finds. Ignore false positives caused by ``href`` anchors and dummy links not meant to work.
 
 ### Changelog
+ - [ ] Make sure that all merged PRs that should have changelog entries do have them.
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice. Commit it.
  - [ ] Update the changelog to include a release date.
  - [ ] Run ``scripts/update_bugs_by_version.py`` to regenerate ``bugs_by_version.json`` from the changelog and ``bugs.json``.
