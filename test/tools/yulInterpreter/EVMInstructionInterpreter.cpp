@@ -317,7 +317,7 @@ u256 EVMInstructionInterpreter::eval(
 		logTrace(_instruction, arg);
 		return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CREATE2:
-		accessMemory(arg[2], arg[3]);
+		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
 		return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CALL:
