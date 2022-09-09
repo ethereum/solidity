@@ -505,7 +505,7 @@ void CommandLineInterface::readInputFiles()
 		if (m_options.input.mode == InputMode::StandardJson)
 		{
 			solAssert(!m_standardJsonInput.has_value());
-			m_standardJsonInput = move(fileContent);
+			m_standardJsonInput = std::move(fileContent);
 		}
 		else
 		{
