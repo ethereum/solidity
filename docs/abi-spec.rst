@@ -191,9 +191,9 @@ on the type of ``X`` being
 
 - ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
 
-  ``enc(X) = enc(k) enc([X[0], ..., X[k-1]])``
+  ``enc(X) = enc(k) enc((X[0], ..., X[k-1]))``
 
-  i.e. it is encoded as if it were an array of static size ``k``, prefixed with
+  i.e. it is encoded as if it were a tuple with ``k`` elements of the same type (resp. an array of static size ``k``), prefixed with
   the number of elements.
 
 - ``bytes``, of length ``k`` (which is assumed to be of type ``uint256``):
