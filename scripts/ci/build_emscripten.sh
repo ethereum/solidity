@@ -40,7 +40,7 @@ else
 	BUILD_DIR="$1"
 fi
 
-WORKSPACE=/home/emscripten/project
+WORKSPACE=/emsdk/project
 
 cd $WORKSPACE
 
