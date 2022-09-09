@@ -40,10 +40,7 @@ else
 	BUILD_DIR="$1"
 fi
 
-apt-get update
-apt-get install lz4 --no-install-recommends
-
-WORKSPACE=/root/project
+WORKSPACE=/home/emscripten/project
 
 cd $WORKSPACE
 
