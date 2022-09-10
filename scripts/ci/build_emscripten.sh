@@ -40,7 +40,7 @@ else
 	BUILD_DIR="$1"
 fi
 
-WORKSPACE=/emsdk/project
+WORKSPACE=${2:-/root/project}
 
 cd $WORKSPACE
 

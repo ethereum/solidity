@@ -35,7 +35,7 @@ else
 fi
 
 # solbuildpackpusher/solidity-buildpack-deps:emscripten-13
-docker run --volume "$(pwd):/emsdk/project" --workdir /emsdk/project \
+docker run --volume "$(pwd):/project" --workdir /project \
     --user "1000:1000" \
     solbuildpackpusher/solidity-buildpack-deps@sha256:f1c13f3450d1f2e53ea18ac1ac1a17e932573cb9a5ccd0fd9ef6dd44f6402fa9 \
-    ./scripts/ci/build_emscripten.sh "$BUILD_DIR"
+    ./scripts/ci/build_emscripten.sh "$BUILD_DIR" /project
