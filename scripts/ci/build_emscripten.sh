@@ -40,9 +40,9 @@ else
 	BUILD_DIR="$1"
 fi
 
-WORKSPACE="${2:-/root/project}"
+WORKSPACE=/project
 
-cd "$WORKSPACE"
+cd $WORKSPACE
 
 # shellcheck disable=SC2166
 if [[ "$CIRCLE_BRANCH" = release || -n "$CIRCLE_TAG" || -n "$FORCE_RELEASE" || "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]

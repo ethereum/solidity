@@ -1016,15 +1016,15 @@ jobs:
       - store_artifacts: *artifacts_test_results
       - gitter_notify_failure_unless_pr
 
-  # NOTE: work around to git unsafe repository error by adding /root/project as a safe.directory
-  # See https://github.com/CircleCI-Public/cimg-base/issues/170
   b_ems:
     <<: *base_ems_large
     environment:
       TERM: xterm
       MAKEFLAGS: -j 10
     steps:
-      - run: git config --global --add safe.directory /root/project
+      # NOTE: work around to git unsafe repository error by adding /project as a safe.directory
+      # See https://github.com/CircleCI-Public/cimg-base/issues/170
+      - run: git config --global --add safe.directory /project
       - checkout
       - run:
           name: Build

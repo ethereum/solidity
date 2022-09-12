@@ -183,14 +183,14 @@ function process_tag
 cd /tmp
 
 echo "Check out solidity repository..."
-if [ -d /root/project ]; then
+if [ -d /project ]; then
   echo "Solidity repo checkout already exists."
 else
-  git clone "${SOLIDITY_REPO_URL}" /root/project --quiet
+  git clone "${SOLIDITY_REPO_URL}" /project --quiet
 fi
 
 echo "Extract bytecode comparison scripts from v0.6.1..."
-cd /root/project
+cd /project
 git checkout v0.6.1 --quiet
 cp scripts/bytecodecompare/storebytecode.sh /tmp
 # shellcheck disable=SC2016
@@ -212,7 +212,7 @@ ln -sf /emsdk_portable/emscripten/sdk/ /emsdk_portable/
 ln -sf sdk /emsdk_portable/emscripten/bin
 ln -sf /emsdk_portable/emscripten/bin/* /usr/local/bin
 rm -rf /src
-ln -sf /root/project /src
+ln -sf /project /src
 
 echo "Install dependencies and upgrade system packages."
 apt-get -qq update >/dev/null 2>&1
