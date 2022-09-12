@@ -404,25 +404,25 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 {
 	char const* sourceCode = R"(
 		pragma solidity >=0.0;
-		contract test {
+		contract C {
 		}
 	)";
 
 	vector<tuple<string, string>> sequences =
 	{
-		// { "<optimizer sequence>", "<optimizer cleanup sequence>" }
-		{ "", "" },
-		{ "", "fDn" },
-		{ "dhfoDgvulfnTUtnIf", "" },
-		{ "dhfoDgvulfnTUtnIf", "fDn" }
+		// {"<optimizer sequence>", "<optimizer cleanup sequence>"}
+		{"", ""},
+		{"", "fDn"},
+		{"dhfoDgvulfnTUtnIf", "" },
+		{"dhfoDgvulfnTUtnIf", "fDn"}
 	};
 
-	auto check = [sourceCode](string const& optimizerSequence, string const& optimizerCleanupSequence)
+	auto check = [sourceCode](string const& _optimizerSequence, string const& _optimizerCleanupSequence)
 	{
 		OptimiserSettings optimizerSettings = OptimiserSettings::minimal();
 		optimizerSettings.runYulOptimiser = true;
-		optimizerSettings.yulOptimiserSteps = optimizerSequence;
-		optimizerSettings.yulOptimiserCleanupSteps = optimizerCleanupSequence;
+		optimizerSettings.yulOptimiserSteps = _optimizerSequence;
+		optimizerSettings.yulOptimiserCleanupSteps = _optimizerCleanupSequence;
 		CompilerStack compilerStack;
 		compilerStack.setSources({{"", std::string(sourceCode)}});
 		compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
-		std::string const& serialisedMetadata = compilerStack.metadata("test");
+		std::string const& serialisedMetadata = compilerStack.metadata("C");
 		Json::Value metadata;
 		BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
@@ -439,14 +439,12 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 		BOOST_CHECK(metadata["settings"]["optimizer"]["details"]["yulDetails"].isMember("optimizerSteps"));
 
 		string const metadataOptimizerSteps = metadata["settings"]["optimizer"]["details"]["yulDetails"]["optimizerSteps"].asString();
-		string const expectedMetadataOptimiserSteps = optimizerSequence + ":" + optimizerCleanupSequence;
+		string const expectedMetadataOptimiserSteps = _optimizerSequence + ":" + _optimizerCleanupSequence;
 		BOOST_CHECK_EQUAL(metadataOptimizerSteps, expectedMetadataOptimiserSteps);
 	};
 
 	for (auto const& [sequence, cleanupSequence] : sequences)
-	{
 		check(sequence, cleanupSequence);
-	}
 }
 
 BOOST_AUTO_TEST_CASE(metadata_license_missing)

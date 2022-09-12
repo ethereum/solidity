@@ -143,6 +143,9 @@ void OptimiserSuite::run(
 
 	// Run the user-supplied clean up sequence
 	suite.runSequence(_optimisationCleanupSequence, ast);
+	// Hard-coded FunctionGrouper step is used to bring the AST into a canonical form required by the StackCompressor
+	// and StackLimitEvader. This is hard-coded as the last step, as some previously executed steps may break the
+	// aforementioned form, thus causing the StackCompressor/StackLimitEvader to throw.
 	suite.runSequence("g", ast);
 
 	if (evmDialect)
@@ -318,7 +321,7 @@ void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 		case ':':
 			++colonDelimiters;
 			assertThrow(nestingLevel == 0, OptimizerException, "Cleanup sequence delimiter cannot be placed inside the brackets");
-			assertThrow(colonDelimiters <=1, OptimizerException, "Too many cleanup sequence delimiters");
+			assertThrow(colonDelimiters <= 1, OptimizerException, "Too many cleanup sequence delimiters");
 			break;
 		default:
 		{

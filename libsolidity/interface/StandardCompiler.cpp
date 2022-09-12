@@ -496,6 +496,8 @@ std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details
 
 			if (delimiterPos != string::npos)
 				_cleanupSetting = fullSequence.substr(delimiterPos + 1);
+			else
+				solAssert(_cleanupSetting == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
 		}
 		else
 			return formatFatalError("JSONError", "\"settings.optimizer.details." + _name + "\" must be a string");

@@ -273,6 +273,8 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 
 		if (delimiterPos != string::npos)
 			settings.yulOptimiserCleanupSteps = fullSequence.substr(delimiterPos + 1);
+		else
+			solAssert(settings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
 	}
 
 	return settings;

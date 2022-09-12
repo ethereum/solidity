@@ -1245,72 +1245,8 @@ In Solidity mode, the Yul optimizer is activated together with the regular optim
 Optimization Step Sequence
 --------------------------
 
-By default the optimizer applies its predefined sequence of optimization steps to
-the generated assembly. You can override this sequence and supply your own using
-the ``--yul-optimizations`` option:
-
-.. code-block:: bash
-
-    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul:fDnTOc'
-
-The sequence inside ``[...]`` will be applied multiple times in a loop until the Yul code
-remains unchanged or until the maximum number of rounds (currently 12) has been reached.
-
-An important thing to note, is that there are hardcoded sequences that are run before and after the
-user-supplied sequence, or the default sequence if one was not supplied by the user.
-
-The cleanup sequence delimiter ``:`` is optional, and is used to supply a custom cleanup sequence
-in order to replace the default one. If omitted, the optimizer will simply apply the default cleanup
-sequence. In addition, the delimiter may be placed at the beginning of the user-supplied sequence,
-which will be treated as an empty optimization sequence, whereas conversely, if placed at the end of
-the sequence, will be treated as an empty cleanup sequence.
-
-
-The following optimization steps are available:
-
-============ ===============================
-Abbreviation Full name
-============ ===============================
-``f``        ``BlockFlattener``
-``l``        ``CircularReferencesPruner``
-``c``        ``CommonSubexpressionEliminator``
-``C``        ``ConditionalSimplifier``
-``U``        ``ConditionalUnsimplifier``
-``n``        ``ControlFlowSimplifier``
-``D``        ``DeadCodeEliminator``
-``v``        ``EquivalentFunctionCombiner``
-``e``        ``ExpressionInliner``
-``j``        ``ExpressionJoiner``
-``s``        ``ExpressionSimplifier``
-``x``        ``ExpressionSplitter``
-``I``        ``ForLoopConditionIntoBody``
-``O``        ``ForLoopConditionOutOfBody``
-``o``        ``ForLoopInitRewriter``
-``i``        ``FullInliner``
-``g``        ``FunctionGrouper``
-``h``        ``FunctionHoister``
-``F``        ``FunctionSpecializer``
-``T``        ``LiteralRematerialiser``
-``L``        ``LoadResolver``
-``M``        ``LoopInvariantCodeMotion``
-``r``        ``RedundantAssignEliminator``
-``R``        ``ReasoningBasedSimplifier`` - highly experimental
-``m``        ``Rematerialiser``
-``V``        ``SSAReverser``
-``a``        ``SSATransform``
-``t``        ``StructuralSimplifier``
-``u``        ``UnusedPruner``
-``p``        ``UnusedFunctionParameterPruner``
-``d``        ``VarDeclInitializer``
-============ ===============================
-
-Some steps depend on properties ensured by ``BlockFlattener``, ``FunctionGrouper``, ``ForLoopInitRewriter``.
-For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
-
-The ReasoningBasedSimplifier is an optimizer step that is currently not enabled
-in the default set of steps. It uses an SMT solver to simplify arithmetic expressions
-and boolean conditions. It has not received thorough testing or validation yet and can produce
-non-reproducible results, so please use with care!
+Detailed information regrading the optimization sequence as well a list of abbreviations is
+available in the :ref:`optimizer docs <optimizer-steps>`.
 
 .. _erc20yul:
 
