@@ -16,14 +16,18 @@ jobs:
       - uses: actions/stale@v5
         with:
           debug-only: true
-          stale-issue-message: 'This issue is stale because it has been open for 30 days with no activity. It will be closed in 7 days unless the `stale` label is removed.'
+          stale-issue-message: |
+            This issue is stale because it has been open for 30 days with no activity.
+            It will be closed in 7 days unless the `stale` label is removed.
           stale-issue-label: stale
-          stale-pr-message: 'This pull request is stale because it has been open for 30 days with no activity. It will be closed in 7 days unless the `stale` label is removed.'
+          stale-pr-message: |
+            This pull request is stale because it has been open for 30 days with no activity.
+            It will be closed in 7 days unless the `stale` label is removed.
           stale-pr-label: stale
           days-before-stale: 30
           days-before-close: 7
           remove-stale-when-updated: true
-          exempt-issue-labels: 'keep'
+          exempt-issue-labels: 'roadmap,must have,must have eventually,should have,nice to have'
           exempt-draft-pr: true
+          exempt-all-milestones: true
           operations-per-run: 60
-
