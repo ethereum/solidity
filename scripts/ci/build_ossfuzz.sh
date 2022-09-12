@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-ROOTDIR="/project"
+ROOTDIR="${HOME}/project"
 BUILDDIR="${ROOTDIR}/build"
 mkdir -p "${BUILDDIR}" && mkdir -p "$BUILDDIR/deps"
 

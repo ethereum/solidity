@@ -6,6 +6,12 @@
 #     - ubu: ubuntu
 #     - ems: Emscripten
 version: 2.1
+
+aliases:
+  - &container_config
+    # default working_directory for all containers.
+    working_directory: &working_directory ~/project
+
 parameters:
   ubuntu-2004-docker-image:
     type: string
@@ -288,6 +294,7 @@ defaults:
   # Base Image Templates
 
   - base_ubuntu1604_clang: &base_ubuntu1604_clang
+      <<: *container_config
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
       environment:
@@ -302,6 +309,7 @@ defaults:
         MAKEFLAGS: -j 2
 
   - base_ubuntu2004_clang: &base_ubuntu2004_clang
+      <<: *container_config
       docker:
         - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
       environment:
@@ -329,6 +337,7 @@ defaults:
         MAKEFLAGS: -j 5
 
   - base_ubuntu2004: &base_ubuntu2004
+      <<: *container_config
       docker:
         - image: << pipeline.parameters.ubuntu-2004-docker-image >>
       environment:
@@ -357,6 +366,7 @@ defaults:
         MAKEFLAGS: -j 10
 
   - base_buildpack_focal_small: &base_buildpack_focal_small
+      <<: *container_config
       docker:
         - image: buildpack-deps:focal
       resource_class: small
@@ -365,6 +375,7 @@ defaults:
         MAKEFLAGS: -j 2
 
   - base_buildpack_latest_small: &base_buildpack_latest_small
+      <<: *container_config
       docker:
         - image: buildpack-deps:latest
       resource_class: small
@@ -373,6 +384,7 @@ defaults:
         MAKEFLAGS: -j 2
 
   - base_archlinux: &base_archlinux
+      <<: *container_config
       docker:
         - image: archlinux:base
       environment:
@@ -380,6 +392,7 @@ defaults:
         MAKEFLAGS: -j 3
 
   - base_archlinux_large: &base_archlinux_large
+      <<: *container_config
       docker:
         - image: archlinux:base
       resource_class: large
@@ -388,22 +401,26 @@ defaults:
         MAKEFLAGS: -j 5
 
   - base_win_powershell: &base_win_powershell
+      <<: *container_config
       executor:
         name: win/default
         shell: powershell.exe
 
   - base_win_powershell_large: &base_win_powershell_large
+      <<: *container_config
       executor:
         name: win/default
         shell: powershell.exe
         size: large
 
   - base_win_cmd: &base_win_cmd
+      <<: *container_config
       executor:
         name: win/default
         shell: cmd.exe
 
   - base_osx: &base_osx
+      <<: *container_config
       macos:
         xcode: "13.2.0"
       environment:
@@ -411,6 +428,7 @@ defaults:
         MAKEFLAGS: -j5
 
   - base_osx_large: &base_osx_large
+      <<: *container_config
       macos:
         xcode: "13.2.0"
       resource_class: large
@@ -419,6 +437,7 @@ defaults:
         MAKEFLAGS: -j10
 
   - base_ems_large: &base_ems_large
+      <<: *container_config
       docker:
         - image: << pipeline.parameters.emscripten-docker-image >>
       resource_class: large
@@ -427,6 +446,7 @@ defaults:
         MAKEFLAGS: -j 5
 
   - base_python_small: &base_python_small
+      <<: *container_config
       docker:
         - image: circleci/python:3.6
       resource_class: small
@@ -435,6 +455,7 @@ defaults:
         MAKEFLAGS: -j 2
 
   - base_node_small: &base_node_small
+      <<: *container_config
       docker:
         - image: circleci/node
       resource_class: small

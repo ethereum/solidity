@@ -56,11 +56,11 @@ echo "-- test_docker @ '${PWD}'"
 # See https://github.blog/2022-04-12-git-security-vulnerability-announced/
 docker run \
   --rm \
-  --volume "${PWD}:/project" \
+  --volume "${PWD}:${HOME}/project" \
   "${IMAGE_NAME}" \
   bash -c "
-    git config --global --add safe.directory /project &&
-    /project/scripts/ci/${IMAGE_NAME}_test_${IMAGE_VARIANT}.sh
+    git config --global --add safe.directory ${HOME}/project &&
+    ${HOME}/project/scripts/ci/${IMAGE_NAME}_test_${IMAGE_VARIANT}.sh
   "
 
 echo "-- push_docker"
