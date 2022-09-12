@@ -1043,9 +1043,9 @@ jobs:
       TERM: xterm
       MAKEFLAGS: -j 10
     steps:
-      # NOTE: work around to git unsafe repository error by adding /project as a safe.directory
+      # NOTE: work around to git unsafe repository error by adding $CIRCLE_WORKING_DIRECTORY as a safe.directory
       # See https://github.com/CircleCI-Public/cimg-base/issues/170
-      - run: git config --global --add safe.directory /project
+      - run: git config --global --add safe.directory ${CIRCLE_WORKING_DIRECTORY}
       - checkout
       - run:
           name: Build
