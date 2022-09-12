@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: '0 12 * * *'
 
+permissions:
+  issues: write
+  pull-requests: write
+
 jobs:
   stale:
     runs-on: ubuntu-latest
@@ -12,7 +16,6 @@ jobs:
       - uses: actions/stale@v5
         with:
           debug-only: true
-          repo-token: ${{ secrets.PROJECT_BOARD_AUTOMATION }}
           stale-issue-message: 'This issue is stale because it has been open for 30 days with no activity. It will be closed in 7 days unless the `stale` label is removed.'
           stale-issue-label: stale
           stale-pr-message: 'This pull request is stale because it has been open for 30 days with no activity. It will be closed in 7 days unless the `stale` label is removed.'
