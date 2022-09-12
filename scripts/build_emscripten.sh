@@ -36,10 +36,10 @@ fi
 
 # set base project directory as the home folder of the emscripten user
 # https://github.com/emscripten-core/emsdk/blob/main/docker/Dockerfile#L81
-EMSCRIPTEN_HOME="/home/emscripten"
+PROJECT_DIR="/home/emscripten/project"
 
 # solbuildpackpusher/solidity-buildpack-deps:emscripten-13
-docker run --volume "$(pwd):${EMSCRIPTEN_HOME}/project" --workdir "${EMSCRIPTEN_HOME}/project" \
+docker run --volume "$(pwd):${PROJECT_DIR}" --workdir "${PROJECT_DIR}" \
     --user "1000:1000" \
     solbuildpackpusher/solidity-buildpack-deps@sha256:f1c13f3450d1f2e53ea18ac1ac1a17e932573cb9a5ccd0fd9ef6dd44f6402fa9 \
-    ./scripts/ci/build_emscripten.sh "$BUILD_DIR"
+    ${PROJECT_DIR}/scripts/ci/build_emscripten.sh "$BUILD_DIR"
