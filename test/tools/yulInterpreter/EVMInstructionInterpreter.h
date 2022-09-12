@@ -88,9 +88,15 @@ public:
 	);
 
 private:
-	/// Checks if the memory access is not too large for the interpreter and adjusts
-	/// msize accordingly.
-	/// @returns false if the amount of bytes read is lager than 0xffff
+	/// Checks if the memory access is valid and adjusts msize accordingly.
+	/// @returns true if memory access is valid, false otherwise
+	/// A valid memory access must satisfy all of the following pre-requisites:
+	/// - Sum of @param _offset and @param _size do not overflow modulo u256
+	/// - Sum of @param _offset, @param _size, and 31 do not overflow modulo u256 (see note below)
+	/// - @param _size is lesser than or equal to @a s_maxRangeSize
+	/// - @param _offset is lesser than or equal to the difference of numeric_limits<size_t>::max()
+	/// and @a s_maxRangeSize
+	/// Note: Memory expansion is carried out in multiples of 32 bytes.
 	bool accessMemory(u256 const& _offset, u256 const& _size = 32);
 	/// @returns the memory contents at the provided address.
 	/// Does not adjust msize, use @a accessMemory for that
@@ -125,6 +131,9 @@ private:
 	InterpreterState& m_state;
 	/// Flag to disable trace of instructions that write to memory.
 	bool m_disableMemoryWriteInstructions;
+public:
+	/// Maximum length for range-based memory access operations.
+	static constexpr unsigned s_maxRangeSize = 0xffff;
 };
 
 } // solidity::yul::test
