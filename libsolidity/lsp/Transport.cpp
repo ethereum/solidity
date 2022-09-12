@@ -42,6 +42,12 @@ using namespace std;
 using namespace solidity::lsp;
 
 // {{{ Transport
+ofstream Transport::traceLogFileStream() const
+{
+	lspAssert(m_traceLogFilePath, ErrorCode::InternalError, "");
+	return ofstream(m_traceLogFilePath.value().generic_string(), ios::app);
+}
+
 optional<Json::Value> Transport::receive()
 {
 	auto const headers = parseHeaders();
@@ -59,20 +65,20 @@ optional<Json::Value> Transport::receive()
 
 	string const data = readBytes(stoul(headers->at("content-length")));
 
-	if (m_traceLogFilePath)
-	{
-		ofstream traceLogger(m_traceLogFilePath.value().generic_string(), ios::app);
-		traceLogger << "Received: " << data << endl;
-	}
-
 	Json::Value jsonMessage;
 	string jsonParsingErrors;
 	solidity::util::jsonParseStrict(data, jsonMessage, &jsonParsingErrors);
 	if (!jsonParsingErrors.empty() || !jsonMessage || !jsonMessage.isObject())
 	{
+		if (m_traceLogFilePath)
+			traceLogFileStream() << "{\"Received\": " << util::jsonPrettyPrint(jsonMessage) << "}," << endl;
+
 		error({}, ErrorCode::ParseError, "Could not parse RPC JSON payload. " + jsonParsingErrors);
 		return nullopt;
 	}
+
+	if (m_traceLogFilePath)
+		traceLogFileStream() << "{\"Received\": " << util::jsonPrettyPrint(jsonMessage) << "}," << endl;
 
 	return {std::move(jsonMessage)};
 }
@@ -150,10 +156,7 @@ void Transport::send(Json::Value _json, MessageID _id)
 	string const jsonString = solidity::util::jsonCompactPrint(_json);
 
 	if (m_traceLogFilePath)
-	{
-		ofstream traceLogger(m_traceLogFilePath.value().generic_string(), ios::app);
-		traceLogger << "Sending: " << jsonString << endl;
-	}
+		traceLogFileStream() << "{\"Sending\": " << jsonString << "}," << endl;
 
 	writeBytes(fmt::format("Content-Length: {}\r\n\r\n", jsonString.size()));
 	writeBytes(jsonString);

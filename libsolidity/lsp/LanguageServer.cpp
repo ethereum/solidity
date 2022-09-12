@@ -189,11 +189,11 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 	if (auto traceLogFileNode = _settings["trace-log-file"])
 	{
 		if (traceLogFileNode.isString())
-			m_client.setTraceLogFile(boost::filesystem::path(_settings["trace-log-file"].asString()));
-		if (traceLogFileNode.isNull())
+			m_client.setTraceLogFile(boost::filesystem::path(traceLogFileNode.asString()));
+		else if (traceLogFileNode.isNull())
 			m_client.setTraceLogFile(nullopt);
 		else
-			lspAssert(false, ErrorCode::InvalidParams, "Invalid trace-log-file value. Must be a path to a file.");
+			lspAssert(false, ErrorCode::InvalidParams, "Invalid trace-log-file value. Must be a path to a file. "s + std::to_string(traceLogFileNode.type()));
 	}
 
 	m_settingsObject = _settings;

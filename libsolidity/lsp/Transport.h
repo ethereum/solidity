@@ -109,6 +109,8 @@ public:
 	/// to be written to if trace value is set to verbose.
 	void setTraceLogFile(std::optional<boost::filesystem::path> _pathToLogfile);
 
+	std::ofstream traceLogFileStream() const;
+
 private:
 	TraceValue m_logTrace = TraceValue::Off;
 	std::optional<boost::filesystem::path> m_traceLogFilePath;

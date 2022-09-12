@@ -913,6 +913,8 @@ void CommandLineInterface::handleAst()
 void CommandLineInterface::serveLSP()
 {
 	lsp::StdioTransport transport;
+	transport.setTraceLogFile(m_options.languageServer.traceLogFile);
+
 	if (!lsp::LanguageServer{transport}.run())
 		solThrow(CommandLineExecutionError, "LSP terminated abnormally.");
 }

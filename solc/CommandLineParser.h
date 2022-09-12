@@ -229,6 +229,11 @@ struct CommandLineOptions
 
 	struct
 	{
+		std::optional<boost::filesystem::path> traceLogFile = std::nullopt;
+	} languageServer;
+
+	struct
+	{
 		bool initialize = false;
 		ModelCheckerSettings settings;
 	} modelChecker;

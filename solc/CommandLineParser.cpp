@@ -61,6 +61,7 @@ static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strLSP = "lsp";
+static string const g_strLSPTrace = "lsp-trace";
 static string const g_strMachine = "machine";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
@@ -649,6 +650,16 @@ General Information)").c_str(),
 	;
 	desc.add(alternativeInputModes);
 
+	po::options_description lspModeOptions("LSP Mode Options");
+	lspModeOptions.add_options()
+		(
+			g_strLSPTrace.c_str(),
+			po::value<string>()->value_name(""),
+			"Enables trace I/O logging to a given file."
+		)
+	;
+	desc.add(lspModeOptions);
+
 	po::options_description assemblyModeOptions("Assembly Mode Options");
 	assemblyModeOptions.add_options()
 		(
@@ -942,7 +953,12 @@ void CommandLineParser::processArgs()
 		);
 
 	if (m_options.input.mode == InputMode::LanguageServer)
+	{
+		if (m_args.count("lsp-trace"))
+			m_options.languageServer.traceLogFile = boost::filesystem::path(m_args.at("lsp-trace").as<string>());
+
 		return;
+	}
 
 	checkMutuallyExclusive({g_strColor, g_strNoColor});
 
