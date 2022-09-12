@@ -73,6 +73,8 @@ set(libsolidity_sources
     libsolidity/Assembly.cpp
     libsolidity/ASTJSONTest.cpp
     libsolidity/ASTJSONTest.h
+    libsolidity/ASTJSONPropertyTest.cpp
+    libsolidity/ASTJSONPropertyTest.h
     libsolidity/ErrorCheck.cpp
     libsolidity/ErrorCheck.h
     libsolidity/GasCosts.cpp
