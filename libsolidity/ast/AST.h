@@ -595,6 +595,7 @@ public:
 	):
 		ASTNode(_id, _location), m_path(std::move(_path)), m_pathLocations(std::move(_pathLocations))
 	{
+		solAssert(!m_pathLocations.empty());
 		solAssert(m_pathLocations.size() == m_path.size());
 	}
 

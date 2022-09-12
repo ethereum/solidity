@@ -548,18 +548,23 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 }
 
 
-ASTNode const* LanguageServer::astNodeAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
+tuple<ASTNode const*, int> LanguageServer::astNodeAndOffsetAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos)
 {
 	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
-		return nullptr;
+		return {nullptr, -1};
 
 	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
-		return nullptr;
+		return {nullptr, -1};
 
 	if (optional<int> sourcePos =
 		m_compilerStack.charStream(_sourceUnitName).translateLineColumnToPosition(_filePos))
-		return locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName));
+		return {locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName)), *sourcePos};
 	else
-		return nullptr;
+		return {nullptr, -1};
+}
+
+ASTNode const* LanguageServer::astNodeAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
+{
+	return get<0>(astNodeAndOffsetAtSourceLocation(_sourceUnitName, _filePos));
 }
 

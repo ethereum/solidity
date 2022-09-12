@@ -33,11 +33,11 @@ void References::operator()(MessageID _id, Json::Value const& _args)
 {
 	auto const [sourceUnitName, lineColumn] = extractSourceUnitNameAndLineColumn(_args);
 
-	ASTNode const* sourceNode = m_server.astNodeAtSourceLocation(sourceUnitName, lineColumn);
+	auto const [sourceNode, sourceOffset] = m_server.astNodeAndOffsetAtSourceLocation(sourceUnitName, lineColumn);
 	SourceUnit const& sourceUnit = m_server.ast(sourceUnitName);
 
 	Json::Value jsonReply = Json::arrayValue;
-	for (auto const& reference: ReferenceCollector::collect(sourceNode, sourceUnit))
+	for (auto const& reference: ReferenceCollector::collect(sourceNode, sourceOffset, sourceUnit))
 		jsonReply.append(toJson(get<SourceLocation>(reference)));
 
 	client().reply(_id, jsonReply);

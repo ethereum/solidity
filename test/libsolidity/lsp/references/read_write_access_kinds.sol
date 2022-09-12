@@ -30,54 +30,24 @@ contract C
 //     "position": @OutputWrite
 // }
 // <- [
-//     {
-//         "kind": 3,
-//         "range": @OutputDef
-//     },
-//     {
-//         "kind": 3,
-//         "range": @OutputWrite1
-//     },
-//     {
-//         "kind": 3,
-//         "range": @OutputWrite2
-//     },
-//     {
-//         "kind": 2,
-//         "range": @OutputRead1
-//     },
-//     {
-//         "kind": 3,
-//         "range": @OutputWrite3
-//     },
-//     {
-//         "kind": 2,
-//         "range": @OutputRead2
-//     }
+//     { "kind": 3, "range": @OutputDef },
+//     { "kind": 3, "range": @OutputWrite1 },
+//     { "kind": 3, "range": @OutputWrite2 },
+//     { "kind": 2, "range": @OutputRead1 },
+//     { "kind": 3, "range": @OutputWrite3 },
+//     { "kind": 2, "range": @OutputRead2 }
 // ]
 // -> textDocument/documentHighlight {
 //     "position": @GreenWrite
 // }
 // <- [
-//     {
-//         "kind": 3,
-//         "range": @OutputGreenWrite1
-//     },
-//     {
-//         "kind": 2,
-//         "range": @OutputGreenRead1
-//     }
+//     { "kind": 3, "range": @OutputGreenWrite1 },
+//     { "kind": 2, "range": @OutputGreenRead1 }
 // ]
 // -> textDocument/documentHighlight {
 //     "position": @GreenUse
 // }
 // <- [
-//     {
-//         "kind": 3,
-//         "range": @OutputGreenWrite1
-//     },
-//     {
-//         "kind": 2,
-//         "range": @OutputGreenRead1
-//     }
+//     { "kind": 3, "range": @OutputGreenWrite1 },
+//     { "kind": 2, "range": @OutputGreenRead1 }
 // ]

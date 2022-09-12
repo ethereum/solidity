@@ -23,6 +23,9 @@
 namespace solidity::lsp
 {
 
+/**
+ * See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentHighlightKind
+ */
 enum class DocumentHighlightKind
 {
 	Unspecified = 0,    //!< could be for example a highlight found in a comment
@@ -31,24 +34,41 @@ enum class DocumentHighlightKind
 	Write = 3,          //!< write access to a variable
 };
 
-// Represents a symbol / AST node that is to be highlighted, with some context associated.
+/**
+ * Represents a symbol / AST node that is to be highlighted, with some context associated.
+ */
 using Reference = std::tuple<langutil::SourceLocation, DocumentHighlightKind>;
 
+/**
+ * ReferenceCollector can be used to collect all source locations and their usage
+ * of a given symbol in the AST tree.
+ */
 class ReferenceCollector: public frontend::ASTConstVisitor
 {
-public:
-	ReferenceCollector(frontend::Declaration const& _declaration, std::string const& _sourceIdentifierName);
+private:
+	ReferenceCollector(frontend::Declaration const& _declaration, std::string const& _sourceIdentifierName = "");
 
+	/// Collects all occurrences of a given identifier matching the same declaration.
+	/// Just passing the AST node and infer the name from there is not enough as they might have been aliased.
+	///
+	/// @param _declaration the declaration to match against for the symbols to collect
+	/// @param _sourceOffset byte offset into the respective file reflecting the exact location of the cursor
+	/// @param _astSearchRoot the AST base root node to start the recursive traversal to collect the references
+	/// @param _sourceIdentifierName the symbolic name that must match, which is explicitly given as it might have been altered due to aliases.
+	///
+	/// @returns a vector of Reference objects that contain the source location of each match as well as their
+	/// semantic use (e.g. read access or write access).
 	static std::vector<Reference> collect(
 		frontend::Declaration const* _declaration,
-		frontend::ASTNode const& _ast,
+		frontend::ASTNode const& _astSearchRoot,
 		std::string const& _sourceIdentifierName
 	);
 
-	static std::vector<Reference> collect(frontend::ASTNode const* _sourceNode, frontend::SourceUnit const& _sourceUnit);
+public:
+	/// Collects all references (symbols with the same matching declaration as @p _sourceNode) in the given source unit.
+	static std::vector<Reference> collect(frontend::ASTNode const* _sourceNode, int _sourceOffset, frontend::SourceUnit const& _sourceUnit);
 
 	bool visit(frontend::ImportDirective const& _import) override;
-	void endVisit(frontend::ImportDirective const& _import) override;
 	void endVisit(frontend::Identifier const& _identifier) override;
 	void endVisit(frontend::IdentifierPath  const& _identifierPath) override;
 	void endVisit(frontend::MemberAccess const& _memberAccess) override;
@@ -57,13 +77,10 @@ public:
 	bool visitNode(frontend::ASTNode const& _node) override;
 
 private:
-	bool tryAddReference(frontend::Declaration const* _declaration, solidity::langutil::SourceLocation const& _location);
-
-private:
 	frontend::Declaration const& m_declaration;
 	std::string const& m_sourceIdentifierName;
-	std::vector<Reference> m_resultingReferences;
+	std::vector<Reference> m_collectedReferences;
 	DocumentHighlightKind m_kind = DocumentHighlightKind::Read;
 };
 
-} // end namespace
+}

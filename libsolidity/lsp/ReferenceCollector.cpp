@@ -23,6 +23,8 @@
 
 #include <libsolutil/Common.h>
 
+#include <typeinfo>
+
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 using namespace std::string_literals;
@@ -31,159 +33,133 @@ using namespace std;
 namespace solidity::lsp
 {
 
-namespace
-{
-
-vector<Declaration const*> allAnnotatedDeclarations(Identifier const* _identifier)
-{
-	vector<Declaration const*> output;
-	output.push_back(_identifier->annotation().referencedDeclaration);
-	output += _identifier->annotation().candidateDeclarations;
-	return output;
-}
-
-}
-
 ReferenceCollector::ReferenceCollector(
 	Declaration const& _declaration,
-	std::string const& _sourceIdentifierName
+	string const& _sourceIdentifierName
 ):
 	m_declaration{_declaration},
 	m_sourceIdentifierName{_sourceIdentifierName.empty() ? _declaration.name() : _sourceIdentifierName}
 {
 }
 
-std::vector<Reference> ReferenceCollector::collect(
+vector<Reference> ReferenceCollector::collect(
 	Declaration const* _declaration,
-	ASTNode const& _ast,
-	std::string const& _sourceIdentifierName
+	ASTNode const& _astSearchRoot,
+	string const& _sourceIdentifierName
 )
 {
 	if (!_declaration)
 		return {};
 
 	ReferenceCollector collector(*_declaration, _sourceIdentifierName);
-	_ast.accept(collector);
-	return std::move(collector.m_resultingReferences);
+	_astSearchRoot.accept(collector);
+	return std::move(collector.m_collectedReferences);
 }
 
-std::vector<Reference> ReferenceCollector::collect(
+vector<Reference> ReferenceCollector::collect(
 	ASTNode const* _sourceNode,
+	int _sourceOffset,
 	SourceUnit const& _sourceUnit
 )
 {
 	if (!_sourceNode)
 		return {};
 
-	auto output = vector<Reference>{};
+	auto references = vector<Reference>{};
 
 	if (auto const* identifier = dynamic_cast<Identifier const*>(_sourceNode))
-	{
-		for (auto const* declaration: allAnnotatedDeclarations(identifier))
-			output += collect(declaration, _sourceUnit, identifier->name());
-	}
+		references += collect(identifier->annotation().referencedDeclaration, _sourceUnit, identifier->name());
 	else if (auto const* identifierPath = dynamic_cast<IdentifierPath const*>(_sourceNode))
 	{
 		solAssert(identifierPath->path().size() >= 1, "");
-		output += collect(identifierPath->annotation().referencedDeclaration, _sourceUnit, identifierPath->path().back());
+		for (size_t i = 0; i < identifierPath->pathLocations().size(); ++i)
+		{
+			SourceLocation const location = identifierPath->pathLocations()[i];
+			if (location.containsOffset(_sourceOffset))
+			{
+				Declaration const* declaration = identifierPath->annotation().pathDeclarations.at(i);
+				ASTString const& name = identifierPath->path().at(i);
+				references += collect(declaration, _sourceUnit, name);
+				break;
+			}
+		}
 	}
 	else if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(_sourceNode))
-		output += collect(memberAccess->annotation().referencedDeclaration, _sourceUnit, memberAccess->memberName());
+		references += collect(memberAccess->annotation().referencedDeclaration, _sourceUnit, memberAccess->memberName());
 	else if (auto const* declaration = dynamic_cast<Declaration const*>(_sourceNode))
-		output += collect(declaration, _sourceUnit, declaration->name());
+		references += collect(declaration, _sourceUnit, declaration->name());
 	else
-		lspAssert(false, ErrorCode::InternalError, "Unhandled AST node "s + typeid(*_sourceNode).name());
+		lspRequire(false, ErrorCode::InternalError, "Unhandled AST node "s + typeid(*_sourceNode).name());
 
-	return output;
+	return references;
 }
 
 bool ReferenceCollector::visit(ImportDirective const& _import)
 {
-	if (_import.name() == m_sourceIdentifierName)
-		return true;
-	return false;
-}
-
-void ReferenceCollector::endVisit(ImportDirective const& _import)
-{
-	for (auto const& symbolAlias: _import.symbolAliases())
+	for (ImportDirective::SymbolAlias const& symbolAlias: _import.symbolAliases())
 	{
 		if (
-			m_sourceIdentifierName == *symbolAlias.alias &&
-			symbolAlias.symbol &&
-			symbolAlias.symbol->annotation().referencedDeclaration == &m_declaration
+			symbolAlias.alias && *symbolAlias.alias == m_sourceIdentifierName &&
+			symbolAlias.symbol && symbolAlias.symbol->annotation().referencedDeclaration == &m_declaration
 		)
-		{
-			m_resultingReferences.emplace_back(symbolAlias.location, DocumentHighlightKind::Read);
-			break;
-		}
-		else if (m_sourceIdentifierName == *symbolAlias.alias)
-		{
-			m_resultingReferences.emplace_back(symbolAlias.location, DocumentHighlightKind::Text);
-			break;
-		}
+			m_collectedReferences.emplace_back(symbolAlias.location, DocumentHighlightKind::Read);
 	}
-}
-
-bool ReferenceCollector::tryAddReference(Declaration const* _declaration, SourceLocation const& _location)
-{
-	if (&m_declaration != _declaration)
-		return false;
-
-	m_resultingReferences.emplace_back(_location, m_kind);
-	return true;
+	return false;
 }
 
 void ReferenceCollector::endVisit(Identifier const& _identifier)
 {
-	if (auto const* declaration = _identifier.annotation().referencedDeclaration)
-		tryAddReference(declaration, _identifier.location());
-
-	for (auto const* declaration: _identifier.annotation().candidateDeclarations + _identifier.annotation().overloadedDeclarations)
-		tryAddReference(declaration, _identifier.location());
+	if (Declaration const* declaration = _identifier.annotation().referencedDeclaration; declaration == &m_declaration)
+		m_collectedReferences.emplace_back(_identifier.location(), m_kind);
 }
-
 
 void ReferenceCollector::endVisit(IdentifierPath const& _identifierPath)
 {
-	tryAddReference(_identifierPath.annotation().referencedDeclaration, _identifierPath.location());
+	for (size_t i = 0; i < _identifierPath.path().size(); ++i)
+	{
+		ASTString const& name = _identifierPath.path()[i];
+		Declaration const* declaration = i < _identifierPath.annotation().pathDeclarations.size() ?
+			_identifierPath.annotation().pathDeclarations.at(i) :
+			nullptr;
+
+		if (declaration == &m_declaration && name == m_sourceIdentifierName)
+			m_collectedReferences.emplace_back(_identifierPath.pathLocations().at(i), m_kind);
+	}
 }
 
 void ReferenceCollector::endVisit(MemberAccess const& _memberAccess)
 {
 	if (_memberAccess.annotation().referencedDeclaration == &m_declaration)
-		m_resultingReferences.emplace_back(_memberAccess.location(), m_kind);
+		m_collectedReferences.emplace_back(_memberAccess.location(), m_kind);
 }
 
-bool ReferenceCollector::visit(Assignment const& _node)
+bool ReferenceCollector::visit(Assignment const& _assignment)
 {
 	auto const restoreKind = ScopeGuard{[this, savedKind=m_kind]() { m_kind = savedKind; }};
 
 	m_kind = DocumentHighlightKind::Write;
-	_node.leftHandSide().accept(*this);
+	_assignment.leftHandSide().accept(*this);
 
 	m_kind = DocumentHighlightKind::Read;
-	_node.rightHandSide().accept(*this);
+	_assignment.rightHandSide().accept(*this);
 
 	return false;
 }
 
-bool ReferenceCollector::visit(VariableDeclaration const& _node)
+bool ReferenceCollector::visit(VariableDeclaration const& _variableDeclaration)
 {
-	if (&_node == &m_declaration)
-		m_resultingReferences.emplace_back(_node.nameLocation(), DocumentHighlightKind::Write);
-
+	if (&_variableDeclaration == &m_declaration && _variableDeclaration.name() == m_sourceIdentifierName)
+		m_collectedReferences.emplace_back(_variableDeclaration.nameLocation(), DocumentHighlightKind::Write);
 	return true;
 }
 
-bool ReferenceCollector::visitNode(ASTNode const& _node)
+bool ReferenceCollector::visitNode(ASTNode const& _genericNode)
 {
-	if (&_node == &m_declaration)
+	if (&_genericNode == &m_declaration)
 	{
-		if (auto const* declaration = dynamic_cast<Declaration const*>(&_node))
-			m_resultingReferences.emplace_back(declaration->nameLocation(), m_kind);
-		else
-			m_resultingReferences.emplace_back(_node.location(), DocumentHighlightKind::Read);
+		Declaration const* declaration = dynamic_cast<Declaration const*>(&_genericNode);
+		if (declaration->name() == m_sourceIdentifierName)
+			m_collectedReferences.emplace_back(declaration->nameLocation(), m_kind);
 	}
 
 	return true;

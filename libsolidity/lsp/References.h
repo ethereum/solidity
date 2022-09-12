@@ -20,6 +20,9 @@
 namespace solidity::lsp
 {
 
+/**
+ * Implements JSON RPC for `textDocument/references`.
+ */
 class References: public HandlerBase
 {
 public:
