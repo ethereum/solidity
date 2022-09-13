@@ -461,6 +461,9 @@ void ExpressionEvaluator::runExternalCall(evmasm::Instruction _instruction)
 	InterpreterState tmpState;
 	tmpState.calldata = m_state.readMemory(memInOffset, memInSize);
 	tmpState.callvalue = callvalue;
+	tmpState.numInstance = m_state.numInstance + 1;
+
+	yulAssert(tmpState.numInstance < 1024, "Detected more than 1024 recursive calls, aborting...");
 
 	// Create new interpreter for the called contract
 	unique_ptr<Interpreter> newInterpreter = makeInterpreterNew(tmpState, tmpScope);

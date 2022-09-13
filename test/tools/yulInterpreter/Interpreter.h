@@ -107,6 +107,9 @@ struct InterpreterState
 	size_t maxExprNesting = 0;
 	ControlFlowState controlFlowState = ControlFlowState::Default;
 
+	/// Number of the current state instance, used for recursion protection
+	size_t numInstance = 0;
+
 	/// Prints execution trace and non-zero storage to @param _out.
 	/// Flag @param _disableMemoryTrace, if set, does not produce a memory dump. This
 	/// avoids false positives reports by the fuzzer when certain optimizer steps are
