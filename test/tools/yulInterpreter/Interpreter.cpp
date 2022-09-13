@@ -500,5 +500,6 @@ void ExpressionEvaluator::runExternalCall(evmasm::Instruction _instruction)
 			0,
 			memOutSize.convert_to<size_t>()
 		);
+		m_state.returndata = newInterpreter->returnData();
 	}
 }

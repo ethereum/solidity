@@ -329,13 +329,24 @@ u256 EVMInstructionInterpreter::eval(
 		accessMemory(arg[3], arg[4]);
 		accessMemory(arg[5], arg[6]);
 		logTrace(_instruction, arg);
-		return arg[0] & 1;
+		// Randomly fail based on the called address if it isn't a call to self.
+		// Used for fuzzing.
+		return (
+			(arg[0] > 0) &&
+			(arg[1] == util::h160::Arith(m_state.address) || (arg[1] & 1))
+		) ? 1 : 0;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
 		accessMemory(arg[2], arg[3]);
 		accessMemory(arg[4], arg[5]);
 		logTrace(_instruction, arg);
-		return 0;
+
+		// Randomly fail based on the called address if it isn't a call to self.
+		// Used for fuzzing.
+		return (
+			(arg[0] > 0) &&
+			(arg[1] == util::h160::Arith(m_state.address) || (arg[1] & 1))
+		) ? 1 : 0;
 	case Instruction::RETURN:
 	{
 		m_state.returndata = {};

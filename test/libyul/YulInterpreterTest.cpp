@@ -51,6 +51,7 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename):
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
+	m_simulateExternalCallsToSelf = m_reader.boolSetting("simulateExternalCall", false);
 }
 
 TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -98,8 +99,8 @@ string YulInterpreterTest::interpret()
 			state,
 			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}),
 			*m_ast,
-			/*disableExternalCalls=*/true,
-			/*disableMemoryTracing=*/false
+			/*disableExternalCalls=*/ !m_simulateExternalCallsToSelf,
+			/*disableMemoryTracing=*/ false
 		);
 	}
 	catch (InterpreterTerminatedGeneric const&)
