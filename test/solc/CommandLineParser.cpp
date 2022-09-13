@@ -436,19 +436,25 @@ BOOST_AUTO_TEST_CASE(default_optimiser_sequence)
 BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
 {
 	vector<string> validSequenceInputs {
-		":",                        // Empty optimization sequence and empty cleanup sequence
-		":fDn",                     // Empty optimization sequence and specified cleanup sequence
-		"dhfoDgvulfnTUtnIf:",       // Specified optimization sequence and empty cleanup sequence
-		"dhfoDgvulfnTUtnIf:fDn",    // Specified optimization sequence and cleanup sequence
-		"dhfo[Dgvulfn]TUtnIf:f[D]n" // Specified and nested optimization and cleanup sequence
+		":",                         // Empty optimization sequence and empty cleanup sequence
+		":fDn",                      // Empty optimization sequence and specified cleanup sequence
+		"dhfoDgvulfnTUtnIf:",        // Specified optimization sequence and empty cleanup sequence
+		"dhfoDgvulfnTUtnIf:fDn",     // Specified optimization sequence and cleanup sequence
+		"dhfo[Dgvulfn]TUtnIf:f[D]n", // Specified and nested optimization and cleanup sequence
+		"dhfoDgvulfnTUtnIf",         // Specified optimizer sequence only
+		"iDu",                       // Short optimizer sequence
+		"a[[a][[aa]aa[aa]][]]aaa[aa[aa[aa]]]a[a][a][a]a[a]" // Nested brackets
 	};
 
-	vector<tuple<string, string>> expectedParsedSequences {
+	vector<tuple<string, string>> const expectedParsedSequences {
 		{"", ""},
 		{"", "fDn"},
 		{"dhfoDgvulfnTUtnIf", ""},
 		{"dhfoDgvulfnTUtnIf", "fDn"},
-		{"dhfo[Dgvulfn]TUtnIf", "f[D]n"}
+		{"dhfo[Dgvulfn]TUtnIf", "f[D]n"},
+		{"dhfoDgvulfnTUtnIf", OptimiserSettings::DefaultYulOptimiserCleanupSteps},
+		{"iDu", OptimiserSettings::DefaultYulOptimiserCleanupSteps},
+		{"a[[a][[aa]aa[aa]][]]aaa[aa[aa[aa]]]a[a][a][a]a[a]", OptimiserSettings::DefaultYulOptimiserCleanupSteps}
 	};
 
 	BOOST_CHECK_EQUAL(validSequenceInputs.size(), expectedParsedSequences.size());
@@ -462,20 +468,46 @@ BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(invalid_nested_cleanup_sequence_delimiter)
+BOOST_AUTO_TEST_CASE(invalid_optimiser_sequences)
 {
-	vector<string> commandLine {"solc", "contract.sol", "--optimize", "--yul-optimizations=dhfoDgvulfnTUt[nIf:fd]N"};
-	string expectedMessage = "Invalid optimizer step sequence in --yul-optimizations: Cleanup sequence delimiter cannot be placed inside the brackets";
-	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
-	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
-}
+	vector<string> const invalidSequenceInputs {
+		"abcdefg{hijklmno}pqr[st]uvwxyz", // Invalid abbreviation
+		"[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["
+		"[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["
+		"[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["
+		"[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["
+		"[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[a]"
+		"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+		"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+		"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+		"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+		"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",  // Brackets nested too deep
+		"a]a][",                          // Unbalanced closing bracket
+		"a[a][",                          // Unbalanced opening bracket
+		"dhfoDgvulfnTUt[nIf:fd]N",        // Nested cleanup sequence delimiter
+		"dhfoDgvulfnTU:tnIf:fdN"          // Too many cleanup sequence delimiters
+	};
 
-BOOST_AUTO_TEST_CASE(too_many_cleanup_sequence_delimiters)
-{
-	vector<string> commandLine {"solc", "contract.sol", "--optimize", "--yul-optimizations=dhfoDgvulfnTU:tnIf:fdN"};
-	string expectedMessage = "Invalid optimizer step sequence in --yul-optimizations: Too many cleanup sequence delimiters";
-	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
-	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+	vector<string> const expectedErrorMessages {
+		"'b' is not a valid step abbreviation",
+		"Brackets nested too deep",
+		"Unbalanced brackets",
+		"Unbalanced brackets",
+		"Cleanup sequence delimiter cannot be placed inside the brackets",
+		"Too many cleanup sequence delimiters"
+	};
+
+	BOOST_CHECK_EQUAL(invalidSequenceInputs.size(), expectedErrorMessages.size());
+
+	string const baseExpectedErrorMessage = "Invalid optimizer step sequence in --yul-optimizations: ";
+
+	for (size_t i = 0; i < invalidSequenceInputs.size(); ++i)
+	{
+		vector<string> const commandLineOptions = {"solc", "contract.sol", "--optimize", "--yul-optimizations=" + invalidSequenceInputs[i]};
+		string const expectedErrorMessage = baseExpectedErrorMessage + expectedErrorMessages[i];
+		auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedErrorMessage; };
+		BOOST_CHECK_EXCEPTION(parseCommandLine(commandLineOptions), CommandLineValidationError, hasCorrectMessage);
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
