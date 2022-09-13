@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Too many cleanup sequence delimiters",
+            "message": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Too many cleanup sequence delimiters",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

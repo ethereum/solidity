@@ -51,7 +51,7 @@ public:
 
 	/// Special characters that do not represent optimiser steps but are allowed in abbreviation sequences.
 	/// Some of them (like whitespace) are ignored, others (like brackets) are a part of the syntax.
-	static constexpr char NonStepAbbreviations[] = " \n[]";
+	static constexpr char NonStepAbbreviations[] = " \n[]:";
 
 	enum class Debug
 	{
@@ -68,6 +68,7 @@ public:
 		Object& _object,
 		bool _optimizeStackAllocation,
 		std::string_view _optimisationSequence,
+		std::string_view _optimisationCleanupSequence,
 		std::optional<size_t> _expectedExecutionsPerDeployment,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);

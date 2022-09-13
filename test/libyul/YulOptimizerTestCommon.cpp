@@ -339,6 +339,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				*m_object,
 				true,
 				frontend::OptimiserSettings::DefaultYulOptimiserSteps,
+				frontend::OptimiserSettings::DefaultYulOptimiserCleanupSteps,
 				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 			);
 		}},

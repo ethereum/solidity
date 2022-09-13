@@ -93,6 +93,7 @@ void OptimiserSuite::run(
 	Object& _object,
 	bool _optimizeStackAllocation,
 	string_view _optimisationSequence,
+	string_view _optimisationCleanupSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers
 )
@@ -139,7 +140,13 @@ void OptimiserSuite::run(
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
 		);
-	suite.runSequence("fDnTOc g", ast);
+
+	// Run the user-supplied clean up sequence
+	suite.runSequence(_optimisationCleanupSequence, ast);
+	// Hard-coded FunctionGrouper step is used to bring the AST into a canonical form required by the StackCompressor
+	// and StackLimitEvader. This is hard-coded as the last step, as some previously executed steps may break the
+	// aforementioned form, thus causing the StackCompressor/StackLimitEvader to throw.
+	suite.runSequence("g", ast);
 
 	if (evmDialect)
 	{
@@ -296,6 +303,7 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 {
 	int8_t nestingLevel = 0;
+	int8_t colonDelimiters = 0;
 	for (char abbreviation: _stepAbbreviations)
 		switch (abbreviation)
 		{
@@ -309,6 +317,11 @@ void OptimiserSuite::validateSequence(string_view _stepAbbreviations)
 		case ']':
 			nestingLevel--;
 			assertThrow(nestingLevel >= 0, OptimizerException, "Unbalanced brackets");
+			break;
+		case ':':
+			++colonDelimiters;
+			assertThrow(nestingLevel == 0, OptimizerException, "Cleanup sequence delimiter cannot be placed inside the brackets");
+			assertThrow(colonDelimiters <= 1, OptimizerException, "Too many cleanup sequence delimiters");
 			break;
 		default:
 		{

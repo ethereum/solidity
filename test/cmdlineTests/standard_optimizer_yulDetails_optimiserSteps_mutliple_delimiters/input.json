@@ -1,0 +1,16 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_mutliple_delimiters/in.sol"]}
+    },
+    "settings": {
+        "optimizer": {
+            "details": {
+                "yul": true,
+                "yulDetails": {
+                    "optimizerSteps": "dhfoDgvu:lfnTUtnIf\n[    xarrscLM\n]\njmuljulj:ul VcTOcul jmul"
+                }
+            }
+        }
+    }
+}

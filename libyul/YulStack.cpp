@@ -209,6 +209,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		_object,
 		m_optimiserSettings.optimizeStackAllocation,
 		m_optimiserSettings.yulOptimiserSteps,
+		m_optimiserSettings.yulOptimiserCleanupSteps,
 		_isCreation ? nullopt : make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
 	);

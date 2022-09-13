@@ -266,7 +266,16 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 		settings.expectedExecutionsPerDeployment = optimizer.expectedExecutionsPerDeployment.value();
 
 	if (optimizer.yulSteps.has_value())
-		settings.yulOptimiserSteps = optimizer.yulSteps.value();
+	{
+		string const fullSequence = optimizer.yulSteps.value();
+		auto const delimiterPos = fullSequence.find(":");
+		settings.yulOptimiserSteps = fullSequence.substr(0, delimiterPos);
+
+		if (delimiterPos != string::npos)
+			settings.yulOptimiserCleanupSteps = fullSequence.substr(delimiterPos + 1);
+		else
+			solAssert(settings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
+	}
 
 	return settings;
 }

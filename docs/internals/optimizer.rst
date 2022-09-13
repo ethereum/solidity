@@ -281,60 +281,85 @@ The following transformation steps are the main components:
 - Redundant Assign Eliminator
 - Full Inliner
 
+.. _optimizer-steps:
+
 Optimizer Steps
 ---------------
 
 This is a list of all steps the Yul-based optimizer sorted alphabetically. You can find more information
 on the individual steps and their sequence below.
 
-- :ref:`block-flattener`.
-- :ref:`circular-reference-pruner`.
-- :ref:`common-subexpression-eliminator`.
-- :ref:`conditional-simplifier`.
-- :ref:`conditional-unsimplifier`.
-- :ref:`control-flow-simplifier`.
-- :ref:`dead-code-eliminator`.
-- :ref:`equal-store-eliminator`.
-- :ref:`equivalent-function-combiner`.
-- :ref:`expression-joiner`.
-- :ref:`expression-simplifier`.
-- :ref:`expression-splitter`.
-- :ref:`for-loop-condition-into-body`.
-- :ref:`for-loop-condition-out-of-body`.
-- :ref:`for-loop-init-rewriter`.
-- :ref:`expression-inliner`.
-- :ref:`full-inliner`.
-- :ref:`function-grouper`.
-- :ref:`function-hoister`.
-- :ref:`function-specializer`.
-- :ref:`literal-rematerialiser`.
-- :ref:`load-resolver`.
-- :ref:`loop-invariant-code-motion`.
-- :ref:`redundant-assign-eliminator`.
-- :ref:`reasoning-based-simplifier`.
-- :ref:`rematerialiser`.
-- :ref:`SSA-reverser`.
-- :ref:`SSA-transform`.
-- :ref:`structural-simplifier`.
-- :ref:`unused-function-parameter-pruner`.
-- :ref:`unused-pruner`.
-- :ref:`var-decl-initializer`.
+============ ===============================
+Abbreviation Full name
+============ ===============================
+``f``        :ref:`block-flattener`
+``l``        :ref:`circular-reference-pruner`
+``c``        :ref:`common-subexpression-eliminator`
+``C``        :ref:`conditional-simplifier`
+``U``        :ref:`conditional-unsimplifier`
+``n``        :ref:`control-flow-simplifier`
+``D``        :ref:`dead-code-eliminator`
+``E``        :ref:`equal-store-eliminator`
+``v``        :ref:`equivalent-function-combiner`
+``e``        :ref:`expression-inliner`
+``j``        :ref:`expression-joiner`
+``s``        :ref:`expression-simplifier`
+``x``        :ref:`expression-splitter`
+``I``        :ref:`for-loop-condition-into-body`
+``O``        :ref:`for-loop-condition-out-of-body`
+``o``        :ref:`for-loop-init-rewriter`
+``i``        :ref:`full-inliner`
+``g``        :ref:`function-grouper`
+``h``        :ref:`function-hoister`
+``F``        :ref:`function-specializer`
+``T``        :ref:`literal-rematerialiser`
+``L``        :ref:`load-resolver`
+``M``        :ref:`loop-invariant-code-motion`
+``r``        :ref:`redundant-assign-eliminator`
+``R``        :ref:`reasoning-based-simplifier` - highly experimental
+``m``        :ref:`rematerialiser`
+``V``        :ref:`SSA-reverser`
+``a``        :ref:`SSA-transform`
+``t``        :ref:`structural-simplifier`
+``p``        :ref:`unused-function-parameter-pruner`
+``u``        :ref:`unused-pruner`
+``d``        :ref:`var-decl-initializer`
+============ ===============================
+
+Some steps depend on properties ensured by ``BlockFlattener``, ``FunctionGrouper``, ``ForLoopInitRewriter``.
+For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
+
+The ReasoningBasedSimplifier is an optimizer step that is currently not enabled
+in the default set of steps. It uses an SMT solver to simplify arithmetic expressions
+and boolean conditions. It has not received thorough testing or validation yet and can produce
+non-reproducible results, so please use with care!
 
 Selecting Optimizations
 -----------------------
 
-By default the optimizer applies its predefined sequence of optimization steps to
-the generated assembly. You can override this sequence and supply your own using
-the ``--yul-optimizations`` option:
+By default the optimizer applies its predefined sequence of optimization steps to the generated assembly.
+You can override this sequence and supply your own using the ``--yul-optimizations`` option:
 
 .. code-block:: bash
 
-    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul'
+    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul:fDnTOc'
+
+The order of steps is significant and affects the quality of the output.
+Moreover, applying a step may uncover new optimization opportunities for others that were already applied,
+so repeating steps is often beneficial.
 
 The sequence inside ``[...]`` will be applied multiple times in a loop until the Yul code
 remains unchanged or until the maximum number of rounds (currently 12) has been reached.
+Brackets (``[]``) may be used multiple times in a sequence, but can not be nested.
 
-Available abbreviations are listed in the :ref:`Yul optimizer docs <optimization-step-sequence>`.
+An important thing to note, is that there are some hardcoded steps that are always run before and after the
+user-supplied sequence, or the default sequence if one was not supplied by the user.
+
+The cleanup sequence delimiter ``:`` is optional, and is used to supply a custom cleanup sequence
+in order to replace the default one. If omitted, the optimizer will simply apply the default cleanup
+sequence. In addition, the delimiter may be placed at the beginning of the user-supplied sequence,
+which will result in the optimization sequence being empty, whereas conversely, if placed at the end of
+the sequence, will be treated as an empty cleanup sequence.
 
 Preprocessing
 -------------
