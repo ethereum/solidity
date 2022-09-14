@@ -1,27 +1,27 @@
 type SmallInt is int;
 type BigInt is int;
 
-using {add1 as +} for SmallInt;
-using {add2 as +} for BigInt;
+using {addSmall as +} for SmallInt;
+using {addBig as +} for BigInt;
 
-function add1(SmallInt, SmallInt) pure returns (SmallInt) {
-    return SmallInt.wrap(1);
+function addSmall(SmallInt a, SmallInt b) pure returns (SmallInt) {
+    return SmallInt.wrap(SmallInt.unwrap(a) + SmallInt.unwrap(b));
 }
 
-function add2(BigInt, BigInt) pure returns (BigInt) {
-    return BigInt.wrap(2);
+function addBig(BigInt a, BigInt b) pure returns (BigInt) {
+    return BigInt.wrap(10 * (BigInt.unwrap(a) + BigInt.unwrap(b)));
 }
 
 contract C {
-    function f() public pure returns (SmallInt) {
-        return SmallInt.wrap(0) + SmallInt.wrap(0);
+    function small() public pure returns (SmallInt) {
+        return SmallInt.wrap(1) + SmallInt.wrap(2);
     }
 
-    function g() public pure returns (BigInt) {
-        return BigInt.wrap(0) + BigInt.wrap(0);
+    function big() public pure returns (BigInt) {
+        return BigInt.wrap(3) + BigInt.wrap(4);
     }
 }
 
 // ----
-// f() -> 1
-// g() -> 2
+// small() -> 3
+// big() -> 70

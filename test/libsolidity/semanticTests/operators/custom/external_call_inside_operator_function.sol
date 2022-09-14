@@ -9,8 +9,10 @@ function add(Int, Int) returns (Int) {
 }
 
 contract B {
-    function f() pure external returns (Int) {
-        return Int.wrap(3);
+    Int s;
+    function f() external returns (Int) {
+        s = Int.wrap(3);
+        return s;
     }
 }
 

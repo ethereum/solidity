@@ -1,29 +1,42 @@
 type Int is int128;
 
-function add(Int, Int) pure returns (Int) {
+function addA(Int, Int) pure returns (Int) {
+    return Int.wrap(1);
+}
+
+function addB(Int, Int) pure returns (Int) {
     return Int.wrap(3);
 }
 
-function another_add(Int, Int) pure returns (Int) {
+function addC(Int, Int) pure returns (Int) {
     return Int.wrap(7);
 }
 
-contract B {
-    using {add as +} for Int;
+contract A {
+    using {addA as +} for Int;
 
-    function f() pure public returns (Int) {
+    function testA() pure public returns (Int) {
         return Int.wrap(0) + Int.wrap(0);
     }
 }
 
-contract C is B {
-    using {another_add as +} for Int;
+contract B is A {
+    using {addB as +} for Int;
 
-    function g() pure public returns (Int) {
+    function testB() pure public returns (Int) {
+        return Int.wrap(0) + Int.wrap(0);
+    }
+}
+
+contract C is A, B {
+    using {addC as +} for Int;
+
+    function testC() pure public returns (Int) {
         return Int.wrap(0) + Int.wrap(0);
     }
 }
 
 // ----
-// f() -> 3
-// g() -> 7
+// testA() -> 1
+// testB() -> 3
+// testC() -> 7

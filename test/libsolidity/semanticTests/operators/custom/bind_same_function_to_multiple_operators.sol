@@ -2,20 +2,20 @@ type Int is int32;
 
 using {foo as +, foo as -} for Int;
 
-function foo(Int, Int) pure returns(Int) {
-    return Int.wrap(7);
+function foo(Int a, Int b) pure returns(Int) {
+    return Int.wrap(Int.unwrap(a) + Int.unwrap(b));
 }
 
 contract C {
     function f() pure public returns (Int) {
-        return Int.wrap(0) + Int.wrap(0);
+        return Int.wrap(2) + Int.wrap(3);
     }
 
     function g() pure public returns (Int) {
-        return Int.wrap(0) - Int.wrap(0);
+        return Int.wrap(6) - Int.wrap(1);
     }
 }
 
 // ----
-// f() -> 7
+// f() -> 5
 // g() -> 7
