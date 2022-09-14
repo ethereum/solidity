@@ -219,7 +219,7 @@ do
     then
         IFS=' ' read -ra OUTPUT_ARRAY <<< "${OUTPUT}"
         NSOURCES=$((NSOURCES - 1 + ${#OUTPUT_ARRAY[@]}))
-        testImportExportEquivalence "$solfile" "${OUTPUT_ARRAY[@]}"
+        testImportExportEquivalence "$solfile" "${OUTPUT_ARRAY[*]}"
     elif [ ${SPLITSOURCES_RC} == 1 ]
     then
         testImportExportEquivalence "$solfile" "$solfile"
