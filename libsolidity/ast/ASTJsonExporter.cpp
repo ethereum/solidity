@@ -339,7 +339,7 @@ bool ASTJsonExporter::visit(UsingForDirective const& _node)
 			functionNode["function"] = toJson(*function);
 			if (op.has_value())
 				functionNode["operator"] = string(TokenTraits::toString(*op));
-			functionList.append(move(functionNode));
+			functionList.append(std::move(functionNode));
 		}
 		attributes.emplace_back("functionList", std::move(functionList));
 	}
