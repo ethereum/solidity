@@ -68,6 +68,8 @@ and have different levels of :ref:`visibility<visibility-and-getters>`
 towards other contracts. :ref:`Functions<functions>` accept :ref:`parameters and return variables<function-parameters-return-variables>` to pass parameters
 and values between them.
 
+Unlike languages like JavaScript, Solidity supports `returns` of multiple types, for example `returns (uint256, bool)`.
+
 .. _structure-function-modifiers:
 
 Function Modifiers
