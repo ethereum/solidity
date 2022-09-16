@@ -37,8 +37,6 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace evmc::literals;
 
-using StorageMap = std::map<evmc::bytes32, evmc::storage_value>;
-
 evmc::VM& EVMHost::getVM(string const& _path)
 {
 	static evmc::VM NullVM{nullptr};
@@ -205,6 +203,8 @@ void EVMHost::recordCalls(evmc_message const& _message) noexcept
 		recorded_calls.emplace_back(_message);
 }
 
+// NOTE: this is used for both internal and external calls.
+// External calls are triggered from ExecutionFramework and contain only EVMC_CREATE or EVMC_CALL.
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
 {
 	recordCalls(_message);
@@ -408,6 +408,7 @@ evmc::result EVMHost::precompileSha256(evmc_message const& _message) noexcept
 	));
 
 	evmc::result result({});
+	result.status_code = EVMC_SUCCESS;
 	result.gas_left = _message.gas;
 	result.output_data = hash.data();
 	result.output_size = hash.size();
@@ -485,7 +486,9 @@ evmc::result EVMHost::precompileIdentity(evmc_message const& _message) noexcept
 	// static data so that we do not need a release routine...
 	bytes static data;
 	data = bytes(_message.input_data, _message.input_data + _message.input_size);
+
 	evmc::result result({});
+	result.status_code = EVMC_SUCCESS;
 	result.gas_left = _message.gas;
 	result.output_data = data.data();
 	result.output_size = data.size();

@@ -35,6 +35,7 @@
 namespace solidity::test
 {
 using Address = util::h160;
+using StorageMap = std::map<evmc::bytes32, evmc::storage_value>;
 
 class EVMHost: public evmc::MockedHost
 {
@@ -55,9 +56,10 @@ public:
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm);
 
+	/// Reset entire state (including accounts).
 	void reset();
-	/// Clears EIP-2929 account and storage access indicator
-	void resetWarmAccess();
+
+	/// Start new block.
 	void newBlock()
 	{
 		tx_context.block_number++;
@@ -67,7 +69,7 @@ public:
 	}
 
 	/// @returns contents of storage at @param _addr.
-	std::map<evmc::bytes32, evmc::storage_value> const& get_address_storage(evmc::address const& _addr);
+	StorageMap const& get_address_storage(evmc::address const& _addr);
 
 	bool account_exists(evmc::address const& _addr) const noexcept final
 	{
@@ -94,7 +96,11 @@ public:
 private:
 	evmc::address m_currentAddress = {};
 
+	/// Transfer value between accounts. Checks for sufficient balance.
 	void transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept;
+
+	/// Clears EIP-2929 account and storage access indicator
+	void resetWarmAccess();
 
 	/// Records calls made via @param _message.
 	void recordCalls(evmc_message const& _message) noexcept;
@@ -113,9 +119,9 @@ private:
 	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;
 
 	evmc::VM& m_vm;
-	// EVM version requested by the testing tool
+	/// EVM version requested by the testing tool
 	langutil::EVMVersion m_evmVersion;
-	// EVM version requested from EVMC (matches the above)
+	/// EVM version requested from EVMC (matches the above)
 	evmc_revision m_evmRevision;
 };
 
