@@ -23,5 +23,5 @@ contract ClientReceipt {
 // gas irOptimized: 191881
 // gas legacy: 235167
 // gas legacyOptimized: 180756
-// getAddress() -> 0xf01f7809444bd9a93a854361c6fae3f23d9e23db
-// balance: 0xf01f7809444bd9a93a854361c6fae3f23d9e23db -> 500
+// getAddress() -> 0x137aa4dfc0911524504fcd4d98501f179bc13b4a
+// balance: 0x137aa4dfc0911524504fcd4d98501f179bc13b4a -> 500
