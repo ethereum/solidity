@@ -74,18 +74,18 @@ then
   rm -r "$z3_dir"
 
   # evmone
-  evmone_version="0.8.0"
+  evmone_version="0.9.1"
   evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
-  validate_checksum "$evmone_package" e8efef478822f0ed6d0493e89004181e895893f93963152a2a81589acc3a0828
+  validate_checksum "$evmone_package" 70420a893a9b1036fcb63526b806d97658db8c373bcab1c3e8382594dc8593e4
   tar xzpf "$evmone_package" -C /usr/local
   rm "$evmone_package"
 
   # hera
-  hera_version="0.5.0"
+  hera_version="0.6.0"
   hera_package="hera-${hera_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ewasm/hera/releases/download/v${hera_version}/${hera_package}"
-  validate_checksum "$hera_package" 190050d7ace384ecd79ec1b1f607a9ff40e196b4eec75932958d4814d221d059
+  validate_checksum "$hera_package" 82ee57404862705ab314f7a4d04bf2cf29d71e8d209850d66c125527cd287f37
   tar xzpf "$hera_package" -C /usr/local
   rm "$hera_package"
 fi
