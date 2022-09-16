@@ -10,6 +10,6 @@ contract C {
 }
 // ----
 // f1() ->
-// ~ emit TestA(function): #0x0fdd67305928fcac8d213d1e47bfa6165cd0b87bc27fc3050000000000000000
+// ~ emit TestA(function): #0xc06afe3a8444fc0004668591e8306bfb9968e79ec27fc3050000000000000000
 // f2(uint256): 1 ->
-// ~ emit TestB(function): #0x0fdd67305928fcac8d213d1e47bfa6165cd0b87bbf3724af0000000000000000
+// ~ emit TestB(function): #0xc06afe3a8444fc0004668591e8306bfb9968e79ebf3724af0000000000000000

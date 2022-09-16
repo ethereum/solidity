@@ -6,4 +6,4 @@ contract C {
 }
 // ----
 // f() ->
-// ~ emit Test(function): #0x0fdd67305928fcac8d213d1e47bfa6165cd0b87b26121ff00000000000000000
+// ~ emit Test(function): #0xc06afe3a8444fc0004668591e8306bfb9968e79e26121ff00000000000000000
