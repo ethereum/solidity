@@ -1,7 +1,6 @@
-/* EVMC: Ethereum Client-VM Connector API.
- * Copyright 2018-2019 The EVMC Authors.
- * Licensed under the Apache License, Version 2.0.
- */
+// EVMC: Ethereum Client-VM Connector API.
+// Copyright 2018 The EVMC Authors.
+// Licensed under the Apache License, Version 2.0.
 
 /**
  * EVMC Loader Library
@@ -21,7 +20,10 @@ extern "C" {
 /** The function pointer type for EVMC create functions. */
 typedef struct evmc_vm* (*evmc_create_fn)(void);
 
-/** Error codes for the EVMC loader. */
+/// Error codes for the EVMC loader.
+///
+/// Objects of this type SHOULD be initialized with ::EVMC_LOADER_UNSPECIFIED_ERROR
+/// before passing to the EVMC loader.
 enum evmc_loader_error_code
 {
     /** The loader succeeded. */
@@ -46,7 +48,11 @@ enum evmc_loader_error_code
     EVMC_LOADER_INVALID_OPTION_NAME = 6,
 
     /** The VM option value is invalid. */
-    EVMC_LOADER_INVALID_OPTION_VALUE = 7
+    EVMC_LOADER_INVALID_OPTION_VALUE = 7,
+
+    /// This error value will be never returned by the EVMC loader,
+    /// but can be used by users to init evmc_loader_error_code objects.
+    EVMC_LOADER_UNSPECIFIED_ERROR = -1
 };
 
 /**
