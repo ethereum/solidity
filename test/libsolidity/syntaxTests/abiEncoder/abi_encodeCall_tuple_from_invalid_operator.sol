@@ -19,5 +19,5 @@ contract C {
 // TypeError 9062: (284-299): Expected an inline tuple, not an expression of a tuple type.
 // TypeError 2271: (334-345): Binary operator / not compatible with types tuple() and tuple().
 // TypeError 9062: (334-345): Expected an inline tuple, not an expression of a tuple type.
-// TypeError 4907: (380-383): Unary operator ! cannot be applied to type tuple().
+// TypeError 4907: (380-383): Built-in unary operator ! cannot be applied to type tuple().
 // TypeError 9062: (380-383): Expected an inline tuple, not an expression of a tuple type.

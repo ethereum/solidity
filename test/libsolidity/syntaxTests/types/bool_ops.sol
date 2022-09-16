@@ -39,12 +39,12 @@ contract C {
 // TypeError 2271: (309-314): Binary operator & not compatible with types bool and bool.
 // TypeError 2271: (328-333): Binary operator | not compatible with types bool and bool.
 // TypeError 2271: (347-352): Binary operator ^ not compatible with types bool and bool.
-// TypeError 4907: (366-368): Unary operator ~ cannot be applied to type bool.
-// TypeError 4907: (382-384): Unary operator ~ cannot be applied to type bool.
+// TypeError 4907: (366-368): Built-in unary operator ~ cannot be applied to type bool.
+// TypeError 4907: (382-384): Built-in unary operator ~ cannot be applied to type bool.
 // TypeError 2271: (398-403): Binary operator + not compatible with types bool and bool.
 // TypeError 2271: (417-422): Binary operator - not compatible with types bool and bool.
-// TypeError 4907: (436-438): Unary operator - cannot be applied to type bool.
-// TypeError 4907: (452-454): Unary operator - cannot be applied to type bool.
+// TypeError 4907: (436-438): Built-in unary operator - cannot be applied to type bool.
+// TypeError 4907: (452-454): Built-in unary operator - cannot be applied to type bool.
 // TypeError 2271: (468-473): Binary operator * not compatible with types bool and bool.
 // TypeError 2271: (487-492): Binary operator / not compatible with types bool and bool.
 // TypeError 2271: (506-512): Binary operator ** not compatible with types bool and bool.

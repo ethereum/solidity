@@ -60,4 +60,4 @@ contract C {
 // TypeError 7743: (82-87): The function "unsub" needs to return exactly one value of type S to be used for the operator -.
 // TypeError 1147: (98-104): The function "bitnot" needs to have exactly one parameter of type S to be used for the operator ~.
 // TypeError 2271: (728-733): Binary operator * not compatible with types struct S storage ref and struct S storage ref. No matching user-defined operator found.
-// TypeError 4907: (785-787): Unary operator ~ cannot be applied to type struct S storage ref. No matching user-defined operator found.
+// TypeError 4907: (785-787): Built-in unary operator ~ cannot be applied to type struct S storage ref. No matching user-defined operator found.

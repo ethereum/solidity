@@ -1758,7 +1758,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	else
 	{
 		string description =
-			"Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." +
+			"Built-in unary operator "s + TokenTraits::toString(op) + " cannot be applied to type " + subExprType->humanReadableName() + "." +
 			(!builtinResult.message().empty() ? " " + builtinResult.message() : "") +
 			(!userDefinedOperatorResult.message().empty() ? " " + userDefinedOperatorResult.message() : "");
 		if (modifying)

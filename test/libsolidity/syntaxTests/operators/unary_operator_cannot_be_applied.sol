@@ -7,5 +7,5 @@ function f() pure {
 }
 
 // ----
-// TypeError 4907: (70-72): Unary operator - cannot be applied to type Int. No matching user-defined operator found.
-// TypeError 9767: (78-81): Unary operator ++ cannot be applied to type Int.
+// TypeError 4907: (70-72): Built-in unary operator - cannot be applied to type Int. No matching user-defined operator found.
+// TypeError 9767: (78-81): Built-in unary operator ++ cannot be applied to type Int.
