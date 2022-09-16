@@ -10,10 +10,16 @@ function another_add(Int, Int) pure returns (Int) {
     return Int.wrap(0);
 }
 
-contract C {
+contract B {
     using {another_add as +} for Int;
 
     function f() public {
+        Int.wrap(0) + Int.wrap(0);
+    }
+}
+
+contract C is B {
+    function g() public {
         Int.wrap(0) + Int.wrap(0);
     }
 }

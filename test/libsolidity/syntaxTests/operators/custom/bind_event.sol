@@ -1,8 +1,10 @@
 type Int is int16;
 
-using {IntError as +} for Int;
+using {C.IntEvent as +} for Int;
 
-error IntError(Int a, Int b);
+contract C {
+    event IntEvent(Int a, Int b);
+}
 
 // ----
-// TypeError 8187: (27-35): Expected function name.
+// TypeError 8187: (27-37): Expected function name.

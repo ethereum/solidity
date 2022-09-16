@@ -16,9 +16,10 @@ contract C {
     S s;
 
     function test() public {
-        S memory sTmp;
+        S storage sTmp;
+        S memory tmp;
         s + s;
-        sTmp + true;
+        tmp + true;
         true + s;
         -sTmp;
         -s;
@@ -27,8 +28,9 @@ contract C {
 }
 
 // ----
-// TypeError 2271: (288-293): Binary operator + not compatible with types struct S storage ref and struct S storage ref. No matching user-defined operator found.
-// TypeError 5653: (303-314): User defined binary operator + not compatible with types struct S memory and bool.
-// TypeError 2271: (324-332): Binary operator + not compatible with types bool and struct S storage ref.
-// TypeError 4907: (357-359): Unary operator - cannot be applied to type struct S storage ref. No matching user-defined operator found.
-// TypeError 4907: (369-374): Unary operator - cannot be applied to type bool.
+// TypeError 2271: (311-316): Binary operator + not compatible with types struct S storage ref and struct S storage ref. No matching user-defined operator found.
+// TypeError 5653: (326-336): User defined binary operator + not compatible with types struct S memory and bool.
+// TypeError 2271: (346-354): Binary operator + not compatible with types bool and struct S storage ref.
+// TypeError 4907: (364-369): Unary operator - cannot be applied to type struct S storage pointer. No matching user-defined operator found.
+// TypeError 4907: (379-381): Unary operator - cannot be applied to type struct S storage ref. No matching user-defined operator found.
+// TypeError 4907: (391-396): Unary operator - cannot be applied to type bool.
