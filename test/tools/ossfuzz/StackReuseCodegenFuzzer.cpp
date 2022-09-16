@@ -87,11 +87,11 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		return;
 	}
 
-	evmc::result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
+	evmc::Result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
 	if (deployResult.status_code != EVMC_SUCCESS)
 		return;
 	auto callMessage = YulEvmoneUtility{}.callMessage(deployResult.create_address);
-	evmc::result callResult = hostContext.call(callMessage);
+	evmc::Result callResult = hostContext.call(callMessage);
 	// If the fuzzer synthesized input does not contain the revert opcode which
 	// we lazily check by string find, the EVM call should not revert.
 	bool noRevertInSource = yul_source.find("revert") == string::npos;
@@ -132,13 +132,13 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	// Reset host before running optimised code.
 	hostContext.reset();
-	evmc::result deployResultOpt = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
+	evmc::Result deployResultOpt = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
 	solAssert(
 		deployResultOpt.status_code == EVMC_SUCCESS,
 		"Evmone: Optimized contract creation failed"
 	);
 	auto callMessageOpt = YulEvmoneUtility{}.callMessage(deployResultOpt.create_address);
-	evmc::result callResultOpt = hostContext.call(callMessageOpt);
+	evmc::Result callResultOpt = hostContext.call(callMessageOpt);
 	if (noRevertInSource)
 		solAssert(
 			callResultOpt.status_code != EVMC_REVERT,
