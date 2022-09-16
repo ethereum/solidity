@@ -1731,7 +1731,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	TypeResult result = type(_operation.subExpression())->unaryOperatorResult(op);
 	if (!result)
 	{
-		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." + (!result.message().empty() ? " " + result.message() : "");
+		string description = "Built-in unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." + (!result.message().empty() ? " " + result.message() : "");
 		if (modifying)
 			// Cannot just report the error, ignore the unary operator, and continue,
 			// because the sub-expression was already processed with requireLValue()
@@ -1760,9 +1760,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		m_errorReporter.typeError(
 			2271_error,
 			_operation.location(),
-			"Operator " +
+			"Built-in binary operator " +
 			string(TokenTraits::toString(_operation.getOperator())) +
-			" not compatible with types " +
+			" cannot be applied to types " +
 			leftType->humanReadableName() +
 			" and " +
 			rightType->humanReadableName() + "." +
