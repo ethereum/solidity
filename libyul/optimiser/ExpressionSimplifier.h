@@ -51,10 +51,14 @@ public:
 	void visit(Expression& _expression) override;
 
 private:
-	explicit ExpressionSimplifier(Dialect const& _dialect):
-		DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore)
+	ExpressionSimplifier(Dialect const& _dialect, std::optional<size_t> _expectedExecutionsPerDeployment):
+		DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore),
+		m_expectedExecutionsPerDeployment(std::move(_expectedExecutionsPerDeployment))
 	{}
 	bool knownToBeZero(Expression const& _expression) const;
+
+	/// The --optimize-runs parameter. Value `nullopt` represents creation code.
+	std::optional<size_t> m_expectedExecutionsPerDeployment;
 };
 
 }

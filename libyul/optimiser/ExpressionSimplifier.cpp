@@ -21,11 +21,13 @@
 
 #include <libyul/optimiser/ExpressionSimplifier.h>
 
-#include <libyul/optimiser/SimplificationRules.h>
-#include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/EVMMetrics.h>
+#include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
+#include <libyul/optimiser/SimplificationRules.h>
 
 #include <libevmasm/SemanticInformation.h>
 
@@ -35,7 +37,7 @@ using namespace solidity::yul;
 
 void ExpressionSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ExpressionSimplifier{_context.dialect}(_ast);
+	ExpressionSimplifier{_context.dialect, _context.expectedExecutionsPerDeployment}(_ast);
 }
 
 void ExpressionSimplifier::visit(Expression& _expression)
@@ -49,8 +51,14 @@ void ExpressionSimplifier::visit(Expression& _expression)
 	))
 		_expression = match->action().toExpression(debugDataOf(_expression));
 
+	GasMeter gasMeter{
+		dynamic_cast<EVMDialect const&>(m_dialect),
+		!m_expectedExecutionsPerDeployment,
+		m_expectedExecutionsPerDeployment ? *m_expectedExecutionsPerDeployment : 1};
+
 	if (auto* functionCall = get_if<FunctionCall>(&_expression))
 		if (optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
+		{
 			for (auto op: evmasm::SemanticInformation::readWriteOperations(*instruction))
 				if (op.startParameter && op.lengthParameter)
 				{
@@ -63,6 +71,33 @@ void ExpressionSimplifier::visit(Expression& _expression)
 					)
 						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, "0"_yulstring, {}};
 				}
+
+			// Replace add(X, A) with sub(X, -A) if it would save gas.
+			if (*instruction == evmasm::Instruction::ADD)
+			{
+				Expression const& arg1 = functionCall->arguments.at(0);
+				Expression& arg2 = functionCall->arguments.at(1);
+				if (auto const* arg2Literal = get_if<Literal>(&arg2))
+				{
+					// Estimate gas savings.
+					bigint const costOfAdd = gasMeter.costs(_expression);
+					Identifier const identifierSub = Identifier{
+						debugDataOf(functionCall->functionName),
+						dynamic_cast<EVMDialect const&>(m_dialect).builtin("sub"_yulstring)->name};
+					Literal const arg2Negated = Literal{
+						debugDataOf(arg2),
+						LiteralKind::Number,
+						YulString{(0 - valueOfLiteral(*arg2Literal)).str()},
+						{}};
+					FunctionCall const functionCallSub
+						= FunctionCall{debugDataOf(_expression), identifierSub, {arg1, arg2Negated}};
+					bigint const costOfSub = gasMeter.costs(functionCallSub);
+
+					if (costOfSub < costOfAdd)
+						*functionCall = functionCallSub;
+				}
+			}
+		}
 }
 
 bool ExpressionSimplifier::knownToBeZero(Expression const& _expression) const
