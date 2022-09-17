@@ -134,12 +134,22 @@ vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
 		auto subIndexIt = object->subIndexByName.find(YulString{currentSubObjectName});
 		yulAssert(
 			subIndexIt != object->subIndexByName.end(),
-			"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code."
-		);
-		object = dynamic_cast<Object const*>(object->subObjects[subIndexIt->second].get());
-		yulAssert(object, "Assembly object <" + _qualifiedName.str() + "> not found or does not contain code.");
-		yulAssert(object->subId != numeric_limits<size_t>::max(), "");
-		path.push_back({object->subId});
+			"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code.");
+		auto const* subObjectNode = object->subObjects[subIndexIt->second].get();
+		auto const* subObject = dynamic_cast<Object const*>(subObjectNode);
+		if (subObject)
+		{
+			yulAssert(subObject->subId != numeric_limits<size_t>::max(), "");
+			path.push_back({subObject->subId});
+			object = subObject;
+		}
+		else
+		{
+			// In case last path component is not an object, it must be data.
+			yulAssert(
+				dynamic_cast<Data const*>(subObjectNode),
+				"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code.");
+		}
 	}
 
 	return path;

@@ -110,7 +110,7 @@ public:
 	/// pathToSubObject("A1.E2.F3.H4") == {1, 0, 2}
 	/// pathToSubObject("E2.F3.H4") == {1, 0, 2}
 	/// pathToSubObject("A1.E2") == {1}
-	/// The path must not lead to a @a Data object (will throw in that case).
+	/// In case the path leads to a @a Data object, returns path to its parent object.
 	std::vector<size_t> pathToSubObject(YulString _qualifiedName) const;
 
 	/// sub id for object if it is subobject of another object, max value if it is not subobject
