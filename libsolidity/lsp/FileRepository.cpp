@@ -88,7 +88,7 @@ string FileRepository::sourceUnitNameToUri(string const& _sourceUnitName) const
 
 string FileRepository::uriToSourceUnitName(string const& _path) const
 {
-	lspAssert(boost::algorithm::starts_with(_path, "file://"), ErrorCode::InternalError, "URI must start with file://");
+	lspRequire(boost::algorithm::starts_with(_path, "file://"), ErrorCode::InternalError, "URI must start with file://");
 	return stripFileUriSchemePrefix(_path);
 }
 

@@ -71,7 +71,14 @@ private:
 	ErrorCode m_code;
 };
 
-#define lspAssert(condition, errorCode, errorMessage) \
+/**
+ * Ensures precondition check is valid.
+ * This is supposed to be a recoverable error, that means, if the condition fails to be valid,
+ * an exception is being raised to be thrown out of the current request handlers
+ * of the current LSP's client RPC call and this will cause the current request to fail
+ * with the given error code - but subsequent calls shall be able to continue.
+ */
+#define lspRequire(condition, errorCode, errorMessage) \
 	if (!(condition)) \
 	{ \
 		BOOST_THROW_EXCEPTION( \
