@@ -1,0 +1,13 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "url_not_found.sol": {
+            "urls": [
+                "standard_urls_missing/non-existent-contract-1.sol",
+                "standard_urls_missing/non-existent-contract.sol",
+                "standard_urls_missing/non-existent-contract-2.sol"
+            ]
+        }
+    },
+    "settings": {"outputSelection": {"*": { "*": ["metadata", "evm.bytecode"]}}}
+}

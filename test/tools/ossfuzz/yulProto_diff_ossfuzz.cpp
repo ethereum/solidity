@@ -79,10 +79,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		SourceReferenceFormatter formatter(std::cout, stack, false, false);
 
 		for (auto const& error: stack.errors())
-			formatter.printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter.printExceptionInformation(*error, Error::errorSeverity(error->type()));
 		yulAssert(false, "Proto fuzzer generated malformed program");
 	}
 

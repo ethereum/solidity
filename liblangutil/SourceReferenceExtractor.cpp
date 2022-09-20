@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <variant>
 
 using namespace std;
 using namespace solidity;
@@ -30,7 +31,7 @@ using namespace solidity::langutil;
 SourceReferenceExtractor::Message SourceReferenceExtractor::extract(
 	CharStreamProvider const& _charStreamProvider,
 	util::Exception const& _exception,
-	string _severity
+	std::variant<Error::Type, Error::Severity> _typeOrSeverity
 )
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
@@ -44,16 +45,16 @@ SourceReferenceExtractor::Message SourceReferenceExtractor::extract(
 		for (auto const& info: secondaryLocation->infos)
 			secondary.emplace_back(extract(_charStreamProvider, &info.second, info.first));
 
-	return Message{std::move(primary), _severity, std::move(secondary), nullopt};
+	return Message{std::move(primary), _typeOrSeverity, std::move(secondary), nullopt};
 }
 
 SourceReferenceExtractor::Message SourceReferenceExtractor::extract(
 	CharStreamProvider const& _charStreamProvider,
-	Error const& _error
+	Error const& _error,
+	std::variant<Error::Type, Error::Severity> _typeOrSeverity
 )
 {
-	string severity = Error::formatErrorSeverity(Error::errorSeverity(_error.type()));
-	Message message = extract(_charStreamProvider, _error, severity);
+	Message message = extract(_charStreamProvider, static_cast<util::Exception>(_error), _typeOrSeverity);
 	message.errorId = _error.errorId();
 	return message;
 }

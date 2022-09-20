@@ -145,7 +145,7 @@ void SyntaxTest::filterObtainedErrors()
 			}
 		}
 		m_errorList.emplace_back(SyntaxTestError{
-			currentError->typeName(),
+			Error::formatErrorType(currentError->type()),
 			currentError->errorId(),
 			errorMessage(*currentError),
 			sourceName,

@@ -286,7 +286,7 @@ void LanguageServer::compileAndUpdateDiagnostics()
 		jsonDiag["source"] = "solc";
 		jsonDiag["severity"] = toDiagnosticSeverity(error->type());
 		jsonDiag["code"] = Json::UInt64{error->errorId().error};
-		string message = error->typeName() + ":";
+		string message = Error::formatErrorType(error->type()) + ":";
 		if (string const* comment = error->comment())
 			message += " " + *comment;
 		jsonDiag["message"] = std::move(message);

@@ -26,6 +26,7 @@
 #include <libsolutil/UTF8.h>
 #include <iomanip>
 #include <string_view>
+#include <variant>
 
 using namespace std;
 using namespace solidity;
@@ -65,19 +66,18 @@ AnsiColorized SourceReferenceFormatter::frameColored() const
 	return AnsiColorized(m_stream, m_colored, {BOLD, BLUE});
 }
 
-AnsiColorized SourceReferenceFormatter::errorColored(optional<Error::Severity> _severity) const
+AnsiColorized SourceReferenceFormatter::errorColored(Error::Severity _severity) const
 {
 	// We used to color messages of any severity as errors so this seems like a good default
 	// for cases where severity cannot be determined.
 	char const* textColor = RED;
 
-	if (_severity.has_value())
-		switch (_severity.value())
-		{
-		case Error::Severity::Error: textColor = RED; break;
-		case Error::Severity::Warning: textColor = YELLOW; break;
-		case Error::Severity::Info: textColor = WHITE; break;
-		}
+	switch (_severity)
+	{
+	case Error::Severity::Error: textColor = RED; break;
+	case Error::Severity::Warning: textColor = YELLOW; break;
+	case Error::Severity::Info: textColor = WHITE; break;
+	}
 
 	return AnsiColorized(m_stream, m_colored, {BOLD, textColor});
 }
@@ -178,13 +178,12 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
 {
-	// exception header line
-	optional<Error::Severity> severity = Error::severityFromString(_msg.severity);
-	errorColored(severity) << _msg.severity;
-	if (m_withErrorIds && _msg.errorId.has_value())
-		errorColored(severity) << " (" << _msg.errorId.value().error << ")";
-	messageColored() << ": " << _msg.primary.message << '\n';
+	errorColored(Error::errorSeverityOrType(_msg._typeOrSeverity)) << Error::formatTypeOrSeverity(_msg._typeOrSeverity);
 
+	if (m_withErrorIds && _msg.errorId.has_value())
+		errorColored(Error::errorSeverityOrType(_msg._typeOrSeverity)) << " (" << _msg.errorId.value().error << ")";
+
+	messageColored() << ": " << _msg.primary.message << '\n';
 	printSourceLocation(_msg.primary);
 
 	for (auto const& secondary: _msg.secondary)
@@ -197,7 +196,12 @@ void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtracto
 	m_stream << '\n';
 }
 
-void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _severity)
+void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, Error::Type _type)
+{
+	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _exception, _type));
+}
+
+void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, Error::Severity _severity)
 {
 	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _exception, _severity));
 }
@@ -210,5 +214,11 @@ void SourceReferenceFormatter::printErrorInformation(ErrorList const& _errors)
 
 void SourceReferenceFormatter::printErrorInformation(Error const& _error)
 {
-	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _error));
+	SourceReferenceExtractor::Message message =
+		SourceReferenceExtractor::extract(
+			m_charStreamProvider,
+			_error,
+			Error::errorSeverity(_error.type())
+		);
+	printExceptionInformation(message);
 }
