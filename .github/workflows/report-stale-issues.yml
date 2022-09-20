@@ -1,0 +1,47 @@
+name: Report stale triaged issues
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'
+
+env:
+  PERIOD: 14 # in days
+  WAIT_FOR_INFO: "waiting for more info"
+  DRY_RUN: true
+
+jobs:
+  check-status:
+    name: Retrieve all open issues that are inactive for more than ${{ env.PERIOD }} days
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get period date
+        id: date
+        run: |
+          period_date=$(date -d "${{ env.PERIOD }} days ago" -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "::set-output name=period::$period_date"
+      - name: Get inactive open issues
+        if: ${{ success() }}
+        id: stale-issues
+        uses: lee-dohm/select-matching-issues@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          query: 'is:issue is:open updated:<${{ steps.date.outputs.period }}'
+      - name: Comment on found issues
+        if: ${{ success() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for issue_url in $(cat ${{ steps.stale-issues.outputs.path }}); do
+            # Filter issues that were triaged and are not waiting for more info
+            stale_triaged=$(gh issue view $issue_url \
+                                    --json labels \
+                                    --jq '.labels | map(.name != "${{ env.WAIT_FOR_INFO }}") | all and length > 0')
+            if [[ "$stale_triaged" == "true" ]]; then
+              if [[ "${{ env.DRY_RUN }}" == "true" ]]; then
+                echo "Commenting on issue: $issue_url"
+              else
+                gh issue comment $issue_url --body "Hey, devs! I have been waiting for too long. Please give me some attention! :-)"
+              fi
+            fi
+          done
