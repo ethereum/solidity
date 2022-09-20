@@ -74,6 +74,9 @@ function euler_test
     force_hardhat_unlimited_contract_size "$config_file"
     npm install
 
+    # TODO: Remove this when https://github.com/Uniswap/v3-periphery/issues/313 gets fixed.
+    npm install @uniswap/v3-periphery@1.4.1
+
     replace_version_pragmas
     neutralize_packaged_contracts
 
