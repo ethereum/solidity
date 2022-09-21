@@ -19,14 +19,10 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
-using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
-
-
 
 bool CFG::constructFlow(ASTNode const& _astRoot)
 {

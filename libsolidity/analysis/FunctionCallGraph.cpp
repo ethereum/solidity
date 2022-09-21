@@ -207,14 +207,20 @@ bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 bool FunctionCallGraphBuilder::visit(BinaryOperation const& _binaryOperation)
 {
 	if (_binaryOperation.annotation().userDefinedFunction.set())
+	{
+		solAssert(*_binaryOperation.annotation().userDefinedFunction);
 		functionReferenced(**_binaryOperation.annotation().userDefinedFunction, true /* called directly */);
+	}
 	return true;
 }
 
 bool FunctionCallGraphBuilder::visit(UnaryOperation const& _unaryOperation)
 {
 	if (_unaryOperation.annotation().userDefinedFunction.set())
+	{
+		solAssert(*_unaryOperation.annotation().userDefinedFunction);
 		functionReferenced(**_unaryOperation.annotation().userDefinedFunction, true /* called directly */);
+	}
 	return true;
 }
 

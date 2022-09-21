@@ -98,8 +98,8 @@ struct CFGNode
 	std::vector<CFGNode*> entries;
 	/// Exit nodes. All CFG nodes to which control flow may continue after this node.
 	std::vector<CFGNode*> exits;
-	/// Function call done by this node
-	FunctionDefinition const* functionDefinition;
+	/// Resolved definition of the function called by this node
+	FunctionDefinition const* functionDefinition = nullptr;
 	/// Variable occurrences in the node.
 	std::vector<VariableOccurrence> variableOccurrences;
 	// Source location of this control flow block.

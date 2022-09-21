@@ -312,7 +312,7 @@ errorDefinition:
 	Semicolon;
 
 /**
- * User type operators.
+ * Customizable operators of user-defined types.
  */
 userOp: Add | Sub | Mul | Div | Mod | BitAnd | BitOr | BitXor | BitNot | Equal | NotEqual | LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual | Shl | Sar | Exp | Not;
 
@@ -320,7 +320,7 @@ userOp: Add | Sub | Mul | Div | Mod | BitAnd | BitOr | BitXor | BitNot | Equal |
  * Using directive to bind library functions and free functions to types.
  * Can occur within contracts and libraries and at the file level.
  */
-usingDirective: Using (identifierPath (As userOp)? | (LBrace identifierPath (As userOp)? (Comma identifierPath (As userOp)?)* RBrace)) For (Mul | typeName) Global? Semicolon;
+usingDirective: Using (identifierPath | (LBrace identifierPath (As userOp)? (Comma identifierPath (As userOp)?)* RBrace)) For (Mul | typeName) Global? Semicolon;
 /**
  * A type name can be an elementary type, a function type, a mapping type, a user-defined type
  * (e.g. a contract or struct) or an array type.
