@@ -587,7 +587,7 @@ bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
 	solAssert(!!importee, "");
 	if (!m_scopes[importee])
 		m_scopes[importee] = make_shared<DeclarationContainer>(importee, nullptr, m_scopes[nullptr].get());
-	// TODO here, m_selfNode inside the contanier does not point to the key of m_scopes (_import) - is that a problem?
+	// TODO here, m_selfNode inside the container does not point to the key of m_scopes (_import) - is that a problem?
 	m_scopes[&_import] = m_scopes[importee];
 	ASTVisitor::visit(_import);
 	return false; // Do not recurse into child nodes (Identifier for symbolAliases)
