@@ -185,9 +185,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			m_errorReporter.syntaxError(
 				6634_error,
 				_pragma.location(),
-				"\"pragma stdlib\" requires Constantinople EVM version at the minimum (selected EVM version is " +
-				m_evmVersion.name() +
-				")."
+				"\"pragma stdlib\" requires Constantinople EVM version at the minimum."
 			);
 		m_sourceUnit->annotation().useStdlib = true;
 	}
