@@ -192,9 +192,9 @@ function test_solc_behaviour
 import re, sys
 json = open("$stdout_path", "r").read()
 json = re.sub(r"{[^{}]*Warning: This is a pre-release compiler version[^{}]*},?", "", json)
-json = re.sub(r"},\s*]", "}]", json)                  # },] -> }]
-json = re.sub(r"\"errors\":\s*\[\s*\],?\s*","",json)  # Remove "errors" array if it's not empty
-json = re.sub("\n\\s+\n", "\n\n", json)               # Remove any leftover trailing whitespace
+json = re.sub(r"\"errors\":\s*\[\s*\],?\s*","",json)    # Remove "errors" array if it's not empty
+json = re.sub("\n\\s+\n", "\n\n", json)                 # Remove trailing whitespace
+json = re.sub(r"},(\n{0,1})\n*(\s*])", r"}\1\2", json)  # },] -> }]
 open("$stdout_path", "w").write(json)
 EOF
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
