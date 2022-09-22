@@ -77,6 +77,11 @@ Finally, please make sure you respect the `coding style
 for this project. Also, even though we do CI testing, please test your code and
 ensure that it builds locally before submitting a pull request.
 
+We highly recommend going through our `review checklist <https://github.com/ethereum/solidity/blob/develop/ReviewChecklist.md>`
+before submitting the pull request.
+We thoroughly review every PR and will help you get it right, but there are many
+common problems that can be easily avoided, making the review much smoother.
+
 Thank you for your help!
 
 Running the Compiler Tests
