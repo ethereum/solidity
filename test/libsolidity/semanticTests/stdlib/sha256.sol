@@ -1,11 +1,11 @@
 pragma stdlib;
 
-import "std/precompiles.sol";
+import { sha256 } from "std/cryptography.sol";
 
 contract C {
-  function f(uint256 a) external returns (bytes32) {
-    return sha256(abi.encodePacked(a));
-  }
+    function f(uint256 a) external returns (bytes32) {
+        return sha256(abi.encodePacked(a));
+    }
 }
 
 // ====

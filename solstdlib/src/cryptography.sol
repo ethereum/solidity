@@ -14,8 +14,7 @@ function ripemd160(bytes memory input) returns (bytes20 ret) {
   assembly {
     let success := staticcall(gas(), 3, add(input, 32), mload(input), 0, 32)
     if iszero(success) { revert(0, 0) }
-    // TODO: check byteorder
-    ret := mload(0)
+    ret := shl(96, mload(0))
   }
 }
 
