@@ -3992,6 +3992,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 						*TypeProvider::withLocationIfReference(DataLocation::Storage, parameterTypes.at(0)) !=
 						*TypeProvider::withLocationIfReference(DataLocation::Storage, usingForType)
 					)
+				) ||
+				(
+					parameterCount != 1 && parameterCount != 2
 				)
 			)
 				m_errorReporter.typeError(
@@ -3999,25 +4002,11 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					path->location(),
 					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
 					"needs to have one or two parameters of type " +
-					_usingFor.typeName()->annotation().type->canonicalName() +
+					usingForType->canonicalName() +
 					" and the same data location to be used for the operator " +
 					TokenTraits::friendlyName(*operator_) +
 					"."
 				);
-			else if (
-				parameterCount != 1 &&
-				parameterCount != 2
-			)
-				m_errorReporter.typeError(
-					8112_error,
-					path->location(),
-					"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-					"needs to have one or two parameters of type " +
-					_usingFor.typeName()->annotation().type->canonicalName() +
-					" and the same data location to be used for the operator " +
-					TokenTraits::friendlyName(*operator_) +
-					"."
-								);
 
 			TypePointers const& returnParameterTypes = functionType->returnParameterTypes();
 			size_t const returnParameterCount = returnParameterTypes.size();
