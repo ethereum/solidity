@@ -386,7 +386,7 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 
 }
 
-Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNode const& _scope, bool _unaryOperation) const
+Result<FunctionDefinition const*> Type::operatorDefinition(Token _token, ASTNode const& _scope, bool _unaryOperation) const
 {
 	if (!typeDefinition() || !util::contains(overridableOperators, _token))
 		return nullptr;
@@ -409,12 +409,12 @@ Result<FunctionDefinition const*> Type::userDefinedOperator(Token _token, ASTNod
 			if (auto const* referenceType = dynamic_cast<ReferenceType const*>(normalizedType))
 				normalizedType = TypeProvider::withLocationIfReference(referenceType->location(), normalizedType);
 
-			Type const* normalizedParameterType = functionType->parameterTypes().front();
-			if (auto const* referenceType = dynamic_cast<ReferenceType const*>(normalizedParameterType))
-				normalizedParameterType = TypeProvider::withLocationIfReference(referenceType->location(), normalizedParameterType);
+			Type const* normalizedFirstParameterType = functionType->parameterTypes().front();
+			if (auto const* referenceType = dynamic_cast<ReferenceType const*>(normalizedFirstParameterType))
+				normalizedFirstParameterType = TypeProvider::withLocationIfReference(referenceType->location(), normalizedFirstParameterType);
 
 			if (
-				*normalizedType == *normalizedParameterType &&
+				*normalizedType == *normalizedFirstParameterType &&
 				(
 					(_unaryOperation && function.parameterList().parameters().size() == 1) ||
 					(!_unaryOperation && function.parameterList().parameters().size() == 2)
