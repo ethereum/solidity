@@ -53,6 +53,8 @@ For most of the topics the compiler will provide suggestions.
   If the name contains a dot, its prefix up to the dot may not conflict with any declaration outside the inline
   assembly block.
 
+* In inline assembly, opcodes that do not take arguments are now represented as "built-in functions" instead of standalone identifiers. So ``gas`` is now ``gas()``.
+
 * State variable shadowing is now disallowed.  A derived contract can only
   declare a state variable ``x``, if there is no visible state variable with
   the same name in any of its bases.
@@ -174,3 +176,6 @@ This section gives detailed instructions on how to update prior code for every b
   ``override`` to every overriding function. For multiple inheritance, add ``override(A, B, ..)``,
   where you list all contracts that define the overridden function in the parentheses. When
   multiple bases define the same function, the inheriting contract must override all conflicting functions.
+
+* In inline assembly, add ``()`` to all opcodes that do not otherwise accept an argument.
+  For example, change ``pc`` to ``pc()``, and ``gas`` to ``gas()``.
