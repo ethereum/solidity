@@ -1808,25 +1808,11 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		(!userDefinedFunctionType || userDefinedFunctionType->isPure());
 
 	TypeResult builtinResult = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
-	Type const* commonType = leftType;
 
 	// Either the operator is user-defined or built-in.
 	solAssert(!userDefinedOperatorResult || !builtinResult);
 
-	if (!builtinResult && !userDefinedOperatorResult)
-		m_errorReporter.typeError(
-			2271_error,
-			_operation.location(),
-			"Binary operator " +
-			string(TokenTraits::toString(_operation.getOperator())) +
-			" not compatible with types " +
-			leftType->humanReadableName() +
-			" and " +
-			rightType->humanReadableName() + "." +
-			(!builtinResult.message().empty() ? " " + builtinResult.message() : "") +
-			(!userDefinedOperatorResult.message().empty() ? " " + userDefinedOperatorResult.message() : "")
-		);
-
+	Type const* commonType = leftType;
 	if (builtinResult)
 		commonType = builtinResult.get();
 	else if (userDefinedOperatorResult)
@@ -1861,6 +1847,19 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		else if (userDefinedFunctionType->returnParameterTypes().size() == 1)
 			commonType = userDefinedFunctionType->parameterTypes().at(0);
 	}
+	else
+		m_errorReporter.typeError(
+			2271_error,
+			_operation.location(),
+			"Built-in binary operator " +
+			string(TokenTraits::toString(_operation.getOperator())) +
+			" cannot be applied to types " +
+			leftType->humanReadableName() +
+			" and " +
+			rightType->humanReadableName() + "." +
+			(!builtinResult.message().empty() ? " " + builtinResult.message() : "") +
+			(!userDefinedOperatorResult.message().empty() ? " " + userDefinedOperatorResult.message() : "")
+		);
 
 	_operation.annotation().commonType = commonType;
 	_operation.annotation().type =

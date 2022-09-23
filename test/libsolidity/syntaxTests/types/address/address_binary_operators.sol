@@ -9,7 +9,7 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (85-108): Binary operator + not compatible with types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
-// TypeError 2271: (122-145): Binary operator - not compatible with types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
-// TypeError 2271: (159-182): Binary operator * not compatible with types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
-// TypeError 2271: (196-219): Binary operator / not compatible with types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
+// TypeError 2271: (85-108): Built-in binary operator + cannot be applied to types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
+// TypeError 2271: (122-145): Built-in binary operator - cannot be applied to types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
+// TypeError 2271: (159-182): Built-in binary operator * cannot be applied to types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
+// TypeError 2271: (196-219): Built-in binary operator / cannot be applied to types address and address. Arithmetic operations on addresses are not supported. Convert to integer first before using them.

@@ -25,4 +25,4 @@ contract C is B {
 }
 
 // ----
-// TypeError 2271: (281-306): Binary operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.
+// TypeError 2271: (281-306): Built-in binary operator + cannot be applied to types Int and Int. Multiple user-defined functions provided for this operator.

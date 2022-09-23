@@ -20,4 +20,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (s2.sol:104-129): Binary operator - not compatible with types Int and Int. No matching user-defined operator found.
+// TypeError 2271: (s2.sol:104-129): Built-in binary operator - cannot be applied to types Int and Int. No matching user-defined operator found.

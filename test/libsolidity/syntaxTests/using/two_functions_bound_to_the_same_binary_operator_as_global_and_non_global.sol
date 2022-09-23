@@ -17,4 +17,4 @@ function test() pure returns (Int) {
 }
 
 // ----
-// TypeError 2271: (s1.sol:284-309): Binary operator + not compatible with types Int and Int. Multiple user-defined functions provided for this operator.
+// TypeError 2271: (s1.sol:284-309): Built-in binary operator + cannot be applied to types Int and Int. Multiple user-defined functions provided for this operator.

@@ -34,9 +34,9 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (421-426): Binary operator + not compatible with types struct S calldata and struct S calldata. No matching user-defined operator found.
-// TypeError 2271: (458-463): Binary operator + not compatible with types struct S storage ref and struct S storage ref. No matching user-defined operator found.
-// TypeError 2271: (495-500): Binary operator - not compatible with types struct S memory and struct S memory. No matching user-defined operator found.
-// TypeError 2271: (532-537): Binary operator - not compatible with types struct S storage ref and struct S storage ref. No matching user-defined operator found.
-// TypeError 2271: (571-576): Binary operator * not compatible with types struct S calldata and struct S calldata. No matching user-defined operator found.
-// TypeError 2271: (609-614): Binary operator * not compatible with types struct S memory and struct S memory. No matching user-defined operator found.
+// TypeError 2271: (421-426): Built-in binary operator + cannot be applied to types struct S calldata and struct S calldata. No matching user-defined operator found.
+// TypeError 2271: (458-463): Built-in binary operator + cannot be applied to types struct S storage ref and struct S storage ref. No matching user-defined operator found.
+// TypeError 2271: (495-500): Built-in binary operator - cannot be applied to types struct S memory and struct S memory. No matching user-defined operator found.
+// TypeError 2271: (532-537): Built-in binary operator - cannot be applied to types struct S storage ref and struct S storage ref. No matching user-defined operator found.
+// TypeError 2271: (571-576): Built-in binary operator * cannot be applied to types struct S calldata and struct S calldata. No matching user-defined operator found.
+// TypeError 2271: (609-614): Built-in binary operator * cannot be applied to types struct S memory and struct S memory. No matching user-defined operator found.
