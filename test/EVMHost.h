@@ -40,8 +40,25 @@ using StorageMap = std::map<evmc::bytes32, evmc::storage_value>;
 class EVMHost: public evmc::MockedHost
 {
 public:
-	using MockedHost::get_code_size;
+	// Verbatim features of MockedHost.
+	using MockedHost::account_exists;
+	using MockedHost::get_storage;
+	using MockedHost::set_storage;
 	using MockedHost::get_balance;
+	using MockedHost::get_code_size;
+	using MockedHost::get_code_hash;
+	using MockedHost::copy_code;
+	using MockedHost::get_tx_context;
+	using MockedHost::emit_log;
+	using MockedHost::access_account;
+	using MockedHost::access_storage;
+
+	// Modified features of MockedHost.
+	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept final;
+	evmc::result call(evmc_message const& _message) noexcept final;
+	evmc::bytes32 get_block_hash(int64_t number) const noexcept final;
+
+	// Solidity testing specific features.
 
 	/// Tries to dynamically load an evmc vm supporting evm1 or ewasm and caches the loaded VM.
 	/// @returns vmc::VM(nullptr) on failure.
@@ -71,28 +88,10 @@ public:
 	/// @returns contents of storage at @param _addr.
 	StorageMap const& get_address_storage(evmc::address const& _addr);
 
-	bool account_exists(evmc::address const& _addr) const noexcept final
-	{
-		return evmc::MockedHost::account_exists(_addr);
-	}
-
-	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept final;
-
-	evmc::result call(evmc_message const& _message) noexcept final;
-
-	evmc::bytes32 get_block_hash(int64_t number) const noexcept final;
-
 	static Address convertFromEVMC(evmc::address const& _addr);
 	static evmc::address convertToEVMC(Address const& _addr);
 	static util::h256 convertFromEVMC(evmc::bytes32 const& _data);
 	static evmc::bytes32 convertToEVMC(util::h256 const& _data);
-
-	/// @returns true, if the evmc VM has the given capability.
-	bool hasCapability(evmc_capabilities capability) const noexcept
-	{
-		return m_vm.has_capability(capability);
-	}
-
 private:
 	evmc::address m_currentAddress = {};
 
