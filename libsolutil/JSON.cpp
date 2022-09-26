@@ -31,8 +31,8 @@
 #include <memory>
 
 static_assert(
-	(NLOHMANN_JSON_VERSION_MAJOR == 3) && (NLOHMANN_JSON_VERSION_MINOR == 10) && (NLOHMANN_JSON_VERSION_PATCH == 2),
-	"Unexpected nlohmann-json version. Expecting 3.10.2."
+	(NLOHMANN_JSON_VERSION_MAJOR == 3) && (NLOHMANN_JSON_VERSION_MINOR == 11) && (NLOHMANN_JSON_VERSION_PATCH == 2),
+	"Unexpected nlohmann-json version. Expecting 3.11.2."
 );
 
 namespace solidity::util
