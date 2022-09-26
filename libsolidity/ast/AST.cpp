@@ -907,6 +907,34 @@ OperationAnnotation& UnaryOperation::annotation() const
 	return initAnnotation<OperationAnnotation>();
 }
 
+FunctionType const* UnaryOperation::userDefinedFunctionType() const
+{
+	if (!annotation().userDefinedFunction.set())
+		return nullptr;
+
+	FunctionDefinition const* userDefinedFunction = *annotation().userDefinedFunction;
+	solAssert(userDefinedFunction);
+	return dynamic_cast<FunctionType const*>(
+		userDefinedFunction->libraryFunction() ?
+		userDefinedFunction->typeViaContractName() :
+		userDefinedFunction->type()
+	);
+}
+
+FunctionType const* BinaryOperation::userDefinedFunctionType() const
+{
+	if (!annotation().userDefinedFunction.set())
+		return nullptr;
+
+	FunctionDefinition const* userDefinedFunction = *annotation().userDefinedFunction;
+	solAssert(userDefinedFunction);
+	return dynamic_cast<FunctionType const*>(
+		userDefinedFunction->libraryFunction() ?
+		userDefinedFunction->typeViaContractName() :
+		userDefinedFunction->type()
+	);
+}
+
 BinaryOperationAnnotation& BinaryOperation::annotation() const
 {
 	return initAnnotation<BinaryOperationAnnotation>();

@@ -685,9 +685,7 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 			"Only file-level functions and library functions can be bound to a user type operator."
 		);
 
-		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function->libraryFunction() ? function->typeViaContractName() : function->type()
-		);
+		FunctionType const* functionType = _unaryOperation.userDefinedFunctionType();
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);
@@ -832,9 +830,7 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 			"Only file-level functions and library functions can be bound to a user type operator."
 		);
 
-		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function->libraryFunction() ? function->typeViaContractName() : function->type()
-		);
+		FunctionType const* functionType = _binOp.userDefinedFunctionType();
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);

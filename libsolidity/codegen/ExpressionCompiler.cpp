@@ -420,9 +420,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			"Only file-level functions and library functions can be bound to a user type operator."
 		);
 
-		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function->libraryFunction() ? function->typeViaContractName() : function->type()
-		);
+		FunctionType const* functionType = _unaryOperation.userDefinedFunctionType();
 		solAssert(functionType);
 
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
@@ -548,9 +546,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			function->isFree() || function->libraryFunction(),
 			"Only file-level functions and library functions can be bound to a user type operator."
 		);
-		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function->libraryFunction() ? function->typeViaContractName() : function->type()
-		);
+		FunctionType const* functionType = _binaryOperation.userDefinedFunctionType();
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
 		solAssert(functionType);

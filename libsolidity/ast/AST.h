@@ -2068,6 +2068,8 @@ public:
 	bool isPrefixOperation() const { return m_isPrefix; }
 	Expression const& subExpression() const { return *m_subExpression; }
 
+	FunctionType const* userDefinedFunctionType() const;
+
 	OperationAnnotation& annotation() const override;
 
 private:
@@ -2100,6 +2102,8 @@ public:
 	Expression const& leftExpression() const { return *m_left; }
 	Expression const& rightExpression() const { return *m_right; }
 	Token getOperator() const { return m_operator; }
+
+	FunctionType const* userDefinedFunctionType() const;
 
 	BinaryOperationAnnotation& annotation() const override;
 
