@@ -37,8 +37,6 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace evmc::literals;
 
-using StorageMap = std::map<evmc::bytes32, evmc::storage_value>;
-
 evmc::VM& EVMHost::getVM(string const& _path)
 {
 	static evmc::VM NullVM{nullptr};
@@ -192,6 +190,7 @@ void EVMHost::transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recip
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
+	// TODO reuse MockedHost::selfdestruct.
 
 	transfer(accounts[_addr], accounts[_beneficiary], convertFromEVMC(accounts[_addr].balance));
 	accounts.erase(_addr);
@@ -205,6 +204,8 @@ void EVMHost::recordCalls(evmc_message const& _message) noexcept
 		recorded_calls.emplace_back(_message);
 }
 
+// NOTE: this is used for both internal and external calls.
+// External calls are triggered from ExecutionFramework and contain only EVMC_CREATE or EVMC_CALL.
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
 {
 	recordCalls(_message);
@@ -393,8 +394,14 @@ evmc::result EVMHost::precompileECRecover(evmc_message const& _message) noexcept
 		}
 	};
 	evmc::result result = precompileGeneric(_message, inputOutput);
-	result.status_code = EVMC_SUCCESS;
-	result.gas_left = _message.gas;
+	// ECRecover will return success with empty response in case of failure
+	if (result.status_code != EVMC_SUCCESS)
+	{
+		result.status_code = EVMC_SUCCESS;
+		result.gas_left = _message.gas;
+		result.output_data = {};
+		result.output_size = 0;
+	}
 	return result;
 }
 
@@ -407,11 +414,7 @@ evmc::result EVMHost::precompileSha256(evmc_message const& _message) noexcept
 		_message.input_data + _message.input_size
 	));
 
-	evmc::result result({});
-	result.gas_left = _message.gas;
-	result.output_data = hash.data();
-	result.output_size = hash.size();
-	return result;
+	return resultWithGas(_message, hash);
 }
 
 evmc::result EVMHost::precompileRipeMD160(evmc_message const& _message) noexcept
@@ -485,11 +488,8 @@ evmc::result EVMHost::precompileIdentity(evmc_message const& _message) noexcept
 	// static data so that we do not need a release routine...
 	bytes static data;
 	data = bytes(_message.input_data, _message.input_data + _message.input_size);
-	evmc::result result({});
-	result.gas_left = _message.gas;
-	result.output_data = data.data();
-	result.output_size = data.size();
-	return result;
+
+	return resultWithGas(_message, data);
 }
 
 evmc::result EVMHost::precompileModExp(evmc_message const&) noexcept
