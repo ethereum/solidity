@@ -394,8 +394,14 @@ evmc::result EVMHost::precompileECRecover(evmc_message const& _message) noexcept
 		}
 	};
 	evmc::result result = precompileGeneric(_message, inputOutput);
-	result.status_code = EVMC_SUCCESS;
-	result.gas_left = _message.gas;
+	// ECRecover will return success with empty response in case of failure
+	if (result.status_code != EVMC_SUCCESS)
+	{
+		result.status_code = EVMC_SUCCESS;
+		result.gas_left = _message.gas;
+		result.output_data = {};
+		result.output_size = 0;
+	}
 	return result;
 }
 
@@ -408,12 +414,7 @@ evmc::result EVMHost::precompileSha256(evmc_message const& _message) noexcept
 		_message.input_data + _message.input_size
 	));
 
-	evmc::result result({});
-	result.status_code = EVMC_SUCCESS;
-	result.gas_left = _message.gas;
-	result.output_data = hash.data();
-	result.output_size = hash.size();
-	return result;
+	return resultWithGas(_message, hash);
 }
 
 evmc::result EVMHost::precompileRipeMD160(evmc_message const& _message) noexcept
@@ -488,12 +489,7 @@ evmc::result EVMHost::precompileIdentity(evmc_message const& _message) noexcept
 	bytes static data;
 	data = bytes(_message.input_data, _message.input_data + _message.input_size);
 
-	evmc::result result({});
-	result.status_code = EVMC_SUCCESS;
-	result.gas_left = _message.gas;
-	result.output_data = data.data();
-	result.output_size = data.size();
-	return result;
+	return resultWithGas(_message, data);
 }
 
 evmc::result EVMHost::precompileModExp(evmc_message const&) noexcept
