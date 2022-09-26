@@ -116,6 +116,7 @@ private:
 	/// @returns a result object with no gas usage and result data taken from @a _data.
 	/// @note The return value is only valid as long as @a _data is alive!
 	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;
+	static evmc::result resultWithFailure() noexcept;
 
 	evmc::VM& m_vm;
 	/// EVM version requested by the testing tool
