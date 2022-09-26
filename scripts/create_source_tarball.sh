@@ -31,9 +31,9 @@ REPO_ROOT="$(dirname "$0")"/..
     fi
     # Add dependencies
     mkdir -p "$SOLDIR/deps/downloads/" 2>/dev/null || true
-    jsoncpp_version="1.9.3"
+    jsoncpp_version="1.9.5"
     jsoncpp_package_path="$SOLDIR/deps/downloads/jsoncpp-${jsoncpp_version}.tar.gz"
-    jsoncpp_sha256=8593c1d69e703563d94d8c12244e2e18893eeb9a8a9f8aa3d09a327aa45c8f7d
+    jsoncpp_sha256=f409856e5920c18d0c2fb85276e24ee607d2a09b5e7d5f0a371368903c275da2
     wget -O "$jsoncpp_package_path" "https://github.com/open-source-parsers/jsoncpp/archive/${jsoncpp_version}.tar.gz"
     if ! [ "$(sha256sum "$jsoncpp_package_path")" = "${jsoncpp_sha256}  ${jsoncpp_package_path}" ]
     then
