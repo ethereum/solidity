@@ -495,9 +495,7 @@ evmc::result EVMHost::precompileIdentity(evmc_message const& _message) noexcept
 evmc::result EVMHost::precompileModExp(evmc_message const&) noexcept
 {
 	// TODO implement
-	evmc::result result({});
-	result.status_code = EVMC_FAILURE;
-	return result;
+	return resultWithFailure();
 }
 
 evmc::result EVMHost::precompileALTBN128G1Add(evmc_message const& _message) noexcept
@@ -773,6 +771,11 @@ evmc::result EVMHost::precompileALTBN128G1Mul(evmc_message const& _message) noex
 
 evmc::result EVMHost::precompileALTBN128PairingProduct(evmc_message const& _message) noexcept
 {
+	// Input must be divisible by 192.
+	// TODO: validate points
+	if (_message.input_size % 192)
+		return resultWithFailure();
+
 	// This is a partial implementation - it always returns "success"
 	bytes static data = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
 	return resultWithGas(_message, data);
@@ -786,11 +789,14 @@ evmc::result EVMHost::precompileGeneric(
 	if (_inOut.count(input))
 		return resultWithGas(_message, _inOut.at(input));
 	else
-	{
-		evmc::result result({});
-		result.status_code = EVMC_FAILURE;
-		return result;
-	}
+		return resultWithFailure();
+}
+
+evmc::result EVMHost::resultWithFailure() noexcept
+{
+	evmc::result result({});
+	result.status_code = EVMC_FAILURE;
+	return result;
 }
 
 evmc::result EVMHost::resultWithGas(
