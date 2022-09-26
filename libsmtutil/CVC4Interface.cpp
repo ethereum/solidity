@@ -239,7 +239,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 				m_context.mkExpr(
 					CVC4::kind::EQUAL,
 					m_context.mkExpr(CVC4::kind::BITVECTOR_EXTRACT, extractOp, arguments[0]),
-					m_context.mkConst(CVC4::BitVector(1, size_t(0)))
+					m_context.mkConst(CVC4::BitVector(1, uint64_t{0}))
 				),
 				nat,
 				m_context.mkExpr(
