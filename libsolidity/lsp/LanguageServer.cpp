@@ -183,7 +183,7 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 		else if (text == "directly-opened-and-on-import")
 			m_fileLoadStrategy = FileLoadStrategy::DirectlyOpenedAndOnImported;
 		else
-			lspAssert(false, ErrorCode::InvalidParams, "Invalid file load strategy: " + text);
+			lspRequire(false, ErrorCode::InvalidParams, "Invalid file load strategy: " + text);
 	}
 
 	m_settingsObject = _settings;
@@ -366,7 +366,7 @@ bool LanguageServer::run()
 
 void LanguageServer::requireServerInitialized()
 {
-	lspAssert(
+	lspRequire(
 		m_state == State::Initialized,
 		ErrorCode::ServerNotInitialized,
 		"Server is not properly initialized."
@@ -375,7 +375,7 @@ void LanguageServer::requireServerInitialized()
 
 void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 {
-	lspAssert(
+	lspRequire(
 		m_state == State::Started,
 		ErrorCode::RequestFailed,
 		"Initialize called at the wrong time."
@@ -389,7 +389,7 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	if (Json::Value uri = _args["rootUri"])
 	{
 		rootPath = uri.asString();
-		lspAssert(
+		lspRequire(
 			boost::starts_with(rootPath, "file://"),
 			ErrorCode::InvalidParams,
 			"rootUri only supports file URI scheme."
@@ -471,7 +471,7 @@ void LanguageServer::handleTextDocumentDidOpen(Json::Value const& _args)
 {
 	requireServerInitialized();
 
-	lspAssert(
+	lspRequire(
 		_args["textDocument"],
 		ErrorCode::RequestFailed,
 		"Text document parameter missing."
@@ -492,14 +492,14 @@ void LanguageServer::handleTextDocumentDidChange(Json::Value const& _args)
 
 	for (Json::Value jsonContentChange: _args["contentChanges"])
 	{
-		lspAssert(
+		lspRequire(
 			jsonContentChange.isObject(),
 			ErrorCode::RequestFailed,
 			"Invalid content reference."
 		);
 
 		string const sourceUnitName = m_fileRepository.uriToSourceUnitName(uri);
-		lspAssert(
+		lspRequire(
 			m_fileRepository.sourceUnits().count(sourceUnitName),
 			ErrorCode::RequestFailed,
 			"Unknown file: " + uri
@@ -509,7 +509,7 @@ void LanguageServer::handleTextDocumentDidChange(Json::Value const& _args)
 		if (jsonContentChange["range"].isObject()) // otherwise full content update
 		{
 			optional<SourceLocation> change = parseRange(m_fileRepository, sourceUnitName, jsonContentChange["range"]);
-			lspAssert(
+			lspRequire(
 				change && change->hasText(),
 				ErrorCode::RequestFailed,
 				"Invalid source range: " + util::jsonCompactPrint(jsonContentChange["range"])
@@ -529,7 +529,7 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 {
 	requireServerInitialized();
 
-	lspAssert(
+	lspRequire(
 		_args["textDocument"],
 		ErrorCode::RequestFailed,
 		"Text document parameter missing."
