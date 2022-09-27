@@ -42,8 +42,6 @@
 
 #pragma once
 
-#include <liblangutil/UndefMacros.h>
-
 #include <iosfwd>
 #include <string>
 #include <tuple>
