@@ -1329,7 +1329,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					// hash the signature
 					if (auto const* stringType = dynamic_cast<StringLiteralType const*>(selectorType))
 					{
-						m_context << util::selectorFromSignature(stringType->value());
+						m_context << util::selectorFromSignatureU256(stringType->value());
 						dataOnStack = TypeProvider::fixedBytes(4);
 					}
 					else
