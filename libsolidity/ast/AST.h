@@ -32,7 +32,6 @@
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 #include <libsolutil/FixedHash.h>
-#include <libsolutil/JSON.h>
 #include <libsolutil/LazyInit.h>
 #include <libsolutil/Visitor.h>
 
