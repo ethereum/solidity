@@ -1196,7 +1196,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			// hash the signature
 			Type const& selectorType = type(*arguments.front());
 			if (auto const* stringType = dynamic_cast<StringLiteralType const*>(&selectorType))
-				selector = formatNumber(util::selectorFromSignature(stringType->value()));
+				selector = formatNumber(util::selectorFromSignatureU256(stringType->value()));
 			else
 			{
 				// Used to reset the free memory pointer later.
@@ -1785,7 +1785,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					""
 				);
 				define(IRVariable{_memberAccess}) << formatNumber(
-					util::selectorFromSignature(functionType.externalSignature())
+					util::selectorFromSignatureU256(functionType.externalSignature())
 				) << "\n";
 			}
 			else if (functionType.kind() == FunctionType::Kind::Event)
@@ -3234,7 +3234,7 @@ void IRGeneratorForStatements::handleCatch(TryStatement const& _tryStatement)
 
 	if (TryCatchClause const* errorClause = _tryStatement.errorClause())
 	{
-		appendCode() << "case " << selectorFromSignature32("Error(string)") << " {\n";
+		appendCode() << "case " << selectorFromSignatureU32("Error(string)") << " {\n";
 		setLocation(*errorClause);
 		string const dataVariable = m_context.newYulVariable();
 		appendCode() << "let " << dataVariable << " := " << m_utils.tryDecodeErrorMessageFunction() << "()\n";
@@ -3254,7 +3254,7 @@ void IRGeneratorForStatements::handleCatch(TryStatement const& _tryStatement)
 	}
 	if (TryCatchClause const* panicClause = _tryStatement.panicClause())
 	{
-		appendCode() << "case " << selectorFromSignature32("Panic(uint256)") << " {\n";
+		appendCode() << "case " << selectorFromSignatureU32("Panic(uint256)") << " {\n";
 		setLocation(*panicClause);
 		string const success = m_context.newYulVariable();
 		string const code = m_context.newYulVariable();
@@ -3317,7 +3317,7 @@ void IRGeneratorForStatements::revertWithError(
 	})");
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
-	templ("hash", util::selectorFromSignature(_signature).str());
+	templ("hash", util::selectorFromSignatureU256(_signature).str());
 	templ("allocateUnbounded", m_utils.allocateUnboundedFunction());
 
 	vector<string> errorArgumentVars;

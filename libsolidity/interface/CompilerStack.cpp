@@ -1034,7 +1034,7 @@ Json::Value CompilerStack::interfaceSymbols(string const& _contractName) const
 	for (ErrorDefinition const* error: contractDefinition(_contractName).interfaceErrors())
 	{
 		string signature = error->functionType(true)->externalSignature();
-		interfaceSymbols["errors"][signature] = util::toHex(toCompactBigEndian(util::selectorFromSignature32(signature), 4));
+		interfaceSymbols["errors"][signature] = util::toHex(toCompactBigEndian(util::selectorFromSignatureU32(signature), 4));
 	}
 
 	for (EventDefinition const* event: ranges::concat_view(

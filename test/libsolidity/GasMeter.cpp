@@ -78,7 +78,7 @@ public:
 	{
 		u256 gasUsed = 0;
 		GasMeter::GasConsumption gas;
-		util::FixedHash<4> hash(util::keccak256(_sig));
+		util::FixedHash<4> hash = util::selectorFromSignatureH32(_sig);
 		for (bytes const& arguments: _argumentVariants)
 		{
 			sendMessage(hash.asBytes() + arguments, false, 0);

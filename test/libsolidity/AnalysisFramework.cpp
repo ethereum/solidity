@@ -30,7 +30,7 @@
 
 #include <liblangutil/Scanner.h>
 
-#include <libsolutil/Keccak256.h>
+#include <libsolutil/FunctionSelector.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -170,6 +170,5 @@ FunctionTypePointer AnalysisFramework::retrieveFunctionBySignature(
 	std::string const& _signature
 )
 {
-	FixedHash<4> hash(util::keccak256(_signature));
-	return _contract.interfaceFunctions()[hash];
+	return _contract.interfaceFunctions()[util::selectorFromSignatureH32(_signature)];
 }

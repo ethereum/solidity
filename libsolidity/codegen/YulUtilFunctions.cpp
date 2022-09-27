@@ -233,7 +233,7 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 			.render();
 
 		int const hashHeaderSize = 4;
-		u256 const errorHash = util::selectorFromSignature("Error(string)");
+		u256 const errorHash = util::selectorFromSignatureU256("Error(string)");
 
 		string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
 			.tupleEncoder(
@@ -4426,7 +4426,7 @@ string YulUtilFunctions::revertReasonIfDebugBody(
 		revert(start, <overallLength>)
 	)");
 	templ("allocate", _allocation);
-	templ("sig", util::selectorFromSignature("Error(string)").str());
+	templ("sig", util::selectorFromSignatureU256("Error(string)").str());
 	templ("length", to_string(_message.length()));
 
 	size_t words = (_message.length() + 31) / 32;
@@ -4454,7 +4454,7 @@ string YulUtilFunctions::panicFunction(util::PanicCode _code)
 			}
 		)")
 		("functionName", functionName)
-		("selector", util::selectorFromSignature("Panic(uint256)").str())
+		("selector", util::selectorFromSignatureU256("Panic(uint256)").str())
 		("code", toCompactHexWithPrefix(static_cast<unsigned>(_code)))
 		.render();
 	});
