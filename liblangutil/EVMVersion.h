@@ -52,10 +52,11 @@ public:
 	static EVMVersion istanbul() { return {Version::Istanbul}; }
 	static EVMVersion berlin() { return {Version::Berlin}; }
 	static EVMVersion london() { return {Version::London}; }
+	static EVMVersion paris() { return {Version::Paris}; }
 
 	static std::optional<EVMVersion> fromString(std::string const& _version)
 	{
-		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg(), istanbul(), berlin(), london()})
+		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg(), istanbul(), berlin(), london(), paris()})
 			if (_version == v.name())
 				return v;
 		return std::nullopt;
@@ -77,6 +78,7 @@ public:
 		case Version::Istanbul: return "istanbul";
 		case Version::Berlin: return "berlin";
 		case Version::London: return "london";
+		case Version::Paris: return "paris";
 		}
 		return "INVALID";
 	}
@@ -90,6 +92,8 @@ public:
 	bool hasChainID() const { return *this >= istanbul(); }
 	bool hasSelfBalance() const { return *this >= istanbul(); }
 	bool hasBaseFee() const { return *this >= london(); }
+	bool hasPrevRandao() const { return *this >= paris(); }
+	bool hasDifficulty() const { return *this < paris(); }
 
 	bool hasOpcode(evmasm::Instruction _opcode) const;
 
@@ -98,11 +102,11 @@ public:
 	bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
 
 private:
-	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium, Constantinople, Petersburg, Istanbul, Berlin, London };
+	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium, Constantinople, Petersburg, Istanbul, Berlin, London, Paris };
 
 	EVMVersion(Version _version): m_version(_version) {}
 
-	Version m_version = Version::London;
+	Version m_version = Version::Paris;
 };
 
 }

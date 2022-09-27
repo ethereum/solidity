@@ -84,7 +84,8 @@ enum class Instruction: uint8_t
 	TIMESTAMP,			///< get the block's timestamp
 	NUMBER,				///< get the block's number
 	DIFFICULTY,			///< get the block's difficulty
-	GASLIMIT,			///< get the block's gas limit
+	PREVRANDAO = DIFFICULTY,	///< get randomness provided by the beacon chain
+	GASLIMIT = 0x45,	///< get the block's gas limit
 	CHAINID,			///< get the config's chainid param
 	SELFBALANCE,		///< get balance of the current account
 	BASEFEE,            ///< get the block's basefee

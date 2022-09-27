@@ -118,12 +118,19 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 	{
 		return _instr == evmasm::Instruction::BASEFEE && _evmVersion < langutil::EVMVersion::london();
 	};
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// prevrandao for VMs before paris.
+	auto prevRandAOException = [&](string const& _instrName) -> bool
+	{
+		// Using string comparison as the opcode is the same as for "difficulty"
+		return _instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris();
+	};
 
 	set<YulString> reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
 		string name = toLower(instr.first);
-		if (!baseFeeException(instr.second))
+		if (!baseFeeException(instr.second) && !prevRandAOException(name))
 			reserved.emplace(name);
 	}
 	reserved += vector<YulString>{
@@ -139,6 +146,17 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 
 map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
+	auto hasOpCode = [&](evmasm::Instruction _instr, string const& _instrName) -> bool
+	{
+		if (
+			_instr == evmasm::Instruction::PREVRANDAO &&
+			_instrName == "prevrandao"
+		)
+			return _evmVersion.hasPrevRandao();
+
+		return _evmVersion.hasOpcode(_instr);
+	};
+
 	map<YulString, BuiltinFunctionForEVM> builtins;
 	for (auto const& instr: evmasm::c_instructions)
 	{
@@ -152,7 +170,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			opcode != evmasm::Instruction::JUMP &&
 			opcode != evmasm::Instruction::JUMPI &&
 			opcode != evmasm::Instruction::JUMPDEST &&
-			_evmVersion.hasOpcode(opcode)
+			hasOpCode(opcode, name)
 		)
 			builtins.emplace(createEVMFunction(name, opcode));
 	}

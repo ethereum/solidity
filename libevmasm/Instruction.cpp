@@ -77,6 +77,7 @@ std::map<std::string, Instruction> const solidity::evmasm::c_instructions =
 	{ "TIMESTAMP", Instruction::TIMESTAMP },
 	{ "NUMBER", Instruction::NUMBER },
 	{ "DIFFICULTY", Instruction::DIFFICULTY },
+	{ "PREVRANDAO", Instruction::PREVRANDAO },
 	{ "GASLIMIT", Instruction::GASLIMIT },
 	{ "CHAINID", Instruction::CHAINID },
 	{ "SELFBALANCE", Instruction::SELFBALANCE },
@@ -223,6 +224,8 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{ Instruction::COINBASE,	{ "COINBASE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::TIMESTAMP,	{ "TIMESTAMP",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::NUMBER,		{ "NUMBER",			0, 0, 1, false, Tier::Base } },
+//	{ Instruction::PREVRANDAO,	{ "PREVRANDAO",		0, 0, 1, false, Tier::Base } },
+// TODO Replace with PREVRANDAO in the next breaking release
 	{ Instruction::DIFFICULTY,	{ "DIFFICULTY",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::GASLIMIT,	{ "GASLIMIT",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::CHAINID,		{ "CHAINID",		0, 0, 1, false, Tier::Base } },

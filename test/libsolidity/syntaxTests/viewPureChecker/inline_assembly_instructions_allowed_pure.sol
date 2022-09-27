@@ -74,6 +74,7 @@ contract C {
             //pop(timestamp())
             //pop(number())
             //pop(difficulty())
+            //pop(prevrandao())
             //pop(gaslimit())
 
             // NOTE: msize() is allowed only with optimizer disabled

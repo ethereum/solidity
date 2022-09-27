@@ -8,7 +8,7 @@ Order of Precedence of Operators
 ================================
 .. include:: types/operator-precedence-table.rst
 
-.. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
+.. index:: assert, block, coinbase, difficulty, prevrandao, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
 
 Global Variables
 ================
@@ -33,6 +33,7 @@ Global Variables
 - ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
+- ``block.prevrandao`` (``uint``): randomness provided by the beacon chain
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
 - ``block.timestamp`` (``uint``): current block timestamp in seconds since Unix epoch

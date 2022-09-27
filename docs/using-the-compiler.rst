@@ -172,6 +172,9 @@ at each version. Backward compatibility is not guaranteed between each version.
      the optimizer.
 - ``london`` (**default**)
    - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
+- ``paris``
+   - The ``difficulty`` opcode was supplanted by the new opcode ``prevrandao`` (`EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
+     Both can be used interchangeably. ``prevrandao`` is a reserved keyword in yul code.
 
 
 .. index:: ! standard JSON, ! --standard-json
