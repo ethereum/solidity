@@ -74,6 +74,7 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit(map<string
 template <typename T, typename... Args>
 ASTPointer<T> ASTJsonImporter::createASTNode(Json const& _node, Args&&... _args)
 {
+	static_assert(sizeof(Json::number_integer_t) == sizeof(uint64_t));
 	astAssert(member(_node, "id").is_number_integer(), "'id'-field must be 64bit integer.");
 
 	int64_t id = static_cast<Json::number_integer_t>(_node["id"]);

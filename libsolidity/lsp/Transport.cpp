@@ -106,7 +106,7 @@ optional<map<string, string>> Transport::parseHeaders()
 
 void Transport::notify(string _method, Json _message)
 {
-	Json json;
+	Json json{Json::object()};
 	json["method"] = std::move(_method);
 	json["params"] = std::move(_message);
 	send(std::move(json));
@@ -114,14 +114,14 @@ void Transport::notify(string _method, Json _message)
 
 void Transport::reply(MessageID _id, Json _message)
 {
-	Json json;
+	Json json{Json::object()};
 	json["result"] = std::move(_message);
 	send(std::move(json), _id);
 }
 
 void Transport::error(MessageID _id, ErrorCode _code, string _message)
 {
-	Json json;
+	Json json{Json::object()};
 	json["error"]["code"] = static_cast<int>(_code);
 	json["error"]["message"] = std::move(_message);
 	send(std::move(json), _id);

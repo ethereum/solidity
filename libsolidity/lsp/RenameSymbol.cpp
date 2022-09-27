@@ -91,10 +91,10 @@ void RenameSymbol::operator()(MessageID _id, Json const& _args)
 	// Apply changes in reverse order (will iterate in reverse)
 	sort(m_locations.begin(), m_locations.end());
 
-	Json reply = Json::object();
+	Json reply{Json::object()};
 	reply["changes"] = Json::object();
 
-	Json edits = Json::array();
+	Json edits{Json::array()};
 
 	for (auto i = m_locations.rbegin(); i != m_locations.rend(); i++)
 	{
@@ -106,7 +106,7 @@ void RenameSymbol::operator()(MessageID _id, Json const& _args)
 		buffer.replace((size_t)i->start, (size_t)(i->end - i->start), newName);
 		fileRepository().setSourceByUri(uri, std::move(buffer));
 
-		Json edit = Json::object();
+		Json edit{Json::object()};
 		edit["range"] = toRange(*i);
 		edit["newText"] = newName;
 
@@ -115,7 +115,7 @@ void RenameSymbol::operator()(MessageID _id, Json const& _args)
 		if (i + 1 == m_locations.rend() || (i + 1)->sourceName != i->sourceName)
 		{
 			reply["changes"][uri] = edits;
-			edits = Json::array();
+			edits = Json::array(); // Reset.
 		}
 	}
 

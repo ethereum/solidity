@@ -39,7 +39,7 @@ Json StorageLayout::generate(ContractDefinition const& _contractDef)
 	for (auto [var, slot, offset]: contractType->stateVariables())
 		variables.emplace_back(generate(*var, slot, offset));
 
-	Json layout;
+	Json layout(Json::object());
 	layout["storage"] = std::move(variables);
 	layout["types"] = std::move(m_types);
 	return layout;
@@ -47,7 +47,7 @@ Json StorageLayout::generate(ContractDefinition const& _contractDef)
 
 Json StorageLayout::generate(VariableDeclaration const& _var, u256 const& _slot, unsigned _offset)
 {
-	Json varEntry;
+	Json varEntry(Json::object());
 	Type const* varType = _var.type();
 
 	varEntry["label"] = _var.name();
