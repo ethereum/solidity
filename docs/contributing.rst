@@ -32,7 +32,7 @@ the team and contributors are working on, you can join our public team calls:
 
 - Mondays and Wednesdays at 3pm CET/CEST.
 
-Both calls take place on `Jitsi <https://meet.ethereum.org/solidity>`_.
+Both calls take place on `Jitsi <http://meet.soliditylang.org/>`_.
 
 How to Report Issues
 ====================
