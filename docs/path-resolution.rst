@@ -197,7 +197,7 @@ source unit name.
 
     A source unit name is just an identifier and even if its value happens to look like a path, it
     is not subject to the normalization rules you would typically expect in a shell.
-    Any ``/./`` or ``/../`` seguments or sequences of multiple slashes remain a part of it.
+    Any ``/./`` or ``/../`` segments or sequences of multiple slashes remain a part of it.
     When the source is provided via Standard JSON interface it is entirely possible to associate
     different content with source unit names that would refer to the same file on disk.
 
