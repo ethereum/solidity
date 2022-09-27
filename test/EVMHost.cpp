@@ -255,7 +255,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		h160 createAddress(keccak256(
 			bytes(begin(message.sender.bytes), end(message.sender.bytes)) +
 			asBytes(to_string(sender.nonce++))
-		));
+		), h160::AlignLeft);
 		message.destination = convertToEVMC(createAddress);
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
@@ -266,7 +266,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 			bytes(begin(message.sender.bytes), end(message.sender.bytes)) +
 			bytes(begin(message.create2_salt.bytes), end(message.create2_salt.bytes)) +
 			keccak256(bytes(message.input_data, message.input_data + message.input_size)).asBytes()
-		));
+		), h160::AlignLeft);
 		message.destination = convertToEVMC(createAddress);
 		if (accounts.count(message.destination) && (
 			accounts[message.destination].nonce > 0 ||
