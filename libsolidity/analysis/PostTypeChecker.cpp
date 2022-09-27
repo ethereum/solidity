@@ -411,7 +411,7 @@ struct ReservedErrorSelector: public PostTypeChecker::Checker
 			);
 		else
 		{
-			uint32_t selector = util::selectorFromSignature32(_error.functionType(true)->externalSignature());
+			uint32_t selector = util::selectorFromSignatureU32(_error.functionType(true)->externalSignature());
 			if (selector == 0 || ~selector == 0)
 				m_errorReporter.syntaxError(
 					2855_error,

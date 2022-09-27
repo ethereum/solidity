@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(external_function)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f(uint256)", u256(0));
-		string functionIdF = asString(m_contractAddress.ref()) + asString(FixedHash<4>(keccak256("f(uint256)")).ref());
+		string functionIdF = asString(m_contractAddress.ref()) + asString(util::selectorFromSignatureH32("f(uint256)").ref());
 		REQUIRE_LOG_DATA(encodeArgs(functionIdF, functionIdF));
 	)
 }

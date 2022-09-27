@@ -27,6 +27,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 
 #include <range/v3/view/tail.hpp>
@@ -281,8 +282,7 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					signaturesSeen.insert(functionSignature);
-					util::FixedHash<4> hash(util::keccak256(functionSignature));
-					interfaceFunctionList.emplace_back(hash, fun);
+					interfaceFunctionList.emplace_back(util::selectorFromSignatureH32(functionSignature), fun);
 				}
 			}
 		}

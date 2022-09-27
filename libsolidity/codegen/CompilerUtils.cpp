@@ -95,7 +95,7 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 {
 	solAssert(_argumentType.isImplicitlyConvertibleTo(*TypeProvider::fromElementaryTypeName("string memory")));
 	fetchFreeMemoryPointer();
-	m_context << util::selectorFromSignature("Error(string)");
+	m_context << util::selectorFromSignatureU256("Error(string)");
 	m_context << Instruction::DUP2 << Instruction::MSTORE;
 	m_context << u256(4) << Instruction::ADD;
 	// Stack: <string data> <mem pos of encoding start>
@@ -111,7 +111,7 @@ void CompilerUtils::revertWithError(
 )
 {
 	fetchFreeMemoryPointer();
-	m_context << util::selectorFromSignature(_signature);
+	m_context << util::selectorFromSignatureU256(_signature);
 	m_context << Instruction::DUP2 << Instruction::MSTORE;
 	m_context << u256(4) << Instruction::ADD;
 	// Stack: <arguments...> <mem pos of encoding start>

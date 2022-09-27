@@ -31,8 +31,7 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libsolutil/FixedHash.h>
-#include <libsolutil/Keccak256.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/ErrorCodes.h>
 
 #include <functional>
@@ -108,8 +107,7 @@ public:
 
 	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
 	{
-		util::FixedHash<4> hash(util::keccak256(_sig));
-		sendMessage(hash.asBytes() + _arguments, false, _value);
+		sendMessage(util::selectorFromSignatureH32(_sig).asBytes() + _arguments, false, _value);
 		return m_output;
 	}
 

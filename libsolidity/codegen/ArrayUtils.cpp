@@ -889,7 +889,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 			}
 			sstore(ref, slot_value)
 		})");
-		code("panicSelector", util::selectorFromSignature("Panic(uint256)").str());
+		code("panicSelector", util::selectorFromSignatureU256("Panic(uint256)").str());
 		code("emptyArrayPop", to_string(unsigned(util::PanicCode::EmptyArrayPop)));
 		m_context.appendInlineAssembly(code.render(), {"ref", "slot_value", "length"});
 		m_context << Instruction::POP << Instruction::POP << Instruction::POP;

@@ -338,9 +338,9 @@ solidity::frontend::test::ParameterList ContractABIUtils::failureParameters(byte
 		parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}});
 
 		uint64_t selector = fromBigEndian<uint64_t>(bytes{_bytes.begin(), _bytes.begin() + 4});
-		if (selector == selectorFromSignature32("Panic(uint256)"))
+		if (selector == selectorFromSignatureU32("Panic(uint256)"))
 			parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
-		else if (selector == selectorFromSignature32("Error(string)"))
+		else if (selector == selectorFromSignatureU32("Error(string)"))
 		{
 			parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
 			parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});

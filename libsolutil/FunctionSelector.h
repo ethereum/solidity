@@ -26,17 +26,22 @@
 namespace solidity::util
 {
 
-/// @returns the ABI selector for a given function signature, as a 32 bit number.
-inline uint32_t selectorFromSignature32(std::string const& _signature)
+/// @returns the ABI selector for a given function signature, as a FixedHash h32.
+inline FixedHash<4> selectorFromSignatureH32(std::string const& _signature)
 {
-	return uint32_t(FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256(_signature))));
+	return FixedHash<4>(util::keccak256(_signature), FixedHash<4>::AlignLeft);
+}
+
+/// @returns the ABI selector for a given function signature, as a 32 bit number.
+inline uint32_t selectorFromSignatureU32(std::string const& _signature)
+{
+	return uint32_t(FixedHash<4>::Arith(selectorFromSignatureH32(_signature)));
 }
 
 /// @returns the ABI selector for a given function signature, as a u256 (left aligned) number.
-inline u256 selectorFromSignature(std::string const& _signature)
+inline u256 selectorFromSignatureU256(std::string const& _signature)
 {
-	return u256(selectorFromSignature32(_signature)) << (256 - 32);
+	return u256(selectorFromSignatureU32(_signature)) << (256 - 32);
 }
-
 
 }

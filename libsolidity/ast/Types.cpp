@@ -3583,12 +3583,12 @@ string FunctionType::externalSignature() const
 
 u256 FunctionType::externalIdentifier() const
 {
-	return util::selectorFromSignature32(externalSignature());
+	return util::selectorFromSignatureU32(externalSignature());
 }
 
 string FunctionType::externalIdentifierHex() const
 {
-	return util::FixedHash<4>(util::keccak256(externalSignature())).hex();
+	return util::selectorFromSignatureH32(externalSignature()).hex();
 }
 
 bool FunctionType::isPure() const

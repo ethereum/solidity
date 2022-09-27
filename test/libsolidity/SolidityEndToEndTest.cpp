@@ -1627,7 +1627,7 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 	ALSO_VIA_YUL(
 		DISABLE_EWASM_TESTRUN();
 		compileAndRun(sourceCode);
-		bytes calldata1 = FixedHash<4>(util::keccak256("f()")).asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
+		bytes calldata1 = util::selectorFromSignatureH32("f()").asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
 		sendMessage(calldata1, false);
 		BOOST_CHECK(m_transactionSuccessful);
 		BOOST_CHECK(m_output == encodeArgs(util::keccak256(bytes{'a', 'b', 'c'} + calldata1)));
@@ -1872,8 +1872,8 @@ BOOST_AUTO_TEST_CASE(bytes_in_arguments)
 
 		compileAndRun(sourceCode);
 
-		string innercalldata1 = asString(FixedHash<4>(util::keccak256("f(uint256,uint256)")).asBytes() + encodeArgs(8, 9));
-		string innercalldata2 = asString(FixedHash<4>(util::keccak256("g(uint256)")).asBytes() + encodeArgs(3));
+		string innercalldata1 = asString(util::selectorFromSignatureH32("f(uint256,uint256)").asBytes() + encodeArgs(8, 9));
+		string innercalldata2 = asString(util::selectorFromSignatureH32("g(uint256)").asBytes() + encodeArgs(3));
 		bytes calldata = encodeArgs(
 			12, 32 * 4, u256(32 * 4 + 32 + (innercalldata1.length() + 31) / 32 * 32), 13,
 			u256(innercalldata1.length()), innercalldata1,
@@ -2205,8 +2205,8 @@ BOOST_AUTO_TEST_CASE(calldata_struct_function_type)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
-	bytes fn_C_g = m_contractAddress.asBytes() + FixedHash<4>(util::keccak256("g(uint256)")).asBytes() + bytes(8,0);
-	bytes fn_C_h = m_contractAddress.asBytes() + FixedHash<4>(util::keccak256("h(uint256)")).asBytes() + bytes(8,0);
+	bytes fn_C_g = m_contractAddress.asBytes() + util::selectorFromSignatureH32("g(uint256)").asBytes() + bytes(8,0);
+	bytes fn_C_h = m_contractAddress.asBytes() + util::selectorFromSignatureH32("h(uint256)").asBytes() + bytes(8,0);
 	ABI_CHECK(callContractFunctionNoEncoding("f((function))", fn_C_g), encodeArgs(42 * 3));
 	ABI_CHECK(callContractFunctionNoEncoding("f((function))", fn_C_h), encodeArgs(23));
 }
@@ -3007,7 +3007,7 @@ BOOST_AUTO_TEST_CASE(receive_external_function_type)
 		compileAndRun(sourceCode, 0, "C");
 		ABI_CHECK(callContractFunction(
 			"f(function)",
-			m_contractAddress.asBytes() + FixedHash<4>(util::keccak256("g()")).asBytes() + bytes(32 - 4 - 20, 0)
+			m_contractAddress.asBytes() + util::selectorFromSignatureH32("g()").asBytes() + bytes(32 - 4 - 20, 0)
 		), encodeArgs(u256(7)));
 	)
 }
@@ -3026,7 +3026,7 @@ BOOST_AUTO_TEST_CASE(return_external_function_type)
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(
 		callContractFunction("f()"),
-		m_contractAddress.asBytes() + FixedHash<4>(util::keccak256("g()")).asBytes() + bytes(32 - 4 - 20, 0)
+		m_contractAddress.asBytes() + util::selectorFromSignatureH32("g()").asBytes() + bytes(32 - 4 - 20, 0)
 	);
 }
 
