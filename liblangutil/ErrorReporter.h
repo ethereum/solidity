@@ -30,7 +30,8 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/StringUtils.h>
 
-#include <boost/range/adaptor/filtered.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/filter.hpp>
 
 namespace solidity::langutil
 {
@@ -106,9 +107,8 @@ public:
 		std::initializer_list<std::string> const descs = { _descriptions... };
 		solAssert(descs.size() > 0, "Need error descriptions!");
 
-		auto filterEmpty = boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
-
-		std::string errorStr = util::joinHumanReadable(descs | filterEmpty, " ");
+		auto nonEmpty = [](std::string const& _s) { return !_s.empty(); };
+		std::string errorStr = util::joinHumanReadable(descs | ranges::views::filter(nonEmpty) | ranges::to_vector, " ");
 
 		error(_error, Error::Type::TypeError, _location, errorStr);
 	}

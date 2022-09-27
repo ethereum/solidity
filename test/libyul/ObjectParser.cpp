@@ -43,7 +43,6 @@
 #include <string>
 #include <sstream>
 
-using namespace ranges;
 using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
