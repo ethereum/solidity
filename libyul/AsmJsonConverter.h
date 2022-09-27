@@ -26,7 +26,7 @@
 #include <libyul/ASTForward.h>
 #include <liblangutil/SourceLocation.h>
 #include <json/json.h>
-#include <boost/variant.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <optional>
 #include <vector>
 
