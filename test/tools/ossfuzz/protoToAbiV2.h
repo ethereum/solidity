@@ -10,9 +10,7 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <boost/variant/static_visitor.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/variant.hpp>
 
 #include <ostream>
 #include <random>
