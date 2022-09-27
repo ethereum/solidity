@@ -31,7 +31,7 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/algorithm/cxx11/all_of.hpp>
+#include <range/v3/algorithm/all_of.hpp>
 
 #include <optional>
 #include <variant>
@@ -64,7 +64,7 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 		{
 			FunctionDefinition const& f = std::get<FunctionDefinition>(statement);
 
-			if (tooSimpleToBePruned(f) || boost::algorithm::all_of(f.parameters + f.returnVariables, used))
+			if (tooSimpleToBePruned(f) || ranges::all_of(f.parameters + f.returnVariables, used))
 				continue;
 
 			usedParametersAndReturnVariables[f.name] = {

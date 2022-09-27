@@ -34,8 +34,6 @@
 
 #include <libsolutil/FixedHash.h>
 
-#include <boost/algorithm/cxx11/all_of.hpp>
-
 #include <range/v3/view/reverse.hpp>
 
 #include <ostream>
