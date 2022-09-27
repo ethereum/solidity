@@ -146,29 +146,30 @@ BOOST_AUTO_TEST_CASE(string_constructor_frombytes)
 
 BOOST_AUTO_TEST_CASE(converting_constructor)
 {
-	// Truncation
-	FixedHash<8> a = FixedHash<8>(FixedHash<12>("112233445566778899001122"));
+	// Left-aligned truncation
+	FixedHash<8> a = FixedHash<8>(FixedHash<12>("112233445566778899001122"), FixedHash<8>::AlignLeft);
 	BOOST_CHECK_EQUAL(a.size, 8);
 	BOOST_CHECK_EQUAL(a.hex(), "1122334455667788");
 
+	// Right-aligned truncation
+	FixedHash<8> b = FixedHash<8>(FixedHash<12>("112233445566778899001122"), FixedHash<8>::AlignRight);
+	BOOST_CHECK_EQUAL(b.size, 8);
+	BOOST_CHECK_EQUAL(b.hex(), "5566778899001122");
+
 	// Left-aligned extension
-	FixedHash<12> b = FixedHash<12>(FixedHash<8>("1122334455667788"), FixedHash<12>::AlignLeft);
-	BOOST_CHECK_EQUAL(b.size, 12);
-	BOOST_CHECK_EQUAL(b.hex(), "112233445566778800000000");
+	FixedHash<12> c = FixedHash<12>(FixedHash<8>("1122334455667788"), FixedHash<12>::AlignLeft);
+	BOOST_CHECK_EQUAL(c.size, 12);
+	BOOST_CHECK_EQUAL(c.hex(), "112233445566778800000000");
 
 	// Right-aligned extension
-	FixedHash<12> c = FixedHash<12>(FixedHash<8>("1122334455667788"), FixedHash<12>::AlignRight);
-	BOOST_CHECK_EQUAL(c.size, 12);
-	BOOST_CHECK_EQUAL(c.hex(), "000000001122334455667788");
-
-	// Default setting
-	FixedHash<12> d = FixedHash<12>(FixedHash<8>("1122334455667788"));
-	BOOST_CHECK_EQUAL(d, b);
+	FixedHash<12> d = FixedHash<12>(FixedHash<8>("1122334455667788"), FixedHash<12>::AlignRight);
+	BOOST_CHECK_EQUAL(d.size, 12);
+	BOOST_CHECK_EQUAL(d.hex(), "000000001122334455667788");
 
 	// FailIfDifferent setting
 	// TODO: Shouldn't this throw?
 	FixedHash<12> e = FixedHash<12>(FixedHash<8>("1122334455667788"), FixedHash<12>::FailIfDifferent);
-	BOOST_CHECK_EQUAL(e, b);
+	BOOST_CHECK_EQUAL(e, c);
 }
 
 BOOST_AUTO_TEST_CASE(arith_constructor)

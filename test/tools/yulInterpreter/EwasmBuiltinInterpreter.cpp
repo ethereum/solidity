@@ -439,7 +439,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "getExternalCodeSize")
 		// Generate "random" code length.
-		return uint32_t(u256(keccak256(h256(readAddress(arg[0])))) & 0xfff);
+		return uint32_t(u256(keccak256(h256(readAddress(arg[0]), h256::AlignLeft))) & 0xfff);
 	else if (_fun == "getGasLeft")
 		return 0x99;
 	else if (_fun == "getBlockGasLimit")
