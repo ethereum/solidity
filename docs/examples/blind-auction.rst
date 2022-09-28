@@ -177,7 +177,7 @@ During the **bidding period**, a bidder does not actually send their bid, but
 only a hashed version of it.  Since it is currently considered practically
 impossible to find two (sufficiently long) values whose hash values are equal,
 the bidder commits to the bid by that.  After the end of the bidding period,
-the bidders have to reveal their bids: They send their values unencrypted and
+the bidders have to reveal their bids: They send their values unencrypted, and
 the contract checks that the hash value is the same as the one provided during
 the bidding period.
 
@@ -189,7 +189,7 @@ transfers cannot be blinded in Ethereum, anyone can see the value.
 The following contract solves this problem by accepting any value that is
 larger than the highest bid. Since this can of course only be checked during
 the reveal phase, some bids might be **invalid**, and this is on purpose (it
-even provides an explicit flag to place invalid bids with high value
+even provides an explicit flag to place invalid bids with high-value
 transfers): Bidders can confuse competition by placing several high or low
 invalid bids.
 
