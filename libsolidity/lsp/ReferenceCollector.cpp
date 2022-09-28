@@ -35,23 +35,23 @@ namespace solidity::lsp
 
 ReferenceCollector::ReferenceCollector(
 	Declaration const& _declaration,
-	string const& _sourceIdentifierName
+	string const& _identifierAtCursorLocation
 ):
 	m_declaration{_declaration},
-	m_sourceIdentifierName{_sourceIdentifierName.empty() ? _declaration.name() : _sourceIdentifierName}
+	m_identifierAtCursorLocation{_identifierAtCursorLocation.empty() ? _declaration.name() : _identifierAtCursorLocation}
 {
 }
 
 vector<Reference> ReferenceCollector::collect(
 	Declaration const* _declaration,
 	ASTNode const& _astSearchRoot,
-	string const& _sourceIdentifierName
+	string const& _identifierAtCursorLocation
 )
 {
 	if (!_declaration)
 		return {};
 
-	ReferenceCollector collector(*_declaration, _sourceIdentifierName);
+	ReferenceCollector collector(*_declaration, _identifierAtCursorLocation);
 	_astSearchRoot.accept(collector);
 	return std::move(collector.m_collectedReferences);
 }
@@ -65,10 +65,10 @@ vector<Reference> ReferenceCollector::collect(
 	if (!_sourceNode)
 		return {};
 
-	auto references = vector<Reference>{};
+	solAssert(_sourceNode->location().containsOffset(_sourceOffset), "");
 
 	if (auto const* identifier = dynamic_cast<Identifier const*>(_sourceNode))
-		references += collect(identifier->annotation().referencedDeclaration, _sourceUnit, identifier->name());
+		return collect(identifier->annotation().referencedDeclaration, _sourceUnit, identifier->name());
 	else if (auto const* identifierPath = dynamic_cast<IdentifierPath const*>(_sourceNode))
 	{
 		solAssert(identifierPath->path().size() >= 1, "");
@@ -79,19 +79,17 @@ vector<Reference> ReferenceCollector::collect(
 			{
 				Declaration const* declaration = identifierPath->annotation().pathDeclarations.at(i);
 				ASTString const& name = identifierPath->path().at(i);
-				references += collect(declaration, _sourceUnit, name);
-				break;
+				return collect(declaration, _sourceUnit, name);
 			}
 		}
+		return {};
 	}
 	else if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(_sourceNode))
-		references += collect(memberAccess->annotation().referencedDeclaration, _sourceUnit, memberAccess->memberName());
+		return collect(memberAccess->annotation().referencedDeclaration, _sourceUnit, memberAccess->memberName());
 	else if (auto const* declaration = dynamic_cast<Declaration const*>(_sourceNode))
-		references += collect(declaration, _sourceUnit, declaration->name());
+		return collect(declaration, _sourceUnit, declaration->name());
 	else
 		lspRequire(false, ErrorCode::InternalError, "Unhandled AST node "s + typeid(*_sourceNode).name());
-
-	return references;
 }
 
 bool ReferenceCollector::visit(ImportDirective const& _import)
@@ -99,7 +97,7 @@ bool ReferenceCollector::visit(ImportDirective const& _import)
 	for (ImportDirective::SymbolAlias const& symbolAlias: _import.symbolAliases())
 	{
 		if (
-			symbolAlias.alias && *symbolAlias.alias == m_sourceIdentifierName &&
+			symbolAlias.alias && *symbolAlias.alias == m_identifierAtCursorLocation &&
 			symbolAlias.symbol && symbolAlias.symbol->annotation().referencedDeclaration == &m_declaration
 		)
 			m_collectedReferences.emplace_back(symbolAlias.location, DocumentHighlightKind::Read);
@@ -122,7 +120,7 @@ void ReferenceCollector::endVisit(IdentifierPath const& _identifierPath)
 			_identifierPath.annotation().pathDeclarations.at(i) :
 			nullptr;
 
-		if (declaration == &m_declaration && name == m_sourceIdentifierName)
+		if (declaration == &m_declaration && name == m_identifierAtCursorLocation)
 			m_collectedReferences.emplace_back(_identifierPath.pathLocations().at(i), m_kind);
 	}
 }
@@ -148,7 +146,7 @@ bool ReferenceCollector::visit(Assignment const& _assignment)
 
 bool ReferenceCollector::visit(VariableDeclaration const& _variableDeclaration)
 {
-	if (&_variableDeclaration == &m_declaration && _variableDeclaration.name() == m_sourceIdentifierName)
+	if (&_variableDeclaration == &m_declaration && _variableDeclaration.name() == m_identifierAtCursorLocation)
 		m_collectedReferences.emplace_back(_variableDeclaration.nameLocation(), DocumentHighlightKind::Write);
 	return true;
 }
@@ -158,7 +156,7 @@ bool ReferenceCollector::visitNode(ASTNode const& _genericNode)
 	if (&_genericNode == &m_declaration)
 	{
 		Declaration const* declaration = dynamic_cast<Declaration const*>(&_genericNode);
-		if (declaration->name() == m_sourceIdentifierName)
+		if (declaration->name() == m_identifierAtCursorLocation)
 			m_collectedReferences.emplace_back(declaration->nameLocation(), m_kind);
 	}
 

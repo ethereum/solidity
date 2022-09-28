@@ -548,7 +548,7 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 }
 
 
-tuple<ASTNode const*, int> LanguageServer::astNodeAndOffsetAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos)
+tuple<ASTNode const*, int> LanguageServer::astNodeAndOffsetAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
 {
 	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
 		return {nullptr, -1};
