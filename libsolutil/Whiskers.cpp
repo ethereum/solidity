@@ -34,6 +34,7 @@ using namespace solidity::util;
 Whiskers::Whiskers(string _template):
 	m_template(std::move(_template))
 {
+	checkTemplateValid();
 }
 
 Whiskers& Whiskers::operator()(string _parameter, string _value)
@@ -72,6 +73,17 @@ Whiskers& Whiskers::operator()(
 string Whiskers::render() const
 {
 	return replace(m_template, m_parameters, m_conditions, m_listParameters);
+}
+
+void Whiskers::checkTemplateValid() const
+{
+	regex validTemplate("<[#?!\\/]\\+{0,1}[a-zA-Z0-9_$-]+(?:[^a-zA-Z0-9_$>-]|$)");
+	smatch match;
+	assertThrow(
+		!regex_search(m_template, match, validTemplate),
+		WhiskersError,
+		"Template contains an invalid/unclosed tag " + match.str()
+	);
 }
 
 void Whiskers::checkParameterValid(string const& _parameter) const

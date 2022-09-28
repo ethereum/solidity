@@ -92,6 +92,7 @@ public:
 private:
 	// Prevent implicit cast to bool
 	Whiskers& operator()(std::string _parameter, long long);
+	void checkTemplateValid() const;
 	void checkParameterValid(std::string const& _parameter) const;
 	void checkParameterUnknown(std::string const& _parameter) const;
 
