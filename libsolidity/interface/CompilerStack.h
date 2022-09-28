@@ -117,6 +117,13 @@ public:
 		None
 	};
 
+	enum class CompilationSourceType {
+		/// Regular compilation from Solidity source files.
+		Solidity,
+		/// Compilation from an imported Solidity AST.
+		SolidityAST
+	};
+
 	/// Creates a new compiler stack.
 	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
@@ -511,7 +518,7 @@ private:
 	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
-	bool m_importedSources = false;
+	CompilationSourceType m_compilationSourceType = CompilationSourceType::Solidity;
 	/// Whether or not there has been an error during processing.
 	/// If this is true, the stack will refuse to generate code.
 	bool m_hasError = false;
