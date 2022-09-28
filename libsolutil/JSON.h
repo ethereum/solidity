@@ -67,4 +67,69 @@ std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format);
 /// \return \c true if the document was successfully parsed, \c false if an error occurred.
 bool jsonParseStrict(std::string const& _input, Json::Value& _json, std::string* _errs = nullptr);
 
+namespace detail
+{
+
+template<typename T>
+struct helper;
+
+#define DEFINE_JSON_CONVERSION_HELPERS(TYPE, CHECK_TYPE_MEMBER, CONVERT_TYPE_MEMBER) \
+	template<>                                                                       \
+	struct helper<TYPE>                                                              \
+	{                                                                                \
+		static bool isOfType(Json::Value const& _input)                              \
+		{                                                                            \
+			return _input.CHECK_TYPE_MEMBER();                                       \
+		}                                                                            \
+		static TYPE get(Json::Value const& _input)                                   \
+		{                                                                            \
+			return _input.CONVERT_TYPE_MEMBER();                                     \
+		}                                                                            \
+		static TYPE getOrDefault(Json::Value const& _input, TYPE _default = {})      \
+		{                                                                            \
+			TYPE result = _default;                                                  \
+			if (helper::isOfType(_input))                                            \
+				result = _input.CONVERT_TYPE_MEMBER();                               \
+			return result;                                                           \
+		}                                                                            \
+	};
+
+DEFINE_JSON_CONVERSION_HELPERS(float, isDouble, asFloat)
+DEFINE_JSON_CONVERSION_HELPERS(double, isDouble, asDouble)
+DEFINE_JSON_CONVERSION_HELPERS(std::string, isString, asString)
+DEFINE_JSON_CONVERSION_HELPERS(Json::Int, isInt, asInt)
+DEFINE_JSON_CONVERSION_HELPERS(Json::Int64, isInt64, asInt64)
+DEFINE_JSON_CONVERSION_HELPERS(Json::UInt, isUInt, asUInt)
+DEFINE_JSON_CONVERSION_HELPERS(Json::UInt64, isUInt64, asUInt64)
+
+#undef DEFINE_JSON_CONVERSION_HELPERS
+
+} // namespace detail
+
+template<typename T>
+bool isOfType(Json::Value const& _input)
+{
+	return detail::helper<T>::isOfType(_input);
 }
+
+template<typename T>
+bool isOfTypeIfExists(Json::Value const& _input, std::string const& _name)
+{
+	if (_input.isMember(_name))
+		return isOfType<T>(_input[_name]);
+	return true;
+}
+
+template<typename T>
+T get(Json::Value const& _input)
+{
+	return detail::helper<T>::get(_input);
+}
+
+template<typename T>
+T getOrDefault(Json::Value const& _input, T _default = {})
+{
+	return detail::helper<T>::getOrDefault(_input, _default);
+}
+
+} // namespace solidity::util
