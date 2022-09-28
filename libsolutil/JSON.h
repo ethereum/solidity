@@ -23,6 +23,7 @@
 
 #pragma once
 
+#define JSON_DIAGNOSTICS 1
 #include <libsolutil/nlohmannjson.hpp>
 
 #include <string>
