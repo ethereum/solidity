@@ -2,7 +2,7 @@
 Micropayment Channel
 ********************
 
-In this section we will learn how to build an example implementation
+In this section, we will learn how to build an example implementation
 of a payment channel. It uses cryptographic signatures to make
 repeated transfers of Ether between the same parties secure, instantaneous, and
 without transaction fees. For the example, we need to understand how to
@@ -17,14 +17,14 @@ Alice is the sender and Bob is the recipient.
 Alice only needs to send cryptographically signed messages off-chain
 (e.g. via email) to Bob and it is similar to writing checks.
 
-Alice and Bob use signatures to authorise transactions, which is possible with smart contracts on Ethereum.
+Alice and Bob use signatures to authorize transactions, which is possible with smart contracts on Ethereum.
 Alice will build a simple smart contract that lets her transmit Ether, but instead of calling a function herself
 to initiate a payment, she will let Bob do that, and therefore pay the transaction fee.
 
 The contract will work as follows:
 
     1. Alice deploys the ``ReceiverPays`` contract, attaching enough Ether to cover the payments that will be made.
-    2. Alice authorises a payment by signing a message with her private key.
+    2. Alice authorizes a payment by signing a message with her private key.
     3. Alice sends the cryptographically signed message to Bob. The message does not need to be kept secret
        (explained later), and the mechanism for sending it does not matter.
     4. Bob claims his payment by presenting the signed message to the smart contract, it verifies the
@@ -259,7 +259,7 @@ Messages are cryptographically signed by the sender and then transmitted directl
 Each message includes the following information:
 
     * The smart contract's address, used to prevent cross-contract replay attacks.
-    * The total amount of Ether that is owed the recipient so far.
+    * The total amount of Ether that is owed to the recipient so far.
 
 A payment channel is closed just once, at the end of a series of transfers.
 Because of this, only one of the messages sent is redeemed. This is why
