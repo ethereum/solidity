@@ -23,11 +23,13 @@
 #include <test/CommonSyntaxTest.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
-
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+#include <memory>
+
+#include "liblangutil/EVMVersion.h"
 
 namespace solidity::frontend::test
 {

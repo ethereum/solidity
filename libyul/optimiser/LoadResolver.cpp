@@ -21,19 +21,32 @@
  */
 
 #include <libyul/optimiser/LoadResolver.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
-#include <libyul/SideEffects.h>
 #include <libyul/AST.h>
-#include <libyul/Utilities.h>
-
-#include <libevmasm/GasMeter.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/cpp_int/limits.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <cstddef>
+#include <initializer_list>
+#include <variant>
 
-#include <limits>
+#include "libsolutil/Common.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+#include "libyul/optimiser/DataFlowAnalyzer.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

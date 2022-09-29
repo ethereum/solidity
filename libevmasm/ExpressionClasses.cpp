@@ -23,16 +23,29 @@
  */
 
 #include <libevmasm/ExpressionClasses.h>
-
-#include <libevmasm/Assembly.h>
-#include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/SimplificationRules.h>
-
-#include <boost/container_hash/hash.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/container_hash/extensions.hpp>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <functional>
 #include <limits>
 #include <tuple>
+#include <algorithm>
+#include <iostream>
+#include <map>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "libevmasm/SemanticInformation.h"
+#include "libevmasm/SimplificationRule.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Assertions.h"
 
 using namespace std;
 using namespace solidity;

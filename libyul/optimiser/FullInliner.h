@@ -21,18 +21,32 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Exceptions.h>
-
 #include <liblangutil/SourceLocation.h>
-
+#include <stddef.h>
 #include <optional>
 #include <set>
 #include <utility>
+#include <map>
+#include <vector>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+class NameDispenser;
+struct Block;
+struct Dialect;
+struct FunctionCall;
+struct FunctionDefinition;
+struct OptimiserStepContext;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

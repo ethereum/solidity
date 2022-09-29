@@ -20,17 +20,27 @@
  */
 
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
-
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
-
-#include <libsolutil/Whiskers.h>
-#include <libsolutil/StringUtils.h>
-
 #include <range/v3/view/map.hpp>
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/MultiUseYulFunctionCollector.h"
+#include "libsolidity/codegen/ir/Common.h"
+#include "libsolidity/codegen/ir/IRVariable.h"
 
 using namespace std;
 using namespace solidity;

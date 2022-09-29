@@ -22,24 +22,33 @@
  */
 
 #include <test/ExecutionFramework.h>
-
 #include <test/EVMHost.h>
-
 #include <test/evmc/evmc.hpp>
-
 #include <test/libsolidity/util/SoltestTypes.h>
 
 #include <libsolutil/CommonIO.h>
 
 #include <liblangutil/Exceptions.h>
-
-#include <boost/test/framework.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <range/v3/range.hpp>
 #include <range/v3/view/transform.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <boost/cstdint.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/view.hpp>
 #include <cstdlib>
 #include <limits>
+#include <algorithm>
+#include <iostream>
+#include <unordered_map>
+
+#include "Common.h"
+#include "evmc/mocked_host.hpp"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libsolutil/FixedHash.h"
 
 using namespace std;
 using namespace solidity;

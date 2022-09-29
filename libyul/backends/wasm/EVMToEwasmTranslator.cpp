@@ -20,7 +20,6 @@
  */
 
 #include <libyul/backends/wasm/EVMToEwasmTranslator.h>
-
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
@@ -31,19 +30,16 @@
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
-
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Object.h>
-
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/CharStreamProvider.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
+#include <libsolutil/Assertions.h>
 
 // The following headers are generated from the
 // yul files placed in libyul/backends/wasm/polyfill.
@@ -56,6 +52,21 @@
 #include <ewasmPolyfills/Keccak.h>
 #include <ewasmPolyfills/Logical.h>
 #include <ewasmPolyfills/Memory.h>
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTCopier.h"
+#include "libyul/optimiser/NameDispenser.h"
 
 using namespace std;
 using namespace solidity;

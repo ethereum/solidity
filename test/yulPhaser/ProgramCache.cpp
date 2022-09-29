@@ -18,17 +18,30 @@
 
 #include <tools/yulPhaser/ProgramCache.h>
 #include <tools/yulPhaser/Chromosome.h>
-
-#include <libyul/optimiser/Metrics.h>
-
 #include <liblangutil/CharStream.h>
-
 #include <libsolutil/CommonIO.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <assert.h>
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <string>
 #include <set>
+#include <algorithm>
+#include <variant>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/ASTForward.h"
+#include "tools/yulPhaser/Program.h"
 
 using namespace std;
 using namespace solidity::util;

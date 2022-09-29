@@ -17,9 +17,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/codegen/ReturnInfo.h>
-
 #include <libsolidity/ast/Types.h>
-#include <libsolidity/ast/AST.h>
+#include <vector>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTForward.h"
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;

@@ -17,6 +17,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/ast/CallGraph.h>
+#include <iosfwd>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
 
 using namespace std;
 using namespace solidity::frontend;

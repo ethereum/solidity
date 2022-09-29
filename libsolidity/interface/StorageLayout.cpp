@@ -17,8 +17,17 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/interface/StorageLayout.h>
-
 #include <libsolidity/ast/TypeProvider.h>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <iosfwd>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
 
 using namespace std;
 using namespace solidity;

@@ -17,10 +17,16 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/FitnessMetrics.h>
-
 #include <libsolutil/CommonIO.h>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
 #include <cmath>
+#include <algorithm>
+
+#include "libyul/ASTForward.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/Program.h"
+#include "tools/yulPhaser/ProgramCache.h"
 
 using namespace std;
 using namespace solidity::util;

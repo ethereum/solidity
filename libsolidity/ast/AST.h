@@ -28,23 +28,56 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/parsing/Token.h>
-
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/LazyInit.h>
 #include <libsolutil/Visitor.h>
-
 #include <json/json.h>
-
 #include <range/v3/view/subrange.hpp>
 #include <range/v3/view/map.hpp>
-
+#include <stddef.h>
+#include <stdint.h>
+#include <range/v3/view/view.hpp>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+#include <map>
+#include <set>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/Token.h"
+
+namespace solidity {
+namespace frontend {
+class Block;
+class CallableDeclaration;
+class ContractDefinition;
+class Declaration;
+class EnumDefinition;
+class EnumValue;
+class ErrorDefinition;
+class EventDefinition;
+class Expression;
+class ExpressionStatement;
+class FunctionCall;
+class FunctionDefinition;
+class Identifier;
+class InheritanceSpecifier;
+class ModifierDefinition;
+class ModifierInvocation;
+class OverrideSpecifier;
+class StructDefinition;
+class TypeName;
+class UsingForDirective;
+class VariableDeclaration;
+}  // namespace frontend
+namespace util {
+template <unsigned int N> class FixedHash;
+}  // namespace util
+}  // namespace solidity
 
 namespace solidity::yul
 {

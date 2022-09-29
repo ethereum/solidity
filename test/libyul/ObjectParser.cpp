@@ -20,28 +20,64 @@
  */
 
 #include <test/Common.h>
-
 #include <test/libsolidity/ErrorCheck.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Scanner.h>
-
 #include <libyul/YulStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
-
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/test/unit_test.hpp>
-
-#include <range/v3/view/iota.hpp>
-
+#include <ext/alloc_traits.h>
+#include <stddef.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/tuple/detail/tuple_basic.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <range/v3/utility/static_const.hpp>
 #include <memory>
 #include <optional>
 #include <string>
 #include <sstream>
+#include <map>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolutil/StringUtils.h"
+#include "libyul/Object.h"
+#include "libyul/ObjectParser.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity::frontend;

@@ -22,9 +22,51 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libyul/optimiser/ASTWalker.h>
-
+#include <stddef.h>
 #include <array>
 #include <memory>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class BinaryOperation;
+class Break;
+class Conditional;
+class Continue;
+class ContractDefinition;
+class ForStatement;
+class FunctionCall;
+class FunctionDefinition;
+class FunctionTypeName;
+class Identifier;
+class IfStatement;
+class InlineAssembly;
+class ModifierInvocation;
+class PlaceholderStatement;
+class Return;
+class RevertStatement;
+class Throw;
+class TryStatement;
+class VariableDeclaration;
+class VariableDeclarationStatement;
+class WhileStatement;
+}  // namespace frontend
+namespace yul {
+struct Assignment;
+struct Break;
+struct Continue;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Switch;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::frontend
 {

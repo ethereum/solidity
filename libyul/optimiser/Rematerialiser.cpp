@@ -19,14 +19,25 @@
  */
 
 #include <libyul/optimiser/Rematerialiser.h>
-
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
-
 #include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <cstddef>
+#include <utility>
+#include <variant>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/optimiser/DataFlowAnalyzer.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

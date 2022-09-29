@@ -22,9 +22,19 @@
  */
 
 #include <libsolidity/codegen/Compiler.h>
-
 #include <libsolidity/codegen/ContractCompiler.h>
-#include <libevmasm/Assembly.h>
+#include <ostream>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/codegen/CompilerContext.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

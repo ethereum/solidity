@@ -25,6 +25,9 @@
 #include <libsolutil/StringUtils.h>
 #include <string>
 #include <vector>
+#include <cstddef>
+
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity::util;

@@ -20,16 +20,23 @@
  */
 
 #include <libyul/optimiser/OptimizerUtilities.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libyul/Dialect.h>
 #include <libyul/AST.h>
-
 #include <liblangutil/Token.h>
 #include <libsolutil/CommonData.h>
-
 #include <range/v3/action/remove_if.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <iosfwd>
+#include <variant>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

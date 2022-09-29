@@ -27,9 +27,36 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <liblangutil/EVMVersion.h>
 #include <libyul/optimiser/ASTWalker.h>
-
 #include <list>
 #include <map>
+#include <vector>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Block;
+class ForStatement;
+class FunctionDefinition;
+class Identifier;
+class IdentifierPath;
+class InlineAssembly;
+class ModifierDefinition;
+class ParameterList;
+class Return;
+class StructuredDocumentation;
+class TryCatchClause;
+class VariableDeclaration;
+class VariableDeclarationStatement;
+struct InlineAssemblyAnnotation;
+struct StructurallyDocumentedAnnotation;
+}  // namespace frontend
+namespace yul {
+class YulString;
+struct FunctionDefinition;
+struct Identifier;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::langutil
 {

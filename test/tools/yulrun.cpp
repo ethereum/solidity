@@ -20,27 +20,44 @@
  */
 
 #include <test/tools/yulInterpreter/Interpreter.h>
-
-#include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmAnalysis.h>
-#include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/YulStack.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libsolutil/CommonIO.h>
-#include <libsolutil/CommonData.h>
-#include <libsolutil/Exceptions.h>
-
-#include <boost/program_options.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <boost/lexical_cast/bad_lexical_cast.hpp>
+#include <boost/program_options/detail/parsers.hpp>
+#include <boost/program_options/detail/value_semantic.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/positional_options.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/type_index/type_index_facade.hpp>
 #include <string>
 #include <memory>
 #include <iostream>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Object.h"
+
+namespace solidity {
+namespace yul {
+struct AsmAnalysisInfo;
+struct Block;
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

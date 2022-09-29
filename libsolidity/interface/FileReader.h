@@ -19,11 +19,13 @@
 
 #include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/ReadFile.h>
-
 #include <boost/filesystem.hpp>
-
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <map>
 #include <set>
+#include <string>
+#include <vector>
 
 namespace solidity::frontend
 {

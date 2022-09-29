@@ -19,6 +19,22 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
+#include <set>
+
+namespace solidity {
+namespace frontend {
+class CallableDeclaration;
+class ErrorDefinition;
+class EventDefinition;
+class FunctionDefinition;
+class FunctionType;
+class ModifierDefinition;
+class SourceUnit;
+class StructurallyDocumented;
+class VariableDeclaration;
+struct StructurallyDocumentedAnnotation;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

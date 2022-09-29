@@ -17,12 +17,18 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/Upgrade060.h>
 #include <tools/solidityUpgrade/SourceTransform.h>
-
 #include <libsolidity/analysis/OverrideChecker.h>
+#include <iosfwd>
+#include <optional>
+#include <utility>
+#include <vector>
 
-#include <libyul/AST.h>
-
-#include <regex>
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/AnsiColorized.h"
+#include "tools/solidityUpgrade/UpgradeChange.h"
 
 using namespace std;
 using namespace solidity;

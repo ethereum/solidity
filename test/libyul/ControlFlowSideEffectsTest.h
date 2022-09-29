@@ -19,7 +19,6 @@
 #pragma once
 
 #include <test/TestCase.h>
-
 #include <iosfwd>
 #include <string>
 #include <vector>

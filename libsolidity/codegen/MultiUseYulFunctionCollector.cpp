@@ -21,10 +21,12 @@
  */
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
-
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Assertions.h>
+#include <iosfwd>
+#include <utility>
 
 using namespace std;
 using namespace solidity;

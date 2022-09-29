@@ -19,8 +19,10 @@
 #pragma once
 
 #include <test/TestCase.h>
-
 #include <libyul/YulStack.h>
+#include <iosfwd>
+#include <memory>
+#include <string>
 
 namespace solidity::yul
 {

@@ -17,15 +17,27 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/PostTypeChecker.h>
-
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/Version.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/SemVerHandler.h>
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
-
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
 #include <memory>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <set>
+#include <string>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity;

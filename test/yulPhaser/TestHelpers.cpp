@@ -17,10 +17,18 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
-
 #include <libyul/optimiser/Suite.h>
-
+#include <bits/std_abs.h>
+#include <ext/alloc_traits.h>
 #include <regex>
+#include <algorithm>
+#include <sstream>
+#include <utility>
+
+#include "libyul/ASTForward.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/Mutations.h"
+#include "tools/yulPhaser/Population.h"
 
 using namespace std;
 using namespace solidity;

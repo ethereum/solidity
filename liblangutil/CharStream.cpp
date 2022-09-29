@@ -50,6 +50,11 @@
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+
+#include "liblangutil/SourceLocation.h"
 
 using namespace std;
 using namespace solidity;

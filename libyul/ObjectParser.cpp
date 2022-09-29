@@ -21,16 +21,30 @@
 
 #include <libyul/AST.h>
 #include <libyul/ObjectParser.h>
-
 #include <libyul/AsmParser.h>
 #include <libyul/Exceptions.h>
-
 #include <liblangutil/Token.h>
 #include <liblangutil/Scanner.h>
-
 #include <libsolutil/StringUtils.h>
-
+#include <libsolutil/Assertions.h>
 #include <regex>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/ParserBase.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/CommonData.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Object.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

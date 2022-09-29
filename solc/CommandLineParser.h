@@ -24,17 +24,16 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
 #include <libsolidity/interface/ImportRemapper.h>
-
 #include <libyul/YulStack.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <libsolutil/JSON.h>
-
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
-
+#include <stddef.h>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/positional_options.hpp>
+#include <boost/program_options/variables_map.hpp>
 #include <map>
 #include <memory>
 #include <optional>
@@ -42,6 +41,10 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/FixedHash.h"
 
 namespace solidity::frontend
 {

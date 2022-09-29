@@ -24,9 +24,11 @@
 
 #pragma once
 
-#include <iterator>
 #include <libsolutil/Common.h>
-
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <iterator>
 #include <vector>
 #include <type_traits>
 #include <cstring>
@@ -38,6 +40,7 @@
 #include <type_traits>
 #include <list>
 #include <algorithm>
+#include <map>
 
 /// Operators need to stay in the global namespace.
 

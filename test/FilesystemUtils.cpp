@@ -17,10 +17,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/FilesystemUtils.h>
-
-#include <test/libsolidity/util/SoltestErrors.h>
-
+#include <boost/filesystem/operations.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/throw_exception.hpp>
 #include <fstream>
+#include <stdexcept>
 
 using namespace std;
 using namespace solidity;

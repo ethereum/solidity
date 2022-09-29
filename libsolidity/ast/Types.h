@@ -27,21 +27,50 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
 #include <liblangutil/Exceptions.h>
-
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/LazyInit.h>
 #include <libsolutil/Result.h>
-
 #include <boost/rational.hpp>
-
+#include <stddef.h>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/detail/default_ops.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
 #include <utility>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+
+#include "liblangutil/Token.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ContractDefinition;
+class Declaration;
+class EnumDefinition;
+class ErrorDefinition;
+class EventDefinition;
+class FunctionDefinition;
+class FunctionTypeName;
+class Literal;
+class ModifierDefinition;
+class SourceUnit;
+class StructDefinition;
+class StructuredDocumentation;
+class UserDefinedValueTypeDefinition;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {
@@ -49,6 +78,7 @@ namespace solidity::frontend
 class TypeProvider;
 class Type; // forward
 class FunctionType; // forward
+
 using FunctionTypePointer = FunctionType const*;
 using TypePointers = std::vector<Type const*>;
 using rational = boost::rational<bigint>;

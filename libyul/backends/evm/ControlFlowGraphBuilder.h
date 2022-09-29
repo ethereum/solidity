@@ -21,6 +21,36 @@
 #pragma once
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
+#include <stddef.h>
+#include <functional>
+#include <memory>
+#include <optional>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Scope.h"
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct AsmAnalysisInfo;
+struct Assignment;
+struct Block;
+struct Break;
+struct Continue;
+struct DebugData;
+struct Dialect;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Literal;
+struct Switch;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

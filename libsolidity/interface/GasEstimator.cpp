@@ -22,20 +22,29 @@
  */
 
 #include <libsolidity/interface/GasEstimator.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-
-#include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
-
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
 #include <functional>
 #include <map>
 #include <memory>
+#include <algorithm>
+#include <cstddef>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/ExpressionClasses.h"
+#include "libevmasm/Instruction.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;

@@ -23,14 +23,24 @@
  */
 
 #include <libevmasm/SimplificationRules.h>
-
 #include <libevmasm/ExpressionClasses.h>
-#include <libevmasm/Assembly.h>
 #include <libevmasm/RuleList.h>
 #include <libsolutil/Assertions.h>
-
-#include <utility>
+#include <stdint.h>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/integer_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <functional>
+#include <optional>
+#include <ostream>
+
+#include "libevmasm/SimplificationRule.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/SourceLocation.h"
 
 using namespace std;
 using namespace solidity;

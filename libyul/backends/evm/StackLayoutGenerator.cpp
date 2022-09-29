@@ -20,29 +20,48 @@
  */
 
 #include <libyul/backends/evm/StackLayoutGenerator.h>
-
 #include <libyul/backends/evm/StackHelpers.h>
-
 #include <libevmasm/GasMeter.h>
-
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/cxx20.h>
 #include <libsolutil/Visitor.h>
-
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/algorithm/find.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <range/v3/view/all.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/drop.hpp>
-#include <range/v3/view/drop_last.hpp>
-#include <range/v3/view/filter.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/reverse.hpp>
-#include <range/v3/view/take.hpp>
 #include <range/v3/view/take_last.hpp>
 #include <range/v3/view/transform.hpp>
+#include <ext/alloc_traits.h>
+#include <range/v3/detail/variant.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/utility/common_tuple.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/ref.hpp>
+#include <range/v3/view/subrange.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <initializer_list>
+#include <memory>
+#include <variant>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/CommonData.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Scope.h"
+#include "libyul/backends/evm/ControlFlowGraph.h"
 
 using namespace solidity;
 using namespace solidity::yul;

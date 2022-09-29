@@ -21,8 +21,15 @@
 
 #include <libyul/AST.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libsolutil/Assertions.h>
+#include <algorithm>
+#include <iosfwd>
+#include <utility>
+#include <vector>
 
-#include <stack>
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

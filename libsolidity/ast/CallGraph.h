@@ -21,10 +21,12 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
-
+#include <stdint.h>
 #include <map>
 #include <set>
 #include <variant>
+
+#include "libsolidity/ast/ASTForward.h"
 
 namespace solidity::frontend
 {

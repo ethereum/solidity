@@ -22,12 +22,34 @@
  */
 
 #include <libsolidity/analysis/ConstantEvaluator.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <liblangutil/ErrorReporter.h>
-
+#include <ext/alloc_traits.h>
+#include <stdint.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/cpp_int/divide.hpp>
+#include <boost/multiprecision/detail/default_ops.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/integer_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <limits>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;

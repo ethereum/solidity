@@ -21,6 +21,12 @@
 
 #include <libyul/Dialect.h>
 #include <libyul/AST.h>
+#include <functional>
+#include <iosfwd>
+#include <memory>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/YulString.h"
 
 using namespace solidity::yul;
 using namespace std;

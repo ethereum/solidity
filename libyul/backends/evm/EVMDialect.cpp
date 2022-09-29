@@ -20,23 +20,27 @@
  */
 
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
-#include <liblangutil/Exceptions.h>
 #include <libsolutil/StringUtils.h>
 #include <libyul/AST.h>
-#include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmParser.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
-
-#include <range/v3/view/reverse.hpp>
-#include <range/v3/view/tail.hpp>
-
 #include <regex>
+#include <algorithm>
+#include <cstddef>
+#include <string>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/Dialect.h"
 
 using namespace std;
 using namespace solidity;

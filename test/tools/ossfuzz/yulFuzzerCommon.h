@@ -17,6 +17,16 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <test/tools/yulInterpreter/Interpreter.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <stddef.h>
+#include <iosfwd>
+#include <memory>
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul::test::yul_fuzzer
 {

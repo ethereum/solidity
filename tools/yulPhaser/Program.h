@@ -20,9 +20,7 @@
 
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AST.h>
-
 #include <liblangutil/Exceptions.h>
-
 #include <cstddef>
 #include <optional>
 #include <ostream>
@@ -30,6 +28,10 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <memory>
+#include <utility>
+
+#include "libyul/YulString.h"
 
 namespace solidity::langutil
 {

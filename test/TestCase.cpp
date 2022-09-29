@@ -18,14 +18,22 @@
 
 #include <test/Common.h>
 #include <test/TestCase.h>
-
 #include <libsolutil/AnsiColorized.h>
-
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/operators.hpp>
+#include <boost/throw_exception.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <map>
+#include <optional>
+#include <utility>
+
+#include "TestCaseReader.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/util/SoltestErrors.h"
 
 using namespace std;
 using namespace solidity;

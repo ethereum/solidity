@@ -18,6 +18,7 @@
 
 
 #include <libsmtutil/Sorts.h>
+#include <iosfwd>
 
 using namespace std;
 

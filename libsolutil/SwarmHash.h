@@ -21,8 +21,10 @@
 #pragma once
 
 #include <libsolutil/FixedHash.h>
-
 #include <string>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
 
 namespace solidity::util
 {

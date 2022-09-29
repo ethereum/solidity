@@ -16,18 +16,44 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <stdexcept>
-#include <iostream>
 #include <test/Common.h>
 #include <test/EVMHost.h>
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <libsolutil/Assertions.h>
 #include <libsolutil/StringUtils.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <range/v3/all.hpp>
+#include <stdlib.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/detail/basic_pointerbuf.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/lexical_cast/bad_lexical_cast.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/program_options/detail/parsers.hpp>
+#include <boost/program_options/detail/value_semantic.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/option.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <stdexcept>
+#include <iostream>
+#include <initializer_list>
+#include <map>
+#include <optional>
+#include <sstream>
+#include <utility>
+
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Numeric.h"
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;

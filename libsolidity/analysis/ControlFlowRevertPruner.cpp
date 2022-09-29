@@ -17,10 +17,17 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ControlFlowRevertPruner.h>
-
 #include <libsolutil/Algorithms.h>
-
 #include <range/v3/algorithm/remove.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <set>
+#include <utility>
+#include <vector>
+
+#include "libsolidity/analysis/ControlFlowGraph.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolutil/CommonData.h"
 
 
 namespace solidity::frontend

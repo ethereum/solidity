@@ -24,6 +24,12 @@
 
 #include <libyul/ASTForward.h>
 
+namespace solidity {
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
+
 namespace solidity::yul
 {
 

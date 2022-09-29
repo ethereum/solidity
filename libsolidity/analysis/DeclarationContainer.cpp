@@ -22,12 +22,23 @@
  */
 
 #include <libsolidity/analysis/DeclarationContainer.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/StringUtils.h>
-
 #include <range/v3/view/filter.hpp>
 #include <range/v3/range/conversion.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <cstddef>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolutil/CommonData.h"
+
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

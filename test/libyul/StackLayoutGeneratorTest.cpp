@@ -19,18 +19,43 @@
 #include <test/libyul/StackLayoutGeneratorTest.h>
 #include <test/libyul/Common.h>
 #include <test/Common.h>
-
 #include <libyul/backends/evm/ControlFlowGraph.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/backends/evm/StackLayoutGenerator.h>
 #include <libyul/Object.h>
-#include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/Visitor.h>
-
 #include <range/v3/view/reverse.hpp>
+#include <stddef.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <stdlib.h>
+#include <boost/process/child.hpp>
+#include <boost/process/detail/child_decl.hpp>
+#include <boost/process/detail/posix/basic_pipe.hpp>
+#include <boost/process/io.hpp>
+#include <boost/process/pipe.hpp>
+#include <functional>
+#include <list>
+#include <map>
+#include <ostream>
+#include <utility>
+#include <variant>
+#include <vector>
+#include <iostream>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/StringUtils.h"
+#include "libyul/AST.h"
+#include "libyul/Scope.h"
+#include "libyul/YulString.h"
 
 #ifdef ISOLTEST
 #include <boost/process.hpp>

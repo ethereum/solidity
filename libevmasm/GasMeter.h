@@ -29,12 +29,26 @@
 
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/AssemblyItem.h>
-
 #include <liblangutil/EVMVersion.h>
-
+#include <stdint.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/operators.hpp>
 #include <ostream>
 #include <tuple>
 #include <utility>
+#include <memory>
+#include <type_traits>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace evmasm {
+class AssemblyItem;
+}  // namespace evmasm
+}  // namespace solidity
 
 namespace solidity::evmasm
 {

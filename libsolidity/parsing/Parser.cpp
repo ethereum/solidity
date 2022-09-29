@@ -22,7 +22,6 @@
  */
 
 #include <libsolidity/parsing/Parser.h>
-
 #include <libsolidity/interface/Version.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
@@ -31,14 +30,30 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceLocation.h>
-#include <libyul/backends/evm/EVMDialect.h>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <cctype>
+#include <ext/alloc_traits.h>
+#include <boost/throw_exception.hpp>
 #include <vector>
 #include <regex>
 #include <tuple>
+#include <cstddef>
+#include <functional>
+#include <map>
+#include <memory>
+#include <type_traits>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/ParserBase.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Common.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity::langutil;

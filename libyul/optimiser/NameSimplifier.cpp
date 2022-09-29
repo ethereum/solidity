@@ -21,11 +21,15 @@
 #include <libyul/Dialect.h>
 #include <libyul/YulString.h>
 #include <libyul/optimiser/NameDispenser.h>
-#include <libyul/optimiser/OptimizerUtilities.h>
-
-#include <libsolutil/CommonData.h>
-
 #include <regex>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace solidity::yul;
 using namespace std;

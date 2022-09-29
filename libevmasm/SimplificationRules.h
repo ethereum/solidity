@@ -26,11 +26,20 @@
 
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SimplificationRule.h>
-
 #include <libsolutil/CommonData.h>
-
+#include <stddef.h>
 #include <functional>
 #include <vector>
+#include <initializer_list>
+#include <map>
+#include <memory>
+#include <string>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Numeric.h"
 
 namespace solidity::langutil
 {

@@ -23,15 +23,29 @@
 #pragma once
 
 #include <solc/CommandLineParser.h>
-
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
 #include <libyul/YulStack.h>
-
+#include <boost/filesystem/path.hpp>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <map>
+#include <optional>
+
+#include "liblangutil/DebugInfoSelection.h"
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolutil/FixedHash.h"
+
+namespace Json {
+class Value;
+}  // namespace Json
+namespace solidity {
+namespace evmasm {
+struct LinkerObject;
+}  // namespace evmasm
+}  // namespace solidity
 
 namespace solidity::frontend
 {

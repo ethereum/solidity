@@ -17,19 +17,23 @@
 #include <test/libsolidity/util/TestFileParser.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libsolidity/util/ContractABIUtils.h>
-
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/JSON.h>
-
 #include <json/json.h>
-
+#include <json/value.h>
 #include <iosfwd>
 #include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
+#include <utility>
+
+#include "libsolidity/util/SoltestTypes.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
 
 namespace solidity::frontend::test
 {

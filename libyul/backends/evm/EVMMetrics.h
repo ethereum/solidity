@@ -25,6 +25,17 @@
 #include <liblangutil/EVMVersion.h>
 #include <libsolutil/Numeric.h>
 #include <libevmasm/Instruction.h>
+#include <utility>
+
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace yul {
+struct FunctionCall;
+struct Identifier;
+struct Literal;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

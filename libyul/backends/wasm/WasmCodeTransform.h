@@ -26,12 +26,37 @@
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/TypeInfo.h>
-
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
-
+#include <stddef.h>
 #include <stack>
 #include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+class TypeInfo;
+struct Assignment;
+struct Block;
+struct Break;
+struct Continue;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Literal;
+struct Switch;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

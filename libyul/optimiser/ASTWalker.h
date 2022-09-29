@@ -22,14 +22,32 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libyul/Exceptions.h>
 #include <libyul/YulString.h>
-
 #include <map>
 #include <optional>
 #include <set>
 #include <vector>
+#include <type_traits>
+
+namespace solidity {
+namespace yul {
+struct Assignment;
+struct Block;
+struct Break;
+struct Continue;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Literal;
+struct Switch;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

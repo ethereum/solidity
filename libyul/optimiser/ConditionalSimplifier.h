@@ -22,6 +22,20 @@
 #include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 #include <libsolutil/Common.h>
+#include <map>
+#include <utility>
+
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct Dialect;
+struct OptimiserStepContext;
+struct Switch;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

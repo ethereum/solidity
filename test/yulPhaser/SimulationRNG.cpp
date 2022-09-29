@@ -17,12 +17,23 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
-
 #include <tools/yulPhaser/SimulationRNG.h>
-
-#include <boost/test/unit_test.hpp>
-
-#include <cassert>
+#include <bits/std_abs.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <vector>
 
 using namespace std;
 

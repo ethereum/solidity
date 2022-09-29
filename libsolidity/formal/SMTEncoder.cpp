@@ -17,27 +17,50 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/SMTEncoder.h>
-
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
-
 #include <libsolidity/analysis/ConstantEvaluator.h>
-
 #include <libyul/AST.h>
 #include <libyul/optimiser/Semantics.h>
-
-#include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
-
-#include <liblangutil/CharStreamProvider.h>
-
 #include <libsolutil/Algorithms.h>
-
-#include <range/v3/view.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/all.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
 #include <limits>
 #include <deque>
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <type_traits>
+
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/UniqueErrorReporter.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTVisitor.h"
+#include "libsolidity/formal/EncodingContext.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/formal/SymbolicVariables.h"
+#include "libsolidity/formal/VariableUsage.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

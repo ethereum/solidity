@@ -18,9 +18,10 @@
 #pragma once
 
 #include <libsolutil/Exceptions.h>
-
 #include <json/value.h>
-
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/throw_exception.hpp>
 #include <functional>
 #include <iosfwd>
 #include <map>

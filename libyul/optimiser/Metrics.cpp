@@ -20,14 +20,23 @@
 
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
-
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
-
 #include <libevmasm/Instruction.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <optional>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
-#include <libsolutil/CommonData.h>
+#include "libsolutil/Numeric.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

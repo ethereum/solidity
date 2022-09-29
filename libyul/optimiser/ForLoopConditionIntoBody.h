@@ -20,6 +20,14 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/Dialect.h>
 
+namespace solidity {
+namespace yul {
+struct Block;
+struct Dialect;
+struct ForLoop;
+}  // namespace yul
+}  // namespace solidity
+
 namespace solidity::yul
 {
 

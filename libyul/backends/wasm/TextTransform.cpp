@@ -21,19 +21,29 @@
 
 #include <libyul/backends/wasm/BinaryTransform.h>
 #include <libyul/backends/wasm/TextTransform.h>
-
 #include <libyul/Exceptions.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
-
-#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
 #include <range/v3/view/transform.hpp>
+#include <stdint.h>
+#include <boost/iterator/iterator_traits.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <deque>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <variant>
+
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/backends/wasm/WasmAST.h"
 
 using namespace std;
 using namespace solidity;

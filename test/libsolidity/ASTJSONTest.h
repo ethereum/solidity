@@ -21,11 +21,14 @@
 #include <libsolutil/AnsiColorized.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <test/TestCase.h>
-
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string_view>
 
 namespace solidity::frontend
 {

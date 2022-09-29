@@ -24,16 +24,19 @@
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
 #include <tools/yulPhaser/GeneticAlgorithms.h>
-
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-
+#include <boost/filesystem/path.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/positional_options.hpp>
+#include <boost/program_options/variables_map.hpp>
 #include <cstddef>
 #include <istream>
 #include <memory>
 #include <optional>
 #include <ostream>
 #include <string>
+#include <vector>
 
 namespace solidity::langutil
 {

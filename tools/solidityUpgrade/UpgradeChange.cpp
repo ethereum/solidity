@@ -16,10 +16,18 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/UpgradeChange.h>
-
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <libsolutil/Numeric.h>
+#include <stddef.h>
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <memory>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/CharStreamProvider.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/AnsiColorized.h"
 
 using namespace std;
 using namespace solidity;

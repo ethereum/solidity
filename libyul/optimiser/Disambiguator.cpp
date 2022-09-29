@@ -20,11 +20,25 @@
  */
 
 #include <libyul/optimiser/Disambiguator.h>
-
-#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
+#include <libsolutil/Assertions.h>
+#include <algorithm>
+#include <iosfwd>
+#include <memory>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/AsmAnalysisInfo.h"
+#include "libyul/optimiser/NameDispenser.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct FunctionDefinition;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

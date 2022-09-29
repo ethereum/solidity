@@ -23,26 +23,122 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
-
 #include <test/Common.h>
 #include <test/EVMHost.h>
-
-#include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
-
-#include <libevmasm/Assembly.h>
-
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/ErrorCodes.h>
-
-#include <boost/test/unit_test.hpp>
-
 #include <range/v3/view/transform.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
 #include <functional>
-#include <numeric>
 #include <string>
-#include <tuple>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <initializer_list>
+#include <map>
+#include <memory>
+#include <vector>
+
+#include "ExecutionFramework.h"
+#include "libevmasm/LinkerObject.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace frontend {
+namespace test {
+namespace SolidityEndToEndTest {
+struct abi_encodePacked;
+struct abi_encodePackedV2_arrayOfStrings;
+struct abi_encodePackedV2_nestedArray;
+struct abi_encodePackedV2_structs;
+struct abi_encodePacked_from_memory;
+struct abi_encodePacked_from_storage;
+struct abi_encodePacked_functionPtr;
+struct array_copy_storage_abi;
+struct bare_call_return_data;
+struct bytes_from_calldata_to_memory;
+struct bytes_in_arguments;
+struct call_forward_bytes_length;
+struct constructor;
+struct contracts_separated_with_comment;
+struct copy_from_calldata_removes_bytes_data;
+struct copying_bytes_multiassign;
+struct creation_code_optimizer;
+struct do_while_loop;
+struct do_while_loop_multiple_local_vars;
+struct empty_name_input_parameter_with_named_one;
+struct enum_referencing;
+struct event_wrong_abi_name;
+struct for_loop;
+struct for_loop_break_continue;
+struct for_loop_multiple_local_vars;
+struct for_loop_simple_init_expr;
+struct keccak256;
+struct library_call;
+struct library_call_protection;
+struct library_function_external;
+struct mapping_state_inc_dec;
+struct multi_level_mapping;
+struct nested_for_loop_multiple_local_vars;
+struct nested_loops;
+struct nested_loops_multiple_local_vars;
+struct non_payable_throw;
+struct packed_keccak256;
+struct packed_keccak256_complex_types;
+struct packed_ripemd160;
+struct packed_sha256;
+struct receive_external_function_type;
+struct recursive_calls;
+struct reject_ether_sent_to_library;
+struct ripemd;
+struct selfdestruct;
+struct send_ether;
+struct sha256;
+struct short_circuiting;
+struct short_strings;
+struct string_as_mapping_key;
+struct strip_reason_strings;
+struct struct_referencing;
+struct transfer_ether;
+struct while_loop;
+}  // namespace SolidityEndToEndTest
+}  // namespace test
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using namespace std::placeholders;

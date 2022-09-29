@@ -20,9 +20,16 @@
  */
 
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
-
-#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
+#include <iosfwd>
+#include <memory>
+#include <variant>
+#include <vector>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

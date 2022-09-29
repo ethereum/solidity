@@ -21,6 +21,9 @@
  */
 
 #include <libevmasm/Instruction.h>
+#include <iosfwd>
+
+#include "libevmasm/Exceptions.h"
 
 using namespace std;
 using namespace solidity;

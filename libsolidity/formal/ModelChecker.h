@@ -27,13 +27,25 @@
 #include <libsolidity/formal/CHC.h>
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/ModelCheckerSettings.h>
-
 #include <libsolidity/interface/ReadFile.h>
-
 #include <libsmtutil/SolverInterface.h>
-
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/UniqueErrorReporter.h>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "libsolutil/FixedHash.h"
+
+namespace solidity {
+namespace frontend {
+class SourceUnit;
+}  // namespace frontend
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::langutil
 {

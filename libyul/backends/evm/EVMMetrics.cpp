@@ -20,16 +20,25 @@
 */
 
 #include <libyul/backends/evm/EVMMetrics.h>
-
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <iosfwd>
+#include <optional>
 
-#include <libsolutil/CommonData.h>
+#include "libsolutil/Numeric.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

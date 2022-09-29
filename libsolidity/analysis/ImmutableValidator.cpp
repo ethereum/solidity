@@ -17,10 +17,29 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ImmutableValidator.h>
-
 #include <libsolutil/CommonData.h>
-
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/SetOnce.h"
+
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;

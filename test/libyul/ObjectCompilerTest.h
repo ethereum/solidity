@@ -19,13 +19,17 @@
 #pragma once
 
 #include <test/TestCase.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace solidity::langutil
 {
 class Scanner;
 class Error;
+
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 }
 

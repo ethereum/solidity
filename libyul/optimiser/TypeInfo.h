@@ -22,9 +22,14 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
-
 #include <vector>
 #include <map>
+
+namespace solidity {
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

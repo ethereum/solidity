@@ -20,7 +20,6 @@
  */
 
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
-
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/Semantics.h>
@@ -29,6 +28,20 @@
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <cstddef>
+#include <optional>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/optimiser/DataFlowAnalyzer.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

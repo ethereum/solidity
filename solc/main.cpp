@@ -22,12 +22,15 @@
  */
 
 #include <solc/CommandLineInterface.h>
-
 #include <liblangutil/Exceptions.h>
-
-#include <boost/exception/all.hpp>
-
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
 #include <iostream>
+#include <exception>
+#include <string>
+
+#include "libsmtutil/Exceptions.h"
+#include "libsolidity/ast/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

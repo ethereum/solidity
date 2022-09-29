@@ -17,18 +17,21 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <liblangutil/DebugInfoSelection.h>
-
 #include <liblangutil/Exceptions.h>
-
 #include <libsolutil/StringUtils.h>
-
 #include <boost/algorithm/string/trim.hpp>
-
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/split.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #include <vector>
+#include <type_traits>
+#include <utility>
 
 using namespace std;
 using namespace solidity;

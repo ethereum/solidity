@@ -16,25 +16,26 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmAnalysis.h>
-#include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/YulStack.h>
-
 #include <liblangutil/DebugInfoSelection.h>
-#include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
-
-#include <libsolutil/CommonIO.h>
-#include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
-
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
-
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string>
 #include <memory>
-#include <iostream>
+#include <algorithm>
+#include <sstream>
+
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Object.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

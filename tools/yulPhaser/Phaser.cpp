@@ -17,7 +17,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Phaser.h>
-
 #include <tools/yulPhaser/AlgorithmRunner.h>
 #include <tools/yulPhaser/Common.h>
 #include <tools/yulPhaser/Exceptions.h>
@@ -25,17 +24,38 @@
 #include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/SimulationRNG.h>
-
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <liblangutil/Scanner.h>
-
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
-
+#include <assert.h>
+#include <boost/cstdint.hpp>
+#include <boost/detail/basic_pointerbuf.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/lexical_cast/bad_lexical_cast.hpp>
+#include <boost/program_options/detail/parsers.hpp>
+#include <boost/program_options/detail/value_semantic.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/type_index/type_index_facade.hpp>
 #include <iostream>
+#include <cstdint>
+#include <map>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/Metrics.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/Population.h"
+#include "tools/yulPhaser/ProgramCache.h"
 
 using namespace std;
 using namespace solidity;

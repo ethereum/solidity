@@ -20,6 +20,10 @@
  */
 
 #include <liblangutil/EVMVersion.h>
+#include <libsolutil/Assertions.h>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
 
 using namespace solidity;
 using namespace solidity::evmasm;

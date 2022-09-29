@@ -17,25 +17,25 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/util/ContractABIUtils.h>
-
 #include <test/libsolidity/util/SoltestErrors.h>
-
-#include <libsolidity/ast/Types.h>
-#include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/CommonData.h>
-
-#include <liblangutil/Common.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/assign/list_of.hpp>
 #include <range/v3/view/zip.hpp>
-
-#include <fstream>
-#include <memory>
+#include <stdint.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/zip_with.hpp>
 #include <numeric>
 #include <regex>
-#include <stdexcept>
+#include <algorithm>
+#include <functional>
+#include <iterator>
+#include <sstream>
+
+#include "ExecutionFramework.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/util/SoltestTypes.h"
+#include "libsolutil/AnsiColorized.h"
+#include "libsolutil/Numeric.h"
 
 using namespace solidity;
 using namespace solidity::util;

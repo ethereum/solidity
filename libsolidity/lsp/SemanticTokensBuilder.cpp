@@ -17,11 +17,19 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/SemanticTokensBuilder.h>
 #include <libsolidity/lsp/Utils.h>
-
 #include <liblangutil/CharStream.h>
 #include <liblangutil/SourceLocation.h>
-
 #include <fmt/format.h>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <vector>
+
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity::langutil;

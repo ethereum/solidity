@@ -20,18 +20,24 @@
  */
 
 #include <libyul/ScopeFiller.h>
-
 #include <libyul/AST.h>
 #include <libyul/Scope.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Exceptions.h>
-
 #include <liblangutil/ErrorReporter.h>
-
 #include <libsolutil/CommonData.h>
-
+#include <libsolutil/Assertions.h>
 #include <memory>
-#include <functional>
+#include <iosfwd>
+#include <map>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

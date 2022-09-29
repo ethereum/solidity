@@ -25,7 +25,7 @@
 #pragma once
 
 #include <libevmasm/Instruction.h>
-
+#include <stddef.h>
 #include <optional>
 #include <vector>
 

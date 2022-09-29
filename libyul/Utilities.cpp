@@ -20,18 +20,32 @@
  */
 
 #include <libyul/Utilities.h>
-
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
-
-#include <boost/algorithm/string.hpp>
-
+#include <stddef.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/type_index/type_index_facade.hpp>
 #include <algorithm>
 #include <sstream>
 #include <vector>
+#include <iterator>
+#include <memory>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

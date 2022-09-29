@@ -23,6 +23,13 @@
 
 #include <libsolidity/ast/ASTForward.h>
 
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class SourceUnit;
+}  // namespace frontend
+}  // namespace solidity
+
 namespace solidity::langutil
 {
 class ErrorReporter;

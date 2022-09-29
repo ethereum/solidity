@@ -28,11 +28,33 @@
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
-
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <string>
+#include <map>
+#include <set>
+#include <string_view>
+#include <utility>
+#include <vector>
+
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolutil/Common.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Block;
+class ContractDefinition;
+class FunctionDefinition;
+class FunctionType;
+class ModifierInvocation;
+class VariableDeclaration;
+}  // namespace frontend
+namespace langutil {
+class CharStreamProvider;
+struct DebugInfoSelection;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

@@ -17,15 +17,28 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/SyntaxTest.h>
-
-#include <test/Common.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
-#include <fstream>
+#include <libsolutil/Assertions.h>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <memory>
 #include <stdexcept>
+#include <algorithm>
+#include <map>
+#include <optional>
+#include <utility>
+#include <vector>
+
+#include "CommonSyntaxTest.h"
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/CharStream.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ErrorCheck.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/AnsiColorized.h"
 
 using namespace std;
 using namespace solidity;

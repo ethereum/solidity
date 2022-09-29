@@ -22,13 +22,14 @@
 #pragma once
 
 #include <liblangutil/Exceptions.h>
-
 #include <libyul/YulString.h>
-
+#include <stddef.h>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <variant>
+#include <map>
+#include <vector>
 
 namespace solidity::yul
 {

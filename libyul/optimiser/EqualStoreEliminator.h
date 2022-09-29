@@ -24,6 +24,22 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <map>
+#include <set>
+#include <utility>
+
+#include "libyul/ASTForward.h"
+#include "libyul/SideEffects.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct Dialect;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

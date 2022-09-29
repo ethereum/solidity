@@ -17,6 +17,10 @@
 
 #include <libyul/optimiser/FunctionCallFinder.h>
 #include <libyul/AST.h>
+#include <iosfwd>
+
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

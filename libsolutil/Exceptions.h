@@ -22,7 +22,7 @@
 #include <boost/exception/info.hpp>
 #include <boost/exception/info_tuple.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-
+#include <boost/exception/detail/error_info_impl.hpp>
 #include <exception>
 #include <string>
 

@@ -26,12 +26,16 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
-
+#include <stddef.h>
 #include <algorithm>
 #include <limits>
 #include <locale>
 #include <string>
 #include <vector>
+#include <iterator>
+#include <optional>
+#include <type_traits>
+#include <utility>
 
 namespace solidity::util
 {

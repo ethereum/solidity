@@ -19,8 +19,13 @@
  */
 
 #include <libsolutil/SwarmHash.h>
-
 #include <libsolutil/Keccak256.h>
+#include <stdint.h>
+#include <algorithm>
+#include <cstddef>
+
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

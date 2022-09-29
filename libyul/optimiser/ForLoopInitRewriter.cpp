@@ -17,10 +17,14 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
+#include <iosfwd>
+#include <optional>
+#include <utility>
+#include <variant>
+#include <vector>
 
-#include <functional>
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

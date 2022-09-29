@@ -23,10 +23,10 @@
  */
 
 #include <libsolutil/Whiskers.h>
-
 #include <libsolutil/Assertions.h>
-
 #include <regex>
+#include <sstream>
+#include <utility>
 
 using namespace std;
 using namespace solidity::util;

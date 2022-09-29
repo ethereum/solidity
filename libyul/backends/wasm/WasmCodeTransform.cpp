@@ -20,18 +20,30 @@
 */
 
 #include <libyul/backends/wasm/WasmCodeTransform.h>
-
 #include <libyul/backends/wasm/WasmDialect.h>
-
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 #include <libyul/Exceptions.h>
-
-#include <liblangutil/Exceptions.h>
-
+#include <stdint.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <optional>
 #include <limits>
+#include <algorithm>
+#include <cstddef>
+#include <set>
+#include <type_traits>
+#include <variant>
+
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/backends/wasm/WasmAST.h"
+#include "libyul/optimiser/NameDispenser.h"
+#include "libyul/optimiser/TypeInfo.h"
 
 using namespace std;
 using namespace solidity;

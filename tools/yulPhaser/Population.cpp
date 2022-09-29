@@ -17,16 +17,23 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Population.h>
-
 #include <tools/yulPhaser/PairSelections.h>
 #include <tools/yulPhaser/Selections.h>
-
 #include <libsolutil/CommonData.h>
-#include <libsolutil/CommonIO.h>
-
+#include <libsolutil/Assertions.h>
 #include <algorithm>
 #include <cassert>
-#include <numeric>
+#include <string>
+
+#include "liblangutil/SourceLocation.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/Mutations.h"
+
+namespace solidity {
+namespace phaser {
+class FitnessMetric;
+}  // namespace phaser
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

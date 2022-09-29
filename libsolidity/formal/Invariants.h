@@ -20,10 +20,18 @@
 
 #include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolidity/formal/Predicate.h>
-
 #include <map>
 #include <set>
 #include <string>
+
+#include "libsmtutil/SolverInterface.h"
+
+namespace solidity {
+namespace frontend {
+class Predicate;
+struct ModelCheckerInvariants;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::smt
 {

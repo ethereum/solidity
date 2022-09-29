@@ -28,6 +28,26 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <stddef.h>
+#include <map>
+#include <memory>
+#include <utility>
+
+namespace solidity {
+namespace frontend {
+class BinaryOperation;
+class ContractDefinition;
+class ExpressionStatement;
+class FunctionCall;
+class FunctionDefinition;
+class Identifier;
+class InlineAssembly;
+class MemberAccess;
+class Return;
+class SourceUnit;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

@@ -25,12 +25,22 @@
 #pragma once
 
 #include <libevmasm/AssemblyItem.h>
-
 #include <libsolutil/Common.h>
-
 #include <memory>
 #include <unordered_set>
 #include <vector>
+#include <cstddef>
+#include <functional>
+#include <string>
+#include <utility>
+
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace evmasm {
+class AssemblyItem;
+}  // namespace evmasm
+}  // namespace solidity
 
 namespace solidity::langutil
 {

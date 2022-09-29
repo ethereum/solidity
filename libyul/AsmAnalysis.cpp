@@ -20,7 +20,6 @@
  */
 
 #include <libyul/AsmAnalysis.h>
-
 #include <libyul/AST.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Utilities.h>
@@ -28,19 +27,34 @@
 #include <libyul/Object.h>
 #include <libyul/Scope.h>
 #include <libyul/ScopeFiller.h>
-
 #include <liblangutil/ErrorReporter.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
-
-#include <boost/algorithm/string.hpp>
-
 #include <fmt/format.h>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
 #include <memory>
 #include <functional>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <variant>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace std;
 using namespace solidity;

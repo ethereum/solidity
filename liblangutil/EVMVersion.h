@@ -22,11 +22,10 @@
 #pragma once
 
 #include <libevmasm/Instruction.h>
-
+#include <boost/operators.hpp>
 #include <optional>
 #include <string>
-
-#include <boost/operators.hpp>
+#include <initializer_list>
 
 
 namespace solidity::langutil

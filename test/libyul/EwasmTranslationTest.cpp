@@ -17,29 +17,27 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/EwasmTranslationTest.h>
-
 #include <test/tools/yulInterpreter/Interpreter.h>
-
 #include <test/Common.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 #include <libyul/YulStack.h>
-#include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AST.h>
 #include <libyul/Object.h>
-
 #include <liblangutil/DebugInfoSelection.h>
-#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libsolutil/AnsiColorized.h>
-
-#include <boost/test/unit_test.hpp>
-#include <boost/algorithm/string.hpp>
-
 #include <fstream>
+#include <vector>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace solidity;
 using namespace solidity::util;

@@ -21,9 +21,11 @@
 
 #include <libyul/optimiser/EquivalentFunctionDetector.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
-
 #include <libyul/AST.h>
-#include <libyul/optimiser/Metrics.h>
+#include <cstdint>
+#include <iosfwd>
+
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

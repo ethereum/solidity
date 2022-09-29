@@ -17,11 +17,19 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/TestCaseReader.h>
-
 #include <libsolutil/CommonIO.h>
+#include <stddef.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <tuple>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include "libsolidity/util/SoltestErrors.h"
+#include "libsolutil/StringUtils.h"
 
 using namespace std;
 using namespace solidity::frontend::test;

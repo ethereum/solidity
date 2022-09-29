@@ -17,9 +17,19 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/ModelCheckerSettings.h>
-
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/split.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #include <optional>
-#include <range/v3/view.hpp>
+#include <iosfwd>
+#include <memory>
+#include <vector>
 
 using namespace std;
 using namespace solidity;

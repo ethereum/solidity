@@ -19,26 +19,70 @@
 /// Unit tests for solc/CommandLineInterface.h
 
 #include <solc/CommandLineInterface.h>
-#include <solc/Exceptions.h>
-
 #include <test/solc/Common.h>
-
 #include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/FilesystemUtils.h>
 #include <test/TemporaryDirectory.h>
-
 #include <libsolutil/JSON.h>
-
-#include <boost/algorithm/string.hpp>
-
 #include <range/v3/view/transform.hpp>
-
+#include <json/value.h>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/framework.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/tree/test_unit.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/class_properties.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/view.hpp>
 #include <map>
-#include <ostream>
 #include <set>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <array>
+
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/FileReader.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/StringUtils.h"
+#include "solc/CommandLineParser.h"
+
+namespace boost {
+namespace test_tools {
+namespace tt_detail {
+template <typename T> struct print_log_value;
+}  // namespace tt_detail
+}  // namespace test_tools
+}  // namespace boost
+namespace solidity {
+namespace frontend {
+struct CommandLineValidationError;
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity::frontend;

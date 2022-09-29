@@ -20,8 +20,15 @@
  */
 
 #include <libyul/optimiser/NameDisplacer.h>
-
 #include <libyul/AST.h>
+#include <iosfwd>
+#include <variant>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/NameDispenser.h"
 
 using namespace std;
 using namespace solidity;

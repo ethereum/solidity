@@ -25,6 +25,9 @@
 #include <libevmasm/Exceptions.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <map>
+#include <string>
 
 namespace solidity::evmasm
 {

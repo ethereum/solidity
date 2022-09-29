@@ -21,8 +21,8 @@
 #pragma once
 
 #include <liblangutil/EVMVersion.h>
-
 #include <test/Common.h>
+#include <string>
 
 namespace solidity::test
 {

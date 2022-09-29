@@ -22,11 +22,13 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
-
+#include <stdint.h>
 #include <vector>
+#include <string>
+
+#include "libsolutil/Common.h"
 
 namespace solidity::evmasm
 {

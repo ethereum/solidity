@@ -19,10 +19,19 @@
 #pragma once
 
 #include <libsolidity/formal/Predicate.h>
-
 #include <libsolidity/formal/SymbolicState.h>
-
 #include <libsmtutil/Sorts.h>
+#include <vector>
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class FunctionDefinition;
+namespace smt {
+class SymbolicState;
+}  // namespace smt
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::smt
 {

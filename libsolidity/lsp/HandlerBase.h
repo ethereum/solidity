@@ -19,11 +19,25 @@
 
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/lsp/LanguageServer.h>
-
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/CharStreamProvider.h>
-
+#include <json/value.h>
 #include <optional>
+#include <string>
+#include <utility>
+
+#include "libsolidity/interface/CompilerStack.h"
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+struct LineColumn;
+struct SourceLocation;
+}  // namespace langutil
+namespace lsp {
+class FileRepository;
+}  // namespace lsp
+}  // namespace solidity
 
 namespace solidity::lsp
 {

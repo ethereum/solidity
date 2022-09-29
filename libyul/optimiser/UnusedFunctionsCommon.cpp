@@ -17,10 +17,20 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/optimiser/UnusedFunctionsCommon.h>
-
-#include <libyul/Dialect.h>
-
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Assertions.h>
+#include <memory>
+#include <type_traits>
+
+#include "libyul/AST.h"
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/NameDispenser.h"
+
+namespace solidity {
+namespace yul {
+class YulString;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace solidity;
 using namespace solidity::util;

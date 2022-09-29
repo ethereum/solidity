@@ -17,14 +17,19 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
-
 #include <tools/yulPhaser/Exceptions.h>
-
 #include <libsolutil/Assertions.h>
-
+#include <assert.h>
+#include <ext/alloc_traits.h>
 #include <cerrno>
 #include <cstring>
-#include <fstream>
+#include <iomanip>
+#include <map>
+
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/GeneticAlgorithms.h"
+#include "tools/yulPhaser/Population.h"
+#include "tools/yulPhaser/ProgramCache.h"
 
 using namespace std;
 using namespace solidity::phaser;

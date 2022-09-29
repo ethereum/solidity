@@ -20,11 +20,18 @@
 
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <libyul/YulString.h>
-
 #include <set>
 #include <memory>
+#include <functional>
+#include <map>
+#include <string>
+
+namespace solidity {
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

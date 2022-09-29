@@ -20,8 +20,12 @@
  */
 
 #include <libyul/optimiser/Substitution.h>
-
 #include <libyul/AST.h>
+#include <iosfwd>
+#include <variant>
+
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTCopier.h"
 
 using namespace std;
 using namespace solidity;

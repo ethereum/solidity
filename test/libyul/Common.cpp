@@ -20,9 +20,7 @@
  */
 
 #include <test/libyul/Common.h>
-
 #include <test/Common.h>
-
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
@@ -30,15 +28,34 @@
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
-#include <liblangutil/SourceReferenceFormatter.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/throw_exception.hpp>
 #include <variant>
+#include <algorithm>
+#include <iosfwd>
+#include <iterator>
+#include <map>
+#include <stdexcept>
+#include <type_traits>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/StringUtils.h"
+#include "libyul/AsmAnalysisInfo.h"
+#include "libyul/Dialect.h"
+#include "libyul/Object.h"
+#include "libyul/ObjectParser.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTCopier.h"
 
 using namespace std;
 using namespace solidity;

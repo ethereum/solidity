@@ -17,19 +17,53 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/Predicate.h>
-
 #include <libsolidity/formal/SMTEncoder.h>
-
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/CharStream.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
-
 #include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string.hpp>
-
-#include <range/v3/view.hpp>
+#include <ext/alloc_traits.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
 #include <utility>
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <memory>
+#include <new>
+#include <set>
+#include <stdexcept>
+#include <tuple>
+
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/ASTVisitor.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/formal/SymbolicTypes.h"
+#include "libsolidity/formal/SymbolicVariables.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace frontend {
+namespace smt {
+class EncodingContext;
+}  // namespace smt
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using boost::algorithm::starts_with;

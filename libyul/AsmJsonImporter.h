@@ -26,8 +26,13 @@
 #include <json/json.h>
 #include <liblangutil/SourceLocation.h>
 #include <libyul/ASTForward.h>
-
+#include <json/value.h>
 #include <utility>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "libyul/AST.h"
 
 namespace solidity::yul
 {

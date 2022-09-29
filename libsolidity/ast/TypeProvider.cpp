@@ -18,8 +18,20 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <cstddef>
+#include <tuple>
+
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
 
 using namespace std;
 using namespace solidity;

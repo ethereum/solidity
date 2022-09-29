@@ -25,8 +25,26 @@
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/AST.h>
-
+#include <stddef.h>
 #include <set>
+#include <map>
+#include <utility>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct CallGraph;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct Leave;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

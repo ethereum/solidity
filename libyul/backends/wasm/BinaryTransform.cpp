@@ -20,14 +20,26 @@
  */
 
 #include <libyul/backends/wasm/BinaryTransform.h>
-
 #include <libyul/Exceptions.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 #include <libsolutil/LEB128.h>
-
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <variant>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/backends/wasm/WasmAST.h"
 
 using namespace std;
 using namespace solidity;

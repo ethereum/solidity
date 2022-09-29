@@ -23,12 +23,23 @@
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceExtractor.h>
-
 #include <libsolutil/AnsiColorized.h>
-
 #include <ostream>
 #include <sstream>
 #include <functional>
+#include <string>
+
+namespace solidity {
+namespace langutil {
+namespace SourceReferenceExtractor {
+struct Message;
+}  // namespace SourceReferenceExtractor
+struct SourceReference;
+}  // namespace langutil
+namespace util {
+struct Exception;
+}  // namespace util
+}  // namespace solidity
 
 namespace solidity::langutil
 {

@@ -20,9 +20,26 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 #include <libsolidity/formal/SymbolicVariables.h>
-
 #include <libsmtutil/Sorts.h>
 #include <libsmtutil/SolverInterface.h>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/TypeProvider.h"
+#include "libsolidity/ast/Types.h"
+
+namespace solidity {
+namespace frontend {
+class FunctionCall;
+class FunctionDefinition;
+class SourceUnit;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::smt
 {

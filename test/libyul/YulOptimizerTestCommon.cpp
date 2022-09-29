@@ -17,7 +17,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/YulOptimizerTestCommon.h>
-
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
@@ -52,7 +51,6 @@
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
-#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/UnusedAssignEliminator.h>
 #include <libyul/optimiser/UnusedStoreEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
@@ -62,13 +60,24 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
-#include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/AsmAnalysis.h>
 #include <libyul/CompilabilityChecker.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
-
+#include <libsolutil/Assertions.h>
 #include <random>
+#include <cstddef>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/AST.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Object.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTCopier.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/NameDispenser.h"
 
 using namespace solidity;
 using namespace solidity::util;

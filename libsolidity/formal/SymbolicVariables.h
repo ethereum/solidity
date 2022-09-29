@@ -21,11 +21,15 @@
 #include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/TypeProvider.h>
-
 #include <libsmtutil/SolverInterface.h>
-
+#include <stddef.h>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/Sorts.h"
 
 namespace solidity::frontend::smt
 {

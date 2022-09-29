@@ -22,13 +22,34 @@
  */
 
 #include <libsolidity/codegen/LValue.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libevmasm/Instruction.h>
-
 #include <libsolutil/StackTooDeepString.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/throw_exception.hpp>
+#include <cstddef>
+#include <string>
+#include <utility>
+
+#include "libevmasm/Exceptions.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/TypeProvider.h"
+#include "libsolidity/codegen/ABIFunctions.h"
+#include "libsolidity/codegen/ArrayUtils.h"
+#include "libsolidity/codegen/CompilerContext.h"
+#include "libsolidity/codegen/YulUtilFunctions.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

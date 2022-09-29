@@ -17,17 +17,45 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
-
-#include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Population.h>
-
 #include <libsolutil/CommonIO.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <assert.h>
+#include <bits/std_abs.h>
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/framework.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/detail/print_helper.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
+#include <boost/type_traits/remove_const.hpp>
 #include <algorithm>
 #include <vector>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/SimulationRNG.h"
+
+namespace solidity {
+namespace phaser {
+class FitnessMetric;
+}  // namespace phaser
+}  // namespace solidity
 
 using namespace std;
 using namespace boost::unit_test::framework;

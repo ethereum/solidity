@@ -24,6 +24,13 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
+#include <vector>
+
+namespace solidity {
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

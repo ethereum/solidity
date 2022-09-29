@@ -20,17 +20,72 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
-
 #include <test/libsolidity/ABITestsCommon.h>
-
-#include <liblangutil/Exceptions.h>
-
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/test/unit_test.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <functional>
 #include <string>
-#include <tuple>
+#include <cstddef>
+#include <initializer_list>
+#include <vector>
+
+#include "Common.h"
+#include "ExecutionFramework.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Keccak256.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace frontend {
+namespace test {
+namespace ABIEncoderTest {
+struct bool_arrays;
+struct bool_arrays_split;
+struct bytesNN_arrays;
+struct bytesNN_arrays_dyn;
+struct calldata;
+struct conversion;
+struct external_function;
+struct external_function_cleanup;
+struct memory_array_one_dim;
+struct memory_array_two_dim;
+struct memory_byte_array;
+struct packed_structs;
+struct storage_array;
+struct storage_array_compact;
+struct storage_array_dyn;
+struct storage_byte_array;
+struct string_literal;
+struct structs;
+struct value_types;
+}  // namespace ABIEncoderTest
+}  // namespace test
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using namespace std::placeholders;

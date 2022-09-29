@@ -20,6 +20,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <string_view>
 
 namespace solidity::frontend
 {

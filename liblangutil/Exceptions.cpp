@@ -22,9 +22,11 @@
  */
 
 #include <liblangutil/Exceptions.h>
+#include <boost/exception/get_error_info.hpp>
+#include <iosfwd>
 
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string/trim.hpp>
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Exceptions.h"
 
 using namespace std;
 using namespace solidity;

@@ -23,12 +23,20 @@
  */
 
 #include <libevmasm/BlockDeduplicator.h>
-
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/SemanticInformation.h>
-
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <functional>
 #include <set>
+#include <algorithm>
+#include <memory>
+#include <tuple>
+#include <utility>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

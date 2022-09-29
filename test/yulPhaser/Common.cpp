@@ -17,18 +17,28 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/TemporaryDirectory.h>
-#include <test/yulPhaser/TestHelpers.h>
-
 #include <tools/yulPhaser/Common.h>
-
 #include <libsolutil/CommonData.h>
-
-#include <boost/test/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <boost/filesystem/path.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/detail/print_helper.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <fstream>
-#include <sstream>
 #include <string>
+#include <map>
+#include <vector>
 
 using namespace std;
 using namespace boost::test_tools;

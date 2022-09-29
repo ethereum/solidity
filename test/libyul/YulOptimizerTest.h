@@ -19,10 +19,16 @@
 #pragma once
 
 #include <test/TestCase.h>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace solidity::langutil
 {
 class Error;
+
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 }
 

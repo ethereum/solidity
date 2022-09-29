@@ -29,6 +29,14 @@
 #include <string>
 #include <vector>
 
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class Declaration;
+class MagicVariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
+
 namespace solidity::frontend
 {
 

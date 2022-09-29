@@ -19,12 +19,13 @@
 /// Utilities shared by multiple tests for code in solc/.
 
 #include <solc/CommandLineParser.h>
-
 #include <boost/test/unit_test.hpp>
-
+#include <boost/test/tools/detail/print_helper.hpp>
 #include <optional>
 #include <string>
 #include <vector>
+
+#include "libsolidity/interface/FileReader.h"
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::CommandLineOptions)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::InputMode)

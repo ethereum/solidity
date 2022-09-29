@@ -21,10 +21,22 @@
  */
 
 #include <libsolidity/analysis/PostTypeContractLevelChecker.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/FunctionSelector.h>
 #include <liblangutil/ErrorReporter.h>
+#include <cstdint>
+#include <iosfwd>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity;

@@ -20,10 +20,27 @@
 
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicVariables.h>
-
 #include <libsmtutil/SolverInterface.h>
-
+#include <stddef.h>
 #include <map>
+#include <functional>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/ast/AST.h"
+
+namespace solidity {
+namespace frontend {
+namespace smt {
+class SymbolicVariable;
+}  // namespace smt
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::smt
 {

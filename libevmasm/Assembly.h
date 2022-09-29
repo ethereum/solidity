@@ -23,23 +23,36 @@
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/LinkerObject.h>
 #include <libevmasm/Exceptions.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/Keccak256.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
-
 #include <json/json.h>
-
+#include <ext/alloc_traits.h>
+#include <json/value.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <iostream>
 #include <sstream>
 #include <memory>
 #include <map>
 #include <utility>
+#include <optional>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace evmasm {
+class Assembly;
+}  // namespace evmasm
+}  // namespace solidity
 
 namespace solidity::evmasm
 {

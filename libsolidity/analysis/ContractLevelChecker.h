@@ -28,6 +28,17 @@
 #include <map>
 #include <functional>
 #include <set>
+#include <string>
+#include <vector>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ContractDefinition;
+class FunctionDefinition;
+class SourceUnit;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

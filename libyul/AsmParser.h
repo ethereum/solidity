@@ -26,16 +26,32 @@
 #include <libyul/AST.h>
 #include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
-
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
-
 #include <map>
 #include <memory>
 #include <variant>
 #include <vector>
 #include <string_view>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <utility>
+
+#include "liblangutil/Token.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace langutil {
+class CharStream;
+class ErrorReporter;
+class Scanner;
+}  // namespace langutil
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

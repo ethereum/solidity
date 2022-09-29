@@ -20,6 +20,14 @@
 
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <vector>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ContractDefinition;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

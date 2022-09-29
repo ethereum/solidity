@@ -20,15 +20,23 @@
  */
 
 #include <libyul/optimiser/KnowledgeBase.h>
-
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
-
 #include <libsolutil/CommonData.h>
-
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <variant>
+#include <iosfwd>
+#include <vector>
+
+#include "libevmasm/SimplificationRule.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

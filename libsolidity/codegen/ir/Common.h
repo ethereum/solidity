@@ -22,9 +22,27 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
-
+#include <stddef.h>
+#include <boost/container/detail/std_fwd.hpp>
 #include <algorithm>
 #include <string>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ContractDefinition;
+class Declaration;
+class Expression;
+class FunctionDefinition;
+class FunctionType;
+class ModifierInvocation;
+class Type;
+class VariableDeclaration;
+}  // namespace frontend
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

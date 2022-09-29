@@ -19,13 +19,20 @@
 #include <libsolidity/lsp/Transport.h> // for RequestError
 #include <libsolidity/lsp/Utils.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/ASTUtils.h>
-
-#include <fmt/format.h>
-
 #include <memory>
 #include <string>
 #include <vector>
+#include <iosfwd>
+#include <optional>
+#include <utility>
+
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolidity/lsp/FileRepository.h"
+#include "libsolidity/lsp/LanguageServer.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;

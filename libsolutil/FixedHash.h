@@ -26,13 +26,23 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
-
 #include <boost/functional/hash.hpp>
 #include <boost/io/ios_state.hpp>
-
+#include <string.h>
+#include <boost/io_fwd.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/cpp_int/cpp_int_config.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <array>
 #include <cstdint>
 #include <algorithm>
+#include <iomanip>
+#include <ostream>
+#include <string>
+
+#include "libsolutil/Common.h"
 
 namespace solidity::util
 {

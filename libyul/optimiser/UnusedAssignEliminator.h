@@ -26,9 +26,23 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/UnusedStoreBase.h>
-
 #include <map>
 #include <vector>
+#include <set>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Assignment;
+struct Block;
+struct FunctionDefinition;
+struct Identifier;
+struct Leave;
+struct OptimiserStepContext;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

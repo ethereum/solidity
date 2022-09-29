@@ -25,8 +25,21 @@
 #include <libevmasm/KnownState.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libsolutil/Keccak256.h>
+#include <stddef.h>
+#include <boost/bimap/detail/bimap_core.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <type_traits>
 
-#include <functional>
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/ExpressionClasses.h"
+#include "libevmasm/Instruction.h"
+#include "libevmasm/SemanticInformation.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

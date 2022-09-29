@@ -19,11 +19,14 @@
 #pragma once
 
 #include <libsmtutil/Exceptions.h>
-
 #include <libsolutil/Common.h>
-
+#include <stddef.h>
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <map>
+#include <string>
+#include <utility>
 
 namespace solidity::smtutil
 {

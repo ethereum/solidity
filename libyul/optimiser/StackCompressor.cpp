@@ -20,25 +20,41 @@
  */
 
 #include <libyul/optimiser/StackCompressor.h>
-
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/Semantics.h>
-
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
-#include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/backends/evm/StackLayoutGenerator.h>
-
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-
 #include <libyul/CompilabilityChecker.h>
-
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <set>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/EVMVersion.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Object.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/EVMDialect.h"
+#include "libyul/optimiser/DataFlowAnalyzer.h"
+
+namespace solidity {
+namespace yul {
+struct CFG;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

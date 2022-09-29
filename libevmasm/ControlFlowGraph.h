@@ -27,15 +27,19 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
 #include <libevmasm/ExpressionClasses.h>
-
 #include <vector>
 #include <memory>
 #include <limits>
+#include <map>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libsolutil/Numeric.h"
 
 namespace solidity::evmasm
 {
 
 class KnownState;
+
 using KnownStatePointer = std::shared_ptr<KnownState>;
 
 /**

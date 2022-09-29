@@ -23,11 +23,19 @@
 #include <test/TestCaseReader.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
-
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+#include <optional>
+
+#include "liblangutil/EVMVersion.h"
+
+namespace solidity {
+namespace util {
+struct Exception;
+}  // namespace util
+}  // namespace solidity
 
 namespace solidity::test
 {

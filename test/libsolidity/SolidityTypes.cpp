@@ -24,8 +24,48 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolutil/Keccak256.h>
-#include <boost/test/unit_test.hpp>
+#include <stdint.h>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/detail/default_ops.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <functional>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/Result.h"
 
 using namespace std;
 using namespace solidity::langutil;

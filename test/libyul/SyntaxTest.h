@@ -20,6 +20,17 @@
 
 #include <test/CommonSyntaxTest.h>
 #include <libyul/Dialect.h>
+#include <memory>
+#include <string>
+
+#include "TestCase.h"
+#include "liblangutil/EVMVersion.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul::test
 {

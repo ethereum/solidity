@@ -26,17 +26,19 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
-
-
 #include <cstddef>
 #include <vector>
 #include <functional>
 #include <map>
+#include <iterator>
+
+#include "libevmasm/AssemblyItem.h"
 
 namespace solidity::evmasm
 {
 
 class AssemblyItem;
+
 using AssemblyItems = std::vector<AssemblyItem>;
 
 /**

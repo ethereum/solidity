@@ -17,13 +17,26 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
-
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Algorithms.h>
-
 #include <range/v3/algorithm/sort.hpp>
-
+#include <range/v3/functional/identity.hpp>
 #include <functional>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/analysis/ControlFlowGraph.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/CommonData.h"
 
 using namespace std;
 using namespace std::placeholders;

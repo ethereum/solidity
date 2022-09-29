@@ -17,10 +17,14 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/solc/Common.h>
-
 #include <solc/CommandLineInterface.h>
-
+#include <stddef.h>
 #include <sstream>
+#include <memory>
+#include <regex>
+#include <utility>
+
+#include "libsolidity/ast/ASTForward.h"
 
 using namespace std;
 using namespace solidity::frontend;

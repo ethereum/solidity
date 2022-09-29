@@ -22,17 +22,22 @@
 #pragma once
 
 #include <liblangutil/EVMVersion.h>
-
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
-
 #include <libsolidity/interface/DebugSettings.h>
-
 #include <libsolutil/ErrorCodes.h>
-
+#include <stddef.h>
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class MultiUseYulFunctionCollector;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

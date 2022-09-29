@@ -22,19 +22,38 @@
  */
 
 #include <libsolidity/ast/ASTJsonImporter.h>
-
 #include <libyul/AsmJsonImporter.h>
 #include <libyul/AST.h>
-#include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/Token.h>
-
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
+#include <json/config.h>
+#include <json/forwards.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <iosfwd>
+#include <tuple>
+#include <utility>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/SetOnce.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 

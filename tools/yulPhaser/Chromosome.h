@@ -23,6 +23,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace solidity::phaser
 {

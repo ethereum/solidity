@@ -21,13 +21,31 @@
 #include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDisplacer.h>
-
 #include <libsolutil/CommonData.h>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <array>
 #include <map>
 #include <variant>
 #include <limits>
+#include <algorithm>
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+#include "libsolutil/Numeric.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/NameDispenser.h"
 
 using namespace std;
 using namespace solidity;

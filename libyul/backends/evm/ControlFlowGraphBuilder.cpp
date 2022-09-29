@@ -23,24 +23,43 @@
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
-
 #include <libsolutil/cxx20.h>
 #include <libsolutil/Visitor.h>
 #include <libsolutil/Algorithms.h>
-
-#include <range/v3/action/push_back.hpp>
-#include <range/v3/action/erase.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <range/v3/view/concat.hpp>
 #include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/enumerate.hpp>
-#include <range/v3/view/filter.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/reverse.hpp>
-#include <range/v3/view/single.hpp>
-#include <range/v3/view/take_last.hpp>
 #include <range/v3/view/transform.hpp>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <list>
+#include <map>
+#include <set>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/AsmAnalysisInfo.h"
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/Dialect.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/ControlFlowGraph.h"
 
 using namespace solidity;
 using namespace solidity::yul;

@@ -20,13 +20,19 @@
  */
 
 #include <libyul/backends/evm/NoOutputAssembly.h>
-
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
-
 #include <libevmasm/Instruction.h>
-
 #include <range/v3/view/iota.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <cstddef>
+#include <functional>
+#include <map>
+
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace std;
 using namespace solidity;

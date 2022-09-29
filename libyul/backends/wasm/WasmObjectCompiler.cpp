@@ -20,15 +20,20 @@
  */
 
 #include <libyul/backends/wasm/WasmObjectCompiler.h>
-
 #include <libyul/backends/wasm/WasmCodeTransform.h>
 #include <libyul/backends/wasm/BinaryTransform.h>
 #include <libyul/backends/wasm/TextTransform.h>
-
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <vector>
 
-#include <libsolutil/CommonData.h>
+#include "libsolutil/Common.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/wasm/WasmAST.h"
 
 using namespace solidity;
 using namespace solidity::yul;

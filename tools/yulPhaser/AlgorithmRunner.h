@@ -24,11 +24,21 @@
 #include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/ProgramCache.h>
-
 #include <cstddef>
 #include <ctime>
 #include <optional>
 #include <ostream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace solidity {
+namespace phaser {
+class GeneticAlgorithm;
+class ProgramCache;
+}  // namespace phaser
+}  // namespace solidity
 
 namespace solidity::phaser
 {

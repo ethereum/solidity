@@ -19,17 +19,31 @@
 #include <test/libsolidity/util/BytesUtils.h>
 #include <test/libsolidity/util/ContractABIUtils.h>
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/StringUtils.h>
+#include <math.h>
+#include <stdint.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/cpp_int/literals.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
+#include <algorithm>
+#include <exception>
+#include <map>
+#include <ostream>
+#include <utility>
+#include <vector>
 
-#include <boost/algorithm/string.hpp>
-
-#include <iomanip>
-#include <memory>
-#include <regex>
-#include <stdexcept>
+#include "ExecutionFramework.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/util/SoltestTypes.h"
+#include "libsolutil/AnsiColorized.h"
+#include "libsolutil/Numeric.h"
 
 using namespace solidity;
 using namespace solidity::util;

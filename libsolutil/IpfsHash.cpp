@@ -17,11 +17,22 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/IpfsHash.h>
-
-#include <libsolutil/Exceptions.h>
 #include <libsolutil/picosha2.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

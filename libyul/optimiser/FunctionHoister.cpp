@@ -24,8 +24,13 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
+#include <iosfwd>
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

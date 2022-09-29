@@ -16,19 +16,25 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/interface/FileReader.h>
-
 #include <liblangutil/Exceptions.h>
-
 #include <libsolutil/CommonIO.h>
-#include <libsolutil/Exceptions.h>
 #include <libsolutil/StringUtils.h>
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <range/v3/view/transform.hpp>
-
 #include <range/v3/range/conversion.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <concepts/concepts.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
 #include <functional>
+#include <exception>
+#include <utility>
+
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/CommonData.h"
 
 using solidity::frontend::ReadCallback;
 using solidity::langutil::InternalCompilerError;

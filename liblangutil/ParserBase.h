@@ -24,6 +24,7 @@
 #pragma once
 
 #include <liblangutil/Token.h>
+#include <stddef.h>
 #include <memory>
 #include <string>
 

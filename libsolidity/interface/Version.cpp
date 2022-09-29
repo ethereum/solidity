@@ -22,8 +22,8 @@
  */
 
 #include <libsolidity/interface/Version.h>
-
 #include <solidity/BuildInfo.h>
+#include <iosfwd>
 
 using namespace std;
 

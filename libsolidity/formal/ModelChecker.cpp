@@ -17,12 +17,44 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/ModelChecker.h>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #ifdef HAVE_Z3
 #include <libsmtutil/Z3Interface.h>
 #endif
 
 #include <range/v3/algorithm/any_of.hpp>
-#include <range/v3/view.hpp>
+#include <iosfwd>
+#include <set>
+#include <utility>
+
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/UniqueErrorReporter.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ExperimentalFeatures.h"
+#include "libsolidity/formal/BMC.h"
+#include "libsolidity/formal/CHC.h"
+#include "libsolidity/formal/EncodingContext.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/CommonData.h"
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

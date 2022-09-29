@@ -24,11 +24,20 @@
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/ProgramCache.h>
-
 #include <libyul/optimiser/Metrics.h>
-
+#include <assert.h>
 #include <cstddef>
 #include <optional>
+#include <memory>
+#include <utility>
+#include <vector>
+
+namespace solidity {
+namespace phaser {
+class Chromosome;
+class ProgramCache;
+}  // namespace phaser
+}  // namespace solidity
 
 namespace solidity::phaser
 {

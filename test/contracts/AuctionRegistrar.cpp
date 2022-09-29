@@ -24,13 +24,41 @@
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <test/contracts/ContractInterface.h>
 #include <test/EVMHost.h>
-
 #include <libsolutil/LazyInit.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <string>
-#include <optional>
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+#include "Common.h"
+#include "ExecutionFramework.h"
+#include "evmc/evmc.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;

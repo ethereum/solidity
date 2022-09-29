@@ -22,8 +22,8 @@
 #pragma once
 
 #include <libyul/backends/wasm/WasmAST.h>
-
 #include <vector>
+#include <string>
 
 namespace solidity::yul
 {

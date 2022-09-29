@@ -17,8 +17,13 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/Scoper.h>
-
 #include <libsolidity/ast/AST.h>
+#include <iosfwd>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/ASTVisitor.h"
 
 using namespace std;
 using namespace solidity;

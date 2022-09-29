@@ -20,18 +20,33 @@
  */
 
 #include <test/tools/yulInterpreter/EwasmBuiltinInterpreter.h>
-
 #include <test/tools/yulInterpreter/Interpreter.h>
-
-#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AST.h>
-
 #include <libevmasm/Instruction.h>
-
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Numeric.h>
-
+#include <ext/alloc_traits.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
 #include <limits>
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <variant>
+
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

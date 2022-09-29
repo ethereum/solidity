@@ -24,6 +24,12 @@
 
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/AssemblyItem.h>
+#include <libsolutil/Assertions.h>
+#include <cstddef>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Assertions.h"
 
 using namespace std;
 using namespace solidity;

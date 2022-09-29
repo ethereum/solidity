@@ -30,31 +30,32 @@
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/DebugSettings.h>
-
 #include <libsolidity/formal/ModelCheckerSettings.h>
-
 #include <libsmtutil/SolverInterface.h>
-
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
-
 #include <libevmasm/LinkerObject.h>
-
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/LazyInit.h>
-
 #include <json/json.h>
-
+#include <json/value.h>
+#include <stddef.h>
 #include <functional>
 #include <memory>
 #include <ostream>
 #include <set>
 #include <string>
 #include <vector>
+#include <map>
+#include <optional>
+
+#include "libevmasm/AssemblyItem.h"
+#include "liblangutil/CharStream.h"
+#include "liblangutil/Exceptions.h"
 
 namespace solidity::langutil
 {
@@ -66,6 +67,7 @@ namespace solidity::evmasm
 {
 class Assembly;
 class AssemblyItem;
+
 using AssemblyItems = std::vector<AssemblyItem>;
 }
 

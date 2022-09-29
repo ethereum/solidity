@@ -23,9 +23,20 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <set>
 #include <map>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

@@ -25,9 +25,21 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <optional>
 #include <set>
+#include <map>
+#include <vector>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct AsmAnalysisInfo;
+struct Block;
+struct FunctionDefinition;
+struct Scope;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

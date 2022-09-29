@@ -20,17 +20,48 @@
  * Unit tests for interface/StandardCompiler.h.
  */
 
-#include <string>
-#include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/CommonData.h>
 #include <test/Metadata.h>
-
+#include <json/config.h>
+#include <json/value.h>
+#include <stdint.h>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <string>
 #include <algorithm>
 #include <set>
+#include <iosfwd>
+#include <map>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "libevmasm/Exceptions.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity::evmasm;

@@ -20,11 +20,9 @@
  */
 
 #include <libyul/optimiser/Suite.h>
-
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/CircularReferencesPruner.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
@@ -41,7 +39,6 @@
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
-#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/FunctionSpecializer.h>
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -49,7 +46,6 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
-#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
@@ -69,19 +65,31 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/Object.h>
-
 #include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/evm/NoOutputAssembly.h>
-
 #include <libsolutil/CommonData.h>
-
-#include <libyul/CompilabilityChecker.h>
-
 #include <range/v3/view/map.hpp>
-#include <range/v3/action/remove.hpp>
-
+#include <stdint.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #include <limits>
 #include <tuple>
+#include <algorithm>
+#include <iostream>
+#include <utility>
+#include <variant>
+
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/EVMDialect.h"
+#include "libyul/optimiser/ASTCopier.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/NameDispenser.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

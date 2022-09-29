@@ -21,14 +21,25 @@
  */
 
 #include <libsolidity/analysis/OverrideChecker.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
-#include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/Visitor.h>
-
 #include <boost/algorithm/string/predicate.hpp>
+#include <ext/alloc_traits.h>
+#include <algorithm>
+#include <cstddef>
+#include <type_traits>
+#include <utility>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/StringUtils.h"
 
 
 using namespace std;

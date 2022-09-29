@@ -18,6 +18,20 @@
 #include <libsolidity/lsp/HandlerBase.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <json/value.h>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/lsp/Transport.h"
+
+namespace solidity {
+namespace lsp {
+class LanguageServer;
+}  // namespace lsp
+}  // namespace solidity
 
 namespace solidity::lsp
 {

@@ -23,13 +23,22 @@
  */
 
 #include <libevmasm/ControlFlowGraph.h>
-#include <map>
-#include <memory>
-#include <algorithm>
 #include <libevmasm/Exceptions.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/KnownState.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <map>
+#include <memory>
+#include <algorithm>
+#include <cstddef>
+#include <set>
+#include <utility>
+
+#include "libevmasm/Instruction.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

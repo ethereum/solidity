@@ -19,6 +19,15 @@
 #include <libsolidity/codegen/ir/IRVariable.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Assertions.h>
+#include <type_traits>
+#include <utility>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/CommonData.h"
 
 using namespace std;
 using namespace solidity;

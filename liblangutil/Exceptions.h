@@ -27,21 +27,25 @@
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
 #include <liblangutil/SourceLocation.h>
-
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/facilities/overload.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
-
+#include <stddef.h>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/preprocessor/config/config.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 #include <memory>
 #include <variant>
+#include <type_traits>
 
 namespace solidity::langutil
 {
 class Error;
+
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
 struct CompilerError: virtual util::Exception {};

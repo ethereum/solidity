@@ -22,9 +22,9 @@
 #pragma once
 
 #include <tools/yulPhaser/Chromosome.h>
-
 #include <functional>
 #include <tuple>
+#include <vector>
 
 namespace solidity::phaser
 {

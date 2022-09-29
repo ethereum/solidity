@@ -43,7 +43,8 @@
 #pragma once
 
 #include <liblangutil/UndefMacros.h>
-
+#include <stddef.h>
+#include <stdint.h>
 #include <iosfwd>
 #include <string>
 #include <tuple>

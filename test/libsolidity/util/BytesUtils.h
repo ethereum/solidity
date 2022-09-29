@@ -15,8 +15,11 @@
 #pragma once
 
 #include <test/libsolidity/util/SoltestTypes.h>
-
 #include <libsolutil/CommonData.h>
+#include <stddef.h>
+#include <string>
+
+#include "libsolutil/Common.h"
 
 namespace solidity::frontend::test
 {

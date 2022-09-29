@@ -21,11 +21,28 @@
 #include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
-
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <optional>
+
+#include "EVMHost.h"
+#include "TestCaseReader.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolidity/util/SoltestTypes.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+
+namespace boost {
+namespace filesystem {
+class path;
+}  // namespace filesystem
+}  // namespace boost
 
 namespace solidity::frontend::test
 {

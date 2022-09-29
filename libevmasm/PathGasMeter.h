@@ -23,12 +23,15 @@
 #pragma once
 
 #include <libevmasm/GasMeter.h>
-
 #include <liblangutil/EVMVersion.h>
-
+#include <stddef.h>
 #include <set>
 #include <vector>
 #include <memory>
+#include <map>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libsolutil/Numeric.h"
 
 namespace solidity::evmasm
 {

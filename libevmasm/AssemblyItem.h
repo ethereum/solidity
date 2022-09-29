@@ -28,9 +28,18 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
 #include <optional>
 #include <iostream>
 #include <sstream>
+#include <map>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace solidity::evmasm
 {
@@ -57,6 +66,7 @@ enum class Precision { Precise , Approximate };
 
 class Assembly;
 class AssemblyItem;
+
 using AssemblyItems = std::vector<AssemblyItem>;
 
 class AssemblyItem

@@ -18,8 +18,30 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <json/json.h>
-
 #include <fmt/format.h>
+#include <json/value.h>
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class ElementaryTypeName;
+class ElementaryTypeNameExpression;
+class EnumDefinition;
+class EnumValue;
+class ErrorDefinition;
+class FunctionDefinition;
+class Identifier;
+class IdentifierPath;
+class Literal;
+class MemberAccess;
+class ModifierDefinition;
+class PragmaDirective;
+class SourceUnit;
+class StructuredDocumentation;
+class UserDefinedTypeName;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

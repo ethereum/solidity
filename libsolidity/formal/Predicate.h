@@ -20,14 +20,31 @@
 
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/SymbolicVariables.h>
-
 #include <libsolidity/ast/AST.h>
-
 #include <libsmtutil/Sorts.h>
-
 #include <map>
 #include <optional>
 #include <vector>
+#include <string>
+#include <utility>
+
+#include "libsmtutil/SolverInterface.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ArrayType;
+class ContractDefinition;
+class FunctionCall;
+class FunctionDefinition;
+class ScopeOpener;
+class Type;
+class VariableDeclaration;
+namespace smt {
+class EncodingContext;
+}  // namespace smt
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

@@ -19,10 +19,13 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/CharStream.h>
-
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/exception/get_error_info.hpp>
 #include <algorithm>
-#include <cmath>
 #include <variant>
+#include <iosfwd>
+#include <memory>
 
 using namespace std;
 using namespace solidity;

@@ -21,9 +21,20 @@
  */
 
 #include <libevmasm/PeepholeOptimiser.h>
-
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/SemanticInformation.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <algorithm>
+#include <map>
+#include <utility>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;
@@ -43,6 +54,7 @@ struct OptimiserState
 
 template<typename FunctionType>
 struct FunctionParameterCount;
+
 template<typename R, typename... Args>
 struct FunctionParameterCount<R(Args...)>
 {

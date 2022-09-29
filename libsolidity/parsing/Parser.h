@@ -26,6 +26,64 @@
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ParserBase.h>
 #include <liblangutil/EVMVersion.h>
+#include <stdint.h>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/parsing/Token.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Block;
+class ContractDefinition;
+class EmitStatement;
+class EnumDefinition;
+class EnumValue;
+class ErrorDefinition;
+class EventDefinition;
+class Expression;
+class ExpressionStatement;
+class ForStatement;
+class FunctionTypeName;
+class Identifier;
+class IdentifierPath;
+class IfStatement;
+class ImportDirective;
+class InheritanceSpecifier;
+class InlineAssembly;
+class Mapping;
+class ModifierDefinition;
+class ModifierInvocation;
+class OverrideSpecifier;
+class ParameterList;
+class PragmaDirective;
+class PrimaryExpression;
+class RevertStatement;
+class SourceUnit;
+class Statement;
+class StructDefinition;
+class StructuredDocumentation;
+class TryCatchClause;
+class TryStatement;
+class TypeName;
+class UserDefinedTypeName;
+class UserDefinedValueTypeDefinition;
+class UsingForDirective;
+class VariableDeclaration;
+class VariableDeclarationStatement;
+class WhileStatement;
+}  // namespace frontend
+namespace langutil {
+class ErrorReporter;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::langutil
 {

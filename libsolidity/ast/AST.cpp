@@ -22,20 +22,36 @@
  */
 
 #include <libsolidity/ast/AST.h>
-
 #include <libsolidity/ast/CallGraph.h>
-#include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
-
 #include <range/v3/view/tail.hpp>
-
-#include <boost/algorithm/string.hpp>
-
-#include <functional>
+#include <ext/alloc_traits.h>
+#include <math.h>
+#include <stdlib.h>
+#include <boost/algorithm/string/erase.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <meta/meta.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/transform.hpp>
 #include <utility>
+#include <algorithm>
+#include <iosfwd>
+#include <type_traits>
+
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/LazyInit.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

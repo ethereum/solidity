@@ -22,12 +22,9 @@
  */
 
 #include <libsolidity/codegen/CompilerContext.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-#include <libsolidity/interface/Version.h>
-
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
@@ -40,16 +37,31 @@
 #include <libyul/Object.h>
 #include <libyul/YulString.h>
 #include <libyul/Utilities.h>
-
-#include <libsolutil/Whiskers.h>
-#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/StackTooDeepString.h>
-
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
+#include <libsolutil/Assertions.h>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/throw_exception.hpp>
 #include <utility>
+#include <iterator>
+#include <ostream>
+
+#include "libevmasm/Assembly.h"
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "liblangutil/CharStream.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
 
 // Change to "define" to output all intermediate code
 #undef SOL_OUTPUT_ASM

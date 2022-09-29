@@ -17,10 +17,27 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/SymbolicState.h>
-
 #include <libsolidity/formal/SymbolicTypes.h>
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SMTEncoder.h>
+#include <ext/alloc_traits.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <cstddef>
+#include <utility>
+
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/formal/SymbolicVariables.h"
+#include "libsolutil/CommonData.h"
 
 using namespace std;
 using namespace solidity;

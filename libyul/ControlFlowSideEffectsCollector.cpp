@@ -17,18 +17,28 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/ControlFlowSideEffectsCollector.h>
-
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/FunctionReferenceResolver.h>
-
 #include <libsolutil/Common.h>
-#include <libsolutil/CommonData.h>
-#include <libsolutil/Algorithms.h>
-
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/algorithm/find_if.hpp>
+#include <ext/alloc_traits.h>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <iosfwd>
+#include <type_traits>
+#include <utility>
+
+#include "libyul/ASTForward.h"
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity::yul;

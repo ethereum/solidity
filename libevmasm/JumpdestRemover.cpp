@@ -21,10 +21,14 @@
  */
 
 #include <libevmasm/JumpdestRemover.h>
-
 #include <libevmasm/AssemblyItem.h>
-
+#include <libsolutil/Assertions.h>
 #include <limits>
+#include <algorithm>
+#include <utility>
+
+#include "libevmasm/Exceptions.h"
+#include "libsolutil/Assertions.h"
 
 using namespace std;
 using namespace solidity;

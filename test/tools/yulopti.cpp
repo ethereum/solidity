@@ -20,36 +20,25 @@
  */
 
 #include <libsolutil/CommonIO.h>
-#include <libsolutil/Exceptions.h>
 #include <libsolutil/StringUtils.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libsolidity/parsing/Parser.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/Object.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Suite.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
-
-#include <libsolutil/JSON.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <liblangutil/CharStreamProvider.h>
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/program_options.hpp>
-
 #include <range/v3/action/sort.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/concat.hpp>
@@ -58,12 +47,61 @@
 #include <range/v3/view/set_algorithm.hpp>
 #include <range/v3/view/stride.hpp>
 #include <range/v3/view/transform.hpp>
-
-#include <cctype>
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/algorithm/string/compare.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/program_options/detail/parsers.hpp>
+#include <boost/program_options/detail/value_semantic.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/positional_options.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <range/v3/action/action.hpp>
+#include <range/v3/detail/variant.hpp>
+#include <range/v3/functional/comparisons.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/all.hpp>
+#include <range/v3/view/subrange.hpp>
+#include <range/v3/view/view.hpp>
 #include <string>
-#include <sstream>
 #include <iostream>
 #include <variant>
+#include <algorithm>
+#include <iomanip>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <stdexcept>
+#include <string_view>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTCopier.h"
+#include "libyul/optimiser/NameDispenser.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

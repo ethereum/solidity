@@ -18,22 +18,51 @@
 
 #include <test/TemporaryDirectory.h>
 #include <test/yulPhaser/TestHelpers.h>
-
 #include <tools/yulPhaser/AlgorithmRunner.h>
 #include <tools/yulPhaser/Common.h>
 #include <tools/yulPhaser/FitnessMetrics.h>
-
 #include <liblangutil/CharStream.h>
-
 #include <libsolutil/CommonIO.h>
-
-#include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
-
-#include <fstream>
+#include <assert.h>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <stdio.h>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/framework.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/detail/print_helper.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/tree/test_unit.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/class_properties.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <regex>
 #include <sstream>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/Metrics.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/GeneticAlgorithms.h"
+#include "tools/yulPhaser/Population.h"
+#include "tools/yulPhaser/Program.h"
+#include "tools/yulPhaser/ProgramCache.h"
 
 using namespace std;
 using namespace boost::unit_test::framework;

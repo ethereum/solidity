@@ -23,11 +23,19 @@
 #include <test/CommonSyntaxTest.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
-
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+#include <memory>
+
+#include "TestCaseReader.h"
+
+namespace solidity {
+namespace test {
+struct SyntaxTestError;
+}  // namespace test
+}  // namespace solidity
 
 namespace solidity::frontend::test
 {

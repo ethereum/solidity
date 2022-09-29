@@ -17,16 +17,23 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/parsing/DocStringParser.h>
-
 #include <libsolidity/ast/AST.h>
-
 #include <liblangutil/Common.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
-
 #include <range/v3/algorithm/find_first_of.hpp>
 #include <range/v3/algorithm/find_if_not.hpp>
 #include <range/v3/view/subrange.hpp>
+#include <range/v3/functional/comparisons.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <algorithm>
+#include <iosfwd>
+#include <iterator>
+#include <memory>
+#include <utility>
+
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

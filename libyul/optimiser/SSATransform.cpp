@@ -21,14 +21,27 @@
  */
 
 #include <libyul/optimiser/SSATransform.h>
-
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
-
 #include <libyul/optimiser/TypeInfo.h>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

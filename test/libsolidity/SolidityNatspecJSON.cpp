@@ -21,14 +21,24 @@
  */
 
 #include <test/Common.h>
-#include <string>
 #include <libsolutil/JSON.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
-#include <libsolutil/Exceptions.h>
 #include <libsolidity/interface/Natspec.h>
+#include <json/value.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <string>
+#include <ostream>
 
-#include <boost/test/unit_test.hpp>
+#include "liblangutil/EVMVersion.h"
 
 using namespace solidity::langutil;
 

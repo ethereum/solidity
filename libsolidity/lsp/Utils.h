@@ -19,16 +19,27 @@
 #pragma once
 
 #include <liblangutil/SourceLocation.h>
-
 #include <libsolidity/ast/ASTForward.h>
-
 #include <libsolutil/JSON.h>
-
+#include <json/value.h>
 #include <optional>
 #include <vector>
+#include <string>
+
+namespace solidity {
+namespace frontend {
+class Declaration;
+class Expression;
+}  // namespace frontend
+namespace langutil {
+struct LineColumn;
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 #if !defined(NDEBUG)
 #include <fstream>
+
 #define lspDebug(message) (std::ofstream("/tmp/solc.log", std::ios::app) << (message) << std::endl)
 #else
 #define lspDebug(message) do {} while (0)

@@ -24,13 +24,16 @@
 #pragma once
 
 #include <liblangutil/EVMVersion.h>
-
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
-
+#include <stddef.h>
 #include <array>
 #include <map>
 #include <vector>
+#include <set>
+#include <string>
+
+#include "libevmasm/AssemblyItem.h"
 
 namespace solidity::frontend
 {

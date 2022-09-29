@@ -19,20 +19,29 @@
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/lsp/Transport.h>
 #include <libsolidity/lsp/Utils.h>
-
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/CommonIO.h>
-
-#include <range/v3/algorithm/none_of.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/transform.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
-#include <regex>
-
-#include <boost/algorithm/string/predicate.hpp>
-
 #include <fmt/format.h>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/throw_exception.hpp>
+#include <concepts/concepts.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <regex>
+#include <exception>
+#include <functional>
+#include <iosfwd>
+#include <map>
+#include <utility>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Result.h"
 
 using namespace std;
 using namespace solidity;

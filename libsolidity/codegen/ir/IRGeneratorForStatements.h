@@ -24,8 +24,54 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/ir/IRLValue.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
-
 #include <functional>
+#include <iosfwd>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/parsing/Token.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Assignment;
+class BinaryOperation;
+class Block;
+class Break;
+class Conditional;
+class Continue;
+class ContractDefinition;
+class Expression;
+class ExpressionStatement;
+class ForStatement;
+class FunctionCall;
+class FunctionCallOptions;
+class FunctionDefinition;
+class Identifier;
+class IfStatement;
+class IndexAccess;
+class IndexRangeAccess;
+class InlineAssembly;
+class Literal;
+class MemberAccess;
+class PlaceholderStatement;
+class Return;
+class Statement;
+class TryCatchClause;
+class TryStatement;
+class TupleExpression;
+class Type;
+class UnaryOperation;
+class VariableDeclaration;
+class VariableDeclarationStatement;
+class WhileStatement;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

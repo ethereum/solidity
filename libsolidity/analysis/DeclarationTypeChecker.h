@@ -21,9 +21,27 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <list>
 #include <map>
+#include <set>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ArrayTypeName;
+class ElementaryTypeName;
+class EnumDefinition;
+class FunctionTypeName;
+class IdentifierPath;
+class InheritanceSpecifier;
+class Mapping;
+class StructDefinition;
+class UserDefinedTypeName;
+class UserDefinedValueTypeDefinition;
+class UsingForDirective;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

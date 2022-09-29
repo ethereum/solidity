@@ -29,6 +29,12 @@
 #include <memory>
 #include <vector>
 
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
+
 namespace solidity::frontend
 {
 

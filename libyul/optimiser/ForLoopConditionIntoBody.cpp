@@ -19,8 +19,18 @@
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
+#include <iosfwd>
+#include <iterator>
+#include <memory>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

@@ -21,13 +21,20 @@
  */
 
 #include <libyul/optimiser/MainFunction.h>
-
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/Exceptions.h>
-
 #include <libyul/AST.h>
+#include <ext/alloc_traits.h>
+#include <cstddef>
+#include <set>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
-#include <libsolutil/CommonData.h>
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

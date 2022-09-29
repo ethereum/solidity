@@ -15,16 +15,24 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolutil/Exceptions.h>
-
 #include <libsolidity/lsp/HandlerBase.h>
-#include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Utils.h>
-#include <libsolidity/ast/AST.h>
-
 #include <liblangutil/Exceptions.h>
-
 #include <fmt/format.h>
+#include <libsolutil/Assertions.h>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/throw_exception.hpp>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/CharStreamProvider.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/lsp/FileRepository.h"
+#include "libsolidity/lsp/Transport.h"
+#include "libsolutil/Common.h"
 
 using namespace solidity::langutil;
 using namespace solidity::lsp;

@@ -19,12 +19,11 @@
 #pragma once
 
 #include <tools/yulPhaser/Program.h>
-
 #include <libyul/optimiser/Metrics.h>
-
 #include <cstddef>
 #include <map>
 #include <string>
+#include <utility>
 
 namespace solidity::phaser
 {

@@ -20,10 +20,16 @@
  */
 
 #include <libyul/optimiser/ASTWalker.h>
-
 #include <libyul/AST.h>
-
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <iosfwd>
+#include <memory>
+#include <variant>
+
+#include "libsolutil/Exceptions.h"
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

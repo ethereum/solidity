@@ -21,8 +21,15 @@
  */
 
 #include <libyul/optimiser/SSAValueTracker.h>
-
 #include <libyul/AST.h>
+#include <iosfwd>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

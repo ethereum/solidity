@@ -21,6 +21,24 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 #include <liblangutil/ErrorReporter.h>
 #include <set>
+#include <optional>
+#include <string>
+
+#include "liblangutil/SourceLocation.h"
+
+namespace solidity {
+namespace frontend {
+class CFG;
+class ContractDefinition;
+class FunctionDefinition;
+class VariableDeclaration;
+struct CFGNode;
+struct FunctionFlow;
+}  // namespace frontend
+namespace langutil {
+class ErrorReporter;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

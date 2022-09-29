@@ -25,20 +25,31 @@
 #include <libsolidity/codegen/ir/IRVariable.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
-
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/codegen/ir/Common.h>
-
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <libsolutil/Common.h>
-
+#include <stddef.h>
+#include <stdint.h>
 #include <set>
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
+#include <optional>
+#include <utility>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

@@ -24,24 +24,50 @@
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
 #include <libsolidity/codegen/ir/IRGeneratorForStatements.h>
-
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-
 #include <libyul/YulStack.h>
 #include <libyul/Utilities.h>
-
-#include <libsolutil/Algorithms.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Whiskers.h>
-
 #include <liblangutil/SourceReferenceFormatter.h>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/multiprecision/number.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/all.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #include <sstream>
 #include <variant>
+#include <algorithm>
+#include <memory>
+#include <tuple>
+#include <type_traits>
+
+#include "liblangutil/DebugInfoSelection.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/CallGraph.h"
+#include "libsolidity/ast/TypeProvider.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/MultiUseYulFunctionCollector.h"
+#include "libsolidity/codegen/YulUtilFunctions.h"
+#include "libsolidity/codegen/ir/IRGenerationContext.h"
+#include "libsolidity/codegen/ir/IRVariable.h"
+#include "libsolutil/CommonIO.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/Object.h"
 
 using namespace std;
 using namespace solidity;

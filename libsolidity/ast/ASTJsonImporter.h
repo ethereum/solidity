@@ -23,13 +23,25 @@
 
 #pragma once
 
-#include <vector>
 #include <libsolidity/ast/AST.h>
 #include <json/json.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
+#include <json/value.h>
+#include <stdint.h>
+#include <vector>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/parsing/Token.h"
 
 namespace solidity::frontend
 {

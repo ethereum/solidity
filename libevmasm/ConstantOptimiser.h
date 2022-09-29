@@ -23,18 +23,24 @@
 #pragma once
 
 #include <libevmasm/Exceptions.h>
-
 #include <liblangutil/EVMVersion.h>
-
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Assertions.h>
-
+#include <stddef.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
 #include <vector>
+#include <map>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libsolutil/Common.h"
 
 namespace solidity::evmasm
 {
 
 class AssemblyItem;
+
 using AssemblyItems = std::vector<AssemblyItem>;
 class Assembly;
 

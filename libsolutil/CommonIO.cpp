@@ -22,8 +22,14 @@
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Assertions.h>
+#include <bits/termios-c_cc.h>
+#include <bits/termios-c_lflag.h>
+#include <bits/termios-struct.h>
+#include <bits/termios-tcflow.h>
+#include <boost/filesystem/operations.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 
-#include <fstream>
+#include "libsolutil/vector_ref.h"
 #if defined(_WIN32)
 #include <windows.h>
 #else

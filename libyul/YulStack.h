@@ -26,16 +26,27 @@
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <libyul/Object.h>
 #include <libyul/ObjectParser.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
-
 #include <libevmasm/LinkerObject.h>
-
 #include <memory>
 #include <string>
+#include <optional>
+#include <string_view>
+#include <utility>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/Exceptions.h"
+
+namespace solidity {
+namespace evmasm {
+struct LinkerObject;
+}  // namespace evmasm
+namespace yul {
+struct Object;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::evmasm
 {

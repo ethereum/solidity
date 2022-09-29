@@ -25,19 +25,42 @@
 
 #include <test/Common.h>
 #include <test/EVMHost.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
-
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/ErrorCodes.h>
-
-#include <functional>
-
 #include <boost/rational.hpp>
 #include <boost/test/unit_test.hpp>
+#include <stddef.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <functional>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "evmc/evmc.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
 
 namespace solidity::frontend::test
 {

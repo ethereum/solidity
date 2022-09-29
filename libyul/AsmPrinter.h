@@ -25,14 +25,41 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
-
 #include <libsolutil/CommonData.h>
-
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceLocation.h>
-
 #include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+namespace yul {
+class YulString;
+struct Assignment;
+struct Block;
+struct Break;
+struct Continue;
+struct DebugData;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Literal;
+struct Switch;
+struct TypedName;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

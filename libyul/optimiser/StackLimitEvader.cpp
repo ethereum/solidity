@@ -18,7 +18,6 @@
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
@@ -29,12 +28,42 @@
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>
 #include <libyul/Utilities.h>
-#include <libsolutil/Algorithms.h>
 #include <libsolutil/CommonData.h>
-
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/take.hpp>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <concepts/concepts.hpp>
+#include <range/v3/detail/variant.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/view.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
+#include <variant>
+
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/AsmAnalysisInfo.h"
+#include "libyul/Dialect.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/StackLayoutGenerator.h"
+#include "libyul/optimiser/OptimiserStep.h"
+
+namespace solidity {
+namespace yul {
+struct CFG;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

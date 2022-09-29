@@ -16,23 +16,16 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/SourceUpgrade.h>
-
-#include <libsolutil/CommonIO.h>
 #include <libsolutil/AnsiColorized.h>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/program_options/errors.hpp>
 
 //#include <test/Common.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/exception/all.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-
-#include <cstdlib>
 #include <iostream>
-#include <fstream>
-#include <queue>
-#include <regex>
+#include <string>
 
 #if defined(_WIN32)
 #include <windows.h>

@@ -21,14 +21,41 @@
  */
 
 #include <libsolidity/analysis/ContractLevelChecker.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
-#include <libsolutil/FunctionSelector.h>
 #include <liblangutil/ErrorReporter.h>
-
 #include <range/v3/view/reverse.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <set>
+#include <utility>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/analysis/OverrideChecker.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

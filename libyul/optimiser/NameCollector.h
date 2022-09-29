@@ -22,9 +22,25 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-
+#include <stddef.h>
 #include <map>
 #include <set>
+
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Assignment;
+struct Block;
+struct Continue;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

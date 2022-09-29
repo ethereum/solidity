@@ -20,13 +20,22 @@
  */
 
 #include <libyul/backends/evm/AsmCodeGen.h>
-
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
-#include <libyul/AST.h>
-#include <libyul/AsmAnalysisInfo.h>
-
 #include <libsolutil/StackTooDeepString.h>
+#include <ext/alloc_traits.h>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace std;
 using namespace solidity;

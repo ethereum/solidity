@@ -18,10 +18,18 @@
 
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 #include <libyul/Dialect.h>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

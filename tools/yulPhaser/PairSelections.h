@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <tuple>
 #include <vector>
+#include <utility>
 
 namespace solidity::phaser
 {

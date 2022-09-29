@@ -20,8 +20,20 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
-
 #include <libsolutil/CommonData.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <iosfwd>
+#include <memory>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

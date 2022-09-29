@@ -16,13 +16,19 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/CircularReferencesPruner.h>
-
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/Algorithms.h>
+#include <iosfwd>
+#include <map>
+#include <variant>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity::yul;

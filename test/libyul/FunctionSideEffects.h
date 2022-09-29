@@ -20,11 +20,11 @@
 
 #include <libsolutil/AnsiColorized.h>
 #include <test/TestCase.h>
-
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+#include <memory>
 
 namespace solidity::yul::test
 {

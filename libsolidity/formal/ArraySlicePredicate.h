@@ -19,10 +19,22 @@
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/Predicate.h>
 #include <libsolidity/formal/SymbolicVariables.h>
-
 #include <libsmtutil/Sorts.h>
-
 #include <vector>
+#include <map>
+#include <string>
+#include <utility>
+
+#include "libsmtutil/SolverInterface.h"
+
+namespace solidity {
+namespace frontend {
+class Predicate;
+namespace smt {
+class EncodingContext;
+}  // namespace smt
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

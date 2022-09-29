@@ -24,10 +24,15 @@
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
-
 #include <liblangutil/SourceLocation.h>
-
 #include <vector>
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

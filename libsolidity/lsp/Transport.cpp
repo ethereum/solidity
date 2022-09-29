@@ -17,19 +17,18 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/Transport.h>
 #include <libsolidity/lsp/Utils.h>
-
 #include <libsolutil/JSON.h>
-#include <libsolutil/Visitor.h>
 #include <libsolutil/CommonIO.h>
 #include <liblangutil/Exceptions.h>
-
 #include <fmt/format.h>
-
-#include <boost/algorithm/string.hpp>
-
+#include <stdio.h>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #include <iostream>
-#include <sstream>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 
 #if defined(_WIN32)

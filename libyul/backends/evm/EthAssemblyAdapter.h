@@ -24,9 +24,25 @@
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/AsmAnalysis.h>
 #include <liblangutil/SourceLocation.h>
-
+#include <stddef.h>
 #include <functional>
 #include <limits>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::evmasm
 {

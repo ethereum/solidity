@@ -17,10 +17,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/ProgramCache.h>
-
-#include <libyul/optimiser/Metrics.h>
-
 #include <libyul/optimiser/Suite.h>
+#include <assert.h>
+#include <algorithm>
+
+#include "libyul/ASTForward.h"
+#include "tools/yulPhaser/Program.h"
 
 using namespace std;
 using namespace solidity::yul;

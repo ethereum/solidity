@@ -19,15 +19,17 @@
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
-#include <libyul/Dialect.h>
-
-#include <algorithm>
-#include <cctype>
-#include <climits>
-#include <iterator>
 #include <string>
 #include <regex>
 #include <limits>
+#include <cstddef>
+#include <utility>
+#include <variant>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity::yul;

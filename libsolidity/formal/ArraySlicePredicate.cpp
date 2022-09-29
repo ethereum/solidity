@@ -17,8 +17,25 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/ArraySlicePredicate.h>
-
 #include <liblangutil/Exceptions.h>
+#include <iosfwd>
+#include <memory>
+
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/ast/TypeProvider.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/formal/Predicate.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/formal/SymbolicVariables.h"
+
+namespace solidity {
+namespace frontend {
+namespace smt {
+class EncodingContext;
+}  // namespace smt
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

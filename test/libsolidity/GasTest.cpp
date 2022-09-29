@@ -17,17 +17,24 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/GasTest.h>
-#include <test/Common.h>
-#include <libsolutil/CommonIO.h>
-#include <libsolutil/JSON.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
+#include <json/config.h>
+#include <json/value.h>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <fstream>
 #include <stdexcept>
+#include <utility>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ErrorCheck.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/OptimiserSettings.h"
 
 using namespace solidity::langutil;
 using namespace solidity::frontend;

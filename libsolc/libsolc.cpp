@@ -25,12 +25,18 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libyul/YulString.h>
-
+#include <libsolutil/Assertions.h>
 #include <cstdlib>
 #include <list>
 #include <string>
+#include <iosfwd>
+#include <iterator>
+#include <memory>
+#include <utility>
 
 #include "license.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/ReadFile.h"
 
 using namespace std;
 using namespace solidity;

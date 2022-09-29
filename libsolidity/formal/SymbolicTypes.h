@@ -21,6 +21,24 @@
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "libsmtutil/SolverInterface.h"
+#include "libsmtutil/Sorts.h"
+
+namespace solidity {
+namespace frontend {
+class IntegerType;
+class Type;
+namespace smt {
+class SymbolicVariable;
+}  // namespace smt
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::smt
 {

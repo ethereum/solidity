@@ -19,12 +19,40 @@
 #pragma once
 
 #include <libsolidity/ast/Types.h>
-
 #include <array>
 #include <map>
 #include <memory>
 #include <optional>
 #include <utility>
+#include <string>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class Declaration;
+class EnumDefinition;
+class ErrorDefinition;
+class EventDefinition;
+class FunctionDefinition;
+class FunctionTypeName;
+class Literal;
+class ModifierDefinition;
+class SourceUnit;
+class StructDefinition;
+class UserDefinedValueTypeDefinition;
+class VariableDeclaration;
+}  // namespace frontend
+namespace langutil {
+class ElementaryTypeNameToken;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

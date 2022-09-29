@@ -16,6 +16,18 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
+#include <cstddef>
+
+#include "libsolutil/Common.h"
+#include "libyul/ASTForward.h"
+#include "test/tools/yulInterpreter/Interpreter.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

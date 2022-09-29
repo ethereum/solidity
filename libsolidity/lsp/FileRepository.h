@@ -19,9 +19,13 @@
 
 #include <libsolidity/interface/FileReader.h>
 #include <libsolutil/Result.h>
-
+#include <boost/filesystem/path.hpp>
 #include <string>
 #include <map>
+#include <vector>
+
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/Common.h"
 
 namespace solidity::lsp
 {

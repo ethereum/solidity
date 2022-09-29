@@ -20,8 +20,23 @@
  */
 
 #include <libsolidity/interface/ABI.h>
-
 #include <libsolidity/ast/AST.h>
+#include <initializer_list>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <set>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;

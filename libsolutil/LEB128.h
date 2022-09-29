@@ -19,6 +19,7 @@
 
 
 #include <libsolutil/Common.h>
+#include <stdint.h>
 
 namespace solidity::util
 {

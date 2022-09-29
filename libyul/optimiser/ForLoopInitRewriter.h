@@ -20,6 +20,13 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
+namespace solidity {
+namespace yul {
+struct Block;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
+
 namespace solidity::yul
 {
 

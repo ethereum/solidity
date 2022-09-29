@@ -27,26 +27,54 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/ABIFunctions.h>
-
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/OptimiserSettings.h>
-
 #include <libevmasm/Assembly.h>
 #include <libevmasm/Instruction.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/ErrorCodes.h>
-
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
+#include <stddef.h>
 #include <functional>
 #include <ostream>
 #include <stack>
 #include <queue>
 #include <utility>
 #include <limits>
+#include <algorithm>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "libevmasm/AssemblyItem.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/codegen/MultiUseYulFunctionCollector.h"
+#include "libsolidity/codegen/YulUtilFunctions.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ContractDefinition;
+class Declaration;
+class FunctionDefinition;
+class VariableDeclaration;
+}  // namespace frontend
+namespace yul {
+class YulString;
+struct EVMDialect;
+struct Object;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::frontend
 {

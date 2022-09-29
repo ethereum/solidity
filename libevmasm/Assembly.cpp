@@ -21,26 +21,43 @@
  */
 
 #include <libevmasm/Assembly.h>
-
 #include <libevmasm/CommonSubexpressionEliminator.h>
-#include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/PeepholeOptimiser.h>
 #include <libevmasm/Inliner.h>
 #include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
-#include <libevmasm/GasMeter.h>
-
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
-
-#include <json/json.h>
-
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/enumerate.hpp>
-
-#include <fstream>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
 #include <limits>
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
+#include <tuple>
+#include <type_traits>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "libevmasm/KnownState.h"
+#include "libevmasm/LinkerObject.h"
+#include "liblangutil/DebugInfoSelection.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Keccak256.h"
 
 using namespace std;
 using namespace solidity;

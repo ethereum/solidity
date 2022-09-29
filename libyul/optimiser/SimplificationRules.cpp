@@ -20,17 +20,37 @@
  */
 
 #include <libyul/optimiser/SimplificationRules.h>
-
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
-#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
-
 #include <libevmasm/RuleList.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/integer_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <cstddef>
+#include <string>
+#include <variant>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/SimplificationRule.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

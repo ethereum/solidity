@@ -20,19 +20,41 @@
  */
 
 #include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
-
 #include <test/tools/yulInterpreter/Interpreter.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AST.h>
-
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
-
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Numeric.h>
-
+#include <ext/alloc_traits.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/cpp_int/cpp_int_config.hpp>
+#include <boost/multiprecision/detail/integer_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
 #include <limits>
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <variant>
+
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

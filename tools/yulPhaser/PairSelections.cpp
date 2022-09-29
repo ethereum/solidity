@@ -17,11 +17,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/PairSelections.h>
-
 #include <tools/yulPhaser/Selections.h>
 #include <tools/yulPhaser/SimulationRNG.h>
-
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 using namespace solidity::phaser;

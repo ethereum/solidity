@@ -19,6 +19,21 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <stddef.h>
+#include <optional>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct Break;
+struct Continue;
+struct FunctionDefinition;
+struct Switch;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

@@ -26,6 +26,7 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <liblangutil/SourceLocation.h>
 #include <string>
+#include <map>
 
 namespace solidity::langutil
 {

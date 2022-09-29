@@ -17,22 +17,25 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/ObjectCompilerTest.h>
-
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <libsolutil/AnsiColorized.h>
-
 #include <libyul/YulStack.h>
-
-#include <libevmasm/Instruction.h>
 #include <libevmasm/Disassemble.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
-#include <boost/algorithm/string.hpp>
-
+#include <boost/algorithm/string/trim.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
 #include <fstream>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "libevmasm/LinkerObject.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
 
 using namespace solidity;
 using namespace solidity::util;

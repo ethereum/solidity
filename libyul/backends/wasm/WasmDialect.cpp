@@ -20,9 +20,18 @@
  */
 
 #include <libyul/backends/wasm/WasmDialect.h>
-
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
+#include <algorithm>
+#include <functional>
+#include <initializer_list>
+#include <iosfwd>
+#include <memory>
+#include <utility>
+
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/Dialect.h"
+#include "libyul/SideEffects.h"
 
 using namespace std;
 using namespace solidity::yul;

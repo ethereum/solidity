@@ -17,13 +17,19 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/Invariants.h>
-
 #include <libsolidity/formal/ExpressionFormatter.h>
-#include <libsolidity/formal/SMTEncoder.h>
-
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <iosfwd>
+#include <utility>
+#include <vector>
 
-#include <boost/algorithm/string.hpp>
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/Exceptions.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/formal/Predicate.h"
+#include "libsolidity/formal/SSAVariable.h"
 
 using namespace std;
 using boost::algorithm::starts_with;

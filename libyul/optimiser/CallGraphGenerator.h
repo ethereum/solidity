@@ -22,10 +22,20 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-
 #include <map>
 #include <optional>
 #include <set>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

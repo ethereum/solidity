@@ -17,9 +17,18 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/PredicateSort.h>
-
 #include <libsolidity/formal/SMTEncoder.h>
 #include <libsolidity/formal/SymbolicTypes.h>
+#include <libsolutil/Assertions.h>
+#include <iosfwd>
+#include <memory>
+
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/formal/SymbolicState.h"
+#include "libsolutil/CommonData.h"
 
 using namespace std;
 using namespace solidity::util;

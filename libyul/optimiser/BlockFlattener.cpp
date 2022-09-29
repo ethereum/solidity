@@ -18,10 +18,23 @@
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Assertions.h>
+#include <iosfwd>
+#include <optional>
+#include <utility>
+#include <variant>
+#include <vector>
 
-#include <functional>
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
+
+namespace solidity {
+namespace yul {
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

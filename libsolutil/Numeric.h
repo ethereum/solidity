@@ -23,8 +23,17 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
-
 #include <boost/version.hpp>
+#include <stdint.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/cpp_int/cpp_int_config.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/integer_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #if (BOOST_VERSION < 106500)
 #error "Unsupported Boost version. At least 1.65 required."
 #endif
@@ -43,6 +52,9 @@
 #endif
 
 #include <limits>
+#include <algorithm>
+#include <string>
+#include <type_traits>
 
 namespace solidity
 {

@@ -17,13 +17,21 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/TemporaryDirectory.h>
-
 #include <test/libsolidity/util/SoltestErrors.h>
-
-#include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
-
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/context.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <fstream>
+#include <string>
 
 using namespace std;
 using namespace boost::test_tools;

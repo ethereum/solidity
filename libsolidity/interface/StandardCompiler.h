@@ -25,12 +25,23 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolutil/JSON.h>
-
 #include <liblangutil/DebugInfoSelection.h>
-
+#include <json/value.h>
 #include <optional>
 #include <utility>
 #include <variant>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "libevmasm/LinkerObject.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/FixedHash.h"
 
 namespace solidity::frontend
 {

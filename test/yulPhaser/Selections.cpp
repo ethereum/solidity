@@ -17,17 +17,26 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
-
 #include <tools/yulPhaser/Selections.h>
 #include <tools/yulPhaser/SimulationRNG.h>
-
 #include <libsolutil/CommonData.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <bits/std_abs.h>
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
 #include <algorithm>
 #include <set>
 #include <vector>
+#include <cstddef>
 
 using namespace std;
 using namespace solidity::util;

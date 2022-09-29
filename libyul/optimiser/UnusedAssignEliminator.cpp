@@ -21,14 +21,21 @@
  */
 
 #include <libyul/optimiser/UnusedAssignEliminator.h>
-
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <utility>
+#include <variant>
+#include <vector>
 
-#include <range/v3/action/remove_if.hpp>
+#include "libsolutil/Common.h"
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/OptimiserStep.h"
+#include "libyul/optimiser/UnusedStoreBase.h"
 
 using namespace std;
 using namespace solidity;

@@ -17,8 +17,14 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ControlFlowGraph.h>
-
 #include <libsolidity/analysis/ControlFlowBuilder.h>
+#include <iosfwd>
+
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
 
 using namespace std;
 using namespace solidity::langutil;

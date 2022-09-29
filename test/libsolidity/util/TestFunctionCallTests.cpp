@@ -16,14 +16,35 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <functional>
-#include <string>
-#include <tuple>
-#include <boost/test/unit_test.hpp>
-#include <liblangutil/Exceptions.h>
-#include <test/ExecutionFramework.h>
-
 #include <test/libsolidity/util/TestFunctionCall.h>
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <string>
+#include <iosfwd>
+#include <vector>
+
+#include "Common.h"
+#include "libsolidity/util/SoltestTypes.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity::util;

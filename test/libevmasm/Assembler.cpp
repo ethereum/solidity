@@ -24,14 +24,40 @@
 #include <libevmasm/Assembly.h>
 #include <libsolutil/JSON.h>
 #include <libevmasm/Disassemble.h>
-#include <libyul/Exceptions.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <json/value.h>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_log.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <algorithm>
 #include <memory>
 #include <string>
-#include <tuple>
+#include <cstddef>
+#include <map>
+#include <vector>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "libevmasm/LinkerObject.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity::langutil;

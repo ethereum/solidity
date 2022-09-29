@@ -32,15 +32,46 @@
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolidity/formal/SMTEncoder.h>
-
 #include <libsolidity/interface/ReadFile.h>
-
 #include <libsmtutil/SolverInterface.h>
 #include <liblangutil/UniqueErrorReporter.h>
-
+#include <stddef.h>
 #include <set>
 #include <string>
 #include <vector>
+#include <map>
+#include <memory>
+#include <utility>
+
+#include "liblangutil/Token.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/FixedHash.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Conditional;
+class ContractDefinition;
+class Expression;
+class ForStatement;
+class FunctionCall;
+class FunctionDefinition;
+class IfStatement;
+class Return;
+class SourceUnit;
+class TryStatement;
+class Type;
+class UnaryOperation;
+class WhileStatement;
+namespace smt {
+class SymbolicVariable;
+}  // namespace smt
+}  // namespace frontend
+namespace langutil {
+class CharStreamProvider;
+class UniqueErrorReporter;
+}  // namespace langutil
+}  // namespace solidity
 
 using solidity::util::h256;
 

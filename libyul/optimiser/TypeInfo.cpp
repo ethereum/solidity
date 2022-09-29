@@ -20,13 +20,19 @@
  */
 
 #include <libyul/optimiser/TypeInfo.h>
-
-#include <libyul/optimiser/NameCollector.h>
-
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-
 #include <libsolutil/Visitor.h>
+#include <libsolutil/Assertions.h>
+#include <algorithm>
+#include <iosfwd>
+#include <utility>
+#include <variant>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity::yul;

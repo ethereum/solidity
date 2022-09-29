@@ -17,11 +17,20 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <liblangutil/Exceptions.h>
-
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/type_index/type_index_facade.hpp>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
 
 using namespace solidity;
 using namespace solidity::langutil;

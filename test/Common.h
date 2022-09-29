@@ -22,11 +22,16 @@
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/Numeric.h>
-
 #include <test/evmc/evmc.h>
-
 #include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/program_options/options_description.hpp>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace solidity::test
 {

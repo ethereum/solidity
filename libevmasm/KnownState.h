@@ -36,6 +36,10 @@
 #endif
 
 #include <boost/bimap.hpp>
+#include <boost/bimap/bimap.hpp>
+#include <boost/multi_index/detail/bidir_node_iterator.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/operators.hpp>
 
 #if defined(_MSC_VER)
 #pragma warning(pop)
@@ -49,7 +53,6 @@
 #include <libsolutil/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SemanticInformation.h>
-
 #include <limits>
 #include <utility>
 #include <vector>
@@ -58,6 +61,10 @@
 #include <tuple>
 #include <memory>
 #include <ostream>
+#include <algorithm>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libsolutil/Numeric.h"
 
 namespace solidity::langutil
 {
@@ -68,6 +75,7 @@ namespace solidity::evmasm
 {
 
 class AssemblyItem;
+
 using AssemblyItems = std::vector<AssemblyItem>;
 
 /**

@@ -23,9 +23,10 @@
 #pragma once
 
 #include <liblangutil/Exceptions.h>
-
 #include <vector>
 #include <tuple>
+#include <string>
+#include <utility>
 
 namespace solidity::frontend::test
 {

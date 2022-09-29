@@ -20,10 +20,16 @@
  */
 
 #include <libyul/optimiser/ASTCopier.h>
-
 #include <libyul/AST.h>
-
 #include <libsolutil/Common.h>
+#include <algorithm>
+#include <functional>
+#include <iosfwd>
+#include <variant>
+
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

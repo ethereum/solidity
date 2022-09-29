@@ -25,11 +25,13 @@
 #include <libevmasm/Assembly.h>
 #include <libevmasm/AssemblyItem.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <range/v3/view/span.hpp>
+#include <stddef.h>
+#include <stdint.h>
 #include <map>
 #include <set>
 #include <vector>
+#include <optional>
 
 namespace solidity::evmasm
 {

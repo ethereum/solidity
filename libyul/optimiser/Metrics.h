@@ -23,6 +23,21 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <liblangutil/EVMVersion.h>
+#include <cstddef>
+#include <map>
+
+#include "libevmasm/Instruction.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Assignment;
+struct Block;
+struct FunctionCall;
+struct Literal;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

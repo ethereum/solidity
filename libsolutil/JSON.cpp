@@ -21,14 +21,17 @@
  */
 
 #include <libsolutil/JSON.h>
-
-#include <libsolutil/CommonIO.h>
-
 #include <boost/algorithm/string/replace.hpp>
-
+#include <json/reader.h>
+#include <json/version.h>
+#include <json/writer.h>
+#include <boost/iterator/iterator_traits.hpp>
 #include <sstream>
 #include <map>
 #include <memory>
+#include <deque>
+#include <utility>
+#include <vector>
 
 using namespace std;
 

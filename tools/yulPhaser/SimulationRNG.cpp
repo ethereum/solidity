@@ -17,14 +17,13 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/SimulationRNG.h>
-
 // NOTE: The code would work with std::random but the results for a given seed would not be reproducible
 // across different STL implementations. Boost does not guarantee this either but at least it has only one
 // implementation. Reproducibility is not a hard requirement for yul-phaser but it's nice to have.
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/binomial_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-
+#include <assert.h>
 #include <ctime>
 #include <limits>
 

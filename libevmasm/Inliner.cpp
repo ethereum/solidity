@@ -21,22 +21,47 @@
  */
 
 #include <libevmasm/Inliner.h>
-
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/GasMeter.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/SemanticInformation.h>
-
 #include <libsolutil/CommonData.h>
-
 #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/slice.hpp>
 #include <range/v3/view/transform.hpp>
-
+#include <boost/cstdint.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/cpp_int/limits.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/utility/common_tuple.hpp>
+#include <range/v3/view/subrange.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
 #include <optional>
 #include <limits>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

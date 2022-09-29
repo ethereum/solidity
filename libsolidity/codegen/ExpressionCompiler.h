@@ -30,9 +30,18 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
-
 #include <functional>
 #include <memory>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
 
 namespace solidity::evmasm
 {

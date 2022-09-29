@@ -19,14 +19,26 @@
  * Unit tests for Solidity's ABI decoder.
  */
 
+#include <test/libsolidity/SolidityExecutionFramework.h>
+#include <test/libsolidity/ABITestsCommon.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <functional>
 #include <string>
-#include <tuple>
-#include <boost/test/unit_test.hpp>
-#include <liblangutil/Exceptions.h>
-#include <test/libsolidity/SolidityExecutionFramework.h>
+#include <iosfwd>
 
-#include <test/libsolidity/ABITestsCommon.h>
+#include "Common.h"
+#include "ExecutionFramework.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace std::placeholders;

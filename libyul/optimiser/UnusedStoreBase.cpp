@@ -20,14 +20,16 @@
  */
 
 #include <libyul/optimiser/UnusedStoreBase.h>
-
-#include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
+#include <iosfwd>
+#include <memory>
+#include <utility>
 
-#include <range/v3/action/remove_if.hpp>
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Common.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

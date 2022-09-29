@@ -21,6 +21,18 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Dialect.h>
 #include <libsolutil/Common.h>
+#include <map>
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct Block;
+struct ControlFlowSideEffects;
+struct Dialect;
+struct OptimiserStepContext;
+struct Switch;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

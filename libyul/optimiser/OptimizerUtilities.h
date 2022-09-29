@@ -26,8 +26,17 @@
 #include <libyul/Dialect.h>
 #include <libyul/YulString.h>
 #include <libyul/optimiser/ASTWalker.h>
-
+#include <stdint.h>
 #include <optional>
+#include <set>
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct Block;
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::evmasm
 {

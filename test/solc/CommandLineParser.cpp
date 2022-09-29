@@ -20,23 +20,52 @@
 
 #include <solc/CommandLineParser.h>
 #include <solc/Exceptions.h>
-
 #include <test/solc/Common.h>
-
-#include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <libsolutil/CommonData.h>
 #include <liblangutil/EVMVersion.h>
-#include <libsmtutil/SolverInterface.h>
-#include <libsolidity/interface/Version.h>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <map>
 #include <optional>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <vector>
+#include <initializer_list>
+#include <memory>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+#include "liblangutil/DebugInfoSelection.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolidity/interface/FileReader.h"
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolutil/JSON.h"
+#include "libyul/YulStack.h"
 
 using namespace std;
 using namespace solidity::frontend;

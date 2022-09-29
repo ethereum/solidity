@@ -25,17 +25,28 @@
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Dialect.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
-
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
 #include <range/v3/view/transform.hpp>
-
+#include <boost/algorithm/string/join.hpp>
+#include <boost/iterator/iterator_traits.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
 #include <memory>
-#include <functional>
+#include <algorithm>
+#include <cstddef>
+#include <deque>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/CharStreamProvider.h"
+#include "liblangutil/DebugInfoSelection.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

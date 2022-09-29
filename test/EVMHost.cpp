@@ -21,15 +21,37 @@
  */
 
 #include <test/EVMHost.h>
-
 #include <test/evmc/loader.h>
-
 #include <libevmasm/GasMeter.h>
-
-#include <libsolutil/Exceptions.h>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/picosha2.h>
+#include <stddef.h>
+#include <boost/cstdint.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/operators.hpp>
+#include <boost/throw_exception.hpp>
+#include <algorithm>
+#include <array>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+
+#include "evmc/evmc.h"
+#include "evmc/evmc.hpp"
+#include "evmc/mocked_host.hpp"
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
 
 using namespace std;
 using namespace solidity;

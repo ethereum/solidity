@@ -19,11 +19,8 @@
  * Unit tests for parsing Yul.
  */
 
-#include <test/Common.h>
-
 #include <test/libsolidity/ErrorCheck.h>
 #include <test/libyul/Common.h>
-
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
@@ -31,13 +28,46 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Dialect.h>
 #include <liblangutil/ErrorReporter.h>
-
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/test/unit_test.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/detail/print_helper.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <memory>
 #include <optional>
 #include <string>
+#include <iosfwd>
+#include <map>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace std;
 using namespace solidity;

@@ -25,12 +25,24 @@
 #include <test/evmc/mocked_host.hpp>
 #include <test/evmc/evmc.hpp>
 #include <test/evmc/evmc.h>
-
 #include <liblangutil/EVMVersion.h>
-
 #include <libsolutil/FixedHash.h>
-
 #include <boost/filesystem.hpp>
+#include <stdint.h>
+#include <iosfwd>
+#include <map>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+
+namespace boost {
+namespace filesystem {
+class path;
+}  // namespace filesystem
+}  // namespace boost
 
 namespace solidity::test
 {

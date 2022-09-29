@@ -22,9 +22,15 @@
 #include <libsmtutil/SolverInterface.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolutil/FixedHash.h>
-
+#include <stddef.h>
 #include <map>
 #include <vector>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+
+#include "libsmtutil/Sorts.h"
 
 namespace solidity::smtutil
 {

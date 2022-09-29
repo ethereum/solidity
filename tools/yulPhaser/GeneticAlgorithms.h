@@ -23,9 +23,10 @@
 
 #include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Population.h>
-
+#include <assert.h>
 #include <cstddef>
 #include <optional>
+#include <functional>
 
 namespace solidity::phaser
 {

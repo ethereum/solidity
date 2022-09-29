@@ -24,20 +24,30 @@
 #include <libsolidity/analysis/ReferencesResolver.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/ast/AST.h>
-
-#include <libyul/AsmAnalysis.h>
-#include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AST.h>
-#include <libyul/backends/evm/EVMDialect.h>
-
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
-
-#include <libsolutil/StringUtils.h>
 #include <libsolutil/CommonData.h>
-
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <algorithm>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

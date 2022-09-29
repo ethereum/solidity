@@ -20,18 +20,36 @@
  */
 
 #include <libyul/Object.h>
-
 #include <libyul/AsmPrinter.h>
 #include <libyul/Exceptions.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
-
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
 #include <range/v3/view/transform.hpp>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/all.hpp>
+#include <algorithm>
+#include <cstddef>
+
+#include "liblangutil/CharStream.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+struct DebugInfoSelection;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

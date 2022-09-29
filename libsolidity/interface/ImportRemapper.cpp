@@ -18,6 +18,10 @@
 #include <libsolidity/interface/ImportRemapper.h>
 #include <libsolutil/CommonIO.h>
 #include <liblangutil/Exceptions.h>
+#include <pstl/glue_algorithm_defs.h>
+#include <stddef.h>
+#include <algorithm>
+#include <utility>
 
 using std::equal;
 using std::find;

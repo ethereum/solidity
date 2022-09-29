@@ -29,13 +29,28 @@
 #include <liblangutil/Scanner.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Visitor.h>
-
-#include <range/v3/view/subrange.hpp>
-
-#include <boost/algorithm/string.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/predicate.hpp>
 #include <algorithm>
 #include <regex>
+#include <cstddef>
+#include <functional>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+
+#include "liblangutil/ParserBase.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+
+namespace solidity {
+namespace langutil {
+class CharStream;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

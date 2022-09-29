@@ -22,13 +22,31 @@
  */
 
 #include <libsolidity/codegen/ABIFunctions.h>
-
-#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
-
 #include <boost/algorithm/string/join.hpp>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <tuple>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/TypeProvider.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/MultiUseYulFunctionCollector.h"
+#include "libsolidity/codegen/YulUtilFunctions.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;

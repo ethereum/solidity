@@ -24,6 +24,14 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
 #include <libyul/ASTForward.h>
+#include <string>
+
+namespace solidity {
+namespace yul {
+struct Case;
+struct Literal;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

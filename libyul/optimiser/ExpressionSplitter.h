@@ -22,11 +22,20 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <vector>
+
+namespace solidity {
+namespace yul {
+class NameDispenser;
+struct Block;
+struct ForLoop;
+struct FunctionCall;
+struct If;
+struct Switch;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

@@ -20,8 +20,17 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <liblangutil/ErrorReporter.h>
-
 #include <memory>
+#include <set>
+
+#include "libsolidity/ast/AST.h"
+
+namespace solidity {
+namespace langutil {
+class ErrorReporter;
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

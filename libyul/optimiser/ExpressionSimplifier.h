@@ -22,8 +22,15 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+
+#include "libyul/optimiser/ASTWalker.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

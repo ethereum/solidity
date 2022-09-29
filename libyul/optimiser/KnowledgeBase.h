@@ -23,12 +23,13 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
-
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
-
+#include <stddef.h>
 #include <map>
 #include <functional>
+#include <optional>
+#include <utility>
 
 namespace solidity::yul
 {

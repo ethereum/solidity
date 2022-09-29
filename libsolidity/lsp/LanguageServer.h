@@ -21,19 +21,34 @@
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
-
 #include <json/value.h>
-
 #include <functional>
 #include <map>
 #include <optional>
 #include <string>
 #include <vector>
+#include <set>
+
+namespace boost {
+namespace filesystem {
+class path;
+}  // namespace filesystem
+}  // namespace boost
+namespace solidity {
+namespace frontend {
+class ASTNode;
+}  // namespace frontend
+namespace langutil {
+struct LineColumn;
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::lsp
 {
 
 class RenameSymbol;
+
 enum class ErrorCode;
 
 /**

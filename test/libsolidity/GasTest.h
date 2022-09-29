@@ -21,13 +21,14 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
-
+#include <stddef.h>
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
+#include <map>
+#include <memory>
 
 namespace solidity::frontend::test
 {

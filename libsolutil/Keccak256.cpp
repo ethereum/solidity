@@ -21,9 +21,11 @@
  */
 
 #include <libsolutil/Keccak256.h>
-
 #include <cstdint>
 #include <cstring>
+#include <iosfwd>
+
+#include "libsolutil/FixedHash.h"
 
 using namespace std;
 

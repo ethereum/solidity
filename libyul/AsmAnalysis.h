@@ -23,19 +23,43 @@
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 #include <libyul/Scope.h>
-
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <functional>
 #include <list>
 #include <memory>
 #include <optional>
 #include <utility>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "libyul/SideEffects.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Assignment;
+struct Block;
+struct Break;
+struct Continue;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Literal;
+struct Object;
+struct Switch;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::langutil
 {

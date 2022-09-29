@@ -19,6 +19,9 @@
 #pragma once
 
 #include <test/TestCase.h>
+#include <iosfwd>
+#include <memory>
+#include <string>
 
 namespace solidity::yul::test
 {

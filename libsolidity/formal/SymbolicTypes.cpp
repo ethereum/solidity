@@ -17,14 +17,26 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/SymbolicTypes.h>
-
 #include <libsolidity/formal/EncodingContext.h>
-
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/formal/SymbolicVariables.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity::util;

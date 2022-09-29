@@ -19,11 +19,18 @@
  */
 
 #include <libyul/optimiser/SyntacticalEquality.h>
-
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
-
 #include <libsolutil/CommonData.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <set>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

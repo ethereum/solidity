@@ -17,15 +17,27 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ViewPureChecker.h>
-#include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libevmasm/SemanticInformation.h>
-
+#include <libsolutil/Assertions.h>
 #include <functional>
 #include <utility>
 #include <variant>
+#include <iosfwd>
+#include <set>
+#include <string>
+
+#include "libevmasm/Instruction.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/Dialect.h"
 
 using namespace std;
 using namespace solidity;

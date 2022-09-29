@@ -16,6 +16,15 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/HandlerBase.h>
+#include <json/value.h>
+
+#include "libsolidity/lsp/Transport.h"
+
+namespace solidity {
+namespace lsp {
+class LanguageServer;
+}  // namespace lsp
+}  // namespace solidity
 
 namespace solidity::lsp
 {

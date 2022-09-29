@@ -23,11 +23,32 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <liblangutil/SourceLocation.h>
-
+#include <stddef.h>
 #include <array>
 #include <vector>
+#include <map>
+#include <memory>
+
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+class NameDispenser;
+struct Block;
+struct Case;
+struct DebugData;
+struct Dialect;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Switch;
+struct TypedName;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

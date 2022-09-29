@@ -22,11 +22,14 @@
 #pragma once
 
 #include <libyul/backends/wasm/WasmAST.h>
-
 #include <libsolutil/Common.h>
-
+#include <stddef.h>
 #include <vector>
 #include <stack>
+#include <cstdint>
+#include <map>
+#include <string>
+#include <utility>
 
 namespace solidity::yul::wasm
 {

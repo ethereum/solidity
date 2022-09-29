@@ -22,20 +22,33 @@
  */
 
 #include <libsolidity/analysis/DocStringTagParser.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/parsing/DocStringParser.h>
-#include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Common.h>
-
-#include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/filter.hpp>
-
-#include <boost/algorithm/string.hpp>
-
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/view.hpp>
 #include <regex>
 #include <string_view>
+#include <cstddef>
+#include <functional>
+#include <map>
+#include <memory>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/ASTVisitor.h"
+#include "libsolidity/ast/Types.h"
 
 using namespace std;
 using namespace solidity;

@@ -13,19 +13,18 @@
 */
 
 #include <test/libsolidity/SemanticTest.h>
-
-#include <libsolutil/Whiskers.h>
-#include <libyul/Exceptions.h>
 #include <test/Common.h>
 #include <test/libsolidity/util/BytesUtils.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/throw_exception.hpp>
-
-#include <algorithm>
-#include <cctype>
+#include <ext/alloc_traits.h>
+#include <json/value.h>
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/algorithm/string/detail/case_conv.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <fstream>
 #include <functional>
 #include <memory>
@@ -33,6 +32,29 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <set>
+#include <type_traits>
+
+#include "ExecutionFramework.h"
+#include "TestCase.h"
+#include "evmc/evmc.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/AnalysisFramework.h"
+#include "libsolidity/SolidityExecutionFramework.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libsolidity/util/TestFileParser.h"
+#include "libsolidity/util/TestFunctionCall.h"
+#include "libsolutil/AnsiColorized.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Keccak256.h"
+#include "libsolutil/StringUtils.h"
 
 using namespace std;
 using namespace solidity;

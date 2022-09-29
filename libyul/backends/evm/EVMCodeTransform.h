@@ -26,9 +26,25 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/AST.h>
 #include <libyul/Scope.h>
-
+#include <stddef.h>
 #include <optional>
 #include <stack>
+#include <map>
+#include <memory>
+#include <set>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+
+namespace solidity {
+namespace yul {
+struct BuiltinContext;
+struct EVMDialect;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::langutil
 {

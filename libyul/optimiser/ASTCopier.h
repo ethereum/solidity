@@ -22,14 +22,14 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libyul/YulString.h>
-
 #include <memory>
 #include <optional>
 #include <set>
 #include <vector>
 #include <map>
+
+#include "libyul/AST.h"
 
 namespace solidity::yul
 {

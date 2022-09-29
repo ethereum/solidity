@@ -19,6 +19,18 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <map>
+#include <vector>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct FunctionCall;
+struct FunctionDefinition;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

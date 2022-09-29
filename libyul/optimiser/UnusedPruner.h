@@ -24,9 +24,17 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/YulString.h>
-
+#include <stddef.h>
 #include <map>
 #include <set>
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct FunctionDefinition;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

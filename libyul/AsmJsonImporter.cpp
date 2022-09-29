@@ -25,14 +25,19 @@
 #include <libyul/AsmJsonImporter.h>
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
-
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
-
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
-
+#include <json/config.h>
 #include <vector>
+#include <iosfwd>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/Token.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/CommonData.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity::langutil;

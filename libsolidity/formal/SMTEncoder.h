@@ -28,16 +28,39 @@
 #include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/VariableUsage.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/UniqueErrorReporter.h>
-
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <utility>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/Token.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
+
+namespace solidity {
+namespace frontend {
+namespace smt {
+class EncodingContext;
+class SymbolicArrayVariable;
+class SymbolicState;
+class SymbolicVariable;
+}  // namespace smt
+}  // namespace frontend
+namespace langutil {
+class UniqueErrorReporter;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::langutil
 {

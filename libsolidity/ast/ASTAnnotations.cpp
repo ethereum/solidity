@@ -22,6 +22,9 @@
  */
 
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <iosfwd>
+
+#include "libsolidity/ast/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

@@ -23,10 +23,27 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/AST.h>
-
 #include <range/v3/action/remove_if.hpp>
-
+#include <stddef.h>
 #include <variant>
+#include <algorithm>
+#include <map>
+#include <set>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Break;
+struct Continue;
+struct ForLoop;
+struct FunctionDefinition;
+struct If;
+struct Switch;
+}  // namespace yul
+}  // namespace solidity
 
 
 namespace solidity::yul

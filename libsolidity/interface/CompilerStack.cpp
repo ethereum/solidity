@@ -25,7 +25,6 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/ImportRemapper.h>
-
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
 #include <libsolidity/analysis/ControlFlowRevertPruner.h>
@@ -43,7 +42,6 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/analysis/ImmutableValidator.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/ASTJsonImporter.h>
@@ -55,38 +53,73 @@
 #include <libsolidity/interface/StorageLayout.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
-
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
-
-#include <libyul/YulString.h>
-#include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/YulStack.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
-
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
-
 #include <libevmasm/Exceptions.h>
-
 #include <libsolutil/SwarmHash.h>
 #include <libsolutil/IpfsHash.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
-
-#include <json/json.h>
-
 #include <boost/algorithm/string/replace.hpp>
-
 #include <range/v3/view/concat.hpp>
-
+#include <json/config.h>
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/iterator/iterator_traits.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/operators.hpp>
+#include <boost/throw_exception.hpp>
+#include <range/v3/detail/variant.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/utility/get.hpp>
 #include <utility>
 #include <map>
 #include <limits>
 #include <string>
+#include <deque>
+#include <functional>
+#include <ostream>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
+
+#include "libevmasm/Assembly.h"
+#include "libevmasm/GasMeter.h"
+#include "libevmasm/LinkerObject.h"
+#include "liblangutil/DebugInfoSelection.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/ErrorReporter.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/analysis/FunctionCallGraph.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/CallGraph.h"
+#include "libsolidity/ast/ExperimentalFeatures.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/CompilerContext.h"
+#include "libsolidity/formal/BMC.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/CommonIO.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Keccak256.h"
+#include "libsolutil/LazyInit.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace std;
 using namespace solidity;

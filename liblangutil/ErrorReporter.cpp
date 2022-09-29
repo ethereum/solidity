@@ -23,7 +23,12 @@
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceLocation.h>
+#include <boost/throw_exception.hpp>
 #include <memory>
+#include <iosfwd>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

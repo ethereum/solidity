@@ -26,8 +26,22 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
-
 #include <memory>
+#include <iterator>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Declaration;
+}  // namespace frontend
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

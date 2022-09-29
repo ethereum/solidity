@@ -21,8 +21,14 @@
  */
 
 #include <libyul/optimiser/FunctionGrouper.h>
-
 #include <libyul/AST.h>
+#include <algorithm>
+#include <cstddef>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

@@ -20,16 +20,47 @@
  */
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
-
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/default_ops.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/integer_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <set>
+#include <type_traits>
+#include <utility>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/ABIFunctions.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolutil/CommonIO.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Keccak256.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;

@@ -20,15 +20,33 @@
  */
 
 #include <libyul/backends/evm/ConstantOptimiser.h>
-
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
-
-#include <libsolutil/CommonData.h>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/default_ops.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
 #include <variant>
+#include <algorithm>
+#include <iosfwd>
+#include <optional>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "liblangutil/EVMVersion.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/EVMDialect.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

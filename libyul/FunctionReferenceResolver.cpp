@@ -17,11 +17,20 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/FunctionReferenceResolver.h>
-
 #include <libyul/AST.h>
 #include <libsolutil/CommonData.h>
-
 #include <range/v3/view/reverse.hpp>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <iosfwd>
+#include <variant>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity::yul;

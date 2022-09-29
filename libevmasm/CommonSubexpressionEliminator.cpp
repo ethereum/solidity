@@ -22,13 +22,29 @@
  * Optimizer step for common subexpression elimination and stack reorganisation.
  */
 
-#include <functional>
-#include <libsolutil/Keccak256.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libsolutil/StackTooDeepString.h>
-
 #include <range/v3/view/reverse.hpp>
+#include <stddef.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <functional>
+#include <algorithm>
+#include <initializer_list>
+#include <memory>
+#include <ostream>
+
+#include "libevmasm/ExpressionClasses.h"
+#include "libevmasm/Instruction.h"
+#include "libevmasm/KnownState.h"
+#include "libevmasm/SemanticInformation.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

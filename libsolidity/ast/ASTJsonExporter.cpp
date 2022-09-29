@@ -21,28 +21,40 @@
  */
 
 #include <libsolidity/ast/ASTJsonExporter.h>
-
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/TypeProvider.h>
-
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 #include <libsolutil/Keccak256.h>
-
 #include <boost/algorithm/string/join.hpp>
-
+#include <range/v3/view/map.hpp>
+#include <ext/alloc_traits.h>
+#include <json/config.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #include <utility>
 #include <vector>
 #include <algorithm>
-#include <limits>
 #include <type_traits>
-#include <range/v3/view/map.hpp>
+#include <memory>
+#include <set>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/Dialect.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity::langutil;

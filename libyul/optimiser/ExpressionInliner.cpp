@@ -20,15 +20,20 @@
  */
 
 #include <libyul/optimiser/ExpressionInliner.h>
-
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Substitution.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
-
 #include <libyul/AST.h>
+#include <cstddef>
+#include <memory>
+#include <variant>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

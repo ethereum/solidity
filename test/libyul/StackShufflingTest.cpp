@@ -18,7 +18,27 @@
  * Unit tests for stack shuffling.
  */
 #include <libyul/backends/evm/StackHelpers.h>
-#include <boost/test/unit_test.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/zip.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <string>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/Scope.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/ControlFlowGraph.h"
 
 using namespace std;
 using namespace solidity::langutil;

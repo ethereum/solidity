@@ -22,13 +22,20 @@
 #pragma once
 
 #include <libyul/Dialect.h>
-
 #include <map>
+#include <optional>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "libyul/AST.h"
+#include "libyul/YulString.h"
 
 namespace solidity::yul
 {
 
 class YulString;
+
 using Type = YulString;
 struct FunctionCall;
 struct Object;

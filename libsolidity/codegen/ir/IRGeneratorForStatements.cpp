@@ -20,34 +20,61 @@
  */
 
 #include <libsolidity/codegen/ir/IRGeneratorForStatements.h>
-
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/ir/IRLValue.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
-#include <libsolidity/codegen/ABIFunctions.h>
-#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ReturnInfo.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/ASTUtils.h>
-
 #include <libevmasm/GasMeter.h>
-
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/ASTCopier.h>
-
 #include <liblangutil/Exceptions.h>
-
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
-
 #include <range/v3/view/transform.hpp>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <set>
+#include <tuple>
+#include <variant>
+
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/MultiUseYulFunctionCollector.h"
+#include "libsolidity/codegen/ir/Common.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/CommonIO.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

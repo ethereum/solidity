@@ -24,6 +24,14 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
+#include <stddef.h>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "libsolutil/Numeric.h"
 
 namespace solidity::evmasm
 {

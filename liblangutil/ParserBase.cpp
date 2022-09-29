@@ -24,6 +24,11 @@
 #include <liblangutil/ParserBase.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
+#include <cstddef>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/Token.h"
 
 using namespace std;
 using namespace solidity;

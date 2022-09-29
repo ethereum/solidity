@@ -24,11 +24,13 @@
 #pragma once
 
 #include <liblangutil/EVMVersion.h>
-
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/Types.h>
+#include <vector>
+
+#include "libsolidity/ast/AST.h"
 
 namespace solidity::langutil
 {

@@ -27,6 +27,16 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <set>
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct Block;
+struct CallGraph;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

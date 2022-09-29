@@ -22,17 +22,27 @@
 #pragma once
 
 #include <test/libsolidity/ErrorCheck.h>
-
 #include <libsolidity/interface/CompilerStack.h>
-
 #include <functional>
 #include <string>
 #include <memory>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class SourceUnit;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {
 class Type;
 class FunctionType;
+
 using FunctionTypePointer = FunctionType const*;
 }
 

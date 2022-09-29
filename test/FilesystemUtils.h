@@ -22,7 +22,7 @@
 #pragma once
 
 #include <boost/filesystem.hpp>
-
+#include <boost/filesystem/path.hpp>
 #include <set>
 #include <string>
 

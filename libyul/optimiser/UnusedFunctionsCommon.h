@@ -19,8 +19,16 @@
 
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <libyul/AST.h>
+#include <utility>
+#include <vector>
+
+namespace solidity {
+namespace yul {
+class NameDispenser;
+class YulString;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul::unusedFunctionsCommon
 {

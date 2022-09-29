@@ -19,8 +19,16 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/ASTVisitor.h>
-
 #include <libsolutil/Algorithms.h>
+#include <ext/alloc_traits.h>
+#include <stddef.h>
+#include <functional>
+#include <memory>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
 
 namespace solidity::frontend
 {

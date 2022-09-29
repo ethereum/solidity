@@ -17,15 +17,26 @@
 
 #include <libyul/optimiser/SMTSolver.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
-
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
-
 #include <libsolutil/Visitor.h>
-#include <libsolutil/CommonData.h>
-
 #include <libsmtutil/SMTPortfolio.h>
-#include <libsmtutil/Helpers.h>
+#include <libsolutil/Assertions.h>
+#include <iosfwd>
+#include <optional>
+#include <utility>
+#include <variant>
+
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsmtutil/Sorts.h"
+#include "libyul/Exceptions.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace solidity::yul;
 using namespace solidity::util;

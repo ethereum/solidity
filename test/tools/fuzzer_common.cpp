@@ -17,21 +17,33 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/fuzzer_common.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/formal/ModelCheckerSettings.h>
-
 #include <libsolutil/JSON.h>
-
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
-
 #include <libsolc/libsolc.h>
-
 #include <liblangutil/Exceptions.h>
+#include <json/value.h>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
+#include <initializer_list>
+#include <iostream>
+#include <map>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
-#include <sstream>
+#include "libevmasm/Exceptions.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

@@ -25,28 +25,58 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
-
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AST.h>
-
 #include <liblangutil/ErrorReporter.h>
-
-#include <libsolutil/Algorithms.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Views.h>
-#include <libsolutil/Visitor.h>
-
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
 #include <range/v3/algorithm/count_if.hpp>
 #include <range/v3/view/drop_exactly.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/zip.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/throw_exception.hpp>
+#include <range/v3/functional/bind_back.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/subrange.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip_with.hpp>
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <set>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/CommonIO.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/Result.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/SideEffects.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
 
 using namespace std;
 using namespace solidity;

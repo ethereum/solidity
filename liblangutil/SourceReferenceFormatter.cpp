@@ -23,10 +23,17 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
-#include <libsolutil/UTF8.h>
-#include <iomanip>
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
 #include <string_view>
-#include <variant>
+#include <memory>
+#include <optional>
+#include <ostream>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/SourceReferenceExtractor.h"
+#include "libsolutil/AnsiColorized.h"
 
 using namespace std;
 using namespace solidity;

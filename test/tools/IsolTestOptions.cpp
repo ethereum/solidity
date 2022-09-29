@@ -20,14 +20,24 @@
 */
 
 #include <test/tools/IsolTestOptions.h>
-
 #include <libsolutil/Assertions.h>
-
-#include <boost/filesystem.hpp>
-
+#include <stdlib.h>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/program_options/detail/value_semantic.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/type_index/type_index_facade.hpp>
 #include <iostream>
 #include <regex>
 #include <string>
+#include <map>
+#include <sstream>
+#include <vector>
+
+#include "Common.h"
+#include "liblangutil/EVMVersion.h"
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;

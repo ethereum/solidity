@@ -18,21 +18,39 @@
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/AnsiColorized.h>
-
-#include <memory>
 #include <test/Common.h>
 #include <test/tools/IsolTestOptions.h>
 #include <test/InteractiveTests.h>
-#include <test/EVMHost.h>
-
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/filesystem.hpp>
-
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/iterator/iterator_traits.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/range/iterator_range_core.hpp>
+#include <memory>
 #include <cstdlib>
 #include <iostream>
 #include <queue>
 #include <regex>
 #include <utility>
+#include <algorithm>
+#include <deque>
+#include <exception>
+#include <map>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "TestCase.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libsolutil/vector_ref.h"
 
 #if defined(_WIN32)
 #include <windows.h>

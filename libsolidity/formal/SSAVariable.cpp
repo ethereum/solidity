@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/SSAVariable.h>
+#include <iosfwd>
 
 using namespace std;
 using namespace solidity::frontend;

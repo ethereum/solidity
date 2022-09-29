@@ -20,17 +20,33 @@
  */
 
 #include <libyul/backends/evm/EVMObjectCompiler.h>
-
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
-
 #include <libyul/optimiser/FunctionCallFinder.h>
-
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/throw_exception.hpp>
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <boost/algorithm/string.hpp>
+#include "liblangutil/EVMVersion.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+
+namespace solidity {
+namespace yul {
+struct FunctionCall;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace solidity::yul;
 using namespace std;

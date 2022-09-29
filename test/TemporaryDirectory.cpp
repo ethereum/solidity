@@ -17,13 +17,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/TemporaryDirectory.h>
-
 #include <test/libsolidity/util/SoltestErrors.h>
-
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-
-#include <regex>
+#include <stdint.h>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/system/error_code.hpp>
 #include <iostream>
 
 using namespace std;

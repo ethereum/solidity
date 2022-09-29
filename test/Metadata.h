@@ -22,10 +22,12 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/JSON.h>
-
+#include <json/value.h>
 #include <map>
 #include <optional>
 #include <string>
+
+#include "libsolutil/Common.h"
 
 namespace solidity::test
 {

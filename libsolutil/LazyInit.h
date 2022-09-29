@@ -20,7 +20,6 @@
 
 #include <libsolutil/Assertions.h>
 #include <libsolutil/Exceptions.h>
-
 #include <memory>
 #include <optional>
 #include <type_traits>

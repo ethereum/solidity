@@ -17,18 +17,61 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <solc/CommandLineParser.h>
-
 #include <solc/Exceptions.h>
-
 #include <libyul/optimiser/Suite.h>
-
 #include <liblangutil/EVMVersion.h>
-
-#include <boost/algorithm/string.hpp>
-
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/range/conversion.hpp>
+#include <libsolutil/Assertions.h>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/constants.hpp>
+#include <boost/algorithm/string/detail/classification.hpp>
+#include <boost/algorithm/string/predicate_facade.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/filesystem/exception.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/lexical_cast/bad_lexical_cast.hpp>
+#include <boost/program_options/cmdline.hpp>
+#include <boost/program_options/detail/parsers.hpp>
+#include <boost/program_options/detail/value_semantic.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/range/distance.hpp>
+#include <boost/type_index/type_index_facade.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/view.hpp>
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <initializer_list>
+#include <memory>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+
+#include "liblangutil/DebugInfoSelection.h"
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolidity/interface/FileReader.h"
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/CommonIO.h"
+#include "libsolutil/JSON.h"
+#include "libsolutil/StringUtils.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulStack.h"
 
 using namespace std;
 using namespace solidity::langutil;

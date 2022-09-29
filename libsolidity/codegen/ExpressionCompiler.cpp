@@ -22,26 +22,49 @@
  */
 
 #include <libsolidity/codegen/ExpressionCompiler.h>
-
 #include <libsolidity/codegen/ReturnInfo.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
-
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
-
 #include <libevmasm/GasMeter.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StackTooDeepString.h>
-
-#include <boost/algorithm/string/replace.hpp>
-#include <numeric>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/throw_exception.hpp>
 #include <utility>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <set>
+#include <string>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/codegen/ABIFunctions.h"
+#include "libsolidity/codegen/ArrayUtils.h"
+#include "libsolidity/codegen/YulUtilFunctions.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity;

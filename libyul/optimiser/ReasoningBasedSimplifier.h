@@ -20,11 +20,28 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Dialect.h>
-
 // because of instruction
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <map>
+#include <optional>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct Block;
+struct Dialect;
+struct If;
+struct OptimiserStepContext;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::smtutil
 {

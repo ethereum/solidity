@@ -18,13 +18,21 @@
 #pragma once
 
 #include <liblangutil/Exceptions.h>
-
 #include <iosfwd>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
 #include <variant>
+#include <utility>
+
+#include "liblangutil/SourceLocation.h"
+
+namespace solidity {
+namespace util {
+struct Exception;
+}  // namespace util
+}  // namespace solidity
 
 namespace solidity::langutil
 {

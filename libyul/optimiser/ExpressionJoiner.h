@@ -23,8 +23,19 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
-
+#include <stddef.h>
 #include <map>
+#include <vector>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct FunctionCall;
+struct Identifier;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

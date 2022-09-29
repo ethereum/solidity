@@ -17,12 +17,40 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
-
 #include <libyul/optimiser/Suite.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/detail/indirections.hpp>
+#include <boost/test/tools/detail/print_helper.hpp>
+#include <boost/test/tools/detail/tolerance_manip.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
 #include <set>
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/Mutations.h"
+#include "tools/yulPhaser/Population.h"
+
+namespace solidity {
+namespace phaser {
+class FitnessMetric;
+}  // namespace phaser
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity::yul;

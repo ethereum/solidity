@@ -33,15 +33,29 @@
 #include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Population.h>
-
 #include <boost/test/tools/detail/print_helper.hpp>
-
+#include <stddef.h>
 #include <cassert>
 #include <functional>
 #include <map>
 #include <string>
 #include <tuple>
 #include <vector>
+#include <ostream>
+#include <variant>
+
+namespace boost {
+namespace test_tools {
+namespace tt_detail {
+template <typename T> struct print_log_value;
+}  // namespace tt_detail
+}  // namespace test_tools
+}  // namespace boost
+namespace solidity {
+namespace phaser {
+class Population;
+}  // namespace phaser
+}  // namespace solidity
 
 // OPERATORS FOR BOOST::TEST
 

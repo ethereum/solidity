@@ -20,7 +20,6 @@
  */
 
 #include <libyul/optimiser/FullInliner.h>
-
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
@@ -28,14 +27,26 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
+#include <boost/operators.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <type_traits>
+#include <variant>
+
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/NameDispenser.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

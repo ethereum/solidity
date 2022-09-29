@@ -22,8 +22,15 @@
 #pragma once
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
-
+#include <stddef.h>
 #include <map>
+#include <list>
+#include <optional>
+#include <set>
+#include <utility>
+#include <vector>
+
+#include "libyul/YulString.h"
 
 namespace solidity::yul
 {

@@ -17,6 +17,8 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/Exceptions.h>
+#include <boost/exception/get_error_info.hpp>
+#include <iosfwd>
 
 using namespace std;
 using namespace solidity::util;

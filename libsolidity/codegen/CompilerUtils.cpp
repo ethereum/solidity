@@ -22,7 +22,6 @@
  */
 
 #include <libsolidity/codegen/CompilerUtils.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/ABIFunctions.h>
@@ -32,6 +31,42 @@
 #include <libevmasm/Instruction.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StackTooDeepString.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <utility>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/CompilerContext.h"
+#include "libsolidity/codegen/YulUtilFunctions.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/ErrorCodes.h"
+#include "libsolutil/FixedHash.h"
+
+namespace solidity {
+namespace evmasm {
+class Assembly;
+}  // namespace evmasm
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

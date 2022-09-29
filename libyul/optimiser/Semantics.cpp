@@ -20,18 +20,21 @@
  */
 
 #include <libyul/optimiser/Semantics.h>
-
-#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-
-#include <libevmasm/SemanticInformation.h>
-
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Algorithms.h>
-
 #include <limits>
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <variant>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/SideEffects.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/CallGraphGenerator.h"
 
 using namespace std;
 using namespace solidity;

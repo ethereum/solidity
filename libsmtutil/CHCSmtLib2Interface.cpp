@@ -17,19 +17,23 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsmtutil/CHCSmtLib2Interface.h>
-
 #include <libsolutil/Keccak256.h>
-
-#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
-#include <range/v3/view.hpp>
-
-#include <array>
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #include <fstream>
-#include <iostream>
 #include <memory>
-#include <stdexcept>
+#include <functional>
+#include <utility>
+
+#include "liblangutil/Exceptions.h"
+#include "libsmtutil/CHCSolverInterface.h"
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/SMTLib2Interface.h"
 
 using namespace std;
 using namespace solidity;

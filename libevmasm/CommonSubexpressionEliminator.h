@@ -24,17 +24,28 @@
 
 #pragma once
 
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/Exceptions.h>
+#include <libevmasm/ExpressionClasses.h>
+#include <libevmasm/SemanticInformation.h>
+#include <libevmasm/KnownState.h>
 #include <map>
 #include <ostream>
 #include <set>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <libsolutil/CommonIO.h>
-#include <libsolutil/Exceptions.h>
-#include <libevmasm/ExpressionClasses.h>
-#include <libevmasm/SemanticInformation.h>
-#include <libevmasm/KnownState.h>
+#include <utility>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "libsolutil/Assertions.h"
+
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace langutil
 {
@@ -45,6 +56,7 @@ namespace solidity::evmasm
 {
 
 class AssemblyItem;
+
 using AssemblyItems = std::vector<AssemblyItem>;
 
 /**

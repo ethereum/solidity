@@ -20,9 +20,19 @@
  */
 
 #include <libyul/optimiser/BlockHasher.h>
-#include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
+#include <libsolutil/Assertions.h>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <set>
+#include <utility>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

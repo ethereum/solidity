@@ -17,13 +17,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Chromosome.h>
-
 #include <tools/yulPhaser/SimulationRNG.h>
-
 #include <libyul/optimiser/Suite.h>
-#include <libsolutil/CommonData.h>
+#include <algorithm>
+#include <map>
 
-#include <sstream>
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity;

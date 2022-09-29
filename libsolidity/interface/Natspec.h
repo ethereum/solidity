@@ -27,9 +27,12 @@
 #pragma once
 
 #include <json/json.h>
+#include <libsolidity/ast/AST.h>
+#include <json/value.h>
 #include <memory>
 #include <string>
-#include <libsolidity/ast/AST.h>
+#include <map>
+#include <vector>
 
 namespace solidity::frontend
 {

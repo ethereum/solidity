@@ -28,6 +28,27 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerContext.h>
+#include <stddef.h>
+#include <string>
+#include <vector>
+
+#include "libsolidity/codegen/ABIFunctions.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace evmasm {
+class AssemblyItem;
+}  // namespace evmasm
+namespace frontend {
+class ArrayType;
+class CompilerContext;
+class ContractDefinition;
+class Declaration;
+class IntegerType;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

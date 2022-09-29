@@ -21,20 +21,32 @@
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
-
 #include <test/Common.h>
 #include <test/libsolidity/ASTJSONTest.h>
-
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_traits.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
+#include <algorithm>
+#include <deque>
+
+#include "TestCase.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libsolutil/Common.h"
 
 using namespace solidity::langutil;
 using namespace solidity::frontend;

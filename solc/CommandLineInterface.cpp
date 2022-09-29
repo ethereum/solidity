@@ -22,61 +22,61 @@
  * Solidity command line interface.
  */
 #include <solc/CommandLineInterface.h>
-
 #include <solc/Exceptions.h>
-
-#include "license.h"
-#include "solidity/BuildInfo.h"
-
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/ast/ASTJsonExporter.h>
-#include <libsolidity/ast/ASTJsonImporter.h>
-#include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
-#include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/ImportRemapper.h>
-#include <libsolidity/interface/StorageLayout.h>
 #include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Transport.h>
-
 #include <libyul/YulStack.h>
-
-#include <libevmasm/Instruction.h>
 #include <libevmasm/Disassemble.h>
-#include <libevmasm/GasMeter.h>
-
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
-#include <libsmtutil/Exceptions.h>
-
-#include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
-
-#include <algorithm>
-#include <fstream>
-#include <memory>
-
 #include <range/v3/view/map.hpp>
-
-#include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/algorithm/string.hpp>
+#include <json/config.h>
+#include <json/value.h>
+#include <libsolutil/Assertions.h>
+#include <stdio.h>
+#include <boost/algorithm/string/erase.hpp>
+#include <boost/exception/get_error_info.hpp>
+#include <boost/filesystem/convenience.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_traits.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <algorithm>
+#include <memory>
+#include <deque>
+#include <iterator>
+#include <set>
+#include <utility>
+#include <vector>
+
+#include "license.h"
+#include "libevmasm/LinkerObject.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/FileReader.h"
+#include "libsolutil/StringUtils.h"
+#include "solc/CommandLineParser.h"
+>>>>>>> 6692b5d3e (11813: add include-what-you-use)
 
 #ifdef _WIN32 // windows
 	#include <io.h>
+
 	#define isatty _isatty
 	#define fileno _fileno
 #else // unix
 	#include <unistd.h>
 #endif
-
-#include <fstream>
 
 #if !defined(STDERR_FILENO)
 	#define STDERR_FILENO 2

@@ -25,6 +25,7 @@
 #include <cassert>
 #include <cstddef>
 #include <vector>
+#include <utility>
 
 namespace solidity::phaser
 {

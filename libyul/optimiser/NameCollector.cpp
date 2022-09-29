@@ -20,8 +20,13 @@
  */
 
 #include <libyul/optimiser/NameCollector.h>
-
 #include <libyul/AST.h>
+#include <libsolutil/Assertions.h>
+#include <cstddef>
+#include <vector>
+
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

@@ -19,9 +19,11 @@
 #pragma once
 
 #include <libsmtutil/SolverInterface.h>
-
 #include <optional>
 #include <set>
+#include <algorithm>
+#include <map>
+#include <string>
 
 namespace solidity::frontend
 {

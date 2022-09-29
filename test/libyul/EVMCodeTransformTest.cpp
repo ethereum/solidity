@@ -17,17 +17,21 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/EVMCodeTransformTest.h>
-#include <test/libyul/Common.h>
-
 #include <libyul/YulStack.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
-
 #include <libevmasm/Assembly.h>
-
 #include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libsolutil/AnsiColorized.h>
+#include <ostream>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/DebugInfoSelection.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace solidity;
 using namespace solidity::util;

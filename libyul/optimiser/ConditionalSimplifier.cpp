@@ -18,9 +18,19 @@
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
-#include <libyul/optimiser/NameCollector.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libsolutil/CommonData.h>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <variant>
+#include <vector>
+
+#include "libsolutil/Exceptions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

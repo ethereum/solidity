@@ -17,20 +17,31 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/optimiser/FunctionSpecializer.h>
-
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <libyul/AST.h>
 #include <libyul/YulString.h>
 #include <libsolutil/CommonData.h>
-
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/enumerate.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
 #include <variant>
+#include <iosfwd>
+#include <memory>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity::util;

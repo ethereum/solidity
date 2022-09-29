@@ -20,6 +20,11 @@
  */
 
 #include <libyul/Scope.h>
+#include <cstddef>
+#include <utility>
+
+#include "libsolutil/Exceptions.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

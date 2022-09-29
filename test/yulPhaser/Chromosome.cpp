@@ -17,15 +17,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
-
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/SimulationRNG.h>
-
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
-#include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -35,10 +32,31 @@
 #include <libyul/optimiser/Suite.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
-
 #include <libsolutil/CommonIO.h>
+#include <assert.h>
+#include <bits/std_abs.h>
+#include <libsolutil/Assertions.h>
+#include <math.h>
+#include <stdlib.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
+#include <algorithm>
+#include <iosfwd>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity::yul;

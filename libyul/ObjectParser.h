@@ -24,13 +24,21 @@
 #include <libyul/YulString.h>
 #include <libyul/Object.h>
 #include <libyul/Dialect.h>
-
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/ParserBase.h>
-
 #include <libsolutil/Common.h>
-
 #include <memory>
+#include <optional>
+
+namespace solidity {
+namespace langutil {
+class ErrorReporter;
+}  // namespace langutil
+namespace yul {
+struct Block;
+struct Dialect;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::langutil
 {

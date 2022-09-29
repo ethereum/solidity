@@ -17,15 +17,23 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
-
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/AST.h>
 #include <libsolutil/CommonData.h>
-
 #include <utility>
+#include <initializer_list>
+#include <iosfwd>
+#include <memory>
+#include <variant>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/Exceptions.h"
+#include "libyul/SideEffects.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

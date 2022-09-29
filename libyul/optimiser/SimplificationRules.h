@@ -22,19 +22,32 @@
 #pragma once
 
 #include <libevmasm/SimplificationRule.h>
-
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
-
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
-
+#include <stddef.h>
 #include <functional>
 #include <optional>
 #include <vector>
+#include <initializer_list>
+#include <map>
+#include <memory>
+#include <utility>
+
+#include "libevmasm/Instruction.h"
+
+namespace solidity {
+namespace langutil {
+class EVMVersion;
+}  // namespace langutil
+namespace yul {
+class YulString;
+struct DebugData;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

@@ -16,13 +16,21 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
-
 #include <libsolutil/CommonIO.h>
-
 #include <libyul/AsmPrinter.h>
+#include <libsolutil/Assertions.h>
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
 
 using namespace std;
 using namespace solidity::langutil;

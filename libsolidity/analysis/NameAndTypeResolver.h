@@ -28,11 +28,31 @@
 #include <libsolidity/analysis/ReferencesResolver.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTVisitor.h>
-
 #include <liblangutil/EVMVersion.h>
-
 #include <list>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "libsolidity/ast/ASTForward.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ContractDefinition;
+class Declaration;
+class DeclarationContainer;
+class GlobalContext;
+class ImportDirective;
+class SourceUnit;
+class VariableDeclarationStatement;
+class VariableScope;
+}  // namespace frontend
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::langutil
 {

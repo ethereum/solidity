@@ -24,6 +24,18 @@
 #include <libyul/optimiser/EquivalentFunctionDetector.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/ASTForward.h>
+#include <map>
+#include <utility>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct FunctionCall;
+struct FunctionDefinition;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

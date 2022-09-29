@@ -25,7 +25,7 @@
 #pragma once
 
 #include <libsolutil/Exceptions.h>
-
+#include <libsolutil/Assertions.h>
 #include <string>
 #include <map>
 #include <vector>

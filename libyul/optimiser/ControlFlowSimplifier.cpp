@@ -20,12 +20,21 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/TypeInfo.h>
 #include <libyul/AST.h>
-#include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
-
 #include <range/v3/action/remove_if.hpp>
+#include <libsolutil/Assertions.h>
+#include <range/v3/functional/identity.hpp>
+#include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+#include "libyul/Exceptions.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

@@ -17,8 +17,27 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libevmasm/GasMeter.h>
-
 #include <libevmasm/KnownState.h>
+#include <libsolutil/Assertions.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/cpp_int/limits.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/integer_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <algorithm>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/ExpressionClasses.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Assertions.h"
 
 using namespace std;
 using namespace solidity;

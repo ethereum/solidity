@@ -19,7 +19,6 @@
  */
 
 #include <libyul/optimiser/UnusedPruner.h>
-
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -29,6 +28,18 @@
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/SideEffects.h>
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

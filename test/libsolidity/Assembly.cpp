@@ -22,12 +22,9 @@
  */
 
 #include <test/Common.h>
-
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Assembly.h>
-
 #include <liblangutil/CharStream.h>
-
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
@@ -37,11 +34,42 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <liblangutil/ErrorReporter.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <stddef.h>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <vector>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/Exceptions.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/analysis/GlobalContext.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/DebugSettings.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
 
 using namespace std;
 using namespace solidity::langutil;

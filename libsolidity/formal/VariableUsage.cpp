@@ -17,13 +17,20 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/VariableUsage.h>
-
-#include <libsolidity/formal/BMC.h>
 #include <libsolidity/formal/SMTEncoder.h>
-
-#include <range/v3/view.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/view.hpp>
 #include <algorithm>
+#include <iosfwd>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolutil/CommonData.h"
 
 using namespace std;
 using namespace solidity;

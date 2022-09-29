@@ -24,11 +24,28 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTEnums.h>
 #include <liblangutil/SourceLocation.h>
+#include <stddef.h>
 #include <map>
 #include <functional>
 #include <set>
 #include <variant>
 #include <optional>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "liblangutil/Token.h"
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class Declaration;
+class FunctionDefinition;
+class ModifierDefinition;
+class OverrideSpecifier;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

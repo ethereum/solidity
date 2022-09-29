@@ -27,15 +27,38 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
-
 #include <json/json.h>
 #include <libsolutil/JSON.h>
-
+#include <json/value.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <algorithm>
 #include <optional>
 #include <ostream>
 #include <stack>
 #include <vector>
+#include <initializer_list>
+#include <map>
+#include <string>
+#include <utility>
+
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/parsing/Token.h"
+
+namespace solidity {
+namespace frontend {
+class Type;
+}  // namespace frontend
+namespace util {
+struct JsonFormat;
+}  // namespace util
+namespace yul {
+struct Identifier;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::langutil
 {

@@ -29,8 +29,29 @@
 #pragma warning(push)
 #pragma warning(disable:4535) // calling _set_se_translator requires /EHa
 #endif
-#include <boost/test/unit_test.hpp>
 #include <boost/test/tree/traverse.hpp>
+#include <stdlib.h>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/range/iterator_range_core.hpp>
+#include <boost/test/detail/global_typedef.hpp>
+#include <boost/test/framework.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/tree/test_unit.hpp>
+#include <boost/test/tree/visitor.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/class_properties.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/type_index/type_index_facade.hpp>
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
@@ -39,12 +60,18 @@
 
 #include <test/InteractiveTests.h>
 #include <test/Common.h>
-#include <test/EVMHost.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
 #include <string>
+#include <exception>
+#include <initializer_list>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include "CommonSyntaxTest.h"
+#include "TestCase.h"
+#include "libsolidity/util/SoltestErrors.h"
 
 using namespace boost::unit_test;
 using namespace solidity::frontend::test;

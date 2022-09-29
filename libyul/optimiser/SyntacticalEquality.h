@@ -23,9 +23,31 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
-
 #include <map>
 #include <type_traits>
+#include <cstddef>
+#include <memory>
+
+namespace solidity {
+namespace yul {
+struct Assignment;
+struct Block;
+struct Break;
+struct Case;
+struct Continue;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Literal;
+struct Switch;
+struct TypedName;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

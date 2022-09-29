@@ -55,9 +55,12 @@
 #include <liblangutil/Token.h>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/SourceLocation.h>
-
+#include <stddef.h>
 #include <optional>
 #include <iosfwd>
+#include <memory>
+#include <string>
+#include <tuple>
 
 namespace solidity::langutil
 {

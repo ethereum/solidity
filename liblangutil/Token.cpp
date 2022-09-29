@@ -43,8 +43,10 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Token.h>
 #include <libsolutil/StringUtils.h>
-
 #include <map>
+#include <algorithm>
+#include <iterator>
+#include <utility>
 
 
 using namespace std;

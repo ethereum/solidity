@@ -22,12 +22,17 @@
 
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Exceptions.h>
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/StringUtils.h>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <cstdint>
+#include <iomanip>
+#include <locale>
+#include <ostream>
 
-#include <boost/algorithm/string.hpp>
+#include "libsolutil/Common.h"
 
 using namespace std;
 using namespace solidity;

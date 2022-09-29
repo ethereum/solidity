@@ -17,12 +17,33 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/FunctionCallGraph.h>
-
 #include <libsolutil/StringUtils.h>
-
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/transform.hpp>
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/view.hpp>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/CallGraph.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity::frontend;

@@ -23,15 +23,27 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
-
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
-
 #include <libsolutil/Common.h>
-
+#include <stddef.h>
 #include <memory>
 #include <set>
 #include <limits>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

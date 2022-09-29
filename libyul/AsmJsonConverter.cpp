@@ -25,6 +25,13 @@
 #include <libyul/Exceptions.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/UTF8.h>
+#include <iosfwd>
+#include <memory>
+#include <utility>
+#include <variant>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 

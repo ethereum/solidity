@@ -19,12 +19,16 @@
 #pragma once
 
 #include <test/TestCaseReader.h>
-
 #include <liblangutil/EVMVersion.h>
-
 #include <boost/filesystem.hpp>
-
+#include <boost/filesystem/path.hpp>
 #include <string>
+#include <iosfwd>
+#include <locale>
+#include <memory>
+#include <vector>
+
+#include "libsolutil/Numeric.h"
 
 namespace solidity::frontend::test
 {

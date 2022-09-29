@@ -17,15 +17,26 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/ControlFlowSideEffectsTest.h>
-
-#include <test/Common.h>
 #include <test/libyul/Common.h>
-
 #include <libyul/Object.h>
 #include <libyul/AST.h>
 #include <libyul/ControlFlowSideEffects.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <boost/throw_exception.hpp>
+#include <map>
+#include <stdexcept>
+#include <tuple>
+#include <vector>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libsolutil/AnsiColorized.h"
+#include "libsolutil/StringUtils.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

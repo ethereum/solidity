@@ -23,12 +23,25 @@
  */
 
 #include <libsolidity/analysis/DocStringAnalyser.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <liblangutil/ErrorReporter.h>
+#include <ext/alloc_traits.h>
+#include <stdint.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/range/algorithm/equal.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <boost/algorithm/string.hpp>
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
 
 using namespace std;
 using namespace solidity;

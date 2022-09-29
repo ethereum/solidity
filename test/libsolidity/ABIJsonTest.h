@@ -22,8 +22,9 @@
 #pragma once
 
 #include <test/TestCase.h>
-
 #include <string>
+#include <iosfwd>
+#include <memory>
 
 namespace solidity::frontend::test
 {

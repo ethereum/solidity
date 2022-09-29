@@ -22,18 +22,26 @@
 #pragma once
 
 #include <libyul/Dialect.h>
-
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/ASTForward.h>
 #include <liblangutil/EVMVersion.h>
-
+#include <stddef.h>
 #include <map>
 #include <set>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <utility>
+
+#include "libevmasm/Instruction.h"
+#include "libyul/SideEffects.h"
+#include "libyul/YulString.h"
 
 namespace solidity::yul
 {
 
 class YulString;
+
 using Type = YulString;
 struct FunctionCall;
 struct Object;

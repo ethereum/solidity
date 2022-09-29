@@ -17,7 +17,6 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/CommonData.h>
 #include <test/libsolidity/util/SoltestTypes.h>
-
 #include <iosfwd>
 #include <iterator>
 #include <numeric>
@@ -25,6 +24,8 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <cstddef>
+#include <map>
 
 namespace solidity::frontend::test
 {

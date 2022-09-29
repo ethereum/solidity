@@ -20,14 +20,23 @@
  */
 
 #include <libyul/optimiser/NameDispenser.h>
-
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
-#include <libyul/AST.h>
-#include <libyul/Dialect.h>
 #include <libyul/YulString.h>
-
 #include <libsolutil/CommonData.h>
+#include <functional>
+#include <iosfwd>
+#include <string>
+#include <utility>
+
+#include "libsolutil/Exceptions.h"
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

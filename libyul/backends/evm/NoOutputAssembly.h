@@ -22,12 +22,19 @@
 #pragma once
 
 #include <libyul/backends/evm/AbstractAssembly.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libevmasm/LinkerObject.h>
-
+#include <stddef.h>
 #include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
 
 namespace solidity::langutil
 {

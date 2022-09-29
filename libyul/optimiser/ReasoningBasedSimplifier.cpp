@@ -17,19 +17,24 @@
 
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SMTSolver.h>
-
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
-
 #include <libsolutil/CommonData.h>
-
+#include <libsolutil/Assertions.h>
 #include <utility>
 #include <memory>
+#include <iosfwd>
+#include <map>
+
+#include "libsmtutil/Exceptions.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/OptimiserStep.h"
 
 using namespace std;
 using namespace solidity;

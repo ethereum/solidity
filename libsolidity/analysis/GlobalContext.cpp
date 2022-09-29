@@ -23,11 +23,17 @@
  */
 
 #include <libsolidity/analysis/GlobalContext.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <memory>
+#include <iosfwd>
+#include <string>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolutil/Common.h"
 
 using namespace std;
 

@@ -17,17 +17,36 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/DeclarationTypeChecker.h>
-
 #include <libsolidity/analysis/ConstantEvaluator.h>
-
 #include <libsolidity/ast/TypeProvider.h>
-
 #include <liblangutil/ErrorReporter.h>
-
 #include <libsolutil/Algorithms.h>
-#include <libsolutil/Visitor.h>
-
 #include <range/v3/view/transform.hpp>
+#include <ext/alloc_traits.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/rational.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/StringUtils.h"
 
 using namespace std;
 using namespace solidity::langutil;

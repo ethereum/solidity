@@ -21,12 +21,23 @@
  */
 
 #include <libyul/optimiser/EqualStoreEliminator.h>
-
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AST.h>
-#include <libyul/Utilities.h>
+#include <iosfwd>
+#include <optional>
+#include <variant>
+
+#include "libsolutil/Exceptions.h"
+#include "libyul/optimiser/DataFlowAnalyzer.h"
+#include "libyul/optimiser/OptimiserStep.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct ExpressionStatement;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

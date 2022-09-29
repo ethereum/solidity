@@ -22,11 +22,15 @@
  */
 
 #include <liblangutil/SemVerHandler.h>
-
 #include <liblangutil/Exceptions.h>
-
-#include <functional>
+#include <ext/alloc_traits.h>
+#include <boost/throw_exception.hpp>
 #include <limits>
+#include <iosfwd>
+#include <memory>
+#include <utility>
+
+#include "liblangutil/Token.h"
 
 using namespace std;
 using namespace solidity;

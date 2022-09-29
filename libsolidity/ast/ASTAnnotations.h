@@ -26,14 +26,26 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
-
 #include <libsolutil/SetOnce.h>
-
+#include <stddef.h>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <vector>
+#include <string>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class CallableDeclaration;
+class ContractDefinition;
+class Declaration;
+class FunctionDefinition;
+class ParameterList;
+class SourceUnit;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::yul
 {
@@ -47,7 +59,6 @@ namespace solidity::frontend
 
 class Type;
 class ArrayType;
-
 struct CallGraph;
 
 struct ASTAnnotation

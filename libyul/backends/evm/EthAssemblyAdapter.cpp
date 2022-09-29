@@ -20,18 +20,27 @@
  */
 
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
-
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/Exceptions.h>
-
 #include <libevmasm/Assembly.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/Instruction.h>
-
-#include <liblangutil/SourceLocation.h>
-
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <memory>
-#include <functional>
+#include <cstddef>
+#include <cstdint>
+
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

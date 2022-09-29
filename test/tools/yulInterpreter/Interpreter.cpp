@@ -20,24 +20,36 @@
  */
 
 #include <test/tools/yulInterpreter/Interpreter.h>
-
 #include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
 #include <test/tools/yulInterpreter/EwasmBuiltinInterpreter.h>
-
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
-
 #include <liblangutil/Exceptions.h>
-
 #include <libsolutil/FixedHash.h>
 
 #include <range/v3/view/reverse.hpp>
-
+#include <ext/alloc_traits.h>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/add.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
 #include <ostream>
 #include <variant>
+#include <algorithm>
+#include <functional>
+#include <iomanip>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
 
 using namespace std;
 using namespace solidity;

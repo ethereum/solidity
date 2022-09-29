@@ -17,8 +17,19 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/EncodingContext.h>
-
 #include <libsolidity/formal/SymbolicTypes.h>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <algorithm>
+#include <iosfwd>
+#include <iterator>
+
+#include "libsmtutil/SolverInterface.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/formal/SymbolicState.h"
+#include "libsolidity/formal/SymbolicVariables.h"
 
 using namespace std;
 using namespace solidity;

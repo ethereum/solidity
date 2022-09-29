@@ -22,9 +22,27 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <functional>
 #include <memory>
+
+namespace solidity {
+namespace yul {
+struct Assignment;
+struct Block;
+struct Break;
+struct Continue;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Leave;
+struct Literal;
+struct Switch;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::langutil
 {

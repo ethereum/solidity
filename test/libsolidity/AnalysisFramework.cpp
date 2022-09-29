@@ -20,19 +20,20 @@
  */
 
 #include <test/libsolidity/AnalysisFramework.h>
-
 #include <test/Common.h>
-
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libsolidity/ast/AST.h>
 
 #include <liblangutil/Scanner.h>
 
 #include <libsolutil/FunctionSelector.h>
 
-#include <boost/test/unit_test.hpp>
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ErrorCheck.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolutil/FixedHash.h"
 
 using namespace std;
 using namespace solidity;

@@ -23,6 +23,16 @@
 
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/backends/evm/StackLayoutGenerator.h>
+#include <map>
+#include <set>
+#include <vector>
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

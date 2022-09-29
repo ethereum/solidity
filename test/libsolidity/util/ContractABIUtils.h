@@ -15,12 +15,24 @@
 #pragma once
 
 #include <test/libsolidity/util/SoltestTypes.h>
-
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <libsolutil/CommonData.h>
-
 #include <json/json.h>
+#include <json/value.h>
+#include <stddef.h>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "libsolutil/Common.h"
+
+namespace solidity {
+namespace frontend {
+namespace test {
+class ErrorReporter;
+}  // namespace test
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::test
 {

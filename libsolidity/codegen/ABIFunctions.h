@@ -25,14 +25,19 @@
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
-
 #include <libsolidity/interface/DebugSettings.h>
-
 #include <liblangutil/EVMVersion.h>
-
+#include <stddef.h>
 #include <functional>
 #include <map>
 #include <vector>
+#include <string>
+
+namespace solidity {
+namespace frontend {
+class MultiUseYulFunctionCollector;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {
@@ -41,6 +46,7 @@ class Type;
 class ArrayType;
 class StructType;
 class FunctionType;
+
 using TypePointers = std::vector<Type const*>;
 
 /**

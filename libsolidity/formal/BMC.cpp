@@ -17,13 +17,41 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/BMC.h>
-
 #include <libsolidity/formal/SymbolicTypes.h>
-
 #include <libsmtutil/SMTPortfolio.h>
-
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <algorithm>
+#include <ostream>
+#include <tuple>
+#include <unordered_map>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/UniqueErrorReporter.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/TypeProvider.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/formal/EncodingContext.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/formal/SMTEncoder.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/formal/SymbolicState.h"
+#include "libsolidity/formal/SymbolicVariables.h"
+#include "libsolidity/formal/VariableUsage.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libsolutil/StringUtils.h"
 
 #ifdef HAVE_Z3_DLOPEN
 #include <z3_version.h>

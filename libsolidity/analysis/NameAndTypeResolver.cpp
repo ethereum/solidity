@@ -22,13 +22,24 @@
  */
 
 #include <libsolidity/analysis/NameAndTypeResolver.h>
-
-#include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/StringUtils.h>
-#include <boost/algorithm/string.hpp>
-#include <unordered_set>
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <set>
+#include <utility>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/analysis/DeclarationContainer.h"
+#include "libsolidity/analysis/GlobalContext.h"
+#include "libsolidity/analysis/ReferencesResolver.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTVisitor.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity::langutil;

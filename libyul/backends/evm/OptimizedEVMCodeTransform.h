@@ -26,9 +26,25 @@
 #include <libyul/backends/evm/ControlFlowGraph.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
-
 #include <optional>
 #include <stack>
+#include <map>
+#include <memory>
+#include <set>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct BuiltinContext;
+struct DebugData;
+struct EVMDialect;
+struct FunctionCall;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::langutil
 {

@@ -22,11 +22,33 @@
  */
 
 #include <libsolidity/analysis/StaticAnalyzer.h>
-
 #include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ErrorReporter.h>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/rational.hpp>
 #include <memory>
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/ASTVisitor.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity;

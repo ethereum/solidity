@@ -21,8 +21,15 @@
 #include <libyul/backends/evm/VariableReferenceCounter.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/Visitor.h>
+#include <memory>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Scope.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace solidity::yul;
 

@@ -25,16 +25,21 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/NameDisplacer.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/YulString.h>
 #include <libyul/AST.h>
-
 #include <libsolutil/CommonData.h>
 
 #include <range/v3/algorithm/all_of.hpp>
 
 #include <optional>
 #include <variant>
+#include <cstddef>
+#include <map>
+#include <set>
+#include <utility>
+#include <vector>
+
+#include "libyul/ASTForward.h"
 
 using namespace std;
 using namespace solidity::util;

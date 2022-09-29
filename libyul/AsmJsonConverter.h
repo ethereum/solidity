@@ -29,6 +29,32 @@
 #include <boost/variant/static_visitor.hpp>
 #include <optional>
 #include <vector>
+#include <string>
+
+namespace solidity {
+namespace langutil {
+struct SourceLocation;
+}  // namespace langutil
+namespace yul {
+struct Assignment;
+struct Block;
+struct Break;
+struct Case;
+struct Continue;
+struct ExpressionStatement;
+struct ForLoop;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Identifier;
+struct If;
+struct Label;
+struct Leave;
+struct Literal;
+struct Switch;
+struct TypedName;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

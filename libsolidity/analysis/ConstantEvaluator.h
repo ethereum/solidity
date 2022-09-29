@@ -24,8 +24,27 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
-
+#include <stddef.h>
+#include <boost/rational.hpp>
 #include <utility>
+#include <map>
+#include <optional>
+
+#include "liblangutil/Token.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class BinaryOperation;
+class Expression;
+class Identifier;
+class Literal;
+class TupleExpression;
+class UnaryOperation;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

@@ -17,9 +17,17 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/YulStack.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
+#include <libsolutil/Assertions.h>
+#include <stdint.h>
+#include <cstddef>
+#include <string>
+
+#include "liblangutil/CharStream.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace solidity;
 using namespace solidity::langutil;

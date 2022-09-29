@@ -17,16 +17,30 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/MemoryGuardTest.h>
-
 #include <test/libyul/Common.h>
 #include <libsolidity/codegen/ir/Common.h>
-#include <libsolutil/Algorithms.h>
 #include <libyul/Object.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
 #include <fstream>
 #include <memory>
-#include <stdexcept>
+#include <map>
+#include <utility>
+#include <vector>
+
+#include "TestCase.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ErrorCheck.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/AnsiColorized.h"
+#include "libsolutil/Common.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

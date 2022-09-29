@@ -23,14 +23,28 @@
 
 #pragma once
 
-#include <functional>
-
 #include <test/ExecutionFramework.h>
-
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
-
 #include <libyul/YulStack.h>
+#include <functional>
+#include <map>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "Common.h"
+#include "EVMHost.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+
+namespace boost {
+namespace filesystem {
+class path;
+}  // namespace filesystem
+}  // namespace boost
 
 namespace solidity::frontend::test
 {

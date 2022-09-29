@@ -27,9 +27,50 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libevmasm/Assembly.h>
+#include <stddef.h>
 #include <functional>
 #include <ostream>
 #include <map>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/codegen/ABIFunctions.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Block;
+class Break;
+class Compiler;
+class CompilerContext;
+class Continue;
+class ContractDefinition;
+class EmitStatement;
+class Expression;
+class ExpressionStatement;
+class ForStatement;
+class FunctionDefinition;
+class IfStatement;
+class InlineAssembly;
+class PlaceholderStatement;
+class Return;
+class RevertStatement;
+class Throw;
+class TryCatchClause;
+class TryStatement;
+class Type;
+class VariableDeclaration;
+class VariableDeclarationStatement;
+class WhileStatement;
+}  // namespace frontend
+namespace util {
+template <unsigned int N> class FixedHash;
+}  // namespace util
+}  // namespace solidity
 
 namespace solidity::frontend
 {

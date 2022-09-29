@@ -18,22 +18,30 @@
 
 #include <test/libyul/YulOptimizerTest.h>
 #include <test/libyul/YulOptimizerTestCommon.h>
-
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libyul/Common.h>
 #include <test/Common.h>
-
 #include <libyul/Object.h>
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/AsmPrinter.h>
-
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <liblangutil/Scanner.h>
-
 #include <libsolutil/AnsiColorized.h>
-
+#include <boost/filesystem/path.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/throw_exception.hpp>
 #include <fstream>
+#include <iterator>
+#include <optional>
+#include <stdexcept>
+#include <tuple>
+#include <type_traits>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/CharStream.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
 
 using namespace solidity;
 using namespace solidity::util;

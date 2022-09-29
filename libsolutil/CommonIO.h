@@ -25,11 +25,14 @@
 #pragma once
 
 #include <boost/filesystem.hpp>
-
 #include <libsolutil/Common.h>
+#include <stddef.h>
+#include <boost/filesystem/path.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <algorithm>
+#include <iterator>
 
 namespace solidity
 {

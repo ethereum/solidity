@@ -19,13 +19,31 @@
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
-
 // because of instruction
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libsmtutil/SolverInterface.h>
-
+#include <stddef.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
 #include <memory>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+struct Literal;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::smtutil
 {

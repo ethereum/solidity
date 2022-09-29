@@ -19,12 +19,21 @@
  */
 
 #include <libyul/CompilabilityChecker.h>
-
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/NoOutputAssembly.h>
+#include <libsolutil/Assertions.h>
+#include <algorithm>
+#include <iosfwd>
+#include <memory>
+#include <vector>
+
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Object.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace std;
 using namespace solidity;

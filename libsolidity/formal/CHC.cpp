@@ -17,6 +17,19 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/CHC.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/detail/et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
 
 #ifdef HAVE_Z3
 #include <libsmtutil/Z3CHCInterface.h>
@@ -27,9 +40,7 @@
 #include <libsolidity/formal/PredicateInstance.h>
 #include <libsolidity/formal/PredicateSort.h>
 #include <libsolidity/formal/SymbolicTypes.h>
-
 #include <libsolidity/ast/TypeProvider.h>
-
 #include <libsmtutil/CHCSmtLib2Interface.h>
 #include <liblangutil/CharStreamProvider.h>
 #include <libsolutil/Algorithms.h>
@@ -39,15 +50,38 @@
 #include <z3_version.h>
 #endif
 
-#include <boost/algorithm/string.hpp>
-
 #include <range/v3/algorithm/for_each.hpp>
-#include <range/v3/view.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/reverse.hpp>
-
 #include <charconv>
 #include <queue>
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <list>
+#include <system_error>
+#include <type_traits>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/UniqueErrorReporter.h"
+#include "libsmtutil/CHCSolverInterface.h"
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/SMTLib2Interface.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
+#include "libsolidity/formal/Predicate.h"
+#include "libsolidity/formal/SMTEncoder.h"
+#include "libsolidity/formal/SSAVariable.h"
+#include "libsolidity/formal/SymbolicState.h"
+#include "libsolidity/formal/SymbolicVariables.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/SetOnce.h"
 
 using namespace std;
 using namespace solidity;

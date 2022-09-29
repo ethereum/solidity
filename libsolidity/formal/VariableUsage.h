@@ -19,9 +19,24 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
-
 #include <vector>
 #include <set>
+#include <functional>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class CallableDeclaration;
+class ContractDefinition;
+class FunctionCall;
+class FunctionDefinition;
+class Identifier;
+class IndexAccess;
+class ModifierInvocation;
+class PlaceholderStatement;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::smt
 {

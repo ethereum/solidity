@@ -19,18 +19,10 @@
 /// Unit tests for libsolidity/analysis/FunctionCallGraph.h
 
 #include <libsolidity/analysis/FunctionCallGraph.h>
-
-#include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <libsolutil/CommonData.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/CompilerStack.h>
-
-#include <boost/test/unit_test.hpp>
-
-#include <range/v3/action/sort.hpp>
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/join.hpp>
@@ -38,13 +30,55 @@
 #include <range/v3/view/remove_if.hpp>
 #include <range/v3/view/set_algorithm.hpp>
 #include <range/v3/view/transform.hpp>
-
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <range/v3/functional/comparisons.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/view.hpp>
 #include <memory>
 #include <ostream>
 #include <set>
 #include <string>
 #include <tuple>
 #include <vector>
+#include <algorithm>
+#include <map>
+#include <utility>
+
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/CallGraph.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/CommonIO.h"
+#include "libsolutil/SetOnce.h"
+
+namespace boost {
+namespace test_tools {
+namespace tt_detail {
+template <typename T> struct print_log_value;
+}  // namespace tt_detail
+}  // namespace test_tools
+}  // namespace boost
 
 using namespace std;
 using namespace solidity::util;

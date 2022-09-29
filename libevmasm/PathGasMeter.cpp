@@ -23,6 +23,19 @@
 #include <libevmasm/PathGasMeter.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/SemanticInformation.h>
+#include <libsolutil/Assertions.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <utility>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/ExpressionClasses.h"
+#include "libevmasm/GasMeter.h"
+#include "libevmasm/Instruction.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Assertions.h"
 
 using namespace std;
 using namespace solidity;

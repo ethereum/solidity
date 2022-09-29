@@ -17,9 +17,28 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/SMTCheckerTest.h>
-#include <test/Common.h>
+#include <libsolutil/Assertions.h>
+#include <boost/throw_exception.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/utility/get.hpp>
+#include <range/v3/view/split.hpp>
+#include <range/v3/view/view.hpp>
+#include <optional>
+#include <set>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
-#include <range/v3/action/remove_if.hpp>
+#include "CommonSyntaxTest.h"
+#include "TestCaseReader.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsolidity/ErrorCheck.h"
+#include "libsolidity/SyntaxTest.h"
+#include "libsolidity/formal/ModelChecker.h"
+#include "libsolidity/interface/CompilerStack.h"
 
 using namespace std;
 using namespace solidity;

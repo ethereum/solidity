@@ -22,10 +22,12 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 #include <libsolutil/Exceptions.h>
-
 #include <string>
-#include <set>
 #include <iostream>
+#include <memory>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
 
 using namespace std;
 using namespace solidity;

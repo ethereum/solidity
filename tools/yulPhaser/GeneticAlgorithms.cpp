@@ -20,6 +20,15 @@
 #include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Selections.h>
 #include <tools/yulPhaser/PairSelections.h>
+#include <libsolutil/Assertions.h>
+#include <algorithm>
+#include <utility>
+#include <vector>
+
+#include "libsolutil/Assertions.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/Population.h"
+#include "tools/yulPhaser/SimulationRNG.h"
 
 using namespace std;
 using namespace solidity;

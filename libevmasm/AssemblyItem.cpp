@@ -17,18 +17,27 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libevmasm/AssemblyItem.h>
-
 #include <libevmasm/Assembly.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/FixedHash.h>
 #include <liblangutil/SourceLocation.h>
-
-#include <fstream>
+#include <boost/core/enable_if.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <limits>
+#include <algorithm>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Common.h"
 
 using namespace std;
 using namespace solidity;

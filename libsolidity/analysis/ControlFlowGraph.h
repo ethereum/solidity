@@ -23,12 +23,19 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
-
 #include <map>
 #include <memory>
 #include <stack>
 #include <utility>
 #include <vector>
+#include <optional>
+#include <type_traits>
+
+namespace solidity {
+namespace langutil {
+class ErrorReporter;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {

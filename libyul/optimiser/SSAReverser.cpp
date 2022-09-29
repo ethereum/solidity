@@ -19,8 +19,22 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/AST.h>
 #include <libsolutil/CommonData.h>
-
 #include <variant>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
+
+namespace solidity {
+namespace yul {
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

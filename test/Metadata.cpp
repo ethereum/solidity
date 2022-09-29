@@ -20,11 +20,17 @@
  * Metadata processing helpers.
  */
 
-#include <string>
-#include <iostream>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
 #include <test/Metadata.h>
+#include <json/config.h>
+#include <stddef.h>
+#include <string>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+#include "libsolutil/JSON.h"
 
 using namespace std;
 

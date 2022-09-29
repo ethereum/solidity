@@ -21,18 +21,24 @@
  */
 
 #include <libyul/optimiser/ExpressionJoiner.h>
-
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
-
-#include <libsolutil/CommonData.h>
-
 #include <range/v3/view/reverse.hpp>
-
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
 #include <limits>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <variant>
+
+#include "libsolutil/Assertions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

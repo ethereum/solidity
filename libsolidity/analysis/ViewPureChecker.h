@@ -21,10 +21,28 @@
 #include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
-
 #include <map>
 #include <memory>
 #include <optional>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class FunctionCall;
+class FunctionDefinition;
+class Identifier;
+class ImportDirective;
+class IndexAccess;
+class IndexRangeAccess;
+class InlineAssembly;
+class MemberAccess;
+class ModifierDefinition;
+class ModifierInvocation;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

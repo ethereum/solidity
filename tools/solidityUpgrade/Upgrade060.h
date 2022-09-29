@@ -19,8 +19,12 @@
 
 #include <tools/solidityUpgrade/UpgradeChange.h>
 #include <tools/solidityUpgrade/UpgradeSuite.h>
-
 #include <libsolidity/ast/ASTVisitor.h>
+#include <set>
+#include <string>
+
+#include "libsolidity/analysis/OverrideChecker.h"
+#include "libsolidity/ast/AST.h"
 
 namespace solidity::tools
 {

@@ -21,7 +21,11 @@
 
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/AST.h>
-#include <libsolutil/CommonData.h>
+#include <iosfwd>
+
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/EquivalentFunctionDetector.h"
 
 using namespace std;
 using namespace solidity;

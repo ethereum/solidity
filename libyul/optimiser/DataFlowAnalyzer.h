@@ -28,12 +28,18 @@
 #include <libyul/YulString.h>
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
-
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Common.h>
-
+#include <stddef.h>
 #include <map>
 #include <set>
+#include <optional>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "libsolutil/CommonData.h"
+#include "libyul/ASTForward.h"
 
 namespace solidity::yul
 {

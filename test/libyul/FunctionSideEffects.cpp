@@ -17,20 +17,26 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/FunctionSideEffects.h>
-#include <test/Common.h>
 #include <test/libyul/Common.h>
-
 #include <libsolutil/AnsiColorized.h>
-
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/Object.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libsolutil/StringUtils.h>
+#include <boost/throw_exception.hpp>
+#include <map>
+#include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <vector>
 
-#include <boost/algorithm/string.hpp>
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolidity/util/SoltestErrors.h"
+#include "libyul/YulString.h"
 
 
 using namespace solidity;

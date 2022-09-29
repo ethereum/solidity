@@ -17,12 +17,17 @@
 #pragma once
 
 #include <libsolutil/AnsiColorized.h>
-
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/CharStreamProvider.h>
-
 #include <algorithm>
 #include <utility>
+#include <string>
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::tools
 {

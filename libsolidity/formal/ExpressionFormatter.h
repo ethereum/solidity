@@ -23,9 +23,10 @@
  */
 
 #include <libsolidity/formal/Predicate.h>
-
 #include <map>
 #include <string>
+
+#include "libsmtutil/SolverInterface.h"
 
 namespace solidity::frontend::smt
 {

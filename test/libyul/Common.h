@@ -22,14 +22,15 @@
 #pragma once
 
 #include <liblangutil/EVMVersion.h>
-
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
 
 namespace solidity::langutil
 {
 class Error;
+
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 }
 

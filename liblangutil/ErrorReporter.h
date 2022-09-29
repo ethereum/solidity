@@ -25,7 +25,6 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Exceptions.h>
-
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/StringUtils.h>

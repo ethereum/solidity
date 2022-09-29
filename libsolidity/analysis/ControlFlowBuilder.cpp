@@ -19,7 +19,26 @@
 #include <libsolidity/analysis/ControlFlowBuilder.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libyul/AST.h>
-#include <libyul/backends/evm/EVMDialect.h>
+#include <ext/alloc_traits.h>
+#include <cstddef>
+#include <map>
+#include <optional>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/Token.h"
+#include "libsolidity/analysis/ControlFlowGraph.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/ASTVisitor.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/Dialect.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace solidity;
 using namespace solidity::langutil;

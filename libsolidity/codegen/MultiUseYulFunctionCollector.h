@@ -26,6 +26,7 @@
 #include <map>
 #include <string>
 #include <set>
+#include <vector>
 
 namespace solidity::frontend
 {

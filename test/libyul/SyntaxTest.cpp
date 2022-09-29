@@ -16,19 +16,24 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/AsmAnalysis.h>
-#include <libyul/AsmAnalysisInfo.h>
-
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
-
 #include <test/libyul/Common.h>
 #include <test/libyul/SyntaxTest.h>
 #include <test/TestCaseReader.h>
-
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <test/Common.h>
+#include <libsolutil/Assertions.h>
+#include <boost/throw_exception.hpp>
+#include <iosfwd>
+#include <map>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include "CommonSyntaxTest.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ErrorCheck.h"
 
 using namespace std;
 using namespace solidity;

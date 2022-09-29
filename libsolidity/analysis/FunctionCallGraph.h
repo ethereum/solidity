@@ -21,9 +21,21 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/CallGraph.h>
-
 #include <deque>
 #include <ostream>
+
+namespace solidity {
+namespace frontend {
+class CallableDeclaration;
+class ContractDefinition;
+class EmitStatement;
+class FunctionCall;
+class Identifier;
+class MemberAccess;
+class ModifierInvocation;
+class NewExpression;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

@@ -25,10 +25,17 @@
  */
 
 #include <libsolidity/interface/Natspec.h>
-
 #include <libsolidity/ast/AST.h>
+#include <boost/algorithm/string/predicate.hpp>
+#include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <utility>
 
-#include <boost/algorithm/string.hpp>
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/ast/Types.h"
 
 
 using namespace std;

@@ -23,6 +23,34 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <optional>
+
+#include "libsolidity/ast/ASTEnums.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Block;
+class Break;
+class Continue;
+class ContractDefinition;
+class ForStatement;
+class FunctionDefinition;
+class FunctionTypeName;
+class IfStatement;
+class InlineAssembly;
+class Literal;
+class ModifierDefinition;
+class PlaceholderStatement;
+class PragmaDirective;
+class SourceUnit;
+class StructDefinition;
+class Throw;
+class UnaryOperation;
+class UsingForDirective;
+class WhileStatement;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

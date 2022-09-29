@@ -22,10 +22,10 @@
 
 #pragma once
 
+#include <libsolutil/Exceptions.h>
+#include <libsolutil/Assertions.h>
 #include <vector>
 #include <string>
-
-#include <libsolutil/Exceptions.h>
 
 namespace solidity::util
 {

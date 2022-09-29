@@ -23,8 +23,15 @@
 
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/YulString.h>
-
 #include <map>
+
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace yul {
+class YulString;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

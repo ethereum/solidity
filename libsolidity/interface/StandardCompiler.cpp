@@ -23,26 +23,49 @@
 
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/ImportRemapper.h>
-
 #include <libsolidity/ast/ASTJsonExporter.h>
 #include <libyul/YulStack.h>
 #include <libyul/Exceptions.h>
 #include <libyul/optimiser/Suite.h>
-
 #include <libevmasm/Disassemble.h>
-
 #include <libsmtutil/Exceptions.h>
-
 #include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libsolutil/JSON.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/CommonData.h>
-
 #include <boost/algorithm/string/predicate.hpp>
-
-#include <algorithm>
+#include <json/config.h>
+#include <libsolutil/Assertions.h>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/get_error_info.hpp>
 #include <optional>
+#include <cstddef>
+#include <exception>
+#include <functional>
+#include <initializer_list>
+#include <memory>
+#include <set>
+#include <tuple>
+#include <type_traits>
+
+#include "liblangutil/DebugInfoSelection.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/Object.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

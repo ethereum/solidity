@@ -22,11 +22,9 @@
 
 
 #include <libyul/YulStack.h>
-
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
-#include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/evm/EVMMetrics.h>
@@ -35,11 +33,33 @@
 #include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
-
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
 #include <optional>
+#include <cstddef>
+#include <map>
+#include <type_traits>
+#include <vector>
+
+#include "libevmasm/AssemblyItem.h"
+#include "libevmasm/LinkerObject.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/ErrorReporter.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolutil/Common.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Object.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

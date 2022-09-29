@@ -21,7 +21,6 @@
  */
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
-
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/KnowledgeBase.h>
@@ -29,13 +28,25 @@
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
-
 #include <libsolutil/CommonData.h>
 #include <libsolutil/cxx20.h>
-
-#include <variant>
-
 #include <range/v3/view/reverse.hpp>
+#include <libsolutil/Assertions.h>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
+#include <variant>
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <type_traits>
+
+#include "libsolutil/Assertions.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/SideEffects.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;

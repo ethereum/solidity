@@ -25,9 +25,12 @@
 #include <cstddef>
 #include <set>
 
+#include "libevmasm/AssemblyItem.h"
+
 namespace solidity::evmasm
 {
 class AssemblyItem;
+
 using AssemblyItems = std::vector<AssemblyItem>;
 
 class JumpdestRemover

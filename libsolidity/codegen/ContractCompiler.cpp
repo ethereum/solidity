@@ -28,32 +28,58 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
-
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/AsmCodeGen.h>
-#include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/optimiser/Suite.h>
 #include <libyul/Object.h>
 #include <libyul/optimiser/ASTCopier.h>
-#include <libyul/YulString.h>
-
 #include <libevmasm/Instruction.h>
-#include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
-
-#include <liblangutil/ErrorReporter.h>
-
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/StackTooDeepString.h>
-
 #include <range/v3/view/reverse.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/exception/detail/error_info_impl.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <boost/throw_exception.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/view/view.hpp>
 #include <algorithm>
 #include <limits>
+#include <ostream>
+#include <string>
+#include <tuple>
+
+#include "libevmasm/Exceptions.h"
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTEnums.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/codegen/CompilerContext.h"
+#include "libsolidity/codegen/YulUtilFunctions.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/SetOnce.h"
+#include "libyul/Dialect.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+
+namespace solidity {
+namespace frontend {
+class Compiler;
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

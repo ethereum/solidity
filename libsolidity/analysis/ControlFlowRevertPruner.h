@@ -20,8 +20,17 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
-
 #include <libsolutil/Algorithms.h>
+#include <map>
+#include <tuple>
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class FunctionCall;
+class FunctionDefinition;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

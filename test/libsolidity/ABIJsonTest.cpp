@@ -19,14 +19,18 @@
  */
 
 #include <test/libsolidity/ABIJsonTest.h>
-
 #include <test/Common.h>
-
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/AnsiColorized.h>
-
+#include <boost/throw_exception.hpp>
 #include <fstream>
+#include <stdexcept>
+#include <vector>
+
+#include "TestCase.h"
+#include "TestCaseReader.h"
+#include "libsolidity/util/SoltestErrors.h"
 
 using namespace std;
 using namespace solidity;

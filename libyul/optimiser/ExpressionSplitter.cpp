@@ -21,14 +21,24 @@
  */
 
 #include <libyul/optimiser/ExpressionSplitter.h>
-
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/TypeInfo.h>
-
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-
 #include <libsolutil/CommonData.h>
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Exceptions.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/NameDispenser.h"
 
 using namespace std;
 using namespace solidity;

@@ -17,14 +17,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Common.h>
-
 #include <tools/yulPhaser/Exceptions.h>
-
 #include <libsolutil/Assertions.h>
-
 #include <cerrno>
 #include <cstring>
-#include <fstream>
 
 using namespace std;
 using namespace solidity;

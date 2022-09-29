@@ -34,19 +34,60 @@
 #include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolidity/formal/Predicate.h>
 #include <libsolidity/formal/SMTEncoder.h>
-
 #include <libsolidity/interface/ReadFile.h>
-
 #include <libsmtutil/CHCSolverInterface.h>
-
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/UniqueErrorReporter.h>
-
 #include <boost/algorithm/string/join.hpp>
-
+#include <ext/alloc_traits.h>
 #include <map>
 #include <optional>
 #include <set>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/Token.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/formal/EncodingContext.h"
+#include "libsolidity/parsing/Token.h"
+#include "libsolutil/FixedHash.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class Block;
+class Break;
+class CallableDeclaration;
+class Continue;
+class ContractDefinition;
+class Expression;
+class ForStatement;
+class FunctionCall;
+class FunctionDefinition;
+class IfStatement;
+class IndexAccess;
+class IndexRangeAccess;
+class Return;
+class SourceUnit;
+class TryCatchClause;
+class TryStatement;
+class Type;
+class VariableDeclaration;
+class WhileStatement;
+namespace smt {
+class SymbolicIntVariable;
+}  // namespace smt
+}  // namespace frontend
+namespace langutil {
+class CharStreamProvider;
+class UniqueErrorReporter;
+}  // namespace langutil
+}  // namespace solidity
 
 namespace solidity::frontend
 {
@@ -255,6 +296,7 @@ private:
 	// Forward declarations. Definitions are below.
 	struct CHCVerificationTarget;
 	struct CHCQueryPlaceholder;
+
 	void checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& _target);
 	void checkAndReportTarget(
 		CHCVerificationTarget const& _target,

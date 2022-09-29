@@ -17,10 +17,18 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libevmasm/Disassemble.h>
-
 #include <libsolutil/Common.h>
-#include <libsolutil/CommonIO.h>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/number.hpp>
 #include <functional>
+#include <iterator>
+#include <ostream>
+#include <vector>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

@@ -23,6 +23,23 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
+#include <ext/alloc_traits.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int/bitwise.hpp>
+#include <boost/multiprecision/detail/default_ops.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <utility>
+
+#include "libevmasm/Exceptions.h"
+#include "libevmasm/Instruction.h"
+#include "liblangutil/EVMVersion.h"
+#include "libsolutil/Assertions.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
 
 using namespace std;
 using namespace solidity;

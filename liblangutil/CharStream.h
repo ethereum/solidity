@@ -50,11 +50,13 @@
 
 #pragma once
 
+#include <stddef.h>
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
+#include <string_view>
 
 namespace solidity::langutil
 {

@@ -20,6 +20,24 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <map>
+#include <optional>
+#include <set>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct Block;
+struct Dialect;
+struct ForLoop;
+struct OptimiserStepContext;
+struct SideEffects;
+struct VariableDeclaration;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

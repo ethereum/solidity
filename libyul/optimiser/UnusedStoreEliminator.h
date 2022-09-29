@@ -27,11 +27,24 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/UnusedStoreBase.h>
-
 #include <libevmasm/SemanticInformation.h>
-
 #include <map>
 #include <vector>
+#include <optional>
+
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct FunctionCall;
+struct FunctionDefinition;
+struct Leave;
+struct OptimiserStepContext;
+struct SideEffects;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

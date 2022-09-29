@@ -22,6 +22,18 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/Scope.h>
+#include <map>
+#include <utility>
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct Block;
+struct ForLoop;
+struct FunctionDefinition;
+struct Identifier;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

@@ -20,14 +20,24 @@
  */
 
 #include <libyul/optimiser/ExpressionSimplifier.h>
-
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
-
 #include <libevmasm/SemanticInformation.h>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <functional>
+#include <iosfwd>
+#include <optional>
+#include <variant>
+#include <vector>
+
+#include "libevmasm/Instruction.h"
+#include "libevmasm/SimplificationRule.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/YulString.h"
 
 using namespace std;
 using namespace solidity;

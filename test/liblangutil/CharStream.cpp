@@ -22,11 +22,43 @@
  */
 
 #include <liblangutil/CharStream.h>
-#include <liblangutil/Exceptions.h>
-
 #include <test/Common.h>
+#include <boost/exception/to_string.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <memory>
+#include <ostream>
 
-#include <boost/test/unit_test.hpp>
+#include "liblangutil/SourceLocation.h"
+
+namespace boost {
+namespace test_tools {
+namespace tt_detail {
+template <typename T> struct print_log_value;
+}  // namespace tt_detail
+}  // namespace test_tools
+}  // namespace boost
+namespace solidity {
+namespace langutil {
+struct InternalCompilerError;
+}  // namespace langutil
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity::test;

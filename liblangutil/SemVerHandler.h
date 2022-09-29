@@ -25,7 +25,6 @@
 
 #include <liblangutil/Token.h>
 #include <libsolutil/Assertions.h>
-
 #include <string>
 #include <optional>
 #include <utility>

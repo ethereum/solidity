@@ -20,12 +20,24 @@
  * Unit tests for libsolc/libsolc.cpp.
  */
 
-#include <string>
-#include <boost/test/unit_test.hpp>
 #include <libsolutil/JSON.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolc/libsolc.h>
+#include <json/config.h>
+#include <json/value.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <string>
+#include <cstring>
+#include <iosfwd>
 
 using namespace std;
 

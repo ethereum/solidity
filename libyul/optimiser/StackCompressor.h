@@ -23,7 +23,7 @@
 #pragma once
 
 #include <libyul/Object.h>
-
+#include <stddef.h>
 #include <memory>
 
 namespace solidity::yul

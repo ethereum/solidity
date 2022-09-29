@@ -23,8 +23,19 @@
 #pragma once
 
 #include <libsmtutil/CHCSolverInterface.h>
-
 #include <libsmtutil/SMTLib2Interface.h>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "libsmtutil/SolverInterface.h"
+#include "libsmtutil/Sorts.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/FixedHash.h"
 
 namespace solidity::smtutil
 {

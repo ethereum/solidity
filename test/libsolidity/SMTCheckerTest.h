@@ -19,12 +19,14 @@
 #pragma once
 
 #include <test/libsolidity/SyntaxTest.h>
-
 #include <libsmtutil/SolverInterface.h>
-
 #include <libsolidity/formal/ModelChecker.h>
-
 #include <string>
+#include <iosfwd>
+#include <memory>
+
+#include "TestCase.h"
+#include "libsolidity/formal/ModelCheckerSettings.h"
 
 namespace solidity::frontend::test
 {

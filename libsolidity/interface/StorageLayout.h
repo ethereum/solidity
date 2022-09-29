@@ -23,8 +23,19 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
-
 #include <json/json.h>
+#include <json/value.h>
+#include <string>
+
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class Type;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

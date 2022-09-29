@@ -15,35 +15,56 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
-#include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/interface/ReadFile.h>
-#include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/HandlerBase.h>
 #include <libsolidity/lsp/Utils.h>
-
 // LSP feature implementations
 #include <libsolidity/lsp/GotoDefinition.h>
 #include <libsolidity/lsp/RenameSymbol.h>
 #include <libsolidity/lsp/SemanticTokensBuilder.h>
-
-#include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/CharStream.h>
-
 #include <libsolutil/CommonIO.h>
-#include <libsolutil/Visitor.h>
 #include <libsolutil/JSON.h>
-
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
+#include <fmt/format.h>
+#include <json/config.h>
+#include <stddef.h>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/file_status.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/path_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/throw_exception.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/view/adaptor.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
 #include <ostream>
 #include <string>
+#include <memory>
+#include <optional>
+#include <utility>
 
-#include <fmt/format.h>
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/Version.h"
+#include "libsolidity/lsp/FileRepository.h"
+#include "libsolidity/lsp/Transport.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class SourceUnit;
+}  // namespace frontend
+}  // namespace solidity
 
 using namespace std;
 using namespace std::string_literals;

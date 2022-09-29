@@ -21,15 +21,33 @@
 #include <tools/solidityUpgrade/Upgrade050.h>
 #include <tools/solidityUpgrade/Upgrade060.h>
 #include <tools/solidityUpgrade/Upgrade070.h>
-
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <liblangutil/EVMVersion.h>
-
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
-
+#include <boost/program_options/variables_map.hpp>
 #include <memory>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "libsolidity/interface/ReadFile.h"
+#include "tools/solidityUpgrade/UpgradeSuite.h"
+
+namespace solidity {
+namespace frontend {
+class SourceUnit;
+}  // namespace frontend
+namespace langutil {
+class CharStreamProvider;
+}  // namespace langutil
+namespace tools {
+class UpgradeChange;
+}  // namespace tools
+}  // namespace solidity
 
 namespace solidity::tools
 {

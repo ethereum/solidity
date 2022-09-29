@@ -22,15 +22,24 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
-
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-
-#include <boost/test/framework.hpp>
-
-#include <cstdlib>
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/throw_exception.hpp>
 #include <iostream>
+#include <initializer_list>
+#include <memory>
+#include <utility>
+
+#include "ExecutionFramework.h"
+#include "libevmasm/LinkerObject.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libyul/YulStack.h"
 
 using namespace solidity;
 using namespace solidity::frontend;

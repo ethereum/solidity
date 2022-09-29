@@ -19,17 +19,18 @@
 #pragma once
 
 #include <libsmtutil/SolverInterface.h>
-
 #include <libsolidity/interface/ReadFile.h>
-
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
-
 #include <cstdio>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+#include <optional>
+#include <utility>
+
+#include "libsmtutil/Sorts.h"
 
 namespace solidity::smtutil
 {

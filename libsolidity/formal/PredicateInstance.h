@@ -19,6 +19,17 @@
 #pragma once
 
 #include <libsolidity/formal/Predicate.h>
+#include <vector>
+
+#include "libsmtutil/SolverInterface.h"
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+class FunctionDefinition;
+class Predicate;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend::smt
 {

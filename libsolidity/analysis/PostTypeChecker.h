@@ -23,6 +23,25 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <memory>
+#include <vector>
+
+namespace solidity {
+namespace frontend {
+class ASTNode;
+class ContractDefinition;
+class EmitStatement;
+class ErrorDefinition;
+class FunctionCall;
+class Identifier;
+class MemberAccess;
+class ModifierInvocation;
+class OverrideSpecifier;
+class RevertStatement;
+class StructDefinition;
+class VariableDeclaration;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::langutil
 {

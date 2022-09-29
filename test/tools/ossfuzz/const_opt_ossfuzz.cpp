@@ -17,6 +17,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/fuzzer_common.h>
+#include <stdint.h>
+#include <cstddef>
+#include <string>
 
 using namespace std;
 

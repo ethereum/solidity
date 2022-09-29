@@ -17,17 +17,34 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/FitnessMetrics.h>
-
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/optimiser/UnusedPruner.h>
-
 #include <liblangutil/CharStream.h>
-
 #include <libsolutil/CommonIO.h>
-
-#include <boost/test/unit_test.hpp>
-
+#include <ext/alloc_traits.h>
+#include <libsolutil/Assertions.h>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
 #include <cmath>
+#include <algorithm>
+#include <string>
+#include <variant>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/ASTForward.h"
+#include "libyul/optimiser/Metrics.h"
+#include "tools/yulPhaser/Chromosome.h"
+#include "tools/yulPhaser/Program.h"
+#include "tools/yulPhaser/ProgramCache.h"
 
 using namespace std;
 using namespace solidity::langutil;

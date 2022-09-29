@@ -23,6 +23,13 @@
 #include <libevmasm/LinkerObject.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Keccak256.h>
+#include <stdint.h>
+#include <algorithm>
+#include <cstddef>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/FixedHash.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace std;
 using namespace solidity;

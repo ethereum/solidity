@@ -21,6 +21,15 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Dialect.h>
 
+namespace solidity {
+namespace yul {
+struct Block;
+struct Dialect;
+struct ForLoop;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
+
 namespace solidity::yul
 {
 

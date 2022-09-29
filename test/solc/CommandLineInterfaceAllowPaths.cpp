@@ -18,21 +18,44 @@
 
 /// Unit tests for solc/CommandLineInterface.h
 
-#include <solc/CommandLineInterface.h>
-
 #include <test/solc/Common.h>
-
 #include <test/Common.h>
 #include <test/FilesystemUtils.h>
 #include <test/TemporaryDirectory.h>
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <boost/algorithm/string/predicate.hpp>
-
-#include <fstream>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/test/framework.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/assertion_result.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tree/test_unit.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/class_properties.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
 #include <regex>
 #include <string>
 #include <vector>
+#include <sstream>
+
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolidity/interface/FileReader.h"
+#include "libsolutil/CommonData.h"
+
+namespace boost {
+namespace test_tools {
+namespace tt_detail {
+template <typename T> struct print_log_value;
+}  // namespace tt_detail
+}  // namespace test_tools
+}  // namespace boost
 
 using namespace std;
 using namespace solidity::frontend;

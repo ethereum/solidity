@@ -17,14 +17,31 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/RenameSymbol.h>
 #include <libsolidity/lsp/Utils.h>
-
 #include <libyul/AST.h>
-
 #include <fmt/format.h>
-
+#include <ext/alloc_traits.h>
 #include <memory>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <optional>
+#include <utility>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/CharStreamProvider.h"
+#include "liblangutil/Exceptions.h"
+#include "libsolidity/ast/AST.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/Types.h"
+#include "libsolidity/interface/CompilerStack.h"
+#include "libsolidity/interface/ImportRemapper.h"
+#include "libsolidity/lsp/FileRepository.h"
+#include "libsolidity/lsp/LanguageServer.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libyul/YulString.h"
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;

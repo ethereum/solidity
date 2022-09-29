@@ -23,13 +23,24 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
-
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/CommonData.h>
-
 #include <libsolutil/Exceptions.h>
-
+#include <libsolutil/Assertions.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <map>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/AST.h"
+#include "libyul/YulString.h"
 
 namespace solidity::yul
 {

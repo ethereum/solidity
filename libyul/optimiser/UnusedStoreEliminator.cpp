@@ -21,24 +21,41 @@
  */
 
 #include <libyul/optimiser/UnusedStoreEliminator.h>
-
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
-#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libsolutil/CommonData.h>
-
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
-
 #include <range/v3/algorithm/all_of.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <functional>
+#include <iosfwd>
+#include <set>
+#include <string>
+#include <utility>
+#include <variant>
+
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/SideEffects.h"
+#include "libyul/backends/evm/AbstractAssembly.h"
+#include "libyul/optimiser/ASTWalker.h"
+#include "libyul/optimiser/CallGraphGenerator.h"
+#include "libyul/optimiser/OptimiserStep.h"
+#include "libyul/optimiser/UnusedStoreBase.h"
 
 using namespace std;
 using namespace solidity;

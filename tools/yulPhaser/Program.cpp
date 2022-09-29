@@ -17,15 +17,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Program.h>
-
 #include <liblangutil/CharStream.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/SourceReferenceFormatter.h>
-
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmJsonConverter.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/ObjectParser.h>
@@ -38,13 +34,30 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/Suite.h>
-
 #include <libsolutil/JSON.h>
-
 #include <libsolidity/interface/OptimiserSettings.h>
-
+#include <json/value.h>
+#include <libsolutil/Assertions.h>
 #include <cassert>
 #include <memory>
+#include <map>
+#include <optional>
+#include <set>
+#include <type_traits>
+
+#include "liblangutil/EVMVersion.h"
+#include "liblangutil/Exceptions.h"
+#include "liblangutil/Scanner.h"
+#include "liblangutil/SourceLocation.h"
+#include "libyul/ASTForward.h"
+#include "libyul/Object.h"
+#include "libyul/optimiser/ASTCopier.h"
+
+namespace solidity {
+namespace yul {
+class NameDispenser;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

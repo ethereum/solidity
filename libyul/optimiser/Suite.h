@@ -26,11 +26,23 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <liblangutil/EVMVersion.h>
-
+#include <stddef.h>
 #include <set>
 #include <string>
 #include <string_view>
 #include <memory>
+#include <map>
+#include <optional>
+#include <vector>
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct Block;
+struct OptimiserStep;
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

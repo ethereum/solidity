@@ -17,8 +17,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/Numeric.h>
-
 #include <liblangutil/Exceptions.h>
+#include <math.h>
+#include <stddef.h>
+
+#include "libsolutil/vector_ref.h"
 
 using namespace solidity;
 

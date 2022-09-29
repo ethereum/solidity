@@ -24,9 +24,18 @@
 #include <libyul/Dialect.h>
 #include <libyul/ASTForward.h>
 #include <libyul/Object.h>
-
 #include <map>
 #include <memory>
+#include <set>
+
+#include "libyul/YulString.h"
+
+namespace solidity {
+namespace yul {
+struct Dialect;
+struct Object;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

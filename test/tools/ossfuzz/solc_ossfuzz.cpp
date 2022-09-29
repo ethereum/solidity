@@ -17,10 +17,15 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/fuzzer_common.h>
-
 #include <test/TestCaseReader.h>
-
+#include <stddef.h>
+#include <stdint.h>
 #include <sstream>
+#include <map>
+#include <stdexcept>
+#include <string>
+
+#include "test/libsolidity/util/SoltestErrors.h"
 
 using namespace solidity::frontend::test;
 using namespace std;

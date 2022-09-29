@@ -16,23 +16,51 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
-
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/backends/evm/StackLayoutGenerator.h>
-
 #include <libyul/Utilities.h>
-
 #include <libsolutil/Visitor.h>
-#include <libsolutil/cxx20.h>
-
-#include <range/v3/view/drop.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/take_last.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/ref.hpp>
+#include <range/v3/view/subrange.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <list>
+#include <optional>
+#include <string>
+#include <utility>
+#include <variant>
+
+#include "libevmasm/Instruction.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+#include "libyul/AST.h"
+#include "libyul/ControlFlowSideEffects.h"
+#include "libyul/Dialect.h"
+#include "libyul/Exceptions.h"
+#include "libyul/Scope.h"
+#include "libyul/YulString.h"
+#include "libyul/backends/evm/ControlFlowGraph.h"
+#include "libyul/backends/evm/EVMDialect.h"
 
 using namespace solidity;
 using namespace solidity::yul;

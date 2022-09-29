@@ -21,10 +21,15 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libyul/YulString.h>
-
+#include <stddef.h>
 #include <set>
+
+namespace solidity {
+namespace yul {
+struct Block;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

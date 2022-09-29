@@ -20,6 +20,23 @@
 #include <libyul/Utilities.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/detail/number_compare.hpp>
+#include <boost/multiprecision/number.hpp>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace yul {
+struct OptimiserStepContext;
+}  // namespace yul
+}  // namespace solidity
 
 using namespace std;
 using namespace solidity;

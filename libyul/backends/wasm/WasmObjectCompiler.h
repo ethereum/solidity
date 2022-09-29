@@ -21,15 +21,17 @@
 
 #pragma once
 
+#include <libsolutil/Common.h>     // solidity::bytes
 #include <string>
 #include <vector>
 #include <tuple>
-#include <libsolutil/Common.h>     // solidity::bytes
+#include <utility>
 
 namespace solidity::yul
 {
 struct Object;
 struct Dialect;
+
 namespace wasm
 {
 struct Module;

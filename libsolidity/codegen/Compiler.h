@@ -28,8 +28,21 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <liblangutil/EVMVersion.h>
 #include <libevmasm/Assembly.h>
+#include <stddef.h>
 #include <functional>
 #include <ostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "libsolutil/Common.h"
+
+namespace solidity {
+namespace frontend {
+class ContractDefinition;
+}  // namespace frontend
+}  // namespace solidity
 
 namespace solidity::frontend
 {

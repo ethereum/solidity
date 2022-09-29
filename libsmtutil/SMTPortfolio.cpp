@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsmtutil/SMTPortfolio.h>
+#include <libsolutil/Assertions.h>
 
 #ifdef HAVE_Z3
 #include <libsmtutil/Z3Interface.h>
@@ -25,6 +26,13 @@
 #include <libsmtutil/CVC4Interface.h>
 #endif
 #include <libsmtutil/SMTLib2Interface.h>
+#include <iosfwd>
+#include <tuple>
+
+#include "libsmtutil/Exceptions.h"
+#include "libsmtutil/SolverInterface.h"
+#include "libsolidity/interface/ReadFile.h"
+#include "libsolutil/FixedHash.h"
 
 using namespace std;
 using namespace solidity;

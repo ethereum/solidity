@@ -19,17 +19,17 @@
 #pragma once
 
 #include <test/libsolidity/util/SoltestErrors.h>
-
 #include <libsolutil/StringUtils.h>
-
 #include <range/v3/view/map.hpp>
-
 #include <boost/filesystem.hpp>
 #include <boost/throw_exception.hpp>
-
+#include <boost/filesystem/path.hpp>
 #include <fstream>
 #include <map>
 #include <string>
+#include <cstddef>
+#include <stdexcept>
+#include <utility>
 
 namespace solidity::frontend::test
 {

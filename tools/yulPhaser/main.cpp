@@ -18,10 +18,13 @@
 
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Phaser.h>
-
-#include <libsolutil/Exceptions.h>
-
+#include <libsolutil/Assertions.h>
+#include <boost/exception/exception.hpp>
+#include <boost/exception/get_error_info.hpp>
+#include <boost/program_options/errors.hpp>
 #include <iostream>
+#include <exception>
+#include <string>
 
 int main(int argc, char** argv)
 {

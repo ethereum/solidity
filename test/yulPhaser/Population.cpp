@@ -17,26 +17,50 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
-
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/PairSelections.h>
 #include <tools/yulPhaser/Population.h>
-#include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/Selections.h>
-
 #include <libyul/optimiser/BlockFlattener.h>
-#include <libyul/optimiser/SSAReverser.h>
-#include <libyul/optimiser/StructuralSimplifier.h>
-#include <libyul/optimiser/UnusedPruner.h>
-
-#include <liblangutil/CharStream.h>
-
-#include <boost/test/unit_test.hpp>
-
-#include <cmath>
-#include <optional>
+#include <assert.h>
+#include <bits/std_abs.h>
+#include <stddef.h>
+#include <boost/preprocessor/arithmetic/dec.hpp>
+#include <boost/preprocessor/comparison/not_equal.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
+#include <boost/preprocessor/logical/bool.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/repetition/detail/for.hpp>
+#include <boost/preprocessor/repetition/for.hpp>
+#include <boost/preprocessor/seq/elem.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/test/framework.hpp>
+#include <boost/test/tools/assertion.hpp>
+#include <boost/test/tools/interface.hpp>
+#include <boost/test/tools/old/interface.hpp>
+#include <boost/test/tree/decorator.hpp>
+#include <boost/test/unit_test_suite.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring.hpp>
+#include <boost/test/utils/basic_cstring/basic_cstring_fwd.hpp>
+#include <boost/test/utils/lazy_ostream.hpp>
+#include <boost/test/utils/wrap_stringstream.hpp>
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <tuple>
+#include <vector>
+
+#include "liblangutil/SourceLocation.h"
+#include "libyul/ASTForward.h"
+#include "tools/yulPhaser/FitnessMetrics.h"
+#include "tools/yulPhaser/Mutations.h"
+#include "tools/yulPhaser/SimulationRNG.h"
 
 using namespace std;
 using namespace solidity::langutil;

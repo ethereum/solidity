@@ -22,6 +22,8 @@
 
 #include <libsolutil/IndentedWriter.h>
 #include <libsolutil/Assertions.h>
+#include <iosfwd>
+#include <memory>
 
 using namespace std;
 using namespace solidity::util;

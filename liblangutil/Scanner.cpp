@@ -53,13 +53,17 @@
 #include <liblangutil/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
-
-#include <boost/algorithm/string/classification.hpp>
-
+#include <stdint.h>
+#include <boost/static_assert.hpp>
 #include <optional>
 #include <string_view>
 #include <tuple>
 #include <array>
+#include <utility>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/SourceLocation.h"
+#include "liblangutil/Token.h"
 
 using namespace std;
 

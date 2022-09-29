@@ -24,7 +24,8 @@
 #include <libyul/YulString.h>
 #include <libyul/ControlFlowSideEffects.h>
 #include <libyul/SideEffects.h>
-
+#include <ext/alloc_traits.h>
+#include <stddef.h>
 #include <vector>
 #include <set>
 #include <optional>
@@ -33,6 +34,7 @@ namespace solidity::yul
 {
 
 class YulString;
+
 using Type = YulString;
 enum class LiteralKind;
 struct Literal;

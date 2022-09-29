@@ -20,25 +20,41 @@
  */
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
-
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Utilities.h>
-
 #include <libsolutil/Visitor.h>
 #include <libsolutil/StackTooDeepString.h>
-
-#include <liblangutil/Exceptions.h>
-
 #include <range/v3/view/reverse.hpp>
-
 #include <range/v3/algorithm/max.hpp>
 #include <range/v3/algorithm/none_of.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/transform.hpp>
-
+#include <range/v3/functional/comparisons.hpp>
+#include <range/v3/functional/identity.hpp>
+#include <range/v3/iterator/basic_iterator.hpp>
+#include <range/v3/iterator/reverse_iterator.hpp>
+#include <range/v3/iterator/unreachable_sentinel.hpp>
+#include <range/v3/range/traits.hpp>
+#include <range/v3/view/view.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
 #include <utility>
 #include <variant>
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <string>
+
+#include "libevmasm/Instruction.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/CommonData.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
+#include "libyul/AST.h"
+#include "libyul/Scope.h"
+#include "libyul/backends/evm/EVMDialect.h"
+#include "libyul/backends/evm/VariableReferenceCounter.h"
 
 using namespace std;
 using namespace solidity;

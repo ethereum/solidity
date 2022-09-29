@@ -18,23 +18,27 @@
 
 
 #include <libsolutil/StringUtils.h>
-
 #include <test/libsolidity/util/TestFileParser.h>
-
 #include <test/libsolidity/util/BytesUtils.h>
 #include <test/libsolidity/util/SoltestErrors.h>
-#include <test/Common.h>
-
 #include <liblangutil/Common.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/throw_exception.hpp>
-
+#include <stddef.h>
+#include <boost/multiprecision/detail/no_et_ops.hpp>
+#include <boost/multiprecision/detail/number_base.hpp>
 #include <fstream>
 #include <memory>
-#include <optional>
-#include <stdexcept>
+#include <exception>
+#include <locale>
+#include <set>
+#include <tuple>
+
+#include "ExecutionFramework.h"
+#include "libsolidity/interface/OptimiserSettings.h"
+#include "libsolidity/util/SoltestTypes.h"
+#include "libsolutil/Common.h"
+#include "libsolutil/Numeric.h"
+#include "libsolutil/vector_ref.h"
 
 using namespace solidity;
 using namespace solidity::util;

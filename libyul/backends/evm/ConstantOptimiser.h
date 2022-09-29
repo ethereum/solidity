@@ -26,14 +26,24 @@
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/ASTForward.h>
-
 #include <liblangutil/SourceLocation.h>
-
 #include <libsolutil/Common.h>
-
+#include <stddef.h>
+#include <boost/multiprecision/number.hpp>
 #include <tuple>
 #include <map>
 #include <memory>
+#include <utility>
+
+#include "libsolutil/Numeric.h"
+
+namespace solidity {
+namespace yul {
+class YulString;
+struct DebugData;
+struct EVMDialect;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

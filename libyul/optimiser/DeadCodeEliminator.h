@@ -24,9 +24,16 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/YulString.h>
 #include <libyul/ControlFlowSideEffects.h>
-
 #include <map>
 #include <set>
+#include <utility>
+
+namespace solidity {
+namespace yul {
+struct Block;
+struct ForLoop;
+}  // namespace yul
+}  // namespace solidity
 
 namespace solidity::yul
 {

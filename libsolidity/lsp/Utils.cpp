@@ -16,14 +16,21 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/lsp/Utils.h>
-
 #include <regex>
 #include <fstream>
+#include <algorithm>
+#include <memory>
+#include <vector>
+
+#include "liblangutil/CharStream.h"
+#include "liblangutil/SourceLocation.h"
+#include "libsolidity/ast/ASTAnnotations.h"
+#include "libsolidity/ast/ASTForward.h"
+#include "libsolutil/Common.h"
 
 namespace solidity::lsp
 {

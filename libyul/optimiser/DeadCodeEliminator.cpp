@@ -24,11 +24,17 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
-
-#include <libevmasm/SemanticInformation.h>
-
+#include <libsolutil/Assertions.h>
 #include <algorithm>
 #include <limits>
+#include <cstddef>
+#include <tuple>
+#include <variant>
+#include <vector>
+
+#include "libyul/ASTForward.h"
+#include "libyul/Exceptions.h"
+#include "libyul/optimiser/ASTWalker.h"
 
 using namespace std;
 using namespace solidity;
