@@ -912,29 +912,6 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(selfdestruct)
-{
-	char const* sourceCode = R"(
-		contract test {
-			constructor() payable {}
-			function a(address payable receiver) public returns (uint ret) {
-				selfdestruct(receiver);
-				return 10;
-			}
-		}
-	)";
-	u256 amount(130);
-	h160 address(23);
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode, amount);
-		ABI_CHECK(callContractFunction("a(address)", address), bytes());
-		BOOST_CHECK(!addressHasCode(m_contractAddress));
-		BOOST_CHECK_EQUAL(balanceAt(address), amount);
-	)
-}
-
 BOOST_AUTO_TEST_CASE(keccak256)
 {
 	char const* sourceCode = R"(
