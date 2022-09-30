@@ -13,68 +13,108 @@ Order of Precedence of Operators
 Global Variables
 ================
 
-- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: :ref:`ABI <ABI>`-decodes
-  the provided data. The types are given in parentheses as second argument.
-  Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
-- ``abi.encode(...) returns (bytes memory)``: :ref:`ABI <ABI>`-encodes the given arguments
-- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of
-  the given arguments. Note that this encoding can be ambiguous!
-- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: :ref:`ABI <ABI>`-encodes
-  the given arguments starting from the second and prepends the given four-byte selector
-- ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``: ABI-encodes a call to ``functionPointer`` with the arguments found in the
-  tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, (...))``
-- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent
-  to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)``
-- ``bytes.concat(...) returns (bytes memory)``: :ref:`Concatenates variable number of
-  arguments to one byte array<bytes-concat>`
-- ``string.concat(...) returns (string memory)``: :ref:`Concatenates variable number of
-  arguments to one string array<string-concat>`
-- ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
-- ``block.chainid`` (``uint``): current chain id
-- ``block.coinbase`` (``address payable``): current block miner's address
-- ``block.difficulty`` (``uint``): current block difficulty
-- ``block.gaslimit`` (``uint``): current block gaslimit
-- ``block.number`` (``uint``): current block number
-- ``block.timestamp`` (``uint``): current block timestamp in seconds since Unix epoch
-- ``gasleft() returns (uint256)``: remaining gas
-- ``msg.data`` (``bytes``): complete calldata
-- ``msg.sender`` (``address``): sender of the message (current call)
-- ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
-- ``msg.value`` (``uint``): number of wei sent with the message
-- ``tx.gasprice`` (``uint``): gas price of the transaction
-- ``tx.origin`` (``address``): sender of the transaction (full call chain)
-- ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
-- ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use
-  for malformed input or error in external component)
-- ``require(bool condition, string memory message)``: abort execution and revert state changes if
-  condition is ``false`` (use for malformed input or error in external component). Also provide error message.
-- ``revert()``: abort execution and revert state changes
-- ``revert(string memory message)``: abort execution and revert state changes providing an explanatory string
-- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
-- ``keccak256(bytes memory) returns (bytes32)``: compute the Keccak-256 hash of the input
-- ``sha256(bytes memory) returns (bytes32)``: compute the SHA-256 hash of the input
-- ``ripemd160(bytes memory) returns (bytes20)``: compute the RIPEMD-160 hash of the input
-- ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with
-  the public key from elliptic curve signature, return zero on error
-- ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with
-  arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
-- ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed
-  with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
-- ``this`` (current contract's type): the current contract, explicitly convertible to ``address`` or ``address payable``
-- ``super``: the contract one level higher in the inheritance hierarchy
-- ``selfdestruct(address payable recipient)``: destroy the current contract, sending its funds to the given address
-- ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
-- ``<address>.code`` (``bytes memory``): code at the :ref:`address` (can be empty)
-- ``<address>.codehash`` (``bytes32``): the codehash of the :ref:`address`
-- ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`,
-  returns ``false`` on failure
-- ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
-- ``type(C).name`` (``string``): the name of the contract
-- ``type(C).creationCode`` (``bytes memory``): creation bytecode of the given contract, see :ref:`Type Information<meta-type>`.
-- ``type(C).runtimeCode`` (``bytes memory``): runtime bytecode of the given contract, see :ref:`Type Information<meta-type>`.
-- ``type(I).interfaceId`` (``bytes4``): value containing the EIP-165 interface identifier of the given interface, see :ref:`Type Information<meta-type>`.
-- ``type(T).min`` (``T``): the minimum value representable by the integer type ``T``, see :ref:`Type Information<meta-type>`.
-- ``type(T).max`` (``T``): the maximum value representable by the integer type ``T``, see :ref:`Type Information<meta-type>`.
+.. list-table::
+   :widths: 50 70
+   :header-rows: 1
+
+   * - Global Variable
+     - Description
+   * - ``abi.decode(bytes memory encodedData, (...)) returns (...)``
+     - :ref:`ABI <ABI>`-Decodes the provided data. The types are given in parentheses as second argument.
+   * - ``abi.encode(...) returns (bytes memory)``
+     - :ref:`ABI <ABI>`-Encodes the given arguments
+   * - ``abi.encodePacked(...) returns (bytes memory)``
+     - Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments. Note that this encoding can be ambiguous!
+   * - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``
+     - :ref:`ABI <ABI>`-Encodes the given arguments starting from the second and prepends the given four-byte selector
+   * - ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``
+     - ABI-encodes a call to ``functionPointer`` with the arguments found in the tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, (...))``
+   * - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``
+     -  Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)``
+   * - ``bytes.concat(...) returns (bytes memory)``
+     - :ref:`Concatenates variable number of arguments to one byte array<bytes-concat>`
+   * - ``string.concat(...) returns (string memory)``
+     - :ref:`Concatenates variable number of arguments to one string array<string-concat>`
+   * - ``block.basefee`` (``uint``)
+     - Current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
+   * - ``block.chainid`` (``uint``)
+     - Current chain id
+   * - ``block.coinbase`` (``address payable``)
+     - Current block miner's address
+   * - ``block.difficulty`` (``uint``)
+     - Current block difficulty
+   * - ``block.gaslimit`` (``uint``)
+     - Current block gaslimit
+   * - ``block.number`` (``uint``)
+     - Current block number
+   * - ``block.timestamp`` (``uint``)
+     - Current block timestamp in seconds since Unix epoch
+   * - ``gasleft() returns (uint256)``
+     - Remaining gas
+   * - ``msg.data`` (``bytes``)
+     - Complete calldata
+   * - ``msg.sender`` (``address``)
+     - Sender of the message (current call)
+   * - ``msg.sig`` (``bytes4``)
+     - First four bytes of the calldata (i.e. function identifier)
+   * - ``msg.value`` (``uint``)
+     - Number of wei sent with the message
+   * - ``tx.gasprice`` (``uint``)
+     - Gas price of the transaction
+   * - ``tx.origin`` (``address``)
+     - Sender of the transaction (full call chain)
+   * - ``assert(bool condition)``
+     - Abort execution and revert state changes if condition is ``false`` (use for internal error)
+   * - ``require(bool condition)``
+     - Abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
+   * - ``require(bool condition, string memory message)``
+     - Abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
+   * - ``revert()``
+     - Abort execution and revert state changes
+   * - ``revert(string memory message)``
+     - Abort execution and revert state changes providing an explanatory string
+   * - ``blockhash(uint blockNumber) returns (bytes32)``
+     - Hash of the given block - only works for 256 most recent blocks
+   * - ``keccak256(bytes memory) returns (bytes32)``
+     - Compute the Keccak-256 hash of the input
+   * - ``sha256(bytes memory) returns (bytes32)``
+     - Compute the SHA-256 hash of the input
+   * - ``ripemd160(bytes memory) returns (bytes20)``
+     - Compute the RIPEMD-160 hash of the input
+   * - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``
+     - Recover address associated with the public key from elliptic curve signature, return zero on error
+   * - ``addmod(uint x, uint y, uint k) returns (uint)``
+     - Compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
+   * - ``mulmod(uint x, uint y, uint k) returns (uint)``
+     - Compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
+   * - ``this`` (current contract's type)
+     - The current contract, explicitly convertible to ``address`` or ``address payable``
+   * - ``super``
+     - The contract one level higher in the inheritance hierarchy
+   * - ``selfdestruct(address payable recipient)``
+     - Destroy the current contract, sending its funds to the given address
+   * - ``<address>.balance`` (``uint256``)
+     - Balance of the :ref:`address` in Wei
+   * - ``<address>.code`` (``bytes memory``)
+     - Code at the :ref:`address` (can be empty)
+   * - ``<address>.codehash`` (``bytes32``)
+     - The codehash of the :ref:`address`
+   * - ``<address payable>.send(uint256 amount) returns (bool)``
+     - Send given amount of Wei to :ref:`address`, returns ``false`` on failure
+   * - ``<address payable>.transfer(uint256 amount)``
+     - Send given amount of Wei to :ref:`address`, throws on failure
+   * - ``type(C).name`` (``string``)
+     - The name of the contract
+   * - ``type(C).creationCode`` (``bytes memory``)
+     - Creation bytecode of the given contract, see :ref:`Type Information<meta-type>`.
+   * - ``type(C).runtimeCode`` (``bytes memory``)
+     - Runtime bytecode of the given contract, see :ref:`Type Information<meta-type>`.
+   * - ``type(I).interfaceId`` (``bytes4``)
+     - Value containing the EIP-165 interface identifier of the given interface, see :ref:`Type Information<meta-type>`.
+   * - ``type(T).min`` (``T``)
+     - The minimum value representable by the integer type ``T``, see :ref:`Type Information<meta-type>`.
+   * - ``type(T).max`` (``T``)
+     - The maximum value representable by the integer type ``T``, see :ref:`Type Information<meta-type>`.
 
 
 .. index:: visibility, public, private, external, internal
