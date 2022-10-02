@@ -701,10 +701,19 @@ void Parser::checkBreakContinuePosition(string const& _which)
 
 bool Parser::isValidNumberLiteral(string const& _literal)
 {
+	string tmp_literal;
 	try
 	{
-		// Try to convert _literal to u256.
-		[[maybe_unused]] auto tmp = u256(_literal);
+		index = 0;
+		for(int i = 0; i < _literal.size(); i++)
+		{
+			if(_literal[i] != '_')
+			{
+				tmp_literal[index] = _literal[i];
+				index++;
+			}
+		}
+		[[maybe_unused]] auto tmp = u256(tmp_literal);
 	}
 	catch (...)
 	{
@@ -713,5 +722,5 @@ bool Parser::isValidNumberLiteral(string const& _literal)
 	if (boost::starts_with(_literal, "0x"))
 		return true;
 	else
-		return _literal.find_first_not_of("0123456789") == string::npos;
+		return tmp_literal.find_first_not_of("0123456789") == string::npos;
 }
