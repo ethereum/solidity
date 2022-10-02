@@ -18,6 +18,7 @@ For a good overview and starting point, please check out the official [Solidity 
 - [Build and Install](#build-and-install)
 - [Example](#example)
 - [Documentation](#documentation)
+- [Resources](#Resources)
 - [Development](#development)
 - [Maintainers](#maintainers)
 - [License](#license)
@@ -67,6 +68,23 @@ browser-based IDE. Here are some example contracts:
 ## Documentation
 
 The Solidity documentation is hosted at [Read the docs](https://docs.soliditylang.org).
+
+
+## Resources
+You will make a faster headway when you start your Solidity journey with the right resources. Apart from the documentation, which is really helpful, these are some other resources that can stregthen your knowledge and aid your understanding:
+
+### Written Tutorials
+
+1. [Solidity by Example](https://solidity-by-example.org/) - It has an actionable project-based learning approach
+2. [Tutorialspoint Solidity Tutorial](https://www.tutorialspoint.com/solidity/index.htm) - Tutorialspoint is better for anyone who wants to know the basics of Solidity, especially if you have no programming background.
+
+### Video Tutorials
+1. [Smart Contract Programmer](https://www.youtube.com/channel/UCJWh7F3AFyQ_x01VKzr9eyA) - This channel is the official video version of Solidity by Example. If it is the case that you are not understanding a tutorial in Solidity by Example, this channel will always shed more light.
+
+2. [Patrick Collin's Solidity 32-hour Solidity Course](https://youtu.be/gyMwXuJrbJQ) - This 32-hour long tutorial covers the basics of Solidity and its frameworks.
+
+3. [Eat The Blocks](https://www.youtube.com/c/EatTheBlocks) - Eat the Blocks is one of the most popular Solidity channels on YouTube and it has digestible tutorials.
+
 
 ## Development
 
