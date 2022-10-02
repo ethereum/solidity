@@ -66,6 +66,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/range/adaptor/filtered.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef _WIN32 // windows
@@ -130,26 +131,6 @@ static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strStorageLayout = "storage-layout";
 static string const g_strVersion = "version";
-
-static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
-{
-	if (_options.compiler.estimateGas)
-		return true;
-	if (!_options.output.dir.empty())
-		return false;
-	return
-		_options.compiler.outputs.abi ||
-		_options.compiler.outputs.asm_ ||
-		_options.compiler.outputs.asmJson ||
-		_options.compiler.outputs.binary ||
-		_options.compiler.outputs.binaryRuntime ||
-		_options.compiler.outputs.metadata ||
-		_options.compiler.outputs.natspecUser ||
-		_options.compiler.outputs.natspecDev ||
-		_options.compiler.outputs.opcodes ||
-		_options.compiler.outputs.signatureHashes ||
-		_options.compiler.outputs.storageLayout;
-}
 
 static bool coloredOutput(CommandLineOptions const& _options)
 {
@@ -1141,8 +1122,7 @@ void CommandLineInterface::outputCompilationResults()
 	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)
 	{
-		if (needsHumanTargetedStdout(m_options))
-			sout() << endl << "======= " << contract << " =======" << endl;
+		sout() << "======= " << contract << " =======" << endl;
 
 		// do we need EVM assembly?
 		if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
@@ -1174,10 +1154,12 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(false, contract);
 	} // end of contracts iteration
 
-	if (!m_hasOutput)
+	if (!m_hasOutput ^ (contracts.size() < 1))
 	{
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
+		else if(contracts.size() < 1)
+			sout() << "Compiler run successful. No contracts to compile. " << endl;
 		else
 			serr() << "Compiler run successful, no output requested." << endl;
 	}
