@@ -1154,7 +1154,7 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(false, contract);
 	} // end of contracts iteration
 
-	if (!m_hasOutput ^ (contracts.size() < 1))
+	if (!m_hasOutput ^ (contracts.size()<1))
 	{
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
