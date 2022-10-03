@@ -1154,15 +1154,15 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(false, contract);
 	} // end of contracts iteration
 
-	if (!m_hasOutput || (contracts.size()<1))
+	if (!m_hasOutput)
 	{
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
-		else if(contracts.size()<1)
-			sout() << "Compiler run successful. No contracts to compile. " << endl;
 		else
 			serr() << "Compiler run successful, no output requested." << endl;
 	}
+	else if(contracts.size() < 1)
+			sout() << "Compiler run successful. No contracts to compile. " << endl;
 }
 
 }
