@@ -1161,7 +1161,7 @@ void CommandLineInterface::outputCompilationResults()
 		else
 			serr() << "Compiler run successful, no output requested." << endl;
 	}
-	else if(contracts.size() < 1)
+	else if (contracts.size() < 1)
 			sout() << "Compiler run successful. No contracts to compile. " << endl;
 }
 
