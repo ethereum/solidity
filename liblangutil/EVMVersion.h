@@ -95,7 +95,7 @@ public:
 	bool hasPrevRandao() const { return *this >= paris(); }
 	bool hasDifficulty() const { return *this < paris(); }
 
-	bool hasOpcode(evmasm::Instruction _opcode) const;
+	bool hasInstruction(evmasm::InternalInstruction _instruction) const;
 
 	/// Whether we have to retain the costs for the call opcode itself (false),
 	/// or whether we can just forward easily all remaining gas (true).

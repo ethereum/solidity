@@ -270,13 +270,13 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 			auto const numberOfMappings = std::count(sourceMappings.begin(), sourceMappings.end(), ';');
 
 			LinkerObject const& obj = assembly.assemble();
-			string const disassembly = disassemble(obj.bytecode, "\n");
+			string const disassembly = disassemble(obj.bytecode, EVMVersion(), "\n");
 			auto const numberOfOpcodes = std::count(disassembly.begin(), disassembly.end(), '\n');
 
 			#if 0 // {{{ debug prints
 			{
 				LinkerObject const& subObj = assembly.sub(0).assemble();
-				string const subDisassembly = disassemble(subObj.bytecode, "\n");
+				string const subDisassembly = disassemble(subObj.bytecode, EVMVersion(), "\n");
 				cout << '\n';
 				cout << "### immutables: " << numImmutables << ", refs: " << numActualRefs << '\n';
 				cout << " - srcmap: \"" << sourceMappings << "\"\n";
@@ -285,8 +285,8 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				cout << " - subs: " << assembly.numSubs() << '\n';
 				cout << " - sub opcodes " << std::count(subDisassembly.begin(), subDisassembly.end(), '\n') << '\n';
 				cout << " - sub srcmaps " << AssemblyItem::computeSourceMapping(subAsm->items(), indices) << '\n';
-				cout << " - main bytecode:\n\t" << disassemble(obj.bytecode, "\n\t");
-				cout << "\r - sub bytecode:\n\t" << disassemble(subObj.bytecode, "\n\t");
+				cout << " - main bytecode:\n\t" << disassemble(obj.bytecode, EVMVersion(), "\n\t");
+				cout << "\r - sub bytecode:\n\t" << disassemble(subObj.bytecode, EVMVersion(), "\n\t");
 			}
 			#endif // }}}
 

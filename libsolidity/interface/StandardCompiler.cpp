@@ -21,6 +21,7 @@
  * Standard JSON compiler interface.
  */
 
+#include "libevmasm/Instruction.h"
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/ImportRemapper.h>
 
@@ -384,6 +385,7 @@ Json::Value collectEVMObject(
 	evmasm::LinkerObject const& _object,
 	string const* _sourceMap,
 	Json::Value _generatedSources,
+	EVMVersion _evmVersion,
 	bool _runtimeObject,
 	function<bool(string)> const& _artifactRequested
 )
@@ -392,7 +394,7 @@ Json::Value collectEVMObject(
 	if (_artifactRequested("object"))
 		output["object"] = _object.toHex();
 	if (_artifactRequested("opcodes"))
-		output["opcodes"] = evmasm::disassemble(_object.bytecode);
+		output["opcodes"] = evmasm::disassemble(_object.bytecode, _evmVersion);
 	if (_artifactRequested("sourceMap"))
 		output["sourceMap"] = _sourceMap ? *_sourceMap : "";
 	if (_artifactRequested("functionDebugData"))
@@ -1314,6 +1316,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 				compilerStack.object(contractName),
 				compilerStack.sourceMapping(contractName),
 				compilerStack.generatedSources(contractName),
+				_inputsAndSettings.evmVersion,
 				false,
 				[&](string const& _element) { return isArtifactRequested(
 					_inputsAndSettings.outputSelection,
@@ -1335,6 +1338,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 				compilerStack.runtimeObject(contractName),
 				compilerStack.runtimeSourceMapping(contractName),
 				compilerStack.generatedSources(contractName, true),
+				_inputsAndSettings.evmVersion,
 				true,
 				[&](string const& _element) { return isArtifactRequested(
 					_inputsAndSettings.outputSelection,
@@ -1476,6 +1480,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 						*o.bytecode,
 						o.sourceMappings.get(),
 						Json::arrayValue,
+						_inputsAndSettings.evmVersion,
 						isDeployed,
 						[&, kind = kind](string const& _element) { return isArtifactRequested(
 							_inputsAndSettings.outputSelection,

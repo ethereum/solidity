@@ -19,6 +19,7 @@
  * Analyzer part of inline assembly.
  */
 
+#include "libevmasm/Instruction.h"
 #include <libyul/AsmAnalysis.h>
 
 #include <libyul/AST.h>
@@ -308,31 +309,48 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	vector<YulString> const* returnTypes = nullptr;
 	vector<optional<LiteralKind>> const* literalArguments = nullptr;
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
+	auto inScope = [&](YulString const& _function)
 	{
-		parameterTypes = &f->parameters;
-		returnTypes = &f->returns;
-		if (!f->literalArguments.empty())
-			literalArguments = &f->literalArguments;
+		return m_currentScope->lookup(_function, GenericVisitor{
+			[&](Scope::Variable const&)
+			{
+				m_errorReporter.typeError(
+					4202_error,
+					nativeLocationOf(_funCall.functionName),
+					"Attempt to call variable instead of function."
+				);
+			},
+			[&](Scope::Function const& _fun)
+			{
+				parameterTypes = &_fun.arguments;
+				returnTypes = &_fun.returns;
+			}
+		});
+	};
+
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// prevrandao for VMs before paris.
+	auto prevrandaoInScopeException = [&](YulString const& _instrName) -> bool
+	{
+		return _instrName.str() == "prevrandao"
+			&& m_evmVersion < langutil::EVMVersion::paris()
+			&& inScope(_instrName);
+	};
+
+	YulString const& functionName = _funCall.functionName.name;
+
+	BuiltinFunction const* builtinFunction = m_dialect.builtin(functionName);
+	if (builtinFunction && !prevrandaoInScopeException(functionName))
+	{
+		parameterTypes = &builtinFunction->parameters;
+		returnTypes = &builtinFunction->returns;
+		if (!builtinFunction->literalArguments.empty())
+			literalArguments = &builtinFunction->literalArguments;
 
 		validateInstructions(_funCall);
-		m_sideEffects += f->sideEffects;
+		m_sideEffects += builtinFunction->sideEffects;
 	}
-	else if (m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
-		[&](Scope::Variable const&)
-		{
-			m_errorReporter.typeError(
-				4202_error,
-				nativeLocationOf(_funCall.functionName),
-				"Attempt to call variable instead of function."
-			);
-		},
-		[&](Scope::Function const& _fun)
-		{
-			parameterTypes = &_fun.arguments;
-			returnTypes = &_fun.returns;
-		}
-	}))
+	else if (inScope(functionName))
 	{
 		if (m_resolver)
 			// We found a local reference, make sure there is no external reference.
@@ -745,6 +763,19 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 			"PC instruction is a low-level EVM feature. "
 			"Because of that PC is disallowed in strict assembly."
 		);
+	else if (_instr == evmasm::InternalInstruction::PREVRANDAO && !m_evmVersion.hasPrevRandao())
+		m_errorReporter.warning(
+			5761_error,
+			_location,
+			"\"prevrandao\" is not supported by the VM version and will be treated like \"difficulty\"."
+		);
+	else if (_instr == evmasm::InternalInstruction::DIFFICULTY && !m_evmVersion.hasDifficulty())
+		m_errorReporter.warning(
+			3242_error,
+			_location,
+			"\"difficulty\" was renamed and supplanted by \"prevrandao\" in the VM version paris."
+		);
+
 
 	return returnValue;
 }

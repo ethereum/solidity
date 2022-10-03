@@ -16,6 +16,8 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "libevmasm/Instruction.h"
+#include "liblangutil/EVMVersion.h"
 #include <libevmasm/Disassemble.h>
 
 #include <libsolutil/Common.h>
@@ -27,15 +29,15 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
 
-
 void solidity::evmasm::eachInstruction(
 	bytes const& _mem,
-	function<void(Instruction,u256 const&)> const& _onInstruction
+	langutil::EVMVersion _evmVersion,
+	function<void(InternalInstruction,u256 const&)> const& _onInstruction
 )
 {
 	for (auto it = _mem.begin(); it < _mem.end(); ++it)
 	{
-		Instruction const instr{*it};
+		InternalInstruction instr = internalInstruction(InstructionOpCode(*it), _evmVersion);
 		int additional = 0;
 		if (isValidInstruction(instr))
 			additional = instructionInfo(instr).additional;
@@ -57,10 +59,10 @@ void solidity::evmasm::eachInstruction(
 	}
 }
 
-string solidity::evmasm::disassemble(bytes const& _mem, string const& _delimiter)
+string solidity::evmasm::disassemble(bytes const& _mem, langutil::EVMVersion _evmVersion, string const& _delimiter)
 {
 	stringstream ret;
-	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
+	eachInstruction(_mem, _evmVersion, [&](InternalInstruction _instr, u256 const& _data) {
 		if (!isValidInstruction(_instr))
 			ret << "0x" << std::uppercase << std::hex << static_cast<int>(_instr) << _delimiter;
 		else
