@@ -7,14 +7,15 @@ foreach(src IN LISTS STDLIB)
 	set(STDLIB_FILE ${CMAKE_SOURCE_DIR}/solstdlib/src/${src}.sol)
 	file(READ ${STDLIB_FILE} STDLIB_FILE_CONTENT HEX)
 	string(REGEX MATCHALL ".." STDLIB_FILE_CONTENT "${STDLIB_FILE_CONTENT}")
+	list(REMOVE_ITEM STDLIB_FILE_CONTENT "0d")
 	string(REGEX REPLACE ";" ",\n\t0x" STDLIB_FILE_CONTENT "${STDLIB_FILE_CONTENT}")
 	set(STDLIB_FILE_CONTENT "0x${STDLIB_FILE_CONTENT}")
 	set(STDLIB_FILE_NAME ${src})
-	configure_file("${CMAKE_SOURCE_DIR}/solstdlib/solstdlib.src.h.in" ${CMAKE_BINARY_DIR}/include/solstdlib/${src}.h @ONLY)
+	configure_file("${CMAKE_SOURCE_DIR}/solstdlib/solstdlib.src.h.in" ${CMAKE_BINARY_DIR}/include/solstdlib/${src}.h NEWLINE_STYLE LF @ONLY)
 	list(APPEND GENERATED_STDLIB_HEADERS ${CMAKE_BINARY_DIR}/include/solstdlib/${src}.h)
 endforeach()
 
-configure_file("${CMAKE_SOURCE_DIR}/solstdlib/solstdlib.h.in" ${CMAKE_BINARY_DIR}/include/solstdlib.h @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/solstdlib/solstdlib.h.in" ${CMAKE_BINARY_DIR}/include/solstdlib.h NEWLINE_STYLE LF @ONLY)
 
 #add_library(stdlib
 #	${GENERATED_STDLIB_HEADERS}
