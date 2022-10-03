@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"ir_compiler_subobjects/input.sol"
+/// @use-src 0:"input.sol"
 object "C_3" {
     code {
         {
@@ -12,7 +12,7 @@ object "C_3" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"ir_compiler_subobjects/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_3_deployed" {
         code {
             {
@@ -25,7 +25,7 @@ object "C_3" {
 }
 
 Optimized IR:
-/// @use-src 0:"ir_compiler_subobjects/input.sol"
+/// @use-src 0:"input.sol"
 object "D_16" {
     code {
         {
@@ -38,7 +38,7 @@ object "D_16" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"ir_compiler_subobjects/input.sol"
+    /// @use-src 0:"input.sol"
     object "D_16_deployed" {
         code {
             {
@@ -77,7 +77,7 @@ object "D_16" {
                 revert(0, 0)
             }
         }
-        /// @use-src 0:"ir_compiler_subobjects/input.sol"
+        /// @use-src 0:"input.sol"
         object "C_3" {
             code {
                 {
@@ -90,7 +90,7 @@ object "D_16" {
                     return(_1, _2)
                 }
             }
-            /// @use-src 0:"ir_compiler_subobjects/input.sol"
+            /// @use-src 0:"input.sol"
             object "C_3_deployed" {
                 code {
                     {

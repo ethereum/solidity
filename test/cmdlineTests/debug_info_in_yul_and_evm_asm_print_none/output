@@ -1,5 +1,5 @@
 
-======= debug_info_in_yul_and_evm_asm_print_none/input.sol:C =======
+======= input.sol:C =======
 EVM assembly:
   mstore(0x40, 0x80)
   callvalue
@@ -52,7 +52,7 @@ sub_0: assembly {
 
 IR:
 
-/// @use-src 0:"debug_info_in_yul_and_evm_asm_print_none/input.sol"
+/// @use-src 0:"input.sol"
 object "C_6" {
     code {
 
@@ -79,7 +79,7 @@ object "C_6" {
         }
 
     }
-    /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_none/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_6_deployed" {
         code {
 
@@ -159,7 +159,7 @@ object "C_6" {
 
 
 Optimized IR:
-/// @use-src 0:"debug_info_in_yul_and_evm_asm_print_none/input.sol"
+/// @use-src 0:"input.sol"
 object "C_6" {
     code {
         {
@@ -171,7 +171,7 @@ object "C_6" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_none/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_6_deployed" {
         code {
             {

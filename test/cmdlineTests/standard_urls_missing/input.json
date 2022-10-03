@@ -3,9 +3,9 @@
     "sources": {
         "url_not_found.sol": {
             "urls": [
-                "standard_urls_missing/non-existent-contract-1.sol",
-                "standard_urls_missing/non-existent-contract.sol",
-                "standard_urls_missing/non-existent-contract-2.sol"
+                "non-existent-contract-1.sol",
+                "non-existent-contract.sol",
+                "non-existent-contract-2.sol"
             ]
         }
     },

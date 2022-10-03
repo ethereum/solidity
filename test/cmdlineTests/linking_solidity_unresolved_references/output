@@ -1,23 +1,23 @@
 
-======= linking_solidity_unresolved_references/input.sol:C =======
+======= input.sol:C =======
 Binary:
-<BYTECODE REMOVED>__$8ef13d1c56d5343bf69cf9444272079aa5$__<BYTECODE REMOVED>__$8ef13d1c56d5343bf69cf9444272079aa5$__<BYTECODE REMOVED>
+<BYTECODE REMOVED>__$a7fb54ac3bf4ba657d4a55d066b3521d62$__<BYTECODE REMOVED>__$a7fb54ac3bf4ba657d4a55d066b3521d62$__<BYTECODE REMOVED>
 
-// $8ef13d1c56d5343bf69cf9444272079aa5$ -> linking_solidity_unresolved_references/input.sol:L2
-// $8ef13d1c56d5343bf69cf9444272079aa5$ -> linking_solidity_unresolved_references/input.sol:L2
+// $a7fb54ac3bf4ba657d4a55d066b3521d62$ -> input.sol:L2
+// $a7fb54ac3bf4ba657d4a55d066b3521d62$ -> input.sol:L2
 Binary of the runtime part:
-<BYTECODE REMOVED>__$8ef13d1c56d5343bf69cf9444272079aa5$__<BYTECODE REMOVED>__$8ef13d1c56d5343bf69cf9444272079aa5$__<BYTECODE REMOVED>
+<BYTECODE REMOVED>__$a7fb54ac3bf4ba657d4a55d066b3521d62$__<BYTECODE REMOVED>__$a7fb54ac3bf4ba657d4a55d066b3521d62$__<BYTECODE REMOVED>
 
-// $8ef13d1c56d5343bf69cf9444272079aa5$ -> linking_solidity_unresolved_references/input.sol:L2
-// $8ef13d1c56d5343bf69cf9444272079aa5$ -> linking_solidity_unresolved_references/input.sol:L2
+// $a7fb54ac3bf4ba657d4a55d066b3521d62$ -> input.sol:L2
+// $a7fb54ac3bf4ba657d4a55d066b3521d62$ -> input.sol:L2
 
-======= linking_solidity_unresolved_references/input.sol:L1 =======
+======= input.sol:L1 =======
 Binary:
 <BYTECODE REMOVED>
 Binary of the runtime part:
 <BYTECODE REMOVED>
 
-======= linking_solidity_unresolved_references/input.sol:L2 =======
+======= input.sol:L2 =======
 Binary:
 <BYTECODE REMOVED>
 Binary of the runtime part:

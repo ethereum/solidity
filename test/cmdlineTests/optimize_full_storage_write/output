@@ -1,7 +1,7 @@
 
-======= optimize_full_storage_write/input.sol:OptimizeFullSlotWrite =======
+======= input.sol:OptimizeFullSlotWrite =======
 EVM assembly:
-    /* "optimize_full_storage_write/input.sol":60:213  contract OptimizeFullSlotWrite {... */
+    /* "input.sol":60:213  contract OptimizeFullSlotWrite {... */
   mstore(0x40, 0x80)
   callvalue
   dup1
@@ -23,7 +23,7 @@ tag_1:
 stop
 
 sub_0: assembly {
-        /* "optimize_full_storage_write/input.sol":60:213  contract OptimizeFullSlotWrite {... */
+        /* "input.sol":60:213  contract OptimizeFullSlotWrite {... */
       mstore(0x40, 0x80)
       callvalue
       dup1
@@ -46,16 +46,16 @@ sub_0: assembly {
       0x00
       dup1
       revert
-        /* "optimize_full_storage_write/input.sol":111:211  function f() public {... */
+        /* "input.sol":111:211  function f() public {... */
     tag_3:
       tag_4
-        /* "optimize_full_storage_write/input.sol":192:207  nums[3] = 44444 */
+        /* "input.sol":192:207  nums[3] = 44444 */
       0xad9c000000000000823500000000000056ce0000000000002b67
-        /* "optimize_full_storage_write/input.sol":135:139  nums */
+        /* "input.sol":135:139  nums */
       0x00
-        /* "optimize_full_storage_write/input.sol":192:207  nums[3] = 44444 */
+        /* "input.sol":192:207  nums[3] = 44444 */
       sstore
-        /* "optimize_full_storage_write/input.sol":111:211  function f() public {... */
+        /* "input.sol":111:211  function f() public {... */
       jump
     tag_4:
       stop

@@ -1,5 +1,5 @@
 
-======= wasm_to_wasm_function_returning_multiple_values/input.yul (Ewasm) =======
+======= input.yul (Ewasm) =======
 
 Pretty printed source:
 object "object" {

@@ -1,6 +1,6 @@
 IR:
 
-/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+/// @use-src 0:"input.sol"
 object "C_2" {
     code {
         /// @src 0:265:278  "contract C {}"
@@ -31,7 +31,7 @@ object "C_2" {
         /// @src 0:265:278  "contract C {}"
 
     }
-    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_2_deployed" {
         code {
             /// @src 0:265:278  "contract C {}"
@@ -63,7 +63,7 @@ object "C_2" {
 
 
 Optimized IR:
-/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+/// @use-src 0:"input.sol"
 object "C_2" {
     code {
         {
@@ -76,7 +76,7 @@ object "C_2" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_2_deployed" {
         code {
             {
@@ -90,7 +90,7 @@ object "C_2" {
 
 IR:
 
-/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+/// @use-src 0:"input.sol"
 object "D_27" {
     code {
         /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
@@ -121,7 +121,7 @@ object "D_27" {
         /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
 
     }
-    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+    /// @use-src 0:"input.sol"
     object "D_27_deployed" {
         code {
             /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
@@ -343,7 +343,7 @@ object "D_27" {
 
         }
 
-        /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+        /// @use-src 0:"input.sol"
         object "C_2" {
             code {
                 /// @src 0:265:278  "contract C {}"
@@ -374,7 +374,7 @@ object "D_27" {
                 /// @src 0:265:278  "contract C {}"
 
             }
-            /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+            /// @use-src 0:"input.sol"
             object "C_2_deployed" {
                 code {
                     /// @src 0:265:278  "contract C {}"
@@ -411,7 +411,7 @@ object "D_27" {
 
 
 Optimized IR:
-/// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+/// @use-src 0:"input.sol"
 object "D_27" {
     code {
         {
@@ -424,7 +424,7 @@ object "D_27" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+    /// @use-src 0:"input.sol"
     object "D_27_deployed" {
         code {
             {
@@ -499,7 +499,7 @@ object "D_27" {
                 revert(0, 0)
             }
         }
-        /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+        /// @use-src 0:"input.sol"
         object "C_2" {
             code {
                 {
@@ -512,7 +512,7 @@ object "D_27" {
                     return(_1, _2)
                 }
             }
-            /// @use-src 0:"debug_info_in_yul_snippet_escaping/input.sol"
+            /// @use-src 0:"input.sol"
             object "C_2_deployed" {
                 code {
                     {

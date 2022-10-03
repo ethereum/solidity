@@ -1,5 +1,5 @@
 
-======= asm_json/input.sol:C =======
+======= input.sol:C =======
 EVM assembly:
 {
   ".code":
@@ -1572,7 +1572,7 @@ EVM assembly:
   },
   "sourceList":
   [
-    "asm_json/input.sol",
+    "input.sol",
     "#utility.yul"
   ]
 }

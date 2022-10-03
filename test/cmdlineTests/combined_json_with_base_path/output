@@ -1,20 +1,20 @@
 {
   "contracts":
   {
-    "combined_json_with_base_path/c.sol:C": {}
+    "c.sol:C": {}
   },
   "sourceList":
   [
-    "combined_json_with_base_path/c.sol",
-    "combined_json_with_base_path/input.sol"
+    "c.sol",
+    "input.sol"
   ],
   "sources":
   {
-    "combined_json_with_base_path/c.sol":
+    "c.sol":
     {
       "AST":
       {
-        "absolutePath": "combined_json_with_base_path/c.sol",
+        "absolutePath": "c.sol",
         "exportedSymbols":
         {
           "C":
@@ -62,11 +62,11 @@
         "src": "36:38:0"
       }
     },
-    "combined_json_with_base_path/input.sol":
+    "input.sol":
     {
       "AST":
       {
-        "absolutePath": "combined_json_with_base_path/input.sol",
+        "absolutePath": "input.sol",
         "exportedSymbols":
         {
           "C":
@@ -91,7 +91,7 @@
             "src": "36:22:1"
           },
           {
-            "absolutePath": "combined_json_with_base_path/c.sol",
+            "absolutePath": "c.sol",
             "file": "./c.sol",
             "id": 2,
             "nameLocation": "-1:-1:-1",

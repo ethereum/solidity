@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"name_simplifier/input.sol"
+/// @use-src 0:"input.sol"
 object "C_59" {
     code {
         {
@@ -12,7 +12,7 @@ object "C_59" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"name_simplifier/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_59_deployed" {
         code {
             {

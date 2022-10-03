@@ -1,9 +1,9 @@
 JSON AST (compact format):
 
 
-======= ast_compact_json_with_base_path/c.sol =======
+======= c.sol =======
 {
-  "absolutePath": "ast_compact_json_with_base_path/c.sol",
+  "absolutePath": "c.sol",
   "exportedSymbols":
   {
     "C":
@@ -50,9 +50,9 @@ JSON AST (compact format):
   ],
   "src": "36:38:0"
 }
-======= ast_compact_json_with_base_path/input.sol =======
+======= input.sol =======
 {
-  "absolutePath": "ast_compact_json_with_base_path/input.sol",
+  "absolutePath": "input.sol",
   "exportedSymbols":
   {
     "C":
@@ -77,7 +77,7 @@ JSON AST (compact format):
       "src": "36:22:1"
     },
     {
-      "absolutePath": "ast_compact_json_with_base_path/c.sol",
+      "absolutePath": "c.sol",
       "file": "./c.sol",
       "id": 2,
       "nameLocation": "-1:-1:-1",

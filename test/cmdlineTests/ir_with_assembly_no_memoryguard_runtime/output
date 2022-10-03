@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"ir_with_assembly_no_memoryguard_runtime/input.sol"
+/// @use-src 0:"input.sol"
 object "D_8" {
     code {
         {
@@ -12,7 +12,7 @@ object "D_8" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"ir_with_assembly_no_memoryguard_runtime/input.sol"
+    /// @use-src 0:"input.sol"
     object "D_8_deployed" {
         code {
             {

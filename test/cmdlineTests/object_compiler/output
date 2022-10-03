@@ -1,5 +1,5 @@
 
-======= object_compiler/input.yul (EVM) =======
+======= input.yul (EVM) =======
 
 Pretty printed source:
 object "MyContract" {
@@ -26,40 +26,40 @@ Binary representation:
 33600055600b8060106000396000f3fe60005460005260206000f3
 
 Text representation:
-    /* "object_compiler/input.yul":128:136   */
+    /* "input.yul":128:136   */
   caller
-    /* "object_compiler/input.yul":125:126   */
+    /* "input.yul":125:126   */
   0x00
-    /* "object_compiler/input.yul":118:137   */
+    /* "input.yul":118:137   */
   sstore
-    /* "object_compiler/input.yul":240:259   */
+    /* "input.yul":240:259   */
   dataSize(sub_0)
-    /* "object_compiler/input.yul":217:238   */
+    /* "input.yul":217:238   */
   dup1
   dataOffset(sub_0)
-    /* "object_compiler/input.yul":125:126   */
+    /* "input.yul":125:126   */
   0x00
-    /* "object_compiler/input.yul":205:260   */
+    /* "input.yul":205:260   */
   codecopy
-    /* "object_compiler/input.yul":125:126   */
+    /* "input.yul":125:126   */
   0x00
-    /* "object_compiler/input.yul":265:295   */
+    /* "input.yul":265:295   */
   return
 stop
 
 sub_0: assembly {
-        /* "object_compiler/input.yul":397:398   */
+        /* "input.yul":397:398   */
       0x00
-        /* "object_compiler/input.yul":391:399   */
+        /* "input.yul":391:399   */
       sload
-        /* "object_compiler/input.yul":397:398   */
+        /* "input.yul":397:398   */
       0x00
-        /* "object_compiler/input.yul":381:400   */
+        /* "input.yul":381:400   */
       mstore
-        /* "object_compiler/input.yul":417:421   */
+        /* "input.yul":417:421   */
       0x20
-        /* "object_compiler/input.yul":397:398   */
+        /* "input.yul":397:398   */
       0x00
-        /* "object_compiler/input.yul":407:422   */
+        /* "input.yul":407:422   */
       return
 }

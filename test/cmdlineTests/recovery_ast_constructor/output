@@ -1,9 +1,9 @@
 JSON AST (compact format):
 
 
-======= recovery_ast_constructor/input.sol =======
+======= input.sol =======
 {
-  "absolutePath": "recovery_ast_constructor/input.sol",
+  "absolutePath": "input.sol",
   "exportedSymbols":
   {
     "Error1":

@@ -1,7 +1,7 @@
 {
     "language": "Solidity",
     "sources": {
-        "A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_mutliple_delimiters/in.sol"]}
+        "A": {"urls": ["in.sol"]}
     },
     "settings": {
         "optimizer": {

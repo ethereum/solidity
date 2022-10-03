@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"yul_optimizer_steps_nested_brackets/input.sol"
+/// @use-src 0:"input.sol"
 object "C_6" {
     code {
         {
@@ -109,7 +109,7 @@ object "C_6" {
         function constructor_C()
         { }
     }
-    /// @use-src 0:"yul_optimizer_steps_nested_brackets/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_6_deployed" {
         code {
             {

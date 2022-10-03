@@ -1,7 +1,7 @@
 
-======= debug_info_in_yul_and_evm_asm_print_location_only/input.sol:C =======
+======= input.sol:C =======
 EVM assembly:
-    /* "debug_info_in_yul_and_evm_asm_print_location_only/input.sol":60:101 */
+    /* "input.sol":60:101 */
   mstore(0x40, 0x80)
   callvalue
   dup1
@@ -23,7 +23,7 @@ tag_1:
 stop
 
 sub_0: assembly {
-        /* "debug_info_in_yul_and_evm_asm_print_location_only/input.sol":60:101 */
+        /* "input.sol":60:101 */
       mstore(0x40, 0x80)
       callvalue
       dup1
@@ -46,7 +46,7 @@ sub_0: assembly {
       0x00
       dup1
       revert
-        /* "debug_info_in_yul_and_evm_asm_print_location_only/input.sol":77:99 */
+        /* "input.sol":77:99 */
     tag_3:
       stop
 
@@ -55,7 +55,7 @@ sub_0: assembly {
 
 IR:
 
-/// @use-src 0:"debug_info_in_yul_and_evm_asm_print_location_only/input.sol"
+/// @use-src 0:"input.sol"
 object "C_6" {
     code {
         /// @src 0:60:101
@@ -86,7 +86,7 @@ object "C_6" {
         /// @src 0:60:101
 
     }
-    /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_location_only/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_6_deployed" {
         code {
             /// @src 0:60:101
@@ -168,7 +168,7 @@ object "C_6" {
 
 
 Optimized IR:
-/// @use-src 0:"debug_info_in_yul_and_evm_asm_print_location_only/input.sol"
+/// @use-src 0:"input.sol"
 object "C_6" {
     code {
         {
@@ -181,7 +181,7 @@ object "C_6" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"debug_info_in_yul_and_evm_asm_print_location_only/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_6_deployed" {
         code {
             {

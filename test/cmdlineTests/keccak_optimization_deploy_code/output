@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"keccak_optimization_deploy_code/input.sol"
+/// @use-src 0:"input.sol"
 object "C_12" {
     code {
         {
@@ -14,7 +14,7 @@ object "C_12" {
             return(128, _1)
         }
     }
-    /// @use-src 0:"keccak_optimization_deploy_code/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_12_deployed" {
         code {
             {

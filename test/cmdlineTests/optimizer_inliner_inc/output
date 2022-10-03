@@ -1,7 +1,7 @@
 
-======= optimizer_inliner_inc/input.sol:C =======
+======= input.sol:C =======
 EVM assembly:
-    /* "optimizer_inliner_inc/input.sol":157:279  contract C {... */
+    /* "input.sol":157:279  contract C {... */
   mstore(0x40, 0x80)
   callvalue
   dup1
@@ -23,7 +23,7 @@ tag_1:
 stop
 
 sub_0: assembly {
-        /* "optimizer_inliner_inc/input.sol":157:279  contract C {... */
+        /* "input.sol":157:279  contract C {... */
       mstore(0x40, 0x80)
       callvalue
       dup1
@@ -46,7 +46,7 @@ sub_0: assembly {
       0x00
       dup1
       revert
-        /* "optimizer_inliner_inc/input.sol":174:277  function f() public pure {... */
+        /* "input.sol":174:277  function f() public pure {... */
     tag_3:
       tag_4
       tag_5
@@ -54,29 +54,29 @@ sub_0: assembly {
     tag_4:
       stop
     tag_5:
-        /* "optimizer_inliner_inc/input.sol":213:219  uint x */
+        /* "input.sol":213:219  uint x */
       0x00
-        /* "optimizer_inliner_inc/input.sol":209:271  for(uint x = 0; x < 10; x = unsafe_inc(x))... */
+        /* "input.sol":209:271  for(uint x = 0; x < 10; x = unsafe_inc(x))... */
     tag_7:
-        /* "optimizer_inliner_inc/input.sol":229:231  10 */
+        /* "input.sol":229:231  10 */
       0x0a
-        /* "optimizer_inliner_inc/input.sol":225:226  x */
+        /* "input.sol":225:226  x */
       dup2
-        /* "optimizer_inliner_inc/input.sol":225:231  x < 10 */
+        /* "input.sol":225:231  x < 10 */
       lt
-        /* "optimizer_inliner_inc/input.sol":209:271  for(uint x = 0; x < 10; x = unsafe_inc(x))... */
+        /* "input.sol":209:271  for(uint x = 0; x < 10; x = unsafe_inc(x))... */
       iszero
       tag_8
       jumpi
-        /* "optimizer_inliner_inc/input.sol":145:146  1 */
+        /* "input.sol":145:146  1 */
       0x01
-        /* "optimizer_inliner_inc/input.sol":141:146  x + 1 */
+        /* "input.sol":141:146  x + 1 */
       add
-        /* "optimizer_inliner_inc/input.sol":209:271  for(uint x = 0; x < 10; x = unsafe_inc(x))... */
+        /* "input.sol":209:271  for(uint x = 0; x < 10; x = unsafe_inc(x))... */
       jump(tag_7)
     tag_8:
       pop
-        /* "optimizer_inliner_inc/input.sol":174:277  function f() public pure {... */
+        /* "input.sol":174:277  function f() public pure {... */
       jump	// out
 
     auxdata: <AUXDATA REMOVED>

@@ -1,20 +1,20 @@
 
-======= linking_unqualified_library_name/contract1.sol:C =======
+======= contract1.sol:C =======
 Binary:
-<BYTECODE REMOVED>__$cdf6d5ab08a9335b02e7c2475aa27d04fa$__<BYTECODE REMOVED>
+<BYTECODE REMOVED>__$4a937a7d3d68a205b3b2520e23ccff31ea$__<BYTECODE REMOVED>
 
-// $cdf6d5ab08a9335b02e7c2475aa27d04fa$ -> linking_unqualified_library_name/error.sol:Log
+// $4a937a7d3d68a205b3b2520e23ccff31ea$ -> error.sol:Log
 
-======= linking_unqualified_library_name/contract2.sol:C =======
+======= contract2.sol:C =======
 Binary:
-<BYTECODE REMOVED>__$22584241c2fc4f2884d5222245463779a8$__<BYTECODE REMOVED>
+<BYTECODE REMOVED>__$b77e1024bb5d89efefbab5fb1f7cb8fde7$__<BYTECODE REMOVED>
 
-// $22584241c2fc4f2884d5222245463779a8$ -> linking_unqualified_library_name/math.sol:Log
+// $b77e1024bb5d89efefbab5fb1f7cb8fde7$ -> math.sol:Log
 
-======= linking_unqualified_library_name/error.sol:Log =======
+======= error.sol:Log =======
 Binary:
 <BYTECODE REMOVED>
 
-======= linking_unqualified_library_name/math.sol:Log =======
+======= math.sol:Log =======
 Binary:
 <BYTECODE REMOVED>

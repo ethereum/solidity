@@ -1,7 +1,7 @@
 {
     "contracts":
     {
-        "inline_assembly_function_name_clash/input.sol:C":
+        "input.sol:C":
         {
             "function-debug-runtime":
             {

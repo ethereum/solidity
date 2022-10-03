@@ -1,7 +1,7 @@
 {
   "contracts":
   {
-    "combined_json_with_userdoc/input.sol:C":
+    "input.sol:C":
     {
       "userdoc":
       {
@@ -11,7 +11,7 @@
         "version": 1
       }
     },
-    "combined_json_with_userdoc/input.sol:D":
+    "input.sol:D":
     {
       "userdoc":
       {

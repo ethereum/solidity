@@ -1,6 +1,6 @@
 IR:
 
-/// @use-src 0:"exp_base_literal/input.sol"
+/// @use-src 0:"input.sol"
 object "C_81" {
     code {
         /// @src 0:82:370  "contract C {..."
@@ -31,7 +31,7 @@ object "C_81" {
         /// @src 0:82:370  "contract C {..."
 
     }
-    /// @use-src 0:"exp_base_literal/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_81_deployed" {
         code {
             /// @src 0:82:370  "contract C {..."

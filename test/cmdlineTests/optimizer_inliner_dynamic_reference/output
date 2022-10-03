@@ -1,7 +1,7 @@
 
-======= optimizer_inliner_dynamic_reference/input.sol:C =======
+======= input.sol:C =======
 EVM assembly:
-    /* "optimizer_inliner_dynamic_reference/input.sol":60:367  contract C {... */
+    /* "input.sol":60:367  contract C {... */
   mstore(0x40, 0x80)
   callvalue
   dup1
@@ -23,7 +23,7 @@ tag_1:
 stop
 
 sub_0: assembly {
-        /* "optimizer_inliner_dynamic_reference/input.sol":60:367  contract C {... */
+        /* "input.sol":60:367  contract C {... */
       mstore(0x40, 0x80)
       callvalue
       dup1
@@ -56,11 +56,11 @@ sub_0: assembly {
       0x00
       dup1
       revert
-        /* "optimizer_inliner_dynamic_reference/input.sol":160:215  function a() public pure returns (uint) { return f(); } */
+        /* "input.sol":160:215  function a() public pure returns (uint) { return f(); } */
     tag_3:
-        /* "optimizer_inliner_dynamic_reference/input.sol":361:362  6 */
+        /* "input.sol":361:362  6 */
       0x06
-        /* "optimizer_inliner_dynamic_reference/input.sol":160:215  function a() public pure returns (uint) { return f(); } */
+        /* "input.sol":160:215  function a() public pure returns (uint) { return f(); } */
     tag_6:
       mload(0x40)
         /* "#utility.yul":160:185   */
@@ -71,78 +71,78 @@ sub_0: assembly {
       0x20
         /* "#utility.yul":133:151   */
       add
-        /* "optimizer_inliner_dynamic_reference/input.sol":160:215  function a() public pure returns (uint) { return f(); } */
+        /* "input.sol":160:215  function a() public pure returns (uint) { return f(); } */
       mload(0x40)
       dup1
       swap2
       sub
       swap1
       return
-        /* "optimizer_inliner_dynamic_reference/input.sol":246:305  function h() public view returns (uint) { return x() + 1; } */
+        /* "input.sol":246:305  function h() public view returns (uint) { return x() + 1; } */
     tag_4:
       tag_6
       tag_11
       jump	// in
-        /* "optimizer_inliner_dynamic_reference/input.sol":125:155  function g() public { x = f; } */
+        /* "input.sol":125:155  function g() public { x = f; } */
     tag_5:
-        /* "optimizer_inliner_dynamic_reference/input.sol":147:148  x */
+        /* "input.sol":147:148  x */
       0x00
-        /* "optimizer_inliner_dynamic_reference/input.sol":147:152  x = f */
+        /* "input.sol":147:152  x = f */
       dup1
       sload
       not(0xffffffffffffffff)
       and
-        /* "optimizer_inliner_dynamic_reference/input.sol":151:152  f */
+        /* "input.sol":151:152  f */
       tag_17
-        /* "optimizer_inliner_dynamic_reference/input.sol":147:152  x = f */
+        /* "input.sol":147:152  x = f */
       or
       swap1
       sstore
-        /* "optimizer_inliner_dynamic_reference/input.sol":125:155  function g() public { x = f; } */
+        /* "input.sol":125:155  function g() public { x = f; } */
       stop
-        /* "optimizer_inliner_dynamic_reference/input.sol":209:212  f() */
+        /* "input.sol":209:212  f() */
     tag_16:
-        /* "optimizer_inliner_dynamic_reference/input.sol":202:212  return f() */
+        /* "input.sol":202:212  return f() */
       swap1
       pop
-        /* "optimizer_inliner_dynamic_reference/input.sol":160:215  function a() public pure returns (uint) { return f(); } */
+        /* "input.sol":160:215  function a() public pure returns (uint) { return f(); } */
       swap1
       jump	// out
-        /* "optimizer_inliner_dynamic_reference/input.sol":246:305  function h() public view returns (uint) { return x() + 1; } */
+        /* "input.sol":246:305  function h() public view returns (uint) { return x() + 1; } */
     tag_11:
-        /* "optimizer_inliner_dynamic_reference/input.sol":280:284  uint */
+        /* "input.sol":280:284  uint */
       0x00
-        /* "optimizer_inliner_dynamic_reference/input.sol":295:296  x */
+        /* "input.sol":295:296  x */
       dup1
       sload
-        /* "optimizer_inliner_dynamic_reference/input.sol":295:298  x() */
+        /* "input.sol":295:298  x() */
       tag_19
       swap1
-        /* "optimizer_inliner_dynamic_reference/input.sol":295:296  x */
+        /* "input.sol":295:296  x */
       dup1
       iszero
       tag_20
       mul
       or
-        /* "optimizer_inliner_dynamic_reference/input.sol":295:298  x() */
+        /* "input.sol":295:298  x() */
       0xffffffff
       and
       jump	// in
     tag_19:
-        /* "optimizer_inliner_dynamic_reference/input.sol":295:302  x() + 1 */
+        /* "input.sol":295:302  x() + 1 */
       tag_16
       swap1
-        /* "optimizer_inliner_dynamic_reference/input.sol":301:302  1 */
+        /* "input.sol":301:302  1 */
       0x01
-        /* "optimizer_inliner_dynamic_reference/input.sol":295:302  x() + 1 */
+        /* "input.sol":295:302  x() + 1 */
       tag_22
       jump	// in
-        /* "optimizer_inliner_dynamic_reference/input.sol":310:365  function f() internal pure returns (uint) { return 6; } */
+        /* "input.sol":310:365  function f() internal pure returns (uint) { return 6; } */
     tag_17:
-        /* "optimizer_inliner_dynamic_reference/input.sol":361:362  6 */
+        /* "input.sol":361:362  6 */
       0x06
       swap1
-        /* "optimizer_inliner_dynamic_reference/input.sol":310:365  function f() internal pure returns (uint) { return 6; } */
+        /* "input.sol":310:365  function f() internal pure returns (uint) { return 6; } */
       jump	// out
     tag_20:
       tag_25

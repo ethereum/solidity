@@ -411,17 +411,19 @@ test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid rem
 
 printTask "Running general commandline tests..."
 (
-    cd "$REPO_ROOT"/test/cmdlineTests/
     for tdir in "${selected_tests[@]}"
     do
+        cd "$REPO_ROOT"/test/cmdlineTests/
         if ! [[ -d $tdir ]]
         then
             fail "Test directory not found: $tdir"
+        else
+            cd "$REPO_ROOT"/test/cmdlineTests/$tdir
         fi
 
         printTask " - ${tdir}"
 
-        if [[ $(ls -A "$tdir") == "" ]]
+        if [[ $(ls | wc -l) == "" ]]
         then
             printWarning "   ---> skipped (test dir empty)"
             continue
@@ -438,7 +440,7 @@ printTask "Running general commandline tests..."
             fi
         fi
 
-        inputFiles="$(ls -1 "${tdir}/input."* 2> /dev/null || true)"
+        inputFiles="$(ls -1 "input."* 2> /dev/null || true)"
         inputCount="$(echo "${inputFiles}" | wc -w)"
         if (( inputCount > 1 ))
         then
@@ -450,32 +452,32 @@ printTask "Running general commandline tests..."
         # Use printf to get rid of the trailing newline
         inputFile=$(printf "%s" "${inputFiles}")
 
-        if [ "${inputFile}" = "${tdir}/input.json" ]
+        if [ "${inputFile}" = "input.json" ]
         then
-            ! [ -e "${tdir}/stdin" ] || fail "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."
+            ! [ -e "stdin" ] || fail "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."
 
             stdin="${inputFile}"
             inputFile=""
-            stdout="$(cat "${tdir}/output.json" 2>/dev/null || true)"
-            stdoutExpectationFile="${tdir}/output.json"
-            command_args="--standard-json "$(cat "${tdir}/args" 2>/dev/null || true)
+            stdout="$(cat "output.json" 2>/dev/null || true)"
+            stdoutExpectationFile="output.json"
+            command_args="--standard-json "$(cat "args" 2>/dev/null || true)
         else
-            if [ -e "${tdir}/stdin" ]
+            if [ -e "stdin" ]
             then
-                stdin="${tdir}/stdin"
-                [ -f "${tdir}/stdin" ] || fail "'stdin' is not a regular file."
+                stdin="stdin"
+                [ -f "stdin" ] || fail "'stdin' is not a regular file."
             else
                 stdin=""
             fi
 
-            stdout="$(cat "${tdir}/output" 2>/dev/null || true)"
-            stdoutExpectationFile="${tdir}/output"
-            command_args=$(cat "${tdir}/args" 2>/dev/null || true)
+            stdout="$(cat "output" 2>/dev/null || true)"
+            stdoutExpectationFile="output"
+            command_args=$(cat "args" 2>/dev/null || true)
         fi
-        exitCodeExpectationFile="${tdir}/exit"
+        exitCodeExpectationFile="exit"
         exitCode=$(cat "$exitCodeExpectationFile" 2>/dev/null || true)
-        err="$(cat "${tdir}/err" 2>/dev/null || true)"
-        stderrExpectationFile="${tdir}/err"
+        err="$(cat "err" 2>/dev/null || true)"
+        stderrExpectationFile="err"
         test_solc_behaviour "$inputFile" \
                             "$command_args" \
                             "$stdin" \
@@ -685,6 +687,7 @@ SOLTMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
 
+    # current pull request causes xargs: path/to/solidity/build/test/tools/solfuzzer: terminated by signal 11
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
     echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
 )

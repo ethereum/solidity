@@ -1,7 +1,7 @@
 {
   "contracts":
   {
-    "combined_json_generated_sources/input.sol:C":
+    "input.sol:C":
     {
       "generated-sources": [],
       "generated-sources-runtime":

@@ -1,7 +1,7 @@
 {
   "contracts":
   {
-    "function_debug_info_via_yul/input.sol:C":
+    "input.sol:C":
     {
       "function-debug": {},
       "function-debug-runtime": {}

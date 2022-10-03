@@ -1,5 +1,5 @@
 
-======= yul_verbatim/input.yul (EVM) =======
+======= input.yul (EVM) =======
 
 Pretty printed source:
 object "object" {
@@ -20,38 +20,38 @@ Binary representation:
 6002808103808261626382815564656678797a010203040506070900010203040506070900010203040506070900010201020304050607090001020304050607090001020304050607090001026009905050505050
 
 Text representation:
-    /* "yul_verbatim/input.yul":15:16   */
+    /* "input.yul":15:16   */
   0x02
-    /* "yul_verbatim/input.yul":37:38   */
+    /* "input.yul":37:38   */
   dup1
-    /* "yul_verbatim/input.yul":34:35   */
+    /* "input.yul":34:35   */
   dup2
-    /* "yul_verbatim/input.yul":30:39   */
+    /* "input.yul":30:39   */
   sub
-    /* "yul_verbatim/input.yul":78:79   */
+    /* "input.yul":78:79   */
   dup1
-    /* "yul_verbatim/input.yul":75:76   */
+    /* "input.yul":75:76   */
   dup3
-    /* "yul_verbatim/input.yul":53:80   */
+    /* "input.yul":53:80   */
   verbatimbytecode_616263
-    /* "yul_verbatim/input.yul":95:96   */
+    /* "input.yul":95:96   */
   dup3
-    /* "yul_verbatim/input.yul":92:93   */
+    /* "input.yul":92:93   */
   dup2
-    /* "yul_verbatim/input.yul":85:97   */
+    /* "input.yul":85:97   */
   sstore
-    /* "yul_verbatim/input.yul":111:132   */
+    /* "input.yul":111:132   */
   verbatimbytecode_646566
-    /* "yul_verbatim/input.yul":137:158   */
+    /* "input.yul":137:158   */
   verbatimbytecode_78797a
-    /* "yul_verbatim/input.yul":189:326   */
+    /* "input.yul":189:326   */
   verbatimbytecode_01020304050607090001020304050607090001020304050607090001020102030405060709000102030405060709000102030405060709000102
-    /* "yul_verbatim/input.yul":336:337   */
+    /* "input.yul":336:337   */
   0x09
-    /* "yul_verbatim/input.yul":331:337   */
+    /* "input.yul":331:337   */
   swap1
   pop
-    /* "yul_verbatim/input.yul":0:339   */
+    /* "input.yul":0:339   */
   pop
   pop
   pop

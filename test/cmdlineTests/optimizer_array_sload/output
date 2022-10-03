@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"optimizer_array_sload/input.sol"
+/// @use-src 0:"input.sol"
 object "Arraysum_34" {
     code {
         {
@@ -12,7 +12,7 @@ object "Arraysum_34" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"optimizer_array_sload/input.sol"
+    /// @use-src 0:"input.sol"
     object "Arraysum_34_deployed" {
         code {
             {

@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+/// @use-src 0:"input.sol"
 object "C_7" {
     code {
         {
@@ -12,7 +12,7 @@ object "C_7" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_7_deployed" {
         code {
             {
@@ -25,7 +25,7 @@ object "C_7" {
 }
 
 Optimized IR:
-/// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+/// @use-src 0:"input.sol"
 object "D_10" {
     code {
         {
@@ -38,7 +38,7 @@ object "D_10" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"ir_compiler_inheritance_nosubobjects/input.sol"
+    /// @use-src 0:"input.sol"
     object "D_10_deployed" {
         code {
             {

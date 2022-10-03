@@ -1,5 +1,5 @@
 Optimized IR:
-/// @use-src 0:"constant_optimizer_yul/input.sol"
+/// @use-src 0:"input.sol"
 object "C_12" {
     code {
         {
@@ -15,7 +15,7 @@ object "C_12" {
             return(_1, _2)
         }
     }
-    /// @use-src 0:"constant_optimizer_yul/input.sol"
+    /// @use-src 0:"input.sol"
     object "C_12_deployed" {
         code {
             {

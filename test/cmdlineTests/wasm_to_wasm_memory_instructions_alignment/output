@@ -1,5 +1,5 @@
 
-======= wasm_to_wasm_memory_instructions_alignment/input.yul (Ewasm) =======
+======= input.yul (Ewasm) =======
 
 Pretty printed source:
 object "object" {
