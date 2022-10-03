@@ -664,7 +664,22 @@ bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier
 {
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
 	if (builtin && builtin->instruction.has_value())
+	{
+		if (_instructionIdentifier == "prevrandao" && !m_evmVersion.hasPrevRandao())
+			m_errorReporter.warning(
+				5761_error,
+				_location,
+				"\"prevrandao\" is not supported by the VM version and will be treated like \"difficulty\"."
+			);
+		else if (_instructionIdentifier == "difficulty" && m_evmVersion.hasPrevRandao())
+			m_errorReporter.warning(
+				3242_error,
+				_location,
+				"\"difficulty\" was renamed and supplanted by \"prevrandao\" in the VM version paris."
+			);
+
 		return validateInstructions(builtin->instruction.value(), _location);
+	}
 	else
 		return false;
 }
@@ -684,6 +699,8 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		_instr != evmasm::Instruction::JUMPDEST,
 	"");
 
+	bool returnValue = true;
+
 	auto errorForVM = [&](ErrorId _errorId, string const& vmKindMessage) {
 		m_errorReporter.typeError(
 			_errorId,
@@ -695,6 +712,7 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 				fmt::arg("version", m_evmVersion.name())
 			)
 		);
+		returnValue = false;
 	};
 
 	if (_instr == evmasm::Instruction::RETURNDATACOPY && !m_evmVersion.supportsReturndata())
@@ -727,10 +745,8 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 			"PC instruction is a low-level EVM feature. "
 			"Because of that PC is disallowed in strict assembly."
 		);
-	else
-		return false;
 
-	return true;
+	return returnValue;
 }
 
 bool AsmAnalyzer::validateInstructions(FunctionCall const& _functionCall)

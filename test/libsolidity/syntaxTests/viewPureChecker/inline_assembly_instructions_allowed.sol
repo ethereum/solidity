@@ -73,7 +73,7 @@ contract C {
             pop(coinbase())
             pop(timestamp())
             pop(number())
-            pop(difficulty())
+            pop(prevrandao())
             pop(gaslimit())
 
             // NOTE: msize() is allowed only with optimizer disabled
@@ -83,7 +83,7 @@ contract C {
     }
 }
 // ====
-// EVMVersion: >=london
+// EVMVersion: >=paris
 // ----
 // Warning 5740: (89-1716): Unreachable code.
 // Warning 5740: (1729-1741): Unreachable code.

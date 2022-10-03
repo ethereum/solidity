@@ -146,7 +146,7 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 
 map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
-	auto hasOpCode = [&](evmasm::Instruction _instr, string const& _instrName) -> bool
+	/*auto hasOpCode = [&](evmasm::Instruction _instr, string const& _instrName) -> bool
 	{
 		if (
 			_instr == evmasm::Instruction::PREVRANDAO &&
@@ -155,7 +155,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			return _evmVersion.hasPrevRandao();
 
 		return _evmVersion.hasOpcode(_instr);
-	};
+	};*/
 
 	map<YulString, BuiltinFunctionForEVM> builtins;
 	for (auto const& instr: evmasm::c_instructions)
@@ -170,7 +170,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			opcode != evmasm::Instruction::JUMP &&
 			opcode != evmasm::Instruction::JUMPI &&
 			opcode != evmasm::Instruction::JUMPDEST &&
-			hasOpCode(opcode, name)
+			_evmVersion.hasOpcode(opcode)
 		)
 			builtins.emplace(createEVMFunction(name, opcode));
 	}
