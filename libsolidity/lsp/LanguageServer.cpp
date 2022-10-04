@@ -1,4 +1,4 @@
-/*
+/*LanguageServer.cpp
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify
@@ -26,9 +26,9 @@
 
 // LSP feature implementations
 #include <libsolidity/lsp/GotoDefinition.h>
-#include <libsolidity/lsp/References.h>
+#include <libsolidity/lsp/ReferencesHandler.h>
 #include <libsolidity/lsp/RenameSymbol.h>
-#include <libsolidity/lsp/SemanticHighlight.h>
+#include <libsolidity/lsp/SemanticHighlighter.h>
 #include <libsolidity/lsp/SemanticTokensBuilder.h>
 
 #include <liblangutil/SourceReferenceExtractor.h>
@@ -147,10 +147,10 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"textDocument/didChange", bind(&LanguageServer::handleTextDocumentDidChange, this, _2)},
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _2)},
 		{"textDocument/rename", RenameSymbol(*this) },
-		{"textDocument/documentHighlight", SemanticHighlight(*this) },
+		{"textDocument/documentHighlight", SemanticHighlighter(*this) },
 		{"textDocument/implementation", GotoDefinition(*this) },
 		{"textDocument/semanticTokens/full", bind(&LanguageServer::semanticTokensFull, this, _1, _2)},
-		{"textDocument/references", References(*this) },
+		{"textDocument/references", ReferencesHandler(*this) },
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2)},
 	},
 	m_fileRepository("/" /* basePath */, {} /* no search paths */),
@@ -187,7 +187,7 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 		else if (text == "directly-opened-and-on-import")
 			m_fileLoadStrategy = FileLoadStrategy::DirectlyOpenedAndOnImported;
 		else
-			lspRequire(false, ErrorCode::InvalidParams, "Invalid file load strategy: " + text);
+			lspAssert(false, "Invalid file load strategy: " + text);
 	}
 
 	m_settingsObject = _settings;

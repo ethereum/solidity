@@ -107,7 +107,7 @@ bool ReferenceCollector::visit(ImportDirective const& _import)
 
 void ReferenceCollector::endVisit(Identifier const& _identifier)
 {
-	if (Declaration const* declaration = _identifier.annotation().referencedDeclaration; declaration == &m_declaration)
+	if (_identifier.annotation().referencedDeclaration == &m_declaration)
 		m_collectedReferences.emplace_back(_identifier.location(), m_kind);
 }
 
@@ -133,12 +133,18 @@ void ReferenceCollector::endVisit(MemberAccess const& _memberAccess)
 
 bool ReferenceCollector::visit(Assignment const& _assignment)
 {
+	auto const getDocumentHighlightKind = [](Expression const& _expression) noexcept -> DocumentHighlightKind {
+		if (_expression.annotation().willBeWrittenTo)
+			return DocumentHighlightKind::Write;
+		return DocumentHighlightKind::Read;
+	};
+
 	auto const restoreKind = ScopeGuard{[this, savedKind=m_kind]() { m_kind = savedKind; }};
 
-	m_kind = DocumentHighlightKind::Write;
+	m_kind = getDocumentHighlightKind(_assignment.leftHandSide());
 	_assignment.leftHandSide().accept(*this);
 
-	m_kind = DocumentHighlightKind::Read;
+	m_kind = getDocumentHighlightKind(_assignment.rightHandSide());
 	_assignment.rightHandSide().accept(*this);
 
 	return false;

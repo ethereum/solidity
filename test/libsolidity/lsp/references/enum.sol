@@ -23,14 +23,14 @@ contract MyContract
 //               ^^^^^ @ColorType3
 //                                             ^^^^^ @ColorType4
     {
-        Color result = Color(a);
+        Color Color = Color(a);
 //      ^^^^^ @ColorType5
 //                     ^^^^^ @ColorType6
         if (a != lastColor)
 //               ^^^^^^^^^ @lastCursor2
-            result = Color.Green;
+            Color = Color.Green;
 //                   ^^^^^ @ColorType7
-        return result;
+        return Color;
     }
 
     function f() public pure returns (uint)
@@ -41,6 +41,7 @@ contract MyContract
 }
 
 // ----
+// lib: @diagnostics 2519
 // -> textDocument/documentHighlight {
 //     "position": @EnumDef
 // }

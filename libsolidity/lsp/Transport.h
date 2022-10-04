@@ -88,6 +88,11 @@ private:
 	}
 
 /**
+ * Fatally halts the process if the condition fails.
+ */
+#define lspAssert(condition, errorMessage) solAssert((condition), (errorMessage))
+
+/**
  * Transport layer API
  *
  * The transport layer API is abstracted to make LSP more testable as well as

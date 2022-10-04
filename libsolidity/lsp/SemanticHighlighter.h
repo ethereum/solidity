@@ -26,15 +26,15 @@ namespace solidity::lsp
 /**
  * Implements JSON RPC for `textDocument/documentHighlight`.
  */
-class SemanticHighlight: public HandlerBase
+class SemanticHighlighter: public HandlerBase
 {
 public:
-	explicit SemanticHighlight(LanguageServer& _server): HandlerBase(_server) {}
+	using HandlerBase::HandlerBase;
 
 	void operator()(MessageID _id, Json::Value const& _args);
 
 private:
-	std::vector<Reference> semanticHighlight(frontend::ASTNode const* _sourceNode, int _sourceOffset, std::string const& _sourceUnitName);
+	std::vector<Reference> findAllReferences(frontend::ASTNode const* _sourceNode, int _sourceOffset, std::string const& _sourceUnitName);
 };
 
 }

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/lsp/SemanticHighlight.h>
+#include <libsolidity/lsp/SemanticHighlighter.h>
 #include <libsolidity/lsp/Utils.h>
 
 using namespace std;
@@ -23,24 +23,23 @@ using namespace solidity;
 using namespace solidity::lsp;
 using namespace solidity::frontend;
 
-void SemanticHighlight::operator()(MessageID _id, Json::Value const& _args)
+void SemanticHighlighter::operator()(MessageID _id, Json::Value const& _args)
 {
 	auto const [sourceUnitName, lineColumn] = extractSourceUnitNameAndLineColumn(_args);
 	auto const [sourceNode, sourceOffset] = m_server.astNodeAndOffsetAtSourceLocation(sourceUnitName, lineColumn);
 
 	Json::Value jsonReply = Json::arrayValue;
-	for (auto const& [location, kind]: semanticHighlight(sourceNode, sourceOffset, sourceUnitName))
+	for (auto const& [location, kind]: findAllReferences(sourceNode, sourceOffset, sourceUnitName))
 	{
 		Json::Value item = Json::objectValue;
 		item["range"] = toRange(location);
-		if (kind != DocumentHighlightKind::Unspecified)
-			item["kind"] = static_cast<int>(kind);
+		item["kind"] = static_cast<int>(kind);
 		jsonReply.append(item);
 	}
 	client().reply(_id, jsonReply);
 }
 
-vector<Reference> SemanticHighlight::semanticHighlight(ASTNode const* _sourceNode, int _sourceOffset, string const& _sourceUnitName)
+vector<Reference> SemanticHighlighter::findAllReferences(ASTNode const* _sourceNode, int _sourceOffset, string const& _sourceUnitName)
 {
 	if (!_sourceNode)
 		return {};

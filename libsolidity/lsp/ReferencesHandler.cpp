@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/lsp/References.h>
+#include <libsolidity/lsp/ReferencesHandler.h>
 #include <libsolidity/lsp/ReferenceCollector.h>
 #include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Utils.h>
@@ -29,7 +29,7 @@ using namespace solidity::frontend;
 namespace solidity::lsp
 {
 
-void References::operator()(MessageID _id, Json::Value const& _args)
+void ReferencesHandler::operator()(MessageID _id, Json::Value const& _args)
 {
 	auto const [sourceUnitName, lineColumn] = extractSourceUnitNameAndLineColumn(_args);
 

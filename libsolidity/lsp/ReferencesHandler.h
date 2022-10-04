@@ -23,10 +23,10 @@ namespace solidity::lsp
 /**
  * Implements JSON RPC for `textDocument/references`.
  */
-class References: public HandlerBase
+class ReferencesHandler: public HandlerBase
 {
 public:
-	explicit References(LanguageServer& _server): HandlerBase(_server) {}
+	using HandlerBase::HandlerBase;
 
 	void operator()(MessageID _id, Json::Value const& _args);
 };

@@ -30,7 +30,6 @@ namespace solidity::lsp
  */
 enum class DocumentHighlightKind
 {
-	Unspecified = 0,    //!< could be for example a highlight found in a comment
 	Text = 1,           //!< a textual occurrence
 	Read = 2,           //!< read access to a variable
 	Write = 3,          //!< write access to a variable
